@@ -67,33 +67,19 @@ question.  In file <code>FarragoTrace.properties</code>, set
 <code>net.sf.farrago.dynamic.level=FINE</code> before executing the
 SQL statement.  This will guarantee that the generated .java file will
 be preserved under directory
-dev/farrago/classes/net/sf/farrago/dynamic/stmtXYZ (where XYZ is a random
-unique suffix which you may be able to see in the error message).  If
-the problem is that the generated code isn't even legal Java, it may
-be very difficult to find what's going wrong if DynamicJava is being
-used to interpret the generated code directly.  In that case, 
-issue this SQL command:
-
-<pre><code>
-alter system set "javaInterpreterEnabled"=false
-</code></pre>
-
-As a result, Sun's Java compiler will be used for subsequent queries.
-This usually gives a good compilation error which you can use together
-with the generated source code to find the problem (at this point,
-someone still has to debug the code generator to track down the origin
-of the problem and fix it).  When you're done, turn off the trace
-(since the dynamic trace clutters up disk space), and reset the
-<code>javaInterepreterEanbled</code> parameter to <code>true</code>,
-since forcing compilation isn't always good for performance.
+dev/farrago/classes/net/sf/farrago/dynamic/stmtXYZ (where XYZ is a
+random unique suffix which you may be able to see in the error
+message).  Now, use the compilation error together with the generated
+source code to find the problem (at this point, someone still has to
+debug the code generator to track down the origin of the problem and
+fix it).  When you're done, turn off the trace (since the generated
+code clutters up disk space).
 
 <p>
 
 If the generated Java code runs but does the wrong thing, you may have
-to debug it if you can't find the problem by inspection.  To do this,
-make sure the interpreter is disabled before starting, since you really
-don't want to debug DynamicJava.  Now, set a breakpoint in the finally
-clause of method
+to debug it if you can't find the problem by inspection.  Set a
+breakpoint in the finally clause of method
 <code>net.sf.farrago.db.FarragoDatabase.prepareStmt</code> and execute
 the SQL statement.  Once this breakpoint is reached, the dynamically
 compiled class should already be loaded.  Now, find the place in your

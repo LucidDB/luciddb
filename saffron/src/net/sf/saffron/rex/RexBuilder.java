@@ -49,8 +49,6 @@ public class RexBuilder {
     protected final SaffronTypeFactory _typeFactory;
     private final RexLiteral _booleanTrue;
     private final RexLiteral _booleanFalse;
-    private final RexLiteral _integerZero;
-    private final RexLiteral _integerOne;
     private final RexLiteral _varcharEmpty;
     private final RexLiteral _constantNull;
     public final SqlStdOperatorTable _opTab = SqlOperatorTable.std();
@@ -66,12 +64,6 @@ public class RexBuilder {
         this._booleanFalse = makeLiteral(Boolean.FALSE,
                 typeFactory.createSqlType(SqlTypeName.Boolean),
                 SqlTypeName.Boolean);
-        this._integerZero = makeLiteral(new BigDecimal(0),
-                typeFactory.createSqlType(SqlTypeName.Integer),
-                SqlTypeName.Decimal);
-        this._integerOne = makeLiteral(new BigDecimal(1),
-                typeFactory.createSqlType(SqlTypeName.Integer),
-                SqlTypeName.Decimal);
         this._varcharEmpty = makeLiteral(new NlsString("",null,null),
                 typeFactory.createSqlType(SqlTypeName.Varchar, 0),
                 SqlTypeName.Char);
@@ -406,10 +398,6 @@ public class RexBuilder {
     public RexContextVariable makeContextVariable(String name,SaffronType type)
     {
         return new RexContextVariable(name,type);
-    }
-
-    public SqlOperator getOperator(String name, int syntax) {
-        return _opTab.lookup(name, syntax);
     }
 
     public RexLiteral makeSymbolLiteral(SqlSymbol flag) {

@@ -22,18 +22,14 @@
 
 package net.sf.saffron.sql;
 
-import net.sf.saffron.calc.RexToCalcTranslator;
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
 import net.sf.saffron.core.SaffronTypeFactoryImpl;
 import net.sf.saffron.resource.SaffronResource;
-import net.sf.saffron.rex.RexCall;
 import net.sf.saffron.rex.RexNode;
 import net.sf.saffron.sql.test.SqlTester;
 import net.sf.saffron.sql.type.SqlTypeName;
-import net.sf.saffron.util.EnumeratedValues;
 import net.sf.saffron.util.Util;
-import openjava.ptree.Expression;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -174,10 +170,11 @@ public abstract class SqlOperator
     }
 
     /**
-     * Returns the syntactic type of this operator, a value from {@link
-     * SqlOperator.Syntax}.
+     * Returns the syntactic type of this operator.
+     *
+     * @post return != null
      */
-    public abstract int getSyntax();
+    public abstract SqlSyntax getSyntax();
 
     /**
      * An abstract method where its implementations call the
@@ -314,7 +311,7 @@ public abstract class SqlOperator
     public SaffronType getType(SqlValidator validator, SqlValidator.Scope scope,
                                SqlCall call) {
         // Check that there's the right number of arguments.
-        checkNumberOfArg(call);
+        checkNumberOfArg(argTypeInference,call);
 
         checkArgTypes(call, validator, scope);
 
@@ -341,26 +338,25 @@ public abstract class SqlOperator
         argTypeInference.check(validator,scope,call);
     }
 
-    protected void checkNumberOfArg(final AllowedArgInference argType, SqlCall call) {
-        boolean doThrow = false;
-        if (argType!=null) {
-            doThrow = argType.getArgCount() != call.operands.length;
-        } else {
-            doThrow = call.operator.getNumOfOperands(call.operands.length)!=
-                            call.operands.length;
+    protected boolean checkArgTypesNoThrow(SqlCall call, SqlValidator validator, SqlValidator.Scope scope)
+    {
+        // Check that all of the arguments are of the right type, or are at
+        // least assignable to the right type.
+        if (null==argTypeInference) {
+            throw Util.needToImplement(
+                "if you see this you must either give argTypeInference a value"+
+                " or override this method");
+
         }
 
-        if (doThrow) {
-            throw SaffronResource.instance().newValidationError(
-                                    "Wrong number of arguments to " + call);
-        }
+        return argTypeInference.checkNoThrowing(call, validator,scope);
     }
 
-    protected void checkNumberOfArg(SqlCall call) {
-        assert argTypeInference != null : "Derived class should have set " +
-                "argTypeInference or overridden this method";
-        if (argTypeInference.getArgCount() != call.operands.length) {
-            throw Util.newInternal("todo: Wrong number of arguments to " + call);
+    protected void checkNumberOfArg(final AllowedArgInference argType, SqlCall call) {
+        if ( call.operator.getNumOfOperands(call.operands.length)!=
+                            call.operands.length) {
+            throw SaffronResource.instance().newValidationError(
+                                    "Wrong number of arguments to " + call);
         }
     }
 
@@ -384,18 +380,42 @@ public abstract class SqlOperator
      * "SUBSTR(VARCHAR, INTEGER, INTEGER)".
      */
     public String getAllowedSignatures() {
+        return getAllowedSignatures(name);
+    }
+
+    /**
+     * Returns a string describing the expected argument types of a call, e.g.
+     * "SUBSTRING(VARCHAR, INTEGER, INTEGER)" where the name SUBSTRING can
+     * be replaced by a specifed name.
+     */
+    public String getAllowedSignatures(String opNameToUse) {
         assert(null!=argTypeInference) :
                 "If you see this, assign argTypeInference a value " +
                 "or override this function";
-        return argTypeInference.getAllowedSignatures(this).trim();
+        return argTypeInference.getAllowedSignatures(this).
+                replaceAll("\\{0\\}",opNameToUse).trim();
     }
 
+    /**
+     * Returns the same as {@link #getAnonymousSignature} with the exception that
+     * lookupMakeCallObj/fun name is this.operator.name
+     * @param list
+     * @return
+     */
     protected String getSignature(final ArrayList list){
+        return getAnonymousSignature(list).replaceAll("\\{0\\}",name);
+    }
+
+    /**
+     * Returns a string of all allowed type permutated with an anonymous
+     * lookupMakeCallObj/fun name represented by the string <code>{0}</code>
+     */
+    protected String getAnonymousSignature(final ArrayList list){
         StringBuffer ret = new StringBuffer();
         String template = getSignatureTemplate();
         if (null==template) {
             ret.append("'");
-            ret.append(name);
+            ret.append("{0}");
             ret.append("(");
             for (int i = 0; i < list.size(); i++) {
                 if (i>0) {
@@ -407,7 +427,7 @@ public abstract class SqlOperator
         }
         else {
             Object[] values = new Object[list.size()+1];
-            values[0] = this.name;
+            values[0] = "{0}";
             ret.append("'");
             for (int i = 0; i <list.size(); i++) {
                 values[i+1] = "<"+list.get(i)+">";
@@ -434,8 +454,8 @@ public abstract class SqlOperator
      *         and if they are comparable, i.e. charset and collation agree
      */
     public boolean isCharTypeComparable(SaffronType[] argTypes){
-        Util.pre(null!=argTypes,"null!=operands");
-        Util.pre(2<=argTypes.length,"1<=operands.length");
+        Util.pre(null!=argTypes,"null!=argTypes");
+        Util.pre(2<=argTypes.length,"2<=argTypes.length");
 
         for (int j=0;j<(argTypes.length-1);j++){
              SaffronType t0 = argTypes[j];
@@ -512,7 +532,7 @@ public abstract class SqlOperator
                                            SqlValidator.Scope scope,
                                            SqlNode[] operands) {
         Util.pre(null!=operands,"null!=operands");
-        Util.pre(2<=operands.length,"1<=operands.length");
+        Util.pre(2<=operands.length,"2<=operands.length");
 
         SaffronType[] argTypes = new SaffronType[operands.length];
         for (int i = 0; i < operands.length; i++) {
@@ -523,25 +543,6 @@ public abstract class SqlOperator
     }
 
     //~ Inner Classes ---------------------------------------------------------
-
-    /**
-     * <code>Syntax</code> enumerates possible syntactic types of operators.
-     */
-    public static class Syntax extends EnumeratedValues
-    {
-        public static final Syntax instance = new Syntax();
-        public static final int Function = 0;
-        public static final int Binary = 1;
-        public static final int Prefix = 2;
-        public static final int Postfix = 3;
-        public static final int Special = 4;
-
-        private Syntax()
-        {
-            super(
-                new String [] { "function","binary","prefix","postfix","special" });
-        }
-    }
 
     /**
      * Strategy to infer the type of an operator call from the type of the
@@ -685,12 +686,12 @@ public abstract class SqlOperator
 
         public void check(SqlValidator validator, SqlValidator.Scope scope, SqlCall call)
         {
-            if (!check(call, validator, scope)) {
+            if (!checkNoThrowing(call, validator, scope)) {
                 throw call.newValidationSignatureError(validator, scope);
             }
         }
 
-        public boolean check(SqlCall call, SqlValidator validator,
+        public boolean checkNoThrowing(SqlCall call, SqlValidator validator,
                              SqlValidator.Scope scope) {
             assert(getArgCount()==call.operands.length);
 
@@ -745,7 +746,7 @@ public abstract class SqlOperator
                 }
                 else
                 {
-                    buf.append(op.getSignature(list));
+                    buf.append(op.getAnonymousSignature(list));
                     buf.append(NL);
                 }
                 list.remove(list.size()-1);
@@ -825,7 +826,7 @@ public abstract class SqlOperator
             for (int i = 0; i < m_allowedRules.length; i++) {
                 AllowedArgInference rule = m_allowedRules[i];
 
-                if (!rule.check(call,validator,scope))
+                if (!rule.checkNoThrowing(call,validator,scope))
                 {
                     nbrOfTypeErrors++;
                 }

@@ -38,14 +38,21 @@ using namespace fennel;
 using namespace std;
 
 
-const int MAXLEN = 8;   // Must not be less than 5. Best >=7.
-const int MAXRANDOM = 5;
-const int MAXCMPLEN = 8;  // Must not be less than 3.
+static const int MAXLEN = 8;   // Must not be less than 5. Best >=7.
+static const int MAXRANDOM = 5;
+static const int MAXCMPLEN = 8;  // Must not be less than 3.
+
+
+static int64_t const ticks_per_day = boost::posix_time::ptime::time_rep_type::frac_sec_per_day();
+static int64_t const ticks_per_year = ticks_per_day * 365LL;
+static int64_t const ticks_per_month = ticks_per_day * 31LL;
+static int64_t const ticks_per_hour = ticks_per_day/24;
+static int64_t const ticks_per_minute = ticks_per_hour/60;
+static int64_t const ticks_per_sec = ticks_per_minute/60;
+
 
 class SqlDateTest : virtual public TestBase, public TraceSource
 {
-    void testSqlStringBuffer_Ascii();
-    void testSqlStringBuffer_UCS2();
 
     void testSqlDateToStr_Ascii();
     void testSqlTimeToStr_Ascii();
@@ -53,6 +60,10 @@ class SqlDateTest : virtual public TestBase, public TraceSource
                                      int number,
                                      char character);
 
+    void testSqlStrToDate_Ascii();
+    
+    void testLocalTime();
+    
 #ifdef HAVE_ICU
     string UnicodeToPrintable(const UnicodeString &s);
 #endif
@@ -65,6 +76,11 @@ public:
         srand(time(NULL));
         FENNEL_UNIT_TEST_CASE(SqlDateTest, testSqlDateToStr_Ascii);
         FENNEL_UNIT_TEST_CASE(SqlDateTest, testSqlTimeToStr_Ascii);
+        //        FENNEL_UNIT_TEST_CASE(SqlDateTest, testSqlTimeStampToStr_Ascii);
+        FENNEL_UNIT_TEST_CASE(SqlDateTest, testSqlStrToDate_Ascii);
+        //        FENNEL_UNIT_TEST_CASE(SqlDateTest, testSqlStrToTime_Ascii);
+        //        FENNEL_UNIT_TEST_CASE(SqlDateTest, testSqlStrToTimestamp_Ascii);
+        FENNEL_UNIT_TEST_CASE(SqlDateTest, testLocalTime);
     }
     
     virtual ~SqlDateTest()
@@ -112,14 +128,10 @@ SqlDateTest::appendCharsToUCS2LikeString(string& str,
 void
 SqlDateTest::testSqlDateToStr_Ascii()
 {
-    int storage, size, leftpad, rightpad;
+    int storage; 
     int leftbump = 2;
     int rightbump = 2;
 
-    int64_t const ticks_per_day = boost::posix_time::ptime::time_rep_type::frac_sec_per_day();
-    //    int64_t const ticks_per_hour = ticks_per_day/24;
-    int64_t const ticks_per_month = ticks_per_day * 31LL;
-    int64_t const ticks_per_year = ticks_per_day * 365LL;
     
     
     SqlStringBuffer s1(10, 10,
@@ -135,6 +147,7 @@ SqlDateTest::testSqlDateToStr_Ascii()
     SqlDateToStr<1,1,SQLDATE>(s1.mStr, storage, ticks_per_month);
     BOOST_CHECK(s1.verify());
 
+    int size, leftpad, rightpad; 
     for (storage = 5; storage <= 15; storage++) {
         for (size = 0; size <= storage; size++) {
             for (leftpad = 0; leftpad <= storage-size; leftpad++) {
@@ -147,39 +160,32 @@ SqlDateTest::testSqlDateToStr_Ascii()
 
                 bool caught = false;
                 try {
-                  SqlDateToStr<1,1,SQLDATE>(t.mStr, storage, ticks_per_year + size*ticks_per_month + storage*ticks_per_day);
+                    SqlDateToStr<1,1,SQLDATE>(t.mStr, storage, ticks_per_year + size*ticks_per_month + storage*ticks_per_day);
                 } catch(const char *str) {
-                  caught = true;
-                  BOOST_CHECK_EQUAL(strcmp(str,"22001"),0);
-                  BOOST_CHECK(t.verify());
-                  BOOST_CHECK(storage < 10);
+                    caught = true;
+                    BOOST_CHECK_EQUAL(strcmp(str,"22001"),0);
+                    BOOST_CHECK(t.verify());
+                    BOOST_CHECK(storage < 10);
                 } catch(...) {
-                  BOOST_CHECK(false);
+                    BOOST_CHECK(false);
                 }
                 if (!caught) {
-                  BOOST_CHECK(t.verify());
-                  cout << t.mStr << endl;
+                    BOOST_CHECK(t.verify());
+                    //                    cout << t.mStr << endl;
                 }
 
             }
         }
-    }
+    } 
 }
 
 void
 SqlDateTest::testSqlTimeToStr_Ascii()
 {
-    int storage, size, leftpad, rightpad;
+    int storage ;
     int leftbump = 2;
     int rightbump = 2;
 
-    int64_t const ticks_per_day = boost::posix_time::ptime::time_rep_type::frac_sec_per_day();
-    int64_t const ticks_per_hour = ticks_per_day/24;
-    int64_t const ticks_per_minute = ticks_per_hour/60;
-    int64_t const ticks_per_sec = ticks_per_minute/60;
-
-    
-    
     SqlStringBuffer s1(10, 10,
                       0, 0,
                       'x', ' ', 
@@ -194,9 +200,9 @@ SqlDateTest::testSqlTimeToStr_Ascii()
     BOOST_CHECK(s1.verify());
     SqlDateToStr<1,1,SQLTIME>(s1.mStr, storage, 1000*57601000LL);
     BOOST_CHECK(s1.verify());
-    cout << s1.mStr << endl;
+    //    cout << s1.mStr << endl;
     
-
+    int size, leftpad, rightpad; 
     for (storage = 5; storage <= 15; storage++) {
         for (size = 0; size <= storage; size++) {
             for (leftpad = 0; leftpad <= storage-size; leftpad++) {
@@ -209,23 +215,68 @@ SqlDateTest::testSqlTimeToStr_Ascii()
 
                 bool caught = false;
                 try {
-                  SqlDateToStr<1,1,SQLTIME>(t.mStr, storage, ticks_per_hour + size*ticks_per_minute + storage*ticks_per_sec);
+                    SqlDateToStr<1,1,SQLTIME>(t.mStr, storage, ticks_per_hour + size*ticks_per_minute + storage*ticks_per_sec);
                 } catch(const char *str) {
-                  caught = true;
-                  BOOST_CHECK_EQUAL(strcmp(str,"22001"),0);
-                  BOOST_CHECK(t.verify());
-                  BOOST_CHECK(storage < 10);
+                    caught = true;
+                    BOOST_CHECK_EQUAL(strcmp(str,"22001"),0);
+                    BOOST_CHECK(t.verify());
+                    BOOST_CHECK(storage < 10);
                 } catch(...) {
-                  BOOST_CHECK(false);
+                    BOOST_CHECK(false);
                 }
                 if (!caught) {
-                  BOOST_CHECK(t.verify());
-                  cout << t.mStr << endl;
+                    BOOST_CHECK(t.verify());
+                    //              cout << t.mStr << endl;
                 }
 
             }
         }
     }
+}
+
+void
+SqlDateTest::testSqlStrToDate_Ascii()
+{
+
+    char dateStr[11] = "2000-10-21" ;
+    
+    int64_t t = IsoStringToDate(dateStr, 10);
+    //    cout << "2000-10-21 = " << t << endl;
+    int64_t oct2k = 972086400000LL; // GMT + 0; - in milliseconds
+    BOOST_CHECK_EQUAL(t,oct2k);
+
+    char timeStr[9] = "14:21:01";
+    t = IsoStringToTime(timeStr, 8);
+    //    cout << "14:21:01 = " << t << endl;
+        
+    int64_t fourteen21 = ( ticks_per_hour*14 + ticks_per_minute * 21 + ticks_per_sec * 1) /1000;
+
+    BOOST_CHECK_EQUAL(t, fourteen21);
+
+    char timestampStr[20] = "2000-10-21 14:21:01";
+    t =  IsoStringToTimestamp(timestampStr, 19);
+    
+    //    cout << "2000-10-21 14:21:01 = " << t << endl;  
+    BOOST_CHECK_EQUAL(t, oct2k + fourteen21);      
+    
+}
+
+
+void
+SqlDateTest::testLocalTime()
+{
+
+    int64_t t = CurrentTime();
+    int64_t ts = CurrentTimestamp();
+
+
+
+    cout << "Time = " << t << endl;
+    
+    //    BOOST_CHECK_EQUAL(t, oct2k + fourteen21);      
+    
+    cout << "Time = " << ts << endl;
+
 }
 
 

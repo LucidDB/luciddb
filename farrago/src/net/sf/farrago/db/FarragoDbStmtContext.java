@@ -29,6 +29,8 @@ import net.sf.farrago.session.*;
 import net.sf.saffron.core.*;
 import net.sf.saffron.util.*;
 import net.sf.saffron.oj.stmt.*;
+import net.sf.saffron.rel.SaffronRel;
+import net.sf.saffron.sql.SqlKind;
 
 import java.util.*;
 import java.util.logging.*;
@@ -65,7 +67,7 @@ public class FarragoDbStmtContext
     private FarragoExecutableStmt executableStmt;
 
     private FarragoCompoundAllocation allocations;
-    
+
     private String sql;
 
     //~ Constructors ----------------------------------------------------------
@@ -91,13 +93,13 @@ public class FarragoDbStmtContext
         // purge self from session's list
         session.forgetAllocation(this);
     }
-    
+
     // implement FarragoSessionStmtContext
     public FarragoSession getSession()
     {
         return session;
     }
-    
+
     // implement FarragoSessionStmtContext
     public boolean isPrepared()
     {
@@ -122,8 +124,12 @@ public class FarragoDbStmtContext
         unprepare();
         allocations = new FarragoCompoundAllocation();
         this.sql = sql;
-        executableStmt = session.prepare(
-            sql,allocations,isExecDirect,null);
+        executableStmt = session.prepare(sql,allocations,isExecDirect,null);
+        postprepare();
+    }
+
+    private void postprepare()
+    {
         if (isPrepared()) {
             dynamicParamValues = new Object[
                 executableStmt.getDynamicParamRowType().getFieldCount()];
@@ -134,12 +140,31 @@ public class FarragoDbStmtContext
     }
 
     // implement FarragoSessionStmtContext
+    public void prepare(SaffronRel plan, SqlKind kind, boolean logical)
+    {
+        // REVIEW jvs 28-June-2004:  do you mean DML or DDL?
+        assert (!kind.isA(SqlKind.Dml)) : "DDL query plan is not allowed here";
+        unprepare();
+        allocations = new FarragoCompoundAllocation();
+        this.sql = "";                  // not available
+
+        // As plan is never DDL, bypass FarragoDbSession.prepare(), which
+        // serves to wrap a DDL stmt in a transaction.
+        executableStmt =
+            session.getDatabase().implementStmt(
+                session, session.getCatalog(), plan, kind, logical,
+                allocations, session.getSessionIndexMap());
+        postprepare();
+    }
+
+
+    // implement FarragoSessionStmtContext
     public SaffronType getPreparedRowType()
     {
         assert(isPrepared());
         return executableStmt.getRowType();
     }
-    
+
     // implement FarragoSessionStmtContext
     public SaffronType getPreparedParamType()
     {
@@ -154,14 +179,14 @@ public class FarragoDbStmtContext
         // TODO:  type/null checking
         dynamicParamValues[parameterIndex] = x;
     }
-    
+
     // implement FarragoSessionStmtContext
     public void clearParameters()
     {
         assert(isPrepared());
         Arrays.fill(dynamicParamValues,null);
     }
-    
+
     // implement FarragoSessionStmtContext
     public void execute()
     {
@@ -199,9 +224,10 @@ public class FarragoDbStmtContext
                     boolean found = resultSet.next();
                     assert (found);
                     updateCount = resultSet.getInt(1);
-                    // REVIEW: jvp 20-Jun-2004 workaround limitations of 
+                    // REVIEW: jvp 20-Jun-2004 workaround limitations of
                     // other libraries
-                    while (resultSet.next());
+                    while (resultSet.next()) {
+                    }
                 } else {
                     updateCount = 0;
                 }
@@ -231,7 +257,7 @@ public class FarragoDbStmtContext
             session.endTransactionIfAuto(true);
         }
     }
-    
+
     // implement FarragoSessionStmtContext
     public ResultSet getResultSet()
     {

@@ -100,6 +100,13 @@ void TupleAccessor::compute(
             assert(cbFixed == cbMin);
         }
         bool bFixedWidth = (cbMin == attr.cbStorage);
+        if (bFixedWidth && !attr.cbStorage) {
+            if (!attr.pTypeDescriptor->getMinByteCount(1)) {
+                // this is a "0-length variable-width" field masquerading
+                // as a fixed-width field
+                bFixedWidth = false;
+            }
+        }
         bool bNullable = attr.isNullable;
         uint nBits = (attr.pTypeDescriptor->getBitCount());
         assert(nBits <= 1);
@@ -440,6 +447,10 @@ void TupleAccessor::marshal(TupleData const &tuple,PBuffer pTupleBufDest)
                 bitFields[accessor.iValueBit] =
                     *reinterpret_cast<bool const *>(value.pData);
             }
+        } else {
+            // if you hit this assert, most likely the result produced an null but type derivation in 
+            // SqlValidator derived an non nullable result type
+            assert(!isMAXU(accessor.iNullBit));
         }
         if (!isMAXU(accessor.iEndIndirectOffset)) {
             assert(pNextVarEndOffset ==

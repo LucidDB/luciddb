@@ -620,7 +620,7 @@ public abstract class SqlValidatorTestCase extends TestCase {
     public void testTrimFails(){
         checkExpFails("trim(123 FROM 'beard')","(?s).*Can not apply 'TRIM' to arguments of type.*");
         checkExpFails("trim('a' FROM 123)","(?s).*Can not apply 'TRIM' to arguments of type.*");
-        checkExpFails("trim('a' FROM 'b' collate latin1$sv)","(?s).*is not comparable to.*");
+        checkExpFails("trim('a' FROM 'b' collate latin1$sv)","(?s).*not comparable to eachother.*");
     }
 
     public void _testConvertAndTranslate() {
@@ -659,6 +659,42 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExpFails("substring('10' FROM '0' FOR '\\' collate latin1$sv)","(?s).* not comparable to eachother.*");
     }
 
+    public void testLikeAndSimilar() {
+        checkExp("'a' like 'b'");
+        checkExp("'a' like 'b'");
+        checkExp("'a' similar to 'b'");
+        checkExp("'a' similar to 'b' escape 'c'");
+    }
+
+    public void testLikeAndSimilarFails() {
+        checkExpFails("'a' like _shift_jis'b'  escape 'c'","(?s).*Operands _ISO-8859-1.a. COLLATE ISO-8859-1.en_US.primary, _SHIFT_JIS.b..*");
+        checkExpFails("'a' similar to _shift_jis'b'  escape 'c'","(?s).*Operands _ISO-8859-1.a. COLLATE ISO-8859-1.en_US.primary, _SHIFT_JIS.b..*");
+        checkExpFails("'a' similar to 'b' collate shift_jis$jp  escape 'c'","(?s).*Operands _ISO-8859-1.a. COLLATE ISO-8859-1.en_US.primary, _ISO-8859-1.b. COLLATE SHIFT_JIS.jp.primary.*");
+    }
+
+    public void testNullCast() {
+        checkType("cast(null as tinyint)","TINYINT");
+        checkType("cast(null as smallint)","SMALLINT");
+        checkType("cast(null as integer)","INTEGER");
+        checkType("cast(null as bigint)","BIGINT");
+        checkType("cast(null as real)","REAL");
+        checkType("cast(null as double)","DOUBLE");
+        checkType("cast(null as bit)","BIT(0)");
+        checkType("cast(null as boolean)","BOOLEAN");
+        checkType("cast(null as varchar)","VARCHAR(0)");
+        checkType("cast(null as char)","CHAR(0)");
+        checkType("cast(null as binary)","BINARY(0)");
+        checkType("cast(null as date)","DATE");
+        checkType("cast(null as time)","TIME");
+        checkType("cast(null as timestamp)","TIMESTAMP");
+        checkType("cast(null as decimal)","DECIMAL");
+        checkType("cast(null as varbinary)","VARBINARY(0)");
+    }
+
+    public void testCastFails() {
+        checkExpFails("cast('foo' as bar)","(?s).*Unknown datatype name: BAR.*");
+    }
+
     public void testDateTime() {
         // LOCAL_TIME
         checkExp("LOCALTIME(3)");
@@ -667,8 +703,7 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExpFails("LOCALTIME()",UNKNOWN_FUNC);
         checkType("LOCALTIME","TIME"); //  NOT NULL, with TZ ?
         checkExpFails("LOCALTIME(-1)", "Argument to function 'LOCALTIME' must be a literal"); // i guess -s1 is an expression?
-// this next one fails because i can't get the error string to match.  dunno why.
-//        checkExpFails("LOCALTIME('foo')","Validation Error: Can not apply 'LOCALTIME' to arguments of type 'LOCALTIME(<VARCHAR(3)>)'. Supported form(s): 'LOCALTIME(<INTEGER>)'");
+        checkExpFails("LOCALTIME('foo')","(?s).*Can not apply .LOCALTIME. to arguments of type .LOCALTIME.<VARCHAR.3.>.*");
 
         // LOCALTIMESTAMP
         checkExp("LOCALTIMESTAMP(3)");
@@ -677,8 +712,8 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExpFails("LOCALTIMESTAMP()",UNKNOWN_FUNC);
         checkType("LOCALTIMESTAMP","TIMESTAMP"); //  NOT NULL, with TZ ?
         checkExpFails("LOCALTIMESTAMP(-1)", "Argument to function 'LOCALTIMESTAMP' must be a literal"); // i guess -s1 is an expression?
-//        checkExpFails("LOCALTIMESTAMP('foo')","Validation Error: Can not apply 'LOCALTIMESTAMP' to arguments of type 'LOCALTIMESTAMP(<VARCHAR(3)>)'. " +
-    //            "Supported form(s): 'LOCALTIMESTAMP(<INTEGER>)'");
+        checkExpFails("LOCALTIMESTAMP('foo')","(?s).*Can not apply .LOCALTIMESTAMP. to arguments of type .LOCALTIMESTAMP.<VARCHAR.3.>... " +
+                "Supported form.s.: .LOCALTIMESTAMP.<INTEGER>.*");
 
         // CURRENT_DATE
         checkExpFails("CURRENT_DATE(3)",UNKNOWN_FUNC);
@@ -687,8 +722,7 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExp("CURRENT_DATE()"); // FIXME: works, but shouldn't
         checkType("CURRENT_DATE","DATE"); //  NOT NULL, with TZ?
         checkExpFails("CURRENT_DATE(-1)", UNKNOWN_FUNC); // i guess -s1 is an expression?
- //       checkExpFails("CURRENT_DATE('foo')","Validation Error: Can not apply 'CURRENT_DATE' to arguments of type 'CURRENT_DATE(<VARCHAR(3)>)'. " +
- //               "Supported form(s): 'CURRENT_DATE(<INTEGER>)'");
+        checkExpFails("CURRENT_DATE('foo')","(?s).*Reference to unknown function CURRENT_DATE.*");
 
         // current_time
         checkExp("current_time(3)");
@@ -697,8 +731,7 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExpFails("current_time()", UNKNOWN_FUNC);
         checkType("current_time","TIME"); //  NOT NULL, with TZ ?
         checkExpFails("current_time(-1)", "Argument to function 'CURRENT_TIME' must be a literal"); // i guess -s1 is an expression?
-  //      checkExpFails("current_time('foo')","Validation Error: Can not apply 'CURRENT_TIME' to arguments of type 'CURRENT_TIME(<VARCHAR(3)>)'. " +
- //               "Supported form(s): 'CURRENT_TIME(<INTEGER>)'");
+        checkExpFails("current_time('foo')","(?s).*Can not apply .CURRENT_TIME. to arguments of type 'CURRENT_TIME.<VARCHAR.3.>.'.*");
 
         // current_timestamp
         checkExp("CURRENT_TIMESTAMP(3)");
@@ -707,8 +740,7 @@ public abstract class SqlValidatorTestCase extends TestCase {
         checkExpFails("CURRENT_TIMESTAMP()",UNKNOWN_FUNC);
         checkType("CURRENT_TIMESTAMP","TIMESTAMP"); //  NOT NULL, with TZ ?
         checkExpFails("CURRENT_TIMESTAMP(-1)", "Argument to function 'CURRENT_TIMESTAMP' must be a literal"); // i guess -s1 is an expression?
-  //      checkExpFails("CURRENT_TIMESTAMP('foo')","Validation Error: Can not apply 'CURRENT_TIMESTAMP' to arguments of type 'CURRENT_TIMESTAMP(<VARCHAR(3)>)'. " +
- //               "Supported form(s): 'CURRENT_TIMESTAMP(<INTEGER>)'");
+        checkExpFails("CURRENT_TIMESTAMP('foo')","(?s).*Can not apply 'CURRENT_TIMESTAMP' to arguments of type 'CURRENT_TIMESTAMP.<VARCHAR.3.>.'.*");
 
        // Date literals
         checkExp("DATE '2004-12-01'");
@@ -721,17 +753,31 @@ public abstract class SqlValidatorTestCase extends TestCase {
         // REVIEW: Can't think of any date/time/ts literals that will parse, but not validate.
 
     }
+
     /**
      * Testing for casting to/from date/time types.
      */
     public void testDateTimeCast() {
-        checkExpFails("CAST('foo' as bar)","Unknown type name: BAR");
         checkExpFails("CAST(1 as DATE)","Cast function cannot convert value of type INTEGER to type DATE");
         checkExp("CAST(DATE '2001-12-21' AS VARCHAR(10))");
         checkExp("CAST( '2001-12-21' AS DATE)");
+        checkExp("CAST( TIMESTAMP '2001-12-21 10:12:21' AS VARCHAR(20))");
+        checkExp("CAST( TIME '10:12:21' AS VARCHAR(20))");
+        checkExp("CAST( '10:12:21' AS TIME)");
+        checkExp("CAST( '2004-12-21 10:12:21' AS TIMESTAMP)");
     }
     public void testInvalidFunction() {
         checkExpFails("foo()", UNKNOWN_FUNC);
+    }
+
+    public void testJdbcFunctionCall() {
+        checkExp("{fn log(1)}");
+        checkExp("{fn locate('','')}");
+        checkExpFails("{fn locate('','',1)}","(?s).*"); //todo this legal jdbc syntax, just that currently the 3 ops call is not implemented in the system
+        checkExpFails("{fn log('1')}","(?s).*Can not apply.*fn LOG..<VARCHAR.1.>.*");
+        checkExpFails("{fn log(1,1)}","(?s).*Encountered .fn LOG. with 2 parameter.s., was expecting 1 parameter.s.*");
+        checkExpFails("{fn fn(1)}","(?s).*Function .fn FN. is not defined.*");
+        checkExpFails("{fn hahaha(1)}","(?s).*Function .fn HAHAHA. is not defined.*");
     }
 
 }

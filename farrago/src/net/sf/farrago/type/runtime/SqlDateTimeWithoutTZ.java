@@ -21,6 +21,7 @@
 package net.sf.farrago.type.runtime;
 
 import java.util.Calendar;
+import java.util.TimeZone;
 
 
 /**
@@ -38,6 +39,7 @@ public abstract class SqlDateTimeWithoutTZ extends NullablePrimitive
     implements NullableValue, AssignableValue
 {
     private Calendar cal =  Calendar.getInstance();
+    private static final TimeZone gmtZone = TimeZone.getTimeZone("GMT+0");
 
     public long value = 0; // time as GMT since epoch.
     public int timeZoneOffset = 0; // timezone offset in Millis.
@@ -49,15 +51,8 @@ public abstract class SqlDateTimeWithoutTZ extends NullablePrimitive
      */
     public SqlDateTimeWithoutTZ()
     {
-        //        timeZoneOffset = cal.getTimeZone().getRawOffset();
-    }
-
-    /**
-     * Create a Runtime object with timezone offset different from localtime.
-     * @param tzOffset
-     */
-    public SqlDateTimeWithoutTZ(int tzOffset) {
-        timeZoneOffset =  0 ; //tzOffset;
+        timeZoneOffset = Calendar.getInstance().getTimeZone().getRawOffset();
+        cal.setTimeZone(gmtZone);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -69,7 +64,7 @@ public abstract class SqlDateTimeWithoutTZ extends NullablePrimitive
         return long.class;
     }
 
-    public abstract Object getData(long time);
+    public abstract Object getData(long millisecond);
 
     /**
      * Set whether or not the value is null.  Note that once a value has been
@@ -84,11 +79,13 @@ public abstract class SqlDateTimeWithoutTZ extends NullablePrimitive
     }
 
     public Object getNullableData() {
-        if (isNull || getCal() == null) {
+        if (isNull() || getCal() == null) {
             return null;
         }
         // subtract timeZoneOffset to get localtime == GMT time.
-        return this.getData(value - timeZoneOffset);
+        long millis = cal.getTimeInMillis();
+        timeZoneOffset = Calendar.getInstance().getTimeZone().getOffset(millis);
+        return this.getData(millis - timeZoneOffset);
     }
 
     /**
@@ -105,28 +102,30 @@ public abstract class SqlDateTimeWithoutTZ extends NullablePrimitive
      * @param date value to assign, or null to set null
      */
     public void assignFrom(Object date) {
-        assert(!isNull) : "attempt to assign to null object in SqlDateTimeWithoutTZ";
+        assert ( !isNull ) : "attempt to assign to null object in SqlDateTimeWithoutTZ";
         if (null == date) {
             setNull(true);
             return;
         } else if (date instanceof Long) {
-            value = ((Long)date).longValue()  + timeZoneOffset;
+            value = ((Long)date).longValue()  ;
             return;
-        } else if (date instanceof java.util.Date) {
+        /*} else if (date instanceof java.util.Date) {
             value = ((java.util.Date)date).getTime() + timeZoneOffset; // set tzOffset?
-            return;
+            return; */
         } else if (date instanceof SqlDateTimeWithoutTZ) {
             SqlDateTimeWithoutTZ  sqlDate = (SqlDateTimeWithoutTZ) date;
             this.timeZoneOffset = sqlDate.timeZoneOffset;
             this.value = sqlDate.value;
             return;
         }
-        assert (false) : "Unsupported object " + date;
+        assert false : "Unsupported object " + date;
     }
 
     public void assignFrom(long l) {
-        assert(!isNull) : "attempt to assign to null object in SqlDateTimeWithoutTZ";
-        value = l + timeZoneOffset;
+        assert (!isNull) : "attempt to assign to null object in SqlDateTimeWithoutTZ";
+        value = l;
+        cal.setTimeInMillis(value);
+        timeZoneOffset = Calendar.getInstance().getTimeZone().getOffset(l);
     }
 
     // implement NullablePrimitive
@@ -137,15 +136,17 @@ public abstract class SqlDateTimeWithoutTZ extends NullablePrimitive
     public Calendar getCal() {
         if (cal == null) {
             cal = Calendar.getInstance();
+            cal.setTimeZone((gmtZone));
         }
         cal.setTimeInMillis(value);
         return cal;
     }
 
     public void setCal(Calendar cal) {
-        assert(!isNull) : "attempt to assign to null object in SqlDateTimeWithoutTZ";
+        assert !isNull : "attempt to assign to null object in SqlDateTimeWithoutTZ";
         this.cal = cal;
         value = cal.getTimeInMillis();
+        timeZoneOffset = cal.getTimeZone().getOffset(value);
     }
 
     /**
@@ -155,7 +156,6 @@ public abstract class SqlDateTimeWithoutTZ extends NullablePrimitive
 
         public SqlDate() {
             super();
-            timeZoneOffset = 0;  // no tz for plain Date.
         }
 
         /**
@@ -164,8 +164,8 @@ public abstract class SqlDateTimeWithoutTZ extends NullablePrimitive
          * @return an Object representation of this value's data, or null if this
          *         value is null
          */
-        public Object getData(long time) {
-            return new java.sql.Date(time);
+        public Object getData(long millisecond) {
+            return new java.sql.Date(millisecond);
         }
 
 
@@ -182,8 +182,11 @@ public abstract class SqlDateTimeWithoutTZ extends NullablePrimitive
          * @return an Object representation of this value's data, or null if this
          *         value is null
          */
-        public Object getData(long time) {
-            return new java.sql.Time(time);
+        public Object getData(long millisecond) {
+            /* int hour = cal.get(Calendar.HOUR_OF_DAY);
+            int min = cal.get(Calendar.MINUTE);
+            int sec = cal.get(Calendar.SECOND); */
+            return new java.sql.Time(millisecond);
         }
     }
 
@@ -198,8 +201,8 @@ public abstract class SqlDateTimeWithoutTZ extends NullablePrimitive
          * @return an Object representation of this value's data, or null if this
          *         value is null
          */
-        public Object getData(long time) {
-            return new java.sql.Timestamp(time);
+        public Object getData(long millisecond) {
+            return new java.sql.Timestamp(millisecond);
         }
 
     }

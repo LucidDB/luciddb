@@ -35,6 +35,7 @@ import net.sf.saffron.oj.rel.JavaRel;
 import net.sf.saffron.opt.*;
 import net.sf.saffron.rel.*;
 import net.sf.saffron.rel.convert.*;
+import net.sf.saffron.util.Util;
 
 import openjava.mop.*;
 
@@ -222,7 +223,7 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
                                     Literal.makeLiteral(
                                         attrAccessor.getFixedOffset()))))));
             } else if (type.isBoundedVariableWidth()) {
-                 // Variable-length fields are trickier.  The first one starts
+                // Variable-length fields are trickier.  The first one starts
                 // at a fixed offset.  To determine the end, dereference the
                 // indirect offset located at a fixed offset relative to the
                 // sliceBuffer start.  Note that all offsets are
@@ -262,8 +263,9 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
                 methodBody.add(
                     new ExpressionStatement(
                         new MethodCall(
-                            new FieldAccess(varTuple,field.getName()),
-                            "setPointer",
+                            new FieldAccess(varTuple,
+                                Util.toJavaId(field.getName())),
+                            BytePointer.SET_POINTER_METHOD_NAME,
                             new ExpressionList(
                                 new FieldAccess("byteArray"),
                                 expStartOffset,
@@ -288,8 +290,9 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
                 methodBody.add(
                     new ExpressionStatement(
                         new MethodCall(
-                            new FieldAccess(varTuple,field.getName()),
-                            "setPointer",
+                            new FieldAccess(varTuple,
+                                Util.toJavaId(field.getName())),
+                            BytePointer.SET_POINTER_METHOD_NAME,
                             new ExpressionList(
                                 new FieldAccess("byteArray"),
                                 expStartOffset,

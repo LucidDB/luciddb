@@ -1,0 +1,104 @@
+0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/real.sql#1 $ 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test real literal
+0: jdbc:farrago:>  select 0.0 as t1 from values ('true');
++------+
+|  T1  |
++------+
+| 0.0  |
++------+
+0: jdbc:farrago:>  select 1. as t1 from values ('true');
++-----+
+| T1  |
++-----+
+| 1   |
++-----+
+0: jdbc:farrago:>  select .1 as t1 from values ('true');
++------+
+|  T1  |
++------+
+| 0.1  |
++------+
+0: jdbc:farrago:>  select 1004.30 as t1 from values ('true');
++---------+
+|   T1    |
++---------+
+| 1004.3  |
++---------+
+0: jdbc:farrago:>  select -34.84 as t1 from values ('true');
++---------+
+|   T1    |
++---------+
+| -34.84  |
++---------+
+0: jdbc:farrago:> -- select 1.2345678901234e+20 as t1 from values ('true');
+0: jdbc:farrago:>  select 1.2345678901234e-20 as t1 from values ('true');
++----------------------+
+|          T1          |
++----------------------+
+| 1.2345678901234E-20  |
++----------------------+
+0: jdbc:farrago:> -- select 10e40 as t1 from values ('true');
+0: jdbc:farrago:> -- select -10e40 as t1 from values ('true');
+0: jdbc:farrago:>  select 10e-40 as t1 from values ('true');
++----------+
+|    T1    |
++----------+
+| 1.0E-39  |
++----------+
+0: jdbc:farrago:>  select -10e-40 as t1 from values ('true');
++-----------+
+|    T1     |
++-----------+
+| -1.0E-39  |
++-----------+
+0: jdbc:farrago:>  select 0.0 as t1 from values ('true');
++------+
+|  T1  |
++------+
+| 0.0  |
++------+
+0: jdbc:farrago:>  select 1004.30 as t1 from values ('true');
++---------+
+|   T1    |
++---------+
+| 1004.3  |
++---------+
+0: jdbc:farrago:>  select -34.84 as t1 from values ('true');
++---------+
+|   T1    |
++---------+
+| -34.84  |
++---------+
+0: jdbc:farrago:> -- select 1.2345678901234e+200 as t1 from values ('true');
+0: jdbc:farrago:>  select 1.2345678901234e-200 as t1 from values ('true');
++-----------------------+
+|          T1           |
++-----------------------+
+| 1.2345678901234E-200  |
++-----------------------+
+0: jdbc:farrago:> -- select 10e400 as t1 from values ('true');
+0: jdbc:farrago:> -- select -10e400 as t1 from values ('true');
+0: jdbc:farrago:> -- select 10e-400 as t1 from values ('true');
+0: jdbc:farrago:> -- select -10e-400 as t1 from values ('true');
+0: jdbc:farrago:>  select -34.84 as t1 from values ('true');
++---------+
+|   T1    |
++---------+
+| -34.84  |
++---------+
+0: jdbc:farrago:>  select -1004.30 as t1 from values ('true');
++----------+
+|    T1    |
++----------+
+| -1004.3  |
++----------+
+0: jdbc:farrago:> -- select -1.2345678901234e+200 as t1 from values ('true');
+0: jdbc:farrago:>  select -1.2345678901234e-200 as t1 from values ('true');
++------------------------+
+|           T1           |
++------------------------+
+| -1.2345678901234E-200  |
++------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

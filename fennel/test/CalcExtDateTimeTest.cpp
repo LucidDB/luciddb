@@ -39,6 +39,7 @@ using namespace std;
 class CalcExtDateTimeTest : virtual public TestBase, public TraceSource
 {
     void testCalcExtConvertDateToString();
+    void testCalcExtLocalTime();
 
     void checkWarnings(Calculator& calc, string expected);
     void printOutput(TupleData const & tup,
@@ -51,6 +52,7 @@ public:
         srand(time(NULL));
         CalcInit::instance();
         FENNEL_UNIT_TEST_CASE(CalcExtDateTimeTest, testCalcExtConvertDateToString);
+        FENNEL_UNIT_TEST_CASE(CalcExtDateTimeTest, testCalcExtLocalTime);
     }
 
     virtual ~CalcExtDateTimeTest()
@@ -105,9 +107,42 @@ CalcExtDateTimeTest::testCalcExtConvertDateToString()
 
     calc.bind(&inTuple, &outTuple);
     calc.exec();
-    printOutput(outTuple, calc);
+    //    printOutput(outTuple, calc);
 
     BOOST_CHECK(equals(outTuple[0], "1970-01-02"));
+}
+
+void
+CalcExtDateTimeTest::testCalcExtLocalTime()
+{
+    ostringstream pg("");
+    
+    pg << "O s8;" << endl;
+    pg << "I s4;" << endl;
+    pg << "L s8;" << endl;
+    pg << "C bo, bo;" << endl;
+    pg << "V 1, 0;" << endl;
+    pg << "T;" << endl;
+    pg << "CALL 'LocalTime(L0) /* 0: LOCALTIME() */;" << endl;
+    pg << "REF O0, L0 /* 1: */;" << endl;
+    //    pg << "RETURN /* 2: */;|" << endl;
+    
+    Calculator calc;
+
+    try {
+        calc.assemble(pg.str().c_str());
+    }
+    catch (FennelExcn& ex) {
+        BOOST_FAIL("Assemble exception " << ex.getMessage()<< pg.str());
+    }
+
+    TupleDataWithBuffer outTuple(calc.getOutputRegisterDescriptor());
+    TupleDataWithBuffer inTuple(calc.getInputRegisterDescriptor());
+
+    calc.bind(&inTuple, &outTuple);
+    calc.exec();
+    printOutput(outTuple, calc);    
+    
 }
 
 FENNEL_UNIT_TEST_SUITE(CalcExtDateTimeTest);

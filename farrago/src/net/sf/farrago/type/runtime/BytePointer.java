@@ -48,6 +48,8 @@ public class BytePointer extends ByteArrayInputStream implements AssignableValue
     public static final String ENFORCE_PRECISION_METHOD_NAME =
     "enforceBytePrecision";
 
+    public static final String SET_POINTER_METHOD_NAME = "setPointer";
+    
     /** Read-only global for 0-length byte array */
     public static final byte [] emptyBytes = new byte[0];
 

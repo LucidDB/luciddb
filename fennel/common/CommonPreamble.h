@@ -31,7 +31,9 @@
 
 // NOTE: we include these first to make sure we get the desired limit
 // definitions
+#ifndef __MINGW32__
 #define __STDC_LIMIT_MACROS
+#endif
 #define _XOPEN_SOURCE 500
 #define _GNU_SOURCE 1
 #include <inttypes.h>

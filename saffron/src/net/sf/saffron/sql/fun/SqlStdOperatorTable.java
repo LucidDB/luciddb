@@ -25,6 +25,7 @@ import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
 import net.sf.saffron.resource.SaffronResource;
 import net.sf.saffron.rex.RexCall;
+import net.sf.saffron.rex.RexNode;
 import net.sf.saffron.sql.test.SqlTester;
 import net.sf.saffron.sql.type.SqlTypeName;
 import net.sf.saffron.sql.fun.SqlTrimFunction;
@@ -78,11 +79,11 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
     // have to promote CHAR to VARCHAR
     public final SqlBinaryOperator concatOperator =
             new SqlBinaryOperator("||", SqlKind.Other, 30, true,
-                    useFirstArgType, null, typeNullableStringStringOfSameType) {
+                    useNullableFirstArgType, null, typeNullableStringStringOfSameType) {
                 protected SaffronType _inferType(SqlValidator validator,
                         SqlValidator.Scope scope, SqlCall call) {
                     //todo: make return a string with the correct precision.
-                    return useBiggest.getType(validator, scope, call);
+                    return useNullableBiggest.getType(validator, scope, call);
                 }
 
 
@@ -111,7 +112,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
 
     public final SqlBinaryOperator divideOperator =
             new SqlBinaryOperator("/", SqlKind.Divide, 30, true,
-                    useBiggest, useFirstKnownParam, typeNumericNumeric) {
+                    useNullableBiggest, useFirstKnownParam, typeNumericNumeric) {
                 public void test(SqlTester tester) {
                     tester.checkScalarExact("10 / 5", "2");
                     tester.checkScalarApprox("10.0 / 5", "2.0");
@@ -218,7 +219,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
 
     public final SqlBinaryOperator minusOperator =
             new SqlBinaryOperator("-", SqlKind.Minus, 20, true,
-                    useBiggest, useFirstKnownParam, typeNullableNumericNumeric) {
+                    useNullableBiggest, useFirstKnownParam, typeNullableNumericNumeric) {
                 public void test(SqlTester tester) {
                     tester.checkScalarExact("2-1", "1");
                     tester.checkScalarApprox("2.0-1", "1.0");
@@ -229,7 +230,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
 
     public final SqlBinaryOperator multiplyOperator =
             new SqlBinaryOperator("*", SqlKind.Times, 30, true,
-                    useBiggest, useFirstKnownParam, typeNullableNumericNumeric) {
+                    useNullableBiggest, useFirstKnownParam, typeNullableNumericNumeric) {
                 public void test(SqlTester tester) {
                     tester.checkScalarExact("2*3", "6");
                     tester.checkScalarExact("2*-3", "-6");
@@ -264,7 +265,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
     // todo: useFirstArgType isn't correct in general
     public final SqlBinaryOperator plusOperator =
             new SqlBinaryOperator("+", SqlKind.Plus, 20, true,
-                    useBiggest, useFirstKnownParam, typeNullableNumericNumeric) {
+                    useNullableBiggest, useFirstKnownParam, typeNullableNumericNumeric) {
                 public void test(SqlTester tester) {
                     tester.checkScalarExact("1+2", "3");
                     tester.checkScalarApprox("1+2.0", "3.0");
@@ -459,6 +460,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
     public final SqlSpecialOperator likeOperator =
             new SqlLikeOperator("LIKE", SqlKind.Like){
                 public void test(SqlTester tester) {
+                    tester.checkBoolean("'' like ''",Boolean.TRUE);
                     tester.checkBoolean("'a' like 'a'",Boolean.TRUE);
                     tester.checkBoolean("'a' like 'b'",Boolean.FALSE);
                     tester.checkBoolean("'a' like 'A'",Boolean.FALSE);
@@ -537,7 +539,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
      * and that length. Otherwise it is the length of the input.<p>
      */
     public final SqlFunction substringFunc =
-            new SqlFunction("SUBSTRING", SqlKind.Function, SqlOperatorTable.useFirstArgType, null,
+            new SqlFunction("SUBSTRING", SqlKind.Function, SqlOperatorTable.useNullableFirstArgType, null,
                     null, SqlFunction.SqlFuncTypeName.String) {
 
                 public String getAllowedSignatures() {
@@ -717,7 +719,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
                         //must return the right precision also
                         ret = argTypes[0];
                     }
-
+                    ret = makeNullableIfOperandsAre(typeFactory,argTypes,ret);
                     return ret;
                 }
 
@@ -804,7 +806,8 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
      * Represents Position function
      */
     public final SqlFunction positionFunc =
-            new SqlFunction("POSITION", SqlKind.Function, SqlOperatorTable.useInteger, null,
+            new SqlFunction("POSITION", SqlKind.Function,
+                    SqlOperatorTable.useNullableInteger, null,
                     SqlOperatorTable.typeNullableStringString,
                     SqlFunction.SqlFuncTypeName.Numeric) {
                 public void unparse(SqlWriter writer, SqlNode[] operands,
@@ -844,7 +847,8 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
             };
     //~ CHAR LENGTH ---------------
     public final SqlFunction charLengthFunc =
-            new SqlFunction("CHAR_LENGTH", SqlKind.Function, SqlOperatorTable.useInteger, null,
+            new SqlFunction("CHAR_LENGTH", SqlKind.Function,
+                    SqlOperatorTable.useNullableInteger, null,
                     SqlOperatorTable.typeNullableVarchar,
                     SqlFunction.SqlFuncTypeName.Numeric) {
                 public void test(SqlTester tester) {
@@ -853,7 +857,8 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
                 }
             };
     public final SqlFunction characterLengthFunc =
-            new SqlFunction("CHARACTER_LENGTH", SqlKind.Function, SqlOperatorTable.useInteger, null,
+            new SqlFunction("CHARACTER_LENGTH", SqlKind.Function,
+                    SqlOperatorTable.useNullableInteger, null,
                     SqlOperatorTable.typeNullableVarchar,
                     SqlFunction.SqlFuncTypeName.Numeric) {
                 public void test(SqlTester tester) {
@@ -863,7 +868,8 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
             };
     //~ UPPER ---------------
     public final SqlFunction upperFunc =
-            new SqlFunction("UPPER", SqlKind.Function, SqlOperatorTable.useFirstArgType, null,
+            new SqlFunction("UPPER", SqlKind.Function,
+                    SqlOperatorTable.useNullableFirstArgType, null,
                     SqlOperatorTable.typeNullableVarchar,
                     SqlFunction.SqlFuncTypeName.String)
             {
@@ -876,7 +882,8 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
             };
     //~ LOWER ---------------
     public final SqlFunction lowerFunc =
-            new SqlFunction("LOWER", SqlKind.Function, SqlOperatorTable.useFirstArgType, null,
+            new SqlFunction("LOWER", SqlKind.Function,
+                    SqlOperatorTable.useNullableFirstArgType, null,
                     SqlOperatorTable.typeNullableVarchar,
                     SqlFunction.SqlFuncTypeName.String) {
                 public void test(SqlTester tester) {
@@ -888,7 +895,8 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
             };
     //~ INIT CAP ---------------
     public final SqlFunction initcapFunc =
-            new SqlFunction("INITCAP", SqlKind.Function, SqlOperatorTable.useFirstArgType, null,
+            new SqlFunction("INITCAP", SqlKind.Function,
+                    SqlOperatorTable.useNullableFirstArgType, null,
                     SqlOperatorTable.typeNullableVarchar,
                     SqlFunction.SqlFuncTypeName.String) {
                 public void test(SqlTester tester) {
@@ -906,7 +914,8 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
      * is negative.
      */
     public final SqlFunction powFunc =
-            new SqlFunction("POW", SqlKind.Function, SqlOperatorTable.useDouble, null,
+            new SqlFunction("POW", SqlKind.Function,
+                    SqlOperatorTable.useNullableDouble, null,
                     SqlOperatorTable.typeNumericNumeric,
                     SqlFunction.SqlFuncTypeName.Numeric) {
                 public void test(SqlTester tester) {
@@ -917,7 +926,8 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
             };
     //~ MOD ---------------
     public final SqlFunction modFunc =
-            new SqlFunction("MOD", SqlKind.Function, SqlOperatorTable.useBiggest, null,
+            new SqlFunction("MOD", SqlKind.Function,
+                    SqlOperatorTable.useNullableBiggest, null,
                     SqlOperatorTable.typeNumericNumeric,
                     SqlFunction.SqlFuncTypeName.Numeric) {
                 public void test(SqlTester tester) {
@@ -928,16 +938,20 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
             };
     //~ LOGARITHMS ---------------
     public final SqlFunction lnFunc =
-            new SqlFunction("LN", SqlKind.Function, SqlOperatorTable.useDouble, null,
-                    SqlOperatorTable.typeNumeric, SqlFunction.SqlFuncTypeName.Numeric) {
+            new SqlFunction("LN", SqlKind.Function,
+                    SqlOperatorTable.useNullableDouble, null,
+                    SqlOperatorTable.typeNumeric,
+                    SqlFunction.SqlFuncTypeName.Numeric) {
                 public void test(SqlTester tester) {
                     tester.checkScalarApprox("ln(2.71828)", "1.0");
                     tester.checkNull("ln(cast(null as tinyint))");
                 }
             };
     public final SqlFunction logFunc =
-            new SqlFunction("LOG", SqlKind.Function, SqlOperatorTable.useDouble, null,
-                    SqlOperatorTable.typeNumeric, SqlFunction.SqlFuncTypeName.Numeric) {
+            new SqlFunction("LOG", SqlKind.Function,
+                    SqlOperatorTable.useNullableDouble, null,
+                    SqlOperatorTable.typeNumeric,
+                    SqlFunction.SqlFuncTypeName.Numeric) {
                 public void test(SqlTester tester) {
                     tester.checkScalarApprox("log(10)", "1.0");
                     tester.checkNull("log(cast(null as real))");
@@ -945,8 +959,10 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
             };
     //~ ABS VALUE ---------------
     public final SqlFunction absFunc =
-            new SqlFunction("ABS", SqlKind.Function, SqlOperatorTable.useBiggest, null,
-                    SqlOperatorTable.typeNumeric, SqlFunction.SqlFuncTypeName.Numeric) {
+            new SqlFunction("ABS", SqlKind.Function,
+                    SqlOperatorTable.useNullableBiggest, null,
+                    SqlOperatorTable.typeNumeric,
+                    SqlFunction.SqlFuncTypeName.Numeric) {
                 public void test(SqlTester tester) {
                     tester.checkScalarExact("abs(-1)", "1");
                     tester.checkNull("abs(cast(null as double))");
@@ -954,7 +970,8 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
             };
     //~ NULLIF - Conditional Expression ---------------
     public final SqlFunction nullIfFunc =
-            new SqlFunction("NULLIF", SqlKind.Function, null, null, null, SqlFunction.SqlFuncTypeName.System) {
+            new SqlFunction("NULLIF", SqlKind.Function, null, null, null,
+                    SqlFunction.SqlFuncTypeName.System) {
                 public SqlCall createCall(SqlNode[] operands) {
                     if (2 != operands.length) {
                         //todo put this in the validator
@@ -1017,20 +1034,24 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
     //~ LOCAL TIME - TIME FUNCTION -----------------
     public final SqlFunction localTimeFunc =
             new SqlFunction("LOCALTIME", SqlKind.Function, null, null,
-                    SqlOperatorTable.typePositiveIntegerLiteral, SqlFunction.SqlFuncTypeName.TimeDate) {
-                protected SaffronType inferType(SqlValidator validator, SqlValidator.Scope scope, SqlCall call) {
+                    SqlOperatorTable.typePositiveIntegerLiteral,
+                    SqlFunction.SqlFuncTypeName.TimeDate) {
+                protected SaffronType inferType(SqlValidator validator,
+                        SqlValidator.Scope scope, SqlCall call) {
                     SqlLiteral literal = (SqlLiteral) call.operands[0];
                     int precision = literal.intValue();
                     if (precision < 0) {
                         throw SaffronResource.instance().newArgumentMustBePositiveInteger(call.operator.name);
                     }
-                    return validator.typeFactory.createSqlType(SqlTypeName.Time, precision);
+                    SaffronType type = validator.typeFactory.createSqlType(
+                            SqlTypeName.Time, precision);
+                    return makeNullableIfOperandsAre(validator,scope,call,type);
                 }
 
                 public SaffronType getType(SaffronTypeFactory typeFactory,
                         SaffronType[] argTypes) {
-                    int precision = 0; // todo: access the value of the literal parmaeter
-                    return typeFactory.createSqlType(SqlTypeName.Time, precision);
+                    SaffronType type = useTime.getType(typeFactory,argTypes);
+                    return makeNullableIfOperandsAre(typeFactory, argTypes, type);
                 }
 
                 protected void checkNumberOfArg(SqlCall call) {
@@ -1061,8 +1082,10 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
                 public SaffronType getType(SaffronTypeFactory typeFactory,
                         SaffronType[] argTypes) {
                     int precision = 0; // todo: access the value of the literal parmaeter
+                    //REVIEW wael 06/23/2004: is there a reason why SqlTypeName.Time
+                    //is used here and SqlTypeName.TimeDate above?
                     return typeFactory.createSqlType(
-                            SqlTypeName.Time, precision);
+                            SqlTypeName.Timestamp, precision);
                 }
 
                 protected void checkNumberOfArg(SqlCall call) {
@@ -1144,10 +1167,10 @@ public class SqlStdOperatorTable extends SqlOperatorTable {
                     return validator.typeFactory.createSqlType(SqlTypeName.Date);
                 }
 
-                public SaffronType getType(SaffronTypeFactory typeFactory,
-                        SaffronType[] argTypes) {
+                public SaffronType getType(SqlValidator validator, SqlValidator.Scope scope,
+                        SqlCall call) {
                     int precision = 0; // todo: access the value of the literal parmaeter
-                    return typeFactory.createSqlType(SqlTypeName.Time, precision);
+                    return validator.typeFactory.createSqlType(SqlTypeName.Time, precision);
                 }
 
                 protected void checkArgTypes(SqlCall call, SqlValidator validator, SqlValidator.Scope scope) {

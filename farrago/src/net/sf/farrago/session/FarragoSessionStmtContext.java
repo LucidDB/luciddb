@@ -6,12 +6,12 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
@@ -20,6 +20,8 @@
 package net.sf.farrago.session;
 
 import net.sf.saffron.core.*;
+import net.sf.saffron.rel.SaffronRel;
+import net.sf.saffron.sql.SqlKind;
 
 import net.sf.farrago.util.*;
 
@@ -52,12 +54,12 @@ public interface FarragoSessionStmtContext extends FarragoAllocation
      * @return whether this context currently has a statement prepared
      */
     public boolean isPrepared();
-    
+
     /**
      * @return whether this context currently has a DML statement prepared
      */
     public boolean isPreparedDml();
-    
+
     /**
      * Turns this context into a daemon so that it will be deallocated
      * as soon as its current result set is closed.
@@ -74,11 +76,26 @@ public interface FarragoSessionStmtContext extends FarragoAllocation
      */
     public void prepare(String sql,boolean isExecDirect);
 
+
+    /**
+     * Prepares a query or DML statement (not DDL), provided as a query plan.
+     * The system uses this to prepare and execute internal statements.
+     * As with {@link #prepare(String,boolean)}, the statement can be executed
+     * by {@link #execute()}.
+     *
+     * @param plan a query plan (ie a Saffron relational expression).
+     * @param kind SqlKind value that characterized the statement.
+     * @param logical true when the query plan is logical (needs to be
+     *  optimized), false when it is physical (already optimized).
+     */
+    public void prepare(SaffronRel plan, SqlKind kind, boolean logical);
+
+
     /**
      * @return the output row type for the currently prepared statement
      */
     public SaffronType getPreparedRowType();
-    
+
     /**
      * @return the input parameter row type for the currently prepared
      * statement
@@ -103,7 +120,7 @@ public interface FarragoSessionStmtContext extends FarragoAllocation
      * Executes the currently prepared statement.
      */
     public void execute();
-    
+
     /**
      * @return the result set produced by execute(), or null
      * if the statement was not a query

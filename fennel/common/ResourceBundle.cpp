@@ -29,9 +29,7 @@
 #include <string>
 #include <sstream>
 
-#if 0
 #include <boost/lexical_cast.hpp>
-#endif
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -172,10 +170,8 @@ static string convertPropertyToBoost(string &message)
                            ? bracketPos
                            : min(commaPos, bracketPos));
 
-        // NOTE:  this used to call boost::lexical_cast, but that
-        // broke on Cygwin and Mingw, so for now use good old C calls
-        int argIndex = atoi(
-            message.substr(i + 1, argEndIndex - (i + 1)).c_str());
+        int argIndex = boost::lexical_cast<int>(
+            message.substr(i + 1, argEndIndex - (i + 1)));
 
         // boost args are 1-based
         ss << '%' << (argIndex + 1) << '%';

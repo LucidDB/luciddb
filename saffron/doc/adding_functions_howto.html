@@ -88,8 +88,8 @@ The CommonParser.jj file will schematically look something like this (This layou
 </table>
 </code>
 <p>
-Create a new operator/function in <i>//open/saffron/src/net/sf/saffron/sql/SqlOperatorTable.java</i> or<i>//open/saffron/src/net/sf/saffron/sql/SqlFunctionTable.java</i> if needed.<br>
-You might need to update //open/saffron/src/net/sf/saffron/sql/SqlKind.java
+Create a new operator/function in <i>//open/saffron/src/net/sf/saffron/sql/SqlStdOperatorTable.java</i> if needed.<br>
+You might need to update //open/saffron/src/net/sf/saffron/sql/SqlKind.java and //open/saffron/src/net/sf/saffron/rex/RexKind.java
 <p>
 In addition to precedence and associativity values, every operator or function is created with strategy objects for figuring out 
 <ol>
@@ -109,7 +109,7 @@ A good approach is to write your tests first and if they fail make the necessary
 <h2>The CalcRelImplementor</h2>
 file: //open/saffron/src/net/sf/saffron/opt/CalcRelImplementor.java<br>
 In this file the high level SQL operator is translated into calc assembly.<br>
-A recommended approach on where to make you changes is to first write your test case. That way you first get a clearer idea on how the SQL operator should translate into assembly. Secondly, by running the test, the Implementor and other parts in the system (RexBuilder etc) should give you assertion errors pointing you to where you might need to add your new code. <br>
+A recommended approach on where to make you changes is to first write your test case. That way you first get a clearer idea on how the SQL operator should translate into assembly. Secondly, by running the test, the Implementor and other parts in the system (RexBuilder, SqlToRelConverter, etc) should give you assertion errors pointing you to where you might need to add your new code. <br>
 
 </BODY>
 </HTML>

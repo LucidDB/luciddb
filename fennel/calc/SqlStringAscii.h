@@ -60,7 +60,7 @@ SqlStrCat_Ascii(char* dest,
 //! Returns new length in bytes.
 //!
 //! This is an optimization for creating a concatenated string from
-//! two other strings, eliminating a seperate string copy. The
+//! two other strings, eliminating a separate string copy. The
 //! assumption is that this is the common case with concatenation. 
 //! Subsequent concatenations may occur with other form.
 //!
@@ -205,7 +205,7 @@ SqlStrTrim_Ascii(char* dest,
 //! Results in a VARCHAR.
 //! Note: Does not check that result has enough capacity to contain
 //! substring as this is irrelevant. If a program depends on the size
-//! of result not changing, and this instruction inforcing that
+//! of result not changing, and this instruction enforcing that
 //! invariant -- probably a bad practice anyway -- trouble could result.
 int 
 SqlStrTrim_Ascii(char const ** result,

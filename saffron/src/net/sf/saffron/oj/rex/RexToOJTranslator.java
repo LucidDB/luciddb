@@ -115,7 +115,8 @@ public class RexToOJTranslator implements RexVisitor
         final Variable v = implementor.findInputVariable(inputAndCol.input);
         SaffronType rowType = inputAndCol.input.getRowType();
         final SaffronField field = rowType.getFields()[inputAndCol.fieldIndex];
-        setTranslation(new FieldAccess(v, field.getName()));
+        final String javaFieldName = Util.toJavaId(field.getName());
+        setTranslation(new FieldAccess(v, javaFieldName));
     }
     
     // implement RexVisitor
@@ -240,10 +241,10 @@ public class RexToOJTranslator implements RexVisitor
         final SaffronField [] inputRowFields = inputRowType.getFields();
         final ExpressionList args = new ExpressionList();
         for (int i = 0; i < rangeFields.length; i++) {
-            args.add(
-                new FieldAccess(
-                    inputExpr,
-                    inputRowFields[inputAndCol.fieldIndex + i].getName()));
+            String fieldName =
+                    inputRowFields[inputAndCol.fieldIndex + i].getName();
+            final String javaFieldName = Util.toJavaId(fieldName);
+            args.add(new FieldAccess(inputExpr, javaFieldName));
         }
         setTranslation(
             new AllocationExpression(
@@ -259,11 +260,11 @@ public class RexToOJTranslator implements RexVisitor
     // implement RexVisitor
     public void visitFieldAccess(RexFieldAccess fieldAccess)
     {
-        // TODO jvs 27-May-2004:  rex-to-Java field name translation
+        final String javaFieldName = Util.toJavaId(fieldAccess.getName());
         setTranslation(
             new FieldAccess(
                 translateRexNode(fieldAccess.getReferenceExpr()),
-                fieldAccess.getName()));
+                javaFieldName));
     }
 
     public Expression translateRexNode(RexNode node)

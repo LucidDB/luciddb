@@ -67,6 +67,13 @@ public class SaffronTrace {
     /**
      * The "net.sf.saffron.core.SaffronPlanner" tracer prints the query
      * optimization process.
+     *
+     * <p>Levels:<ul>
+     * <li>{@link Level#FINE} prints rules as they fire.
+     * <li>{@link Level#FINER} prints the whole expression pool and rule queue
+     *     as each rule fires.
+     * <li>{@link Level#FINEST} prints finer details like rule importances.
+     * </ul>
      */
     public static Logger getPlannerTracer() {
         return Logger.getLogger(SaffronPlanner.class.getName());

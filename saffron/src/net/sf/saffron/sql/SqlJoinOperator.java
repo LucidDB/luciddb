@@ -72,9 +72,9 @@ public class SqlJoinOperator extends SqlOperator
 
     //~ Methods ---------------------------------------------------------------
 
-    public int getSyntax()
+    public SqlSyntax getSyntax()
     {
-        return Syntax.Special;
+        return SqlSyntax.Special;
     }
 
     public SqlCall createCall(SqlNode [] operands)

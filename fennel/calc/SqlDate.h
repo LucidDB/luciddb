@@ -72,6 +72,8 @@ FENNEL_BEGIN_NAMESPACE
 
 enum SqlDateTimeType { SQLDATE, SQLTIME, SQLTIMESTAMP };
 
+boost::posix_time::ptime const epoc(boost::gregorian::date(1970,1,1));
+
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint, SqlDateTimeType dateTimeType>
 int
 SqlDateToStr(char *dest,
@@ -85,25 +87,21 @@ SqlDateToStr(char *dest,
     if (CodeUnitBytes == MaxCodeUnitsPerCodePoint) {
         if (CodeUnitBytes == 1) {
             // ASCII
-            int64_t tt = d;
+
             // from_time_t isn't in the version of boost we're using. sigh.
-            //          boost::posix_time::ptime t = boost::posix_time::from_time_t(tt);
-            ptime const epoc(date(1970,Jan,1));
+            //          boost::posix_time::ptime t = boost::posix_time::from_time_t(d);
+
             // we could use the millisecond() duration constructor,
             // instead of time_duration(...), but the time_duration was
             // the only way i could find didn't use an explicit long
             // paramter, instead of the type parameter, since 
             // int64_t == (long long) on (fc1) linux.
-            boost::posix_time::ptime t = epoc + time_duration(0,0,0,tt);
+            boost::posix_time::ptime t = epoc + time_duration(0,0,0,d);
 
-            // deal with UTC conversion.  This is bogus - we should get the session tz from
-            // the environment somehow.
-            t = local_adj::utc_to_local(t);
-
-            //          cout << boost::gregorian::to_iso_extended_string(t.date()) << endl;
             int len;
-            if (dateTimeType == SQLDATE) {
-                char buf[11];           // extra byte for NUL
+            char buf[20];
+            switch (dateTimeType) {
+            case SQLDATE:
                 len = DateToIsoString(buf, t);
                 if (len > destStorageBytes) {
                     // SQL99 6.22, general rule 9 case a.iii => 
@@ -111,17 +109,17 @@ SqlDateToStr(char *dest,
                     throw "22001"; 
                 }
                 memcpy(dest,buf,len);
-            } else if (dateTimeType == SQLTIME) {
-                char buf[9];           // extra byte for NUL
+                break;
+            case SQLTIME:
                 len = TimeToIsoString(buf, t);
                 if (len > destStorageBytes) {
                     // SQL99 6.22, general rule 9 case a.iii => 
                     // exception SQL99 22.1 22-001 "String Data Right truncation"
                     throw "22001"; 
                 }
-                memcpy(dest,buf,len);
-            } else if (dateTimeType == SQLTIMESTAMP) {
-                char buf[20];           // extra byte for NUL
+                memcpy(dest,buf,len); 
+                break;
+            case SQLTIMESTAMP:
                 len = TimestampToIsoString(buf, t);
                 if (len > destStorageBytes) {
                     // SQL99 6.22, general rule 9 case a.iii => 
@@ -129,8 +127,10 @@ SqlDateToStr(char *dest,
                     throw "22001"; 
                 }
                 memcpy(dest,buf,len);
+                break;
+            default: 
+                throw std::logic_error("bad dateTimeType" + dateTimeType);
             }
-
 
             return len;
         } else if (CodeUnitBytes == 2) {
@@ -145,10 +145,47 @@ SqlDateToStr(char *dest,
    
 }
 
+template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint, SqlDateTimeType dateTimeType>
+int64_t
+SqlStrToDate(char *src, int len)
+{
+    using namespace boost::posix_time; 
+    using namespace boost::gregorian;
+
+    if (CodeUnitBytes == MaxCodeUnitsPerCodePoint) {
+        if (CodeUnitBytes == 1) {
+            // ASCII
+
+            switch(dateTimeType) {
+            case SQLDATE:
+                return IsoStringToDate(src,len);
+            case SQLTIME:
+                return IsoStringToTime(src,len);
+            case SQLTIMESTAMP:
+                return IsoStringToTimestamp(src,len);
+            }
+        } else if (CodeUnitBytes == 2) {
+            // TODO: Add UCS2 here
+            throw std::logic_error("no UCS2");
+        } else {
+            throw std::logic_error("no such encoding");
+        }
+    } else {
+        throw std::logic_error("no UTF8/16/32");
+    }
+   
+}
 
 int TimeToIsoString(char *dest, boost::posix_time::ptime t);
 int DateToIsoString(char *dest, boost::posix_time::ptime t);
 int TimestampToIsoString(char *dest, boost::posix_time::ptime t);
+
+int64_t IsoStringToTime(char *src, int len);
+int64_t IsoStringToDate(char *src, int len);
+int64_t IsoStringToTimestamp(char *src, int len);
+int64_t CurrentTime();
+int64_t CurrentTimestamp();
+
 FENNEL_END_NAMESPACE
 
 #endif

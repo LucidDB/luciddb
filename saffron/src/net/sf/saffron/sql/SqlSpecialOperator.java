@@ -50,9 +50,9 @@ public abstract class SqlSpecialOperator extends SqlOperator
 
     //~ Methods ---------------------------------------------------------------
 
-    public int getSyntax()
+    public SqlSyntax getSyntax()
     {
-        return Syntax.Special;
+        return SqlSyntax.Special;
     }
 
     public void unparse(

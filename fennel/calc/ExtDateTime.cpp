@@ -82,6 +82,84 @@ CastTimestampToStrA(
     }
 }
 
+void
+CastStrAToDate(
+        RegisterRef<int64_t>* result, 
+        RegisterRef<char*>* dateStr)
+{
+    assert(result->type() == STANDARD_TYPE_INT_64);
+    assert(dateStr->type() == STANDARD_TYPE_VARCHAR);
+
+    if (dateStr->isNull()) {
+        result->toNull();
+    } else {
+        result->value(SqlStrToDate<1,1,SQLDATE>(dateStr->pointer(), dateStr->storage()));
+    }
+}
+
+void
+CastStrAToTime(
+        RegisterRef<int64_t>* result, 
+        RegisterRef<char*>* timeStr)
+{
+    assert(result->type() == STANDARD_TYPE_INT_64);
+    assert(timeStr->type() == STANDARD_TYPE_VARCHAR);
+
+    if (timeStr->isNull()) {
+        result->toNull();
+    } else {
+        result->value(SqlStrToDate<1,1,SQLTIME>(timeStr->pointer(), timeStr->storage()));
+    }
+}
+
+void
+CastStrAToTimestamp(
+        RegisterRef<int64_t>* result, 
+        RegisterRef<char*>* timestampStr)
+{
+    assert(result->type() == STANDARD_TYPE_INT_64);
+    assert(timestampStr->type() == STANDARD_TYPE_VARCHAR);
+
+    if (timestampStr->isNull()) {
+        result->toNull();
+    } else {
+        result->value(SqlStrToDate<1,1,SQLTIMESTAMP>(timestampStr->pointer(), timestampStr->storage()));
+    }
+}
+
+// for debugging - see the millisec value passed through to fennel.
+void CastDateTimeToInt64(
+        RegisterRef<int64_t>* result, 
+        RegisterRef<int64_t>* dtime )
+{
+    assert(result->type() == STANDARD_TYPE_INT_64);
+    assert(dtime->type() == STANDARD_TYPE_INT_64);
+
+    if (dtime->isNull()) {
+        result->toNull();
+    } else {
+        result->value(dtime->value());
+    }
+
+    
+}
+
+void CurrentTime(RegisterRef<int64_t>* result)
+{
+    assert (result->type() == STANDARD_TYPE_INT_64);
+    
+    result->value(CurrentTime());
+    
+}
+
+void CurrentTimestamp(RegisterRef<int64_t>* result)
+{
+    assert (result->type() == STANDARD_TYPE_INT_64);
+    
+    result->value(CurrentTimestamp());
+    
+}
+
 
 void
 ExtDateTimeRegister(ExtendedInstructionTable* eit)
@@ -92,6 +170,19 @@ ExtDateTimeRegister(ExtendedInstructionTable* eit)
     params_V_I64.push_back(STANDARD_TYPE_VARCHAR);
     params_V_I64.push_back(STANDARD_TYPE_INT_64);
 
+    vector<StandardTypeDescriptorOrdinal> params_I64_V;
+    params_I64_V.push_back(STANDARD_TYPE_INT_64);
+    params_I64_V.push_back(STANDARD_TYPE_VARCHAR);
+
+
+    vector<StandardTypeDescriptorOrdinal> params_I64_I64;
+    params_I64_I64.push_back(STANDARD_TYPE_INT_64);
+    params_I64_I64.push_back(STANDARD_TYPE_INT_64);
+
+    vector<StandardTypeDescriptorOrdinal> params_I64;
+    params_I64.push_back(STANDARD_TYPE_INT_64); 
+
+    // date -> str
     eit->add("CastDateToStrA", params_V_I64,
              (ExtendedInstruction2<char*, int64_t>*) NULL,
              &CastDateToStrA);
@@ -103,6 +194,31 @@ ExtDateTimeRegister(ExtendedInstructionTable* eit)
     eit->add("CastTimestampToStrA", params_V_I64,
              (ExtendedInstruction2<char*, int64_t>*) NULL,
              &CastTimestampToStrA);
+
+    // str -> date
+    eit->add("CastStrAToDate", params_I64_V,
+             (ExtendedInstruction2<int64_t, char*>*) NULL,
+             &CastStrAToDate);
+
+    eit->add("CastStrAToTime", params_I64_V,
+             (ExtendedInstruction2<int64_t, char*>*) NULL,
+             &CastStrAToTime);
+
+    eit->add("CastStrAToTimestamp", params_I64_V,
+             (ExtendedInstruction2<int64_t, char*>*) NULL,
+             &CastStrAToTimestamp);
+
+    eit->add("CastDateTimeToInt64", params_I64_I64,
+             (ExtendedInstruction2<int64_t, int64_t>*) NULL,
+             &CastDateTimeToInt64);
+
+    eit->add("LocalTime", params_I64,
+             (ExtendedInstruction1<int64_t>*) NULL,
+             &CurrentTime);
+
+    eit->add("LocalTimestamp", params_I64,
+             (ExtendedInstruction1<int64_t>*) NULL,
+             &CurrentTimestamp);
 
 
 }

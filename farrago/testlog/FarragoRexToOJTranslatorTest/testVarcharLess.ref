@@ -1,5 +1,5 @@
 
-private net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
 
 if (CITY.isNull()) {
     oj_var0.setNull( true );

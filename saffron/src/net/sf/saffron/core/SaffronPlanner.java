@@ -47,14 +47,22 @@ public interface SaffronPlanner
     SaffronRel getRoot();
 
     /**
-     * Registers a calling convention.
+     * Registers a calling convention. If the calling convention has already
+     * been registered, does nothing.
+     *
+     * @return whether the calling convention was added, as per
+     *   {@link java.util.Collection#add}
      */
-    void addCallingConvention(CallingConvention convention);
+    boolean addCallingConvention(CallingConvention convention);
 
     /**
-     * Registers a rule.
+     * Registers a rule. If the calling convention has already
+     * been registered, does nothing.
+     *
+     * @return whether the rule was added, as per
+     *   {@link java.util.Collection#add}
      */
-    void addRule(VolcanoRule rule);
+    boolean addRule(VolcanoRule rule);
 
     /**
      * Changes a relational expression to an equivalent one of a different

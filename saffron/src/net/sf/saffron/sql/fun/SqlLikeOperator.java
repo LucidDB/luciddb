@@ -22,6 +22,10 @@ package net.sf.saffron.sql.fun;
 
 import net.sf.saffron.sql.test.SqlTester;
 import net.sf.saffron.sql.*;
+import net.sf.saffron.util.Util;
+
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * An operator describing the <code>LIKE</code> and
@@ -47,10 +51,42 @@ public abstract class SqlLikeOperator extends SqlSpecialOperator
     SqlLikeOperator(String name, SqlKind kind)
     {
         super(name,kind,15,true,
-                SqlOperatorTable.useBoolean,
+                SqlOperatorTable.useNullableBoolean,
                 SqlOperatorTable.useFirstKnownParam,
                 /** this is not correct in general */
                 SqlOperatorTable.typeNullableStringStringString);
+    }
+
+    public int getNumOfOperands(int desiredCount) {
+        if ( 2==desiredCount || 3==desiredCount) {
+            return desiredCount;
+        }
+        return 2;
+    }
+
+    public List getPossibleNumOfOperands() {
+        List ret = new ArrayList(2);
+        ret.add(new Integer(2));
+        ret.add(new Integer(3));
+        return ret;
+    }
+
+    protected void checkArgTypes(SqlCall call,
+            SqlValidator validator, SqlValidator.Scope scope) {
+        if (2==call.operands.length) {
+            SqlOperatorTable.typeNullableStringStringOfSameType.
+                    check(validator,scope,call);
+        } else if (3==call.operands.length) {
+            SqlOperatorTable.typeNullableStringStringStringOfSameType.
+                    check(validator,scope,call);
+            //calc implementation should
+            //enforce the escape character length to be 1
+
+        } else {
+            Util.newInternal("should never come here");
+        }
+
+        isCharTypeComparableThrows(validator,scope,call.operands);
     }
 
     public void unparse(SqlWriter writer,

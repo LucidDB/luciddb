@@ -62,6 +62,8 @@ import net.sf.farrago.test.FarragoTestCase;
 public abstract class FarragoConcurrencyTestCase
     extends FarragoTestCase
 {
+    private boolean debug = false;
+
     protected FarragoConcurrencyTestCase(String testName)
         throws Exception
     {
@@ -131,12 +133,12 @@ public abstract class FarragoConcurrencyTestCase
         int threadIndex = 0;
         for(Iterator i = threadIds.iterator(); i.hasNext(); ) {
             Integer threadId = (Integer)i.next();
-            Collection cmdCollection = commandGenerator.getCommands(threadId);
+            Iterator commands = commandGenerator.getCommandIterator(threadId);
 
-            FarragoTestCommand[] commands = 
-                (FarragoTestCommand[])
-                cmdCollection.toArray(
-                    new FarragoTestCommand[cmdCollection.size()]);
+            if (debug) {
+                System.out.println("Thread ID: " + threadId);
+                commandGenerator.printCommands(System.out, threadId);
+            }
 
             threads[threadIndex++] = 
                 new FarragoTestCommandExecutor(threadId.intValue(),
@@ -180,6 +182,11 @@ public abstract class FarragoConcurrencyTestCase
             System.err.println("-----\n");
             fail();
         }
+    }
+
+    protected void setDebug(boolean enabled)
+    {
+        debug = enabled;
     }
 }
 

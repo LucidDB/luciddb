@@ -186,7 +186,7 @@ public:
     
 
     //! Provide a nicely formatted string describing the register for the
-    //! specifed set and index
+    //! specified set and index
     static inline string toString(ERegisterSet set, unsigned long index)
     {
         ostringstream ostr("");
@@ -416,7 +416,7 @@ public:
     }
     //! Refer to other RegisterRef for non-pointer types
     //!
-    //! Convienence function, replaces:
+    //! Convenience function, replaces:
     //! to->pointer(from->pointer(), from->length())
     //! Currently does not support cachepointer or reset as
     //! ByRefOnly implies a do-not-care register set.

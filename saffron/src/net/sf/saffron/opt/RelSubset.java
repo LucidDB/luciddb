@@ -37,6 +37,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.logging.Level;
+import java.io.StringWriter;
+import java.io.PrintWriter;
 
 
 /**
@@ -203,8 +206,8 @@ public class RelSubset extends SaffronBaseRel
     {
         final PlanCost cost = planner.getCost(rel);
         if (cost.isLt(bestCost)) {
-            tracer.fine("Subset cost improved: subset [" + this + "] cost was "
-                    + bestCost + " now " + cost);
+            tracer.finer("Subset cost improved: subset [" + this +
+                    "] cost was " + bestCost + " now " + cost);
             bestCost = cost;
             best = rel;
 
@@ -242,8 +245,22 @@ public class RelSubset extends SaffronBaseRel
                 RelSubset subset = (RelSubset) p;
                 SaffronRel cheapest = subset.best;
                 if (cheapest == null) {
-                    throw Util.newInternal(
-                        "node could not be implemented: " + subset.toString());
+                    final String expr = subset.toString();
+                    if (tracer.isLoggable(Level.FINE)) {
+                        // Dump the planner's expression pool so we can figure
+                        // out why we reached impasse.
+                        StringWriter sw = new StringWriter();
+                        final PrintWriter pw = new PrintWriter(sw);
+                        pw.println("Node [" + expr +
+                                "] could not be implemented; planner state:");
+                        ((VolcanoPlanner) planner).dump(pw);
+                        pw.flush();
+                        tracer.fine(sw.toString());
+                    }
+                    Error e = Util.newInternal(
+                            "node could not be implemented: " + expr);
+                    tracer.throwing(getClass().getName(), "visit", e);
+                    throw e;
                 }
                 parent.replaceInput(ordinal,cheapest);
                 p = cheapest;

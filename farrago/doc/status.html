@@ -206,8 +206,10 @@ at a time
 
 <li>All row expressions currently implemented via Java code generation.
 
-<li>Generated Java code can either be interpreted by dynamic Java or compiled
-by Sun Java compiler (and then to native code JIT).
+<li>Generated Java code is compiled by the Janino compiler (and then
+possibly to native code JIT).  Alternate compilers such as Sun's can
+be selected via the <code>javaCompilerClassName</code> system
+parameter.
 
 <li>Fennel calculator for row expressions is currently under development
 but not yet operational.

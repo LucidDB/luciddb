@@ -49,10 +49,10 @@ public class SqlRowOperator extends SqlSpecialOperator
     }
 
     // implement SqlOperator
-    public int getSyntax()
+    public SqlSyntax getSyntax()
     {
         // Function syntax would work too.
-        return SqlOperator.Syntax.Special;
+        return SqlSyntax.Special;
     }
 
     // implement SqlOperator

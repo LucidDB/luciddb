@@ -1,22 +1,7 @@
 
-private byte[] oj_var0 = new byte[12];
+ExecutableStmt.Oj_VARBINARY_10 oj_var0 = new ExecutableStmt.Oj_VARBINARY_10();
 
+oj_var0.assignFrom( new byte[]{ 0, 17, 34, 51, 68, 85, 102, 119, -120, -103, -86, -69 } );
+oj_var0.enforceBytePrecision( 10, false, 0 );
 
-private ExecutableStmt.Oj_VARBINARY_10 oj_var1 = new ExecutableStmt.Oj_VARBINARY_10();
-
-oj_var0[0] = 0;
-oj_var0[1] = 17;
-oj_var0[2] = 34;
-oj_var0[3] = 51;
-oj_var0[4] = 68;
-oj_var0[5] = 85;
-oj_var0[6] = 102;
-oj_var0[7] = 119;
-oj_var0[8] = -120;
-oj_var0[9] = -103;
-oj_var0[10] = -86;
-oj_var0[11] = -69;
-oj_var1.assignFrom( oj_var0 );
-oj_var1.enforceBytePrecision( 10, false, 0 );
-
-return oj_var1;
+return oj_var0;

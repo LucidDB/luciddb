@@ -20,7 +20,6 @@
 package net.sf.farrago.ojrex;
 
 import net.sf.saffron.core.*;
-import net.sf.saffron.sql.*;
 import net.sf.saffron.rex.*;
 
 import openjava.ptree.*;
@@ -42,15 +41,16 @@ public class FarragoOJRexRowImplementor extends FarragoOJRexImplementor
         Variable variable = translator.createScratchVariable(rowType);
         SaffronField [] fields = rowType.getFields();
         for (int i = 0; i < operands.length; ++i) {
+            final SaffronField field = fields[i];
             translator.convertCastOrAssignment(
                 fields[i].getType(),
                 call.operands[i].getType(),
-                // TODO jvs 27-May-2004:  proper field name translation
-                new FieldAccess(variable,fields[i].getName()),
+                translator.convertFieldAccess(variable, field),
                 operands[i]);
         }
         return variable;
     }
+
 }
 
 // End FarragoOJRexRowImplementor.java

@@ -516,12 +516,16 @@ public class IteratorResultSet implements ResultSet
     // the remaining methods implement ResultSet
     public boolean next() throws SQLException
     {
-        if (iterator.hasNext()) {
-            this.current = iterator.next();
-            this.row++;
-            return true;
-        } else {
-            return false;
+        try {
+            if (iterator.hasNext()) {
+                this.current = iterator.next();
+                this.row++;
+                return true;
+            } else {
+                return false;
+            }
+        } catch (Throwable e) {
+            throw newFetchError(e);
         }
     }
 
@@ -804,6 +808,16 @@ public class IteratorResultSet implements ResultSet
     private SQLException newDirectionError()
     {
         return new SQLException("cannot go backwards");
+    }
+
+    private SQLException newFetchError(Throwable e)
+    {
+        final SQLException sqlEx =
+                new SQLException("error while fetching from cursor");
+        if (e != null) {
+            sqlEx.initCause(e);
+        }
+        return sqlEx;
     }
 
     private boolean toBoolean(Object o) throws SQLException

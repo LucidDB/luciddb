@@ -18,6 +18,8 @@
 */
 package net.sf.farrago.test.regression;
 
+import java.util.Iterator;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
@@ -36,7 +38,7 @@ public class FarragoTestCommandExecutor
     private String jdbcURL;
 
     /** Command sequence for this thread. */
-    private FarragoTestCommand[] commands;
+    private Iterator commands;
 
     /** 
      * Used to synchronize command execution.
@@ -68,7 +70,7 @@ public class FarragoTestCommandExecutor
      */
     FarragoTestCommandExecutor(int threadId,
                                String jdbcURL,
-                               FarragoTestCommand[] commands,
+                               Iterator commands,
                                Sync synchronizer)
     {
         this.jdbcURL = jdbcURL;
@@ -93,19 +95,21 @@ public class FarragoTestCommandExecutor
         }
 
         // stepNumber is used to reconstitute the original step
-        // numbers passed by the test case author.  If there are no
-        // AutoSynchronizationCommand objects in the command list,
-        // then stepNumber = i + 1.
+        // numbers passed by the test case author.
         int stepNumber = 0;
 
-        for(int i = 0, n = commands.length; i < n; i++) {
-            FarragoTestCommand command = commands[i];
+        while(commands.hasNext()) {
+            FarragoTestCommand command = (FarragoTestCommand)commands.next();
 
             if (!(command instanceof FarragoTestCommandGenerator.AutoSynchronizationCommand)) {
                 stepNumber++;
             }
 
-            if (connection != null && command != null && error == null) {
+            // synchronization commands are always executed, lest we deadlock
+            boolean isSync = command instanceof FarragoTestCommandGenerator.SynchronizationCommand;
+
+            if (isSync ||
+                (connection != null && command != null && error == null)) {
                 try {
                     command.execute(this);
                 } catch(Throwable t) {
@@ -226,7 +230,8 @@ public class FarragoTestCommandExecutor
             } else {
                 // REVIEW: SZ 6/17/2004: Need a timeout here --
                 // otherwise a test case will hang forever if there's
-                // a deadlock.
+                // a deadlock.  The question is, how long should the
+                // timeout be to avoid falsely detecting deadlocks?
                 wait();
             }
         }

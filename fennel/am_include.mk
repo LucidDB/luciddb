@@ -7,12 +7,18 @@ COMMON_INCLUDES=\
 
 INCLUDES=$(COMMON_INCLUDES) $(EXTRA_INCLUDES)
 
+# NOTE jvs 30-June-2004:  The -Wl,-l below is to force stlport to
+# come after boost; this is important on Windows, and without it,
+# libtool blithely reorders them
+
 AM_LDFLAGS=\
 $(ICU_LD_FLAGS) \
--L$(stlport_location)/lib -l$(STLPORT_LIB) \
--L$(BOOST_THREADLIB_DIR) -l$(BOOST_THREADLIB) \
--L$(BOOST_REGEXLIB_DIR) -l$(BOOST_REGEXLIB) \
--L$(BOOST_DATETIMELIB_DIR) -l$(BOOST_DATETIMELIB) \
+-L$(boost_location)/lib \
+-L$(stlport_location)/lib \
+-Wl,-l$(BOOST_THREADLIB) \
+-Wl,-l$(BOOST_REGEXLIB) \
+-Wl,-l$(BOOST_DATETIMELIB) \
+-Wl,-l$(STLPORT_LIB) \
 $(EXTRA_LDFLAGS)
 
 AM_ETAGSFLAGS = --c++ --members

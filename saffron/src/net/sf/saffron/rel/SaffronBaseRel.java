@@ -91,7 +91,7 @@ public abstract class SaffronBaseRel implements SaffronRel {
         this.cluster = cluster;
         this.id = nextId++;
         this.digest = getRelTypeName() + "#" + id;
-        tracer.fine("new " + digest);
+        tracer.finest("new " + digest);
     }
 
     //~ Methods ---------------------------------------------------------------

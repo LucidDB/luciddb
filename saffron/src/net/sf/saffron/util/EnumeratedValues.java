@@ -265,6 +265,14 @@ public class EnumeratedValues implements Cloneable
     }
 
     /**
+     * Returns true if this enumerationr contains {@param name}, else false.
+     */
+    public boolean containsName(String name)
+    {
+        return valuesByName.containsKey(name);
+    }
+
+    /**
      * Returns an error indicating that the value is illegal. (The client
      * needs to throw the error.)
      */

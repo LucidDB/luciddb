@@ -124,24 +124,36 @@ public class SqlCollation
     }
 
     /**
-     * Returns the collating sequence (the collation name) to use for a comparison per
-     * SQL:99 ISO/IEC 9075-2:1999, section 4.2.3, table 3
+     * Returns the collating sequence (the collation name) and the coercibility the resulting value shall have per
+     * SQL:99 ISO/IEC 9075-2:1999, section 4.2.3, table 2
      * @param col1 first operand for the dyadic operation
      * @param col2 second operand for the dyadic operation
-     * @return the resulting collation sequence. The "no collating sequence" result is returned as null.
+     * @return the resulting collation sequence. If no collating sequence could
+     * be deduced a {@link SaffronResource#newValidationError} is thrown
      */
-    public static String getCoercibilityDyadicComparison(SqlCollation col1, SqlCollation col2) {
+    public static SqlCollation getCoercibilityDyadicOperatorThrows(SqlCollation col1, SqlCollation col2) {
         SqlCollation ret = getCoercibilityDyadic(col1, col2);
         if (null==ret) {
             //todo change exception type
             //todo improve error msg
             throw SaffronResource.instance().newValidationError(
-                   "Invalid compare. Comparing  (collation, coercibility): "+
-                   "("+col1.m_collationName+", "+col1.m_coercibility+") with "+
-                   "("+col2.m_collationName+", "+col2.m_coercibility+") is illegal");
-            }
+                    "Invalid compare. Comparing  (collation, coercibility): "+
+                    "("+col1.m_collationName+", "+col1.m_coercibility+") with "+
+                    "("+col2.m_collationName+", "+col2.m_coercibility+") is illegal");
+        }
+        return ret;
+    }
 
-        return ret.m_collationName;
+    /**
+     * Returns the collating sequence (the collation name) to use for a comparison per
+     * SQL:99 ISO/IEC 9075-2:1999, section 4.2.3, table 3
+     * @param col1 first operand for the dyadic operation
+     * @param col2 second operand for the dyadic operation
+     * @return the resulting collation sequence. If no collating sequence could
+     * be deduced a {@link SaffronResource#newValidationError} is thrown
+     */
+    public static String getCoercibilityDyadicComparison(SqlCollation col1, SqlCollation col2) {
+        return getCoercibilityDyadicOperatorThrows(col1, col2).m_collationName;
     }
 
     /**

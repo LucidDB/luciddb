@@ -40,9 +40,9 @@ public abstract class SqlPostfixOperator extends SqlOperator
 
     //~ Methods ---------------------------------------------------------------
 
-    public int getSyntax()
+    public SqlSyntax getSyntax()
     {
-        return Syntax.Postfix;
+        return SqlSyntax.Postfix;
     }
 
     protected String getSignatureTemplate() {

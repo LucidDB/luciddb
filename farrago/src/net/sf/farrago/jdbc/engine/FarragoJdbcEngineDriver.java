@@ -32,8 +32,6 @@ import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
 
-import koala.dynamicjava.interpreter.error.*;
-
 /**
  * FarragoJdbcEngineDriver implements the Farrago engine/server side of
  * the {@link java.sql.Driver} interface.
@@ -97,7 +95,7 @@ public class FarragoJdbcEngineDriver
     }
     
     /**
-     * Converter from any Exception to SQLException.
+     * Converter from any Throwable to SQLException.
      *
      * @param ex Throwable to be converted
      *
@@ -105,40 +103,7 @@ public class FarragoJdbcEngineDriver
      */
     static SQLException newSqlException(Throwable ex)
     {
-        tracer.severe(ex.getMessage());
-        tracer.throwing("FarragoJdbcEngineDriver","newSqlException",ex);
-
-        if (ex instanceof CatchedExceptionError) {
-            ex = ((CatchedExceptionError) ex).getException();
-        }
-        
-        SQLException sqlExcn;
-        if (ex instanceof FarragoException || ex instanceof SaffronException) {
-            // TODO:  map for SQLState
-            sqlExcn = new SQLException(ex.getMessage());
-        } else if (ex instanceof SQLException) {
-            sqlExcn = (SQLException) ex;
-        } else {
-            // for anything else, include the class name
-            // as part of what went wrong
-            sqlExcn = new SQLException(
-                ex.getClass().getName() + ": " + ex.getMessage());
-        }
-
-        // preserve additional attributes of the original excn
-        sqlExcn.setStackTrace(ex.getStackTrace());
-
-        // convert to SQLException-style chaining
-        Throwable cause = ex.getCause();
-        if (cause != null) {
-            // NOTE jvs 18-June-2004:  reverse the order so that
-            // the underlying cause comes out on top
-            SQLException sqlCause = newSqlException(cause);
-            sqlCause.setNextException(sqlExcn);
-            return sqlCause;
-        } else {
-            return sqlExcn;
-        }
+        return FarragoUtil.newSqlException(ex,tracer);
     }
 }
 

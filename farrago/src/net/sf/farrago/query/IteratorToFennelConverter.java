@@ -34,6 +34,7 @@ import net.sf.saffron.oj.rel.JavaRel;
 import net.sf.saffron.opt.*;
 import net.sf.saffron.rel.*;
 import net.sf.saffron.rel.convert.*;
+import net.sf.saffron.util.Util;
 
 import openjava.mop.*;
 import openjava.ptree.*;
@@ -156,7 +157,8 @@ public class IteratorToFennelConverter
             }
             SaffronField field = fields[i];
             FarragoAtomicType type = (FarragoAtomicType) field.getType();
-            Expression fieldExp = new FieldAccess(varTuple,field.getName());
+            Expression fieldExp = new FieldAccess(varTuple,
+                Util.toJavaId(field.getName()));
             if (type.hasClassForPrimitive()) {
                 Class primitiveClass =
                     type.getClassForPrimitive();

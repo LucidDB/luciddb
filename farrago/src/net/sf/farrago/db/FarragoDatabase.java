@@ -37,6 +37,7 @@ import net.sf.farrago.ojrex.*;
 import net.sf.saffron.sql.*;
 import net.sf.saffron.util.*;
 import net.sf.saffron.oj.rex.*;
+import net.sf.saffron.rel.SaffronRel;
 
 import openjava.tools.DebugOut;
 
@@ -77,7 +78,7 @@ public class FarragoDatabase
     private FennelDbHandle fennelDbHandle;
 
     private OJRexImplementorTable ojRexImplementorTable;
-    
+
     /**
      * Cache of all sorts of stuff.
      */
@@ -420,7 +421,7 @@ public class FarragoDatabase
                 "Fennel parameter " + param.getName() + "="
                 + param.getValue());
         }
-        
+
         cmd.setCreateDatabase(init);
 
         NativeTrace nativeTrace =
@@ -442,7 +443,7 @@ public class FarragoDatabase
     {
         return ojRexImplementorTable;
     }
-    
+
     /**
      * .
      *
@@ -519,6 +520,38 @@ public class FarragoDatabase
         }
     }
 
+
+    /**
+     * Implement a logical or physical query plan but do not execute it.
+     * @param rootRel root of query plan (saffron relational expression)
+     * @param sqlKind SqlKind for the relational expression: only
+     *   SqlKind.Explain and SqlKind.Dml are special cases.
+     * @param logical true for a logical query plan (still needs to be
+     *   optimized), false for a physical plan.
+     * @param session FarragoSession requesting implementation
+     * @param catalog catalog to use for metadata lookup
+     * @param owner the FarragoAllocationOwner which will be responsible for
+     * the returned stmt
+     * @param indexMap FarragoIndexMap to use for index access
+     * @return statement implementation
+     */
+    public FarragoExecutableStmt implementStmt(
+        FarragoSession session, FarragoCatalog catalog,
+        SaffronRel rootRel, SqlKind sqlKind, boolean logical,
+        FarragoAllocationOwner owner, FarragoIndexMap indexMap)
+    {
+        FarragoPreparingStmt stmt =
+            new FarragoPreparingStmt(catalog, fennelDbHandle, session,
+                                     codeCache, dataWrapperCache, indexMap);
+        try {
+            FarragoExecutableStmt executable = stmt.implement(rootRel, sqlKind, logical);
+            owner.addAllocation(executable);
+            return executable;
+        } finally {
+            stmt.closeAllocation();
+        }
+
+    }
 
     private FarragoExecutableStmt prepareStmtImpl(
         FarragoSession session,

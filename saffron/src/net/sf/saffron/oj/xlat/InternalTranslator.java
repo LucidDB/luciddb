@@ -31,6 +31,7 @@ import net.sf.saffron.rex.RexKind;
 import net.sf.saffron.rex.RexNode;
 import net.sf.saffron.rex.RexVisitor;
 import net.sf.saffron.sql.SqlOperator;
+import net.sf.saffron.sql.SqlSyntax;
 import net.sf.saffron.util.Util;
 import openjava.mop.OJClass;
 import openjava.mop.QueryEnvironment;
@@ -218,8 +219,7 @@ class InternalTranslator
         if (sqlName == null) {
             return null;
         }
-        return rexBuilder._opTab.lookup(sqlName,
-                SqlOperator.Syntax.Binary);
+        return rexBuilder._opTab.lookup(sqlName,SqlSyntax.Binary);
     }
 
     public RexNode evaluateDown(BinaryExpression p) {

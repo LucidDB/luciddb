@@ -89,6 +89,11 @@ public class VolcanoPlanner implements SaffronPlanner
     private final Graph conversionGraph = new Graph();
 
     /**
+     * Set of all registered rules.
+     */
+    private final HashSet ruleSet = new HashSet();
+
+    /**
      * Maps rule description to rule, just to ensure that rules' descriptions
      * are unique.
      */
@@ -167,14 +172,23 @@ public class VolcanoPlanner implements SaffronPlanner
         return null;
     }
 
-    public void addCallingConvention(final CallingConvention convention)
+    public boolean addCallingConvention(CallingConvention convention)
     {
-        assert(!callingConventions.contains(convention));
+        if (callingConventions.contains(convention)) {
+            return false;
+        }
         callingConventions.add(convention);
+        return true;
     }
 
-    public void addRule(VolcanoRule rule)
+    public boolean addRule(VolcanoRule rule)
     {
+        if (ruleSet.contains(rule)) {
+            // Rule already exists.
+            return false;
+        }
+        final boolean added = ruleSet.add(rule);
+        assert added;
         // Check that there isn't a rule with the same description.
         final String description = rule.toString();
         assert(description != null);
@@ -186,7 +200,12 @@ public class VolcanoPlanner implements SaffronPlanner
             if (existingRule == rule) {
                 throw new AssertionError("Rule not already registered");
             } else {
-                throw new AssertionError("Rule's description is unique");
+                // This rule has the same description as one previously
+                // registered, yet it is not equal. You may need to fix the
+                // rule's equals and hashCode methods.
+                throw new AssertionError("Rule's description is unique; " +
+                        "existing rule=" + existingRule +
+                        "; new rule=" + rule);
             }
         }
 
@@ -245,6 +264,8 @@ public class VolcanoPlanner implements SaffronPlanner
                 mapArcToConverterRule.putMulti(arc,rule);
             }
         }
+
+        return true;
     }
 
     public boolean canConvert(
@@ -299,12 +320,12 @@ public class VolcanoPlanner implements SaffronPlanner
             // root subset.
             root = canonize(root);
         }
-        if (tracer.isLoggable(Level.FINE)) {
+        if (tracer.isLoggable(Level.FINER)) {
             StringWriter sw = new StringWriter();
             final PrintWriter pw = new PrintWriter(sw);
             dump(pw);
             pw.flush();
-            tracer.fine(sw.toString());
+            tracer.finer(sw.toString());
         }
         return root.buildCheapestPlan(this);
     }
@@ -590,7 +611,7 @@ public class VolcanoPlanner implements SaffronPlanner
         if (fixupInputs(rel)) {
             assert(mapDigestToRel.remove(oldDigest) == rel);
             final String newDigest = rel.recomputeDigest();
-            tracer.fine( "Rename #" + rel.getId() + " from '" + oldDigest +
+            tracer.finer( "Rename #" + rel.getId() + " from '" + oldDigest +
                     "' to '" + newDigest + "'");
             final SaffronRel equivRel =
                 (SaffronRel) mapDigestToRel.put(newDigest,rel);
@@ -598,7 +619,7 @@ public class VolcanoPlanner implements SaffronPlanner
                 assert equivRel != rel;
                 // There's already an equivalent with the same name, and we
                 // just knocked it out. Put it back, and forget about 'rel'.
-                tracer.fine("After renaming #" + rel.getId() +
+                tracer.finer("After renaming #" + rel.getId() +
                         ", it is now equivalent to rel #" + equivRel.getId());
                 mapDigestToRel.put(equivRel.toString(),equivRel);
                 if (ruleQueue.remove(rel) && !ruleQueue.contains(equivRel)) {
@@ -853,7 +874,7 @@ loop:
                 if (registerCount > beforeCount) {
                     continue loop;
                 }
-                tracer.fine(
+                tracer.finer(
                     "Optimize: cannot implement [" + rel.toString()
                     + "] in less than [" + targetCost + "]");
                 return makeInfiniteCost(); // no can do
@@ -881,7 +902,7 @@ loop:
                     if (registerCount > beforeCount) {
                         continue loop;
                     }
-                    tracer.fine(
+                    tracer.finer(
                         "Optimize: cannot implement2 " + rel.toString()
                         + ", cost=" + childSubset.bestCost);
                     return makeInfiniteCost(); // no can do
@@ -889,7 +910,7 @@ loop:
                 usedCost = usedCost.plus(childSubset.bestCost);
             }
 
-            tracer.fine(
+            tracer.finer(
                 "Optimize: rel=" + rel.getId() + ", cost=" + usedCost);
             return usedCost;
         }
@@ -940,7 +961,7 @@ loop:
                     && (equivExp.getClass() == rel.getClass()));
             RelSet equivSet = getSet(equivExp);
             if (equivSet != null) {
-                tracer.fine("Register: rel #" + rel.getId() +
+                tracer.finer("Register: rel #" + rel.getId() +
                         " is equivalent to rel #" + equivExp);
                 return registerSubset(set,getSubset(equivExp));
             }
@@ -954,7 +975,7 @@ loop:
                 (set != null)
                     && (set != childSet)
                     && (set.equivalentSet == null)) {
-                tracer.fine(
+                tracer.finer(
                     "Register #" + rel.getId() + " " + digest
                     + " (and merge sets, because it is a conversion)");
                 merge(set,childSet);
@@ -1001,7 +1022,7 @@ loop:
         mapRel2Subset.put(rel,subset);
         final Object xx = mapDigestToRel.put(digest,rel);
         assert((xx == null) || (xx == rel));
-        tracer.fine(
+        tracer.finer(
             "Register #" + rel.getId() + " " + digest + " in " + subset);
 
         // This relational expression may have been registered while we
@@ -1051,7 +1072,7 @@ loop:
             (set != subset.set)
                 && (set != null)
                 && (set.equivalentSet == null)) {
-            tracer.fine(
+            tracer.finer(
                 "Register #" + subset.getId() + " " + subset
                 + ", and merge sets");
             merge(set,subset.set);

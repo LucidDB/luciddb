@@ -1,0 +1,390 @@
+0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/date.sql#1 $ 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test date literal
+0: jdbc:farrago:> 
+0: jdbc:farrago:> SELECT date 'January 8, 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "January 8, 1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999-01-08' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 1999-01-08  |
++-------------+
+0: jdbc:farrago:> SELECT date '1999-01-18' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 1999-01-18  |
++-------------+
+0: jdbc:farrago:> SELECT date '1/8/1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "1/8/1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date '1/18/1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "1/18/1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date '18/1/1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "18/1/1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date '01/02/03' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "01/02/03" (state=,code=0)
+0: jdbc:farrago:> SELECT date '19990108' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "19990108" (state=,code=0)
+0: jdbc:farrago:> SELECT date '990108' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "990108" (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999.008' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "1999.008" (state=,code=0)
+0: jdbc:farrago:> SELECT date 'J2451187' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "J2451187" (state=,code=0)
+0: jdbc:farrago:> SELECT date 'January 8, 99 BC' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "January 8, 99 BC" (state=,code=0)
+0: jdbc:farrago:> SELECT date '99-Jan-08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "99-Jan-08" (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999-Jan-08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "1999-Jan-08" (state=,code=0)
+0: jdbc:farrago:> SELECT date '08-Jan-99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "08-Jan-99" (state=,code=0)
+0: jdbc:farrago:> SELECT date '08-Jan-1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "08-Jan-1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date 'Jan-08-99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "Jan-08-99" (state=,code=0)
+0: jdbc:farrago:> SELECT date 'Jan-08-1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "Jan-08-1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date '99-08-Jan' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "99-08-Jan" (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999-08-Jan' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "1999-08-Jan" (state=,code=0)
+0: jdbc:farrago:> SELECT date '99 Jan 08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "99 Jan 08" (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999 Jan 08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "1999 Jan 08" (state=,code=0)
+0: jdbc:farrago:> SELECT date '08 Jan 99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "08 Jan 99" (state=,code=0)
+0: jdbc:farrago:> SELECT date '08 Jan 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "08 Jan 1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date 'Jan 08 99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "Jan 08 99" (state=,code=0)
+0: jdbc:farrago:> SELECT date 'Jan 08 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "Jan 08 1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date '99 08 Jan' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "99 08 Jan" (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999 08 Jan' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "1999 08 Jan" (state=,code=0)
+0: jdbc:farrago:> SELECT date '99-01-08' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0099-01-08  |
++-------------+
+0: jdbc:farrago:> SELECT date '1999-01-08' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 1999-01-08  |
++-------------+
+0: jdbc:farrago:> SELECT date '08-01-99' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0008-04-08  |
++-------------+
+0: jdbc:farrago:> SELECT date '08-01-1999' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0013-06-21  |
++-------------+
+0: jdbc:farrago:> SELECT date '01-08-99' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0001-11-07  |
++-------------+
+0: jdbc:farrago:> SELECT date '01-08-1999' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0007-01-20  |
++-------------+
+0: jdbc:farrago:> SELECT date '99-08-01' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0099-08-01  |
++-------------+
+0: jdbc:farrago:> SELECT date '1999-08-01' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 1999-08-01  |
++-------------+
+0: jdbc:farrago:> SELECT date '99 01 08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "99 01 08" (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999 01 08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "1999 01 08" (state=,code=0)
+0: jdbc:farrago:> SELECT date '08 01 99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "08 01 99" (state=,code=0)
+0: jdbc:farrago:> SELECT date '08 01 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "08 01 1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date '01 08 99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "01 08 99" (state=,code=0)
+0: jdbc:farrago:> SELECT date '01 08 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "01 08 1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date '99 08 01' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "99 08 01" (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999 08 01' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "1999 08 01" (state=,code=0)
+0: jdbc:farrago:> SELECT date 'January 8, 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "January 8, 1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999-01-08' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 1999-01-08  |
++-------------+
+0: jdbc:farrago:> SELECT date '1999-01-18' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 1999-01-18  |
++-------------+
+0: jdbc:farrago:> SELECT date '1/8/1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "1/8/1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date '1/18/1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "1/18/1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date '18/1/1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "18/1/1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date '01/02/03' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "01/02/03" (state=,code=0)
+0: jdbc:farrago:> SELECT date '19990108' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "19990108" (state=,code=0)
+0: jdbc:farrago:> SELECT date '990108' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "990108" (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999.008' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "1999.008" (state=,code=0)
+0: jdbc:farrago:> SELECT date 'J2451187' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "J2451187" (state=,code=0)
+0: jdbc:farrago:> SELECT date 'January 8, 99 BC' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "January 8, 99 BC" (state=,code=0)
+0: jdbc:farrago:> SELECT date '99-Jan-08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "99-Jan-08" (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999-Jan-08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "1999-Jan-08" (state=,code=0)
+0: jdbc:farrago:> SELECT date '08-Jan-99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "08-Jan-99" (state=,code=0)
+0: jdbc:farrago:> SELECT date '08-Jan-1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "08-Jan-1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date 'Jan-08-99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "Jan-08-99" (state=,code=0)
+0: jdbc:farrago:> SELECT date 'Jan-08-1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "Jan-08-1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date '99-08-Jan' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "99-08-Jan" (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999-08-Jan' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "1999-08-Jan" (state=,code=0)
+0: jdbc:farrago:> SELECT date '99 Jan 08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "99 Jan 08" (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999 Jan 08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "1999 Jan 08" (state=,code=0)
+0: jdbc:farrago:> SELECT date '08 Jan 99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "08 Jan 99" (state=,code=0)
+0: jdbc:farrago:> SELECT date '08 Jan 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "08 Jan 1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date 'Jan 08 99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "Jan 08 99" (state=,code=0)
+0: jdbc:farrago:> SELECT date 'Jan 08 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "Jan 08 1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date '99 08 Jan' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "99 08 Jan" (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999 08 Jan' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "1999 08 Jan" (state=,code=0)
+0: jdbc:farrago:> SELECT date '99-01-08' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0099-01-08  |
++-------------+
+0: jdbc:farrago:> SELECT date '1999-01-08' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 1999-01-08  |
++-------------+
+0: jdbc:farrago:> SELECT date '08-01-99' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0008-04-08  |
++-------------+
+0: jdbc:farrago:> SELECT date '08-01-1999' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0013-06-21  |
++-------------+
+0: jdbc:farrago:> SELECT date '01-08-99' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0001-11-07  |
++-------------+
+0: jdbc:farrago:> SELECT date '01-08-1999' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0007-01-20  |
++-------------+
+0: jdbc:farrago:> SELECT date '99-08-01' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0099-08-01  |
++-------------+
+0: jdbc:farrago:> SELECT date '1999-08-01' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 1999-08-01  |
++-------------+
+0: jdbc:farrago:> SELECT date '99 01 08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "99 01 08" (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999 01 08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "1999 01 08" (state=,code=0)
+0: jdbc:farrago:> SELECT date '08 01 99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "08 01 99" (state=,code=0)
+0: jdbc:farrago:> SELECT date '08 01 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "08 01 1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date '01 08 99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "01 08 99" (state=,code=0)
+0: jdbc:farrago:> SELECT date '01 08 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "01 08 1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date '99 08 01' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "99 08 01" (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999 08 01' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "1999 08 01" (state=,code=0)
+0: jdbc:farrago:> SELECT date 'January 8, 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "January 8, 1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999-01-08' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 1999-01-08  |
++-------------+
+0: jdbc:farrago:> SELECT date '1999-01-18' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 1999-01-18  |
++-------------+
+0: jdbc:farrago:> SELECT date '1/8/1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "1/8/1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date '1/18/1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "1/18/1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date '18/1/1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "18/1/1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date '01/02/03' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "01/02/03" (state=,code=0)
+0: jdbc:farrago:> SELECT date '19990108' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "19990108" (state=,code=0)
+0: jdbc:farrago:> SELECT date '990108' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "990108" (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999.008' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "1999.008" (state=,code=0)
+0: jdbc:farrago:> SELECT date 'J2451187' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "J2451187" (state=,code=0)
+0: jdbc:farrago:> SELECT date 'January 8, 99 BC' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "January 8, 99 BC" (state=,code=0)
+0: jdbc:farrago:> SELECT date '99-Jan-08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "99-Jan-08" (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999-Jan-08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "1999-Jan-08" (state=,code=0)
+0: jdbc:farrago:> SELECT date '08-Jan-99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "08-Jan-99" (state=,code=0)
+0: jdbc:farrago:> SELECT date '08-Jan-1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "08-Jan-1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date 'Jan-08-99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "Jan-08-99" (state=,code=0)
+0: jdbc:farrago:> SELECT date 'Jan-08-1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "Jan-08-1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date '99-08-Jan' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "99-08-Jan" (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999-08-Jan' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "1999-08-Jan" (state=,code=0)
+0: jdbc:farrago:> SELECT date '99 Jan 08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "99 Jan 08" (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999 Jan 08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "1999 Jan 08" (state=,code=0)
+0: jdbc:farrago:> SELECT date '08 Jan 99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "08 Jan 99" (state=,code=0)
+0: jdbc:farrago:> SELECT date '08 Jan 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "08 Jan 1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date 'Jan 08 99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "Jan 08 99" (state=,code=0)
+0: jdbc:farrago:> SELECT date 'Jan 08 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "Jan 08 1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date '99 08 Jan' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "99 08 Jan" (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999 08 Jan' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "1999 08 Jan" (state=,code=0)
+0: jdbc:farrago:> SELECT date '99-01-08' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0099-01-08  |
++-------------+
+0: jdbc:farrago:> SELECT date '1999-01-08' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 1999-01-08  |
++-------------+
+0: jdbc:farrago:> SELECT date '08-01-99' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0008-04-08  |
++-------------+
+0: jdbc:farrago:> SELECT date '08-01-1999' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0013-06-21  |
++-------------+
+0: jdbc:farrago:> SELECT date '01-08-99' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0001-11-07  |
++-------------+
+0: jdbc:farrago:> SELECT date '01-08-1999' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0007-01-20  |
++-------------+
+0: jdbc:farrago:> SELECT date '99-08-01' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 0099-08-01  |
++-------------+
+0: jdbc:farrago:> SELECT date '1999-08-01' as D1 from values ('true');
++-------------+
+|     D1      |
++-------------+
+| 1999-08-01  |
++-------------+
+0: jdbc:farrago:> SELECT date '99 01 08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "99 01 08" (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999 01 08' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "1999 01 08" (state=,code=0)
+0: jdbc:farrago:> SELECT date '08 01 99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "08 01 99" (state=,code=0)
+0: jdbc:farrago:> SELECT date '08 01 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "08 01 1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date '01 08 99' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "01 08 99" (state=,code=0)
+0: jdbc:farrago:> SELECT date '01 08 1999' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "01 08 1999" (state=,code=0)
+0: jdbc:farrago:> SELECT date '99 08 01' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "99 08 01" (state=,code=0)
+0: jdbc:farrago:> SELECT date '1999 08 01' as D1 from values ('true');
+Error: net.sf.farrago.parser.ParseException: Unparseable date: "1999 08 01" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

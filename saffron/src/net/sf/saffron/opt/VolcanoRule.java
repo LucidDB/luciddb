@@ -22,8 +22,8 @@
 
 package net.sf.saffron.opt;
 
-import net.sf.saffron.core.SaffronPlanner;
 import net.sf.saffron.rel.SaffronRel;
+import net.sf.saffron.util.Util;
 
 
 /**
@@ -55,13 +55,49 @@ public abstract class VolcanoRule
 
     //~ Constructors ----------------------------------------------------------
 
+    /**
+     * Creates a rule
+     *
+     * @param operand Root operand, must not be null
+     * @pre operand != null
+     */
     public VolcanoRule(RuleOperand operand)
     {
+        Util.pre(operand != null, "operand != null");
         this.operand = operand;
         this.description = guessDescription(getClass().getName());
     }
 
     //~ Methods ---------------------------------------------------------------
+
+    public int hashCode() {
+        // Conventionally, hashCode() and equals() should use the same
+        // criteria, whereas here we only look at the description. This is
+        // okay, because the planner requires all rule instances to have
+        // distinct descriptions.
+        return description.hashCode();
+    }
+
+    public boolean equals(Object obj) {
+        if (!(obj instanceof VolcanoRule)) {
+            return false;
+        }
+        return equals((VolcanoRule) obj);
+    }
+
+    /**
+     * Returns whether this rule is equal to another rule.
+     *
+     * <p>The base implementation checks that the rules have the same class
+     * and that the operands are equal; derived classes can override.
+     */
+    protected boolean equals(VolcanoRule that) {
+        // Include operands and class in the equality criteria just in case
+        // they have chosen a poor description.
+        return this.description.equals(that.description) &&
+                this.getClass() == that.getClass() &&
+                this.operand.equals(that.operand);
+    }
 
     /**
      * This method is called every time the rule matches. At the time that

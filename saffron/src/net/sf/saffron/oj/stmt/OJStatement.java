@@ -378,7 +378,6 @@ public class OJStatement
 
         boolean explain = false;
         boolean explainWithImplementation = false;
-
         if (sqlQuery.isA(SqlKind.Explain)) {
             explain = true;
             // dig out the underlying SQL statement
@@ -389,7 +388,6 @@ public class OJStatement
 
         SqlToRelConverter sqlToRelConverter =
             getSqlToRelConverter(validator,connection);
-
         SaffronRel rootRel;
         if (needValidation) {
             rootRel = sqlToRelConverter.convertQuery(sqlQuery);
@@ -401,28 +399,49 @@ public class OJStatement
             return new PreparedExplanation(rootRel);
         }
 
+        rootRel = optimize(rootRel);
+        if (explain) {
+            return new PreparedExplanation(rootRel);
+        }
+        return implement(rootRel, sqlQuery.getKind(), decl, arguments);
+    }
+
+
+    /** optimize a query plan.
+     * @param rootRel root of a relational expression
+     * @return an equivalent optimized relational expression
+     */
+    private SaffronRel optimize(SaffronRel rootRel)
+    {
         SaffronPlanner planner = rootRel.getCluster().getPlanner();
         planner.setRoot(rootRel);
-
         rootRel = planner.changeConvention(rootRel,resultCallingConvention);
         assert(rootRel != null);
         planner.setRoot(rootRel);
         planner = planner.chooseDelegate();
         rootRel = planner.findBestExp();
         assert(rootRel != null) : "could not implement exp";
+        return rootRel;
+    }
 
-        if (explain) {
-            return new PreparedExplanation(rootRel);
-        }
 
-        JavaRelImplementor relImplementor = getRelImplementor(
-            rootRel.getCluster().rexBuilder);
+    /** implement a physical query plan. 
+     * @param rootRel root of the relational expression.
+     * @param sqlKind SqlKind of the original statement.
+     * @param decl ClassDeclaration of the generated result.
+     * @param args argument list of the generated result.
+     * @return an executable plan, a {@link PreparedExecution}.
+     */
+    private PreparedExecution implement(
+        SaffronRel rootRel, SqlKind sqlKind,
+        ClassDeclaration decl, Argument[] arguments)
+    {
+        JavaRelImplementor relImplementor =
+            getRelImplementor(rootRel.getCluster().rexBuilder);
         Expression expr = relImplementor.implementRoot((JavaRel) rootRel);
-
-        boolean isDml = sqlQuery.isA(SqlKind.Dml);
+        boolean isDml = sqlKind.isA(SqlKind.Dml);
         ParseTree parseTree = expr;
-        BoundMethod boundMethod = compileAndBind(
-            decl,parseTree,arguments);
+        BoundMethod boundMethod = compileAndBind(decl,parseTree,arguments);
         final PreparedExecution plan =
             new PreparedExecution(
                 parseTree,
@@ -432,6 +451,40 @@ public class OJStatement
         return plan;
     }
 
+
+    /**
+     * Prepares a statement for execution, starting from a relational expression
+     * (ie a logical or a physical query plan).
+     * @param rootRel root of the relational expression.
+     * @param sqlKind SqlKind for the relational expression: only
+     *   SqlKind.Explain and SqlKind.Dml are special cases.
+     * @param needOpt true for a logical query plan (still needs to be
+     *   optimized), false for a physical plan.
+     * @param runtimeContextClass run-time context for execution.
+     */
+    public PreparedResult prepareSql(
+        SaffronRel rootRel, SqlKind sqlKind, boolean needOpt,
+        Class runtimeContextClass)
+    {
+        if (runtimeContextClass == null) {
+            runtimeContextClass = connection.getClass();
+        }
+
+        final Argument [] arguments =
+            new Argument [] {
+                new Argument(
+                    connectionVariable,
+                    runtimeContextClass,
+                    connection)
+            };
+        ClassDeclaration decl = init(arguments);
+
+        if (needOpt)
+            rootRel = optimize(rootRel);
+        return implement(rootRel, sqlKind, decl, arguments);
+    }
+
+    
     /**
      * Protected method to allow subclasses to override construction of
      * SqlToRelConverter.
@@ -625,6 +678,9 @@ public class OJStatement
         // variable instead.  The only side-effect is that the parameter
         // names in the method signature is different.
 
+        // TODO jvs 28-June-2004:  get rid of this if DynamicJava
+        // gets tossed
+
         // form parameter list
         String [] parameterNames = new String[arguments.length];
         String [] javaParameterNames = new String[arguments.length];
@@ -705,6 +761,9 @@ public class OJStatement
         }
         String s;
 
+        // TODO jvs 28-June-2004:  get rid of this if DynamicJava
+        // gets tossed
+
         // hack because DynamicJava cannot resolve fully-qualified inner
         // class names such as "saffron.runtime.Dummy_389838.Ojp_0",
         // and needs dollar signs to help it, but the real Java compiler
@@ -769,6 +828,8 @@ public class OJStatement
 
         boolean writeJavaFile = shouldAlwaysWriteJavaFile();
 
+        javaCompiler.getArgs().setDestdir(javaRoot.getAbsolutePath());
+        javaCompiler.getArgs().setFullClassName(fullClassName);
         try {
             javaCompiler.getArgs().setSource(s,javaFile.toString());
         } catch (UnsupportedOperationException e) {

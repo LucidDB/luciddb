@@ -25,13 +25,14 @@ package net.sf.saffron.rel;
 import net.sf.saffron.core.SaffronPlanner;
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
-import net.sf.saffron.oj.rel.JavaRelImplementor;
 import net.sf.saffron.oj.rel.JavaRel;
+import net.sf.saffron.oj.rel.JavaRelImplementor;
 import net.sf.saffron.opt.OptUtil;
 import net.sf.saffron.opt.PlanCost;
 import net.sf.saffron.opt.VolcanoCluster;
-import net.sf.saffron.util.Util;
 import openjava.ptree.Expression;
+
+import java.util.Arrays;
 
 
 /**
@@ -161,7 +162,7 @@ public class AggregateRel extends SingleRel
             }
             Call other = (Call) o;
             return aggregation.equals(other.aggregation)
-                && Util.equals(args,other.args);
+                && Arrays.equals(args,other.args);
         }
 
         public void implementNext(

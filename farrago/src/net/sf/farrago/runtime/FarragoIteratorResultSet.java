@@ -44,6 +44,9 @@ public class FarragoIteratorResultSet extends IteratorResultSet
     private static final Logger tracer =
         FarragoTrace.getFarragoIteratorResultSetTracer();
 
+    private static final Logger jdbcTracer =
+        FarragoTrace.getFarragoJdbcEngineDriverTracer();
+
     //~ Instance fields -------------------------------------------------------
 
     private FarragoAllocation allocation;
@@ -78,10 +81,15 @@ public class FarragoIteratorResultSet extends IteratorResultSet
     // implement ResultSet
     public boolean next() throws SQLException
     {
-        if (tracer.isLoggable(Level.FINE)) {
-            tracer.fine(toString());
+        try {
+            if (tracer.isLoggable(Level.FINE)) {
+                tracer.fine(toString());
+            }
+            return super.next();
+        } catch (Throwable ex) {
+            // trace exceptions as part of JDBC API
+            throw FarragoUtil.newSqlException(ex,jdbcTracer);
         }
-        return super.next();
     }
     
     // implement ResultSet

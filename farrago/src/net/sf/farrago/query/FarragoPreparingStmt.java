@@ -221,7 +221,7 @@ public class FarragoPreparingStmt extends OJStatement
     {
         this.planner = planner;
     }
-    
+
     public SqlOperatorTable getSqlOperatorTable()
     {
         return session.getSqlOperatorTable();
@@ -252,7 +252,7 @@ public class FarragoPreparingStmt extends OJStatement
     }
 
     /**
-     * Implement a query or DML statement but do not execute it.
+     * Implement a parsed query or DML statement but do not execute it.
      *
      * @param sqlNode top-level node of parsed statement
      *
@@ -266,6 +266,35 @@ public class FarragoPreparingStmt extends OJStatement
             needValidation = true;
         }
 
+        definePackageName();
+        PreparedResult preparedResult = super.prepareSql(
+            sqlNode,
+            session.getRuntimeContextClass(),
+            validator,
+            needValidation);
+        return implement(preparedResult);
+    }
+
+    /**
+     * Implement a logical or physical query plan but do not execute it.
+     * @param rootRel root of query plan (saffron relational expression)
+     * @param sqlKind SqlKind for the relational expression: only
+     *   SqlKind.Explain and SqlKind.Dml are special cases.
+     * @param logical true for a logical query plan (still needs to be
+     *   optimized), false for a physical plan.
+     * @return prepared FarragoExecutableStmt
+     */
+    public FarragoExecutableStmt implement(SaffronRel rootRel, SqlKind sqlKind, boolean logical)
+    {
+        definePackageName();
+        PreparedResult preparedResult =
+            super.prepareSql(
+                rootRel, sqlKind, logical, session.getRuntimeContextClass());
+        return implement(preparedResult);
+    }
+
+    private void definePackageName()
+    {
         // TODO:  once and only once
         packageDir = classesRoot;
         packageDir = new File(packageDir,"net");
@@ -291,12 +320,10 @@ public class FarragoPreparingStmt extends OJStatement
         // createTempFile created a normal file; we want a directory
         packageDir.delete();
         packageDir.mkdir();
+    }
 
-        PreparedResult preparedResult = super.prepareSql(
-            sqlNode,
-            session.getRuntimeContextClass(),
-            validator,
-            needValidation);
+    private FarragoExecutableStmt implement(PreparedResult preparedResult)
+    {
         FarragoExecutableStmt executableStmt;
         if (preparedResult instanceof PreparedExecution) {
             PreparedExecution preparedExecution =
@@ -720,19 +747,7 @@ public class FarragoPreparingStmt extends OJStatement
     // override OJStatement
     protected String getCompilerClassName()
     {
-        // TODO: For now rely on a system parameter to control DynamicJava
-        // interpretation.  Eventually, we want the optimizer to be able to
-        // tell us when we should definitely compile before the first
-        // execution, and also let caching decide based on usage patterns.
-
-        if (catalog.getCurrentConfig().isJavaInterpreterEnabled()) {
-            // use the DynamicJava interpreter
-            return "openjava.ojc.DynamicJavaCompiler";
-        } else {
-            // use the Sun Java compiler; it produces better
-            // error messages
-            return super.getCompilerClassName();
-        }
+        return catalog.getCurrentConfig().getJavaCompilerClassName();
     }
 
     // override OJStatement

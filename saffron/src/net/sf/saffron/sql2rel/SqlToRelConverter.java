@@ -30,13 +30,12 @@ import net.sf.saffron.opt.VolcanoQuery;
 import net.sf.saffron.rel.*;
 import net.sf.saffron.rex.*;
 import net.sf.saffron.sql.*;
-import net.sf.saffron.sql.fun.SqlStdOperatorTable;
 import net.sf.saffron.sql.fun.SqlRowOperator;
-import net.sf.saffron.sql.fun.SqlCastFunction;
+import net.sf.saffron.sql.fun.SqlStdOperatorTable;
 import net.sf.saffron.sql.type.SqlTypeName;
-import net.sf.saffron.util.Util;
 import net.sf.saffron.util.BitString;
 import net.sf.saffron.util.NlsString;
+import net.sf.saffron.util.Util;
 import openjava.mop.Environment;
 
 import java.math.BigDecimal;
@@ -57,20 +56,6 @@ import java.util.*;
  **/
 public class SqlToRelConverter {
     //~ Static fields/initializers --------------------------------------------
-
-    /** Maps an {@link String operator name} to an {@link RexKind operator}.
-     * For example, binaryMap.get("/") yields {@link RexKind#Divide}. */
-    private static final HashMap binaryMap = createBinaryMap();
-
-    /** Maps an {@link String operator name} to an {@link RexKind operator}.
-     * For example, binaryMap.get("-") yields {@link RexKind#MinusPrefix}. */
-    private static final HashMap prefixMap = createPrefixMap();
-
-    /** Maps an {@link String operator name} to an {@link RexKind operator}. */
-    private static final HashMap postfixMap = createPostfixMap();
-
-    /** Maps a {@link String function name} to an {@link RexKind operator}. */
-    private static final HashMap functionMap = createFunctionMap();
 
     //~ Instance fields -------------------------------------------------------
 
@@ -317,8 +302,8 @@ public class SqlToRelConverter {
                     if (i == 0) {
                         conditionExp = e;
                     } else {
-                        conditionExp = rexBuilder.makeCall(rexBuilder._opTab.andOperator, conditionExp,
-                                e);
+                        conditionExp = rexBuilder.makeCall(opTab.andOperator,
+                                conditionExp, e);
                     }
                 }
             } else {
@@ -368,7 +353,7 @@ public class SqlToRelConverter {
                     call = (SqlCall) node;
                 } else {
                     // convert "1" to "row(1)"
-                    call = SqlOperatorTable.std().rowConstructor.createCall(
+                    call = opTab.rowConstructor.createCall(
                             new SqlNode[] {node});
                 }
                 inputs[i] = convertRowConstructor(bb, call);
@@ -503,16 +488,21 @@ public class SqlToRelConverter {
                     return rexBuilder.makeCall(
                             op, convertExpression(bb,operands[0]),
                             convertExpression(bb,operands[1]));
-                } else if ((call.operator instanceof SqlFunction)
+                } else if (call.operator instanceof SqlJdbcFunctionCall) {
+                    SqlJdbcFunctionCall jdbcCall =
+                            (SqlJdbcFunctionCall) call.operator;
+                    return convertExpression(bb,jdbcCall.getLookupCall());
+                }
+                else if ((call.operator instanceof SqlFunction)
                            || (call.operator instanceof SqlRowOperator)
-                           || (call.operator.equals(SqlOperatorTable.std().likeOperator))
-                           || (call.operator.equals(SqlOperatorTable.std().similarOperator)))
+                           || (call.operator.equals(opTab.likeOperator))
+                           || (call.operator.equals(opTab.similarOperator)))
                 {
                     if (call.operator.equals(
-                            SqlOperatorTable.std().characterLengthFunc)) {
+                            opTab.characterLengthFunc)) {
                         //todo: solve aliases in a more elegent way.
                         call.operator = opTab.charLengthFunc;
-                    } else if (call.operator.equals(SqlOperatorTable.std().castFunc)) {
+                    } else if (call.operator.equals(opTab.castFunc)) {
                         return convertCast(bb,call);
                     }
 
@@ -578,9 +568,11 @@ public class SqlToRelConverter {
      */
     private RexNode convertCast(Blackboard bb, SqlCall call) {
         assert SqlKind.Cast.equals(call.operator.kind);
-        SqlCastFunction fun = (SqlCastFunction) call.operator;
-        RexNode arg = convertExpression(bb, call.operands[0]);
         SqlDataType dataType = (SqlDataType)call.operands[1];
+        if (SqlLiteral.isNullLiteral(call.operands[0])) {
+            return  convertExpression(bb, call.operands[0]);
+        }
+        RexNode arg = convertExpression(bb, call.operands[0]);
         return rexBuilder.makeCast(dataType.getType(), arg);
     }
 
@@ -757,9 +749,8 @@ public class SqlToRelConverter {
                 if (i == 0) {
                     conditionExp = exp;
                 } else {
-                    SqlOperator andOp = rexBuilder.getOperator("AND", SqlOperator.Syntax.Binary);
-                    conditionExp = rexBuilder.makeCall(
-                            andOp, conditionExp, exp);
+                    conditionExp = rexBuilder.makeCall(opTab.andOperator,
+                            conditionExp, exp);
                 }
             }
             assert conditionExp != null;
@@ -1114,6 +1105,14 @@ public class SqlToRelConverter {
         SaffronType type = validator.contextVariableTable.deriveType(
             identifier);
         if (type != null) {
+            // this is bogus, we should use functions for these guys.
+            if (identifier.getSimple().equals("LOCALTIME")) {
+                SqlOperator op = SqlOperatorTable.std().localTimeFunc;
+                return rexBuilder.makeCall(op,new RexNode[] {});
+            } else if (identifier.getSimple().equals("LOCALTIMESTAMP")) {
+                SqlOperator op = SqlOperatorTable.std().localTimestampFunc;
+                return rexBuilder.makeCall(op,new RexNode[] {});
+            }
             return rexBuilder.makeContextVariable(identifier.getSimple(),type);
         }
 

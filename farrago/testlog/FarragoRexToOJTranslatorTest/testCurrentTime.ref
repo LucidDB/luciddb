@@ -1,5 +1,5 @@
 
-private ExecutableStmt.Oj_TIME_0 oj_var0 = new ExecutableStmt.Oj_TIME_0();
+ExecutableStmt.Oj_TIME_0 oj_var0 = new ExecutableStmt.Oj_TIME_0();
 
 oj_var0.assignFrom( connection.getContextVariable_CURRENT_TIME() );
 

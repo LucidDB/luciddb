@@ -27,6 +27,26 @@ select case slacker when true then 'yes' when false then 'no' else 'null' end fr
 select nullif(name,'Wilma') from sales.emps order by 1;
 select nullif(50,age) is null from sales.emps order by 1;
 select nullif(age,50) is null from sales.emps order by 1;
+select nullif(50,age) from sales.emps order by 1;
+select nullif(age,50) from sales.emps order by 1;
+
+select cast(null as tinyint) from values(1);
+select cast(null as smallint) from values(1);
+select cast(null as integer) from values(1);
+select cast(null as bigint) from values(1);
+select cast(null as real) from values(1);
+select cast(null as double) from values(1);
+--select cast(null as bit) from values(1);
+select cast(null as boolean) from values(1);
+select cast(null as char) from values(1);
+select cast(null as varchar) from values(1);
+select cast(null as binary) from values(1);
+select cast(null as date) from values(1);
+select cast(null as time) from values(1);
+select cast(null as timestamp) from values(1);
+select cast(null as varbinary) from values(1);
+--select cast(null as decimal) from values(1);
+
 --select abs((-empno)*2) as res from sales.emps;
 --select abs(2) as res from sales.emps;
 --select abs(-2) as res from sales.emps;

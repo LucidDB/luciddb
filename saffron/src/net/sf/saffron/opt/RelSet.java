@@ -178,7 +178,7 @@ class RelSet
         assert(this != otherSet);
         assert(this.equivalentSet == null);
         assert(otherSet.equivalentSet == null);
-        tracer.fine("Merge set#" + otherSet.id + " into set#" + id);
+        tracer.finer("Merge set#" + otherSet.id + " into set#" + id);
         otherSet.equivalentSet = this;
 
         // remove from table

@@ -30,6 +30,9 @@ select cast(time '12:01:01' as varchar(10)) from values('true');
 -- select cast(timestamp '2004-12-21 12:01:01' as varchar(10)) from values('true'); -- error not caught yet.
 select cast(timestamp '2004-12-21 12:01:01' as varchar(20)) from values('true');
 
+select cast('2004-12-21 12:01:01' as timestamp) from values('true');
+select cast( '2004-12-21' as date) from values('true');
+select cast('12:01:01' as time) from values('true');
 
 -- select * from datetime1 where datecol > DATE '2003-12-21';
 

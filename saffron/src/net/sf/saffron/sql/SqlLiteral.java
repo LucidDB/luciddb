@@ -175,6 +175,7 @@ public class SqlLiteral extends SqlNode
     public static class DateLiteral extends SqlLiteral {
         protected boolean _hasTimeZone;
         protected String _formatString = ParserUtil.DateFormatStr;
+        private static final TimeZone gmtZone = TimeZone.getTimeZone("GMT+0");
 
         /**
          *  Construct a new dateformat object for the given string.
@@ -207,8 +208,9 @@ public class SqlLiteral extends SqlNode
             return Long.toString(getCal().getTimeInMillis());
         }
 
-        public Date getDate() {
-            return new java.sql.Date(getCal().getTimeInMillis());
+        private Date getDate() {
+            return new java.sql.Date(getCal().getTimeInMillis() -
+                    Calendar.getInstance().getTimeZone().getRawOffset());
         }
 
         public Calendar getCal() {
@@ -220,13 +222,13 @@ public class SqlLiteral extends SqlNode
          * @return timezone
          */
         public TimeZone getTimeZone() {
-            assert(_hasTimeZone) : "Attempt to get timezone on Literal date: " + getCal() + ", which has no timezone";
+            assert _hasTimeZone : "Attempt to get timezone on Literal date: " + getCal() + ", which has no timezone";
             return getCal().getTimeZone();
         }
 
         public String toString() {
             return "DATE '" +
-                    getDateFormat(_formatString).format(getCal().getTime()) +
+                    getDateFormat(_formatString).format(getDate()) +
                     "'";
         }
 
@@ -257,8 +259,11 @@ public class SqlLiteral extends SqlNode
            this(t,p,false,SqlTypeName.Time);
         }
 
-        public Time getTime() {
-            return new java.sql.Time(getCal().getTimeInMillis());
+        private Time getTime() {
+            long millis = getCal().getTimeInMillis();
+            int tzOffset =
+                    Calendar.getInstance().getTimeZone().getOffset(millis);
+            return new java.sql.Time(millis - tzOffset);
         }
 
         public int getPrec() {
@@ -272,7 +277,7 @@ public class SqlLiteral extends SqlNode
         public String toFormattedString() {
             String result =
                     new SimpleDateFormat(_formatString).
-                                format(getCal().getTime()) ;
+                                format(getTime()) ;
             if (_precision > 0) {
                 // get the millisecond count.  millisecond => at most 3 digits.
                 String digits = Long.toString(getCal().getTimeInMillis());
@@ -699,14 +704,6 @@ public class SqlLiteral extends SqlNode
         case SqlTypeName.Varchar_ordinal: // should never happen
         case SqlTypeName.Varbinary_ordinal: // should never happen
 
-//        } else if (value instanceof String) {
-//            return typeFactory.createSqlType(SqlTypeName.Varchar, ((String) value).length());
-//        } else if (value instanceof BigInteger) {
-            //REVIEW 29-feb-2004 wael: can this else if clause safely be removed?
-//            return typeFactory.createSqlType(SqlTypeName.Integer);
-//        } else if (value instanceof java.math.BigDecimal) {
-            //REVIEW 29-feb-2004 wael: can this else if clause safely be removed?
-//            return typeFactory.createSqlType(SqlTypeName.Double);
         default:
             throw Util.needToImplement(toString() + ", operand=" + _value);
         }

@@ -46,7 +46,8 @@ import java.util.ArrayList;
 public class SqlCastFunction extends SqlFunction {
 
     public SqlCastFunction() {
-        super("CAST",SqlKind.Cast, null, null, null, SqlFunction.SqlFuncTypeName.System);
+        super("CAST",SqlKind.Cast, null, SqlOperatorTable.useFirstKnownParam,
+                null, SqlFunction.SqlFuncTypeName.System);
     }
 
     // private SqlNode returnNode;
@@ -65,7 +66,7 @@ public class SqlCastFunction extends SqlFunction {
     }
 
      public int getNumOfOperands(int desiredCount) {
-        return 1;
+        return 2;
     }
 
     public List getPossibleNumOfOperands() {
@@ -87,6 +88,9 @@ public class SqlCastFunction extends SqlFunction {
      * can override this method.
      */
     protected void checkArgTypes(SqlCall call, SqlValidator validator, SqlValidator.Scope scope) {
+        if (SqlLiteral.isNullLiteral(call.operands[0])) {
+            return;
+        }
         SaffronType validatedNodeType = validator.getValidatedNodeType(call.operands[0]);
         SaffronType returnType = ((SqlDataType)call.operands[1]).getType();
         if (!returnType.isAssignableFrom(validatedNodeType, true)) {

@@ -29,12 +29,24 @@ package net.sf.saffron.calc;
  * Id: $
  */
 public class ExtInstructionDefTable {
+    public static final CalcProgramBuilder.InstructionDef localTime =
+      new CalcProgramBuilder.ExtInstrDef("LocalTime", 1);
+    public static final CalcProgramBuilder.InstructionDef localTimestamp =
+      new CalcProgramBuilder.ExtInstrDef("LocalTimestamp", 1);       
+    public static final CalcProgramBuilder.InstructionDef castDateToMillis =
+      new CalcProgramBuilder.ExtInstrDef("CastDateTimeToInt64", 2);    
     public static final CalcProgramBuilder.ExtInstrDef castDateToStr =
             new CalcProgramBuilder.ExtInstrDef("CastDateToStrA", 2);
     public static final CalcProgramBuilder.ExtInstrDef castTimeToStr =
             new CalcProgramBuilder.ExtInstrDef("CastTimeToStrA", 2);
     public static final CalcProgramBuilder.ExtInstrDef castTimestampToStr =
             new CalcProgramBuilder.ExtInstrDef("CastTimestampToStrA", 2);
+    public static final CalcProgramBuilder.InstructionDef castStrAToDate =
+            new CalcProgramBuilder.ExtInstrDef("CastStrAToDate", 2);
+    public static final CalcProgramBuilder.InstructionDef castStrAToTime =
+            new CalcProgramBuilder.ExtInstrDef("CastStrAToTime", 2);
+    public static final CalcProgramBuilder.InstructionDef castStrAToTimestamp =
+            new CalcProgramBuilder.ExtInstrDef("CastStrAToTimestamp", 2);
     public static final CalcProgramBuilder.ExtInstrDef charLength =
             new CalcProgramBuilder.ExtInstrDef("strLenCharA", 2);
     public static final CalcProgramBuilder.ExtInstrDef concat =
@@ -57,5 +69,7 @@ public class ExtInstructionDefTable {
             new CalcProgramBuilder.ExtInstrDef("strTrimA", 5);
     public static final CalcProgramBuilder.ExtInstrDef upper =
             new CalcProgramBuilder.ExtInstrDef("strToUpperA", 2);
+
+
 
 }

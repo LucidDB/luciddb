@@ -99,6 +99,10 @@ public class RexToCalcTranslator implements RexVisitor
                 generateCalcProgramComments.get());
         SaffronTypeFactory fac = _rexBuilder.getTypeFactory();
         _knownTypes = new TypePair[] {
+            new TypePair(fac.createSqlType(SqlTypeName.Tinyint),
+                    CalcProgramBuilder.OpType.Int1),
+            new TypePair(fac.createSqlType(SqlTypeName.Smallint),
+                    CalcProgramBuilder.OpType.Int2),
             new TypePair(fac.createSqlType(SqlTypeName.Integer),
                     CalcProgramBuilder.OpType.Int4),
             new TypePair(fac.createSqlType(SqlTypeName.Bigint),
@@ -124,6 +128,14 @@ public class RexToCalcTranslator implements RexVisitor
             new TypePair(fac.createSqlType(SqlTypeName.Timestamp),
                     CalcProgramBuilder.OpType.Int8),
 
+            new TypePair(fac.createJavaType(Byte.class),
+                    CalcProgramBuilder.OpType.Int1),
+            new TypePair(fac.createJavaType(byte.class),
+                    CalcProgramBuilder.OpType.Int1),
+            new TypePair(fac.createJavaType(Short.class),
+                    CalcProgramBuilder.OpType.Int2),
+            new TypePair(fac.createJavaType(short.class),
+                    CalcProgramBuilder.OpType.Int2),
             new TypePair(fac.createJavaType(Integer.class),
                     CalcProgramBuilder.OpType.Int4),
             new TypePair(fac.createJavaType(int.class),
@@ -355,8 +367,7 @@ public class RexToCalcTranslator implements RexVisitor
     }
 
     public void visitContextVariable(RexContextVariable variable) {
-        throw SaffronResource.instance().newProgramImplementationError(
-                "Don't know how to implement rex node=" + variable);
+        implementNode(variable);
     }
 
     public void visitFieldAccess(RexFieldAccess fieldAccess) {
@@ -556,8 +567,39 @@ public class RexToCalcTranslator implements RexVisitor
         CalcProgramBuilder.RegisterDescriptor resultDesc =
                 getCalcRegisterDescriptor(call);
 
-        if (returnType.isCharType() && argType.getSqlTypeName().equals(SqlTypeName.Date))
+        if (returnType.getSqlTypeName().equals(SqlTypeName.Bigint) &&
+                (argType.getSqlTypeName().equals(SqlTypeName.Date) ||
+                argType.getSqlTypeName().equals(SqlTypeName.Time) ||
+                argType.getSqlTypeName().equals(SqlTypeName.Timestamp)))
         {
+            new CalcRexImplementorTableImpl.InstrImplementor(
+                    ExtInstructionDefTable.castDateToMillis).implement(call, this);
+
+            return;
+
+        }
+        if (returnType.getSqlTypeName().equals(SqlTypeName.Date) &&
+                argType.isCharType()) {
+            new CalcRexImplementorTableImpl.InstrImplementor(
+                    ExtInstructionDefTable.castStrAToDate).implement(call, this);
+
+            return;
+        }
+        if (returnType.getSqlTypeName().equals(SqlTypeName.Time) &&
+                argType.isCharType()) {
+            new CalcRexImplementorTableImpl.InstrImplementor(
+                    ExtInstructionDefTable.castStrAToTime).implement(call, this);
+
+            return;
+        }
+       if (returnType.getSqlTypeName().equals(SqlTypeName.Timestamp) &&
+                argType.isCharType()) {
+            new CalcRexImplementorTableImpl.InstrImplementor(
+                    ExtInstructionDefTable.castStrAToTimestamp).implement(call, this);
+
+            return;
+        }
+        if (returnType.isCharType() && argType.getSqlTypeName().equals(SqlTypeName.Date)) {
             new CalcRexImplementorTableImpl.InstrImplementor(
                     ExtInstructionDefTable.castDateToStr).implement(call, this);
             return;
@@ -652,6 +694,18 @@ public class RexToCalcTranslator implements RexVisitor
                + " use implementNode(RexNode) instead");
        }
         setResult(node, _builder.newInput(getCalcRegisterDescriptor(node)));
+    }
+
+    private void implementNode(RexContextVariable node)
+    {
+        if (containsResult(node)) {
+            throw new AssertionError(
+                    "Shouldn't call this function directly;"
+                    + " use implementNode(RexNode) instead");
+        }
+
+        throw SaffronResource.instance().newProgramImplementationError(
+                    "Don't know how to implement rex node=" + node);
     }
 
     public void setGenerateShortCircuit(boolean generateShortCircuit) {

@@ -1,5 +1,5 @@
 
-private net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
+net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
 
 if (AGE.isNull()) {
     oj_var0.setNull( true );

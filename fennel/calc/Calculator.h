@@ -136,7 +136,7 @@ public:
     //!
     //! When assemble() is used, an XO <b>may</b> learn the format of its
     //! input from Calculator. The XO could use this information to
-    //! double-check the integrety of the TupleDescriptor via 
+    //! double-check the integrity of the TupleDescriptor via 
     //! asserts. Typically called before exec().
     TupleDescriptor getInputRegisterDescriptor() const;
 
@@ -144,7 +144,7 @@ public:
     //!
     //! When assemble() is used, an XO <b>may</b> learn the format of its
     //! status from Calculator. The XO could use this information to
-    //! double-check the integrety of other plan information.
+    //! double-check the integrity of other plan information.
     //! Typically called before exec().
     TupleDescriptor getStatusRegisterDescriptor() const;
 
@@ -202,7 +202,7 @@ protected:
     //! Program instructions
     vector<Instruction *> mCode;
 
-    //! Tuples that underly registers, indexed by register set
+    //! Tuples that underlie registers, indexed by register set
     //!
     //! Note: Referenced in class RegisterReference and CalcAssembler
     TupleData* mRegisterTuple[RegisterReference::ELastSet];

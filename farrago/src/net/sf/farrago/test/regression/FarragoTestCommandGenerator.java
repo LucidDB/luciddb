@@ -21,6 +21,8 @@ package net.sf.farrago.test.regression;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
+import java.io.PrintStream;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -100,6 +102,20 @@ public class FarragoTestCommandGenerator
     public void addSynchronizationCommand(int threadId, int order)
     {
         addCommand(threadId, order, new SynchronizationCommand());
+    }
+
+    /**
+     * Causes the given thread to sleep for the indicated number of
+     * milliseconds.  Thread executes {@link Thread#sleep(long)}.
+     *
+     * @param threadId the thread that should execute this command
+     * @param order the execution order
+     * @param timeout the length of time to sleep in milliseconds
+     *                (must not be negative)
+     */
+    public void addSleepCommand(int threadId, int order, long millis)
+    {
+        addCommand(threadId, order, new SleepCommand(millis));
     }
 
     /**
@@ -254,7 +270,7 @@ public class FarragoTestCommandGenerator
     /**
      * Handle adding a command to {@link #threadMap}.
      */
-    void addCommand(int threadId, int order, FarragoTestCommand command)
+    public void addCommand(int threadId, int order, FarragoTestCommand command)
     {
         assert(threadId > 0);
         assert(order > 0);
@@ -381,9 +397,6 @@ public class FarragoTestCommandGenerator
     /**
      * Returns a {@link Collection} of {@link FarragoTestCommand}
      * objects for the given thread ID.
-     *
-     * @throws NullPointerException if threadId was not configured
-     *                              with any commands.
      */
     Collection getCommands(Integer threadId)
     {
@@ -394,12 +407,42 @@ public class FarragoTestCommandGenerator
 
 
     /**
+     * Returns an {@link Iterator} of {@link FarragoTestCommand}
+     * objects for the given thread ID.
+     */
+    Iterator getCommandIterator(Integer threadId)
+    {
+        return getCommands(threadId).iterator();
+    }
+
+    
+    /**
+     * Prints a description of the commands to be executed for a given
+     * thread.
+     */
+    void printCommands(PrintStream out, Integer threadId)
+    {
+        int stepNumber = 1;
+        for(Iterator i = getCommandIterator(threadId); i.hasNext(); ) {
+            out.println("\tStep "
+                        + stepNumber++
+                        + ": " 
+                        + i.next().getClass().getName());
+        }
+    }
+
+
+    /**
      * SynchronizationCommand causes the execution thread to wait for all
      * other threads in the test before continuing.
      */
-    private static class SynchronizationCommand
+    static class SynchronizationCommand
         implements FarragoTestCommand
     {
+        private SynchronizationCommand()
+        {
+        }
+
         public void execute(FarragoTestCommandExecutor executor)
             throws Exception
         {
@@ -420,6 +463,28 @@ public class FarragoTestCommandGenerator
         private AutoSynchronizationCommand()
         {
             super();
+        }
+    }
+
+
+    /**
+     * SleepCommand causes the execution thread to wait for all
+     * other threads in the test before continuing.
+     */
+    private static class SleepCommand
+        implements FarragoTestCommand
+    {
+        private long millis;
+
+        private SleepCommand(long millis)
+        {
+            this.millis = millis;
+        }
+
+        public void execute(FarragoTestCommandExecutor executor)
+            throws Exception
+        {
+            Thread.sleep(millis);
         }
     }
 

@@ -187,7 +187,7 @@ class RuleQueue
             // Identical match has already been added.
             return;
         }
-        tracer.fine("Rule-match queued: " + matchName);
+        tracer.finer("Rule-match queued: " + matchName);
         matchList.add(match);
     }
 
@@ -243,17 +243,17 @@ class RuleQueue
                 importance = Math.max(importance,childImportance);
             }
         }
-        tracer.finer("Importance of [" + subset + "] is " + importance);
+        tracer.finest("Importance of [" + subset + "] is " + importance);
         return importance;
     }
 
     private void dump() {
-        if (tracer.isLoggable(Level.FINE)) {
+        if (tracer.isLoggable(Level.FINER)) {
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
             dump(pw);
             pw.flush();
-            tracer.fine(sw.toString());
+            tracer.finer(sw.toString());
         }
     }
 
@@ -346,12 +346,12 @@ class RuleQueue
             assert matches[i] != null : i;
         }
         Arrays.sort(matches,ruleMatchImportanceComparator);
-        if (tracer.isLoggable(Level.FINE)) {
-            tracer.fine("Sorted rule queue:");
+        if (tracer.isLoggable(Level.FINER)) {
+            tracer.finer("Sorted rule queue:");
             for (int i = 0; i < matches.length; i++) {
                 VolcanoRuleMatch match = (VolcanoRuleMatch) matches[i];
                 final double importance = match.computeImportance();
-                tracer.fine(match + " importance " + importance);
+                tracer.finer(match + " importance " + importance);
             }
         }
         final VolcanoRuleMatch match = (VolcanoRuleMatch) matches[0];
@@ -403,8 +403,8 @@ class RuleQueue
             alpha = 0.99;
         }
         final double importance = parentImportance * alpha;
-        if (tracer.isLoggable(Level.FINER)) {
-            tracer.finer(
+        if (tracer.isLoggable(Level.FINEST)) {
+            tracer.finest(
                 "Importance of [" + child + "] to its parent [" + parent
                 + "] is " + importance + " (parent importance="
                 + parentImportance + ", child cost=" + childCost

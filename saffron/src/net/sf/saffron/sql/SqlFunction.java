@@ -68,9 +68,9 @@ public abstract class SqlFunction extends SqlOperator
 
     //~ Methods ---------------------------------------------------------------
 
-    public int getSyntax()
+    public SqlSyntax getSyntax()
     {
-        return Syntax.Function;
+        return SqlSyntax.Function;
     }
 
     public void unparse(

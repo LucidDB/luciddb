@@ -133,6 +133,15 @@ public class SqlTypeName extends EnumeratedValues.BasicValue {
         return (SqlTypeName) enumeration.getValue(name);
     }
 
+    /**
+     * Returns true if {@param name} is defined in {@link SqlTypeName#enumeration}
+     * Otherwise it returns false.
+     * @param name
+     */
+    public static boolean containsName(String name) {
+        return enumeration.containsName(name);
+    }
+
     public boolean allowsNoPrecNoScale() {
         return (signatures & PrecNoScaleNo) != 0;
     }

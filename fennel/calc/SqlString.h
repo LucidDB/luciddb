@@ -113,7 +113,7 @@ SqlStrCat(char* dest,
 //! dest = str1 || str2. Returns new length in bytes.
 //!
 //! This is an optimization for creating a concatenated string from
-//! two other strings, eliminating a seperate string copy. The
+//! two other strings, eliminating a separate string copy. The
 //! assumption is that this is the common case with concatenation. 
 //! Subsequent concatenations may occur with other form.
 //!
@@ -757,7 +757,7 @@ SqlStrTrim(char* dest,
 //! Results in a VARCHAR.
 //! Note: Does not check that result has enough capacity to contain
 //! substring as this is irrelevant. If a program depends on the size
-//! of result not changing, and this instruction inforcing that
+//! of result not changing, and this instruction enforcing that
 //! invariant -- probably a bad practice anyway -- trouble could result.
 //!
 //! Trim character code points that require more than one code unit are

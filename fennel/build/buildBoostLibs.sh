@@ -7,50 +7,38 @@ set -e
 set -v
 
 # First, build bjam
-BOOST_PLATFORM=bin.${BOOST_JAM_PLATFORM}
-BJAM=${BOOST_DIR}/tools/build/jam_src/${BOOST_PLATFORM}/bjam
-BUILD_OPTS="debug release <runtime-link>dynamic <threading>multi"
-BUILD_OPTS="${BUILD_OPTS} <stlport-anachronisms>off"
 cd ${BOOST_DIR}/tools/build/jam_src
 ./build.sh
 
+# Locate bjam executable
+BOOST_PLATFORM=bin.${BOOST_JAM_PLATFORM}
+BJAM=${BOOST_DIR}/tools/build/jam_src/${BOOST_PLATFORM}/bjam
+
+# Choose Boost build options
+BUILD_OPTS="debug release <runtime-link>dynamic <threading>multi"
+BUILD_OPTS="${BUILD_OPTS} <stlport-anachronisms>off"
+
+BJAM_OPTS="--stagedir=${BOOST_DIR}"
+
+# exclude the Boost libraries we don't want
+BJAM_OPTS="${BJAM_OPTS} --without-filesystem"
+BJAM_OPTS="${BJAM_OPTS} --without-test"
+BJAM_OPTS="${BJAM_OPTS} --without-signals"
+
+# export variables to control bjam
+export BUILD="${BUILD_OPTS}"
+export TOOLS="${BOOST_TOOLSET}"
+export STLPORT_ROOT="${STLPORT_LOCATION}"
+
 if test "${TARGET_OS}" = "mingw32"
 then
-    export NOCYGWIN_STLPORT_LIB_ID=1
+    export NOCYGWIN_STLPORT_LIB_ID=stlport_gcc
+    # NOTE:  horrible hack
+    sed -i -e 's:IRIX:CYGWIN*:g' \
+        ${BOOST_DIR}/tools/build/v1/gcc-stlport-tools.jam
+    set -e
 fi
 
-# Next, generate (but do not exec) a script to build Boost
-# bjam seems to only run on the last target. hack around
-# this by splitting into two invocations
+# Run the Boost build, staging the libraries into ${BOOST_DIR}/lib
 cd ${BOOST_DIR}
-${BJAM} -n -obuildBoost2-thread.sh "-sTOOLS=${BOOST_TOOLSET}" "-sBUILD=${BUILD_OPTS}" \
-    "-sSTLPORT_ROOT=${STLPORT_LOCATION}" \
-    boost_thread
-${BJAM} -n -obuildBoost2-regex.sh "-sTOOLS=${BOOST_TOOLSET}" "-sBUILD=${BUILD_OPTS}" \
-    "-sSTLPORT_ROOT=${STLPORT_LOCATION}" \
-    boost_regex
-${BJAM} -n -obuildBoost2-date_time.sh "-sTOOLS=${BOOST_TOOLSET}" "-sBUILD=${BUILD_OPTS}" \
-    "-sSTLPORT_ROOT=${STLPORT_LOCATION}" \
-    boost_date_time
-cat buildBoost2-thread.sh buildBoost2-regex.sh buildBoost2-date_time.sh > buildBoost2.sh
-
-# Transform the script to keep path lengths under control for Cygwin
-sed -e 's:stlport-anachronisms-off/stlport-cstd-namespace-std/stlport-debug-alloc-off/stlport-iostream-on/stlport-version-[0-9\.]*:stlport-opts:g' \
-    buildBoost2.sh > buildBoost3.sh
-
-# And apply some platform-specific tweaks
-
-if test "${TARGET_OS}" = "cygwin"
-then
-    rm buildBoost2.sh
-    mv buildBoost3.sh buildBoost2.sh
-    sed -e 's:-lstlport_gcc:-lstlport_cygwin:g' \
-        buildBoost2.sh > buildBoost3.sh
-fi
-
-# Finally, execute the script
-set +e
-. buildBoost3.sh
-
-# TODO:  figure out why release build has unresolved externals on mingw;
-# debug build seems fine; that's why error checking is disabled above
+${BJAM} ${BJAM_OPTS} stage

@@ -27,12 +27,9 @@ import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
 import net.sf.saffron.core.SaffronTypeFactoryImpl;
 import net.sf.saffron.oj.util.OJUtil;
-import net.sf.saffron.oj.util.RelEnvironment;
-import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.util.Util;
 import openjava.mop.CannotExecuteException;
 import openjava.mop.OJClass;
-import openjava.ptree.Expression;
 import openjava.ptree.util.ClassMap;
 import openjava.ptree.util.SyntheticClass;
 
@@ -83,9 +80,7 @@ public class OJTypeFactoryImpl extends SaffronTypeFactoryImpl
         final OJClass [] fieldClasses = new OJClass[fields.length];
         for (int i = 0; i < fields.length; i++) {
             SaffronField field = fields[i];
-            // TODO jvs 26-May-2004: mangle names to match Java rules; but need
-            // to match this wherever FieldAccess objects are constructed
-            fieldNames[i] = field.getName();
+            fieldNames[i] = Util.toJavaId(field.getName());
             final SaffronType fieldType = field.getType();
             fieldClasses[i] = OJUtil.typeToOJClass(declarer,fieldType);
         }

@@ -22,10 +22,6 @@
 
 package net.sf.saffron.sql;
 
-import net.sf.saffron.calc.RexToCalcTranslator;
-import net.sf.saffron.calc.CalcRexImplementor;
-import net.sf.saffron.rex.RexCall;
-
 /**
  * <code>SqlBinaryOperator</code> is a binary operator.
  */
@@ -51,9 +47,9 @@ public abstract class SqlBinaryOperator extends SqlOperator
 
     //~ Methods ---------------------------------------------------------------
 
-    public int getSyntax()
+    public SqlSyntax getSyntax()
     {
-        return Syntax.Binary;
+        return SqlSyntax.Binary;
     }
 
     protected String getSignatureTemplate() {

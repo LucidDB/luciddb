@@ -42,15 +42,10 @@ public class FarragoConcurrencyTest
         return wrappedSuite(FarragoConcurrencyTest.class);
     }
 
-    // TODO: remove when testConcurrentExplain is fixed.
-    public void testDummy()
-    {
-    }
-
     /**
      * Test concurrent "explain plan" for a simple select statement.
      */
-    public void _testConcurrentExplain()
+    public void testConcurrentExplain()
         throws Exception
     {
         FarragoTestCommandGenerator cmdGen = newCommandGenerator();
@@ -71,19 +66,16 @@ public class FarragoConcurrencyTest
     /**
      * Test concurrent "explain plan" for a simple select statement.
      */
-    public void _testConcurrentExplainNoLockstep()
+    public void testConcurrentExplainNoLockstep()
         throws Exception
     {
-        FarragoTestCommandGenerator cmdGen = newCommandGenerator();
+        FarragoTestTimedCommandGenerator cmdGen = 
+            new FarragoTestTimedCommandGenerator(30);
 
         String sql = "explain plan for select * from sales.depts";
 
-        // Repeat a few times to improve odds of getting concurrent
-        // planning.
-        for (int i = 1; i <= 100; i++) {
-            cmdGen.addExplainCommand(1, i, sql);
-            cmdGen.addExplainCommand(2, i, sql);
-        }
+        cmdGen.addExplainCommand(1, 1, sql);
+        cmdGen.addExplainCommand(2, 1, sql);
 
         executeTest(cmdGen, false);
     }
@@ -91,9 +83,8 @@ public class FarragoConcurrencyTest
 
     /**
      * Test concurrent <code>select * from sales.depts</code> statements.
-     * Known to fail as of 6/17/2004.
      */
-    public void _testConcurrentSelect()
+    public void testConcurrentSelect()
         throws Exception
     {
         FarragoTestCommandGenerator cmdGen = newCommandGenerator();
@@ -105,7 +96,7 @@ public class FarragoConcurrencyTest
         // Repeat a few times to improve odds of getting concurrent
         // execution.
         for(int i = 0; i < 10; i++) {
-            int tick = (i * 3) + 1;
+            int tick = (i * 3) + 2;
 
             cmdGen.addPrepareCommand(1, tick, sql);
             cmdGen.addFetchAndCompareCommand(1, tick + 1, 5, expected);
@@ -123,11 +114,41 @@ public class FarragoConcurrencyTest
         executeTest(cmdGen, true);        
     }
 
+
     /**
-     * Test concurrent select statements with a join.
+     * Test concurrent <code>select * from sales.depts</code> statements.
      * Known to fail as of 6/17/2004.
      */
-    public void _testConcurrentJoin()
+    public void testConcurrentSelectNoLockStep()
+        throws Exception
+    {
+        FarragoTestTimedCommandGenerator cmdGen = 
+            new FarragoTestTimedCommandGenerator(30);
+
+        String sql = "select * from sales.depts order by deptno";
+        String expected = 
+            "{ 10, 'Sales' }, { 20, 'Marketing' }, { 30, 'Accounts' }";
+
+        cmdGen.addPrepareCommand(1, 1, sql);
+        cmdGen.addFetchAndCompareCommand(1, 2, 5, expected);
+        cmdGen.addCloseCommand(1, 3);
+
+        cmdGen.addPrepareCommand(2, 1, sql);
+        cmdGen.addFetchAndCompareCommand(2, 2, 5, expected);
+        cmdGen.addCloseCommand(2, 3);
+
+        cmdGen.addPrepareCommand(3, 1, sql);
+        cmdGen.addFetchAndCompareCommand(3, 2, 5, expected);
+        cmdGen.addCloseCommand(3, 3);
+
+        executeTest(cmdGen, false);
+    }
+
+
+    /**
+     * Test concurrent select statements with a join.
+     */
+    public void testConcurrentJoin()
         throws Exception
     {
         FarragoTestCommandGenerator cmdGen = newCommandGenerator();
@@ -142,7 +163,7 @@ public class FarragoConcurrencyTest
         // Repeat a few times to improve odds of getting concurrent
         // execution.
         for(int i = 0; i < 10; i++) {
-            int tick = (i * 3) + 1;
+            int tick = (i * 3) + 2;
 
             cmdGen.addPrepareCommand(1, tick, sql);
             cmdGen.addFetchAndCompareCommand(1, tick + 1, 5, expected);
@@ -156,13 +177,43 @@ public class FarragoConcurrencyTest
         executeTest(cmdGen, true);        
     }
 
+
+    /**
+     * Test concurrent select statements with a join.
+     */
+    public void testConcurrentJoinNoLockStep()
+        throws Exception
+    {
+        FarragoTestTimedCommandGenerator cmdGen =
+            new FarragoTestTimedCommandGenerator(30);
+
+        String sql = "select emps.empno, emps.name, emps.gender, depts.* from sales.depts, sales.emps where emps.deptno = depts.deptno";
+
+        String expected = 
+            "{ 100, 'Fred',  null, 10, 'Sales' }, " +
+            "{ 110, 'Eric',  'M',  20, 'Marketing' }, " +
+            "{ 120, 'Wilma', 'F',  20, 'Marketing' }";
+
+        cmdGen.addPrepareCommand(1, 1, sql);
+        cmdGen.addFetchAndCompareCommand(1, 2, 5, expected);
+        cmdGen.addCloseCommand(1, 3);
+        
+        cmdGen.addPrepareCommand(2, 1, sql);
+        cmdGen.addFetchAndCompareCommand(2, 2, 5, expected);
+        cmdGen.addCloseCommand(2, 3);
+
+        executeTest(cmdGen, false);        
+    }
+
+
     /**
      * Test conccurent insert statements.
      */
     public void _testConcurrentInsert()
         throws Exception
     {
-        // REVIEW: SZ 6/18/2004: insert is completely untested
+        // REVIEW: SZ 6/18/2004: Fennel storage currently has no
+        // table-level concurrency-control, so this test should fail.
 
         FarragoTestCommandGenerator cmdGen = newCommandGenerator();
 

@@ -94,8 +94,8 @@
     <text>Cast function cannot convert value of type {0} to type {1}</text>
 </exception>
 
-<exception id="120011" name="UnknownTypeName">
-    <text>Unknown type name: {0}</text>
+<exception id="120011" name="UnknownDatatypeName">
+    <text>Unknown datatype name: {0}</text>
 </exception>
 
 <!-- End of last error section ============================================ -->

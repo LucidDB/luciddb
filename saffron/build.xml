@@ -48,6 +48,7 @@
   <fail unless="macker.dir"/>
   <fail unless="jalopy.dir"/>
   <fail unless="dynamicjava.dir"/>
+  <fail unless="janino.dir"/>
 
   <!--
     ===================================================================
@@ -117,6 +118,7 @@
     <pathelement location="${tomcat.home}/common/lib/servlet.jar"/>
     <pathelement location="${weblogic.home}/lib/weblogic.jar"/>
     <pathelement location="${dynamicjava.dir}/lib/dynamicjava.jar"/>
+    <pathelement location="${janino.dir}/lib/janino.jar"/>
     <pathelement location="${ant.home}/lib/ant.jar"/>
     <pathelement location="${ant.home}/lib/optional.jar"/>
     <pathelement location="${javahome.dir}/lib/tools.jar"/>
@@ -159,6 +161,12 @@
     <condition property="djava.unavailable" value="">
       <not>
         <available file="${dynamicjava.dir}"/>
+      </not>
+    </condition>
+    <available property="janino.available" file="${janino.dir}"/>
+    <condition property="janino.unavailable" value="">
+      <not>
+        <available file="${janino.dir}"/>
       </not>
     </condition>
   </target>
@@ -335,6 +343,8 @@
       <exclude name="${servlet.unavailable}net/sf/saffron/web/**/*.java"/>
       <!-- exclude DynamicJavaCompiler if djava is not available -->
       <exclude name="${djava.unavailable}openjava/ojc/DynamicJavaCompiler.java"/>
+      <!-- exclude JaninoCompiler if janino is not available -->
+      <exclude name="${janino.unavailable}openjava/ojc/JaninoCompiler.java"/>
     </javac>
   </target>
 

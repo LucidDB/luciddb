@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/str.sql#4 $
+0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/str.sql#5 $
 0: jdbc:farrago:> -- Full vertical system testing of non function statements
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -160,8 +160,8 @@
 +---------+
 | EXPR$0  |
 +---------+
-| 0       |
-| 0       |
+|         |
+|         |
 | 0       |
 | 5       |
 +---------+
@@ -202,10 +202,42 @@
 | false   |
 | true    |
 +---------+
-0: jdbc:farrago:> --select name like '' from sales.emps;
-0: jdbc:farrago:> --select city like 'san%' from sales.emps order by 1;
-0: jdbc:farrago:> --select city like 'San%' from sales.emps order by 1;
+0: jdbc:farrago:> select name like '' from sales.emps;
++---------+
+| EXPR$0  |
++---------+
+| false   |
+| false   |
+| false   |
+| false   |
++---------+
+0: jdbc:farrago:> select city like 'san%' from sales.emps order by 1;
++---------+
+| EXPR$0  |
++---------+
+|         |
+|         |
+| false   |
+| false   |
++---------+
+0: jdbc:farrago:> select city like 'San%' from sales.emps order by 1;
++---------+
+| EXPR$0  |
++---------+
+|         |
+|         |
+| false   |
+| true    |
++---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> --select char_length(city) from sales.emps order by 1;
+0: jdbc:farrago:> select char_length(city) from sales.emps order by 1;
++---------+
+| EXPR$0  |
++---------+
+|         |
+|         |
+| 9       |
+| 13      |
++---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

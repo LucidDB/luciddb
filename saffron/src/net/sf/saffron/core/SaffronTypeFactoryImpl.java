@@ -137,7 +137,7 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
                 fieldNames);
         } else {
             // REVIEW jvs 1-Mar-2004: I adapted this from
-            // SqlOperatorTable.useBiggest to keep Saffron tests happy.  But at
+            // SqlOperatorTable.useNullableBiggest to keep Saffron tests happy.  But at
             // some point need to pull up Farrago's implementation instead, at
             // least for SQL types.
             for (int i = 1; i < types.length; i++) {
@@ -1280,6 +1280,13 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             rule = (HashSet) coerceRules.get(SqlTypeName.Timestamp);
             rule.add(SqlTypeName.Char);
             rule.add(SqlTypeName.Varchar);
+
+            // for getting the milliseconds.
+            rule = (HashSet) coerceRules.get(SqlTypeName.Bigint);
+            rule.add(SqlTypeName.Date);
+            rule.add(SqlTypeName.Time);
+            rule.add(SqlTypeName.Timestamp);
+
 
         }
 

@@ -492,6 +492,10 @@ class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         // use same construct as with CHAR_LENGTH above
         registerInstr(opTab.upperFunc, ExtInstructionDefTable.upper);
 
+        registerInstr(opTab.localTimeFunc,ExtInstructionDefTable.localTime);
+        registerInstr(opTab.localTimestampFunc,
+                    ExtInstructionDefTable.localTimestamp);
+
 
     }
 }

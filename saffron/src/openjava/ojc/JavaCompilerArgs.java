@@ -110,6 +110,11 @@ public class JavaCompilerArgs {
     public void setSource(String source, String fileName) {
         throw new UnsupportedOperationException();
     }
+    public void setFullClassName(String fullClassName) {
+        // NOTE jvs 28-June-2004: I added this in order to support Janino's
+        // JavaSourceClassLoader, which needs it.  Non-Farrago users
+        // don't need to call this method.
+    }
 }
 
 // End JavaCompilerArgs.java

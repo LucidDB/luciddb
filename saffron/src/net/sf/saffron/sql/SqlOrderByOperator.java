@@ -45,9 +45,9 @@ public class SqlOrderByOperator extends SqlSpecialOperator
         super("ORDER BY",SqlKind.OrderBy,0);
     }
 
-    public int getSyntax()
+    public SqlSyntax getSyntax()
     {
-        return Syntax.Postfix;
+        return SqlSyntax.Postfix;
     }
 
     public void unparse(

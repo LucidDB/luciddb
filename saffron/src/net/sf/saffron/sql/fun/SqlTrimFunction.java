@@ -39,7 +39,8 @@ import java.util.List;
 public class SqlTrimFunction extends SqlFunction {
     public SqlTrimFunction() {
         super("TRIM", SqlKind.Trim, null, null,
-                SqlOperatorTable.typeNullableStringString,SqlFunction.SqlFuncTypeName.String);
+                SqlOperatorTable.typeNullableStringStringOfSameType,
+                SqlFunction.SqlFuncTypeName.String);
     }
 
     public int getNumOfOperands(int disiredCount) {
@@ -92,7 +93,8 @@ public class SqlTrimFunction extends SqlFunction {
     public SaffronType getType(SaffronTypeFactory typeFactory,
             SaffronType[] argTypes) {
         assert(3 == argTypes.length);
-        return argTypes[2];
+        return SqlOperatorTable.makeNullableIfOperandsAre(
+                typeFactory,argTypes, argTypes[2]);
     }
 
     public SaffronType getType(SqlValidator validator,
@@ -104,15 +106,10 @@ public class SqlTrimFunction extends SqlFunction {
             ops[i - 1] = call.operands[i];
         }
 
-        if (!isCharTypeComparable(validator, scope, ops)) {
-            throw validator.newValidationError(
-                    call.operands[1].toString() +
-                    " is not comparable to " +
-                    call.operands[2].toString());
-
-        }
-
-        return validator.deriveType(scope, call.operands[2]);
+        isCharTypeComparableThrows(validator, scope, ops);
+        SaffronType type = validator.deriveType(scope, call.operands[2]);
+        return SqlOperatorTable.makeNullableIfOperandsAre(
+                validator,scope,call,type);
     }
 
     public void test(SqlTester tester) {

@@ -26,6 +26,8 @@ import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.util.Util;
 import net.sf.saffron.util.Walkable;
 
+import java.util.Arrays;
+
 
 /**
  * A <code>RuleOperand</code> determines whether a {@link
@@ -93,6 +95,23 @@ public class RuleOperand implements Walkable
     }
 
     //~ Methods ---------------------------------------------------------------
+
+    public int hashCode() {
+        int h = clazz.hashCode();
+        h = Util.hash(h, convention.getOrdinal());
+        h = Util.hashArray(h, children);
+        return h;
+    }
+
+    public boolean equals(Object obj) {
+        if (!(obj instanceof RuleOperand)) {
+            return false;
+        }
+        RuleOperand that = (RuleOperand) obj;
+        return this.clazz == that.clazz &&
+                this.convention == that.convention &&
+                Arrays.equals(this.children, that.children);
+    }
 
     // implement Walkable
     public Object [] getChildren()

@@ -331,9 +331,31 @@ public class SqlParserTest extends TestCase
                 "SELECT *" + NL + "FROM `T`" + NL + "WHERE ((TRUE IS DISTINCT FROM TRUE) IS TRUE)");
     }
 
-    public void _testCast(){
-        check("select cast(1.0 as integer) from values(true)",
-              "SELECT *" + NL + "FROM `T`"+ NL + "FROM VALUES(TRUE)");
+    public void testCast(){
+        checkExp("cast(x as boolean)", "CAST(`X` AS BOOLEAN)");
+        checkExp("cast(x as integer)", "CAST(`X` AS INTEGER)");
+        checkExp("cast(x as varchar)", "CAST(`X` AS VARCHAR)");
+        checkExp("cast(x as date)", "CAST(`X` AS DATE)");
+        checkExp("cast(x as time)", "CAST(`X` AS TIME)");
+        checkExp("cast(x as timestamp)", "CAST(`X` AS TIMESTAMP)");
+        checkExp("cast(x as decimal)", "CAST(`X` AS DECIMAL)");
+        checkExp("cast(x as char)", "CAST(`X` AS CHAR)");
+        checkExp("cast(x as binary)", "CAST(`X` AS BINARY)");
+        checkExp("cast(x as varbinary)", "CAST(`X` AS VARBINARY)");
+        checkExp("cast(x as tinyint)", "CAST(`X` AS TINYINT)");
+        checkExp("cast(x as smallint)", "CAST(`X` AS SMALLINT)");
+        checkExp("cast(x as bigint)", "CAST(`X` AS BIGINT)");
+        checkExp("cast(x as real)", "CAST(`X` AS REAL)");
+        checkExp("cast(x as double)", "CAST(`X` AS DOUBLE)");
+        checkExp("cast(x as bit)", "CAST(`X` AS BIT)");
+
+        checkExp("cast(x as bit(123))", "CAST(`X` AS BIT(123))");
+        checkExp("cast(x as decimal(1,2))", "CAST(`X` AS DECIMAL(1, 2))");
+
+        checkExp("cast('foo' as bar)","CAST('foo' AS `BAR`)");
+    }
+
+    public void testCastFails() {
     }
 
     public void testLikeAndSimilar()
@@ -1106,10 +1128,12 @@ public class SqlParserTest extends TestCase
      */
     public void testDateTimeCast() {
      //   checkExp("CAST(DATE '2001-12-21' AS CHARACTER VARYING)", "CAST(2001-12-21)");
-        checkExp("CAST('2001-12-21' AS DATE)","CAST('2001-12-21' AS `DATE`)");
-        checkExp("CAST(12 AS DATE)","CAST(12 AS `DATE`)");
+        checkExp("CAST('2001-12-21' AS DATE)","CAST('2001-12-21' AS DATE)");
+        checkExp("CAST(12 AS DATE)","CAST(12 AS DATE)");
         checkFails("CAST('2000-12-21' AS DATE NOT NULL)", "(?s).*Encountered \"NOT\" at line 1, column 27.*");
         checkFails("CAST('foo' as 1)","(?s).*Encountered \"1\" at line 1, column 15.*");
+        checkExp("Cast(DATE '2004-12-21' AS VARCHAR(10))", "CAST(DATE '2004-12-21' AS VARCHAR(10))");
+
     }
 
     public void testTrim() {
@@ -1132,6 +1156,13 @@ public class SqlParserTest extends TestCase
     public void testOverlay() {
         checkExp("overlay('ABCdef' placing 'abc' from 1)","OVERLAY('ABCdef' PLACING 'abc' FROM 1)");
         checkExp("overlay('ABCdef' placing 'abc' from 1 for 3)","OVERLAY('ABCdef' PLACING 'abc' FROM 1 FOR 3)");
+    }
+
+    public void testJdbcFunctionCall() {
+        checkExp("{fn apa(1,'1')}","{fn APA(1, '1') }");
+        checkExp("{ Fn apa(log(ln(1))+2)}","{fn APA((LOG(LN(1)) + 2)) }");
+        checkExp("{fN apa(*)}","{fn APA(*) }");
+        checkExp("{   FN\t\r\n apa()}","{fn APA() }");
     }
 }
 

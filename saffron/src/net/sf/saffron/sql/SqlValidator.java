@@ -662,7 +662,7 @@ public class SqlValidator
             return literal.createSqlType(typeFactory);
 
         }
-        //~ SqlDynamicParam -----------------------------------------------------------
+        //~ SqlDynamicParam ---------------------------------------------------
         if (operand instanceof SqlDynamicParam) {
             return unknownType;
         }
@@ -691,6 +691,7 @@ public class SqlValidator
             }
             //~ FunctionCall ---------
             if ((call.operator instanceof SqlFunction)
+                || (call.operator instanceof SqlSpecialOperator)
                 || (call.operator instanceof SqlRowOperator))
             {
                 SqlCall node = (SqlCall) operand;
@@ -698,18 +699,16 @@ public class SqlValidator
                 SaffronType[] argTypes = new SaffronType[operands.length];
                 for (int i = 0; i < operands.length; ++i) {
                     // We can't derive a type for some operands.
-                    switch (call.operator.kind.ordinal_) {
-                        case SqlKind.TrimORDINAL:
-                        if (i == 0) {
+                    if (operands[i] instanceof SqlSymbol) {
                             continue; // operand is a symbol e.g. LEADING
-                        }
                     }
                     SaffronType nodeType = deriveType(scope, operands[i]);
                     setValidatedNodeType(operands[i], nodeType);
                     argTypes[i] = nodeType;
                 }
 
-                if (!(call.operator instanceof SqlRowOperator)) {
+                if (!(call.operator instanceof SqlJdbcFunctionCall)
+                        && call.operator instanceof SqlFunction) {
                     SqlFunction function = opTab.lookupFunction(
                         call.operator.name, argTypes);
                     if (function == null) {

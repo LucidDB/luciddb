@@ -22,8 +22,14 @@ package net.sf.saffron.sql;
 
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
+import net.sf.saffron.core.SaffronTypeFactoryImpl;
 import net.sf.saffron.sql.type.SqlTypeName;
+import net.sf.saffron.sql.parser.ParserPosition;
 import net.sf.saffron.resource.SaffronResource;
+import net.sf.saffron.util.SaffronProperties;
+import net.sf.saffron.util.Util;
+
+import java.nio.charset.Charset;
 
 /**
  * This should really be a subtype of SqlCall ...
@@ -52,7 +58,7 @@ public class SqlDataType extends SqlNode {
         return type;
     }
     
-    public SqlDataType(SqlIdentifier typeName, int precision , int scale,
+    public SqlDataType(final SqlIdentifier typeName, int precision , int scale,
             String charSetName) {
         this.typeName = typeName;
         this.scale = scale;
@@ -100,44 +106,80 @@ public class SqlDataType extends SqlNode {
      *   following this node in a depth-first scan of the parse tree
      */
     public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
-        typeName.unparse(writer,leftPrec,rightPrec);
-        if (precision > 0) {
-            writer.print("(" + precision);
-            if (scale > 0) {
-                writer.print(", " + scale);
+        String name = typeName.getSimple();
+        if (SqlTypeName.containsName(name)){
+            //we have a built in data type
+            writer.print(name);
+
+            if (precision > 0) {
+                writer.print("(" + precision);
+                if (scale > 0) {
+                    writer.print(", " + scale);
+                }
+                writer.print(")");
             }
-            writer.print(")");
-        }
-        if (charSetName != null) {
-            writer.print(" CHARACTER SET " + charSetName);
+
+            if (charSetName != null) {
+                writer.print(" CHARACTER SET " + charSetName);
+            }
+        } else {
+            // else we have a user defined type
+            typeName.unparse(writer,leftPrec,rightPrec);
         }
     }
 
     public Object clone() {
-        return new SqlDataType((SqlIdentifier)typeName.clone(), precision, scale, charSetName);
+        return new SqlDataType(typeName, precision, scale, charSetName);
     }
 
+    /**
+     * @throws {@link SqlValidator#newValidationError} if
+     * {@link SqlDataType#typeName#getSimple()} is not defined.
+     */
+
     public SaffronType deriveType(SqlValidator validator) {
-        SqlTypeName typeName;
-        SaffronTypeFactory typeFactory = validator.typeFactory;
-        String name = this.getTypeName().names[0];
-        try {
-            typeName = SqlTypeName.get(name);
-        } catch (Error e) {
-            throw SaffronResource.instance().newUnknownTypeName(name);
+        String name = typeName.getSimple();
+        //for now we only support builtin datatypes
+        if (!SqlTypeName.containsName(name)) {
+            ParserPosition pos = getParserPosition();
+            assert(pos==null) : "need to add pos data now when pos!=null";
+            throw SaffronResource.instance().newUnknownDatatypeName(name);
         }
 
-        if (getPrecision() > 0 && getScale() > 0) {
-            type = typeFactory.createSqlType(typeName, getPrecision(),
-                    getScale());
-        } else if (getPrecision() > 0) {
-            type = typeFactory.createSqlType(typeName, getPrecision());
+        SqlTypeName sqlTypeName = SqlTypeName.get(name);
+        SaffronTypeFactory typeFactory = validator.typeFactory;
+
+        if (precision>0 && scale>0 && sqlTypeName.allowsPrecScale(true,true))
+        {
+            type = typeFactory.createSqlType(sqlTypeName, precision, scale);
+        } else if (precision>0 && sqlTypeName.allowsPrecNoScale()) {
+            type = typeFactory.createSqlType(sqlTypeName, precision);
+        } else if (sqlTypeName.allowsNoPrecNoScale()) {
+            type = typeFactory.createSqlType(sqlTypeName);
         } else {
-            type = typeFactory.createSqlType(typeName);
+            type = SaffronTypeFactoryImpl.createSqlTypeIgnorePrecOrScale(
+                    typeFactory, sqlTypeName);
+        }
+
+        if (type.isCharType()) {
+            //Applying Syntax rule 10 from SQL:99 spec section 6.22
+            //"If TD is a fixed-length, variable-length or large object character string, then the collating sequence
+            //of the result of the <cast specification> is the default collating sequence for the character
+            //repertoire of TD and the result of the <cast specification> has the Coercible coercibility characteristic."
+            SqlCollation collation = new SqlCollation(
+                    SqlCollation.Coercibility.Coercible);
+
+            Charset charset;
+            if (null == charSetName) {
+                charset = Util.getDefaultCharset();
+            } else {
+                charset = Charset.forName(charSetName);
+            }
+            type = typeFactory.createTypeWithCharsetAndCollation(
+                    type, charset, collation);
         }
         return type;
     }
-
 }
 
 // End SqlDataType.java

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/functions.sql#4 $
+0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/functions.sql#7 $
 0: jdbc:farrago:> -- Full vertical system testing of non function statements
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -175,6 +175,112 @@
 | true    |
 | true    |
 +---------+
+0: jdbc:farrago:> select nullif(50,age) from sales.emps order by 1;
++---------+
+| EXPR$0  |
++---------+
+|         |
+| 50      |
+| 50      |
+| 50      |
++---------+
+0: jdbc:farrago:> select nullif(age,50) from sales.emps order by 1;
++---------+
+| EXPR$0  |
++---------+
+|         |
+|         |
+| 25      |
+| 80      |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select cast(null as tinyint) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> select cast(null as smallint) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> select cast(null as integer) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> select cast(null as bigint) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> select cast(null as real) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> select cast(null as double) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> --select cast(null as bit) from values(1);
+0: jdbc:farrago:> select cast(null as boolean) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> select cast(null as char) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> select cast(null as varchar) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> select cast(null as binary) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> select cast(null as date) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> select cast(null as time) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> select cast(null as timestamp) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> select cast(null as varbinary) from values(1);
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> --select cast(null as decimal) from values(1);
+0: jdbc:farrago:> 
 0: jdbc:farrago:> --select abs((-empno)*2) as res from sales.emps;
 0: jdbc:farrago:> --select abs(2) as res from sales.emps;
 0: jdbc:farrago:> --select abs(-2) as res from sales.emps;

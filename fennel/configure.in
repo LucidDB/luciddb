@@ -189,8 +189,6 @@ then
              ln -s /usr/include/FlexLexer.h FlexLexer.h)])
 fi
 
-BOOST_OPTIONS_SUFFIX=stlport-opts/threading-multi
-
 dnl Debug setting
 dnl Note:  even without-debug, we still include -g for profiling;
 dnl binaries can be stripped post-build for real release
@@ -202,28 +200,22 @@ if test "$with_debug" = "yes"
 then
     CXXFLAGS="$CXXFLAGS -g -DDEBUG"
     CXXFLAGS="$CXXFLAGS -D_STLP_DEBUG=1 -D_STLP_DEBUG_UNINITIALIZED=1"
-    BOOST_DEBUG_OR_RELEASE=debug
-    BOOST_THREADLIB=boost_threadd
-    BOOST_REGEXLIB=boost_regex_debug
-    BOOST_DATETIMELIB=boost_date_time
+    BOOST_LIB_SUFFIX=gcc-mt-gdp-1_31
     STLPORT_LIB=${STLPORT_LIB_BASE}_stldebug
 else
     CXXFLAGS="$CXXFLAGS -O3 -g -DNDEBUG"
-    BOOST_DEBUG_OR_RELEASE=release
-    BOOST_THREADLIB=boost_regex
-    BOOST_DATETIMELIB=boost_date_time
-    BOOST_THREADLIB=boost_thread
+    BOOST_LIB_SUFFIX=gcc-mt-p-1_31
     STLPORT_LIB=$STLPORT_LIB_BASE
 fi
+
+BOOST_THREADLIB=boost_thread-$BOOST_LIB_SUFFIX
+BOOST_REGEXLIB=boost_regex-$BOOST_LIB_SUFFIX
+BOOST_DATETIMELIB=boost_date_time-$BOOST_LIB_SUFFIX
 
 dnl Shared library support
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 AC_SUBST(LIBTOOL_DEPS)
-
-BOOST_DATETIMELIB_DIR=$boost_location/libs/date_time/build/bin/libboost_date_time.$DLLEXT/$BOOST_TOOLSET/$BOOST_DEBUG_OR_RELEASE/$BOOST_LINKAGE/$BOOST_OPTIONS_SUFFIX
-BOOST_REGEXLIB_DIR=$boost_location/libs/regex/build/bin/libboost_regex.$DLLEXT/$BOOST_TOOLSET/$BOOST_DEBUG_OR_RELEASE/$BOOST_LINKAGE/$BOOST_OPTIONS_SUFFIX
-BOOST_THREADLIB_DIR=$boost_location/libs/thread/build/bin/libboost_thread.$DLLEXT/$BOOST_TOOLSET/$BOOST_DEBUG_OR_RELEASE/$BOOST_LINKAGE/$BOOST_OPTIONS_SUFFIX
 
 DIST_DIR=$PACKAGE-$VERSION
 
@@ -232,11 +224,8 @@ AC_SUBST(jdk_platform)
 AC_SUBST(target_os)
 AC_SUBST(lib_path_var)
 AC_SUBST(BOOST_DATETIMELIB)
-AC_SUBST(BOOST_DATETIMELIB_DIR)
 AC_SUBST(BOOST_REGEXLIB)
-AC_SUBST(BOOST_REGEXLIB_DIR)
 AC_SUBST(BOOST_THREADLIB)
-AC_SUBST(BOOST_THREADLIB_DIR)
 AC_SUBST(BOOST_TOOLSET)
 AC_SUBST(STLPORT_LIB)
 AC_SUBST(MINGW_LDFLAGS)

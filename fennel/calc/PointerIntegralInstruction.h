@@ -48,7 +48,7 @@ protected:
     StandardTypeDescriptorOrdinal mPointerType;
 };
 
-// TODO: Rename to PointerPutLength to be consistant with RegisterReference
+// TODO: Rename to PointerPutLength to be consistent with RegisterReference
 // TODO: accessors.
 template <typename PTR_TYPE>
 class PointerPutSize : public PointerIntegralInstruction<PTR_TYPE>

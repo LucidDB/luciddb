@@ -40,9 +40,20 @@ import java.util.ArrayList;
 public abstract class SqlBetweenOperator extends SqlSpecialOperator {
     public SqlBetweenOperator(String name, SqlKind kind) {
         super(name, kind, 15, true,
-                SqlOperatorTable.useFirstArgType,
+                SqlOperatorTable.useNullableBoolean,
                 null,
-                SqlOperatorTable.typeNullableNumericNumericNumeric);
+                null);
+    }
+
+    protected void checkArgTypes(SqlCall call, SqlValidator validator,
+            SqlValidator.Scope scope) {
+        SqlOperatorTable.typeNullableNumeric.check(call,validator,scope,call.operands[0],0);
+        SqlOperatorTable.typeNullableNumeric.check(call,validator,scope,call.operands[2],0);
+        SqlOperatorTable.typeNullableNumeric.check(call,validator,scope,call.operands[3],0);
+    }
+
+    public int getNumOfOperands(int desiredCount) {
+        return 4;
     }
 
     public void unparse(

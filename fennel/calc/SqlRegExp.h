@@ -187,9 +187,9 @@ SqlSimilarPrepEscapeProcessing(char const * const escape,
             // Define special characters for SQL2003 8.6 General Rule
             // 3b. (See also Syntax Rule 6.)  Added <right brace> to
             // these list as it appears at first glance to be an
-            // ommision from the rules.  Could easily be wrong
+            // omission from the rules.  Could easily be wrong
             // though. There could be a subtle reason why '}' is
-            // ommitted from these rules
+            // omitted from these rules
             char const * const SqlSimilarPrepGeneralRule3b = "[]()|^-+*_%?{}";
 
             if (strchr(SqlSimilarPrepGeneralRule3b, escapeChar)) {
@@ -292,7 +292,7 @@ SqlSimilarPrepRewriteCharEnumeration(std::string& expPat,
         //
 
         // SQL2003 8.6 Syntax Rule 3
-        // and 8.6 BNF <characater enumeration>
+        // and 8.6 BNF <character enumeration>
         // Must make a few substitutions as regex doesn't match
         // SIMILAR. Also, regex doesn't use [:ALPHA:], only [:alpha:].
         // See General Rule 7m - 7s
@@ -305,7 +305,7 @@ SqlSimilarPrepRewriteCharEnumeration(std::string& expPat,
         // U+000C, Form Feed
         // U+000D, Carriage Return
         // U+0085, Next Line
-        // Plus Unicode General Catagory classes Zs, Zl, Zp:
+        // Plus Unicode General Category classes Zs, Zl, Zp:
         // (see NOTE 6 & NOTE 7), ignoring those > U+00FF
         // U+0020, Space
         // U+00A0, No-Break Space
@@ -364,8 +364,8 @@ SqlSimilarPrepReWrite(char escapeChar,
         // (similar to 8.6 General Rule 3b).
         //
         // Added <right brace> to these list as it appears at first glance to
-        // be an ommision from the rules.  Could easily be wrong though. There
-        // could be a subtle reason why '}' is ommitted from these rules
+        // be an omission from the rules.  Could easily be wrong though. There
+        // could be a subtle reason why '}' is omitted from these rules
         //
         char const * const SqlSimilarPrepSyntaxRule6 = "[]()|^-+*_%?{}";
 
@@ -392,7 +392,7 @@ SqlSimilarPrepReWrite(char escapeChar,
                     // Valid <escaped char>, per SQL2003 8.6 Syntax Rule 6.
                     // Replace user defined escape char with regex escape char.
                     expPat.replace(pos, 1, BoostRegExEscapeChar);
-                    // Move past subsequent special chararacter.
+                    // Move past subsequent special character.
                     pos += 2; 
                 } else {  
                     // Malformed <escaped char>. Attempt to escape a

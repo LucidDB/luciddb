@@ -907,6 +907,51 @@ public class Rex2CalcPlanTestCase extends TestCase
         check(sql4, prg3,false,false,false);
 
     }
+
+    public void testCastNull() {
+        String sql =
+                "SELECT " +
+                "cast(null as varchar)" +
+                " FROM \"emps\" WHERE \"empno\" > 10";
+        String prg="O vc,0;" + NL +
+                   "I s4;" + NL +
+                   "L bo;" + NL +
+                   "S bo;" + NL +
+                   "C bo, bo, s4, vc,0;" + NL +
+                   "V 1, 0, 10, ;" + NL +
+                   "T;" + NL +
+                   "GT L0, I0, C2;" + NL +
+                   "JMPT @4, L0;" + NL +
+                   "MOVE S0, C0;" + NL +
+                   "RETURN;" + NL +
+                   "MOVE S0, C1;" + NL +
+                   "REF O0, C3;" + NL +
+                   "RETURN;";
+        check(sql, prg,false,false,false);
+    }
+
+    public void testJdbcFunctionSyntax() {
+        String sql =
+                "SELECT " +
+                "{fn log(1.0)}" +
+                " FROM \"emps\" WHERE \"empno\" > 10";
+        String prg="O d;" + NL +
+                   "I s4;" + NL +
+                   "L bo, d;" + NL +
+                   "S bo;" + NL +
+                   "C bo, bo, s4, d;" + NL +
+                   "V 1, 0, 10, 1.0;" + NL +
+                   "T;" + NL +
+                   "GT L0, I0, C2;" + NL +
+                   "JMPT @4, L0;" + NL +
+                   "MOVE S0, C0;" + NL +
+                   "RETURN;" + NL +
+                   "MOVE S0, C1;" + NL +
+                   "CALL 'LN(L1, C3);" + NL +
+                   "REF O0, L1;" + NL +
+                   "RETURN;";
+        check(sql, prg,false,false,false);
+    }
 }
 
 // End Rex2CalcPlanTestCase.java

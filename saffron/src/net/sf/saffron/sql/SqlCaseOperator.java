@@ -114,7 +114,7 @@ public abstract class SqlCaseOperator extends SqlOperator
 
     public SqlCaseOperator()
     {
-        super("CASE",SqlKind.Case,1,true, SqlOperatorTable.useBiggest,
+        super("CASE",SqlKind.Case,1,true, SqlOperatorTable.useNullableBiggest,
                 SqlOperatorTable.useReturnForParam, null);
     }
 
@@ -191,9 +191,9 @@ public abstract class SqlCaseOperator extends SqlOperator
         return ret;
     }
 
-    public int getSyntax()
+    public SqlSyntax getSyntax()
     {
-        return Syntax.Special;
+        return SqlSyntax.Special;
     }
 
     public SqlCall createCall(SqlNode [] operands)

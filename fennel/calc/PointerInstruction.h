@@ -42,7 +42,7 @@ protected:
 
 //! PointerSizeT is the "size" and "maxsize" for array lengths
 //!
-//! This typedef must be compatable with the size TupleStorageByteLength
+//! This typedef must be compatible with the size TupleStorageByteLength
 //! But, to prevent problems between say 32bit and 64 bit machines, this
 //! type is defined with an explicit length so that one program can be written
 //! for both architectures.
@@ -52,11 +52,11 @@ typedef uint32_t PointerSizeT;
 //!
 //! Would be nice if this was signed, but the presence of 
 //! both PointerAdd and PointerSub probably make it OK for
-//! this to be unsigned. It is probably more convienent for
+//! this to be unsigned. It is probably more convenient for
 //! a compiler to have this the same type as PointerOperandT
 //! to avoid a type conversion. 
 //!
-//! This typedef must be compatable with the size TupleStorageByteLength
+//! This typedef must be compatible with the size TupleStorageByteLength
 //! But, to prevent problems between say 32bit and 64 bit machines, this
 //! type is defined with an explicit length so that one program can be written
 //! for both architectures.

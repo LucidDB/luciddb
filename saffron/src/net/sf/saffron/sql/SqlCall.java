@@ -100,13 +100,10 @@ public class SqlCall extends SqlNode
         ArrayList signatureList = new ArrayList();
         for (int i = 0; i < operands.length; i++) {
             final SqlNode operand = operands[i];
-            final SaffronType argType =
-                validator.deriveType(scope,operand);
-
+            final SaffronType argType = validator.deriveType(scope,operand);
             if (null==argType) {
                 continue;
             }
-
             signatureList.add(argType.toString());
         }
         buf.append(operator.getSignature(signatureList));

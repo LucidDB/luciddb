@@ -73,20 +73,38 @@ public class SqlOperatorTable
             {SqlTypeName.Null,SqlTypeName.IntervalDayTime, SqlTypeName.IntervalYearToMonth};
 
     /**
-     * Type-inference strategy whereby the result type of a call is the type of
-     * the first operand.
-     */
-    public static final SqlOperator.TypeInference useFirstArgType =
-            new SqlOperator.TypeInference() {
+         * Type-inference strategy whereby the result type of a call is the type of
+         * the first operand.
+         */
+        public static final SqlOperator.TypeInference useFirstArgType =
+                new SqlOperator.TypeInference() {
 
-                public SaffronType getType(SqlValidator validator, SqlValidator.Scope scope, SqlCall call) {
-                    return validator.deriveType(scope, call.operands[0]);
-                }
+                    public SaffronType getType(SqlValidator validator, SqlValidator.Scope scope, SqlCall call) {
+                        return validator.deriveType(scope, call.operands[0]);
+                    }
 
-                public SaffronType getType(SaffronTypeFactory typeFactory, SaffronType[] argTypes) {
-                    return argTypes[0];
-                }
-            };
+                    public SaffronType getType(SaffronTypeFactory typeFactory, SaffronType[] argTypes) {
+                        return argTypes[0];
+                    }
+                };
+
+        /**
+         * Type-inference strategy whereby the result type of a call is the type of
+         * the first operand. If any of the other operans are nullable the returned
+         * type will also be nullable.
+         */
+        public static final SqlOperator.TypeInference useNullableFirstArgType =
+                new SqlOperator.TypeInference() {
+
+                    public SaffronType getType(SqlValidator validator, SqlValidator.Scope scope, SqlCall call) {
+                        SaffronType type = validator.deriveType(scope, call.operands[0]);
+                        return makeNullableIfOperandsAre(validator,scope,call,type);
+                    }
+
+                    public SaffronType getType(SaffronTypeFactory typeFactory, SaffronType[] argTypes) {
+                        return makeNullableIfOperandsAre(typeFactory,argTypes,argTypes[0]);
+                    }
+                };
 
     /**
      * Type-inference strategy whereby the result type of a call is the type of
@@ -118,6 +136,7 @@ public class SqlOperatorTable
                     return typeFactory.createSqlType(SqlTypeName.Boolean);
                 }
             };
+
     /**
      * Type-inference strategy whereby the result type of a call is Boolean,
      * with nulls allowed if any of the operands allow nulls.
@@ -130,31 +149,33 @@ public class SqlOperatorTable
             SqlCall call)
         {
             SaffronType type = useBoolean.getType(validator,scope,call);
-            for (int i = 0; i < call.operands.length; ++i) {
-                SaffronType operandType = validator.deriveType(
-                    scope,call.operands[i]);
-                if (operandType.isNullable()) {
-                    type = validator.typeFactory.createTypeWithNullability(
-                        type,true);
-                    break;
-                }
-            }
-            return type;
+            return makeNullableIfOperandsAre(validator, scope, call, type);
         }
         public SaffronType getType(
             SaffronTypeFactory typeFactory,
             SaffronType[] argTypes)
         {
             SaffronType type = useBoolean.getType(typeFactory,argTypes);
-            for (int i = 0; i < argTypes.length; ++i) {
-                if (argTypes[i].isNullable()) {
-                    type = typeFactory.createTypeWithNullability(type,true);
-                    break;
-                }
-            }
-            return type;
+            return makeNullableIfOperandsAre(typeFactory, argTypes, type);
         }
     };
+
+    /**
+     * Type-inference strategy whereby the result type of a call is Time.
+     */
+    public static final SqlOperator.TypeInference useTime =
+            new SqlOperator.TypeInference() {
+                public SaffronType getType(SqlValidator validator,
+                        SqlValidator.Scope scope, SqlCall call) {
+                    return validator.typeFactory.createSqlType(SqlTypeName.Time,0);
+                }
+
+                public SaffronType getType(SaffronTypeFactory typeFactory,
+                        SaffronType[] argTypes) {
+                    int precision = 0;
+                    return typeFactory.createSqlType(SqlTypeName.Time, precision);
+                }
+            };
 
     /**
      * Type-inference strategy whereby the result type of a call is Double.
@@ -172,7 +193,27 @@ public class SqlOperatorTable
             };
 
     /**
-     * Type-inference strategy whereby the result type of a call is a Integer.
+     * Type-inference strategy whereby the result type of a call is Double
+     * with nulls allowed if any of the operands allow nulls.
+     */
+    public static final SqlOperator.TypeInference useNullableDouble =
+            new SqlOperator.TypeInference() {
+                public SaffronType getType(SqlValidator validator,
+                        SqlValidator.Scope scope, SqlCall call) {
+                    SaffronType type =
+                            validator.typeFactory.createSqlType(SqlTypeName.Double);
+                    return makeNullableIfOperandsAre(validator,scope,call, type);
+
+                }
+                public SaffronType getType(SaffronTypeFactory typeFactory,
+                        SaffronType[] argTypes) {
+                    SaffronType type = typeFactory.createSqlType(SqlTypeName.Double);
+                    return makeNullableIfOperandsAre(typeFactory,argTypes,type);
+                }
+            };
+
+    /**
+     * Type-inference strategy whereby the result type of a call is an Integer.
      */
     public static final SqlOperator.TypeInference useInteger =
             new SqlOperator.TypeInference() {
@@ -187,17 +228,31 @@ public class SqlOperatorTable
             };
 
     /**
-     * Type-inference strategy whereby the result type of a call is
+     * Type-inference strategy whereby the result type of a call is an Integer
+     * with nulls allowed if any of the operands allow nulls.
      */
-
+    public static final SqlOperator.TypeInference useNullableInteger =
+            new SqlOperator.TypeInference() {
+                public SaffronType getType(SqlValidator validator,
+                        SqlValidator.Scope scope, SqlCall call) {
+                    SaffronType type = validator.typeFactory.createSqlType(SqlTypeName.Integer);
+                    return makeNullableIfOperandsAre(validator,scope,call,type);
+                }
+                public SaffronType getType(SaffronTypeFactory typeFactory,
+                        SaffronType[] argTypes) {
+                    SaffronType type = typeFactory.createSqlType(SqlTypeName.Integer);
+                    return makeNullableIfOperandsAre(typeFactory,argTypes,type);
+                }
+            };
 
     /**
      * Type-inference strategy whereby the result type of a call is using its operands biggest type,
      * using the rules described in ISO/IEC 9075-2:1999 section 9.3 "Data types of results of aggregations"
      * These rules are used in union, except, intercect, case and other places
      * E.g (500000000000 + 3.0e-3) have the operands INTEGER and DOUBLE. Its biggest type is double
+     * If any of the operands are nullable the result type will also be nullable
      */
-    public static final SqlOperator.TypeInference useBiggest =
+    public static final SqlOperator.TypeInference useNullableBiggest =
             new SqlOperator.TypeInference() {
 
                 public SaffronType getType(SqlValidator validator, SqlValidator.Scope scope, SqlCall call) {
@@ -217,7 +272,8 @@ public class SqlOperatorTable
                     // the operator (e.g. sum precision is based on the max of
                     // the arg precisions, while product precision is based on
                     // the sum of the arg precisions).
-                    return typeFactory.leastRestrictive(argTypes);
+                    SaffronType type = typeFactory.leastRestrictive(argTypes);
+                    return makeNullableIfOperandsAre(typeFactory,argTypes,type);
                 }
             };
 
@@ -409,13 +465,14 @@ public class SqlOperatorTable
                     SqlValidator.Scope scope,
                     SqlCall call)
             {
-                if (!check(call,validator,scope)){
+                if (!checkNoThrowing(call,validator,scope)){
+                    assert(null==call.getParserPosition()) : "todo, use position data in error msg";
                     throw validator.newValidationError("Parameters must be of same type");
                 }
             }
 
 
-            public boolean check(SqlCall call, SqlValidator validator,
+            public boolean checkNoThrowing(SqlCall call, SqlValidator validator,
                                  SqlValidator.Scope scope) {
                 assert(2==call.operands.length);
                 SaffronType type1 = validator.deriveType(scope,call.operands[0]);
@@ -538,8 +595,7 @@ public class SqlOperatorTable
                  if (SqlLiteral.isNullLiteral(call.getOperands()[1])) {
                      throw SaffronResource.instance().newArgumentMustNotBeNull(call.operator.name);
                  }
-                 if (call.getOperands()[1] instanceof SqlLiteral) {
-                 } else {
+                 if (!(call.getOperands()[1] instanceof SqlLiteral)) {
                      throw SaffronResource.instance().newArgumentMustBeLiteral(
                          call.operator.name);
                  }
@@ -586,6 +642,60 @@ public class SqlOperatorTable
                 SaffronType nullType = validator.typeFactory.createSqlType(SqlTypeName.Null);
                 if (!nullType.isAssignableFrom(t0, false) && !nullType.isAssignableFrom(t1, false)) {
                     if (!t0.isSameTypeFamily(t1)) {
+                        throw call.newValidationSignatureError(validator,scope);
+                    }
+                }
+                super.check(validator, scope, call);
+            }
+        };
+
+    /**
+     * Parameter type-checking strategy
+     * types must be null | charstring | bitstring | hexstring
+     * AND types must be identical to eachother
+     */
+    public static final SqlOperator.AllowedArgInference typeNullableStringStringStringOfSameType =
+        new SqlOperator.AllowedArgInference(
+            new SqlTypeName[][]{stringNullableTypes,
+                                stringNullableTypes,
+                                stringNullableTypes}) {
+
+            public String getAllowedSignatures(SqlOperator op) {
+                StringBuffer ret=new StringBuffer();
+                for (int i = 0; i < m_types[0].length; i++) {
+                    if (m_types[0][i].getOrdinal()==SqlTypeName.Null_ordinal) {
+                        continue;
+                    }
+
+                    ArrayList list = new ArrayList(2);
+                    list.add(m_types[0][i]); //adding same trice
+                    list.add(m_types[0][i]); //adding same trice
+                    list.add(m_types[0][i]); //adding same trice
+                    ret.append(op.getSignature(list));
+
+                    if ((i+1)<m_types[0].length){
+                        ret.append(op.NL);
+                    }
+                }
+                return ret.toString();
+            }
+
+            protected void getAllowedSignatures(int depth, ArrayList list, StringBuffer buf, SqlOperator op) {
+                throw Util.needToImplement("should not be called unless implemented");
+            }
+
+            public void check(SqlValidator validator, SqlValidator.Scope scope, SqlCall call) {
+                SaffronType t0 = validator.deriveType(scope,call.operands[0]);
+                SaffronType t1 = validator.deriveType(scope,call.operands[1]);
+                SaffronType t2 = validator.deriveType(scope,call.operands[2]);
+                assert(null!=t0) : "should not be null";
+                assert(null!=t1) : "should not be null";
+                assert(null!=t2) : "should not be null";
+                SaffronType nullType = validator.typeFactory.createSqlType(SqlTypeName.Null);
+                if (!nullType.isAssignableFrom(t0, false)
+                    && !nullType.isAssignableFrom(t1, false)
+                    && !nullType.isAssignableFrom(t2, false)) {
+                    if (!t0.isSameTypeFamily(t1) || !t1.isSameTypeFamily(t2)) {
                         throw call.newValidationSignatureError(validator,scope);
                     }
                 }
@@ -882,7 +992,7 @@ public class SqlOperatorTable
     /**
      * Retrieves an operator by its name and syntactic type.
      */
-    public SqlOperator lookup(String opName,int syntax)
+    public SqlOperator lookup(String opName,SqlSyntax syntax)
     {
         final List list = operators.getMulti(opName.toUpperCase());
         for (int i = 0,n = list.size(); i < n; i++) {
@@ -891,17 +1001,17 @@ public class SqlOperatorTable
                 return op;
             }
         }
-        switch (syntax) {
-        case SqlOperator.Syntax.Binary:
+        switch (syntax.ordinal_) {
+        case SqlSyntax.Binary_ordinal:
             return (SqlBinaryOperator) mapNameToOp.get(opName + ":BINARY");
-        case SqlOperator.Syntax.Prefix:
+        case SqlSyntax.Prefix_ordinal:
             return (SqlPrefixOperator) mapNameToOp.get(opName + ":PREFIX");
-        case SqlOperator.Syntax.Postfix:
+        case SqlSyntax.Postfix_ordinal:
             return (SqlPostfixOperator) mapNameToOp.get(opName + ":POSTFIX");
-        case SqlOperator.Syntax.Function:
+        case SqlSyntax.Function_ordinal:
             throw Util.newInternal("Use lookupFunction to lookup function");
         default:
-            throw SqlOperator.Syntax.instance.badValue(syntax);
+            throw syntax.unexpected();
         }
     }
 
@@ -1225,6 +1335,51 @@ public class SqlOperatorTable
 
         return list;
     }
+
+    /**
+     * Helper function that recreates a given SaffronType with nullablility
+     * iff any of a calls operand types are nullable.
+     */
+    public final static SaffronType makeNullableIfOperandsAre(
+            final SqlValidator validator,
+            final SqlValidator.Scope scope,
+            final SqlCall call,
+            SaffronType type) {
+
+        for (int i = 0; i < call.operands.length; ++i) {
+            if (call.operands[i] instanceof SqlSymbol) {
+                continue;
+            }
+
+            SaffronType operandType = validator.deriveType(
+                    scope,call.operands[i]);
+
+            if (operandType.isNullable()) {
+                type = validator.typeFactory.createTypeWithNullability(
+                        type,true);
+                break;
+            }
+        }
+        return type;
+    }
+
+    /**
+     * Helper function that recreates a given SaffronType with nullablility
+     * iff any of a {@param argTypes} are nullable.
+     */
+    public final static SaffronType makeNullableIfOperandsAre(
+            final SaffronTypeFactory typeFactory,
+            final SaffronType[] argTypes,
+            SaffronType type) {
+        for (int i = 0; i < argTypes.length; ++i) {
+            if (argTypes[i].isNullable()) {
+                type = typeFactory.createTypeWithNullability(type,true);
+                break;
+            }
+        }
+        return type;
+    }
+
 
 }
 

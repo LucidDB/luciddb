@@ -421,7 +421,7 @@ public class FarragoRuntimeContext
      *
      * @param nullableValue source value
      */
-    public static void checkNotNull(NullableValue nullableValue)
+    public void checkNotNull(NullableValue nullableValue)
     {
         if (nullableValue.isNull()) {
             throw FarragoResource.instance().newNullNotAllowed();
@@ -433,7 +433,7 @@ public class FarragoRuntimeContext
      *
      * @param obj source value
      */
-    public static void checkNotNull(Object obj)
+    public void checkNotNull(Object obj)
     {
         if (null == obj) {
             throw FarragoResource.instance().newNullNotAllowed();

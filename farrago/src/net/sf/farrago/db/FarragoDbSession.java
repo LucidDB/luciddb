@@ -563,6 +563,7 @@ public class FarragoDbSession
                 rollback = false;
                 ddlValidator.closeAllocation();
                 ddlValidator = null;
+                validate(sqlNode); 
                 FarragoExecutableStmt stmt =
                     database.prepareStmt(
                         this,
@@ -603,6 +604,13 @@ public class FarragoDbSession
             }
         }
         return null;
+    }
+
+    /**
+    * Does some custom sql validations which can't be perform by Saffron
+    */
+    public void validate(SqlNode sqlNode)
+    {
     }
 
     private void executeDdl(

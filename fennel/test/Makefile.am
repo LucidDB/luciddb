@@ -119,6 +119,7 @@ LDADD = -L$(top_builddir)/test -l$(TEST_LIB) \
 	-lfennel_device \
 	-lfennel_synch \
 	-lfennel_common \
+    -l$(STLPORT_LIB) \
 	$(EXTRA_LDFLAGS)
 
 check-local:

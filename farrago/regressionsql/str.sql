@@ -34,8 +34,8 @@ select name like '%ma' from sales.emps order by 1;
 select name like 'ma' from sales.emps;
 select name like '_ma' from sales.emps;
 select name like '___ma' from sales.emps order by 1;
---select name like '' from sales.emps;
---select city like 'san%' from sales.emps order by 1;
---select city like 'San%' from sales.emps order by 1;
+select name like '' from sales.emps;
+select city like 'san%' from sales.emps order by 1;
+select city like 'San%' from sales.emps order by 1;
 
---select char_length(city) from sales.emps order by 1;
+select char_length(city) from sales.emps order by 1;

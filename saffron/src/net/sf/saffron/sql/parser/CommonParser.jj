@@ -161,10 +161,10 @@ JAVACODE Calendar parseDateTime(String s, String dfString, int millis) throws Pa
     java.text.SimpleDateFormat df = new java.text.SimpleDateFormat(dfString);
 	df.setLenient(false);
     // should be gmt.  use local tz for now.
-    // java.util.TimeZone tz = new java.util.SimpleTimeZone(0, "GMT+00:00");
-    Calendar cal = Calendar.getInstance(/*tz */ );
-    // df.setCalendar(cal);
-    
+    java.util.TimeZone tz = new java.util.SimpleTimeZone(0, "GMT+00:00");
+    Calendar cal = Calendar.getInstance(tz );
+    df.setCalendar(cal);
+
     try {
         cal.setTime(df.parse(s));
         cal.add(Calendar.MILLISECOND,millis);
@@ -1382,7 +1382,6 @@ SqlDataType DataType() :
 		)?
 	)
 	{
-
 		return new SqlDataType(typeName, precision, scale, charSetName);
 	}
 }
@@ -1393,39 +1392,30 @@ SqlDataType DataType() :
 // here.
 SqlIdentifier TypeName() :
 {
-    SqlIdentifier typeName;
-    boolean varchar = false;
+    SqlIdentifier typeName = null;
 }
 {
     (
-        typeName = SimpleIdentifier()
-        {
-        }
-        | (<CHARACTER> | <CHAR>) [ <VARYING> { varchar = true; } ]
-        {
-            if (varchar) {
-                typeName = new SqlIdentifier("VARCHAR");
-            } else {
-                typeName = new SqlIdentifier("CHAR");
-            }
-        }
-		| <VARCHAR> { typeName = new SqlIdentifier("VARCHAR"); }
-        | <DOUBLE> [ <PRECISION> ]
-        {
-            typeName = new SqlIdentifier("DOUBLE");
-        }
-        | <DATE>
-        {
-            typeName = new SqlIdentifier("DATE");
-        }
-        | <TIME>
-        {
-            typeName = new SqlIdentifier("TIME");
-        }
-        | <TIMESTAMP>
-        {
-            typeName = new SqlIdentifier("TIMESTAMP");
-        }
+        ( <CHARACTER> | <CHAR> { typeName = new SqlIdentifier(SqlTypeName.Char.name_); })
+        [ <VARYING> { typeName = new SqlIdentifier(SqlTypeName.Varchar.name_); } ]
+    |   <VARCHAR> { typeName = new SqlIdentifier(SqlTypeName.Varchar.name_); }
+    |   <DATE> { typeName = new SqlIdentifier(SqlTypeName.Date.name_); }
+    |   <TIME> { typeName = new SqlIdentifier(SqlTypeName.Time.name_); }
+    |   <TIMESTAMP> { typeName = new SqlIdentifier(SqlTypeName.Timestamp.name_); }
+    |   <DECIMAL> { typeName = new SqlIdentifier(SqlTypeName.Decimal.name_); }
+    |   <BOOLEAN> { typeName = new SqlIdentifier(SqlTypeName.Boolean.name_); }
+    |   <INTEGER> { typeName = new SqlIdentifier(SqlTypeName.Integer.name_); }
+    |   <BINARY> { typeName = new SqlIdentifier(SqlTypeName.Binary.name_); }
+    |   <VARBINARY> { typeName = new SqlIdentifier(SqlTypeName.Varbinary.name_); }
+    |   <TINYINT> { typeName = new SqlIdentifier(SqlTypeName.Tinyint.name_); }
+    |   <SMALLINT> { typeName = new SqlIdentifier(SqlTypeName.Smallint.name_); }
+    |   <BIGINT> { typeName = new SqlIdentifier(SqlTypeName.Bigint.name_); }
+    |   <REAL> [ <PRECISION> ] { typeName = new SqlIdentifier(SqlTypeName.Real.name_); }
+    |   <DOUBLE> [ <PRECISION> ] { typeName = new SqlIdentifier(SqlTypeName.Double.name_); }
+    |   <BIT> { typeName = new SqlIdentifier(SqlTypeName.Bit.name_); }
+
+    |   typeName = SimpleIdentifier()
+
     )
     {
         return typeName;
@@ -1568,6 +1558,24 @@ SqlNode FunctionCall() :
 			return call;
 		}
     )
+|
+    //~ JDBC FUNCTION SYNTAX
+    (
+        <LBRACE_FN>
+        name = Identifier()
+        (
+            LOOKAHEAD(2) <LPAREN> <STAR> <RPAREN>
+            { args = startList(new SqlIdentifier("*")); }
+          | LOOKAHEAD(2) <LPAREN> <RPAREN>
+            { args = ParserUtil.emptyList; }
+          | args = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_SUBQUERY)
+        )
+        <RBRACE>
+        {
+            return new net.sf.saffron.sql.SqlJdbcFunctionCall(name).createCall(
+                    ParserUtil.toNodeArray(args));
+        }
+    )
 }
 
 /**
@@ -1660,6 +1668,10 @@ TOKEN :
 | < ASCENDING: "ascending" >
 | < ASYMMETRIC: "asymmetric" >
 | < BETWEEN: "between" >
+| < BIGINT: "bigint" >
+| < BINARY: "binary" >
+| < BIT: "bit" >
+| < BOOLEAN: "boolean" >
 | < BOTH: "both" >
 | < BY: "by" >
 | < CASE: "case" >
@@ -1668,6 +1680,7 @@ TOKEN :
 | < COLLATE: "collate" >
 | < CROSS: "cross" >
 | < DATE: "date" >
+| < DECIMAL: "decimal" >
 | < DELETE: "delete" >
 | < DESC: "desc" >
 | < DESCENDING: "descending" >
@@ -1690,6 +1703,7 @@ TOKEN :
 | < IN: "in" >
 | < INNER: "inner" >
 | < INSERT: "insert" >
+| < INTEGER: "integer" >
 | < INTERSECT: "intersect" >
 | < INTO: "into" >
 | < IS: "is" >
@@ -1706,12 +1720,14 @@ TOKEN :
 | < PLACING: "placing" >
 | < PLAN: "plan" >
 | < PRECISION: "precision" >
+| < REAL: "real" >
 | < RIGHT: "right" >
 | < ROW: "row" >
 | < SECOND: "second" >
 | < SELECT: "select" >
 | < SET: "set" >
 | < SIMILAR: "similar" >
+| < SMALLINT: "smallint" >
 | < SYMMETRIC: "symmetric" >
 | < TABLE: "table" >
 | < THEN: "then" >
@@ -1719,6 +1735,7 @@ TOKEN :
 | < TIMESTAMP: "timestamp" >
 | < TIMEZONE_HOUR: "timezone_hour" >
 | < TIMEZONE_MINUTE: "timezone_minute" >
+| < TINYINT: "tinyint" >
 | < TO: "to" >
 | < TRAILING: "trailing" >
 | < TRUE: "true" >
@@ -1728,6 +1745,7 @@ TOKEN :
 | < USING: "using" >
 | < VALUES: "values" >
 | < VARCHAR: "varchar" >
+| < VARBINARY: "varbinary" >
 | < VARYING: "varying" >
 | < WHEN: "when" >
 | < WHERE: "where" >
@@ -1810,6 +1828,7 @@ TOKEN :
 | < LBRACE_D: "{" (" ")* ["d","D"] >
 | < LBRACE_T: "{" (" ")* ["t","T"] >
 | < LBRACE_TS: "{" (" ")* ["t","T"] ["s","S"] >
+| < LBRACE_FN: "{" (" ")* ["f","F"] ["n","N"] >
 | < LBRACE: "{" >
 | < RBRACE: "}" >
 | < LBRACKET: "[" >

@@ -439,34 +439,40 @@ public class CalcProgramBuilder
         public static final int Bool_ordinal = 0;
         public static final OpType Bool = new OpType("bo", Bool_ordinal);
 
-        public static final int Int4_ordinal = 1;
+        public static final int Int1_ordinal = 1;
+        public static final OpType Int1 = new OpType("s1", Int1_ordinal);
+
+        public static final int Int2_ordinal = 2;
+        public static final OpType Int2 = new OpType("s2", Int2_ordinal);
+
+        public static final int Int4_ordinal = 3;
         public static final OpType Int4 = new OpType("s4", Int4_ordinal);
 
-        public static final int Uint4_ordinal = 2;
+        public static final int Uint4_ordinal = 4;
         public static final OpType Uint4 = new OpType("u4", Uint4_ordinal);
 
-        public static final int Real_ordinal = 3;
+        public static final int Real_ordinal = 5;
         public static final OpType Real = new OpType("r", Real_ordinal);
 
-        public static final int Int8_ordinal = 4;
+        public static final int Int8_ordinal = 6;
         public static final OpType Int8 = new OpType("s8", Int8_ordinal);
 
-        public static final int Uint8_ordinal = 5;
+        public static final int Uint8_ordinal = 7;
         public static final OpType Uint8 = new OpType("u8", Uint8_ordinal);
 
-        public static final int Double_ordinal = 6;
+        public static final int Double_ordinal = 8;
         public static final OpType Double = new OpType("d", Double_ordinal);
 
-        public static final int Varbinary_ordinal = 7;
+        public static final int Varbinary_ordinal = 9;
         public static final OpType Varbinary = new OpType("vb", Varbinary_ordinal);
 
-        public static final int Varchar_ordinal = 8;
+        public static final int Varchar_ordinal = 10;
         public static final OpType Varchar = new OpType("vc", Varchar_ordinal);
 
-        public static final int Binary_ordinal = 9;
+        public static final int Binary_ordinal = 11;
         public static final OpType Binary = new OpType("b", Binary_ordinal);
 
-        public static final int Char_ordinal = 10;
+        public static final int Char_ordinal = 12;
         public static final OpType Char = new OpType("c", Char_ordinal);
 
         public static final EnumeratedValues enumeration =

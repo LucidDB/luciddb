@@ -6,12 +6,12 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
@@ -22,8 +22,11 @@ package net.sf.farrago.test;
 import junit.framework.*;
 
 import java.sql.*;
+import java.sql.Date;
 
 import java.util.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 /**
  * FarragoJdbcTest tests specifics of the Farrago implementation of the JDBC
@@ -54,6 +57,67 @@ public class FarragoJdbcTest extends FarragoTestCase
     public static Test suite()
     {
         return wrappedSuite(FarragoJdbcTest.class);
+    }
+
+       /**
+     * Test sql date/time to java.sql date/time translations.
+     */
+     public void testDateTimeSql() throws Exception
+    {
+       int rows;
+        try {
+            stmt.execute("alter system set \"calcVirtualMachine\" = 'CALCVM_FENNEL'");
+            String dateSql = "select DATE '2004-12-21', TIME '12:22:33'," + "" +
+                    " TIMESTAMP '2004-12-21 12:22:33' from values('true')";
+            preparedStmt = connection.prepareStatement(dateSql);
+            resultSet  = preparedStmt.executeQuery();
+
+            if (resultSet.next()) {
+
+                Date date = resultSet.getDate(1);
+                Timestamp tstamp = resultSet.getTimestamp(3);
+
+                Calendar cal = Calendar.getInstance() ;
+                cal.setTimeZone(TimeZone.getTimeZone("GMT-8"));
+                cal.clear();
+                cal.set(2004,11,21); //month is zero based.  idiots ...
+                assert date.getTime() == cal.getTime().getTime() ;
+
+                cal.set(2004,11,21,12,22,33);
+
+                assert tstamp.getTime() == cal.getTime().getTime();
+            } else assert false : "Static query returned no rows?";
+
+            resultSet.close();
+ /*           resultSet = stmt.executeQuery(dateSql);
+
+            while (resultSet.next()) {
+                Calendar cal = Calendar.getInstance() ;
+                cal.setTimeZone(TimeZone.getTimeZone("GMT-6"));
+//  not supported by IteratorResultSet yet. 
+                Date date = resultSet.getDate(1, cal);
+                Timestamp tstamp = resultSet.getTimestamp(3, cal);
+
+
+                cal.setTimeZone(TimeZone.getTimeZone("GMT-8"));
+                cal.clear();
+                cal.set(2004,11,21); //month is zero based.  idiots ...
+                assert date.getTime() == cal.getTime().getTime() ;
+
+                cal.set(2004,11,21,12,22,33);
+
+                assert tstamp.getTime() == cal.getTime().getTime();
+            }
+*/
+        }
+        finally {
+            stmt.execute("alter system set \"calcVirtualMachine\" = 'CALCVM_JAVA'");
+            String deleteSql = "delete from sales.datetime1";
+            preparedStmt = connection.prepareStatement(deleteSql);
+            rows = preparedStmt.executeUpdate();
+
+        }
+
     }
 
     /**
@@ -157,7 +221,7 @@ public class FarragoJdbcTest extends FarragoTestCase
             Types.VARCHAR,pmd.getParameterType(1));
         assertEquals(
             "VARCHAR",pmd.getParameterTypeName(1));
-            
+
         preparedStmt.setString(1,"Wilma");
         resultSet = preparedStmt.executeQuery();
         if (catalog.isFennelEnabled()) {
@@ -206,7 +270,7 @@ public class FarragoJdbcTest extends FarragoTestCase
         }
         Assert.fail("Expected failure due to invalid dynamic param");
     }
-    
+
     /**
      * Test invalid attempt to execute a statement with a dynamic parameter
      * without preparation.

@@ -114,14 +114,15 @@ public class FarragoTrace {
     public static Logger getFarragoJdbcEngineDriverTracer() {
         return getClassTracer(FarragoJdbcEngineDriver.class);
     }
+    
     /**
      * The tracer "net.sf.farrago.runtime.FarragoIteratorResultSet"
      * traces {@link FarragoIteratorResultSet}.
      */
     public static Logger getFarragoIteratorResultSetTracer() {
-        // REVIEW:  should probably trace as part of JDBC
         return getClassTracer(FarragoIteratorResultSet.class);
     }
+    
     /**
      * The tracer "net.sf.farrago.test.FarragoTestCase"
      * controls tracing during regression tests.
@@ -152,7 +153,6 @@ public class FarragoTrace {
      * The tracer "net.sf.farrago.dynamic"
      * controls whether dynamically generated Java code is
      * preserved for debugging (otherwise it is deleted automatically).
-     * Note that this has nothing to do with usage of DynamicJava.
      */
     public static Logger getDynamicTracer() {
         return Logger.getLogger("net.sf.farrago.dynamic");

@@ -19,7 +19,11 @@
 
 package net.sf.farrago.util;
 
+import net.sf.saffron.util.*;
+
 import java.io.*;
+import java.sql.*;
+import java.util.logging.*;
 
 /**
  * Miscellaneous static utilities that don't fit into other categories.
@@ -62,6 +66,53 @@ public abstract class FarragoUtil
             }
             writer.write(buf, 0, charsRead);
             charsCopied += charsRead;
+        }
+    }
+
+    
+    /**
+     * Converter from any Throwable to SQLException.
+     *
+     * @param ex Throwable to be converted
+     *
+     * @param tracer Logger on which to trace exceptions as they are
+     * converted
+     *
+     * @return ex as a SQLException
+     */
+    public static SQLException newSqlException(
+        Throwable ex,
+        Logger tracer)
+    {
+        tracer.severe(ex.getMessage());
+        tracer.throwing("FarragoUtil","newSqlException",ex);
+        
+        SQLException sqlExcn;
+        if (ex instanceof FarragoException || ex instanceof SaffronException) {
+            // TODO:  map for SQLState
+            sqlExcn = new SQLException(ex.getMessage());
+        } else if (ex instanceof SQLException) {
+            sqlExcn = (SQLException) ex;
+        } else {
+            // for anything else, include the class name
+            // as part of what went wrong
+            sqlExcn = new SQLException(
+                ex.getClass().getName() + ": " + ex.getMessage());
+        }
+
+        // preserve additional attributes of the original excn
+        sqlExcn.setStackTrace(ex.getStackTrace());
+
+        // convert to SQLException-style chaining
+        Throwable cause = ex.getCause();
+        if (cause != null) {
+            // NOTE jvs 18-June-2004:  reverse the order so that
+            // the underlying cause comes out on top
+            SQLException sqlCause = newSqlException(cause,tracer);
+            sqlCause.setNextException(sqlExcn);
+            return sqlCause;
+        } else {
+            return sqlExcn;
         }
     }
 }

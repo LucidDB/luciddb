@@ -22,6 +22,8 @@
 #include "fennel/common/ConfigMap.h"
 #include <iostream>
 
+#include <boost/lexical_cast.hpp>
+
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 ConfigMap::ConfigMap()
@@ -77,9 +79,7 @@ int ConfigMap::getIntParam(
     if (pPair == paramVals.end()) {
         return defaultVal;
     } else {
-        // NOTE:  this used to call boost::lexical_cast, but that broke
-        // on Cygwin and Mingw, so for now use good old C calls
-        return atoi(pPair->second.c_str());
+        return boost::lexical_cast<int>(pPair->second);
     }
 }
 

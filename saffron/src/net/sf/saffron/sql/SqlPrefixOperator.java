@@ -40,9 +40,9 @@ public abstract class SqlPrefixOperator extends SqlOperator
 
     //~ Methods ---------------------------------------------------------------
 
-    public int getSyntax()
+    public SqlSyntax getSyntax()
     {
-        return Syntax.Prefix;
+        return SqlSyntax.Prefix;
     }
 
     protected String getSignatureTemplate() {

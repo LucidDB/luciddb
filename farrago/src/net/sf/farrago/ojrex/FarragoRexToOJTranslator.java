@@ -64,7 +64,7 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
     private OJClass ojNullablePrimitive;
     
     /**
-     * Creates a translator based on {@link FarragoOJRexImplementorTable#std}.
+     * Creates a translator based on a {@link OJRexImplementorTable}.
      *
      * @param relImplementor implementation context
      *
@@ -173,33 +173,6 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         }
     }
 
-    // override RexToOJTranslator
-    protected Expression convertByteArrayLiteral(byte [] bytes)
-    {
-        // NOTE:  we override Saffron's default because DynamicJava
-        // has a bug dealing with anonymous byte [] initializers
-        Variable variable = getRelImplementor().newVariable();
-        memberList.add(
-            new FieldDeclaration(
-                new ModifierList(ModifierList.PRIVATE),
-                TypeName.forClass(byte [].class),
-                variable.toString(),
-                new ArrayAllocationExpression(
-                    TypeName.forOJClass(OJSystem.BYTE),
-                    new ExpressionList(
-                        Literal.makeLiteral(bytes.length)))));
-        // TODO:  generate this code in class static init block instead
-        for (int i = 0; i < bytes.length; ++i) {
-            stmtList.add(
-                new ExpressionStatement(
-                    new AssignmentExpression(
-                        new ArrayAccess(variable,Literal.makeLiteral(i)),
-                        AssignmentExpression.EQUALS,
-                        Literal.makeLiteral(bytes[i]))));
-        }
-        return variable;
-    }
-
     public Variable createScratchVariable(
         OJClass ojClass, ExpressionList exprs,
         MemberDeclarationList mdlst)
@@ -207,7 +180,7 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         Variable variable = getRelImplementor().newVariable();
         memberList.add(
             new FieldDeclaration(
-                new ModifierList(ModifierList.PRIVATE),
+                new ModifierList(ModifierList.EMPTY),
                 TypeName.forOJClass(ojClass),
                 variable.toString(),
                 new AllocationExpression(
@@ -259,6 +232,12 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
     {
         OJClass ojClass = OJUtil.typeToOJClass(type);
         return ojNullablePrimitive.isAssignableFrom(ojClass);
+    }
+
+    public FieldAccess convertFieldAccess(Variable variable, SaffronField field)
+    {
+        final String javaFieldName = Util.toJavaId(field.getName());
+        return new FieldAccess(variable, javaFieldName);
     }
 
     public Expression convertPrimitiveAccess(Expression expr, RexNode op)

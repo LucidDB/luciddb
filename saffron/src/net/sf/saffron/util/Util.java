@@ -38,9 +38,11 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.regex.Pattern;
-import java.nio.charset.Charset;
+
+import net.sf.saffron.sql.parser.ParserPosition;
 
 /**
  * Miscellaneous utility functions.
@@ -58,6 +60,12 @@ public class Util extends Toolbox
     public static final Object [] emptyObjectArray = new Object[0];
     public static final String [] emptyStringArray = new String[0];
     private static boolean driversLoaded = false;
+    /**
+     * Regular expression for a valid java identifier which contains no
+     * underscores and can therefore be returned intact by {@link #toJavaId}.
+      */
+    private static final Pattern javaIdPattern =
+            Pattern.compile("[a-zA-Z_$][a-zA-Z0-9$]*");
 
     //~ Methods ---------------------------------------------------------------
 
@@ -91,25 +99,9 @@ public class Util extends Toolbox
 
     public static StatementList clone(StatementList e)
     {
-        throw new UnsupportedOperationException();
+        return (StatementList) e.makeCopy();
     }
 
-    //      static SortItem clone(SortItem sortItem)
-    //      {
-    //          try {
-    //              return (SortItem) sortItem.clone();
-    //          } catch (CloneNotSupportedException e) {
-    //              Util.processInternal(e);
-    //              return null;
-    //          }
-    //      }
-    //      static SortItem[] clone(SortItem[] a)
-    //      {
-    //          SortItem[] a2 = new SortItem[a.length];
-    //          for (int i = 0; i < a.length; i++)
-    //              a2[i] = clone(a[i]);
-    //          return a2;
-    //      }
     public static String [] clone(String [] a)
     {
         String [] a2 = new String[a.length];
@@ -119,23 +111,6 @@ public class Util extends Toolbox
         return a2;
     }
 
-    //      static private Class primitive2wrapperClass(Class clazz)
-    //      {
-    //          return clazz == Boolean.TYPE ? java.lang.Boolean.class
-    //              : clazz == Byte.TYPE ? java.lang.Byte.class
-    //              : clazz == Character.TYPE ? java.lang.Character.class
-    //              : clazz == Short.TYPE ? java.lang.Short.class
-    //              : clazz == Integer.TYPE ? java.lang.Integer.class
-    //              : clazz == Long.TYPE ? java.lang.Long.class
-    //              : clazz == Float.TYPE ? java.lang.Float.class
-    //              : clazz == Double.TYPE ? java.lang.Double.class
-    //              : clazz == Void.TYPE ? java.lang.Void.class
-    //              : null;
-    //      }
-    //      public static final Boolean getBoolean(boolean b)
-    //      {
-    //          return b ? Boolean.TRUE : Boolean.FALSE;
-    //      }
     public static int [] clone(int [] a)
     {
         int [] b = new int[a.length];
@@ -146,24 +121,40 @@ public class Util extends Toolbox
     }
 
     /**
-     * Returns whether two integer arrays are equal. Neither must be null.
+     * Combines two integers into a hash code.
      */
-    public static boolean equals(int [] a,int [] b)
-    {
-        if (a.length != b.length) {
-            return false;
-        }
-        for (int i = 0; i < a.length; i++) {
-            if (a[i] != b[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     public static int hash(int i,int j)
     {
         return (i << 4) ^ j;
+    }
+
+    /**
+     * Computes a hash code from an existing hash code and an object (which
+     * may be null).
+     */
+    public static int hash(int h, Object o) {
+        int k = o == null ? 0 :
+                o.hashCode();
+        return ((h << 4) | h) ^ k;
+    }
+
+    /**
+     * Computes a hash code from an existing hash code and an array of objects
+     * (which may be null).
+     */
+    public static int hashArray(int h, Object[] a) {
+        // The hashcode for a null array and an empty array should be different
+        // than h, so use magic numbers.
+        if (a == null) {
+            return hash(h, 19690429);
+        }
+        if (a.length == 0) {
+            return hash(h, 19690721);
+        }
+        for (int i = 0; i < a.length; i++) {
+            h = hash(h, a[i]);
+        }
+        return h;
     }
 
     /**
@@ -190,15 +181,6 @@ public class Util extends Toolbox
             return set;
         }
     }
-
-    //      public static synchronized PrintWriter getDebug()
-    //      {
-    //          if (debugWriter == null) {
-    //              boolean autoFlush = true;
-    //              debugWriter = new PrintWriter(System.out, autoFlush);
-    //          }
-    //          return debugWriter;
-    //      }
 
     /**
      * Computes <code>nlogn(n)</code> (or <code>n</code> if <code>n</code> is
@@ -461,6 +443,62 @@ public class Util extends Toolbox
         return s1;
     }
 
+    /**
+     * Converts an arbitrary string into a string suitable for use as a Java
+     * identifier.
+     *
+     * <p>The mapping is one-to-one (that is, distinct strings will produce
+     * distinct java identifiers). The mapping is also reversible, but the
+     * inverse mapping is not implemented.</p>
+     *
+     * <p>A valid Java identifier must start with a Unicode letter, underscore,
+     * or dollar sign ($). The other characters, if any, can be a Unicode
+     * letter, underscore, dollar sign, or digit.</p>
+     *
+     * <p>This method uses an algorithm similar to URL encoding. Valid
+     * characters are unchanged; invalid characters are converted to an
+     * underscore followed by the hex code of the character; and underscores
+     * are doubled.</p>
+     *
+     * Examples:<ul>
+     * <li><code>toJavaId("foo")</code> returns <code>"foo"</code>
+     * <li><code>toJavaId("foo bar")</code> returns <code>"foo_20_bar"</code>
+     * <li><code>toJavaId("foo_bar")</code> returns <code>"foo__bar"</code>
+     * <li><code>toJavaId("0bar")</code> returns <code>"_40_bar"</code>
+     *     (digits are illegal as a prefix)
+     * <li><code>toJavaId("foo0bar")</code> returns <code>"foo0bar"</code>
+     * </ul>
+     *
+     * @testcase {@link UtilTestCase#testToJavaId}
+     */
+    public static String toJavaId(String s) {
+        if (true) {
+            return s;
+        }
+        // If it's already a valid Java id (and doesn't contain any
+        // underscores), return it unchanged.
+        if (javaIdPattern.matcher(s).matches()) {
+            return s;
+        }
+        // Escape underscores and other undesirables.
+        StringBuffer buf = new StringBuffer(s.length() + 10);
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '_') {
+                buf.append("__");
+            } else if (i == 0 ?
+                    Character.isJavaIdentifierStart(c) :
+                    Character.isJavaIdentifierPart(c)) {
+                buf.append(c);
+            } else {
+                buf.append("_");
+                buf.append(Integer.toString(c, 16));
+                buf.append("_");
+            }
+        }
+        return buf.toString();
+    }
+
     public static Test suite() throws Exception
     {
         TestSuite suite = new TestSuite();
@@ -558,10 +596,43 @@ public class Util extends Toolbox
         throw new ComparisonFailure(message, expected, actual);
     }
 
+    /**
+     * Returns the {@link java.nio.charset.Charset} object representing
+     * the value of {@link SaffronProperties#defaultCharset}
+     * @throws java.nio.charset.IllegalCharsetNameException - If the given charset name is illegal
+     * @throws java.nio.charset.UnsupportedCharsetException - If no support for the named charset is available in this instance of the Java virtual machine
+     */
     public static Charset getDefaultCharset() {
         return Charset.forName(SaffronProperties.instance().defaultCharset.get());
     }
-    
+
+    /**
+     * Simply returns a string saying "encounted at line ?, column ?" using
+     * {@link ParserPosition#getBeginLine} and {@link ParserPosition#getBeginColumn}
+     * respectively
+     */
+    public static String encountedAt(ParserPosition pos) {
+        StringBuffer ret = new StringBuffer();
+        ret.append("encountered at line ");
+        ret.append(pos.getBeginLine());
+        ret.append(", column");
+        ret.append(pos.getBeginColumn());
+        return ret.toString();
+    }
+
+    /**
+     * Returns whether two objects are equal. Either may be null.
+     */
+    public static boolean equals(Object o0, Object o1) {
+        if (o0 == o1) {
+            return true;
+        }
+        if (o0 == null || o1 == null) {
+            return false;
+        }
+        return o0.equals(o1);
+    }
+
     //~ Inner Classes ---------------------------------------------------------
 
     public static class UtilTestCase extends TestCase
@@ -594,6 +665,18 @@ public class Util extends Toolbox
         public void testPrintEquals5()
         {
             assertPrintEquals("\"\\\\\\\"\\r\\n\"","\\\"\r\n",true);
+        }
+
+        public void _testToJavaId()
+        {
+            assertEquals("foo", toJavaId("foo"));
+            assertEquals("foo_20_bar", toJavaId("foo bar"));
+            assertEquals("foo__bar", toJavaId("foo_bar"));
+            assertEquals("_30_bar", toJavaId("0bar"));
+            assertEquals("foo0bar", toJavaId("foo0bar"));
+            assertEquals(
+                    "it_27_s_20_a_20_bird_2c__20_it_27_s_20_a_20_plane_21_",
+                    toJavaId("it's a bird, it's a plane!"));
         }
 
         private void assertPrintEquals(

@@ -55,7 +55,6 @@ public class TestLeaks extends FarragoTestCase
     private void go(boolean jmp) throws Exception
     {
         stmt.execute("alter system set \"codeCacheMaxBytes\" = 0");
-        stmt.execute("alter system set \"javaInterpreterEnabled\" = false");
         String sql = "select * from sales.emps where deptno = 20";
         int nFennelHandles = 0;
         for (int i = 0; i < 50000; ++i) {
