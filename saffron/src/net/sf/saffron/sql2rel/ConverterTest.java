@@ -466,7 +466,7 @@ public class ConverterTest extends TestCase
         // converter bug; the individual rows were getting registered as
         // leaves, rather than the entire VALUES expression (as required to
         // get the join references correct).
-        check("select * from values (1), (2), values (3)",
+        check("select * from (values (1), (2)), (values (3))",
             "ProjectRel(EXPR$0=[$0], EXPR$00=[$1])" + NL
             + "  JoinRel(condition=[true], joinType=[inner])" + NL
             + "    ProjectRel(EXPR$0=[$0])" + NL
