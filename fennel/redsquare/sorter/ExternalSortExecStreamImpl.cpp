@@ -89,7 +89,7 @@ void ExternalSortExecStreamImpl::getResourceRequirements(
 }
 
 void ExternalSortExecStreamImpl::setResourceAllocation(
-    ExecStreamResourceQuantity const &quantity)
+    ExecStreamResourceQuantity &quantity)
 {
     // REVIEW
     ConduitExecStream::setResourceAllocation(quantity);

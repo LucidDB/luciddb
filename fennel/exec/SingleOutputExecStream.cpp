@@ -55,6 +55,14 @@ void SingleOutputExecStream::prepare(SingleOutputExecStreamParams const &params)
     }
 }
 
+void SingleOutputExecStream::open(bool restart)
+{
+    ExecStream::open(restart);
+    if (restart) {
+        pOutAccessor->clear();
+    }
+}
+
 ExecStreamBufProvision SingleOutputExecStream::getOutputBufProvision() const
 {
     return BUFPROV_CONSUMER;

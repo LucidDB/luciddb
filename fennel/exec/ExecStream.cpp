@@ -72,7 +72,7 @@ void ExecStream::getResourceRequirements(
 }
 
 void ExecStream::setResourceAllocation(
-    ExecStreamResourceQuantity const &quantity)
+    ExecStreamResourceQuantity &quantity)
 {
     resourceAllocation = quantity;
     if (pQuotaAccessor) {

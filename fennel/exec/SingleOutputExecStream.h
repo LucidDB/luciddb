@@ -56,6 +56,7 @@ public:
     virtual void setOutputBufAccessors(
         std::vector<SharedExecStreamBufAccessor> const &outAccessors);
     virtual void prepare(SingleOutputExecStreamParams const &params);
+    virtual void open(bool restart);
     virtual ExecStreamBufProvision getOutputBufProvision() const;
 };
 

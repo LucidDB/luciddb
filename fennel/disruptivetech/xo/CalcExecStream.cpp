@@ -108,22 +108,15 @@ ExecStreamResult CalcExecStream::execute(ExecStreamQuantum const &quantum)
         return rc;
     }
     
-    bool output = false;
-    uint nTuplesProcessed = 0;
-
-    for (;;) {
+    for (uint nTuples = 0; nTuples < quantum.nTuplesMax; ++nTuples) {
         while (!pInAccessor->isTupleConsumptionPending()) {
             if (!pInAccessor->demandData()) {
                 return EXECRC_BUF_UNDERFLOW;
-            }
-            if (nTuplesProcessed >= quantum.nTuplesMax) {
-                return EXECRC_QUANTUM_EXPIRED;
             }
             
             pInAccessor->unmarshalTuple(inputData);
 
             pCalc->exec();
-            ++nTuplesProcessed;
 
             // REVIEW: JK 2004/7/16. Note that the calculator provides
             // two interfaces to the list of warnings. One is a
@@ -144,14 +137,13 @@ ExecStreamResult CalcExecStream::execute(ExecStreamQuantum const &quantum)
             }
         }
         
-        if (pOutAccessor->produceTuple(outputData)) {
-            output = true;
-        } else {
+        if (!pOutAccessor->produceTuple(outputData)) {
             return EXECRC_BUF_OVERFLOW;
         }
 
         pInAccessor->consumeTuple();
     }
+    return EXECRC_QUANTUM_EXPIRED;
 }
 
 FENNEL_END_CPPFILE("$Id$");

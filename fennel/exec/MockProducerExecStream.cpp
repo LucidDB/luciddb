@@ -43,7 +43,7 @@ void MockProducerExecStream::prepare(MockProducerExecStreamParams const &params)
     }
     outputData.compute(params.outputTupleDesc);
     nRowsMax = params.nRows;
-    TupleAccessor &tupleAccessor = pOutAccessor->getTraceTupleAccessor();
+    TupleAccessor &tupleAccessor = pOutAccessor->getScratchTupleAccessor();
     assert(tupleAccessor.isFixedWidth());
     cbTuple = tupleAccessor.getMaxByteCount();
 }

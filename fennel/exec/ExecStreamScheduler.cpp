@@ -156,7 +156,7 @@ void ExecStreamScheduler::traceStreamBufferContents(
 {
     TupleDescriptor const &tupleDesc = bufAccessor.getTupleDesc();
     TupleData tupleData(tupleDesc);
-    TupleAccessor &tupleAccessor = bufAccessor.getTraceTupleAccessor();
+    TupleAccessor &tupleAccessor = bufAccessor.getScratchTupleAccessor();
     
     for (PConstBuffer pTuple = bufAccessor.getConsumptionStart();
          pTuple != bufAccessor.getConsumptionEnd();

@@ -15,7 +15,7 @@ ScratchBufferExecStream.cpp \
 SegBufferExecStream.cpp \
 SingleOutputExecStream.cpp
 
-DESIGN_DOC=SchedulerDesign.cpp
-EXTRA_DIST=$(DESIGN_DOC)
-TAGS_DEPENDENCIES=$(DESIGN_DOC)
-ETAGS_ARGS=$(DESIGN_DOC)
+DESIGN_DOCS=SchedulerDesign.cpp ExecStreamHowTo.cpp
+EXTRA_DIST=$(DESIGN_DOCS)
+TAGS_DEPENDENCIES=$(DESIGN_DOCS)
+ETAGS_ARGS=$(DESIGN_DOCS)

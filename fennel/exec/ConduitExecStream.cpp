@@ -74,10 +74,14 @@ ExecStreamResult ConduitExecStream::precheckConduitBuffers()
         return EXECRC_EOS;
     case EXECBUF_NONEMPTY:
     case EXECBUF_OVERFLOW:
-        return EXECRC_YIELD;
+        break;
     default:
         permAssert(false);
     }
+    if (pOutAccessor->getState() == EXECBUF_OVERFLOW) {
+        return EXECRC_BUF_OVERFLOW;
+    }
+    return EXECRC_YIELD;
 }
 
 FENNEL_END_CPPFILE("$Id$");

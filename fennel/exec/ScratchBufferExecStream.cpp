@@ -54,10 +54,7 @@ void ScratchBufferExecStream::open(bool restart)
     assert(pOutAccessor);
     assert(pOutAccessor->getProvision() == BUFPROV_PRODUCER);
 
-    if (restart) {
-        pOutAccessor->clear();
-        pInAccessor->clear();
-    } else {
+    if (!restart) {
         bufferLock.allocatePage();
     }
 
@@ -128,6 +125,6 @@ ExecStreamBufProvision ScratchBufferExecStream::getInputBufProvision() const
     return BUFPROV_CONSUMER;
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/exec/ScratchBufferExecStream.cpp#1 $");
+FENNEL_END_CPPFILE("$Id$");
 
 // End ScratchBufferExecStream.cpp

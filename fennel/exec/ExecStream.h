@@ -163,12 +163,14 @@ public:
     /**
      * Sets current resource allocation for this stream.  If called while the
      * stream is open, this indicates a request for the stream to dynamically
-     * adjust its memory usage.
+     * adjust its memory usage.  If the stream is incapable of honoring
+     * the request, it should update quantity with the actual amounts still
+     * in use.
      *
      * @param quantity allocated resource quantity
      */
     virtual void setResourceAllocation(
-        ExecStreamResourceQuantity const &quantity);
+        ExecStreamResourceQuantity &quantity);
         
     /**
      * Opens this stream, acquiring any resources needed in order to be able to

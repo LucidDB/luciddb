@@ -216,7 +216,7 @@ public:
         ExecStreamResourceQuantity &minQuantity,
         ExecStreamResourceQuantity &optQuantity);
     virtual void setResourceAllocation(
-        ExecStreamResourceQuantity const &quantity);
+        ExecStreamResourceQuantity &quantity);
 };
 
 FENNEL_END_NAMESPACE

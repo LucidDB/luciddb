@@ -325,9 +325,10 @@ public:
     inline TupleAccessor &getConsumptionTupleAccessor();
 
     /**
-     * @return a TupleAccessor suitable for use in tracing buffer contents
+     * @return a TupleAccessor suitable for scratch use such as
+     * tracing (note that this is clobbered by produceTuple)
      */
-    inline TupleAccessor &getTraceTupleAccessor();
+    inline TupleAccessor &getScratchTupleAccessor();
 };
 
 inline ExecStreamBufAccessor::ExecStreamBufAccessor()
@@ -582,9 +583,9 @@ inline TupleAccessor &ExecStreamBufAccessor::getConsumptionTupleAccessor()
     return tupleConsumptionAccessor;
 }
 
-inline TupleAccessor &ExecStreamBufAccessor::getTraceTupleAccessor()
+inline TupleAccessor &ExecStreamBufAccessor::getScratchTupleAccessor()
 {
-    // this can be used for tracing since we don't need its state
+    // this can be used for scratch purposes since we don't need its state
     // across calls to produceTuple
     return tupleProductionAccessor;
 }

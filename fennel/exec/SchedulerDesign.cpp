@@ -53,8 +53,9 @@ implementations instead.
 
 <p>
 
-When the scheduler decides that a particular stream should run, it invokes its
-ExecStream::execute method, passing a reference to an instance of
+When the scheduler decides that a particular stream should run, it invokes that
+stream's implementation of ExecStream::execute, passing a reference to an
+instance of
 ExecStreamQuantum to limit the amount of data processed.  The exact
 interpretation of the quantum is up to the stream implementation.  The stream's
 response is dependent on the states of its adjacent buffers, which usually
@@ -111,7 +112,7 @@ quantization can be used in any graph.
 
 <h3>Top-level Flow</h3>
 
-The flow for instantiation and scheduling of a single stream graph is as
+A typical flow for instantiation and scheduling of a single stream graph is as
 follows:
 
 <ol>
