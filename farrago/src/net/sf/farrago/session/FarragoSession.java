@@ -19,8 +19,7 @@
 
 package net.sf.farrago.session;
 
-import net.sf.farrago.catalog.FarragoCatalog;
-import net.sf.farrago.catalog.FarragoConnectionDefaults;
+import net.sf.farrago.catalog.FarragoRepos;
 import net.sf.farrago.util.FarragoAllocation;
 import org.eigenbase.sql.SqlOperatorTable;
 import org.eigenbase.oj.rex.OJRexImplementorTable;
@@ -54,9 +53,9 @@ public interface FarragoSession extends FarragoAllocation
     public String getUrl();
     
     /**
-     * @return catalog accessed by this session
+     * @return repos accessed by this session
      */
-    public FarragoCatalog getCatalog();
+    public FarragoRepos getRepos();
 
     /**
      * @return whether this session is an internal session cloned
@@ -82,7 +81,7 @@ public interface FarragoSession extends FarragoAllocation
     /**
      * @return current connection defaults for this session
      */
-    public FarragoConnectionDefaults getConnectionDefaults();
+    public FarragoSessionVariables getSessionVariables();
 
     /**
      * @return JDBC database metadata for this session

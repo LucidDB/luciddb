@@ -71,9 +71,9 @@ class FarragoParserImpl extends CommonParserBase {
             token.beginColumn);
     }
 
-    public FarragoCatalog getCatalog()
+    public FarragoRepos getRepos()
     {
-        return farragoParser.getDdlValidator().getCatalog();
+        return farragoParser.getDdlValidator().getRepos();
     }
 }
 

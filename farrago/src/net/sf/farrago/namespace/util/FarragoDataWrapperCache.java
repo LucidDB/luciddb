@@ -50,17 +50,17 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
      *
      * @param sharedCache underlying shared cache
      *
-     * @param catalog FarragoCatalog for wrapper initialization
+     * @param repos FarragoRepos for wrapper initialization
      *
      * @param fennelDbHandle FennelDbHandle for wrapper initialization
      */
     public FarragoDataWrapperCache(
         FarragoAllocationOwner owner,
         FarragoObjectCache sharedCache,
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         FennelDbHandle fennelDbHandle)
     {
-        super(owner,sharedCache,catalog);
+        super(owner,sharedCache,repos);
         this.fennelDbHandle = fennelDbHandle;
     }
 

@@ -81,7 +81,7 @@ public class FarragoTypeTest extends FarragoTestCase {
     public void _testIntPlusInt() throws Exception {
         String sql = "select 1+1.0 from values(1)";
         resultSet = stmt.executeQuery(sql);
-        if (catalog.isFennelEnabled()) {
+        if (repos.isFennelEnabled()) {
             assertEquals(4, getResultSetCount());
         } else {
             assertEquals(1, getResultSetCount());

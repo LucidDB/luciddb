@@ -108,11 +108,11 @@ public class IteratorToFennelConverter
 
         FemTupleDescriptor tupleDesc =
             FennelRelUtil.createTupleDescriptorFromRowType(
-                stmt.getCatalog(),
+                stmt.getRepos(),
                 rowType);
         FemTupleAccessor tupleAccessor =
             FennelRelUtil.getAccessorForTupleDescriptor(
-                stmt.getCatalog(),
+                stmt.getRepos(),
                 stmt.getFennelDbHandle(),
                 tupleDesc);
 
@@ -290,7 +290,7 @@ public class IteratorToFennelConverter
             throw cannotImplement();
         }
 
-        if (!getPreparingStmt().getCatalog().isFennelEnabled()) {
+        if (!getPreparingStmt().getRepos().isFennelEnabled()) {
             return Literal.constantNull();
         }
 
@@ -324,10 +324,10 @@ public class IteratorToFennelConverter
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        FarragoCatalog catalog = getPreparingStmt().getCatalog();
+        FarragoRepos repos = getPreparingStmt().getRepos();
 
         FemJavaTupleStreamDef streamDef =
-            catalog.newFemJavaTupleStreamDef();
+            repos.newFemJavaTupleStreamDef();
         streamDef.setStreamId(getId());
 
         return streamDef;

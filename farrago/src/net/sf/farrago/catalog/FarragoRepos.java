@@ -51,19 +51,19 @@ import java.util.logging.*;
 import javax.jmi.reflect.*;
 
 /**
- * FarragoCatalog represents a loaded instance of an MDR repository containing
+ * FarragoRepos represents a loaded instance of an MDR repository containing
  * Farrago metadata.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoCatalog
+public class FarragoRepos
     extends FarragoMetadataFactory
     implements FarragoAllocation, FarragoTransientTxnContext
 {
     //~ Static fields/initializers --------------------------------------------
 
-    private static final Logger tracer = FarragoTrace.getCatalogTracer();
+    private static final Logger tracer = FarragoTrace.getReposTracer();
 
     /** TODO:  look this up from repository */
     private static final int maxNameLength = 128;
@@ -131,9 +131,9 @@ public class FarragoCatalog
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Open a Farrago catalog.
+     * Open a Farrago repository.
      */
-    public FarragoCatalog(FarragoAllocationOwner owner,boolean userCatalog)
+    public FarragoRepos(FarragoAllocationOwner owner,boolean userRepos)
     {
         owner.addAllocation(this);
         tracer.fine("Loading catalog");
@@ -143,25 +143,25 @@ public class FarragoCatalog
         }
         modelLoader = new FarragoModelLoader();
 
-        if (!userCatalog) {
-            File catalogFile = modelLoader.getSystemCatalogFile();
+        if (!userRepos) {
+            File reposFile = modelLoader.getSystemReposFile();
             try {
                 new FarragoFileLockAllocation(
                     owner,
-                    catalogFile,
+                    reposFile,
                     true);
             } catch (IOException ex) {
                 throw FarragoResource.instance().newCatalogFileLockFailed(
-                    catalogFile.toString());
+                    reposFile.toString());
             }
         }
 
-        farragoPackage = modelLoader.loadModel("FarragoCatalog",userCatalog);
+        farragoPackage = modelLoader.loadModel("FarragoCatalog",userRepos);
         if (farragoPackage == null) {
             throw FarragoResource.instance().newCatalogUninitialized();
         }
         super.setRootPackage(farragoPackage);
-        mdrRepository = modelLoader.getRepository();
+        mdrRepository = modelLoader.getMdrRepos();
         cwmPackage = farragoPackage.getCwm();
         corePackage = cwmPackage.getCore();
         relationalPackage = cwmPackage.getRelational();
@@ -213,9 +213,9 @@ public class FarragoCatalog
     /**
      * .
      *
-     * @return MDRepository storing this catalog
+     * @return MDRepository storing this Farrago repository
      */
-    public MDRepository getRepository()
+    public MDRepository getMdrRepos()
     {
         return mdrRepository;
     }
@@ -236,7 +236,7 @@ public class FarragoCatalog
     /**
      * .
      *
-     * @return CwmCatalog representing this FarragoCatalog
+     * @return CwmCatalog representing this FarragoRepos
      */
     public CwmCatalog getSelfAsCwmCatalog()
     {
@@ -307,7 +307,7 @@ public class FarragoCatalog
     /**
      * .
      *
-     * @return the name of the default Charset for this catalog
+     * @return the name of the default Charset for this repository
      */
     public String getDefaultCharsetName()
     {
@@ -317,7 +317,7 @@ public class FarragoCatalog
     /**
      * .
      *
-     * @return the name of the default Collation for this catalog
+     * @return the name of the default Collation for this repository
      */
     public String getDefaultCollationName()
     {
@@ -522,76 +522,9 @@ public class FarragoCatalog
     }
 
     /**
-     * Resolve a (possibly qualified) name of a schema object.
-     *
-     * @param connectionDefaults default qualifier settings
-     *
-     * @param names array of 1 or more name components, from
-     * most general to most specific
-     *
-     * @return ResolvedSchemaObject, or null if object definitely doesn't
-     * exist
-     */
-    public ResolvedSchemaObject resolveSchemaObjectName(
-        FarragoConnectionDefaults connectionDefaults,
-        String [] names)
-    {
-        ResolvedSchemaObject resolved = new ResolvedSchemaObject();
-        if (names.length > 3) {
-            // Max is catalog.schema.obj
-            return null;
-        } else if (names.length == 3) {
-            resolved.catalogName = names[0];
-            resolved.schemaName = names[1];
-            resolved.objectName = names[2];
-        } else if (names.length == 2) {
-            resolved.catalogName = connectionDefaults.catalogName;
-            resolved.schemaName = names[0];
-            resolved.objectName = names[1];
-        } else if (names.length == 1) {
-            if (connectionDefaults.schemaName == null) {
-                // TODO:  use names for context
-                throw FarragoResource.instance().newValidatorNoDefaultSchema();
-            }
-            resolved.catalogName = connectionDefaults.schemaCatalogName;
-            resolved.schemaName = connectionDefaults.schemaName;
-            resolved.objectName = names[0];
-        } else {
-            throw new IllegalArgumentException();
-        }
-
-        resolved.catalog = getCwmCatalog(resolved.catalogName);
-        if (resolved.catalog == null) {
-            // TODO:  throw ValidatorUnknownObject for catalog
-            return null;
-        }
-
-        if (resolved.catalog instanceof FemDataServer) {
-            // we don't have any metadata for direct references to
-            // remote objects
-            return resolved;
-        }
-
-        resolved.schema = getSchema(
-            resolved.catalog,resolved.schemaName);
-        if (resolved.schema == null) {
-            // TODO:  throw ValidatorUnknownObject for schema
-            return null;
-        }
-
-        resolved.object = getModelElement(
-            resolved.schema.getOwnedElement(),resolved.objectName);
-        if (resolved.object == null) {
-            return null;
-        }
-
-        return resolved;
-    }
-
-    /**
      * Look up a CwmCatalog by name.
      *
-     * @param catalogName name of schema to find
+     * @param catalogName name of catalog to find
      *
      * @return catalog definition, or null if not found
      */
@@ -605,18 +538,18 @@ public class FarragoCatalog
     /**
      * Look up a schema by name in a catalog.
      *
-     * @param cwmCatalog CwmCatalog to search
+     * @param catalog CwmCatalog to search
      *
      * @param schemaName name of schema to find
      *
      * @return schema definition, or null if not found
      */
     public CwmSchema getSchema(
-        CwmCatalog cwmCatalog,
+        CwmCatalog catalog,
         String schemaName)
     {
         return (CwmSchema) getTypedModelElement(
-            cwmCatalog.getOwnedElement(),
+            catalog.getOwnedElement(),
             schemaName,
             CwmSchema.class);
     }
@@ -841,21 +774,21 @@ public class FarragoCatalog
     private void createSystemCatalogs()
     {
         // TODO:  default character set and collation name
-        CwmCatalog cwmCatalog;
+        CwmCatalog catalog;
 
-        cwmCatalog = newCwmCatalog();
-        cwmCatalog.setName(SYSBOOT_CATALOG_NAME);
-        initializeCwmCatalog(cwmCatalog);
+        catalog = newCwmCatalog();
+        catalog.setName(SYSBOOT_CATALOG_NAME);
+        initializeCwmCatalog(catalog);
 
-        cwmCatalog = newCwmCatalog();
-        cwmCatalog.setName(LOCALDB_CATALOG_NAME);
-        initializeCwmCatalog(cwmCatalog);
+        catalog = newCwmCatalog();
+        catalog.setName(LOCALDB_CATALOG_NAME);
+        initializeCwmCatalog(catalog);
     }
 
-    public void initializeCwmCatalog(CwmCatalog cwmCatalog)
+    public void initializeCwmCatalog(CwmCatalog catalog)
     {
-        cwmCatalog.setDefaultCharacterSetName(getDefaultCharsetName());
-        cwmCatalog.setDefaultCollationName(getDefaultCollationName());
+        catalog.setDefaultCharacterSetName(getDefaultCharsetName());
+        catalog.setDefaultCollationName(getDefaultCollationName());
     }
 
     private void createSystemTypes()
@@ -1019,34 +952,7 @@ public class FarragoCatalog
         FemTupleAccessor accessor = (FemTupleAccessor) c.iterator().next();
         return accessor;
     }
-
-
-    /**
-     * Data structure for return value of resolveSchemaObjectName().
-     */
-    public static class ResolvedSchemaObject
-    {
-        public CwmCatalog catalog;
-
-        public CwmSchema schema;
-
-        public CwmModelElement object;
-
-        public String catalogName;
-
-        public String schemaName;
-
-        public String objectName;
-
-        public String [] getQualifiedName()
-        {
-            return new String []
-                {
-                    catalogName,schemaName,objectName
-                };
-        }
-    }
 }
 
 
-// End FarragoCatalog.java
+// End FarragoRepos.java

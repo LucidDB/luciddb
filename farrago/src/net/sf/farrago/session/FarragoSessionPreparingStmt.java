@@ -126,9 +126,9 @@ public interface FarragoSessionPreparingStmt extends FarragoAllocation
     public RelOptCluster getRelOptCluster();
     
     /**
-     * @return catalog for this stmt
+     * @return repos for this stmt
      */
-    public FarragoCatalog getCatalog();
+    public FarragoRepos getRepos();
     
     /**
      * @return handle to Fennel database accessed by this stmt

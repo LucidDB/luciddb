@@ -205,21 +205,21 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        FarragoCatalog catalog = getPreparingStmt().getCatalog();
+        FarragoRepos repos = getPreparingStmt().getRepos();
 
         FemIndexSearchDef searchStream =
-            catalog.newFemIndexSearchDef();
+            repos.newFemIndexSearchDef();
 
         scanRel.defineScanStream(searchStream);
         searchStream.setUniqueKey(isUniqueKey);
         searchStream.setOuterJoin(isOuter);
         if (inputKeyProj != null) {
             searchStream.setInputKeyProj(
-                FennelRelUtil.createTupleProjection(catalog,inputKeyProj));
+                FennelRelUtil.createTupleProjection(repos,inputKeyProj));
         }
         if (inputJoinProj != null) {
             searchStream.setInputJoinProj(
-                FennelRelUtil.createTupleProjection(catalog,inputJoinProj));
+                FennelRelUtil.createTupleProjection(repos,inputJoinProj));
         }
         searchStream.getInput().add(
             implementor.visitFennelChild((FennelRel) child));

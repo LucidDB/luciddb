@@ -44,9 +44,9 @@ public interface FarragoTypeFactory extends OJTypeFactory
     /**
      * .
      *
-     * @return associated FarragoCatalog
+     * @return associated FarragoRepos
      */
-    public FarragoCatalog getCatalog();
+    public FarragoRepos getRepos();
 
 
     /**

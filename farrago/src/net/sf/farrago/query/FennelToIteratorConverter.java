@@ -101,12 +101,12 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
                 implementor.visitChild(this, 0, child);
 
         FennelRel fennelRel = (FennelRel) child;
-        FarragoCatalog catalog = fennelRel.getPreparingStmt().getCatalog();
+        FarragoRepos repos = fennelRel.getPreparingStmt().getRepos();
 
         final RelDataType rowType = getRowType();
         OJClass rowClass = OJUtil.typeToOJClass(rowType);
 
-        if (!catalog.isFennelEnabled()) {
+        if (!repos.isFennelEnabled()) {
             // use dummies to insert a reference to our row class, just so
             // that it will get generated
             ExpressionList argList = new ExpressionList();
@@ -127,10 +127,10 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
         String rootStreamName = rootStream.getName();
 
         FemTupleDescriptor tupleDesc =
-            FennelRelUtil.createTupleDescriptorFromRowType(catalog,rowType);
+            FennelRelUtil.createTupleDescriptorFromRowType(repos,rowType);
         FemTupleAccessor tupleAccessor =
             FennelRelUtil.getAccessorForTupleDescriptor(
-                catalog,
+                repos,
                 fennelRel.getPreparingStmt().getFennelDbHandle(),
                 tupleDesc);
 

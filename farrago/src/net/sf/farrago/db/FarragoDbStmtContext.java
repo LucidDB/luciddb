@@ -266,7 +266,7 @@ public class FarragoDbStmtContext
         if (isDml) {
             success = false;
             try {
-                if (session.getCatalog().isFennelEnabled()) {
+                if (session.getRepos().isFennelEnabled()) {
                     boolean found = resultSet.next();
                     assert (found);
                     updateCount = resultSet.getInt(1);

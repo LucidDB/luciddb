@@ -187,10 +187,10 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        FarragoCatalog catalog = getPreparingStmt().getCatalog();
+        FarragoRepos repos = getPreparingStmt().getRepos();
 
         FemIndexScanDef scanStream =
-            catalog.newFemIndexScanDef();
+            repos.newFemIndexScanDef();
 
         defineScanStream(scanStream);
 
@@ -205,11 +205,11 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
         // I/O cost is proportional to pages of index scanned
         double dCpu = dRows * getRowType().getFieldCount();
 
-        FarragoCatalog catalog = getPreparingStmt().getCatalog();
+        FarragoRepos repos = getPreparingStmt().getRepos();
         int nIndexCols =
-            catalog.isClustered(index)
+            repos.isClustered(index)
             ? ftrsTable.getCwmColumnSet().getFeature().size()
-            : FtrsUtil.getUnclusteredCoverageColList(catalog,index).size();
+            : FtrsUtil.getUnclusteredCoverageColList(repos,index).size();
 
         double dIo = dRows * nIndexCols;
 
@@ -223,9 +223,9 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
      */
     void defineScanStream(FemIndexScanDef scanStream)
     {
-        FarragoCatalog catalog = getPreparingStmt().getCatalog();
+        FarragoRepos repos = getPreparingStmt().getRepos();
 
-        if (!catalog.isTemporary(index)) {
+        if (!repos.isTemporary(index)) {
             scanStream.setRootPageId(
                 getPreparingStmt().getIndexMap().getIndexRoot(index));
         } else {
@@ -245,19 +245,19 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
                 index));
 
         scanStream.setKeyProj(
-            FtrsUtil.getDistinctKeyProjection(catalog,index));
+            FtrsUtil.getDistinctKeyProjection(repos,index));
 
         Integer [] projection = computeProjectedColumns();
         Integer [] indexProjection;
 
-        if (catalog.isClustered(index)) {
+        if (repos.isClustered(index)) {
             indexProjection = projection;
         } else {
             // transform from table-relative to index-relative ordinals
             indexProjection = new Integer[projection.length];
             List indexTableColList =
                 Arrays.asList(
-                    FtrsUtil.getUnclusteredCoverageArray(catalog,index));
+                    FtrsUtil.getUnclusteredCoverageArray(repos,index));
             for (int i = 0; i < projection.length; ++i) {
                 Integer iTableCol = projection[i];
                 int iIndexCol = indexTableColList.indexOf(iTableCol);
@@ -267,7 +267,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
         }
 
         scanStream.setOutputProj(
-            FennelRelUtil.createTupleProjection(catalog,indexProjection));
+            FennelRelUtil.createTupleProjection(repos,indexProjection));
     }
 
     private Integer [] computeProjectedColumns()
@@ -283,7 +283,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
     public RelFieldCollation [] getCollations()
     {
         Integer [] indexedCols = FtrsUtil.getCollationKeyArray(
-            getPreparingStmt().getCatalog(),
+            getPreparingStmt().getRepos(),
             index);
         List collationList = new ArrayList();
         for (int i = 0; i < indexedCols.length; ++i) {

@@ -59,7 +59,7 @@ public class TestLeaks extends FarragoTestCase
         int nFennelHandles = 0;
         for (int i = 0; i < 50000; ++i) {
             resultSet = stmt.executeQuery(sql);
-            if (catalog.isFennelEnabled()) {
+            if (repos.isFennelEnabled()) {
                 assertEquals(2,getResultSetCount());
             } else {
                 assertEquals(0,getResultSetCount());

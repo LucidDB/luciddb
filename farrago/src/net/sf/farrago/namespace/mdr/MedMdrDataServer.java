@@ -67,7 +67,7 @@ class MedMdrDataServer extends MedAbstractDataServer
     
     public static final String PROP_SCHEMA_NAME = "SCHEMA_NAME";
 
-    FarragoCatalog catalog;
+    FarragoRepos repos;
     
     MDRepository repository;
 
@@ -82,10 +82,10 @@ class MedMdrDataServer extends MedAbstractDataServer
     MedMdrDataServer(
         String serverMofId,
         Properties props,
-        FarragoCatalog catalog)
+        FarragoRepos repos)
     {
         super(serverMofId,props);
-        this.catalog = catalog;
+        this.repos = repos;
     }
 
     /**
@@ -163,8 +163,8 @@ class MedMdrDataServer extends MedAbstractDataServer
     private void initAsCatalogServer()
     {
         foreignRepository = false;
-        repository = catalog.getRepository();
-        extentPackage = catalog.farragoPackage;
+        repository = repos.getMdrRepos();
+        extentPackage = repos.farragoPackage;
         rootPackage = extentPackage;
     }
 

@@ -172,7 +172,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         // When a table is dropped, all indexes on the table should also be
         // implicitly dropped.
         addDropRule(
-            getCatalog().indexPackage.getIndexSpansClass(),
+            getRepos().indexPackage.getIndexSpansClass(),
             new DropRule(
                 "spannedClass",
                 null,
@@ -182,7 +182,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         // CASCADE, they go away (a special case later on takes care of
         // cascading to the dependent object as well).
         addDropRule(
-            getCatalog().corePackage.getDependencySupplier(),
+            getRepos().corePackage.getDependencySupplier(),
             new DropRule(
                 "supplier",
                 null,
@@ -191,7 +191,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         // When a dependency gets dropped, take its owner (the client)
         // down with it.
         addDropRule(
-            getCatalog().corePackage.getElementOwnership(),
+            getRepos().corePackage.getElementOwnership(),
             new DropRule(
                 "ownedElement",
                 CwmDependency.class,
@@ -201,7 +201,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         // This is not true for other namespaces (e.g. a table's constraints
         // are dropped implicitly), so we specify the superInterface filter.
         addDropRule(
-            getCatalog().corePackage.getElementOwnership(),
+            getRepos().corePackage.getElementOwnership(),
             new DropRule(
                 "namespace",
                 CwmSchema.class,
@@ -213,7 +213,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         // attributes or associations set (though someone will probably come up
         // with a pathological case eventually).
         activeThread = Thread.currentThread();
-        getCatalog().getRepository().addListener(
+        getRepos().getMdrRepos().addListener(
             this,
             InstanceEvent.EVENT_INSTANCE_DELETE
                 | AttributeEvent.EVENTMASK_ATTRIBUTE
@@ -231,9 +231,9 @@ public class DdlValidator extends FarragoCompoundAllocation
     }
     
     // implement FarragoSessionDdlValidator
-    public FarragoCatalog getCatalog()
+    public FarragoRepos getRepos()
     {
-        return stmtValidator.getCatalog();
+        return stmtValidator.getRepos();
     }
 
     // implement FarragoSessionDdlValidator
@@ -285,9 +285,9 @@ public class DdlValidator extends FarragoCompoundAllocation
     }
 
     // implement FarragoSessionDdlValidator
-    public FarragoConnectionDefaults getConnectionDefaults()
+    public FarragoSessionVariables getSessionVariables()
     {
-        return stmtValidator.getConnectionDefaults();
+        return stmtValidator.getSessionVariables();
     }
 
     // implement FarragoSessionDdlValidator
@@ -357,10 +357,10 @@ public class DdlValidator extends FarragoCompoundAllocation
         } else {
             schemaElement.setName(qualifiedName.names[0]);
             if (schema == null) {
-                if (getConnectionDefaults().schemaName == null) {
+                if (getSessionVariables().schemaName == null) {
                     throw res.newValidatorNoDefaultSchema();
                 }
-                schemaName = getConnectionDefaults().schemaName;
+                schemaName = getSessionVariables().schemaName;
             }
         }
         if (schema == null) {
@@ -585,7 +585,7 @@ public class DdlValidator extends FarragoCompoundAllocation
             while (mapIter.hasNext()) {
                 Map.Entry mapEntry = (Map.Entry) mapIter.next();
                 RefObject obj = (RefObject)
-                    getCatalog().getRepository().getByMofId(
+                    getRepos().getMdrRepos().getByMofId(
                     (String) mapEntry.getKey());
                 Object action = mapEntry.getValue();
 
@@ -673,11 +673,11 @@ public class DdlValidator extends FarragoCompoundAllocation
                     // REVIEW: error message assumes collection is sorted by
                     // definition order, which may not be guaranteed?
                     throw res.newValidatorDuplicateNames(
-                        getCatalog().getLocalizedObjectName(
+                        getRepos().getLocalizedObjectName(
                             null,
                             element.getName(),
                             element.refClass()),
-                        getCatalog().getLocalizedObjectName(
+                        getRepos().getLocalizedObjectName(
                             container,
                             container.refClass()),
                         getParserPosString(element),
@@ -697,11 +697,11 @@ public class DdlValidator extends FarragoCompoundAllocation
 
                     // new object clashes with existing object
                     throw res.newValidatorNameInUse(
-                        getCatalog().getLocalizedObjectName(
+                        getRepos().getLocalizedObjectName(
                             null,
                             oldElement.getName(),
                             oldElement.refClass()),
-                        getCatalog().getLocalizedObjectName(
+                        getRepos().getLocalizedObjectName(
                             container,
                             container.refClass()),
                         getParserPosString(newElement));
@@ -717,7 +717,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         Collection suppliers,
         String kind)
     {
-        CwmDependency dependency = getCatalog().newCwmDependency();
+        CwmDependency dependency = getRepos().newCwmDependency();
         dependency.setName(client.getName()+"$DEP");
         dependency.setKind(kind);
 
@@ -803,9 +803,9 @@ public class DdlValidator extends FarragoCompoundAllocation
                 FarragoException getException()
                 {
                     CwmModelElement droppedElement = (CwmModelElement)
-                        getCatalog().getRepository().getByMofId(mofId);
+                        getRepos().getMdrRepos().getByMofId(mofId);
                     return res.newValidatorDropRestrict(
-                        getCatalog().getLocalizedObjectName(
+                        getRepos().getLocalizedObjectName(
                             droppedElement,
                             droppedElement.refClass()));
                 }
@@ -827,11 +827,11 @@ public class DdlValidator extends FarragoCompoundAllocation
         // doesn't support those.  Instead, have to restart the txn
         // altogether.  Take advantage of the fact that MDR allows us to retain
         // references across txns.
-        getCatalog().endReposTxn(true);
+        getRepos().endReposTxn(true);
 
         // TODO:  really need a lock to protect us against someone else's DDL
         // here, which could invalidate our schedulingMap.
-        getCatalog().beginReposTxn(true);
+        getRepos().beginReposTxn(true);
     }
 
     private void scheduleDeletion(RefObject obj)
@@ -866,7 +866,7 @@ public class DdlValidator extends FarragoCompoundAllocation
     private void stopListening()
     {
         if (activeThread != null) {
-            getCatalog().getRepository().removeListener(this);
+            getRepos().getMdrRepos().removeListener(this);
             activeThread = null;
         }
     }

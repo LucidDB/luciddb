@@ -124,7 +124,7 @@ public abstract class CwmViewImpl
         for (int i = 0; i < n; ++i) {
             CwmColumn column;
             if (implicitColumnNames) {
-                column = validator.getCatalog().newFemViewColumn();
+                column = validator.getRepos().newFemViewColumn();
                 columnList.add(column);
             } else {
                 column = (CwmColumn) columnList.get(i);

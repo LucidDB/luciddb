@@ -36,9 +36,9 @@ import java.util.*;
 public class FarragoSessionRuntimeParams
 {
     /**
-     * Catalog storing object definitions.
+     * Repos storing object definitions.
      */
-    public FarragoCatalog catalog;
+    public FarragoRepos repos;
 
     /**
      * Cache for Fennel tuple streams.
@@ -69,7 +69,7 @@ public class FarragoSessionRuntimeParams
     /**
      * Connection-dependent settings.
      */
-    public FarragoConnectionDefaults connectionDefaults;
+    public FarragoSessionVariables sessionVariables;
 
     /**
      * FarragoObjectCache to use for caching FarragoMedDataWrapper instances.

@@ -77,7 +77,7 @@ public class FennelPullCalcRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FemCalcTupleStreamDef calcStream =
-            getCatalog().newFemCalcTupleStreamDef();
+            getRepos().newFemCalcTupleStreamDef();
 
         calcStream.getInput().add(
             implementor.visitFennelChild((FennelRel) child));

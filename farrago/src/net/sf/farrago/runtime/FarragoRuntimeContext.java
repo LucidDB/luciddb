@@ -52,7 +52,7 @@ public class FarragoRuntimeContext
         RelOptConnection,
         FennelJavaStreamMap
 {
-    private FarragoCatalog catalog;
+    private FarragoRepos repos;
 
     private FarragoObjectCache codeCache;
 
@@ -68,7 +68,7 @@ public class FarragoRuntimeContext
 
     private FarragoIndexMap indexMap;
 
-    private FarragoConnectionDefaults connectionDefaults;
+    private FarragoSessionVariables sessionVariables;
 
     private FarragoDataWrapperCache dataWrapperCache;
 
@@ -82,18 +82,18 @@ public class FarragoRuntimeContext
     public FarragoRuntimeContext(
         FarragoSessionRuntimeParams params)
     {
-        this.catalog = params.catalog;
+        this.repos = params.repos;
         this.codeCache = params.codeCache;
         this.txnCodeCache = params.txnCodeCache;
         this.fennelTxnContext = params.fennelTxnContext;
         this.indexMap = params.indexMap;
         this.dynamicParamValues = params.dynamicParamValues;
-        this.connectionDefaults = params.connectionDefaults;
+        this.sessionVariables = params.sessionVariables;
 
         dataWrapperCache = new FarragoDataWrapperCache(
             this,
             params.sharedDataWrapperCache,
-            params.catalog,
+            params.repos,
             params.fennelTxnContext.getFennelDbHandle());
 
         streamOwner = new StreamOwner();
@@ -134,7 +134,7 @@ public class FarragoRuntimeContext
         Object param)
     {
         FemDataServerImpl femServer = (FemDataServerImpl)
-            catalog.getRepository().getByMofId(serverMofId);
+            repos.getMdrRepos().getByMofId(serverMofId);
 
         FarragoMedDataServer server = 
             femServer.loadFromCache(dataWrapperCache);
@@ -185,7 +185,7 @@ public class FarragoRuntimeContext
      */
     public String getContextVariable_USER()
     {
-        return connectionDefaults.currentUserName;
+        return sessionVariables.currentUserName;
     }
     
     /**
@@ -195,7 +195,7 @@ public class FarragoRuntimeContext
      */
     public String getContextVariable_CURRENT_USER()
     {
-        return connectionDefaults.currentUserName;
+        return sessionVariables.currentUserName;
     }
     
     /**
@@ -205,7 +205,7 @@ public class FarragoRuntimeContext
      */
     public String getContextVariable_SYSTEM_USER()
     {
-        return connectionDefaults.systemUserName;
+        return sessionVariables.systemUserName;
     }
     
     /**
@@ -215,7 +215,7 @@ public class FarragoRuntimeContext
      */
     public String getContextVariable_SESSION_USER()
     {
-        return connectionDefaults.sessionUserName;
+        return sessionVariables.sessionUserName;
     }
     
     /**
@@ -234,7 +234,7 @@ public class FarragoRuntimeContext
         FennelTupleWriter tupleWriter,
         Iterator iter)
     {
-        if (!catalog.isFennelEnabled()) {
+        if (!repos.isFennelEnabled()) {
             return null;
         }
 
@@ -292,12 +292,12 @@ public class FarragoRuntimeContext
             // NOTE jvs 15-July-2004:  to avoid deadlock, grab the catalog
             // lock BEFORE we pin the cache entry (this matches the
             // order used by statement preparation)
-            catalog.beginTransientTxn();
+            repos.beginTransientTxn();
             try {
                 cacheEntry =
                     codeCache.pin(xmiFennelPlan,streamFactory,true);
             } finally {
-                catalog.endTransientTxn();
+                repos.endTransientTxn();
             }
         }
 
@@ -337,7 +337,7 @@ public class FarragoRuntimeContext
         String streamName,
         Object dummies)
     {
-        if (!catalog.isFennelEnabled()) {
+        if (!repos.isFennelEnabled()) {
             return Collections.EMPTY_LIST.iterator();
         }
 
@@ -350,17 +350,17 @@ public class FarragoRuntimeContext
             tupleReader,
             streamGraph,
             streamHandle,
-            catalog.getCurrentConfig().getFennelConfig().getCachePageSize());
+            repos.getCurrentConfig().getFennelConfig().getCachePageSize());
     }
 
     protected FennelStreamHandle getStreamHandle(
         String globalStreamName)
     {
-        catalog.beginReposTxn(true);
+        repos.beginReposTxn(true);
         try {
-            return streamGraph.findStream(catalog,globalStreamName);
+            return streamGraph.findStream(repos,globalStreamName);
         } finally {
-            catalog.endReposTxn(false);
+            repos.endReposTxn(false);
         }
     }
 
@@ -370,7 +370,7 @@ public class FarragoRuntimeContext
         FennelStreamGraph newStreamGraph = null;
         try {
             Collection collection = JmiUtil.importFromXmiString(
-                catalog.transientFarragoPackage,xmiFennelPlan);
+                repos.transientFarragoPackage,xmiFennelPlan);
             assert (collection.size() == 1);
             FemCmdPrepareExecutionStreamGraph cmd =
                 (FemCmdPrepareExecutionStreamGraph)

@@ -28,7 +28,7 @@ import org.netbeans.mdr.storagemodel.*;
 
 
 /**
- * CatalogImpl is a custom implementation for CWM Catalog.
+ * CwmCatalogImpl is a custom implementation for CWM Catalog.
  *
  * @author John V. Sichi
  * @version $Id$

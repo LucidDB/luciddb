@@ -50,19 +50,19 @@ public class FarragoDbSessionFactory implements FarragoSessionFactory
     }
     
     // implement FarragoSessionFactory
-    public FarragoCatalog newCatalog(
+    public FarragoRepos newRepos(
         FarragoAllocationOwner owner,
-        boolean userCatalog)
+        boolean userRepos)
     {
-        return new FarragoCatalog(owner,userCatalog);
+        return new FarragoRepos(owner,userRepos);
     }
     
     // implement FarragoSessionFactory
     public FennelTxnContext newFennelTxnContext(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         FennelDbHandle fennelDbHandle)
     {
-        return new FennelTxnContext(catalog,fennelDbHandle);
+        return new FennelTxnContext(repos,fennelDbHandle);
     }
     
     // implement FarragoSessionFactory

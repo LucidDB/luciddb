@@ -92,7 +92,7 @@ class FtrsIndexJoinRule extends RelOptRule
             return;
         }
 
-        FarragoCatalog catalog = scanRel.getPreparingStmt().getCatalog();
+        FarragoRepos repos = scanRel.getPreparingStmt().getRepos();
         int [] joinFieldOrdinals = new int[2];
         if (!RelOptUtil.analyzeSimpleEquiJoin(joinRel,joinFieldOrdinals)) {
             return;
@@ -103,7 +103,7 @@ class FtrsIndexJoinRule extends RelOptRule
         CwmColumn indexColumn = scanRel.getColumnForFieldAccess(rightOrdinal);
         assert (indexColumn != null);
 
-        if (!catalog.isClustered(scanRel.index)) {
+        if (!repos.isClustered(scanRel.index)) {
             // TODO:  support direct join against an unclustered index scan
             return;
         }
@@ -111,7 +111,7 @@ class FtrsIndexJoinRule extends RelOptRule
         // if we're working with a clustered index scan, consider all of
         // the unclustered indexes as well
         Iterator iter =
-            catalog.getIndexes(scanRel.ftrsTable.getCwmColumnSet()).iterator();
+            repos.getIndexes(scanRel.ftrsTable.getCwmColumnSet()).iterator();
         while (iter.hasNext()) {
             CwmSqlindex index = (CwmSqlindex) iter.next();
             considerIndex(
@@ -130,7 +130,7 @@ class FtrsIndexJoinRule extends RelOptRule
         RelNode leftRel,
         RelOptRuleCall call)
     {
-        FarragoCatalog catalog = scanRel.getPreparingStmt().getCatalog();
+        FarragoRepos repos = scanRel.getPreparingStmt().getRepos();
 
         // TODO:  support compound keys
         boolean isUnique = index.isUnique()
@@ -212,10 +212,10 @@ class FtrsIndexJoinRule extends RelOptRule
         Integer [] inputJoinProj = FennelRelUtil.newIotaProjection(
             leftFieldCount);
 
-        if (!catalog.isClustered(index) && catalog.isClustered(scanRel.index)) {
+        if (!repos.isClustered(index) && repos.isClustered(scanRel.index)) {
             Integer [] clusteredKeyColumns =
                 FtrsUtil.getClusteredDistinctKeyArray(
-                    catalog,
+                    repos,
                     scanRel.index);
 
             // REVIEW:  in many cases it would probably be more efficient to

@@ -46,18 +46,18 @@ import java.util.*;
  */
 class FtrsDataServer extends MedAbstractLocalDataServer
 {
-    private FarragoCatalog catalog;
+    private FarragoRepos repos;
     
     private FarragoTypeFactory indexTypeFactory;
     
     FtrsDataServer(
         String serverMofId,
         Properties props,
-        FarragoCatalog catalog)
+        FarragoRepos repos)
     {
         super(serverMofId,props);
-        this.catalog = catalog;
-        indexTypeFactory = new FarragoTypeFactoryImpl(catalog);
+        this.repos = repos;
+        indexTypeFactory = new FarragoTypeFactoryImpl(repos);
     }
 
     // implement FarragoMedDataServer
@@ -100,17 +100,17 @@ class FtrsDataServer extends MedAbstractLocalDataServer
     public long createIndex(
         CwmSqlindex index)
     {
-        catalog.beginTransientTxn();
+        repos.beginTransientTxn();
         try {
-            FemCmdCreateIndex cmd = catalog.newFemCmdCreateIndex();
-            if (!catalog.isFennelEnabled()) {
+            FemCmdCreateIndex cmd = repos.newFemCmdCreateIndex();
+            if (!repos.isFennelEnabled()) {
                 return 0;
             }
         
             initIndexCmd(cmd,index);
             return getFennelDbHandle().executeCmd(cmd);
         } finally {
-            catalog.endTransientTxn();
+            repos.endTransientTxn();
         }
     }
 
@@ -120,35 +120,35 @@ class FtrsDataServer extends MedAbstractLocalDataServer
         long rootPageId,
         boolean truncate)
     {
-        catalog.beginTransientTxn();
+        repos.beginTransientTxn();
         try {
             FemCmdDropIndex cmd;
             if (truncate) {
-                cmd = catalog.newFemCmdTruncateIndex();
+                cmd = repos.newFemCmdTruncateIndex();
             } else {
-                cmd = catalog.newFemCmdDropIndex();
+                cmd = repos.newFemCmdDropIndex();
             }
-            if (!catalog.isFennelEnabled()) {
+            if (!repos.isFennelEnabled()) {
                 return;
             }
             initIndexCmd(cmd,index);
             cmd.setRootPageId(rootPageId);
             getFennelDbHandle().executeCmd(cmd);
         } finally {
-            catalog.endTransientTxn();
+            repos.endTransientTxn();
         }
     }
     
     private void initIndexCmd(
         FemIndexCmd cmd,CwmSqlindex index)
     {
-        cmd.setDbHandle(getFennelDbHandle().getFemDbHandle(catalog));
+        cmd.setDbHandle(getFennelDbHandle().getFemDbHandle(repos));
         cmd.setTupleDesc(
             FtrsUtil.getCoverageTupleDescriptor(
                 indexTypeFactory,
                 index));
         cmd.setKeyProj(
-            FtrsUtil.getDistinctKeyProjection(catalog,index));
+            FtrsUtil.getDistinctKeyProjection(repos,index));
         cmd.setSegmentId(getIndexSegmentId(index));
         cmd.setIndexId(JmiUtil.getObjectId(index));
     }
@@ -165,7 +165,7 @@ class FtrsDataServer extends MedAbstractLocalDataServer
     {
         // TODO:  share symbolic enum with Fennel rather than hard-coding
         // values here
-        if (FarragoCatalog.isTemporary(index)) {
+        if (FarragoRepos.isTemporary(index)) {
             return 2;
         } else {
             return 1;

@@ -116,11 +116,11 @@ abstract class FennelDoubleRel extends AbstractRelNode implements FennelRel
     /**
      * .
      *
-     * @return catalog for object definitions
+     * @return repos for object definitions
      */
-    FarragoCatalog getCatalog()
+    FarragoRepos getRepos()
     {
-        return getPreparingStmt().getCatalog();
+        return getPreparingStmt().getRepos();
     }
 
     /**

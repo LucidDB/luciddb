@@ -68,15 +68,15 @@ public abstract class FemLocalTableImpl extends InstanceHandler
         FemDataWrapper dataWrapper = dataServer.getWrapper();
         if (dataWrapper.isForeign()) {
             throw validator.res.newValidatorLocalTableButForeignWrapper(
-                validator.getCatalog().getLocalizedObjectName(
+                validator.getRepos().getLocalizedObjectName(
                     this,null),
-                validator.getCatalog().getLocalizedObjectName(
+                validator.getRepos().getLocalizedObjectName(
                     dataWrapper,null));
         }
         
         validator.validateUniqueNames(this,getFeature(),false);
 
-        Collection indexes = validator.getCatalog().getIndexes(this);
+        Collection indexes = validator.getRepos().getIndexes(this);
 
         // NOTE:  don't need to validate index name uniqueness since indexes
         // live in same schema as table, so enforcement will take place at
@@ -85,7 +85,7 @@ public abstract class FemLocalTableImpl extends InstanceHandler
         int nClustered = 0;
         while (indexIter.hasNext()) {
             CwmSqlindex index = (CwmSqlindex) indexIter.next();
-            if (validator.getCatalog().isClustered(index)) {
+            if (validator.getRepos().isClustered(index)) {
                 nClustered++;
             }
         }
@@ -116,7 +116,7 @@ public abstract class FemLocalTableImpl extends InstanceHandler
                 if ((constraint == primaryKey) && (nClustered == 0)) {
                     // If no clustered index was specified, make the primary
                     // key's index clustered.
-                    validator.getCatalog().setTagValue(
+                    validator.getRepos().setTagValue(
                         index,"clusteredIndex","");
                 }
             }
@@ -142,7 +142,7 @@ public abstract class FemLocalTableImpl extends InstanceHandler
     public void validateDeletion(DdlValidator validator,boolean truncation)
     {
         if (truncation) {
-            Collection indexes = validator.getCatalog().getIndexes(this);
+            Collection indexes = validator.getRepos().getIndexes(this);
             Iterator indexIter = indexes.iterator();
             while (indexIter.hasNext()) {
                 CwmSqlindex index = (CwmSqlindex) indexIter.next();
@@ -157,10 +157,10 @@ public abstract class FemLocalTableImpl extends InstanceHandler
     {
         // TODO:  make index SYSTEM-owned so that it can't be
         // dropped explicitly
-        FarragoCatalog catalog = validator.getCatalog();
-        CwmSqlindex index = catalog.newCwmSqlindex();
-        catalog.generateConstraintIndexName(constraint,index);
-        catalog.indexPackage.getIndexSpansClass().add(this,index);
+        FarragoRepos repos = validator.getRepos();
+        CwmSqlindex index = repos.newCwmSqlindex();
+        repos.generateConstraintIndexName(constraint,index);
+        repos.indexPackage.getIndexSpansClass().add(this,index);
 
         // REVIEW:  same as DDL; why is this necessary?
         index.setSpannedClass(this);
@@ -170,7 +170,7 @@ public abstract class FemLocalTableImpl extends InstanceHandler
         while (columnIter.hasNext()) {
             CwmColumn column = (CwmColumn) columnIter.next();
             CwmSqlindexColumn indexColumn =
-                catalog.newCwmSqlindexColumn();
+                repos.newCwmSqlindexColumn();
             indexColumn.setName(column.getName());
             indexColumn.setAscending(Boolean.TRUE);
             indexColumn.setFeature(column);

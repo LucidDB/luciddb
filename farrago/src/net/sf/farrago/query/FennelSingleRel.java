@@ -66,11 +66,11 @@ public abstract class FennelSingleRel extends SingleRel implements FennelRel
     /**
      * .
      *
-     * @return catalog for object definitions
+     * @return repos for object definitions
      */
-    public FarragoCatalog getCatalog()
+    public FarragoRepos getRepos()
     {
-        return getPreparingStmt().getCatalog();
+        return getPreparingStmt().getRepos();
     }
 
     /**

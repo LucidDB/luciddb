@@ -127,7 +127,7 @@ public class FarragoSorterTest extends FarragoTestCase
     {
         // compute external count dynamically based on cache size
         FemFennelConfig fennelConfig =
-            catalog.getCurrentConfig().getFennelConfig();
+            repos.getCurrentConfig().getFennelConfig();
 
         // first, compute number of bytes in cache
         long nBytes = fennelConfig.getCachePageSize();
@@ -142,7 +142,7 @@ public class FarragoSorterTest extends FarragoTestCase
 
     private void testDistribution(DistributionGenerator gen) throws Exception
     {
-        if (!catalog.isFennelEnabled()) {
+        if (!repos.isFennelEnabled()) {
             // need Fennel sorter
             return;
         }

@@ -59,42 +59,42 @@ public abstract class FennelRelUtil
     /**
      * Generate a FemTupleAccessor from a FemTupleDescriptor.
      *
-     * @param catalog catalog for storing transient objects
+     * @param repos repos for storing transient objects
      * @param fennelDbHandle handle to Fennel database being accessed
      * @param tupleDesc source FemTupleDescriptor
      *
      * @return FemTupleAccessor for accessing tuples conforming to tupleDesc
      */
     public static FemTupleAccessor getAccessorForTupleDescriptor(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         FennelDbHandle fennelDbHandle,
         FemTupleDescriptor tupleDesc)
     {
         String tupleAccessorXmiString =
             fennelDbHandle.getAccessorXmiForTupleDescriptorTraced(tupleDesc);
-        return catalog.parseTupleAccessor(tupleAccessorXmiString);
+        return repos.parseTupleAccessor(tupleAccessorXmiString);
     }
 
     /**
      * Create a FemTupleDescriptor for a RelDataType which is a row of
      * FarragoTypes.
      *
-     * @param catalog catalog storing object definitions
+     * @param repos repos storing object definitions
      * @param rowType row of FarragoTypes
      *
      * @return generated tuple descriptor
      */
     public static FemTupleDescriptor createTupleDescriptorFromRowType(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         RelDataType rowType)
     {
         FemTupleDescriptor tupleDesc =
-            catalog.newFemTupleDescriptor();
+            repos.newFemTupleDescriptor();
         RelDataTypeField [] fields = rowType.getFields();
         for (int i = 0; i < fields.length; ++i) {
             assert (fields[i].getType() instanceof FarragoType);
             addTupleAttrDescriptor(
-                catalog,
+                repos,
                 tupleDesc,
                 (FarragoType) fields[i].getType());
         }
@@ -104,21 +104,21 @@ public abstract class FennelRelUtil
     /**
      * Generate a FemTupleProjection.
      *
-     * @param catalog the catalog for storing transient objects
+     * @param repos the repos for storing transient objects
      * @param projection the projection to generate
      *
      * @return generated FemTupleProjection
      */
     public static FemTupleProjection createTupleProjection(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         Integer [] projection)
     {
         FemTupleProjection tupleProj =
-            catalog.newFemTupleProjection();
+            repos.newFemTupleProjection();
 
         for (int i = 0; i < projection.length; ++i) {
             FemTupleAttrProjection attrProj =
-                catalog.newFemTupleAttrProjection();
+                repos.newFemTupleAttrProjection();
             tupleProj.getAttrProjection().add(attrProj);
             attrProj.setAttributeIndex(projection[i].intValue());
         }
@@ -161,14 +161,14 @@ public abstract class FennelRelUtil
     }
 
     public static void addTupleAttrDescriptor(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         FemTupleDescriptor tupleDesc,
         FarragoType type)
     {
         assert (type instanceof FarragoAtomicType);
         FarragoAtomicType atomicType = (FarragoAtomicType) type;
         FemTupleAttrDescriptor attrDesc =
-            catalog.newFemTupleAttrDescriptor();
+            repos.newFemTupleAttrDescriptor();
         tupleDesc.getAttrDescriptor().add(attrDesc);
         attrDesc.setTypeOrdinal(
             convertSqlTypeNumberToFennelTypeOrdinal(
@@ -178,17 +178,17 @@ public abstract class FennelRelUtil
     }
 
     public static FemTupleProjection createTupleProjectionFromColumnList(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         List indexColumnList)
     {
         FemTupleProjection tupleProj =
-            catalog.newFemTupleProjection();
+            repos.newFemTupleProjection();
         Iterator indexColumnIter = indexColumnList.iterator();
         while (indexColumnIter.hasNext()) {
             FemAbstractColumn column = (FemAbstractColumn)
                 indexColumnIter.next();
             FemTupleAttrProjection attrProj =
-                catalog.newFemTupleAttrProjection();
+                repos.newFemTupleAttrProjection();
             tupleProj.getAttrProjection().add(attrProj);
             attrProj.setAttributeIndex(column.getOrdinal());
         }

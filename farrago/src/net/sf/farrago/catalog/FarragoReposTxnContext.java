@@ -29,18 +29,18 @@ package net.sf.farrago.catalog;
  */
 public class FarragoReposTxnContext
 {
-    private FarragoCatalog catalog;
+    private FarragoRepos repos;
 
     private boolean isTxnInProgress;
 
     /**
      * Creates a new inactive transaction context.
      *
-     * @param catalog the catalog against which transactions are to be performed
+     * @param repos the repos against which transactions are to be performed
      */
-    public FarragoReposTxnContext(FarragoCatalog catalog)
+    public FarragoReposTxnContext(FarragoRepos repos)
     {
-        this.catalog = catalog;
+        this.repos = repos;
     }
 
     /**
@@ -57,7 +57,7 @@ public class FarragoReposTxnContext
     public void beginReadTxn()
     {
         assert(!isTxnInProgress);
-        catalog.beginReposTxn(false);
+        repos.beginReposTxn(false);
         isTxnInProgress = true;
     }
 
@@ -67,7 +67,7 @@ public class FarragoReposTxnContext
     public void beginWriteTxn()
     {
         assert(!isTxnInProgress);
-        catalog.beginReposTxn(true);
+        repos.beginReposTxn(true);
         isTxnInProgress = true;
     }
 
@@ -79,7 +79,7 @@ public class FarragoReposTxnContext
         if (!isTxnInProgress) {
             return;
         }
-        catalog.endReposTxn(false);
+        repos.endReposTxn(false);
         isTxnInProgress = false;
     }
 
@@ -91,7 +91,7 @@ public class FarragoReposTxnContext
         if (!isTxnInProgress) {
             return;
         }
-        catalog.endReposTxn(true);
+        repos.endReposTxn(true);
         isTxnInProgress = false;
     }
 }

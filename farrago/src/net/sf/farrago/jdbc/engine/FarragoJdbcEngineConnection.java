@@ -104,7 +104,7 @@ public class FarragoJdbcEngineConnection implements Connection
     // implement Connection
     public String getCatalog() throws SQLException
     {
-        return session.getConnectionDefaults().catalogName;
+        return session.getSessionVariables().catalogName;
     }
     
     // implement Connection

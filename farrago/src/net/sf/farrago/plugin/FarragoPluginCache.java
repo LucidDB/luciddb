@@ -53,7 +53,7 @@ public abstract class FarragoPluginCache extends FarragoCompoundAllocation
 
     private FarragoObjectCache sharedCache;
 
-    private FarragoCatalog catalog;
+    private FarragoRepos repos;
 
     /**
      * Creates an empty cache.
@@ -63,25 +63,25 @@ public abstract class FarragoPluginCache extends FarragoCompoundAllocation
      *
      * @param sharedCache underlying shared cache
      *
-     * @param catalog FarragoCatalog for wrapper initialization
+     * @param repos FarragoRepos for wrapper initialization
      */
     public FarragoPluginCache(
         FarragoAllocationOwner owner,
         FarragoObjectCache sharedCache,
-        FarragoCatalog catalog)
+        FarragoRepos repos)
     {
         owner.addAllocation(this);
         this.sharedCache = sharedCache;
-        this.catalog = catalog;
+        this.repos = repos;
         mapMofIdToPlugin = new HashMap();
     }
 
     /**
-     * @return the underlying catalog
+     * @return the underlying repos
      */
-    public FarragoCatalog getCatalog()
+    public FarragoRepos getRepos()
     {
-        return catalog;
+        return repos;
     }
 
     /**
@@ -185,7 +185,7 @@ public abstract class FarragoPluginCache extends FarragoCompoundAllocation
         FarragoPlugin plugin;
         try {
             plugin = (FarragoPlugin) pluginClass.newInstance();
-            plugin.initialize(catalog,options);
+            plugin.initialize(repos,options);
         } catch (Throwable ex) {
             throw FarragoResource.instance().newPluginInitFailed(
                 libraryName,

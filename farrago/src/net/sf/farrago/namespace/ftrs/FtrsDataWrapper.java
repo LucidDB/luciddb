@@ -64,7 +64,7 @@ public class FtrsDataWrapper
         String serverMofId,
         Properties props) throws SQLException
     {
-        return new FtrsDataServer(serverMofId,props,getCatalog());
+        return new FtrsDataServer(serverMofId,props,getRepos());
     }
     
     // implement FarragoMedDataWrapper

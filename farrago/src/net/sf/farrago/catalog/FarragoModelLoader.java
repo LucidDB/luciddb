@@ -42,7 +42,7 @@ import net.sf.farrago.util.FarragoProperties;
  */
 public class FarragoModelLoader
 {
-    private MDRepository repository;
+    private MDRepository mdrRepos;
 
     private String storageFactoryClassName;
     
@@ -50,53 +50,53 @@ public class FarragoModelLoader
 
     public void close()
     {
-        if (repository != null) {
-            repository.shutdown();
-            repository = null;
+        if (mdrRepos != null) {
+            mdrRepos.shutdown();
+            mdrRepos = null;
         }
     }
 
-    public MDRepository getRepository()
+    public MDRepository getMdrRepos()
     {
-        return repository;
+        return mdrRepos;
     }
         
-    public FarragoPackage loadModel(String extentName,boolean userCatalog)
+    public FarragoPackage loadModel(String extentName,boolean userRepos)
     {
-        if (userCatalog) {
-            setUserCatalogProperties();
+        if (userRepos) {
+            setUserReposProperties();
         } else {
-            setSystemCatalogProperties();
+            setSystemReposProperties();
         }
-        repository = MdrUtil.loadRepository(
+        mdrRepos = MdrUtil.loadRepository(
             storageFactoryClassName,
             storageProps);
-        return (FarragoPackage) repository.getExtent(extentName);
+        return (FarragoPackage) mdrRepos.getExtent(extentName);
     }
 
-    private File getSystemCatalogFileSansExt()
+    private File getSystemReposFileSansExt()
     {
         File catalogDir = FarragoProperties.instance().getCatalogDir();
         return new File(catalogDir,"FarragoCatalog");
     }
 
-    public File getSystemCatalogFile()
+    public File getSystemReposFile()
     {
-        return new File(getSystemCatalogFileSansExt().toString() + ".btd");
+        return new File(getSystemReposFileSansExt().toString() + ".btd");
     }
 
-    private void setSystemCatalogProperties()
+    private void setSystemReposProperties()
     {
-        File catalogFile = getSystemCatalogFileSansExt();
+        File reposFile = getSystemReposFileSansExt();
 
         storageFactoryClassName = BtreeFactory.class.getName();
             
         setStorageProperty(
             "org.netbeans.mdr.persistence.Dir",
-            catalogFile.toString());
+            reposFile.toString());
     }
 
-    private void setUserCatalogProperties()
+    private void setUserReposProperties()
     {
         storageFactoryClassName = JdbcStorageFactory.class.getName();
         setStorageProperty(

@@ -17,18 +17,18 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-package net.sf.farrago.catalog;
+package net.sf.farrago.session;
 
 import net.sf.farrago.cwm.relational.*;
 
 /**
- * FarragoConnectionDefaults defines default values in effect for a connection
- * to Farrago.
+ * FarragoSessionVariables defines global variable settings for a Farrago
+ * session.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoConnectionDefaults implements Cloneable
+public class FarragoSessionVariables implements Cloneable
 {
     /**
      * The name of the default CwmCatalog qualifier, changed by SET CATALOG.
@@ -63,14 +63,14 @@ public class FarragoConnectionDefaults implements Cloneable
      */
     public String currentUserName;
 
-    public FarragoConnectionDefaults cloneDefaults()
+    public FarragoSessionVariables cloneVariables()
     {
         try {
-            return (FarragoConnectionDefaults) clone();
+            return (FarragoSessionVariables) clone();
         } catch (CloneNotSupportedException ex) {
             throw new AssertionError();
         }
     }
 }
 
-// End FarragoConnectionDefaults.java
+// End FarragoSessionVariables.java

@@ -61,10 +61,10 @@ public class MedMdrForeignDataWrapper
     
     // implement FarragoMedDataWrapper
     public void initialize(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         Properties props) throws SQLException
     {
-        super.initialize(catalog,props);
+        super.initialize(repos,props);
         assert(props.isEmpty());
     }
     
@@ -74,7 +74,7 @@ public class MedMdrForeignDataWrapper
         Properties props) throws SQLException
     {
         MedMdrDataServer server =
-            new MedMdrDataServer(serverMofId,props,getCatalog());
+            new MedMdrDataServer(serverMofId,props,getRepos());
         boolean success = false;
         try {
             server.initialize();

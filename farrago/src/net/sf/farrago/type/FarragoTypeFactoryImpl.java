@@ -63,8 +63,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
 {
     //~ Instance fields -------------------------------------------------------
 
-    /** Catalog for type object definitions. */
-    private final FarragoCatalog catalog;
+    /** Repos for type object definitions. */
+    private final FarragoRepos repos;
 
     /** Map of OJ types corresponding to FarragoPrimitiveType instances. */
     private Map ojPrimitiveToFarragoType = new HashMap();
@@ -90,9 +90,9 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     // REVIEW: LES 6-7-2004 - note that date/time prototypes hold a ref to this
     // factory, making the above TODO problematic.
     // instance
-    public FarragoTypeFactoryImpl(FarragoCatalog catalog)
+    public FarragoTypeFactoryImpl(FarragoRepos repos)
     {
-        this.catalog = catalog;
+        this.repos = repos;
 
         addPrimitivePrototype(
             new FarragoPrimitiveType(
@@ -198,9 +198,9 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     //~ Methods ---------------------------------------------------------------
 
     // implement FarragoTypeFactory
-    public FarragoCatalog getCatalog()
+    public FarragoRepos getRepos()
     {
-        return catalog;
+        return repos;
     }
 
     // override RelDataTypeFactoryImpl
@@ -218,14 +218,14 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                 return super.createSqlType(typeName);
             }
         CwmSqlsimpleType simpleType = (CwmSqlsimpleType)
-            catalog.getModelElement(
-                catalog.relationalPackage.getCwmSqlsimpleType().refAllOfType(),
+            repos.getModelElement(
+                repos.relationalPackage.getCwmSqlsimpleType().refAllOfType(),
                 typeName.getName());
         // If type not found directly look in aliases
         if (null == simpleType) {
             Object typeAlias =
-                catalog.getModelElement(
-                    catalog.datatypesPackage.getCwmTypeAlias().refAllOfType(),
+                repos.getModelElement(
+                    repos.datatypesPackage.getCwmTypeAlias().refAllOfType(),
                     typeName.getName());
             simpleType = (CwmSqlsimpleType)
                     ((CwmTypeAlias) typeAlias).getType();
@@ -267,7 +267,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             String charsetName;
             SqlCollation collation;
             if (precisionType.isCharType()) {
-                charsetName = catalog.getDefaultCharsetName();
+                charsetName = repos.getDefaultCharsetName();
                 collation = new SqlCollation(SqlCollation.Coercibility.Coercible);
             } else {
                 charsetName = null;
@@ -307,7 +307,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         if (prototype instanceof FarragoDateTimeType) {
             FarragoType dateTimeType =
                 new FarragoDateTimeType(prototype.getSimpleType(),
-                                        getCatalog().isNullable(column),
+                                        getRepos().isNullable(column),
                                         false /* fixme - Timezone */,
                                         pPrecision.intValue(), this);
             return (FarragoType) canonize(dateTimeType);
@@ -326,7 +326,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         FarragoType specializedType =
             new FarragoPrecisionType(
                 prototype.getSimpleType(),
-                getCatalog().isNullable(column),
+                getRepos().isNullable(column),
                 pPrecision.intValue(),
                 (pScale == null) ? 0 : pScale.intValue(),
                 charsetName,
@@ -468,7 +468,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             // TODO:  cleanup
             prototype = new FarragoPrecisionType(
                 getSimpleType("VARCHAR"),isNullable,128,0,
-                catalog.getDefaultCharsetName(),
+                repos.getDefaultCharsetName(),
                 new SqlCollation(SqlCollation.Coercibility.Coercible));
             prototype.factory = this;
             prototype = (FarragoType) canonize(prototype);
@@ -800,7 +800,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         CwmSqlsimpleType simpleType = (CwmSqlsimpleType) classifier;
         FarragoAtomicType prototype =
             (FarragoAtomicType) sqlTypeNumberToPrototype.get(
-                getTypeHashKey(simpleType,catalog.isNullable(column)));
+                getTypeHashKey(simpleType,repos.isNullable(column)));
         assert (prototype != null);
         return prototype;
     }
@@ -808,8 +808,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     private CwmSqlsimpleType getSimpleType(String typeName)
     {
         Collection types =
-            catalog.relationalPackage.getCwmSqlsimpleType().refAllOfClass();
-        return (CwmSqlsimpleType) catalog.getModelElement(types,typeName);
+            repos.relationalPackage.getCwmSqlsimpleType().refAllOfClass();
+        return (CwmSqlsimpleType) repos.getModelElement(types,typeName);
     }
 
     private Object getTypeHashKey(

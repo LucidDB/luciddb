@@ -46,11 +46,11 @@ import java.util.logging.Logger;
  **/
 public abstract class FarragoTrace {
     /**
-     * The tracer "net.sf.farrago.catalog.FarragoCatalog"
-     * traces {@link FarragoCatalog}.
+     * The tracer "net.sf.farrago.catalog.FarragoRepos"
+     * traces {@link FarragoRepos}.
      */
-    public static Logger getCatalogTracer() {
-        return getClassTracer(FarragoCatalog.class);
+    public static Logger getReposTracer() {
+        return getClassTracer(FarragoRepos.class);
     }
 
     /**

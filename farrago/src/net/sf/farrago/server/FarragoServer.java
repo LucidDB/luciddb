@@ -75,7 +75,7 @@ public class FarragoServer
         // Load the database instance
         FarragoDatabase db = FarragoDatabase.pinReference(sessionFactory);
 
-        FemFarragoConfig config = db.getSystemCatalog().getCurrentConfig();
+        FemFarragoConfig config = db.getSystemRepos().getCurrentConfig();
 
         int rmiRegistryPort = config.getServerRmiRegistryPort();
 

@@ -148,7 +148,7 @@ pre-test state at the end of each test.
 
 Tests must run successfully whether or not Fennel storage is
 available.  Java-based tests can alter their behavior by checking
-FarragoCatalog.isFennelEnabled().  SQL-based tests are unlikely to
+FarragoRepos.isFennelEnabled().  SQL-based tests are unlikely to
 work without Fennel (since most tests require ORDER BY for
 non-determinism), so they are executed but the results are ignored
 when Fennel is disabled.

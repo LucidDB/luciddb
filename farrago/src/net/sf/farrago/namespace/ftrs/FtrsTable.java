@@ -56,7 +56,7 @@ class FtrsTable extends MedAbstractColumnSet
         return new FtrsIndexScanRel(
             cluster,
             this,
-            getPreparingStmt().getCatalog().getClusteredIndex(
+            getPreparingStmt().getRepos().getClusteredIndex(
                 getCwmColumnSet()),
             connection,
             null,

@@ -63,10 +63,10 @@ public class MedJdbcForeignDataWrapper
     
     // implement FarragoMedDataWrapper
     public void initialize(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         Properties props) throws SQLException
     {
-        super.initialize(catalog,props);
+        super.initialize(repos,props);
 
         String driverClassName = props.getProperty(PROP_DRIVER_CLASS_NAME);
         if (driverClassName == null) {

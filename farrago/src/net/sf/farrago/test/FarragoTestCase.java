@@ -62,8 +62,8 @@ public abstract class FarragoTestCase extends DiffTestCase
     /** JDBC connection to Farrago database. */
     protected static Connection connection;
 
-    /** Catalog for test object definitions. */
-    protected static FarragoCatalog catalog;
+    /** Repos for test object definitions. */
+    protected static FarragoRepos repos;
 
     /**
      * Flag used to allow individual test methods to be called from
@@ -134,16 +134,16 @@ public abstract class FarragoTestCase extends DiffTestCase
             driver.getUrlPrefix());
         FarragoJdbcEngineConnection farragoConnection =
             (FarragoJdbcEngineConnection) connection;
-        catalog = farragoConnection.getSession().getCatalog();
+        repos = farragoConnection.getSession().getRepos();
         connection.setAutoCommit(false);
 
-        FarragoReposTxnContext reposTxn = new FarragoReposTxnContext(catalog);
+        FarragoReposTxnContext reposTxn = new FarragoReposTxnContext(repos);
         reposTxn.beginReadTxn();
         savedFarragoConfig =
-            JmiUtil.getAttributeValues(catalog.getCurrentConfig());
+            JmiUtil.getAttributeValues(repos.getCurrentConfig());
         savedFennelConfig =
             JmiUtil.getAttributeValues(
-                catalog.getCurrentConfig().getFennelConfig());
+                repos.getCurrentConfig().getFennelConfig());
         reposTxn.commit();
         
         runCleanup();
@@ -168,10 +168,10 @@ public abstract class FarragoTestCase extends DiffTestCase
      */
     public static void staticTearDown() throws Exception
     {
-        if (catalog != null) {
+        if (repos != null) {
             restoreParameters();
         }
-        catalog = null;
+        repos = null;
         if (connection != null) {
             connection.rollback();
             connection.close();
@@ -185,18 +185,18 @@ public abstract class FarragoTestCase extends DiffTestCase
     static void restoreParameters()
     {
         FarragoReposTxnContext reposTxn =
-            new FarragoReposTxnContext(catalog);
+            new FarragoReposTxnContext(repos);
         reposTxn.beginWriteTxn();
         JmiUtil.setAttributeValues(
-            catalog.getCurrentConfig(),
+            repos.getCurrentConfig(),
             savedFarragoConfig);
         JmiUtil.setAttributeValues(
-            catalog.getCurrentConfig().getFennelConfig(),
+            repos.getCurrentConfig().getFennelConfig(),
             savedFennelConfig);
         reposTxn.commit();
     }
         
-    // NOTE: Catalog open/close is slow and causes sporadic problems when done
+    // NOTE: Repos open/close is slow and causes sporadic problems when done
     // in quick succession, so only do it once for the entire test suite
     // instead of the Junit-recommended once per test case.
 
@@ -451,7 +451,7 @@ public abstract class FarragoTestCase extends DiffTestCase
 
     protected boolean shouldDiff()
     {
-        if (catalog.isFennelEnabled()) {
+        if (repos.isFennelEnabled()) {
             return true;
         }
         return FarragoProperties.instance().testDiff.get();
@@ -482,7 +482,7 @@ public abstract class FarragoTestCase extends DiffTestCase
             // NOTE:  don't use DatabaseMetaData.getSchemas since it doesn't
             // work when Fennel is disabled
             Iterator schemaIter =
-                catalog.getSelfAsCwmCatalog().getOwnedElement().iterator();
+                repos.getSelfAsCwmCatalog().getOwnedElement().iterator();
             while (schemaIter.hasNext()) {
                 Object obj = schemaIter.next();
                 if (!(obj instanceof CwmSchema)) {
@@ -506,7 +506,7 @@ public abstract class FarragoTestCase extends DiffTestCase
         {
             List list = new ArrayList();
             Iterator iter =
-                catalog.medPackage.getFemDataWrapper()
+                repos.medPackage.getFemDataWrapper()
                 .refAllOfClass().iterator();
             while (iter.hasNext()) {
                 FemDataWrapper wrapper = (FemDataWrapper) iter.next();

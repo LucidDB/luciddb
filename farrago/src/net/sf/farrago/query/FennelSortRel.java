@@ -122,14 +122,14 @@ public class FennelSortRel extends FennelPullSingleRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FemSortingStreamDef sortingStream =
-            getCatalog().newFemSortingStreamDef();
+            getRepos().newFemSortingStreamDef();
 
         sortingStream.setDistinctness(
             discardDuplicates
             ? DistinctnessEnum.DUP_DISCARD
             : DistinctnessEnum.DUP_ALLOW);
         sortingStream.setKeyProj(
-            FennelRelUtil.createTupleProjection(getCatalog(),keyProjection));
+            FennelRelUtil.createTupleProjection(getRepos(),keyProjection));
         sortingStream.getInput().add(
             implementor.visitFennelChild((FennelRel) child));
         return sortingStream;

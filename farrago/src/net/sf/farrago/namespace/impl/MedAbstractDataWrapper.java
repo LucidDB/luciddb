@@ -36,7 +36,7 @@ public abstract class MedAbstractDataWrapper
     extends MedAbstractBase
     implements FarragoMedDataWrapper
 {
-    private FarragoCatalog catalog;
+    private FarragoRepos repos;
 
     private Properties props;
 
@@ -45,11 +45,11 @@ public abstract class MedAbstractDataWrapper
     }
 
     /**
-     * @return the catalog with which this wrapper was initialized
+     * @return the repos with which this wrapper was initialized
      */
-    public FarragoCatalog getCatalog()
+    public FarragoRepos getRepos()
     {
-        return catalog;
+        return repos;
     }
 
     /**
@@ -100,11 +100,11 @@ public abstract class MedAbstractDataWrapper
     
     // implement FarragoMedDataWrapper
     public void initialize(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         Properties props)
         throws SQLException
     {
-        this.catalog = catalog;
+        this.repos = repos;
         this.props = props;
     }
 

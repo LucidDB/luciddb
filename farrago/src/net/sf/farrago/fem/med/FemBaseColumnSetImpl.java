@@ -67,15 +67,15 @@ public abstract class FemBaseColumnSetImpl extends InstanceHandler
                 return;
             }
 
-            FarragoCatalog catalog = validator.getCatalog();
+            FarragoRepos repos = validator.getRepos();
             FarragoTypeFactory typeFactory = validator.getTypeFactory();
 
             FemDataServerImpl dataServer = (FemDataServerImpl) getServer();
             FemDataWrapper dataWrapper = dataServer.getWrapper();
             if (!dataWrapper.isForeign()) {
                 throw validator.res.newValidatorForeignTableButLocalWrapper(
-                        catalog.getLocalizedObjectName(this, null),
-                        catalog.getLocalizedObjectName(dataWrapper, null));
+                        repos.getLocalizedObjectName(this, null),
+                        repos.getLocalizedObjectName(dataWrapper, null));
             }
 
             validateCommon(validator);
@@ -90,7 +90,7 @@ public abstract class FemBaseColumnSetImpl extends InstanceHandler
                 int n = rowType.getFieldCount();
                 RelDataTypeField[] fields = rowType.getFields();
                 for (int i = 0; i < n; ++i) {
-                    CwmColumn column = catalog.newFemStoredColumn();
+                    CwmColumn column = repos.newFemStoredColumn();
                     columnList.add(column);
                     typeFactory.convertFieldToCwmColumn(fields[i], column);
                     CwmColumnImpl.validateCommon(validator, column);
@@ -132,7 +132,7 @@ public abstract class FemBaseColumnSetImpl extends InstanceHandler
 
     private String getLocalizedName(DdlValidator validator, FemBaseColumnSetImpl femBaseColumnSet)
     {
-        return validator.getCatalog().getLocalizedObjectName(
+        return validator.getRepos().getLocalizedObjectName(
                 null,
                 femBaseColumnSet.getName(),
                 femBaseColumnSet.refClass());

@@ -111,9 +111,9 @@ class FtrsTableProjectionRule extends RelOptRule
         // Generate a potential scan for each available index covering the
         // desired projection.  Leave it up to the optimizer to select one
         // based on cost, since sort order and I/O may be in competition.
-        FarragoCatalog catalog = origScan.getPreparingStmt().getCatalog();
+        FarragoRepos repos = origScan.getPreparingStmt().getRepos();
         Iterator iter =
-            catalog.getIndexes(origScan.ftrsTable.getCwmColumnSet()).iterator();
+            repos.getIndexes(origScan.ftrsTable.getCwmColumnSet()).iterator();
         while (iter.hasNext()) {
             CwmSqlindex index = (CwmSqlindex) iter.next();
 
@@ -123,7 +123,7 @@ class FtrsTableProjectionRule extends RelOptRule
                 continue;
             }
 
-            if (!testIndexCoverage(catalog,index,projectedColumns)) {
+            if (!testIndexCoverage(repos,index,projectedColumns)) {
                 continue;
             }
 
@@ -151,16 +151,16 @@ class FtrsTableProjectionRule extends RelOptRule
     }
 
     private boolean testIndexCoverage(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         CwmSqlindex index,
         Integer [] projection)
     {
-        if (catalog.isClustered(index)) {
+        if (repos.isClustered(index)) {
             // clustered index guarantees coverage
             return true;
         }
         Integer [] indexProjection =
-            FtrsUtil.getUnclusteredCoverageArray(catalog,index);
+            FtrsUtil.getUnclusteredCoverageArray(repos,index);
         return Arrays.asList(indexProjection).containsAll(
             Arrays.asList(projection));
     }

@@ -53,9 +53,9 @@ public class DdlCreateStmt extends DdlStmt
         if (getModelElement() instanceof CwmSchema) {
             // for CREATE SCHEMA, override the default qualifier
             // with the new schema
-            ddlValidator.getConnectionDefaults().schemaCatalogName =
+            ddlValidator.getSessionVariables().schemaCatalogName =
                 getModelElement().getNamespace().getName();
-            ddlValidator.getConnectionDefaults().schemaName =
+            ddlValidator.getSessionVariables().schemaName =
                 getModelElement().getName();
         }
     }

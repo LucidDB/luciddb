@@ -129,7 +129,7 @@ class FtrsTableModificationRel extends TableModificationRel
         for (int i = 0; i < n; i++) {
             String columnName = (String) getUpdateColumnList().get(i);
             CwmColumn column = (CwmColumn)
-                getCatalog().getModelElement(columns,columnName);
+                getRepos().getModelElement(columns,columnName);
             list.add(column);
         }
         return list;
@@ -146,26 +146,26 @@ class FtrsTableModificationRel extends TableModificationRel
             throw Util.needToImplement(ftrsTable.getCwmColumnSet());
         }
         CwmTable table = (CwmTable) ftrsTable.getCwmColumnSet();
-        FarragoCatalog catalog = getCatalog();
+        FarragoRepos repos = getRepos();
 
         List updateCwmColumnList = null;
 
         FemTableWriterDef tableWriterDef;
         switch (getOperation().getOrdinal()) {
         case TableModificationRel.Operation.INSERT_ORDINAL:
-            tableWriterDef = catalog.newFemTableInserterDef();
+            tableWriterDef = repos.newFemTableInserterDef();
             break;
         case TableModificationRel.Operation.DELETE_ORDINAL:
-            tableWriterDef = catalog.newFemTableDeleterDef();
+            tableWriterDef = repos.newFemTableDeleterDef();
             break;
         case TableModificationRel.Operation.UPDATE_ORDINAL:
             FemTableUpdaterDef tableUpdaterDef =
-                catalog.newFemTableUpdaterDef();
+                repos.newFemTableUpdaterDef();
             tableWriterDef = tableUpdaterDef;
             updateCwmColumnList = getUpdateCwmColumnList();
             tableUpdaterDef.setUpdateProj(
                 FennelRelUtil.createTupleProjectionFromColumnList(
-                    catalog,
+                    repos,
                     updateCwmColumnList));
             break;
         default:
@@ -186,14 +186,14 @@ class FtrsTableModificationRel extends TableModificationRel
         // are updated in place cannot be rolled back individually, so
         // they must come last (after any possible constraint violations).
 
-        CwmSqlindex clusteredIndex = catalog.getClusteredIndex(table);
+        CwmSqlindex clusteredIndex = repos.getClusteredIndex(table);
         boolean clusteredFirst = clusteredIndex.isUnique();
 
         List firstList = new ArrayList();
         List secondList = new ArrayList();
 
         Iterator indexIter =
-            catalog.getIndexes(table).iterator();
+            repos.getIndexes(table).iterator();
         while (indexIter.hasNext()) {
             CwmSqlindex index = (CwmSqlindex) indexIter.next();
 
@@ -203,7 +203,7 @@ class FtrsTableModificationRel extends TableModificationRel
                 if (index != clusteredIndex) {
                     List coverageList =
                         FtrsUtil.getUnclusteredCoverageColList(
-                            catalog,index);
+                            repos,index);
                     if (!coverageList.removeAll(updateCwmColumnList)) {
                         // no intersection between update list and index
                         // coverage, so skip this index entirely
@@ -212,7 +212,7 @@ class FtrsTableModificationRel extends TableModificationRel
                 }
 
                 List distinctKeyList = FtrsUtil.getDistinctKeyColList(
-                    catalog,index);
+                    repos,index);
                 if (!distinctKeyList.removeAll(updateCwmColumnList)) {
                     // distinct key is not being changed, so it's safe to
                     // attempt update-in-place
@@ -221,9 +221,9 @@ class FtrsTableModificationRel extends TableModificationRel
             }
 
             FemIndexWriterDef indexWriter =
-                catalog.fennelPackage.getFemIndexWriterDef()
+                repos.fennelPackage.getFemIndexWriterDef()
                                          .createFemIndexWriterDef();
-            if (!catalog.isTemporary(index)) {
+            if (!repos.isTemporary(index)) {
                 indexWriter.setRootPageId(
                     getPreparingStmt().getIndexMap().getIndexRoot(index));
             } else {
@@ -236,7 +236,7 @@ class FtrsTableModificationRel extends TableModificationRel
             indexWriter.setTupleDesc(
                 FtrsUtil.getCoverageTupleDescriptor(typeFactory,index));
             indexWriter.setKeyProj(
-                FtrsUtil.getDistinctKeyProjection(catalog,index));
+                FtrsUtil.getDistinctKeyProjection(repos,index));
             indexWriter.setUpdateInPlace(updateInPlace);
 
             indexWriter.setDistinctness(
@@ -245,7 +245,7 @@ class FtrsTableModificationRel extends TableModificationRel
                 : DistinctnessEnum.DUP_ALLOW);
             if (index != clusteredIndex) {
                 indexWriter.setInputProj(
-                    FtrsUtil.getCoverageProjection(catalog,index));
+                    FtrsUtil.getCoverageProjection(repos,index));
             }
 
             boolean prepend = false;
@@ -254,7 +254,7 @@ class FtrsTableModificationRel extends TableModificationRel
                     prepend = true;
                 }
             } else {
-                if (catalog.isPrimary(index)) {
+                if (repos.isPrimary(index)) {
                     prepend = true;
                 }
             }
@@ -296,7 +296,7 @@ class FtrsTableModificationRel extends TableModificationRel
 
         if (needBuffer) {
             FemBufferingTupleStreamDef buffer =
-                catalog.newFemBufferingTupleStreamDef();
+                repos.newFemBufferingTupleStreamDef();
             buffer.setInMemory(false);
             buffer.setMultipass(false);
 
@@ -313,11 +313,11 @@ class FtrsTableModificationRel extends TableModificationRel
     /**
      * .
      *
-     * @return catalog for object definitions
+     * @return repos for object definitions
      */
-    FarragoCatalog getCatalog()
+    FarragoRepos getRepos()
     {
-        return getPreparingStmt().getCatalog();
+        return getPreparingStmt().getRepos();
     }
 
     // implement FennelRel

@@ -89,7 +89,7 @@ class FennelCartesianProductRel extends FennelPullDoubleRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FemCartesianProductStreamDef streamDef =
-            getCatalog().newFemCartesianProductStreamDef();
+            getRepos().newFemCartesianProductStreamDef();
 
         FemExecutionStreamDef leftInput =
             implementor.visitFennelChild((FennelRel) left);
@@ -112,7 +112,7 @@ class FennelCartesianProductRel extends FennelPullDoubleRel
 
         if (needBuffer) {
             FemBufferingTupleStreamDef buffer =
-                getCatalog().newFemBufferingTupleStreamDef();
+                getRepos().newFemBufferingTupleStreamDef();
             buffer.setInMemory(false);
             buffer.setMultipass(true);
 

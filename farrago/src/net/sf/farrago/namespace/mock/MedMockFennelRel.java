@@ -79,10 +79,10 @@ class MedMockFennelRel extends TableAccessRel implements FennelPullRel
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        FarragoCatalog catalog = getPreparingStmt().getCatalog();
+        FarragoRepos repos = getPreparingStmt().getRepos();
 
         FemMockTupleStreamDef streamDef =
-            catalog.newFemMockTupleStreamDef();
+            repos.newFemMockTupleStreamDef();
         streamDef.setRowCount(columnSet.nRows);
         return streamDef;
     }

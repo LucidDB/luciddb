@@ -69,7 +69,7 @@ public class FarragoPlanner extends VolcanoPlanner
      */
     public void init()
     {
-        boolean fennelEnabled = stmt.getCatalog().isFennelEnabled();
+        boolean fennelEnabled = stmt.getRepos().isFennelEnabled();
         
         // Only register calling conventions we're interested in.  Eventually
         // we probably want to expand this set once the various converters are
@@ -107,7 +107,7 @@ public class FarragoPlanner extends VolcanoPlanner
         // Add the rule to introduce FennelCalcRel's only if the fennel
         // calculator is enabled.
         final CalcVirtualMachine calcVM =
-            stmt.getCatalog().getCurrentConfig().getCalcVirtualMachine();
+            stmt.getRepos().getCurrentConfig().getCalcVirtualMachine();
         if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_FENNEL)) {
             // use Fennel for calculating expressions
             assert(fennelEnabled);

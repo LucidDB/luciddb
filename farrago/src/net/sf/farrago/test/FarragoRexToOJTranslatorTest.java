@@ -111,7 +111,7 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
 
         // guarantee release of any resources we allocate on the way
         FarragoCompoundAllocation allocations = new FarragoCompoundAllocation();
-        FarragoReposTxnContext reposTxn = new FarragoReposTxnContext(catalog);
+        FarragoReposTxnContext reposTxn = new FarragoReposTxnContext(repos);
         try {
             reposTxn.beginReadTxn();
             
@@ -122,7 +122,7 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
             // FarragoPreparingStmt does most of the work for us
             FarragoSessionStmtValidator stmtValidator =
                 new FarragoStmtValidator(
-                    catalog,
+                    repos,
                     session.getDatabase().getFennelDbHandle(),
                     session,
                     objCache,

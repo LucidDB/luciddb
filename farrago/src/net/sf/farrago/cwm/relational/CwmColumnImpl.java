@@ -155,7 +155,7 @@ public abstract class CwmColumnImpl extends InstanceHandler
 
         if (column.getInitialValue() == null) {
             CwmExpression nullExpression =
-                validator.getCatalog().newCwmExpression();
+                validator.getRepos().newCwmExpression();
             nullExpression.setLanguage("SQL");
             nullExpression.setBody("NULL");
             column.setInitialValue(nullExpression);
@@ -222,7 +222,7 @@ public abstract class CwmColumnImpl extends InstanceHandler
                 // NOTE: don't leave character set name implicit, since if the
                 // default ever changed, that would invalidate existing data
                 column.setCharacterSetName(
-                    validator.getCatalog().getDefaultCharsetName());
+                    validator.getRepos().getDefaultCharsetName());
             } else {
                 if (!Charset.isSupported(column.getCharacterSetName())) {
                     throw validator.res.newValidatorCharsetUnsupported(
@@ -301,7 +301,7 @@ public abstract class CwmColumnImpl extends InstanceHandler
     private static String getLocalizedName(
         DdlValidator validator,CwmColumn column)
     {
-        return validator.getCatalog().getLocalizedObjectName(
+        return validator.getRepos().getLocalizedObjectName(
             null,
             column.getName(),
             column.refClass());
@@ -310,7 +310,7 @@ public abstract class CwmColumnImpl extends InstanceHandler
     private static String getLocalizedTypeName(
         DdlValidator validator,CwmColumn column)
     {
-        return validator.getCatalog().getLocalizedObjectName(
+        return validator.getRepos().getLocalizedObjectName(
             column.getType(),
             column.getType().refClass());
     }

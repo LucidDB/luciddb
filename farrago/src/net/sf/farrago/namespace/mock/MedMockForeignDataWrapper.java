@@ -61,10 +61,10 @@ public class MedMockForeignDataWrapper
     
     // implement FarragoMedDataWrapper
     public void initialize(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         Properties props) throws SQLException
     {
-        super.initialize(catalog,props);
+        super.initialize(repos,props);
     }
 
     // implement FarragoMedDataWrapper

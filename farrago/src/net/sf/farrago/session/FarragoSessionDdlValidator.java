@@ -54,9 +54,9 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
     public FarragoSessionStmtValidator getStmtValidator();
     
     /**
-     * @return catalog storing object definitions being validated
+     * @return repos storing object definitions being validated
      */
-    public FarragoCatalog getCatalog();
+    public FarragoRepos getRepos();
 
     /**
      * @return Handle to Fennel database accessed by this stmt
@@ -92,7 +92,7 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
     /**
      * @return default qualifiers to use
      */
-    public FarragoConnectionDefaults getConnectionDefaults();
+    public FarragoSessionVariables getSessionVariables();
     
     /**
      * @return is a DROP RESTRICT being executed?

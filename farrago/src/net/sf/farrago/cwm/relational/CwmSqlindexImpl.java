@@ -108,9 +108,9 @@ public abstract class CwmSqlindexImpl extends InstanceHandler
                 // REVIEW: support this?  What to do about instances of the
                 // same temporary table in other sessions?
                 throw validator.res.newValidatorIndexOnExistingTempTable(
-                    validator.getCatalog().getLocalizedObjectName(
+                    validator.getRepos().getLocalizedObjectName(
                         this,null),
-                    validator.getCatalog().getLocalizedObjectName(
+                    validator.getRepos().getLocalizedObjectName(
                         getTable(),null));
             }
         }
@@ -140,9 +140,9 @@ public abstract class CwmSqlindexImpl extends InstanceHandler
             return;
         }
 
-        if (validator.getCatalog().isClustered(this)) {
+        if (validator.getRepos().isClustered(this)) {
             throw validator.res.newValidatorDropClusteredIndex(
-                validator.getCatalog().getLocalizedObjectName(this,null),
+                validator.getRepos().getLocalizedObjectName(this,null),
                 validator.getParserPosString(this));
         }
 
@@ -150,9 +150,9 @@ public abstract class CwmSqlindexImpl extends InstanceHandler
             // REVIEW: support this?  What to do about instances of the
             // same temporary table in other sessions?
             throw validator.res.newValidatorIndexOnExistingTempTable(
-                validator.getCatalog().getLocalizedObjectName(
+                validator.getRepos().getLocalizedObjectName(
                     this,null),
-                validator.getCatalog().getLocalizedObjectName(
+                validator.getRepos().getLocalizedObjectName(
                     getTable(),null));
         }
     }

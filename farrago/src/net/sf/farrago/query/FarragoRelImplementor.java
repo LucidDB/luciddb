@@ -131,7 +131,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
         if (streamDef.getOutputDesc() == null) {
             streamDef.setOutputDesc(
                 FennelRelUtil.createTupleDescriptorFromRowType(
-                    preparingStmt.getCatalog(),
+                    preparingStmt.getRepos(),
                     rowType));
         }
 

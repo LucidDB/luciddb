@@ -50,20 +50,20 @@ abstract class FtrsUtil
      * Example:  for index EMPS_UX, the result is
      * [ NAME, DEPTNO, EMPNO ]
      *
-     * @param catalog catalog storing object definitions
+     * @param repos repos storing object definitions
      * @param index index for which to compute column list
      *
      * @return List (of CwmColumn) making up an unclustered index's tuple
      */
     static List getUnclusteredCoverageColList(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         CwmSqlindex index)
     {
         CwmSqlindex clusteredIndex =
-            catalog.getClusteredIndex(index.getSpannedClass());
+            repos.getClusteredIndex(index.getSpannedClass());
         List indexColumnList = new ArrayList();
         appendDefinedKey(indexColumnList,index);
-        appendClusteredDistinctKey(catalog,clusteredIndex,indexColumnList);
+        appendClusteredDistinctKey(repos,clusteredIndex,indexColumnList);
         return indexColumnList;
     }
 
@@ -76,16 +76,16 @@ abstract class FtrsUtil
      * Example:  for index EMPS_UX, the result is
      * [ 1, 2, 0 ]
      *
-     * @param catalog catalog storing object definitions
+     * @param repos repos storing object definitions
      * @param index index for which to compute projection
      *
      * @return projection as array of 0-based table-relative column ordinals
      */
     static Integer [] getUnclusteredCoverageArray(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         CwmSqlindex index)
     {
-        List list = getUnclusteredCoverageColList(catalog,index);
+        List list = getUnclusteredCoverageColList(repos,index);
         Integer [] projection = new Integer[list.size()];
         Iterator iter = list.iterator();
         int i = 0;
@@ -106,18 +106,18 @@ abstract class FtrsUtil
      * column city instead, then the result would be [ 4, 2, 0 ].  For a
      * non-unique clustered index on empno, the result would be [ 0, 2 ].
      *
-     * @param catalog catalog for storing transient objects
+     * @param repos repos for storing transient objects
      * @param index the CwmSqlindex for which the key is to be projected
      *
      * @return array of 0-based column ordinals
      */
     static Integer [] getClusteredDistinctKeyArray(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         CwmSqlindex index)
     {
-        assert (catalog.isClustered(index));
+        assert (repos.isClustered(index));
         List indexColumnList = new ArrayList();
-        appendClusteredDistinctKey(catalog,index,indexColumnList);
+        appendClusteredDistinctKey(repos,index,indexColumnList);
         Integer [] array = new Integer[indexColumnList.size()];
         for (int i = 0; i < array.length; ++i) {
             FemAbstractColumn column = (FemAbstractColumn)
@@ -128,17 +128,17 @@ abstract class FtrsUtil
     }
 
     static List getDistinctKeyColList(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         CwmSqlindex index)
     {
         List indexColumnList = new ArrayList();
-        if (catalog.isClustered(index)) {
-            appendClusteredDistinctKey(catalog,index,indexColumnList);
+        if (repos.isClustered(index)) {
+            appendClusteredDistinctKey(repos,index,indexColumnList);
         } else {
             if (index.isUnique()) {
                 appendDefinedKey(indexColumnList,index);
             } else {
-                return getUnclusteredCoverageColList(catalog,index);
+                return getUnclusteredCoverageColList(repos,index);
             }
         }
         return indexColumnList;
@@ -152,19 +152,19 @@ abstract class FtrsUtil
      * Example:  for index DEPTS_UNIQUE_NAME, the result is
      * [ 1, 0 ]
      *
-     * @param catalog catalog storing object definitions
+     * @param repos repos storing object definitions
      * @param index index for which to compute projection
      *
      * @return projection as array of 0-based table-relative column ordinals
      */
     static Integer [] getCollationKeyArray(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         CwmSqlindex index)
     {
-        if (catalog.isClustered(index)) {
-            return getClusteredDistinctKeyArray(catalog,index);
+        if (repos.isClustered(index)) {
+            return getClusteredDistinctKeyArray(repos,index);
         } else {
-            return getUnclusteredCoverageArray(catalog,index);
+            return getUnclusteredCoverageArray(repos,index);
         }
     }
     
@@ -179,20 +179,20 @@ abstract class FtrsUtil
      * [ 2, 0 ].  For index DEPTS_UNIQUE_NAME, the result is [ 0 ].
      * For index EMPS_UX, the result is [ 0, 1, 2 ].
      *
-     * @param catalog catalog for storing transient objects
+     * @param repos repos for storing transient objects
      * @param index the CwmSqlindex for which the key is to be projected
      *
      * @return new FemTupleProjection
      */
     static FemTupleProjection getDistinctKeyProjection(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         CwmSqlindex index)
     {
-        if (catalog.isClustered(index)) {
+        if (repos.isClustered(index)) {
             List indexColumnList = new ArrayList();
-            appendClusteredDistinctKey(catalog,index,indexColumnList);
+            appendClusteredDistinctKey(repos,index,indexColumnList);
             return FennelRelUtil.createTupleProjectionFromColumnList(
-                catalog,
+                repos,
                 indexColumnList);
         }
 
@@ -207,10 +207,10 @@ abstract class FtrsUtil
             // index tuple as a key to make it unique (the inclusion of the
             // clustering key guarantees this); that way we can perform
             // deletions and rollbacks without requiring linear search.
-            n = getUnclusteredCoverageColList(catalog,index).size();
+            n = getUnclusteredCoverageColList(repos,index).size();
         }
         return FennelRelUtil.createTupleProjection(
-            catalog,
+            repos,
             FennelRelUtil.newIotaProjection(n));
     }
 
@@ -226,7 +226,7 @@ abstract class FtrsUtil
         FarragoTypeFactory typeFactory,
         CwmSqlindex index)
     {
-        if (typeFactory.getCatalog().isClustered(index)) {
+        if (typeFactory.getRepos().isClustered(index)) {
             return getClusteredCoverageTupleDescriptor(typeFactory,index);
         } else {
             return getUnclusteredCoverageTupleDescriptor(typeFactory,index);
@@ -243,26 +243,26 @@ abstract class FtrsUtil
      * [ 0, 1, 2, 3, 4, 5 ].  For index DEPTS_UNIQUE_NAME, the result
      * is [ 1, 0 ].
      *
-     * @param catalog catalog for storing transient objects
+     * @param repos repos for storing transient objects
      * @param index the CwmSqlindex for which the tuple is to be projected
      *
      * @return new FemTupleProjection
      */
     static FemTupleProjection getCoverageProjection(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         CwmSqlindex index)
     {
-        if (catalog.isClustered(index)) {
+        if (repos.isClustered(index)) {
             // clustered index tuple is full table tuple
             int n = index.getSpannedClass().getFeature().size();
             return FennelRelUtil.createTupleProjection(
-                catalog,FennelRelUtil.newIotaProjection(n));
+                repos,FennelRelUtil.newIotaProjection(n));
         }
 
-        List indexColumnList = getUnclusteredCoverageColList(catalog,index);
+        List indexColumnList = getUnclusteredCoverageColList(repos,index);
 
         return FennelRelUtil.createTupleProjectionFromColumnList(
-            catalog,indexColumnList);
+            repos,indexColumnList);
     }
 
     private static void appendConstraintColumns(
@@ -293,16 +293,16 @@ abstract class FtrsUtil
     }
 
     private static void appendClusteredDistinctKey(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         CwmSqlindex clusteredIndex,
         List indexColumnList)
     {
-        assert(catalog.isClustered(clusteredIndex));
+        assert(repos.isClustered(clusteredIndex));
         appendDefinedKey(indexColumnList,clusteredIndex);
         if (!clusteredIndex.isUnique()) {
             appendConstraintColumns(
                 indexColumnList,
-                catalog.getPrimaryKey(clusteredIndex.getSpannedClass()));
+                repos.getPrimaryKey(clusteredIndex.getSpannedClass()));
         }
     }
 
@@ -310,9 +310,9 @@ abstract class FtrsUtil
         FarragoTypeFactory typeFactory,
         CwmSqlindex index)
     {
-        FarragoCatalog catalog = typeFactory.getCatalog();
+        FarragoRepos repos = typeFactory.getRepos();
         FemTupleDescriptor tupleDesc =
-            catalog.newFemTupleDescriptor();
+            repos.newFemTupleDescriptor();
         Iterator columnIter = index.getSpannedClass().getFeature().iterator();
         while (columnIter.hasNext()) {
             Object obj = columnIter.next();
@@ -321,7 +321,7 @@ abstract class FtrsUtil
             }
             CwmColumn column = (CwmColumn) obj;
             FennelRelUtil.addTupleAttrDescriptor(
-                catalog,
+                repos,
                 tupleDesc,
                 typeFactory.createColumnType(column,true));
         }
@@ -332,15 +332,15 @@ abstract class FtrsUtil
         FarragoTypeFactory typeFactory,
         CwmSqlindex index)
     {
-        FarragoCatalog catalog = typeFactory.getCatalog();
+        FarragoRepos repos = typeFactory.getRepos();
         FemTupleDescriptor tupleDesc =
-            catalog.newFemTupleDescriptor();
-        List colList = getUnclusteredCoverageColList(catalog,index);
+            repos.newFemTupleDescriptor();
+        List colList = getUnclusteredCoverageColList(repos,index);
         Iterator columnIter = colList.iterator();
         while (columnIter.hasNext()) {
             CwmColumn column = (CwmColumn) columnIter.next();
             FennelRelUtil.addTupleAttrDescriptor(
-                catalog,
+                repos,
                 tupleDesc,
                 typeFactory.createColumnType(column,true));
         }

@@ -38,7 +38,7 @@ import java.util.*;
 public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
 {
     private FarragoJdbcEngineConnection connection;
-    private FarragoCatalog catalog;
+    private FarragoRepos repos;
 
     //~ Static fields/initializers --------------------------------------------
 
@@ -59,7 +59,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
     FarragoJdbcEngineDatabaseMetaData(FarragoJdbcEngineConnection connection)
     {
         this.connection = connection;
-        catalog = connection.getSession().getCatalog();
+        repos = connection.getSession().getRepos();
     }
     
     // implement DatabaseMetaData
@@ -625,7 +625,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
     // implement DatabaseMetaData
     public int getMaxColumnNameLength() throws SQLException
     {
-        return catalog.getIdentifierPrecision();
+        return repos.getIdentifierPrecision();
     }
 
     // implement DatabaseMetaData
@@ -667,7 +667,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
     // implement DatabaseMetaData
     public int getMaxCursorNameLength() throws SQLException
     {
-        return catalog.getIdentifierPrecision();
+        return repos.getIdentifierPrecision();
     }
 
     // implement DatabaseMetaData
@@ -680,13 +680,13 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
     // implement DatabaseMetaData
     public int getMaxSchemaNameLength() throws SQLException
     {
-        return catalog.getIdentifierPrecision();
+        return repos.getIdentifierPrecision();
     }
 
     // implement DatabaseMetaData
     public int getMaxProcedureNameLength() throws SQLException
     {
-        return catalog.getIdentifierPrecision();
+        return repos.getIdentifierPrecision();
     }
 
     // implement DatabaseMetaData
@@ -723,7 +723,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
     // implement DatabaseMetaData
     public int getMaxTableNameLength() throws SQLException
     {
-        return catalog.getIdentifierPrecision();
+        return repos.getIdentifierPrecision();
     }
 
     // implement DatabaseMetaData
@@ -735,7 +735,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
     // implement DatabaseMetaData
     public int getMaxUserNameLength() throws SQLException
     {
-        return catalog.getIdentifierPrecision();
+        return repos.getIdentifierPrecision();
     }
 
     // implement DatabaseMetaData

@@ -57,9 +57,9 @@ class SessionIndexMap
     private Map indexIdMap;
     
     /**
-     * Catalog for this session.
+     * Repos for this session.
      */
-    private FarragoCatalog catalog;
+    private FarragoRepos repos;
 
     /**
      * Cache for local data wrappers used to manage indexes.
@@ -74,15 +74,15 @@ class SessionIndexMap
      *
      * @param database FarragoDatabase context
      *
-     * @param catalog the catalog for this session
+     * @param repos the repos for this session
      */
     public SessionIndexMap(
         FarragoAllocationOwner owner,
         FarragoDatabase database,
-        FarragoCatalog catalog)
+        FarragoRepos repos)
     {
         this.database = database;
-        this.catalog = catalog;
+        this.repos = repos;
         tempIndexRootMap = new HashMap();
         indexIdMap = new HashMap();
         owner.addAllocation(this);
@@ -90,7 +90,7 @@ class SessionIndexMap
         dataWrapperCache = new FarragoDataWrapperCache(
             this,
             database.getDataWrapperCache(),
-            catalog,
+            repos,
             database.getFennelDbHandle());
     }
     
@@ -98,24 +98,24 @@ class SessionIndexMap
     public long getIndexRoot(
         CwmSqlindex index)
     {
-        if (catalog.isTemporary(index)) {
+        if (repos.isTemporary(index)) {
             Long root = (Long) tempIndexRootMap.get(index);
             assert(root != null);
             return root.longValue();
         } else {
             return Long.parseLong(
-                catalog.getTagValue(index,"indexRoot"));
+                repos.getTagValue(index,"indexRoot"));
         }
     }
     
     private void setIndexRoot(
         CwmSqlindex index,long root)
     {
-        if (catalog.isTemporary(index)) {
+        if (repos.isTemporary(index)) {
             Object old = tempIndexRootMap.put(index,new Long(root));
             assert(old == null);
         } else {
-            catalog.setTagValue(
+            repos.setTagValue(
                 index,"indexRoot",Long.toString(root));
         }
     }
@@ -126,14 +126,14 @@ class SessionIndexMap
     {
         assert(table.isTemporary());
         
-        CwmSqlindex clusteredIndex = catalog.getClusteredIndex(table);
+        CwmSqlindex clusteredIndex = repos.getClusteredIndex(table);
 
         if (tempIndexRootMap.containsKey(clusteredIndex)) {
             // already instantiated this table
             return;
         }
 
-        Iterator iter = catalog.getIndexes(table).iterator();
+        Iterator iter = repos.getIndexes(table).iterator();
         while (iter.hasNext()) {
             CwmSqlindex index = (CwmSqlindex) iter.next();
             assert(!tempIndexRootMap.containsKey(index));
@@ -186,7 +186,7 @@ class SessionIndexMap
             indexRoot = server.createIndex(index);
         } catch (SQLException ex) {
             throw FarragoResource.instance().newDataServerIndexCreateFailed(
-                catalog.getLocalizedObjectName(index,null),ex);
+                repos.getLocalizedObjectName(index,null),ex);
         }
         setIndexRoot(index,indexRoot);
         indexIdMap.put(
@@ -198,7 +198,7 @@ class SessionIndexMap
     public void dropIndexStorage(
         CwmSqlindex index,boolean truncate)
     {
-        if (catalog.isTemporary(index)) {
+        if (repos.isTemporary(index)) {
             if (!tempIndexRootMap.containsKey(index)) {
                 // index was never created, so nothing to do
                 return;
@@ -210,7 +210,7 @@ class SessionIndexMap
             server.dropIndex(index,getIndexRoot(index),truncate);
         } catch (SQLException ex) {
             throw FarragoResource.instance().newDataServerIndexDropFailed(
-                catalog.getLocalizedObjectName(index,null),ex);
+                repos.getLocalizedObjectName(index,null),ex);
         }
         
         if (!truncate) {

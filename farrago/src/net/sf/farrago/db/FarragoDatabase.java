@@ -77,9 +77,9 @@ public class FarragoDatabase
      */
     private static FarragoDatabase instance;
 
-    private FarragoCatalog systemCatalog;
+    private FarragoRepos systemRepos;
 
-    private FarragoCatalog userCatalog;
+    private FarragoRepos userRepos;
 
     private FennelDbHandle fennelDbHandle;
 
@@ -246,14 +246,14 @@ public class FarragoDatabase
 
             dumpTraceConfig();
 
-            systemCatalog = sessionFactory.newCatalog(this,false);
-            userCatalog = systemCatalog;
+            systemRepos = sessionFactory.newRepos(this,false);
+            userRepos = systemRepos;
             if (init) {
-                systemCatalog.createSystemObjects();
+                systemRepos.createSystemObjects();
             }
 
             // REVIEW:  system/user configuration
-            FemFarragoConfig currentConfig = systemCatalog.getCurrentConfig();
+            FemFarragoConfig currentConfig = systemRepos.getCurrentConfig();
 
             tracer.config(
                 "java.class.path = "
@@ -263,12 +263,12 @@ public class FarragoDatabase
                 "java.library.path = "
                 + System.getProperty("java.library.path"));
 
-            if (systemCatalog.isFennelEnabled()) {
-                systemCatalog.beginReposTxn(true);
+            if (systemRepos.isFennelEnabled()) {
+                systemRepos.beginReposTxn(true);
                 try {
                     loadFennel(sessionFactory.newFennelCmdExecutor(),init);
                 } finally {
-                    systemCatalog.endReposTxn(false);
+                    systemRepos.endReposTxn(false);
                 }
             } else {
                 tracer.config("Fennel support disabled");
@@ -288,15 +288,15 @@ public class FarragoDatabase
             // REVIEW:  sequencing from this point on
 
             if (currentConfig.isUserCatalogEnabled()) {
-                userCatalog = new FarragoCatalog(this,true);
-                if (userCatalog.getSelfAsCwmCatalog() == null) {
+                userRepos = new FarragoRepos(this,true);
+                if (userRepos.getSelfAsCwmCatalog() == null) {
                     // REVIEW:  request this explicitly?
-                    userCatalog.createSystemObjects();
+                    userRepos.createSystemObjects();
                 }
                 // During shutdown, we want to reverse this process, making
-                // userCatalog revert to systemCatalog.  CatalogSwitcher takes
-                // care of this before userCatalog gets closed.
-                addAllocation(new CatalogSwitcher());
+                // userRepos revert to systemRepos.  ReposSwitcher takes
+                // care of this before userRepos gets closed.
+                addAllocation(new ReposSwitcher());
             }
 
             // Start up timer.  This comes last so that the first thing we do
@@ -334,8 +334,8 @@ public class FarragoDatabase
         }
 
         fennelDbHandle = null;
-        systemCatalog = null;
-        userCatalog = null;
+        systemRepos = null;
+        userRepos = null;
     }
 
     private void warnOnClose(Throwable ex,boolean suppressExcns)
@@ -380,9 +380,9 @@ public class FarragoDatabase
 
     private void assertNoFennelHandles()
     {
-        assert systemCatalog != null : "FarragoDatabase.systemCatalog is " +
+        assert systemRepos != null : "FarragoDatabase.systemRepos is " +
                 "null: server has probably already been started";
-        if (!systemCatalog.isFennelEnabled()) {
+        if (!systemRepos.isFennelEnabled()) {
             return;
         }
         int n = FennelStorage.getHandleCount();
@@ -394,9 +394,9 @@ public class FarragoDatabase
         tracer.fine("Loading Fennel");
         assertNoFennelHandles();
         FemCmdOpenDatabase cmd =
-            systemCatalog.newFemCmdOpenDatabase();
+            systemRepos.newFemCmdOpenDatabase();
         FemFennelConfig fennelConfig =
-            systemCatalog.getCurrentConfig().getFennelConfig();
+            systemRepos.getCurrentConfig().getFennelConfig();
         Map attributeMap = JmiUtil.getAttributeValues(fennelConfig);
         FemDatabaseParam param;
         Iterator iter = attributeMap.entrySet().iterator();
@@ -407,7 +407,7 @@ public class FarragoDatabase
                 FarragoProperties.instance().expandProperties(
                     entry.getValue().toString());
 
-            param = systemCatalog.newFemDatabaseParam();
+            param = systemRepos.newFemDatabaseParam();
             param.setName(entry.getKey().toString());
             param.setValue(expandedValue);
             cmd.getParams().add(param);
@@ -415,7 +415,7 @@ public class FarragoDatabase
 
         // databaseDir is set dynamically, allowing the catalog
         // to be moved
-        param = systemCatalog.newFemDatabaseParam();
+        param = systemRepos.newFemDatabaseParam();
         param.setName("databaseDir");
         param.setValue(
             FarragoProperties.instance().getCatalogDir().getAbsolutePath());
@@ -439,7 +439,7 @@ public class FarragoDatabase
             FennelDbHandle.allocateNewObjectHandle(this,nativeTrace);
         cmd.setJavaTraceHandle(hNativeTrace.getLongHandle());
         fennelDbHandle = new FennelDbHandle(
-            systemCatalog,systemCatalog,this,cmdExecutor,cmd);
+            systemRepos,systemRepos,this,cmdExecutor,cmd);
 
         tracer.config("Fennel successfully loaded");
     }
@@ -455,21 +455,21 @@ public class FarragoDatabase
     /**
      * .
      *
-     * @return system catalog for this database
+     * @return system repos for this database
      */
-    public FarragoCatalog getSystemCatalog()
+    public FarragoRepos getSystemRepos()
     {
-        return systemCatalog;
+        return systemRepos;
     }
 
     /**
      * .
      *
-     * @return user catalog for this database
+     * @return user repos for this database
      */
-    public FarragoCatalog getUserCatalog()
+    public FarragoRepos getUserRepos()
     {
-        return userCatalog;
+        return userRepos;
     }
 
     /**
@@ -604,7 +604,7 @@ public class FarragoDatabase
             executableStmt = 
                 (FarragoSessionExecutableStmt) cacheEntry.getValue();
 
-            if (isStale(stmt.getCatalog(),executableStmt)) {
+            if (isStale(stmt.getRepos(),executableStmt)) {
                 // TODO jvs 17-July-2004: Need DDL-vs-query concurrency control
                 // here.  FarragoRuntimeContext needs to acquire DDL-locks on
                 // referenced objects so that they cannot be modified/dropped
@@ -620,14 +620,14 @@ public class FarragoDatabase
     }
 
     private boolean isStale(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         FarragoSessionExecutableStmt stmt)
     {
         Iterator idIter = stmt.getReferencedObjectIds().iterator();
         while (idIter.hasNext()) {
             String mofid = (String) idIter.next();
             RefBaseObject obj =
-                catalog.getRepository().getByMofId(mofid);
+                repos.getMdrRepos().getByMofId(mofid);
             if (obj == null) {
                 // TODO jvs 17-July-2004:  Once we support ALTER TABLE, this
                 // won't be good enough.  In addition to checking that the
@@ -650,9 +650,9 @@ public class FarragoDatabase
         if (paramName.equals("calcVirtualMachine")) {
 
             // sanity check
-            if (!userCatalog.isFennelEnabled()) {
+            if (!userRepos.isFennelEnabled()) {
                 CalcVirtualMachine vm = 
-                    userCatalog.getCurrentConfig().getCalcVirtualMachine();
+                    userRepos.getCurrentConfig().getCalcVirtualMachine();
                 if (vm.equals(CalcVirtualMachineEnum.CALCVM_FENNEL)) {
                     throw FarragoResource.instance().
                         newValidatorCalcUnavailable();
@@ -674,7 +674,7 @@ public class FarragoDatabase
 
         if (setCodeCacheSize) {
             codeCache.setMaxBytes(
-                getCodeCacheMaxBytes(systemCatalog.getCurrentConfig()));
+                getCodeCacheMaxBytes(systemRepos.getCurrentConfig()));
         }
     }
 
@@ -689,19 +689,19 @@ public class FarragoDatabase
 
     public void requestCheckpoint(boolean fuzzy,boolean async)
     {
-        if (!systemCatalog.isFennelEnabled()) {
+        if (!systemRepos.isFennelEnabled()) {
             return;
         }
 
-        systemCatalog.beginTransientTxn();
+        systemRepos.beginTransientTxn();
         try {
-            FemCmdCheckpoint cmd = systemCatalog.newFemCmdCheckpoint();
-            cmd.setDbHandle(fennelDbHandle.getFemDbHandle(systemCatalog));
+            FemCmdCheckpoint cmd = systemRepos.newFemCmdCheckpoint();
+            cmd.setDbHandle(fennelDbHandle.getFemDbHandle(systemRepos));
             cmd.setFuzzy(fuzzy);
             cmd.setAsync(async);
             fennelDbHandle.executeCmd(cmd);
         } finally {
-            systemCatalog.endTransientTxn();
+            systemRepos.endTransientTxn();
         }
     }
 
@@ -765,11 +765,11 @@ public class FarragoDatabase
         }
     }
 
-    private class CatalogSwitcher implements FarragoAllocation
+    private class ReposSwitcher implements FarragoAllocation
     {
         public void closeAllocation()
         {
-            userCatalog = systemCatalog;
+            userRepos = systemRepos;
         }
     }
 }

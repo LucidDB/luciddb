@@ -59,13 +59,13 @@ public abstract class FemDataServerImpl extends InstanceHandler
     // implement DdlValidatedElement
     public void validateDefinition(DdlValidator validator,boolean creation)
     {
-        FarragoCatalog catalog = validator.getCatalog();
+        FarragoRepos repos = validator.getRepos();
 
         // since servers are in the same namespace with CWM catalogs,
         // need a special name uniquness check here
         validator.validateUniqueNames(
-            catalog.getCwmCatalog(FarragoCatalog.SYSBOOT_CATALOG_NAME),
-            catalog.relationalPackage.getCwmCatalog().refAllOfType(),
+            repos.getCwmCatalog(FarragoRepos.SYSBOOT_CATALOG_NAME),
+            repos.relationalPackage.getCwmCatalog().refAllOfType(),
             false);
 
         try {
@@ -73,14 +73,14 @@ public abstract class FemDataServerImpl extends InstanceHandler
             loadFromCache(validator.getDataWrapperCache());
         } catch (Throwable ex) {
             throw validator.res.newValidatorDataServerInvalid(
-                catalog.getLocalizedObjectName(this,null),
+                repos.getLocalizedObjectName(this,null),
                 ex);
         }
 
         // REVIEW jvs 18-April-2004:  This uses default charset/collation
         // info from local catalog, but should really allow foreign
         // servers to override.
-        catalog.initializeCwmCatalog(this);
+        repos.initializeCwmCatalog(this);
 
         // REVIEW jvs 18-April-2004:  Query the plugin for these?
         if (getType() == null) {
@@ -140,7 +140,7 @@ public abstract class FemDataServerImpl extends InstanceHandler
      *
      * @param cache cache for loading server
      *
-     * @param catalog catalog for object names
+     * @param repos repos for object names
      *
      * @param typeFactory factory for data types
      *
@@ -150,7 +150,7 @@ public abstract class FemDataServerImpl extends InstanceHandler
      */
     public FarragoMedColumnSet loadColumnSetFromCache(
         FarragoDataWrapperCache cache,
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         FarragoTypeFactory typeFactory,
         FemBaseColumnSet baseColumnSet)
     {
@@ -189,7 +189,7 @@ public abstract class FemDataServerImpl extends InstanceHandler
                 columnPropMap);
         } catch (Throwable ex) {
             throw FarragoResource.instance().newForeignTableAccessFailed(
-                catalog.getLocalizedObjectName(baseColumnSet,null),
+                repos.getLocalizedObjectName(baseColumnSet,null),
                 ex);
         }
 
@@ -209,12 +209,12 @@ public abstract class FemDataServerImpl extends InstanceHandler
             // validate that we can successfully initialize the table
             columnSet = loadColumnSetFromCache(
                 validator.getDataWrapperCache(),
-                validator.getCatalog(),
+                validator.getRepos(),
                 validator.getTypeFactory(),
                 baseColumnSet);
         } catch (Throwable ex) {
             throw validator.res.newValidatorDataServerTableInvalid(
-                validator.getCatalog().getLocalizedObjectName(
+                validator.getRepos().getLocalizedObjectName(
                     baseColumnSet,baseColumnSet.refClass()),
                 ex);
         }

@@ -56,29 +56,29 @@ public interface FarragoSessionFactory
     public FennelCmdExecutor newFennelCmdExecutor();
 
     /**
-     * Opens a new catalog instance.
+     * Opens a new repositor instance.
      *
-     * @param owner the object which should own the new catalog
+     * @param owner the object which should own the new repos
      *
-     * @param userCatalog true for user catalog; false for system catalog
+     * @param userRepos true for user repos; false for system repos
      *
-     * @return new catalog instance
+     * @return new repos instance
      */
-    public FarragoCatalog newCatalog(
+    public FarragoRepos newRepos(
         FarragoAllocationOwner owner,
-        boolean userCatalog);
+        boolean userRepos);
 
     /**
      * Creates a new Fennel transaction context.
      *
-     * @param catalog catalog for transaction metadata access
+     * @param repos repos for transaction metadata access
      *
      * @param fennelDbHandle handle for database to access
      *
      * @return new context
      */
     public FennelTxnContext newFennelTxnContext(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         FennelDbHandle fennelDbHandle);
 
     /**

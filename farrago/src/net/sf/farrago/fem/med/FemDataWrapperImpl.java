@@ -57,7 +57,7 @@ public abstract class FemDataWrapperImpl extends InstanceHandler
     // implement DdlValidatedElement
     public void validateDefinition(DdlValidator validator,boolean creation)
     {
-        FarragoCatalog catalog = validator.getCatalog();
+        FarragoRepos repos = validator.getRepos();
         Properties props = getStorageOptionsAsProperties(this);
 
         FarragoMedDataWrapper wrapper;
@@ -101,19 +101,19 @@ public abstract class FemDataWrapperImpl extends InstanceHandler
             wrapper = loadFromCache(validator.getDataWrapperCache());
         } catch (Throwable ex) {
             throw validator.res.newValidatorDataWrapperInvalid(
-                catalog.getLocalizedObjectName(this,null),
+                repos.getLocalizedObjectName(this,null),
                 ex);
         }
 
         if (isForeign()) {
             if (!wrapper.isForeign()) {
                 throw validator.res.newValidatorForeignWrapperHasLocalImpl(
-                    catalog.getLocalizedObjectName(this,null));
+                    repos.getLocalizedObjectName(this,null));
             }
         } else {
             if (wrapper.isForeign()) {
                 throw validator.res.newValidatorLocalWrapperHasForeignImpl(
-                    catalog.getLocalizedObjectName(this,null));
+                    repos.getLocalizedObjectName(this,null));
             }
         }
     }

@@ -74,7 +74,7 @@ public class DdlSetSystemParamStmt extends DdlStmt
         super.preValidate(ddlValidator);
 
         FemFarragoConfig farragoConfig =
-            ddlValidator.getCatalog().getCurrentConfig();
+            ddlValidator.getRepos().getCurrentConfig();
         RefObject config = farragoConfig;
 
         Object oldValue;

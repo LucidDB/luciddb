@@ -76,7 +76,7 @@ class FtrsScanToSearchRule extends RelOptRule
         FilterRel filter = (FilterRel) call.rels[0];
         FtrsIndexScanRel scan = (FtrsIndexScanRel) call.rels[1];
 
-        FarragoCatalog catalog = scan.getPreparingStmt().getCatalog();
+        FarragoRepos repos = scan.getPreparingStmt().getRepos();
 
         // TODO: General framework for converting filters into ranges.  Build
         // on the rex expression pattern-matching framework?  Or maybe ANTLR
@@ -111,11 +111,11 @@ class FtrsScanToSearchRule extends RelOptRule
             fieldAccess.index);
         assert (filterColumn != null);
 
-        if (catalog.isClustered(scan.index)) {
+        if (repos.isClustered(scan.index)) {
             // if we're working with a clustered index scan, consider all of
             // the unclustered indexes as well
             Iterator iter =
-                catalog.getIndexes(scan.ftrsTable.getCwmColumnSet()).iterator();
+                repos.getIndexes(scan.ftrsTable.getCwmColumnSet()).iterator();
             while (iter.hasNext()) {
                 CwmSqlindex index = (CwmSqlindex) iter.next();
                 considerIndex(index,scan,filterColumn,right,call,extraFilter);
@@ -148,7 +148,7 @@ class FtrsScanToSearchRule extends RelOptRule
         RelOptRuleCall call,
         RexNode extraFilter)
     {
-        FarragoCatalog catalog = origScan.getPreparingStmt().getCatalog();
+        FarragoRepos repos = origScan.getPreparingStmt().getRepos();
 
         // TODO:  support compound keys
         if (!testIndexColumn(index,filterColumn)) {
@@ -185,8 +185,8 @@ class FtrsScanToSearchRule extends RelOptRule
             castRel,FennelPullRel.FENNEL_PULL_CONVENTION);
         assert (keyInput != null);
 
-        if (!catalog.isClustered(index)
-            && catalog.isClustered(origScan.index))
+        if (!repos.isClustered(index)
+            && repos.isClustered(origScan.index))
         {
             // By itself, an unclustered index is not going to produce the
             // requested rows.  Instead, it will produce clustered index keys,
@@ -201,7 +201,7 @@ class FtrsScanToSearchRule extends RelOptRule
 
             Integer [] clusteredKeyColumns =
                 FtrsUtil.getClusteredDistinctKeyArray(
-                    catalog,
+                    repos,
                     origScan.index);
             FtrsIndexScanRel unclusteredScan =
                 new FtrsIndexScanRel(

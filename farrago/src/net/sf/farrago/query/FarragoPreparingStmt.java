@@ -316,7 +316,7 @@ public class FarragoPreparingStmt extends OJStatement
             Set streamDefSet = relImplementor.getStreamDefSet();
             if (!streamDefSet.isEmpty()) {
                 FemCmdPrepareExecutionStreamGraph cmdPrepareStream =
-                    getCatalog().newFemCmdPrepareExecutionStreamGraph();
+                    getRepos().newFemCmdPrepareExecutionStreamGraph();
                 Collection streamDefs = cmdPrepareStream.getStreamDefs();
                 streamDefs.addAll(streamDefSet);
                 xmiFennelPlan =
@@ -462,7 +462,7 @@ public class FarragoPreparingStmt extends OJStatement
                 connection,
                 new FarragoRexBuilder(getFarragoTypeFactory()));
             sqlToRelConverter.setDefaultValueFactory(
-                new CatalogDefaultValueFactory());
+                new ReposDefaultValueFactory());
         }
         return sqlToRelConverter;
     }
@@ -476,9 +476,9 @@ public class FarragoPreparingStmt extends OJStatement
     }
 
     // implement FarragoSessionPreparingStmt
-    public FarragoCatalog getCatalog()
+    public FarragoRepos getRepos()
     {
-        return stmtValidator.getCatalog();
+        return stmtValidator.getRepos();
     }
 
     // implement FarragoSessionPreparingStmt
@@ -521,9 +521,8 @@ public class FarragoPreparingStmt extends OJStatement
     // implement RelOptSchema
     public RelOptTable getTableForMember(String [] names)
     {
-        FarragoCatalog.ResolvedSchemaObject resolved =
-            getCatalog().resolveSchemaObjectName(
-                stmtValidator.getConnectionDefaults(),names);
+        FarragoSessionResolvedObject resolved =
+            stmtValidator.resolveSchemaObjectName(names);
 
         if (resolved.object == null) {
             return getForeignTableFromNamespace(resolved);
@@ -550,7 +549,7 @@ public class FarragoPreparingStmt extends OJStatement
             loadDataServerFromCache(femServer);
             relOptTable = femServer.loadColumnSetFromCache(
                 stmtValidator.getDataWrapperCache(),
-                getCatalog(),
+                getRepos(),
                 getFarragoTypeFactory(),
                 table);
         } else if (columnSet instanceof CwmView) {
@@ -580,11 +579,11 @@ public class FarragoPreparingStmt extends OJStatement
     }
 
     private FarragoMedColumnSet getForeignTableFromNamespace(
-        FarragoCatalog.ResolvedSchemaObject resolved)
+        FarragoSessionResolvedObject resolved)
     {
         FemDataServerImpl femServer = (FemDataServerImpl)
-            getCatalog().getModelElement(
-                getCatalog().medPackage.getFemDataServer().refAllOfType(),
+            getRepos().getModelElement(
+                getRepos().medPackage.getFemDataServer().refAllOfType(),
                 resolved.catalogName);
         if (femServer == null) {
             return null;
@@ -658,9 +657,8 @@ public class FarragoPreparingStmt extends OJStatement
     // implement SqlValidator.CatalogReader
     public SqlValidator.Table getTable(String [] names)
     {
-        FarragoCatalog.ResolvedSchemaObject resolved =
-            getCatalog().resolveSchemaObjectName(
-                stmtValidator.getConnectionDefaults(),names);
+        FarragoSessionResolvedObject resolved =
+            stmtValidator.resolveSchemaObjectName(names);
 
         if (resolved == null) {
             return null;
@@ -710,7 +708,7 @@ public class FarragoPreparingStmt extends OJStatement
     // override OJStatement
     protected String getCompilerClassName()
     {
-        return getCatalog().getCurrentConfig().getJavaCompilerClassName();
+        return getRepos().getCurrentConfig().getJavaCompilerClassName();
     }
 
     // override OJStatement
@@ -805,7 +803,7 @@ public class FarragoPreparingStmt extends OJStatement
      * Expression.  Processed expressions are cached for use by subsequent
      * calls.  The CwmExpression's MofId is used as the cache key.
      */
-    private class CatalogDefaultValueFactory
+    private class ReposDefaultValueFactory
         implements DefaultValueFactory, FarragoObjectCache.CachedObjectFactory
     {
         // implement DefaultValueFactory
@@ -840,7 +838,7 @@ public class FarragoPreparingStmt extends OJStatement
         {
             String mofId = (String) key;
             CwmExpression cwmExp =
-                (CwmExpression) getCatalog().getRepository().getByMofId(mofId);
+                (CwmExpression) getRepos().getMdrRepos().getByMofId(mofId);
             String defaultString = cwmExp.getBody();
             SqlParser sqlParser = new SqlParser(defaultString);
             SqlNode sqlNode;

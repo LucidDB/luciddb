@@ -56,7 +56,7 @@ public class FarragoProperties extends Properties
 
     /**
      * The optional string property "net.sf.farrago.catalog" is the path to the
-     * Farrago catalog directory.  See also {@link #getCatalogDir}
+     * Farrago repository directory.  See also {@link #getCatalogDir}
      */
     public final StringProperty catalogDir = new StringProperty(
         this,"net.sf.farrago.catalog",null);
@@ -112,7 +112,7 @@ public class FarragoProperties extends Properties
     }
 
     /**
-     * @return the directory containing the Farrago catalog files; equivalent
+     * @return the directory containing the Farrago repos files; equivalent
      * to {@link #catalogDir} if set, otherwise the "catalog" subdirectory of
      * {@link #homeDir}
      */

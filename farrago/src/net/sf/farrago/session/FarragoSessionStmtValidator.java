@@ -56,9 +56,9 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
     public FarragoSessionParser getParser();
 
     /**
-     * @return catalog to use for validating object references
+     * @return repos to use for validating object references
      */
-    public FarragoCatalog getCatalog();
+    public FarragoRepos getRepos();
     
     /**
      * @return FennelDbHandle storing local data to be accessed by
@@ -74,7 +74,7 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
     /**
      * @return connection defaults to use for validation
      */
-    public FarragoConnectionDefaults getConnectionDefaults();
+    public FarragoSessionVariables getSessionVariables();
 
     /**
      * @return cache to use for code lookups during validation
@@ -192,6 +192,18 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      * @return type definition
      */
     public CwmSqldataType findSqldataType(String typeName);
+    
+    /**
+     * Resolve a (possibly qualified) name of a schema object.
+     *
+     * @param names array of 1 or more name components, from
+     * most general to most specific
+     *
+     * @return FarragoSessionResolvedObject, or null if object definitely
+     * doesn't exist
+     */
+    public FarragoSessionResolvedObject resolveSchemaObjectName(
+        String [] names);
 }
 
 // End FarragoSessionStmtValidator.java

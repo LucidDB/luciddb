@@ -25,7 +25,7 @@ import java.io.*;
 import java.util.*;
 import java.lang.reflect.*;
 
-// TODO jvs 28-April-2004: move this to a catalog-independent codegen utility
+// TODO jvs 28-April-2004: move this to a repos-independent codegen utility
 // package and add a main method so it can be used from ant; this is just a
 // temporary parking space
 

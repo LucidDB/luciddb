@@ -79,14 +79,14 @@ public interface FarragoPlugin extends FarragoAllocation
      * after an uninitialized instance has been created via Class.forName.  As
      * much validation as possible should be performed.
      *
-     * @param catalog FarragoCatalog which can be used for metadata access
+     * @param repos FarragoRepos which can be used for metadata access
      *
      * @param props plugin properties
      *
      * @exception SQLException if plugin initialization is unsuccessful
      */
     public void initialize(
-        FarragoCatalog catalog,
+        FarragoRepos repos,
         Properties props)
         throws SQLException;
 }
