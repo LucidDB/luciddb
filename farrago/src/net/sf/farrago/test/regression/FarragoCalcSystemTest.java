@@ -28,6 +28,8 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 
 import net.sf.farrago.test.FarragoTestCase;
+import net.sf.farrago.test.FarragoSqlOperatorsTest;
+import net.sf.farrago.ojrex.FarragoOJRexImplementorTable;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
@@ -35,6 +37,8 @@ import org.eigenbase.sql.test.SqlOperatorIterator;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.type.OperandsTypeChecking;
 import org.eigenbase.util.Util;
+import com.disruptivetech.farrago.calc.CalcRexImplementorTable;
+import com.disruptivetech.farrago.calc.CalcRexImplementorTableImpl;
 
 
 /**
@@ -49,29 +53,29 @@ public class FarragoCalcSystemTest extends FarragoTestCase
 {
     //~ Static fields/initializers --------------------------------------------
 
-    public static final String vmFennel =
-        "alter system set \"calcVirtualMachine\" = 'CALCVM_FENNEL'";
-    public static final String vmJava =
-        "alter system set \"calcVirtualMachine\" = 'CALCVM_JAVA'";
-    public static final String vmAuto =
-        "alter system set \"calcVirtualMachine\" = 'CALCVM_AUTO'";
+    private static final SqlStdOperatorTable opTab = SqlOperatorTable.std();
+    private static FarragoOJRexImplementorTable javaTab =
+        new FarragoOJRexImplementorTable(opTab);
+    private static CalcRexImplementorTable fennelTab =
+        CalcRexImplementorTableImpl.std();
+
 
     //~ Instance fields -------------------------------------------------------
 
-    String sqlToExceute;
-    String vmFlag;
+    String sqlToExecute;
+    VirtualMachine vm;
 
     //~ Constructors ----------------------------------------------------------
 
     public FarragoCalcSystemTest(
-        String vmFlag,
+        VirtualMachine vm,
         String sql,
         String testName)
         throws Exception
     {
         super(testName);
-        this.vmFlag = vmFlag;
-        this.sqlToExceute = sql;
+        this.vm = vm;
+        this.sqlToExecute = sql;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -79,7 +83,6 @@ public class FarragoCalcSystemTest extends FarragoTestCase
     public static Test suite()
         throws Exception
     {
-        SqlStdOperatorTable opTab = SqlOperatorTable.std();
         TestSuite suite = new TestSuite();
 
         HashSet exclude = new HashSet();
@@ -139,13 +142,12 @@ public class FarragoCalcSystemTest extends FarragoTestCase
         exclude.add(opTab.currentTimestampFunc);
         exclude.add(opTab.currentTimeFunc);
 
-        // Eventutally need to include these when cast is working
+        // Eventually need to include these when cast is working
         exclude.add(opTab.overlapsOperator);
         exclude.add(opTab.initcapFunc);
         exclude.add(opTab.currentDateFunc);
         exclude.add(opTab.convertFunc);
         exclude.add(opTab.translateFunc);
-
 
         // --- NOTE ---
         // Do not add a function to this exclude list unless you first add a
@@ -156,82 +158,108 @@ public class FarragoCalcSystemTest extends FarragoTestCase
         // iterating over all operators
         while (operatorIt.hasNext()) {
             SqlOperator op = (SqlOperator) operatorIt.next();
-            assert (null != op.name) : "Operator name must not be null";
             if (exclude.contains(op)) {
                 continue;
             }
-
-            List argCountList =
-                op.getOperandsCountDescriptor().getPossibleNumOfOperands();
-            assert (argCountList.size() > 0);
-            Iterator it = argCountList.iterator();
-
-            // iterating over possible call signatures
-            while (it.hasNext()) {
-                Integer n = (Integer) it.next();
-                SqlNode [] operands = new SqlNode[n.intValue()];
-                OperandsTypeChecking allowedTypes =
-                    op.getOperandsCheckingRule();
-                SqlTypeName[][] rules;
-                if (allowedTypes instanceof
-                    OperandsTypeChecking.CompositeOperandsTypeChecking) {
-                    OperandsTypeChecking rule =
-                        ((OperandsTypeChecking.CompositeOperandsTypeChecking)
-                        allowedTypes).getRules()[0];
-                    if (rule instanceof
-                        OperandsTypeChecking.SimpleOperandsTypeChecking) {
-                        rules =
-                            ((OperandsTypeChecking.SimpleOperandsTypeChecking)
-                            rule).getTypes();
-                    } else {
-                        throw Util.needToImplement(rule);
-                    }
-                } else if (allowedTypes instanceof OperandsTypeChecking.SimpleOperandsTypeChecking) {
-                    rules = ((OperandsTypeChecking.SimpleOperandsTypeChecking)
-                        allowedTypes).getTypes();
-                } else {
-                    throw Util.needToImplement(allowedTypes);
-                }
-
-                if (null == allowedTypes) {
-                    throw Util.needToImplement("Need to add to exclude list"
-                        + " and manually add test");
-                }
-
-                for (int i = 0; i < n.intValue(); i++) {
-                    SqlTypeName typeName = rules[i][0];
-                    if (typeName.equals(SqlTypeName.Null)) {
-                        typeName = rules[i][1];
-                    } else if (typeName.equals(SqlTypeName.Any)) {
-                        typeName = SqlTypeName.Boolean;
-                    }
-
-                    SqlDataType dt =
-                        new SqlDataType(new SqlIdentifier(typeName.name, null),
-                            0,
-                            0,
-                            null,
-                            null);
-
-                    operands[i] =
-                        opTab.castFunc.createCall(
-                            SqlLiteral.createNull(null),
-                            dt,
-                            null);
-                }
-                SqlCall call = op.createCall(operands, null);
-
-                String sql = "SELECT " + call.toString() + " FROM VALUES(1)";
-                String testName = "NULL-TEST-" + op.name + "-";
-                suite.addTest(
-                    new FarragoCalcSystemTest(vmFennel, sql,
-                        testName + "FENNEL"));
-
-                //                suite.addTest(new FarragoCalcSystemTest(vmJava, sql, testName+"JAVA"));
+            addTestsForOp(op, suite, VirtualMachine.Fennel);
+            if (false) {
+                // todo: Enable automated tests for java operators (Bug 260
+                //  is logged for this)
+                addTestsForOp(op, suite, VirtualMachine.Java);
             }
         }
 
         return wrappedSuite(suite);
+    }
+
+    private static void addTestsForOp(SqlOperator op,
+        TestSuite suite,
+        VirtualMachine vm)
+        throws Exception
+    {
+        assert (null != op.name) : "Operator name must not be null";
+
+        // Some operators cannot be implemented in all VMs.
+        if (!vm.canImplement(op)) {
+            return;
+        }
+
+        List argCountList =
+            op.getOperandsCountDescriptor().getPossibleNumOfOperands();
+        assert (argCountList.size() > 0);
+        Iterator it = argCountList.iterator();
+
+        // iterating over possible call signatures
+        while (it.hasNext()) {
+            Integer n = (Integer) it.next();
+            SqlNode [] operands = new SqlNode[n.intValue()];
+            OperandsTypeChecking allowedTypes =
+                op.getOperandsCheckingRule();
+            SqlTypeName[][] rules;
+            if (allowedTypes instanceof
+                OperandsTypeChecking.CompositeOperandsTypeChecking) {
+                OperandsTypeChecking rule =
+                    ((OperandsTypeChecking.CompositeOperandsTypeChecking)
+                    allowedTypes).getRules()[0];
+                if (rule instanceof
+                    OperandsTypeChecking.SimpleOperandsTypeChecking) {
+                    rules =
+                        ((OperandsTypeChecking.SimpleOperandsTypeChecking)
+                        rule).getTypes();
+                } else {
+                    throw Util.needToImplement(rule);
+                }
+            } else if (allowedTypes instanceof
+                OperandsTypeChecking.SimpleOperandsTypeChecking) {
+                rules = ((OperandsTypeChecking.SimpleOperandsTypeChecking)
+                    allowedTypes).getTypes();
+            } else {
+                throw Util.needToImplement(allowedTypes);
+            }
+
+            if (null == allowedTypes) {
+                throw Util.needToImplement("Need to add to exclude list"
+                    + " and manually add test");
+            }
+
+            for (int i = 0; i < n.intValue(); i++) {
+                SqlTypeName typeName = rules[i][0];
+                if (typeName.equals(SqlTypeName.Null)) {
+                    typeName = rules[i][1];
+                } else if (typeName.equals(SqlTypeName.Any)) {
+                    typeName = SqlTypeName.Boolean;
+                }
+
+                SqlDataType dt =
+                    new SqlDataType(new SqlIdentifier(typeName.name, null),
+                        0,
+                        0,
+                        null,
+                        null);
+
+                operands[i] =
+                    opTab.castFunc.createCall(
+                        SqlLiteral.createNull(null),
+                        dt,
+                        null);
+            }
+
+            if (operands.length == 0) {
+                // What we're testing here is the rule 'if any of the operands
+                // are null, the result should be null'. But if there are no
+                // operands, that doesn't apply. So skip this form of the
+                // operator.
+                continue;
+            }
+            SqlCall call = op.createCall(operands, null);
+
+            String sql = "SELECT " + call.toString() + " FROM VALUES(1)";
+            String testName = "NULL-TEST-" + op.name + "-";
+            suite.addTest(
+                new FarragoCalcSystemTest(vm, sql, testName + vm.name));
+
+            //                suite.addTest(new FarragoCalcSystemTest(vmJava, sql, testName+"JAVA"));
+        }
     }
 
     // implement TestCase
@@ -239,15 +267,52 @@ public class FarragoCalcSystemTest extends FarragoTestCase
         throws Exception
     {
         super.setUp();
-        stmt.execute(vmFlag);
+        stmt.execute(vm.getAlterSystemCommand());
     }
 
     protected void runTest()
         throws Throwable
     {
-        resultSet = stmt.executeQuery(sqlToExceute);
+        resultSet = stmt.executeQuery(sqlToExecute);
         Set refSet = new HashSet();
         refSet.add(null);
         compareResultSet(refSet);
+    }
+
+    /**
+     * Defines a virtual machine (FENNEL, JAVA, AUTO) and the operators it can
+     * implement.
+     */
+    public static class VirtualMachine
+    {
+        public final String name;
+
+        private VirtualMachine(String name)
+        {
+            this.name = name;
+        }
+
+        public String getAlterSystemCommand()
+        {
+            return "alter system set \"calcVirtualMachine\" = '" +
+                "CALCVM_" + name + "'";
+        }
+
+        public boolean canImplement(SqlOperator op)
+        {
+            if ((name.equals("JAVA") || name.equals("AUTO")) &&
+                javaTab.get(op) != null) {
+                    return true;
+            }
+            if ((name.equals("FENNEL") || name.equals("AUTO")) &&
+                fennelTab.get(op) != null) {
+                return true;
+            }
+            return false;
+        }
+
+        public static final VirtualMachine Fennel = new VirtualMachine("FENNEL");
+        public static final VirtualMachine Java = new VirtualMachine("JAVA");
+        public static final VirtualMachine Auto = new VirtualMachine("AUTO");
     }
 }

@@ -62,7 +62,8 @@ public class FarragoSqlRegressionTest extends FarragoSqlTest
         throws Exception
     {
         addDiffMask("\\$Id.*\\$");
-        stmt.execute(FarragoCalcSystemTest.vmFennel);
+        stmt.execute(FarragoCalcSystemTest.VirtualMachine.Fennel
+            .getAlterSystemCommand());
         runSqlLineTest(getName());
 
         //        stmt.execute(FarragoCalcSystemTest.vmJava);

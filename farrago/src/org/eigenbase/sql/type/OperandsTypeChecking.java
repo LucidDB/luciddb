@@ -111,25 +111,42 @@ public abstract class OperandsTypeChecking
     public abstract String getAllowedSignatures(SqlOperator op);
 
 
-    public static class SimpleOperandsTypeChecking extends OperandsTypeChecking {
+    /**
+     * Operand type-checking strategy which checks operands against an array
+     * of types.
+     *
+     * <p>For example, the following would allow
+     * <code>foo(Date)</code> or
+     * <code>foo(INTEGER, INTEGER)</code> but disallow
+     * <code>foo(INTEGER)</code>.
+     *
+     * <blockquote><pre>SimpleOperandsTypeChecking(new SqlTypeName[][] {
+     *     {SqlTypeName.Date},
+     *     {SqlTypeName.Int, SqlTypeName.Int}})</pre></blockquote>
+     */
+    public static class SimpleOperandsTypeChecking extends OperandsTypeChecking
+    {
         protected SqlTypeName[][] types;
 
-        public SimpleOperandsTypeChecking()
-        { //empty constructor
-        }
-
-        public SimpleOperandsTypeChecking(SqlTypeName[][] types)
+        /**
+         * Creates a SimpleOperandsTypeChecking object.
+         *
+         * @pre types != null
+         * @pre types.length > 0
+         */
+        public SimpleOperandsTypeChecking(SqlTypeName[][] typeses)
         {
-            Util.pre(null != types, "null!=types");
-            Util.pre(types.length > 0, "types.length>0");
+            Util.pre(null != typeses, "null!=types");
+            //Util.pre(typeses.length > 0, "types.length>0");
 
             //only Null types specified? Prohibit! need more than null
-            for (int i = 0; i < types.length; i++) {
-                Util.pre(types[i].length > 0, "Need to define a type");
+            for (int i = 0; i < typeses.length; i++) {
+                final SqlTypeName[] types = typeses[i];
+                Util.pre(types.length > 0, "Need to define a type");
                 boolean foundOne = false;
-                for (int j = 0; j < types[i].length; j++) {
-                    SqlTypeName sqlType = types[i][j];
-                    if (!sqlType.equals(SqlTypeName.Null)) {
+                for (int j = 0; j < types.length; j++) {
+                    SqlTypeName type = types[j];
+                    if (!type.equals(SqlTypeName.Null)) {
                         foundOne = true;
                         break;
                     }
@@ -140,7 +157,7 @@ public abstract class OperandsTypeChecking
                 }
             }
 
-            this.types = types;
+            this.types = typeses;
         }
 
         public boolean check(
@@ -329,6 +346,13 @@ public abstract class OperandsTypeChecking
     }
 
     //~ STRATEGIES  ------------------------------------------------------
+
+    /**
+     * Parameter type-checking strategy for a function which takes no
+     * arguments.
+     */
+    public static final OperandsTypeChecking typeEmpty =
+        new SimpleOperandsTypeChecking(new SqlTypeName[][] {});
 
     /**
      * Parameter type-checking strategy

@@ -1312,7 +1312,7 @@ public class SqlStdOperatorTable extends SqlOperatorTable
     private static abstract class SqlAbstractUserFunction extends SqlFunction {
         public SqlAbstractUserFunction(String name) {
             super(name, SqlKind.Function, ReturnTypeInference.useVarchar30,
-                null, null, SqlFunction.SqlFuncTypeName.System);
+                null, OperandsTypeChecking.typeEmpty, SqlFunction.SqlFuncTypeName.System);
         }
 
         public OperandsCountDescriptor getOperandsCountDescriptor()

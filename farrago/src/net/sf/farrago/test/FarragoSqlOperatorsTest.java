@@ -22,10 +22,9 @@ package net.sf.farrago.test;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import net.sf.farrago.test.regression.FarragoCalcSystemTest;
-import net.sf.farrago.ojrex.FarragoOJRexImplementorTable;
 import org.eigenbase.sql.SqlOperator;
-import org.eigenbase.sql.SqlSyntax;
 import org.eigenbase.sql.SqlOperatorTable;
+import org.eigenbase.sql.SqlSyntax;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.test.AbstractSqlTester;
 import org.eigenbase.sql.test.SqlOperatorIterator;
@@ -36,9 +35,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.regex.Pattern;
-
-import com.disruptivetech.farrago.calc.CalcRexImplementorTableImpl;
-import com.disruptivetech.farrago.calc.CalcRexImplementorTable;
 
 
 /**
@@ -52,27 +48,23 @@ import com.disruptivetech.farrago.calc.CalcRexImplementorTable;
 public class FarragoSqlOperatorsTest extends FarragoTestCase
 {
     private static final SqlStdOperatorTable opTab = SqlOperatorTable.std();
-    private static FarragoOJRexImplementorTable javaTab =
-        new FarragoOJRexImplementorTable(opTab);
-    private static CalcRexImplementorTable fennelTab =
-        CalcRexImplementorTableImpl.std();
     private static final boolean bug260fixed = false;
 
     //~ Instance fields -------------------------------------------------------
 
-    String vmFlag;
+    FarragoCalcSystemTest.VirtualMachine vm;
     SqlOperator operator;
 
     //~ Constructors ----------------------------------------------------------
 
     public FarragoSqlOperatorsTest(
-        String vmFlag,
+        FarragoCalcSystemTest.VirtualMachine vm,
         SqlOperator operator,
         String testName)
         throws Exception
     {
         super(testName);
-        this.vmFlag = vmFlag;
+        this.vm = vm;
         this.operator = operator;
     }
 
@@ -82,33 +74,23 @@ public class FarragoSqlOperatorsTest extends FarragoTestCase
         throws Exception
     {
         TestSuite suite = new TestSuite();
-        addTests(suite, FarragoCalcSystemTest.vmAuto, "AUTO");
-        addTests(suite, FarragoCalcSystemTest.vmFennel, "FENNEL");
-        addTests(suite, FarragoCalcSystemTest.vmJava, "JAVA");
+        addTests(suite, FarragoCalcSystemTest.VirtualMachine.Auto);
+        addTests(suite, FarragoCalcSystemTest.VirtualMachine.Fennel);
+        addTests(suite, FarragoCalcSystemTest.VirtualMachine.Java);
 
         return wrappedSuite(suite);
     }
 
     private static void addTests(TestSuite suite,
-        String vmFlag,
-        String vmName)
+        FarragoCalcSystemTest.VirtualMachine vm)
         throws Exception
     {
         Iterator operatorsIt = new SqlOperatorIterator();
         while (operatorsIt.hasNext()) {
             SqlOperator op = (SqlOperator) operatorsIt.next();
             String testName = "SQL-TESTER-" + op.name + "-";
-            if (vmName.equals("JAVA")) {
-                // Exclude operators which don't have java implementations.
-                if (javaTab.get(op) == null) {
-                    continue;
-                }
-            }
-            if (vmName.equals("FENNEL")) {
-                // Exclude operators which don't have fennel implementations.
-                if (fennelTab.get(op) == null) {
-                    continue;
-                }
+            if (!vm.canImplement(op)) {
+                continue;
             }
             if (!bug260fixed) {
                 if (op == opTab.orOperator ||
@@ -122,8 +104,8 @@ public class FarragoSqlOperatorsTest extends FarragoTestCase
                 }
             }
             suite.addTest(
-                new FarragoSqlOperatorsTest(vmFlag,
-                    op, testName + vmName));
+                new FarragoSqlOperatorsTest(vm,
+                    op, testName + vm.name));
         }
     }
 
@@ -131,7 +113,7 @@ public class FarragoSqlOperatorsTest extends FarragoTestCase
         throws Exception
     {
         super.setUp();
-        stmt.execute(vmFlag);
+        stmt.execute(vm.getAlterSystemCommand());
     }
 
     protected void runTest()

@@ -43,7 +43,8 @@ public abstract class SqlSyntax extends EnumeratedValues.BasicValue
     public static final SqlSyntax Function =
         new SqlSyntax("Function", Function_ordinal) {
             public void unparse(SqlWriter writer, SqlOperator operator,
-                SqlNode [] operands, int leftPrec, int rightPrec) {
+                SqlNode [] operands, int leftPrec, int rightPrec)
+            {
                 SqlUtil.unparseFunctionSyntax(operator,writer,operands,
                     true);
             }
@@ -54,7 +55,8 @@ public abstract class SqlSyntax extends EnumeratedValues.BasicValue
     public static final SqlSyntax Binary =
         new SqlSyntax("Binary", Binary_ordinal) {
             public void unparse(SqlWriter writer, SqlOperator operator,
-                SqlNode[] operands, int leftPrec, int rightPrec) {
+                SqlNode[] operands, int leftPrec, int rightPrec)
+            {
                 SqlUtil.unparseBinarySyntax(operator, operands, writer,
                     leftPrec, rightPrec);
             }
@@ -65,7 +67,8 @@ public abstract class SqlSyntax extends EnumeratedValues.BasicValue
     public static final SqlSyntax Prefix =
         new SqlSyntax("Prefix", Prefix_ordinal) {
             public void unparse(SqlWriter writer, SqlOperator operator,
-                SqlNode[] operands, int leftPrec, int rightPrec) {
+                SqlNode[] operands, int leftPrec, int rightPrec)
+            {
                 assert(operands.length == 1);
                 writer.print(operator.name);
                 writer.print(' ');
@@ -79,7 +82,8 @@ public abstract class SqlSyntax extends EnumeratedValues.BasicValue
     public static final SqlSyntax Postfix =
         new SqlSyntax("Postfix", Postfix_ordinal) {
             public void unparse(SqlWriter writer, SqlOperator operator,
-                SqlNode[] operands, int leftPrec, int rightPrec) {
+                SqlNode[] operands, int leftPrec, int rightPrec)
+            {
                 assert(operands.length == 1);
                 operands[0].unparse(writer, operator.leftPrec,
                     operator.rightPrec);
@@ -94,7 +98,8 @@ public abstract class SqlSyntax extends EnumeratedValues.BasicValue
     public static final SqlSyntax Special =
         new SqlSyntax("Special", Special_ordinal) {
                 public void unparse(SqlWriter writer, SqlOperator operator,
-                        SqlNode[] operands, int leftPrec, int rightPrec) {
+                    SqlNode[] operands, int leftPrec, int rightPrec)
+                {
                     // You probably need to override the operator's unparse
                     // method.
                     throw Util.needToImplement(this);
@@ -106,9 +111,10 @@ public abstract class SqlSyntax extends EnumeratedValues.BasicValue
     public static final SqlSyntax FunctionId =
         new SqlSyntax("FunctionId",FunctionId_ordinal) {
             public void unparse(SqlWriter writer, SqlOperator operator,
-                    SqlNode [] operands, int leftPrec, int rightPrec) {
+                SqlNode [] operands, int leftPrec, int rightPrec)
+            {
                 SqlUtil.unparseFunctionSyntax(operator,writer,operands,
-                        true);
+                    false);
             }
         };
     public static final int Internal_ordinal = 6;
@@ -119,7 +125,8 @@ public abstract class SqlSyntax extends EnumeratedValues.BasicValue
     public static final SqlSyntax Internal =
         new SqlSyntax("Internal", Internal_ordinal) {
             public void unparse(SqlWriter writer, SqlOperator operator,
-                SqlNode[] operands, int leftPrec, int rightPrec) {
+                SqlNode[] operands, int leftPrec, int rightPrec)
+            {
                 throw Util.newInternal("Internal operator '" + operator +
                     "' cannot be un-parsed");
             }
