@@ -22,6 +22,7 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/disruptivetech/xo/CalcExcn.h"
 #include "fennel/disruptivetech/xo/CalcExecStream.h"
+#include "fennel/exec/ExecStreamGraph.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
@@ -33,7 +34,7 @@ void CalcExecStream::prepare(CalcExecStreamParams const &params)
     // Force instantiation of the calculator's instruction tables.
     (void) CalcInit::instance();
 
-    pCalc.reset(new Calculator());
+    pCalc.reset(new Calculator(&pGraph->getDynamicParamManager()));
     if (isTracing()) {
         pCalc->initTraceSource(&(getTraceTarget()), "calc");
     }

@@ -83,7 +83,7 @@ CalcMiscTest::testCalcStatusReg()
 
     // BOOST_MESSAGE(pg.str());
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -158,7 +158,7 @@ CalcMiscTest::testCalcRefInst()
 
     //    BOOST_MESSAGE(pg.str());
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -244,7 +244,7 @@ CalcMiscTest::testCalcReturn()
 
     // BOOST_MESSAGE(pg.str());
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -292,7 +292,7 @@ CalcMiscTest::testCalcRaise()
 
     //    BOOST_MESSAGE(pg.str());
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -349,7 +349,7 @@ CalcMiscTest::testCalcContinueOnException()
 
     BOOST_MESSAGE(pg.str());
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());

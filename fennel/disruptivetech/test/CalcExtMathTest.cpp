@@ -134,7 +134,7 @@ CalcExtMathTest::testCalcExtMathLogarithms()
     pg << "REF O0, L0;" << endl;
     pg << "REF O1, L1;" << endl;
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -178,7 +178,7 @@ CalcExtMathTest::testCalcExtMathLogarithmsFails()
 
     int n = sizeof(tests) / sizeof(tests[0]);
     for( int i=0; i<n; i++ ) {
-        Calculator calc;
+        Calculator calc(0);
         sprintf(buff, pg, tests[i][1], tests[i][2], tests[i][0]);
         try {
             calc.assemble(buff);
@@ -224,7 +224,7 @@ CalcExtMathTest::testCalcExtMathAbs()
 
     //BOOST_MESSAGE(pg.str());
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -285,7 +285,7 @@ CalcExtMathTest::testCalcExtMathPow()
         sprintf(buff, mProgramPower.c_str(),
                 tests[i][0], tests[i][1], tests[i][2], tests[i][3]);
 
-        Calculator calc;
+        Calculator calc(0);
         try {
             calc.assemble(buff);
         }
@@ -319,7 +319,7 @@ CalcExtMathTest::testCalcExtMathPowFails()
     
     int n = sizeof(tests) / sizeof(tests[0]);
     for( int i=0; i<n; i++ ) {
-        Calculator calc;
+        Calculator calc(0);
         sprintf(buff, mProgramPower.c_str(),
                 tests[i][0], tests[i][1], tests[i][2], tests[i][3]);
 	

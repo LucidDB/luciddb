@@ -30,6 +30,8 @@ import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexUtil;
+import org.eigenbase.sql.type.SqlTypeUtil;
 
 
 /**
@@ -153,10 +155,7 @@ public abstract class ProjectRelBase extends SingleRel
         if (!isBoxed()) {
             return exps[0].getType();
         }
-        final RelDataType [] types = new RelDataType[exps.length];
-        for (int i = 0; i < exps.length; ++i) {
-            types[i] = exps[i].getType();
-        }
+        final RelDataType [] types = SqlTypeUtil.collectTypes(exps);
         if (((flags & Flags.AnonFields) == Flags.AnonFields) && false) {
             return cluster.typeFactory.createJoinType(types);
         } else {

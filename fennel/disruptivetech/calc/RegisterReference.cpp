@@ -34,6 +34,7 @@ RegisterReference::setCalc(Calculator* calcP) {
     mRegisterSetP = calcP->mRegisterTuple;
     mRegisterSetDescP = calcP->mRegisterSetDescriptor;
     mResetP = &(calcP->mRegisterReset);
+    mPDynamicParamManager = calcP->getDynamicParamManager();
     if (mSetIndex == EOutput && calcP->mOutputRegisterByReference) {
         //! See Calculator#outputRegisterByReference()
         mProp |= (EPropByRefOnly | EPropReadOnly);

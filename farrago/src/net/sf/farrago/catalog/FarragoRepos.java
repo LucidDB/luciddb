@@ -97,9 +97,9 @@ public class FarragoRepos extends FarragoMetadataFactory
     private final boolean isFennelEnabled;
 
     private final FarragoCompoundAllocation allocations;
-    
+
     private final Set localizedClasses;
-    
+
     private String memStorageId;
 
     //~ Constructors ----------------------------------------------------------
@@ -142,7 +142,7 @@ public class FarragoRepos extends FarragoMetadataFactory
         super.setRootPackage(farragoPackage);
 
         mdrRepository = modelLoader.getMdrRepos();
-        
+
         // Create special in-memory storage for transient objects
         try {
             NBMDRepositoryImpl nbRepos = (NBMDRepositoryImpl) mdrRepository;
@@ -211,7 +211,7 @@ public class FarragoRepos extends FarragoMetadataFactory
             refClass.refMetaObject().refGetValue("name").toString();
         return "Uml" + className;
     }
-    
+
     private Map stringToMap(String propString)
     {
         // TODO:  find something industrial strength
@@ -240,7 +240,7 @@ public class FarragoRepos extends FarragoMetadataFactory
         }
         return map;
     }
-    
+
     /**
      * @return MDRepository storing this Farrago repository
      */

@@ -157,7 +157,7 @@ CalcInstFactoryTest::testBool()
 
     BOOST_MESSAGE(pg.str());
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -209,7 +209,7 @@ CalcInstFactoryTest::testBoolNative()
 
     BOOST_MESSAGE(pg.str());
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -258,7 +258,7 @@ CalcInstFactoryTest::testIntegralNative()
 
     BOOST_MESSAGE(pg.str());
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -305,7 +305,7 @@ CalcInstFactoryTest::testIntegralPointer()
 
     BOOST_MESSAGE(pg.str());
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -345,7 +345,7 @@ CalcInstFactoryTest::testPointerIntegral()
 
     BOOST_MESSAGE(pg.str());
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -398,7 +398,7 @@ CalcInstFactoryTest::testBoolPointer()
 
     BOOST_MESSAGE(pg.str());
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -441,8 +441,8 @@ CalcInstFactoryTest::testJump()
 
     BOOST_MESSAGE("|" << pg.str() << "|");
 
-    Calculator calc;
-    
+    Calculator calc(0);
+
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -493,7 +493,7 @@ CalcInstFactoryTest::testNativeNative()
 
     BOOST_MESSAGE(pg.str());
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -543,7 +543,7 @@ CalcInstFactoryTest::testPointerPointer()
 
     BOOST_MESSAGE(pg.str());
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -569,7 +569,7 @@ CalcInstFactoryTest::testReturn()
 
     BOOST_MESSAGE(pg.str());
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());

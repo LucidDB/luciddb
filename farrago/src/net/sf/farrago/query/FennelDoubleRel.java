@@ -40,8 +40,8 @@ abstract class FennelDoubleRel extends AbstractRelNode implements FennelRel
 {
     //~ Instance fields -------------------------------------------------------
 
-    RelNode left;
-    RelNode right;
+    protected RelNode left;
+    protected RelNode right;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -124,7 +124,7 @@ abstract class FennelDoubleRel extends AbstractRelNode implements FennelRel
      *
      * @return repos for object definitions
      */
-    FarragoRepos getRepos()
+    protected FarragoRepos getRepos()
     {
         return getPreparingStmt().getRepos();
     }

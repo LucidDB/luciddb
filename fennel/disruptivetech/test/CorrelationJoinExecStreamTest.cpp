@@ -81,8 +81,9 @@ void CorrelationJoinExecStreamTest::testCorrelationJoin()
     rightStreamEmbryo.getStream()->setName("RightProducerExecStream");
 
     CorrelationJoinExecStreamParams paramsJoin;
-    paramsJoin.leftAttributeOrdinal = 0;
-    paramsJoin.dynamicParamId = dynamicParamId;
+    
+    Correlation correlation(dynamicParamId, 0);
+    paramsJoin.correlations.push_back(correlation);
    
     ExecStreamEmbryo joinStreamEmbryo;
     joinStreamEmbryo.init(new CorrelationJoinExecStream(),paramsJoin);

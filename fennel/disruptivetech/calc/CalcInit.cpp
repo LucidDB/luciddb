@@ -44,6 +44,7 @@ CalcInit::instance()
     ExtDateTimeRegister(InstructionFactory::getExtendedInstructionTable());
     ExtRegExpRegister(InstructionFactory::getExtendedInstructionTable());
     ExtCastRegister(InstructionFactory::getExtendedInstructionTable());
+    ExtDynamicVariableRegister(InstructionFactory::getExtendedInstructionTable());
 
 
     // Add new init calls here

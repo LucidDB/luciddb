@@ -23,9 +23,10 @@ package org.eigenbase.rel;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.sql.type.SqlTypeUtil;
 
 /**
- * A relational expression which collapses a multiply rows into one
+ * A relational expression which collapses multiply rows into one
  *
  * @author Wael Chatila 
  * @since Dec 12, 2004
@@ -33,20 +34,31 @@ import org.eigenbase.reltype.RelDataType;
  */
 public class CollectRel extends SingleRel {
 
-    public CollectRel(RelOptCluster cluster, RelNode child) {
+    public final String name;
+
+    public CollectRel(RelOptCluster cluster, RelNode child, String name) {
         super(cluster, child);
+        this.name = name;
     }
 
     // override Object (public, does not throw CloneNotSupportedException)
     public Object clone() {
-        return new CollectRel(cluster, RelOptUtil.clone(child));
+        return new CollectRel(cluster, RelOptUtil.clone(child), name);
     }
 
     protected RelDataType deriveRowType()
     {
-        RelDataType ret =
-            cluster.typeFactory.createMultisetType(child.getRowType(),-1);
-        return cluster.typeFactory.createTypeWithNullability(
-            ret, child.getRowType().isNullable());
+        return deriveCollectRowType(this, name);
+    }
+
+    public static RelDataType deriveCollectRowType(SingleRel rel, String name)
+    {
+        RelDataType childType = rel.child.getRowType();
+        assert(childType.isStruct());
+        RelDataType ret = SqlTypeUtil.createMultisetType(
+            rel.cluster.typeFactory, childType, false);
+        ret = rel.cluster.typeFactory.createStructType(
+            new RelDataType[]{ret}, new String[]{name} );
+        return rel.cluster.typeFactory.createTypeWithNullability(ret, false);
     }
 }

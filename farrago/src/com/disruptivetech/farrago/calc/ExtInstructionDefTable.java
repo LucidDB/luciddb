@@ -53,6 +53,8 @@ public class ExtInstructionDefTable
         new CalcProgramBuilder.ExtInstrDef("strLenCharA", 2);
     public static final CalcProgramBuilder.ExtInstrDef concat =
         new CalcProgramBuilder.ExtInstrSizeDef("strCatA");
+    public static final CalcProgramBuilder.ExtInstrDef dynamicVariable =
+        new CalcProgramBuilder.ExtInstrDef("dynamicVariable", 2);
     public static final CalcProgramBuilder.ExtInstrDef like =
         new CalcProgramBuilder.ExtInstrSizeDef("strLikeA");
     public static final CalcProgramBuilder.ExtInstrDef localTime =

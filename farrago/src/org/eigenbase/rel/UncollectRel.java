@@ -45,8 +45,18 @@ public class UncollectRel extends SingleRel {
 
     protected RelDataType deriveRowType()
     {
-        RelDataType ret = child.getRowType().getComponentType();
-        assert(null!=ret);
+        return deriveUncollectRowType(this);
+    }
+
+    public static RelDataType deriveUncollectRowType(SingleRel rel)
+    {
+        RelDataType inputType = rel.child.getRowType();
+        assert(inputType.isStruct());
+        assert(1 == inputType.getFields().length);
+        RelDataType ret =
+            inputType.getFields()[0].getType().getComponentType();
+        assert(null != ret);
+        assert(ret.isStruct());
         return ret;
     }
 }

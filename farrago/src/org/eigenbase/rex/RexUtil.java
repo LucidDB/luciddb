@@ -23,11 +23,9 @@ package org.eigenbase.rex;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlLiteral;
-import org.eigenbase.sql.SqlKind;
-import org.eigenbase.sql.SqlCall;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -183,6 +181,32 @@ public class RexUtil
         return RexLiteral.isNullLiteral(node)
             || ((node.getKind() == RexKind.Cast)
             && isNull(((RexCall) node).operands[0]));
+    }
+
+    /**
+     * Returns wheter a given node contains a RexCall with a specified operator
+     * @param operator to look for
+     * @param node a RexNode tree
+     */
+    public static RexCall findOperatorCall(final SqlOperator operator,
+                                           RexNode node)
+    {
+        try {
+            RexShuttle shuttle = new RexShuttle() {
+                public RexNode visit(RexCall call)
+                {
+                    if (call.op.equals(operator)) {
+                        throw new Util.FoundOne(call);
+                    }
+                    return super.visit(call);
+                }
+            };
+            shuttle.visit(node);
+            return null;
+        } catch (Util.FoundOne e) {
+            Util.swallow(e, null);
+            return (RexCall) e.getNode();
+        }
     }
 }
 

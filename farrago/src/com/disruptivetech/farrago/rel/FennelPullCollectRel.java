@@ -26,6 +26,7 @@ import net.sf.farrago.fem.fennel.FemTupleDescriptor;
 import net.sf.farrago.catalog.FarragoRepos;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.CollectRel;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.type.SqlTypeName;
 
@@ -43,10 +44,14 @@ import org.eigenbase.sql.type.SqlTypeName;
  * @version $Id$
  */
 public class FennelPullCollectRel extends FennelSingleRel
-                                  implements FennelPullRel {
+                                  implements FennelPullRel
+{
+    final String name;
 
-    public FennelPullCollectRel(RelOptCluster cluster, RelNode child) {
+    public FennelPullCollectRel(
+        RelOptCluster cluster, RelNode child, String name) {
         super(cluster, child);
+        this.name = name;
     }
 
     public CallingConvention getConvention() {
@@ -55,10 +60,7 @@ public class FennelPullCollectRel extends FennelSingleRel
 
     protected RelDataType deriveRowType()
     {
-        RelDataType ret =
-            cluster.typeFactory.createMultisetType(child.getRowType(),-1);
-        return cluster.typeFactory.createTypeWithNullability(
-            ret, child.getRowType().isNullable());
+        return CollectRel.deriveCollectRowType(this, name);
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner) {
@@ -66,22 +68,22 @@ public class FennelPullCollectRel extends FennelSingleRel
     }
 
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor) {
-        FemCollectTupleStreamDef collectStream =
+        FemCollectTupleStreamDef collectStreamDef =
             getRepos().newFemCollectTupleStreamDef();
 
-        collectStream.getInput().add(
+        collectStreamDef.getInput().add(
             implementor.visitFennelChild((FennelRel) child));
-        FarragoRepos repos = getRepos();
-        FemTupleDescriptor outTupleDesc = repos.newFemTupleDescriptor();
+        FemTupleDescriptor outTupleDesc = getRepos().newFemTupleDescriptor();
         RelDataType type=
             cluster.typeFactory.createSqlType(SqlTypeName.Varbinary, 4096);
-        FennelRelUtil.addTupleAttrDescriptor(repos, outTupleDesc, type);
-        collectStream.setOutputDesc(outTupleDesc);
-        return collectStream;
+        type = cluster.typeFactory.createTypeWithNullability(type, true);
+        FennelRelUtil.addTupleAttrDescriptor(getRepos(), outTupleDesc, type);
+        collectStreamDef.setOutputDesc(outTupleDesc);
+        return collectStreamDef;
     }
 
     // override Object (public, does not throw CloneNotSupportedException)
     public Object clone() {
-        return new FennelPullCollectRel(cluster, RelOptUtil.clone(child));
+        return new FennelPullCollectRel(cluster, RelOptUtil.clone(child),name);
     }
 }

@@ -40,7 +40,6 @@ using namespace fennel;
 bool verbose = false;
 bool showProgram = true;
 
-
 template <typename T>
 class RegisterTestInfo
 {
@@ -317,8 +316,9 @@ public:
     explicit 
     CalcAssemblerTestCase(uint line, const char* desc, const char* code)
         : mDescription(desc), mProgram(code), mAssemblerError(NULL), 
-          mInputTuple(NULL), mExpectedOutputTuple(NULL), mInputBuf(NULL), mExpOutputBuf(NULL),
-          mFailed(false), mAssembled(false), mID(++testID), mLine(line)
+          mInputTuple(NULL), mExpectedOutputTuple(NULL), mInputBuf(NULL),
+          mExpOutputBuf(NULL), mFailed(false), mAssembled(false), 
+          mID(++testID), mLine(line), mCalc(0)
     { }
 
     ~CalcAssemblerTestCase() 

@@ -21,17 +21,13 @@ package net.sf.farrago.type;
 
 import java.nio.charset.Charset;
 import java.sql.*;
-import java.sql.Date;
 import java.util.*;
 
 import javax.jmi.model.*;
-import javax.jmi.reflect.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.datatypes.CwmTypeAlias;
 import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.runtime.*;
@@ -75,7 +71,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     public FarragoTypeFactoryImpl(FarragoRepos repos)
     {
         super(new OJClassMap(FarragoSyntheticObject.class));
-            
+
         this.repos = repos;
 
         mapTypeToOJClass = new HashMap();
@@ -148,12 +144,18 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         } else if (classifier instanceof FemSqlcollectionType) {
             FemSqlcollectionType collectionType =
                 (FemSqlcollectionType) classifier;
+            assert(collectionType instanceof FemSqlmultisetType) :
+                "todo array type creation not yet implemented";
             FemSqltypeAttribute femComponentType = (FemSqltypeAttribute)
                 collectionType.getFeature().get(0);
             RelDataType componentType =
                 createCwmElementType(femComponentType);
-            assert(collectionType instanceof FemSqlmultisetType) :
-                   "todo array type creation not yet implemented";
+
+            if (!componentType.isStruct()) {
+                componentType = createStructType(
+                    new RelDataType[]{componentType},
+                    new String[]{"EXP$0"});
+            }
             type = createMultisetType(componentType, -1);
         } else if (classifier instanceof FemSqlobjectType) {
             FemSqlobjectType objectType =
@@ -172,7 +174,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         type = createTypeWithNullability(type, isNullable);
         return type;
     }
-    
+
     // implement FarragoTypeFactory
     public RelDataType createStructTypeFromFeatureList(
         final List featureList)
@@ -206,7 +208,6 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     // implement FarragoTypeFactory
     public RelDataType createResultSetType(final ResultSetMetaData metaData)
     {
-        final FarragoTypeFactoryImpl factory = this;
         return createStructType(
             new RelDataTypeFactory.FieldInfo() {
                 public int getFieldCount()
@@ -416,6 +417,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         case SqlTypeName.Varchar_ordinal:
         case SqlTypeName.Binary_ordinal:
         case SqlTypeName.Varbinary_ordinal:
+        case SqlTypeName.Multiset_ordinal:
             return newStringOJClass(
                 declarer, type);
         default:
@@ -456,8 +458,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     }
 
     private OJClass newHolderOJClass(
-        Class superclass, 
-        MemberDeclarationList memberDecls, 
+        Class superclass,
+        MemberDeclarationList memberDecls,
         OJClass declarer,
         RelDataType type)
     {
@@ -493,7 +495,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             ojClass.getName(),
             ojClass);
         return ojClass;
-        
+
     }
 
     // implement FarragoTypeFactory
@@ -501,7 +503,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         RelDataType type,
         Expression expr)
     {
-        if (SqlTypeUtil.isDatetime(type) || 
+        if (SqlTypeUtil.isDatetime(type) ||
             ((getClassForPrimitive(type) != null) && type.isNullable()))
         {
             return new FieldAccess(expr, NullablePrimitive.VALUE_FIELD_NAME);
@@ -509,7 +511,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             return expr;
         }
     }
-    
+
     // implement FarragoTypeFactory
     public Class getClassForPrimitive(
         RelDataType type)
@@ -542,7 +544,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             return null;
         }
     }
-    
+
     // implement FarragoTypeFactory
     public Class getClassForJavaParamStyle(
         RelDataType type)
@@ -575,7 +577,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             return getClassForPrimitive(type);
         }
     }
-    
+
     // implement RelDataTypeFactory
     public RelDataType createJavaType(
         Class clazz)
@@ -583,7 +585,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         RelDataType type = super.createJavaType(clazz);
         return addDefaultAttributes(type);
     }
-    
+
     // implement RelDataTypeFactory
     public RelDataType createSqlType(
         SqlTypeName typeName)
@@ -628,3 +630,4 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
 }
 
 // End FarragoTypeFactoryImpl.java
+

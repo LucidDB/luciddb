@@ -130,8 +130,10 @@ public abstract class RelOptUtil
     }
 
     /**
-     * Returns a list of variables used by a relational expression or its
-     * descendants. The list may contain duplicates.
+     * Returns a set of variables used by a relational expression or its
+     * descendants.
+     * The set may contain duplicates.
+     * The item type is the same as {@link org.eigenbase.rex.RexVariable#getName}
      */
     public static Set getVariablesUsed(RelNode rel)
     {

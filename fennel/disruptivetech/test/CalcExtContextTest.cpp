@@ -261,7 +261,7 @@ CalcExtContextTest::testCalcExtContext()
 
     //    BOOST_MESSAGE(pg.str());
     
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());

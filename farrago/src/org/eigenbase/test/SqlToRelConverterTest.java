@@ -256,6 +256,53 @@ public class SqlToRelConverterTest extends TestCase
             "        TableAccessRel(table=[[DEPT]])" + NL);
 
     }
+
+    public void testMultiset() {
+        check("select multiset(select deptno from dept) from values(true)",
+            "ProjectRel(EXPR$0=[$1])" + NL +
+            "  CorrelatorRel(condition=[true], joinType=[full])" + NL +
+            "    ProjectRel(EXPR$0=[$0])" + NL +
+            "      ProjectRel(EXPR$0=[true])" + NL +
+            "        OneRowRel" + NL +
+            "    CollectRel" + NL +
+            "      ProjectRel(DEPTNO=[$0])" + NL +
+            "        TableAccessRel(table=[[DEPT]])" + NL);
+
+        check("select 'a',multiset[10] from dept",
+            "ProjectRel(EXPR$0=[_ISO-8859-1'a'], EXPR$1=[$2])" + NL +
+            "  CorrelatorRel(condition=[true], joinType=[full])" + NL +
+            "    TableAccessRel(table=[[DEPT]])" + NL +
+            "    CollectRel" + NL +
+            "      UnionRel(all=[true])" + NL +
+            "        ProjectRel(EXPR$0=[10])" + NL +
+            "          OneRowRel" + NL);
+
+        check("select 'abc',multiset[deptno,sal] from emp",
+            "ProjectRel(EXPR$0=[_ISO-8859-1'abc'], EXPR$1=[$8])" + NL +
+            "  CorrelatorRel(condition=[true], joinType=[full])" + NL +
+            "    TableAccessRel(table=[[EMP]])" + NL +
+            "    CollectRel" + NL +
+            "      UnionRel(all=[true])" + NL +
+            "        ProjectRel(DEPTNO=[$cor0.DEPTNO])" + NL +
+            "          OneRowRel" + NL +
+            "        ProjectRel(SAL=[$cor1.SAL])" + NL +
+            "          OneRowRel" + NL);
+    }
+
+    public void testCorrelationJoin() {
+        check("select *," +
+            "         multiset(select * from emp where deptno=dept.deptno) " +
+            "               as empset" +
+            "      from dept",
+            
+            "ProjectRel(DEPTNO=[$0], NAME=[$1], EMPSET=[$2])" + NL +
+            "  CorrelatorRel(condition=[true], joinType=[full])" + NL +
+            "    TableAccessRel(table=[[DEPT]])" + NL +
+            "    CollectRel" + NL +
+            "      ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])" + NL +
+            "        FilterRel(condition=[=($7, $cor0.DEPTNO)])" + NL +
+            "          TableAccessRel(table=[[EMP]])" + NL);
+    }
 }
 
 // End ConverterTest.java

@@ -23,6 +23,7 @@
 #include "fennel/disruptivetech/xo/CalcExecStream.h"
 #include "fennel/disruptivetech/xo/CollectExecStream.h"
 #include "fennel/disruptivetech/xo/UncollectExecStream.h"
+#include "fennel/disruptivetech/xo/CorrelationJoinExecStream.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
 
 // DEPRECATED
@@ -69,6 +70,19 @@ class ExecStreamSubFactory_dt
                 new CalcExecStream(),
                 params);
         }
+    }
+
+    virtual void visit(ProxyCorrelationJoinStreamDef &streamDef) 
+    {
+        CorrelationJoinExecStreamParams params;
+        pExecStreamFactory->readTupleStreamParams(params, streamDef);
+        SharedProxyCorrelation pCorrelation = streamDef.getCorrelations();
+        for ( /* empty */; pCorrelation; ++pCorrelation) {
+            Correlation correlation(
+                            pCorrelation->getId(), pCorrelation->getOffset());
+            params.correlations.push_back(correlation);
+        }
+        pEmbryo->init(new CorrelationJoinExecStream(), params);
     }
 
     virtual void visit(ProxyCollectTupleStreamDef &streamDef) 

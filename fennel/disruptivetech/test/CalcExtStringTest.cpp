@@ -205,7 +205,7 @@ CalcExtStringTest::testCalcExtStringCatA2()
     // make output available
     refLocalOutput(pg, 6);
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -288,7 +288,7 @@ CalcExtStringTest::testCalcExtStringCatA3()
     // make output available
     refLocalOutput(pg, 9);
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -369,7 +369,7 @@ CalcExtStringTest::testCalcExtStringCmpA()
     // make output available
     refLocalOutput(pg, 10);
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -444,7 +444,7 @@ CalcExtStringTest::testCalcExtStringCmpOct()
     // make output available
     refLocalOutput(pg, 10);
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -513,7 +513,7 @@ CalcExtStringTest::testCalcExtStringLenBitA()
     // make output available
     refLocalOutput(pg, 6);
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -578,7 +578,7 @@ CalcExtStringTest::testCalcExtStringLenCharA()
     // make output available
     refLocalOutput(pg, 10);
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -643,7 +643,7 @@ CalcExtStringTest::testCalcExtStringLenOctA()
     // make output available
     refLocalOutput(pg, 6);
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -719,7 +719,7 @@ CalcExtStringTest::testCalcExtStringOverlayA4()
     // make output available
     refLocalOutput(pg, 12);
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -819,7 +819,7 @@ CalcExtStringTest::testCalcExtStringOverlayA5()
     // make output available
     refLocalOutput(pg, 16);
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -915,7 +915,7 @@ CalcExtStringTest::testCalcExtStringPosA()
     // make output available
     refLocalOutput(pg, 8);
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -982,7 +982,7 @@ CalcExtStringTest::testCalcExtStringSubStringA3()
     // make output available
     refLocalOutput(pg, 8);
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -1067,7 +1067,7 @@ CalcExtStringTest::testCalcExtStringSubStringA4()
     // make output available
     refLocalOutput(pg, 14);
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -1170,7 +1170,7 @@ CalcExtStringTest::testCalcExtStringToANull()
 
     // make output available
     refLocalOutput(pg, 15);
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -1236,7 +1236,7 @@ CalcExtStringTest::testCalcExtStringToLower()
     // make output available
     refLocalOutput(pg, 5);
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -1307,7 +1307,7 @@ CalcExtStringTest::testCalcExtStringToUpper()
     // make output available
     refLocalOutput(pg, 5);
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -1419,7 +1419,7 @@ CalcExtStringTest::testCalcExtStringTrim()
     // make output available
     refLocalOutput(pg, 30);
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());

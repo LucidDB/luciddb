@@ -144,7 +144,7 @@ CalcCastTest::testRoundInstruction()
 
     BOOST_MESSAGE(pg.str());
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -301,7 +301,7 @@ CalcCastTest::testExe(SetFunction setF,
 
     BOOST_MESSAGE(pg.str());
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());

@@ -66,7 +66,7 @@ public class SqlValidator
      * objects at these positions
      */
     protected final HashMap sqlids = new HashMap();
-    
+
     /**
      * Maps ParsePosition strings to the {@link Scope} scope
      * objects at these positions
@@ -264,7 +264,7 @@ public class SqlValidator
      * @param topNode top of expression tree in which to lookup completion hints
      * @param pp indicates the position in the sql statement we want to get
      * completion hints for. For example,
-     * "select a.ename, b.deptno from sales.emp a join sales.dept b 
+     * "select a.ename, b.deptno from sales.emp a join sales.dept b
      * "on a.deptno=b.deptno where empno=1";
      * setting pp to 'Line 1, Column 17' returns all the possible column names
      * that can be selected from sales.dept table
@@ -295,7 +295,7 @@ public class SqlValidator
     }
 
     /**
-     * Look up completion hints for a syntatically correct select SQL 
+     * Look up completion hints for a syntatically correct select SQL
      * that has been parsed into an expression tree
      *
      * @param select the Select node of the parsed expression tree
@@ -312,7 +312,7 @@ public class SqlValidator
         Scope dummyScope = (Scope)idscopes.get(pp.toString());
         if (dummyId == null || dummyScope == null) {
             SqlNode fromNode = select.getFrom();
-            return lookupFromHints(fromNode, 
+            return lookupFromHints(fromNode,
                 getScope(select, SqlSelect.FROM_OPERAND), pp);
         } else {
             return dummyId.findValidOptions(this, dummyScope);
@@ -321,8 +321,8 @@ public class SqlValidator
 
 
 
-    private String[] lookupFromHints(SqlNode node, 
-        Scope scope, SqlParserPos pp) 
+    private String[] lookupFromHints(SqlNode node,
+        Scope scope, SqlParserPos pp)
     {
         final Namespace ns = getNamespace(node);
         if (ns instanceof IdentifierNamespace) {
@@ -815,7 +815,7 @@ public class SqlValidator
         if (operand instanceof SqlSelect) {
             return getValidatedNodeType(operand);
         }
-        
+
         if (operand instanceof SqlIdentifier) {
             SqlIdentifier id = (SqlIdentifier) operand;
 
@@ -914,10 +914,8 @@ public class SqlValidator
                 subSelect.validateExpr(this, scope);
                 Namespace ns = getNamespace(subSelect);
                 assert(null!=ns.getRowType());
-                final RelDataType ret =
-                    typeFactory.createMultisetType(ns.getRowType(),-1);
-                return typeFactory.createTypeWithNullability(
-                    ret, ns.getRowType().isNullable());
+                return SqlTypeUtil.createMultisetType(
+                    typeFactory, ns.getRowType(), false);
             }
 
             final SqlSyntax syntax = call.operator.getSyntax();
@@ -1098,7 +1096,7 @@ public class SqlValidator
                         expectedArgCount));
             }
         }
-        
+
         AssignableOperandsTypeChecking typeChecking =
             new AssignableOperandsTypeChecking(argTypes);
         String signature =
@@ -1108,7 +1106,7 @@ public class SqlValidator
             EigenbaseResource.instance().newValidatorUnknownFunction(
                 signature));
     }
-    
+
     /**
      * If an identifier is a legitimate call to a function which has no
      * arguments and requires no parentheses (for example "CURRENT_USER"),
@@ -1477,6 +1475,7 @@ public class SqlValidator
             "usingScope == null || alias != null");
 
         SqlCall call;
+        SqlNode [] operands;
         switch (node.getKind().getOrdinal()) {
         case SqlKind.SelectORDINAL:
             final SqlSelect select = (SqlSelect) node;
@@ -1547,7 +1546,7 @@ public class SqlValidator
                 new TableConstructorNamespace(node, parentScope);
             registerNamespace(usingScope, alias, tableConstructorNamespace);
             call = (SqlCall) node;
-            SqlNode [] operands = call.getOperands();
+            operands = call.getOperands();
             for (int i = 0; i < operands.length; ++i) {
                 assert(operands[i].isA(SqlKind.Row));
 
@@ -1586,15 +1585,30 @@ public class SqlValidator
                 null);
             break;
         case SqlKind.UnnestORDINAL:
-            SqlCall unnestCall = (SqlCall) node;
+            call = (SqlCall) node;
             final UnnestNamespace unnestNamespace =
                 new UnnestNamespace(node, usingScope);
             registerNamespace(usingScope, alias, unnestNamespace);
-            if (unnestCall.operands[0].isA(
+            if (call.operands[0].isA(
                 SqlKind.MultisetQueryConstructor)) {
-                final SqlCall queryCtor = (SqlCall) unnestCall.operands[0];
+                final SqlCall queryCtor = (SqlCall) call.operands[0];
                 registerSubqueries(usingScope, queryCtor.operands[0]);
             }
+            break;
+        case SqlKind.MultisetValueConstructorORDINAL:
+        case SqlKind.MultisetQueryConstructorORDINAL:
+            call = (SqlCall) node;
+            CollectScope cs =
+                new CollectScope(parentScope, usingScope, call);
+             final CollectNamespace ttableConstructorNamespace =
+                new CollectNamespace(node, cs);
+            registerNamespace(cs,  deriveAlias(node, nextGeneratedId++), ttableConstructorNamespace);
+            operands = call.getOperands();
+            for (int i = 0; i < operands.length; i++) {
+                SqlNode operand = operands[i];
+                registerSubqueries(cs, operand);
+            }
+
             break;
         default:
             throw node.getKind().unexpected();
@@ -1623,6 +1637,9 @@ public class SqlValidator
             return;
         } else if (node.isA(SqlKind.Query)) {
             registerQuery(parentScope, null, node, null);
+        } else if (node.isA(SqlKind.MultisetValueConstructor) ||
+                   node.isA(SqlKind.MultisetQueryConstructor)) {
+                registerQuery(parentScope, null, node, null);
         } else if (node instanceof SqlCall) {
             SqlCall call = (SqlCall) node;
             final SqlNode [] operands = call.getOperands();
@@ -2229,7 +2246,7 @@ public class SqlValidator
     {
         Util.pre(node != null, "node != null");
         final SqlParserPos pos = node.getParserPosition();
-        FarragoException contextExcn = 
+        FarragoException contextExcn =
             EigenbaseResource.instance().newValidatorContext(
                 new Integer(pos.getLineNum()),
                 new Integer(pos.getColumnNum()),
@@ -2342,16 +2359,16 @@ public class SqlValidator
         /**
          * Gets schema object names as specified. They can be schema or table
          * object.
-         * If names array contain 1 element, return all schema names and 
+         * If names array contain 1 element, return all schema names and
          *    all table names under the default schema (if that is set)
          * If names array contain 2 elements, treat 1st element as schema name
          *    and return all table names in this schema
          *
-         * @param names the array contains either 2 elements representing a 
-         * partially qualified object name in the format of 'schema.object', 
+         * @param names the array contains either 2 elements representing a
+         * partially qualified object name in the format of 'schema.object',
          * or an unqualified name in the format of 'object'
          *
-         * @return the list of all object (schema and table) names under 
+         * @return the list of all object (schema and table) names under
          *         the above criteria
          */
         String [] getAllSchemaObjectNames(String [] names);
@@ -2475,7 +2492,7 @@ public class SqlValidator
         AbstractNamespace() {
         }
 
-        public String[] lookupHints(SqlParserPos pp) { 
+        public String[] lookupHints(SqlParserPos pp) {
             return Util.emptyStringArray;
         }
 
@@ -2601,12 +2618,12 @@ public class SqlValidator
         /**
          * Finds all possible column names in this scope
          *
-         * @param parentObjName if not null, used to resolve a namespace 
+         * @param parentObjName if not null, used to resolve a namespace
          * from which to query the column names
          * @param result an array list of strings to add the result to
          */
         void findAllColumnNames(String parentObjName, List result);
-       
+
         /**
          * Finds all possible table names in this scope
          *
@@ -2999,6 +3016,7 @@ public class SqlValidator
 
         public RelDataType validateImpl() {
             validateSelect(select, unknownType);
+            setValidatedNodeType(select, rowType);
             return rowType;
         }
 
@@ -3276,7 +3294,7 @@ public class SqlValidator
     /**
      * Namespace for a table constructor <code>VALUES (expr, expr, ...)</code>.
      */
-    class TableConstructorNamespace extends AbstractNamespace
+    public class TableConstructorNamespace extends AbstractNamespace
     {
         private final SqlNode values;
         private final Scope scope;
@@ -3295,6 +3313,11 @@ public class SqlValidator
         public SqlNode getNode()
         {
             return values;
+        }
+
+        public Scope getScope()
+        {
+            return scope;
         }
     }
 
@@ -3325,6 +3348,40 @@ public class SqlValidator
         public SqlNode getNode()
         {
             return child;
+        }
+    }
+
+    /**
+     * Namespace for COLLECT/TABLE
+     */
+    public class CollectNamespace extends AbstractNamespace
+    {
+        private final SqlNode child;
+        private final Scope scope;
+
+        CollectNamespace(SqlNode child, Scope scope)
+        {
+            this.child = child;
+            this.scope = scope;
+        }
+
+        protected RelDataType validateImpl()
+        {
+            RelDataType type = scope.getValidator().deriveTypeImpl(scope, child);
+            boolean isNullable = type.isNullable();
+            type = typeFactory.createStructType(
+                new RelDataType[]{type}, new String[]{ deriveAlias(child, 0) });
+            return typeFactory.createTypeWithNullability(type, isNullable);
+        }
+
+        public SqlNode getNode()
+        {
+            return child;
+        }
+
+        public Scope getScope()
+        {
+            return scope;
         }
     }
 
@@ -3369,6 +3426,27 @@ public class SqlValidator
                 // 'a join b join c'.
                 usingScope.addChild(ns, alias);
             }
+        }
+    }
+
+    /**
+     *todo
+     */
+    class CollectScope extends ListScope
+    {
+        private final Scope usingScope;
+        private final SqlCall child;
+
+        CollectScope(Scope parent, Scope usingScope, SqlCall child)
+        {
+            super(parent);
+            this.usingScope = usingScope;
+            this.child= child;
+        }
+
+        public SqlNode getNode()
+        {
+            return child;
         }
     }
 
@@ -3450,7 +3528,7 @@ public class SqlValidator
             }
         }
 
-        protected void addTableNames(SqlValidator.Namespace ns, 
+        protected void addTableNames(SqlValidator.Namespace ns,
                                     List tableNames) {
             Table table = ns.getTable();
             if (table == null) return;
@@ -3609,15 +3687,15 @@ public class SqlValidator
             try {
                 node.accept(this);
                 return null;
-            } catch (FoundOne e) {
+            } catch (Util.FoundOne e) {
                 Util.swallow(e, null);
-                return e.node;
+                return (SqlNode) e.getNode();
             }
         }
 
         public void visit(SqlCall call) {
             if (call.operator.isAggregator()) {
-                throw new SqlValidator.AggFinder.FoundOne(call);
+                throw new Util.FoundOne(call);
             }
             if (call.isA(SqlKind.Query)) {
                 // don't traverse into queries
@@ -3628,17 +3706,6 @@ public class SqlValidator
                 return;
             }
             super.visit(call);
-        }
-
-        /**
-         * Exception used to interrupt a tree walk.
-         */
-        static class FoundOne extends RuntimeException {
-            private final SqlNode node;
-
-            FoundOne(SqlNode node){
-                this.node = node;
-            }
         }
     }
 
@@ -3714,3 +3781,4 @@ public class SqlValidator
 
 }
 // End SqlValidator.java
+

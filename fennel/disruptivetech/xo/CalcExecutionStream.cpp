@@ -30,6 +30,7 @@ CalcExecutionStream::~CalcExecutionStream()
 {
 }
 
+
 void CalcExecutionStream::prepare(
     CalcExecutionStreamParams const &params,
     TupleDescriptor const &inputDesc,
@@ -38,7 +39,7 @@ void CalcExecutionStream::prepare(
     // Force instantiation of the calculator's instruction tables.
     (void) CalcInit::instance();
 
-    pCalc.reset(new Calculator());
+    pCalc.reset(new Calculator(0));
     if (isTracing()) {
         pCalc->initTraceSource(&(getTraceTarget()), "calc");
     }

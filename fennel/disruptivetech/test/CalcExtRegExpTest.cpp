@@ -280,7 +280,7 @@ CalcExtRegExpTest::testCalcExtRegExpLikeAVarChar()
 
     refLocalOutput(pg, outputs);
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -344,7 +344,7 @@ CalcExtRegExpTest::testCalcExtRegExpLikeAChar()
 
     refLocalOutput(pg, 8);
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -535,7 +535,7 @@ CalcExtRegExpTest::testCalcExtRegExpSimilarAVarChar()
 
     refLocalOutput(pg, outputs);
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -599,7 +599,7 @@ CalcExtRegExpTest::testCalcExtRegExpSimilarAChar()
 
     refLocalOutput(pg, 8);
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());

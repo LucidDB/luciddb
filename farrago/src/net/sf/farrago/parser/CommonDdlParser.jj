@@ -69,7 +69,7 @@ DdlStmt DdlStmtEof() :
 {
     (
         ( <CREATE>
-          ( 
+          (
             modelElement = SchemaDefinition()
             |
             LOOKAHEAD(2)
@@ -147,7 +147,7 @@ DdlStmt DdlStmtEof() :
             )
         )
         |
-        ( <ALTER> 
+        ( <ALTER>
           (
               <SYSTEM> <SET> ddlStmt = SystemParamAssignment()
               |
@@ -376,14 +376,14 @@ FemLocalTable ScopedTableDefinition() :
     table = UnscopedTableDefinition()
         {
             table.setTemporary(true);
-            
+
             // TODO:  support LOCAL (as "MODULE")
             scope = "SESSION";
             commitOption = "DELETE";
         }
     [ <ON> <COMMIT>
       (
-          <PRESERVE> 
+          <PRESERVE>
       {
           commitOption = "PRESERVE";
       }
@@ -422,11 +422,11 @@ CwmView ViewDefinition() :
             farragoParser.getDdlValidator().setSchemaObjectName(
                 view,qualifiedViewName);
         }
-    [<LPAREN> columnNameList = SimpleIdentifierCommaList() 
+    [<LPAREN> columnNameList = SimpleIdentifierCommaList()
         {
             Iterator columnNameIter = columnNameList.iterator();
             while (columnNameIter.hasNext()) {
-                String columnName = 
+                String columnName =
                     ((SqlIdentifier) columnNameIter.next()).getSimple();
                 CwmColumn column = getRepos().newFemViewColumn();
                 column.setName(columnName);
@@ -703,7 +703,7 @@ CwmColumn ColumnDefinition(CwmTable table) :
         {
         }
     [
-        defaultClause = DefaultClause() 
+        defaultClause = DefaultClause()
         {
             setDefaultExpression(column, defaultClause);
         }
@@ -1161,13 +1161,13 @@ FemDataServer DataServerDefinition() :
                     FarragoRepos.SYSBOOT_CATALOG_NAME));
         }
     [
-        <TYPE> serverType = QuotedString() 
+        <TYPE> serverType = QuotedString()
         {
             server.setType(serverType);
         }
     ]
     [
-        <VERSION> serverVersion = QuotedString() 
+        <VERSION> serverVersion = QuotedString()
         {
             server.setVersion(serverVersion);
         }
@@ -1193,7 +1193,7 @@ FemRoutine FunctionDefinition() :
     FemRoutineParameter returnParam;
 }
 {
-    <FUNCTION> 
+    <FUNCTION>
         {
             function = getRepos().newFemRoutine();
             function.setType(ProcedureTypeEnum.FUNCTION);
@@ -1245,7 +1245,7 @@ FemRoutine ProcedureDefinition() :
     SqlIdentifier qualifiedName;
 }
 {
-    <PROCEDURE> 
+    <PROCEDURE>
         {
             procedure = getRepos().newFemRoutine();
             procedure.setType(ProcedureTypeEnum.PROCEDURE);
@@ -1406,11 +1406,11 @@ void RoutineCharacteristics(FemRoutine routine) :
             if (!specificName.names[0].equals(routine.getNamespace().getName()))
             {
                 throw farragoParser.getDdlValidator().newPositionalError(
-                    routine, 
+                    routine,
                     FarragoResource.instance().
                     newValidatorRoutineSchemaMismatch(
                         getRepos().getLocalizedObjectName(
-                            specificName.names[0]), 
+                            specificName.names[0]),
                         getRepos().getLocalizedObjectName(
                             routine.getNamespace())));
             }
@@ -1471,7 +1471,7 @@ FemRoutineParameter RoutineParam(FemRoutine routine) :
 {
     FemRoutineParameter param;
     SqlIdentifier name;
-    
+
     param = getRepos().newFemRoutineParameter();
     routine.getParameter().add(param);
 }
@@ -1516,7 +1516,7 @@ FemJar JarDefinition() :
     SqlLiteral deploymentState;
 }
 {
-    <JAR> 
+    <JAR>
         {
             jar = getRepos().newFemJar();
         }
@@ -1529,7 +1529,8 @@ FemJar JarDefinition() :
         {
             jar.setUrl(url);
         }
-    <OPTIONS> <LPAREN> 
+    <OPTIONS> <LPAREN>
+
          deploymentState = NumericLiteral(SqlParserPos.ZERO) <RPAREN>
         {
             jar.setDeploymentState(deploymentState.intValue());
@@ -1803,3 +1804,4 @@ String DdlNonReservedKeyWord() :
 }
 
 // End CommonDdlParser.jj
+

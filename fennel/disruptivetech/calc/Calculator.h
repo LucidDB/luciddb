@@ -43,6 +43,7 @@ FENNEL_END_NAMESPACE
 #include "fennel/disruptivetech/calc/CalcTypedefs.h"
 #include "fennel/disruptivetech/calc/CalcMessage.h"
 #include "fennel/disruptivetech/calc/RegisterReference.h"
+#include "fennel/disruptivetech/calc/DynamicParam.h"
 #include "fennel/common/TraceSource.h"
 
 FENNEL_BEGIN_NAMESPACE
@@ -54,8 +55,11 @@ class Calculator : virtual public TraceSource
 {
 public:
     //! Constructor for XOs that will use assemble().
+    //! @param dynamicParamManager the DynamicParamManager to use
+    //!        from calculator program. May be NULL if program
+    //!        doesn't make use of it.
     explicit
-    Calculator();
+    Calculator(DynamicParamManager* dynamicParamManager);
 
     //! Constructor for XOs that will populate Calculator piecemeal.
     //!
@@ -67,11 +71,16 @@ public:
     //! @param localSize size of literal RegisterReference vector
     //! @param statusSize size of literal RegisterReference vector
     explicit
-    Calculator(int codeSize, int literalSize, int inputSize,
+    Calculator(DynamicParamManager* dynamicParamManager,
+               int codeSize, int literalSize, int inputSize,
                int outputSize, int localSize, int statusSize);
 
     ~Calculator();
 
+    //! Gets this calculator instance's DynamicParamManager
+    inline DynamicParamManager* getDynamicParamManager() const {
+        return mPDynamicParamManager;
+    }
 
     //
     // Pre-Execution Configuration
@@ -261,6 +270,10 @@ protected:
     //! Actual storage used by the CalcAssembler for the literal, local
     //! and status registers
     vector<FixedBuffer*> mBuffers;
+
+    //! Reference to the Dynamic Parameter Manager
+    DynamicParamManager* mPDynamicParamManager;
+
 private:
     //! Helper function for constructors.
     void init(int codeSize, int literalSize, int inputSize,

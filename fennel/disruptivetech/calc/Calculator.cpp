@@ -27,18 +27,21 @@ using boost::format;
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-Calculator::Calculator() :
+Calculator::Calculator(DynamicParamManager* dynamicParamManager) :
     mIsUsingAssembler(true),
-    mIsAssembling(false)
+    mIsAssembling(false),
+    mPDynamicParamManager(dynamicParamManager)
 {
     init(0,0,0,0,0,0);
 }
 
 
-Calculator::Calculator(int codeSize, int literalSize, int inputSize,
+Calculator::Calculator(DynamicParamManager* dynamicParamManager,
+                       int codeSize, int literalSize, int inputSize,
                        int outputSize, int localSize, int statusSize) :
     mIsUsingAssembler(false),
-    mIsAssembling(false)
+    mIsAssembling(false),
+    mPDynamicParamManager(dynamicParamManager)
 {
     init(codeSize, literalSize, inputSize, outputSize,
          localSize, statusSize);

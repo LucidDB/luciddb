@@ -22,7 +22,7 @@
 #define Fennel_ExecStreamGraph_Included
 
 #include "fennel/common/ClosableObject.h"
-#include "fennel/exec/DynamicParam.h"
+#include "fennel/disruptivetech/calc/DynamicParam.h"
 
 #include <vector>
 #include <boost/utility.hpp>

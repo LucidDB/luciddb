@@ -5,6 +5,7 @@ noinst_LTLIBRARIES = libcalc.la
 CALC_LIB = calc
 
 libcalc_la_SOURCES=  \
+DynamicParam.cpp \
 BoolInstruction.cpp  \
 Calculator.cpp       \
 ExtDateTime.cpp \
@@ -26,7 +27,8 @@ ExtString.cpp \
 ExtCast.cpp \
 ExtRegExp.cpp \
 StringToHex.cpp \
-ExtMath.cpp
+ExtMath.cpp \
+ExtDynamicVariable.cpp
 
 #noinst_PROGRAMS =    \
 #testCalc tuple

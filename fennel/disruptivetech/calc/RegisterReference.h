@@ -25,6 +25,7 @@
 
 #include "fennel/tuple/TupleData.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
+#include "fennel/disruptivetech/calc/DynamicParam.h"
 #include "boost/lexical_cast.hpp"
 
 #include <strstream>
@@ -76,7 +77,8 @@ public:
           mType(STANDARD_TYPE_END),
           mPData(0),
           mCbData(0),
-          mCbStorage(0)
+          mCbStorage(0),
+          mPDynamicParamManager(0)
     { 
         mProp = EPropNone;
     }
@@ -95,7 +97,8 @@ public:
           mType(datatype),
           mPData(0),
           mCbData(0),
-          mCbStorage(0)
+          mCbStorage(0),
+          mPDynamicParamManager(0)
     {
         assert(mSetIndex < ELastSet);
         assert(mSetIndex >= EFirstSet);
@@ -204,6 +207,12 @@ public:
     //! Is the register currently set to NULL?
     virtual bool isNull() const = 0;
 
+    //! Gets the DynamicParamManager belonging to the Calculator
+    inline DynamicParamManager* getDynamicParamManager() const {
+        assert(mPDynamicParamManager);
+        return mPDynamicParamManager;
+    }
+
 protected:
     //! Register set index
     const ERegisterSet mSetIndex;       
@@ -249,6 +258,9 @@ protected:
 
     //! Behavior properties of this register.
     TRegisterRefProp mProp; 
+
+    //! The DynamicParamManager set after a call to setCalc
+    DynamicParamManager* mPDynamicParamManager;
 
     //! Defines default properties for registers based on register set.
     void setDefaultProperties();

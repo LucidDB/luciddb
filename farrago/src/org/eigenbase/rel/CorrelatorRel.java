@@ -22,11 +22,14 @@
 package org.eigenbase.rel;
 
 import java.util.Collections;
+import java.util.List;
+import java.util.ArrayList;
 
 import openjava.ptree.Expression;
 
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.RelOptPlanWriter;
 import org.eigenbase.util.Util;
 
 
@@ -45,8 +48,24 @@ public class CorrelatorRel extends JoinRel
 {
     //~ Instance fields -------------------------------------------------------
 
-    Expression [] correlations;
+    protected ArrayList correlations;
 
+    //~ Inner Classes ---------------------------------------------------------
+
+    /**
+     * Describes the neccessary parameters for an implementation in order
+     * to identify and set dynamic variables
+     */
+    public static class Correleation implements Cloneable {
+        public final int id;
+        public final int offset;
+
+        public Correleation(int id, int offset)
+        {
+            this.id = id;
+            this.offset = offset;
+        }
+    }
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -60,12 +79,12 @@ public class CorrelatorRel extends JoinRel
      * @param correlations set of expressions to set as variables each time a
      *        row arrives from the left input
      */
-    CorrelatorRel(
+    public CorrelatorRel(
         RelOptCluster cluster,
         RelNode left,
         RelNode right,
         int joinType,
-        Expression [] correlations)
+        ArrayList correlations)
     {
         super(cluster, left, right,
             cluster.rexBuilder.makeLiteral(true), joinType,
@@ -82,7 +101,21 @@ public class CorrelatorRel extends JoinRel
             RelOptUtil.clone(left),
             RelOptUtil.clone(right),
             joinType,
-            Util.clone(correlations));
+            (ArrayList) correlations.clone());
+    }
+
+    public void explain(RelOptPlanWriter pw)
+    {
+        // todo wael: add var and col descriptions;
+        pw.explain(
+            this,
+            new String [] { "left", "right", "condition", "joinType" },
+            new Object [] { JoinType.toString(joinType) });
+    }
+
+    public ArrayList getCorrelations()
+    {
+        return correlations;
     }
 }
 

@@ -70,6 +70,10 @@ public class RelOptQuery
     }
 
     //~ Methods ---------------------------------------------------------------
+    public static int getCorrelOrdinal(String correlName) {
+        assert(correlName.startsWith(correlPrefix));
+        return Integer.parseInt(correlName.substring(correlPrefix.length()));
+    }
 
     public RelOptCluster createCluster(
         Environment env,

@@ -497,7 +497,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     // FIXME jvs 2-Feb-2005: all collation-related tests are disabled due to
     // dtbug 280
-    
+
     public void _testSimpleCollate() {
         checkExp("'s' collate latin1$en$1");
         checkExpType("'s' collate latin1$en$1", "CHAR(1)");
@@ -1708,7 +1708,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         if (!todo) {
             return;
         }
-        
+
         check("select case empno when 10 then _iso-8859-1'foo bar' collate latin1$en$1 else null end from emp " +
             "group by case empno when 10 then _iso-8859-1'foo bar' collate latin1$en$1 else null end");
         checkFails("select case empno when 10 then _iso-8859-1'foo bar' else null end from emp " +
@@ -1720,11 +1720,11 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testCorrelatingVariables() {
-        if (todo) {
-            // reference to unqualified correlating column
-            check("select * from emp where exists (" + NL +
-                "select * from dept where deptno = sal)");
-        }
+        // reference to unqualified correlating column
+        checkFails("select * from emp where exists (" + NL +
+            "select * from dept where deptno = sal)",
+            "Unknown identifier 'SAL'");
+
         // reference to qualified correlating column
         check("select * from emp where exists (" + NL +
             "select * from dept where deptno = emp.sal)");
@@ -1805,6 +1805,13 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkFails("select*from unnest(1)","(?s).*Cannot apply 'UNNEST' to arguments of type 'UNNEST.<INTEGER>.*'");
 
         check("select*from unnest(multiset(select*from dept))");
+    }
+
+    public void testCorrelationJoin() {
+        check("select *," +
+            "         multiset(select * from emp where deptno=dept.deptno) " +
+            "               as empset" +
+            "      from dept");
     }
 
     public void testNew() {

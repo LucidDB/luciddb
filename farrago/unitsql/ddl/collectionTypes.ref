@@ -5,6 +5,43 @@
 0: jdbc:farrago:> set schema 'collectionsTest';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- MULTISET 
+0: jdbc:farrago:> -- create/drop
 0: jdbc:farrago:> create table multisetTable(i integer primary key, ii integer multiset);
+0: jdbc:farrago:> -- create again, should fail
+0: jdbc:farrago:> create table multisetTable(i integer primary key, ii integer multiset);
+Error: DDL validation error near line 1, column 14: Target schema "LOCALDB"."COLLECTIONSTEST" already contains table "MULTISETTABLE" with same name (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- drop table
+0: jdbc:farrago:> drop table multisetTable;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- insert with ints
+0: jdbc:farrago:> create table multisetTable_i(i integer primary key, ii integer multiset);
+0: jdbc:farrago:> insert into multisetTable_i values(0, multiset[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0, 1, 2]);
+0: jdbc:farrago:> insert into multisetTable_i values(1,multiset(select deptno from sales.depts));
+0: jdbc:farrago:> --insert into multisetTable_i values(2, null);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- insert with chars
+0: jdbc:farrago:> create table multisetTable_c(i integer primary key, c char(5) multiset);
+0: jdbc:farrago:> --insert into multisetTable_c values(0, multiset['a', 'b', 'c']);
+0: jdbc:farrago:> --insert into multisetTable_c values(1,multiset(select name from sales.depts));
+0: jdbc:farrago:> --insert into multisetTable_c values(2, null);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- insert with ints and chars
+0: jdbc:farrago:> create table multisetTable_ic(i integer primary key, ii integer multiset, c char(5) multiset);
+0: jdbc:farrago:> --insert into multisetTable_ic values(0, multiset(select deptno from sales.depts),  multiset['a']);
+0: jdbc:farrago:> --insert into multisetTable_ic values(1,multiset(select deptno from sales.depts), multiset(select name from sales.depts));
+0: jdbc:farrago:> -- insert into multisetTable_ic values(2, multiset[2],null);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- insert wrong types, must fail
+0: jdbc:farrago:> -- insert into multisetTable_c values(2, 'a');
+0: jdbc:farrago:> -- insert into multisetTable_c values(3, multiset[1]);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- todo insert multisets of multisets
+0: jdbc:farrago:> -- todo rowtypes
+0: jdbc:farrago:> -- todo insert empty multiset
+0: jdbc:farrago:> -- todo insert null into NON NULL
+0: jdbc:farrago:> -- todo create table definition with default types;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

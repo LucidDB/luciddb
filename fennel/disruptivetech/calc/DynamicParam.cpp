@@ -20,7 +20,7 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/exec/DynamicParam.h"
+#include "fennel/disruptivetech/calc/DynamicParam.h"
 #include "fennel/tuple/TupleAccessor.h"
 #include "fennel/tuple/TupleData.h"
 

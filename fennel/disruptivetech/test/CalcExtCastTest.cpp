@@ -250,7 +250,7 @@ CalcExtCastTest::testCalcExtCastStringToChar()
     // make output available
     refLocalOutput(pg, 8);
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -351,7 +351,7 @@ CalcExtCastTest::testCalcExtCastStringToVarChar()
     // make output available
     refLocalOutput(pg, 8);
 
-    Calculator calc;
+    Calculator calc(0);
     
     try {
         calc.assemble(pg.str().c_str());
@@ -426,7 +426,7 @@ CalcExtCastTest::testCalcExtCastExactToChar()
         pg << "CALL 'castA(L" << (i+4) << ", C" << i << ");" << endl;
     refLocalOutput(pg, 8);      // make output available
 
-    Calculator calc;
+    Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -475,7 +475,7 @@ CalcExtCastTest::testCalcExtCastExactToVarChar()
         pg << "CALL 'castA(L" << (i+4) << ", C" << i << ");" << endl;
     refLocalOutput(pg, 8);      // make output available
 
-    Calculator calc;
+    Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -522,7 +522,7 @@ CalcExtCastTest::testCalcExtCastBigExactToString()
     pg << "CALL 'castA(L3, C1);" << endl;
     refLocalOutput(pg, 4);      // make output available
 
-    Calculator calc;
+    Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -565,7 +565,7 @@ CalcExtCastTest::testCalcExtCastExactToStringTruncates()
     pg << "CALL 'castA(L3, C1);" << endl;
     refLocalOutput(pg, 4);      // make output available
 
-    Calculator calc;
+    Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -631,7 +631,7 @@ void CalcExtCastTest::testCalcExtCastVarCharToExact()
         pg << "CALL 'castA(L"<<i<<",C"<<i<<");"<< endl;
     refLocalOutput(pg, 9);      // make output available
 
-    Calculator calc;
+    Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -681,7 +681,7 @@ void CalcExtCastTest::testCalcExtCastCharToExact()
         pg << "CALL 'castA(L"<<i<<",C"<<i<<");"<< endl;
     refLocalOutput(pg, 9);      // make output available
 
-    Calculator calc;
+    Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -727,7 +727,7 @@ void CalcExtCastTest::testCalcExtCastStringToExactFails()
     pg << "CALL 'castA(L3, C1);" << endl;
     refLocalOutput(pg, 4);      // make output available
     
-    Calculator calc;
+    Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -795,7 +795,7 @@ void CalcExtCastTest::testCalcExtCastStringToApprox()
         pg << "CALL 'castA(L" << (i+16) << ", C" << i << ");" << endl;
     refLocalOutput(pg, 24);     // make output available
 
-    Calculator calc;
+    Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -848,7 +848,7 @@ void CalcExtCastTest::testCalcExtCastApproxToString()
     refLocalOutput(pg, 12);     // make output available
     // cerr << "testCalcExtCastApproxToString Program:\n" << pg.str() << endl;
 
-    Calculator calc;
+    Calculator calc(0);
     try {
         calc.assemble(pg.str().c_str());
     }

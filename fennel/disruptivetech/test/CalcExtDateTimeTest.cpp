@@ -93,8 +93,8 @@ CalcExtDateTimeTest::testCalcExtConvertDateToString()
     pg << "CALL 'CastDateToStrA(L0, C0);" << endl;
     pg << "REF O0, L0;" << endl;
 
-    Calculator calc;
-
+    Calculator calc(0);
+    
     try {
         calc.assemble(pg.str().c_str());
     }
@@ -127,7 +127,7 @@ CalcExtDateTimeTest::testCalcExtLocalTime()
     pg << "REF O0, L0 /* 1: */;" << endl;
     //    pg << "RETURN /* 2: */;|" << endl;
     
-    Calculator calc;
+    Calculator calc(0);
 
     try {
         calc.assemble(pg.str().c_str());

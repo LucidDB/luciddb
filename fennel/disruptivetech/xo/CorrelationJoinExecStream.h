@@ -28,14 +28,30 @@
 
 FENNEL_BEGIN_NAMESPACE
 
+
+/**
+ * Mapping an id to an left input column
+ */
+struct Correlation 
+{
+    uint dynamicParamId;
+    uint leftAttributeOrdinal;
+
+    Correlation(uint id, uint offset) : 
+        dynamicParamId(id), 
+        leftAttributeOrdinal(offset)
+    { 
+        //empty
+    }
+};
+
 /**
  * CorrelationJoinExecStreamParams defines parameters for instantiating a
  * CorrelationJoinExecStream.
  */
 struct CorrelationJoinExecStreamParams : public ConfluenceExecStreamParams
 {
-    uint leftAttributeOrdinal;
-    uint dynamicParamId;
+    std::vector<Correlation> correlations;
 };
 
 /**
@@ -53,6 +69,7 @@ class CorrelationJoinExecStream : public ConfluenceExecStream
     uint nLeftAttributes;
     uint leftAttributeOrdinal;
     uint dynamicParamId;
+    std::vector<Correlation> correlations;
 
 public:
     // implement ExecStream

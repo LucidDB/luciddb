@@ -26,7 +26,7 @@ import org.eigenbase.util.*;
 /**
  * MultisetSqlType represents a standard SQL2003 multiset type.
  *
- * @author wael
+ * @author Wael Chatila
  * @version $Id$
  */
 public class MultisetSqlType extends AbstractSqlType
@@ -34,7 +34,7 @@ public class MultisetSqlType extends AbstractSqlType
     private RelDataType elementType;
 
     /**
-     * This should only be called from a factory method.
+     * This constructor should only be called from a factory method.
      *
      * @pre null!=elementType
      */

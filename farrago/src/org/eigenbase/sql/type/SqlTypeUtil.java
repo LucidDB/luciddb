@@ -25,6 +25,7 @@ import org.eigenbase.util.Util;
 import org.eigenbase.sql.*;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.resource.EigenbaseResource;
+import org.eigenbase.rel.RelNode;
 
 import java.util.*;
 
@@ -144,7 +145,15 @@ public abstract class SqlTypeUtil
         for (int i = 0; i < types.length; i++) {
             types[i] = exprs[i].getType();
         }
+        return types;
+    }
 
+    public static RelDataType [] collectTypes(RelNode [] rels)
+    {
+        RelDataType [] types = new RelDataType[rels.length];
+        for (int i = 0; i < types.length; i++) {
+            types[i] = rels[i].getRowType();
+        }
         return types;
     }
 
@@ -457,6 +466,13 @@ public abstract class SqlTypeUtil
         case SqlTypeName.Varbinary_ordinal:
             return type.getPrecision();
 
+        case SqlTypeName.Multiset_ordinal:
+            // TODO Wael Jan-24-2005: Need a better way to tell fennel this
+            // number. This a very generic place and implementation details like
+            // this doesnt belong here. Waiting to change this once we have
+            // blob support
+            return 4096;
+
         default:
             return 0;
         }
@@ -698,6 +714,13 @@ public abstract class SqlTypeUtil
                 charSetName,
                 null);
         }
+    }
+
+    public static RelDataType createMultisetType(RelDataTypeFactory typeFactory,
+                                             RelDataType type,
+                                             boolean nullable) {
+        RelDataType ret = typeFactory.createMultisetType(type, -1);
+        return typeFactory.createTypeWithNullability(ret, nullable);
     }
 }
 

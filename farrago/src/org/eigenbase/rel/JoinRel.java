@@ -180,28 +180,37 @@ public class JoinRel extends AbstractRelNode
 
     protected RelDataType deriveRowType()
     {
+        return deriveJoinRowType(left, right, joinType, cluster.typeFactory);
+
+    }
+
+    public static RelDataType deriveJoinRowType(RelNode left,
+        RelNode right,
+        int joinType,
+        RelDataTypeFactory typeFactory)
+    {
         RelDataType leftType = left.getRowType();
         RelDataType rightType = right.getRowType();
 
         switch (joinType) {
         case JoinType.LEFT:
             rightType =
-                cluster.typeFactory.createTypeWithNullability(rightType, true);
+                typeFactory.createTypeWithNullability(rightType, true);
             break;
         case JoinType.RIGHT:
             leftType =
-                cluster.typeFactory.createTypeWithNullability(leftType, true);
+                typeFactory.createTypeWithNullability(leftType, true);
             break;
         case JoinType.FULL:
             leftType =
-                cluster.typeFactory.createTypeWithNullability(leftType, true);
+                typeFactory.createTypeWithNullability(leftType, true);
             rightType =
-                cluster.typeFactory.createTypeWithNullability(rightType, true);
+                typeFactory.createTypeWithNullability(rightType, true);
             break;
         default:
             break;
         }
-        return createJoinType(cluster.typeFactory, leftType, rightType);
+        return createJoinType(typeFactory, leftType, rightType);
     }
 
     public static RelDataType createJoinType(

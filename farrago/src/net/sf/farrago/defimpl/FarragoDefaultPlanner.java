@@ -106,6 +106,7 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
                 new FennelRenameRule(FennelPullRel.FENNEL_PULL_CONVENTION,
                     "FennelPullRenameRule"));
             addRule(new FennelCartesianJoinRule());
+            addRule(new FennelCorrelatorRule());
         }
 
         // Add the rule to introduce FennelCalcRel's only if the fennel

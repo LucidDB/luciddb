@@ -45,6 +45,8 @@ import openjava.ptree.StatementList;
 
 import org.eigenbase.runtime.ThreadIterator;
 import org.eigenbase.runtime.TimeoutIteratorTest;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.util.SqlBasicVisitor;
 
 /**
  * Miscellaneous utility functions.
@@ -69,6 +71,58 @@ public class Util extends Toolbox
       */
     private static final Pattern javaIdPattern =
         Pattern.compile("[a-zA-Z_$][a-zA-Z0-9$]*");
+
+    //~ Inner Classes ---------------------------------------------------------
+    /**
+     * Exception used to interrupt a tree walk of any kind.
+     */
+    public static class FoundOne extends RuntimeException {
+        private final Object node;
+
+
+        public FoundOne(Object node) {
+            this.node = node;
+        }
+
+        public Object getNode() {
+            return node;
+        }
+    }
+
+    /**
+     * Describes a node, its parent and if and where in the parent a node lives.
+     * If parent is null, the offset value is not valid.
+     */
+    public static class SqlNodeDescriptor {
+        private final SqlNode node;
+        private final SqlNode parent;
+        private final Integer parentOffset;
+
+        public SqlNodeDescriptor(SqlNode node, SqlNode parent, Integer parentOffset)
+        {
+            assert(null == parent ||
+                parent instanceof SqlCall ||
+                parent instanceof SqlNodeList);
+            this.node = node;
+            this.parent = parent;
+            this.parentOffset = parentOffset;
+        }
+
+        public SqlNode getNode()
+        {
+            return node;
+        }
+
+        public SqlNode getParent()
+        {
+            return parent;
+        }
+
+        public Integer getParentOffset()
+        {
+            return parentOffset;
+        }
+    }
 
     //~ Methods ---------------------------------------------------------------
 
@@ -885,6 +939,29 @@ public class Util extends Toolbox
         } else {
             System.loadLibrary(libName);
         }
+    }
+
+    /**
+     * Searches recursively for a {@link SqlIdentifier}
+     * @param node in which to look in
+     * @return null if no Identifier was found.
+     */
+    public static SqlNodeDescriptor findIdentifier(SqlNode node) {
+        SqlBasicVisitor visitor = new SqlBasicVisitor() {
+            public void visit(SqlIdentifier id)
+            {
+                throw new FoundOne(id);
+            }
+        };
+
+        try {
+            node.accept(visitor);
+        } catch (FoundOne e){
+            return new SqlNodeDescriptor((SqlNode) e.getNode(),
+                visitor.currentParent,
+                visitor.currentOffset);
+        }
+        return null;
     }
 }
 

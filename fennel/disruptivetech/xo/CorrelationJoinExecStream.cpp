@@ -48,8 +48,11 @@ void CorrelationJoinExecStream::prepare(
     pOutAccessor->setTupleShape(outputDesc);
 
     nLeftAttributes = leftDesc.size();
-    leftAttributeOrdinal = params.leftAttributeOrdinal;
-    dynamicParamId = params.dynamicParamId;
+    correlations.assign(params.correlations.begin(), 
+                        params.correlations.end());
+    //correlations.resize(correlations.size()); 
+    //assert(correlations.size() > 0);
+    assert(correlations.size() <= nLeftAttributes);
     
     ConfluenceExecStream::prepare(params);
 }
@@ -57,9 +60,12 @@ void CorrelationJoinExecStream::prepare(
 void CorrelationJoinExecStream::open(bool restart) 
 {
     ConfluenceExecStream::open(restart);
-    pGraph->getDynamicParamManager().createParam(
-                dynamicParamId,
-                pLeftBufAccessor->getTupleDesc()[leftAttributeOrdinal]);
+    std::vector<Correlation>::iterator it = correlations.begin();
+    for (/* empty */ ; it != correlations.end(); ++it) {
+        pGraph->getDynamicParamManager().createParam(
+                it->dynamicParamId,
+                pLeftBufAccessor->getTupleDesc()[it->leftAttributeOrdinal]);
+    }
 }
 
 void CorrelationJoinExecStream::close()
@@ -84,8 +90,12 @@ ExecStreamResult CorrelationJoinExecStream::execute(
                 return EXECRC_BUF_UNDERFLOW;
             }
             pLeftBufAccessor->unmarshalTuple(outputData);
-            // updating the dynamic param with the new left value
-            pGraph->getDynamicParamManager().setParam(dynamicParamId, outputData[leftAttributeOrdinal]);
+            // updating the dynamic param(s) with the new left value(s)
+            std::vector<Correlation>::iterator it = correlations.begin();
+            for (/* empty */ ; it != correlations.end(); ++it) {
+                pGraph->getDynamicParamManager().setParam(
+                    it->dynamicParamId, outputData[it->leftAttributeOrdinal]);
+            }
 
             // restart right input stream
             pGraph->getStreamInput(getStreamId(),1)->open(true);
