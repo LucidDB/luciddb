@@ -24,6 +24,7 @@ package org.eigenbase.sql;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.util.SqlVisitor;
 import org.eigenbase.util.Util;
+import java.util.ArrayList;
 
 
 /**
@@ -140,6 +141,32 @@ public class SqlIdentifier extends SqlNode
         validator.validateIdentifier(this, scope);
     }
 
+    /**
+     * Find out all the valid alternatives for this identifier. 
+     *
+     * @param validator Validator
+     * @param scope Validation scope
+     * @return a string array of valid options
+     */
+    public String[] findValidOptions(SqlValidator validator, 
+        SqlValidator.Scope scope)
+    {
+        String tableName;
+        ArrayList result = new ArrayList();
+        if (names.length > 1) {
+            tableName = names[names.length-2];
+        } else {
+            tableName = null;
+            // table names are valid completion hints when the identifier
+            // has only 1 name part
+            scope.findAllTableNames(result);
+        }
+        // if the identifer has more than 1 part, use the tableName to limit
+        // the choices of valid column names
+        scope.findAllColumnNames(tableName, result);
+        return (String [])result.toArray(Util.emptyStringArray);
+    }
+
     public void validateExpr(SqlValidator validator, SqlValidator.Scope scope)
     {
         // First check for builtin functions which don't have parentheses,
@@ -149,8 +176,7 @@ public class SqlIdentifier extends SqlNode
             return;
         }
 
-        final SqlIdentifier fqId = scope.fullyQualify(this);
-        Util.discard(fqId); // todo: store fqId in a map for future reference
+        validator.validateIdentifier(this, scope);
     }
 
     public boolean equalsDeep(SqlNode node)

@@ -24,9 +24,13 @@ import org.eigenbase.sql.SqlValidator;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.util.Util;
 
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Vector;
 
 /**
  * Mock implementation of
@@ -41,6 +45,7 @@ public class MockCatalogReader implements SqlValidator.CatalogReader
 {
     protected final RelDataTypeFactory typeFactory;
     private final HashMap tables = new HashMap();
+    private final HashMap schemas = new HashMap();
 
     public MockCatalogReader(RelDataTypeFactory typeFactory) {
         this.typeFactory = typeFactory;
@@ -52,8 +57,13 @@ public class MockCatalogReader implements SqlValidator.CatalogReader
             typeFactory.createSqlType(SqlTypeName.Varchar, 20);
         final RelDataType dateType =
             typeFactory.createSqlType(SqlTypeName.Date);
+
+        // Register "SALES" schema.
+        MockSchema salesSchema = new MockSchema("SALES");
+        registerSchema(salesSchema);
+
         // Register "EMP" table.
-        MockTable empTable = new MockTable("EMP");
+        MockTable empTable = new MockTable(salesSchema, "EMP");
         empTable.addColumn("EMPNO", intType);
         empTable.addColumn("ENAME", varchar20Type);
         empTable.addColumn("JOB", varchar10Type);
@@ -64,36 +74,112 @@ public class MockCatalogReader implements SqlValidator.CatalogReader
         empTable.addColumn("DEPTNO", intType);
         registerTable(empTable);
         // Register "DEPT" table.
-        MockTable deptTable = new MockTable("DEPT");
+        MockTable deptTable = new MockTable(salesSchema, "DEPT");
         deptTable.addColumn("DEPTNO", intType);
         deptTable.addColumn("NAME", varchar10Type);
         registerTable(deptTable);
         // Register "BONUS" table.
-        MockTable bonusTable = new MockTable("BONUS");
+        MockTable bonusTable = new MockTable(salesSchema, "BONUS");
         bonusTable.addColumn("ENAME", varchar20Type);
         bonusTable.addColumn("JOB", varchar10Type);
         bonusTable.addColumn("SAL", intType);
         bonusTable.addColumn("COMM", intType);
         registerTable(bonusTable);
         // Register "SALGRADE" table.
-        MockTable salgradeTable = new MockTable("SALGRADE");
+        MockTable salgradeTable = new MockTable(salesSchema, "SALGRADE");
         salgradeTable.addColumn("GRADE", intType);
         salgradeTable.addColumn("LOSAL", intType);
         salgradeTable.addColumn("HISAL", intType);
         registerTable(salgradeTable);
+
+        // Register "CUSTOMER" schema.
+        MockSchema customerSchema = new MockSchema("CUSTOMER");
+        registerSchema(customerSchema);
+        // Register "CONTACT" table.
+        MockTable contactTable = new MockTable(customerSchema, "CONTACT");
+        contactTable.addColumn("CONTACTNO", intType);
+        contactTable.addColumn("FNAME", varchar10Type);
+        contactTable.addColumn("LNAME", varchar10Type);
+        contactTable.addColumn("EMAIL", varchar20Type);
+        registerTable(contactTable);
+        // Register "ACCOUNT" table.
+        MockTable accountTable = new MockTable(customerSchema, "ACCOUNT");
+        accountTable.addColumn("ACCTNO", intType);
+        accountTable.addColumn("TYPE", varchar20Type);
+        accountTable.addColumn("BALANCE", intType);
+        registerTable(accountTable);
+
     }
 
     protected void registerTable(MockTable table) {
         table.onRegister(typeFactory);
-        tables.put(table.names[0], table);
+        tables.put(convertToVector(table.getQualifiedName()), table);
+    }
+
+    protected void registerSchema(MockSchema schema) {
+        schemas.put(schema.name, schema);
     }
 
     public SqlValidator.Table getTable(final String [] names)
     {
         if (names.length == 1) {
-            return (SqlValidator.Table) tables.get(names[0]);
+            // assume table in SALES schema (the original default)
+            // if it's not supplied, because SqlValidatorTest is effectively 
+            // using SALES as its default schema.
+            String [] qualifiedName = { "SALES", names[0] };
+            return (SqlValidator.Table) tables.get(
+                convertToVector(qualifiedName));
+        }
+        else if (names.length == 2) {
+            return (SqlValidator.Table) tables.get(convertToVector(names));
         }
         return null;
+    }
+
+    public String [] getAllSchemaObjectNames(String [] names)
+    {
+        if (names.length == 1) {
+            // looking for both schema and object names
+            Collection schemasColl = schemas.values(); 
+            Iterator i = schemasColl.iterator();
+            ArrayList result = new ArrayList();
+            while (i.hasNext()) {
+                MockSchema schema = (MockSchema) i.next();
+                result.add(schema.name);
+                result.addAll(schema.tableNames);
+            }     
+            return (String [])result.toArray(Util.emptyStringArray);
+        }
+        else if (names.length == 2) {
+            // looking for table names under the schema
+            MockSchema schema = (MockSchema) schemas.get(names[0]);
+            return (String [])schema.tableNames.toArray(Util.emptyStringArray);
+        }
+        else {
+            return Util.emptyStringArray;
+        }
+    }
+
+    private Vector convertToVector(String [] names) {
+        Vector v = new Vector(names.length);
+        for (int i = 0; i < names.length; i++) {
+            v.addElement(names[i]);
+        }
+        return v;
+    }
+
+    public static class MockSchema
+    {
+        private final ArrayList tableNames = new ArrayList();
+        private String name; 
+
+        public MockSchema(String name) {
+            this.name = name;
+        }
+
+        public void addTable(String name) {
+            tableNames.add(name);
+        }
     }
 
     /**
@@ -107,7 +193,13 @@ public class MockCatalogReader implements SqlValidator.CatalogReader
         private final String[] names;
 
         public MockTable(String name) {
-            this.names = new String[] {name};
+            // default schema is SALES
+            this.names = new String[] {"SALES", name};
+        }
+
+        public MockTable(MockSchema schema, String name) {
+            this.names = new String[] {schema.name, name};
+            schema.addTable(name);
         }
 
         public RelDataType getRowType() {

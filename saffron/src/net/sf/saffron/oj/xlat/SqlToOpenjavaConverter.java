@@ -595,6 +595,11 @@ public class SqlToOpenjavaConverter
             }
             return null;
         }
+        
+        public String [] getAllSchemaObjectNames(String [] names)
+        {
+            throw new UnsupportedOperationException();
+        }
 
         private String maybeUpper(String s)
         {

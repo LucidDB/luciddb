@@ -62,6 +62,18 @@ public class SqlValidator
     private final CatalogReader catalogReader;
 
     /**
+     * Maps ParsePosition strings to the {@link SqlIdentifier} identifier
+     * objects at these positions
+     */
+    protected final HashMap sqlids = new HashMap();
+    
+    /**
+     * Maps ParsePosition strings to the {@link Scope} scope
+     * objects at these positions
+     */
+    protected final HashMap idscopes = new HashMap();
+
+    /**
      * Maps {@link SqlNode query node} objects to the {@link Scope} scope
      * created from them}.
      */
@@ -245,6 +257,112 @@ public class SqlValidator
         return validateScopedExpression(topNode, scope);
     }
     
+    /**
+     * Look up completion hints for a syntatically correct SQL that has been
+     * parsed into an expression tree
+     *
+     * @param topNode top of expression tree in which to lookup completion hints
+     * @param pp indicates the position in the sql statement we want to get
+     * completion hints for. For example,
+     * "select a.ename, b.deptno from sales.emp a join sales.dept b 
+     * "on a.deptno=b.deptno where empno=1";
+     * setting pp to 'Line 1, Column 17' returns all the possible column names
+     * that can be selected from sales.dept table
+     * setting pp to 'Line 1, Column 31' returns all the possible table names
+     * in 'sales' schema
+     *
+     * @return an array of string hints (sql identifiers) that can fill in at
+     * the indicated position
+     *
+     */
+    public String[] lookupHints(SqlNode topNode, ParserPosition pp)
+    {
+        Scope scope = new EmptyScope();
+        try {
+            outermostNode = performUnconditionalRewrites(topNode);
+            if (outermostNode.getKind().isA(SqlKind.TopLevel)) {
+                registerQuery(scope, null, outermostNode, null);
+            }
+            final Namespace namespace = getNamespace(outermostNode);
+            if (namespace == null) {
+                throw Util.newInternal("Not a query: " + outermostNode);
+            }
+            return namespace.lookupHints(pp);
+        }
+        finally {
+            outermostNode = null;
+        }
+    }
+
+    /**
+     * Look up completion hints for a syntatically correct select SQL 
+     * that has been parsed into an expression tree
+     *
+     * @param select the Select node of the parsed expression tree
+     * @param pp indicates the position in the sql statement we want to get
+     * completion hints for
+     *
+     * @return an array list of strings (sql identifiers) that can fill in at
+     * the indicated position
+     *
+     */
+    private String[] lookupSelectHints(SqlSelect select, ParserPosition pp)
+    {
+        SqlIdentifier dummyId = (SqlIdentifier)sqlids.get(pp.toString());
+        Scope dummyScope = (Scope)idscopes.get(pp.toString());
+        if (dummyId == null || dummyScope == null) {
+            SqlNode fromNode = select.getFrom();
+            return lookupFromHints(fromNode, 
+                getScope(select, SqlSelect.FROM_OPERAND), pp);
+        } else {
+            return dummyId.findValidOptions(this, dummyScope);
+        }
+    }
+
+
+
+    private String[] lookupFromHints(SqlNode node, 
+        Scope scope, ParserPosition pp) 
+    {
+        final Namespace ns = getNamespace(node);
+        if (ns instanceof IdentifierNamespace) {
+            IdentifierNamespace idns = (IdentifierNamespace)ns;
+            if (pp.toString().equals(idns.id.getParserPosition().toString())) {
+                return catalogReader.getAllSchemaObjectNames(idns.id.names);
+            }
+        }
+        switch (node.getKind().getOrdinal()) {
+        case SqlKind.JoinORDINAL:
+            return lookupJoinHints((SqlJoin) node, scope, pp);
+        default:
+            return getNamespace(node).lookupHints(pp);
+        }
+    }
+
+    private String[] lookupJoinHints(SqlJoin join, Scope scope, ParserPosition pp)
+    {
+        SqlNode left = join.getLeft();
+        SqlNode right = join.getRight();
+        SqlNode condition = join.getCondition();
+        String [] result = lookupFromHints(left, scope, pp);
+        if (result.length > 0) {
+            return result;
+        }
+        result = lookupFromHints(right, scope, pp);
+        if (result.length > 0) {
+            return result;
+        }
+        SqlJoinOperator.ConditionType conditionType = join.getConditionType();
+        final Scope joinScope = (Scope) scopes.get(join);
+        switch (conditionType.ordinal) {
+        case SqlJoinOperator.ConditionType.On_ORDINAL:
+            return condition.findValidOptions(this, joinScope, pp);
+        default:
+        // not supporting lookup hints for other types such as 'Using' yet
+            return Util.emptyStringArray;
+        }
+    }
+
     /**
      * Validates an expression tree. You can call this method multiple times,
      * but not reentrantly.
@@ -1737,7 +1855,7 @@ public class SqlValidator
         group.validate(this, groupScope);
     }
 
-    private void validateWhereClause(SqlSelect select)
+    protected void validateWhereClause(SqlSelect select)
     {
         // validate WHERE clause
         final SqlNode where = select.getWhere();
@@ -1762,7 +1880,7 @@ public class SqlValidator
         }
     }
 
-    private void validateHavingClause(SqlSelect select) {
+    protected void validateHavingClause(SqlSelect select) {
         // HAVING is validated in the scope after groups have been created.
         // For example, in "SELECT empno FROM emp WHERE empno = 10 GROUP BY
         // deptno HAVING empno = 10", the reference to 'empno' in the HAVING
@@ -2188,6 +2306,21 @@ public class SqlValidator
          * found.
          */
         Table getTable(String [] names);
+
+        /**
+         * Gets schema object names as specified. They can be schema or table
+         * object.
+         * If names array contain 1 element, return all schema and table names
+         * If names array contain 2 elements, treat 1st element as schema name
+         * and return all table names in this schema
+         *
+         * @param names the array contains either a fully qualified schema 
+         * object name with catalog.schema.object or a partially qualified name
+         * ending with the object name
+         *
+         * @return the list of possible object names (and schema names)
+         */
+        String [] getAllSchemaObjectNames(String [] names);
     }
 
     /**
@@ -2259,6 +2392,11 @@ public class SqlValidator
          */
         void validate();
 
+        /**
+         * lookup hints from this namespace
+         */
+        String[] lookupHints(ParserPosition pp);
+
         SqlNode getNode();
 
         Namespace lookupChild(String name, Scope [] ancestorOut, int [] offsetOut);
@@ -2301,6 +2439,10 @@ public class SqlValidator
          * Creates an AbstractNamespace.
          */
         AbstractNamespace() {
+        }
+
+        public String[] lookupHints(ParserPosition pp) { 
+            return Util.emptyStringArray;
         }
 
         public void validate() {
@@ -2423,6 +2565,22 @@ public class SqlValidator
         String findQualifyingTableName(String columnName, SqlNode ctx);
 
         /**
+         * Finds all possible column names in this scope
+         *
+         * @param parentObjName if not null, used to resolve a namespace 
+         * from which to query the column names
+         * @param result an array list of strings to add the result to
+         */
+        void findAllColumnNames(String parentObjName, List result);
+       
+        /**
+         * Finds all possible table names in this scope
+         *
+         * @param result an array list of strings to add the result to
+         */
+        void findAllTableNames(List result);
+
+        /**
          * Converts an identifier into a fully-qualified identifier. For
          * example, the "empno" in "select empno from emp natural join dept"
          * becomes "emp.empno".
@@ -2517,6 +2675,14 @@ public class SqlValidator
             return null;
         }
 
+        public void findAllColumnNames(String parentObjName, List result)
+        {
+        }
+
+        public void findAllTableNames(List result)
+        {
+        }
+
         public String findQualifyingTableName(String columnName,
             SqlNode ctx)
         {
@@ -2578,6 +2744,31 @@ public class SqlValidator
                 }
                 return null;
             }
+        }
+
+        public void findAllColumnNames(String parentObjName, List result)
+        {
+            if (parentObjName == null) {
+                for (int i = 0; i < children.size(); i++) {
+                    Namespace ns = (Namespace) children.get(i);
+                    addColumnNames(ns, result);
+                }
+                parent.findAllColumnNames(parentObjName, result);
+            } else {
+                final Namespace ns = resolve(parentObjName, null, null);
+                if (ns != null) {
+                    addColumnNames(ns, result);
+                }
+            }
+        }
+
+        public void findAllTableNames(List result)
+        {
+            for (int i = 0; i < children.size(); i++) {
+                Namespace ns = (Namespace) children.get(i);
+                addTableNames(ns, result);
+            }
+            parent.findAllTableNames(result);
         }
 
         public String findQualifyingTableName(final String columnName,
@@ -2776,6 +2967,10 @@ public class SqlValidator
             validateSelect(select, unknownType);
             return rowType;
         }
+
+        public String[] lookupHints(ParserPosition pp) {
+            return lookupSelectHints(select, pp);
+        }
     }
 
     /**
@@ -2833,6 +3028,10 @@ public class SqlValidator
             }
 
             public void validate() {
+            }
+
+            public String[] lookupHints(ParserPosition pp) {
+                return Util.emptyStringArray;
             }
 
             public SqlNode getNode() {
@@ -3200,6 +3399,49 @@ public class SqlValidator
             return parent.resolve(name, ancestorOut, offsetOut);
         }
 
+        protected void addColumnNames(SqlValidator.Namespace ns,
+                                    List colNames) {
+            final RelDataType rowType;
+            try {
+                rowType = ns.getRowType();
+            } catch (Error e) {
+                // namespace is not good - bail out.
+                return;
+            }
+
+            final RelDataTypeField [] fields = rowType.getFields();
+            for (int i = 0; i < fields.length; i++) {
+                RelDataTypeField field = fields[i];
+                colNames.add(field.getName());
+            }
+        }
+
+        protected void addTableNames(SqlValidator.Namespace ns, 
+                                    List tableNames) {
+            Table table = ns.getTable();
+            if (table == null) return;
+            String [] qnames = table.getQualifiedName();
+            String fullname = "";
+            if (qnames != null) {
+                for (int i = 0; i < qnames.length; i++) {
+                    fullname += qnames[i];
+                    if (i < qnames.length - 1)
+                        fullname += ".";
+                }
+            }
+            tableNames.add(fullname);
+        }
+
+        public void findAllColumnNames(String parentObjName, List result)
+        {
+            parent.findAllColumnNames(parentObjName, result);
+        }
+
+        public void findAllTableNames(List result)
+        {
+            parent.findAllTableNames(result);
+        }
+
         public String findQualifyingTableName(String columnName, SqlNode ctx)
         {
             return parent.findQualifyingTableName(columnName, ctx);
@@ -3299,6 +3541,11 @@ public class SqlValidator
 
         public SqlNode getNode() {
             return orderList;
+        }
+
+        public void findAllColumnNames(String parentObjName, List result) {
+            final Namespace ns = getNamespace(select);
+            addColumnNames(ns, result);
         }
 
         public SqlIdentifier fullyQualify(SqlIdentifier identifier) {
@@ -3432,6 +3679,4 @@ public class SqlValidator
     }
 
 }
-
-
 // End SqlValidator.java

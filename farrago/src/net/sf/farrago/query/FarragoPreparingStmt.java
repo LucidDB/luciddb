@@ -792,6 +792,12 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             resolved.getQualifiedName(),
             rowType);
     }
+    
+    // implement SqlValidator.CatalogReader
+    public String [] getAllSchemaObjectNames(String [] names)
+    {   
+        throw new UnsupportedOperationException();
+    }   
 
     void addDependency(Object supplier)
     {
