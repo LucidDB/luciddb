@@ -6,5 +6,5 @@ CalcExcn.cpp \
 CalcExecStream.cpp \
 CalcExecutionStream.cpp \
 CalcTupleStream.cpp \
-CollectExecutionStream.cpp \
+CollectExecStream.cpp \
 UncollectExecutionStream.cpp
