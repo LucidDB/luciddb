@@ -52,12 +52,14 @@ public class CharStringComparator implements Comparator
     private static String rtrim(String s)
     {
         int n = s.length() - 1;
-        if (s.charAt(n) != ' ') {
-            return s;
-        }
-        for (--n; n >= 0; --n) {
+        if (n >= 0) {
             if (s.charAt(n) != ' ') {
-                return s.substring(0, n + 1);
+                return s;
+            }
+            while ((--n) >= 0) {
+                if (s.charAt(n) != ' ') {
+                    return s.substring(0, n + 1);
+                }
             }
         }
         return "";
