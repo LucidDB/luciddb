@@ -47,6 +47,8 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
 {
     public final Logger logger = Logger.getLogger(getClass().getName());
 
+    private final String hintToken = "$suggest$";
+
     //~ Methods ---------------------------------------------------------------
     public void testFrom() {
         String sql;
@@ -240,6 +242,72 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
 
     }
 
+    public void testSimpleParser() {
+        String sql;
+        String expected;
+       
+        // from
+        sql = "select * from where";
+        expected = "select * from $suggest$";
+        simplify(sql, 14, expected);
+       
+        // from
+        sql = "select a.empno, b.deptno from ";
+        expected = "select a.empno, b.deptno from $suggest$";
+        simplify(sql, 30, expected);
+       
+        // select list
+        sql = "select emp. from sales.emp";
+        expected = "select emp.$suggest$ from sales.emp";
+        simplify(sql, 11, expected);
+        
+        sql = "select from sales.emp";
+        expected = "select $suggest$ from sales.emp";
+        simplify(sql, 7, expected);
+
+        sql = "select a.empno ,  from sales.emp a , sales.dept b";
+        expected = "select a.empno ,$suggest$ from sales.emp a , sales.dept b";
+        simplify(sql, 16, expected);
+
+        // join
+        sql = "select a.empno, b.deptno from dummy a join on where empno=1";
+        expected="select a.empno, b.deptno from dummy a join $suggest$ "
+            + "where empno=1";
+        simplify(sql, 43, expected);
+
+        // on
+        sql = "select a.empno, b.deptno from sales.emp a join sales.dept b "
+            + "on a.deptno=";
+        expected="select a.empno, b.deptno from sales.emp a join sales.dept b "
+            + "on a.deptno=$suggest$";
+        simplify(sql, 73, expected);
+
+        // where
+        sql = "select a.empno, b.deptno from sales.emp a, sales.dept b "
+            + "where ";
+        expected = "select a.empno, b.deptno from sales.emp a, sales.dept b "
+            + "where $suggest$";
+        simplify(sql, 62, expected);
+      
+        // order by
+        sql = "select emp.empno from sales.emp where empno=1 order by ";
+        expected = "select emp.empno from sales.emp where empno=1 order by $suggest$";
+        simplify(sql, 55, expected);
+
+        // subquery
+        sql = "select t. from (select 1 as x, 2 as y from sales.emp) as t where t.dummy=1";
+        expected = "select t.$suggest$ from (select 1 as x, 2 as y from sales.emp) as t where t.dummy=1";
+        simplify(sql, 9, expected);
+
+        sql = "select t. from (select 1 as x, 2 as y from (select x from sales.emp)) as t where ";
+        expected = "select t. from (select 1 as x, 2 as y from (select x from sales.emp)) as t where $suggest$";
+        simplify(sql, 81, expected);
+
+        sql = "select from (select 1 as x, 2 as y from sales.emp), (select 2 as y from (select m from n where)) as t where t.dummy=1";
+        expected = "select $suggest$ from (select 1 as x, 2 as y from sales.emp), (select 2 as y from (select m from n)) as t where t.dummy=1";
+        simplify(sql, 7, expected);
+    }
+
     public void hint(String sql, SqlParserPos pp, List expectedResults) 
     {
         SqlValidator validator;
@@ -265,6 +333,34 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
             + uniqueResults.values() + "\nExpected:\n" + expectedResults);
         }
         return;
+    }
+    
+    public String simplify(String sql, int cursor)
+    {
+        SqlValidator validator;
+        validator = tester.getValidator();
+        SqlAdvisor advisor = new SqlAdvisor(validator);
+        String goodSql = advisor.simplifySql(sql, cursor); 
+        return goodSql;
+    }
+
+    public void simplify(String sql, int cursor, String expected)
+    {
+        String actual = simplify(sql, cursor);
+
+        if (!(expected.equals(actual))) {
+            fail("SqlAdvisorTest: simplified SQL not as expected:\n"
+            + actual + "\nExpected:\n" + expected);
+        }
+    }
+
+    public void complete(String sql, int cursor, List expectedResults)
+    {
+        String simpleSql = simplify(sql, cursor);
+        
+        int idx = simpleSql.indexOf(hintToken);
+        SqlParserPos pp = new SqlParserPos(1, idx+1);
+        hint(simpleSql, pp, expectedResults);
     }
 
     public Tester getTester() {

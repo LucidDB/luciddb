@@ -21,6 +21,7 @@
 
 package org.eigenbase.sql.advise;
 
+import java.util.List;
 import org.eigenbase.sql.SqlValidator;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.parser.SqlParser;
@@ -89,6 +90,23 @@ public class SqlAdvisor
             // requested completion hints
         }
         return validator.lookupHints(sqlNode, pp);
+    }
+
+    /**
+     * Turn a partially completed or syntatically incorrect sql statement into
+     * a simplified, valid one that can be passed into getCompletionHints()
+     * 
+     * @param sql A partial or syntatically incorrect sql statement 
+     * @param cursor to indicate column position in the query at which
+     * completion hints need to be retrieved.  
+     *
+     * @return a completed, valid (and possibly simplified SQL statement
+     *
+     */
+    public String simplifySql(String sql, int cursor)
+    {
+        SqlSimpleParser parser = new SqlSimpleParser();
+        return parser.simplifySql(sql, cursor);
     }
 }
 
