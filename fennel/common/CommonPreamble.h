@@ -216,7 +216,7 @@ extern std::logic_error constructAssertion(
 #define permAssert(cond) \
 do { \
     if (!(cond)) { \
-        throw constructAssertion(__FILE__,__LINE__,#cond); \
+        throw fennel::constructAssertion(__FILE__,__LINE__,#cond); \
     } \
 } while (0)
 
