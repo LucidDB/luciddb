@@ -4,8 +4,8 @@ Fennel
 OVERVIEW
 
 The Fennel project is a database kernel in C++; it is intended for
-embedding in higher-level RDBMS projects, in particular the
-companion Farrago project (http://farrago.sourceforge.net).
+embedding in higher-level RDBMS projects, in particular the companion
+Farrago project (http://farrago.sourceforge.net).
 
 Contact perfecthash@users.sf.net if you're interested in contributing,
 and I'll send you instructions for accessing the Perforce server used
