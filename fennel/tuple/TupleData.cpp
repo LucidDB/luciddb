@@ -59,6 +59,16 @@ bool TupleData::containsNull() const
     return false;
 }
 
+void TupleData::projectFrom(
+    TupleData const& src,
+    TupleProjection const& projection)
+{
+    clear();
+    for (uint i = 0; i < projection.size(); ++i) {
+        push_back(src[projection[i]]);
+    }
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End TupleData.cpp

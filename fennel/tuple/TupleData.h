@@ -27,6 +27,7 @@
 FENNEL_BEGIN_NAMESPACE
 
 class TupleDescriptor;
+class TupleProjection;
 
 /**
  * A TupleDatum is a component of TupleData; see
@@ -78,6 +79,9 @@ public:
     void compute(TupleDescriptor const &);
 
     bool containsNull() const;
+
+    /** project unmarshalled data; like TupleDescriptor::projectFrom */
+    void projectFrom(TupleData const& src, TupleProjection const&);
 };
 
 FENNEL_END_NAMESPACE
