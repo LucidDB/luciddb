@@ -22,7 +22,10 @@
 	<!-- basic build targets -->
 	<target name="build">
 		<property name="build.home" location="${default.build.home}"/>
-		<exec dir="${build.home}/thirdparty" executable="make" failonerror="true"/>
+		<exec dir="${build.home}/thirdparty" executable="make" failonerror="true">
+			<arg value="fennel"/>
+			<arg value="farrago"/>
+		</exec>
 	</target>
 
 
