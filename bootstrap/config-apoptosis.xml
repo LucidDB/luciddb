@@ -2,7 +2,7 @@
 
 <!DOCTYPE cruisecontrol [
 
-<!ENTITY open_p4port     "192.168.1.2:1666">
+<!ENTITY open_p4port     "perforce.eigenbase.org:1666">
 <!ENTITY open_p4client   "cruise.apoptosis">
 <!ENTITY open_p4user     "guest">
 <!ENTITY open_root       "//open/dev">
