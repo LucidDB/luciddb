@@ -29,7 +29,7 @@ import java.lang.reflect.*;
  * particular object on which it should be invoked, together with the arguments
  * which should be passed on invocation.
  */
-class BoundMethod
+public class BoundMethod
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -52,7 +52,7 @@ class BoundMethod
 
     //~ Methods ---------------------------------------------------------------
 
-    Object call()
+    public Object call()
         throws IllegalAccessException, InvocationTargetException
     {
         return method.invoke(o, args);

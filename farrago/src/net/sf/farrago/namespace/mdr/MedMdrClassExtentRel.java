@@ -182,7 +182,7 @@ class MedMdrClassExtentRel extends TableAccessRel implements JavaRel
     RexNode [] implementProjection(Expression inputRow)
     {
         Variable connectionVariable =
-            new Variable(OJStatement.connectionVariable);
+            new Variable(OJPreparingStmt.connectionVariable);
 
         // This is a little silly.  Have to put in a dummy cast
         // so that type inference will stop early (otherwise it

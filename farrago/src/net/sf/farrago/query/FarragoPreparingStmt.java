@@ -65,13 +65,13 @@ import org.eigenbase.util.*;
 
 
 /**
- * FarragoPreparingStmt subclasses OJStatement to implement the
+ * FarragoPreparingStmt subclasses OJPreparingStmt to implement the
  * {@link FarragoSessionPreparingStmt} interface.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoPreparingStmt extends OJStatement
+public class FarragoPreparingStmt extends OJPreparingStmt
     implements FarragoSessionPreparingStmt,
         RelOptConnection,
         RelOptSchema,
@@ -706,19 +706,19 @@ public class FarragoPreparingStmt extends OJStatement
         return new Variable(connectionVariable);
     }
 
-    // override OJStatement
+    // override OJPreparingStmt
     protected String getCompilerClassName()
     {
         return getRepos().getCurrentConfig().getJavaCompilerClassName();
     }
 
-    // override OJStatement
+    // override OJPreparingStmt
     protected boolean shouldSetConnectionInfo()
     {
         return false;
     }
 
-    // override OJStatement
+    // override OJPreparingStmt
     protected boolean shouldAlwaysWriteJavaFile()
     {
         Level dynamicLevel = dynamicTracer.getLevel();
@@ -729,37 +729,37 @@ public class FarragoPreparingStmt extends OJStatement
         }
     }
 
-    // override OJStatement
+    // override OJPreparingStmt
     protected boolean shouldReloadTrace()
     {
         return false;
     }
 
-    // override OJStatement
+    // override OJPreparingStmt
     protected String getClassRoot()
     {
         return classesRoot.getPath();
     }
 
-    // override OJStatement
+    // override OJPreparingStmt
     protected String getJavaRoot()
     {
         return classesRoot.getPath();
     }
 
-    // override OJStatement
+    // override OJPreparingStmt
     protected String getTempPackageName()
     {
         return packageName;
     }
 
-    // override OJStatement
+    // override OJPreparingStmt
     protected String getTempClassName()
     {
         return "ExecutableStmt";
     }
 
-    // override OJStatement
+    // override OJPreparingStmt
     protected String getTempMethodName()
     {
         return "execute";

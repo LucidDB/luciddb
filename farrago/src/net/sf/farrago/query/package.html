@@ -60,7 +60,7 @@ TODO:  details on caching
 <h3>Validation</h3>
 
 After parsing, the parse tree must be validated.  prepareSql in {@link
-org.eigenbase.oj.stmt.OJStatement} is called, this time taking the
+org.eigenbase.oj.stmt.OJPreparingStmt} is called, this time taking the
 root SqlNode and an instance of {@link
 org.eigenbase.sql.SqlValidator} (we supply a {@link
 net.sf.farrago.query.FarragoSqlValidator}).  SqlValidator walks the parse

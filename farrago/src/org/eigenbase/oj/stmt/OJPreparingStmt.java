@@ -64,10 +64,11 @@ import org.eigenbase.util.Util;
 
 
 /**
- * An <code>OJStatement</code> is used to execute a saffron (or regular Java)
- * expression dynamically.
+ * <code>OJPreparingStmt</code> is an abstract base for classes which
+ * implement the process of preparing and executing SQL expressions
+ * by generating OpenJava code.
  */
-public class OJStatement
+public abstract class OJPreparingStmt
 {
     //~ Static fields/initializers --------------------------------------------
 
@@ -78,20 +79,12 @@ public class OJStatement
 
     private String queryString = null;
     protected Environment env;
-    int executionCount = 0;
 
     /** CallingConvention via which results should be returned by execution. */
     private CallingConvention resultCallingConvention;
 
-    /**
-     * Share the same compiler between multiple statements.
-     *
-     * <p>When we used DynamicJava this was important, because DynamicJava
-     * has a class loader which caches class definitions. This may no longer
-     * be the case.
-     */
     protected JavaCompiler javaCompiler;
-    private final RelOptConnection connection;
+    protected final RelOptConnection connection;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -103,7 +96,7 @@ public class OJStatement
      *
      * @pre connection != null || this instanceof RelOptConnection
      */
-    public OJStatement(RelOptConnection connection)
+    public OJPreparingStmt(RelOptConnection connection)
     {
         this.connection =
             ((connection == null) && this instanceof RelOptConnection)
@@ -126,26 +119,7 @@ public class OJStatement
         this.resultCallingConvention = resultCallingConvention;
     }
 
-    /**
-     * Evaluates an expression represented by a parse tree. The parse tree
-     * must not contain any non-standard java syntax.
-     */
-    public Object evaluate(
-        ClassDeclaration decl,
-        ParseTree parseTree,
-        Argument [] arguments)
-    {
-        BoundMethod thunk = compileAndBind(decl, parseTree, arguments);
-        try {
-            return thunk.call();
-        } catch (IllegalAccessException e) {
-            throw Toolbox.newInternal(e);
-        } catch (InvocationTargetException e) {
-            throw Toolbox.newInternal(e);
-        }
-    }
-
-    private BoundMethod compileAndBind(
+    protected BoundMethod compileAndBind(
         ClassDeclaration decl,
         ParseTree parseTree,
         Argument [] arguments)
@@ -171,58 +145,10 @@ public class OJStatement
         return thunk;
     }
 
-    /**
-     * Executes a query string, passing in a set of arguments, and returns the
-     * result.
-     *
-     * <p>
-     * Example:
-     * <blockquote>
-     * <pre>Sales sales = new Sales("jdbc:odbc:Northwind");
-     * int maxSalary = 10000;
-     * Statement statement = new Statement();
-     * statement.execute(
-     *     "select &#42; from sales.emp where emp.sal > maxSalary",
-     *     this.class,
-     *     new Argument[] {
-     *         new Argument("sales", sales),
-     *         new Argument("maxSalary", maxSalary)});</pre>
-     * </blockquote>
-     * </p>
-     *
-     * @param queryString expression to execute. (Although this method is
-     *        intended to allow execution of relational expressions,
-     *        <code>queryString</code> can actually be any valid Java
-     *        expression, for example <code>1 + 2</code>.)
-     * @param arguments a set of name/value pairs to pass to the expression.
-     *
-     * @return the result of evaluating the expression. If the expression is
-     *         relational, the return is a {@link java.util.Enumeration}
-     */
-
-    // FIXME jvs 28-Aug-2004:  disabled during move to Farrago
-
-    /*
-    public Object execute(String queryString,Argument [] arguments)
+    protected void initSub()
     {
-        // (re)load trace level etc. from saffron.properties
-        if (shouldReloadTrace()) {
-            SaffronProperties.instance().apply();
-        }
-        ClassDeclaration decl = init(arguments);
-        ParseTree parseTree = parse(queryString);
-        OJQueryExpander queryExpander = new OJQueryExpander(env, connection);
-        parseTree = validate(parseTree,queryExpander);
-        return evaluate(decl,parseTree,arguments);
     }
-    */
-    public ResultSet executeSql(String queryString)
-    {
-        PreparedResult plan = prepareSql(queryString);
-        assert (!plan.isDml());
-        return (ResultSet) plan.execute();
-    }
-
+    
     public ClassDeclaration init(Argument [] arguments)
     {
         env = OJSystem.env;
@@ -245,23 +171,8 @@ public class OJStatement
             clazz);
         env = new ClosedEnvironment(clazz.getEnvironment());
 
-        // Ensure that the thread has factories for types and planners. (We'd
-        // rather that the client sets these.)
-        setupFactories();
-
-        // Register the connection so that it can be retrieved by the generated
-        // java class (provided it runs inside the same JVM). By default, the
-        // connection is in the variable "connection". But don't assign
-        // connectionInfo.jdbcExprFunctor; someone else may have set it.
-        // FIXME jvs 30-Aug-2004
-        /*
-        if (shouldSetConnectionInfo()) {
-            final OJConnectionRegistry.ConnectionInfo connectionInfo =
-                OJConnectionRegistry.instance.get(connection,true);
-            connectionInfo.expr = new Variable(connectionVariable);
-            connectionInfo.env = env;
-        }
-        */
+        initSub();
+        
         OJUtil.threadDeclarers.set(clazz);
         if ((arguments != null) && (arguments.length > 0)) {
             for (int i = 0; i < arguments.length; i++) {
@@ -292,71 +203,6 @@ public class OJStatement
             }
         }
         return decl;
-    }
-
-    public static void setupFactories()
-    {
-        RelDataTypeFactory typeFactory =
-            RelDataTypeFactoryImpl.threadInstance();
-        if (typeFactory == null) {
-            typeFactory = new OJTypeFactoryImpl();
-            RelDataTypeFactoryImpl.setThreadInstance(typeFactory);
-        }
-
-        // FIXME jvs 29-Aug-2004:  disabled during move to Farrago
-
-        /*
-        if (VolcanoPlannerFactory.threadInstance() == null) {
-            VolcanoPlannerFactory.setThreadInstance(new OJPlannerFactory());
-        }
-        */
-    }
-
-    /*
-    public Expression parse(String queryString)
-    {
-        try {
-            return PartialParser.makeExpression(env,"(" + queryString + ")");
-        } catch (MOPException e) {
-            throw Util.newInternal(e,"while parsing [" + queryString + "]");
-        }
-    }
-    */
-
-    /**
-     * Prepares a statement for execution, starting from a SQL string and
-     * using the standard validator.
-     */
-    public PreparedResult prepareSql(String queryString)
-    {
-        SqlParser parser = new SqlParser(queryString);
-        final SqlNode sqlQuery;
-        try {
-            sqlQuery = parser.parseStmt();
-        } catch (ParseException e) {
-            throw Util.newInternal(e,
-                "Error while parsing SQL '" + queryString + "'");
-        }
-        RelOptSchema schema = connection.getRelOptSchema();
-        SqlValidator.CatalogReader catalogReader;
-        if (schema instanceof SqlValidator.CatalogReader) {
-            catalogReader = (SqlValidator.CatalogReader) schema;
-        } else {
-            // FIXME jvs 29-Aug-2004:  disabled during move to Farrago
-
-            /*
-            catalogReader =
-                new SqlToOpenjavaConverter.SchemaCatalogReader(schema,false);
-            */
-            catalogReader = null;
-        }
-        setupFactories();
-        final SqlValidator validator =
-            new SqlValidator(
-                SqlOperatorTable.instance(),
-                catalogReader,
-                schema.getTypeFactory());
-        return prepareSql(sqlQuery, null, validator, true);
     }
 
     /**
@@ -472,8 +318,8 @@ public class OJStatement
      *   SqlKind.Explain and SqlKind.Dml are special cases.
      * @param needOpt true for a logical query plan (still needs to be
      *   optimized), false for a physical plan.
-     * @param decl openjava ClassDeclaration for the code generated to implement the
-     *   statement.
+     * @param decl openjava ClassDeclaration for the code generated to
+     * implement the statement.
      * @param args openjava argument list for the generated code.
      */
     public PreparedResult prepareSql(
@@ -493,101 +339,34 @@ public class OJStatement
      * Protected method to allow subclasses to override construction of
      * SqlToRelConverter.
      */
-    protected SqlToRelConverter getSqlToRelConverter(
+    protected abstract SqlToRelConverter getSqlToRelConverter(
         SqlValidator validator,
-        final RelOptConnection connection)
-    {
-        return new SqlToRelConverter(
-            validator,
-            connection.getRelOptSchema(),
-            env,
-            connection,
-            new JavaRexBuilder(connection.getRelOptSchema().getTypeFactory()));
-    }
+        final RelOptConnection connection);
 
     /**
      * Protected method to allow subclasses to override construction of
      * JavaRelImplementor.
      */
-    protected JavaRelImplementor getRelImplementor(RexBuilder rexBuilder)
-    {
-        return new JavaRelImplementor(rexBuilder);
-    }
+    protected abstract JavaRelImplementor getRelImplementor(
+        RexBuilder rexBuilder);
 
-    /**
-     * Validates and transforms an expression: expands schemas, validates, and
-     * possibly expands queries.
-     */
+    protected abstract String getClassRoot();
 
-    // FIXME jvs 28-Aug-2004:  disabled during move to Farrago
+    protected abstract String getCompilerClassName();
 
-    /*
-    public ParseTree validate(ParseTree parseTree,QueryExpander queryExpander)
-    {
-        MemberAccessCorrector corrector = new MemberAccessCorrector(env);
-        parseTree = Util.go(corrector,parseTree);
-        OJSchemaExpander schemaExpander = new OJSchemaExpander(env);
-        parseTree = Util.go(schemaExpander,parseTree);
-        OJValidator validator = new OJValidator(env);
-        parseTree = Util.go(validator,parseTree);
-        if (queryExpander == null) {
-            return parseTree;
-        }
-        try {
-            parseTree = Util.go(queryExpander,parseTree);
-        } catch (Throwable e) {
-            throw Util.newInternal(
-                e,
-                "while validating parse tree " + parseTree);
-        }
-        return parseTree;
-    }
-    */
-    protected String getClassRoot()
-    {
-        return SaffronProperties.instance().classDir.get(true);
-    }
+    protected abstract String getJavaRoot();
 
-    protected String getCompilerClassName()
-    {
-        return SaffronProperties.instance().javaCompilerClass.get();
-    }
+    protected abstract String getTempPackageName();
 
-    protected String getJavaRoot()
-    {
-        return SaffronProperties.instance().javaDir.get(true);
-    }
+    protected abstract String getTempMethodName();
 
-    protected String getTempPackageName()
-    {
-        return SaffronProperties.instance().packageName.get();
-    }
+    protected abstract String getTempClassName();
 
-    protected String getTempMethodName()
-    {
-        return "dummy";
-    }
+    protected abstract boolean shouldAlwaysWriteJavaFile();
 
-    protected String getTempClassName()
-    {
-        return "Dummy_"
-        + Integer.toHexString(this.hashCode() + executionCount++);
-    }
+    protected abstract boolean shouldSetConnectionInfo();
 
-    protected boolean shouldAlwaysWriteJavaFile()
-    {
-        return false;
-    }
-
-    protected boolean shouldSetConnectionInfo()
-    {
-        return false;
-    }
-
-    protected boolean shouldReloadTrace()
-    {
-        return true;
-    }
+    protected abstract boolean shouldReloadTrace();
 
     private JavaCompiler createCompiler()
     {
@@ -614,12 +393,6 @@ public class OJStatement
         Class clazz,
         String fromPackageName)
     {
-        //		String fromClassFullName;
-        //		if (fromPackageName == null || fromPackageName.equals("")) {
-        //			fromClassFullName = fromClassName;
-        //		} else {
-        //			fromClassFullName = fromPackageName + "." + fromClassFullName;
-        //		}
         for (Class c = clazz; c != null; c = c.getSuperclass()) {
             int modifiers = c.getModifiers();
             if (Modifier.isPublic(modifiers)) {
@@ -774,46 +547,11 @@ public class OJStatement
             compUnit.setComment("/** "
                 + queryString.replaceAll("\n", "\n// ") + "\n */");
         }
-        String s;
-
-        // TODO jvs 28-June-2004:  get rid of this if DynamicJava
-        // gets tossed
-        // hack because DynamicJava cannot resolve fully-qualified inner
-        // class names such as "saffron.runtime.Dummy_389838.Ojp_0",
-        // and needs dollar signs to help it, but the real Java compiler
-        // is strict and does not accept the dollar signs
-        if (getCompilerClassName().equals("openjava.ojc.DynamicJavaCompiler")) {
-            s = generateDynamicJavaCode(compUnit);
-        } else {
-            s = compUnit.toString();
-        }
+        String s = compUnit.toString();
         String className = decl.getName();
         packageName = compUnit.getPackage(); // e.g. "abc.def", or null
         return compile(packageName, className, s, parameterTypes,
             parameterNames);
-    }
-
-    private String generateDynamicJavaCode(CompilationUnit compUnit)
-    {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        SourceCodeWriter writer =
-            new SourceCodeWriter(pw) {
-                public void visit(TypeName p)
-                    throws ParseTreeException
-                {
-                    out.print(p.getName());
-                    int dims = p.getDimension();
-                    out.print(TypeName.stringFromDimension(dims));
-                }
-            };
-        try {
-            compUnit.accept(writer);
-        } catch (ParseTreeException e) {
-            throw Util.newInternal(e);
-        }
-        pw.close();
-        return sw.toString();
     }
 
     private BoundMethod compile(
@@ -895,18 +633,6 @@ public class OJStatement
         }
     }
 
-    //~ Inner Interfaces ------------------------------------------------------
-
-    interface Binder
-    {
-        void declareClass(ClassDeclaration cdecl);
-
-        void declareVariable(
-            String name,
-            OJClass clazz,
-            Object value);
-    }
-
     //~ Inner Classes ---------------------------------------------------------
 
     /**
@@ -983,4 +709,4 @@ public class OJStatement
 }
 
 
-// End OJStatement.java
+// End OJPreparingStmt.java

@@ -25,7 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.eigenbase.oj.rel.JavaRelImplementor;
-import org.eigenbase.oj.stmt.OJStatement;
+import org.eigenbase.oj.stmt.OJPreparingStmt;
 import org.eigenbase.relopt.RelOptPlanner;
 
 
@@ -84,12 +84,12 @@ public abstract class EigenbaseTrace
     }
 
     /**
-     * The "org.eigenbase.oj.OJStatement" tracer prints the generated
+     * The "org.eigenbase.oj.OJPreparingStmt" tracer prints the generated
      * program at level {@link java.util.logging.Level#FINE} or higher.
      */
     public static Logger getStatementTracer()
     {
-        return Logger.getLogger(OJStatement.class.getName());
+        return Logger.getLogger(OJPreparingStmt.class.getName());
     }
 
     /**

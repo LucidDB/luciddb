@@ -67,7 +67,7 @@ class MedJdbcQueryRel extends JdbcQuery
     public ParseTree implement(JavaRelImplementor implementor)
     {
         Variable connectionVariable =
-            new Variable(OJStatement.connectionVariable);
+            new Variable(OJPreparingStmt.connectionVariable);
 
         String sql = columnSet.directory.normalizeQueryString(queryString);
 

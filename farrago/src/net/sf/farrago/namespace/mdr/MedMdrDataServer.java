@@ -239,7 +239,7 @@ class MedMdrDataServer extends MedAbstractDataServer
     Expression generateRuntimeSupportCall(Expression arg)
     {
         Variable connectionVariable =
-            new Variable(OJStatement.connectionVariable);
+            new Variable(OJPreparingStmt.connectionVariable);
         return new MethodCall(
             connectionVariable,
             "getDataServerRuntimeSupport",
