@@ -288,7 +288,7 @@ public abstract class SqlOperator
      *
      * @return rewritten call
      */
-    public SqlCall rewriteCall(
+    public SqlNode rewriteCall(
         SqlCall call)
     {
         return call;

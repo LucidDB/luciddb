@@ -249,6 +249,11 @@ public class SqlKind extends EnumeratedValues.BasicValue
     public static final SqlKind ProcedureCall =
         new SqlKind("ProcedureCall", ProcedureCallORDINAL);
 
+    /** NewSpecification */
+    public static final int NewSpecificationORDINAL = 147;
+    public static final SqlKind NewSpecification =
+        new SqlKind("NewSpecification", NewSpecificationORDINAL);
+
     // postfix operators
 
     /** Descending */

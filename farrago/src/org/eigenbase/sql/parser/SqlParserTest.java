@@ -1669,6 +1669,14 @@ public class SqlParserTest extends TestCase
         check("call \"blubber\"(5)", "(CALL `blubber`(5))");
         check("call whale.blubber(5)", "(CALL `WHALE`.`BLUBBER`(5))");
     }
+
+    public void testNewSpecification()
+    {
+        checkExp("new udt()", "(NEW `UDT`())");
+        checkExp("new my.udt(1, 'hey')", "(NEW `MY`.`UDT`(1, 'hey'))");
+        checkExp("new udt() is not null", "((NEW `UDT`()) IS NOT NULL)");
+        checkExp("1 + new udt()", "(1 + (NEW `UDT`()))");
+    }
 }
 
 

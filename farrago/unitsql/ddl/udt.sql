@@ -21,8 +21,8 @@ create type rectilinear_coord0 as (
 
 -- test nested type
 create type circle as (
-    center rectilinear_coord,
-    radius double
+    center rectilinear_coord0,
+    radius double default 1
 );
 
 -- should fail:  at least one attribute required
@@ -130,6 +130,42 @@ create table stored_coord_list(
 create view viewed_coord_list as
 select scl.pair_id, scl.coord1, scl.coord2.y
 from stored_coord_list scl;
+
+-- test default constructor (null default value)
+select t.p.x
+from (select new rectilinear_coord() as p from values(0)) as t;
+
+-- test default constructor (non-null default value)
+select t.p.x
+from (select new rectilinear_coord0() as p from values(0)) as t;
+
+-- FIXME:  test nested constructors
+-- select t.c.radius, t.c.center.y
+-- from (select new circle() as c from values(0)) as t;
+
+-- test storage
+
+insert into stored_coord_list 
+values(new rectilinear_coord0(), new rectilinear_coord0(), 1);
+
+insert into stored_coord_list 
+values(new rectilinear_coord0(), new rectilinear_coord0(), 2);
+
+select t.pair_id, t.coord1.x, t.coord2.y 
+from stored_coord_list t
+order by pair_id;
+
+update stored_coord_list set pair_id=-pair_id;
+
+select t.pair_id, t.coord1.x, t.coord2.y 
+from stored_coord_list t
+order by pair_id;
+
+delete from stored_coord_list t where t.coord1.x=0 and t.pair_id=-1;
+
+select t.pair_id, t.coord1.x, t.coord2.y 
+from stored_coord_list t
+order by pair_id;
 
 !set outputformat csv
 

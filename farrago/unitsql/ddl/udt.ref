@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udt.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udt.sql#3 $
 0: jdbc:farrago:> -- Test DDL for user-defined types
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udttest;
@@ -21,8 +21,8 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test nested type
 0: jdbc:farrago:> create type circle as (
-. . . . . . . . >     center rectilinear_coord,
-. . . . . . . . >     radius double
+. . . . . . . . >     center rectilinear_coord0,
+. . . . . . . . >     radius double default 1
 . . . . . . . . > );
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  at least one attribute required
@@ -149,6 +149,69 @@ Error: DDL validation error near line 1, column 35: Reference to unknown datatyp
 0: jdbc:farrago:> create view viewed_coord_list as
 . . . . . . . . > select scl.pair_id, scl.coord1, scl.coord2.y
 . . . . . . . . > from stored_coord_list scl;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test default constructor (null default value)
+0: jdbc:farrago:> select t.p.x
+. . . . . . . . > from (select new rectilinear_coord() as p from values(0)) as t;
++----+
+| X  |
++----+
+|    |
++----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test default constructor (non-null default value)
+0: jdbc:farrago:> select t.p.x
+. . . . . . . . > from (select new rectilinear_coord0() as p from values(0)) as t;
++------+
+|  X   |
++------+
+| 0.0  |
++------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- FIXME:  test nested constructors
+0: jdbc:farrago:> -- select t.c.radius, t.c.center.y
+0: jdbc:farrago:> -- from (select new circle() as c from values(0)) as t;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test storage
+0: jdbc:farrago:> 
+0: jdbc:farrago:> insert into stored_coord_list 
+. . . . . . . . > values(new rectilinear_coord0(), new rectilinear_coord0(), 1);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> insert into stored_coord_list 
+. . . . . . . . > values(new rectilinear_coord0(), new rectilinear_coord0(), 2);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select t.pair_id, t.coord1.x, t.coord2.y 
+. . . . . . . . > from stored_coord_list t
+. . . . . . . . > order by pair_id;
++----------+------+------+
+| PAIR_ID  |  X   |  Y   |
++----------+------+------+
+| 1        | 0.0  | 0.0  |
+| 2        | 0.0  | 0.0  |
++----------+------+------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> update stored_coord_list set pair_id=-pair_id;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select t.pair_id, t.coord1.x, t.coord2.y 
+. . . . . . . . > from stored_coord_list t
+. . . . . . . . > order by pair_id;
++----------+------+------+
+| PAIR_ID  |  X   |  Y   |
++----------+------+------+
+| -2       | 0.0  | 0.0  |
+| -1       | 0.0  | 0.0  |
++----------+------+------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> delete from stored_coord_list t where t.coord1.x=0 and t.pair_id=-1;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select t.pair_id, t.coord1.x, t.coord2.y 
+. . . . . . . . > from stored_coord_list t
+. . . . . . . . > order by pair_id;
++----------+------+------+
+| PAIR_ID  |  X   |  Y   |
++----------+------+------+
+| -2       | 0.0  | 0.0  |
++----------+------+------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set outputformat csv
 0: jdbc:farrago:> 

@@ -66,6 +66,10 @@ class FtrsTableModificationRule extends RelOptRule
             return;
         }
 
+        if (!tableModification.isFlattened()) {
+            return;
+        }
+
         RelNode inputRel = call.rels[1];
 
         // Require input types to match expected types exactly.  This

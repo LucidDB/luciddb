@@ -173,23 +173,6 @@ public abstract class FennelRelUtil
         attrDesc.setNullable(type.isNullable());
     }
 
-    public static FemTupleProjection createTupleProjectionFromColumnList(
-        FarragoRepos repos,
-        List indexColumnList)
-    {
-        FemTupleProjection tupleProj = repos.newFemTupleProjection();
-        Iterator indexColumnIter = indexColumnList.iterator();
-        while (indexColumnIter.hasNext()) {
-            FemAbstractColumn column =
-                (FemAbstractColumn) indexColumnIter.next();
-            FemTupleAttrProjection attrProj =
-                repos.newFemTupleAttrProjection();
-            tupleProj.getAttrProjection().add(attrProj);
-            attrProj.setAttributeIndex(column.getOrdinal());
-        }
-        return tupleProj;
-    }
-
     private static int convertSqlTypeNameToFennelTypeOrdinal(
         SqlTypeName sqlType)
     {

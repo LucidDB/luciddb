@@ -21,12 +21,13 @@
 
 package org.eigenbase.sql2rel;
 
+import org.eigenbase.reltype.*;
 import org.eigenbase.relopt.RelOptTable;
 import org.eigenbase.rex.RexNode;
 
 
 /**
- * DefaultValueFactory supplies default values for INSERT and UPDATE.
+ * DefaultValueFactory supplies default values for INSERT, UPDATE, and NEW.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -36,7 +37,7 @@ public interface DefaultValueFactory
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Create an expression which evaluates to the default value for a
+     * Creates an expression which evaluates to the default value for a
      * particular column.
      *
      * @param table the table containing the column
@@ -45,9 +46,23 @@ public interface DefaultValueFactory
      *
      * @return default value expression
      */
-    public RexNode newDefaultValue(
+    public RexNode newColumnDefaultValue(
         RelOptTable table,
         int iColumn);
+
+    /**
+     * Creates an expression which evaluates to the default value for a
+     * particular attribute of a structured type.
+     *
+     * @param type the structured type
+     *
+     * @param the 0-based offset of the attribute in the type
+     *
+     * @retunr default value expression
+     */
+    public RexNode newAttributeDefaultValue(
+        RelDataType type,
+        int iAttribute);
 }
 
 

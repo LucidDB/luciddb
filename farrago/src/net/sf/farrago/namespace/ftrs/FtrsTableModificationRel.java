@@ -58,6 +58,7 @@ class FtrsTableModificationRel extends TableModificationRel
      * @param connection connection expression
      * @param child child producing rows to be inserted
      * @param operation modification operation to perform
+     * @param updateColumnList list of column names to be updated
      */
     public FtrsTableModificationRel(
         RelOptCluster cluster,
@@ -68,7 +69,7 @@ class FtrsTableModificationRel extends TableModificationRel
         List updateColumnList)
     {
         super(cluster, ftrsTable, connection, child, operation,
-            updateColumnList);
+            updateColumnList, true);
         this.ftrsTable = ftrsTable;
         assert ftrsTable.getPreparingStmt() ==
             FennelRelUtil.getPreparingStmt(this);
@@ -161,10 +162,8 @@ class FtrsTableModificationRel extends TableModificationRel
             FemTableUpdaterDef tableUpdaterDef = repos.newFemTableUpdaterDef();
             tableWriterDef = tableUpdaterDef;
             updateCwmColumnList = getUpdateCwmColumnList();
-            // REVIEW jvs 6-Feb-2005:  I think this needs to account
-            // for flattening.
             tableUpdaterDef.setUpdateProj(
-                FennelRelUtil.createTupleProjectionFromColumnList(repos,
+                ftrsTable.getIndexGuide().createTupleProjectionFromColumnList(
                     updateCwmColumnList));
             break;
         default:

@@ -27,7 +27,7 @@ import org.eigenbase.sql.test.SqlTester;
 /**
  * SqlOrderByOperator is used to represent an ORDER BY on a query
  * other than a SELECT (e.g. VALUES or UNION).  It is a purely syntactic
- * operator, and is eliminated by SqlValidator.createInternalSelect
+ * operator, and is eliminated by SqlValidator.performUnconditionalRewrites
  * and replaced with the ORDER_OPERAND of SqlSelect.
  *
  * @author John V. Sichi

@@ -280,6 +280,18 @@ public class FennelDmlTest extends FarragoTestCase
         }
     }
 
+    public void testDeleteNothing()
+        throws Exception
+    {
+        String sql = "delete from depts where deptno=40";
+        try {
+            int rowCount = stmt.executeUpdate(sql);
+            assertEquals(0, rowCount);
+        } finally {
+            connection.rollback();
+        }
+    }
+    
     /**
      * Test DELETE ... WHERE ...
      *

@@ -60,6 +60,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("CUSTOMER");
         expected.add("CONTACT");
         expected.add("ACCOUNT");
+        expected.add("EMP_ADDRESS");
         
         sql = "select a.empno, b.deptno from ^dummy a, sales.dummy b";
         assertHint(sql, expected); // join
@@ -76,6 +77,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("DEPT");
         expected.add("BONUS");
         expected.add("SALGRADE");
+        expected.add("EMP_ADDRESS");
         
         sql = "select a.empno, b.deptno from dummy a, ^sales.dummy b";
         assertHint(sql, expected); // join
@@ -97,6 +99,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("CUSTOMER");
         expected.add("CONTACT");
         expected.add("ACCOUNT");
+        expected.add("EMP_ADDRESS");
         assertHint(sql, expected); // from
 
         sql = "select a.empno, b.deptno from dummy a join ^sales.dummy b "
@@ -106,6 +109,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         expected.add("DEPT");
         expected.add("BONUS");
         expected.add("SALGRADE");
+        expected.add("EMP_ADDRESS");
         assertHint(sql, expected); // join
     }
 

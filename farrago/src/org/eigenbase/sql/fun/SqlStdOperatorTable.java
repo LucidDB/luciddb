@@ -894,6 +894,8 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     public final SqlOperator procedureCallOperator =
         new SqlProcedureCallOperator();
 
+    public final SqlOperator newOperator = new SqlNewOperator();
+
     /**
      * The WINDOW clause of a SELECT statment.
      *
@@ -1263,7 +1265,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             SqlFunction.SqlFuncTypeName.System)
         {
             // override SqlOperator
-            public SqlCall rewriteCall(SqlCall call)
+            public SqlNode rewriteCall(SqlCall call)
             {
                 SqlNode [] operands = call.getOperands();
                 SqlParserPos pos = call.getParserPosition();
@@ -1305,7 +1307,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             SqlFunction.SqlFuncTypeName.System)
         {
             // override SqlOperator
-            public SqlCall rewriteCall(SqlCall call)
+            public SqlNode rewriteCall(SqlCall call)
             {
                 SqlNode [] operands = call.getOperands();
                 SqlParserPos pos = call.getParserPosition();

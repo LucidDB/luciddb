@@ -677,6 +677,14 @@ public class SqlToRelConverter
                 || call.operator instanceof SqlRowOperator) {
                 final RexNode [] exprs =
                     convertExpressionList(bb, operands);
+                if ((call.operator instanceof SqlFunction)) {
+                    SqlFunction function = (SqlFunction) call.operator;
+                    if (function.getFunctionType() ==
+                        SqlFunction.SqlFuncTypeName.UserDefinedConstructor)
+                    {
+                        return makeConstructorCall(function, exprs);
+                    }
+                }
                 return rexBuilder.makeCall(call.operator, exprs);
             } else if (call.operator instanceof SqlLikeOperator) {
                 final RexNode [] exprs =
@@ -724,6 +732,29 @@ public class SqlToRelConverter
         }
     }
 
+    private RexNode makeConstructorCall(
+        SqlFunction constructor,
+        RexNode [] exprs)
+    {
+        // TODO jvs 12-Feb-2005:  pass exprs to constructor method
+        SqlIdentifier typeName = constructor.getSqlIdentifier();
+        RelDataType type = validator.getCatalogReader().getNamedType(typeName);
+
+        int n = type.getFieldList().size();
+        RexNode [] defaultExprs = new RexNode[n];
+        for (int i = 0; i < n; ++i) {
+            defaultExprs[i] = defaultValueFactory.newAttributeDefaultValue(
+                type, i);
+        }
+
+        RexNode [] defaultCasts = RexUtil.generateCastExpressions(
+            rexBuilder,
+            type,
+            defaultExprs);
+
+        return rexBuilder.makeNewInvocation(type, defaultCasts);
+    }
+    
     private RexNode convertOver(Blackboard bb, SqlNode node) {
         SqlCall call = (SqlCall) node;
         SqlCall aggCall = (SqlCall) call.operands[0];
@@ -1392,7 +1423,7 @@ public class SqlToRelConverter
                 }
 
                 rhsExps[i] =
-                    defaultValueFactory.newDefaultValue(targetTable, i);
+                    defaultValueFactory.newColumnDefaultValue(targetTable, i);
             }
 
             sourceRel =
@@ -1401,7 +1432,7 @@ public class SqlToRelConverter
         }
 
         return new TableModificationRel(cluster, targetTable, connection,
-            sourceRel, TableModificationRel.Operation.INSERT, null);
+            sourceRel, TableModificationRel.Operation.INSERT, null, false);
     }
 
     private RelNode convertDelete(SqlDelete call)
@@ -1411,7 +1442,7 @@ public class SqlToRelConverter
         RelOptTable targetTable = getRelOptTable(targetNamespace, schema);
         RelNode sourceRel = convertSelect(call.getSourceSelect());
         return new TableModificationRel(cluster, targetTable, connection,
-            sourceRel, TableModificationRel.Operation.DELETE, null);
+            sourceRel, TableModificationRel.Operation.DELETE, null, false);
     }
 
     private RelNode convertUpdate(SqlUpdate call)
@@ -1434,7 +1465,7 @@ public class SqlToRelConverter
 
         return new TableModificationRel(cluster, targetTable, connection,
             sourceRel, TableModificationRel.Operation.UPDATE,
-            targetColumnNameList);
+            targetColumnNameList, false);
     }
 
     /**
@@ -1714,6 +1745,11 @@ public class SqlToRelConverter
             return null;
         }
 
+        public RelDataType getNamedType(SqlIdentifier typeName)
+        {
+            return null;
+        }
+        
         public String [] getAllSchemaObjectNames(String [] names)
         {
             throw new UnsupportedOperationException();
@@ -2018,9 +2054,16 @@ public class SqlToRelConverter
      */
     class NullDefaultValueFactory implements DefaultValueFactory
     {
-        public RexNode newDefaultValue(
+        public RexNode newColumnDefaultValue(
             RelOptTable table,
             int iColumn)
+        {
+            return rexBuilder.constantNull();
+        }
+        
+        public RexNode newAttributeDefaultValue(
+            RelDataType type,
+            int iAttribute)
         {
             return rexBuilder.constantNull();
         }

@@ -20,6 +20,7 @@
 */
 package org.eigenbase.sql2rel;
 
+import org.eigenbase.sql.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.relopt.*;
@@ -142,7 +143,8 @@ public class RelStructuredTypeFlattener
                 // keep a mapping somewhere
                 RelDataType flattened = SqlTypeUtil.flattenRecordType(
                     rexBuilder.getTypeFactory(),
-                    oldFieldType);
+                    oldFieldType,
+                    null);
                 offset += flattened.getFieldList().size();
             } else {
                 ++offset;
@@ -159,8 +161,15 @@ public class RelStructuredTypeFlattener
 
     public void rewriteRel(TableModificationRel rel)
     {
-        // TODO jvs 10-Feb-2005:  handle UDT's
-        rewriteGeneric(rel);
+        TableModificationRel newRel = new TableModificationRel(
+            rel.getCluster(),
+            rel.getTable(),
+            rel.getConnection(),
+            getNewForOldRel(rel.child),
+            rel.getOperation(),
+            rel.getUpdateColumnList(),
+            true);
+        setNewForOldRel(rel, newRel);
     }
 
     public void rewriteRel(AggregateRel rel)
@@ -330,7 +339,8 @@ public class RelStructuredTypeFlattener
                     // expand to range
                     RelDataType flattenedType = SqlTypeUtil.flattenRecordType(
                         rexBuilder.getTypeFactory(),
-                        exp.getType());
+                        exp.getType(),
+                        null);
                     List fieldList = flattenedType.getFieldList();
                     int n = fieldList.size();
                     for (int j = 0; j < n; ++j) {
@@ -342,7 +352,7 @@ public class RelStructuredTypeFlattener
                                 field.getType()));
                         flattenedFieldNames.add(null);
                     }
-                } else if (isRowConstructor(exp)) {
+                } else if (isConstructor(exp)) {
                     RexCall call = (RexCall) exp;
                     flattenProjections(
                         call.getOperands(),
@@ -376,14 +386,15 @@ public class RelStructuredTypeFlattener
         }
     }
 
-    private boolean isRowConstructor(RexNode rexNode)
+    private boolean isConstructor(RexNode rexNode)
     {
         // TODO jvs 11-Feb-2005:  share code with SqlToRelConverter
         if (!(rexNode instanceof RexCall)) {
             return false;
         }
         RexCall call = (RexCall) rexNode;
-        return call.getOperator().name.equalsIgnoreCase("row");
+        return call.getOperator().name.equalsIgnoreCase("row")
+            || (call.isA(RexKind.NewSpecification));
     }
 
     public void rewriteRel(TableAccessRel rel)

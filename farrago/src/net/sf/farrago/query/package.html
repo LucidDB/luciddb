@@ -140,7 +140,7 @@ This yields:
 <code>
 ProjectRel(DEPTNO=[$0], NAME=[$1], THE_ANSWER=[42])
   FilterRel(condition=[=($0,10)])
-    FtrsIndexScanRel(table=[SALES.DEPTS], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY],preserveOrder=[false])
+    TableAccessRel(table=[SALES.DEPTS])
 </code>
 </pre>
 
@@ -155,7 +155,7 @@ RelNode); the two-dimensional boxes are validated row expressions
 represented by the {@link org.eigenbase.rex.RexNode} object model.
 Besides children and row expressions, relational expressions may
 have additional attributes; e.g. ProjectRel has an array of names to
-be assigned to the columns it produces, and FtrsIndexScanRel has a
+be assigned to the columns it produces, and TableAccessRel has a
 reference to the table to be scanned.  Within a row expression,
 a {@link org.eigenbase.rex.RexInputRef} may refer to the output of a
 child relational expression via variables with names like
@@ -163,12 +163,6 @@ child relational expression via variables with names like
 ProjectRel's expression refers to something different from the
 <code>$0</code> in the FilterRel's condition expression, since
 the expression is relative to the containing RelNode).
-
-<p>
-
-<em>Note for Nit-Pickers</em>: the EXPLAIN PLAN output above is not
-completely abstract, since TableAccessRel has already been replaced with
-FtrsIndexScanRel during translation.
 
 <h3>Optimization</h3>
 

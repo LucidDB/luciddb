@@ -53,6 +53,7 @@ public class TableModificationRel extends SingleRel
     private Operation operation;
     private List updateColumnList;
     private RelDataType inputRowType;
+    private boolean flattened;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -62,7 +63,8 @@ public class TableModificationRel extends SingleRel
         RelOptConnection connection,
         RelNode child,
         Operation operation,
-        List updateColumnList)
+        List updateColumnList,
+        boolean flattened)
     {
         super(cluster, child);
         this.table = table;
@@ -72,6 +74,7 @@ public class TableModificationRel extends SingleRel
         if (table.getRelOptSchema() != null) {
             cluster.getPlanner().registerSchema(table.getRelOptSchema());
         }
+        this.flattened = flattened;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -91,6 +94,11 @@ public class TableModificationRel extends SingleRel
         return updateColumnList;
     }
 
+    public boolean isFlattened()
+    {
+        return flattened;
+    }
+
     // implement Cloneable
     public Object clone()
     {
@@ -100,7 +108,8 @@ public class TableModificationRel extends SingleRel
             connection,
             RelOptUtil.clone(child),
             operation,
-            updateColumnList);
+            updateColumnList,
+            flattened);
     }
 
     public Operation getOperation()
@@ -141,6 +150,13 @@ public class TableModificationRel extends SingleRel
             inputRowType = table.getRowType();
         }
 
+        if (flattened) {
+            inputRowType = SqlTypeUtil.flattenRecordType(
+                getCluster().getTypeFactory(),
+                inputRowType,
+                null);
+        }
+
         return inputRowType;
     }
 
@@ -148,12 +164,13 @@ public class TableModificationRel extends SingleRel
     {
         pw.explain(
             this,
-            new String [] { "child", "table", "operation", "updateColumnList" },
+            new String [] { "child", "table", "operation", "updateColumnList",
+                            "flattened" },
             new Object [] {
                 Arrays.asList(table.getQualifiedName()), getOperation(),
-                
-            (updateColumnList == null) ? Collections.EMPTY_LIST
-                : updateColumnList
+                (updateColumnList == null) ? Collections.EMPTY_LIST
+                : updateColumnList,
+                Boolean.valueOf(flattened)
             });
     }
 

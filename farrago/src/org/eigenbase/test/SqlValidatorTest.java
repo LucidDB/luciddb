@@ -1816,11 +1816,26 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         check("select*from unnest(select multiset[8] from dept)");
     }
 
+    public void testStructuredTypes()
+    {
+        checkType(
+            "values new address()",
+            "ObjectSqlType(ADDRESS)");
+        checkType(
+            "select home_address from emp_address",
+            "ObjectSqlType(ADDRESS)");
+        checkType(
+            "select ea.home_address.zip from emp_address ea",
+            "INTEGER");
+        checkType(
+            "select ea.mailing_address.city from emp_address ea",
+            "VARCHAR(20)");
+    }
+
     public void testNew() {
         // (To debug invidual statements, paste them into this method.)
     }
 }
-
 
 // End SqlValidatorTest.java
 

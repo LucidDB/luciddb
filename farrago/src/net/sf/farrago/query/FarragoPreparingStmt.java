@@ -34,6 +34,7 @@ import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.util.*;
@@ -824,6 +825,18 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     }
 
     // implement SqlValidator.CatalogReader
+    public RelDataType getNamedType(SqlIdentifier typeName)
+    {
+        CwmSqldataType cwmType = stmtValidator.findSqldataType(typeName);
+        if (!(cwmType instanceof FemSqlobjectType)) {
+            // TODO jvs 12-Feb-2005:  throw an excn stating that only
+            // user-defined type is allowed here
+            return null;
+        }
+        return getFarragoTypeFactory().createCwmType(cwmType);
+    }
+
+    // implement SqlValidator.CatalogReader
     public String [] getAllSchemaObjectNames(String [] names)
     {
         return stmtValidator.getAllSchemaObjectNames(names);
@@ -939,7 +952,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         FarragoObjectCache.CachedObjectFactory
     {
         // implement DefaultValueFactory
-        public RexNode newDefaultValue(
+        public RexNode newColumnDefaultValue(
             RelOptTable table,
             int iColumn)
         {
@@ -950,7 +963,24 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                 (FarragoQueryColumnSet) table;
             CwmColumn column =
                 (CwmColumn) queryColumnSet.getCwmColumnSet().getFeature().get(iColumn);
-            CwmExpression cwmExp = column.getInitialValue();
+            return convertExpression(column.getInitialValue());
+        }
+
+        // implement DefaultValueFactory
+        public RexNode newAttributeDefaultValue(
+            RelDataType type,
+            int iAttribute)
+        {
+            SqlIdentifier typeName = type.getSqlIdentifier();
+            CwmSqldataType cwmType = stmtValidator.findSqldataType(typeName);
+            assert(cwmType instanceof FemSqlobjectType);
+            FemSqltypeAttribute attribute =
+                (FemSqltypeAttribute) cwmType.getFeature().get(iAttribute);
+            return convertExpression(attribute.getInitialValue());
+        }
+
+        private RexNode convertExpression(CwmExpression cwmExp)
+        {
             if (cwmExp.getBody().equalsIgnoreCase("NULL")) {
                 return sqlToRelConverter.getRexBuilder().constantNull();
             }

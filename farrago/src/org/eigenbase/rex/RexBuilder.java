@@ -276,6 +276,16 @@ public class RexBuilder
         return new RexCorrelVariable(name, type);
     }
 
+    public RexNode makeNewInvocation(
+        RelDataType type,
+        RexNode [] exprs)
+    {
+        return new RexCall(
+            type, 
+            opTab.newOperator,
+            exprs);
+    }
+
     public RexNode makeCast(
         RelDataType type,
         RexNode exp)

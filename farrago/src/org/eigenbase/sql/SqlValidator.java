@@ -145,6 +145,14 @@ public class SqlValidator
     //~ Methods ---------------------------------------------------------------
 
     /**
+     * @return the catalog reader used by this validator
+     */
+    public CatalogReader getCatalogReader()
+    {
+        return catalogReader;
+    }
+    
+    /**
      * Returns a list of expressions, with every occurrence of "&#42;" or
      * "TABLE.&#42;" expanded.
      */
@@ -664,9 +672,14 @@ public class SqlValidator
             final SqlNodeList selectList =
                 new SqlNodeList(SqlParserPos.ZERO);
             selectList.add(new SqlIdentifier("*", null));
+            SqlNode sourceTable = call.getTargetTable();
+            if (call.getAlias() != null) {
+                sourceTable = addAlias(
+                    sourceTable, call.getAlias().getSimple());
+            }
             SqlSelect select =
                 SqlStdOperatorTable.instance().selectOperator.createCall(null,
-                    selectList, call.getTargetTable(), call.getCondition(),
+                    selectList, sourceTable, call.getCondition(),
                     null, null, null, null, SqlParserPos.ZERO);
             call.setOperand(SqlDelete.SOURCE_SELECT_OPERAND, select);
         } else if (node.isA(SqlKind.Update)) {
@@ -686,9 +699,14 @@ public class SqlValidator
                 selectList.add(addAlias(exp, alias));
                 ++ordinal;
             }
+            SqlNode sourceTable = call.getTargetTable();
+            if (call.getAlias() != null) {
+                sourceTable = addAlias(
+                    sourceTable, call.getAlias().getSimple());
+            }
             SqlSelect select =
                 SqlStdOperatorTable.instance().selectOperator.createCall(null,
-                    selectList, call.getTargetTable(), call.getCondition(),
+                    selectList, sourceTable, call.getCondition(),
                     null, null, null, null, SqlParserPos.ZERO);
             call.setOperand(SqlUpdate.SOURCE_SELECT_OPERAND, select);
         }
@@ -968,6 +986,15 @@ public class SqlValidator
                         // SqlIdentifier.)
                         function = null;
                     } else {
+                        if (unresolvedFunction.getFunctionType() == 
+                            SqlFunction.SqlFuncTypeName.UserDefinedConstructor)
+                        {
+                            // TODO jvs 12-Feb-2005:  support real constructor
+                            // methods
+                            return deriveConstructorType(
+                                call,
+                                unresolvedFunction);
+                        }
                         function = SqlUtil.lookupRoutine(
                             opTab,
                             unresolvedFunction.getNameAsId(),
@@ -1072,6 +1099,33 @@ public class SqlValidator
         // you should override the operator's validateCall() method so that
         // it doesn't try to validate that operand as an expression.
         throw Util.needToImplement(operand);
+    }
+
+    private RelDataType deriveConstructorType(
+        SqlCall call,
+        SqlFunction constructor)
+    {
+        SqlIdentifier sqlIdentifier = constructor.getSqlIdentifier();
+        assert(sqlIdentifier != null);
+        RelDataType type = catalogReader.getNamedType(sqlIdentifier);
+        if (type == null) {
+            // TODO jvs 12-Feb-2005:  proper type name formatting
+            throw newValidationError(
+                sqlIdentifier,
+                EigenbaseResource.instance().newUnknownDatatypeName(
+                    sqlIdentifier.toString()));
+        }
+        // TODO jvs 12-Feb-2005:  constructor method lookup
+        if (shouldExpandIdentifiers()) {
+            call.operator = new SqlFunction(
+                type.getSqlIdentifier(),
+                null,
+                null,
+                null,
+                null,
+                SqlFunction.SqlFuncTypeName.UserDefinedConstructor);
+        }
+        return type;
     }
 
     private void handleUnresolvedFunction(
@@ -2348,10 +2402,25 @@ public class SqlValidator
     public interface CatalogReader
     {
         /**
-         * Finds a table with the given name or names. Returns null if not
-         * found.
+         * Finds a table with the given name, possibly qualified.
+         *
+         * @return named table, or null if not found
          */
         Table getTable(String [] names);
+
+        /**
+         * Finds a user-defined type with the given name, possibly qualified.
+         *
+         *<p>
+         *
+         * NOTE jvs 12-Feb-2005:  the reason this method is defined here
+         * instead of on RelDataTypeFactory is that it has to take into
+         * account context-dependent information such as SQL schema path,
+         * whereas a type factory is context-independent.
+         *
+         * @return named type, or null if not found
+         */
+        RelDataType getNamedType(SqlIdentifier typeName);
 
         /**
          * Gets schema object names as specified. They can be schema or table

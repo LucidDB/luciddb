@@ -149,6 +149,8 @@ public class RexCall extends RexNode
             return RexKind.Similar;
         case SqlKind.MultisetQueryConstructorORDINAL:
             return RexKind.MultisetQueryConstructor;
+        case SqlKind.NewSpecificationORDINAL:
+            return RexKind.NewSpecification;
         default:
             throw kind.unexpected();
         }
@@ -183,9 +185,11 @@ public class RexCall extends RexNode
 
     public String toString()
     {
-        // REVIEW jvs 16-Jan-2005:  For CAST, the type is really an operand
-        // and needs to be printed out.  But special-casing it here is ugly.
-        return computeDigest(op.kind == SqlKind.Cast);
+        // REVIEW jvs 16-Jan-2005: For CAST and NEW, the type is really an
+        // operand and needs to be printed out.  But special-casing it here is
+        // ugly.
+        return computeDigest(
+            isA(RexKind.Cast) || isA(RexKind.NewSpecification));
     }
 
     public void accept(RexVisitor visitor)

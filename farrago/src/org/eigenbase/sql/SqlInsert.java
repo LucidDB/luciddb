@@ -69,7 +69,7 @@ public class SqlInsert extends SqlCall
     /**
      * Get the source SELECT expression for the data to be inserted.  This
      * returns null before the statement
-     * has been expanded by SqlValidator.createInternalSelect
+     * has been expanded by SqlValidator.performUnconditionalRewrites
      *
      * @return the source SELECT for the data to be inserted
      */

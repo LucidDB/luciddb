@@ -39,8 +39,8 @@ public class SqlProcedureCallOperator extends SqlPrefixOperator
         super("CALL", SqlKind.ProcedureCall, 0, null, null, null);
     }
 
-    // override Sqloperator
-    public SqlCall rewriteCall(
+    // override SqlOperator
+    public SqlNode rewriteCall(
         SqlCall call)
     {
         // for now, rewrite "CALL f(x)" to "SELECT f(x) FROM VALUES(0)"

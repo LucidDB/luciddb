@@ -235,10 +235,18 @@ public class SqlFunction extends SqlOperator
 
         public static final int UserDefinedProcedure_ordinal = 5;
         
-        /** User-defined function type **/
+        /** User-defined procedure type **/
         public static final SqlFuncTypeName UserDefinedProcedure =
             new SqlFuncTypeName(
                 "UDP", UserDefinedProcedure_ordinal, "User-defined procedure");
+
+        public static final int UserDefinedConstructor_ordinal = 6;
+        
+        /** User-defined constructor type **/
+        public static final SqlFuncTypeName UserDefinedConstructor =
+            new SqlFuncTypeName(
+                "UDC", UserDefinedConstructor_ordinal,
+                "User-defined constructor");
 
         private SqlFuncTypeName(
             String name,

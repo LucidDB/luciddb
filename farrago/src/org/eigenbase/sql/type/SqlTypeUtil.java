@@ -623,17 +623,23 @@ public abstract class SqlTypeUtil
      *
      * @param recordType type with possible nesting
      *
+     * @param flatteningMap if non-null, receives map from unflattened
+     * ordinal to flattened ordinal (must have length at least
+     * recordType.getFieldList().size())
+     *
      * @return flattened equivalent
      */
     public static RelDataType flattenRecordType(
         RelDataTypeFactory typeFactory,
-        RelDataType recordType)
+        RelDataType recordType,
+        int [] flatteningMap)
     {
         List fieldList = new ArrayList();
         boolean nested =
             flattenFields(
                 recordType.getFields(),
-                fieldList);
+                fieldList,
+                flatteningMap);
         if (!nested) {
             return recordType;
         }
@@ -649,15 +655,20 @@ public abstract class SqlTypeUtil
 
     private static boolean flattenFields(
         RelDataTypeField [] fields,
-        List list)
+        List list,
+        int [] flatteningMap)
     {
         boolean nested = false;
         for (int i = 0; i < fields.length; ++i) {
+            if (flatteningMap != null) {
+                flatteningMap[i] = list.size();
+            }
             if (fields[i].getType().isStruct()) {
                 nested = true;
                 flattenFields(
                     fields[i].getType().getFields(),
-                    list);
+                    list,
+                    null);
             } else {
                 list.add(fields[i]);
             }

@@ -229,6 +229,10 @@ public class RexKind extends EnumeratedValues.BasicValue
     public static final int MultisetQueryConstructorOrdinal = 45;
     public static final RexKind MultisetQueryConstructor =
         new RexKind("MultisetQueryConstructor", MultisetQueryConstructorOrdinal);
+    /** NEW invocation */
+    public static final int NewSpecificationOrdinal = 46;
+    public static final RexKind NewSpecification =
+        new RexKind("NewSpecification", NewSpecificationOrdinal);
 
     /**
      * Set of all {@link RexKind} instances.
@@ -240,7 +244,8 @@ public class RexKind extends EnumeratedValues.BasicValue
             And, Or, Not, Logical, // logical
             Divide, Minus, Plus, MinusPrefix, Times, Arithmetic, // arithmetic
             FieldAccess, Concat, Substr, Row, Identifier, Literal,
-                Values, DynamicParam, Cast, Trim, MultisetQueryConstructor
+                Values, DynamicParam, Cast, Trim, MultisetQueryConstructor,
+                NewSpecification
             });
 
     //~ Instance fields -------------------------------------------------------

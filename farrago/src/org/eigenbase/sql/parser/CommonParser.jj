@@ -441,16 +441,30 @@ boolean WithImplementation() :
  */
 SqlNode SqlProcedureCall() :
 {
-    SqlIdentifier name;
-    List args;
     SqlParserPos callPos;
-    SqlParserPos funcPos;
+    SqlNode routineCall;
 }
 {
     <CALL>
         {
             callPos = getPos();
         }
+    routineCall =
+        NamedRoutineCall(SqlFunction.SqlFuncTypeName.UserDefinedProcedure)
+        {
+        }
+    {
+        return opTab.procedureCallOperator.createCall(routineCall, callPos);
+    }
+}
+
+SqlNode NamedRoutineCall(SqlFunction.SqlFuncTypeName routineType) :
+{
+    SqlIdentifier name;
+    List args;
+    SqlParserPos funcPos;
+}
+{
     name = CompoundIdentifier()
         {
             funcPos = getPos();
@@ -464,8 +478,8 @@ SqlNode SqlProcedureCall() :
     {
         SqlNode function = createCall(
             name, SqlParserUtil.toNodeArray(args), funcPos,
-            SqlFunction.SqlFuncTypeName.UserDefinedProcedure);
-        return opTab.procedureCallOperator.createCall(function, callPos);
+            routineType);
+        return function;
     }
 }
 
@@ -515,6 +529,7 @@ SqlNode SqlInsert() :
 SqlNode SqlDelete() :
 {
     SqlIdentifier table;
+    SqlIdentifier alias = null;
     SqlNode condition;
     SqlParserPos pos;
 }
@@ -527,11 +542,19 @@ SqlNode SqlDelete() :
         {
 
         }
+    [ (<AS>)? alias = SimpleIdentifier() ]
+        {
+        }
     condition = WhereOpt()
         {
         }
     {
-        return new SqlDelete(opTab.deleteOperator,table,condition, pos);
+        return new SqlDelete(
+            opTab.deleteOperator,
+            table,
+            condition,
+            alias,
+            pos);
     }
 }
 
@@ -541,6 +564,7 @@ SqlNode SqlDelete() :
 SqlNode SqlUpdate() :
 {
     SqlIdentifier table;
+    SqlIdentifier alias = null;
     SqlNode condition;
     SqlNodeList sourceExpressionList;
     SqlNodeList targetColumnList;
@@ -554,6 +578,9 @@ SqlNode SqlUpdate() :
             pos = getPos();
             targetColumnList = new SqlNodeList(pos);
             sourceExpressionList = new SqlNodeList(pos);
+        }
+    [ (<AS>)? alias = SimpleIdentifier() ]
+        {
         }
     <SET>
          id = SimpleIdentifier()
@@ -587,7 +614,9 @@ SqlNode SqlUpdate() :
             table,
             targetColumnList,
             sourceExpressionList,
-            condition, pos);
+            condition,
+            alias,
+            pos);
     }
 }
 
@@ -1508,6 +1537,8 @@ SqlNode AtomicRowExpression() :
 |
     e = CompoundIdentifier() { return e; }
 |
+    e = NewSpecification() { return e; }
+|
     {
         SqlNode caseIdentifier=null;
         SqlNode elseClause = null;
@@ -1945,6 +1976,28 @@ SqlIdentifier CompoundIdentifier() :
     (p = Identifier() {pos = getPos();list.add(p);})
     (<DOT> p = Identifier() {list.add(p);})*
     {return new SqlIdentifier(SqlParserUtil.toStringArray(list), pos);}
+}
+
+/**
+ * Parses a NEW UDT(...) expression.
+ */
+SqlNode NewSpecification() :
+{
+    SqlParserPos callPos;
+    SqlNode routineCall;
+}
+{
+    <NEW>
+        {
+            callPos = getPos();
+        }
+    routineCall =
+        NamedRoutineCall(SqlFunction.SqlFuncTypeName.UserDefinedConstructor)
+        {
+        }
+    {
+        return opTab.newOperator.createCall(routineCall, callPos);
+    }
 }
 
 //TODO: real parse errors.

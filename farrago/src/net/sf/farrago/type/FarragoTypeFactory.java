@@ -56,7 +56,8 @@ public interface FarragoTypeFactory extends OJTypeFactory
     public FarragoRepos getRepos();
 
     /**
-     * Creates a type which represents the datatype of a FemSqltypedElement.
+     * Creates a type which represents the datatype of a
+     * FemAbstractTypedElement.
      *
      * @param element CWM typed element
      *
@@ -64,6 +65,16 @@ public interface FarragoTypeFactory extends OJTypeFactory
      */
     public RelDataType createCwmElementType(
         FemAbstractTypedElement element);
+
+    /**
+     * Creates a type which represents a CwmSqldataType.
+     *
+     * @param cwmType CWM type instance
+     *
+     * @return generated type
+     */
+    public RelDataType createCwmType(
+        CwmSqldataType cwmType);
 
     /**
      * Creates a type which represents a structured row based on a

@@ -595,6 +595,12 @@ public class SqlToOpenjavaConverter
             }
             return null;
         }
+
+        public RelDataType getNamedType(SqlIdentifier sqlIdentifier)
+        {
+            // TODO jvs 12-Feb-2005:  use OpenJava/reflection?
+            return null;
+        }
         
         public String [] getAllSchemaObjectNames(String [] names)
         {

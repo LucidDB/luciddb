@@ -58,6 +58,8 @@ class FtrsIndexGuide
     
     private RelDataType flattenedRowType;
 
+    private int [] flatteningMap;
+
     FtrsIndexGuide(
         FarragoTypeFactory typeFactory,
         CwmColumnSet table)
@@ -69,8 +71,13 @@ class FtrsIndexGuide
         unflattenedRowType =
             typeFactory.createStructTypeFromFeatureList(table.getFeature());
         
+        int n = unflattenedRowType.getFieldList().size();
+        flatteningMap = new int[n];
         flattenedRowType =
-            SqlTypeUtil.flattenRecordType(typeFactory, unflattenedRowType);
+            SqlTypeUtil.flattenRecordType(
+                typeFactory,
+                unflattenedRowType,
+                flatteningMap);
     }
 
     /**
@@ -223,8 +230,9 @@ class FtrsIndexGuide
         if (index.isClustered()) {
             List indexColumnList = new ArrayList();
             appendClusteredDistinctKey(index, indexColumnList);
-            return FennelRelUtil.createTupleProjectionFromColumnList(repos,
-                indexColumnList);
+            FemTupleProjection tupleProj =
+                createTupleProjectionFromColumnList(indexColumnList);
+            return tupleProj;
         }
 
         int n;
@@ -290,18 +298,33 @@ class FtrsIndexGuide
         List indexColumnList = getUnclusteredCoverageColList(index);
 
         FemTupleProjection proj =
-            FennelRelUtil.createTupleProjectionFromColumnList(
-                repos,indexColumnList);
-
-        // have to adjust for flattening
-        for (int i = 0; i < proj.getAttrProjection().size(); ++i) {
-            FemTupleAttrProjection attr =
-                (FemTupleAttrProjection) proj.getAttrProjection().get(i);
-            attr.setAttributeIndex(
-                flattenOrdinal(
-                    attr.getAttributeIndex()));
-        }
+            createTupleProjectionFromColumnList(indexColumnList);
         return proj;
+    }
+
+    /**
+     * Generate a FemTupleProjection from a list of CWM columns.
+     *
+     * @param indexColumnList list of columns
+     *
+     * @return generated FemTupleProjection
+     */
+    FemTupleProjection createTupleProjectionFromColumnList(
+        List indexColumnList)
+    {
+        FemTupleProjection tupleProj = repos.newFemTupleProjection();
+        Iterator indexColumnIter = indexColumnList.iterator();
+        while (indexColumnIter.hasNext()) {
+            FemAbstractColumn column =
+                (FemAbstractColumn) indexColumnIter.next();
+            FemTupleAttrProjection attrProj =
+                repos.newFemTupleAttrProjection();
+            tupleProj.getAttrProjection().add(attrProj);
+            attrProj.setAttributeIndex(
+                flattenOrdinal(
+                    column.getOrdinal()));
+        }
+        return tupleProj;
     }
 
     private void appendConstraintColumns(
@@ -411,9 +434,7 @@ class FtrsIndexGuide
      */
     private int flattenOrdinal(int columnOrdinal)
     {
-        Object field = 
-            unflattenedRowType.getFieldList().get(columnOrdinal);
-        int i = flattenedRowType.getFieldList().indexOf(field);
+        int i = flatteningMap[columnOrdinal];
         assert(i != -1);
         return i;
     }

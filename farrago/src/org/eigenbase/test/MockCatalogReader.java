@@ -20,10 +20,9 @@
 */
 package org.eigenbase.test;
 
-import org.eigenbase.sql.SqlValidator;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.util.Util;
 
 import java.util.HashMap;
@@ -46,6 +45,7 @@ public class MockCatalogReader implements SqlValidator.CatalogReader
     protected final RelDataTypeFactory typeFactory;
     private final HashMap tables = new HashMap();
     private final HashMap schemas = new HashMap();
+    private final RelDataType addressType;
 
     public MockCatalogReader(RelDataTypeFactory typeFactory) {
         this.typeFactory = typeFactory;
@@ -57,6 +57,18 @@ public class MockCatalogReader implements SqlValidator.CatalogReader
             typeFactory.createSqlType(SqlTypeName.Varchar, 20);
         final RelDataType dateType =
             typeFactory.createSqlType(SqlTypeName.Date);
+
+        // TODO jvs 12-Feb-2005: register this canonical instance with type
+        // factory
+        addressType = new ObjectSqlType(
+            new SqlIdentifier("ADDRESS", null),
+            false,
+            new RelDataTypeField [] {
+                new RelDataTypeFieldImpl("STREET", 0, varchar20Type),
+                new RelDataTypeFieldImpl("CITY", 1, varchar20Type),
+                new RelDataTypeFieldImpl("ZIP", 1, intType), 
+                new RelDataTypeFieldImpl("STATE", 1, varchar20Type)
+            });
 
         // Register "SALES" schema.
         MockSchema salesSchema = new MockSchema("SALES");
@@ -92,6 +104,14 @@ public class MockCatalogReader implements SqlValidator.CatalogReader
         salgradeTable.addColumn("HISAL", intType);
         registerTable(salgradeTable);
 
+        // Register "EMP_ADDRESS" table
+        MockTable contactAddressTable =
+            new MockTable(salesSchema, "EMP_ADDRESS");
+        contactAddressTable.addColumn("EMPNO", intType);
+        contactAddressTable.addColumn("HOME_ADDRESS", addressType);
+        contactAddressTable.addColumn("MAILING_ADDRESS", addressType);
+        registerTable(contactAddressTable);
+        
         // Register "CUSTOMER" schema.
         MockSchema customerSchema = new MockSchema("CUSTOMER");
         registerSchema(customerSchema);
@@ -108,7 +128,6 @@ public class MockCatalogReader implements SqlValidator.CatalogReader
         accountTable.addColumn("TYPE", varchar20Type);
         accountTable.addColumn("BALANCE", intType);
         registerTable(accountTable);
-
     }
 
     protected void registerTable(MockTable table) {
@@ -136,6 +155,15 @@ public class MockCatalogReader implements SqlValidator.CatalogReader
         return null;
     }
 
+    public RelDataType getNamedType(SqlIdentifier typeName)
+    {
+        if (typeName.equalsDeep(addressType.getSqlIdentifier())) {
+            return addressType;
+        } else {
+            return null;
+        }
+    }
+    
     public String [] getAllSchemaObjectNames(String [] names)
     {
         if (names.length == 1) {
