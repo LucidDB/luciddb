@@ -139,19 +139,22 @@ public class SqlDataTypeSpec extends SqlNode
     {
         String name = typeName.getSimple();
         if (SqlTypeName.containsName(name)) {
+            SqlTypeName sqlTypeName = SqlTypeName.get(name);
+            
             //we have a built in data type
             writer.print(name);
 
-            if (precision > 0) {
+            if (sqlTypeName.allowsPrec()) {
                 writer.print("(" + precision);
-                if (scale > 0) {
+                if (sqlTypeName.allowsScale()) {
                     writer.print(", " + scale);
                 }
                 writer.print(")");
             }
 
             if (charSetName != null) {
-                writer.print(" CHARACTER SET " + charSetName);
+                writer.print(" CHARACTER SET ");
+                writer.printIdentifier(charSetName);
             }
         } else {
             // else we have a user defined type

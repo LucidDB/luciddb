@@ -22,10 +22,7 @@ package org.eigenbase.sql.type;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.Util;
-import org.eigenbase.sql.SqlValidator;
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlCall;
-import org.eigenbase.sql.SqlSymbol;
+import org.eigenbase.sql.*;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.resource.EigenbaseResource;
 
@@ -557,7 +554,8 @@ public abstract class SqlTypeUtil
     /**
      * @return the field names of a struct type
      */
-    public static String[] getFieldNames(RelDataType type) {
+    public static String[] getFieldNames(RelDataType type)
+    {
         RelDataTypeField[] fields = type.getFields();
         String[] ret = new String[fields.length];
         for (int i = 0; i < fields.length; i++) {
@@ -569,13 +567,65 @@ public abstract class SqlTypeUtil
     /**
      * @return the field types of a struct type
      */
-    public static RelDataType[] getFieldTypes(RelDataType type) {
+    public static RelDataType[] getFieldTypes(RelDataType type)
+    {
         RelDataTypeField[] fields = type.getFields();
         RelDataType[] ret = new RelDataType[fields.length];
         for (int i = 0; i < fields.length; i++) {
             ret[i] = fields[i].getType();
         }
         return ret;
+    }
+
+    /**
+     * Converts an instance of RelDataType to an instance of SqlDataTypeSpec.
+     *
+     * @param type type descriptor
+     *
+     * @return corresponding parse representation
+     */
+    public static SqlDataTypeSpec convertTypeToSpec(RelDataType type)
+    {
+        SqlTypeName typeName = type.getSqlTypeName();
+
+        // TODO jvs 28-Dec-2004:  support row types, user-defined types,
+        // interval types, multiset types, etc
+        assert(typeName != null);
+        SqlIdentifier typeIdentifier = new SqlIdentifier(
+            typeName.getName(), null);
+
+        String charSetName = null;
+
+        if (inCharFamily(type)) {
+            charSetName = type.getCharset().name();
+            // TODO jvs 28-Dec-2004:  collation
+        }
+
+        // REVIEW jvs 28-Dec-2004:  discriminate between precision/scale
+        // zero and unspecified?
+        
+        if (typeName.allowsScale()) {
+            return new SqlDataTypeSpec(
+                typeIdentifier,
+                type.getPrecision(),
+                type.getScale(),
+                charSetName,
+                null);
+        } else if (typeName.allowsPrec()) {
+            return new SqlDataTypeSpec(
+                typeIdentifier,
+                type.getPrecision(),
+                0,
+                charSetName,
+                null);
+        } else {
+            return new SqlDataTypeSpec(
+                typeIdentifier,
+                0,
+                0,
+                charSetName,
+                null);
+        }
     }
 }
 

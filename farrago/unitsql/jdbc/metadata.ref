@@ -206,7 +206,7 @@ getNumericFunctions                               SUM,COUNT,MIN,MAX,POSITION,CHA
 getProcedureTerm                                  
 getSchemaTerm                                     schema
 getSearchStringEscape                             \
-getSQLKeywords                                    checkpoint,clustered,release,savepoint,system,truncate,type,CAST,EXTRACT,POSITION,CONVERT,TRANSLATE,OVERLAY,SUBSTRING,TRIM,a,asymmetric,bigint,binary,boolean,collect,descending,explain,following,member,multiset,over,partition,placing,preceding,range,row,similar,submultiset,symmetric,tinyint,unbounded,unnest,varbinary,window,without
+getSQLKeywords                                    checkpoint,clustered,function,inout,out,release,routine,savepoint,system,truncate,type,CAST,EXTRACT,POSITION,CONVERT,TRANSLATE,OVERLAY,SUBSTRING,TRIM,a,asymmetric,bigint,binary,boolean,collect,descending,explain,following,member,multiset,over,partition,placing,preceding,range,row,similar,submultiset,symmetric,tinyint,unbounded,unnest,varbinary,window,without
 getStringFunctions                                SUBSTRING,CONVERT,TRANSLATE,OVERLAY,TRIM,UPPER,LOWER,INITCAP
 getSystemFunctions                                NULLIF,COALESCE,USER,CURRENT_USER,SESSION_USER,SYSTEM_USER,CURRENT_PATH,CURRENT_ROLE,CAST,EXTRACT,ELEMENT,CARDINALITY
 getTimeDateFunctions                              LOCALTIME,LOCALTIMESTAMP,CURRENT_TIME,CURRENT_TIMESTAMP,CURRENT_DATE

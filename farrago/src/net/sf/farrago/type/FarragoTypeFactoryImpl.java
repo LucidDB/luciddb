@@ -32,6 +32,7 @@ import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.datatypes.CwmTypeAlias;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.type.runtime.*;
@@ -96,9 +97,9 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     }
 
     // implement FarragoTypeFactory
-    public RelDataType createColumnType(CwmColumn column)
+    public RelDataType createCwmElementType(FemSqltypedElement element)
     {
-        CwmClassifier classifier = column.getType();
+        CwmClassifier classifier = element.getType();
 
         // TODO jvs 15-Dec-2004:  support multisets, UDT's, intervals
         assert (classifier instanceof CwmSqlsimpleType);
@@ -107,11 +108,11 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         SqlTypeName typeName = SqlTypeName.get(simpleType.getName());
         assert(typeName != null);
 
-        Integer pPrecision = column.getLength();
+        Integer pPrecision = element.getLength();
         if (pPrecision == null) {
-            pPrecision = column.getPrecision();
+            pPrecision = element.getPrecision();
         }
-        Integer pScale = column.getScale();
+        Integer pScale = element.getScale();
 
         RelDataType type;
         if (pScale != null) {
@@ -129,7 +130,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                 typeName);
         }
         
-        String charsetName = column.getCharacterSetName();
+        String charsetName = element.getCharacterSetName();
         SqlCollation collation;
         if (!charsetName.equals("")) {
             // TODO:  collation in CWM
@@ -144,7 +145,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
 
         type = createTypeWithNullability(
             type, 
-            getRepos().isNullable(column));
+            getRepos().isNullable(element));
 
         return type;
     }
@@ -172,9 +173,9 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
 
                 public RelDataType getFieldType(int index)
                 {
-                    final CwmColumn column =
-                        (CwmColumn) featureList.get(index);
-                    return createColumnType(column);
+                    final FemSqltypedElement element =
+                        (FemSqltypedElement) featureList.get(index);
+                    return createCwmElementType(element);
                 }
             });
     }

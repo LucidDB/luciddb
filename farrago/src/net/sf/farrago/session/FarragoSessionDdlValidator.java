@@ -226,12 +226,22 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
     /**
      * Sets the SQL statement of a view from a given SQL parse tree.
      *
-     * @param view   View to modify
-     * @param query  SQL parse tree
+     * @param view view to modify
+     * @param query SQL parse tree
      */
     public void setViewText(
         CwmView view,
         SqlNode query);
+
+    /**
+     * Sets the SQL body of a routine from a given SQL parse tree.
+     *
+     * @param routine routine to modify
+     * @param body SQL parse tree
+     */
+    public void setProcedureText(
+        CwmProcedure routine,
+        SqlNode body);
 
     /**
      * Defines the handlers to be used to validate and execute DDL actions

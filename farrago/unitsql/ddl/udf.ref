@@ -1,0 +1,132 @@
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/stale.sql#1 $
+0: jdbc:farrago:> -- Test DDL for user-defined functions
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create schema udftest;
+0: jdbc:farrago:> create schema udftest2;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set schema udftest;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function celsius_to_fahrenheit(in c double)
+. . . . . . . . > returns double
+. . . . . . . . > contains sql
+. . . . . . . . > return c*1.8 + 32;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function add_integers(in i int,in j int)
+. . . . . . . . > returns int
+. . . . . . . . > contains sql
+. . . . . . . . > return i + j;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- this should fail since add_integers is not a procedure
+0: jdbc:farrago:> drop procedure add_integers;
+Error: Reference to unknown procedure UDFTEST.ADD_INTEGERS;
+encountered near line 1, column 16 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- but DROP ROUTINE should work
+0: jdbc:farrago:> drop routine add_integers;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test overloading
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail
+0: jdbc:farrago:> create function celsius_to_fahrenheit(in c real)
+. . . . . . . . > returns real
+. . . . . . . . > contains sql
+. . . . . . . . > return c*1.8 + 32;
+Error: Routine CELSIUS_TO_FAHRENHEIT already exists within Schema LOCALDB.UDFTEST;
+duplicate name encountered near line 1, column 8 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should succeed:  specific name avoids conflict
+0: jdbc:farrago:> create function celsius_to_fahrenheit(in c real)
+. . . . . . . . > returns real
+. . . . . . . . > specific celsius_to_fahrenheit_real
+. . . . . . . . > contains sql
+. . . . . . . . > return c*1.8 + 32;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  schema for specific name must match schema for invocation name
+0: jdbc:farrago:> create function add_integers(in i int,in j int)
+. . . . . . . . > returns int
+. . . . . . . . > specific udftest2.add_ints
+. . . . . . . . > contains sql
+. . . . . . . . > return i + j;
+Error: Schema UDFTEST2 for specific name does not match schema UDFTEST for invocation name;
+encountered near line 1, column 8 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- drop by specific name
+0: jdbc:farrago:> drop function celsius_to_fahrenheit;
+0: jdbc:farrago:> drop function celsius_to_fahrenheit_real;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  can't declare OUT parameter to function
+0: jdbc:farrago:> create function add_integers(out i int,in j int)
+. . . . . . . . > returns int
+. . . . . . . . > contains sql
+. . . . . . . . > return i + j;
+Error: Parameters to function UDFTEST.ADD_INTEGERS may not be declared as OUT or INOUT;
+encountered near line 1, column 29 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  can't declare INOUT parameter to function
+0: jdbc:farrago:> create function add_integers(inout i int,in j int)
+. . . . . . . . > returns int
+. . . . . . . . > contains sql
+. . . . . . . . > return i + j;
+Error: Parameters to function UDFTEST.ADD_INTEGERS may not be declared as OUT or INOUT;
+encountered near line 1, column 29 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test various modifiers
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  NO SQL can't be specified for SQL-defined routines
+0: jdbc:farrago:> create function add_integers(in i int,in j int)
+. . . . . . . . > returns int
+. . . . . . . . > no sql
+. . . . . . . . > return i + j;
+Error: Routine UDFTEST.ADD_INTEGERS with SQL definition cannot specify NO SQL;
+encountered near line 1, column 8 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- a bit of a fib, but should pass
+0: jdbc:farrago:> create function add_integers(in i int,in j int)
+. . . . . . . . > returns int
+. . . . . . . . > reads sql data
+. . . . . . . . > return i + j;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop function add_integers;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- a bit of a fib, but should pass
+0: jdbc:farrago:> create function add_integers(in i int,in j int)
+. . . . . . . . > returns int
+. . . . . . . . > modifies sql data
+. . . . . . . . > return i + j;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop function add_integers;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function add_integers(in i int,in j int)
+. . . . . . . . > returns int
+. . . . . . . . > contains sql
+. . . . . . . . > deterministic
+. . . . . . . . > return i + j;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop function add_integers;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function add_integers(in i int,in j int)
+. . . . . . . . > returns int
+. . . . . . . . > contains sql
+. . . . . . . . > not deterministic
+. . . . . . . . > return i + j;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop function add_integers;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function add_integers(in i int,in j int)
+. . . . . . . . > returns int
+. . . . . . . . > contains sql
+. . . . . . . . > returns null on null input
+. . . . . . . . > return i + j;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop function add_integers;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function add_integers(in i int,in j int)
+. . . . . . . . > returns int
+. . . . . . . . > contains sql
+. . . . . . . . > called on null input
+. . . . . . . . > return i + j;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop function add_integers;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

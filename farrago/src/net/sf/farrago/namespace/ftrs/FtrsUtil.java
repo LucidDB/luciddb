@@ -319,14 +319,14 @@ abstract class FtrsUtil
         Iterator columnIter = index.getSpannedClass().getFeature().iterator();
         while (columnIter.hasNext()) {
             Object obj = columnIter.next();
-            if (!(obj instanceof CwmColumn)) {
+            if (!(obj instanceof FemAbstractColumn)) {
                 continue;
             }
-            CwmColumn column = (CwmColumn) obj;
+            FemAbstractColumn column = (FemAbstractColumn) obj;
             FennelRelUtil.addTupleAttrDescriptor(
                 repos,
                 tupleDesc,
-                typeFactory.createColumnType(column));
+                typeFactory.createCwmElementType(column));
         }
         return tupleDesc;
     }
@@ -340,11 +340,11 @@ abstract class FtrsUtil
         List colList = getUnclusteredCoverageColList(repos, index);
         Iterator columnIter = colList.iterator();
         while (columnIter.hasNext()) {
-            CwmColumn column = (CwmColumn) columnIter.next();
+            FemAbstractColumn column = (FemAbstractColumn) columnIter.next();
             FennelRelUtil.addTupleAttrDescriptor(
                 repos,
                 tupleDesc,
-                typeFactory.createColumnType(column));
+                typeFactory.createCwmElementType(column));
         }
         return tupleDesc;
     }

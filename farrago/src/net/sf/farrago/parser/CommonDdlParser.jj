@@ -87,6 +87,8 @@ DdlStmt DdlStmtEof() :
               |
               modelElement = ViewDrop()
               |
+              modelElement = RoutineDrop()
+              |
               LOOKAHEAD(2)
               modelElement = DataWrapperDrop()
               |
@@ -431,6 +433,60 @@ CwmView ViewReference(CwmSchema schema) :
     }
 }
 
+FemRoutine RoutineReference(CwmSchema schema) :
+{
+    SqlIdentifier qualifiedRoutineName;
+    FemRoutine routine;
+    boolean specific = false;
+    ProcedureType routineType;
+}
+{
+    [ <SPECIFIC> { specific = true; } ]
+    (
+        <ROUTINE>
+    {
+        routineType = null;
+    }
+        | <FUNCTION>
+    {
+        routineType = ProcedureTypeEnum.FUNCTION;
+    }
+        | <PROCEDURE>
+    {
+        routineType = ProcedureTypeEnum.PROCEDURE;
+    }
+    )
+        qualifiedRoutineName = CompoundIdentifier2()
+        {
+            // TODO jvs 24-Dec-2004: implement lookup by invocation name
+            // and signature when !specific
+            routine = (FemRoutine)
+            farragoParser.getStmtValidator().findSchemaObject(
+                schema,
+                qualifiedRoutineName,
+                getRepos().getSql2003Package().getFemRoutine());
+
+            // REVIEW jvs 29-Dec-2004:  localization in message below
+            // is iffy
+
+            // if they specifically asked for a FUNCTION or PROCEDURE,
+            // and the object found does not match, pretend we
+            // found nothing
+            if ((routineType != null) && (routineType != routine.getType())) {
+                throw FarragoResource.instance().newValidatorUnknownObject(
+                    routineType.toString() + " " +
+                    getRepos().getLocalizedObjectName(
+                        routine.getNamespace().getName(),
+                        routine.getName(),
+                        null),
+                    getCurrentPosition().toString());
+            }
+        }
+    {
+        return routine;
+    }
+}
+
 void TableElementList(CwmTable table) :
 {
 }
@@ -462,9 +518,6 @@ CwmModelElement TableElement(CwmTable table) :
 void BasicColumnDefinition(CwmNamedColumnSet table,CwmColumn column) :
 {
     SqlIdentifier columnName;
-    SqlIdentifier typeName;
-    int precision,scale;
-    String charSetName;
 }
 {
     columnName = SimpleIdentifier()
@@ -472,36 +525,32 @@ void BasicColumnDefinition(CwmNamedColumnSet table,CwmColumn column) :
             table.getFeature().add(column);
             column.setName(columnName.names[0]);
         }
-    typeName = TypeName()
+    TypedElement(column)
+        {
+        }
+}
+
+void TypedElement(CwmColumn column) :
+{
+    SqlDataTypeSpec dataType;
+}
+{
+    dataType = DataType()
         {
             CwmSqldataType type =
                 farragoParser.getStmtValidator().findSqldataType(
-                    typeName.getSimple());
+                    dataType.getTypeName().getSimple());
             column.setType(type);
-        }
-    (
-        <LPAREN>
-        precision = IntLiteral()
-        {
-            // NOTE:  we always set precision here; later, validation may
-            // convert this to length instead
-            column.setPrecision(new Integer(precision));
-        }
-        (
-            <COMMA>
-            scale = IntLiteral()
-            {
-                column.setScale(new Integer(scale));
+            if (dataType.getPrecision() > 0) {
+                column.setPrecision(new Integer(dataType.getPrecision()));
             }
-        )? <RPAREN>
-    )?
-    (
-        <CHARACTER> <SET>
-        charSetName = Identifier()
-        {
-            column.setCharacterSetName(charSetName);
+            if (dataType.getScale() > 0) {
+                column.setScale(new Integer(dataType.getScale()));
+            }
+            if (dataType.getCharSetName() != null) {
+                column.setCharacterSetName(dataType.getCharSetName());
+            }
         }
-    )?
 }
 
 CwmColumn ColumnDefinition(CwmTable table) :
@@ -721,6 +770,20 @@ CwmModelElement ViewDrop() :
     CascadeOption()
         {
             return view;
+        }
+}
+
+CwmModelElement RoutineDrop() :
+{
+    CwmModelElement routine;
+}
+{
+    routine = RoutineReference(null)
+        {
+        }
+    CascadeOption()
+        {
+            return routine;
         }
 }
 
@@ -957,6 +1020,220 @@ FemDataServer DataServerDefinition() :
     }
 }
 
+FemRoutine FunctionDefinition(CwmSchema schema) :
+{
+    FemRoutine function;
+    SqlIdentifier qualifiedName;
+    FemRoutineParameter returnParam;
+}
+{
+    <FUNCTION> 
+        {
+            function = getRepos().newFemRoutine();
+            function.setType(ProcedureTypeEnum.FUNCTION);
+            returnParam = getRepos().newFemRoutineParameter();
+            function.setCalledOnNullInput(true);
+            function.setParameterStyle(RoutineParameterStyleEnum.RPS_SQL);
+        }
+    qualifiedName = CompoundIdentifier2()
+        {
+            // REVIEW jvs 27-Dec-2004:  SQL standard says that
+            // specific name is implementation-defined when unspecified.
+            // The behavior here is to use the invocation name, which
+            // means if there's a conflict with an existing specific name,
+            // the CREATE statement will fail.  This forces users to
+            // provide specific names when overloads are defined.  An
+            // alternative is to generate unique specific names automatically
+            // in case of conflict.
+            farragoParser.getDdlValidator().setSchemaObjectName(
+                schema,function,qualifiedName);
+            function.setInvocationName(function.getName());
+        }
+    <LPAREN> RoutineParamList(function) <RPAREN>
+        {
+        }
+    <RETURNS> TypedElement(returnParam)
+        {
+            returnParam.setName("RETURN");
+            returnParam.setKind(ParameterDirectionKindEnum.PDK_RETURN);
+            function.getParameter().add(returnParam);
+        }
+    RoutineCharacteristics(function)
+        {
+        }
+    [ <STATIC> <DISPATCH> ]
+        {
+            function.setStaticDispatch(true);
+        }
+    RoutineBody(function)
+        {
+        }
+    {
+        return function;
+    }
+}
+
+void RoutineBody(FemRoutine routine) :
+{
+    SqlNode expr;
+}
+{
+    [ <SQL> <SECURITY>
+        (
+            <INVOKER>
+        {
+            routine.setImpersonateDefiner(false);
+        }
+            | <DEFINER>
+        {
+            routine.setImpersonateDefiner(true);
+        }
+        )
+    ]
+        {
+        }
+        <RETURN> expr = Expression(EXPR_ACCEPT_NONQUERY)
+    {
+        // TODO jvs 24-Dec-2004: eventually allow subqueries, non-functional
+        // routine bodies, and external routines.
+        farragoParser.getDdlValidator().setProcedureText(routine, expr);
+    }
+}
+
+void RoutineCharacteristics(FemRoutine routine) :
+{
+    SqlIdentifier specificName;
+}
+{
+// TODO jvs 24-Dec-2004:  prevent conflicting declarations
+    (
+        (<LANGUAGE> (<JAVA> | <SQL>))
+    {
+        // TODO jvs 24-Dec-2004:  cross-check this with body and sql-access
+    }
+        | (<PARAMETER> <STYLE>
+            (
+                <SQL>
+            {
+                routine.setParameterStyle(
+                    RoutineParameterStyleEnum.RPS_SQL);
+            }
+                | <GENERAL>
+            {
+                routine.setParameterStyle(
+                    RoutineParameterStyleEnum.RPS_GENERAL);
+            }
+            )
+        )
+    {
+    }
+        | (<SPECIFIC> specificName = CompoundIdentifier2())
+    {
+        if (specificName.names.length > 1) {
+            assert(specificName.names.length == 2);
+            if (!specificName.names[0].equals(routine.getNamespace().getName()))
+            {
+                throw FarragoResource.instance().
+                    newValidatorRoutineSchemaMismatch(
+                        specificName.names[0], 
+                        routine.getNamespace().getName(),
+                        farragoParser.getDdlValidator().getParserPosString(
+                            routine));
+            }
+            routine.setName(specificName.names[1]);
+        } else {
+            routine.setName(specificName.getSimple());
+        }
+    }
+        | ( <DETERMINISTIC> )
+    {
+        routine.setDeterministic(true);
+    }
+        | ( <NOT> <DETERMINISTIC> )
+    {
+        routine.setDeterministic(false);
+    }
+        | (<NO> <SQL>)
+    {
+        routine.setDataAccess(RoutineDataAccessEnum.RDA_NO_SQL);
+    }
+        | (<CONTAINS> <SQL>)
+    {
+        routine.setDataAccess(RoutineDataAccessEnum.RDA_CONTAINS_SQL);
+    }
+        | (<READS> <SQL> <DATA>)
+    {
+        routine.setDataAccess(RoutineDataAccessEnum.RDA_READS_SQL_DATA);
+    }
+        | (<MODIFIES> <SQL> <DATA>)
+    {
+        routine.setDataAccess(RoutineDataAccessEnum.RDA_MODIFIES_SQL_DATA);
+    }
+        | (<RETURNS> <NULL> <ON> <NULL> <INPUT>)
+    {
+        routine.setCalledOnNullInput(false);
+    }
+        | (<CALLED> <ON> <NULL> <INPUT>)
+    {
+        routine.setCalledOnNullInput(true);
+    }
+// TODO jvs 24-Dec-2004:  add characteristics for dynamic result sets
+// and savepoint level
+    )*
+}
+
+void RoutineParamList(FemRoutine routine) :
+{
+}
+{
+    RoutineParam(routine)
+    (
+        <COMMA>
+        RoutineParam(routine)
+    )*
+}
+
+FemRoutineParameter RoutineParam(FemRoutine routine) :
+{
+    FemRoutineParameter param;
+    SqlIdentifier name;
+    
+    param = getRepos().newFemRoutineParameter();
+    routine.getParameter().add(param);
+}
+{
+    {
+    }
+    [
+        (
+            <IN>
+        {
+            param.setKind(ParameterDirectionKindEnum.PDK_IN);
+        }
+            | <OUT>
+        {
+            param.setKind(ParameterDirectionKindEnum.PDK_OUT);
+        }
+            | <INOUT>
+        {
+            param.setKind(ParameterDirectionKindEnum.PDK_INOUT);
+        }
+        )
+    ]
+        {
+        }
+    name = SimpleIdentifier()
+        {
+            param.setName(name.getSimple());
+        }
+    TypedElement(param)
+        {
+        }
+    {
+        return param;
+    }
+}
+
 FemDataServer DataServerReference() :
 {
     SqlIdentifier name;
@@ -1115,19 +1392,30 @@ TOKEN :
 {
   < ALTER: "alter" >
 | < AUTHORIZATION: "authorization" >
+| < CALLED: "called" >
 | < CASCADE: "cascade" >
 | < CATALOG: "catalog" >
 | < CHECKPOINT: "checkpoint" >
 | < CLUSTERED: "clustered" >
 | < COMMIT: "commit" >
 | < CONSTRAINT: "constraint" >
+| < CONTAINS: "contains" >
 | < CREATE: "create" >
 | < DATA: "data" >
 | < DEFAULT_KW: "default" >
+| < DEFINER: "definer" >
+| < DETERMINISTIC: "deterministic" >
+| < DISPATCH: "dispatch" >
 | < DROP: "drop" >
+| < EXTERNAL: "external" >
 | < FOREIGN: "foreign" >
+| < FUNCTION: "function" >
+| < GENERAL: "general" >
 | < GLOBAL: "global" >
 | < INDEX: "index" >
+| < INOUT: "inout" >
+| < INPUT: "input" >
+| < INVOKER: "invoker" >
 | < JAVA: "java" >
 | < MAX: "max" >
 | < MIN: "min" >
@@ -1135,15 +1423,30 @@ TOKEN :
 | < LANGUAGE: "language" >
 | < LIBRARY: "library" >
 | < LOCAL: "local" >
+| < MODIFIES: "modifies" >
 | < OPTIONS: "options" >
+| < NAME: "name" >
+| < NO: "no" >
+| < OUT: "out" >
+| < PARAMETER: "parameter" >
 | < PRESERVE: "preserve" >
 | < PRIMARY: "primary" >
-| < ROLLBACK: "rollback" >
+| < PROCEDURE: "procedure" >
+| < READS: "reads" >
 | < RELEASE: "release" >
 | < RESTRICT: "restrict" >
+| < RETURN: "return" >
+| < RETURNS: "returns" >
+| < ROLLBACK: "rollback" >
+| < ROUTINE: "routine" >
 | < SAVEPOINT: "savepoint" >
 | < SCHEMA: "schema" >
+| < SECURITY: "security" >
 | < SERVER: "server" >
+| < SPECIFIC: "specific" >
+| < SQL: "sql" >
+| < STATIC: "static" >
+| < STYLE: "style" >
 | < SYSTEM: "system" >
 | < TEMPORARY: "temporary" >
 | < TRUNCATE: "truncate" >
@@ -1164,20 +1467,40 @@ String DdlNonReservedKeyWord() :
 }
 {
     (
-        <CASCADE>
+        <CALLED>
+        | <CASCADE>
         | <CATALOG>
+        | <CONTAINS>
         | <DATA>
+        | <DEFINER>
+        | <DETERMINISTIC>
+        | <DISPATCH>
+        | <EXTERNAL>
+        | <GENERAL>
         | <INDEX>
+        | <INPUT>
+        | <INVOKER>
         | <JAVA>
         | <KEY>
         | <LIBRARY>
         | <MAX>
         | <MIN>
+        | <MODIFIES>
+        | <NAME>
+        | <NO>
         | <OPTIONS>
+        | <PARAMETER>
         | <PRESERVE>
+        | <READS>
         | <RESTRICT>
+        | <RETURN>
+        | <RETURNS>
         | <SCHEMA>
+        | <SECURITY>
         | <SERVER>
+        | <SPECIFIC>
+        | <STATIC>
+        | <STYLE>
         | <TEMPORARY>
         | <VERSION>
         | <VIEW>

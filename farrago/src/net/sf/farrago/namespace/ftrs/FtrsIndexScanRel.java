@@ -25,6 +25,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
@@ -100,13 +101,13 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
      *
      * @return underlying column
      */
-    public CwmColumn getColumnForFieldAccess(int columnOrdinal)
+    public FemAbstractColumn getColumnForFieldAccess(int columnOrdinal)
     {
         assert columnOrdinal >= 0;
         if (projectedColumns != null) {
             columnOrdinal = projectedColumns[columnOrdinal].intValue();
         }
-        return (CwmColumn) ftrsTable.getCwmColumnSet().getFeature().get(columnOrdinal);
+        return (FemAbstractColumn) ftrsTable.getCwmColumnSet().getFeature().get(columnOrdinal);
     }
 
     // implement RelNode

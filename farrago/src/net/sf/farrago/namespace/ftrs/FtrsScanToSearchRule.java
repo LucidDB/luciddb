@@ -24,6 +24,7 @@ import java.util.List;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
@@ -105,7 +106,7 @@ class FtrsScanToSearchRule extends RelOptRule
             return;
         }
         RexInputRef fieldAccess = (RexInputRef) left;
-        CwmColumn filterColumn =
+        FemAbstractColumn filterColumn =
             scan.getColumnForFieldAccess(fieldAccess.index);
         assert (filterColumn != null);
 
@@ -144,7 +145,7 @@ class FtrsScanToSearchRule extends RelOptRule
     private void considerIndex(
         CwmSqlindex index,
         FtrsIndexScanRel origScan,
-        CwmColumn filterColumn,
+        FemAbstractColumn filterColumn,
         RexNode searchValue,
         RelOptRuleCall call,
         RexNode extraFilter)
@@ -181,7 +182,7 @@ class FtrsScanToSearchRule extends RelOptRule
         RelDataType lhsRowType =
             typeFactory.createStructType(
                 new RelDataType [] { 
-                    typeFactory.createColumnType(filterColumn)
+                    typeFactory.createCwmElementType(filterColumn)
                 },
                 new String [] { "filterColumn" });
         RelNode castRel = RelOptUtil.createCastRel(nullFilterRel, lhsRowType);

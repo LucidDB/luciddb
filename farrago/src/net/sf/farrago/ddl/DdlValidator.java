@@ -746,6 +746,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         stmtValidator.getSharedDataWrapperCache().discard(wrapper.refMofId());
     }
 
+    // implement FarragoSessionDdlValidator
     public void setViewText(
         CwmView view,
         SqlNode query)
@@ -753,12 +754,27 @@ public class DdlValidator extends FarragoCompoundAllocation
         FarragoSession session = getInvokingSession();
         String unparseSql = query.toSqlString(
             new SqlDialect(session.getDatabaseMetaData()));
-        CwmQueryExpression queryExp = getRepos().newCwmQueryExpression();
-        queryExp.setLanguage("SQL");
-        queryExp.setBody(unparseSql);
-        view.setQueryExpression(queryExp);
+        CwmQueryExpression queryExpr = getRepos().newCwmQueryExpression();
+        queryExpr.setLanguage("SQL");
+        queryExpr.setBody(unparseSql);
+        view.setQueryExpression(queryExpr);
     }
 
+    // implement FarragoSessionDdlValidator
+    public void setProcedureText(
+        CwmProcedure routine,
+        SqlNode body)
+    {
+        FarragoSession session = getInvokingSession();
+        String unparseSql = body.toSqlString(
+            new SqlDialect(session.getDatabaseMetaData()));
+        CwmProcedureExpression procedureExpr =
+            getRepos().newCwmProcedureExpression();
+        procedureExpr.setLanguage("SQL");
+        procedureExpr.setBody(unparseSql);
+        routine.setBody(procedureExpr);
+    }
+    
     /**
      * Add a new DropRule.
      *

@@ -24,6 +24,7 @@ import javax.jmi.model.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.sql2003.*;
 
 import org.eigenbase.oj.*;
 import org.eigenbase.rel.*;
@@ -50,14 +51,14 @@ public interface FarragoTypeFactory extends OJTypeFactory
     public FarragoRepos getRepos();
 
     /**
-     * Creates a type which represents the datatype of a CWM column.
+     * Creates a type which represents the datatype of a FemSqltypedElement.
      *
-     * @param column CWM column
+     * @param element CWM typed element
      *
      * @return generated type
      */
-    public RelDataType createColumnType(
-        CwmColumn column);
+    public RelDataType createCwmElementType(
+        FemSqltypedElement element);
 
     /**
      * Creates a type which represents the row datatype of a CWM

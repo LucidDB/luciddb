@@ -186,8 +186,8 @@ encountered near {1}</text>
     <text>Column name count does not match query</text>
 </exception>
 
-<exception id="420320" name="ValidatorInvalidViewDefinition">
-    <text>Invalid definition for view {0}</text>
+<exception id="420320" name="ValidatorInvalidObjectDefinition">
+    <text>Invalid definition for {0}</text>
 </exception>
 
 <exception id="420330" name="ValidatorInvalidViewDynamicParam">
@@ -240,6 +240,30 @@ encountered near {1}</text>
 
 <exception id="420430" name="ValidatorNoConstraintAllowed">
     <text>{0} does not accept a constraint definition</text>
+</exception>
+
+<exception id="420440" name="ValidatorRoutineSchemaMismatch">
+    <text>Schema {0} for specific name does not match schema {1} for invocation name;
+encountered near {2}</text>
+</exception>
+
+<exception id="420450" name="ValidatorRoutineDataAccessUnspecified">
+    <text>SQL data access must be specified in definition of routine {0};
+encountered near {1}</text>
+</exception>
+
+<exception id="420460" name="ValidatorInvalidRoutineDynamicParam">
+    <text>Dynamic parameters are illegal in routine bodies</text>
+</exception>
+
+<exception id="420470" name="ValidatorFunctionOutputParam">
+    <text>Parameters to function {0} may not be declared as OUT or INOUT;
+encountered near {1}</text>
+</exception>
+
+<exception id="420480" name="ValidatorRoutineNoSql">
+    <text>Routine {0} with SQL definition cannot specify NO SQL;
+encountered near {1}</text>
 </exception>
 
 <!-- ====================================================================== -->

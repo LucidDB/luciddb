@@ -414,20 +414,20 @@ public class SqlParserTest extends TestCase
     {
         checkExp("cast(x as boolean)", "CAST(`X` AS BOOLEAN)");
         checkExp("cast(x as integer)", "CAST(`X` AS INTEGER)");
-        checkExp("cast(x as varchar)", "CAST(`X` AS VARCHAR)");
+        checkExp("cast(x as varchar(1))", "CAST(`X` AS VARCHAR(1))");
         checkExp("cast(x as date)", "CAST(`X` AS DATE)");
-        checkExp("cast(x as time)", "CAST(`X` AS TIME)");
-        checkExp("cast(x as timestamp)", "CAST(`X` AS TIMESTAMP)");
-        checkExp("cast(x as decimal)", "CAST(`X` AS DECIMAL)");
-        checkExp("cast(x as char)", "CAST(`X` AS CHAR)");
-        checkExp("cast(x as binary)", "CAST(`X` AS BINARY)");
-        checkExp("cast(x as varbinary)", "CAST(`X` AS VARBINARY)");
+        checkExp("cast(x as time)", "CAST(`X` AS TIME(0))");
+        checkExp("cast(x as timestamp)", "CAST(`X` AS TIMESTAMP(0))");
+        checkExp("cast(x as decimal(1,1))", "CAST(`X` AS DECIMAL(1, 1))");
+        checkExp("cast(x as char(1))", "CAST(`X` AS CHAR(1))");
+        checkExp("cast(x as binary(1))", "CAST(`X` AS BINARY(1))");
+        checkExp("cast(x as varbinary(1))", "CAST(`X` AS VARBINARY(1))");
         checkExp("cast(x as tinyint)", "CAST(`X` AS TINYINT)");
         checkExp("cast(x as smallint)", "CAST(`X` AS SMALLINT)");
         checkExp("cast(x as bigint)", "CAST(`X` AS BIGINT)");
         checkExp("cast(x as real)", "CAST(`X` AS REAL)");
         checkExp("cast(x as double)", "CAST(`X` AS DOUBLE)");
-        checkExp("cast(x as bit)", "CAST(`X` AS BIT)");
+        checkExp("cast(x as bit(1))", "CAST(`X` AS BIT(1))");
 
         checkExp("cast(x as bit(123))", "CAST(`X` AS BIT(123))");
         checkExp("cast(x as decimal(1,2))", "CAST(`X` AS DECIMAL(1, 2))");
