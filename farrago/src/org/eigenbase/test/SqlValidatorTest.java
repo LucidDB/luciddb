@@ -1255,10 +1255,10 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testNestedFrom() {
-//        checkType("values (true)", "BOOLEAN");
-//        checkType("select * from values (true)", "BOOLEAN");
-//        checkType("select * from (select * from values (true))", "BOOLEAN");
-//        checkType("select * from (select * from (select * from values (true)))", "BOOLEAN");
+        checkType("values (true)", "BOOLEAN");
+        checkType("select * from values (true)", "BOOLEAN");
+        checkType("select * from (select * from values (true))", "BOOLEAN");
+        checkType("select * from (select * from (select * from values (true)))", "BOOLEAN");
         checkType(
             "select * from (" +
             "  select * from (" +
