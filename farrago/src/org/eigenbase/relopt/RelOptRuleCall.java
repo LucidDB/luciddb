@@ -62,7 +62,13 @@ public abstract class RelOptRuleCall
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Called by the rule whenever it finds a match.
+     * Called by the rule whenever it finds a match.  The implementation of
+     * this method will guarantee that the original relational expression
+     * (e.g., <code>this.rels[0]</code>) has its traits propagated to the new
+     * relational expression (<code>rel</code>) and its unregistered children.
+     * Any trait not specifically set in the RelTraitSet returned by 
+     * <code>rel.getTraits()</code> will be copied from
+     * <code>this.rels[0].getTraitSet()</code>.
      */
     public abstract void transformTo(RelNode rel);
 }
