@@ -1022,6 +1022,38 @@ SqlStrCastFromExact(char* dest,
             // TODO: Note: can't always snprintf directly into dest, due to
             // TODO: null termination wasting a byte.
 
+            // A previous implementation (retained below)
+            // optimistically tried to snprintf into the output
+            // buffer, and retried if it would have fit, save for the
+            // null termination. The logic gets complicated in the
+            // face of snprintf implementatins that return -1, where
+            // such information is not possible.  Until an
+            // optimization pass can be made, always snprintf into a
+            // temporary buffer, and memcpy the result back if it
+            // would fit.
+
+            char buf[36];      // #%lld should always fit in 21 bytes.
+            rv = snprintf(buf, 35, "%lld", src);
+            // snprintf does not return null termination in length
+            assert(rv >= 0 && rv <= 35);
+            if (rv <= destStorageBytes) {
+                memcpy(dest, buf, rv);
+            } else {
+                // SQL99 6.22 General Rule 8 (fixed length), case a),
+                // case iv) "22001" data exception -- string data,
+                // right truncation
+                // SQL99 6.22 General Rule 9 (variable length), case
+                // a), case iii) "22001" data exception -- string
+                // data, right truncation
+                throw "22001";
+            }
+            
+            
+#ifdef SECOND_ALTERNATIVE_IMPLEMENTATION_DOES_NOT_WORK_ON_CYGWIN
+            
+            // Older glibc returns -1 from snprintf. logic gets 
+            // complicated
+            
             rv = snprintf(dest, destStorageBytes, "%lld", src);
             if (rv == destStorageBytes) {
                 // Would have fit, except for the null termination. Do
@@ -1030,8 +1062,8 @@ SqlStrCastFromExact(char* dest,
                 // than random chance would predict. If this is
                 // not acceptable, see ALTERNATIVE_IMPLEMENTATION below
 
-                char buf[32];      // should always fit in 21 bytes.
-                rv = snprintf(buf, 31, "%lld", src);
+                char buf[36];      // should always fit in 21 bytes.
+                rv = snprintf(buf, 35, "%lld", src);
                 assert(rv == destStorageBytes);
                 memcpy(dest, buf, destStorageBytes);
             } else if (rv > destStorageBytes) {
@@ -1043,6 +1075,7 @@ SqlStrCastFromExact(char* dest,
                 // data, right truncation
                 throw "22001";
             }
+#endif
 
 #ifdef ALTERNATIVE_IMPLEMENTATION_UNTESTED_UNPROFILED_AND_PERHAPS_UNHOLY
             // assume any int64_t will fit in 22 bytes:
@@ -1162,21 +1195,14 @@ SqlStrCastFromApprox(char* dest,
                 //! a x86. This should be parameterized.
                 //! TODO: Parameterize precision and format of conversion.
 
-                rv = snprintf(dest, destStorageBytes, "%.16E", src);
-                if (rv == destStorageBytes) {
-                    // Would have fit, except for the null
-                    // termination. Do over into a temporary buf, copy
-                    // results back.  Dreary performance in this case,
-                    // which may be more common than random chance
-                    // would predict. If this is not acceptable, see
-                    // ALTERNATIVE_IMPLEMENTATION below
 
-                    char buf[32];      // #.16E should always fit in 22 bytes.
-
-                    rv = snprintf(buf, 31, "%.16E", src);
-                    assert(rv == destStorageBytes);
-                    memcpy(dest, buf, destStorageBytes);
-                } else if (rv > destStorageBytes) {
+                char buf[36];      // #.16E should always fit in 22 bytes.
+                rv = snprintf(buf, 35, "%.16E", src);
+                // snprintf does not include null termination in length
+                assert(rv >= 0 && rv <= 35);
+                if (rv <= destStorageBytes) {
+                    memcpy(dest, buf, rv);
+                } else {
                     // SQL99 6.22 General Rule 8 (fixed length), case b),
                     // case iii) case 4) "22001" data exception - string
                 
