@@ -174,14 +174,18 @@ public class RexCall extends RexNode
         }
         if (withType) {
             sb.append(":");
-            sb.append(type.toString());
+            // NOTE jvs 16-Jan-2005:  for digests, it is very important
+            // to use the full type string.
+            sb.append(type.getFullTypeString());
         }
         return sb.toString();
     }
 
     public String toString()
     {
-        return computeDigest(false);
+        // REVIEW jvs 16-Jan-2005:  For CAST, the type is really an operand
+        // and needs to be printed out.  But special-casing it here is ugly.
+        return computeDigest(op.kind == SqlKind.Cast);
     }
 
     public void accept(RexVisitor visitor)

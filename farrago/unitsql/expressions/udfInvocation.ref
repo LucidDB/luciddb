@@ -7,7 +7,7 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set path 'udftest';
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test basic function
+0: jdbc:farrago:> -- test basic SQL-defined function
 0: jdbc:farrago:> create function celsius_to_fahrenheit(in c double)
 . . . . . . . . > returns double
 . . . . . . . . > contains sql
@@ -37,6 +37,60 @@ Error: Result expression type VARCHAR(128) from routine "UDFTEST"."BAD_ATOI" doe
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > contains sql
 . . . . . . . . > return case when x like 'A%' then upper(x)||'gator' else lower(x) end;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test CALLED ON NULL INPUT
+0: jdbc:farrago:> create function replace_null(in x varchar(128))
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > contains sql
+. . . . . . . . > called on null input
+. . . . . . . . > return coalesce(x,'null and void');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test RETURNS NULL ON NULL INPUT
+0: jdbc:farrago:> create function dont_replace_null(in x varchar(128))
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > contains sql
+. . . . . . . . > returns null on null input
+. . . . . . . . > return coalesce(x,'null and void');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test external Java function
+0: jdbc:farrago:> create function noargs()
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.noargs';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function substring24(in s varchar(128))
+. . . . . . . . > returns varchar(2)
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.substring24';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function prim_int_to_hex_string(in i int)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.toHexString';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function obj_int_to_hex_string(in i int)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > no sql
+. . . . . . . . > called on null input
+. . . . . . . . > external name 
+. . . . . . . . > 'class net.sf.farrago.test.FarragoTestUDR.toHexString(java.lang.Integer)';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function null_preserving_int_to_hex_string(in i int)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > no sql
+. . . . . . . . > returns null on null input
+. . . . . . . . > external name 
+. . . . . . . . > 'class net.sf.farrago.test.FarragoTestUDR.toHexString(java.lang.Integer)';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function atoi(in s varchar(128))
+. . . . . . . . > returns int
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.atoi';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function atoi_with_null_for_err(in s varchar(128))
+. . . . . . . . > returns int
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.atoiWithNullForErr';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test a function that uses another function
 0: jdbc:farrago:> create function celsius_to_rankine(in c double)
@@ -153,6 +207,131 @@ Messages:
 | EXPR$0  |
 +---------+
 | lara    |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values replace_null('not null');
++-----------+
+|  EXPR$0   |
++-----------+
+| not null  |
++-----------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values replace_null(cast(null as varchar(128)));
++----------------+
+|     EXPR$0     |
++----------------+
+| null and void  |
++----------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values dont_replace_null('not null');
++-----------+
+|  EXPR$0   |
++-----------+
+| not null  |
++-----------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values dont_replace_null(cast(null as varchar(128)));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values noargs();
++-----------------------------+
+|           EXPR$0            |
++-----------------------------+
+| get your kicks on route 66  |
++-----------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values substring24('superman');
++---------+
+| EXPR$0  |
++---------+
+| pe      |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- this should fail with a Java exception
+0: jdbc:farrago:> values substring24(cast(null as varchar(128)));
+Error: java.lang.NullPointerException: null (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values prim_int_to_hex_string(255);
++---------+
+| EXPR$0  |
++---------+
+| ff      |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- this should fail with an SQL exception for NULL detected
+0: jdbc:farrago:> values prim_int_to_hex_string(cast(null as integer));
+Error: NOT NULL field cannot be assigned null value (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values obj_int_to_hex_string(255);
++---------+
+| EXPR$0  |
++---------+
+| ff      |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- this should return 'nada'
+0: jdbc:farrago:> values obj_int_to_hex_string(cast(null as integer));
++---------+
+| EXPR$0  |
++---------+
+| nada    |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values null_preserving_int_to_hex_string(255);
++---------+
+| EXPR$0  |
++---------+
+| ff      |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- this should return null
+0: jdbc:farrago:> values null_preserving_int_to_hex_string(cast(null as integer));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values atoi('451');
++---------+
+| EXPR$0  |
++---------+
+| 451     |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- this should fail with a Java exception
+0: jdbc:farrago:> values atoi(cast(null as varchar(128)));
+Error: java.lang.NumberFormatException: null (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- this should fail with a Java exception
+0: jdbc:farrago:> values atoi('Posey');
+Error: java.lang.NumberFormatException: For input string: "Posey" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values atoi_with_null_for_err('451');
++---------+
+| EXPR$0  |
++---------+
+| 451     |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- this should return null
+0: jdbc:farrago:> values atoi_with_null_for_err(cast(null as varchar(128)));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- this should return null
+0: jdbc:farrago:> values atoi_with_null_for_err('Violet');
++---------+
+| EXPR$0  |
++---------+
+|         |
 +---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set path 'crypto2';

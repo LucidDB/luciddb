@@ -8,6 +8,8 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set path 'udftest';
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test SQL-defined functions
+0: jdbc:farrago:> 
 0: jdbc:farrago:> create function celsius_to_fahrenheit(in c double)
 . . . . . . . . > returns double
 . . . . . . . . > contains sql
@@ -251,7 +253,7 @@ Error: DDL validation error near line 1, column 8: Non-SQL language cannot be sp
 . . . . . . . . > return c*1.8 + 32;
 Error: DDL validation error near line 1, column 8: Non-SQL parameter style cannot be specified for routine "UDFTEST"."CELSIUS_TO_FAHRENHEIT" with SQL definition (state=,code=0)
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- begin tests for external Java routines
+0: jdbc:farrago:> -- test external Java routines
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create function get_java_property(in name varchar(128))
 . . . . . . . . > returns varchar(128)
@@ -296,18 +298,32 @@ Error: java.lang.ClassNotFoundException: java.lang.Rodent (state=,code=0)
 . . . . . . . . > external name 'class java.lang.System.getHotels';
 Error: DDL validation error near line 1, column 8: Unknown external Java method "java.lang.System.getHotels(java.lang.String)" referenced by routine "UDFTEST"."GET_JAVA_PROPERTY" (state=,code=0)
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail:  parameter type mismatch
+0: jdbc:farrago:> -- should fail:  method not found due to parameter type mismatch
 0: jdbc:farrago:> create function get_java_property(in name int)
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class java.lang.System.getProperty';
 Error: DDL validation error near line 1, column 8: Unknown external Java method "java.lang.System.getProperty(int)" referenced by routine "UDFTEST"."GET_JAVA_PROPERTY" (state=,code=0)
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  parameter type mismatch for explicit method spec
+0: jdbc:farrago:> create function get_java_property(in name int)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class java.lang.System.getProperty(java.lang.String)';
+Error: DDL validation error near line 1, column 8: Type of routine parameter "NAME" in routine "UDFTEST"."GET_JAVA_PROPERTY" is INTEGER but external Java method "java.lang.System.getProperty(java.lang.String)" takes type class java.lang.String for corresponding parameter (state=,code=0)
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  return type mismatch
 0: jdbc:farrago:> create function get_java_property(in name varchar(128))
 . . . . . . . . > returns int
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class java.lang.System.getProperty';
-Error: DDL validation error near line 1, column 8: Return type of routine "UDFTEST"."GET_JAVA_PROPERTY" is int but external Java method "java.lang.System.getProperty(java.lang.String)" has return type class java.lang.String (state=,code=0)
+Error: DDL validation error near line 1, column 8: Return type of routine "UDFTEST"."GET_JAVA_PROPERTY" is INTEGER but external Java method "java.lang.System.getProperty(java.lang.String)" has return type class java.lang.String (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test explicit selection of method from overloads
+0: jdbc:farrago:> create function to_hex_string(in i int)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > no sql
+. . . . . . . . > external name 
+. . . . . . . . > 'class net.sf.farrago.test.FarragoTestUDR.toHexString(java.lang.Integer)';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

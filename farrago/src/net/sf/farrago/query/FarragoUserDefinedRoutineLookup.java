@@ -65,6 +65,12 @@ public class FarragoUserDefinedRoutineLookup implements SqlOperatorTable
         Iterator iter = list.iterator();
         while (iter.hasNext()) {
             FemRoutine femFunction = (FemRoutine) iter.next();
+            if (femFunction.getVisibility() == null) {
+                // Oops, the referenced routine hasn't been validated yet.
+                // Throw a special exception and someone up above will
+                // figure out what to do.
+                throw new FarragoUnvalidatedDependencyException();
+            }
             SqlFunction sqlFunction = convertFunction(femFunction);
             overloads.add(sqlFunction);
         }
@@ -78,15 +84,16 @@ public class FarragoUserDefinedRoutineLookup implements SqlOperatorTable
         throw Util.needToImplement(this);
     }
 
-    private SqlFunction convertFunction(FemRoutine femFunction)
+    /**
+     * Converts the validated catalog definition of a function into
+     * SqlFunction representation.
+     *
+     * @param femFunction catalog definition
+     *
+     * @return converted function
+     */
+    public FarragoUserDefinedRoutine convertFunction(FemRoutine femFunction)
     {
-        if (femFunction.getVisibility() == null) {
-            // Oops, the referenced routine hasn't been validated yet.
-            // Throw a special exception and someone up above will
-            // figure out what to do.
-            throw new FarragoUnvalidatedDependencyException();
-        }
-
         List parameters = femFunction.getParameter();
         
         // minus one because last param represents return type
@@ -99,20 +106,20 @@ public class FarragoUserDefinedRoutineLookup implements SqlOperatorTable
             FemRoutineParameter param = (FemRoutineParameter)
                 paramIter.next();
             RelDataType type =
-                stmtValidator.getTypeFactory().createCwmElementType(
-                    param);
+                stmtValidator.getTypeFactory().createCwmElementType(param);
+            
             if (param.getKind() == ParameterDirectionKindEnum.PDK_RETURN) {
                 returnType = type;
             } else {
                 paramTypes[i] = type;
             }
         }
-            
-        SqlFunction sqlFunction = new FarragoUserDefinedRoutine(
+        
+        return new FarragoUserDefinedRoutine(
+            stmtValidator,
             femFunction,
             returnType,
             paramTypes);
-        return sqlFunction;
     }
 }
 

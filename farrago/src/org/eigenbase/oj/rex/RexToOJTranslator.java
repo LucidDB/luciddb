@@ -200,12 +200,28 @@ public class RexToOJTranslator implements RexVisitor
             RexNode operand = operands[i];
             exprs[i] = translateRexNode(operand);
         }
+        Expression callExpr = convertCall(call, exprs);
+        setTranslation(callExpr);
+    }
+
+    /**
+     * Converts a call after its operands have already been translated.
+     *
+     * @param call call to be translated
+     *
+     * @param operandExprs translated operands
+     *
+     * @return converted call
+     */
+    protected Expression convertCall(
+        RexCall call, Expression [] operandExprs)
+    {
         OJRexImplementor implementor =
             implementorTable.get(call.getOperator());
         if (implementor == null) {
             throw Util.needToImplement(call);
         }
-        setTranslation(implementor.implement(this, call, exprs));
+        return implementor.implement(this, call, operandExprs);
     }
 
     // implement RexVisitor

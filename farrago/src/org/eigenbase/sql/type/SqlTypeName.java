@@ -448,6 +448,16 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
     }
     
     /**
+     * Gets the SqlTypeFamily containing this SqlTypeName.
+     *
+     * @return containing family, or null for none
+     */
+    public SqlTypeFamily getFamily()
+    {
+        return SqlTypeFamily.getFamilyForSqlType(this);
+    }
+    
+    /**
      * Gets the SqlTypeName corresponding to a JDBC type.
      *
      * @param jdbcType the JDBC type of interest
@@ -458,7 +468,7 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
     {
         return jdbcTypeToName[jdbcType - MIN_JDBC_TYPE];
     }
-    
+
     private static void setNameForJdbcType(
         int jdbcType,
         SqlTypeName name)

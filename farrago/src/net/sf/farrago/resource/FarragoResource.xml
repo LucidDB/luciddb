@@ -339,6 +339,11 @@ column type family is {1} but default value type family is {2}</text>
 <text>External Java method {1} referenced by {0} is not both public and static</text>
 </exception>
 
+<exception id="420640" name="ValidatorRoutineJavaParamMismatch"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Type of {0} in {1} is {2} but external Java method {3} takes type {4} for corresponding parameter</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Fennel resources 440,000 - 450,000 -->
 <!-- Actual resources are defined separately in Fennel -->
@@ -487,6 +492,10 @@ column type family is {1} but default value type family is {2}</text>
 
 <exception id="490020" name="PluginInitFailed">
 <text>Failed to initialize plugin {0}</text>
+</exception>
+
+<exception id="490030" name="PluginMethodMismatch">
+<text>Failed to resolve Java method</text>
 </exception>
 
 <!-- ====================================================================== -->

@@ -1086,7 +1086,9 @@ public class SqlValidator
         }
     }
 
-    private void checkForIllegalNull(SqlCall call)
+    // TODO jvs 17-Jan-2005:  this should probably become part
+    // the operand-checking interface instead for proper extensibility
+    protected void checkForIllegalNull(SqlCall call)
     {
         if (call.isA(SqlKind.Case)
             || call.isA(SqlKind.Cast)

@@ -38,6 +38,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
 import org.eigenbase.util.*;
 
 
@@ -62,7 +63,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
     //~ Constructors ----------------------------------------------------------
 
     public FarragoRelImplementor(
-        FarragoPreparingStmt preparingStmt,
+        final FarragoPreparingStmt preparingStmt,
         RexBuilder rexBuilder)
     {
         super(rexBuilder);
@@ -73,8 +74,26 @@ public class FarragoRelImplementor extends JavaRelImplementor
 
         streamDefSet = new HashSet();
 
-        ojRexImplementorTable =
-            preparingStmt.getSession().getOJRexImplementorTable();
+        // set up an operator implementor table which knows about UDF's
+        ojRexImplementorTable = new OJRexImplementorTable() 
+            {
+                private final OJRexImplementorTable delegate =
+                    preparingStmt.getSession().getOJRexImplementorTable();
+                
+                public OJRexImplementor get(SqlOperator op)
+                {
+                    if (op instanceof FarragoUserDefinedRoutine) {
+                        return (OJRexImplementor) op;
+                    } else {
+                        return delegate.get(op);
+                    }
+                }
+                
+                public OJAggImplementor get(Aggregation aggregation)
+                {
+                    return delegate.get(aggregation);
+                }
+            };
     }
 
     //~ Methods ---------------------------------------------------------------

@@ -21,7 +21,7 @@ JMPF @16, L4 /* 12: */;
 JMPN @16, L4 /* 13: */;
 MOVE L1, C6 /* 14: */;
 JMP @17 /* 15: */;
-MOVE L1, C7 /* 16: CASE(=(+(1, 1), 1), _ISO-8859-1'wael' COLLATE ISO-8859-1$en_US$primary, =(+(1, 1), 2), _ISO-8859-1'waels clone' COLLATE ISO-8859-1$en_US$primary, CAST(null)) */;
+MOVE L1, C7 /* 16: CASE(=(+(1, 1), 1), _ISO-8859-1'wael' COLLATE ISO-8859-1$en_US$primary, =(+(1, 1), 2), _ISO-8859-1'waels clone' COLLATE ISO-8859-1$en_US$primary, CAST(null):VARCHAR(11) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary") */;
 EQ L6, C3, C3 /* 17: =(1, 1) */;
 JMPF @23, L6 /* 18: */;
 JMPN @23, L6 /* 19: */;

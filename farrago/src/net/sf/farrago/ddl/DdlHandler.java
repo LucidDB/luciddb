@@ -48,7 +48,6 @@ import java.nio.charset.*;
 import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
-import java.lang.reflect.*;
 
 /**
  * DdlHandler provides implementations for the actions taken by
@@ -855,102 +854,15 @@ public class DdlHandler
                 validator.res.newValidatorRoutineJavaParamStyleOnly(
                     repos.getLocalizedObjectName(routine)));
         }
-        String externalName = routine.getExternalName();
-        // TODO jvs 11-Jan-2005:  JAR support, and move some of this
-        // code to FarragoPluginCache
-        String classPlusMethodName;
-        if (!externalName.startsWith(FarragoPluginCache.LIBRARY_CLASS_PREFIX)) {
-            // force error below
-            classPlusMethodName = "";
-        } else {
-            classPlusMethodName = externalName.substring(
-                FarragoPluginCache.LIBRARY_CLASS_PREFIX.length());
-        }
-        int iLeftParen = classPlusMethodName.indexOf('(');
-        String javaClassName;
-        String javaMethodName;
-        int nParams = FarragoCatalogUtil.getRoutineParamCount(routine);
-        Class [] javaParamTypes = new Class[nParams];
-        if (iLeftParen == -1) {
-            int iLastDot = classPlusMethodName.lastIndexOf('.');
-            if (iLastDot == -1) {
-                throw validator.newPositionalError(
-                    routine,
-                    validator.res.newValidatorRoutineInvalidJavaMethod(
-                        repos.getLocalizedObjectName(routine),
-                        repos.getLocalizedObjectName(externalName)));
-            }
-            javaClassName = classPlusMethodName.substring(0, iLastDot);
-            javaMethodName = classPlusMethodName.substring(iLastDot + 1);
-            List params = routine.getParameter();
-            for (int i = 0; i < nParams; ++i) {
-                FemRoutineParameter param = (FemRoutineParameter) params.get(i);
-                RelDataType type =
-                    validator.getTypeFactory().createCwmElementType(param);
-                javaParamTypes[i] =
-                    validator.getTypeFactory().getClassForJavaParamStyle(type);
-                if (javaParamTypes[i] == null) {
-                    throw Util.needToImplement(type);
-                }
-            }
-        } else {
-            // TODO jvs 11-Jan-2005:  convert Java method typenames to
-            // Class objects and check compatibility with SQL parameter types
-            javaClassName = classPlusMethodName.substring(0, iLeftParen);
-            throw Util.needToImplement(externalName);
-        }
-        
-        Class javaClass;
-        try {
-            javaClass = Class.forName(javaClassName);
-        } catch (Exception ex) {
-            throw validator.res.newPluginInitFailed(
-                javaClassName, ex);
-        }
-        
-        String javaUnmangledMethodName = ReflectUtil.getUnmangledMethodName(
-            javaClass,
-            javaMethodName,
-            javaParamTypes);
-        
-        Method javaMethod;
-        try {
-            javaMethod = javaClass.getMethod(javaMethodName, javaParamTypes);
-        } catch (NoSuchMethodException ex) {
-            throw validator.newPositionalError(
-                routine,
-                validator.res.newValidatorRoutineJavaMethodNotFound(
-                    repos.getLocalizedObjectName(routine),
-                    repos.getLocalizedObjectName(
-                        javaUnmangledMethodName)));
-        } catch (Exception ex) {
-            throw validator.res.newPluginInitFailed(
-                javaClassName, ex);
-        }
 
-        int modifiers = javaMethod.getModifiers();
-        if (!Modifier.isStatic(modifiers) || !Modifier.isPublic(modifiers)) {
-            throw validator.newPositionalError(
-                routine,
-                validator.res.newValidatorRoutineJavaMethodNotPublicStatic(
-                    repos.getLocalizedObjectName(routine),
-                    repos.getLocalizedObjectName(javaUnmangledMethodName)));
-        }
-
-        Class javaActualReturnType = javaMethod.getReturnType();
-        RelDataType returnType =
-            validator.getTypeFactory().createCwmElementType(returnParam);
-        Class javaExpectedReturnType =
-            validator.getTypeFactory().getClassForJavaParamStyle(returnType);
-        if (javaExpectedReturnType != javaActualReturnType) {
-            // TODO jvs 11-Jan-2005:  permit compatible types
-            throw validator.newPositionalError(
-                routine,
-                validator.res.newValidatorRoutineJavaReturnMismatch(
-                    repos.getLocalizedObjectName(routine),
-                    javaExpectedReturnType.toString(),
-                    repos.getLocalizedObjectName(javaUnmangledMethodName),
-                    javaActualReturnType.toString()));
+        FarragoUserDefinedRoutineLookup lookup =
+            new FarragoUserDefinedRoutineLookup(validator.getStmtValidator());
+        FarragoUserDefinedRoutine sqlRoutine =
+            lookup.convertFunction(routine);
+        try {
+            sqlRoutine.getJavaMethod();
+        } catch (SqlValidatorException ex) {
+            throw validator.newPositionalError(routine,ex);
         }
     }
 

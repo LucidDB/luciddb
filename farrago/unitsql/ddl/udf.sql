@@ -8,6 +8,8 @@ set schema 'udftest';
 
 set path 'udftest';
 
+-- test SQL-defined functions
+
 create function celsius_to_fahrenheit(in c double)
 returns double
 contains sql
@@ -232,7 +234,7 @@ parameter style java
 contains sql
 return c*1.8 + 32;
 
--- begin tests for external Java routines
+-- test external Java routines
 
 create function get_java_property(in name varchar(128))
 returns varchar(128)
@@ -274,14 +276,27 @@ returns varchar(128)
 no sql
 external name 'class java.lang.System.getHotels';
 
--- should fail:  parameter type mismatch
+-- should fail:  method not found due to parameter type mismatch
 create function get_java_property(in name int)
 returns varchar(128)
 no sql
 external name 'class java.lang.System.getProperty';
+
+-- should fail:  parameter type mismatch for explicit method spec
+create function get_java_property(in name int)
+returns varchar(128)
+no sql
+external name 'class java.lang.System.getProperty(java.lang.String)';
 
 -- should fail:  return type mismatch
 create function get_java_property(in name varchar(128))
 returns int
 no sql
 external name 'class java.lang.System.getProperty';
+
+-- test explicit selection of method from overloads
+create function to_hex_string(in i int)
+returns varchar(128)
+no sql
+external name 
+'class net.sf.farrago.test.FarragoTestUDR.toHexString(java.lang.Integer)';

@@ -429,65 +429,7 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
 
         public SqlTypeName getSqlTypeName()
         {
-            return JavaToSqlTypeConversionRules.instance().lookup(this);
-        }
-    }
-
-    /**
-     * Class to hold conversion rules from JavaType to SqlTypeName
-     */
-    private static class JavaToSqlTypeConversionRules
-    {
-        private static final JavaToSqlTypeConversionRules instance =
-            new JavaToSqlTypeConversionRules();
-        private final HashMap rules = new HashMap();
-
-        private JavaToSqlTypeConversionRules()
-        {
-            rules.put(Integer.class, SqlTypeName.Integer);
-            rules.put(int.class, SqlTypeName.Integer);
-            rules.put(Long.class, SqlTypeName.Bigint);
-            rules.put(long.class, SqlTypeName.Bigint);
-            rules.put(Short.class, SqlTypeName.Smallint);
-            rules.put(short.class, SqlTypeName.Smallint);
-            rules.put(byte.class, SqlTypeName.Tinyint);
-            rules.put(Byte.class, SqlTypeName.Tinyint);
-
-            rules.put(Float.class, SqlTypeName.Real);
-            rules.put(float.class, SqlTypeName.Real);
-            rules.put(Double.class, SqlTypeName.Double);
-            rules.put(double.class, SqlTypeName.Double);
-
-            rules.put(boolean.class, SqlTypeName.Boolean);
-            rules.put(byte [].class, SqlTypeName.Varbinary);
-            rules.put(String.class, SqlTypeName.Varchar);
-            rules.put(char [].class, SqlTypeName.Varchar);
-            rules.put(Character.class, SqlTypeName.Char);
-            rules.put(char.class, SqlTypeName.Char);
-
-            rules.put(Date.class, SqlTypeName.Date);
-            rules.put(Timestamp.class, SqlTypeName.Timestamp);
-            rules.put(Time.class, SqlTypeName.Time);
-        }
-
-        /**
-         * Returns the {@link org.eigenbase.util.Glossary#SingletonPattern
-         * singleton} instance.
-         */
-        public static JavaToSqlTypeConversionRules instance()
-        {
-            return instance;
-        }
-
-        /**
-         * Returns a (if there's one) corresponding {@link SqlTypeName}  for a given (java) class
-         * @param t The Java class to lookup
-         * @return a corresponding SqlTypeName if found, otherwise null is returned
-         */
-        public SqlTypeName lookup(RelDataType t)
-        {
-            JavaType javaType = (JavaType) t;
-            return (SqlTypeName) rules.get(javaType.clazz);
+            return JavaToSqlTypeConversionRules.instance().lookup(clazz);
         }
     }
 }

@@ -25,6 +25,7 @@ import net.sf.farrago.cwm.behavioral.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.reltype.*;
 
 import java.util.*;
@@ -68,19 +69,11 @@ class FarragoRexBuilder extends JavaRexBuilder
         FarragoUserDefinedRoutine routine = (FarragoUserDefinedRoutine) op;
         FemRoutine femRoutine = routine.getFemRoutine();
 
-        if (femRoutine.getBody() == null) {
-            // leave external routines invocations as calls
-            return super.makeCall(op, exprs);
-        }
-
-        // replace calls to SQL-defined routines by
-        // inline expansion of body
-        assert(femRoutine.getBody().getLanguage().equals("SQL"));
-
         Map paramNameToArgMap = new HashMap();
         Map paramNameToTypeMap = new HashMap();
         RelDataType [] paramTypes = routine.getParamTypes();
 
+        RexNode [] castExprs = new RexNode[exprs.length];
         List paramNames = new ArrayList();
         Iterator paramIter = femRoutine.getParameter().iterator();
         for (int i = 0; paramIter.hasNext(); ++i) {
@@ -92,12 +85,53 @@ class FarragoRexBuilder extends JavaRexBuilder
             RexNode argCast = makeCast(paramTypes[i], exprs[i]);
             paramNameToArgMap.put(param.getName(), argCast);
             paramNameToTypeMap.put(param.getName(), paramTypes[i]);
+            castExprs[i] = argCast;
         }
 
-        RexNode returnNode = preparingStmt.expandFunction(
-            femRoutine.getBody().getBody(),
-            paramNameToArgMap,
-            paramNameToTypeMap);
+        RexNode returnNode;
+        if (femRoutine.getBody().getLanguage().equals("SQL")) {
+            // replace calls to SQL-defined routines by
+            // inline expansion of body
+            returnNode = preparingStmt.expandFunction(
+                femRoutine.getBody().getBody(),
+                paramNameToArgMap,
+                paramNameToTypeMap);
+        } else {
+            // leave calls to external functions alone
+            returnNode = super.makeCall(op, castExprs);
+        }
+
+        if (!femRoutine.isCalledOnNullInput()
+            && (paramTypes.length > 0))
+        {
+            // build up
+            // CASE WHEN arg1 IS NULL THEN NULL
+            // WHEN arg2 IS NULL THEN NULL
+            // ...
+            // ELSE invokeUDF(arg1, arg2, ...) END
+            List caseOperandList = new ArrayList();
+            for (int i = 0; i < paramTypes.length; ++i) {
+                // REVIEW jvs 17-Jan-2005: This assumes that CAST will never
+                // convert a non-NULL value into a NULL.  If that's not true,
+                // we should be referencing the arg CAST result instead.
+                caseOperandList.add(
+                    makeCall(
+                        opTab.isNullOperator,
+                        exprs[i]));
+                caseOperandList.add(
+                    makeLiteral(
+                        null,
+                        routine.getReturnType(),
+                        SqlTypeName.Null));
+            }
+            caseOperandList.add(returnNode);
+            RexNode [] caseOperands = (RexNode [])
+                caseOperandList.toArray(new RexNode[0]);
+            RexNode nullCase = makeCall(
+                opTab.caseOperator,
+                caseOperands);
+            returnNode = nullCase;
+        }
 
         RexNode returnCast = makeCast(routine.getReturnType(), returnNode);
         return returnCast;
