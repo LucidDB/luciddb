@@ -699,6 +699,16 @@ public class SqlOperatorTests
     public static void testExtractFunc(SqlTester tester) {
         //todo
     }
+
+    public static void testCeilFunc(SqlTester tester)
+    {
+        //To change body of created methods use File | Settings | File Templates.
+    }
+    
+    public static void testFloorFunc(SqlTester tester)
+    {
+        // Add in calls wwhne function is implemented
+    }
 }
 
 // End SqlOperatorTests.java

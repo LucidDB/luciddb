@@ -248,6 +248,17 @@ public abstract class SqlNode implements Cloneable
      */
     public abstract boolean equalsDeep(SqlNode node);
 
+    /**
+     * Returns whether expression is always ascending, descending or constant.
+     * This property is useful because it allows to safely aggregte infinite
+     * streams of values.
+     *
+     * <p>The default implementation returns <code>false</code>
+     */
+    public boolean isMonotonic(SqlValidatorScope scope)
+    {
+        return false;
+    }
 }
 
 

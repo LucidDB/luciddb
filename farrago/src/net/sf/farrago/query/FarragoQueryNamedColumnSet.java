@@ -78,6 +78,12 @@ public abstract class FarragoQueryNamedColumnSet extends RelOptAbstractTable
         return id.names;
     }
 
+    // implement SqlValidatorTable
+    public boolean isMonotonic(String columnName)
+    {
+        return false;
+    }
+
     // implement FarragoQueryColumnSet
     public FarragoPreparingStmt getPreparingStmt()
     {

@@ -38,6 +38,11 @@ public interface SqlValidatorTable
     RelDataType getRowType();
 
     String [] getQualifiedName();
+
+    /**
+     * Returns whether a given column is monotonic.
+     */
+    boolean isMonotonic(String columnName);
 }
 
 // End SqlValidatorTable.java

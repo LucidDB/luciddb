@@ -135,6 +135,11 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             assert(precision >= 0);
             return typeFactory.createSqlType(typeName, precision);
         }
+        // All of the time functions are monotonic.
+        public boolean isMonotonic(SqlCall call, SqlValidatorScope scope) {
+            return true;
+        }
+
     }
 
     /**
@@ -156,6 +161,11 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
 
         public SqlSyntax getSyntax() {
             return SqlSyntax.FunctionId;
+        }
+
+        // All of the string constants are monotonic.
+        public boolean isMonotonic(SqlCall call, SqlValidatorScope scope) {
+            return true;
         }
     }
 
@@ -413,6 +423,23 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             {
                 SqlOperatorTests.testMinusOperator(tester);
             }
+
+            public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
+            {
+                SqlValidator val = scope.getValidator();
+                // Check for (c - m) where c is a constant
+                if (val.isConstant(call.operands[0])) {
+                    SqlNode node = (SqlNode)call.operands[1];
+                    return scope.isMonotonic(node);
+                }
+                // Check for (m - c) where c is a constant
+                if (val.isConstant(call.operands[1])) {
+                    SqlNode node = (SqlNode)call.operands[0];
+                    return scope.isMonotonic(node);
+                }
+
+                return super.isMonotonic(call, scope);
+            }
         };
 
     /**
@@ -426,6 +453,23 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testMultiplyOperator(tester);
+            }
+
+            public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
+            {
+                SqlValidator val = scope.getValidator();
+                // First check for (m * c) where c is a constant
+                if (val.isConstant(call.operands[1])) {
+                    SqlNode node = (SqlNode)call.operands[0];
+                    return scope.isMonotonic(node);
+                }
+                // Check the converse (c * m)
+                if (val.isConstant(call.operands[0])) {
+                    SqlNode node = (SqlNode)call.operands[1];
+                    return scope.isMonotonic(node);
+                }
+
+                return super.isMonotonic(call, scope);
             }
         };
 
@@ -467,6 +511,24 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             {
                 SqlOperatorTests.testPlusOperator(tester);
             }
+
+            public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
+            {
+                SqlValidator val = scope.getValidator();
+                // First check for (m + c) where c is a constant
+                if (val.isConstant(call.operands[1])) {
+                    SqlNode node = (SqlNode)call.operands[0];
+                    return scope.isMonotonic(node);
+                }
+                // Check the converse (c + m)
+                if (val.isConstant(call.operands[0])) {
+                    SqlNode node = (SqlNode)call.operands[1];
+                    return scope.isMonotonic(node);
+                }
+
+                return super.isMonotonic(call, scope);
+            }
+
         };
 
     public final SqlBinaryOperator memberOfOperator =
@@ -1366,7 +1428,42 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
                 SqlOperatorTests.testCoalesceFunc(tester);
             }
         };
+    
+    /** The <code>FLOOR</code> function. */
+    public final SqlFunction floorFunc = 
+        new SqlFunction("FLOOR", SqlKind.Function,
+            ReturnTypeInferenceImpl.useFirstArgType, null,
+            OperandsTypeChecking.typeNullableNumericOrInterval,
+            SqlFunction.SqlFuncTypeName.Numeric) {
+            public void test(SqlTester tester)
+            {
+                SqlOperatorTests.testFloorFunc(tester);
+            }
 
+            public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
+            {
+                SqlNode node = (SqlNode)call.operands[0];
+                return scope.isMonotonic(node);
+            }
+        };
+
+    /** The <code>CEIL</code> function. */
+    public final SqlFunction ceilFunc =
+        new SqlFunction("CEIL", SqlKind.Function,
+            ReturnTypeInferenceImpl.useFirstArgType, null,
+            OperandsTypeChecking.typeNullableNumericOrInterval,
+            SqlFunction.SqlFuncTypeName.Numeric) {
+            public void test(SqlTester tester)
+            {
+                SqlOperatorTests.testCeilFunc(tester);
+            }
+
+            public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
+            {
+                SqlNode node = (SqlNode)call.operands[0];
+                return scope.isMonotonic(node);
+            }
+        };
     /** The <code>USER</code> function. */
     public final SqlFunction userFunc = new SqlStringContextVariable("USER") {
         public void test(SqlTester tester)
@@ -1483,6 +1580,11 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         {
             return OperandsCountDescriptor.niladicCountDescriptor;
         }
+
+        public boolean isMonotonic(SqlCall call, SqlValidatorScope scope) {
+            return true;
+        }
+
     };
 
     /**

@@ -586,6 +586,14 @@ public abstract class SqlOperator
         }
     }
 
+    /**
+     * Method to check if call to this function is monotonic.  Default
+     * implementation is to return false.
+     */
+    public boolean isMonotonic(SqlCall call, SqlValidatorScope scope) {
+        return false; 
+    }
+
     //~ Inner Classes ---------------------------------------------------------
 
     /**

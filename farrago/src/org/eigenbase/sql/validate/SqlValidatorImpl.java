@@ -1588,6 +1588,13 @@ public class SqlValidatorImpl implements SqlValidator
             aggFinder.findAgg(select.getSelectList()) != null;
     }
 
+    public boolean isConstant(SqlNode expr)
+    {
+        return expr instanceof SqlLiteral ||
+                expr instanceof SqlDynamicParam ||
+                expr instanceof SqlDataTypeSpec;
+    }
+
     private void registerSubqueries(
         SqlValidatorScope parentScope,
         SqlNode node)
@@ -2310,6 +2317,11 @@ public class SqlValidatorImpl implements SqlValidator
             public SqlNodeList getMonotonicExprs()
             {
                 return null;
+            }
+
+            public boolean isMonotonic(String columnName)
+            {
+                return false;
             }
         };
     }

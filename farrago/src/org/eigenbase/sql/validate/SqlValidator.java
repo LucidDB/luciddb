@@ -358,6 +358,12 @@ public interface SqlValidator
      * BY clause may be used.
      */
     SqlValidatorScope getOrderScope(SqlSelect select);
+
+    /**
+     * Returns the boolean result of testing the node to
+     * see if it's a constant
+     */
+    boolean isConstant(SqlNode expr);
 }
 
 // End SqlValidator.java

@@ -103,6 +103,12 @@ public class IdentifierNamespace extends AbstractNamespace
     {
         return monotonicExprs;
     }
+
+    public boolean isMonotonic(String columnName)
+    {
+        final SqlValidatorTable table = getTable();
+        return table.isMonotonic(columnName);
+    }
 }
 
 // End IdentifierNamespace.java

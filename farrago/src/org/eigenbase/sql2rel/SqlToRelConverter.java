@@ -1712,16 +1712,21 @@ public class SqlToRelConverter
                     new String [] { maybeUpper(names[0]) });
             if (table != null) {
                 return new SqlValidatorTable() {
-                        public RelDataType getRowType()
-                        {
-                            return table.getRowType();
-                        }
+                    public RelDataType getRowType()
+                    {
+                        return table.getRowType();
+                    }
 
-                        public String [] getQualifiedName()
-                        {
-                            return null;
-                        }
-                    };
+                    public String [] getQualifiedName()
+                    {
+                        return null;
+                    }
+
+                    public boolean isMonotonic(String columnName)
+                    {
+                        return false;
+                    }
+                };
             }
             return null;
         }

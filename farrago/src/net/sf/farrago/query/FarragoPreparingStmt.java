@@ -967,13 +967,19 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             this.rowType = rowType;
         }
 
-        // implement SqlValidator.Table
+        // implement SqlValidatorTable
         public String [] getQualifiedName()
         {
             return qualifiedName;
         }
 
-        // implement SqlValidator.Table
+        // implement SqlValidatorTable
+        public boolean isMonotonic(String columnName)
+        {
+            return false;
+        }
+
+        // implement SqlValidatorTable
         public RelDataType getRowType()
         {
             return rowType;

@@ -118,6 +118,10 @@ public class SelectScope extends ListScope
 
     public boolean isMonotonic(SqlNode expr)
     {
+        if (expr.isMonotonic(this)) {
+            return true;
+        }
+
         if (children.size() == 1) {
             final SqlNodeList monotonicExprs =
                 ((SqlValidatorNamespace) children.get(0)).getMonotonicExprs();

@@ -27,6 +27,7 @@ import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.util.SqlVisitor;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidatorNamespace;
 import org.eigenbase.util.Util;
 import java.util.ArrayList;
 
@@ -236,6 +237,25 @@ public class SqlIdentifier extends SqlNode
     public boolean isSimple()
     {
         return names.length == 1 && !names[0].equals("*");
+    }
+
+    public boolean isMonotonic(SqlValidatorScope scope)
+    {
+        // First check for builtin functions which don't have parentheses,
+        // like "LOCALTIME".
+        SqlCall call = SqlUtil.makeCall(scope.getValidator().getOperatorTable(), this);
+        if (call != null) {
+            return call.isMonotonic(scope);
+        }
+        final SqlIdentifier fqId = scope.fullyQualify(this);
+        SqlValidatorNamespace ns = null;
+        for (int i = 0; i < fqId.names.length - 1; i++) {
+            String name = fqId.names[i];
+            ns = (i == 0) ?
+                    scope.resolve(name, null, null) :
+                    ns.lookupChild(name, null, null);
+        }
+        return ns.isMonotonic(fqId.names[fqId.names.length - 1]);
     }
 }
 

@@ -138,4 +138,9 @@ abstract class AbstractNamespace implements SqlValidatorNamespace
     {
         return SqlNodeList.Empty;
     }
+
+    public boolean isMonotonic(String columnName)
+    {
+        return false;
+    }
 }

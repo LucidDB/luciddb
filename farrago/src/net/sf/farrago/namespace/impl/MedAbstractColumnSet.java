@@ -145,6 +145,11 @@ public abstract class MedAbstractColumnSet extends RelOptAbstractTable
     {
         return cwmColumnSet;
     }
+
+    public boolean isMonotonic(String columnName)
+    {
+        return false;
+    }
 }
 
 

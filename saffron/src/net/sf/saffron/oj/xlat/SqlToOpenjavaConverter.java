@@ -569,29 +569,34 @@ public class SqlToOpenjavaConverter
                     new String [] { maybeUpper(names[0]) });
             if (table != null) {
                 return new SqlValidatorTable() {
-                        public RelDataType getRowType()
-                        {
-                            return table.getRowType();
-                        }
+                    public RelDataType getRowType()
+                    {
+                        return table.getRowType();
+                    }
 
-                        public String [] getQualifiedName()
-                        {
-                            return null;
-                        }
+                    public String [] getQualifiedName()
+                    {
+                        return null;
+                    }
 
-                        public List getColumnNames()
-                        {
-                            final RelDataType rowType = table.getRowType();
-                            final RelDataTypeField [] fields =
+                    public List getColumnNames()
+                    {
+                        final RelDataType rowType = table.getRowType();
+                        final RelDataTypeField [] fields =
                                 rowType.getFields();
-                            ArrayList list = new ArrayList();
-                            for (int i = 0; i < fields.length; i++) {
-                                RelDataTypeField field = fields[i];
-                                list.add(maybeUpper(field.getName()));
-                            }
-                            return list;
+                        ArrayList list = new ArrayList();
+                        for (int i = 0; i < fields.length; i++) {
+                            RelDataTypeField field = fields[i];
+                            list.add(maybeUpper(field.getName()));
                         }
-                    };
+                        return list;
+                    }
+
+                    public boolean isMonotonic(String columnName)
+                    {
+                        return false;
+                    }
+                };
             }
             return null;
         }
