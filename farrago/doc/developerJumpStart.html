@@ -211,6 +211,19 @@ automatically, destroying any data in your Farrago database)
 
 </ol>
 
+If none of the C++ components under thirdparty have been upgraded, and
+you'd like to force a rebuild of everything else, skip the steps after
+the thirdparty make and instead run
+
+<pre><code>
+cd dev/farrago
+initBuild.sh --with-fennel --skip-thirdparty
+
+</code></pre>
+
+This will recapitulate the original full build, but skipping the
+time-consuming thirdparty C++ components.
+
 <h2>Catalog Dump</h2>
 
 At any time, you can get a dump of the catalog by running <code>ant

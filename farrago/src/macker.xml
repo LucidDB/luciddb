@@ -45,6 +45,7 @@
     <pattern name="server" class="net.sf.farrago.server.*" />
     <pattern name="namespace.impl" class="net.sf.farrago.namespace.impl.*" />
     <pattern name="namespace.mdr" class="net.sf.farrago.namespace.mdr.*" />
+    <pattern name="namespace.mock" class="net.sf.farrago.namespace.mock.*" />
     <pattern name="namespace.jdbc" class="net.sf.farrago.namespace.jdbc.*" />
     <pattern name="namespace.ftrs" class="net.sf.farrago.namespace.ftrs.*" />
     <pattern name="test" class="net.sf.farrago.test.*" />
@@ -80,6 +81,7 @@
       <include pattern="server"/>
       <include pattern="namespace.impl"/>
       <include pattern="namespace.mdr"/>
+      <include pattern="namespace.mock"/>
       <include pattern="namespace.jdbc"/>
       <include pattern="namespace.ftrs"/>
       <include pattern="test"/>
@@ -535,6 +537,22 @@
         <to pattern="farrago" />
         <allow>
           <to pattern="namespace.mdr.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="namespace.mock.deps">
+      <include pattern="namespace.impl.deps" />
+      <include pattern="namespace.mock" />
+    </pattern>
+
+    <access-rule>
+      <message>namespace.mock dependency violation</message>
+      <deny>
+        <from pattern="namespace.mock" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="namespace.mock.deps" />
         </allow>
       </deny>
     </access-rule>

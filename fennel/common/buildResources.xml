@@ -24,7 +24,7 @@
   <property name="resource.name" value="FennelResource"/>
   <property name="resource.locales" value="en_US"/>
 
-  <property name="perforce.view" value="//open/fennel/common"/>
+  <property name="perforce.view" value="."/>
 
   <property
     name="perforce.files"

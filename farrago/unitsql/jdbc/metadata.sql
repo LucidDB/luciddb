@@ -66,7 +66,10 @@ select "databaseInitSize", "databaseIncrementSize", "databaseMaxSize",
     from sys_fem."Config"."FennelConfig";
 
 select * from sys_fem."Security"."AuthorizationIdentifier";
-select * from sys_fem."Security"."Privilege";
+
+-- TODO jvs 7-Aug-2004:  find out why the attribute order on this
+-- changes with every model edit
+-- select * from sys_fem."Security"."Privilege";
 
 -- Implemented but not included since result depends on connection
 -- !metadata getConnection

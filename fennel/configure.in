@@ -194,17 +194,17 @@ dnl Note:  even --with-optimization, we still include -g for profiling;
 dnl binaries can be stripped post-build for real release
 AC_ARG_WITH([optimization],
     AC_HELP_STRING([--with-optimization],[build optimized executables]),
-    [with_debug=$withval],
+    [with_optimization=$withval],
     [with_optimization=no])
 if test "$with_optimization" = "no"
 then
     CXXFLAGS="$CXXFLAGS -g -DDEBUG"
     CXXFLAGS="$CXXFLAGS -D_STLP_DEBUG=1 -D_STLP_DEBUG_UNINITIALIZED=1"
-    BOOST_LIB_SUFFIX=gcc-mt-gdp-1_31
+    BOOST_LIB_SUFFIX=gcc-mt-gdp
     STLPORT_LIB=${STLPORT_LIB_BASE}_stldebug
 else
     CXXFLAGS="$CXXFLAGS -O3 -g -DNDEBUG -Wno-unused-variable"
-    BOOST_LIB_SUFFIX=gcc-mt-p-1_31
+    BOOST_LIB_SUFFIX=gcc-mt-p
     STLPORT_LIB=$STLPORT_LIB_BASE
 fi
 

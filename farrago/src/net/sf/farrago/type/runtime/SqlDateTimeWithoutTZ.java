@@ -30,11 +30,13 @@ import java.text.SimpleDateFormat;
 
 
 /**
- * runtime type for date/time values.
- * This is a bit ugly, due to the unfortunate nature of sql 99 time w/o Timezone.
+ * Runtime type for date/time/timestamp values.
  *
- * The localtime is always the same hours/minutes in the current timezone, so GMT
- * has to be offset accordingly.
+ * <p>This is a bit ugly, due to the unfortunate nature of sql 99 time without
+ * Timezone.
+ *
+ * <p>The localtime is always the same hours/minutes in the current timezone,
+ * so GMT has to be offset accordingly.
  *
  * @author lee
  * @since May 5, 2004
@@ -42,28 +44,43 @@ import java.text.SimpleDateFormat;
  **/
 public abstract class SqlDateTimeWithoutTZ implements AssignableValue
 {
-    // Use same format as supported by parser (should be ISO format)
-    public static final String DateFormatStr = ParserUtil.DateFormatStr;
-    public static final String TimeFormatStr = ParserUtil.TimeFormatStr;
-    public static final String TimestampFormatStr = ParserUtil.TimestampFormatStr;
+    // ~ Instance fields ------------------------------------------------------
+    /**
+     * Calendar, which holds this object's time value. Its timezone is GMT,
+     * unless you call {@link #setCal}.
+     */
+    private Calendar cal = Calendar.getInstance();
 
-    private Calendar cal =  Calendar.getInstance();
-    private static final TimeZone gmtZone = TimeZone.getTimeZone("GMT+0");
-
-    public long value = 0; // time as GMT since epoch.
+    /**
+     * Time as milliseconds since epoch (1 Jan 1970 GMT).
+     */
+    public long value = 0;
     public int timeZoneOffset = 0; // timezone offset in Millis.
 
     /** Whether this value is null. */
     public boolean isNull;
 
+    // ~ Static fields --------------------------------------------------------
+
+    // Use same format as supported by parser (should be ISO format)
+    public static final String DateFormatStr = ParserUtil.DateFormatStr;
+    public static final String TimeFormatStr = ParserUtil.TimeFormatStr;
+    public static final String TimestampFormatStr = ParserUtil.TimestampFormatStr;
+
+    private static final TimeZone gmtZone = TimeZone.getTimeZone("GMT+0");
+
+    /** The default timezone for this Java VM. */
+    private static final TimeZone defaultZone =
+            Calendar.getInstance().getTimeZone();
+
     /**
      * Create a runtime object with timezone offset set from localtime.
-     * FIXME    - we need the session tz, not the
-     * server tz.
+     *
+     * <p>FIXME    - we need the session tz, not the server tz.
      */
     public SqlDateTimeWithoutTZ()
     {
-        timeZoneOffset = Calendar.getInstance().getTimeZone().getRawOffset();
+        timeZoneOffset = defaultZone.getRawOffset();
         cal.setTimeZone(gmtZone);
     }
 
@@ -90,13 +107,18 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
         isNull = b;
     }
 
+    /**
+     * Per the {@link NullableValue} contract, returns either null or the
+     * embedded value object. The value object is a {@link java.sql.Time
+     * JDBC Time/Date/Timestamp} in local time.
+     */
     public Object getNullableData() {
         if (isNull() || getCal() == null) {
             return null;
         }
         // subtract timeZoneOffset to get localtime == GMT time.
         long millis = cal.getTimeInMillis();
-        timeZoneOffset = Calendar.getInstance().getTimeZone().getOffset(millis);
+        timeZoneOffset = defaultZone.getOffset(millis);
         return this.getData(millis - timeZoneOffset);
     }
 
@@ -114,12 +136,13 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
      * @param date value to assign, or null to set null
      */
     public void assignFrom(Object date) {
-        assert ( !isNull ) : "attempt to assign to null object in SqlDateTimeWithoutTZ";
+        assert !isNull :
+                "attempt to assign to null object in SqlDateTimeWithoutTZ";
         if (null == date) {
             setNull(true);
             return;
         } else if (date instanceof Long) {
-            value = ((Long)date).longValue()  ;
+            value = ((Long)date).longValue();
             return;
         } else if (date instanceof java.util.Date) {
             value = ((java.util.Date) date).getTime();// + timeZoneOffset; // set tzOffset?
@@ -138,7 +161,7 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
         assert (!isNull) : "attempt to assign to null object in SqlDateTimeWithoutTZ";
         value = l;
         cal.setTimeInMillis(value);
-        timeZoneOffset = Calendar.getInstance().getTimeZone().getOffset(l);
+        timeZoneOffset = defaultZone.getOffset(l);
     }
 
     // implement NullablePrimitive
@@ -149,7 +172,7 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
     public Calendar getCal() {
         if (cal == null) {
             cal = Calendar.getInstance();
-            cal.setTimeZone((gmtZone));
+            cal.setTimeZone(gmtZone);
         }
         cal.setTimeInMillis(value);
         return cal;

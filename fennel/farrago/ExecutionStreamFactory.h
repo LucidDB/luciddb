@@ -165,6 +165,7 @@ protected:
     virtual void visit(ProxyIndexLoaderDef &);
     virtual void visit(ProxyCartesianProductStreamDef &);
     virtual void visit(ProxyCalcTupleStreamDef &);
+    virtual void visit(ProxyMockTupleStreamDef &);
 
     // helpers for above visitors
 

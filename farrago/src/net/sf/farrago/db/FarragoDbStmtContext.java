@@ -25,12 +25,14 @@ import net.sf.farrago.util.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
+import net.sf.farrago.resource.FarragoResource;
 
 import net.sf.saffron.core.*;
 import net.sf.saffron.util.*;
 import net.sf.saffron.oj.stmt.*;
 import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.sql.SqlKind;
+import net.sf.saffron.sql.type.SqlTypeName;
 import net.sf.saffron.runtime.IteratorResultSet;
 
 import java.util.*;
@@ -59,6 +61,11 @@ public class FarragoDbStmtContext
 
     private FarragoDbSession session;
 
+    /**
+     * Definitions of dynamic parameters.
+     */
+    private ParamDef[] dynamicParamDefs;
+
     private Object [] dynamicParamValues;
 
     private boolean daemon;
@@ -75,6 +82,7 @@ public class FarragoDbStmtContext
      * query timeout in seconds, default to 0.
      */
     private int queryTimeoutMillis = 0;
+
 
     //~ Constructors ----------------------------------------------------------
 
@@ -136,8 +144,18 @@ public class FarragoDbStmtContext
     private void postprepare()
     {
         if (isPrepared()) {
-            dynamicParamValues = new Object[
-                executableStmt.getDynamicParamRowType().getFieldCount()];
+            final SaffronType dynamicParamRowType =
+                    executableStmt.getDynamicParamRowType();
+            final SaffronField[] fields = dynamicParamRowType.getFields();
+            // Allocate an array to hold parameter values.
+            dynamicParamValues = new Object[fields.length];
+            // Allocate an array of validators, one for each parameter.
+            dynamicParamDefs = new ParamDef[fields.length];
+            for (int i = 0; i < fields.length; i++) {
+                final SaffronField field = fields[i];
+                dynamicParamDefs[i] = ParamDef.create(field.getName(),
+                        field.getType());
+            }
         } else {
             // always zero for DDL
             updateCount = 0;
@@ -182,8 +200,8 @@ public class FarragoDbStmtContext
     public void setDynamicParam(int parameterIndex,Object x)
     {
         assert(isPrepared());
-        // TODO:  type/null checking
-        dynamicParamValues[parameterIndex] = x;
+        Object y = dynamicParamDefs[parameterIndex].scrubValue(x);
+        dynamicParamValues[parameterIndex] = y;
     }
 
     // implement FarragoSessionStmtContext
@@ -336,6 +354,250 @@ public class FarragoDbStmtContext
         }
         for (int i = 0; i < dynamicParamValues.length; ++i) {
             tracer.finer("?" + (i + 1) + " = [" + dynamicParamValues[i] + "]");
+        }
+    }
+
+    /**
+     * Enforces constraints on parameters.
+     *
+     * The constraints are:<ol>
+     *
+     * <li>Ensures that null values cannot be inserted into not-null columns.
+     *
+     * <li>Ensures that value is the right type.
+     *
+     * <li>Ensures that the value is within range. For example, you can't
+     *    insert a 10001 into a DECIMAL(5) column.
+     *
+     * </ol>
+     *
+     * <p>TODO: Actually enfore these constraints.
+     */
+    private static class ParamDef {
+        final SaffronType type;
+        final String paramName;
+
+        static final TimeZone defaultZone = TimeZone.getDefault();
+        static final TimeZone gmtZone = TimeZone.getTimeZone("GMT");
+
+        public ParamDef(String paramName, SaffronType type) {
+            this.type = type;
+            this.paramName = paramName;
+        }
+
+        /**
+         * Creates a parameter definition.
+         *
+         * @post return != null
+         */
+        static ParamDef create(String paramName, SaffronType type) {
+            final SqlTypeName sqlTypeName = type.getSqlTypeName();
+            switch (sqlTypeName.ordinal_) {
+            case SqlTypeName.Char_ordinal:
+            case SqlTypeName.Varchar_ordinal:
+                return new StringParamDef(paramName, type);
+            case SqlTypeName.Binary_ordinal:
+            case SqlTypeName.Varbinary_ordinal:
+                return new BinaryParamDef(paramName, type);
+            case SqlTypeName.Date_ordinal:
+                return new DateParamDef(paramName, type);
+            case SqlTypeName.Timestamp_ordinal:
+                return new TimestampParamDef(paramName, type);
+            case SqlTypeName.Time_ordinal:
+                return new TimeParamDef(paramName, type);
+            default:
+                return new ParamDef(paramName, type);
+            }
+        }
+
+        /**
+         * Checks the type of a value, and throws an error if it is invalid.
+         *
+         * @param x
+         * @return Value to be sent into the depths...
+         */
+        public Object scrubValue(Object x) {
+            return x;
+        }
+
+        /**
+         * Returns an error that the value is not valid for the desired SQL
+         * type.
+         */
+        protected FarragoException newInvalidType(Object x) {
+            return FarragoResource.instance().newParameterValueIncompatible(
+                    x.getClass().getName(),
+                    paramName,
+                    type.toString());
+        }
+    }
+
+    /**
+     * Definition of a Timestamp parameter. Converts parameters from local time
+     * (the JVM's timezone) into system time.
+     */
+    private static class TimestampParamDef extends ParamDef {
+        public TimestampParamDef(String paramName, SaffronType type) {
+            super(paramName, type);
+        }
+
+        public Object scrubValue(Object x) {
+            // java.sql.Date, java.sql.Time, java.sql.Timestamp are all OK.
+            if (!(x instanceof java.util.Date)) {
+                throw newInvalidType(x);
+            }
+            java.util.Date timestamp = (java.util.Date) x;
+            long millis = timestamp.getTime();
+            int timeZoneOffset = defaultZone.getOffset(millis);
+            // shift the time into gmt
+            return new Timestamp(millis + timeZoneOffset);
+        }
+
+    }
+
+    /**
+     * Definition of a date parameter. Converts parameters from local time
+     * (the JVM's timezone) into system time.
+     */
+    private static class DateParamDef extends ParamDef {
+        public DateParamDef(String paramName, SaffronType type) {
+            super(paramName, type);
+        }
+
+        public Object scrubValue(Object x) {
+            if (!(x instanceof java.util.Date)) {
+                throw newInvalidType(x);
+            }
+            java.util.Date date = (java.util.Date) x;
+            final long millis = date.getTime(),
+                    shiftedMillis;
+            // Shift time into gmt and truncate to previous midnight.
+            // (There's probably a more efficient way of doing this.)
+            Calendar cal = Calendar.getInstance();
+            cal.setTimeInMillis(millis);
+            // Truncate to midnight before we shift into GMT, just in case
+            // the untruncated date falls in a different day in GMT.
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
+            // Shift into gmt and truncate again.
+            cal.setTimeZone(gmtZone);
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
+            shiftedMillis = cal.getTimeInMillis();
+
+            return new java.sql.Date(shiftedMillis);
+        }
+
+    }
+
+    /**
+     * Definition of a time parameter. Converts parameters from local time
+     * (the JVM's timezone) into system time.
+     */
+    private static class TimeParamDef extends ParamDef {
+        public TimeParamDef(String paramName, SaffronType type) {
+            super(paramName, type);
+        }
+
+        public Object scrubValue(Object x) {
+            // java.sql.Date, java.sql.Time, java.sql.Timestamp are all OK.
+            if (!(x instanceof java.util.Date)) {
+                throw newInvalidType(x);
+            }
+            java.util.Date time = (java.util.Date) x;
+            // create a calendar containing time in locale timezone
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(time);
+            final int hour = cal.get(Calendar.HOUR_OF_DAY);
+            final int minute = cal.get(Calendar.MINUTE);
+            final int second = cal.get(Calendar.SECOND);
+            final int millisecond = cal.get(Calendar.MILLISECOND);
+            // set date to epoch
+            cal.clear();
+            // shift to gmt
+            cal.setTimeZone(gmtZone);
+            // now restore the time part
+            cal.set(Calendar.HOUR_OF_DAY, hour);
+            cal.set(Calendar.MINUTE, minute);
+            cal.set(Calendar.SECOND, second);
+            cal.set(Calendar.MILLISECOND, millisecond);
+            // convert to a time object
+            return new Time(cal.getTimeInMillis());
+        }
+
+    }
+
+    /**
+     * Definition of a string parameter. Values which are not strings are
+     * converted into strings. Strings are not padded, even for CHAR columns.
+     */
+    private static class StringParamDef extends ParamDef {
+        private final int maxCharCount;
+
+        public StringParamDef(String paramName, SaffronType type) {
+            super(paramName, type);
+            maxCharCount = type.getPrecision();
+        }
+
+        public Object scrubValue(Object x) {
+            if (x == null) {
+                return x;
+            }
+            if (x instanceof String) {
+                return x;
+            }
+            final String s = x.toString();
+            if (s.length() > maxCharCount) {
+                throw FarragoResource.instance().newParameterValueTooLong(
+                        s, paramName, type.toString());
+            }
+            return s;
+        }
+    }
+
+    /**
+     * Definition of a string parameter. Values which are not strings are
+     * converted into strings. Strings are not padded, even for CHAR columns.
+     */
+    private static class BinaryParamDef extends ParamDef {
+        private final int maxByteCount;
+
+        public BinaryParamDef(String paramName, SaffronType type) {
+            super(paramName, type);
+            maxByteCount = type.getPrecision();
+        }
+
+        public Object scrubValue(Object x) {
+            if (x == null) {
+                return x;
+            }
+            if (!(x instanceof byte[])) {
+                throw newInvalidType(x);
+            }
+            final byte[] bytes = (byte[]) x;
+            if (bytes.length > maxByteCount) {
+                throw FarragoResource.instance().newParameterValueTooLong(
+                        toString(bytes), paramName, type.toString());
+            }
+            return bytes;
+        }
+
+        private static String toString(byte[] bytes) {
+            StringBuffer buf = new StringBuffer(2 + bytes.length * 5);
+            for (int i = 0; i < bytes.length; i++) {
+                byte b = bytes[i];
+                if (i > 0) {
+                    buf.append(", ");
+                }
+                buf.append("x");
+                buf.append(Integer.toString(b, 16));
+            }
+            buf.append("}");
+            return buf.toString();
         }
     }
 

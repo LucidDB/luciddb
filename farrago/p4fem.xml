@@ -6,9 +6,9 @@
 
 <project name="farrago-p4fem" basedir="." default="checkoutFem">
   <target name="checkoutFem">
-    <p4edit view="//open/fennel/farrago/NativeMethods.h"/>
-    <p4edit view="//open/fennel/farrago/FemGeneratedClasses.h"/>
-    <p4edit view="//open/fennel/farrago/FemGeneratedMethods.h"/>
-    <p4edit view="//open/fennel/common/FemGeneratedEnums.h"/>
+    <p4edit view="../fennel/farrago/NativeMethods.h"/>
+    <p4edit view="../fennel/farrago/FemGeneratedClasses.h"/>
+    <p4edit view="../fennel/farrago/FemGeneratedMethods.h"/>
+    <p4edit view="../fennel/common/FemGeneratedEnums.h"/>
   </target>
 </project>

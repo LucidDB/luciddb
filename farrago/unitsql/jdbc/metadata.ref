@@ -318,11 +318,10 @@ usesLocalFiles                                    false
 | name  | visibility  | namespace  | mofId  | mofClassName  |
 +-------+-------------+------------+--------+---------------+
 +-------+-------------+------------+--------+---------------+
-0: jdbc:farrago:> select * from sys_fem."Security"."Privilege";
-+-------+------------------+----------+----------+----------+--------+---------------+
-| name  | withGrantOption  | Element  | Grantee  | Grantor  | mofId  | mofClassName  |
-+-------+------------------+----------+----------+----------+--------+---------------+
-+-------+------------------+----------+----------+----------+--------+---------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- TODO jvs 7-Aug-2004:  find out why the attribute order on this
+0: jdbc:farrago:> -- changes with every model edit
+0: jdbc:farrago:> -- select * from sys_fem."Security"."Privilege";
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Implemented but not included since result depends on connection
 0: jdbc:farrago:> -- !metadata getConnection

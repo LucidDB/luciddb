@@ -86,7 +86,8 @@ public class FarragoQueryTest extends FarragoTestCase
     {
         String sql = "select name from sales.emps where public_key=?";
         preparedStmt = connection.prepareStatement(sql);
-        preparedStmt.setString(1,"Abc");
+        final byte[] bytes = {0x41, 0x62, 0x63};
+        preparedStmt.setBytes(1,bytes);
         resultSet = preparedStmt.executeQuery();
         if (!catalog.isFennelEnabled()) {
             return;

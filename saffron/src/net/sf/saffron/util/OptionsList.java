@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// (C) Copyright 2002-2004 Disruptive Tech
 // (C) Copyright 2003-2004 John V. Sichi
 // You must accept the terms in LICENSE.html to use this software.
 //
@@ -134,8 +134,8 @@ public class OptionsList
 {
     //~ Instance fields -------------------------------------------------------
 
-    private final ArrayList optionGroups_ = new ArrayList();
-    private final ArrayList options_ = new ArrayList();
+    private final ArrayList optionGroups = new ArrayList();
+    private final ArrayList options = new ArrayList();
 
     //~ Constructors ----------------------------------------------------------
 
@@ -152,7 +152,7 @@ public class OptionsList
     public OptionsList(Option [] options)
     {
         for (int i = 0; i < options.length; i++) {
-            options_.add(options[i]);
+            this.options.add(options[i]);
         }
     }
 
@@ -160,7 +160,7 @@ public class OptionsList
 
     public void add(Option option)
     {
-        options_.add(option);
+        options.add(option);
     }
 
     /**
@@ -185,11 +185,11 @@ public class OptionsList
     {
         for (int i = 0; i < options.length; i++) {
             Option option = options[i];
-            if (option.required_) {
-                throw new AssertionError("!options[i].required_");
+            if (option.required) {
+                throw new AssertionError("!options[i].required");
             }
         }
-        optionGroups_.add(new Group(minCount,maxCount,options));
+        optionGroups.add(new Group(minCount,maxCount,options));
     }
 
     public void parse(String [] args)
@@ -213,7 +213,7 @@ public class OptionsList
         // Check mandatory options.
         for (int i = 0; i < options.length; i++) {
             Option option = options[i];
-            if (!option.required_) {
+            if (!option.required) {
                 continue;
             }
             if (!usedOptions.contains(option)) {
@@ -224,26 +224,26 @@ public class OptionsList
         }
 
         // Check inclusivity/exclusivity.
-        for (int i = 0; i < optionGroups_.size(); i++) {
-            Group group = (Group) optionGroups_.get(i);
+        for (int i = 0; i < optionGroups.size(); i++) {
+            Group group = (Group) optionGroups.get(i);
             int count = 0;
             for (int j = 0; j < options.length; j++) {
-                Option option = group.options_[j];
+                Option option = group.options[j];
                 if (usedOptions.contains(option)) {
                     count++;
                 }
             }
-            if (count > group.maxCount_) {
+            if (count > group.maxCount) {
                 throw new RuntimeException(
-                    "More than " + group.maxCount_
+                    "More than " + group.maxCount
                     + " of the following options were specified: "
-                    + group.description_);
+                    + group.description);
             }
-            if (count < group.minCount_) {
+            if (count < group.minCount) {
                 throw new RuntimeException(
-                    "Fewer than " + group.minCount_
+                    "Fewer than " + group.minCount
                     + " of the following options were specified: "
-                    + group.description_);
+                    + group.description);
             }
         }
 
@@ -253,15 +253,15 @@ public class OptionsList
             Option option = options[i];
             if (
                 !usedOptions.contains(option)
-                    && (option.defaultValue_ != null)) {
-                option.set(option.defaultValue_,false);
+                    && (option.defaultValue != null)) {
+                option.set(option.defaultValue,false);
             }
         }
     }
 
     public Option [] toArray()
     {
-        return (Option []) options_.toArray(new Option[options_.size()]);
+        return (Option []) options.toArray(new Option[options.size()]);
     }
 
     //~ Inner Interfaces ------------------------------------------------------
@@ -317,19 +317,19 @@ public class OptionsList
          * {@link OptionsList.NumberOption#doubleValue}.
          * </p>
          */
-        protected Object value_;
+        protected Object value;
 
         /** Default value of option, or null if there is no default value. */
-        private final Object defaultValue_;
-        private final String description_;
+        private final Object defaultValue;
+        private final String description;
 
         /** Short name of option, used as a flag, e.g. "c". */
-        private final String flag_;
+        private final String flag;
 
         /** Long name of option, e.g. "color". */
-        private final String name_;
-        private final boolean required_;
-        private OptionHandler handler_;
+        private final String name;
+        private final boolean required;
+        private OptionHandler handler;
 
         Option(
             String flag,
@@ -340,27 +340,27 @@ public class OptionsList
             Object defaultValue,
             OptionHandler handler)
         {
-            flag_ = flag;
-            name_ = option;
-            required_ = required;
-            defaultValue_ = defaultValue;
-            description_ = description;
-            handler_ = handler;
+            this.flag = flag;
+            name = option;
+            this.required = required;
+            this.defaultValue = defaultValue;
+            this.description = description;
+            this.handler = handler;
         }
 
         public String getDescription()
         {
-            return description_;
+            return description;
         }
 
         public void setHandler(OptionHandler handler)
         {
-            handler_ = handler;
+            this.handler = handler;
         }
 
         public String getName()
         {
-            return name_;
+            return name;
         }
 
         /**
@@ -382,7 +382,7 @@ public class OptionsList
          */
         public Object getValue()
         {
-            return value_;
+            return value;
         }
 
         /**
@@ -400,15 +400,15 @@ public class OptionsList
             final String arg = args[i];
             if (
                 arg.startsWith("-")
-                    && (flag_ != null)
-                    && arg.equals("-" + flag_)) {
+                    && (flag != null)
+                    && arg.equals("-" + flag)) {
                 // e.g. "-nolog"
                 // e.g. "-threads 5"
                 readArg(args[i + 1]);
                 return i + 2;
-            } else if ((name_ != null) && arg.startsWith(name_ + "=")) {
+            } else if ((name != null) && arg.startsWith(name + "=")) {
                 // e.g. "threads=5"
-                readArg(arg.substring((name_ + "=").length()));
+                readArg(arg.substring((name + "=").length()));
                 return i + 1;
             }
             return i;
@@ -416,10 +416,10 @@ public class OptionsList
 
         public void set(Object value,boolean isExplicit)
         {
-            if (handler_ == null) {
-                value_ = value;
+            if (handler == null) {
+                this.value = value;
             } else {
-                handler_.set(this,value,isExplicit);
+                handler.set(this,value,isExplicit);
             }
         }
 
@@ -463,7 +463,7 @@ public class OptionsList
          */
         protected void valueError(String arg)
         {
-            handler_.invalidValue(this,arg);
+            handler.invalidValue(this,arg);
         }
     }
 
@@ -484,13 +484,13 @@ public class OptionsList
                 description,
                 required,
                 anonymous,
-                new Boolean(defaultValue),
+                Boolean.valueOf(defaultValue),
                 handler);
         }
 
         public boolean booleanValue()
         {
-            return ((Boolean) value_).booleanValue();
+            return ((Boolean) value).booleanValue();
         }
 
         protected void readArg(String arg)
@@ -507,7 +507,7 @@ public class OptionsList
 
     public static class EnumeratedOption extends Option
     {
-        private final EnumeratedValues enumeration_;
+        private final EnumeratedValues enumeration;
 
         public EnumeratedOption(
             String flag,
@@ -527,12 +527,12 @@ public class OptionsList
                 anonymous,
                 defaultValue,
                 handler);
-            enumeration_ = enumeration;
+            this.enumeration = enumeration;
         }
 
         protected void readArg(String arg)
         {
-            final EnumeratedValues.Value value = enumeration_.getValue(arg);
+            final EnumeratedValues.Value value = enumeration.getValue(arg);
             if (value == null) {
                 valueError(arg);
             } else {
@@ -564,12 +564,12 @@ public class OptionsList
 
         public double doubleValue()
         {
-            return ((Number) value_).doubleValue();
+            return ((Number) value).doubleValue();
         }
 
         public int intValue()
         {
-            return ((Number) value_).intValue();
+            return ((Number) value).intValue();
         }
 
         protected void readArg(String arg)
@@ -611,7 +611,7 @@ public class OptionsList
 
         public String stringValue()
         {
-            return (String) value_;
+            return (String) value;
         }
 
         protected void readArg(String arg)
@@ -622,28 +622,28 @@ public class OptionsList
 
     private static class Group
     {
-        private final String description_;
-        private final Option [] options_;
-        private final int maxCount_;
-        private final int minCount_;
+        private final String description;
+        private final Option [] options;
+        private final int maxCount;
+        private final int minCount;
 
         Group(int maxCount,int minCount,Option [] options)
         {
-            maxCount_ = maxCount;
-            minCount_ = minCount;
-            options_ = options;
+            this.maxCount = maxCount;
+            this.minCount = minCount;
+            this.options = options;
 
             // derive description
             StringBuffer buf = new StringBuffer("{");
-            for (int j = 0; j < options_.length; j++) {
-                Option option = options_[j];
+            for (int j = 0; j < this.options.length; j++) {
+                Option option = this.options[j];
                 if (j > 0) {
                     buf.append(", ");
                 }
                 buf.append(option.getName());
             }
             buf.append("}");
-            description_ = buf.toString();
+            description = buf.toString();
         }
     }
 }

@@ -19,37 +19,568 @@
 
 package net.sf.farrago.test;
 
-import junit.framework.*;
+import junit.framework.Assert;
+import junit.framework.Test;
 
-import java.sql.*;
-import java.sql.Date;
-
-import java.util.*;
-
+import java.io.InputStream;
+import java.io.Reader;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.sql.*;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.TimeZone;
+import java.util.regex.Pattern;
 
 /**
  * FarragoJdbcTest tests specifics of the Farrago implementation of the JDBC
  * API.  See also unitsql/jdbc/*.sql.
+ *
+ * todo: test:
+ * 1. string too long for char/varchar field
+ * 2. value which converted to char/varchar is too long
+ * 3. various numeric values out of range, e.g. put 65537 in a tinyint
+ * 4. assign boolean to integer columns (becomes 0/1)
+ * 5. assign numerics to boolean
+ *    5a. small enough
+ *    5b out of range (not 0 or 1)
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class FarragoJdbcTest extends FarragoTestCase
 {
+    // Constants used by testDataTypes
+    private static final byte minByte = Byte.MIN_VALUE;
+    private static final byte maxByte = Byte.MAX_VALUE;
+    private static final short minShort = Short.MIN_VALUE;
+    private static final short maxShort = Short.MAX_VALUE;
+    private static final int minInt = Integer.MIN_VALUE;
+    private static final int maxInt = Integer.MAX_VALUE;
+    private static final long minLong = Long.MIN_VALUE;
+    private static final long maxLong = Long.MAX_VALUE;
+    private static final float minFloat = Float.MIN_VALUE;
+    private static final float maxFloat = Float.MAX_VALUE;
+    private static final double minDouble = Double.MIN_VALUE;
+    private static final double maxDouble = Double.MAX_VALUE;
+    private static final boolean boolValue = true;
+    private static final BigDecimal bigDecimalValue = new BigDecimal(maxDouble);
+    private static final String stringValue = "0";
+    private static final byte[] bytes = {127, -34, 56, 29, 56, 49};
+
+    /**
+     * A point of time in Sydney, Australia. (The timezone is deliberately not
+     * PST, where the test is likely to be run, or GMT, and should be in
+     * daylight-savings time in December.)
+     *
+     * 4:22:33.456 PM on 21st December 2004 Japan (GMT+9)
+     * is 9 hours earlier in GMT, namely
+     * 7:22:33.456 AM on 21st December 2004 GMT
+     * and is another 8 hours earlier in PST:
+     * 11:22:33.456 PM on 20th December 2004 PST (GMT-8)
+     */
+    private static final Calendar sydneyCal = makeCalendar("JST", 2004, 11,
+            21, 16, 22, 33, 456);
+
+    private static final Time time = new Time(sydneyCal.getTime().getTime());
+    private static final Date date = new Date(sydneyCal.getTime().getTime());
+    static {
+        // Sanity check, assuming local time is PST
+        String tzID = TimeZone.getDefault().getID();
+        if (tzID.equals("America/Tijuana")) {
+            String t = time.toString();
+            assert t.equals("23:22:33") : t;
+            String d = date.toString();
+            assert d.equals("2004-12-20") : d;
+        }
+    }
+    private static final Timestamp timestamp =
+            new Timestamp(sydneyCal.getTime().getTime());
+
+    private static final Byte tinyIntObj = new Byte(minByte);
+    private static final Short smallIntObj = new Short(maxShort);
+    private static final Integer integerObj = new Integer(minInt);
+    private static final Long bigIntObj = new Long(maxLong);
+    private static final Float floatObj = new Float(maxFloat);
+    private static final Double doubleObj = new Double(maxDouble);
+    private static final Boolean boolObj = Boolean.FALSE;
+    private static final BigDecimal decimalObj = new BigDecimal(13412342124143241D);
+    private static final String charObj = "CHAR test string";
+    private static final String varcharObj = "VARCHAR test string";
+
+    private static final int TINYINT = 2;
+    private static final int SMALLINT = 3;
+    private static final int INTEGER = 4;
+    private static final int BIGINT = 5;
+    private static final int REAL = 6;
+    private static final int FLOAT = 7;
+    private static final int DOUBLE = 8;
+    private static final int BOOLEAN = 9;
+    private static final int CHAR = 10;
+    private static final int VARCHAR = 11;
+    private static final int BINARY = 12;
+    private static final int VARBINARY = 13;
+    private static final int TIME = 14;
+    private static final int DATE = 15;
+    private static final int TIMESTAMP = 16;
+
+    /**
+     * Defines a SQL type, and a corresponding column in the datatypes table,
+     * and some operations particular to each type.
+     */
+    private static class SqlType {
+        private final int ordinal;
+        private final String string;
+
+        SqlType(int ordinal, String example) {
+            this.ordinal = ordinal;
+            this.string = example;
+        }
+
+        /** Definition of the <code>TINYINT</code> SQL type. */
+        private static final SqlType Tinyint = new SqlType(TINYINT, "tinyint") {
+            public Object getExpected(Object value) {
+                if (value instanceof Number) {
+                    return new Byte(((Number) value).byteValue());
+                }
+                if (value instanceof Boolean) {
+                    return new Byte(((Boolean) value).booleanValue() ?
+                            (byte) 1 : (byte) 0);
+                }
+                return super.getExpected(value);
+            }
+        };
+
+        /** Definition of the <code>SMALLINT</code> SQL type. */
+        private static final SqlType Smallint = new SqlType(SMALLINT, "smallint") {
+            public Object getExpected(Object value) {
+                if (value instanceof Number) {
+                    return new Short(((Number) value).shortValue());
+                }
+                if (value instanceof Boolean) {
+                    return new Short(((Boolean) value).booleanValue() ?
+                            (short) 1 : (short) 0);
+                }
+                return super.getExpected(value);
+            }
+        };
+
+        /** Definition of the <code>INTEGER</code> SQL type. */
+        private static final SqlType Integer = new SqlType(INTEGER, "integer") {
+            public Object getExpected(Object value) {
+                if (value instanceof Number) {
+                    return new Integer(((Number) value).intValue());
+                }
+                if (value instanceof Boolean) {
+                    return new Integer(((Boolean) value).booleanValue() ? 1 :
+                            0);
+                }
+                return super.getExpected(value);
+            }
+        };
+
+        /** Definition of the <code>BIGINT</code> SQL type. */
+        private static final SqlType Bigint = new SqlType(BIGINT, "bigint") {
+            public Object getExpected(Object value) {
+                if (value instanceof Number) {
+                    return new Long(((Number) value).longValue());
+                }
+                if (value instanceof Boolean) {
+                    return new Long(((Boolean) value).booleanValue() ? 1 :
+                            0);
+                }
+                return super.getExpected(value);
+            }
+        };
+
+        /** Definition of the <code>REAL</code> SQL type. */
+        private static final SqlType Real = new SqlType(REAL, "real") {
+            public Object getExpected(Object value) {
+                if (value instanceof Number) {
+                    // SQL real yields Java float
+                    return new Float(((Number) value).floatValue());
+                }
+                if (value instanceof Boolean) {
+                    return new Float(((Boolean) value).booleanValue() ? 1 :
+                            0);
+                }
+                return super.getExpected(value);
+            }
+        };
+
+        /** Definition of the <code>FLOAT</code> SQL type. */
+        private static final SqlType Float = new SqlType(FLOAT, "float") {
+            public Object getExpected(Object value) {
+                if (value instanceof Number) {
+                    // SQL float yields Java double
+                    return new Double(((Number) value).doubleValue());
+                }
+                if (value instanceof Boolean) {
+                    return new Double(((Boolean) value).booleanValue() ? 1 :
+                            0);
+                }
+                return super.getExpected(value);
+            }
+        };
+
+        /** Definition of the <code>DOUBLE</code> SQL type. */
+        private static final SqlType Double = new SqlType(DOUBLE, "double") {
+            public Object getExpected(Object value) {
+                if (value instanceof Number) {
+                    // SQL double yields Java double
+                    return new Double(((Number) value).doubleValue());
+                }
+                if (value instanceof Boolean) {
+                    return new Double(((Boolean) value).booleanValue() ? 1 :
+                            0);
+                }
+                return super.getExpected(value);
+            }
+        };
+
+        /** Definition of the <code>BOOLEAN</code> SQL type. */
+        private static final SqlType Boolean = new SqlType(BOOLEAN, "boolean") {
+            public int checkIsValid(Object value) {
+                if (value == null || value instanceof Boolean) {
+                    return VALID;
+                }
+                if (value instanceof Number) {
+                    return isBetween((Number) value, 0, 1) ? VALID :
+                        OUTOFRANGE;
+                }
+                return INVALID;
+            }
+
+            public Object getExpected(Object value) {
+                if (value instanceof Number) {
+                    // SQL double yields Java double
+                    return new Boolean(((Number) value).intValue() != 0);
+                }
+                return super.getExpected(value);
+            }
+        };
+
+        private static boolean isBetween(Number number, long min, long max) {
+            long x = number.longValue();
+            return min <= x && x <= max;
+        }
+
+        /* Are we supporting bit/decimal/numeric? see dtbug175 */
+        /*"bit", */
+        /*"decimal(12,2)", */
+
+        /* If strings too small - will get:
+        java: TupleAccessor.cpp:416: void fennel::TupleAccessor::unmarshal(fennel::TupleData&, unsigned int) const: Assertion `value.cbData <= accessor.cbStorage' failed.
+        */
+
+        /** Definition of the <code>CHAR(100)</code> SQL type. */
+        private static final SqlType Char = new SqlType(CHAR, "char(100)") {
+            public Object getExpected(Object value) {
+                String s = String.valueOf(value);
+                if (false) // TODO: should char columns return padded strings?
+                if (s.length() <  100) {
+                    // Pad to 100 characters.
+                    StringBuffer buf = new StringBuffer(s);
+                    while (buf.length() < 100) {
+                        buf.append(' ');
+                    }
+                    s = buf.toString();
+                }
+                return s;
+            }
+        };
+
+        /** Definition of the <code>VARCHAR(200)</code> SQL type. */
+        private static final SqlType Varchar = new SqlType(VARCHAR, "varchar(200)") {
+            public Object getExpected(Object value) {
+                return String.valueOf(value);
+            }
+        };
+
+        /** Definition of the <code>BINARY(10)</code> SQL type. */
+        private static final SqlType Binary = new SqlType(BINARY, "binary(10)") {
+            public int checkIsValid(Object value) {
+                if (value == null) {
+                    return VALID;
+                } else if (value instanceof byte[]) {
+                    byte[] bytes = (byte[]) value;
+                    if (bytes.length < 10) {
+                        return VALID;
+                    } else {
+                        return OUTOFRANGE;
+                    }
+                } else {
+                    return INVALID;
+                }
+            }
+
+            public Object getExpected(Object value) {
+                if (value instanceof byte[]) {
+                    byte[] b = (byte[]) value;
+                    if (b.length == 10) {
+                        return b;
+                    }
+                    // Pad to 10 bytes.
+                    byte[] b2 = new byte[10];
+                    System.arraycopy(b, 0, b2, 0, Math.min(b.length, 10));
+                    return b2;
+                }
+
+                return super.getExpected(value);
+            }
+        };
+
+        /** Definition of the <code>VARBINARY(20)</code> SQL type. */
+        private static final SqlType Varbinary = new SqlType(VARBINARY,
+                "varbinary(20)") {
+            public int checkIsValid(Object value) {
+                if (value == null) {
+                    return VALID;
+                } else if (value instanceof byte[]) {
+                    byte[] bytes = (byte[]) value;
+                    if (bytes.length < 20) {
+                        return VALID;
+                    } else {
+                        return OUTOFRANGE;
+                    }
+                } else {
+                    return INVALID;
+                }
+            }
+        };
+
+        /** Definition of the <code>TIME(0)</code> SQL type. */
+        private static final SqlType Time = new SqlType(TIME, "Time(0)") {
+            public Object getExpected(Object value) {
+                if (value instanceof java.util.Date) {
+                    // Lop off the date, leaving only the time of day.
+                    java.util.Date d = (java.util.Date) value;
+                    Calendar cal = Calendar.getInstance();
+                    cal.setTime(d);
+                    cal.set(Calendar.YEAR, 1970);
+                    cal.set(Calendar.MONTH, 0);
+                    cal.set(Calendar.DAY_OF_MONTH, 1);
+                    return new Time(cal.getTimeInMillis());
+                }
+                return super.getExpected(value);
+            }
+        };
+
+        /** Definition of the <code>DATE</code> SQL type. */
+        private static final SqlType Date = new SqlType(DATE, "Date") {
+            public Object getExpected(Object value) {
+                if (value instanceof java.util.Date) {
+                    // Truncate the date to 12:00AM
+                    java.util.Date d = (java.util.Date) value;
+                    Calendar cal = Calendar.getInstance();
+                    cal.setTime(d);
+                    cal.set(Calendar.HOUR_OF_DAY, 0);
+                    cal.set(Calendar.MINUTE, 0);
+                    cal.set(Calendar.SECOND, 0);
+                    cal.set(Calendar.MILLISECOND, 0);
+                    return new Date(cal.getTimeInMillis());
+                }
+                return super.getExpected(value);
+            }
+        };
+
+        /** Definition of the <code>TIMESTAMP</code> SQL type. */
+        private static final SqlType Timestamp = new SqlType(TIMESTAMP,
+                "timestamp(0)") {
+            public Object getExpected(Object value) {
+                if (value instanceof Timestamp) {
+                    return value;
+                } else if (value instanceof java.util.Date) {
+                    return new Timestamp(((java.util.Date) value).getTime());
+                }
+                return super.getExpected(value);
+            }
+        };
+
+        private static final SqlType[] all = {
+            Tinyint, Smallint, Integer, Bigint,
+            Real, Float, Double,
+            Boolean,
+            Char, Varchar,
+            Binary, Varbinary,
+            Time, Date, Timestamp,
+        };
+        private static final SqlType[] typesNumericAndChars = {
+            Tinyint, Smallint, Integer, Bigint, Real, Float, Double,
+            Char, Varchar,
+        };
+        private static final SqlType[] typesBinary = {
+            Binary, Varbinary,
+        };
+
+        public Object getExpected(Object value) {
+            return value;
+        }
+
+        public static final int VALID = 0;
+        public static final int INVALID = 1;
+        public static final int OUTOFRANGE = 2;
+        public static String[] validityName = {
+            "valid", "invalid", "outofrange"
+        };
+        public int checkIsValid(Object value) {
+            return VALID;
+        }
+    }
+    private Object[] values;
+    private static boolean schemaExists = false;
+
+    /**
+     * Defines a Java type.
+     *
+     * <p>Each type has a correponding set of get/set methods, for example
+     * "Boolean" has {@link ResultSet#getBoolean(int)} and
+     * {@link PreparedStatement#setBoolean(int,boolean)}.
+     */
+    private static class JavaType {
+        private final String name;
+        private final Class clazz;
+        private final boolean regular;
+        private final Method setMethod;
+        private static final JavaType Boolean =
+                new JavaType("Boolean", boolean.class, true);
+        private static final JavaType Byte =
+                new JavaType("Byte", byte.class, true);
+        private static final JavaType Short =
+                new JavaType("Short", short.class, true);
+        private static final JavaType Int =
+                new JavaType("Int", int.class, true);
+        private static final JavaType Long =
+                new JavaType("Long", long.class, true);
+        private static final JavaType Float =
+                new JavaType("Float", float.class, true);
+        private static final JavaType Double =
+                new JavaType("Double", double.class, true);
+        private static final JavaType BigDecimal =
+                new JavaType("BigDecimal", BigDecimal.class, true);
+        private static final JavaType String =
+                new JavaType("String", String.class, true);
+        private static final JavaType Bytes =
+                new JavaType("Bytes", byte[].class, true);
+
+        // Date, Time, Timestamp each have an additional set method, e.g.
+        //   setXxx(int,Date,Calendar)
+        // TODO: test this
+
+        private static final JavaType Date =
+                new JavaType("Date", Date.class, true);
+        private static final JavaType Time =
+                new JavaType("Time", Time.class, true);
+        private static final JavaType Timestamp =
+                new JavaType("Timestamp", Timestamp.class, true);
+
+        // Object has 2 extra 'setObject' methods:
+        //   setObject(int,Object,int targetSqlType)
+        //   setObject(int,Object,int targetSqlType,int scale)
+        // TODO: test this
+
+        private static final JavaType Object =
+                new JavaType("Object", Object.class, true);
+
+        // next 4 are not regular, because their 'set' method has an extra
+        // parmaeter, e.g. setAsciiStream(int,InputStream,int length)
+
+        private static final JavaType AsciiStream =
+                new JavaType("AsciiStream", InputStream.class, false);
+        private static final JavaType UnicodeStream =
+                new JavaType("UnicodeStream", InputStream.class, false);
+        private static final JavaType BinaryStream =
+                new JavaType("BinaryStream", InputStream.class, false);
+        private static final JavaType CharacterStream =
+                new JavaType("CharacterStream", Reader.class, false);
+        private static final JavaType Ref =
+                new JavaType("Ref", Ref.class, true);
+        private static final JavaType Blob =
+                new JavaType("Blob", Blob.class, true);
+        private static final JavaType Clob =
+                new JavaType("Clob", Clob.class, true);
+        private static final JavaType Array =
+                new JavaType("Array", Array.class, true);
+
+        private JavaType(String name, Class clazz, boolean regular) {
+            this.name = name;
+            this.clazz = clazz;
+            // whether it has a setXxxx(int,xxx) method
+            this.regular = regular;
+            // e.g. PreparedStatement.setBoolean(int,boolean)
+            Method method = null;
+            try {
+                method = PreparedStatement.class.getMethod("set" + name,
+                        new Class[] {int.class, clazz});
+            } catch (NoSuchMethodException e) {
+            } catch (SecurityException e) {
+            }
+            this.setMethod = method;
+        }
+
+        JavaType all[] = {
+            Boolean,
+            Byte,
+            Short,
+            Int,
+            Long,
+            Float,
+            Double,
+            BigDecimal,
+            String,
+            Bytes,
+            Date,
+            Time,
+            Timestamp,
+            Object,
+            AsciiStream,
+            UnicodeStream,
+            BinaryStream,
+            CharacterStream,
+            Ref,
+            Blob,
+            Clob,
+            Array,
+        };
+    }
+
+    private static final String columnNames[] = new String[SqlType.all.length];
+    private static String columnTypeStr = "";
+    private static String columnStr = "";
+    private static String paramStr = "";
+    static {
+        for (int i = 0; i < SqlType.all.length; i++) {
+            final SqlType sqlType = SqlType.all[i];
+            assert sqlType.ordinal == i + 2;
+            columnNames[i] = "\"Column " + (i + 1) + ": " + sqlType.string + "\"";
+            if (i > 0) {
+                columnTypeStr += ", ";
+                columnStr += ", ";
+                paramStr += ", ";
+            }
+            columnTypeStr += columnNames[i] + " " + sqlType.string;
+            columnStr += columnNames[i];
+            paramStr += "?";
+        }
+        columnTypeStr = "id integer primary key, " + columnTypeStr;
+        columnStr = "id, " + columnStr;
+        paramStr = "( ?, " + paramStr + ")";
+    }
+
+    // Flags indicating whether bugs have been fixed. (It's better to 'if'
+    // out than to comment out code, because commented out code doesn't get
+    // refactored.)
     private static final boolean dtbug220_fixed = false;
     private static final boolean dtbug110_199_fixed = false;
     private static final boolean dtbug119_fixed = false;
-    private static final boolean dtbug199_fixed = false;
+    private static final boolean todo = false;
 
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a new FarragoDJbcTest object.
-     *
-     * @param testName JUnit test name
-     *
-     * @throws Exception .
+     * Creates a new FarragoJdbcTest object.
      */
     public FarragoJdbcTest(String testName) throws Exception
     {
@@ -64,219 +595,358 @@ public class FarragoJdbcTest extends FarragoTestCase
         return wrappedSuite(FarragoJdbcTest.class);
     }
 
+    /**
+     * Creates a calendar.
+     */
+    private static Calendar makeCalendar(String tz, int year, int month,
+            int date, int hour, int minute, int second, int millis) {
+        final Calendar cal = Calendar.getInstance();
+        cal.clear();
+        cal.set(year, month, date, hour, minute, second);
+        cal.set(Calendar.MILLISECOND, millis);
+        TimeZone timeZone = TimeZone.getTimeZone(tz);
+        cal.setTimeZone(timeZone);
+        return cal;
+    }
+
     // NOTE jvs 26-July-2004:  some of the tests in this class modify fixture
     // tables such as SALES.EMPS, but that's OK, because transactions are
     // implicitly rolled back by FarragoTestCase.tearDown.
 
+    public void testPreparedStmtDataTypes() throws Exception {
+
+        String query = "insert into datatypes_schema.dataTypes_table values " +
+                paramStr;
+        preparedStmt = connection.prepareStatement(query);
+        values = new Object[2 + SqlType.all.length];
+        preparedStmt.setInt(1, 100);
+        checkSetString();
+        checkSetByteMin();
+        checkSetByteMax();
+        checkSetShortMin();
+        checkSetShortMax();
+        checkSetIntMin();
+        checkSetIntMax();
+        checkSetLongMin();
+        checkSetLongMax();
+        checkSetFloatMin();
+        checkSetFloatMax();
+        checkSetDoubleMin();
+        checkSetDoubleMax();
+        checkSetBooleanFalse();
+        if (todo) {
+            // BigDecimal values seem to go in but don't come out!
+            checkSetBigDecimal();
+        }
+        checkSetBytes();
+        checkSetDate();
+        checkSetTime();
+        checkSetTimestamp();
+        checkSetObject();
+    }
+
+    protected void setUp() throws Exception {
+        super.setUp();
+
+        synchronized (getClass()) {
+            if (!schemaExists) {
+                stmt.executeUpdate("create schema datatypes_schema");
+                stmt.executeUpdate(
+                        "create table datatypes_schema.dataTypes_table (" +
+                        columnTypeStr + ")");
+            }
+            schemaExists = true;
+        }
+    }
+
+    private void checkSetObject() throws SQLException {
+        // Test PreparedStatement.setObject(int,Object) for each kind
+        // of object.
+        preparedStmt.setObject(TINYINT, tinyIntObj);
+        values[TINYINT] = tinyIntObj;
+        preparedStmt.setObject(SMALLINT, smallIntObj);
+        values[SMALLINT] = smallIntObj;
+        preparedStmt.setObject(INTEGER, integerObj);
+        values[INTEGER] = integerObj;
+        preparedStmt.setObject(BIGINT, bigIntObj);
+        values[BIGINT] = bigIntObj;
+        preparedStmt.setObject(REAL, floatObj);
+        values[REAL] = floatObj;
+        preparedStmt.setObject(FLOAT, doubleObj);
+        values[FLOAT] = doubleObj;
+        preparedStmt.setObject(DOUBLE, doubleObj);
+        values[DOUBLE] = doubleObj;
+        preparedStmt.setObject(BOOLEAN, boolObj);
+        values[BOOLEAN] = boolObj;
+        preparedStmt.setObject(CHAR, charObj);
+        values[CHAR] = charObj;
+        preparedStmt.setObject(VARCHAR, varcharObj);
+        values[VARCHAR] = varcharObj;
+        preparedStmt.setObject(BINARY, bytes);
+        values[BINARY] = bytes;
+        preparedStmt.setObject(VARBINARY, bytes);
+        values[VARBINARY] = bytes;
+        preparedStmt.setObject(DATE, date);
+        values[DATE] = date;
+        preparedStmt.setObject(TIME, time);
+        values[TIME] = time;
+        preparedStmt.setObject(TIMESTAMP, timestamp);
+        values[TIMESTAMP] = timestamp;
+        checkResults(JavaType.Object);
+    }
+
+    private void checkSetTimestamp() throws Exception {
+        checkSet(JavaType.Timestamp, SqlType.Char, timestamp);
+        checkSet(JavaType.Timestamp, SqlType.Varchar, timestamp);
+        checkSet(JavaType.Timestamp, SqlType.Date, timestamp);
+        checkSet(JavaType.Timestamp, SqlType.Time, timestamp);
+        checkSet(JavaType.Timestamp, SqlType.Timestamp, timestamp);
+        checkResults(JavaType.Timestamp);
+    }
+
+    private void checkSetTime() throws Exception {
+        checkSet(JavaType.Time, SqlType.Char, time);
+        checkSet(JavaType.Time, SqlType.Varchar, time);
+        checkSet(JavaType.Time, SqlType.Time, time);
+        checkSet(JavaType.Time, SqlType.Timestamp, time);
+        checkResults(JavaType.Time);
+    }
+
+    private void checkSetDate() throws Exception {
+        checkSet(JavaType.Date, SqlType.Char, date);
+        checkSet(JavaType.Date, SqlType.Varchar, date);
+        checkSet(JavaType.Date, SqlType.Date, date);
+        checkSet(JavaType.Date, SqlType.Timestamp, date);
+        checkResults(JavaType.Date);
+    }
+
+    private void checkSetBytes() throws Exception {
+        checkSet(JavaType.Bytes, SqlType.typesBinary, bytes);
+        checkResults(JavaType.Bytes);
+    }
+
+    private void checkSetBigDecimal() throws Exception {
+        checkSet(JavaType.BigDecimal, SqlType.typesNumericAndChars, bigDecimalValue);
+        checkResults(JavaType.BigDecimal);
+    }
+
+    private void checkSetBooleanFalse() throws Exception {
+        checkSet(JavaType.Boolean, SqlType.typesNumericAndChars, boolObj);
+        checkResults(JavaType.Boolean);
+    }
+
+    private void checkSetDoubleMax() throws Exception {
+        checkSet(JavaType.Double, SqlType.typesNumericAndChars, new Double(maxDouble));
+        checkResults(JavaType.Double);
+    }
+
+    private void checkSetDoubleMin() throws Exception {
+        checkSet(JavaType.Double, SqlType.typesNumericAndChars, new Double(minDouble));
+        checkResults(JavaType.Double);
+    }
+
+    private void checkSetFloatMax() throws Exception {
+        checkSet(JavaType.Float, SqlType.typesNumericAndChars, new Float(maxFloat));
+        checkResults(JavaType.Float);
+    }
+
+    private void checkSetFloatMin() throws Exception {
+        checkSet(JavaType.Float, SqlType.typesNumericAndChars, new Float(minFloat));
+        checkResults(JavaType.Float);
+    }
+
+    private void checkSetLongMax() throws Exception {
+        checkSet(JavaType.Long, SqlType.typesNumericAndChars, new Long(maxLong));
+        checkResults(JavaType.Long);
+    }
+
+    private void checkSetLongMin() throws Exception {
+        checkSet(JavaType.Long, SqlType.typesNumericAndChars, new Long(minLong));
+        checkResults(JavaType.Long);
+    }
+
+    private void checkSetIntMax() throws Exception {
+        checkSet(JavaType.Int, SqlType.typesNumericAndChars, new Integer(maxInt));
+        checkResults(JavaType.Int);
+    }
+
+    private void checkSetIntMin() throws Exception {
+        checkSet(JavaType.Int, SqlType.typesNumericAndChars, new Integer(minInt));
+        checkResults(JavaType.Int);
+    }
+
+    private void checkSetShortMax() throws Exception {
+        checkSet(JavaType.Short, SqlType.typesNumericAndChars, new Short(maxShort));
+        checkResults(JavaType.Short);
+    }
+
+    private void checkSetShortMin() throws Exception {
+        checkSet(JavaType.Short, SqlType.typesNumericAndChars, new Short(minShort));
+        checkResults(JavaType.Short);
+    }
+
+    private void checkSetByteMax() throws Exception {
+        checkSet(JavaType.Byte, SqlType.typesNumericAndChars, new Byte(maxByte));
+        checkResults(JavaType.Byte);
+    }
+
+    private void checkSetByteMin() throws Exception {
+        checkSet(JavaType.Byte, SqlType.typesNumericAndChars, new Byte(minByte));
+        checkResults(JavaType.Byte);
+    }
+
+    private void checkSetString() throws Exception {
+        // Skipped: dtbug220
+        // for (int j=2; j<=javaSqlTypes.length; j++)
+        checkSet(JavaType.String, SqlType.Char, stringValue);
+        checkSet(JavaType.String, SqlType.Varchar, stringValue);
+        if (true) {
+            //todo: setString on VARBINARY column should fail
+            checkSet(JavaType.String, SqlType.Binary, stringValue);
+            checkSet(JavaType.String, SqlType.Varbinary, stringValue);
+        }
+        checkResults(JavaType.String);
+    }
+
+    private void checkResults(JavaType javaType) throws SQLException {
+        int res = preparedStmt.executeUpdate();
+        assertEquals(1, res);
+
+        // Select the results back, to make sure the values we expected got
+        // written.
+        final Statement stmt = connection.createStatement();
+        final ResultSet resultSet = stmt.executeQuery(
+                "select * from datatypes_schema.dataTypes_table");
+        final int columnCount = resultSet.getMetaData().getColumnCount();
+        assert columnCount == SqlType.all.length + 1;
+        while (resultSet.next()) {
+            for (int k = 0; k < SqlType.all.length; k++) {
+                // SqlType#2 (Tinyint) is held in column #2 (1-based).
+                final SqlType sqlType = SqlType.all[k];
+                final Object actual = resultSet.getObject(sqlType.ordinal);
+                Object value = values[sqlType.ordinal];
+                if (value == null) {
+                    // value was not valid for this column -- so we don't
+                    // expect a result
+                    continue;
+                }
+                final Object expected = sqlType.getExpected(value);
+                String message = "sqltype [" + sqlType.string +
+                        "], javatype [" +
+                        (javaType == null ? "?" : javaType.name) +
+                        "], expected [" + toString(expected) +
+                        (expected == null ? "" :
+                        " :" + expected.getClass()) +
+                        "], actual [" + toString(actual) +
+                        (actual == null ? "" : " :" + actual.getClass()) +
+                        "]";
+                assertEquals(message, expected, actual);
+            }
+        }
+        stmt.close();
+        connection.rollback();
+        // wipe out the array for the next test
+        Arrays.fill(values, null);
+    }
+
+    /**
+     * Override {@link Assert#assertEquals(String,Object,Object)} to handle
+     * byte arrays correctly.
+     */
+    public static void assertEquals(String message, Object expected,
+            Object actual) {
+        if (expected instanceof byte[] &&
+                actual instanceof byte[] &&
+                Arrays.equals((byte []) expected, (byte[]) actual)) {
+            return;
+        }
+        Assert.assertEquals(message, expected, actual);
+    }
+
+    private String toString(Object o) {
+        if (o instanceof byte[]) {
+            StringBuffer buf = new StringBuffer("{");
+            byte[] bytes = (byte[]) o;
+            for (int i = 0; i < bytes.length; i++) {
+                if (i > 0) {
+                    buf.append(", ");
+                }
+                byte b = bytes[i];
+                buf.append(Integer.toHexString(b));
+            }
+            buf.append("}");
+            return buf.toString();
+        }
+        return String.valueOf(o);
+    }
+
+    private void checkSet(JavaType javaType, SqlType[] types, Object value)
+            throws Exception {
+        for (int i = 0; i < types.length; i++) {
+            SqlType type = types[i];
+            checkSet(javaType, type, value);
+        }
+    }
+
+    private void checkSet(JavaType javaType, SqlType sqlType,
+            Object value) throws Exception {
+        int column = sqlType.ordinal;
+        int validity = sqlType.checkIsValid(value);
+        Throwable throwable;
+        tracer.fine("Call PreparedStmt.set" + javaType.name + "(" + column +
+                ", " + value +
+                "), value is " + SqlType.validityName[validity]);
+        try {
+            javaType.setMethod.invoke(preparedStmt,
+                    new Object[] {new Integer(column), value});
+            throwable = null;
+        } catch (IllegalAccessException e) {
+            throwable = e;
+        } catch (IllegalArgumentException e) {
+            throwable = e;
+        } catch (InvocationTargetException e) {
+            throwable = e.getCause();
+        }
+        switch (validity) {
+        case SqlType.VALID:
+            if (throwable != null) {
+                fail("Error received when none expected, javaType=" +
+                        javaType.name + ", sqlType=" + sqlType.string +
+                        ", value=" + value + ", throwable=" + throwable);
+            }
+            this.values[column] = value;
+            break;
+        case SqlType.INVALID:
+            if (throwable instanceof SQLException) {
+                String errorString = throwable.toString();
+                if (errorString.matches(
+                        ".*Cannot assign a value of Java class '.*' to .*")) {
+                    break;
+                }
+            }
+            fail("Was expecting error, javaType=" + javaType.name +
+                    ", sqlType=" + sqlType.string + ", value=" +  value);
+            break;
+        case SqlType.OUTOFRANGE:
+            Pattern outOfRangePattern = Pattern.compile("out of range");
+            if (throwable instanceof SQLException) {
+                String errorString = throwable.toString();
+                if (outOfRangePattern.matcher(errorString).matches()) {
+                    break;
+                }
+            }
+            fail("Was expecting out-of-range error, javaType=" +
+                    javaType.name + ", sqlType=" + sqlType.string +
+                    ", value=" + value);
+            break;
+        }
+    }
+
+
     public void testDataTypes() throws Exception
     {
-        byte minByte = Byte.MIN_VALUE, maxByte = Byte.MAX_VALUE;
-        short minShort = Short.MIN_VALUE, maxShort = Short.MAX_VALUE;
-        int  minInt = Integer.MIN_VALUE, maxInt = Integer.MAX_VALUE;
-        long minLong = Long.MIN_VALUE, maxLong = Long.MAX_VALUE;
-        float minFloat = Float.MIN_VALUE, maxFloat = Float.MAX_VALUE;
-        double minDouble = Double.MIN_VALUE, maxDouble = Double.MAX_VALUE;
-        boolean boolValue = true;
-        BigDecimal bigDecimalValue = new BigDecimal(maxDouble);
-        String stringValue = "0";
-        byte[] bytes = { 127, -34, 56, 29, 56, 49 };
-
-        Calendar cal = Calendar.getInstance() ;
-        cal.setTimeZone(TimeZone.getTimeZone("GMT-8"));
-        cal.clear();
-        cal.set(2004,11,21,12,22,33);
-        Time time = new Time(cal.getTime().getTime());
-        Date date = new Date(cal.getTime().getTime());
-        Timestamp timestamp = new Timestamp(cal.getTime().getTime());
-
-        Byte tinyIntObj = new Byte(minByte);
-        Short smallIntObj = new Short(maxShort);
-        Integer integerObj = new Integer(minInt);
-        Long bigIntObj = new Long(maxLong);
-        Float floatObj = new Float(maxFloat);
-        Double doubleObj = new Double(maxDouble);
-        Boolean boolObj = new Boolean(false);
-        BigDecimal decimalObj = new BigDecimal(13412342124143241D);
-        String charObj = "CHAR test string";
-        String varcharObj = "VARCHAR test string";
-
-        int TINYINT = 2;
-        int SMALLINT = 3;
-        int INTEGER = 4;
-        int BIGINT = 5;
-        int REAL = 6;
-        int FLOAT = 7;
-        int DOUBLE = 8;
-        int BOOLEAN = 9;
-        int CHAR = 10;
-        int VARCHAR = 11;
-        int BINARY = 12;
-        int VARBINARY = 13;
-        int TIME = 14;
-        int DATE = 15;
-        int TIMESTAMP = 16;
-
-        String dataTypes[] = { "tinyint", "smallint", "integer",  "bigint",
-                               "real",    "float",    "double",
-                               "boolean",
-                               /* Are we supporting bit/decimal/numeric? see dtbug175 */
-                               /*"bit", */
-                               /*"decimal(12,2)", */
-
-                               /* If strings too small - will get:
-                                  java: TupleAccessor.cpp:416: void fennel::TupleAccessor::unmarshal(fennel::TupleData&, unsigned int) const: Assertion `value.cbData <= accessor.cbStorage' failed.
-                               */
-                               "char(100)", "varchar(200)",
-
-                               "binary(10)", "varbinary(20)",
-                               "date", "time(0)", "timestamp(0)"};
-        String columnNames[] = new String[dataTypes.length];
-        String columnTypeStr = new String();
-        String columnStr = new String();
-        String paramStr = new String();
-
-        for (int i=0; i < dataTypes.length; i++) {
-            columnNames[i] = "\"Column " + (i+1) + ": " + dataTypes[i] + "\"";
-            columnTypeStr += columnNames[i] + " " + dataTypes[i];
-            columnStr += columnNames[i];
-            paramStr += "?";
-            if (i < dataTypes.length-1) {
-                columnTypeStr += ", ";
-                columnStr += ", ";
-                paramStr += ", ";
-            }
-        }
-        columnTypeStr = "id integer primary key, " + columnTypeStr;
-        columnStr = "id, " + columnStr;
-        paramStr = "( ?, " + paramStr + ")";
-        stmt.executeUpdate("create schema datatypes_schema");
-        stmt.executeUpdate("create table datatypes_schema.dataTypes_table ("
-                           + columnTypeStr + ")");
-
-        String ins_query = "insert into datatypes_schema.dataTypes_table values ";
+        final String ins_query = "insert into datatypes_schema.dataTypes_table values ";
         String query = ins_query + paramStr;
-
-        preparedStmt = connection.prepareStatement(query);
-        int res;
-        for (int i = 0; i <= 19; i++)
-        {
-            preparedStmt.setInt(1, i+100);
-
-            switch (i)
-            {
-            case 0:
-                // Skipped: dtbug220
-                // for (int j=2; j<=javaSqlTypes.length; j++)
-                for (int j=CHAR; j<=VARBINARY; j++)
-                    preparedStmt.setString(j, stringValue);
-                break;
-            case 1:
-                for (int j = TINYINT; j<=VARCHAR; j++)
-                    preparedStmt.setByte(j, minByte);
-                break;
-            case 2:
-                for (int j = TINYINT; j<=VARCHAR; j++)
-                    preparedStmt.setByte(j, maxByte);
-                break;
-            case 3:
-                for (int j = TINYINT; j<=VARCHAR; j++)
-                    preparedStmt.setShort(j, minShort);
-                break;
-            case 4:
-                for (int j = TINYINT; j<=VARCHAR; j++)
-                    preparedStmt.setShort(j, maxShort);
-                break;
-            case 5:
-                for (int j = TINYINT; j<=VARCHAR; j++)
-                    preparedStmt.setInt(j, minInt);
-                break;
-            case 6:
-                for (int j = TINYINT; j<=VARCHAR; j++)
-                    preparedStmt.setInt(j, maxInt);
-                break;
-            case 7:
-                for (int j = TINYINT; j<=VARCHAR; j++)
-                    preparedStmt.setLong(j, minLong);
-                break;
-            case 8:
-                for (int j = TINYINT; j<=VARCHAR; j++)
-                    preparedStmt.setLong(j, maxLong);
-                break;
-            case 9:
-                for (int j = TINYINT; j<=VARCHAR; j++)
-                    preparedStmt.setFloat(j, minFloat);
-                break;
-            case 10:
-                for (int j = TINYINT; j<=VARCHAR; j++)
-                    preparedStmt.setFloat(j, maxFloat);
-                break;
-            case 11:
-                for (int j = TINYINT; j<=VARCHAR; j++)
-                    preparedStmt.setDouble(j, minDouble);
-                break;
-            case 12:
-                for (int j = TINYINT; j<=VARCHAR; j++)
-                    preparedStmt.setDouble(j, maxDouble);
-                break;
-            case 13:
-                for (int j = TINYINT; j<=VARCHAR; j++)
-                    preparedStmt.setBoolean(j, boolValue);
-                break;
-            case 14:
-                for (int j = TINYINT; j<=VARCHAR; j++)
-                    preparedStmt.setBigDecimal(j, bigDecimalValue);
-                break;
-            case 15:
-                preparedStmt.setBytes(BINARY, bytes);
-                preparedStmt.setBytes(VARBINARY, bytes);
-                break;
-            case 16:
-                for (int j = CHAR; j<=VARCHAR; j++)
-                    preparedStmt.setDate(j, date);
-                // dtbug199
-                //preparedStmt.setDate(DATE, date)   ;
-                //preparedStmt.setDate(TIMESTAMP, date);
-                break;
-            case 17:
-                for (int j = CHAR; j<=VARCHAR; j++)
-                    preparedStmt.setTime(j, time);
-                // dtbug199
-                //preparedStmt.setTime(TIME, time);
-                //preparedStmt.setTime(TIMESTAMP, time);
-                break;
-            case 18:
-                for (int j = CHAR; j<=VARCHAR; j++)
-                    preparedStmt.setTimestamp(j, timestamp);
-                // dtbug199
-                //for (int j = DATE; j<=TIMESTAMP; j++)
-                //    preparedStmt.setTimestamp(j, timestamp);
-                break;
-            case 19:
-                preparedStmt.setObject(TINYINT, tinyIntObj);
-                preparedStmt.setObject(SMALLINT, smallIntObj);
-                preparedStmt.setObject(INTEGER, integerObj);
-                preparedStmt.setObject(BIGINT, bigIntObj);
-                preparedStmt.setObject(REAL, floatObj);
-                preparedStmt.setObject(FLOAT, doubleObj);
-                preparedStmt.setObject(DOUBLE, doubleObj);
-                preparedStmt.setObject(BOOLEAN, boolObj);
-                preparedStmt.setObject(CHAR, charObj);
-                preparedStmt.setObject(VARCHAR, varcharObj);
-                preparedStmt.setObject(BINARY, bytes);
-                preparedStmt.setObject(VARBINARY, bytes);
-                //preparedStmt.setObject(DATE, date);
-                //preparedStmt.setObject(TIME, time);
-                //preparedStmt.setObject(TIMESTAMP, timestamp);
-                break;
-
-            default:
-                assert false;
-                break;
-            }
-
-            res = preparedStmt.executeUpdate();
-            assertEquals(1, res);
-        }
 
         query = "select " + columnStr + " from datatypes_schema.datatypes_table";
 
@@ -524,31 +1194,25 @@ public class FarragoJdbcTest extends FarragoTestCase
                 break;
 
             case 116:
-                if (dtbug199_fixed) {
-                    assertEquals(date, resultSet.getDate(CHAR));
-                    assertEquals(date, resultSet.getDate(VARCHAR));
-                    assertEquals(date, resultSet.getDate(DATE));
-                    assertEquals(date, resultSet.getDate(TIMESTAMP));
-                }
+                assertEquals(date, resultSet.getDate(CHAR));
+                assertEquals(date, resultSet.getDate(VARCHAR));
+                assertEquals(date, resultSet.getDate(DATE));
+                assertEquals(date, resultSet.getDate(TIMESTAMP));
                 break;
 
             case 117:
-                if (dtbug199_fixed) {
-                    assertEquals(time, resultSet.getTime(CHAR));
-                    assertEquals(time, resultSet.getTime(VARCHAR));
-                    assertEquals(time, resultSet.getTime(TIME));
-                    assertEquals(time, resultSet.getTime(TIMESTAMP));
-                }
+                assertEquals(time, resultSet.getTime(CHAR));
+                assertEquals(time, resultSet.getTime(VARCHAR));
+                assertEquals(time, resultSet.getTime(TIME));
+                assertEquals(time, resultSet.getTime(TIMESTAMP));
                 break;
 
             case 118:
-                if (dtbug199_fixed) {
-                    assertEquals(timestamp, resultSet.getTimestamp(CHAR));
-                    assertEquals(timestamp, resultSet.getTimestamp(VARCHAR));
-                    assertEquals(timestamp, resultSet.getTimestamp(DATE));
-                    assertEquals(timestamp, resultSet.getTimestamp(TIME));
-                    assertEquals(timestamp, resultSet.getTimestamp(TIMESTAMP));
-                }
+                assertEquals(timestamp, resultSet.getTimestamp(CHAR));
+                assertEquals(timestamp, resultSet.getTimestamp(VARCHAR));
+                assertEquals(timestamp, resultSet.getTimestamp(DATE));
+                assertEquals(timestamp, resultSet.getTimestamp(TIME));
+                assertEquals(timestamp, resultSet.getTimestamp(TIMESTAMP));
                 break;
 
             case 119:
@@ -597,8 +1261,9 @@ public class FarragoJdbcTest extends FarragoTestCase
         resultSet = null;
     }
 
+
     /**
-     * Test sql date/time to java.sql date/time translations.
+     * Test sql Date/Time to java.sql Date/Time translations.
      */
     public void testDateTimeSql() throws Exception
     {
@@ -625,27 +1290,27 @@ public class FarragoJdbcTest extends FarragoTestCase
 
         resultSet.close();
 
-        /*
-        resultSet = stmt.executeQuery(dateSql);
+        if (false) {
+            resultSet = stmt.executeQuery(dateSql);
 
-        while (resultSet.next()) {
-            Calendar cal = Calendar.getInstance() ;
-            cal.setTimeZone(TimeZone.getTimeZone("GMT-6"));
-            //  not supported by IteratorResultSet yet.
-            Date date = resultSet.getDate(1, cal);
-            Timestamp tstamp = resultSet.getTimestamp(3, cal);
+            while (resultSet.next()) {
+                Calendar cal = Calendar.getInstance() ;
+                cal.setTimeZone(TimeZone.getTimeZone("GMT-6"));
+                //  not supported by IteratorResultSet yet.
+                Date date = resultSet.getDate(1, sydneyCal);
+                Timestamp tstamp = resultSet.getTimestamp(3, sydneyCal);
 
 
-            cal.setTimeZone(TimeZone.getTimeZone("GMT-8"));
-            cal.clear();
-            cal.set(2004,11,21); //month is zero based.  idiots ...
-            assert date.getTime() == cal.getTime().getTime() ;
+                cal.setTimeZone(TimeZone.getTimeZone("GMT-8"));
+                cal.clear();
+                cal.set(2004,11,21); //month is zero based.  idiots ...
+                assert date.getTime() == cal.getTime().getTime();
 
-            cal.set(2004,11,21,12,22,33);
+                cal.set(2004,11,21,12,22,33);
 
-            assert tstamp.getTime() == cal.getTime().getTime();
+                assert tstamp.getTime() == cal.getTime().getTime();
+            }
         }
-        */
 
     }
 
@@ -704,91 +1369,75 @@ public class FarragoJdbcTest extends FarragoTestCase
      */
     public void testChar() throws Exception
     {
-        byte gender = 1;
-        byte city = -128;
-        short gender2 = 2;
-        short city2 = 32767;
-        int gender3 = 3;
-        int city3 = -234234;
-        long gender4 = 4L;
-        long city4 = 123432432432545455L;
-        float gender5 = 5.0F;
-        float city5 = 6.02e+23F;
-        double gender6 = 6.2;
-        double city6 = 3.14;
-        BigDecimal gender7 = new BigDecimal(2);
-        BigDecimal city7 = new BigDecimal(88.23432432);
-        boolean gender8 = false;
-        boolean city8 = true;
-        String gender9 = "F";
-        String city9 = "San Jose";
 
-        Object genderx = new Character('M');
-        // alternative:
-        //Object genderx = new Integer(1);
-        Object cityx = new StringBuffer("New York");
+        preparedStmt = connection.prepareStatement(
+                "insert into \"SALES\".\"EMPS\" values " +
+                "(?, ?, 10, ?, ?, ?, 28, NULL, NULL, false)");
 
-        String name = "JDBC Test Char";
+        preparedStmt.setByte(3, (byte) 1);
+        preparedStmt.setByte(4, (byte) -128);
+        doEmpInsert(1);
 
-        String query = "insert into \"SALES\".\"EMPS\" values ";
-        query += "(?, ?, 10, ?, ?, ?, 28, NULL, NULL, false)";
+        preparedStmt.setShort(3, (short) 2);
+        preparedStmt.setShort(4, (short) 32767);
+        doEmpInsert(2);
 
-        preparedStmt = connection.prepareStatement(query);
-        int res;
-        for (int i = 1; i <= 10; i++)
-        {
-            preparedStmt.setInt(1, i+1000);
-            preparedStmt.setString(2, name + i);
-            switch (i)
-            {
-            case 1:
-                preparedStmt.setByte(3, gender);
-                preparedStmt.setByte(4, city);
-                break;
-            case 2:
-                preparedStmt.setShort(3, gender2);
-                preparedStmt.setShort(4, city2);
-                break;
-            case 3:
-                preparedStmt.setInt(3, gender3);
-                preparedStmt.setInt(4, city3);
-                break;
-            case 4:
-                preparedStmt.setLong(3, gender4);
-                preparedStmt.setLong(4, city4);
-                break;
-            case 5:
-                preparedStmt.setFloat(3, gender5);
-                preparedStmt.setFloat(4, city5);
-                break;
-            case 6:
-                preparedStmt.setDouble(3, gender6);
-                preparedStmt.setDouble(4, city6);
-                break;
-            case 7:
-                preparedStmt.setBigDecimal(3, gender7);
-                preparedStmt.setBigDecimal(4, city7);
-                break;
-            case 8:
-                preparedStmt.setBoolean(3, gender8);
-                preparedStmt.setBoolean(4, city8);
-                break;
-            case 9:
-                preparedStmt.setString(3, gender9);
-                preparedStmt.setString(4, city9);
-                break;
-            case 10:
-                preparedStmt.setObject(3, genderx);
-                preparedStmt.setObject(4, cityx);
-                break;
-            default:
-                assertEquals(1,2);
-                break;
-            }
-            preparedStmt.setInt(5, i+100);
-            res = preparedStmt.executeUpdate();
-            assertEquals(1, res);
+        preparedStmt.setInt(3, 3);
+        preparedStmt.setInt(4, -234234);
+        doEmpInsert(3);
+
+        preparedStmt.setLong(3, 4L);
+        preparedStmt.setLong(4, 123432432432545455L);
+        doEmpInsert(4);
+
+        Throwable throwable;
+        try {
+            preparedStmt.setFloat(3, 5.0F);
+            preparedStmt.setFloat(4, 6.02e+23F);
+            doEmpInsert(5);
+            throwable = null;
+            fail("Expected an error");
+        } catch (SQLException e) {
+            throwable = e;
         }
+        assertExceptionMatches(throwable,
+            ".*Value '5.0' is too long for parameter '.2' of type 'CHAR.1.'");
+
+        try {
+            preparedStmt.setDouble(3, 6.2);
+            preparedStmt.setDouble(4, 3.14);
+            doEmpInsert(6);
+        } catch (SQLException e) {
+            throwable = e;
+        }
+        assertExceptionMatches(throwable,
+                ".*Value '6.2' is too long for parameter '.2' of type 'CHAR.1.'");
+
+        preparedStmt.setBigDecimal(3, new BigDecimal(2));
+        preparedStmt.setBigDecimal(4, new BigDecimal(88.23432432));
+        doEmpInsert(7);
+
+        try {
+            preparedStmt.setBoolean(3, false);
+            preparedStmt.setBoolean(4, true);
+            doEmpInsert(8);
+        } catch (SQLException e) {
+            throwable = e;
+        }
+        assertExceptionMatches(throwable,
+                ".*Value 'false' is too long for parameter '.2' of type 'CHAR.1.'");
+
+        preparedStmt.setString(3, "x");
+        preparedStmt.setBoolean(4, true);
+        doEmpInsert(8);
+
+        preparedStmt.setString(3, "F");
+        preparedStmt.setString(4, "San Jose");
+        doEmpInsert(9);
+
+        preparedStmt.setObject(3, new Character('M'));
+        preparedStmt.setObject(4, new StringBuffer("New York"));
+        doEmpInsert(10);
 
         // this query won't find everything we insert above because of bugs in
         // executeUpdate when there's a setFloat/setDouble called on a varchar
@@ -796,7 +1445,7 @@ public class FarragoJdbcTest extends FarragoTestCase
         //query = "select gender, city, empid from sales.emps where name like '";
         //query += name + "%'";
         // for now, use this query instead
-        query = "select gender, city, empid from sales.emps where empno>1000";
+        String query = "select gender, city, empid from sales.emps where empno>1000";
 
         preparedStmt = connection.prepareStatement(query);
 
@@ -838,13 +1487,13 @@ public class FarragoJdbcTest extends FarragoTestCase
                 // assertEquals(city7, resultSet.getBigDecimal(2));
                 break;
             case 108:
-                assertEquals(gender8, resultSet.getBoolean(1));
+                assertEquals("x", resultSet.getString(1));
                 // ERROR:  same as bug #117
                 // assertEquals(city8, resultSet.getBoolean(2));
                 break;
             case 109:
-                assertEquals(gender9, resultSet.getString(1));
-                assertEquals(city9, resultSet.getString(2));
+                assertEquals("F", resultSet.getString(1));
+                assertEquals("San Jose", resultSet.getString(2));
                 break;
             case 110:
                 // ERROR - the actual result looks correct, probably merely object type not matching
@@ -860,6 +1509,28 @@ public class FarragoJdbcTest extends FarragoTestCase
 
         resultSet.close();
         resultSet = null;
+    }
+
+    static void assertExceptionMatches(Throwable e,
+            String expectedPattern) {
+        if (e == null) {
+            fail("Expected an error which matches pattern '" +
+                    expectedPattern + "'");
+        }
+        String msg = e.toString();
+        if (!msg.matches(expectedPattern)) {
+            fail("Got a different error '" + msg + "' than expected '" +
+                    expectedPattern + "'");
+        }
+    }
+
+    private void doEmpInsert(int i) throws SQLException {
+        String name = "JDBC Test Char";
+        preparedStmt.setInt(1, i + 1000);
+        preparedStmt.setString(2, name + i);
+        preparedStmt.setInt(5, i+100);
+        int res = preparedStmt.executeUpdate();
+        assertEquals(1, res);
     }
 
     /**

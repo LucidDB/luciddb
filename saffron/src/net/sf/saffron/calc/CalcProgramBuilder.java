@@ -1304,7 +1304,7 @@ public class CalcProgramBuilder
 
     public Register newBoolLiteral(boolean b)
     {
-        return newLiteral(OpType.Bool, new java.lang.Boolean(b), -1);
+        return newLiteral(OpType.Bool, Boolean.valueOf(b), -1);
     }
 
     public Register newInt4Literal(int i)

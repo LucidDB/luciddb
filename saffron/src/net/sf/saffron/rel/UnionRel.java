@@ -93,7 +93,7 @@ public class UnionRel extends SaffronBaseRel
             terms[i] = "input#" + i;
         }
         terms[inputs.length] = "all";
-        pw.explain(this,terms,new Object [] { new Boolean(all) });
+        pw.explain(this,terms,new Object [] { Boolean.valueOf(all) });
     }
 
     public void replaceInput(int ordinalInParent,SaffronRel p)

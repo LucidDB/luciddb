@@ -96,6 +96,9 @@ typedef JniProxyIter<ProxyJavaTupleStreamDef> SharedProxyJavaTupleStreamDef;
 class ProxyKeyAccessorDef;
 typedef JniProxyIter<ProxyKeyAccessorDef> SharedProxyKeyAccessorDef;
 
+class ProxyMockTupleStreamDef;
+typedef JniProxyIter<ProxyMockTupleStreamDef> SharedProxyMockTupleStreamDef;
+
 class ProxySortingStreamDef;
 typedef JniProxyIter<ProxySortingStreamDef> SharedProxySortingStreamDef;
 
@@ -454,6 +457,14 @@ int32_t getStreamId();
 static jmethodID meth_getStreamId;
 };
 
+class ProxyMockTupleStreamDef
+: virtual public JniProxy, virtual public ProxyTupleStreamDef
+{
+public:
+int64_t getRowCount();
+static jmethodID meth_getRowCount;
+};
+
 class ProxySortingStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef, virtual public ProxyKeyAccessorDef
 {
@@ -643,6 +654,8 @@ virtual void visit(ProxyIndexWriterDef &)
 virtual void visit(ProxyJavaTupleStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyKeyAccessorDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyMockTupleStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxySortingStreamDef &)
 { unhandledVisit(); }

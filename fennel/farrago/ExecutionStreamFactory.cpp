@@ -37,6 +37,7 @@
 #include "fennel/xo/TableWriterFactory.h"
 #include "fennel/xo/CartesianProductStream.h"
 #include "fennel/xo/CalcTupleStream.h"
+#include "fennel/xo/MockTupleStream.h"
 #include "fennel/db/Database.h"
 #include "fennel/db/CheckpointThread.h"
 #include "fennel/tuple/TupleDescriptor.h"
@@ -281,6 +282,17 @@ void ExecutionStreamFactory::visit(ProxyCalcTupleStreamDef &streamDef)
     readTupleStreamParams(*pParams,streamDef);
     pParams->program = streamDef.getProgram();
     pParams->isFilter = streamDef.isFilter();
+
+    factors.setFactors(pStream,pParams);
+}
+
+void ExecutionStreamFactory::visit(ProxyMockTupleStreamDef &streamDef)
+{
+    MockTupleStream *pStream = new MockTupleStream();
+
+    MockTupleStreamParams *pParams = new MockTupleStreamParams();
+    readTupleStreamParams(*pParams,streamDef);
+    pParams->nRows = streamDef.getRowCount();
 
     factors.setFactors(pStream,pParams);
 }

@@ -264,6 +264,14 @@ encountered near {1}</text>
     <text>Cannot assign ''{0}'' to a {1} value: {2}</text>
 </exception>
 
+<exception id="450020" name="ParameterValueTooLong">
+    <text>Value ''{0}'' is too long for parameter ''{1}'' of type ''{2}''</text>
+</exception>
+
+<exception id="450020" name="ParameterValueIncompatible">
+    <text>Cannot assign a value of Java class ''{0}'' to parameter ''{1}'' of type ''{2}''</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Data wrapper resources 460,000 - 470,000 -->
 <!-- ====================================================================== -->

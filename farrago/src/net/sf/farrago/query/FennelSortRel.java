@@ -114,7 +114,8 @@ public class FennelSortRel extends FennelPullSingleRel
             this,
             new String [] { "child","key","discardDuplicates" },
             new Object [] {
-                Arrays.asList(keyProjection),new Boolean(discardDuplicates)
+                Arrays.asList(keyProjection),
+                Boolean.valueOf(discardDuplicates)
             });
     }
 

@@ -47,6 +47,7 @@ jmethodID ProxyIndexWriterDef::meth_getDistinctness = 0;
 jmethodID ProxyIndexWriterDef::meth_isUpdateInPlace = 0;
 jmethodID ProxyJavaTupleStreamDef::meth_getStreamId = 0;
 jmethodID ProxyKeyAccessorDef::meth_getKeyProj = 0;
+jmethodID ProxyMockTupleStreamDef::meth_getRowCount = 0;
 jmethodID ProxySortingStreamDef::meth_getDistinctness = 0;
 jmethodID ProxyTableUpdaterDef::meth_getUpdateProj = 0;
 jmethodID ProxyTableWriterDef::meth_getIndexWriter = 0;
@@ -208,6 +209,10 @@ ProxyJavaTupleStreamDef::meth_getStreamId = pEnv->GetMethodID(jClass,"getStreamI
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemKeyAccessorDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyKeyAccessorDef>));
 ProxyKeyAccessorDef::meth_getKeyProj = pEnv->GetMethodID(jClass,"getKeyProj","()Lnet/sf/farrago/fem/fennel/FemTupleProjection;");
+
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemMockTupleStreamDef");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyMockTupleStreamDef>));
+ProxyMockTupleStreamDef::meth_getRowCount = pEnv->GetMethodID(jClass,"getRowCount","()J");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemSortingStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxySortingStreamDef>));
@@ -592,6 +597,11 @@ p->pEnv = pEnv;
 p->jObject = pEnv->CallObjectMethod(jObject,meth_getKeyProj);
 if (!p->jObject) p.reset();
 return p;
+}
+
+int64_t ProxyMockTupleStreamDef::getRowCount()
+{
+return pEnv->CallLongMethod(jObject,meth_getRowCount);
 }
 
 Distinctness ProxySortingStreamDef::getDistinctness()

@@ -18,6 +18,7 @@ ConsumerToProducerProvisionAdapter.cpp \
 DoubleInputTupleStream.cpp \
 ExecutionStream.cpp \
 ExecutionStreamGraph.cpp \
+MockTupleStream.cpp \
 ProducerToConsumerProvisionAdapter.cpp \
 SingleInputTupleStream.cpp \
 SortingStream.cpp \
