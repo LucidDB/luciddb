@@ -64,7 +64,7 @@ void BTreeInsertExecStream::open(bool restart)
 ExecStreamResult BTreeInsertExecStream::execute(
     ExecStreamQuantum const &quantum)
 {
-    ExecStreamResult rc = precheckConduitInput();
+    ExecStreamResult rc = precheckConduitBuffers();
     if (rc != EXECRC_YIELD) {
         return rc;
     }

@@ -22,6 +22,7 @@
 #define Fennel_ExecStreamTestBase_Included
 
 #include "fennel/test/SegStorageTestBase.h"
+#include "fennel/exec/MockProducerExecStream.h"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -88,10 +89,37 @@ protected:
         uint nBytesExpected,
         uint byteExpected);
     
+    /**
+     * Executes the prepared stream graph and verifies that its output
+     * matches that produced by a value generator.
+     *
+     * @param stream output stream from which to read
+     *
+     * @param nRowsExpected number of rows expected
+     *
+     * @param verifier generator for expected values
+     */
+    void verifyOutput(
+        ExecStream &stream,
+        uint nRowsExpected,
+        MockProducerExecStreamGenerator &verifier);
+    
 public:
     // override TestBase
     virtual void testCaseSetUp();
     virtual void testCaseTearDown();
+};
+
+/**
+ * Data generator for a 45-degree ramp (output value equals input row number).
+ */
+class RampExecStreamGenerator : public MockProducerExecStreamGenerator
+{
+public:
+    virtual int64_t generateValue(uint iRow)
+    {
+        return iRow;
+    }
 };
 
 FENNEL_END_NAMESPACE

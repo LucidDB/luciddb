@@ -22,9 +22,30 @@
 #define Fennel_MockProducerExecStream_Included
 
 #include "fennel/exec/SingleOutputExecStream.h"
+#include "fennel/tuple/TupleData.h"
 
 FENNEL_BEGIN_NAMESPACE
 
+/**
+ * MockProducerExecStreamGenerator defines an interface for generating
+ * a data stream.
+ */
+class MockProducerExecStreamGenerator
+{
+public:
+    virtual ~MockProducerExecStreamGenerator();
+    
+    /**
+     * Generates one data value.
+     *
+     * @param iRow 0-based row number to generate
+     */
+    virtual int64_t generateValue(uint iRow) = 0;
+};
+
+typedef boost::shared_ptr<MockProducerExecStreamGenerator>
+    SharedMockProducerExecStreamGenerator;
+    
 /**
  * MockProducerExecStreamParams defines parameters for MockProducerExecStream.
  */
@@ -34,6 +55,13 @@ struct MockProducerExecStreamParams : public SingleOutputExecStreamParams
      * Number of rows to generate.
      */
     uint64_t nRows;
+
+    /**
+     * Generator for row values.  If non-singular, the tuple descriptor
+     * for this stream must be a single int64_t.  If singular, all output
+     * is constant 0.
+     */
+    SharedMockProducerExecStreamGenerator pGenerator;
 };
 
 /**
@@ -47,6 +75,8 @@ class MockProducerExecStream : public SingleOutputExecStream
     uint cbTuple;
     uint64_t nRowsMax;
     uint64_t nRowsProduced;
+    TupleData outputData;
+    SharedMockProducerExecStreamGenerator pGenerator;
     
 public:
     // implement ExecStream

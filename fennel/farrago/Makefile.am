@@ -11,6 +11,7 @@ CmdInterpreter.cpp \
 ExecutionStreamFactory.cpp \
 Fem.cpp \
 JavaExcn.cpp \
+JavaSourceExecStream.cpp \
 JavaTraceTarget.cpp \
 JavaTupleStream.cpp \
 JniProxy.cpp \

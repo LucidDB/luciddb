@@ -100,7 +100,7 @@ ExecStreamResult FtrsTableWriterExecStream::execute(
         return EXECRC_BUF_OVERFLOW;
     }
 
-    ExecStreamResult rc = precheckConduitInput();
+    ExecStreamResult rc = precheckConduitBuffers();
     if (rc != EXECRC_YIELD) {
         return rc;
     }

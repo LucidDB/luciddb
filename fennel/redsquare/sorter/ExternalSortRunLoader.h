@@ -197,6 +197,12 @@ public:
     void startRun();
 
     /**
+     * @return whether this loader has been started and not yet fetched
+     */
+    bool isStarted();
+
+    // TODO jvs 10-Nov-2004:  eliminate this overload
+    /**
      * Loads one run.
      *
      * @param tupleStream tuple stream from which to read run
@@ -204,6 +210,15 @@ public:
      * @return result of load
      */
     ExternalSortRC loadRun(TupleStream &tupleStream);
+
+    /**
+     * Loads data from buffer into a run.
+     *
+     * @param bufAccessor buffer from which to read run
+     *
+     * @return result of load
+     */
+    ExternalSortRC loadRun(ExecStreamBufAccessor &bufAccessor);
 
     /**
      * Sorts loaded run.

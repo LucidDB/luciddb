@@ -26,8 +26,10 @@
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/MockProducerExecStream.h"
 #include "fennel/exec/ScratchBufferExecStream.h"
+#include "fennel/exec/CopyExecStream.h"
 #include "fennel/exec/SegBufferExecStream.h"
 #include "fennel/exec/CartesianJoinExecStream.h"
+#include "fennel/exec/ExecStreamEmbryo.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
 
 #include <boost/test/test_tools.hpp>
@@ -46,12 +48,14 @@ public:
     explicit ExecStreamTest()
     {
         FENNEL_UNIT_TEST_CASE(ExecStreamTest,testScratchBufferExecStream);
+        FENNEL_UNIT_TEST_CASE(ExecStreamTest,testCopyExecStream);
         FENNEL_UNIT_TEST_CASE(ExecStreamTest,testSegBufferExecStream);
         FENNEL_UNIT_TEST_CASE(ExecStreamTest,testCartesianJoinExecStreamOuter);
         FENNEL_UNIT_TEST_CASE(ExecStreamTest,testCartesianJoinExecStreamInner);
     }
 
     void testScratchBufferExecStream();
+    void testCopyExecStream();
     void testSegBufferExecStream();
     
     void testCartesianJoinExecStreamOuter()
@@ -87,11 +91,12 @@ void ExecStreamTest::testScratchBufferExecStream()
     
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc(
-        stdTypeFactory.newDataType(STANDARD_TYPE_INT_32));
-    
+        stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
+
     MockProducerExecStreamParams params1;
     params1.outputTupleDesc.push_back(attrDesc);
-    params1.nRows = 10000;     // at least two buffers
+    params1.nRows = 5000;     // at least two buffers
+    params1.pGenerator.reset(new RampExecStreamGenerator());
     params1.enforceQuotas = false;
     pStreamImpl1->prepare(params1);
     
@@ -102,10 +107,42 @@ void ExecStreamTest::testScratchBufferExecStream()
     pStreamImpl2->prepare(params2);
 
     pGraph->setScratchSegment(params2.scratchAccessor.pSegment);
-    
-    verifyZeroedOutput(
+
+    verifyOutput(
         *pStream2,
-        params1.nRows*sizeof(int32_t));
+        params1.nRows,
+        *(params1.pGenerator));
+}
+
+void ExecStreamTest::testCopyExecStream()
+{
+    StandardTypeDescriptorFactory stdTypeFactory;
+    TupleAttributeDescriptor attrDesc(
+        stdTypeFactory.newDataType(STANDARD_TYPE_INT_32));
+    
+    MockProducerExecStreamParams mockParams;
+    mockParams.outputTupleDesc.push_back(attrDesc);
+    mockParams.nRows = 10000;   // at least two buffers
+    mockParams.enforceQuotas = false;
+
+    ExecStreamEmbryo mockStreamEmbryo;
+    mockStreamEmbryo.init(new MockProducerExecStream(),mockParams);
+    mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
+
+    CopyExecStreamParams copyParams;
+    copyParams.outputTupleDesc.push_back(attrDesc);
+    copyParams.enforceQuotas = false;
+    
+    ExecStreamEmbryo copyStreamEmbryo;
+    copyStreamEmbryo.init(new CopyExecStream(),copyParams);
+    copyStreamEmbryo.getStream()->setName("CopyExecStream");
+    
+    SharedExecStream pOutputStream = prepareGraphTwoBufferedStreams(
+        mockStreamEmbryo,copyStreamEmbryo);
+
+    verifyZeroedOutput(
+        *pOutputStream,
+        mockParams.nRows*sizeof(int32_t));
 }
 
 void ExecStreamTest::testSegBufferExecStream()

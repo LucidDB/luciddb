@@ -29,13 +29,19 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 void MockProducerExecStream::prepare(MockProducerExecStreamParams const &params)
 {
     SingleOutputExecStream::prepare(params);
+    pGenerator = params.pGenerator;
     for (uint i = 0; i < params.outputTupleDesc.size(); i++) {
         assert(!params.outputTupleDesc[i].isNullable);
         StandardTypeDescriptorOrdinal ordinal =
             StandardTypeDescriptorOrdinal(
                 params.outputTupleDesc[i].pTypeDescriptor->getOrdinal());
         assert(StandardTypeDescriptor::isIntegralNative(ordinal));
+        if (pGenerator) {
+            assert(ordinal == STANDARD_TYPE_INT_64);
+            assert(i == 0);
+        }
     }
+    outputData.compute(params.outputTupleDesc);
     nRowsMax = params.nRows;
     TupleAccessor &tupleAccessor = pOutAccessor->getTraceTupleAccessor();
     assert(tupleAccessor.isFixedWidth());
@@ -48,23 +54,44 @@ void MockProducerExecStream::open(bool restart)
     nRowsProduced = 0;
 }
 
-// NOTE: MockProducerExecStream's implementation is kept lean and mean
-// intentionally so that it can be used to drive other streams with minimal
-// overhead during profiling
-
-ExecStreamResult MockProducerExecStream::execute(ExecStreamQuantum const &)
+ExecStreamResult MockProducerExecStream::execute(
+    ExecStreamQuantum const &quantum)
 {
-    uint cbBatch = 0;
-    PBuffer pBuffer = pOutAccessor->getProductionStart();
-    uint cb = pOutAccessor->getProductionAvailable();
-    while ((cb >= cbTuple) && (nRowsProduced < nRowsMax)) {
-        cb -= cbTuple;
-        cbBatch += cbTuple;
-        ++nRowsProduced;
+    if (pGenerator) {
+        uint nTuples = 0;
+        int64_t value;
+        outputData[0].pData = reinterpret_cast<PConstBuffer>(&value);
+        while (nRowsProduced < nRowsMax) {
+            if (pOutAccessor->getProductionAvailable() < cbTuple) {
+                return EXECRC_BUF_OVERFLOW;
+            }
+            value = pGenerator->generateValue(nRowsProduced);
+            bool rc = pOutAccessor->produceTuple(outputData);
+            assert(rc);
+            ++nTuples;
+            ++nRowsProduced;
+            if (nTuples >= quantum.nTuplesMax) {
+                return EXECRC_QUANTUM_EXPIRED;
+            }
+        }
+        pOutAccessor->markEOS();
+        return EXECRC_EOS;
     }
-    memset(pBuffer,0,cbBatch);
+    
+    // NOTE: implementation below is kept lean and mean
+    // intentionally so that it can be used to drive other streams with minimal
+    // overhead during profiling
+
+    uint cb = pOutAccessor->getProductionAvailable();
+    uint nRows = std::min<uint64_t>(nRowsMax - nRowsProduced, cb / cbTuple);
+    uint cbBatch = nRows * cbTuple;
+    cb -= cbBatch;
+    nRowsProduced += nRows;
+    
     // TODO:  pOutAccessor->validateTupleSize(?);
     if (cbBatch) {
+        PBuffer pBuffer = pOutAccessor->getProductionStart();
+        memset(pBuffer,0,cbBatch);
         pOutAccessor->produceData(pBuffer + cbBatch);
         pOutAccessor->requestConsumption();
     } else {
@@ -77,6 +104,10 @@ ExecStreamResult MockProducerExecStream::execute(ExecStreamQuantum const &)
     } else {
         return EXECRC_BUF_OVERFLOW;
     }
+}
+
+MockProducerExecStreamGenerator::~MockProducerExecStreamGenerator()
+{
 }
 
 FENNEL_END_CPPFILE("$Id$");

@@ -47,20 +47,32 @@ class CalcExecStreamTest : public ExecStreamTestBase
      *
      * @param expectedFactor factor by which byte length of output should
      * exceed number of rows of input
+     *
+     * @param nRowsInput number of rows of input
      */
     void testConstant(
         std::string program,
         TupleDescriptor const &inputDesc,
         TupleDescriptor const &outputDesc,
-        uint expectedFactor);
+        uint expectedFactor,
+        uint nRowsInput = 1000);
+    
+    void testConstantOneForOneImpl(uint nRowsInput = 1000);
     
 public:
     explicit CalcExecStreamTest();
 
     /**
      * Tests with program that produces same amount of output as input.
+     *
+     * @param nRowsInput number of rows of input
      */
     void testConstantOneForOne();
+    
+    /**
+     * Tests with no input.
+     */
+    void testEmptyInput();
     
     /**
      * Tests with program that produces twice as much output as input.
@@ -75,7 +87,7 @@ public:
     /**
      * Tests with program that produces a tuple which overflows output buffer.
      */
-    void testOutputOverflow();
+    void testTupleOverflow();
 };
 
 CalcExecStreamTest::CalcExecStreamTest()
@@ -89,12 +101,13 @@ CalcExecStreamTest::CalcExecStreamTest()
     uint64Desc = attrDesc;
         
     FENNEL_UNIT_TEST_CASE(CalcExecStreamTest,testConstantOneForOne);
+    FENNEL_UNIT_TEST_CASE(CalcExecStreamTest,testEmptyInput);
     FENNEL_UNIT_TEST_CASE(CalcExecStreamTest,testConstantTwoForOne);
     FENNEL_UNIT_TEST_CASE(CalcExecStreamTest,testConstantOneForTwo);
-    FENNEL_UNIT_TEST_CASE(CalcExecStreamTest,testOutputOverflow);
+    FENNEL_UNIT_TEST_CASE(CalcExecStreamTest,testTupleOverflow);
 }
 
-void CalcExecStreamTest::testConstantOneForOne()
+void CalcExecStreamTest::testConstantOneForOneImpl(uint nRowsInput)
 {
     std::string program =
         "O u8; "
@@ -110,7 +123,17 @@ void CalcExecStreamTest::testConstantOneForOne()
     TupleDescriptor tupleDesc;
     tupleDesc.push_back(uint64Desc);
     
-    testConstant(program, tupleDesc, tupleDesc, sizeof(uint64_t));
+    testConstant(program, tupleDesc, tupleDesc, sizeof(uint64_t), nRowsInput);
+}
+
+void CalcExecStreamTest::testConstantOneForOne()
+{
+    testConstantOneForOneImpl();
+}
+
+void CalcExecStreamTest::testEmptyInput()
+{
+    testConstantOneForOneImpl(0);
 }
 
 void CalcExecStreamTest::testConstantTwoForOne()
@@ -162,7 +185,7 @@ void CalcExecStreamTest::testConstantOneForTwo()
     testConstant(program, inputDesc, outputDesc, sizeof(uint64_t));
 }
 
-void CalcExecStreamTest::testOutputOverflow()
+void CalcExecStreamTest::testTupleOverflow()
 {
     std::string program =
         "O c,40000; "
@@ -195,11 +218,12 @@ void CalcExecStreamTest::testConstant(
     std::string program,
     TupleDescriptor const &inputDesc,
     TupleDescriptor const &outputDesc,
-    uint expectedFactor)
+    uint expectedFactor,
+    uint nRowsInput)
 {
     MockProducerExecStreamParams mockParams;
     mockParams.outputTupleDesc = inputDesc;
-    mockParams.nRows = 1000;
+    mockParams.nRows = nRowsInput;
     mockParams.enforceQuotas = false;
 
     CalcExecStreamParams calcParams;

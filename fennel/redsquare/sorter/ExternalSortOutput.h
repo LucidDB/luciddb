@@ -24,6 +24,7 @@
 
 #include "fennel/tuple/TupleAccessor.h"
 #include "fennel/redsquare/sorter/ExternalSortSubStream.h"
+#include "fennel/exec/ExecStreamDefs.h"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -69,6 +70,7 @@ public:
      */
     void setSubStream(ExternalSortSubStream &subStream);
 
+    // TODO jvs 10-Nov-2004:  eliminate this overload
     /**
      * Fetches tuples and writes them to a result stream.
      *
@@ -77,6 +79,15 @@ public:
      * @return result (EXTSORT_SUCCESS or EXTSORT_ENDOFDATA)
      */
     ExternalSortRC fetch(ByteOutputStream &resultOutputStream);
+    
+    /**
+     * Fetches tuples and writes them to a buffer.
+     *
+     * @param bufAccessor receives marshalled tuple data
+     *
+     * @return result
+     */
+    ExecStreamResult fetch(ExecStreamBufAccessor &bufAccessor);
     
     /**
      * Releases any resources acquired by this object.

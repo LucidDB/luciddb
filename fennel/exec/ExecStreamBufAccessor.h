@@ -426,6 +426,7 @@ inline void ExecStreamBufAccessor::requestConsumption()
 {
     assert(state == EXECBUF_NONEMPTY);
     state = EXECBUF_OVERFLOW;
+    pBufEnd = pProducer;
 }
 
 inline void ExecStreamBufAccessor::markEOS()
@@ -523,7 +524,7 @@ inline void ExecStreamBufAccessor::validateTupleSize(
 
 inline bool ExecStreamBufAccessor::produceTuple(TupleData const &tupleData)
 {
-    assert(isProductionPossible());
+    assert(getState() != EXECBUF_EOS);
 
     if (tupleProductionAccessor.isBufferSufficient(
             tupleData, getProductionAvailable()))
@@ -535,7 +536,9 @@ inline bool ExecStreamBufAccessor::produceTuple(TupleData const &tupleData)
         return true;
     } else {
         validateTupleSize(tupleData);
-        requestConsumption();
+        if (getState() != EXECBUF_OVERFLOW) {
+            requestConsumption();
+        }
         return false;
     }
 }

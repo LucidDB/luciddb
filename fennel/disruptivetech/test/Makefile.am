@@ -60,8 +60,8 @@ SqlStringAsciiTest_SOURCES=SqlStringBuffer.cpp SqlStringAsciiTest.cpp
 
 LDADD = \
 	-L$(top_builddir)/test \
-    -L$(top_builddir)/libfennel \
-    -L$(top_builddir)/disruptivetech/libfennel_dt \
+	-L$(top_builddir)/libfennel \
+	-L$(top_builddir)/disruptivetech/libfennel_dt \
 	-l$(TEST_LIB) \
 	-lfennel_dt_calc \
 	-lfennel_dt_xo \
@@ -76,7 +76,7 @@ LDADD = \
 	-lfennel_device \
 	-lfennel_synch \
 	-lfennel_common \
-    -l$(STLPORT_LIB) \
+	-l$(STLPORT_LIB) \
 	$(EXTRA_LDFLAGS)
 
 check-local:

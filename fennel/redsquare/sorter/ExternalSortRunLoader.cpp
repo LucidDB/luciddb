@@ -24,6 +24,7 @@
 #include "fennel/redsquare/sorter/ExternalSortInfo.h"
 #include "fennel/xo/TupleStream.h"
 #include "fennel/common/ByteInputStream.h"
+#include "fennel/exec/ExecStreamBufAccessor.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -166,7 +167,7 @@ void ExternalSortRunLoader::releaseResources()
     // allocateBuffer()
 
     // FIXME jvs 13-June-2004:  need to do this, but it frees
-    // provision adapater buffer too!
+    // provision adapter buffer too!
 #if 0
     sortInfo.memSegmentAccessor.pSegment->deallocatePageRange(
         NULL_PAGE_ID,NULL_PAGE_ID);
@@ -228,6 +229,61 @@ ExternalSortRC ExternalSortRunLoader::loadRun(TupleStream &tupleStream)
     } else {
         return EXTSORT_ENDOFDATA;
     }
+}
+
+ExternalSortRC ExternalSortRunLoader::loadRun(
+    ExecStreamBufAccessor &bufAccessor)
+{
+    for (;;) {
+        if (!bufAccessor.demandData()) {
+            break;
+        }
+        uint cbAvailable = bufAccessor.getConsumptionAvailable();
+        assert(cbAvailable);
+        PConstBuffer pSrc = bufAccessor.getConsumptionStart();
+        bool overflow = false;
+        uint cbCopy = 0;
+        while (cbCopy < cbAvailable) {
+            PConstBuffer pSrcTuple = pSrc + cbCopy;
+            uint cbTuple = tupleAccessor.getBufferByteCount(pSrcTuple);
+
+            // first make sure we have room for the key pointer
+            if (pIndexBuffer >= pIndexBufferEnd) {
+                if (!allocateIndexBuffer()) {
+                    overflow = true;
+                    break;
+                }
+            }
+
+            // now make sure we have enough room for the data
+            if (pDataBuffer + cbCopy + cbTuple > pDataBufferEnd) {
+                if (!cbCopy) {
+                    // first tuple:  try to allocate a new buffer
+                    if (!allocateDataBuffer()) {
+                        // since cbCopy is zero, we can return right now
+                        return EXTSORT_OVERFLOW;
+                    }
+                }
+                // copy whatever we've calculated so far;
+                // next time through the for loop, we'll allocate a fresh buffer
+                break;
+            }
+
+            *((PBuffer *) pIndexBuffer) = pDataBuffer + cbCopy;
+            pIndexBuffer += sizeof(PBuffer);
+            nTuplesLoaded++;
+            cbCopy += cbTuple;
+        }
+        memcpy(pDataBuffer,pSrc,cbCopy);
+        pDataBuffer += cbCopy;
+        bufAccessor.consumeData(pSrc + cbCopy);
+        if (overflow) {
+            return EXTSORT_OVERFLOW;
+        }
+    }
+
+    assert(nTuplesLoaded);
+    return EXTSORT_SUCCESS;
 }
 
 void ExternalSortRunLoader::sort()
@@ -354,6 +410,11 @@ void ExternalSortRunLoader::quickSort(uint l,uint r)
 uint ExternalSortRunLoader::getLoadedTupleCount()
 {
     return nTuplesLoaded;
+}
+
+bool ExternalSortRunLoader::isStarted()
+{
+    return nTuplesLoaded > nTuplesFetched;
 }
 
 FENNEL_END_CPPFILE("$Id$");

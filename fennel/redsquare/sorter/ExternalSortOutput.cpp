@@ -23,6 +23,7 @@
 #include "fennel/redsquare/sorter/ExternalSortOutput.h"
 #include "fennel/redsquare/sorter/ExternalSortInfo.h"
 #include "fennel/common/ByteOutputStream.h"
+#include "fennel/exec/ExecStreamBufAccessor.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -90,6 +91,52 @@ ExternalSortRC ExternalSortOutput::fetch(
     } else {
         resultOutputStream.consumeWritePointer(pNextTuple - pOutBuf);
         return EXTSORT_SUCCESS;
+    }
+}
+
+ExecStreamResult ExternalSortOutput::fetch(
+    ExecStreamBufAccessor &bufAccessor)
+{
+    uint cbRemaining = bufAccessor.getProductionAvailable();
+    PBuffer pOutBuf = bufAccessor.getProductionStart();
+    PBuffer pNextTuple = pOutBuf;
+
+    for (;;) {
+        if (iCurrentTuple >= pFetchArray->nTuples) {
+            ExternalSortRC rc = pSubStream->fetch(EXTSORT_FETCH_ARRAY_SIZE);
+            if (rc == EXTSORT_ENDOFDATA) {
+                goto done;
+            }
+            iCurrentTuple = 0;
+        }
+
+        while (iCurrentTuple < pFetchArray->nTuples) {
+            PConstBuffer pSrcTuple = 
+                pFetchArray->ppTupleBuffers[iCurrentTuple];
+            uint cbTuple = tupleAccessor.getBufferByteCount(pSrcTuple);
+            if (cbTuple > cbRemaining) {
+                if (pNextTuple == pOutBuf) {
+                    bufAccessor.requestConsumption();
+                    return EXECRC_BUF_OVERFLOW;
+                }
+                goto done;
+            }
+            memcpy(pNextTuple,pSrcTuple,cbTuple);
+            cbRemaining -= cbTuple;
+            pNextTuple += cbTuple;
+            iCurrentTuple++;
+        }
+    }
+    
+ done:
+    if (pNextTuple == pOutBuf) {
+        bufAccessor.markEOS();
+        return EXECRC_EOS;
+    } else {
+        bufAccessor.produceData(pNextTuple);
+        bufAccessor.requestConsumption();
+        // REVIEW:  sometimes should be EXECRC_EOS instead
+        return EXECRC_BUF_OVERFLOW;
     }
 }
 

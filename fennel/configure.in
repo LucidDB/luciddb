@@ -252,6 +252,7 @@ disruptivetech/farrago/Makefile \
 redsquare/Makefile \
 redsquare/sorter/Makefile \
 redsquare/libfennel_rs/Makefile \
+redsquare/test/Makefile \
 redsquare/farrago/Makefile \
 ])
 

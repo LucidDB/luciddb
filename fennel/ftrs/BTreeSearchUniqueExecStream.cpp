@@ -28,7 +28,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 ExecStreamResult BTreeSearchUniqueExecStream::execute(
     ExecStreamQuantum const &quantum)
 {
-    ExecStreamResult rc = precheckConduitInput();
+    ExecStreamResult rc = precheckConduitBuffers();
     if (rc != EXECRC_YIELD) {
         return rc;
     }

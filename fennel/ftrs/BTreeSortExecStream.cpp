@@ -66,6 +66,10 @@ ExecStreamResult BTreeSortExecStream::execute(
         return EXECRC_EOS;
     }
 
+    if (pOutAccessor->getState() == EXECBUF_OVERFLOW) {
+        return EXECRC_BUF_OVERFLOW;
+    }
+
     uint nTuples = 0;
     TupleAccessor const &readAccessor = pWriter->getTupleAccessorForRead();
     

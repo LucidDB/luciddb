@@ -26,6 +26,7 @@
 #include "fennel/exec/ExecStreamEmbryo.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/DfsTreeExecStreamScheduler.h"
+#include "fennel/exec/MockProducerExecStream.h"
 
 #include <boost/test/test_tools.hpp>
 
@@ -139,19 +140,57 @@ void ExecStreamTestBase::verifyConstantOutput(
         if (bufAccessor.getState() == EXECBUF_EOS) {
             break;
         }
-        BOOST_CHECK(bufAccessor.isConsumptionPossible());
+        BOOST_REQUIRE(bufAccessor.isConsumptionPossible());
         uint nBytes = bufAccessor.getConsumptionAvailable();
         nBytesTotal += nBytes;
         for (uint i = 0; i < nBytes; ++i) {
             uint c = bufAccessor.getConsumptionStart()[i];
             if (c != byteExpected) {
                 BOOST_CHECK_EQUAL(byteExpected,c);
-                break;
+                return;
             }
         }
         bufAccessor.consumeData(bufAccessor.getConsumptionEnd());
     }
     BOOST_CHECK_EQUAL(nBytesExpected,nBytesTotal);
+}
+
+void ExecStreamTestBase::verifyOutput(
+    ExecStream &stream,
+    uint nRowsExpected,
+    MockProducerExecStreamGenerator &generator)
+{
+    // TODO:  assertions about output tuple, or better yet, use proper tuple
+    // access
+    
+    pGraph->open();
+    pScheduler->start();
+    uint nRows = 0;
+    for (;;) {
+        ExecStreamBufAccessor &bufAccessor =
+            pScheduler->readStream(stream);
+        if (bufAccessor.getState() == EXECBUF_EOS) {
+            break;
+        }
+        BOOST_REQUIRE(bufAccessor.isConsumptionPossible());
+        for (;;) {
+            if (!bufAccessor.demandData()) {
+                break;
+            }
+            BOOST_REQUIRE(nRows < nRowsExpected);
+            int64_t actualValue = *reinterpret_cast<int64_t const *>(
+                bufAccessor.getConsumptionStart());
+            bufAccessor.consumeData(
+                bufAccessor.getConsumptionStart() + sizeof(actualValue));
+            int64_t expectedValue = generator.generateValue(nRows);
+            ++nRows;
+            if (expectedValue != actualValue) {
+                BOOST_CHECK_EQUAL(expectedValue,actualValue);
+                return;
+            }
+        }
+    }
+    BOOST_CHECK_EQUAL(nRowsExpected,nRows);
 }
 
 FENNEL_END_CPPFILE("$Id$");

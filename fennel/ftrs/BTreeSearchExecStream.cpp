@@ -77,7 +77,7 @@ void BTreeSearchExecStream::open(bool restart)
 ExecStreamResult BTreeSearchExecStream::execute(
     ExecStreamQuantum const &quantum)
 {
-    ExecStreamResult rc = precheckConduitInput();
+    ExecStreamResult rc = precheckConduitBuffers();
     if (rc != EXECRC_YIELD) {
         return rc;
     }

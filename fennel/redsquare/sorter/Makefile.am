@@ -6,4 +6,5 @@ ExternalSortRunLoader.cpp \
 ExternalSortRunAccessor.cpp \
 ExternalSortMerger.cpp \
 ExternalSortOutput.cpp \
+ExternalSortExecStreamImpl.cpp \
 ExternalSortStreamImpl.cpp

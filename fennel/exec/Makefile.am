@@ -5,6 +5,7 @@ libexec_la_SOURCES=\
 CartesianJoinExecStream.cpp \
 ConduitExecStream.cpp \
 ConfluenceExecStream.cpp \
+CopyExecStream.cpp \
 DfsTreeExecStreamScheduler.cpp \
 ExecStream.cpp \
 ExecStreamGraph.cpp \

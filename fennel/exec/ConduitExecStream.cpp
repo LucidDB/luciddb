@@ -61,7 +61,7 @@ ExecStreamBufProvision ConduitExecStream::getInputBufProvision() const
     return BUFPROV_PRODUCER;
 }
 
-ExecStreamResult ConduitExecStream::precheckConduitInput()
+ExecStreamResult ConduitExecStream::precheckConduitBuffers()
 {
     switch (pInAccessor->getState()) {
     case EXECBUF_EMPTY:

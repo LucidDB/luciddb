@@ -45,13 +45,14 @@ protected:
     SharedExecStreamBufAccessor pInAccessor;
 
     /**
-     * Checks the state of the input buffer.  If empty, requests production.
-     * If EOS,  propagates that to output buffer.
+     * Checks the state of the input and output buffers.  If input empty,
+     * requests production.  If input EOS, propagates that to output buffer.
+     * If output full, returns EXECRC_OVERFLOW.
      *
      * @return result of precheck; anything but EXECRC_YIELD indicates
      * that execution should terminate immediately with returned code
      */
-    ExecStreamResult precheckConduitInput();
+    ExecStreamResult precheckConduitBuffers();
     
 public:
     // implement ExecStream
