@@ -1,0 +1,9 @@
+To integrate Fennel statistics into the moodss performance monitor
+(http://jfontain.free.fr/moodss), install moodss and then soft-link
+this directory as a sub-directory of /usr/lib/moodss named fennel.
+When you start moodss, fennel should show up as a loadable module.
+For now, fennel always writes its stats to /tmp/fennel.stats, which
+is where the module expects them by default.  You can load example.moo
+into moodss with
+
+moodss -f example.moo

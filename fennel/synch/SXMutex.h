@@ -1,0 +1,144 @@
+/*
+// $Id$
+// Fennel is a relational database kernel.
+// Copyright (C) 1999-2004 John V. Sichi.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
+#ifndef Fennel_SXMutex_Included
+#define Fennel_SXMutex_Included
+
+#include "fennel/synch/SynchMonitoredObject.h"
+#include <boost/utility.hpp>
+
+FENNEL_BEGIN_NAMESPACE
+
+/**
+ * An SXMutex implements a standard readers/writers exclusion scheme: any
+ * number of shared-lock threads may hold the lock at one time, during which
+ * time exclusive-lock threads are blocked; only one exclusive-lock thread may
+ * hold the lock at a time, during which all other lock-requesting threads are
+ * blocked.
+ *
+ *<p>
+ *
+ * Note on nomenclature: RWLock is a more standard name.  However, this
+ * synchronization object is used in places where there's not a direct
+ * correlation between shared/read and exclusive/write.  (For example, for a
+ * checkpoint lock, writer threads take a shared lock and the checkpointing
+ * thread takes an exclusive lock).  And "mutex" is more specific than "lock",
+ * which is used in boost in the sense of a guard.
+ */
+class SXMutex : public SynchMonitoredObject
+{
+public:
+    /**
+     * Enumeration of available scheduling policies.
+     */
+    enum SchedulingPolicy
+    {
+        /**
+         * Scheduling is determined by the OS with no preferences given.  This
+         * may lead to starvation of exclusive lock requests.
+         */
+        SCHEDULE_DEFAULT,
+
+        /**
+         * Exclusive locks are always favored, so once a thread is waiting for
+         * an exclusive lock, no new shared locks can be obtained.  This may
+         * lead to starvation of shared lock requests.  Deadlock is also a
+         * danger if multiple shared locks are requested by the same thread,
+         * since an exclusive request may begin after the first request is
+         * granted, blocking the second request.
+         */
+        SCHEDULE_FAVOR_EXCLUSIVE
+    };
+    
+    explicit SXMutex();
+    ~SXMutex();
+    
+    bool waitFor(LockMode lockMode,uint iTimeout = ETERNITY);
+    void release(LockMode lockMode);
+    bool tryUpgrade();
+    
+    bool isLocked(LockMode lockdMode) const;
+    void setSchedulingPolicy(SchedulingPolicy schedulingPolicy);
+    
+private:
+    SchedulingPolicy schedulingPolicy;
+    uint nShared,nExclusive,nExclusivePending;
+    ThreadData *pExclusiveHolder;
+};
+
+/**
+ * Guard class for acquisition of an SXMutex.  Models the
+ * boost::ScopedLock concept.  Template parameter LockMode determines the
+ * semantics of this lock; the NOWAIT modes may not be used.
+ */
+template<LockMode lockMode>
+class SXMutexGuard : public boost::noncopyable
+{
+    SXMutex &rwLock;
+    bool m_locked;
+    
+public:
+    explicit SXMutexGuard(SXMutex& mx, bool initially_locked=true)
+        : rwLock(mx), m_locked(false)
+    {
+        if (initially_locked) {
+            lock();
+        }
+    }
+    
+    ~SXMutexGuard()
+    {
+        if (m_locked) {
+            unlock();
+        }
+    }
+
+    void lock()
+    {
+        assert(!m_locked);
+        rwLock.waitFor(lockMode);
+        m_locked = true;
+    }
+    
+    void unlock()
+    {
+        assert(m_locked);
+        rwLock.release(lockMode);
+        m_locked = false;
+    }
+
+    bool locked() const
+    {
+        return m_locked;
+    }
+    
+    operator const void*() const
+    {
+        return m_locked ? this : 0;
+    }
+};
+
+typedef SXMutexGuard<LOCKMODE_S> SXMutexSharedGuard;
+typedef SXMutexGuard<LOCKMODE_X> SXMutexExclusiveGuard;
+
+FENNEL_END_NAMESPACE
+
+#endif
+

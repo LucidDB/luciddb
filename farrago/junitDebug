@@ -1,0 +1,10 @@
+#!/bin/bash
+# $Id$
+# Run a single Junit test case from the default test package
+
+if [ ! "$1" ]; then 
+   echo "Error: specify a .sql filename or an unqualified test class name"; 
+   exit; 
+fi
+
+junitSingle "$1" jswat.junit

@@ -1,0 +1,200 @@
+/*
+// $Id$
+// Saffron preprocessor and data engine
+// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// You must accept the terms in LICENSE.html to use this software.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
+package net.sf.saffron.rel;
+
+import net.sf.saffron.core.*;
+import net.sf.saffron.opt.OptUtil;
+import net.sf.saffron.opt.PlanCost;
+import net.sf.saffron.opt.RelImplementor;
+import net.sf.saffron.opt.VolcanoCluster;
+import net.sf.saffron.util.Util;
+
+import openjava.mop.OJClass;
+
+import openjava.ptree.Expression;
+
+
+/**
+ * <code>AggregateRel</code> is a relational operator which eliminates
+ * duplicates and computes totals.
+ *
+ * @author jhyde
+ * @version $Id$
+ *
+ * @since 3 February, 2002
+ */
+public class AggregateRel extends SingleRel
+{
+    //~ Instance fields -------------------------------------------------------
+
+    protected Call [] aggCalls;
+    protected int groupCount;
+
+    //~ Constructors ----------------------------------------------------------
+
+    public AggregateRel(
+        VolcanoCluster cluster,
+        SaffronRel child,
+        int groupCount,
+        Call [] aggCalls)
+    {
+        super(cluster,child);
+        this.groupCount = groupCount;
+        this.aggCalls = aggCalls;
+    }
+
+    //~ Methods ---------------------------------------------------------------
+
+    public Call [] getAggCalls()
+    {
+        return aggCalls;
+    }
+
+    public int getGroupCount()
+    {
+        return groupCount;
+    }
+
+    public Object clone()
+    {
+        return new AggregateRel(
+            cluster,
+            OptUtil.clone(child),
+            groupCount,
+            aggCalls);
+    }
+
+    public PlanCost computeSelfCost(SaffronPlanner planner)
+    {
+        return planner.makeTinyCost();
+    }
+
+    protected SaffronType deriveRowType()
+    {
+        final SaffronType childType = child.getRowType();
+        SaffronType [] types = new SaffronType[groupCount + aggCalls.length];
+        for (int i = 0; i < groupCount; i++) {
+            types[i] = childType.getFields()[i].getType();
+        }
+        for (int i = 0; i < aggCalls.length; i++) {
+            final SaffronType returnType =
+                aggCalls[i].aggregation.getReturnType(cluster.typeFactory);
+            types[groupCount + i] = returnType;
+        }
+        return cluster.typeFactory.createProjectType(
+            new SaffronTypeFactory.FieldInfo() {
+                public int getFieldCount()
+                {
+                    return groupCount + aggCalls.length;
+                }
+
+                public String getFieldName(int index)
+                {
+                    if (index < groupCount) {
+                        return childType.getFields()[index].getName();
+                    } else {
+                        return "$f" + index;
+                    }
+                }
+
+                public SaffronType getFieldType(int index)
+                {
+                    if (index < groupCount) {
+                        return childType.getFields()[index].getType();
+                    } else {
+                        final Call aggCall = aggCalls[index - groupCount];
+                        return aggCall.aggregation.getReturnType(
+                            cluster.typeFactory);
+                    }
+                }
+            });
+    }
+
+    //~ Inner Classes ---------------------------------------------------------
+
+    public static class Call
+    {
+        Aggregation aggregation;
+        int [] args;
+
+        public Call(Aggregation aggregation,int [] args)
+        {
+            this.aggregation = aggregation;
+            this.args = args;
+        }
+
+        public Aggregation getAggregation()
+        {
+            return aggregation;
+        }
+
+        public int [] getArgs()
+        {
+            return args;
+        }
+
+        // override Object
+        public boolean equals(Object o)
+        {
+            if (!(o instanceof Call)) {
+                return false;
+            }
+            Call other = (Call) o;
+            return aggregation.equals(other.aggregation)
+                && Util.equals(args,other.args);
+        }
+
+        public void implementNext(
+            RelImplementor implementor,
+            SaffronRel rel,
+            Expression accumulator)
+        {
+            aggregation.implementNext(implementor,rel,accumulator,args);
+        }
+
+        /**
+         * Generates the expression to retrieve the result of this
+         * aggregation.
+         */
+        public Expression implementResult(Expression accumulator)
+        {
+            return aggregation.implementResult(accumulator);
+        }
+
+        public Expression implementStart(
+            RelImplementor implementor,
+            SaffronRel rel)
+        {
+            return aggregation.implementStart(implementor,rel,args);
+        }
+
+        public Expression implementStartAndNext(
+            RelImplementor implementor,
+            SaffronRel rel)
+        {
+            return aggregation.implementStartAndNext(implementor,rel,args);
+        }
+    }
+}
+
+
+// End AggregateRel.java

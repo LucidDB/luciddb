@@ -1,0 +1,120 @@
+<html>
+<!--
+  -->
+
+<head>
+<title>Farrago Project FAQ</title>
+<link rel="stylesheet" href="stylesheet.css" type="text/css" />
+<style>
+<!--
+.small { font-family: verdana,arial,helvetica,sans-serif; font-size: x-small; }
+-->
+</style>
+</head>
+
+<body>
+<h1>Farrago Project FAQ</h1>
+
+<h2>What's with the name?</h2> 
+
+See the <a
+href="http://dictionary.reference.com/search?q=farrago">dictionary</a>.
+But that's not the <a
+href="http://www.quinion.com/words/topicalwords/tw-far1.htm">whole
+story</a>.
+
+<hr>
+
+<h2>Does the world really need another open-source DBMS?</h2>
+
+Perhaps surprisingly, yes.  Most of the offerings I've seen are fine
+for running a website but inadequate for enterprise use.  In addition,
+the most popular open-source systems are burdened with legacy code and
+architecture.  There are many ways to go wrong, especially if the goal
+is something as banal as a quick buck, mindshare, or a dumping ground
+for an unsuccessful commercial product.  The basics of relational
+database technology are mature, well-known, and non-proprietary;
+despite its name, Farrago is all about taking the time to create a
+maintainable, high-quality implementation that can eventually replace
+even the most heavyweight closed-source products (OK, that and
+achieving world peace).  Novelty is a non-goal.
+
+<hr>
+
+<h2>Isn't Java slow?  Doesn't that mean Farrago can't possibly compete
+with systems implemented entirely in C/C++?</h2>
+
+Careful attention has been paid to keep Java out of the most important
+data processing paths.  Where Java is used (mostly at the metadata and
+optimization level, with an auxiliary role in execution), its
+performance is acceptable.
+
+<hr>
+
+<h2>Under what license is Farrago distributed?</h2>
+
+The Farrago code which puts everything together is licensed under the
+<a href="http://www.gnu.org/copyleft/lesser.html">GNU LGPL</a> 
+(GPL would be preferable, but is incompatible with usage of Java).  
+MDR components are licensed under the
+<a href="http://www.opensource.org/licenses/sunpublic.php">
+Sun Public License</a>.  MonRG is under the
+<a href="http://www.opensource.org/licenses/cpl.php">
+Common Public License</a>.  JavaCC is under the
+<a href="http://www.opensource.org/licenses/bsd-license.html">BSD License</a>.
+
+<hr>
+
+<h2>Some older Saffron documentation describes many
+deviations from standard SQL (e.g. null semantics, Java type system
+dependencies, aggregation).  Does this mean Farrago SQL is
+non-standard also?</h2>
+
+No.  The core of Saffron is an extensible optimizer which is agnostic
+about these issues.  Farrago supplies its own SQL-conformant
+optimization rules when it instantiates the optimizer.  The other
+parts of Saffron (such as the Java precompiler) aren't used for SQL
+processing.
+
+<hr>
+
+<h2>Are you insane?  Why are you even attempting this?</h2>
+
+<b>John Sichi's personal answer:</b>
+
+Maybe.  Because.  Ok, at least three reasons:
+
+<ul>
+
+<li>The giants are out there.  They're not windmills.  Someone's got
+to take them on.
+
+<li>I have built significant portions of four different DBMS products
+in my for-hire career.  Each time, I ended up having to walk away from
+a lot of code, usually due to changes in company direction.  I need
+closure.
+
+<li>It seems that every few years someone gets an idea for a new DBMS
+which is going to solve some niche problem, thus avoiding direct
+competition with the big boys.  (I've been involved with a couple of
+these.)  What happens is that 90% of the effort gets burnt on building
+all the infrastructure required for a generic DBMS, and only 10% on
+the proprietary solution.  This is counter-productive.  So, even if
+Farrago never achieves its most ambitious goals, its architecture
+should still make it a useful platform for this kind of effort.
+</ul>
+
+<hr>
+
+<h2>Why a jackalope for the mascot?</h2>
+
+The wily jackalope combines the speed of a jackrabbit with the fluid
+grace and complex headgear of an antelope, which seems appropriate
+for a hybrid Java/C++ system.  In addition, the jackalope symbolizes
+a vision beyond the mundane reality seen by others (and is also
+reputed to be surprisingly savage when cornered).
+
+<hr>
+
+</body>
+</html>

@@ -1,0 +1,53 @@
+CPPFLAGS = -g -ggdb -DDEBUG -I. -I$(STLPORT_DIR)/stlport/ -I$(BOOST_DIR) -I$(FENNEL_HOME)/../ -I$(FENNEL_HOME)
+LDFLAGS = -L$(STLPORT_DIR)/lib/ -L$(BOOST_DIR)/
+LDLIBS = -lstlport_gcc_stldebug -lstdc++
+#LDLIBS = -lstlport_cygwin
+
+.EXE = 
+ifeq (i386, $(HOSTTYPE)) 
+.EXE = .exe
+endif
+
+#TARGET = ootree$(.EXE) stack$(.EXE) frame$(.EXE) tuple$(.EXE)
+TARGET = ootree$(.EXE) 
+
+all: $(TARGET)
+
+stack$(.EXE):	stack.o
+
+frame.o: lameBTree
+
+regType.o: regType.h
+
+frame$(.EXE):	frame.o lameBTree regType.o symbols.h
+	$(CXX) $(LDFLAGS) frame.o regType.o $(LDLIBS) -o frame
+
+INSTRUCTIONS = Instruction.hpp BoolInstruction.hpp NativeInstruction.hpp \
+	NativeNativeInstruction.hpp IntegralNativeInstruction.hpp \
+	BoolNativeInstruction.hpp JumpInstruction.hpp ReturnInstruction.hpp \
+	ReturnException.hpp
+
+CALCULATOR = CalcMessage.hpp RegisterReference.hpp \
+	Registers.hpp Calculator.hpp $(INSTRUCTIONS)
+
+OBJ = Calculator.o Registers.o BoolInstruction.o JumpInstruction.o
+
+Calculator.o: $(CALCULATOR)
+BoolInstruction.o: BoolInstruction.hpp $(CALCULATOR)
+JumpInstruction.o: JumpInstruction.hpp $(CALCULATOR)
+ootree.o: $(CALCULATOR)
+Registers.o: $(CALCULATOR)
+
+ootree$(.EXE): ootree.o $(OBJ)
+	$(CXX) $(LDFLAGS) ootree.o $(OBJ) $(LDLIBS) -o ootree
+
+ootree.s: ootree.cpp
+	$(CXX) $(CPPFLAGS) -S ootree.cpp
+
+tuple$(.EXE): tuple.o
+	$(CXX) $(LDFLAGS) tuple.o $(LDLIBS) -o tuple$(.EXE)
+
+clean:
+	rm -f $(TARGET) *.o *.stackdump
+
+

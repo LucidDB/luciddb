@@ -1,0 +1,54 @@
+<?xml version="1.0" ?>
+<?xml-stylesheet type="text/xsl"
+ href="http://apoptosis.dyndns.org:8080/open/mondrian/resource/Resource.xsl" ?>
+<!-- 
+ !DOCTYPE resourceBundle SYSTEM "Resource.dtd"
+  -->
+<!--
+// $Id$
+// Saffron preprocessor and data engine
+// (C) Copyright 2004-2004 Disruptive Technologies, Inc.
+// You must accept the terms in LICENSE.html to use this software.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+-->
+
+<resourceBundle
+	static="false"
+	locale="en_US"
+	exceptionClassName="java.lang.RuntimeException">
+
+<exception id="1" name="Internal">
+    <text>Internal error: {0}</text>
+</exception>
+
+<exception id="2" name="ProgramCompilationError">
+    <text>Compilation Error: {0}</text>
+</exception>
+
+<exception id="3" name="ProgramImplementationError">
+    <text>Implementation Error: {0}</text>
+</exception>
+
+<exception id="4" name="CompilationAssertionError">
+    <text>Assertion Error: {0}</text>
+</exception>
+
+
+<!-- End of last error section ============================================ -->
+
+</resourceBundle>
+
+<!-- End SaffronResource.xml -->

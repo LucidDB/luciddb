@@ -1,0 +1,88 @@
+0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/expressions/values.sql#4 $
+0: jdbc:farrago:> -- Test queries with VALUES
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- single-row
+0: jdbc:farrago:> select * from values ('hi',2,'bye');
++---------+---------+---------+
+| EXPR$0  | EXPR$1  | EXPR$2  |
++---------+---------+---------+
+| hi      | 2       | bye     |
++---------+---------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- top-level
+0: jdbc:farrago:> values ('hi',2,'bye');
++---------+---------+---------+
+| EXPR$0  | EXPR$1  | EXPR$2  |
++---------+---------+---------+
+| hi      | 2       | bye     |
++---------+---------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- multi-row
+0: jdbc:farrago:> select * from values ('hi',2,'bye'), ('foo',3,'bar') order by 1;
++---------+---------+---------+
+| EXPR$0  | EXPR$1  | EXPR$2  |
++---------+---------+---------+
+| foo     | 3       | bar     |
+| hi      | 2       | bye     |
++---------+---------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- top-level ordered
+0: jdbc:farrago:> values ('hi',2,'bye'), ('foo',3,'bar') order by 1;
++---------+---------+---------+
+| EXPR$0  | EXPR$1  | EXPR$2  |
++---------+---------+---------+
+| foo     | 3       | bar     |
+| hi      | 2       | bye     |
++---------+---------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- values with expressions
+0: jdbc:farrago:> values (1+2);
++---------+
+| EXPR$0  |
++---------+
+| 3       |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- bad:  identifiers in values
+0: jdbc:farrago:> values (x,2);
+Error: Unknown identifier 'X' (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- bad:  expressions on identifiers in values
+0: jdbc:farrago:> values (x+1,2);
+Error: Unknown identifier 'X' (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test SESSION_USER
+0: jdbc:farrago:> values (session_user);
++---------------+
+| SESSION_USER  |
++---------------+
+| guest         |
++---------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test CURRENT_USER (should be same as SESSION_USER)
+0: jdbc:farrago:> values (current_user);
++---------------+
+| CURRENT_USER  |
++---------------+
+| guest         |
++---------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test USER (should be same as CURRENT_USER)
+0: jdbc:farrago:> values (user);
++--------+
+|  USER  |
++--------+
+| guest  |
++--------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test SYSTEM_USER (but don't actually execute since it's context-dependent)
+0: jdbc:farrago:> explain plan for values (system_user);
++-------------------------------------------+
+|                  column0                  |
++-------------------------------------------+
+| IterCalcRel(SYSTEM_USER=[$0])             |
+|   IterCalcRel(SYSTEM_USER=[SYSTEM_USER])  |
+|     IterOneRowRel                         |
++-------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

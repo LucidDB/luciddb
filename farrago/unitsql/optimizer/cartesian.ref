@@ -1,0 +1,86 @@
+0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/optimizer/cartesian.sql#1 $
+0: jdbc:farrago:> -- Test queries which require Cartesian products
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set schema sales;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- simple cross product
+0: jdbc:farrago:> select emps.name as ename,depts.name as dname 
+. . . . . . . . > from emps,depts
+. . . . . . . . > order by 1,2;
++--------+------------+
+| ENAME  |   DNAME    |
++--------+------------+
+| Eric   | Accounts   |
+| Eric   | Marketing  |
+| Eric   | Sales      |
+| Fred   | Accounts   |
+| Fred   | Marketing  |
+| Fred   | Sales      |
+| John   | Accounts   |
+| John   | Marketing  |
+| John   | Sales      |
+| Wilma  | Accounts   |
+| Wilma  | Marketing  |
+| Wilma  | Sales      |
++--------+------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- cross product with a non-restartable Java plan for the right-hand input
+0: jdbc:farrago:> select emps.name as ename,d.dnoplus 
+. . . . . . . . > from emps,(select deptno+1 as dnoplus from depts) d
+. . . . . . . . > order by 1,2;
++--------+----------+
+| ENAME  | DNOPLUS  |
++--------+----------+
+| Eric   | 11       |
+| Eric   | 21       |
+| Eric   | 31       |
+| Fred   | 11       |
+| Fred   | 21       |
+| Fred   | 31       |
+| John   | 11       |
+| John   | 21       |
+| John   | 31       |
+| Wilma  | 11       |
+| Wilma  | 21       |
+| Wilma  | 31       |
++--------+----------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify plans
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select emps.name as ename,depts.name as dname from emps,depts;
+'column0'
+'IterCalcRel(ENAME=[$1], DNAME=[$11])'
+'  FennelToIteratorConverter'
+'    FennelCartesianProductRel'
+'      FennelIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'      FennelIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select emps.name as ename,depts.name as dname from emps,depts
+. . . . . . . . > order by 1,2;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(ENAME=[$1], DNAME=[$11])'
+'        FennelToIteratorConverter'
+'          FennelCartesianProductRel'
+'            FennelIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'            FennelIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select emps.name as ename,d.dnoplus 
+. . . . . . . . > from emps,(select deptno+1 as dnoplus from depts) d;
+'column0'
+'IterCalcRel(ENAME=[$1], DNOPLUS=[$10])'
+'  FennelToIteratorConverter'
+'    FennelCartesianProductRel'
+'      FennelIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'      IteratorToFennelConverter'
+'        IterCalcRel(DNOPLUS=[+($0, 1)])'
+'          FennelToIteratorConverter'
+'            FennelIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

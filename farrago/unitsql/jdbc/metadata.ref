@@ -1,0 +1,182 @@
+0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/jdbc/metadata.sql#3 $
+0: jdbc:farrago:> -- Test JDBC metadata calls
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test getCatalogs
+0: jdbc:farrago:> !metadata getCatalogs
++--------------+
+|  TABLE_CAT   |
++--------------+
+| HSQLDB_DEMO  |
+| LOCALDB      |
+| SYS_BOOT     |
+| SYS_CWM      |
+| SYS_FEM      |
++--------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test getSchemas
+0: jdbc:farrago:> !metadata getSchemas
++----------------+----------------+
+|  TABLE_SCHEM   | TABLE_CATALOG  |
++----------------+----------------+
+| JDBC_METADATA  | SYS_BOOT       |
+| SALES          | LOCALDB        |
++----------------+----------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test getTableTypes
+0: jdbc:farrago:> !metadata getTableTypes
++---------------+
+|  TABLE_TYPE   |
++---------------+
+| ForeignTable  |
+| Table         |
+| View          |
++---------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test getTables (default catalog)
+0: jdbc:farrago:> !tables
++------------+--------------+-------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | TABLE_TYPE  | REMARKS  | TYPE_CAT  | TYPE_SCHEM  | TYPE_NAME  | SELF_REFERENCING_COL_NAME  | REF_GENERATION  |
++------------+--------------+-------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
+| LOCALDB    | SALES        | DEPTS       | Table       |          |           |             |            |                            |                 |
+| LOCALDB    | SALES        | EMPS        | Table       |          |           |             |            |                            |                 |
+| LOCALDB    | SALES        | TEMPS       | Table       |          |           |             |            |                            |                 |
+| LOCALDB    | SALES        | EMPSVIEW    | View        |          |           |             |            |                            |                 |
+| LOCALDB    | SALES        | JOINVIEW    | View        |          |           |             |            |                            |                 |
+| LOCALDB    | SALES        | TEMPSVIEW   | View        |          |           |             |            |                            |                 |
++------------+--------------+-------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test getTables (system catalog)
+0: jdbc:farrago:> set catalog sys_boot;
+0: jdbc:farrago:> !tables
++------------+----------------+------------------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
+| TABLE_CAT  |  TABLE_SCHEM   |       TABLE_NAME       | TABLE_TYPE  | REMARKS  | TYPE_CAT  | TYPE_SCHEM  | TYPE_NAME  | SELF_REFERENCING_COL_NAME  | REF_GENERATION  |
++------------+----------------+------------------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
+| SYS_BOOT   | JDBC_METADATA  | CATALOGS_VIEW          | View        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | SCHEMAS_VIEW           | View        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | SCHEMAS_VIEW_INTERNAL  | View        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | TABLES_VIEW            | View        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | TABLES_VIEW_INTERNAL   | View        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | TABLE_TYPES_VIEW       | View        |          |           |             |            |                            |                 |
++------------+----------------+------------------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test misc calls
+0: jdbc:farrago:> !dbinfo
+allProceduresAreCallable                          true
+allTablesAreSelectable                            true
+dataDefinitionCausesTransactionCommit             true
+dataDefinitionIgnoredInTransactions               false
+doesMaxRowSizeIncludeBlobs                        false
+getCatalogSeparator                               .
+getCatalogTerm                                    catalog
+getDatabaseProductName                            Farrago
+getDatabaseProductVersion                         0.1
+getDefaultTransactionIsolation                    1
+getDriverMajorVersion                             0
+getDriverMinorVersion                             1
+getDriverName                                     FarragoJdbcDriver
+getDriverVersion                                  0.1
+getExtraNameCharacters                            
+getIdentifierQuoteString                          "
+getMaxBinaryLiteralLength                         0
+getMaxCatalogNameLength                           0
+getMaxCharLiteralLength                           0
+getMaxColumnNameLength                            128
+getMaxColumnsInGroupBy                            0
+getMaxColumnsInIndex                              0
+getMaxColumnsInOrderBy                            0
+getMaxColumnsInSelect                             0
+getMaxColumnsInTable                              0
+getMaxConnections                                 0
+getMaxCursorNameLength                            128
+getMaxIndexLength                                 0
+getMaxProcedureNameLength                         128
+getMaxRowSize                                     0
+getMaxSchemaNameLength                            128
+getMaxStatementLength                             0
+getMaxStatements                                  0
+getMaxTableNameLength                             128
+getMaxTablesInSelect                              0
+getMaxUserNameLength                              128
+getNumericFunctions                               
+getProcedureTerm                                  
+getSchemaTerm                                     schema
+getSearchStringEscape                             null
+getSQLKeywords                                    
+getStringFunctions                                
+getSystemFunctions                                
+getTimeDateFunctions                              
+getURL                                            jdbc:farrago:
+getUserName                                       jackalope
+isCatalogAtStart                                  true
+isReadOnly                                        false
+nullPlusNonNullIsNull                             true
+nullsAreSortedAtEnd                               false
+nullsAreSortedAtStart                             false
+nullsAreSortedHigh                                false
+nullsAreSortedLow                                 true
+storesLowerCaseIdentifiers                        false
+storesLowerCaseQuotedIdentifiers                  false
+storesMixedCaseIdentifiers                        false
+storesMixedCaseQuotedIdentifiers                  false
+storesUpperCaseIdentifiers                        true
+storesUpperCaseQuotedIdentifiers                  false
+supportsAlterTableWithAddColumn                   false
+supportsAlterTableWithDropColumn                  false
+supportsANSI92EntryLevelSQL                       false
+supportsANSI92FullSQL                             false
+supportsANSI92IntermediateSQL                     false
+supportsBatchUpdates                              false
+supportsCatalogsInDataManipulation                true
+supportsCatalogsInIndexDefinitions                false
+supportsCatalogsInPrivilegeDefinitions            false
+supportsCatalogsInProcedureCalls                  false
+supportsCatalogsInTableDefinitions                false
+supportsColumnAliasing                            true
+supportsConvert                                   false
+supportsCoreSQLGrammar                            false
+supportsCorrelatedSubqueries                      true
+supportsDataDefinitionAndDataManipulationTransactionsfalse
+supportsDataManipulationTransactionsOnly          true
+supportsDifferentTableCorrelationNames            false
+supportsExpressionsInOrderBy                      false
+supportsExtendedSQLGrammar                        false
+supportsFullOuterJoins                            true
+supportsGroupBy                                   true
+supportsGroupByBeyondSelect                       false
+supportsGroupByUnrelated                          false
+supportsIntegrityEnhancementFacility              false
+supportsLikeEscapeClause                          false
+supportsLimitedOuterJoins                         true
+supportsMinimumSQLGrammar                         false
+supportsMixedCaseIdentifiers                      false
+supportsMixedCaseQuotedIdentifiers                true
+supportsMultipleResultSets                        false
+supportsMultipleTransactions                      true
+supportsNonNullableColumns                        true
+supportsOpenCursorsAcrossCommit                   false
+supportsOpenCursorsAcrossRollback                 false
+supportsOpenStatementsAcrossCommit                true
+supportsOpenStatementsAcrossRollback              true
+supportsOrderByUnrelated                          false
+supportsOuterJoins                                true
+supportsPositionedDelete                          false
+supportsPositionedUpdate                          false
+supportsSchemasInDataManipulation                 true
+supportsSchemasInIndexDefinitions                 true
+supportsSchemasInPrivilegeDefinitions             true
+supportsSchemasInProcedureCalls                   true
+supportsSchemasInTableDefinitions                 true
+supportsSelectForUpdate                           false
+supportsStoredProcedures                          false
+supportsSubqueriesInComparisons                   true
+supportsSubqueriesInExists                        true
+supportsSubqueriesInIns                           true
+supportsSubqueriesInQuantifieds                   true
+supportsTableCorrelationNames                     true
+supportsTransactions                              true
+supportsUnion                                     true
+supportsUnionAll                                  true
+usesLocalFilePerTable                             false
+usesLocalFiles                                    false
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

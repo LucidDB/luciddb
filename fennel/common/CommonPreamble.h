@@ -1,0 +1,242 @@
+/*
+// $Id$
+// Fennel is a relational database kernel.
+// Copyright (C) 1999-2004 John V. Sichi.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
+#ifndef Fennel_CommonPreamble_Included
+#define Fennel_CommonPreamble_Included
+
+// Autoconf definitions
+#include <config.h>
+
+// NOTE: CommonPreamble.h should be included by all fennel *.cpp files before
+// any other.
+
+// Common standard heades
+
+// NOTE: we include these first to make sure we get the desired limit
+// definitions
+#define __STDC_LIMIT_MACROS
+#define _XOPEN_SOURCE 500
+#define _GNU_SOURCE 1
+#include <inttypes.h>
+#include <stddef.h>
+#include <limits.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <iostream>
+#include <string>
+#include <string.h>
+#include <time.h>
+#include <new>
+#include <cassert>
+#include <boost/thread/tss.hpp>
+
+// FIXME:  correct port
+typedef unsigned uint;
+
+#include "fennel/common/Namespace.h"
+
+// These macros are used to bracket code in all C++ files making up the
+// implementation of the record manager.  The parameter x should be a string
+// containing a revision control file Id tag, which is currently unused.
+
+#define FENNEL_BEGIN_CPPFILE(x) \
+FENNEL_BEGIN_NAMESPACE
+
+#define FENNEL_END_CPPFILE(x) \
+FENNEL_END_NAMESPACE
+
+#include "fennel/common/OpaqueInteger.h"
+#include "fennel/common/Types.h"
+
+// define OpaqueInteger hash fxn
+namespace std
+{
+
+template<class T,class Dummy>
+struct hash< fennel::OpaqueInteger<T,Dummy> >
+{
+    size_t operator() (const fennel::OpaqueInteger<T,Dummy> &key) const
+    {
+        return hash<T>()(fennel::opaqueToInt(key));
+    }
+};
+ 
+} // namespace std
+
+FENNEL_BEGIN_NAMESPACE
+
+// Thread-local storage
+
+/**
+ * ThreadData defines the thread-specific data associated with each
+ * thread which enters the record manager.  Currently there is none, but we
+ * still use this as a form of thread identifier in locking.
+ */
+struct ThreadData
+{
+    explicit ThreadData()
+    {
+    }
+};
+
+extern boost::thread_specific_ptr<ThreadData> g_threadData;
+
+inline ThreadData *getThreadData()
+{
+    ThreadData *pData = g_threadData.get();
+    if (!pData) {
+        pData = new ThreadData();
+        g_threadData.reset(pData);
+    }
+    return pData;
+}
+
+// Memory management
+
+FENNEL_END_NAMESPACE
+
+// "placement new" definitions
+inline void *operator new(size_t,fennel::PBuffer pBuffer)
+{
+    return pBuffer;
+}
+
+inline void *operator new[](size_t,fennel::PBuffer pBuffer)
+{
+    return pBuffer;
+}
+
+FENNEL_BEGIN_NAMESPACE
+
+/**
+ * Delete an object and set the pointer associated with
+ * it to NULL.
+ */
+template <class T>
+inline void deleteAndNullify(T *p)
+{
+    if (p) {
+        delete p;
+        p = NULL;
+    }
+}
+
+/**
+ * Delete an array and set the pointer associated with
+ * it to NULL.
+ */
+template <class T>
+inline void deleteAndNullifyArray(T *p)
+{
+    if (p) {
+        delete [] p;
+        p = NULL;
+    }
+}
+
+
+// Memory alignment
+
+/**
+ * \def ARCH_ALIGN_BYTES
+ * Note that on SPARC, uint64_t access has to be 64-bit aligned even for
+ * a 32-bit processor
+ * // TODO:  make this a const rather than a define; would a
+ *       uint work for all types T below?
+ */
+#if (__WORDSIZE == 64) || defined(sun)
+#define ARCH_ALIGN_BYTES 8
+#else
+#define ARCH_ALIGN_BYTES 4
+#endif
+
+/**
+ * A bitmask which selects the unaligned bits of a memory address or size.
+ */
+#define ARCH_ALIGN_MASK (ARCH_ALIGN_BYTES-1)
+
+/**
+ * Align a size DOWN to the next alignment multiple.
+ */
+template<class T>
+inline T alignRoundDown(T t)
+{
+    return t & ~ARCH_ALIGN_MASK;
+}
+
+/**
+ * Align a pointer DOWN (assuming <code>sizeof(uint) == sizeof(void *)</code>).
+ */
+template<class T>
+inline T *alignRoundPtrDown(T *t)
+{
+    return (T *) alignRoundDown(uint(t));
+}
+
+/**
+ * Align a size UP to the next alignment multiple.
+ */
+template<class T>
+inline T alignRoundUp(T t)
+{
+    if (t & ARCH_ALIGN_MASK) {
+        return alignRoundDown(t) + ARCH_ALIGN_BYTES;
+    } else {
+        return t;
+    }
+}
+
+/**
+ * Align a pointer UP.
+ */
+template<class T>
+inline T *alignRoundPtrUp(T *t)
+{
+    return (T *) alignRoundUp(uint(t));
+}
+
+// calculate number of bytes needed to hold given number of bits
+inline uint bytesForBits(uint cBits)
+{
+    return (cBits>>3) + ((cBits & 7) ? 1 : 0);
+}
+
+
+// Misc types and utils
+
+// prints out a hex dump of the given block of memory
+// cb bytes are dumped with at most 16 bytes per line, with the offset
+// of each line printed on the left (with an optional additional offset)
+extern void hexDump(
+    std::ostream &,void const *,uint cb,
+    uint cbOffsetInitial = 0);
+
+template <class Numeric>
+inline Numeric sqr(Numeric n)
+{
+    return n*n;
+}
+
+FENNEL_END_NAMESPACE
+
+#endif
+
+// End CommonPreamble.h

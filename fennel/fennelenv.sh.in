@@ -1,0 +1,13 @@
+if [ -z "$1" ]
+then
+    export FENNEL_HOME=`pwd`
+else
+    export FENNEL_HOME=$1
+fi
+
+
+export @lib_path_var@=$FENNEL_HOME/libfennel/.libs:$@lib_path_var@
+export @lib_path_var@=$FENNEL_HOME/test/.libs:$@lib_path_var@
+export @lib_path_var@=$FENNEL_HOME/farrago/.libs:$@lib_path_var@
+export @lib_path_var@=@BOOST_THREADLIB_DIR@:$@lib_path_var@
+export @lib_path_var@=@stlport_location@/lib:$@lib_path_var@

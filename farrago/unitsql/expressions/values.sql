@@ -1,0 +1,35 @@
+-- $Id$
+-- Test queries with VALUES
+
+-- single-row
+select * from values ('hi',2,'bye');
+
+-- top-level
+values ('hi',2,'bye');
+
+-- multi-row
+select * from values ('hi',2,'bye'), ('foo',3,'bar') order by 1;
+
+-- top-level ordered
+values ('hi',2,'bye'), ('foo',3,'bar') order by 1;
+
+-- values with expressions
+values (1+2);
+
+-- bad:  identifiers in values
+values (x,2);
+
+-- bad:  expressions on identifiers in values
+values (x+1,2);
+
+-- test SESSION_USER
+values (session_user);
+
+-- test CURRENT_USER (should be same as SESSION_USER)
+values (current_user);
+
+-- test USER (should be same as CURRENT_USER)
+values (user);
+
+-- test SYSTEM_USER (but don't actually execute since it's context-dependent)
+explain plan for values (system_user);

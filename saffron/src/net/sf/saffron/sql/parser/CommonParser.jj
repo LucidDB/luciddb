@@ -1,0 +1,1576 @@
+/*
+// $Id$
+// Saffron preprocessor and data engine
+// (C) Copyright 2002-2004 Disruptive Technologies, Inc.
+// You must accept the terms in LICENSE.html to use this software.
+//
+// This file contains the heart of a parser for SQL SELECT statements.
+// code can be shared between various parsers (for example, a DDL parser and a
+// DML parser) but is not a standalone JavaCC file. You need to prepend a
+// parser declaration (such as that in Parser.jj).
+*/
+
+/* Epsilon */
+JAVACODE
+void E() {}
+
+JAVACODE List startList(Object o)
+{
+    List list = new ArrayList();
+    list.add(o);
+    return list;
+}
+
+/*
+ * NOTE jvs 6-Feb-2004: The straightforward way to implement the SQL grammar is
+ * to keep query expressions (SELECT, UNION, etc) separate from row expressions
+ * (+, LIKE, etc).  However, this is not possible with an LL(k) parser, because
+ * both kinds of expressions allow parenthesization, so no fixed amount of left
+ * context is ever good enough.  A subquery can be a leaf in a row expression,
+ * and can include operators like UNION, so it's not even possible to use a
+ * syntactic lookahead rule like "look past an indefinite number of parentheses
+ * until you see SELECT, VALUES, or TABLE" (since at that point we still
+ * don't know whether we're parsing a subquery like ((select ...) + x)
+ * vs. (select ... union select ...).
+ *
+ * The somewhat messy solution is to unify the two kinds of expression,
+ * and to enforce syntax rules using parameterized context.  This
+ * is the purpose of the ExprContext parameter.  It is passed to
+ * most expression productions, which check the expressions encountered
+ * against the context for correctness.  When a query
+ * element like SELECT is encountered, the production calls
+ * checkQueryExpression, which will throw an exception if
+ * a row expression was expected instead.  When a row expression like
+ * IN is encountered, the production calls checkNonQueryExpression
+ * instead.  It is very important to understand how this works
+ * when modifying the grammar.
+ *
+ * The commingling of expressions results in some bogus ambiguities which are
+ * resolved with LOOKAHEAD hints.  The worst example is comma.  SQL allows both
+ * (WHERE x IN (1,2)) and (WHERE x IN (select ...)).  This means when we parse
+ * the right-hand-side of an IN, we have to allow any kind of expression inside
+ * the parentheses.  Now consider the expression "WHERE x IN(SELECT a FROM b
+ * GROUP BY c,d)".  When the parser gets to "c,d" it doesn't know whether the
+ * comma indicates the end of the GROUP BY or the end of one item in an IN
+ * list.  Luckily, we know that select and comma-list are mutually exclusive
+ * within IN, so we use maximal munch for the GROUP BY comma.  However, this
+ * usage of hints could easily mask unintended ambiguities resulting from
+ * future changes to the grammar, making it very brittle.
+ */
+
+JAVACODE String getPositionString()
+{
+    return "line " + token.beginLine + " col " + token.beginColumn;
+}
+
+JAVACODE void checkQueryExpression(ExprContext exprContext)
+{
+    if ((exprContext == EXPR_ACCEPT_NONQUERY)
+        || (exprContext == EXPR_ACCEPT_SUBQUERY))
+    {
+        // REVIEW: I tried to use generateParseException(), but
+        // that results in bogus internal errors due to
+        // lookahead.
+        throw new ParseException(
+            "Query expression " + token.image
+            + " encountered in illegal context near "
+            + getPositionString());
+    }
+}
+
+JAVACODE void checkNonQueryExpression(ExprContext exprContext)
+{
+    if (exprContext == EXPR_ACCEPT_QUERY) {
+        throw new ParseException(
+            "Non-query expression " + token.image
+            + " encountered in illegal context near "
+            + getPositionString());
+    }
+}
+
+/*****************************************
+ * Syntactical Descriptions              *
+ *****************************************/
+
+/**
+ * Parses either a row expression or a query expression with an optional
+ * ORDER BY.
+ */
+SqlNode OrderedQueryOrExpr(ExprContext exprContext) :
+{
+    SqlNode e;
+    SqlNodeList orderBy;
+}
+{
+    (
+        e = QueryOrExpr(exprContext)
+    )
+    (
+        // use the syntactic type of the expression we just parsed
+        // to decide whether ORDER BY makes sense
+        orderBy = OrderBy(e.isA(SqlKind.Query))
+        {
+            e = opTab.orderByOperator.createCall(e,orderBy);
+        }
+    )?
+       {
+            return e;
+        }
+}
+
+/**
+ * Parses a leaf in a query expression (SELECT or VALUES).
+ */
+SqlNode LeafQuery(ExprContext exprContext) :
+{
+    SqlNode e;
+}
+{
+    {
+        // ensure a query is legal in this context
+        checkQueryExpression(exprContext);
+    }
+    e = SqlSelect()
+        {
+            return e;
+        }
+    | e = TableConstructor()
+        {
+            return e;
+        }
+    | e = ExplicitTable()
+        {
+            return e;
+        }
+}
+
+/**
+ * Parses a parenthesized query or single row expression.
+ */
+SqlNode ParenthesizedExpression(ExprContext exprContext) :
+{
+    SqlNode e;
+}
+{
+    <LPAREN>
+    {
+        if (exprContext == EXPR_ACCEPT_SUBQUERY) {
+            // we've now seen left paren, so queries inside should
+            // be allowed as subqueries
+            exprContext = EXPR_ACCEPT_ALL;
+        }
+    }
+    e = OrderedQueryOrExpr(exprContext) <RPAREN>
+        {
+            return e;
+        }
+}
+
+/**
+ * Parses a parenthesized query or comma-list of row expressions.
+ *
+ *<p>
+ *
+ * REVIEW jvs 8-Feb-2004: There's a small hole in this production.  It can be
+ * used to construct something like
+ *
+ * <code>WHERE x IN (select count(*) from t where c=d,5)</code>,
+ *
+ * which should be illegal.  The above is interpreted as equivalent to
+ *
+ * <code>WHERE x IN ((select count(*) from t where c=d),5)</code>,
+ *
+ * which is a legal use of a subquery.  The only way to fix the hole is to be
+ * able to remember whether a subexpression was parenthesized or not, which
+ * means preserving parentheses in the SqlNode tree.  This is probably
+ * desirable anyway for use in purely syntactic parsing applications (e.g. SQL
+ * pretty-printer).  However, if this is done, it's important to also make
+ * isA() on the paren node call down to its operand so that we can
+ * always correctly discriminate a query from a row expression.
+ */
+List ParenthesizedQueryOrCommaList(
+    ExprContext exprContext) :
+{
+    SqlNode e;
+    List list = null;
+}
+{
+    <LPAREN>
+    {
+        if (exprContext == EXPR_ACCEPT_SUBQUERY) {
+            // we've now seen left paren, so queries inside should
+            // be allowed as subqueries
+            exprContext = EXPR_ACCEPT_ALL;
+        }
+    }
+    e = OrderedQueryOrExpr(exprContext)
+        {
+            list = startList(e);
+        }
+    (
+        <COMMA> {
+            // a comma-list can't appear where only a query is expected
+            checkNonQueryExpression(exprContext);
+        }
+        e = Expression(exprContext)
+        {
+            list.add(e);
+        }
+    )* <RPAREN>
+        {
+            return list;
+        }
+}
+
+/**
+ * Parses a query (SELECT, UNION, INTERSECT, EXCEPT, VALUES) followed by the
+ * end-of-file symbol.
+ */
+SqlNode SqlQueryEof() :
+{
+    SqlNode query;
+}
+{
+    query = OrderedQueryOrExpr(EXPR_ACCEPT_QUERY) (<EOF>) { return query; }
+}
+
+/**
+ * Parses an SQL statement followed by the end-of-file symbol.
+ */
+SqlNode SqlStmtEof() :
+{
+    SqlNode stmt;
+}
+{
+    (
+        stmt = OrderedQueryOrExpr(EXPR_ACCEPT_QUERY)
+    |
+        stmt = SqlExplain()
+    |
+        stmt = SqlInsert()
+    |
+        stmt = SqlDelete()
+    |
+        stmt = SqlUpdate()
+    )
+    (<EOF>)
+    { return stmt; }
+}
+
+/**
+ * Parses a leaf SELECT expression without ORDER BY.
+ */
+SqlSelect SqlSelect() :
+{
+    boolean distinct = false;
+    List selectList;
+    SqlNode fromClause;
+    SqlNode where;
+    SqlNode groupBy;
+    SqlNode having;
+}
+{
+    // REVIEW jvs 9-Feb-2004:  What is this SELECT UNIQUE syntax?
+    // It's not standard.
+
+    <SELECT>
+    (
+        <DISTINCT> { distinct = true; }
+    |   <UNIQUE> { distinct = false; }
+    |   <ALL> { distinct = false; }
+    |   E()
+    )
+    selectList = SelectList()
+    <FROM>
+    fromClause = FromClause()
+    where = WhereOpt()
+    groupBy = GroupByOpt()
+    having = HavingOpt()
+    {
+        return opTab.selectOperator.createCall(
+                distinct, new SqlNodeList(selectList), fromClause, where,
+                groupBy, having, null);
+    }
+}
+
+/**
+ * Parses an EXPLAIN PLAN statement.
+ */
+SqlNode SqlExplain() :
+{
+    SqlNode stmt;
+    boolean withImplementation = true;
+}
+{
+    <EXPLAIN> <PLAN> [ withImplementation = WithImplementation() ] <FOR> (
+        stmt = OrderedQueryOrExpr(EXPR_ACCEPT_QUERY)
+        {
+        }
+        | stmt = SqlInsert()
+        {
+        }
+        | stmt = SqlDelete()
+        {
+        }
+        | stmt = SqlUpdate()
+        {
+        }
+    )
+        {
+            return new SqlExplain(
+                opTab.explainOperator,
+                stmt,
+                SqlLiteral.create(withImplementation));
+        }
+}
+
+/**
+ * Parses modifier for EXPLAIN PLAN.
+ */
+boolean WithImplementation() :
+{
+}
+{
+    (
+        <WITH> <IMPLEMENTATION>
+    {
+        return true;
+    }
+        |
+        <WITHOUT> <IMPLEMENTATION>
+    {
+        return false;
+    }
+    )
+}
+
+/**
+ * Parses an INSERT statement.
+ */
+SqlNode SqlInsert() :
+{
+    SqlIdentifier table;
+    SqlNode source;
+    List columnList = null;
+}
+{
+    <INSERT> <INTO> table = CompoundIdentifier()
+        {
+        }
+    ( LOOKAHEAD(2)
+        <LPAREN>
+        columnList = SimpleIdentifierCommaList()
+        <RPAREN>
+    )?
+        {
+        }
+    source = OrderedQueryOrExpr(EXPR_ACCEPT_QUERY)
+        {
+        }
+    {
+        return new SqlInsert(
+            opTab.insertOperator,
+            table,
+            source,
+            (columnList != null) ? new SqlNodeList(columnList) : null);
+    }
+}
+
+/**
+ * Parses a DELETE statement.
+ */
+SqlNode SqlDelete() :
+{
+    SqlIdentifier table;
+    SqlNode condition;
+}
+{
+    <DELETE> <FROM> table = CompoundIdentifier()
+        {
+        }
+    condition = WhereOpt()
+        {
+        }
+    {
+        return new SqlDelete(opTab.deleteOperator,table,condition);
+    }
+}
+
+/**
+ * Parses an UPDATE statement.
+ */
+SqlNode SqlUpdate() :
+{
+    SqlIdentifier table;
+    SqlNode condition;
+    SqlNodeList sourceExpressionList;
+    SqlNodeList targetColumnList;
+    SqlIdentifier id;
+    SqlNode exp;
+}
+{
+    <UPDATE> table = CompoundIdentifier()
+        {
+            targetColumnList = new SqlNodeList();
+            sourceExpressionList = new SqlNodeList();
+        }
+    <SET>
+         id = SimpleIdentifier()
+        {
+            targetColumnList.add(id);
+        }
+    <EQ> exp = Expression(EXPR_ACCEPT_SUBQUERY)
+        {
+            // TODO:  support DEFAULT also
+            sourceExpressionList.add(exp);
+        }
+    (
+        <COMMA>
+        id = SimpleIdentifier()
+        {
+            targetColumnList.add(id);
+        }
+        <EQ> exp = Expression(EXPR_ACCEPT_SUBQUERY)
+        {
+            sourceExpressionList.add(exp);
+        }
+    )*
+        {
+        }
+    condition = WhereOpt()
+        {
+        }
+    {
+        return new SqlUpdate(
+            opTab.updateOperator,
+            table,
+            targetColumnList,
+            sourceExpressionList,
+            condition);
+    }
+}
+
+/**
+ * Parses the select list of a SELECT statement.
+ */
+List SelectList() :
+{
+    List list = new ArrayList();
+    SqlNode item;
+}
+{
+    item = SelectItem() {list.add(item);}
+    ( <COMMA> item = SelectItem() {list.add(item);} )*
+    { return list; }
+}
+
+/**
+ * Parses one item in a select list.
+ */
+SqlNode SelectItem() :
+{
+    SqlNode e;
+    SqlIdentifier id;
+}
+{
+    e = SelectExpression()
+    ((<AS>)?
+     id = SimpleIdentifier() { e = opTab.asOperator.createCall(e, id); } )?
+    {return e;}
+}
+
+/**
+ * Parses one unaliased expression in a select list.
+ */
+SqlNode SelectExpression() :
+{
+    SqlNode e;
+    String id;
+}
+{
+    LOOKAHEAD(3)
+    id = Identifier() <DOT> <STAR> { return new SqlIdentifier(new String[] {id, "*"}, null); }
+|
+    <STAR> { return new SqlIdentifier("*"); }
+|
+    e = Expression(EXPR_ACCEPT_SUBQUERY) { return e; }
+}
+
+// TODO jvs 15-Nov-2003:  SQL standard allows parentheses in the FROM list for
+// building up non-linear join trees (e.g. OUTER JOIN two tables, and then INNER
+// JOIN the result).  Also note that aliases on paranthesized FROM expressions
+// "hide" all table names inside the parentheses (without aliases, they're
+// visible).  Should also support UNION JOIN.  Also, CROSS JOIN shouldn't
+// permit a join condition.
+/**
+ * Parses the FROM clause a SELECT.
+ */
+SqlNode FromClause() :
+{
+    SqlNode e, e2, condition;
+    boolean isNatural;
+    SqlJoinOperator.JoinType joinType;
+    List list;
+}
+{
+    e = TableRef()
+    (
+        (
+            <NATURAL> {isNatural = true;}
+        |
+            {isNatural = false;}
+        )
+        (
+            <JOIN>
+            {joinType = SqlJoinOperator.JoinType.Inner;}
+        |
+            <INNER> <JOIN>
+            {joinType = SqlJoinOperator.JoinType.Inner;}
+        |
+            <LEFT> (<OUTER>)? <JOIN>
+            {joinType = SqlJoinOperator.JoinType.Left;}
+        |
+            <RIGHT> (<OUTER>)? <JOIN>
+            {joinType = SqlJoinOperator.JoinType.Right;}
+        |
+            <FULL> (<OUTER>)? <JOIN>
+            {joinType = SqlJoinOperator.JoinType.Full;}
+        |
+            <CROSS> <JOIN>
+            {joinType = SqlJoinOperator.JoinType.Cross;}
+        )
+        e2 = TableRef()
+        (
+            <ON> condition = Expression(EXPR_ACCEPT_SUBQUERY) {
+                e = opTab.joinOperator.createCall(e,
+                        SqlLiteral.create(isNatural),
+                        SqlLiteral.create(joinType), e2,
+                        SqlLiteral.create(SqlJoinOperator.ConditionType.On),
+                        condition);
+            }
+        |
+            <USING> <LPAREN> list = SimpleIdentifierCommaList() <RPAREN> {
+                e = opTab.joinOperator.createCall(e,
+                        SqlLiteral.create(isNatural),
+                        SqlLiteral.create(joinType), e2,
+                        SqlLiteral.create(SqlJoinOperator.ConditionType.Using),
+                        new SqlNodeList(list));
+            }
+        |
+            {
+                e = opTab.joinOperator.createCall(e,
+                        SqlLiteral.create(isNatural),
+                        SqlLiteral.create(joinType), e2,
+                        SqlLiteral.create(SqlJoinOperator.ConditionType.On),
+                        null);
+            }
+        )
+    |
+        // NOTE jvs 6-Feb-2004:  See comments at top of file for why
+        // hint is necessary here.  I had to use this special semantic
+        // lookahead form to get JavaCC to shut up, which makes
+        // me even more uneasy.
+        LOOKAHEAD({true}) <COMMA> e2 = TableRef() {
+            e = opTab.joinOperator.createCall(e, SqlLiteral.False,
+                    SqlLiteral.create(SqlJoinOperator.JoinType.Comma), e2,
+                    SqlLiteral.create(SqlJoinOperator.ConditionType.On), null);
+        }
+    )*
+    {return e;}
+}
+
+// TODO jvs 15-Nov-2003: SQL standard allows column aliases on table
+// references, e.g. DEPTS AS D1(DEPTNO1,DNAME1); I guess this is syntactic
+// sugar to make it easier for query writers to conform to the column name
+// uniqueness rules without requiring them to write a nested SELECT, but it
+// seems pretty useless for non-trivial tables, since you have to supply names
+// for ALL columns at once.
+/**
+ * Parses a table reference in a FROM clause.
+ */
+SqlNode TableRef() :
+{
+    SqlNode tableRef;
+    String alias;
+}
+{
+    (
+        tableRef = CompoundIdentifier()
+    |
+        tableRef = ParenthesizedExpression(EXPR_ACCEPT_QUERY)
+    |
+        tableRef = TableConstructor()
+    )
+    (
+        (<AS>)? alias = Identifier() {
+            tableRef = opTab.asOperator.createCall(
+                tableRef, new SqlIdentifier(alias));
+        }
+    )?
+    { return tableRef; }
+}
+
+/**
+ * Parses an explicit TABLE t reference.
+ */
+SqlNode ExplicitTable() :
+{
+    SqlNode tableRef;
+}
+{
+    <TABLE> tableRef = CompoundIdentifier()
+        {
+            return opTab.explicitTableOperator.createCall(tableRef);
+        }
+}
+
+/**
+ * Parses a VALUES leaf query expression.
+ */
+SqlNode TableConstructor() :
+{
+    SqlNodeList rowConstructorList;
+}
+{
+    <VALUES> rowConstructorList = RowConstructorList()
+    {
+        return opTab.valuesOperator.createCall(rowConstructorList.toArray());
+    }
+}
+
+/**
+ * Parses one or more rows in a VALUES expression.
+ */
+SqlNodeList RowConstructorList() :
+{
+    SqlNodeList list = new SqlNodeList();
+    SqlNode rowConstructor;
+}
+{
+    rowConstructor = RowConstructor() {list.add(rowConstructor);}
+    (
+        LOOKAHEAD(2)
+        <COMMA> rowConstructor = RowConstructor() {list.add(rowConstructor);}
+    )*
+        {
+        }
+    {
+        return list;
+    }
+}
+
+/**
+ * Parses a row constructor in the context of a VALUES expression.
+ */
+SqlNode RowConstructor() :
+{
+    List valueList;
+    SqlNode value;
+}
+{
+    // hints are necessary here due to common LPAREN prefixes
+    (
+        // TODO jvs 8-Feb-2004: extra parentheses are accepted here as a hack
+        // for unparse, but this is actually invalid SQL; should
+        // fix unparse
+        LOOKAHEAD(3)
+        <LPAREN> <ROW>
+        valueList = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_ALL) <RPAREN>
+        |
+        LOOKAHEAD(3)
+        [ <ROW> ] valueList = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_ALL)
+        |
+        value = Expression(EXPR_ACCEPT_ALL)
+        {
+            // NOTE: A bare value here is standard SQL syntax, believe it or
+            // not.  Taken together with multi-row table constructors, it leads
+            // to very easy mistakes if you forget the parentheses on a
+            // single-row constructor.  This is also the reason for the
+            // LOOKAHEAD in RowConstructorList().  It would be so much more
+            // reasonable to require parentheses.  Sigh.
+            valueList = Collections.singletonList(value);
+        }
+    )
+        {
+            // REVIEW jvs 8-Feb-2004: Should we discriminate between scalar
+            // subqueries inside of ROW and row subqueries?  The standard does,
+            // but the distinction seems to be purely syntactic.
+            return opTab.rowConstructor.createCall(
+                ParserUtil.toNodeArray(valueList));
+        }
+}
+
+/**
+ * Parses the optional WHERE clause for SELECT, DELETE, and UPDATE.
+ */
+SqlNode WhereOpt() :
+{
+    SqlNode condition;
+}
+{
+    <WHERE> condition = Expression(EXPR_ACCEPT_SUBQUERY) { return condition; }
+|
+    { return null; }
+}
+
+/**
+ * Parses the optional GROUP BY clause for SELECT.
+ */
+SqlNode GroupByOpt() :
+{
+    List list;
+    SqlNode e;
+}
+{
+    <GROUP> <BY> e = Expression(EXPR_ACCEPT_SUBQUERY) { list = startList(e); }
+    (
+        // NOTE jvs 6-Feb-2004:  See comments at top of file for why
+        // hint is necessary here.
+        LOOKAHEAD(2)
+        <COMMA> e = Expression(EXPR_ACCEPT_SUBQUERY) { list.add(e); }
+    )* { return new SqlNodeList(list); }
+|
+    { return null; }
+}
+
+/**
+ * Parses the optional HAVING clause for SELECT.
+ */
+SqlNode HavingOpt() :
+{
+    SqlNode e;
+}
+{
+    <HAVING> e = Expression(EXPR_ACCEPT_SUBQUERY) { return e; }
+|
+    { return null; }
+}
+
+/**
+ * Parses an ORDER BY clause.
+ */
+SqlNodeList OrderBy(boolean accept) :
+{
+    List list;
+    SqlNode e;
+}
+{
+    <ORDER>
+         {
+             if (!accept) {
+                 // Someone told us ORDER BY wasn't allowed here.  So why
+                 // did they bother calling us?  To get the correct
+                 // parser position for error reporting.
+                 throw new ParseException(
+                     "ORDER BY unexpected near " + getPositionString());
+             }
+         }
+    <BY> e = OrderItem() { list = startList(e); }
+    (
+        // NOTE jvs 6-Feb-2004:  See comments at top of file for why
+        // hint is necessary here.
+        LOOKAHEAD(2) <COMMA> e = OrderItem() { list.add(e); }
+    )* { }
+    {
+        return new SqlNodeList(list);
+    }
+}
+
+/**
+ * Parses one list item in an ORDER BY clause.
+ */
+SqlNode OrderItem() :
+{
+    SqlNode e;
+}
+{
+    e = Expression(EXPR_ACCEPT_SUBQUERY)
+    (
+        <ASC> { return e; }
+    |   <ASCENDING> { return e; }
+    |   <DESC> { return opTab.descendingOperator.createCall(e); }
+    |   <DESCENDING> { return opTab.descendingOperator.createCall(e); }
+    |   { return e; }
+    )
+}
+
+// ----------------------------------------------------------------------------
+// Expressions
+
+/**
+ * Parses a SQL expression (such as might occur in a WHERE clause) followed by
+ * the end-of-file symbol.
+ */
+SqlNode SqlExpressionEof() :
+{
+    SqlNode e;
+}
+{
+    e = Expression(EXPR_ACCEPT_SUBQUERY) (<EOF>) { return e; }
+}
+
+/**
+ * Parses either a row expression or a query expression without ORDER BY.
+ */
+SqlNode QueryOrExpr(ExprContext exprContext) :
+{
+    SqlNode e;
+    SqlOperator op;
+    List list;
+}
+{
+    e = LeafQueryOrExpr(exprContext)
+        {
+            list = startList(e);
+        }
+    (
+        {
+            if (!e.isA(SqlKind.Query)) {
+                // whoops, expression we just parsed wasn't a query,
+                // but we're about to see something like UNION, so
+                // force an exception retroactively
+                checkNonQueryExpression(EXPR_ACCEPT_QUERY);
+            }
+        }
+        op = BinaryQueryOperator()
+        {
+            // ensure a query is legal in this context
+            checkQueryExpression(exprContext);
+        }
+        e = LeafQueryOrExpr(EXPR_ACCEPT_QUERY)
+        {
+            list.add(op);
+            list.add(e);
+        }
+    )*
+        {
+            e = opTab.toTree(list);
+            return e;
+        }
+}
+
+/**
+ * Parses either a row expression, a leaf query expression, or
+ * a parenthesized expression of any kind.
+ */
+SqlNode LeafQueryOrExpr(ExprContext exprContext) :
+{
+    SqlNode e;
+}
+{
+    e = Expression(exprContext)
+        {
+            return e;
+        }
+    | e = LeafQuery(exprContext)
+        {
+            return e;
+        }
+}
+
+/**
+ * Parses a row expression or a parenthesized expression of any kind.
+ */
+SqlNode Expression(ExprContext exprContext) :
+{
+    SqlNode e;
+    SqlOperator op;
+    List list;
+}
+{
+    e = Expression2(exprContext)
+    (
+        {
+            checkNonQueryExpression(exprContext);
+            list = startList(e);
+            boolean notClausePresent=false;
+        }
+        [<NOT> {notClausePresent=true;}]
+
+        // LIKE or SIMILAR
+        (
+                <LIKE> { op = opTab.likeOperator; }
+            |
+                <SIMILAR> { op = opTab.similarOperator; }
+        )
+        e = Expression2(EXPR_ACCEPT_SUBQUERY) { list.add(e); }
+        [
+            <ESCAPE> e = Expression2(EXPR_ACCEPT_SUBQUERY)
+            { list.add(e); }
+        ]
+
+        {
+            e = op.createCall(ParserUtil.toNodeArray(list));
+            if (notClausePresent) {
+                e = opTab.notOperator.createCall(e);
+            }
+            return e;
+        }
+    |
+        { return e; }
+    )
+}
+
+// TODO jvs 15-Nov-2003:  ANY/ALL
+
+/**
+ * Parses a binary row expression, or a parenthesized expression of any
+ * kind.
+ */
+SqlNode Expression2(ExprContext exprContext) :
+{
+    List list, list2;
+    SqlNode e;
+    SqlOperator op;
+    SqlNodeList orderBy;
+}
+{
+    e = Expression3(exprContext)
+    (
+        { list = startList(e); }
+        (
+            LOOKAHEAD(2)
+            (
+                // Special case for "IN", because RHS of "IN" is the only place
+                // that an expression-list is allowed ("exp IN (exp1, exp2)").
+                <IN>
+                {
+                    checkNonQueryExpression(exprContext);
+                    list.add(opTab.inOperator);
+                }
+                list2 = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_ALL)
+                {
+                    // special case for stuff like IN (s1 UNION s2)
+                    if (list2.size() == 1) {
+                        SqlNode item = (SqlNode) list2.get(0);
+                        if (item.isA(SqlKind.Query)) {
+                            list.add(item);
+                        } else {
+                            list.add(new SqlNodeList(list2));
+                        }
+                    } else {
+                        list.add(new SqlNodeList(list2));
+                    }
+                }
+            |
+                {
+                    checkNonQueryExpression(exprContext);
+                }
+                (
+                    <NOT> <BETWEEN>
+                    { op = opTab.notBetweenOperator; }
+                |
+                    <BETWEEN>
+                    { op = opTab.betweenOperator; }
+                )
+                e = Expression3(EXPR_ACCEPT_SUBQUERY)
+                {
+                    list.add(op);
+                    list.add(e);
+                }
+            |
+                LOOKAHEAD(2) op = BinaryRowOperator()
+                {
+                    checkNonQueryExpression(exprContext);
+                }
+                e = Expression3(EXPR_ACCEPT_SUBQUERY)
+                {
+                    list.add(op);
+                    list.add(e);
+                }
+            |
+                {
+                    checkNonQueryExpression(exprContext);
+                }
+                op = PostfixRowOperator() {
+                    list.add(op);
+                }
+            )
+        )+
+        {
+            e = opTab.toTree(list);
+            return e;
+        }
+        |
+        {
+            return e;
+        }
+    )
+}
+
+/**
+ * Parses a unary row expression, or a parenthesized expression of any
+ * kind.
+ */
+SqlNode Expression3(ExprContext exprContext) :
+{
+    SqlNode e;
+    List list;
+    SqlPrefixOperator op;
+    boolean rowSeen = false;
+}
+{
+    op = PrefixRowOperator() {
+        checkNonQueryExpression(exprContext);
+    }
+    e = Expression3(EXPR_ACCEPT_SUBQUERY) {
+        return op.createCall(e);
+    }
+|
+    e = AtomicRowExpression() {
+        checkNonQueryExpression(exprContext);
+        return e;
+    }
+|
+    [ <ROW> { rowSeen = true; } ]
+        {
+        }
+    list = ParenthesizedQueryOrCommaList(exprContext)
+        {
+            if ((list.size() == 1) && !rowSeen) {
+                // interpret as single value or query
+                return (SqlNode) (list.get(0));
+            } else {
+                // interpret as row constructor
+                return opTab.rowConstructor.createCall(
+                    ParserUtil.toNodeArray(list));
+            }
+        }
+}
+
+/**
+ * Parses an atomic row expression.
+ */
+SqlNode AtomicRowExpression() :
+{
+    SqlNode e;
+}
+{
+    e = Literal() { return e; }
+|
+    e = DynamicParam() { return e; }
+|
+    LOOKAHEAD(2) e = FunctionCall() { return e; }
+|
+    e = CompoundIdentifier() { return e; }
+}
+
+/**
+ * Parses a literal expression.
+ */
+SqlLiteral Literal() :
+{
+    String          p;
+}
+{
+    <UNSIGNED_INTEGER_LITERAL> {
+        p = getToken(0).image;
+        return SqlLiteral.Numeric.createExact(p);
+    }
+|
+    <DECIMAL_NUMERIC_LITERAL> {
+        p = getToken(0).image;
+        return SqlLiteral.Numeric.createExact(p);
+    }
+|
+    <APPROX_NUMERIC_LITERAL> {
+        p = getToken(0).image;
+        return SqlLiteral.Numeric.createApprox(p);
+    }
+|
+    <BIT_STRING_LITERAL> {
+        p = ParserUtil.trim(getToken(0).image, "bB'");
+        return new SqlLiteral(SqlLiteral.BitString.createFromBitString(p));
+    }
+|
+    <BINARY_STRING_LITERAL> {
+        p = ParserUtil.trim(getToken(0).image, "xX'");
+        return new SqlLiteral(ParserUtil.parseBinaryString(p));
+    }
+|
+    <HEX_STRING_LITERAL> {
+        p = ParserUtil.trim(getToken(0).image, "xX'");
+        return new SqlLiteral(SqlLiteral.BitString.createFromHexString(p));
+    }
+|
+    <STRING_LITERAL> {
+        return SqlLiteral.StringLiteral.create(getToken(0).image);
+    }
+
+|
+    <TRUE> { return SqlLiteral.True; }
+|
+    <FALSE> { return SqlLiteral.False; }
+|
+    (<NULL> | <UNKNOWN>) {
+        return SqlLiteral.createNull();
+    }
+|
+    <LBRACE_D> <STRING_LITERAL> { p = getToken(0).image; } <RBRACE> {
+        return SqlLiteral.create(ParserUtil.parseDate(ParserUtil.strip(p, "'")));
+    }
+|
+    <LBRACE_T> <STRING_LITERAL> { p = getToken(0).image; } <RBRACE> {
+        return SqlLiteral.create(ParserUtil.parseTime(ParserUtil.strip(p, "'")));
+    }
+|
+    <LBRACE_TS> <STRING_LITERAL> { p = getToken(0).image; } <RBRACE> {
+        return SqlLiteral.create(ParserUtil.parseTimestamp(ParserUtil.strip(p, "'")));
+    }
+}
+
+/**
+ * Parses a dynamic parameter marker.
+ */
+SqlDynamicParam DynamicParam() :
+{
+}
+{
+    <HOOK>
+        {
+            return new SqlDynamicParam(nDynamicParams++);
+        }
+}
+
+
+/**
+ * Parses a simple identifier as a string.
+ */
+String Identifier() :
+{
+    String kw;
+}
+{
+    <IDENTIFIER> {return getToken(0).image.toUpperCase();}
+|
+    <QUOTED_IDENTIFIER> {return ParserUtil.strip(getToken(0).image, "\"");}
+|
+    kw = NonReservedKeyWord() {return kw;}
+}
+
+/**
+ * Parses a simple identifier as an SqlIdentifier.
+ */
+SqlIdentifier SimpleIdentifier() :
+{
+    String p;
+}
+{
+    p = Identifier()
+    {return new SqlIdentifier(p);}
+}
+
+/**
+ * Parses a comma-separated list of simple identifiers.
+ */
+List SimpleIdentifierCommaList() :
+{
+    List list = new ArrayList();
+    SqlIdentifier id;
+}
+{
+    id = SimpleIdentifier() {list.add(id);}
+    (<COMMA> id = SimpleIdentifier() {list.add(id);})*
+    {return list;}
+}
+
+/**
+ * Parses a compound identifier.
+ */
+SqlIdentifier CompoundIdentifier() :
+{
+    List list = new ArrayList();
+    String p;
+}
+{
+    (p = Identifier() {list.add(p);})
+    (<DOT> p = Identifier() {list.add(p);})*
+    {return new SqlIdentifier(ParserUtil.toStringArray(list),null);}
+}
+
+/**
+ * Parses a function call expression.
+ */
+SqlNode FunctionCall() :
+{
+    String name;
+    List args;
+}
+{
+    name = Identifier()
+    (
+        LOOKAHEAD(2) <LPAREN> <STAR> <RPAREN> {
+            args = startList(new SqlIdentifier("*"));
+        }
+        | LOOKAHEAD(2) <LPAREN> <RPAREN> {
+            args = ParserUtil.emptyList;
+        }
+        | args = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_SUBQUERY)
+    )
+        {
+            return funcTab.createCall(name, ParserUtil.toNodeArray(args));
+        }
+}
+
+/**
+ * Parses a binary query operator like UNION.
+ */
+SqlBinaryOperator BinaryQueryOperator() :
+{
+}
+{
+    LOOKAHEAD(2) <UNION> <ALL> { return opTab.unionAllOperator; }
+    | <UNION> { return opTab.unionOperator; }
+    | LOOKAHEAD(2) <INTERSECT> <ALL> { return opTab.intersectAllOperator; }
+    | <INTERSECT> { return opTab.intersectOperator; }
+    | LOOKAHEAD(2) <EXCEPT> <ALL> { return opTab.exceptAllOperator; }
+    | <EXCEPT> { return opTab.exceptOperator; }
+}
+
+/**
+ * Parses a binary row operator like AND.
+ */
+SqlBinaryOperator BinaryRowOperator() :
+{
+}
+{
+  <EQ> { return opTab.equalsOperator; }
+| <GT> { return opTab.greaterThanOperator; }
+| <LT> { return opTab.lessThanOperator; }
+| <LE> { return opTab.lessThanOrEqualOperator; }
+| <GE> { return opTab.greaterThanOrEqualOperator; }
+| <NE> { return opTab.notEqualsOperator; }
+| <PLUS> { return opTab.plusOperator; }
+| <MINUS> { return opTab.minusOperator; }
+| <STAR> { return opTab.multiplyOperator; }
+| <SLASH> { return opTab.divideOperator; }
+| <CONCAT> { return opTab.concatOperator; }
+| <AND> { return opTab.andOperator; }
+| <OR> { return opTab.orOperator; }
+| <OVERLAPS> { return opTab.overlapsOperator; }
+| <IS> <DISTINCT> <FROM> { return opTab.isDistinctFromOperator; }
+// <IN> is handled as a special case
+}
+
+/**
+ * Parses a prefix row operator like NOT.
+ */
+SqlPrefixOperator PrefixRowOperator() :
+{}
+{
+  <PLUS> { return opTab.prefixPlusOperator; }
+| <MINUS> { return opTab.prefixMinusOperator; }
+| <NOT> { return opTab.notOperator; }
+| <EXISTS> { return opTab.existsOperator; }
+}
+
+/**
+ * Parses a postfix row operator like IS NOT NULL.
+ */
+SqlPostfixOperator PostfixRowOperator() :
+{}
+{
+    <IS>
+    (
+        <NOT>
+        (
+            <NULL> { return opTab.isNotNullOperator; }
+        |   <TRUE> { return opTab.isNotTrueOperator; }
+        |   <FALSE> { return opTab.isNotFalseOperator; }
+        |   <UNKNOWN> { return opTab.isNotNullOperator; }
+        )
+    |
+        (
+            <NULL> { return opTab.isNullOperator; }
+        |   <TRUE> { return opTab.isTrueOperator; }
+        |   <FALSE> { return opTab.isFalseOperator; }
+        |   <UNKNOWN> { return opTab.isNullOperator; }
+        )
+    )
+}
+
+
+/* KEYWORDS:  anything in this list is a reserved word unless it appears
+   in the NonReservedKeyWord() production. */
+
+TOKEN :
+{
+  < ALL: "all" >
+| < AND: "and" >
+| < AS: "as" >
+| < ASC: "asc" >
+| < ASCENDING: "ascending" >
+| < BETWEEN: "between" >
+| < BY: "by" >
+| < COLLATE: "collate" >
+| < CROSS: "cross" >
+| < DELETE: "delete" >
+| < DESC: "desc" >
+| < DESCENDING: "descending" >
+| < DISTINCT: "distinct" >
+| < ESCAPE: "escape" >
+| < EXCEPT: "except" >
+| < EXISTS: "exists" >
+| < EXPLAIN: "explain" >
+| < FALSE: "false" >
+| < FOR: "for" >
+| < FROM: "from" >
+| < FULL: "full" >
+| < GROUP: "group" >
+| < HAVING: "having" >
+| < IMPLEMENTATION: "implementation" >
+| < IN: "in" >
+| < INNER: "inner" >
+| < INSERT: "insert" >
+| < INTERSECT: "intersect" >
+| < INTO: "into" >
+| < IS: "is" >
+| < JOIN: "join" >
+| < LEFT: "left" >
+| < LIKE: "like" >
+| < NATURAL: "natural" >
+| < OR: "or" >
+| < ORDER: "order" >
+| < OUTER: "outer" >
+| < OVERLAPS: "overlaps" >
+| < PLAN: "plan" >
+| < RIGHT: "right" >
+| < ROW: "row" >
+| < SELECT: "select" >
+| < SET: "set" >
+| < SIMILAR: "similar" >
+| < TABLE: "table" >
+| < TRUE: "true" >
+| < UNION: "union" >
+| < UNKNOWN: "unknown" >
+| < UPDATE: "update" >
+| < USING: "using" >
+| < VALUES: "values" >
+| < WHERE: "where" >
+| < WITH: "with" >
+| < WITHOUT: "without" >
+
+}
+
+/**
+ * Parses a non-reserved keyword for use as an identifier.  Specializations
+ * of this parser can use this as a base for implementing the
+ * NonReservedKeyWord() production.
+ */
+String CommonNonReservedKeyWord() :
+{
+}
+{
+    (
+        <ASC>
+        | <ASCENDING>
+        | <IMPLEMENTATION>
+        | <PLAN>
+    )
+        {
+            return getToken(0).image.toUpperCase();
+        }
+}
+
+/* LITERALS */
+
+TOKEN :
+{
+    < UNSIGNED_INTEGER_LITERAL: (["0"-"9"])+ >
+|
+    < APPROX_NUMERIC_LITERAL:
+        (<UNSIGNED_INTEGER_LITERAL> | <DECIMAL_NUMERIC_LITERAL>) <EXPONENT> >
+|
+    < DECIMAL_NUMERIC_LITERAL:
+       (["0"-"9"])+(".")?(["0"-"9"])*
+      | "."(["0"-"9"])+
+    >
+|
+    < #EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ >
+|
+    < #HEXDIGIT: ["0"-"9","a"-"f","A"-"F"] >
+|
+    < BIT_STRING_LITERAL: ["b","B"] <QUOTE> (["0","1"])* <QUOTE> >
+|
+    < BINARY_STRING_LITERAL:
+        ["x","X"] <QUOTE> (<HEXDIGIT><HEXDIGIT>)* <QUOTE>
+        (([" ","\t","\n","\r","\f"])* <QUOTE>  (<HEXDIGIT><HEXDIGIT>)* <QUOTE>)*
+    >
+|
+    < HEX_STRING_LITERAL:
+        ["x","X"] <QUOTE> (<HEXDIGIT>)* <QUOTE>
+        (([" ","\t","\n","\r","\f"])* <QUOTE>  (<HEXDIGIT>)* <QUOTE>)*
+    >
+|
+    < STRING_LITERAL:
+      ("_" <CHARSETNAME> | "N")?
+      "'"
+      (   (~["'","\\","\n","\r"])
+        | ("''")
+      )*
+      "'"
+    >
+|
+    < #CHARSETNAME: (["a"-"z","A"-"Z","0"-"9"]) (["a"-"z","A"-"Z","0"-"9",":",".","-","_"])* >
+
+}
+
+
+/* SEPARATORS */
+
+TOKEN :
+{
+  < LPAREN: "(">
+| < RPAREN: ")">
+| < LBRACE_D: "{" (" ")* ["d","D"] >
+| < LBRACE_T: "{" (" ")* ["t","T"] >
+| < LBRACE_TS: "{" (" ")* ["t","T"] ["s","S"] >
+| < LBRACE: "{" >
+| < RBRACE: "}" >
+| < LBRACKET: "[" >
+| < RBRACKET: "]" >
+| < SEMICOLON: ";" >
+| < DOT: "." >
+| < COMMA: "," >
+}
+
+/* OPERATORS */
+
+TOKEN :
+{
+  < EQ: "=" >
+| < GT: ">" >
+| < LT: "<" >
+| < HOOK: "?" >
+| < COLON: ":" >
+| < LE: "<=" >
+| < GE: ">=" >
+| < NE: "<>" >
+| < PLUS: "+" >
+| < MINUS: "-" >
+| < STAR: "*" >
+| < SLASH: "/" >
+| < CONCAT: "||" >
+| < DOUBLE_PERIOD: ".." >
+| < QUOTE: "'" >
+}
+
+
+/*****************************************
+ * Lexical Descriptions                  *
+ *****************************************/
+
+/* WHITE SPACE */
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+| "\f"
+}
+
+/* COMMENTS */
+
+MORE :
+{
+    <"/**" ~["/"]> : IN_FORMAL_COMMENT
+}
+
+MORE :
+{
+    "//" : IN_SINGLE_LINE_COMMENT
+|
+    "--" : IN_SINGLE_LINE_COMMENT
+|
+    "/*" : IN_MULTI_LINE_COMMENT
+}
+
+<IN_SINGLE_LINE_COMMENT>
+SPECIAL_TOKEN :
+{
+    <SINGLE_LINE_COMMENT: "\n" | "\r" | "\r\n" > : DEFAULT
+}
+
+<IN_FORMAL_COMMENT>
+SPECIAL_TOKEN :
+{
+    <FORMAL_COMMENT: "*/" > : DEFAULT
+}
+
+<IN_MULTI_LINE_COMMENT>
+SPECIAL_TOKEN :
+{
+    <MULTI_LINE_COMMENT: "*/" > : DEFAULT
+}
+
+<IN_SINGLE_LINE_COMMENT,IN_FORMAL_COMMENT,IN_MULTI_LINE_COMMENT>
+MORE :
+{
+    < ~[] >
+}
+
+
+/* common words */
+TOKEN :
+{
+  < NOT: "not" >
+| < NULL: "null" >
+| < UNIQUE: "unique" >
+| < ON: "on" >
+}
+
+
+/* IDENTIFIERS */
+
+TOKEN :
+{
+  < IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
+|
+  < QUOTED_IDENTIFIER:
+      "\""
+      (   (~["\"","\n","\r"])
+        | ("\"\"")
+      )*
+      "\""
+  >
+|
+  < #LETTER:
+      [
+       "\u0024",
+       "\u0041"-"\u005a",
+       "\u005f",
+       "\u0061"-"\u007a",
+       "\u00c0"-"\u00d6",
+       "\u00d8"-"\u00f6",
+       "\u00f8"-"\u00ff",
+       "\u0100"-"\u1fff",
+       "\u3040"-"\u318f",
+       "\u3300"-"\u337f",
+       "\u3400"-"\u3d2d",
+       "\u4e00"-"\u9fff",
+       "\uf900"-"\ufaff"
+      ]
+  >
+|
+  < #DIGIT:
+      [
+       "\u0030"-"\u0039",
+       "\u0660"-"\u0669",
+       "\u06f0"-"\u06f9",
+       "\u0966"-"\u096f",
+       "\u09e6"-"\u09ef",
+       "\u0a66"-"\u0a6f",
+       "\u0ae6"-"\u0aef",
+       "\u0b66"-"\u0b6f",
+       "\u0be7"-"\u0bef",
+       "\u0c66"-"\u0c6f",
+       "\u0ce6"-"\u0cef",
+       "\u0d66"-"\u0d6f",
+       "\u0e50"-"\u0e59",
+       "\u0ed0"-"\u0ed9",
+       "\u1040"-"\u1049"
+      ]
+  >
+}

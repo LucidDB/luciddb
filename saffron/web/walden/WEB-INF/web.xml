@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+$Id$
+
+(C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// You must accept the terms in LICENSE.html to use this software.
+-->
+
+
+<!DOCTYPE web-app
+    PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+    "http://java.sun.com/dtd/web-app_2_3.dtd">
+
+<web-app>
+
+    <context-param>
+      <param-name>saffron.package.name</param-name>
+      <param-value>saffron.runtime.temp</param-value>
+    </context-param>
+
+    <context-param>
+      <param-name>saffron.java.dir</param-name>
+      <param-value>@tempJavaDir@</param-value>
+    </context-param>
+
+    <context-param>
+      <param-name>saffron.class.dir</param-name>
+      <param-value>@classDir@</param-value>
+    </context-param>
+
+    <context-param>
+      <param-name>saffron.java.compiler.args</param-name>
+      <param-value>-classpath @classDir@ -d @classDir@ -verbose</param-value>
+    </context-param>
+
+    <listener>
+      <listener-class>saffron.web.servlet.WaldenListener</listener-class>
+    </listener>
+
+    <servlet>
+      <servlet-name>WaldenServlet</servlet-name>
+      <servlet-class>saffron.web.servlet.WaldenServlet</servlet-class>
+    	<init-param>
+    	  <param-name>saffron.package.name</param-name>
+    	  <param-value>saffron.runtime.temp</param-value>
+    	</init-param>
+    	<init-param>
+    	  <param-name>saffron.java.dir</param-name>
+    	  <param-value>@tempJavaDir@</param-value>
+    	</init-param>
+    	<init-param>
+    	  <param-name>saffron.class.dir</param-name>
+    	  <param-value>@classDir@</param-value>
+    	</init-param>
+    </servlet>
+
+    <servlet-mapping>
+      <servlet-name>WaldenServlet</servlet-name>
+      <url-pattern>/waldenservlet</url-pattern>
+    </servlet-mapping>
+
+    <session-config>
+        <session-timeout>30</session-timeout>
+    </session-config>
+
+    <welcome-file-list>
+        <welcome-file>index.jsp</welcome-file>
+        <welcome-file>index.html</welcome-file>
+        <welcome-file>index.htm</welcome-file>
+    </welcome-file-list>
+</web-app>

@@ -1,0 +1,3017 @@
+/*
+ * OpenJava1.0.jj
+ *
+ * The parser for OpenJava 1.0 system.
+ * This parser is LL(k) leaded by semantecs.
+ *
+ * @date    Mar 30, 1998
+ * @auther  Michiaki Tatsubori
+ * Apr 29, 1998  by mich
+ *
+ */
+options {
+    STATIC = false;
+    JAVA_UNICODE_ESCAPE = true;
+}
+
+
+PARSER_BEGIN(Parser)
+
+package openjava.tools.parser;
+
+
+import java.io.Reader;
+import java.util.Vector;
+import java.util.Hashtable;
+import java.lang.reflect.Method;
+import openjava.mop.*;
+import openjava.ptree.*;
+import openjava.tools.DebugOut;
+import openjava.syntax.SyntaxRule;
+import openjava.syntax.TokenSource;
+
+
+public class Parser
+{
+    /**
+     * Allocates a new parser object who gets tokens from the given parser
+     * object.
+     *
+     * @param  parser  this is used to get tokens via <code>getToken()</code>
+     *                 or <code>getNextToken()</code>.
+     */
+    public Parser( Parser parser ) {
+	this( (ParserTokenManager) new CustomTokenManager( parser, OJSystem.env ) );
+    }
+
+    public Parser( TokenSource token_src ) {
+	this( new TokenSourceAdapter( token_src ) );
+    }
+
+    private final String getComment() {
+        Token token = getToken( 1 ).specialToken;
+	return ((token == null) ? null : token.image);
+    }
+
+    
+    private final static int makeInt( String str ) {
+        if (str.length() == 1) {
+	    return Integer.valueOf( str ).intValue();
+        } else if (str.startsWith( "0x" ) || str.startsWith( "0X" )) {
+	    return Integer.valueOf( str.substring( 2 ), 16 ).intValue();
+        } else if (str.startsWith( "0" )) {
+	    return Integer.valueOf( str.substring( 1 ), 8 ).intValue();
+	}
+	return Integer.valueOf( str ).intValue();
+    }
+    private final static long makeLong( String str ) {
+        if (str.length() == 1) {
+	    return Long.valueOf( str ).longValue();
+        } else if (str.startsWith( "0x" ) || str.startsWith( "0X" )) {
+	    str = str.substring( 2 );
+	    if (str.endsWith( "l" ) || str.endsWith( "L" )) {
+	        str = str.substring( 0, str.length() - 1 );
+	    }
+	    return Long.valueOf( str, 16 ).longValue();
+        } else if (str.startsWith( "0" )) {
+	    str = str.substring( 1 );
+	    if (str.endsWith( "l" ) || str.endsWith( "L" )) {
+	        str = str.substring( 0, str.length() - 1 );
+	    }
+	    return Long.valueOf( str, 8 ).longValue();
+	}
+	return Long.valueOf( str ).longValue();
+    }
+
+    /**
+     * Detects class or interface name and metaclass
+     */
+    private final ClassEnvironment setClassEnvironment( Environment base_env )
+	throws ParseException
+    {
+	int ptr = 1;
+	for (; roughModifierCheck( getToken( ptr ) ) ; ++ptr)  ;
+	Token c_or_i = getToken( ptr++ );
+	if (c_or_i.kind != CLASS && c_or_i.kind != INTERFACE) {
+	    throw new ParseException( "'class' or 'interface' expected : "
+				     + c_or_i.image );
+	}
+	Token cname = getToken( ptr++ );
+	if (cname.kind != IDENTIFIER) {
+	    throw new ParseException( "class name expected : "
+				     + c_or_i.image );
+	}
+	String classname = cname.image;
+
+	String meta = null;
+	Token inst = getToken(ptr++);
+	if (inst.kind != INSTANTIATES) {
+	    ptr++;
+	} else {
+	    IntAndObj tmp = consumeMetaclassName(ptr);  ptr = tmp.ptr;
+	    meta = base_env.toQualifiedName((String) tmp.obj);
+	}
+	ClassEnvironment result = new ClassEnvironment(base_env, classname);
+	OJSystem.metabind(result.toQualifiedName(classname), meta);
+	return result;
+    }
+
+    private IntAndObj consumeMetaclassName( int ptr ) throws ParseException {
+	Token token = getToken( ptr++ );
+	if (token.kind != IDENTIFIER) {
+	    throw new ParseException( "metaclass name exptected : "
+				     + token.image );
+	}
+	StringBuffer buf = new StringBuffer( token.image );
+	while (getToken( ptr ).kind == DOT
+	       && getToken( ptr + 1 ).kind == IDENTIFIER) {
+	    buf.append( "." ).append( getToken( ptr + 1 ).image );
+	    ptr += 2;
+	}
+	return new IntAndObj( ptr, buf.toString() );
+    }
+
+    /**
+     * This is used to check OpenJava user modifier semantically.
+     */
+    private final boolean OpenJavaModifierLookahead( Environment env ) {
+	return modifierCheck( env, getToken( 1 ) );
+    }
+
+    /**
+     * This is used to check OpenJava user modifier semantically.
+     */
+    private final boolean ModifierLookahead( Environment env ) {
+	return modifierCheck( env, getToken( 1 ) );
+    }
+
+    boolean DeclSuffixLookahead( Environment env ) {
+	String typename = env.currentClassName();
+	String keyword = consumeKeyword( 1 );
+	if (keyword == null)  return false;
+	Class meta = toExecutable( env, typename );
+	return invokeOJClass_isRegisteredKeyword( meta, keyword );
+    }
+
+    boolean TypeSuffixLookahead( Environment env, String typename ) {
+	String keyword = consumeKeyword( 1 );
+	if (keyword == null)  return false;
+	Class meta = toExecutable( env, typename );
+	return invokeOJClass_isRegisteredKeyword( meta, keyword );
+    }
+
+    private static final boolean modifierCheck( Environment env, Token t ) {
+	if (pureModifierCheck( t ))  return true;
+	if (t.kind != IDENTIFIER)  return false;
+	Class meta = toExecutable( env, env.currentClassName() );
+	if (meta == null)  return false;
+	return invokeOJClass_isRegisteredModifier( meta, t.image );
+    }
+
+    private String consumeKeyword( int ptr ) {
+	Token token = getToken( ptr );
+	if (token.kind != IDENTIFIER)  return null;
+	return token.image;
+    }
+
+    static final Class toExecutable( Environment env, String typename ) {
+	String qname = env.toQualifiedName( typename );
+	return OJSystem.getMetabind( qname );
+    }
+
+    static boolean invokeOJClass_isRegisteredKeyword( Class meta,
+						       String keyword )
+    {
+	try {
+	    Method m = meta.getMethod( "isRegisteredKeyword",
+				       new Class[]{ String . class} );
+	    Boolean b = (Boolean) m.invoke( null, new Object[]{ keyword } );
+	    return b.booleanValue();
+	} catch ( Exception e ) {}
+	return false;
+    }
+
+    static SyntaxRule invokeOJClass_getDeclSuffixRule( Class meta,
+						       String keyword )
+    {
+	try {
+	    Method m = meta.getMethod( "getDeclSuffixRule",
+				       new Class[]{ String . class} );
+	    return (SyntaxRule) m.invoke( null, new Object[]{ keyword } );
+	} catch ( Exception e ) {}
+	return null;
+    }
+
+    static SyntaxRule invokeOJClass_getTypeSuffixRule( Class meta,
+						       String keyword )
+    {
+	try {
+	    Method m = meta.getMethod( "getTypeSuffixRule",
+				       new Class[]{ String . class} );
+	    return (SyntaxRule) m.invoke( null, new Object[]{ keyword } );
+	} catch ( Exception e ) {}
+	return null;
+    }
+
+    static boolean invokeOJClass_isRegisteredModifier( Class meta,
+						       String keyword )
+    {
+	try {
+	    Method m = meta.getMethod( "isRegisteredModifier",
+				       new Class[]{ String . class} );
+	    Boolean b = (Boolean) m.invoke( null, new Object[]{ keyword } );
+	    return b.booleanValue();
+	} catch ( Exception e ) {}
+	return false;
+    }
+
+    /**
+     * This is used to check constructors semantically.
+     */
+    private final boolean ConstructorDeclarationLookahead(
+	    ClassEnvironment env ) {
+	int ptr;
+	for (ptr = 1; modifierCheck( env, getToken( ptr ) ) ; ++ptr)  ;
+	String simplename = Environment.toSimpleName( env.currentClassName() );
+	if (! getToken( ptr ).image.equals( simplename )
+	    || getToken( ptr + 1 ).kind != LPAREN) {
+	    return false;
+	}
+	return true;
+    }
+
+    /**
+     * This will used to check local variable declaration semantically.
+     */
+    private final boolean LocalVariableDeclarationLookahead(
+	    Environment env ) {
+	int ptr;
+	for (ptr = 1; modifierCheck( env, getToken( ptr ) ) ; ++ptr)  ;
+	int old_ptr = ptr;
+	ptr = consumePureResultType( old_ptr );
+	if (ptr != old_ptr && getToken( ptr ).kind == IDENTIFIER) {
+	    return true;
+	}
+	return false;
+    }
+
+    private final boolean roughModifierCheck( Token t ) {
+	if (pureModifierCheck( t ))  return true;
+	return (t.kind == IDENTIFIER);
+    }
+
+    private static final boolean pureModifierCheck( Token t ) {
+	switch (t.kind) {
+	case ABSTRACT  : case FINAL        : case PUBLIC    : case PRIVATE  :
+	case PROTECTED : case STATIC       : case TRANSIENT : case VOLATILE :
+	case NATIVE    : case SYNCHRONIZED :
+	    return true;
+	}
+	return false;
+    }
+
+    private final boolean ConstructorInvocationLookahead() {
+	int ptr = 1;
+	while (getToken(ptr).kind != EOF) {
+	    if (getToken(ptr).kind == SUPER
+		&& getToken(ptr + 1).kind == LPAREN) {
+		return true;
+	    }
+	    if (getToken(ptr).kind == SEMICOLON)  return false;
+	    if (getToken(ptr).kind == RBRACE)  return false;
+	    ++ptr;
+	}
+	return false;
+    }
+
+    private final boolean AssignmentLookahead() {
+	int ptr = 1;
+	switch (getToken( ptr ).kind) {
+	case LPAREN :
+	    ptr = consumeParenPair( ptr );
+	    break;
+	case IDENTIFIER :
+	case THIS :
+	case SUPER :
+	    ptr++;
+	    break;
+	default :
+	    return false;
+	}
+	for (boolean cont = true; cont;) {
+	    switch (getToken( ptr ).kind) {
+	    case LPAREN :
+		ptr = consumeParenPair( ptr );
+		break;
+	    case LBRACKET :
+		ptr = consumeBracketPair( ptr );
+		break;
+	    case DOT :
+		ptr++;
+		if (getToken( ptr ).kind != IDENTIFIER)  return false;
+		ptr++;
+		break;
+	    default :
+		cont = false;
+	    }
+	}
+	return assignmentOperatorCheck( getToken( ptr ) );
+    }
+
+    private final int consumeParenPair( int ptr ) {
+	int nest = 1;
+	for (++ptr; nest > 0; ptr++) {
+	    if (getToken( ptr ).kind == LPAREN)  nest++;
+	    if (getToken( ptr ).kind == RPAREN)  nest--;
+	}
+	return ptr;
+    }	
+
+    private final int consumeBracketPair( int ptr ) {
+	int nest = 1;
+	for (++ptr; nest > 0; ptr++) {
+	    if (getToken( ptr ).kind == LBRACKET)  nest++;
+	    if (getToken( ptr ).kind == RBRACKET)  nest--;
+	}
+	return ptr;
+    }	
+
+    private static final boolean assignmentOperatorCheck( Token t ) {
+	if (t.kind == ASSIGN)  return true;
+	if (t.kind == PLUSASSIGN)  return true;
+	if (t.kind == MINUSASSIGN)  return true;
+	if (t.kind == STARASSIGN)  return true;
+	if (t.kind == SLASHASSIGN)  return true;
+	if (t.kind == ANDASSIGN)  return true;
+	if (t.kind == ORASSIGN)  return true;
+	if (t.kind == XORASSIGN)  return true;
+	if (t.kind == REMASSIGN)  return true;
+	if (t.kind == LSHIFTASSIGN)  return true;
+	if (t.kind == RSIGNEDSHIFTASSIGN)  return true;
+	if (t.kind == RUNSIGNEDSHIFTASSIGN)  return true;
+	return false;
+    }
+
+    private final boolean ClassLiteralLookahead() {
+	int ptr = 1;
+	ptr = consumePureResultType( ptr );
+	if (ptr == 1)  return false;
+	/** here should be user suffix check **/
+	if (getToken( ptr ).kind != DOT)  return false;
+	if (getToken( ptr + 1 ).kind != CLASS)  return false;
+	return true;
+    }
+
+    private final int consumePureResultType( int ptr ) {
+	Token token = getToken( ptr );
+	if (primitiveTypeCheck( token )) {
+	    ptr++;
+	} else if (token.kind == IDENTIFIER) {
+	    ptr++;
+	    while (getToken( ptr ).kind == DOT
+		   && getToken( ptr + 1 ).kind == IDENTIFIER) {
+		ptr += 2;
+	    }
+	} else {
+	    return ptr;
+	}
+
+	while (getToken( ptr ).kind == LBRACKET
+	       && getToken( ptr + 1 ).kind == RBRACKET) {
+	    ptr += 2;
+	}
+    
+	return ptr;
+    }
+
+    private final boolean primitiveTypeCheck( Token t ) {
+	if (t.kind == BOOLEAN || t.kind == CHAR || t.kind == BYTE
+	    || t.kind == SHORT || t.kind == INT || t.kind == LONG
+	    || t.kind == FLOAT || t.kind == DOUBLE || t.kind == VOID) {
+	    return true;
+	}
+	return false;
+    }
+
+}
+
+class IntAndObj
+{
+    IntAndObj( int ptr, Object obj ) {
+	super();  this.ptr = ptr;  this.obj = obj;
+    }
+    int ptr;
+    Object obj;
+}
+
+PARSER_END(Parser)
+
+
+/*****************************************
+ * Utility Codes for Semantical Analysis *
+ *****************************************/
+
+/* For Debug */
+JAVACODE
+void debug_message1() {
+    DebugOut.println( "debug1 : " + getToken( 0 ).image
+		     + " , " + getToken( 1 ).image );
+}
+
+/* Declaration Suffix */
+JAVACODE
+ParseTree UserDeclSuffix( Environment env, String keyword ) {
+    String typename = env.currentClassName();
+    Class meta = toExecutable( env, typename );
+    SyntaxRule rule = invokeOJClass_getDeclSuffixRule( meta, keyword );
+    CustomTokenManager token_mgr = new CustomTokenManager( this, env );
+    token_mgr.assume();
+    ParseTree result = rule.consume( token_mgr );
+    token_mgr.fix();
+    return result;
+}
+
+/* Type Name Suffix */
+JAVACODE
+ParseTree UserTypeSuffix( Environment env, String typename, String keyword ) {
+    Class meta = toExecutable( env, typename );
+    SyntaxRule rule = invokeOJClass_getTypeSuffixRule( meta, keyword );
+    CustomTokenManager token_mgr = new CustomTokenManager( this, env );
+    token_mgr.assume();
+    ParseTree result = rule.consume( token_mgr );
+    token_mgr.fix();
+    return result;
+}
+
+/* Epsilon */
+JAVACODE
+void E() {}
+
+
+/*****************************************
+ * Lexical Descriptions                  *
+ *****************************************/
+
+/* WHITE SPACE */
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+| "\f"
+}
+
+/* COMMENTS */
+
+MORE :
+{
+    <"/**" ~["/"]> : IN_FORMAL_COMMENT
+}
+
+MORE :
+{
+    "//" : IN_SINGLE_LINE_COMMENT
+|
+    "/*" : IN_MULTI_LINE_COMMENT
+}
+
+<IN_SINGLE_LINE_COMMENT>
+SPECIAL_TOKEN :
+{
+    <SINGLE_LINE_COMMENT: "\n" | "\r" | "\r\n" > : DEFAULT
+}
+
+<IN_FORMAL_COMMENT>
+SPECIAL_TOKEN :
+{
+    <FORMAL_COMMENT: "*/" > : DEFAULT
+}
+
+<IN_MULTI_LINE_COMMENT>
+SPECIAL_TOKEN :
+{
+    <MULTI_LINE_COMMENT: "*/" > : DEFAULT
+}
+
+<IN_SINGLE_LINE_COMMENT,IN_FORMAL_COMMENT,IN_MULTI_LINE_COMMENT>
+MORE :
+{
+    < ~[] >
+}
+
+/* RESERVED WORDS AND LITERALS */
+
+TOKEN :
+{
+  < ABSTRACT: "abstract" >
+| < BOOLEAN: "boolean" >
+| < BREAK: "break" >
+| < BYTE: "byte" >
+| < CASE: "case" >
+| < CATCH: "catch" >
+| < CHAR: "char" >
+| < CLASS: "class" >
+| < CONST: "const" >
+| < CONTINUE: "continue" >
+| < _DEFAULT: "default" >
+| < DO: "do" >
+| < DOUBLE: "double" >
+| < ELSE: "else" >
+| < EXTENDS: "extends" >
+| < FALSE: "false" >
+| < FINAL: "final" >
+| < FINALLY: "finally" >
+| < FLOAT: "float" >
+| < FOR: "for" >
+| < GOTO: "goto" >
+| < IF: "if" >
+| < IMPLEMENTS: "implements" >
+| < IMPORT: "import" >
+| < INSTANCEOF: "instanceof" >
+| < INT: "int" >
+| < INTERFACE: "interface" >
+| < LONG: "long" >
+| < NATIVE: "native" >
+| < NEW: "new" >
+| < NULL: "null" >
+| < PACKAGE: "package">
+| < PRIVATE: "private" >
+| < PROTECTED: "protected" >
+| < PUBLIC: "public" >
+| < RETURN: "return" >
+| < SHORT: "short" >
+| < STATIC: "static" >
+| < SUPER: "super" >
+| < SWITCH: "switch" >
+| < SYNCHRONIZED: "synchronized" >
+| < THIS: "this" >
+| < THROW: "throw" >
+| < THROWS: "throws" >
+| < TRANSIENT: "transient" >
+| < TRUE: "true" >
+| < TRY: "try" >
+| < VOID: "void" >
+| < VOLATILE: "volatile" >
+| < WHILE: "while" >
+| < METACLASS: "metaclass" >
+| < INSTANTIATES: "instantiates" >
+}
+
+/* LITERALS */
+
+TOKEN :
+{
+    < INTEGER_LITERAL:
+      <DECIMAL_LITERAL>
+    | <HEX_LITERAL>
+    | <OCTAL_LITERAL>
+    >
+|
+    < LONG_LITERAL:
+      <DECIMAL_LITERAL> ["l","L"]
+    | <HEX_LITERAL> ["l","L"]
+    | <OCTAL_LITERAL> ["l","L"]
+    >
+|
+  < #DECIMAL_LITERAL: ["1"-"9"] (["0"-"9"])* >
+|
+  < #HEX_LITERAL: "0" ["x","X"] (["0"-"9","a"-"f","A"-"F"])+ >
+|
+  < #OCTAL_LITERAL: "0" (["0"-"7"])* >
+|
+    < DOUBLE_FLOATING_POINT_LITERAL:
+      (["0"-"9"])+ "." (["0"-"9"])* (<EXPONENT>)? (["d","D"])?
+    | "." (["0"-"9"])+ (<EXPONENT>)? ["d","D"]
+    | (["0"-"9"])+ <EXPONENT> ["d","D"]
+    | (["0"-"9"])+ (<EXPONENT>)? ["d","D"]
+    >
+|
+    < FLOATING_POINT_LITERAL:
+      (["0"-"9"])+ "." (["0"-"9"])* (<EXPONENT>)? ["f","F"]
+    | "." (["0"-"9"])+ (<EXPONENT>)? (["f","F"])?
+    | (["0"-"9"])+ <EXPONENT> (["f","F"])?
+    | (["0"-"9"])+ (<EXPONENT>)? ["f","F"]
+    >
+|
+    < #EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ >
+|
+    < CHARACTER_LITERAL:
+      "'"
+      (   (~["'","\\","\n","\r"])
+        | ("\\"
+            ( ["n","t","b","r","f","\\","'","\""]
+            | ["0"-"7"] ( ["0"-"7"] )?
+            | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+            )
+          )
+      )
+      "'"
+    >
+|
+    < STRING_LITERAL:
+      "\""
+      (   (~["\"","\\","\n","\r"])
+        | ("\\"
+            ( ["n","t","b","r","f","\\","'","\""]
+            | ["0"-"7"] ( ["0"-"7"] )?
+            | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+            )
+          )
+      )*
+      "\""
+    >
+}
+
+/* IDENTIFIERS */
+
+TOKEN :
+{
+  < IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
+|
+  < #LETTER:
+      [
+       "\u0024",
+       "\u0041"-"\u005a",
+       "\u005f",
+       "\u0061"-"\u007a",
+       "\u00c0"-"\u00d6",
+       "\u00d8"-"\u00f6",
+       "\u00f8"-"\u00ff",
+       "\u0100"-"\u1fff",
+       "\u3040"-"\u318f",
+       "\u3300"-"\u337f",
+       "\u3400"-"\u3d2d",
+       "\u4e00"-"\u9fff",
+       "\uf900"-"\ufaff"
+      ]
+  >
+|
+  < #DIGIT:
+      [
+       "\u0030"-"\u0039",
+       "\u0660"-"\u0669",
+       "\u06f0"-"\u06f9",
+       "\u0966"-"\u096f",
+       "\u09e6"-"\u09ef",
+       "\u0a66"-"\u0a6f",
+       "\u0ae6"-"\u0aef",
+       "\u0b66"-"\u0b6f",
+       "\u0be7"-"\u0bef",
+       "\u0c66"-"\u0c6f",
+       "\u0ce6"-"\u0cef",
+       "\u0d66"-"\u0d6f",
+       "\u0e50"-"\u0e59",
+       "\u0ed0"-"\u0ed9",
+       "\u1040"-"\u1049"
+      ]
+  >
+}
+
+/* SEPARATORS */
+
+TOKEN :
+{
+  < LPAREN: "(" >
+| < RPAREN: ")" >
+| < LBRACE: "{" >
+| < RBRACE: "}" >
+| < LBRACKET: "[" >
+| < RBRACKET: "]" >
+| < SEMICOLON: ";" >
+| < COMMA: "," >
+| < DOT: "." >
+}
+
+/* OPERATORS */
+
+TOKEN :
+{
+  < ASSIGN: "=" >
+| < GT: ">" >
+| < LT: "<" >
+| < BANG: "!" >
+| < TILDE: "~" >
+| < HOOK: "?" >
+| < COLON: ":" >
+| < EQ: "==" >
+| < LE: "<=" >
+| < GE: ">=" >
+| < NE: "!=" >
+| < SC_OR: "||" >
+| < SC_AND: "&&" >
+| < INCR: "++" >
+| < DECR: "--" >
+| < PLUS: "+" >
+| < MINUS: "-" >
+| < STAR: "*" >
+| < SLASH: "/" >
+| < BIT_AND: "&" >
+| < BIT_OR: "|" >
+| < XOR: "^" >
+| < REM: "%" >
+| < LSHIFT: "<<" >
+| < RSIGNEDSHIFT: ">>" >
+| < RUNSIGNEDSHIFT: ">>>" >
+| < PLUSASSIGN: "+=" >
+| < MINUSASSIGN: "-=" >
+| < STARASSIGN: "*=" >
+| < SLASHASSIGN: "/=" >
+| < ANDASSIGN: "&=" >
+| < ORASSIGN: "|=" >
+| < XORASSIGN: "^=" >
+| < REMASSIGN: "%=" >
+| < LSHIFTASSIGN: "<<=" >
+| < RSIGNEDSHIFTASSIGN: ">>=" >
+| < RUNSIGNEDSHIFTASSIGN: ">>>=" >
+}
+
+
+/*****************************************
+ * Syntactical Descriptions              *
+ *****************************************/
+
+/*
+ * Program structuring syntax follows.
+ */
+
+CompilationUnit CompilationUnit( Environment base_env ) :
+/* Any ";" around each type declaration must be ignored. */
+{
+    CompilationUnit result;
+    FileEnvironment  env = new FileEnvironment( base_env );
+    String			p1;
+    String[]			p2;
+    ClassDeclarationList		p3;
+    /**/DebugOut.println( "#CompilationUnit()" );
+    String comment = getComment();
+}
+{
+    p1=PackageDeclarationOpt()
+    p2=ImportDeclarationListOpt()
+    {
+	env.setPackage( p1 );
+	for (int i = 0; i < p2.length; ++i) {
+	    if (CompilationUnit.isOnDemandImport( p2[i] )) {
+		String pack_cls = CompilationUnit.trimOnDemand( p2[i] );
+		env.importPackage( pack_cls );
+	    } else {
+		env.importClass( p2[i] );
+	    }
+	}
+    }
+    ( ";" )*
+    p3=TypeDeclarationListOpt( env )
+    <EOF>
+    {
+	result = new CompilationUnit( p1, p2, p3 );
+	result.setComment( comment );
+	return result;
+    }
+}
+
+String PackageDeclarationOpt() :
+{
+    String			p1;
+}
+{
+    "package" p1=Name() ";"
+    { return p1; }
+|
+    E()
+    { return null; }
+}
+
+String[] ImportDeclarationListOpt() :
+{
+    String[]			result;
+    String			p1;
+    Vector  v = new Vector();
+}
+{
+    ( p1=ImportDeclaration() { v.addElement( p1 ); } )+
+    {
+	result = new String[v.size()];
+	for (int i = 0; i < result.length; ++i) {
+	    result[i] = (String) v.elementAt( i );
+	}
+    }
+    { return result; }
+|
+    E()
+    { return new String[0]; }
+}
+
+String ImportDeclaration() :
+{
+    String			p1;
+    StringBuffer strbuf = new StringBuffer();
+}
+{
+    "import"
+    Identifier() 
+    { strbuf.append( getToken( 0 ).image ); }
+    ( LOOKAHEAD(2)
+        "." Identifier()
+        { strbuf.append( "." + getToken( 0 ).image ); }
+    )*
+    [
+        "." "*"
+        { strbuf.append( ".*" ); }
+    ]
+    ";"
+    { return strbuf.toString(); }
+}
+
+ClassDeclarationList TypeDeclarationListOpt( Environment env ) :
+/* Must ignore ";"s */
+{
+    ClassEnvironment  newenv;
+    ClassDeclarationList	result = new ClassDeclarationList();
+    ClassDeclaration		p1;
+}
+{
+    LOOKAHEAD( { (getToken( 1 ).kind != RBRACE
+		  && getToken( 1 ).kind != EOF) } )
+    ( LOOKAHEAD( { (getToken( 1 ).kind != RBRACE
+		    && getToken( 1 ).kind != EOF) } )
+        { newenv = setClassEnvironment( env ); }
+        p1=TypeDeclaration( newenv )
+        ( ";" )*
+        { result.add( p1 ); }
+    )+
+    { return result; }
+|
+    E()
+    { return result; }
+}
+
+ClassDeclaration TypeDeclaration( ClassEnvironment env ) :
+{
+    ClassDeclaration			result;
+    ClassDeclaration			p1;
+    Token ctoken = getToken( 1 ).specialToken;
+    String comment = getComment();
+}
+{
+    (
+        LOOKAHEAD( ( Identifier() | "abstract" | "final" | "public" )*
+		   "class" )
+        p1=ClassDeclaration( env )
+    |
+        p1=InterfaceDeclaration( env )
+    )
+    {
+        result = p1;
+	result.setComment( comment );
+	return result;
+    }
+}
+
+String Identifier() :
+/* This enables it to use "metaclass" as identifier. */
+{}
+{
+    <IDENTIFIER>
+    { return getToken( 0 ).image; }
+|
+    "metaclass"
+    { return "metaclass"; }
+}
+
+String[] MetaclassesOpt( Environment env ) :
+/* metaclass may have metametaclass */
+{
+    String[]			result;
+    String			p1;
+    String			p2;
+    Vector  v = new Vector();
+    String  qname;
+}
+{
+    "metaclass"
+    p1=Name()
+    {
+	qname = env.toQualifiedName( p1 );
+	v.addElement( qname );
+	/****/DebugOut.print( "metaclass " + qname );
+    }
+    [
+        "," p2=Name()
+        {
+	    qname = env.toQualifiedName( p2 );
+	    /****/DebugOut.print( ", " + qname );
+	}
+    ]
+    ( ":" | ";" )
+    { /****/DebugOut.println( " :" ); }
+    {
+	result = new String[v.size()];
+	for (int i = 0; i < result.length; ++i) {
+	    result[i] = (String) v.elementAt( i );
+	}
+    }
+    { return result; }
+|
+    E()
+    { return new String[0]; }
+}
+
+String InstantiatesPhraseOpt( ClassEnvironment env ) :
+{
+    String			p1 = null;
+}
+{
+    "instantiates" p1=Name()
+    { return p1; }
+|
+    E()
+    { return p1; }
+}
+
+String OpenJavaModifier() :
+/* User modifiers must not be "metaclass" */
+{
+    String		result;
+}
+{
+    <IDENTIFIER>
+    {
+	result = getToken( 0 ).image;
+	DebugOut.println( "user modifier detected : " + result );
+    }
+    { return result; }
+}
+
+Hashtable OpenJavaDeclSuffixListOpt( Environment env ) :
+{
+    Hashtable			result = new Hashtable();
+    String			p1;
+    ParseTree			p2;
+}
+{
+    LOOKAHEAD( { DeclSuffixLookahead( env ) } )
+    ( LOOKAHEAD( { DeclSuffixLookahead( env ) } )
+        p1=Identifier()
+        p2=UserDeclSuffix( env, p1 )
+        {
+	    DebugOut.println( "decl suffix : " + p1 + " " + p2 );
+	    result.put( p1, p2 );
+	}
+    )+
+    { return result; }
+|
+    E()
+    { return result; }
+}
+
+Hashtable OpenJavaTypeSuffixListOpt( Environment env, String typename ) :
+{
+    Hashtable			result = new Hashtable();
+    String			p1;
+    ParseTree			p2;
+}
+{
+    LOOKAHEAD( { TypeSuffixLookahead( env, typename ) } )
+    ( LOOKAHEAD( { TypeSuffixLookahead( env, typename ) } )
+        p1=Identifier()
+        p2=UserTypeSuffix( env, typename, p1 )
+        {
+	    DebugOut.println( "type suffix : " + p1 + " " + p2 );
+	    result.put( p1, p2 );
+	}
+    )+
+    { return result; }
+|
+    E()
+    { return result; }
+}
+
+int Modifier() :
+{}
+{
+  "abstract"      { return ModifierList.ABSTRACT; }
+| "final"         { return ModifierList.FINAL; }
+| "public"        { return ModifierList.PUBLIC; }
+| "private"       { return ModifierList.PRIVATE; }
+| "protected"     { return ModifierList.PROTECTED; }
+| "static"        { return ModifierList.STATIC; }
+| "transient"     { return ModifierList.TRANSIENT; }
+| "volatile"      { return ModifierList.VOLATILE; }
+| "native"        { return ModifierList.NATIVE; }
+| "synchronized"  { return ModifierList.SYNCHRONIZED; }
+}
+
+/*
+ * Declaration syntax follows.
+ */
+
+ClassDeclaration ClassDeclaration( ClassEnvironment env ) :
+{
+    ModifierList		p1;
+    ClassDeclaration		p2;
+
+    DebugOut.println( "#ClassDeclaration()" );
+}
+{
+    p1=ClassModifiersOpt( env )
+    p2=UnmodifiedClassDeclaration( env )
+    { p2.setModifiers( p1 ); }
+    { return p2; }
+}
+
+ModifierList ClassModifiersOpt( Environment env ) :
+{
+    ModifierList		result = new ModifierList();
+    int				p1;
+    String			p2;
+}
+{
+    LOOKAHEAD( { (getToken( 1 ).kind != CLASS) } )
+    ( LOOKAHEAD( { ModifierLookahead( env ) } )
+        (
+	    LOOKAHEAD( "abstract" | "final" | "public" )
+	    p1=Modifier()
+	    { result.add( p1 ); }
+	|
+	    LOOKAHEAD( { OpenJavaModifierLookahead( env ) } )
+	    p2=OpenJavaModifier()
+	    { result.add( p2 ); }
+	)
+    )+
+    { return result; }
+|
+    E()
+    { return result; }
+}
+
+ClassDeclaration UnmodifiedClassDeclaration( ClassEnvironment env ) :
+{
+    ClassDeclaration		result;
+    String			p1;
+    TypeName[]			p2;
+    TypeName[]			p3;
+    MemberDeclarationList	p4;
+    String			mm;
+    Hashtable			sf;
+}
+{
+    "class" p1=Identifier()
+    mm=InstantiatesPhraseOpt( env )
+    p2=ExtendsPhraseOpt( env )
+    p3=ImplementsPhraseOpt( env )
+    sf=OpenJavaDeclSuffixListOpt( env )
+    p4=ClassBody( env )
+    {
+	result = new ClassDeclaration( null, p1, p2, p3, p4 );
+	result.setSuffixes( sf );
+    }
+    { return result; }
+}
+
+TypeName[] ExtendsPhraseOpt( Environment env ) :
+{
+    TypeName[]			p1;
+}
+{
+    /* "extends" TypeName() */
+    "extends" p1=TypeNameList( env )
+    { return p1; }
+|
+    E()
+    { return null; }
+}
+
+TypeName[] ImplementsPhraseOpt( Environment env ) :
+{
+    TypeName[]			p1;
+}
+{
+    "implements" p1=TypeNameList( env )
+    { return p1; }
+|
+    E()
+    { return null; }
+}
+
+MemberDeclarationList ClassBody( ClassEnvironment env ) :
+{
+    MemberDeclarationList	p1;
+
+    DebugOut.println( "#ClassBody()" );
+}
+{
+    "{"
+    ( ";" )*
+    p1=ClassBodyDeclarationListOpt( env )
+    "}"
+    { return p1; }
+}
+
+MemberDeclarationList ClassBodyDeclarationListOpt( ClassEnvironment env ) :
+{
+    MemberDeclarationList	result = new MemberDeclarationList();
+    MemberDeclarationList	p1;
+}
+{
+    LOOKAHEAD( { (getToken( 1 ).kind != RBRACE) } )
+    ( LOOKAHEAD( { (getToken( 1 ).kind != RBRACE) } )
+        p1=ClassBodyDeclaration( env )
+        ( ";" )*
+        { result.addAll( p1 ); }
+    )+
+    { return result; }
+|
+    E()
+    { return result; }
+}
+
+ClassDeclaration NestedTypeDeclaration( ClassEnvironment env ) :
+{
+    ClassDeclaration		result;
+    ClassDeclaration		p1;
+    Token ctoken = getToken( 1 ).specialToken;
+    String comment = getComment();
+}
+{
+    (
+        LOOKAHEAD( ( Identifier() | "static" | "abstract" | "final"
+		    | "public" | "protected" | "private" )*
+		   "class" )
+        p1=NestedClassDeclaration( env )
+    |
+        p1=NestedInterfaceDeclaration( env )
+    )
+    {
+        result = p1;
+	result.setComment( comment );
+        return result;
+    }
+}
+
+ClassDeclaration NestedClassDeclaration( ClassEnvironment env ) :
+{
+    ModifierList		p1;
+    ClassDeclaration		p2;
+
+    DebugOut.println( "#NestedClassDeclaration()" );
+}
+{
+    p1=NestedClassModifiersOpt( env )
+    p2=UnmodifiedClassDeclaration( env )
+    { p2.setModifiers( p1 ); }
+    { return p2; }
+}
+
+ModifierList NestedClassModifiersOpt( ClassEnvironment env ) :
+{
+    ModifierList		result = new ModifierList();
+    int				p1;
+    String			p2;
+}
+{
+    LOOKAHEAD( { (getToken( 1 ).kind != CLASS) } )
+    ( LOOKAHEAD( { ModifierLookahead( env ) } )
+        (
+	    LOOKAHEAD( "static" | "abstract" | "final"
+		      | "public" | "protected" | "private" )
+	    p1=Modifier()
+	    { result.add( p1 ); }
+	|
+	    LOOKAHEAD( { OpenJavaModifierLookahead( env ) } )
+	    p2=OpenJavaModifier()
+	    { result.add( p2 ); }
+	)
+    )+
+    { return result; }
+|
+    E()
+    { return result; }
+}
+
+MemberDeclarationList ClassBodyDeclaration( ClassEnvironment env ) :
+{
+    ClassEnvironment  newenv;
+    MemberDeclarationList	result;
+    MemberDeclaration		p1;
+    MemberDeclarationList	p2;
+}
+{
+    LOOKAHEAD( [ "static" ] "{" )
+    p1=MemberInitializer( env )
+    { result = new MemberDeclarationList( p1 ); }
+    { return result; }
+|
+    LOOKAHEAD( ( Identifier() | "static" | "abstract" | "final"
+		| "public" | "protected" | "private" )*
+	       ( "class" | "interface" ) )
+    { newenv = setClassEnvironment( env ); }
+    p1=NestedTypeDeclaration( newenv )
+    { result = new MemberDeclarationList( p1 ); }
+    { return result; }
+|
+    LOOKAHEAD( { ConstructorDeclarationLookahead( env ) } )
+    p1=ConstructorDeclaration( env )
+    { result = new MemberDeclarationList( p1 ); }
+    { return result; }
+|
+    p2=MethodOrFieldDeclaration( env )
+    { return p2; }
+}
+
+MemberDeclarationList MethodOrFieldDeclaration( Environment env ) :
+{
+    MemberDeclarationList	result = new MemberDeclarationList();
+    ModifierList		p1;
+    TypeName			p2;
+    String			p3;
+    ParameterList		p4;
+    int				p5;
+    TypeName[]			p6;
+    StatementList		p7;
+    VariableDeclarator		p8;
+    Hashtable			sf;
+    Token ctoken = getToken( 1 ).specialToken;
+    String comment = getComment();
+}
+{
+    p1=MemberModifiersOpt( env )
+    p2=Type( env )
+    (
+        LOOKAHEAD( Identifier() "(" )
+        p3=Identifier()
+        p4=FormalParameters( env )
+        p5=EmptyBracketsOpt()
+        p6=ThrowsPhraseOpt( env )
+        sf=OpenJavaDeclSuffixListOpt( env )
+        p7=MethodBody( env )
+        {
+	    p2.addDimension( p5 );
+	    MethodDeclaration mthd
+		= new MethodDeclaration( p1, p2, p3, p4, p6, p7 );
+	    mthd.setSuffixes( sf );
+	    mthd.setComment( comment );
+	    result.add( mthd );
+	}
+    |
+        p8=VariableDeclarator( env )
+        {
+	    FieldDeclaration fld1 = new FieldDeclaration( p1, p2, p8 );
+	    fld1.setComment( comment );
+	    result.add( fld1 );
+	}
+        (
+	    ","
+	    p8=VariableDeclarator( env )
+	    {
+		FieldDeclaration fld2 = new FieldDeclaration( p1, p2, p8 );
+		fld2.setComment( comment );
+		result.add( fld2 );
+	    }
+	)*
+        ";"
+    )
+    { return result; }
+}
+
+TypeName[] ThrowsPhraseOpt( Environment env ) :
+{
+    TypeName[]			p1;
+}
+{
+    "throws" p1=TypeNameList( env )
+    { return p1; }
+|
+    E()
+    { return null; }
+}
+
+StatementList MethodBody( Environment env ) :
+{
+    StatementList		p1;
+}
+{
+    p1=BlockedBody( env )
+    { return p1; }
+|
+    ";"
+    { return null; }
+}
+
+ModifierList MemberModifiersOpt( Environment env ) :
+{
+    ModifierList		result = new ModifierList();
+    int				p1;
+    String			p2;
+}
+{
+    LOOKAHEAD( { modifierCheck( env, getToken( 1 ) ) } )
+    ( LOOKAHEAD( { ModifierLookahead( env ) } )
+        (
+	    LOOKAHEAD( "public" | "protected" | "private"
+		      | "static" | "abstract" | "final"
+		      | "transient" | "volatile" | "native" | "synchronized" )
+	    p1=Modifier()
+	    { result.add( p1 ); }
+	|
+	    LOOKAHEAD( { OpenJavaModifierLookahead( env ) } )
+	    p2=OpenJavaModifier()
+	    { result.add( p2 ); }
+	)
+    )+
+    { return result; }
+|
+    E()
+    { return result; }
+}
+
+ClassDeclaration InterfaceDeclaration( ClassEnvironment env ) :
+{
+    ModifierList		p1;
+    ClassDeclaration		p2;
+
+    DebugOut.println( "#InterfaceDeclaration()" );
+}
+{
+    p1=InterfaceModifiersOpt( env )
+    p2=UnmodifiedInterfaceDeclaration( env )
+    { p2.setModifiers( p1 ); }
+    { return p2; }
+}
+
+ModifierList InterfaceModifiersOpt( Environment env ) :
+{
+    ModifierList		result = new ModifierList();
+    int				p1;
+    String			p2;
+}
+{
+    LOOKAHEAD( { (getToken( 1 ).kind != INTERFACE) } )
+    ( LOOKAHEAD( { ModifierLookahead( env ) } )
+        (
+	    LOOKAHEAD( "abstract" | "public" )
+	    p1=Modifier()
+	    { result.add( p1 ); }
+	|
+	    LOOKAHEAD( { OpenJavaModifierLookahead( env ) } )
+	    p2=OpenJavaModifier()
+	    { result.add( p2 ); }
+	)
+    )+
+    { return result; }
+|
+    E()
+    { return result; }
+}
+
+ClassDeclaration NestedInterfaceDeclaration( ClassEnvironment env ) :
+{
+    ModifierList		p1;
+    ClassDeclaration		p2;
+
+    DebugOut.println( "#NestedInterfaceDeclaration()" );
+}
+{
+    p1=NestedInterfaceModifiersOpt( env )
+    p2=UnmodifiedInterfaceDeclaration( env )
+    { p2.setModifiers( p1 ); }
+    { return p2; }
+}
+
+ModifierList NestedInterfaceModifiersOpt( ClassEnvironment env ) :
+{
+    ModifierList		result = new ModifierList();
+    int				p1;
+    String			p2;
+}
+{
+    LOOKAHEAD( { (getToken( 1 ).kind != INTERFACE) } )
+    ( LOOKAHEAD( { ModifierLookahead( env ) } )
+        (
+	    LOOKAHEAD( "static" | "abstract" | "final"
+		      | "public" | "protected" | "private" )
+	    p1=Modifier()
+	    { result.add( p1 ); }
+	|
+	    LOOKAHEAD( { OpenJavaModifierLookahead( env ) } )
+	    p2=OpenJavaModifier()
+	    { result.add( p2 ); }
+	)
+    )+
+    { return result; }
+|
+    E()
+    { return result; }
+}
+
+ClassDeclaration UnmodifiedInterfaceDeclaration( ClassEnvironment env ) :
+{
+    ClassDeclaration		result;
+    String			p1;
+    TypeName[]			p2;
+    MemberDeclarationList	p3;
+    String			mm;
+    Hashtable			sf;
+}
+{
+    "interface" p1=Identifier()
+    mm=InstantiatesPhraseOpt( env )
+    p2=ExtendsPhraseOpt( env )
+    sf=OpenJavaDeclSuffixListOpt( env )
+    p3=InterfaceBody( env )
+    {
+	result = new ClassDeclaration( null, p1, p2, null, p3, false );
+	result.setSuffixes( sf );
+    }
+    { return result; }
+}
+
+MemberDeclarationList InterfaceBody( ClassEnvironment env ) :
+{
+    MemberDeclarationList	p1;
+}
+{
+    "{" p1=InterfaceBodyDeclarationListOpt( env ) "}"
+    { return p1; }
+}
+
+MemberDeclarationList InterfaceBodyDeclarationListOpt( ClassEnvironment env ) :
+{
+    MemberDeclarationList	result = new MemberDeclarationList();
+    MemberDeclarationList	p1;
+}
+{
+    LOOKAHEAD( { (getToken( 1 ).kind != RBRACE) } )
+    ( LOOKAHEAD( { (getToken( 1 ).kind != RBRACE) } )
+        p1=InterfaceBodyDeclaration( env )
+        { result.addAll( p1 ); }
+    )+
+    { return result; }
+|
+    E()
+    { return result; }
+}
+
+MemberDeclarationList InterfaceBodyDeclaration( ClassEnvironment env ) :
+{
+    ClassEnvironment  newenv;
+    MemberDeclarationList	result;
+    ClassDeclaration		p1;
+    MemberDeclarationList	p2;
+}
+{
+    LOOKAHEAD( ( Identifier() | "abstract" | "final" | "public" )*
+	       ( "class" | "interface" ) )
+    { newenv = setClassEnvironment( env ); }
+    p1=NestedTypeDeclaration( newenv )
+    { result = new MemberDeclarationList( p1 ); }
+    { return result; }
+|
+    p2=MethodOrFieldDeclaration( env )
+    { return p2; }
+}
+
+VariableDeclarator VariableDeclarator( Environment env ) :
+{
+    String			p1;
+    int				p2;
+    VariableInitializer		p3 = null;
+}
+{
+    p1=Identifier() p2=EmptyBracketsOpt() [ "=" p3=VariableInitializer( env ) ]
+    { return new VariableDeclarator( p1, p2, p3 ); }
+}
+
+int EmptyBracketsOpt() :
+{
+    int				result = 0;
+}
+{
+    LOOKAHEAD( "[" "]" )
+    ( LOOKAHEAD(2) "[" "]" { result++; } )+
+    { return result; }
+|
+    E()
+    { return result; }
+}
+
+VariableInitializer VariableInitializer( Environment env ) :
+{
+    VariableInitializer		p1;
+}
+{
+    p1=ArrayInitializer( env )
+    { return p1; }
+|
+    p1=Expression( env )
+    { return p1; }
+}
+
+ArrayInitializer ArrayInitializer( Environment env ) :
+{
+    ArrayInitializer		result = new ArrayInitializer();
+    VariableInitializer		p1;
+}
+{
+    "{"
+     [ LOOKAHEAD( { (getToken( 1 ).kind != RBRACE
+		     && getToken( 1 ).kind != COMMA) } )
+         p1=VariableInitializer( env )
+         { result.add( p1 ); }
+         ( LOOKAHEAD( { (getToken( 1 ).kind == COMMA
+			 && getToken( 2 ).kind != RBRACE) } )
+	     "," p1=VariableInitializer( env )
+	     { result.add( p1 ); }
+	 )*
+     ]
+     [ "," { result.omitRemainder( true ); } ]
+     "}"
+     { return result; }
+}
+
+ParameterList FormalParameters( Environment env ) :
+{
+    ParameterList		result = new ParameterList();
+    Parameter			p1;
+
+    DebugOut.println( "#FormalParameters()" );
+}
+{
+    "("
+    [ LOOKAHEAD( { (getToken( 1 ).kind != RPAREN) } )
+        p1=FormalParameter( env )
+        { result.add( p1 ); }
+        ( "," p1=FormalParameter( env ) { result.add( p1 ); } )*
+    ]
+    ")"
+    { return result; }
+}
+
+Parameter FormalParameter( Environment env ) :
+{
+    ModifierList		p1;
+    TypeName			p2;
+    String			p3;
+    int				p4;
+    DebugOut.println( "#FormalParameter()" );
+}
+{
+    p1=FormalParameterModifiersOpt( env ) p2=Type( env )
+    p3=Identifier() p4=EmptyBracketsOpt()
+    { p2.addDimension( p4 ); }
+    { return new Parameter( p1, p2, p3 ); }
+}
+
+ModifierList FormalParameterModifiersOpt( Environment env ) :
+{
+    ModifierList		result = new ModifierList();
+    int				p1;
+    String			p2;
+}
+{
+    LOOKAHEAD( { modifierCheck( env, getToken( 1 ) ) } )
+    ( LOOKAHEAD( { ModifierLookahead( env ) } )
+        (
+	    LOOKAHEAD( "final" )
+	    p1=Modifier()
+	    { result.add( p1 ); }
+	|
+	    LOOKAHEAD( { OpenJavaModifierLookahead( env ) } )
+	    p2=OpenJavaModifier()
+	    { result.add( p2 ); }
+	)
+    )+
+    { return result; }
+|
+    E()
+    { return result; }
+}
+
+ConstructorDeclaration ConstructorDeclaration( Environment env ) :
+{
+    ConstructorDeclaration	result;
+    ModifierList		p1;
+    String			p2;
+    ParameterList		p3;
+    TypeName[]			p4;
+    ConstructorInvocation	p5;
+    StatementList		p6;
+    Hashtable			sf;
+
+    DebugOut.println( "#ConstructorDeclaration()" );
+}
+{
+    p1=ConstructorModifiersOpt( env )
+    p2=Identifier()
+    p3=FormalParameters( env )
+    p4=ThrowsPhraseOpt( env )
+    sf=OpenJavaDeclSuffixListOpt( env )
+    "{"
+    p5=ExplicitConstructorInvocationOpt( env )
+    p6=BlockOrStatementListOpt( env )
+    "}"
+    {
+	result = new ConstructorDeclaration( p1, p2, p3, p4, p5, p6 );
+	result.setSuffixes( sf );
+	return result;
+    }
+}
+
+ModifierList ConstructorModifiersOpt( Environment env ) :
+{
+    ModifierList		result = new ModifierList();
+    int				p1;
+    String			p2;
+}
+{
+    LOOKAHEAD( "public" | "protected" | "private" )
+    p1=Modifier()
+    { result.add( p1 ); }
+    ( LOOKAHEAD( { OpenJavaModifierLookahead( env ) } )
+        p2=OpenJavaModifier()
+        { result.add( p2 ); }
+    )*
+    { return result; }
+|
+    LOOKAHEAD( { OpenJavaModifierLookahead( env ) } )
+    ( LOOKAHEAD( { OpenJavaModifierLookahead( env ) } )
+        p2=OpenJavaModifier()
+        { result.add( p2 ); }
+    )+
+    [
+        p1=Modifier()
+        { result.add( p1 ); }
+        ( LOOKAHEAD( { OpenJavaModifierLookahead( env ) } )
+	    p2=OpenJavaModifier()
+	    { result.add( p2 ); }
+	)*
+    ]
+    { return result; }
+|
+    E()
+    { return result; }
+}
+
+ConstructorInvocation ExplicitConstructorInvocationOpt( Environment env ) :
+{
+    ExpressionList		p1;
+    Expression			p2 = null;
+
+    DebugOut.println( "#ExplicitConstructorInvocationOpt()" );
+}
+{
+    LOOKAHEAD( "this" "(" )
+    "this" p1=Arguments( env ) ";"
+    { return new ConstructorInvocation( p1 ); }
+|
+    LOOKAHEAD( { ConstructorInvocationLookahead() } )
+    [ LOOKAHEAD( { (getToken( 1 ).kind != SUPER) } )
+        p2=PrimaryExpression( env ) "."
+    ]
+    "super" p1=Arguments( env ) ";"
+    { return new ConstructorInvocation( p1, p2 ); }
+|
+    E()
+    { return null; }
+}
+
+MemberInitializer MemberInitializer( Environment env ) :
+{
+    MemberInitializer 		result;
+    StatementList		p1;
+    boolean is_static = false;
+}
+{
+    [ "static" { is_static = true; } ] p1=BlockedBody( env )
+    {
+	if (is_static) {
+	    result = new MemberInitializer( p1, true );
+	} else {
+	    result = new MemberInitializer( p1 );
+	}
+    }
+    { return result; }
+}
+
+
+/*
+ * Type, name and expression syntax follows.
+ */
+
+TypeName Type( Environment env ) :
+{
+    TypeName			result;
+    String			p1;
+    Hashtable			p2;
+    int				p3;
+}
+{
+    ( p1=PrimitiveType() | p1=Name() )
+    p2=OpenJavaTypeSuffixListOpt( env, p1 )
+    p3=EmptyBracketsOpt()
+    {
+	result = new TypeName( p1, p3, p2 );
+    }
+    { return result; }
+}
+
+String PrimitiveType() :
+{
+    String			result;
+}
+{
+    ( "boolean" | "char" | "byte" | "short" | "int" | "long"
+        | "float" | "double" | "void"
+    )
+    { result = getToken( 0 ).image; }
+    { return result; }
+}
+
+String Name() :
+/*
+ * A lookahead of 2 is required below since "Name" can be followed
+ * by a ".*" when used in the context of an "ImportDeclaration".
+ */
+{
+    String			p1;
+    StringBuffer strbuf = null;
+}
+{
+    p1=Identifier() { strbuf = new StringBuffer( p1 ); }
+    ( LOOKAHEAD(2)
+        "." p1=Identifier()
+        { strbuf.append( "." + p1 ); }
+    )*
+    { return strbuf.toString(); }
+}
+
+TypeName TypeName( Environment env ) :
+{
+    TypeName			result;
+    String			p1;
+    Hashtable			p2;
+}
+{
+    p1=Name()
+    p2=OpenJavaTypeSuffixListOpt( env, p1 )
+    {
+	result = new TypeName( p1, p2 );
+    }
+    { return result; }
+}
+
+TypeName[] TypeNameList( Environment env ) :
+{
+    TypeName[]			result;
+    TypeName			p1;
+    Vector  v = new Vector();
+}
+{
+    p1=TypeName( env ) { v.addElement( p1 ); }
+    (
+        ","
+        p1=TypeName( env ) { v.addElement( p1 ); }
+    )*
+    {
+	result = new TypeName[v.size()];
+	for (int i = 0; i < result.length; ++i) {
+	    result[i] = (TypeName) v.elementAt( i );
+	}
+    }
+    { return result; }
+}
+
+TypeName[] TypeNameListOpt( Environment env ) :
+{
+    TypeName[]			result;
+    TypeName			p1;
+    Vector  v = new Vector();
+}
+{
+    p1=TypeName( env ) { v.addElement( p1 ); }
+    (
+        ","
+        p1=TypeName( env ) { v.addElement( p1 ); }
+    )*
+    {
+	result = new TypeName[v.size()];
+	for (int i = 0; i < result.length; ++i) {
+	    result[i] = (TypeName) v.elementAt( i );
+	}
+    }
+    { return result; }
+|
+    E()
+    { return new TypeName[0]; }
+}
+
+
+/*
+ * Expression syntax follows.
+ */
+
+Expression Expression( Environment env ) :
+{
+    Expression			result;
+    Expression			p1;
+    String			p2 = null;
+    Expression			p3 = null;
+
+    DebugOut.println( "#Expression()" );
+}
+{
+    p1=ConditionalExpression( env )
+    [ p2=AssignmentOperator() p3=Expression( env ) ]
+    {
+	if (p2 != null) {
+	    result = new AssignmentExpression( p1, p2, p3 );
+	} else {
+	    result = p1;
+	}
+    }
+    { return result; }
+}
+
+AssignmentExpression AssignmentExpression( Environment env ) :
+{
+    Expression			p1;
+    String			p2;
+    Expression			p3;
+    
+    DebugOut.println( "#AssignmentExpression()" );
+}
+{
+    p1=PrimaryExpression( env ) p2=AssignmentOperator() p3=Expression( env )
+    { return new AssignmentExpression( p1, p2, p3 ); }
+}
+
+String AssignmentOperator() :
+{
+    String			result;
+
+    DebugOut.println( "#AssignmentOperator()" );
+}
+{
+    ( "=" | "*=" | "/=" | "%=" | "+=" | "-=" | "<<=" | ">>=" | ">>>="
+        | "&=" | "^=" | "|=" )
+    { result = getToken( 0 ).image; }
+    { return result; }
+}
+
+Expression ConditionalExpression( Environment env ) :
+{
+    Expression			result;
+    Expression			p1;
+    Expression			p2 = null;
+    Expression			p3 = null;
+}
+{
+    p1=ConditionalOrExpression( env )
+    [
+        "?" p2=Expression( env )
+        ":" p3=ConditionalExpression( env )
+    ]
+    {
+	if (p2 != null) {
+	    result = new ConditionalExpression( p1, p2, p3 );
+	} else {
+	    result = p1;
+	}
+    }
+    { return result; }
+}
+
+Expression ConditionalOrExpression( Environment env ) :
+{
+    Expression			result;
+    Expression			p1;
+    String			p2;
+    Expression			p3;
+}
+{
+    p1=ConditionalAndExpression( env )
+    { result = p1; }
+    (
+        "||" { p2 = getToken( 0 ).image; }
+        p3=ConditionalAndExpression( env )
+        { result = new BinaryExpression( result, p2, p3 ); }
+    )*
+    { return result; }
+}
+
+Expression ConditionalAndExpression( Environment env ) :
+{
+    Expression			result;
+    Expression			p1;
+    String			p2;
+    Expression			p3;
+}
+{
+    p1=InclusiveOrExpression( env )
+    { result = p1; }
+    (
+        "&&" { p2 = getToken( 0 ).image; }
+        p3=InclusiveOrExpression( env )
+        { result = new BinaryExpression( result, p2, p3 ); }
+    )*
+    { return result; }
+}
+
+Expression InclusiveOrExpression( Environment env ) :
+{
+    Expression			result;
+    Expression			p1;
+    String			p2;
+    Expression			p3;
+}
+{
+    p1=ExclusiveOrExpression( env )
+    { result = p1; }
+    (
+        "|" { p2 = getToken( 0 ).image; }
+        p3=ExclusiveOrExpression( env )
+        { result = new BinaryExpression( result, p2, p3 ); }
+    )*
+    { return result; }
+}
+
+Expression ExclusiveOrExpression( Environment env ) :
+{
+    Expression			result;
+    Expression			p1;
+    String			p2;
+    Expression			p3;
+}
+{
+    p1=AndExpression( env )
+    { result = p1; }
+    (
+        "^" { p2 = getToken( 0 ).image; }
+        p3=AndExpression( env )
+        { result = new BinaryExpression( result, p2, p3 ); }
+    )*
+    { return result; }
+}
+
+Expression AndExpression( Environment env ) :
+{
+    Expression			result;
+    Expression			p1;
+    String			p2;
+    Expression			p3;
+}
+{
+    p1=EqualityExpression( env )
+    { result = p1; }
+    (
+        "&" { p2 = getToken( 0 ).image; }
+        p3=EqualityExpression( env )
+        { result = new BinaryExpression( result, p2, p3 ); }
+    )*
+    { return result; }
+}
+
+Expression EqualityExpression( Environment env ) :
+{
+    Expression			result;
+    Expression			p1;
+    String			p2;
+    Expression			p3;
+
+    DebugOut.println( "#EqualityExpression()" );
+}
+{
+    p1=InstanceofExpression( env )
+    { result = p1; }
+    (
+        ( "==" | "!=" ) { p2 = getToken( 0 ).image; }
+        p3=InstanceofExpression( env )
+        { result = new BinaryExpression( result, p2, p3 ); }
+    )*
+    { return result; }
+}
+
+Expression InstanceofExpression( Environment env ) :
+{
+    Expression			result;
+    Expression			p1;
+    TypeName			p2 = null;
+}
+{
+    p1=RelationalExpression( env ) [ "instanceof" p2=Type( env ) ]
+    {
+	if (p2 != null) {
+	    result = new InstanceofExpression( p1, p2 );
+	} else {
+	    result = p1;
+	}
+    }
+    { return result; }
+}
+
+Expression RelationalExpression( Environment env ) :
+{
+    Expression			result;
+    Expression			p1;
+    String			p2;
+    Expression			p3;
+}
+{
+    p1=ShiftExpression( env )
+    { result = p1; }
+    (
+        ( "<" | ">" | "<=" | ">=" ) { p2 = getToken( 0 ).image; }
+        p3=ShiftExpression( env )
+        { result = new BinaryExpression( result, p2, p3 ); }
+    )*
+    { return result; }
+}
+
+Expression ShiftExpression( Environment env ) :
+{
+    Expression			result;
+    Expression			p1;
+    String			p2;
+    Expression			p3;
+}
+{
+    p1=AdditiveExpression( env )
+    { result = p1; }
+    (
+        ( "<<" | ">>" | ">>>" ) { p2 = getToken( 0 ).image; }
+         p3=AdditiveExpression( env )
+        { result = new BinaryExpression( result, p2, p3 ); }
+    )*
+    { return result; }
+}
+
+Expression AdditiveExpression( Environment env ) :
+{
+    Expression			result;
+    Expression			p1;
+    String			p2;
+    Expression			p3;
+}
+{
+    p1=MultiplicativeExpression( env )
+    { result = p1; }
+    (
+        ( "+" | "-" ) { p2 = getToken( 0 ).image; }
+        p3=MultiplicativeExpression( env )
+        { result = new BinaryExpression( result, p2, p3 ); }
+    )*
+    { return result; }
+}
+
+Expression MultiplicativeExpression( Environment env ) :
+{
+    Expression			result;
+    Expression			p1;
+    String			p2;
+    Expression			p3;
+}
+{
+    p1=UnaryExpression( env )
+    { result = p1; }
+    (
+        ( "*" | "/" | "%" ) { p2 = getToken( 0 ).image; }
+        p3=UnaryExpression( env )
+        { result = new BinaryExpression( result, p2, p3 ); }
+    )*
+    { return result; }
+}
+
+Expression UnaryExpression( Environment env ) :
+{
+    int				p1;
+    Expression			p2;
+}
+{
+    LOOKAHEAD( "+" | "-" )
+    (
+        "+" { p1 = UnaryExpression.PLUS; }
+    |
+        "-" { p1 = UnaryExpression.MINUS; }
+    )
+    p2=UnaryExpression( env )
+    { return new UnaryExpression( p1, p2 ); }
+|
+    LOOKAHEAD( "++" | "--" )
+    p2=PreIncrementExpression( env )
+    { return p2; }
+|
+    p2=UnaryExpressionNotPlusMinus( env )
+    { return p2; }
+}
+
+Expression PreIncrementExpression( Environment env ) :
+{
+    int				p1;
+    Expression			p2;
+}
+{
+    (
+        "++" { p1 = UnaryExpression.PRE_INCREMENT; }
+    |
+        "--" { p1 = UnaryExpression.PRE_DECREMENT; }
+    )
+    p2=PrimaryExpression( env )
+    { return new UnaryExpression( p1, p2 ); }
+}
+
+Expression UnaryExpressionNotPlusMinus( Environment env ) :
+{
+    int				p1;
+    Expression			p2;
+}
+{
+    (
+        "~" { p1 = UnaryExpression.BIT_NOT; }
+    |
+        "!" { p1 = UnaryExpression.NOT; }
+    )
+    p2=UnaryExpression( env )
+    { return new UnaryExpression( p1, p2 ); }
+|
+    LOOKAHEAD( CastLookahead() )
+    p2=CastExpression( env )
+    { return p2; }
+|
+    p2=PostfixExpression( env )
+    { return p2; }
+}
+
+void CastLookahead( Environment env ) :
+/* This method is lookahead only. */
+{}
+{
+    LOOKAHEAD(2)
+    "(" PrimitiveType()
+|
+    LOOKAHEAD("(" Name() "[")
+    "(" Name() "[" "]"
+|
+    LOOKAHEAD("(" Name() ")")
+    "(" Name() ")"
+    ( "~" | "!" | "(" | Identifier() | "this" | "super" | "new" | Literal() )
+|
+    "(" Name() Identifier()
+}
+
+Expression PostfixExpression( Environment env ) :
+{
+    Expression			result;
+    Expression			p1;
+    int				p2 = -1;
+}
+{
+    p1=PrimaryExpression( env )
+    [
+        "++" { p2 = UnaryExpression.POST_INCREMENT; }
+    |
+        "--" { p2 = UnaryExpression.POST_DECREMENT; }
+    ]
+    {
+	if (p2 != -1) {
+	    result = new UnaryExpression( p1, p2 );
+	} else {
+	    result = p1;
+	}
+    }
+    { return result; }
+}
+
+CastExpression CastExpression( Environment env ) :
+{
+    TypeName			p1;
+    Expression			p2;
+
+    DebugOut.println( "#CastExpression()" );
+}
+{
+    LOOKAHEAD( "(" PrimitiveType() )
+    "(" p1=Type( env ) ")" p2=UnaryExpression( env )
+    { return new CastExpression( p1, p2 ); }
+|
+    LOOKAHEAD( "(" Name() )
+    "(" p1=Type( env ) ")" p2=UnaryExpressionNotPlusMinus( env )
+    { return new CastExpression( p1, p2 ); }
+}
+
+Expression SelfAccess( Environment env ) :
+{
+    Expression			result;
+    String			p1 = null;
+}
+{
+    [ p1=Name() "." ] "this"
+    {
+	if (p1 != null) {
+	    result = SelfAccess.makeThis( p1 );
+	} else {
+	    result = SelfAccess.constantThis();
+	}
+    }
+    { return result; }
+}
+
+ClassLiteral ClassLiteral( Environment env ) :
+{
+    TypeName			p1;
+}
+{
+    p1=Type( env ) "." "class"
+    { return new ClassLiteral( p1 ); }
+}
+
+Expression PrimaryExpression( Environment env ) :
+/* There must not be Name() . Identifier()
+ * There is a case that PrimaryPrefix is a Name() but is actualy
+ * FieldAccess().  This should be resolved later.
+ */
+{
+    Expression			result;
+    Expression			p1;
+    Expression			p2;
+    Expression			p3;
+    String			p4;
+    ExpressionList		p5;
+}
+{
+    p1=PrimaryPrefix( env )
+    { result = p1; }
+    ( LOOKAHEAD( "." | "[" | "(" )
+        (
+	    LOOKAHEAD( "." "new" )
+	    "." p2=AllocationExpression( env )
+	    {
+		AllocationExpression alloc = (AllocationExpression) p2;
+		alloc.setEncloser( result );
+		result = alloc;
+	    }
+	|
+	    "[" p3=Expression( env ) "]"
+	    { result = new ArrayAccess( result, p3 ); }
+	|
+	    "." p4=Identifier()
+	    { result = new FieldAccess( result, p4 ); }
+	|
+	    p5=Arguments( env )
+	    {
+		FieldAccess base = (FieldAccess) result;
+		Expression expr = base.getReferenceExpr();
+		String name = base.getName();
+		result = new MethodCall( expr, name, p5 );
+	    }
+	)
+    )*
+    { return result; }
+}
+
+Expression PrimaryPrefix( Environment env ) :
+{
+    Expression			p1;
+    String			p2;
+
+    DebugOut.println( "#PrimaryPrefix()" );
+}
+{
+    p1=Literal()
+    { return p1; }
+|
+    LOOKAHEAD( [ Name() "." ] "this" )
+    p1=SelfAccess( env )
+    { return p1; }
+|
+    "super" "." p2=Identifier()
+    { return new FieldAccess( SelfAccess.constantSuper(), p2 ); }
+|
+    "(" p1=Expression( env ) ")"
+    { return p1; }
+|
+    p1=AllocationExpression( env )
+    { return p1; }
+|
+    LOOKAHEAD( { ClassLiteralLookahead() } )
+    p1=ClassLiteral( env )
+    { return p1; }
+|
+    p1=TempFieldAccess( env )
+    { return p1; }
+}
+
+FieldAccess TempFieldAccess( Environment env ) :
+/*
+ * Returns temporary expression as a field access;
+ * A field access without primary may be a variable.
+ * A variable may be qualified class name or field access.
+ */
+{
+    FieldAccess			result;
+    String			p1;
+    StringBuffer  strbuf = null;
+}
+{
+    p1=Identifier()
+    ( LOOKAHEAD( "." Identifier() )
+        "."
+        {
+	    if (strbuf == null) {
+		strbuf = new StringBuffer( p1 );
+	    } else {
+		strbuf.append( "." + p1 );
+	    }
+	}
+        p1=Identifier()
+    )*
+    {
+	if (strbuf == null || strbuf.length() == 0) {
+	    result = new FieldAccess( (Variable) null, p1 );
+	} else {
+	    Variable var = new Variable( strbuf.toString() );
+	    result = new FieldAccess( var, p1 );
+	}
+    }
+    { return result; }
+}
+
+Literal Literal() :
+{
+    String			p1;
+    Literal			p2;
+}
+{
+    <INTEGER_LITERAL> { p1 = getToken( 0 ).image; }
+    { return new Literal( Literal.INTEGER, p1 ); }
+|
+    <LONG_LITERAL> { p1 = getToken( 0 ).image; }
+    { return new Literal( Literal.LONG, p1 ); }
+|
+    <FLOATING_POINT_LITERAL> { p1 = getToken( 0 ).image; }
+    { return new Literal( Literal.FLOAT, p1 ); }
+|
+    <DOUBLE_FLOATING_POINT_LITERAL> { p1 = getToken( 0 ).image; }
+    { return new Literal( Literal.DOUBLE, p1 ); }
+|
+    <CHARACTER_LITERAL> { p1 = getToken( 0 ).image; }
+    { return new Literal( Literal.CHARACTER, p1 ); }
+|
+    <STRING_LITERAL> { p1 = getToken( 0 ).image; }
+    { return new Literal( Literal.STRING, p1 ); }
+|
+    "true"
+    { return Literal.constantTrue(); }
+|
+    "false"
+    { return Literal.constantFalse(); }
+|
+    "null"
+    { return Literal.constantNull(); }
+}
+
+ExpressionList Arguments( Environment env ) :
+{
+    ExpressionList		result = new ExpressionList();
+    Expression			p1;
+
+    DebugOut.println( "#Arguments()" );
+}
+{
+    "("
+    [
+        p1=Expression( env )
+        { result.add( p1 ); }
+        (
+	    "," p1=Expression( env )
+	    { result.add( p1 ); }
+	)*
+    ]
+    ")"
+    { return result; }
+}
+
+Expression AllocationExpression( Environment env ) :
+{
+    Expression			result;
+    TypeName			p1;
+    ArrayAllocationExpression	p2;
+    ExpressionList		p3;
+    MemberDeclarationList	p4 = null;
+
+    DebugOut.println( "#AllocationExpression()" );
+}
+{
+    LOOKAHEAD( "new" PrimitiveType() )
+    "new" p1=TypeWithoutDims( env )
+    p2=ArrayDimsAndInits( env, p1 )
+    { result = p2; }
+    { return result; }
+|
+    "new" p1=TypeWithoutDims( env )
+    (
+        LOOKAHEAD( "[" )
+        p2=ArrayDimsAndInits( env, p1 )
+        { result = p2; }
+    |
+        LOOKAHEAD( "(" ")" "{" )
+        p3=Arguments( env )
+        p4=ClassBody( new ClassEnvironment( env ) )
+        { result = new AllocationExpression( p1, p3, p4 ); }
+    |
+        p3=Arguments( env )
+        { result = new AllocationExpression( p1, p3 ); }
+    )
+    { return result; }
+}
+
+TypeName TypeWithoutDims( Environment env ) :
+{
+    String			p1;
+    Hashtable			p2;
+}
+{
+    ( p1=PrimitiveType() | p1=Name() )
+    p2=OpenJavaTypeSuffixListOpt( env, p1 )
+    { return new TypeName( p1, p2 ); }
+}
+
+ArrayAllocationExpression ArrayDimsAndInits( Environment env, TypeName type ) :
+/*
+ * The first LOOKAHEAD specification below is to parse to PrimarySuffix
+ * if there is an expression between the "[...]".
+ */
+{
+    Expression			p1;
+    int				p2;
+    ArrayInitializer		p3;
+    ExpressionList  exprs = new ExpressionList();
+}
+{
+    LOOKAHEAD( "[" "]" )
+    p2=EmptyBracketsOpt() p3=ArrayInitializer( env )
+    { for (int i = 0; i < p2; ++i)  exprs.add( null ); }
+    { return new ArrayAllocationExpression( type, exprs, p3 ); }
+|
+    LOOKAHEAD( "[" )
+    ( LOOKAHEAD( { (getToken( 1 ).kind == LBRACKET
+		    && getToken( 2 ).kind != RBRACKET) } )
+        "[" p1=Expression( env ) { exprs.add( p1 ); } "]"
+    )+
+    p2=EmptyBracketsOpt()
+    { for (int i = 0; i < p2; ++i)  exprs.add( null ); }
+    { return new ArrayAllocationExpression( type, exprs ); }
+}
+
+StatementList BlockedBody( Environment env ) :
+/* See also Block. This is for bodys but for statement */
+{
+    StatementList		p1;
+}
+{
+    "{" p1=BlockOrStatementListOpt( env ) "}"
+    { return p1; }
+}
+
+/*
+ * Statement syntax follows.
+ */
+
+Statement Statement( Environment env ) :
+{
+    Statement			p1;
+}
+{
+    LOOKAHEAD( Identifier() ":" )
+    p1=LabeledStatement( env )
+    { return p1; }
+|
+    p1=Block( env )
+    { return p1; }
+|
+    p1=EmptyStatement( env )
+    { return p1; }
+|
+    p1=SwitchStatement( env )
+    { return p1; }
+|
+    p1=IfStatement( env )
+    { return p1; }
+|
+    p1=WhileStatement( env )
+    { return p1; }
+|
+    p1=DoWhileStatement( env )
+    { return p1; }
+|
+    p1=ForStatement( env )
+    { return p1; }
+|
+    p1=BreakStatement( env )
+    { return p1; }
+|
+    p1=ContinueStatement( env )
+    { return p1; }
+|
+    p1=ReturnStatement( env )
+    { return p1; }
+|
+    p1=ThrowStatement( env )
+    { return p1; }
+|
+    p1=SynchronizedStatement( env )
+    { return p1; }
+|
+    p1=TryStatement( env )
+    { return p1; }
+|
+    p1=ExpressionStatement( env )
+    { return p1; }
+}
+
+LabeledStatement LabeledStatement( Environment env ) :
+{
+    String			p1;
+    Statement			p2;
+
+    DebugOut.println( "#LabeledStatement()" );
+}
+{
+    p1=Identifier() ":" p2=Statement( env )
+    { return new LabeledStatement( p1, p2 ); }
+}
+
+Block Block( Environment env ) :
+/* See also BlockedBody. This is to be statement */
+{
+    StatementList		p1;
+    DebugOut.println( "#Block()" );
+}
+{
+    "{" p1=BlockOrStatementListOpt( env ) "}"
+    { return new Block( p1 ); }
+}
+
+StatementList BlockOrStatementListOpt( Environment env ) :
+{
+    StatementList		result = new StatementList();
+    StatementList		p1;
+}
+{
+    LOOKAHEAD( { (getToken( 1 ).kind != RBRACE
+	       && getToken( 1 ).kind != EOF
+	       && getToken( 1 ).kind != CASE
+	       && getToken( 1 ).kind != _DEFAULT ) } )
+    ( LOOKAHEAD( { (getToken( 1 ).kind != RBRACE
+	         && getToken( 1 ).kind != EOF
+	         && getToken( 1 ).kind != CASE
+	         && getToken( 1 ).kind != _DEFAULT ) } )
+        p1=BlockOrStatement( env )
+        { result.addAll( p1 ); }
+    )+
+    { return result; }
+|
+    E()
+    { return result; }
+}
+
+StatementList BlockOrStatement( Environment env ) :
+{
+    Statement			p1;
+    StatementList		p2;
+}
+{
+    p1=UnmodifiedClassDeclaration( new ClassEnvironment( env ) )
+    { return new StatementList( p1 ); }
+|
+    LOOKAHEAD( { LocalVariableDeclarationLookahead( env ) } )
+    p2=LocalVariableDeclaration( env ) ";"
+    { return p2; }
+|
+    p1=Statement( env )
+    { return new StatementList( p1 ); }
+}
+
+StatementList LocalVariableDeclaration( Environment env ) :
+{
+    StatementList		result = new StatementList();
+    ModifierList		p1;
+    TypeName			p2;
+    VariableDeclarator		p3;
+    TypeName  tspec;
+    String  vname;
+    VariableInitializer  vinit;
+    DebugOut.println( "#LocalVariableDeclaration()" );
+}
+{
+    p1=VariableModifiersOpt( env ) p2=Type( env )
+    p3=VariableDeclarator( env )
+    {
+	tspec = (TypeName) p2.makeRecursiveCopy();
+	tspec.addDimension( p3.getDimension() );
+	vname = p3.getVariable();
+	vinit = p3.getInitializer();
+	result.add( new VariableDeclaration( p1, tspec, vname, vinit ) );
+    }
+    (
+        "," p3=VariableDeclarator( env )
+        {
+	    tspec = (TypeName) p2.makeRecursiveCopy();
+	    tspec.addDimension( p3.getDimension() );
+	    vname = p3.getVariable();
+	    vinit = p3.getInitializer();
+	    result.add( new VariableDeclaration( p1, tspec, vname, vinit ) );
+	}
+    )*
+    { return result; }
+}
+
+ModifierList VariableModifiersOpt( Environment env ) :
+{
+    ModifierList		result = new ModifierList();
+    int				p1;
+    String			p2;
+}
+{
+    LOOKAHEAD( { modifierCheck( env, getToken( 1 ) ) } )
+    ( LOOKAHEAD( { ModifierLookahead( env ) } )
+        (
+	    LOOKAHEAD( "final" )
+	    p1=Modifier()
+	    { result.add( p1 ); }
+	|
+	    LOOKAHEAD( { OpenJavaModifierLookahead( env ) } )
+	    p2=OpenJavaModifier()
+	    { result.add( p2 ); }
+	)
+    )+
+    { return result; }
+|
+    E()
+    { return result; }
+}
+
+EmptyStatement EmptyStatement( Environment env ) :
+{
+    DebugOut.println( "#EmptyStatement()" );
+}
+{
+    ";"
+    { return new EmptyStatement(); }
+}
+
+ExpressionStatement ExpressionStatement( Environment env ) :
+{
+    Expression			p1;
+    
+    DebugOut.println( "#ExpressionStatement()" );
+}
+{
+    p1=StatementExpression( env ) ";"
+    { return new ExpressionStatement( p1 ); }
+}
+
+Expression StatementExpression( Environment env ) :
+{
+    Expression			p1;
+    /***********/
+}
+{
+    p1=PreIncrementExpression( env )
+    { return p1; }
+|
+    /*LOOKAHEAD( PrimaryExpression( env ) AssignmentOperator() )*/
+    LOOKAHEAD( { AssignmentLookahead() } )
+    p1=AssignmentExpression( env )
+    { return p1; }
+|
+    p1=PostfixExpression( env )
+    { return p1; }
+}
+
+SwitchStatement SwitchStatement( Environment env ) :
+{
+    Expression			p1;
+    Expression			p2;
+    StatementList		p3;
+    CaseGroupList  cplist = new CaseGroupList();
+    ExpressionList  exprs;
+
+    DebugOut.println( "#SwitchStatement()" );
+}
+{
+    "switch" "(" p1=Expression( env ) ")" "{"
+     ( LOOKAHEAD( "case" | "default" )
+         { exprs = new ExpressionList(); }
+         ( LOOKAHEAD( "case" | "default" )
+	   p2=SwitchLabel( env ) { exprs.add( p2 ); }
+	 )+
+         p3=BlockOrStatementListOpt( env )
+         { cplist.add( new CaseGroup( exprs, p3 ) ); }
+     )*
+    "}"
+     { return new SwitchStatement( p1, cplist ); }
+}
+
+Expression SwitchLabel( Environment env ) :
+{
+    Expression			p1;
+}
+{
+    "case" p1=Expression( env ) ":"
+    { return p1; }
+|
+    "default" ":"
+    { return null; }
+}
+
+IfStatement IfStatement( Environment env ) :
+/*
+ * The disambiguating algorithm of JavaCC automatically binds dangling
+ * else's to the innermost if statement.  The LOOKAHEAD specification
+ * is to tell JavaCC that we know what we are doing.
+ */
+{
+    IfStatement			result;
+    Expression			p1;
+    StatementList		p2;
+    Statement			p3;
+    StatementList  true_part;
+    StatementList  false_part = null;
+    
+    DebugOut.println( "#IfStatement()" );
+}
+{
+    "if" "(" p1=Expression( env ) ")"
+    ( LOOKAHEAD(1)
+        p2=BlockedBody( env )
+        { true_part = p2; }
+    |
+        p3=Statement( env )
+        { true_part = new StatementList( p3 ); }
+    )
+    [ LOOKAHEAD(1)
+        "else"
+        ( LOOKAHEAD(1)
+	    p2=BlockedBody( env )
+	    { false_part = p2; }
+	|
+	    p3=Statement( env )
+	    { false_part = new StatementList( p3 ); }
+	)
+    ]
+    { return new IfStatement( p1, true_part, false_part ); }
+}
+
+WhileStatement WhileStatement( Environment env ) :
+{
+    Expression			p1;
+    StatementList		p2;
+    Statement			p3;
+    StatementList  body;
+    
+    DebugOut.println( "#WhileStatement()" );
+}
+{
+    "while" "(" p1=Expression( env ) ")"
+    ( LOOKAHEAD(1)
+        p2=BlockedBody( env )
+        { body = p2; }
+    |
+        p3=Statement( env )
+        { body = new StatementList( p3 ); }
+    )
+    { return new WhileStatement( p1, body ); }
+}
+
+DoWhileStatement DoWhileStatement( Environment env ) :
+{
+    StatementList		p1;
+    Statement			p2;
+    Expression			p3;
+    StatementList  body;
+    
+    DebugOut.println( "#DoWhileStatement()" );
+}
+{
+    "do"
+    ( LOOKAHEAD(1)
+        p1=BlockedBody( env )
+        { body = p1; }
+    |
+        p2=Statement( env )
+        { body = new StatementList( p2 ); }
+    )
+    "while" "(" p3=Expression( env ) ")" ";"
+    { return new DoWhileStatement( body, p3 ); }
+}
+
+ForStatement ForStatement( Environment env ) :
+{
+    ForStatement		result;
+    TypeName			p1 = null;
+    VariableDeclarator[]	p2 = null;
+    ExpressionList		p3 = null;
+    Expression			p4 = null;
+    ExpressionList		p5 = null;
+    StatementList		p6;
+    Statement			p7;
+    StatementList  body;
+
+    DebugOut.println( "#ForStatement()" );
+}
+{
+    "for" "("
+    [ LOOKAHEAD( { (getToken( 1 ).kind != SEMICOLON) } )
+        (
+	    LOOKAHEAD( { LocalVariableDeclarationLookahead( env ) } )
+	    p1=Type( env )
+	    p2=VariableDeclaratorList( env )
+	|
+	    p3=StatementExpressionList( env )
+        )
+    ]
+    ";"
+    [ LOOKAHEAD( { (getToken( 1 ).kind != SEMICOLON) } )
+        p4=Expression( env )
+    ]
+    ";"
+    [ LOOKAHEAD( { (getToken( 1 ).kind != RPAREN) } )
+        p5=StatementExpressionList( env )
+    ]
+    ")"
+    (
+        LOOKAHEAD(1)
+        p6=BlockedBody( env )
+        { body = p6; }
+    |
+        p7=Statement( env )
+        { body = new StatementList( p7 ); }
+    )
+    {
+	if (p1 != null) {
+	    result = new ForStatement( p1, p2, p4, p5, body );
+	} else if (p3 != null) {
+	    result = new ForStatement( p3, p4, p5, body );
+	} else {
+	    result = new ForStatement( new ExpressionList(), p4, p5, body );
+	}
+    }
+    { return result; }
+}
+
+VariableDeclarator[] VariableDeclaratorList( Environment env ) :
+{
+    VariableDeclarator[]	result;
+    VariableDeclarator		p1;
+    Vector v = new Vector();
+
+    DebugOut.println( "#LocalVariableDeclaration()" );
+}
+{
+    p1=VariableDeclarator( env )
+    { v.addElement( p1 ); }
+    (
+        "," p1=VariableDeclarator( env )
+        { v.addElement( p1 ); }
+    )*
+    {
+	result = new VariableDeclarator[v.size()];
+	for (int i = 0; i < result.length; ++i) {
+	    result[i] = (VariableDeclarator) v.elementAt( i );
+	}
+	return result;
+    }
+}
+
+ExpressionList StatementExpressionList( Environment env ) :
+{
+    ExpressionList		result = new ExpressionList();
+    Expression			p1;
+}
+{
+    p1=StatementExpression( env )
+    { result.add( p1 ); }
+    (
+        "," p1=StatementExpression( env )
+        { result.add( p1 ); }
+    )*
+    { return result; }
+}
+
+BreakStatement BreakStatement( Environment env ) :
+{
+    BreakStatement		result;
+    String			p1 = null;
+
+    DebugOut.println( "#BreakStatement()" );
+}
+{
+    "break" [ p1=Identifier() ] ";"
+    {
+	if (p1 != null) {
+	    result = new BreakStatement( p1 );
+	} else {
+	    result = new BreakStatement();
+	}
+    }
+    { return result; }
+}
+
+ContinueStatement ContinueStatement( Environment env ) :
+{
+    ContinueStatement		result;
+    String			p1 = null;
+
+    DebugOut.println( "#ContinueStatement()" );
+}
+{
+    "continue" [ p1=Identifier() ] ";"
+    {
+	if (p1 != null) {
+	    result = new ContinueStatement( p1 );
+	} else {
+	    result = new ContinueStatement();
+	}
+    }
+    { return result; }
+}
+
+ReturnStatement ReturnStatement( Environment env ) :
+{
+    ReturnStatement		result;
+    Expression			p1 = null;
+
+    DebugOut.println( "#ReturnStatement()" );
+}
+{
+    "return"
+    [
+         LOOKAHEAD( { (getToken(1).kind != SEMICOLON)} )
+         p1=Expression( env )
+    ]
+    ";"
+    {
+	if (p1 != null) {
+	    result = new ReturnStatement( p1 );
+	} else {
+	    result = new ReturnStatement();
+	}
+    }
+    { return result; }
+}
+
+ThrowStatement ThrowStatement( Environment env ) :
+{
+    Statement			result;
+    Expression			p1;
+
+    DebugOut.println( "#ThrowStatement()" );
+}
+{
+    "throw" p1=Expression( env ) ";"
+    { return new ThrowStatement( p1 ); }
+}
+
+SynchronizedStatement SynchronizedStatement( Environment env ) :
+{
+    Expression			p1;
+    StatementList		p2;
+
+    DebugOut.println( "#SynchronizedStatement()" );
+}
+{
+    "synchronized" "(" p1=Expression( env ) ")" p2=BlockedBody( env )
+    { return new SynchronizedStatement( p1, p2 ); }
+}
+
+TryStatement TryStatement( Environment base_env ) :
+/*
+ * Semantic check required here to make sure that at least one
+ * finally/catch is present.
+ */
+{
+    Environment			env = new ClosedEnvironment( base_env );
+    TryStatement		result;
+    StatementList		p1;
+    Parameter			p2;
+    StatementList		p3;
+    StatementList		p4 = null;
+    CatchList  catches = new CatchList();
+    Environment c_env;
+    
+    DebugOut.println( "#TryStatement()" );
+}
+{
+    "try" p1=BlockedBody( env )
+    ( LOOKAHEAD( "catch" )
+         { c_env = new ClosedEnvironment( env ); }
+         "catch" "(" p2=FormalParameter( c_env ) ")" p3=BlockedBody( c_env )
+         { catches.add( new CatchBlock( p2, p3 ) ); }
+    )*
+    [
+         "finally" p4=BlockedBody( new ClosedEnvironment( env ) )
+    ]
+    { result = new TryStatement( p1, catches, p4 ); }
+    { return result; }
+}

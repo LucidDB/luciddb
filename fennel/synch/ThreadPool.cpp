@@ -1,0 +1,99 @@
+/*
+// $Id$
+// Fennel is a relational database kernel.
+// Copyright (C) 1999-2004 John V. Sichi.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
+#include "fennel/common/CommonPreamble.h"
+#include "fennel/synch/ThreadPool.h"
+#include "fennel/synch/Thread.h"
+
+FENNEL_BEGIN_CPPFILE("$Id$");
+
+/**
+ * PooledThread is a Thread working for a ThreadPool.
+ */
+class PooledThread : public Thread
+{
+    ThreadPoolBase &pool;
+    
+public:
+    explicit PooledThread(ThreadPoolBase &poolInit)
+        : pool(poolInit)
+    {
+    }
+
+    virtual void run()
+    {
+        pool.runPooledThread();
+    }
+};
+
+ThreadPoolBase::ThreadPoolBase()
+{
+    bStop = true;
+}
+
+ThreadPoolBase::~ThreadPoolBase()
+{
+    assert(bStop);
+}
+
+void ThreadPoolBase::start(uint nThreads)
+{
+    StrictMutexGuard guard(mutex);
+    bStop = false;
+    assert(nThreads > 0);
+    for (uint i = 0; i < nThreads; ++i) {
+        PooledThread *pThread = new PooledThread(*this);
+        pThread->start();
+        threads.push_back(pThread);
+    }
+}
+
+void ThreadPoolBase::stop()
+{
+    StrictMutexGuard guard(mutex);
+    if (bStop) {
+        return;
+    }
+    bStop = true;
+    condition.notify_all();
+    guard.unlock();
+    for (uint i = 0; i < threads.size(); ++i) {
+        threads[i]->join();
+        deleteAndNullify(threads[i]);
+    }
+}
+
+void ThreadPoolBase::runPooledThread()
+{
+    StrictMutexGuard guard(mutex);
+    for (;;) {
+        while (!bStop && isQueueEmpty()) {
+            condition.wait(guard);
+        }
+        if (bStop) {
+            return;
+        }
+        runOneTask(guard);
+    }
+}
+
+FENNEL_END_CPPFILE("$Id$");
+
+// End ThreadPool.cpp

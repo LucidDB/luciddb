@@ -1,0 +1,1325 @@
+
+// Farrago is a relational database management system.
+// Copyright (C) 2003 John V. Sichi.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+// 
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+options {
+    STATIC = false;
+    JAVA_UNICODE_ESCAPE = true;
+    IGNORE_CASE = true;
+}
+
+PARSER_BEGIN(FarragoParserImpl)
+
+package net.sf.farrago.parser;
+
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.ddl.*;
+import net.sf.saffron.sql.*;
+import net.sf.saffron.sql.parser.ParserUtil;
+import net.sf.saffron.sql.parser.CommonParserBase;
+import net.sf.saffron.util.*;
+import java.util.*;
+import javax.jmi.reflect.*;
+import java.sql.*;
+
+import net.sf.farrago.cwm.*;
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.datatypes.*;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.cwm.relational.enumerations.*;
+import net.sf.farrago.cwm.keysindexes.*;
+
+import net.sf.farrago.fem.med.*;
+
+
+/**
+ * Farrago SQL parser implementation, generated from DdlParser.jj and
+ * CommonParser.jj by JavaCC.
+ *
+ * @author John V. Sichi
+ * @version $Id$
+ */
+class FarragoParserImpl extends CommonParserBase {
+    FarragoParser farragoParser;
+
+    private boolean dropRestrict;
+
+    ParserContext getCurrentContext()
+    {
+        return new ParserContext(
+            token.beginLine,
+            token.beginColumn);
+    }
+
+    public FarragoCatalog getCatalog()
+    {
+        return farragoParser.ddlValidator.getCatalog();
+    }
+}
+
+PARSER_END(FarragoParserImpl)
+
+
+/*****************************************
+ * Syntactical Descriptions              *
+ *****************************************/
+
+
+
+SqlIdentifier CompoundIdentifier2() :
+{
+    List list = new ArrayList();
+    String p;
+}
+{
+    (p = Identifier() {list.add(p);})
+    (<DOT> p = Identifier() {list.add(p);})?
+    {return new SqlIdentifier(ParserUtil.toStringArray(list),null);}
+}
+
+int IntLiteral() :
+{
+    Token t;
+}
+{
+    t = <UNSIGNED_INTEGER_LITERAL>
+        {
+            try {
+                return Integer.parseInt(t.image);
+            } catch (NumberFormatException ex) {
+                throw Util.newInternal(ex);
+            }
+        }
+}
+
+String StringLiteral() :
+{
+    Token t;
+}
+{
+    t = <STRING_LITERAL>
+        {
+            // TODO:  combine with CommonParser.jj
+            String p = ParserUtil.strip(t.image,"'");
+            return ParserUtil.parseString(p);
+        }
+}
+
+/**
+ * Parses an SQL statement followed by the end-of-file symbol.
+ *
+ * @return top-level CWM object affected for DDL statement, or top-level SqlNode
+ * for DML or query statement
+ */
+Object FarragoSqlStmtEof() :
+{
+    Object obj;
+}
+{
+    (
+        obj = DdlStmtEof()
+	|
+        obj = SqlStmtEof()
+	)
+        { return obj; }
+}
+
+DdlStmt DdlStmtEof() :
+{
+    CwmModelElement modelElement;
+    DdlStmt ddlStmt;
+}
+{
+    (
+        ( <CREATE>
+        {
+            farragoParser.startReposWriteTxn();
+        }
+          ( 
+            modelElement = SchemaDefinition()
+            |
+            LOOKAHEAD(2)
+            modelElement = SchemaObjectDefinition(null)
+            |
+            modelElement = IndexDefinition(null,null)
+            |
+            modelElement = ForeignDataWrapperDefinition()
+            |
+            modelElement = DataServerDefinition()
+           )
+        {
+            ddlStmt = new DdlCreateStmt(modelElement);
+        }
+        )
+        |
+        ( <DROP>
+        {
+            farragoParser.startReposWriteTxn();
+            // assume RESTRICT; CascadeOption() may override
+            dropRestrict = true;
+        }
+          (
+              modelElement = SchemaDrop()
+              |
+              modelElement = TableDrop()
+              |
+              modelElement = IndexDrop()
+			  |
+			  modelElement = ViewDrop()
+			  |
+              LOOKAHEAD(2)
+			  modelElement = ForeignDataWrapperDrop()
+			  |
+			  modelElement = DataServerDrop()
+			  |
+			  modelElement = ForeignTableDrop()
+          )
+        {
+            ddlStmt = new DdlDropStmt(modelElement,dropRestrict);
+        }
+        )
+        |
+        ( <TRUNCATE>
+        {
+            farragoParser.startReposWriteTxn();
+        }
+          (
+              <TABLE> modelElement = TableIdentifier(null)
+          )
+        {
+            ddlStmt = new DdlTruncateStmt(modelElement);
+        }
+        )
+        |
+        ( <SET>
+        {
+            // TODO:  should be read
+            farragoParser.startReposWriteTxn();
+        }
+          (
+              (modelElement = CatalogReference())
+              |
+              (modelElement = SchemaReference())
+          )
+        {
+            ddlStmt = new DdlSetQualifierStmt(modelElement);
+        }
+        )
+        |
+        ( <ALTER> <SYSTEM> <SET>
+        {
+            farragoParser.startReposWriteTxn();
+        }
+          (
+              ddlStmt = SystemParamAssignment()
+          )
+        {
+        }
+        )
+        |
+        ( <CHECKPOINT> { ddlStmt = new DdlCheckpointStmt(); } )
+        |
+        ( <COMMIT> { ddlStmt = new DdlCommitStmt(); } )
+        |
+        ( <ROLLBACK> ddlStmt = Rollback())
+        |
+        ( <SAVEPOINT> ddlStmt = Savepoint())
+        |
+        ( <RELEASE> <SAVEPOINT> ddlStmt = ReleaseSavepoint())
+    )
+        <EOF>
+        {
+            return ddlStmt;
+        }
+}
+
+// TODO:  support non-topological order of object definition, e.g. a
+// referencing table before a referenced table
+
+CwmSchema SchemaDefinition() :
+{
+    CwmSchema schema;
+    SqlIdentifier schemaName,userName;
+}
+{
+    <SCHEMA> schemaName = CompoundIdentifier2()
+        {
+            schema = getCatalog().newCwmSchema();
+            if (schemaName.names.length == 2) {
+                CwmCatalog cwmCatalog = farragoParser.ddlValidator.findCatalog(
+                    schemaName.names[0]);
+                schema.setNamespace(cwmCatalog);
+                schema.setName(schemaName.names[1]);
+            } else {
+                schema.setNamespace(
+                    farragoParser.ddlValidator.getDefaultCatalog());
+                schema.setName(schemaName.getSimple());
+            }
+        }
+    [ <AUTHORIZATION> userName = SimpleIdentifier() ]
+        {
+            // TODO:  store userName
+        }
+    (
+        <CREATE>
+        SchemaObjectDefinition(schema)
+    )*
+    {
+        // TODO: character set, all that jazz
+        return schema;
+    }
+}
+
+CwmModelElement SchemaObjectDefinition(CwmSchema schema) :
+{
+    CwmModelElement modelElement;
+}
+{
+    (
+        modelElement = TableDefinition(schema)
+		|
+		modelElement = ViewDefinition(schema)
+		|
+		modelElement = ForeignTableDefinition(schema)
+    )
+        {
+            return modelElement;
+        }
+}
+
+// TODO:  support non-topological order of table element definition, e.g. a
+// referencing constraint definition before a referenced column definition
+
+CwmTable TableDefinition(CwmSchema schema) :
+{
+    CwmTable table;
+}
+{
+    (
+        table = UnscopedTableDefinition(schema)
+        |
+        table = ScopedTableDefinition(schema)
+    )
+        {
+        }
+    (LOOKAHEAD(2) <CREATE> IndexDefinition(schema,table))*
+        {
+        }
+    {
+        return table;
+    }
+}
+
+CwmTable UnscopedTableDefinition(CwmSchema schema) :
+{
+    CwmTable table;
+    SqlIdentifier qualifiedTableName;
+}
+{
+    <TABLE>
+        {
+            table = getCatalog().newCwmTable();
+        }
+    qualifiedTableName = CompoundIdentifier2()
+        {
+            farragoParser.ddlValidator.setSchemaObjectName(
+                schema,table,qualifiedTableName);
+        }
+    <LPAREN> TableElementList(table) <RPAREN>
+        {
+        }
+    {
+        return table;
+    }
+}
+
+CwmTable ScopedTableDefinition(CwmSchema schema) :
+{
+    CwmTable table;
+    String scope;
+    String commitOption;
+}
+{
+    <GLOBAL> <TEMPORARY>
+    table = UnscopedTableDefinition(schema)
+        {
+            table.setTemporary(true);
+            
+            // TODO:  support LOCAL (as "MODULE")
+            scope = "SESSION";
+            commitOption = "DELETE";
+        }
+    [ <ON> <COMMIT>
+      (
+          <PRESERVE> 
+      {
+          commitOption = "PRESERVE";
+      }
+          |
+          <DELETE>
+      {
+          commitOption = "DELETE";
+      }
+      )
+      <ROWS> ]
+        {
+        }
+    {
+        // TODO:  define a tag for commitOption, since CWM doesn't have a place
+        // for it?
+        table.setTemporaryScope(scope + ":COMMIT=" + commitOption);
+        return table;
+    }
+}
+
+CwmView ViewDefinition(CwmSchema schema) :
+{
+	CwmView view;
+	SqlIdentifier qualifiedViewName;
+	SqlNode query;
+    List columnNameList;
+}
+{
+	<VIEW>
+		{
+           view = getCatalog().newCwmView();
+        }
+    qualifiedViewName = CompoundIdentifier2()
+        {
+            farragoParser.ddlValidator.setSchemaObjectName(
+                schema,view,qualifiedViewName);
+        }
+    [<LPAREN> columnNameList = SimpleIdentifierCommaList() 
+		{
+            Iterator columnNameIter = columnNameList.iterator();
+			while (columnNameIter.hasNext()) {
+				String columnName = 
+					((SqlIdentifier) columnNameIter.next()).getSimple();
+                CwmColumn column = getCatalog().newCwmColumn();
+                column.setName(columnName);
+                view.getFeature().add(column);
+			}
+		}
+	 <RPAREN>]
+
+    <AS> query = OrderedQueryOrExpr(EXPR_ACCEPT_QUERY)
+    {
+        // NOTE:  we accept ORDER BY on the view definition, even though
+        // that's not standard SQL, and leave it up to the validator to
+        // decide what to do with it
+        Connection connection =
+            farragoParser.ddlValidator.getInvokingConnection();
+        String unparseSql;
+        try {
+            unparseSql = query.toString(
+                new SqlDialect(connection.getMetaData()));
+        } catch (SQLException ex) {
+            throw Util.newInternal(ex);
+        }
+		CwmQueryExpression queryExp = getCatalog().newCwmQueryExpression();
+		queryExp.setLanguage("SQL");
+        queryExp.setBody(unparseSql);
+		view.setQueryExpression(queryExp);
+	}
+	{
+       return view;
+    }
+}
+
+
+CwmSqlindex IndexDefinition(CwmSchema schema,CwmTable table) :
+{
+    CwmSqlindex index;
+    SqlIdentifier indexName;
+    CwmTable specifiedTable;
+    List columnNameList;
+    boolean unique = false;
+    boolean clustered = false;
+
+    if ((schema == null) && (table != null)) {
+        schema = (CwmSchema) table.getNamespace();
+    }
+}
+{
+    [ <UNIQUE> { unique = true; } ]
+        {
+        }
+    [ <CLUSTERED> { clustered = true; } ]
+        {
+        }
+    <INDEX>
+        {
+            index = getCatalog().newCwmSqlindex();
+        }
+    indexName = SimpleIdentifier()
+        {
+            index.setName(indexName.names[0]);
+        }
+    <ON> specifiedTable = TableIdentifier(schema)
+        {
+            if (table == null) {
+                table = specifiedTable;
+            } else {
+                // TODO:  move rule down into validator
+                if (table != specifiedTable) {
+                    DdlValidator validator = farragoParser.ddlValidator;
+                    throw validator.res.newValidatorIndexBadTable(
+                        validator.getParserContextString(
+                            index));
+                }
+            }
+            getCatalog().indexPackage.getIndexSpansClass().add(table,index);
+            // REVIEW:  why is this necessary?  shouldn't association above be
+            // sufficient?
+            index.setSpannedClass(table);
+            if (clustered) {
+                getCatalog().setTagValue(index,"clusteredIndex",null);
+            }
+            index.setUnique(unique);
+        }
+    <LPAREN> columnNameList = SimpleIdentifierCommaList() <RPAREN>
+        {
+            Iterator columnNameIter = columnNameList.iterator();
+            while (columnNameIter.hasNext()) {
+                String columnName =
+                    ((SqlIdentifier) columnNameIter.next()).names[0];
+                CwmColumn column = farragoParser.ddlValidator.findColumn(
+                    table,columnName);
+                CwmSqlindexColumn indexColumn =
+                    getCatalog().newCwmSqlindexColumn();
+                // NOTE:  don't do indexColumn.setName(); that way we don't
+                // have to worry about consistency issues during update.  But
+                // might want to do this later to make catalog views perform
+                // better, or if other CWM tools expect this.
+                indexColumn.setAscending(Boolean.TRUE);
+                indexColumn.setFeature(column);
+                indexColumn.setIndex(index);
+            }
+        }
+    {
+        return index;
+    }
+}
+
+CwmTable TableIdentifier(CwmSchema schema) :
+{
+    SqlIdentifier qualifiedTableName;
+    CwmTable table;
+}
+{
+    qualifiedTableName = CompoundIdentifier2()
+        {
+            table = (CwmTable) farragoParser.ddlValidator.findSchemaObject(
+                schema,
+                qualifiedTableName,
+                getCatalog().relationalPackage.getCwmTable());
+        }
+    {
+        return table;
+    }
+}
+
+CwmView ViewReference(CwmSchema schema) :
+{
+    SqlIdentifier qualifiedViewName;
+    CwmView view;
+}
+{
+    <VIEW> qualifiedViewName = CompoundIdentifier2()
+        {
+            view = (CwmView) farragoParser.ddlValidator.findSchemaObject(
+                schema,
+                qualifiedViewName,
+                getCatalog().relationalPackage.getCwmView());
+        }
+    {
+        return view;
+    }
+}
+
+void TableElementList(CwmTable table) :
+{
+}
+{
+    TableElement(table)
+    (
+        <COMMA>
+        TableElement(table)
+    )*
+}
+
+
+
+CwmModelElement TableElement(CwmTable table) :
+{
+    CwmModelElement modelElement;
+}
+{
+    (
+        modelElement = ColumnDefinition(table)
+        |
+        modelElement = TableConstraint(table)
+    )
+        {
+            return modelElement;
+        }
+}
+
+void BasicColumnDefinition(CwmTable table,CwmColumn column) :
+{
+    SqlIdentifier columnName;
+    SqlIdentifier typeName;
+    int precision,scale;
+    String charSetName;
+}
+{
+    columnName = SimpleIdentifier()
+        {
+            table.getFeature().add(column);
+            column.setName(columnName.names[0]);
+        }
+    typeName = TypeName()
+        {
+            CwmSqldataType type =
+                farragoParser.ddlValidator.findSqldataType(
+                    typeName.getSimple());
+            column.setType(type);
+        }
+    (
+        <LPAREN>
+        precision = IntLiteral()
+        {
+            // NOTE:  we always set precision here; later, validation may
+            // convert this to length instead
+            column.setPrecision(new Integer(precision));
+        }
+        (
+            <COMMA>
+            scale = IntLiteral()
+            {
+                column.setScale(new Integer(scale));
+            }
+        )? <RPAREN>
+    )?
+    (
+        <CHARACTER> <SET>
+        charSetName = Identifier()
+        {
+            column.setCharacterSetName(charSetName);
+        }
+    )?
+}
+
+CwmColumn ColumnDefinition(CwmTable table) :
+{
+    CwmColumn column;
+    SqlNode defaultClause;
+}
+{
+    {
+        column = getCatalog().newCwmColumn();
+    }
+    BasicColumnDefinition(table,column)
+        {
+        }
+    [
+        defaultClause = DefaultClause() 
+        {
+            CwmExpression defaultExpression =
+            getCatalog().newCwmExpression();
+            defaultExpression.setBody(defaultClause.toString(null));
+            defaultExpression.setLanguage("SQL");
+            column.setInitialValue(defaultExpression);
+        }
+    ]
+        {
+        }
+    ( ColumnConstraint(table,column) )*
+        {
+        }
+    {
+        return column;
+    }
+}
+
+SqlNode DefaultClause() :
+{
+    SqlNode expression;
+}
+{
+    <DEFAULT_KW> (
+        // TODO:  allow USER, CURRENT_USER, CURRENT_ROLE, SESSION_USER,
+        // SYSTEM_USER, CURRENT_PATH, <datatime value function>,
+        // <implicitly typed value specification>
+        expression = Literal()
+    )
+        {
+            return expression;
+        }
+}
+
+CwmModelElement TableConstraint(CwmTable table) :
+{
+    String constraintName = null;
+    CwmUniqueConstraint constraint;
+}
+{
+    [ <CONSTRAINT> constraintName = Identifier() ]
+        {
+        }
+    constraint = TableUniqueConstraint(table)
+        {
+            if (constraintName != null) {
+                constraint.setName(constraintName);
+            } else {
+                getCatalog().generateConstraintName(constraint);
+            }
+            table.getOwnedElement().add(constraint);
+        }
+    {
+        return constraint;
+    }
+}
+
+CwmUniqueConstraint TableUniqueConstraint(CwmTable table) :
+{
+    CwmUniqueConstraint constraint;
+    List columnNameList;
+}
+{
+    constraint = UniqueConstraint()
+        {
+        }
+    <LPAREN> columnNameList = SimpleIdentifierCommaList() <RPAREN>
+        {
+            Iterator columnNameIter = columnNameList.iterator();
+            while (columnNameIter.hasNext()) {
+                String columnName =
+                    ((SqlIdentifier) columnNameIter.next()).names[0];
+                CwmColumn column = farragoParser.ddlValidator.findColumn(
+                    table,columnName);
+                constraint.getFeature().add(column);
+                // TODO:  validate no duplicates
+            }
+        }
+    // TODO:  deferrability, etc.
+    {
+        return constraint;
+    }
+}
+
+CwmUniqueConstraint UniqueConstraint() :
+{
+    CwmUniqueConstraint constraint;
+}
+{
+    (
+        <UNIQUE>
+    {
+        constraint = getCatalog().newCwmUniqueConstraint();
+    }
+        |
+        <PRIMARY> <KEY>
+    {
+        constraint = getCatalog().newCwmPrimaryKey();
+    }
+    )
+        {
+            return constraint;
+        }
+}
+
+
+// Some SQL type names need special handling due to the fact that they have
+// spaces in them but are not quoted (what a brilliant idea!).  Note that
+// whenever a typename is also a keyword (like CHARACTER), it has to be added
+// here.
+SqlIdentifier TypeName() :
+{
+    SqlIdentifier typeName;
+    boolean varchar = false;
+}
+{
+    (
+        typeName = SimpleIdentifier()
+        {
+        }
+        | <CHARACTER> [ <VARYING> { varchar = true; } ]
+        {
+            if (varchar) {
+                typeName = new SqlIdentifier("VARCHAR");
+            } else {
+                typeName = new SqlIdentifier("CHARACTER");
+            }
+        }
+        | <DOUBLE> [ <PRECISION> ]
+        {
+            typeName = new SqlIdentifier("DOUBLE");
+        }
+    )
+    {
+        return typeName;
+    }
+}
+
+void ColumnConstraint(CwmTable table,CwmColumn column) :
+{
+    CwmUniqueConstraint constraint;
+    String constraintName = null;
+}
+{
+    [ <CONSTRAINT> constraintName = Identifier() ]
+        {
+        }
+    (
+        <NOT> <NULL>
+    {
+        column.setIsNullable(NullableTypeEnum.COLUMN_NO_NULLS);
+    }
+        | constraint = UniqueConstraint()
+        {
+            constraint.getFeature().add(column);
+            table.getOwnedElement().add(constraint);
+            if (constraintName != null) {
+                constraint.setName(constraintName);
+            } else {
+                getCatalog().generateConstraintName(constraint);
+            }
+        }
+    )
+        {
+        }
+}
+
+CwmModelElement SchemaDrop() :
+{
+    SqlIdentifier schemaName;
+    CwmSchema schema;
+}
+{
+    schema = SchemaReference()
+        {
+        }
+    CascadeOption()
+        {
+            return schema;
+        }
+}
+
+CwmCatalog CatalogReference() :
+{
+    SqlIdentifier catalogName;
+}
+{
+    <CATALOG> catalogName = SimpleIdentifier()
+        {
+            return farragoParser.ddlValidator.findCatalog(
+                catalogName.getSimple());
+        }
+}
+
+CwmSchema SchemaReference() :
+{
+    SqlIdentifier schemaName;
+}
+{
+    <SCHEMA> schemaName = CompoundIdentifier2()
+        {
+            return farragoParser.ddlValidator.findSchema(schemaName);
+        }
+}
+
+CwmModelElement TableDrop() :
+{
+    CwmModelElement table;
+}
+{
+    <TABLE> table = TableIdentifier(null)
+        {
+        }
+    CascadeOption()
+        {
+            return table;
+        }
+}
+
+CwmModelElement ViewDrop() :
+{
+    CwmModelElement view;
+}
+{
+    view = ViewReference(null)
+        {
+        }
+    CascadeOption()
+        {
+            return view;
+        }
+}
+
+CwmModelElement IndexDrop() :
+{
+    SqlIdentifier qualifiedIndexName;
+}
+{
+    <INDEX> qualifiedIndexName = CompoundIdentifier2()
+        {
+            return farragoParser.ddlValidator.findSchemaObject(
+                null,
+                qualifiedIndexName,
+                getCatalog().relationalPackage.getCwmSqlindex());
+        }
+}
+
+void CascadeOption() :
+{
+}
+{
+    [
+        (
+            <RESTRICT>
+        {
+            dropRestrict = true;
+        }
+            | <CASCADE>
+        {
+            dropRestrict = false;
+        }
+        )
+    ]
+}
+
+DdlStmt SystemParamAssignment() :
+{
+    SqlIdentifier paramName;
+    SqlLiteral paramValue;
+}
+{
+    paramName = SimpleIdentifier()
+        {
+        }
+    <EQ>
+        {
+        }
+    paramValue = Literal()
+        {
+        }
+    {
+        return new DdlSetSystemParamStmt(
+            paramName.names[0],paramValue);
+    }
+}
+
+DdlStmt Rollback() :
+{
+    SqlIdentifier savepointName = null;
+}
+{
+    (<TO> <SAVEPOINT> savepointName = SimpleIdentifier() )?
+        {
+        }
+    {
+        if (savepointName != null) {
+            return new DdlRollbackStmt(savepointName.names[0]);
+        } else {
+            return new DdlRollbackStmt(null);
+        }
+    }
+}
+
+DdlStmt Savepoint() :
+{
+    SqlIdentifier savepointName = null;
+}
+{
+    savepointName = SimpleIdentifier()
+        {
+        }
+    {
+        return new DdlSavepointStmt(savepointName.names[0]);
+    }
+}
+
+DdlStmt ReleaseSavepoint() :
+{
+    SqlIdentifier savepointName = null;
+}
+{
+    savepointName = SimpleIdentifier()
+        {
+        }
+    {
+        return new DdlReleaseSavepointStmt(savepointName.names[0]);
+    }
+}
+
+FemDataWrapper ForeignDataWrapperDefinition() :
+{
+    FemDataWrapper wrapper;
+    SqlIdentifier wrapperName;
+    String libraryFile;
+    DdlValidator ddlValidator = farragoParser.ddlValidator;
+}
+{
+    <FOREIGN> <DATA> <WRAPPER> wrapperName = SimpleIdentifier()
+        {
+            wrapper = getCatalog().newFemDataWrapper();
+            wrapper.setName(wrapperName.getSimple());
+            wrapper.setNamespace(
+                getCatalog().getCwmCatalog(
+                    FarragoCatalog.SYSBOOT_CATALOG_NAME));
+        }
+    <LIBRARY> libraryFile = StringLiteral()
+        {
+            wrapper.setLibraryFile(libraryFile);
+        }
+    <LANGUAGE> <JAVA>
+        {
+            wrapper.setLanguage("JAVA");
+        }
+    OptionalStorageOptions(wrapper)
+        {
+        }
+    {
+        return wrapper;
+    }
+}
+
+FemDataWrapper ForeignDataWrapperReference() :
+{
+    SqlIdentifier name;
+}
+{
+    <FOREIGN> <DATA> <WRAPPER> name = SimpleIdentifier()
+        {
+            return farragoParser.ddlValidator.findDataWrapper(name);
+        }
+}
+
+FemDataServer DataServerDefinition() :
+{
+    FemDataServer server;
+    FemDataWrapper wrapper;
+    SqlIdentifier serverName;
+    String serverType;
+    String serverVersion;
+    DdlValidator ddlValidator = farragoParser.ddlValidator;
+}
+{
+    <SERVER> serverName = SimpleIdentifier()
+        {
+            server = getCatalog().newFemDataServer();
+            server.setName(serverName.getSimple());
+            server.setNamespace(
+                getCatalog().getCwmCatalog(
+                    FarragoCatalog.SYSBOOT_CATALOG_NAME));
+        }
+    [
+        <TYPE> serverType = StringLiteral() 
+        {
+            server.setType(serverType);
+        }
+    ]
+    [
+        <VERSION> serverVersion = StringLiteral() 
+        {
+            server.setVersion(serverVersion);
+        }
+    ]
+        {
+        }
+    wrapper = ForeignDataWrapperReference()
+        {
+            server.setWrapper(wrapper);
+        }
+    OptionalStorageOptions(server)
+        {
+        }
+    {
+        return server;
+    }
+}
+
+FemDataServer DataServerReference() :
+{
+    SqlIdentifier name;
+}
+{
+    <SERVER> name = SimpleIdentifier()
+        {
+            return farragoParser.ddlValidator.findDataServer(name);
+        }
+}
+
+FemForeignTable ForeignTableDefinition(CwmSchema schema) :
+{
+    FemForeignTable table;
+    FemDataServer server;
+    SqlIdentifier qualifiedTableName;
+    DdlValidator ddlValidator = farragoParser.ddlValidator;
+}
+{
+    <FOREIGN> <TABLE>
+        {
+            table = getCatalog().newFemForeignTable();
+        }
+    qualifiedTableName = CompoundIdentifier2()
+        {
+            farragoParser.ddlValidator.setSchemaObjectName(
+                schema,table,qualifiedTableName);
+        }
+    [ <LPAREN> ForeignTableElementList(table) <RPAREN> ]
+        {
+        }
+    server = DataServerReference()
+        {
+            server.getTable().add(table);
+        }
+    OptionalStorageOptions(table)
+        {
+        }
+    {
+        return table;
+    }
+}
+
+FemForeignTable ForeignTableReference(CwmSchema schema) :
+{
+    SqlIdentifier qualifiedTableName;
+    FemForeignTable table;
+}
+{
+    <FOREIGN> <TABLE> qualifiedTableName = CompoundIdentifier2()
+        {
+            table = (FemForeignTable)
+            farragoParser.ddlValidator.findSchemaObject(
+                schema,
+                qualifiedTableName,
+                getCatalog().medPackage.getFemForeignTable());
+        }
+    {
+        return table;
+    }
+}
+
+void ForeignTableElementList(FemForeignTable table) :
+{
+}
+{
+    ForeignColumnDefinition(table)
+    (
+        <COMMA>
+        ForeignColumnDefinition(table)
+    )*
+}
+
+FemForeignColumn ForeignColumnDefinition(FemForeignTable table) :
+{
+    FemForeignColumn column;
+}
+{
+    {
+        column = getCatalog().newFemForeignColumn();
+    }
+    BasicColumnDefinition(table,column)
+        {
+        }
+    OptionalStorageOptions(column)
+        {
+        }
+    {
+        return column;
+    }
+}
+
+void OptionalStorageOptions(FemElementWithStorageOptions element) :
+{
+}
+{
+    [
+        <OPTIONS>
+        <LPAREN>
+        StorageOption(element)
+        (
+            <COMMA>
+            StorageOption(element)
+        )*
+        <RPAREN>
+    {
+    } ]
+}
+
+void StorageOption(FemElementWithStorageOptions element) :
+{
+    SqlIdentifier name;
+    String value;
+}
+{
+    name = SimpleIdentifier()
+        {
+        }
+    value = StringLiteral()
+        {
+        }
+    {
+        FemStorageOption option = getCatalog().newFemStorageOption();
+        option.setName(name.getSimple());
+        option.setValue(value);
+        element.getStorageOptions().add(option);
+    }
+}
+
+CwmModelElement ForeignDataWrapperDrop() :
+{
+    CwmModelElement wrapper;
+}
+{
+    wrapper = ForeignDataWrapperReference()
+        {
+        }
+    CascadeOption()
+        {
+            return wrapper;
+        }
+}
+
+CwmModelElement DataServerDrop() :
+{
+    CwmModelElement server;
+}
+{
+    server = DataServerReference()
+        {
+        }
+    CascadeOption()
+        {
+            return server;
+        }
+}
+
+CwmModelElement ForeignTableDrop() :
+{
+    CwmModelElement table;
+}
+{
+    table = ForeignTableReference(null)
+        {
+        }
+    CascadeOption()
+        {
+            return table;
+        }
+}
+
+/* KEYWORDS:  anything in this list is a reserved word unless it appears
+   in the NonReservedKeyWord() production. */
+
+TOKEN :
+{
+  < ALTER: "alter" >
+| < AUTHORIZATION: "authorization" >
+| < CASCADE: "cascade" >
+| < CATALOG: "catalog" >
+| < CHARACTER: "character" >
+| < CHECKPOINT: "checkpoint" >
+| < CLUSTERED: "clustered" >
+| < COMMIT: "commit" >
+| < CONSTRAINT: "constraint" >
+| < CREATE: "create" >
+| < DATA: "data" >
+| < DEFAULT_KW: "default" >
+| < DOUBLE: "double" >
+| < DROP: "drop" >
+| < FOREIGN: "foreign" >
+| < GLOBAL: "global" >
+| < INDEX: "index" >
+| < JAVA: "java" >
+| < KEY: "key" >
+| < LANGUAGE: "language" >
+| < LIBRARY: "library" >
+| < OPTIONS: "options" >
+| < PRECISION: "precision" >
+| < PRESERVE: "preserve" >
+| < PRIMARY: "primary" >
+| < ROLLBACK: "rollback" >
+| < RELEASE: "release" >
+| < RESTRICT: "restrict" >
+| < ROWS: "rows" >
+| < SAVEPOINT: "savepoint" >
+| < SCHEMA: "schema" >
+| < SERVER: "server" >
+| < SYSTEM: "system" >
+| < TEMPORARY: "temporary" >
+| < TO: "to" >
+| < TRUNCATE: "truncate" >
+| < TYPE: "type" >
+| < VERSION: "version" >
+| < VIEW: "view" >
+| < VARYING: "varying" >
+| < WRAPPER: "wrapper" >
+}
+
+String NonReservedKeyWord() :
+{
+    String kw;
+}
+{
+    (
+        kw = CommonNonReservedKeyWord()
+        {
+            return kw;
+        }
+        |
+        kw = DdlNonReservedKeyWord()
+        {
+            return kw;
+        }
+    )
+}
+
+/**
+ * Parses a non-reserved DDL keyword for use as an identifier.
+ */
+String DdlNonReservedKeyWord() :
+{
+}
+{
+    (
+        <CASCADE>
+        | <CATALOG>
+        | <DATA>
+        | <INDEX>
+        | <JAVA>
+        | <KEY>
+        | <LIBRARY>
+        | <OPTIONS>
+        | <PRESERVE>
+        | <RESTRICT>
+        | <SCHEMA>
+        | <SERVER>
+        | <TEMPORARY>
+        | <VERSION>
+        | <VIEW>
+        | <WRAPPER>
+    )
+        {
+            return getToken(0).image.toUpperCase();
+        }
+}
+
+// End DdlParser.jj

@@ -1,0 +1,255 @@
+/*
+// $Id$
+// Fennel is a relational database kernel.
+// Copyright (C) 1999-2004 John V. Sichi.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
+#include "fennel/common/CommonPreamble.h"
+#include "fennel/device/FileDevice.h"
+#include "fennel/device/RandomAccessRequest.h"
+#include "fennel/common/SysCallExcn.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sstream>
+
+#ifdef __MINGW32__
+#include <windows.h>
+#endif
+
+FENNEL_BEGIN_CPPFILE("$Id$");
+
+FileDevice::FileDevice(
+    std::string filenameInit,DeviceMode openMode)
+{
+    filename = filenameInit;
+    mode = openMode;
+    
+#ifdef __MINGW32__
+
+    DWORD fdwCreate = mode.create ? CREATE_ALWAYS : OPEN_EXISTING;
+
+    DWORD fdwFlags = FILE_FLAG_OVERLAPPED;
+    
+    DWORD fdwAccess = GENERIC_READ;
+    if (!mode.readOnly) {
+        fdwAccess |= GENERIC_WRITE;
+    }
+    if (mode.direct) {
+        fdwFlags |= FILE_FLAG_NO_BUFFERING;
+    }
+    if (mode.sequential) {
+        fdwFlags |= FILE_FLAG_SEQUENTIAL_SCAN;
+    } else {
+        fdwFlags |= FILE_FLAG_RANDOM_ACCESS;
+    }
+    if (mode.temporary) {
+        fdwFlags |= FILE_ATTRIBUTE_TEMPORARY | FILE_FLAG_DELETE_ON_CLOSE;
+    } else {
+        fdwFlags |= FILE_ATTRIBUTE_NORMAL;
+    }
+
+    // REVIEW:  I used FILE_SHARE_ so that recovery tests could reopen a
+    // log file for read while it was still open for write by the original
+    // txn.  Should probably fix the tests instead, in case allowing sharing
+    // could hinder performance.
+    
+    handle = reinterpret_cast<int>(
+        CreateFile(
+            filename.c_str(),
+            fdwAccess,
+            FILE_SHARE_READ | FILE_SHARE_WRITE,
+            NULL,
+            fdwCreate,
+            fdwFlags,
+            NULL));
+
+    if (!isOpen()) {
+        std::ostringstream oss;
+        oss << "Failed to open file " << filename;
+        throw SysCallExcn(oss.str());
+    }
+
+    cbFile = GetFileSize(HANDLE(handle),NULL);
+
+#else
+    
+    int access = O_LARGEFILE;
+    int permission = S_IRUSR;
+    if (mode.readOnly) {
+        access |= O_RDONLY;
+    } else {
+        access |= O_RDWR;
+        permission |= S_IWUSR;
+    }
+    if (mode.create) {
+        access |= O_CREAT | O_TRUNC;
+    }
+
+    if (mode.direct) {
+        access |= O_SYNC;
+        // NOTE:  I tried O_DIRECT, but got EINVAL errors back from pwrite.
+        // Maybe try again with Linux 2.6.
+    }
+    
+    handle = ::open(filename.c_str(), access, permission);
+    if (!isOpen()) {
+        std::ostringstream oss;
+        oss << "Failed to open file " << filename;
+        throw SysCallExcn(oss.str());
+    }
+    cbFile = ::lseek(handle,0,SEEK_END);
+    
+#endif
+}
+
+FileDevice::~FileDevice()
+{
+    if (isOpen()) {
+        close();
+    }
+}
+
+void FileDevice::close()
+{
+    assert(isOpen());
+#ifdef __MINGW32__
+    CloseHandle(HANDLE(handle));
+#else
+    ::close(handle);
+    if (mode.temporary) {
+        ::unlink(filename.c_str());
+    }
+#endif
+    handle = -1;
+}
+
+void FileDevice::flush()
+{
+    if (mode.readOnly) {
+        return;
+    }
+#ifdef __MINGW32__
+    if (!FlushFileBuffers(HANDLE(handle))) {
+        throw SysCallExcn("Flush failed");
+    }
+#else
+    if (::fdatasync(handle)) {
+        throw SysCallExcn("Flush failed");
+    }
+#endif
+}
+
+void FileDevice::setSizeInBytes(FileSize cbFileNew)
+{
+#ifdef __MINGW32__
+    DWORD rc = SetFilePointer(HANDLE(handle),cbFileNew,NULL,FILE_BEGIN);
+    if (rc == INVALID_SET_FILE_POINTER) {
+        throw SysCallExcn("Resize file failed:  SetFilePointer");
+    }
+    rc = SetEndOfFile(HANDLE(handle));
+    if (!rc) {
+        throw SysCallExcn("Resize file failed:  SetEndOfFile");
+    }
+#else
+    if(::ftruncate(handle,cbFileNew)){
+        throw SysCallExcn("Resize file failed");
+    }
+#endif
+    cbFile = cbFileNew;
+}
+
+void FileDevice::transfer(RandomAccessRequest const &request)
+{
+    FileSize cbActual;
+    assert(request.bindingList.size() == 1);
+#ifdef __MINGW32__
+    LARGE_INTEGER largeInt;
+    RandomAccessRequestBinding &binding = request.bindingList.front();
+    largeInt.QuadPart = request.cbOffset;
+    binding.Offset = largeInt.LowPart;
+    binding.OffsetHigh = largeInt.HighPart;
+    
+    DWORD dwActual = 0;
+    BOOL bCompleted;
+    if (request.type == RandomAccessRequest::READ) {
+        bCompleted = ReadFile(
+            HANDLE(handle),
+            request.bindingList.front().getBuffer(),
+            request.cbTransfer,
+            &dwActual,
+            &binding);
+    } else {
+        bCompleted = WriteFile(
+            HANDLE(handle),
+            request.bindingList.front().getBuffer(),
+            request.cbTransfer,
+            &dwActual,
+            &binding);
+    }
+    if (!bCompleted) {
+        if (GetLastError() == ERROR_IO_PENDING) {
+            if (!GetOverlappedResult(
+                    HANDLE(handle),
+                    &binding,
+                    &dwActual,
+                    TRUE))
+            {
+                dwActual = 0;
+            }
+        } else {
+            dwActual = 0;
+        }
+    }
+    cbActual = dwActual;
+#elif defined(__CYGWIN__)
+    StrictMutexGuard guard(mutex);
+    ::lseek(handle, request.cbOffset, SEEK_SET);
+    if (request.type == RandomAccessRequest::READ) {
+        cbActual = ::read(
+            handle,
+            request.bindingList.front().getBuffer(),
+            request.cbTransfer);
+    } else {
+        cbActual = ::write(
+            handle,
+            request.bindingList.front().getBuffer(),
+            request.cbTransfer);
+    }
+    guard.unlock();
+#else
+    if (request.type == RandomAccessRequest::READ) {
+        cbActual = ::pread(
+            handle,
+            request.bindingList.front().getBuffer(),
+            request.cbTransfer,
+            request.cbOffset);
+    } else {
+        cbActual = ::pwrite(
+            handle,
+            request.bindingList.front().getBuffer(),
+            request.cbTransfer,
+            request.cbOffset);
+    }
+#endif
+    request.bindingList.front().notifyTransferCompletion(
+        cbActual == request.cbTransfer);
+}
+
+FENNEL_END_CPPFILE("$Id$");
+
+// End FileDevice.cpp

@@ -1,0 +1,106 @@
+TODO & Cleanup List for Fennel Calculator
+
+===========================
+Calculator Major Todo Items
+===========================
+
+Look through Spec for TBD. 
+
+Assembler
+	Support Serialized programs
+	Allocate Local/Literal/Status Tuple
+	Provide for initialization of literal register set.
+	Provite a TupleDescriptor (or the like) for each register set.
+
+External Functions
+
+Exceptions
+
+Add addressing modes. For example: Allow a RegisterReference type that
+takes two sets of register indexes instead of the current single set of
+register indexes. The first set will "point" to the start of an array,
+the second will be an index into that array.
+
+Precompilation feature for some extended functions, for example the
+LIKE operator. See email from JH on 1/25/04.
+
+
+========================
+Calculator Cleanup Items
+========================
+
+Keep the spec up to date.
+
+Rename Calculator to "Kaluckulator".
+
+Check code for all TODO strings. They are also todo reminders.
+
+Substitute iostreams for boost::io::str and boost::lexical_cast.
+
+Build and test performance of the bind-a-pointer-to-location optimizations
+
+The unit test is an expedient mess, but a mess none-the-same. Pull large
+programs out into a stress test. Refactor test to test on instruction,
+or one aspect of an instruction at a time.
+
+Get build working on Cygwin again.
+
+See if RegisterRef member functions can be made faster. There's a bit
+too much indirection in there for my taste. Examine the assembly code
+and see what really can be done.
+
+Consider renaming register sets into register banks. Sets can cause
+confusion to readers who assume that a register set is built with a
+set collection.
+
+Convert the spec to a more friendly and editable format. The whole .doc to 
+compact .html thing isn't working very well. Basically JK is the only
+one who can edit the file w/o causing massive diffs.
+
+Document Extended Instructions in spec.
+
+Need to modify RegisterReference::valueToString() to support VARCHAR
+and other VAR types. Currently there's a compile-time issue. Perhaps
+RegReference should be partially specialized between pointer and
+non-pointer types, and getP/getV and putP/putV should be merged together?
+
+Consider supporting assert level checking of Input TupleDescriptor derived
+from assemble() vs. what the XO receives from upstream.
+
+Update ExtendedInstruction to check datatypes against the
+RegisterReference type. Should allow extra assert() level testing
+of type-correctness.
+
+If the program was assembled, the status register is controlled by Calculator.
+Therefore can make RegisterReferences CachePointer.
+
+If JS's assertion that binds() are not required between exec() calls is true,
+then Input and Output tuples could have a CachePtrToPtr property defined
+on them. Cache a ptr to pData and the various length fields.
+
+Split getP() into a version that returns (or sets) a const pointer, and one
+that returns a non-const. The non-const version should check for the Read-Only
+property. For some reason, putting a const around the TMPLT does not work
+as expected.
+
+Consider making unit length in tupledata and tupledescriptor a typedef
+and propigating said typedef into calculator.
+
+Update spec to reflect PointerSizeT and PointerOperandT being a unit,
+for the moment.
+
+
+====================================================
+Extended Instructions & Conversions Major Todo Items
+====================================================
+
+Wrap all EIs in NULL semantic code. (if op1 or op2 is null,
+result tonull, etc.)
+
+Provide pc to EIs.
+
+=================================================
+Extended Instructions & Conversions Cleanup Items
+=================================================
+
+

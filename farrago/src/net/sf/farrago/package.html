@@ -1,0 +1,64 @@
+<html>
+<head>
+<title>Package net.sf.farrago</title>
+</head>
+<body>
+
+Top-level package containing all Farrago subpackages.
+
+<hr>
+
+The diagram below illustrates the dependencies among Farrago subpackages:
+
+<hr>
+<img src="../../../../FarragoPackages.gif">
+<hr>
+
+In general, higher-level packages depend on lower-level packages,
+but not vice versa (e.g. almost everything depends on resource, and
+parser and type depend on catalog).  No lateral dependencies are
+allowed (e.g. fennel and saffron are mutually independent), except
+where explicitly shown (ddl and parser).  In this context,
+dependency means early binding; that is, the higher-level package
+references the lower-level package at compile time.
+
+<p>
+
+The cwm and fem packages are special because they contain generated code,
+but also contain implementation classes.  The dependencies are
+for the two kinds of code are very different, and so are shown separately
+(the cwm and fem packages in the lower left represent the generated code;
+the cwmImpl and femImpl packages in the upper right represent the
+implementation classes).
+
+<p>
+
+TBD: dependencies on packages like java.sql, and split up query
+package into opt/stmt.
+
+<p>
+
+Dependencies are checked via the <a
+href="http://innig.net/macker">macker</a> tool.  Currently, this is
+done manually, but will eventually there will be an automated checkin
+monkey for enforcement, so that when macker gets mad, he'll send you
+email and give you a piece of his mind.  Dependency definitions are in
+<a href="http://apoptosis.dyndns.org:8080/open/farrago/src/macker.xml">
+//open/farrago/src/macker.xml</a>.
+
+<p>
+
+Note that late binding is allowed to violate the layering.  For
+example, the util layer defines the {@link
+net.sf.farrago.util.FarragoAllocation} interface.  The jdbc layer
+defines class {@link net.sf.farrago.jdbc.FarragoJdbcStatement}, which
+implements FarragoAllocation, and passes an instance to {@link
+net.sf.farrago.util.FarragoCompoundAllocation}.  When the
+FarragoCompoundAllocation is closed, it calls back via the interface,
+meaning at runtime, code in the util layer ends up calling code in the
+jdbc layer.
+
+<hr>
+
+</body>
+</html>

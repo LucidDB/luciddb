@@ -1,0 +1,94 @@
+0: jdbc:farrago:> -- $Id: //open/farrago/initsql/createJdbcViews.sql#3 $
+0: jdbc:farrago:> -- This script creates a view schema used by JDBC metadata calls
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !set verbose true
+0: jdbc:farrago:> !autocommit off
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- create views in system-owned schema sys_boot.jdbc_metadata
+0: jdbc:farrago:> create schema sys_boot.jdbc_metadata;
+0: jdbc:farrago:> set schema sys_boot.jdbc_metadata;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- NOTE:  don't include ORDER BY in the view definitions
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view schemas_view_internal as
+. . . . . . . . >     select 
+. . . . . . . . >         c."name" as table_catalog,
+. . . . . . . . >         s."name" as table_schem,
+. . . . . . . . >         s."mofId"
+. . . . . . . . >     from 
+. . . . . . . . >         sys_cwm."Relational"."Schema" s,
+. . . . . . . . >         sys_cwm."Relational"."Catalog" c
+. . . . . . . . >     where 
+. . . . . . . . >         s."namespace" = c."mofId"
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- TODO:  replace t."type" with cast(null as varchar(128))
+0: jdbc:farrago:> -- TODO:  eliminate explicit projection once optimizer can do it
+0: jdbc:farrago:> -- FIXME:  need UPPER(t."mofClassName")
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view tables_view_internal as
+. . . . . . . . >     select 
+. . . . . . . . >         s.table_catalog as table_cat,
+. . . . . . . . >         s.table_schem,
+. . . . . . . . >         t."name" as table_name,
+. . . . . . . . >         t."mofClassName" as table_type,
+. . . . . . . . >         t."type" as remarks,
+. . . . . . . . >         t."type" as type_cat,
+. . . . . . . . >         t."type" as type_schem,
+. . . . . . . . >         t."type" as type_name,
+. . . . . . . . >         t."type" as self_referencing_col_name,
+. . . . . . . . >         t."type" as ref_generation,
+. . . . . . . . >         t."mofId"
+. . . . . . . . >     from
+. . . . . . . . >         schemas_view_internal s,
+. . . . . . . . >         (select "name","mofClassName","type","namespace","mofId"
+. . . . . . . . >             from sys_cwm."Relational"."NamedColumnSet") t
+. . . . . . . . >     where 
+. . . . . . . . >         t."namespace" = s."mofId"
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view catalogs_view as
+. . . . . . . . >     select 
+. . . . . . . . >         c."name" as table_cat
+. . . . . . . . >     from 
+. . . . . . . . >         sys_cwm."Relational"."Catalog" c
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view schemas_view as
+. . . . . . . . >     select 
+. . . . . . . . >         table_schem,
+. . . . . . . . >         table_catalog
+. . . . . . . . >     from 
+. . . . . . . . >         schemas_view_internal
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view tables_view as
+. . . . . . . . >     select 
+. . . . . . . . >         table_cat,
+. . . . . . . . >         table_schem,
+. . . . . . . . >         table_name,
+. . . . . . . . >         table_type,
+. . . . . . . . >         remarks,
+. . . . . . . . >         type_cat,
+. . . . . . . . >         type_schem,
+. . . . . . . . >         type_name,
+. . . . . . . . >         self_referencing_col_name,
+. . . . . . . . >         ref_generation
+. . . . . . . . >     from
+. . . . . . . . >         tables_view_internal
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- TODO:  upper-case strings, and add 'GLOBAL TEMPORARY' and 'SYSTEM TABLE'
+0: jdbc:farrago:> create view table_types_view(table_type) as
+. . . . . . . . >     select * 
+. . . . . . . . >     from values 
+. . . . . . . . >         ('ForeignTable'),
+. . . . . . . . >         ('Table'),
+. . . . . . . . >         ('View')
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- TODO:  all the rest
+0: jdbc:farrago:>          
+0: jdbc:farrago:> commit;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

@@ -1,0 +1,64 @@
+<html>
+<head>
+<title>Package net.sf.saffron.sql</title>
+</head>
+<body>
+Provides an SQL parser and object model. This package, and the dependent <code>
+net.sf.saffron.sql.parser</code> package, are independent of the other saffron 
+packages, so may be used standalone.<p>&nbsp;</p>
+<table border="1" width="100%">
+  <tr>
+    <th>Revision</th>
+    <td>$Id$</td>
+  </tr>
+  <tr>
+    <th>Copyright</th>
+    <td>(C) Copyright 2003-2003 Disruptive Technologies, Inc.</td>
+  </tr>
+  <tr>
+    <th>Author</th>
+    <td>Julian Hyde</td>
+  </tr>
+</table>
+<h2>Parser</h2>
+<p>{@link net.sf.saffron.sql.parser.SqlParser} parses a SQL string to a parse tree. It 
+only performs the most basic syntactic validation.</p>
+<h2>Object model</h2>
+<p>Every node in the parse tree is a {@link net.sf.saffron.sql.SqlNode}. Sub-types are:</p>
+<ul>
+  <li>{@link net.sf.saffron.sql.SqlLiteral} represents a boolean, numeric, string, or 
+  date constant, or the value <code>NULL</code>.</li>
+  <li>{@link net.sf.saffron.sql.SqlIdentifier} represents an identifier, such as <code>
+  EMPNO</code> or <code>emp.deptno</code>.</li>
+  <li>{@link net.sf.saffron.sql.SqlCall} is a call to an operator or function. By means 
+  of special operators, we can use this construct to represent virtually every 
+  non-leaf node in the tree. For example, a <code>select</code> statement is a 
+  call to the 'select' operator.</li>
+  <li>{@link net.sf.saffron.sql.SqlNodeList} is a list of nodes.</li>
+</ul>
+<p>A {@link net.sf.saffron.sql.SqlOperator} describes the behavior of a node in the 
+tree, such as how to un-parse a {@link net.sf.saffron.sql.SqlCall} into a SQL string. 
+It is important to note that operators are metadata, not data: there is only one
+<code>SqlOperator</code> instance representing the '=' operator, even though 
+there may be many calls to it.</p>
+<p><code>SqlOperator</code> has several derived classes which make it easy to 
+define new operators: {@link net.sf.saffron.sql.SqlFunction}, {@link 
+net.sf.saffron.sql.SqlBinaryOperator}, {@link net.sf.saffron.sql.SqlPrefixOperator}, {@link 
+net.sf.saffron.sql.SqlPostfixOperator}. And there are singleton classes for special 
+syntactic constructs {@link net.sf.saffron.sql.SqlSelectOperator} and {@link 
+net.sf.saffron.sql.SqlJoinOperator}. (These special operators even have their own 
+sub-types of {@link net.sf.saffron.sql.SqlCall}: {@link net.sf.saffron.sql.SqlSelect} and 
+{@link net.sf.saffron.sql.SqlJoin}.)</p>
+<p>A {@link net.sf.saffron.sql.SqlOperatorTable} is a collection of operators. By 
+supplying your own operator table, you can customize the dialect of SQL without 
+modifying the parser.</p>
+<h2>Validation</h2>
+<p>{@link net.sf.saffron.sql.SqlValidator} checks that a tree of {@link net.sf.saffron.sql.SqlNode}s is 
+semantically valid. You supply a {@link net.sf.saffron.sql.SqlOperatorTable} to 
+describe the available functions and operators, and a {@link 
+net.sf.saffron.sql.SqlValidator.CatalogReader} for access to the database's catalog.</p>
+<h2>Generating SQL</h2>
+<p>A {@link net.sf.saffron.sql.SqlWriter} converts a tree of {@link net.sf.saffron.sql.SqlNode}s into a 
+SQL string. A {@link net.sf.saffron.sql.SqlDialect} defines how this happens.</p>
+</body>
+</html>

@@ -1,0 +1,150 @@
+/*
+// $Id$
+// Fennel is a relational database kernel.
+// Copyright (C) 1999-2004 John V. Sichi.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
+#include "fennel/common/CommonPreamble.h"
+#include "fennel/segment/SegInputStream.h"
+
+FENNEL_BEGIN_CPPFILE("$Id$");
+
+SharedSegInputStream SegInputStream::newSegInputStream(
+    SegmentAccessor const &segmentAccessor,
+    PageId beginPageId)
+{
+    return SharedSegInputStream(
+        new SegInputStream(segmentAccessor,beginPageId),
+        ClosableObjectDestructor());
+}
+
+SegInputStream::SegInputStream(
+    SegmentAccessor const &segmentAccessor,
+    PageId beginPageId,
+    uint cbExtraHeader)
+    : SegStream(segmentAccessor,cbExtraHeader)
+{
+    if (beginPageId == FIRST_LINEAR_PAGE_ID) {
+        assert(
+            getSegment()->getAllocationOrder() == Segment::LINEAR_ALLOCATION);
+    }
+    currPageId = beginPageId;
+    shouldDeallocate = false;
+}
+
+void SegInputStream::startPrefetch()
+{
+    pageIter.mapRange(segmentAccessor,currPageId);
+}
+
+void SegInputStream::endPrefetch()
+{
+    pageIter.makeSingular();
+}
+
+void SegInputStream::lockBuffer()
+{
+    pageLock.lockShared(currPageId);
+    SegStreamNode const &node = pageLock.getNodeForRead();
+    PConstBuffer pFirstByte =
+        reinterpret_cast<PConstBuffer>(&node) + cbPageHeader;
+    setBuffer(pFirstByte,node.cbData);
+}
+
+void SegInputStream::readNextBuffer()
+{
+    nullifyBuffer();
+    if (pageLock.isLocked()) {
+        if (currPageId != NULL_PAGE_ID) {
+            if (pageIter.isSingular()) {
+                currPageId = getSegment()->getPageSuccessor(currPageId);
+            } else {
+                ++pageIter;
+                assert(*pageIter == getSegment()->getPageSuccessor(currPageId));
+                currPageId = *pageIter;
+            }
+        }
+        if (shouldDeallocate) {
+            pageLock.deallocateLockedPage();
+        } else {
+            pageLock.unlock();
+        }
+    }
+    if (currPageId == NULL_PAGE_ID) {
+        return;
+    }
+    lockBuffer();
+}
+
+void SegInputStream::readPrevBuffer()
+{
+    assert(pageIter.isSingular());
+    assert(
+        getSegment()->getAllocationOrder() >= Segment::CONSECUTIVE_ALLOCATION);
+    nullifyBuffer();
+    if (Segment::getLinearBlockNum(currPageId) == 0) {
+        return;
+    }
+    --currPageId;
+    lockBuffer();
+}
+
+void SegInputStream::closeImpl()
+{
+    pageIter.makeSingular();
+    if (shouldDeallocate) {
+        pageLock.unlock();
+        while (currPageId != NULL_PAGE_ID) {
+            PageId nextPageId = getSegment()->getPageSuccessor(currPageId);
+            pageLock.deallocateUnlockedPage(currPageId);
+            currPageId = nextPageId;
+        }
+    }
+    SegStream::closeImpl();
+}
+
+void SegInputStream::getSegPos(SegStreamPosition &pos)
+{
+    CompoundId::setPageId(pos.segByteId,currPageId);
+    CompoundId::setByteOffset(pos.segByteId,getBytesConsumed());
+    pos.cbOffset = cbOffset;
+}
+
+void SegInputStream::seekSegPos(SegStreamPosition const &pos)
+{
+    assert(pageIter.isSingular());
+    currPageId = CompoundId::getPageId(pos.segByteId);
+    lockBuffer();
+    uint cb = CompoundId::getByteOffset(pos.segByteId);
+    if (cb == CompoundId::MAX_BYTE_OFFSET) {
+        consumeReadPointer(getBytesAvailable());
+    } else {
+        consumeReadPointer(cb);
+    }
+    
+    cbOffset = pos.cbOffset;
+}
+
+void SegInputStream::setDeallocate(
+    bool shouldDeallocateInit)
+{
+    shouldDeallocate = shouldDeallocateInit;
+}
+
+FENNEL_END_CPPFILE("$Id$");
+
+// End SegInputStream.cpp

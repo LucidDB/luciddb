@@ -1,0 +1,190 @@
+/*
+// $Id$
+// Saffron preprocessor and data engine
+// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// You must accept the terms in LICENSE.html to use this software.
+// jhyde, 24 September, 2000
+*/
+
+package sales;
+import saffron.util.Util;
+import java.io.PrintWriter;
+import java.util.Locale;
+import saffron.ext.Median;
+import saffron.ext.LocaleMin;
+import saffron.ext.Nth;
+
+/**
+ * todo:
+ */
+public class Sales2 {
+	Emp[] emps = new Emp[] {
+		new Emp(100, "Fred", 10, "M", "San Francisco"),
+		new Emp(110, "Eric", 20, "M", "San Francisco"),
+		new Emp(110, "John", 40, "M", "Vancouver"),
+		new Emp(120, "Wilma", 20, "F", "Los Angeles")};
+
+	Dept[] depts = new Dept[] {
+		new Dept(10, "Sales"),
+		new Dept(20, "Marketing"),
+		new Dept(30, "Accounts")};
+
+	public Emp[] getEmps()
+	{
+		return emps;
+	}
+
+	public static void main(String[] args)
+	{
+		new Sales2().dummy();
+	}
+
+	public void dummy()
+	{
+//		PrintWriter pw = Test.init(3);
+		PrintWriter pw = new PrintWriter(System.out);
+/*
+		Iterator t = (select 1 from emps where emps.deptno > 30);
+*/
+
+/*
+		Iterator t = (select 1 as tt from emps);
+*/
+
+/*
+		Iterator t = (select 1 as tt from emps left join depts on
+								emps.deptno == depts.deptno);
+*/
+
+/*
+		while (t.hasNext()) {
+			Emp e = (Emp) t.next();
+			pw.println(e.toString());
+		}
+*/
+
+/*
+  		for (emp in select emps from emps where emps.deptno > 30) {
+  			pw.println(emp.toString());
+  		}
+*/
+
+/*
+  		for (emp in select emps from getEmps() as emps
+  				 where emps.deptno > 30) {
+  			pw.println(emp.toString());
+  		}
+*/
+
+/*
+		for (i in select {emp, dept} from emps as emp
+				 join depts as dept
+				 on emp.deptno == dept.deptno
+				 where emp.deptno > 15) {
+			pw.println(i.emp.toString() + ":" + i.dept.toString());
+		}
+*/
+
+/*
+ 		for (emp in select emp, dept
+ 				 from (select emps from emps where emps.deptno == 10) as emp
+ 				 join depts as dept
+ 				 on emp.deptno == dept.deptno) {
+ 			pw.println(emp.toString());
+ 		}
+*/
+
+/*
+		for (i in (select {emp, dept}
+				   from (
+					   select {emp.name.substring(0,1) as initial,
+								   emp.deptno * 2 as twiceDeptno} 
+					   from emps as emp
+					   where emp.deptno == 10) as emp
+				   join depts as dept
+				   on emp.twiceDeptno == dept.deptno)) {
+			Util.println(pw, i);
+		}
+*/
+
+/*
+		for (i in (select {sum(emp.deptno) as sumDeptno, emp.gender}
+				   group by {emp.gender} 
+				   from emps as emp)) {
+			Util.println(pw, i);
+		}
+*/
+
+/*
+		// expressions everywhere
+		for (i in (select {(emp.gender.equals("M") ? "male" : "female") +
+							   sum(emp.deptno + 1) as sumDeptno,
+							   emp.gender.equals("M") ? "male" : "female" as g}
+				   group by {emp.gender.equals("M") ? "male" : "female"} 
+				   from emps as emp)) {
+			Util.println(pw, i);
+		}
+*/
+
+		// user-defined aggregates
+		for (i in (select {sum(emp.deptno) as sumDeptno,
+							   new Median().aggregate(emp.deptno) as medDeptno,
+							   new Nth(1).aggregate(emp) as secondEmp,
+							   new LocaleMin(Locale.FRENCH).aggregate(
+								   emp.name) as minFrenchName,
+							   emp.gender}
+			group by {emp.gender}
+			from emps as emp)) {
+			Util.println(pw, i);
+		}
+
+		// todo: expression with order by
+
+		// todo: expression with 'in'
+		// todo: Emp[][] empss; select * from empss as emps where (select 1
+		// from emps as emp)
+
+/*
+		pw.println(
+  			"There are " +
+  			(select from emps as emp where emp.deptno > 15).length +
+  			" female employees.");
+*/
+
+/*
+		Emp[] femaleEmps = (select from emps as emp where emp.deptno > 15);
+*/
+
+		pw.println("done.");
+		pw.flush();
+	}
+
+	public static class Emp {
+		public int empno;
+		public String name;
+		public int deptno;
+		public String gender;
+		public String city;
+		public Emp(int empno,String name,int deptno,String gender,String city)
+		{
+			this.empno = empno;
+			this.name = name;
+			this.deptno = deptno;
+			this.gender = gender;
+			this.city = city;
+		}
+	}
+
+	public static class Dept {
+		public int deptno;
+		public String name;
+		public Dept(int deptno,String name)
+		{
+			this.deptno = deptno;
+			this.name = name;
+		}
+	}
+
+}
+
+// End Sales2.oj

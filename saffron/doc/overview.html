@@ -1,0 +1,1358 @@
+<body>
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta name="GENERATOR" content="Microsoft FrontPage 5.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>Saffron overview</title>
+
+<style>
+
+A:link { color:#000066; }
+A:visited { color:#666666; }
+
+A.clsIncCpyRt,
+A.clsIncCpyRt:visited,
+P.clsIncCpyRt {
+  font-weight:normal; font-size:75%; font-family:verdana,arial,helvetica,sans-serif;
+  color:black;
+  text-decoration:none;
+}
+
+A.clsLeftMenu,
+A.clsLeftMenu:visited {
+  color:#000000;
+  text-decoration:none;
+  font-weight:bold; font-size:8pt;
+}
+
+A.clsBackTop,
+A.clsBackTop:visited {
+  margin-top:10; margin-bottom:0;
+  padding-bottom:0;
+  font-size:75%;
+  color:black;
+}
+
+A:hover,
+A.clsBackTop:hover,
+A.clsIncCpyRt:hover,
+A:active { color:blue; }
+
+A.clsGlossary {
+  font-size:10pt;
+  color:green;
+}
+
+BODY { font-size:80%; font-family:verdana,arial,helvetica,sans-serif; }
+
+BUTTON.clsShowme,
+BUTTON.clsShowme5 {
+  font-weight:bold; font-size:11; font-family:arial;
+  width:68; height:23;
+  position:relative; top:2;
+  background-color:#002F90;
+  color:#FFFFFF;
+}
+
+DIV.clsBeta {
+  font-weight:bold;
+  color:red;
+}
+
+DIV.clsDocBody { margin-left:10px; margin-right:10px; }
+
+DIV.clsDocBody HR { margin-top:0; }
+
+DIV.clsDesFooter { margin:10px 10px 0px 223px; }
+
+DIV.clsFPfig { font-size:80%; }
+
+DIV.clsHi {
+	padding-left:2em;
+	text-indent:-2em
+}
+
+DIV.clsShowme { margin-bottom:.5em; margin-top:.5em; }
+
+H1{
+  font-size:145%;
+  margin-top:1.25em; margin-bottom:0em;
+}
+
+H2 {
+  font-size:135%;
+  margin-top:1.25em; margin-bottom:.5em;
+}
+
+H3 {
+  font-size:128%;
+  margin-top:1em; margin-bottom:0em;
+}
+
+H4 {
+  font-size:120%;
+  margin-top:.8em; margin-bottom:0em;
+}
+
+H5 {
+  font-size:110%;
+  margin-top:.8em; margin-bottom:0em;
+}
+
+H6 {
+  font-size:70%;
+  margin-top:.6em; margin-bottom:0em;
+}
+
+HR.clsTransHR {
+	position:relative; top:20;
+	margin-bottom:15;
+}
+
+P.clsRef {
+  font-weight:bold;
+  margin-top:12pt; margin-bottom:0pt;
+}
+
+PRE {
+  background:#EEEEEE;
+  margin-top:1em;	margin-bottom:1em; margin-left:0px;
+  padding:5pt;
+}
+
+PRE.clsCode, CODE.clsText { font-family:'courier new',courier,serif; font-size:130%; }
+
+PRE.clsSyntax { font-family:verdana,arial,helvetica,sans-serif; font-size:120%; }
+
+SPAN.clsEntryText {
+  line-height:12pt;
+  font-size:8pt;
+}
+
+SPAN.clsHeading {
+  color:#00319C;
+  font-size:11pt; font-weight:bold;
+}
+
+SPAN.clsDefValue, TD.clsDefValue { font-weight:bold; font-family:'courier new' }
+
+SPAN.clsLiteral, TD.clsLiteral { font-family:'courier new'; }
+
+SPAN.clsRange, TD.clsRange { font-style:italic; }
+
+SPAN.clsShowme {
+  width:100%;
+  filter:dropshadow(color=#000000,OffX=2.5,OffY=2.5,Positive=1);
+  position:relative;
+  top:-8;
+}
+
+TABLE { font-size:100%; }
+
+TABLE.clsStd {
+	background-color:#444;
+	border:1px none;
+	cellspacing:0;
+	cellpadding:0
+}
+
+TABLE.clsStd TH,
+BLOCKQUOTE TH {
+	font-size:100%;
+	text-align:left; vertical-align:top;
+	background-color:#DDD;
+	padding:2px;
+}
+
+TABLE.clsStd TD,
+BLOCKQUOTE TD {
+	font-size:100%;
+	vertical-align:top;
+	background-color:#EEE;
+	padding:2px;
+}
+
+TABLE.clsParamVls,
+TABLE.clsParamVls TD { padding-left:2pt; padding-right:2pt; }
+
+#TOC { visibility:hidden; }
+
+UL UL, OL UL { list-style-type:square; }
+
+.clsHide { display:none; }
+
+.clsShow { }
+
+.clsShowDiv {
+  visibility:hidden;
+  position:absolute;
+  left:230px; top:140px;
+  height:0px; width:170px;
+  z-index:-1;
+}
+
+.#pBackTop { display:none; }
+
+#idTransDiv {
+	position:relative;
+	width:90%; top:20;
+  filter:revealTrans(duration=1.0, transition=23);
+}
+
+
+/*** INDEX-SPECIFIC ***/
+
+A.clsDisabled {
+  text-decoration:none;
+  color:black;
+  cursor:text;
+}
+
+A.clsEnabled { cursor:auto; }
+
+SPAN.clsAccess { text-decoration:underline; }
+
+TABLE.clsIndex {
+  font-size:100%;
+  padding-left:2pt; padding-right:2pt;
+	margin-top: 17pt;
+}
+
+TABLE.clsIndex TD {
+  margin:3pt;
+  background-color:#EEEEEE;
+}
+
+TR.clsEntry { vertical-align:top; }
+
+TABLE.clsIndex TD.clsLetters {
+  background-color:#CCCCCC;
+  text-align:center;
+}
+
+TD.clsMainHead {
+  background-color:#FFFFFF;
+  vertical-align:top;
+  font-size:145%; font-weight:bold;
+  margin-top:1.35em; margin-bottom:.5em;
+}
+
+UL.clsIndex { margin-left:20pt; margin-top:0pt; margin-bottom:5pt; }
+
+LI OL { padding-bottom: 1.5em }
+
+
+/*** GALLERY/TOOLS/SAMPLES ***/
+
+FORM.clsSamples { margin-bottom:0; margin-top:0; }
+
+H1.clsSampH1 {
+	font-size:145%;
+  margin-top:.25em; margin-bottom:.25em;
+}
+
+H1.clsSampHead {
+  margin-top:5px; margin-bottom:5px;
+  font-size:24px; font-weight:bold; font-family:verdana,arial,helvetica,sans-serif;
+}
+
+H2.clsSampTitle {
+  font-size:128%;
+  margin-top:.2em; margin-bottom:0em;
+}
+
+TD.clsDemo {
+  font-size:8pt;
+  color:#00319C;
+  text-decoration:underline;
+}
+
+.clsSampDnldMain { font-size:11px; font-family:verdana,arial,helvetica,sans-serif; }
+
+.clsShowDesc { cursor:hand; }
+
+A.clsTools {
+  color:#0B3586;
+  font-weight:bold;
+}
+
+H1.clsTools, H2.clsTools {
+  color:#0B3586;
+  margin-top:5px;
+}
+
+TD.clsToolsHome {
+  font-size:9pt;
+  line-height:15pt;
+}
+
+SPAN.clsToolsTitle {
+  color:#00319C;
+  font-size:11pt; font-weight:bold;
+  text-decoration:none;
+}
+
+
+/*** DESIGN ***/
+P.cat {
+	font-size:13pt;
+	color:#787800;
+	text-decoration:none;
+	margin-top:18px;
+}
+
+P.author {
+	font-size:9pt; font-style:italic;
+	line-height:13pt;
+	margin-top:10px;
+}
+
+P.date {
+	font-size:8pt;
+	line-height:12px;
+	margin-top:0px;
+	color:#3366FF;
+}
+
+P.graph1 {
+	line-height:13pt;
+	margin-top:-10px;
+}
+
+P.col {
+	line-height:13pt;
+	margin-top:10px; margin-left:5px;
+}
+
+P.cal1 {
+	text-decoration:none;
+	margin-top:-10px;
+}
+
+P.cal2 {margin-top:-10px; }
+P.photo { font-size:8pt; }
+
+
+/*** DOCTOP ***/
+
+#tblNavLinks A {
+	color:black;
+	text-decoration:none;
+	font-family:verdana,arial,helvetica,sans-serif;
+}
+#lnkShowText, #lnkSyncText, #lnkSearchText, #lnkIndexText { font-size:8pt; font-weight:bold; }
+#lnkPrevText, #lnkNextText, #lnkUpText { font-size:7.5pt; font-weight:normal; }
+
+
+DIV.clsBucketBranch {
+	margin-left:10px; margin-top:15px; margin-bottom:-10pt;
+	font-style:italic; font-size:85%;
+}
+
+DIV.clsBucketBranch A,
+DIV.clsBucketBranch A:link,
+DIV.clsBucketBranch A:active,
+DIV.clsBucketBranch A:visited { text-decoration:none; color:black; }
+DIV.clsBucketBranch A:hover { color:blue; }
+
+
+/*** SDK, IE4 ONLY ***/
+
+DIV.clsExpanded, A.clsExpanded { display:inline; color:black; }
+DIV.clsCollapsed, A.clsCollapsed { display:none; }
+SPAN.clsPropattr { font-weight:bold; }
+
+#pStyles,	#pCode, #pSyntax, #pEvents, #pStyles {display:none; text-decoration:underline; cursor:hand; }
+
+/*** jhyde added ***/
+CODE { color:maroon; font-family:'courier new' }
+
+DFN { font-weight:bold; font-style:italic; }
+
+
+</style>
+
+</head>
+
+<!-- 
+
+This sentence is here to fool javadoc (which is looking for a period, and otherwise finds one
+inside one of our header tables).
+
+ -->
+
+<table border="1" class="clsStd" width="100%">
+  <tr>
+    <td colspan="2">
+      <table border="0" width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+          <td>
+<a href="index.html">Top</a> |
+      <a href="http://apoptosis.dyndns.org:8080/open/saffron/doc/index.html">Web home</a> |
+      <a href="http://sourceforge.net/projects/saffron/">SourceForge home</a>
+          </td>
+          <td align="right">
+            <a href="http://sourceforge.net">
+	          <img src="http://sourceforge.net/sflogo.php?group_id=46646&type=1" border="0" alt="SourceForge.net Logo">
+	        </a>
+          </td>
+        </tr>
+      </table>
+	</td>
+  </tr>
+  <tr>
+    <td colspan="2"><em>$Id$</em></td>
+  </tr>
+  <tr>
+    <td colspan="2"><em>(C) Copyright 2002-2003 Disruptive Technologies, Inc.</em></td>
+  </tr>
+  <tr>
+    <th align="right">Author</th>
+    <td>Julian Hyde</td>
+  </tr>
+  <tr>
+    <th align="right">Created</th>
+    <td>November 5<sup>th</sup>, 2002</td>
+  </tr>
+</table>
+
+<h1>Saffron overview</h1>
+
+<p>Julian Hyde, November 5th, 2001.</p>
+<h2>Overview</h2>
+<p>Saffron is a seamless integration of SQL-like relational expressions into Java. 
+As we shall see, the tight integration means that relational expressions are 
+much more powerful than those offered by SQL.</p>
+<h2>How is Saffron different from SQL?</h2>
+<ol>
+  <li><b>You can use Saffron expressions directly from Java code</b>. For example, 
+  an <code>exists </code>condition:<blockquote>
+  <pre>if (exists (select from emp where emp.salary &gt; 50000)) {
+  ...
+}</pre>
+  </blockquote>
+  <p>An <code>in </code>condition:</p>
+  <blockquote>
+  <pre>if (&quot;Fred&quot; in (select emp.ename from emp where emp.salary &gt; 50000)) {
+   ...
+}</pre>
+  </blockquote>
+  <p>A <code>for </code>loop:</p>
+  <blockquote>
+  <pre>for (emp in (select from emp order by emp.salary)) {
+   System.out.println(emp.ename + &quot; earns &quot; + emp.salary);
+}</pre>
+  </blockquote>
+  <p>And an array initialized using a relational expression:</p>
+  <blockquote>
+  <pre>Emp[] programmers = (select from emp
+        where emp.title.equals(&quot;Programmer&quot;));</pre>
+  </blockquote>
+  </li>
+  <li><b>Saffron</b><b> uses Java expression syntax</b>. You can call java methods, 
+  construct objects and arrays, and access java objects just as you would in 
+  regular java code. For example,<blockquote>
+    <pre>select emp.ename.substring(ename.indexOf(&quot;.&quot;)) from emp</pre>
+  </blockquote>
+  </li>
+  <li><b>Saffron</b><b> relational expressions use Java's type system</b>. Runtime type 
+  conversions (of, say, a <code>DECIMAL(8,2)</code> column to a java <code>float
+  </code>variable) are inefficient, error-prone, and can lose information.
+  The names of tables and columns are checked at compile time, so your programs 
+  are more maintainable.</li>
+  <li><b>Saffron</b><b> doesn't use 3-valued logic</b>. A condition in Saffron
+    always 
+  evaluates to <code>true</code> or <code>false</code>, whereas in SQL a 
+  condition can sometimes evaluates to NULL.</li>
+  <li><b>Saffron</b><b> expressions are evaluated efficiently</b>. If an expression 
+  involves only Java objects (no tables), the Saffron compiler will generate Java 
+  code which is almost as efficient as hand-written code.</li>
+  <li><b>Saffron</b><b> accesses heterogeneous data better</b>. Consider the following 
+  query, which accesses data from an in-memory array (<code>manufacturers</code>), and tables from two 
+  different relational databases (<code>orderDb </code>and <code>productDb</code>).<blockquote>
+  <pre>String[] manufacturers = new String[] {&quot;Heinz&quot;, &quot;Guinness&quot;};
+int[] customers = (
+  select order.customerId
+  from productDb.products as product
+  join orderDb.orders as order on order.productId == productId
+  where product.manufacturer in manufacturers);</pre>
+  </blockquote>
+  Should the query be executed on the orders database or the products database? 
+  And how should the manufacturer list be sent over: as a hard-coded in-list, or 
+  by restarting the query for each manufacturer in the list?&nbsp; It really 
+  doesn't matter: the Saffron optimizer will decide for you. 
+  </li>
+</ol>
+<h2>How does Saffron improve Java?</h2>
+<p>We have already discussed how Saffron makes your life easier if you are 
+embedding SQL statements in Java using JDBC. But Saffron can help even if 
+you are not accessing data stored in a relational database. This is 
+because in-memory data is often relational, and the algorithms to deal with it 
+are often the familiar relational operations: sort, join, filter, union, 
+intersect, minus.</p>
+<p>Suppose I have two lists of customers, and I want to create a list of both, 
+with duplicates eliminated. An experienced Java programmer would probably 
+write something like this:</p>
+<blockquote>
+  <pre>Customer[] addCustomerLists(Customer[] list1, Customer[] list2) {
+  Hashtable hashtable = new Hashtable();
+  for (int i = 0; i &lt; list1.length; i++) {
+    Customer c = list1[i];
+    hashtable.put(c, c);
+  }
+  for (int i = 0; i &lt; list2.length; i++) {
+    Customer c = list2[i];
+    hashtable.put(c, c);
+  }
+  Customer[] list3 = new Customer[hashtable.size()];
+  hashtable.asList().copyInto(list3);
+  return list3;
+}</pre>
+</blockquote>
+<p>They would test it, notice that the customers are now in arbitrary order, and 
+add</p>
+<blockquote>
+  <pre>  java.util.Arrays.sort(list3);</pre>
+</blockquote>
+<p>just before returning the result. In Saffron, a programmer would write</p>
+<blockquote>
+  <pre>Customer[] list3 = select from (list1 union list2) c order by c;</pre>
+</blockquote>
+<p>They don't need to know Hashtable is the 'correct' data structure to use. 
+They tell the system <i>what </i>they want, and the system figures <i>how </i>to 
+compute it efficiently.</p>
+<p>This is a rather simple example. It gets better, because Saffron is a <i>
+closed </i>language. This means that you can use a Saffron expression anywhere </p>
+<h2>Grammar</h2>
+<p><i>Definition</i>. A <dfn>set expression</dfn> is 
+an expression which returns more than one item; namely, a query, an array, an 
+iterator or collection, or a <code>Table</code>.</p>
+<h3>Relational expressions</h3>
+<blockquote>
+  <pre><code>select</code> [<code>{</code>[<i>expression</i> [<code>as </code><i>alias</i>]], ...<code>}</code> | <i>expression</i>]
+  [<code>from </code><i>from-expression</i>]
+  [<code>where </code><i>expression</i>]
+  [<code>order by </code>[<i>expression </i>[<code>asc </code>| <code>desc</code>]], ...]</pre>
+  <pre><i>expression </i><code>union </code><i>expression</i></pre>
+  <pre><i>expression </i><code>intersect </code><i>expression</i></pre>
+  <pre><i>expression </i><code>minus </code><i>expression</i></pre>
+</blockquote>
+<p>The syntax for the from list <i>from-expression</i> is as follows:</p>
+<blockquote>
+  <pre><i>expression </i>[as alias]</pre>
+  <pre><i>from-expression </i>[<code>left</code> | <code>right</code> | <code>full</code> | ] <code>join</code><i>
+</i>   <i>from-expression </i>[<code>on</code> <i>condition</i>]</pre>
+</blockquote>
+<p>Notes:</p>
+<ol>
+  <li>The select list can have 3 forms.<ol>
+  <li>An <i><dfn>empty select list</dfn> </i>means return everything from the from clause. 
+  If the from clause has precisely one item, the result is the same type as that 
+  item (for example, each row from <code>select from emp</code> has type <code>
+  Emp</code>); otherwise, the result is a record, with one field per from item 
+  (for example, each row from <code>select from emp join dept</code> has type
+  <code>{Emp emp; Dept dept}</code>; each row 
+  from <code>select</code> has type <code>{}</code>).</li>
+  <li>A <dfn>single-item select list</dfn> means 
+  return rows without boxing them into records. So, for example, each row from
+  <code>select three from new int[] {1, 2, 3} as three</code> is an <code>int</code>. </li>
+  <li>A <dfn>boxed select list</dfn> (enclosed in
+  <code>{</code> ... <code>}</code>) means create a record for each row. The 
+  optimizer will create a synthetic class to describe the type of the row. Two 
+  rows with the same types and aliases, in the same order, will have the same 
+  synthetic class (and are therefore union-compatible). For example, each 
+  row from <code>select {three} from new int[] {1, 2, 3} as three</code> is
+  <code>class Synthetic$124 { int three; }</code>; the type of <code>select {emp.empno, 
+  emp.ename as name} from emp</code> is <code>class Synthetic$527 { int empno; 
+  String name; }</code>.</li>
+</ol>
+  </li>
+  <li>Aliases of items in from and select lists default to variable, field, and 
+  method names. The aliases of the fields in <code>Emp emp; select emp, 
+  dept.deptno, dept.dname.substring(3) from dept</code> are <code>emp</code>,
+  <code>deptno</code>, and <code>substring</code>, respectively. Other 
+  kinds of expression have no default alias, and therefore an alias must be 
+  specified. Whether implied or explicit, the aliases in a select or from 
+  list must be distinct.</li>
+  <li>If the from clause is missing, the input to the select statement is a 
+  table with one row and no columns.</li>
+  <li>Expressions in the from list must be set expressions. 
+  Any kind of expression is allowed in the select list; queries are returned as 
+  arrays.</li>
+  <li>If <code>on</code><i> condition </i>is omitted from a <i>from-expression</i> 
+  it defaults to <code>true</code> (hence, a cartesian product). The keywords
+  <code>left</code>, <code>right</code> and <code>full</code> indicate that an 
+  outer join is to be performed.</li>
+  <li>No plans to do <i>aggregation</i>.</li>
+</ol>
+<h3>Boolean expressions</h3>
+<p>We add the following boolean expressions to Java:</p>
+<blockquote>
+  <pre><i>expression</i> <code>in </code><i>expression</i></pre>
+  <pre><code>exists </code>(<i>expression</i>)</pre>
+</blockquote>
+<p>The right-hand expressions must be set expressions.</p>
+<p>These expressions can, of course, occur inside relational expressions. The 
+sub-query so created is said to be <dfn>correlated</dfn> if it refers to rows
+from the outer query. For example, the following query 
+is correlated on <code>dept.deptno</code>:</p>
+<blockquote>
+  <pre><code>select
+from </code>depts <code>as </code>dept
+<code>where exists </code>(
+   <code>select from </code>emps <code>as </code>emp
+<code>   where </code>emp.deptno == dept.deptno &amp;&amp;
+      emp.gender.equals(&quot;F&quot;))</pre>
+</blockquote>
+<p>We do not provide a <code>not</code> operator to negate these. Use the 
+regular Java <code>!</code> operator, for example, <code>!(&quot;apple&quot; in fruit)</code> 
+or <code>!exists (select from fruit where fruit.equals(&quot;apple&quot;)</code>.</p>
+<h3>Statements</h3>
+<blockquote>
+  <pre><code>for </code>([<i>type</i>]<i> variable</i> <code>in </code><i>expression</i>) {
+   <i>statement list
+</i>}</pre>
+</blockquote>
+<h3>Aggregation</h3>
+<p>Simple example:</p>
+<blockquote>
+  <pre><code>select</code> emp.deptno, sum(emp.sal)<code> as</code> sumSal<code>
+group by</code> emp.deptno<code>
+from </code>emps <code>as </code>emp</pre>
+</blockquote>
+<p>Unlike SQL, the <code>group by</code> clause comes before the <code>from</code> 
+clause, and is mandatory if you want to aggregate. The equivalent of the SQL <code>select 
+sum(emp.sal) from emp</code> has an empty <code>group by</code> clause in Saffron: <code>select sum(emp.sal) 
+group by from emp</code>.</p>
+<p>In Saffron, the <code>where</code> clause is applied <i>after</i> aggregation 
+has been performed, more like a SQL <code>having</code> clause than a <code>
+where</code> clause. Expressions in the <code>where</code> clause can only 
+reference aggregations and grouping expressions, not ungrouped expressions. If 
+you want to filter the rows going into the aggregation, use a subquery in the 
+from list:</p>
+<blockquote>
+  <pre><code>select</code> femp.deptno, sum(femp.sal)<code> as</code> sumSal<code>
+group by</code> femp.deptno<code>
+from </code>(
+    <code>select</code>
+    <code>from</code> emps <code>as</code> emp
+    <code>where</code> emp.gender.equals(&quot;F&quot;)) <code>as </code>femp
+<code>where </code>avg(femp.sal) &gt; 50000</pre>
+</blockquote>
+<p>There are 3 kinds of aggregation function:</p>
+<ol>
+  <li>Builtin aggregation functions (such as <code>count</code>) are treated 
+  specially by the system, and generate optimized code.</li>
+  <li>A regular java function which takes a set (array, collection, or iterator) 
+  will be called if its argument matches the element type in the actual usage. 
+  For example, if <code>emp.sal</code> is of type <code>double</code>, then
+  <code>double sum(double[] a)</code> would match. Likewise, <code>int 
+  count(Iterator iter)</code> would match <code>select count(emp) from emps as 
+  emp</code>, because Emp can be up-cast to Object, the element type of Iterator.</li>
+  <li>User-defined aggregations.</li>
+</ol>
+
+<pA user-defined aggregation is a class which implements <code>interface {@link
+saffron.AggregationExtender}</code>. If you invoke the {@link
+saffron.AggregationExtender#aggregate} pseudo-method, the system generates the
+right code to calculate the aggregation.</p>
+
+<p>Now let's see how the Saffron system invokes a user-defined aggregation
+while evaluating a query. Suppose we have written <code>class MySum</code>,
+which can total both <code> int</code> and <code>double</code> values, and
+evaluate the query</p>
+
+<blockquote>
+  <pre><code>select</code> MySum(i)
+<code>from new int</code>[] {2, 3, 4} <code>as</code> i</pre>
+</blockquote>
+<p>The Saffron system makes following calls. Note how the <code>resolve</code> 
+method deals with operator overloading. Note how <code>int</code>s are wrapped 
+as <code>Integer</code>s then in arrays to be passed to <code>addOne</code>, and returned from
+<code>result</code>.</p>
+<blockquote>
+  <pre>AggregatorClass sum = new MySum();
+AggregationExtender intSum = sum.resolve(new Class[] {Integer.TYPE});
+Object total = intSum.start(null);
+intSum.addOne(total, new Object[] {new Integer(2)});
+intSum.addOne(total, new Object[] {new Integer(4)});
+Object total2 = intSum.start(null);
+intSum.addOne(total2, new Object[] {new Integer(3)});
+intSum.merge(total, total2);
+System.out.println(&quot;Result is &quot; +
+    ((Integer) intSum.result(total)).intValue());</pre>
+</blockquote>
+<p>Examples of more complex aggregations:</p>
+<ul>
+  <li>The <code>median</code> aggregation ({@link saffron.ext.Median}) requires a 
+  variable-size workspace. A typical implementation would use an {@link java.util.ArrayList} to collect the values, sort them, then return the middle one.</li>
+  <li>The <code>nth</code> aggregation {@link saffron.ext.Nth}) returns the <i>n</i>th item of a set. <i>n</i> 
+  is passed to the <code>start</code> method, so must be independent of any 
+  particular row. Example:<blockquote>
+    <pre><code>select</code> new Nth(3).aggregate(name) <code>from</code> (<code>select from</code> emps <code>order by</code> salary)</pre>
+  </blockquote>
+  </li>
+  <li>The <code>closest</code> aggregation computes the nearest of a set of 
+  points to a given point. Its <code>start</code> method receives the latitude 
+  and longitude of the initial point (as <code>new Object[] {new Double(42), new 
+  Double(129)}</code>), and the <code>addOne</code> method receives the latitude 
+  and longitude of each subsequent point.<blockquote>
+    <pre><code>select</code> closest(42, -129, office.latitude, office.longitude)
+<code>from</code> offices <code>as</code> office</pre>
+  </blockquote>
+  </li>
+</ul>
+<p>Notes &amp; issues:</p>
+<ol>
+  <li>Arguments are zero or more primitive types or objects. Primitives are 
+  passed wrapped as objects.</li>
+  <li>A robust aggregation of median (not possible without invoking custom 
+  code-generation) would internally expand it to<blockquote>
+    <pre><code>select </code>nth(count() / 2, sorted)
+<code>from</code> (<code>select from new int</code>[] {2, 3, 4} <code>as</code> i <code>order by</code> i) <code>as </code>sorted</pre>
+  </blockquote>
+  </li>
+  <li>Distinct aggregations. Syntax? Implementation?</li>
+  <li>Could we use aggregations as rolling averages? (I guess the <code>{@link saffron.AggregationExtender}.result()</code> method would have to be non-destructive.)</li>
+</ol>
+<h2>Type-checking</h2>
+<p>One of Java's most important features is its strong type system. To 
+take advantage of this, every relational expression is always has a result which 
+is an array type.</p>
+<p>This doesn't mean that the array is actually created. If you use the
+<code>for (... in ...)</code> construct, for example, the system will implement the loop 
+using an iterator, and is unlikely to construct the result as an array. 
+And the optimizer tries hard not to convert intermediate sets, such as that 
+created by an <code>in </code>operator, into arrays.</p>
+<p>Regular java expressions can also be used as relational expressions:</p>
+<ul>
+  <li>arrays</li>
+  <li>collections (<code>Collection</code>, including <code>Vector</code>)</li>
+  <li>iterators (<code>Enumeration</code>, <code>Iterator</code>)</li>
+</ul>
+<p>The problem with collections and iterators (until generics arrive in Java 
+1.4) is that we don't know what type of objects they contain. We allow the 
+programmer to specify that type information using by a dummy cast to an array 
+type. For example:</p>
+<blockquote>
+  <pre>Vector fruit = new Vector();
+fruit.addElement(&quot;apple&quot;);
+fruit.addElement(&quot;banana&quot;);
+fruit.addElement(&quot;orange&quot;);
+fruit.addElement(&quot;mango&quot;);
+String[] tropicalFruit = (select fruit
+                          from (String[]) fruit
+                          where fruit.indexOf(&quot;n&quot;) &gt;= 0);</pre>
+</blockquote>
+<p>You can cast a collection or iterator to an array of primitive types, 
+provided that the collection does not contain null values.</p>
+<h3>Casting input datasets</h3>
+<p>Some data sources, such as vectors, iterators and external data sources such 
+as JDBC tables, contain very little type information, and this makes it 
+difficult to write concise queries. For example,</p>
+<blockquote>
+  <pre>Vector emps = new Vector();
+emps.addElement(fred);
+emps.addElement(barney);
+for (emp in select from emps as emp where ((Emp) emp).deptno == 20) {
+  print(((Emp) emp).name);
+}</pre>
+</blockquote>
+<p>Better to tell the system just once that <code>emps </code>is a collection of
+<code>Emp </code>objects:</p>
+<blockquote>
+  <pre>for (emp in select from (Emp[]) emps as emp where emp.deptno == 20) {
+  print(emp.name);
+}</pre>
+</blockquote>
+<p>The cast does not necessarily cause the vector to be converted to an array:
+we are simply providing the Saffron compiler with more type information, and
+allowing it to choose the most efficient plan.</p>
+
+<h3>Determining the output type</h3>
+
+<p>By default, a relational expression returns an array. You can produce results 
+in a different format by using a dummy cast, like this:</p>
+
+<blockquote>
+  <pre>Iterator emps;
+Iterator femaleEmps = (Iterator)
+    (select from (Emp[]) emps as emp
+     where emp.gender.equals(&quot;F&quot;));</pre>
+</blockquote>
+<p>This is particularly useful where the output is large (even infinite!) and 
+you to iterate over the first few rows without computing the whole result.</p>
+
+<p>The available types are {@link java.util.Iterator}, {@link 
+java.util.Enumeration}, {@link java.util.Collection}, {@link java.util.Vector}, 
+and <code>type[]</code>. In future, we may add {@link java.sql.ResultSet}.</p>
+
+<h3><a name="Tables_and_Schemas">Tables and Schemas</a></h3>
+
+<p>The interfaces Table, Schema and Connection allow you to access data sources
+which have arbitrary access methods. A table (<code>interface {@link
+saffron.Table}</code>) represents a set of relational data, and it provides
+methods to describe the data source, discover its access methods, and so
+forth. Schemas (<code>interface {@link saffron.Schema}</code>) make it easy to
+expose a set of tables and the information necessary to compile programs which
+use them. If you can to access data in a JDBC database, derive a class from
+<code>class {@link saffron.ext.ReflectSchema}</code> and create a member of
+type {@link saffron.ext.JdbcTable} for each table your wish to access
+(<code>class {@link sales.Sales}</code> is an example of this.)</p>
+
+<p>Let's look at what happens when you compile a program which uses a
+schema.</p>
+
+<ol>
+  <li>The compiler notices a piece of code (<code>sales.emps</code>) which 
+  accesses a member or method of an object (<code>sales</code>) which implements <code>
+  interface {@link saffron.Connection}</code>.</li>
+  <li>The compiler calls the static method <code>getSchema</code> on that 
+  object. (Why call a static method, not a method in the interface?&nbsp; 
+  Well, remember that this is happening at compile time. The real object 
+  does not exist yet.)</li>
+  <li>The compiler invokes the schema's <code>getMemberTable</code> or <code>
+  getMethodTable</code> method, to retrieve a <code>Table</code>. If there is no 
+  such table, these methods may throw <code>openjava.mop.NoSuchMemberException</code>, 
+  which will be reported as a compilation error.</li>
+  <li>The compiler invokes the table's <code>toRel</code> method, passing the 
+  piece of parse tree which represents the expression which will yields the 
+  schema. (The <i>real </i>schema object only gets created at run time, 
+  remember.)</li>
+  <li>The compiler calls schema's getTable method with the parse&nbsp; object 
+  be for example, class Sales.</li>
+</ol>
+
+<p>In particular, we provide <code>abstract class {@link saffron.ext.JdbcTable}
+implements {@link saffron.Table}</code> to make it easy to access tables via
+JDBC. We recommend that you group tables into a schema class, which extends
+<code>class {@link saffron.ext.ReflectSchema}</code>. For
+example,</p><blockquote>
+
+  <pre>class SalesConnection
+   extends saffron.ext.JdbcConnection
+   implements saffron.Connection
+{
+   public SalesConnection(String connect) {
+      super(connect);
+   }
+   // required for saffron.Connection
+   public static saffron.Schema getSchema() {
+      return new SalesSchema();
+   }
+};
+
+class SalesSchema
+   extends saffron.ext.ReflectSchema
+   implements saffron.Schema
+{
+   public static class Emp {
+      public int empno;
+      public String name;
+      public int deptno;
+   };
+   public static class Dept {
+      public int deptno;
+      public String name;
+   };
+
+   public saffron.Table emp = new saffron.ext.JdbcTable(
+      this, &quot;EMP&quot;, Emp.class);
+   public saffron.Table depts = new saffron.ext.JdbcTable(
+      this, &quot;DEPT&quot;, Dept.class);
+};
+
+SalesConnection sales = new SalesConnection(&quot;jdbc:odbc:MyDatabase&quot;);
+for (emp in sales.emps) {
+  <i>some code</i>
+}</pre>
+</blockquote>
+<p>The Saffron compiler creates an instance of the schema, and interrogates it 
+regarding the objects it contains. When it sees the expression <code>sales.emps</code>, 
+it invokes <code>SalesConnection.getSchema().getTableForMember(&quot;emps&quot;)</code> to 
+get a {@link saffron.Table} which describes <code>emps</code> and, in particular, 
+that it returns rows of type <code>Emp</code>. The translator then calls 
+the table's <code>toRel()</code> method to create a relational expression node; 
+in this case a {@link saffron.rel.TableAccess}. (The translator actually converts <code>
+sales.emp</code> into a brief intermediate expression <code>(Emp[]) 
+sales.contentsAsArray(&quot;emps&quot;)</code>. The <code>contentsAsArray</code> function 
+is a placeholder which has special meaning to the translator. Note how an array 
+cast is used to provide type information.)</p>
+
+<p>As well as type information, the schema could in future provide information
+about volumetrics, indexes, and even custom rules for optimizing the query.</p>
+
+<p><i>todo</i>: Expose <code>Map</code>s (including <code>Hashtable</code>s) as 
+relations with 2 columns.</p>
+<h3>Non-relational schemas</h3>
+<p>A schema could be used to present non-relational data in a relational format. 
+It would know that 'getDept(40)' was the same as 'select from dept where deptno 
+= 40' and 'dept.getEmployees()' is the same as 'select from emp where emp.deptno 
+== dept.deptno'. We would need a mechanism to construct an <dfn>
+extent</dfn> (the set of all instances of a given 
+entity). The schema could declare an explicit method to find the instances of an 
+entity; another way is to use mandatory relationships (for example, since every 
+employee must work in a department, given all departments, we can find all 
+employees by traversing the 'works in' relationship). It helps if the 
+relationship is many- (or one-) to-one, since we don't need to eliminate 
+duplicates. There could be more than one access path to an entity.</p>
+
+<p>How to represent such mappings? Views: dept.getEmployees() is equivalent to
+select from emp where emp.deptno == dept.deptno. Better, parameterized views.
+Example {@link sales.Reflect} presents Java's type system ({@link
+java.lang.Class}, {@java.lang.reflect.Field}, <i>et cetera</i>) as
+relations.</p>
+
+<p><i>todo: </i>Could allow a type (e.g. <code>boolean</code>,
+<code>int</code>) to serve as a relation. Could implement by iterating over all
+possible values of that type (rarely practical) or joining to an attribute of a
+more finite relation. Example: <code>select from int as i where i in (select
+emp.deptno from emp)</code>.</p>
+
+<h2>Null semantics</h2>
+<p>Saffron uses Java, not SQL, null semantics. <code>null</code> 
+is always the Java null value. Every boolean expression evaluates to 
+either <code>true </code>or <code>false</code>. And yes, <code>null == 
+null</code> evaluates to <code>true</code>.</p>
+<h2>Comparison semantics</h2>
+<p>In Saffron, as in Java, the <code>==</code> operator 
+compares addresses, not content. The expression <code>&quot;abc&quot; == &quot;a&quot; 
++ &quot;bc&quot;</code> may, on some Java systems, evaluate to false, so you should 
+write <code>&quot;abc&quot;.equals(&quot;a&quot; + &quot;bc&quot;)</code> instead.</p>
+<p>The <code>in </code>operator expands to expressions which use the <code>
+equals()</code> and <code>hashCode()</code> methods, so you should only uses it 
+on classes for which these methods are well-behaved. And the expression</p>
+<blockquote>
+  <pre>null in new String[] {&quot;apple&quot;, &quot;orange&quot;}</pre>
+</blockquote>
+<p>will give a <code>NullPointerException</code>.</p>
+<p>The <code>order by</code> operator requires that objects implement the <code>
+interface java.lang.Comparable</code>. (<i>todo: Compile- or run-time error if 
+not?</i>)</p>
+<p>Primitive types are compared using the primitive operators <code>==</code>, 
+<code>&lt;</code> etc.</p>
+<p>Two instances of a synthetic classes are equal if and only if each of their 
+components are equal. Synthetic classes are compared lexicographically. 
+Example:</p>
+<blockquote>
+<pre>select
+from (select from twos join threes) as i
+join (select from twos join threes) as j
+where i &lt; j</pre>
+</blockquote>
+<h2>Primitive values</h2>
+<p>Saffron accepts primitive values, such as <code>int</code>, <code>char</code>,
+<code>double</code>, in most places that it accepts objects. A couple of 
+exceptions:</p>
+<ol>
+  <li>Outer joins need to produce null values. For example,<pre>select {twos, threes}
+from new int[] {2, 4, 6, 8} as twos
+left join new int[] {3, 6, 9} as threes
+on twos == threes</pre>
+  would produce<pre>2, 0
+4, 0
+6, 6
+8, 0 </pre>
+  </li>
+  <li>Saffron uses Java collections to implement certain algorithms. For example, 
+  in the following expression, it uses a Hashtable to detect values which have 
+  already been emitted.
+  <pre>select from new int[] {2, 4, 6, 8} as twos
+minus
+select from new int[] {3, 6, 9} as threes</pre>
+  It automatically boxes and unboxes primitive values.</li>
+</ol>
+<h2>Planning and evaluation</h2>
+<p>The Saffron system runs in static and dynamic mode.</p>
+
+
+<p>In static mode, relational expressions are embedded into Java programs. A 
+pre-processor checks that the relational expressions are valid, and converts 
+them into regular java. There are many ways to evaluate a relational expression, </p>
+
+
+<p>A query optimizer chooses an evaluation plan.</p>
+<h2>Evaluation model</h2>
+<h2>Implementation issues</h2>
+
+
+<h3>Composite rows</h3>
+
+
+<p>If a relational expression has more than one expression in its <code>select
+</code>clause, it produces rows which are not atomic. For example,</p>
+
+
+<blockquote>
+  <pre>int[] twos = new int[] {2,4,6,8};
+int[] threes = new int[] {3,6,9};
+for (i in (select twos, threes twos cross join threes)) {
+   ...
+}</pre>
+</blockquote>
+<p>creates rows which are pairs of <code>int</code>s. It is translated to</p>
+<blockquote>
+  <pre>int[] twos = new int[] {2,4,6,8};
+int[] threes = new int[] {3,6,9};
+for (int x = 0; x &lt; twos.length; x++) {
+   for (int y = 0; y &lt; threes.length; y++) {
+      Synth1 i = new Synth1(twos[x], threes[y]);
+      ...
+   }
+}</pre>
+</blockquote>
+<p>This illustrates two issues with composite rows. First, these rows need 
+a type. The Saffron compiler solves this issue by generating a synthetic 
+class (in this case, <code>class Synth1</code>). We don't know what this 
+class will be called, so we use <code>for (<i>variable</i> in ...)</code> 
+syntax, which lets the system infer the type for us.</p>
+<p>Second, the system creates a new object for every row, which might be 
+expensive. In this case, they are emitted from the query, so we can't avoid 
+creating them. If the composite rows are not emitted, the Saffron optimizer will 
+do its best to avoid creating them.</p>
+<h2>How the optimizer works</h2>
+<p>The job of the optimizer is to convert a parse tree containing Saffron expressions into a regular parse tree. Its input and output, therefore, are both 
+parse trees.</p>
+<p>In between times, it searches for Saffron expressions, and converts them to 
+tree of intermediate relational expressions (<code>class {@link saffron.rel.Rel}</code>).</p>
+<p>These relational expressions still contain fragments of regular Java 
+expressions for select expressions, method calls, and so forth. The Java 
+expressions are translated into internal form. Except for references to 
+variables outside the Saffron expression, variables tend to disappear, to be 
+replaced by mysterious-looking expressions. For example, in the expression</p>
+<blockquote>
+<pre>select
+from location
+join (select
+      from emp
+      join dept on emp.deptno == dept.deptno)
+on location.state.equals(dept.state) </pre>
+</blockquote>
+<p>the join condition <code>location.state.equals(dept.state)</code> becomes <code>$input0.state.equals($input1.$f1.state)</code>. 
+Here, <code>$input0</code> and <code>$input1</code> represent the 2 
+inputs to the join node (which is the context for this Java fragment); <code>$f1</code> 
+is the first field of the composite row produced by the inner query. That 
+field's type is Dept, and therefore it has a <code>state</code> field.</p>
+<p>The optimizer uses a dynamic programming approach based upon that used by the 
+Volcano optimizer. Starting with the initial expression, it applies 
+transformation rules to convert it, and its sub-expressions, into semantically 
+equivalent expressions. It estimates the cost of each expression, and 
+cultivates variants of expressions until it finds cheap implementations of them.</p>
+<p>An expression can be implemented using several <dfn>calling
+conventions</dfn>. Calling conventions include array,
+vector, iterator. The most important (and efficient) calling convention is 
+inline. Inline means that a piece of code will be executed for every row 
+in the expression; no collection of objects is created, just <i>stuff happens</i>. 
+An inline implementation of</p>
+<blockquote>
+  <pre>for (o in (select from emp join dept on emp.deptno == dept.deptno)) {
+  System.out.println(o.emp.ename + &quot; works in &quot; + o.dept.dname);
+}</pre>
+</blockquote>
+<p>would be</p>
+<blockquote>
+  <pre>for (int i = 0; i &lt; emp.length; i++) {
+   for (int j = 0; j &lt; dept.length; j++) {
+      if (emp[i].deptno == dept[j].deptno) {
+         Synth1 o = new Synth1(emp[i], dept[j]);
+         System.out.println(o.emp.ename + &quot; works in &quot; + o.dept.dname);
+      }
+   }
+}</pre>
+</blockquote>
+<p>This is rather tricky to implement, because the stuff in the middle of the 
+for loop corresponds to stuff at the top of Rel tree. Each Rel node's 
+implement method has to handle a callback from a child saying 'I have placed a 
+row in variable <i>xyz</i>; please generate code to do something with it.'</p>
+
+
+
+<p>If two expressions have the same meaning but different calling conventions, 
+they are not immediately interchangeable. It may be cheaper to evaluate a 
+particular expression as an array, but another algorithm may find it more 
+convenient if that expression is a vector. For this reason, there are 
+special kinds of rule called <dfn>conversion rules</dfn>. 
+They can convert from one convention to another, but they have a non-zero cost. 
+The optimizer may decide that it is cheaper to build a vector in the first 
+place, rather than paying the cost of converting it to a vector later.</p>
+
+
+
+<p>There is a special kind of node called a <dfn>Terminator</dfn> 
+(<code>class {@link saffron.rel.java.Terminator}</code>). 
+After a tree has been optimized, a Terminator is placed on the root to drive 
+code-generation. It behaves somewhat like a Rel node (in that it has 
+inputs, and can be called-back to generate code), but it does not actually 
+produce any result. (<i>todo</i>: Maybe Terminator should be a calling 
+convention?)</p>
+
+
+<h1>Appendix 1: Design notes</h1>
+
+
+<h2>Syntax of <code>group by</code></h2>
+
+
+<p>There are several problems with a SQL-like aggregation:</p>
+<ol>
+  <li>If a <code>select</code> statement contains a <code>group by</code> clause, 
+  the validation rules for expressions within that statement are altered: only 
+  expressions which are in the <code>group by</code> can be used outside of an 
+  aggregate function.</li>
+  <li>Even if there is no <code>group by</code> clause present, aggregation 
+  implicitly occurs if an aggregate function occurs anywhere in the <code>select</code> 
+  statement. For example, every expression in<blockquote>
+    <pre>select emp.gender.toLowerCase(), emp.name
+from emp
+where emp.name.startsWith(&quot;P&quot;)</pre>
+  </blockquote>
+<p>becomes illegal if an aggregation is added:</p>
+  <blockquote>
+    <pre>select emp.gender.toLowerCase(), emp.name
+from emp
+where emp.name.startsWith(&quot;P&quot;) &amp;&amp; min(emp.salary) &gt; 50000</pre>
+  </blockquote>
+<p>This syntax problem could be fixed fairly easily, by requiring an empty <code>
+group by</code> clause in such cases.</p>
+  </li>
+  <li>If we allow functions on sets to be used as aggregation functions, then 
+  certain statements are ambiguous. Consider the following:<blockquote>
+    <pre>int count(Object[] a) {
+    int n = 0;
+    for (int i = 0; i &lt; a.length; i++) {
+        if (a[i] != null) {
+            n++;
+        }
+    }
+    return n;
+}
+class Emp {
+    String name;
+    Person[] dependents;
+};
+select count(emp.dependents) from emp;</pre>
+  </blockquote>
+  <p>It is not clear whether Saffron should return a row for each employee with 
+  the number of the dependents that employee has, or a single number, the number 
+  of employees whose <code>dependents</code> field is not null.</li>
+</ol>
+<p>The underlying problem is that SQL aggregation makes a scalar expression 
+behave like a set, and this undermines the usual rules of expression validation 
+and type-checking. We can make the set explicit, but the resulting expression</p>
+<blockquote>
+  <pre>select deptno,
+    sum(select emp.sal from emps as emp
+           where emp.deptno == deptno) as sumSal,
+    min(select emp.sal from emps as emp
+           where emp.deptno == deptno) as minSal
+from (select distinct deptno from emps) as deptno</pre>
+</blockquote>
+<p>is more verbose -- the underlying set, <code>emps</code>, is referenced three 
+times -- and perhaps less efficient.</p>
+<p>We need to make grouping an aggregation explicit.</p>
+<p>QUEL aggregations are more like scalar sub-queries. They are more verbose. They are also more powerful: note how we can sum only female employees' 
+salaries. In this syntax, the set of values to be aggregated over (in this case,
+<code>select ... from emp</code>) is formed for each aggregate expression; the 
+optimizer recognizes common expressions and evaluates them only once. Example:</p>
+<blockquote>
+  <pre><code>select distinct </code>emp.deptno,
+  min(<code>select</code> emp.sal <code>from </code>emps <code>as </code>emp2
+      <code>where </code>emp2.deptno == emp.deptno) <code>as </code>minSal
+  sum(<code>select</code> emp.sal <code>from </code>emps <code>as </code>emp2
+      <code>where </code>emp2.deptno == emp.deptno &amp;&amp;
+          gender.equals(&quot;F&quot;)) <code>as </code>sumFemaleSal
+<code>from </code>emps <code>as </code>emp</pre>
+</blockquote>
+
+
+<h2>Aggregation types</h2>
+<p>Jim Gray et al. [<a href="#GBLP96">GBLP96</a>] classify aggregation operators into 3 
+categories, in increasing order of complexity:</p>
+<ul>
+  <li><dfn>Distributive</dfn> aggregations requires fixed storage, and two totals can 
+  be merged. Example: <code>sum</code>, <code>count</code>, <code>min</code>,
+  <code>max</code>. To merge two partial sums, take <code>sum(S1 u S2) = 
+  sum({sum(S1), sum(S2)})</code>. (Here, <code>S1</code> and <code>S2</code> are 
+  the sets of values which formed the partial sums, and <code>S1 u S2</code> is 
+  their union, the set of all values.) <code>min</code> and <code>max</code> 
+  work the same. <code>count</code> is different, in that it cannot be used to 
+  merge two sums; instead, you use <code>+</code>: <code>count(S1 u S2) = 
+  count(S1) + count(S2)</code>.</li>
+  <li><dfn>Algebraic</dfn> aggregations also require 
+  fixed storage, but two totals cannot be merged. Example: <code>avg</code>,
+  <code>stddev</code>.</li>
+  <li><dfn>Holistic</dfn> aggregations require 
+  variable storage. Example: <code>median</code>, <code>countDistinct</code>.</li>
+</ul>
+<p>Some algebraic aggregates can be decomposed into distributive aggregates, as 
+follows: avg(S) = sum(S) / count(S). We could provide better 
+support for these; maybe a new method &lt;code&gt;Expression {@link saffron.rel.Aggregation}.preExpand()&lt;/code&gt;, which is called before the parse tree is 
+converted into a {@link saffron.rel.Aggregate} relational operator.</p>
+<p>It is hard to implement holistic aggregations efficiently. For example, <code>
+median</code> can be translated into an efficient relational expressions by 
+hand:</p>
+<blockquote>
+  <pre>select {nth(countEmp / 2, salary) as medianSalary}
+group by {emp.deptno}
+from (select from emp order by emp.deptno) empSorted
+join (select {emp.deptno, count() as empCount}
+      group by {emp.deptno} from emp) empCounted
+on empSorted.deptno == empCounted.deptno</pre>
+</blockquote>
+<p>Similarly distinct <code>count</code>:</p>
+<blockquote>
+  <pre>select {
+    empGrouped.deptno,
+    count(empGrouped.gender) as countDistinctGender}
+group by {empGrouped.deptno}
+from (
+    select distinct {emp.deptno, emp.gender}
+    from emps as emp) as empGrouped</pre>
+</blockquote>
+<p>We should supply an extender which can transform either the parse tree or the 
+relational operator tree in such a way.</p>
+<h2>Start parameters for aggregations</h2>
+<p>Aggregations can take parameters per query, per group, and per row. Examples:</p>
+<ul>
+  <li>Conventional aggregations take parameters only per row.</li>
+  <li>The nth(count, value), count is per-group, and value is per-row.</li>
+  <li>In min(collator, value), collator is per-query, and value is per-row.</li>
+</ul>
+<p>One way to provide per-group parameters is for aggregations to have two sets 
+of parameters: the first passed at start time, the other passed per row.</p>
+<p>But custom aggregations can also do the job. They are a little less efficient, 
+and the syntax is a little more verbose, but what's going on is clearer.
+</p>
+<p>Custom aggregation to do locale-specific min:</p>
+<blockquote>
+  <pre>select {emp.dept.deptno,
+   new LocaleMin(emp.dept.locale).apply(name) minName}
+group by {emp.dept}
+from emps as emp</pre>
+</blockquote>
+<h2>Problems with iterators</h2>
+<p><i>The ideas in this section are not implemented. So, if your iterator is 
+infinite, the optimizer may generate a plan which never finishes. And it may 
+generate a plan which requires iterators to be restarted.</i></p>
+<p>Iterators (and enumerations) present peculiarities that finite data sources such as JDBC tables, arrays, 
+and collections don't present.</p>
+<p><b>Restarting an iterator</b></p>
+<p>First, they need to be restarted. Suppose the optimizer implemented</p>
+<blockquote>
+  <pre>Iterator nouns, verbs;
+for (i in (String[]) verbs intersect (String[]) nouns) {
+   print(verb + &quot; is both a noun and a verb&quot;);
+}</pre>
+</blockquote>
+<p>as a nested loops join,</p>
+<blockquote>
+  <pre>while (nouns.hasNext()) {
+   String noun = (String) nouns.next();
+   while (verbs.hasNext()) {
+      String verb = (String) verbs.next();
+      if (verb.equals(noun)) {
+         print(verb &quot; is both a noun and a verb&quot;);
+      }
+   }
+}</pre>
+</blockquote>
+<p>This doesn't work. The problem is, the second time around the outer loop,
+<code>verbs.hasNext()</code> has already returned <code>false</code>.</p>
+<p>If possible, you should use a class which implements {@link java.util.Collection} 
+or {@link saffron.runtime.Iterable}; the optimizer calls the <code>iterate()</code> 
+method each time it needs to start an iteration.</p>
+<p>If you supply an {@link java.util.Iterator}, the optimizer wraps it in a {@link 
+  saffron.runtime.BufferedIterator}.</p>
+<p><i>Enhancement</i>: If the plan never requires that the iterator is 
+restarted, the optimizer should leave the iterator unwrapped.</p>
+<p><b>Infinite iterators</b></p>
+<p>The second problem with iterators is that they can be infinite. This is a bad 
+idea if you're copying the results to an array, but you can achieve spectacular 
+results if you're prepared to go with the whole <i>streaming thing</i>. Here's 
+an example:</p>
+<blockquote>
+  <pre>class MultiplesOf implements Iterator {
+    int i, n;
+    MultiplesOf(int n) {
+        this.n = n;
+        this.i = 0;
+    }
+    public boolean hasNext() {
+        return true;
+    }
+    public Object next() {
+        return i += n;
+    }
+    public void remove() {
+        throw new UnsupportedOperationException();
+    }
+}
+
+Iterator twos = new MultiplesOf(2);
+Iterator tens = (Iterator) (select from twos where twos % 5 == 0);</pre>
+</blockquote>
+<p>We have created one infinite iterator from another!</p>
+<p>The problem is that the optimizer might be tempted to do stupid things, like 
+storing the results in an intermediate array. We tell it not to by implementing 
+an empty interface, {@link saffron.runtime.Infinite}.</p>
+<p><i>We have not implemented support for infinite iterators. Expressions 
+involving infinite iterators might just go on for ever.</i></p>
+<h1>Appendix 2: Futures</h1>
+<p>List:</p>
+<ol>
+  <li>Aggregation<ol>
+    <li>Allow built-in aggregations in regular java (that is, outside <code>
+    select</code> statements with a <code>group by</code> clause). Example #1:
+    <code>select {deptno, count(select from emps as e2 where e2.deptno == 
+    e1.deptno) as countEmp} from emps as e1</code>. Example #2: <code>if (count(select from 
+    emps as e2 where e2.deptno == e1.deptno</code>.</li>
+  </ol>
+  </li>
+  <li>Schema on top of persistence layer -- JDO say. Or JAXB. Talk to Castor 
+  folks about it.</li>
+  <li>Refactoring.<ol>
+    <li>search for obsolete &amp; deprecated</li>
+  </ol>
+  </li>
+  <li>Demos<ol>
+    <li>Swing application where you can enter expressions or statements, and 
+    execute them. Can create a set of named connections.</li>
+  </ol>
+  </li>
+  <li>Environment<ol>
+    <li>log</li>
+    <li>hsqldb</li>
+  </ol>
+  </li>
+  <li>OpenJava<ol>
+  <li>Obsolete MSJavaCompiler maybe</li>
+  <li>Drive compiler from system properties</li>
+  <li>Drive parser from system properties (or only have one parser, and turn off 
+  saffron features programmatically).</li>
+</ol>
+
+
+  </li>
+</ol>
+
+<h1>Appendix 3: References</h1>
+
+<dl>
+<dt><a name="GBLP96">GBLP96</a></dt>
+ <dd>J. Gray, A. Bosworth, A. Layman, and H. Pirahesh. Data cube: A relational 
+ aggregation operator generalizing group-by, cross-tab, and sub-totals. In <em>
+ IEEE 12th International Conference on Data Engineering</em>, pages 152&mdash;159, 
+ 1996 (<a href="http://research.microsoft.com/~gray/DataCube.doc">doc</a>).</dd>
+</dl>
+
+<table border="1" width="100%" class="clsStd">
+  <tr>
+    <td>End <i>$Id$</i></td>
+  </tr>
+</table>
+
+</html>
+</body>

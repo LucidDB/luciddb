@@ -1,0 +1,17 @@
+# Define variables needed by other scripts.  This is the only
+# script which needs to be processed by autoconf.  Others can
+# just source this and use the variable definitions.
+
+BOOST_DIR=@boost_location@
+BOOST_JAM_PLATFORM=@boost_jam_platform@
+BOOST_THREADLIB_DIR=@BOOST_THREADLIB_DIR@
+BOOST_THREADLIB=@BOOST_THREADLIB@
+BOOST_TOOLSET=@BOOST_TOOLSET@
+
+TARGET_OS=@target_os@
+
+STLPORT_LOCATION=@stlport_location@
+STLPORT_LIB=@STLPORT_LIB@
+DIST_DIR=@DIST_DIR@
+DIST_TARBALL=${DIST_DIR}.tar.gz
+

@@ -1,0 +1,318 @@
+/*
+// $Id$
+// Fennel is a relational database kernel.
+// Copyright (C) 1999-2004 John V. Sichi.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
+#include "fennel/common/CommonPreamble.h"
+#include "fennel/common/FileSystem.h"
+#include "fennel/test/TestBase.h"
+#include "fennel/synch/SynchObj.h"
+#include "fennel/device/RandomAccessFileDevice.h"
+#include "fennel/device/RandomAccessRequest.h"
+#include "fennel/device/DeviceAccessScheduler.h"
+#include "fennel/device/DeviceAccessSchedulerParams.h"
+#include <memory>
+#include <fstream>
+#include <boost/test/test_tools.hpp>
+#include <boost/scoped_array.hpp>
+
+using namespace fennel;
+
+class TestRandomAccessFileDevice : virtual public TestBase
+{
+    static const uint ZERO_SIZE;
+    static const uint HALF_SIZE;
+    static const uint FULL_SIZE;
+    
+    DeviceAccessSchedulerParams schedParams;
+    SharedRandomAccessDevice pRandomAccessDevice;
+    DeviceMode baseMode;
+    
+    void openDevice(DeviceMode openMode,std::string devName)
+    {
+        if (openMode.create) {
+            FileSystem::remove(devName.c_str());
+        }
+        pRandomAccessDevice.reset(
+            new RandomAccessFileDevice(devName,openMode));
+    }
+
+    void closeDevice()
+    {
+        pRandomAccessDevice.reset();
+    }
+
+    void testDeviceCreation()
+    {
+        char *devName = "test.dat";
+        DeviceMode openMode = baseMode;
+        openMode.create = 1;
+        openDevice(openMode,devName);
+        closeDevice();
+        if (openMode.temporary) {
+            if (FileSystem::doesFileExist(devName)) {
+                std::cerr << "temporary test.dat not deleted" << std::endl;
+            }
+        } else {
+            openMode.create = 0;
+            openDevice(openMode,devName);
+            closeDevice();
+        }
+    }
+
+    void testGrow()
+    {
+        char *devName = "grow.dat";
+        DeviceMode openMode = baseMode;
+        openMode.create = 1;
+        openDevice(openMode,devName);
+        BOOST_CHECK_EQUAL(pRandomAccessDevice->getSizeInBytes(),ZERO_SIZE);
+        pRandomAccessDevice->setSizeInBytes(FULL_SIZE);
+        BOOST_CHECK_EQUAL(pRandomAccessDevice->getSizeInBytes(),FULL_SIZE);
+        closeDevice();
+        if (openMode.temporary) {
+            return;
+        }
+        openMode.create = 0;
+        openDevice(openMode,devName);
+        BOOST_CHECK_EQUAL(pRandomAccessDevice->getSizeInBytes(),FULL_SIZE);
+        closeDevice();
+    }
+
+    void testShrink()
+    {
+        char *devName = "shrink.dat";
+        DeviceMode openMode = baseMode;
+        openMode.create = 1;
+        openDevice(openMode,devName);
+        BOOST_CHECK_EQUAL(pRandomAccessDevice->getSizeInBytes(),ZERO_SIZE);
+        pRandomAccessDevice->setSizeInBytes(FULL_SIZE);
+        BOOST_CHECK_EQUAL(pRandomAccessDevice->getSizeInBytes(),FULL_SIZE);
+        closeDevice();
+        if (openMode.temporary) {
+            return;
+        }
+        openMode.create = 0;
+        openDevice(openMode,devName);
+        BOOST_CHECK_EQUAL(pRandomAccessDevice->getSizeInBytes(),FULL_SIZE);
+        pRandomAccessDevice->setSizeInBytes(HALF_SIZE);
+        closeDevice();
+        openDevice(openMode,devName);
+        BOOST_CHECK_EQUAL(pRandomAccessDevice->getSizeInBytes(),HALF_SIZE);
+        closeDevice();
+    }
+
+    void testAsyncIO()
+    {
+        class Listener
+        {
+            StrictMutex mutex;
+            LocalCondition cond;
+            
+        public:
+            int nTarget;
+            int nSuccess;
+            int nCompleted;
+
+            explicit Listener(int nTargetInit)
+            {
+                nTarget = nTargetInit;
+                nSuccess = 0;
+                nCompleted = 0;
+            }
+            virtual ~Listener()
+            {
+            }
+            
+            void notifyTransferCompletion(bool b)
+            {
+                StrictMutexGuard mutexGuard(mutex);
+                if (b) {
+                    nSuccess++;
+                }
+                nCompleted++;
+                if (nCompleted == nTarget) {
+                    cond.notify_all();
+                }
+            }
+
+            void waitForAll()
+            {
+                StrictMutexGuard mutexGuard(mutex);
+                while (nCompleted < nTarget) {
+                    cond.wait(mutexGuard);
+                }
+            }
+        };
+
+        class Binding : public RandomAccessRequestBinding 
+        {
+            Listener &listener;
+            uint cb;
+            PBuffer pBuffer;
+        public:
+            explicit Binding(
+                Listener &listenerInit,uint cbInit,PBuffer pBufferInit)
+                : listener(listenerInit),cb(cbInit),pBuffer(pBufferInit)
+            {
+            }
+
+            virtual ~Binding()
+            {
+            }
+            
+            virtual PBuffer getBuffer() const
+            {
+                return pBuffer;
+            }
+            
+            virtual uint getBufferSize() const
+            {
+                return cb;
+            }
+            
+            virtual void notifyTransferCompletion(bool bSuccess)
+            {
+                listener.notifyTransferCompletion(bSuccess);
+            }
+        };
+
+#ifdef __MINGW32__
+        if (baseMode.direct) {
+            // TODO:  use sector-aligned writes and re-enable this.
+            return;
+        }
+#endif
+
+        DeviceAccessScheduler *pScheduler =
+            DeviceAccessScheduler::newScheduler(schedParams);
+        
+        char *devName = "async.dat";
+        DeviceMode openMode = baseMode;
+        openMode.create = 1;
+        openDevice(openMode,devName);
+        pScheduler->registerDevice(pRandomAccessDevice);
+        std::string s = "Four score and seven years ago.";
+        char const *writeBuf = s.c_str();
+        uint cb = s.size();
+        int n = 5;
+        pRandomAccessDevice->setSizeInBytes(n*cb);
+        
+        Listener writeListener(n);
+        RandomAccessRequest writeRequest;
+        writeRequest.pDevice = pRandomAccessDevice.get();
+        writeRequest.cbOffset = 0;
+        writeRequest.cbTransfer=n*cb;
+        writeRequest.type = RandomAccessRequest::WRITE;
+        for (int i = 0; i < n; i++) {
+            Binding *pBinding = new Binding(
+                writeListener,cb,PBuffer(writeBuf));
+            writeRequest.bindingList.push_back(*pBinding);
+        }
+        pScheduler->schedule(writeRequest);
+        writeListener.waitForAll();
+        BOOST_CHECK_EQUAL(writeListener.nSuccess,n);
+        pRandomAccessDevice->flush();
+        
+        if (!openMode.temporary) {
+            pScheduler->unregisterDevice(pRandomAccessDevice);
+            closeDevice();
+            openMode.create = 0;
+            openDevice(openMode,devName);
+            pScheduler->registerDevice(pRandomAccessDevice);
+        }
+        
+        Listener readListener(n);
+        RandomAccessRequest readRequest;
+        readRequest.pDevice = pRandomAccessDevice.get();
+        readRequest.cbOffset = 0;
+        readRequest.cbTransfer=n*cb;
+        readRequest.type = RandomAccessRequest::READ;
+        boost::scoped_array<FixedBuffer> readBuf(new FixedBuffer[cb*n]);
+        for (int i = 0; i < n; i++) {
+            Binding *pBinding = new Binding(
+                readListener,cb,
+                readBuf.get() + i*cb);
+            readRequest.bindingList.push_back(*pBinding);
+        }
+        pScheduler->schedule(readRequest);
+        readListener.waitForAll();
+        BOOST_CHECK_EQUAL(readListener.nSuccess,n);
+        for (int i = 0; i < n; i++) {
+            std::string s2(reinterpret_cast<char *>(readBuf.get() + i*cb),cb);
+            BOOST_CHECK_EQUAL(s,s2);
+        }
+        pScheduler->unregisterDevice(pRandomAccessDevice);
+        closeDevice();
+
+        pScheduler->stop();
+        delete pScheduler;
+    }
+    
+public:
+    explicit TestRandomAccessFileDevice()
+    {
+        schedParams.readConfig(configMap);
+        FENNEL_UNIT_TEST_CASE(TestRandomAccessFileDevice,testPermanentNoDirect);
+        FENNEL_UNIT_TEST_CASE(TestRandomAccessFileDevice,testTemporary);
+        FENNEL_UNIT_TEST_CASE(TestRandomAccessFileDevice,testPermanentDirect);
+    }
+    
+    void testPermanentNoDirect()
+    {
+        baseMode = DeviceMode::load;
+        runModeTests();
+    }
+
+    void testTemporary()
+    {
+        baseMode = DeviceMode::load;
+        baseMode.temporary = true;
+        runModeTests();
+    }
+    
+    void testPermanentDirect()
+    {
+        baseMode = DeviceMode::load;
+        baseMode.direct = true;
+        runModeTests();
+    }
+    
+    void runModeTests()
+    {
+        testDeviceCreation();
+        testGrow();
+        testShrink();
+        testAsyncIO();
+    }
+    
+    virtual void testCaseTearDown()
+    {
+        closeDevice();
+    }
+};
+
+// NOTE:  HALF_SIZE and FULL_SIZE have to be multiples of the disk sector size
+// for direct I/O to work on Windows.
+const uint TestRandomAccessFileDevice::ZERO_SIZE = 0;
+const uint TestRandomAccessFileDevice::HALF_SIZE = 4096;
+const uint TestRandomAccessFileDevice::FULL_SIZE = 8192;
+
+FENNEL_UNIT_TEST_SUITE(TestRandomAccessFileDevice);
+
+// End TestRandomAccessFileDevice.cpp

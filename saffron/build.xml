@@ -1,0 +1,766 @@
+<!--
+// $Id$
+// Saffron preprocessor and data engine
+// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// You must accept the terms in LICENSE.html to use this software.
+  -->
+
+<!-- XML ENTITY "macros" -->
+<!DOCTYPE project [
+<!ENTITY EnableAssertions "-ea -esa">
+]>
+
+<project name="saffron" default="compile">
+  <property environment="env"/>
+  <property name="project.location" location="."/>
+  <property name="lib.location" location="${project.location}/lib"/>
+  <property file="${project.location}/build.properties"/>
+  <property name="project.build.debug" value="on"/>
+
+  <!--
+    ===================================================================
+    External dependencies
+    ===================================================================
+  -->
+
+  <!-- import local property overrides; these take precedence -->
+  <property file="${project.location}/customBuild.properties"/>
+
+  <!-- Override this in customBuild.properties if your thirdparty
+       lives elsewhere. -->
+  <property name="thirdparty.dir" value="../thirdparty"/>
+
+  <!-- import thirdparty library settings -->
+  <property file="${thirdparty.dir}/build.properties"/>
+
+  <property name="javahome.dir" location="${env.JAVA_HOME}"/>
+
+  <fail unless="javacc.dir"/>
+  <fail unless="junit.dir"/>
+  <fail unless="macker.dir"/>
+  <fail unless="jalopy.dir"/>
+  <fail unless="dynamicjava.dir"/>
+
+  <!--
+    ===================================================================
+    Set the properties related to paths
+    ===================================================================
+  -->
+  <property name="src.dir" value="src"/>
+  <property name="java.dir" value="${src.dir}"/>
+  <property name="examples.dir" value="examples"/>
+  <property name="lib.dir" value="lib"/>
+  <property name="doc.dir" value="doc"/>
+  <property name="resource.location" location="resource"/>
+  <property name="javadoc.dir" value="${doc.dir}/api"/>
+  <property name="classes.dir" value="classes"/>
+  <property name="dist.name" value="${name}-${version}"/>
+  <property name="dist.base" value="distribution"/>
+  <property name="dist.dir" value="dist"/>
+  <property name="demo.dir" value="demo"/>
+  <property name="web.dir" value="web"/>
+  <property name="walden.dir" value="${web.dir}/walden"/>
+  <property name="dist.src.file" value="${dist.dir}/${dist.name}-src.zip"/>
+  <property name="dist.data.file" value="${dist.dir}/${dist.name}-data.zip"/>
+  <property name="dist.bin.file" value="${dist.dir}/${dist.name}-bin.zip"/>
+  <property name="dist.jar.file" value="${dist.dir}/${name}.jar"/>
+  <property name="boot.jar.file" value="${lib.dir}/boot.jar"/>
+  <property name="war.file" value="${dist.dir}/walden.war"/>
+  <property name="applet.jar.file" value="${dist.dir}/waldenapplet.jar"/>
+  <property name="tomcat.home" value="${env.TOMCAT_HOME}"/>
+  <property name="weblogic.home" value="${env.WEBLOGIC_HOME}"/>
+  <property name="parser.jj.file.abs" location="${java.dir}/${parser.jj.file}"/>
+  <property name="CombinedParser.jj" 
+    location="${java.dir}/net/sf/saffron/sql/parser/CombinedParser.jj"/>
+  <property name="test.log.dir" location="testlog"/>
+
+  <!-- third-party libraries -->
+  <path id="saffron.3p.classpath">
+    <pathelement location="${thirdparty.dir}/mondrian-resource.jar"/>
+    <pathelement location="${thirdparty.dir}/mondrian-xom.jar"/>
+    <pathelement location="${ant.home}/lib/ant.jar"/>
+    <pathelement location="${ant.home}/lib/junit.jar"/>
+    <pathelement location="${ant.home}/lib/optional.jar"/>
+    <pathelement location="${ant.home}/lib/xercesImpl.jar"/>
+    <pathelement location="${ant.home}/lib/xml-apis.jar"/>
+  </path>
+  <property name="saffron.3p.classpath" refid="saffron.3p.classpath"/>
+
+  <!-- classpath for execution. -->
+  <path id="saffron.run.classpath">
+    <pathelement path="${saffron.3p.classpath}"/>
+    <pathelement location="${classes.dir}"/>
+  </path>
+
+  <path id="saffron.build.classpath">
+    <pathelement path="${saffron.3p.classpath}"/>
+    <pathelement location="${classes.dir}"/>
+    <pathelement location="${boot.jar.file}"/>
+    <pathelement location="${junit.dir}/junit.jar"/>
+    <pathelement location="${tomcat.home}/common/lib/servlet.jar"/>
+    <pathelement location="${weblogic.home}/lib/weblogic.jar"/>
+    <pathelement location="${dynamicjava.dir}/lib/dynamicjava.jar"/>
+    <pathelement location="${ant.home}/lib/ant.jar"/>
+    <pathelement location="${ant.home}/lib/optional.jar"/>
+    <pathelement location="${javahome.dir}/lib/tools.jar"/>
+    <pathelement path="${env.CLASSPATH}"/>
+  </path>
+
+  <taskdef name="ojavac"
+           classname="openjava.ojc.OpenJavaTask"
+           classpathref="saffron.build.classpath"/>
+
+  <!--
+    ===================================================================
+    Set up the environment
+    ===================================================================
+  -->
+
+  <target name="sniff">
+    <available property="junit.available"
+        classname="junit.framework.TestCase"
+        classpathref="saffron.build.classpath"/>
+    <available property="servlet.available"
+        classname="javax.servlet.http.HttpServletRequest"
+        classpathref="saffron.build.classpath"/>
+    <condition property="servlet.unavailable" value="">
+      <not>
+        <available classname="javax.servlet.http.HttpServletRequest"
+             classpathref="saffron.build.classpath"/>
+      </not>
+    </condition>
+    <available property="jspc.available"
+        classname="org.apache.tools.ant.taskdefs.optional.jspc"
+        classpathref="saffron.build.classpath"/>
+    <available property="weblogic.available"
+        classname="weblogic.jspc"
+        classpathref="saffron.build.classpath"/>
+    <available property="tomcat.available"
+        classname="org.apache.jasper.JspC"
+        classpathref="saffron.build.classpath"/>
+    <available property="djava.available" file="${dynamicjava.dir}"/>
+    <condition property="djava.unavailable" value="">
+      <not>
+        <available file="${dynamicjava.dir}"/>
+      </not>
+    </condition>
+  </target>
+
+  <!--
+    ===================================================================
+    Properties for running the FoodMart test
+    ===================================================================
+  -->
+
+  <!-- Comma-separated list of jdbc drivers; for example,
+       "org.hsqldb.jdbcDriver,sun.jdbc.odbc.JdbcOdbcDriver" -->
+  <property name="saffron.jdbcDrivers" value="sun.jdbc.odbc.JdbcOdbcDriver"/>
+  <!-- The URL of the folder which contains the resource files. -->
+  <property name="saffron.resourceURL" value="file:///${resource.location}"/>
+
+  <target name="help">
+    <echo>
+      You must specify a specific project target when using the ANT build.
+      The main targets are 'all', 'compile', 'clean', 'test'.
+    </echo>
+  </target>
+
+  <target name="all" depends="clean,compile,test"
+    description="Cleans, compiles all classes, and runs the regression test"/>
+
+  <target name="test" depends="junit"/>
+
+  <target name="junit" depends="setup.runtime">
+    <junit printsummary="yes" fork="yes" failureproperty="junit.failure">
+      <classpath refid="saffron.build.classpath"/>
+      <jvmarg line="&EnableAssertions;"/>
+      <jvmarg value="-Dsaffron.package.name=net.sf.saffron.runtime"/>
+      <jvmarg value="-Dsaffron.java.dir=${examples.dir}"/>
+      <jvmarg value="-Dsaffron.class.dir=${classes.dir}"/>
+      <jvmarg value="-Dsaffron.test.everything=${test.everything}"/>
+      <jvmarg value="-Dsaffron.java.compiler.args=-classpath ${saffron.build.classpath.prop} -d ${classes.dir} -verbose"/>
+      <formatter type="plain" unless="integration.build"/>
+      <formatter type="xml" if="integration.build"/>
+      <test name="net.sf.saffron.test.Main" todir="${test.log.dir}"/>
+    </junit>
+
+    <fail if="junit.failure"/>
+  </target>
+
+  <target name="test.sql" depends="compile"
+      description="Runs only SQL-related tests.">
+    <junit printsummary="yes" fork="yes" haltonfailure="true">
+      <classpath refid="saffron.build.classpath"/>
+      <jvmarg value="-Dsaffron.class.dir=${classes.dir}"/>
+      <jvmarg line="&EnableAssertions;"/>
+      <formatter type="plain" usefile="false" />
+      <batchtest>
+        <fileset dir="${classes.dir}">
+          <include name="**/DiffSanityTest.class"/>
+          <include name="**/SqlParserTest.class"/>
+        </fileset>
+      </batchtest>
+    </junit>
+  </target>
+
+  <target name="test.opt" depends="compile"
+      description="Runs only the optimizer tests.">
+    <junit printsummary="yes" fork="yes" haltonfailure="true">
+      <classpath refid="saffron.build.classpath"/>
+      <formatter type="plain" usefile="false" />
+      <batchtest>
+        <fileset dir="${classes.dir}">
+          <include name="**/VolcanoPlannerTest.class"/>
+        </fileset>
+      </batchtest>
+    </junit>
+  </target>
+
+  <target name="clean" depends="clean.examples">
+    <delete includeEmptyDirs="true" quiet="true">
+      <fileset dir="${classes.dir}">
+        <include name="**/*.class"/>
+        <!-- files generated from SaffronResource.xml -->
+        <include name="net/sf/saffron/resource/SaffronResource.properties"/>
+        <include name="net/sf/saffron/resource/SaffronResource_en_US.properties"/>
+      </fileset>
+      <fileset dir="${java.dir}">
+        <!-- ParserTokenManager.java is generated too, but don't delete, cuz
+             we have modified it and checked it in. -->
+        <include name="openjava/tools/parser/Parser.java"/>
+        <include name="openjava/tools/parser/TokenMgrError.java"/>
+        <include name="openjava/tools/parser/ParseException.java"/>
+        <include name="openjava/tools/parser/JavaCharStream.java"/>
+        <include name="openjava/tools/parser/Token.java"/>
+        <include name="openjava/tools/parser/ParserConstants.java"/>
+        <include name="openjava/tools/parser/ASCII_UCodeESC_CharStream.java"/>
+        <include name="net/sf/saffron/sql/parser/CombinedParser.jj"/>
+        <include name="net/sf/saffron/sql/parser/Parser.java"/>
+        <include name="net/sf/saffron/sql/parser/TokenMgrError.java"/>
+        <include name="net/sf/saffron/sql/parser/ParseException.java"/>
+        <include name="net/sf/saffron/sql/parser/JavaCharStream.java"/>
+        <include name="net/sf/saffron/sql/parser/Token.java"/>
+        <include name="net/sf/saffron/sql/parser/SqlParseImpConstants.java"/>
+        <include name="net/sf/saffron/sql/parser/ASCII_UCodeESC_CharStream.java"/>
+        <!-- files generated from SaffronResource.xml -->
+        <include name="net/sf/saffron/resource/SaffronResource.java"/>
+        <include name="net/sf/saffron/resource/SaffronResource_en_US.java"/>
+
+        <!-- failed test logs -->
+        <include name="net/sf/saffron/**/*.log"/>
+      </fileset>
+      <fileset dir="dist">
+        <include name="walden.war"/>
+        <include name="*.jar"/>
+      </fileset>
+    </delete>
+  </target>
+
+  <target name="clean.examples">
+    <delete includeEmptyDirs="true" quiet="true">
+      <fileset dir="${examples.dir}">
+        <include name="net/sf/saffron/runtime/**/Dummy_*.java"/>
+        <include name="saffron/runtime/**/Dummy_*.java"/>
+        <include name="net/sf/saffron/web/jsp/**/*.java"/>
+      </fileset>
+    </delete>
+  </target>
+
+  <target name="clean.temp.classes">
+    <delete includeEmptyDirs="true" quiet="true">
+      <fileset dir="${examples.dir}" includes="net/sf/saffron/runtime/**/Dummy_*.java"/>
+      <fileset dir="${classes.dir}" includes="net/sf/saffron/runtime/**/Dummy_*.class"/>
+    </delete>
+  </target>
+
+  <target name="compile"
+      depends="generateResources,parser,sqlParser,
+               compile.jsp.maybe,compile.java,compile.test"/>
+
+  <target name="compile.java" depends="sniff">
+    <mkdir dir="${classes.dir}"/>
+    <javac
+        srcdir="${java.dir}"
+        destdir="${classes.dir}"
+        debug="${project.build.debug}"
+        source="1.4"
+        classpathref="saffron.build.classpath">
+      <include name="**/*.java" />
+      <exclude name="openjava/ptree/util/ParseTreeTranslator.java" />
+      <exclude name="openjava/debug/gui/ColoredSourceWriter.java" />
+      <exclude name="openjava/debug/gui/SourceCodeViewer.java" />
+      <exclude name="openjava/ptree/ExpressionObject.java" />
+      <exclude name="openjava/ptree/SetExpression.java" />
+      <exclude name="openjava/ptree/util/ParseTreeTranslator.java" />
+      <exclude name="saffron/util/Obsolete.java" />
+      <!-- if class javax.servlet is:
+            - available, "servlet.unavailable" is not set, so
+              ${servlet.unavailable} remains in the path as is,
+               and no files are excluded;
+            - unavailable, ${servlet.unavailable} expands to "", so
+              saffron/web/**/*.java are excluded
+        -->
+      <exclude name="${servlet.unavailable}net/sf/saffron/web/**/*.java"/>
+      <!-- exclude DynamicJavaCompiler if djava is not available -->
+      <exclude name="${djava.unavailable}openjava/ojc/DynamicJavaCompiler.java"/>
+    </javac>
+  </target>
+
+  <target name="compile.jsp.maybe" depends="compile.java"
+      if="weblogic.available"
+      description="Compiles jsp pages, but only if weblogic is available">
+    <antcall target="compile.jsp"/>
+  </target>
+
+  <target name="compile.jsp"
+      description="Compiles jsp pages, fails if weblogic is not available.">
+    <wljspc src="${walden.dir}" dest="${examples.dir}"
+        package="saffron.web.jsp">
+      <classpath refid="saffron.build.classpath"/>
+      <include name="**/*.jsp"/>
+    </wljspc>
+  </target>
+
+  <target name="compile.test">
+    <javac
+        srcdir="${examples.dir}"
+        destdir="${classes.dir}"
+        debug="${project.build.debug}"
+        source="1.4"
+        classpathref="saffron.build.classpath">
+      <include name="**/*.java" />
+      <exclude name="net/sf/saffron/runtime/Dummy_*.java" />
+    </javac>
+  </target>
+
+  <target name="compile.oj">
+    <ojavac srcDir="${examples.dir}"
+        destDir="${examples.dir}"
+		debugInfo="3"
+		debugToErr="false"
+        includes="sales/Sales2.oj"/>
+  </target>
+
+  <target name="compile.examples"
+      depends="compile.test,compile.oj,compile.test">
+  </target>
+
+  <target name="checkResourceUptodate">
+    <uptodate property="resource.uptodate"
+      srcfile="${java.dir}/net/sf/saffron/resource/SaffronResource.xml"
+      targetfile="${java.dir}/net/sf/saffron/resource/SaffronResource.java"/>
+  </target>
+
+  <target name="generateResources" depends="checkResourceUptodate"
+    unless="resource.uptodate">
+    <taskdef name="resgen" classname="mondrian.resource.ResourceGenTask">
+      <classpath refid="saffron.run.classpath"/>
+    </taskdef>
+    <resgen srcdir="${src.dir}" locales="en_US">
+      <include name="net/sf/saffron/resource/SaffronResource.xml"/>
+    </resgen>
+    <!-- Copy The generated property files into the class folder -->
+    <mkdir dir="${classes.dir}"/>
+    <move todir="${classes.dir}">
+        <fileset dir="${src.dir}" includes="**/SaffronResource*.properties"/>
+    </move>
+  </target>
+
+  <target name="checkParsersUptodate">
+    <uptodate property="parser.uptodate"
+      srcfile="${parser.jj.file.abs}"
+      targetfile="${java.dir}/openjava/tools/parser/Parser.java"/>
+    <uptodate property="sqlParser.uptodate"
+      targetfile="${java.dir}/net/sf/saffron/sql/parser/Parser.java">
+      <srcfiles dir="${java.dir}/net/sf/saffron/sql/parser">
+        <include name="Parser.jj"/>
+        <include name="CommonParser.jj"/>
+      </srcfiles>
+    </uptodate>
+  </target>
+
+  <!-- Generates the enhanced Java parser. Generated files are:
+       TokenMgrError.java, ParseException.java,
+       JavaCharStream.java, Token.java, ASCII_UCodeESC_CharStream.java -->
+  <target name="parser" depends="checkParsersUptodate"
+    unless="parser.uptodate">
+    <javacc
+      target="${parser.jj.file.abs}"
+      javacchome="${javacc.dir}"
+      outputdirectory="${java.dir}/openjava/tools/parser"
+      buildtokenmanager="false"/>
+  </target>
+
+  <!-- Generate the SQL parser. Generated files are:
+       TokenMgrError.java, ParseException.java,
+       JavaCharStream.java, Token.java, ASCII_UCodeESC_CharStream.java -->
+  <target name="sqlParser" depends="checkParsersUptodate"
+    unless="sqlParser.uptodate">
+    <delete file="${CombinedParser.jj}" quiet="true"/>
+    <concat
+      destfile="${CombinedParser.jj}"
+      append="false">
+      <filelist dir="${java.dir}/net/sf/saffron/sql/parser"
+          files="Parser.jj,CommonParser.jj"/>
+    </concat>
+    <chmod file="${CombinedParser.jj}" perm="a-w"/>
+    <javacc
+      target="${CombinedParser.jj}"
+      javacchome="${javacc.dir}"/>
+  </target>
+
+  <target name="macker">
+    <path id="macker.classpath">
+      <fileset dir="${macker.dir}/lib" includes="*.jar"/>
+      <fileset dir="${macker.dir}/build" includes="macker.jar"/>
+    </path>
+    <taskdef name="macker"
+      classname="net.innig.macker.ant.MackerAntTask"
+      classpathref="macker.classpath"/>
+
+    <macker maxMessages="10">
+      <rules dir="${java.dir}" includes="**/*macker*.xml" />
+      <classes dir="${classes.dir}">
+        <include name="**/*.class" />
+      </classes>
+    </macker>
+  </target>
+
+  <!-- Beautify Saffron source code.  This forks a separate ant process using
+       the server JVM to work around a problem documented at
+       http://jalopy.sourceforge.net/javadoc.html.  -->
+  <target name="jalopy" depends="clean.examples,compile"
+    description="Runs jalopy on all source code.">
+    <java classname="org.apache.tools.ant.Main" fork="true"
+      classpathref="saffron.run.classpath">
+      <jvmarg value="-server"/>
+      <arg value="forked_jalopy"/>
+    </java>
+  </target>
+
+  <target name="forked_jalopy">
+    <taskdef name="jalopy"
+      classname="de.hunsicker.jalopy.plugin.ant.AntPlugin">
+      <classpath>
+        <fileset dir="${jalopy.dir}/lib">
+          <include name="*.jar"/>
+        </fileset>
+      </classpath>
+    </taskdef>
+    <!-- NOTE: may want to turn force off once rules stabilize -->
+    <jalopy backup="true" convention="${src.dir}/jalopy.xml"
+      classpathref="saffron.build.classpath" history="FILE" force="true">
+      <fileset dir="${src.dir}">
+        <!-- NOTE: don't apply jalopy to the openjava code; this makes
+             diffing against the original code easier -->
+        <include name="net/sf/saffron/**/*.java"/>
+        <!-- TODO:  single-source the following set of generated files -->
+        <exclude name="net/sf/saffron/sql/parser/Parser.java"/>
+        <exclude name="net/sf/saffron/sql/parser/TokenMgrError.java"/>
+        <exclude name="net/sf/saffron/sql/parser/ParseException.java"/>
+        <exclude name="net/sf/saffron/sql/parser/JavaCharStream.java"/>
+        <exclude name="net/sf/saffron/sql/parser/Token.java"/>
+        <exclude name="net/sf/saffron/sql/parser/SqlParseImpConstants.java"/>
+        <exclude name="net/sf/saffron/sql/parser/ASCII_UCodeESC_CharStream.java"/>
+      </fileset>
+      <fileset dir="${examples.dir}">
+        <include name="**/*.java"/>
+      </fileset>
+    </jalopy>
+  </target>
+
+  <target name="etags">
+    <exec dir="${project.location}" executable="find" output="javaFiles">
+      <arg line=". -name &quot;*.java&quot; -print"/>
+    </exec>
+    <exec dir="${project.location}" executable="ctags">
+      <arg line="-e"/>
+      <arg line="-L javaFiles"/>
+    </exec>
+    <delete file="${project.location}/javaFiles" quiet="true"/>
+  </target>
+
+  <target name="srczip">
+    <mkdir dir="${dist.dir}" />
+    <zip
+        zipfile="${dist.src.file}"
+        update="true">
+      <zipfileset
+          dir="."
+          prefix="${dist.name}">
+        <include name="**/*.java"/>
+        <include name="**/*.jj"/>
+        <include name="**/*.oj"/>
+        <include name="**/*.html"/>
+        <include name="**/*.css"/>
+        <include name="lib/boot.jar"/>
+        <include name="${walden.dir}/**"/>
+        <include name="build.xml"/>
+        <include name="build.properties"/>
+        <include name="build.bat"/>
+        <include name="deploy_env.properties"/>
+        <include name="LICENSE.html"/>
+        <include name="README.txt"/>
+        <include name="VERSION.txt"/>
+        <exclude name="${javadoc.dir}/**"/>
+        <exclude name="**/*~"/>
+        <exclude name="${examples.dir}/sales/Sales2.java"/>
+        <exclude name="${examples.dir}/sales/Sales2OJMI.java"/>
+      </zipfileset>
+    </zip>
+  </target>
+
+  <target name="binzip" depends="javadoc">
+    <mkdir dir="${dist.dir}" />
+    <zip
+        zipfile="${dist.bin.file}"
+        update="true">
+      <zipfileset
+          dir="."
+          prefix="${dist.name}">
+        <include name="${javadoc.dir}/**/*"/>
+        <include name="LICENSE.html"/>
+        <include name="README.txt"/>
+        <include name="VERSION.txt"/>
+        <exclude name="**/*~"/>
+      </zipfileset>
+      <zipfileset
+          dir="${dist.dir}"
+          prefix="${dist.name}/lib"
+          includes="${name}.jar"/>
+    </zip>
+  </target>
+
+  <!-- builds a jar file of the classes we need in order to run ant; when the
+       new versions have built, we can replace them -->
+  <target name="bootjar" depends="clean">
+    <javac
+        srcdir="${src.dir}"
+        destdir="${classes.dir}"
+        debug="${project.build.debug}"
+        source="1.4"
+        classpathref="saffron.build.classpath">
+      <include name="openjava/ojc/OpenJavaTask.java" />
+	</javac>
+    <mkdir dir="${lib.dir}" />
+	<delete file="${boot.jar.file}"/>
+    <jar jarfile="${boot.jar.file}">
+      <fileset
+          dir="${classes.dir}"
+          includes="openjava/ojc/OpenJavaTask.class"/>
+    </jar>
+	<antcall target="clean"/>
+  </target>
+
+  <target name="jar">
+    <mkdir dir="${dist.dir}" />
+    <zip
+        zipfile="${dist.jar.file}"
+        update="true">
+      <zipfileset
+          dir="${classes.dir}"
+          includes="**/*.class"/>
+      <zipfileset dir=".">
+        <include name="LICENSE.html"/>
+        <include name="README.txt"/>
+        <include name="VERSION.txt"/>
+      </zipfileset>
+    </zip>
+  </target>
+
+  <target name="javadoc">
+    <mkdir dir="${javadoc.dir}" />
+    <delete quiet="true" file="${javadoc.dir}/index.html"/>
+    <javadoc classpathref="saffron.build.classpath"
+        destdir="${javadoc.dir}"
+        packagenames="
+openjava.*,
+JP.*,
+net.sf.saffron.*"
+        footer="&lt;a href=&quot;http://sourceforge.net/projects/saffron&quot;&gt;&lt;img src=&quot;http://sourceforge.net/sflogo.php?group_id=46646&#38;type=1&quot; width=&quot;88&quot; height=&quot;31&quot; border=&quot;0&quot; alt=&quot;SourceForge.net_Logo&quot;&gt;&lt;/a&gt;"
+		access="private"
+        source="1.4">
+      <sourcepath>
+        <pathelement path="${java.dir}"/>
+      </sourcepath>
+      <classpath refid="saffron.build.classpath"/>
+      <link href="http://javadoc.dyndns.org/joogle/api"/>
+      <tag name="pre" description="Pre-condition:"
+           scope="constructors,methods"/>
+      <tag name="post" description="Post-condition:"
+           scope="constructors,methods"/>
+      <tag name="testcase" description="Test-case:"
+           scope="constructors,methods,types"/>
+      <link href="http://javadoc.dyndns.org/joogle/api"/>
+    </javadoc>
+  </target>
+
+  <target name="upload-javadoc" depends="javadoc" description="
+Copies javadoc to sourceforge, where it will be accessible via
+http://saffron.sourceforge.net/api/index.html.
+You should set pscp.user, pscp.password and pscp.path in build.properties">
+    <exec executable="pscp.exe">
+      <arg line="-pw ${pscp.password}"/>
+      <arg line="-r ${javadoc.dir}"/>
+      <arg line="${pscp.user}:${pscp.path}"/>
+    </exec>
+  </target>
+
+  <target name="setup.runtime">
+    <pathconvert property="saffron.build.classpath.prop" dirsep="${file.separator}"
+		pathsep="${path.separator}" refid="saffron.build.classpath"/>
+  </target>
+
+  <target name="run.sales.Test" depends="setup.runtime">
+    <java classpathref="saffron.build.classpath"
+		classname="sales.Test"
+        fork="yes">
+      <jvmarg line="&EnableAssertions;"/>
+      <jvmarg value="-Dsaffron.package.name=saffron.runtime"/>
+      <jvmarg value="-Dsaffron.java.dir=${examples.dir}"/>
+      <jvmarg value="-Dsaffron.class.dir=${classes.dir}"/>
+      <jvmarg value="-Dsaffron.java.compiler.args='-classpath ${saffron.build.classpath.prop} -d ${classes.dir} -verbose'"/>
+    </java>
+  </target>
+
+  <target name="test.all" 
+      description="Runs all tests, ignoring any test filters">
+	<antcall target="run.saffron.test.Main">
+      <param name="test.everything" value="true"/>
+    </antcall>
+  </target>
+
+  <target name="run.saffron.test.Main" depends="setup.runtime">
+    <java classpathref="saffron.build.classpath"
+        classname="net.sf.saffron.test.Main"
+        fork="yes" failonerror="true">
+      <jvmarg line="&EnableAssertions;"/>
+      <jvmarg value="-Dsaffron.package.name=net.sf.saffron.runtime"/>
+      <jvmarg value="-Dsaffron.java.dir=${examples.dir}"/>
+      <jvmarg value="-Dsaffron.class.dir=${classes.dir}"/>
+      <jvmarg value="-Dsaffron.test.everything=${test.everything}"/>
+      <jvmarg value="-Dsaffron.java.compiler.args=-classpath ${saffron.build.classpath.prop} -d ${classes.dir} -verbose"/>
+    </java>
+  </target>
+
+  <target name="run.walden.text" depends="setup.runtime">
+    <java classpathref="saffron.build.classpath"
+		classname="net.sf.saffron.walden.Main"
+        fork="no">
+      <jvmarg line="&EnableAssertions;"/>
+      <arg value="-Dsaffron.package.name=net.sf.saffron.runtime"/>
+      <arg value="-Dsaffron.java.dir=${examples.dir}"/>
+      <arg value="-Dsaffron.class.dir=${classes.dir}"/>
+      <arg value="-Dsaffron.java.compiler.args=-classpath ${saffron.build.classpath.prop} -d ${classes.dir} -verbose"/>
+    </java>
+  </target>
+
+  <target name="applet.jar">
+    <filter filtersfile="deploy_env.properties"/>
+    <mkdir dir="${dist.dir}"/>
+    <delete file="${war.file}"/>
+    <delete file="${dist.dir}/web.xml"/>
+    <copy file="${walden.dir}/WEB-INF/web.xml"
+	    filtering="true" todir="${dist.dir}"/>
+    <delete file="${applet.jar.file}"/>
+    <jar jarfile="${applet.jar.file}" update="true">
+      <fileset dir="${classes.dir}" includes="**/*.class"/>
+    </jar>
+  </target>
+
+  <target name="walden" depends="compile.java,applet.jar">
+    <signjar jar="${applet.jar.file}"
+             alias="duke" storepass="password" keypass="dukekeypassword" />
+    <signjar jar="${dynamicjava.dir}/lib/dynamicjava.jar"
+             signedjar="${dist.dir}/dynamicjavaSigned.jar"
+             alias="duke" storepass="password" keypass="dukekeypassword"/>
+    <signjar jar="${junit.dir}/junit.jar"
+             signedjar="${dist.dir}/junitSigned.jar"
+             alias="duke" storepass="password" keypass="dukekeypassword"/>
+    <delete file="${war.file}"/>
+    <war warfile="${war.file}"
+        webxml="${dist.dir}/web.xml" update="true">
+      <fileset dir="${walden.dir}" excludes="${walden.dir}/WEB-INF/web.xml"/>
+	  <lib dir="${junit.dir}" includes="junit.jar"/>
+      <classes dir="${classes.dir}"/>
+      <fileset dir="${dist.dir}" includes="waldenapplet.jar,junitSigned.jar,dynamicjavaSigned.jar"/>
+    </war>
+  </target>
+
+  <target name="walden.unsigned" depends="compile.java,applet.jar">
+    <delete file="${war.file}"/>
+    <war warfile="${war.file}"
+        webxml="${dist.dir}/web.xml" update="true">
+      <fileset dir="${walden.dir}" excludes="${walden.dir}/WEB-INF/web.xml"/>
+	  <lib dir="${junit.dir}" includes="junit.jar"/>
+      <classes dir="${classes.dir}"/>
+      <fileset dir="${dist.dir}" includes="waldenapplet.jar,junitSigned.jar,dynamicjavaSigned.jar"/>
+    </war>
+  </target>
+
+<!--
+  == Run this once before first attempt to deploy Walden.
+  -->
+  <target name="genkey.walden">
+    <genkey alias="duke" storepass="password"
+      keypass="dukekeypassword">
+       <dname>
+        <param name="CN" value="Julian Hyde"/>
+        <param name="OU" value="Saffron Dev"/>
+        <param name="O" value="Masala.org"/>
+        <param name="C" value="US"/>
+       </dname>
+    </genkey>
+  </target>
+
+  <target name="deploy.walden" depends="walden">
+    <delete dir="${tomcat.home}/webapps/walden"/>
+    <copy file="${war.file}"
+        todir="${tomcat.home}/webapps"/>
+  </target>
+
+  <path id="tomcat.classpath">
+    <pathelement location="${java.home}/lib/tools.jar"/>
+    <pathelement location="${tomcat.home}/localhost/work/classes"/>
+    <pathelement location="${tomcat.home}/bin/bootstrap.jar"/>
+  </path>
+
+  <target name="start.tomcat">
+    <java classpathref="tomcat.classpath"
+          classname="org.apache.catalina.startup.Bootstrap"
+          fork="yes">
+      <jvmarg line="&EnableAssertions;"/>
+      <jvmarg value="-Dcatalina.base=${tomcat.home}"/>
+      <jvmarg value="-Dcatalina.home=${tomcat.home}"/>
+      <jvmarg value="-Djava.io.tmpdir=${tomcat.home}/temp"/>
+      <arg value="start"/>
+    </java>
+  </target>
+
+  <target name="debug.tomcat">
+    <java classpathref="tomcat.classpath"
+          classname="org.apache.catalina.startup.Bootstrap"
+          fork="yes">
+      <jvmarg line="&EnableAssertions;"/>
+      <jvmarg value="-Dcatalina.base=${tomcat.home}"/>
+      <jvmarg value="-Dcatalina.home=${tomcat.home}"/>
+      <jvmarg value="-Djava.io.tmpdir=${tomcat.home}/temp"/>
+      <arg value="-Xdebug"/>
+      <arg value="-Xrunjdwp:transport=dt_socket,address=5000,server=y,suspend=n"/>
+      <arg value="start"/>
+    </java>
+  </target>
+
+  <target name="stop.tomcat">
+    <java classpathref="tomcat.classpath"
+          classname="org.apache.catalina.startup.Bootstrap"
+          fork="yes">
+      <jvmarg line="&EnableAssertions;"/>
+      <jvmarg value="-Dcatalina.base=${tomcat.home}"/>
+      <jvmarg value="-Dcatalina.home=${tomcat.home}"/>
+      <jvmarg value="-Djava.io.tmpdir=${tomcat.home}/temp"/>
+      <arg value="stop"/>
+    </java>
+  </target>
+
+</project>

@@ -1,0 +1,73 @@
+/*
+// $Id$
+// Saffron preprocessor and data engine
+// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// You must accept the terms in LICENSE.html to use this software.
+//
+// jhyde, Mar 18, 2003
+//
+// This parser was derived from Parser.jj, part of the OpenJava system
+// written by Michiaki Tatsubori.
+*/
+options {
+    STATIC = false;
+    JAVA_UNICODE_ESCAPE = true;
+    IGNORE_CASE = true;
+}
+
+
+PARSER_BEGIN(Parser)
+
+package net.sf.saffron.sql.parser;
+
+import net.sf.saffron.sql.*;
+import net.sf.saffron.util.Util;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+
+/**
+ * SQL parser, generated from Parser.jj and CommonParser.jj by JavaCC.
+ *
+ * <p>The public wrapper for this parser is {@link SqlParser}.
+ *
+ * @author jhyde
+ * @since Mar 18, 2003
+ * @version $Id$
+ */
+class Parser extends CommonParserBase {
+    private final Logger logger = Logger.getLogger("net.sf.saffron.sql.parser");
+}
+
+PARSER_END(Parser)
+
+
+/*****************************************
+ * Utility Codes for Semantical Analysis *
+ *****************************************/
+
+/* For Debug */
+JAVACODE
+void debug_message1() {
+    logger.log(Level.INFO,  getToken( 0 ).image
+             + " , " + getToken( 1 ).image );
+}
+
+String NonReservedKeyWord() :
+{
+    String kw;
+}
+{
+    kw = CommonNonReservedKeyWord()
+        {
+            return kw;
+        }
+}
+
+// End Parser.jj
+

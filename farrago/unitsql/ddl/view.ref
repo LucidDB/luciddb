@@ -1,0 +1,134 @@
+0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/ddl/view.sql#3 $
+0: jdbc:farrago:> -- Test DDL on views
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create schema s;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set schema s;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test * expansion
+0: jdbc:farrago:> create view v1 as select * from sales.depts;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from v1 order by deptno;
++---------+------------+
+| DEPTNO  |    NAME    |
++---------+------------+
+| 10      | Sales      |
+| 20      | Marketing  |
+| 30      | Accounts   |
++---------+------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test explicit column names
+0: jdbc:farrago:> create view v2(ename) as select name from sales.emps;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from v2 order by 1;
++--------+
+| ENAME  |
++--------+
+| Eric   |
+| Fred   |
+| John   |
+| Wilma  |
++--------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- bad:  column mismatch
+0: jdbc:farrago:> create view v3(empno, name, id) as select empno, name from sales.emps;
+Error: Invalid definition for view V3:  column name count does not match query (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- bad:  duplicate column names
+0: jdbc:farrago:> create view v4(empno,empno) as select empno, name from sales.emps;
+Error: Duplicate definition for Column EMPNO within View S.V4;
+encountered near line 1, column 22;
+earlier definition was near line 1, column 22 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- bad:  invalid view def
+0: jdbc:farrago:> create view v5 as select * from nonexistent_table;
+Error: Invalid definition for view V5:  Table 'NONEXISTENT_TABLE' not found (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- bad:  view with dynamic params
+0: jdbc:farrago:> create view v6 as select * from sales.emps where empno = ?;
+Error: Invalid definition for view V6:  dynamic parameters are illegal in views (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- bad:  duplicate view name
+0: jdbc:farrago:> create view v1 as select * from sales.emps;
+Error: View V1 already exists within Schema LOCALDB.S;
+duplicate name encountered near line 1, column 13 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- bad:  ORDER BY in view
+0: jdbc:farrago:> create view v7 as select * from sales.emps order by name;
+Error: Invalid definition for view V7:  ORDER BY is illegal in views (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- add extra dependencies to make drop schema cascade work harder
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view v22 as select * from v2;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view v23 as select * from v22;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view v24 as select * from v22,v23;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop schema s cascade;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create schema s;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set schema s;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table t1(i int not null primary key);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view v7 as select * from t1;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- bad:  can't drop without cascade
+0: jdbc:farrago:> drop table t1;
+Error: Table S.T1 can only be dropped with CASCADE because other objects still reference it (state=,code=0)
+0: jdbc:farrago:> drop table t1 restrict;
+Error: Table S.T1 can only be dropped with CASCADE because other objects still reference it (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should work
+0: jdbc:farrago:> drop table t1 cascade;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- bad:  v7 shouldn't be there any more
+0: jdbc:farrago:> select * from v7;
+Error: Table 'V7' not found (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table t2(i int not null primary key);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view v8 as select * from t2;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view v9 as select * from v8;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view v10 as select * from v9;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view v11 as select * from v8;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- bad: can't drop without cascade
+0: jdbc:farrago:> drop view v8;
+Error: View S.V8 can only be dropped with CASCADE because other objects still reference it (state=,code=0)
+0: jdbc:farrago:> drop view v8 restrict;
+Error: View S.V8 can only be dropped with CASCADE because other objects still reference it (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- bad: can't drop without cascade
+0: jdbc:farrago:> drop view v9;
+Error: View S.V9 can only be dropped with CASCADE because other objects still reference it (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should work
+0: jdbc:farrago:> drop view v9 cascade;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- bad:  no longer exists
+0: jdbc:farrago:> select * from v10;
+Error: Table 'V10' not found (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop table t2 cascade;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- bad:  no longer exists
+0: jdbc:farrago:> select * from v8;
+Error: Table 'V8' not found (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from v11;
+Error: Table 'V11' not found (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- make sure dependencies got dropped too
+0: jdbc:farrago:> select "name" from sys_cwm."Core"."Dependency" where "name"='V8';
++-------+
+| name  |
++-------+
++-------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

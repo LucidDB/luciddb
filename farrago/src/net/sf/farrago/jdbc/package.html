@@ -1,0 +1,25 @@
+<html>
+
+<head>
+<title>Package net.sf.farrago.jdbc</title>
+</head>
+
+<body>
+
+Implements the Farrago JDBC driver.
+
+<hr>
+
+The Farrago JDBC driver is a thin subclassing of the Saffron JDBC
+driver in {@link net.sf.saffron.jdbc}.  {@link
+net.sf.farrago.jdbc.FarragoJdbcDriver} merely overrides the URL
+connection prefix and connection class name.  {@link
+net.sf.farrago.jdbc.FarragoJdbcConnection} hooks in Farrago
+transaction support.  {@link net.sf.farrago.jdbc.FarragoJdbcStatement}
+takes care of Farrago-specific aspects of statement execution such as
+providing a {@link net.sf.farrago.type.FarragoTypeFactory} and
+returning results via {@link
+net.sf.farrago.runtime.FarragoIteratorResultSet}.
+
+</body>
+</html>

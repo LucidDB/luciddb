@@ -1,0 +1,187 @@
+/*
+// Farrago is a relational database management system.
+// Copyright (C) 2003-2004 John V. Sichi.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+// 
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
+package net.sf.farrago.namespace.mdr;
+
+import net.sf.saffron.core.*;
+import net.sf.saffron.util.*;
+
+import net.sf.farrago.namespace.*;
+import net.sf.farrago.type.*;
+import net.sf.farrago.util.*;
+import net.sf.farrago.FarragoMetadataFactory;
+
+import java.sql.*;
+import java.util.*;
+
+import javax.jmi.model.*;
+import javax.jmi.reflect.*;
+
+/**
+ * MedMdrNameDirectory implements the FarragoNameDirectory
+ * interface by mapping the package structure of an MDR repository.
+ * It is public because some of its services are used at
+ * execution time by generated code.
+ *
+ * @author John V. Sichi
+ * @version $Id$
+ */
+public class MedMdrNameDirectory implements FarragoNameDirectory
+{
+    final MedMdrForeignDataWrapper dataWrapper;
+    
+    final RefPackage rootPackage;
+
+    /**
+     * Instantiate a MedMdrNameDirectory.
+     *
+     * @param dataWrapper MedMdrForeignDataWrapper from which
+     * this directory was opened
+     *
+     * @param rootPackage root package from which to map names in repository;
+     * so, when a table name like x.y.z is looked up, rootPackage will be
+     * searched for subpackage x, which will be searched for subpackage y,
+     * which will be searched for class z
+     */
+    MedMdrNameDirectory(
+        MedMdrForeignDataWrapper dataWrapper,
+        RefPackage rootPackage)
+    {
+        this.dataWrapper = dataWrapper;
+        this.rootPackage = rootPackage;
+    }
+
+    RefPackage lookupRefPackage(
+        String [] names,int prefix)
+    {
+        if (dataWrapper.schemaName != null) {
+            if (prefix > 0) {
+                assert(prefix == 1);
+                assert(names[0].equals(dataWrapper.schemaName));
+            }
+            return rootPackage;
+        }
+        return JmiUtil.getSubPackage(rootPackage,names,prefix);
+    }
+
+    /**
+     * Look up a RefClass from its qualified name.
+     *
+     * @param foreignName name of this class relative to this directory's
+     * root package
+     */
+    public RefClass lookupRefClass(String [] foreignName)
+    {
+        int prefix = foreignName.length - 1;
+        RefPackage refPackage = lookupRefPackage(foreignName,prefix);
+        if (refPackage == null) {
+            return null;
+        }
+        try {
+            return refPackage.refClass(foreignName[prefix]);
+        } catch (InvalidNameException ex) {
+            return null;
+        }
+    }
+    
+    // implement FarragoNameDirectory
+    public FarragoNamedColumnSet lookupColumnSet(
+        FarragoTypeFactory typeFactory,
+        String [] foreignName,
+        String [] localName)
+        throws SQLException
+    {
+        return lookupColumnSetAndImposeType(
+            typeFactory,foreignName,localName,null);
+    }
+    
+    FarragoNamedColumnSet lookupColumnSetAndImposeType(
+        FarragoTypeFactory typeFactory,
+        String [] foreignName,
+        String [] localName,
+        SaffronType rowType)
+        throws SQLException
+    {
+        RefClass refClass = lookupRefClass(foreignName);
+        if (refClass == null) {
+            return null;
+        }
+
+        if (rowType == null) {
+            rowType = computeRowType(typeFactory,refClass);
+        }
+        
+        return new MedMdrClassExtent(
+            this,
+            typeFactory,
+            refClass,
+            foreignName,
+            localName,
+            rowType);
+    }
+
+    private SaffronType computeRowType(
+        FarragoTypeFactory typeFactory,
+        RefClass refClass)
+    {
+        List features = JmiUtil.getFeatures(refClass,StructuralFeature.class);
+        int n = features.size();
+        SaffronType [] types = new SaffronType[n + 2];
+        String [] fieldNames = new String[n + 2];
+        for (int i = 0; i < n; ++i) {
+            StructuralFeature feature = (StructuralFeature) features.get(i);
+            fieldNames[i] = feature.getName();
+            types[i] = typeFactory.createMofType(feature);
+            if (dataWrapper.foreignRepository) {
+                // for foreign repositories, we don't have generated
+                // classes, so need to treat everything as nullable
+                types[i] = typeFactory.createTypeWithNullability(
+                    types[i],true);
+            }
+        }
+        fieldNames[n] = "mofId";
+        types[n] = typeFactory.createMofType(null);
+        fieldNames[n+1] = "mofClassName";
+        types[n+1] = typeFactory.createMofType(null);
+        return typeFactory.createProjectType(types,fieldNames);
+    }
+
+    // implement FarragoNameDirectory
+    public FarragoNameDirectory lookupSubdirectory(String [] foreignName)
+        throws SQLException
+    {
+        RefPackage subPackage = lookupRefPackage(
+            foreignName,foreignName.length);
+        if (subPackage == null) {
+            return null;
+        }
+        return new MedMdrNameDirectory(
+            dataWrapper,subPackage);
+    }
+
+    // implement FarragoNameDirectory
+    public Iterator getContentsAsCwm(FarragoMetadataFactory factory)
+        throws SQLException
+    {
+        // TODO
+        return null;
+    }
+}
+
+// End MedMdrNameDirectory.java

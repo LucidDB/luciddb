@@ -1,0 +1,126 @@
+/*
+// $Id$
+// Fennel is a relational database kernel.
+// Copyright (C) 1999-2004 John V. Sichi.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
+#ifndef Fennel_ThreadPool_Included
+#define Fennel_ThreadPool_Included
+
+#include <deque>
+#include <vector>
+#include "fennel/synch/SynchMonitoredObject.h"
+#include "fennel/synch/Thread.h"
+
+FENNEL_BEGIN_NAMESPACE
+
+class PooledThread;
+
+/**
+ * ThreadPoolBase defines the non-templated portion of ThreadPool.
+ */
+class ThreadPoolBase : protected SynchMonitoredObject
+{
+    friend class PooledThread;
+    void runPooledThread();
+    
+protected:
+    std::vector<PooledThread *> threads;
+    bool bStop;
+    
+    ThreadPoolBase();
+    virtual ~ThreadPoolBase();
+    virtual bool isQueueEmpty() = 0;
+    virtual void runOneTask(StrictMutexGuard &) = 0;
+    
+public:
+    /**
+     * Start the given number of threads in the pool.
+     *
+     * @param nThreads number of threads to start
+     */
+    void start(uint nThreads);
+    
+    /**
+     * Shut down the pool, waiting for any pending tasks to complete.
+     */
+    void stop();
+};
+
+/**
+ * ThreadPool is a very simple thread-pooling implementation.  It's a template
+ * to avoid requiring task queue entries to be dynamically allocated.
+ *
+ *<p>
+ *
+ * The Task template parameter must behave as a concrete data type, and
+ * must have a method execute().
+ */
+template <class Task>
+class ThreadPool : public ThreadPoolBase
+{
+    std::deque<Task> queue;
+
+    virtual bool isQueueEmpty()
+    {
+        return queue.empty();
+    }
+    
+    virtual void runOneTask(StrictMutexGuard &guard)
+    {
+        Task task = queue.front();
+        queue.pop_front();
+        guard.unlock();
+        task.execute();
+        guard.lock();
+    }
+    
+public:
+    /**
+     * Constructor.
+     */
+    explicit ThreadPool()
+    {
+    }
+
+    /**
+     * Destructor:  stop must already have been called.
+     */
+    virtual ~ThreadPool()
+    {
+    }
+
+    /**
+     * Submit a task to the pool.  It will be executed as soon as a thread is
+     * available.
+     *
+     * @param task the task to execute, expressed as a function object
+     */
+    void submitTask(Task &task)
+    {
+        assert(!bStop);
+        StrictMutexGuard guard(mutex);
+        queue.push_back(task);
+        condition.notify_one();
+    }
+};
+
+FENNEL_END_NAMESPACE
+
+#endif
+
+// End ThreadPool.h

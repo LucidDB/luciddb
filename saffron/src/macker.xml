@@ -1,0 +1,245 @@
+<?xml version="1.0"?>
+<!--
+// $Id$
+// Saffron preprocessor and data engine
+// (C) Copyright 2003-2003 Disruptive Technologies, Inc.
+// You must accept the terms in LICENSE.html to use this software.
+  -->
+
+<macker>
+    <ruleset name="Layering rules">
+        <!-- libraries -->
+        <pattern name="java">
+           <include class="java*.**"/>
+           <include class="void"/>
+           <include class="boolean"/>
+           <include class="int"/>
+        </pattern>
+        <pattern name="saffron">
+          <include class="net.sf.saffron.**" />
+        </pattern>
+        <pattern name="openjava">
+          <include class="openjava.**" />
+        </pattern>
+        <pattern name="all-libs">
+          <include pattern="java"/>
+          <include pattern="saffron"/>
+        </pattern>
+
+        <!-- saffron components -->
+        <pattern name="core" class="net.sf.saffron.core.*" />
+        <pattern name="jdbc" class="net.sf.saffron.jdbc.*" />
+        <pattern name="util">
+          <include class="net.sf.saffron.util.*" />
+          <include class="openjava.tools.*" />
+          <include class="openjava.mop.Toolbox" />
+        </pattern>
+        <pattern name="opt" class="net.sf.saffron.opt.*" />
+        <pattern name="ptree">
+          <include class="openjava.ptree.**" />
+          <include class="openjava.mop.Environment" />
+        </pattern>
+        <pattern name="mop" class="openjava.mop.*" />
+        <pattern name="rel">
+          <include class="net.sf.saffron.rel.*"/>
+          <include class="net.sf.saffron.rel.convert.*"/>
+        </pattern>
+        <pattern name="javarel">
+          <include class="net.sf.saffron.oj.rel.JavaRel"/>
+          <include class="net.sf.saffron.oj.util.**"/>
+          <include class="net.sf.saffron.oj.xlat.RexToOjTranslator"/>
+        </pattern>
+        <pattern name="rex">
+          <include class="net.sf.saffron.rex.*"/>
+        </pattern>
+        <pattern name="not-util">
+          <include pattern="saffron"/>
+          <include pattern="openjava"/>
+          <exclude pattern="util"/>
+        </pattern>
+
+        <!-- net.sf.saffron.calc -->
+        <access-rule>
+            <message>saffron.calc depends upon nothing</message>
+            <deny>
+                <from pattern="calc" />
+                <allow>
+                    <from pattern="calc"/>
+                </allow>
+            </deny>
+        </access-rule>
+
+        <!-- net.sf.saffron.opt -->
+        <access-rule>
+            <message>saffron.opt has constrained dependencies</message>
+            <deny>
+                <from pattern="opt" />
+                <to pattern="not-util" />
+                <allow>
+                    <to pattern="opt" />
+                </allow>
+                <allow>
+                    <to pattern="core" />
+                </allow>
+                <allow>
+                    <to pattern="rel" />
+                </allow>
+                <allow>
+                    <to pattern="mop" />
+                </allow>
+                <allow>
+                    <to pattern="javarel" />
+                </allow>
+                <allow>
+                    <to pattern="ptree" />
+                </allow>
+                <allow>
+                    <to pattern="rex" />
+                </allow>
+            </deny>
+        </access-rule>
+
+        <!-- net.sf.saffron.rel -->
+        <access-rule>
+            <message>saffron.rel has constrained dependencies</message>
+            <deny>
+                <from pattern="rel" />
+                <to pattern="not-util" />
+                <allow>
+                    <to pattern="opt" />
+                </allow>
+                <allow>
+                    <to pattern="core" />
+                </allow>
+                <allow>
+                    <to pattern="rel" />
+                </allow>
+                <allow>
+                    <to pattern="rex" />
+                </allow>
+                <allow>
+                    <to pattern="ptree" />
+                </allow>
+            </deny>
+        </access-rule>
+
+        <!-- net.sf.saffron.core -->
+        <access-rule>
+            <message>saffron.core has constrained dependencies</message>
+            <deny>
+                <from pattern="core" />
+                <to pattern="not-util" />
+                <allow>
+                    <to pattern="core" />
+                </allow>
+                <allow>
+                    <to pattern="opt" />
+                </allow>
+                <allow>
+                    <to pattern="rel" />
+                </allow>
+                <allow>
+                    <to pattern="rex" />
+                </allow>
+                <allow>
+                    <to pattern="ptree" />
+                </allow>
+                <allow>
+                    <to class="net.sf.saffron.sql.type.SqlTypeName" />
+                </allow>
+            </deny>
+        </access-rule>
+
+        <!-- net.sf.saffron.sql -->
+        <access-rule>
+            <message>sql model cannot access other packages</message>
+            <deny>
+                <from class="net.sf.saffron.sql.*" />
+                <to   pattern="not-util" />
+                <allow>
+                    <to class="net.sf.saffron.sql.*" />
+                </allow>
+                <allow>
+                    <to pattern="ptree" />
+                </allow>
+                <allow>
+                    <to class="net.sf.saffron.core.SaffronType*" />
+                </allow>
+                <!-- todo: cleanup code and remove following rules -->
+                <allow>
+                    <from class="net.sf.saffron.sql.SqlUtil" />
+                    <to class="net.sf.saffron.ext.JdbcTable*" />
+                </allow>
+                <allow>
+                    <from class="net.sf.saffron.sql.SqlUtil" />
+                    <to class="net.sf.saffron.opt.OptUtil" />
+                </allow>
+            </deny>
+        </access-rule>
+
+        <!-- net.sf.saffron.sql.parser -->
+        <access-rule>
+            <message>sql parser can only access sql model</message>
+            <deny>
+                <from class="net.sf.saffron.sql.parser.*" />
+                <to   pattern="not-util" />
+                <allow>
+                    <to class="net.sf.saffron.sql.parser.*" />
+                </allow>
+                <allow>
+                    <to class="net.sf.saffron.sql.*" />
+                </allow>
+            </deny>
+        </access-rule>
+
+        <!-- net.sf.saffron.rex -->
+        <access-rule>
+            <message>saffron.rex depends upon nothing</message>
+            <deny>
+                <from pattern="rex" />
+                <allow>
+                    <from pattern="rex"/>
+                </allow>
+            </deny>
+        </access-rule>
+
+        <!-- net.sf.saffron.runtime -->
+        <access-rule>
+            <message>saffron.runtime depends upon nothing</message>
+            <deny>
+                <from class="net.sf.saffron.runtime.**" />
+                <allow> <from class="net.sf.saffron.runtime.**"/> </allow>
+            </deny>
+        </access-rule>
+
+        <!-- net.sf.saffron.util -->
+        <access-rule>
+            <message>saffron.util depends upon nothing</message>
+            <deny>
+                <from class="net.sf.saffron.util.**" />
+                <allow> <from class="net.sf.saffron.util.**"/> </allow>
+            </deny>
+        </access-rule>
+
+        <!-- net.sf.saffron.oj -->
+        <access-rule>
+            <message>saffron.oj can't depend on saffron.oj.xlat</message>
+            <deny>
+                <from class="net.sf.saffron.oj.**" />
+                <to class="net.sf.saffron.oj.xlat.*" />
+                <allow> <from class="net.sf.saffron.oj.xlat.**"/> </allow>
+                <allow> <from class="net.sf.saffron.oj.stmt.**"/> </allow>
+            </deny>
+        </access-rule>
+
+        <!-- net.sf.saffron.oj.util -->
+        <access-rule>
+            <message>saffron.oj.util can't depend on rex</message>
+            <deny>
+                <from class="net.sf.saffron.oj.util.**" />
+                <to pattern="rex" />
+            </deny>
+        </access-rule>
+
+    </ruleset>
+</macker>

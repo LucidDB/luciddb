@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>Package net.sf.farrago.type</title>
+</head>
+<body>
+
+Defines Farrago-specific datatype support.
+
+<hr>
+
+This package subclasses generic Saffron datatype interfaces from
+{@link net.sf.saffron.rel} and {@link net.sf.saffron.oj} in order to
+implement true SQL datatype semantics (e.g. nullability, precision,
+scale, character set, and collation sequence).  During query
+processing, the Farrago JDBC driver ensures that an instance of {@link
+net.sf.farrago.type.FarragoTypeFactory} is used for all type analysis.
+
+</body>
+</html>

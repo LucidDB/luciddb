@@ -1,0 +1,53 @@
+<?xml version="1.0" ?>
+<!-- $Id: //open/dev/fennel/common/FennelResource.xml#1 $ -->
+
+<resourceBundle
+  static="false"
+  locale="en_US"
+  cppNamespace="fennel"
+  cppCommonInclude="CommonPreamble.h">
+  <!-- additional attributes for resourceBundle:
+       cppExceptionClassName: Name of an exception class to use if
+                              none is specified for a given exception
+                              element.
+       cppExceptionClassLocation: Header file for previous.
+       cppChainExceptions: set to "true" if exceptions support
+                           chaining.  Requires all exception types to
+                           have two constructors: one that takes
+                           std::string, and another that takes
+                           std::string and a const T * const where T
+                           is the C++ exception class. -->
+
+
+  <!-- Example resource message with an exception.  Commented out 
+       because Fennel does not use the exception generation mechanism.
+       Attributes specified here override the above
+       cppExceptionClassName and cppExceptionClassLocation
+       attributes. 
+
+  <exception
+    id="2"
+    name="exampleError"
+    cppClassName="ExampleExcn" cppClassLocation="fennel/common/SysCallExcn.h">
+    <text>Whoops: {0}</text>
+  </exception>
+
+  -->
+
+  <!-- NOTE: message id range 440000-450000 is reserved to avoid
+  overlap with Farrago -->
+
+  <message id="440010" name="sysCallFailed">
+    <text>System call failed:  {0}</text>
+  </message>
+
+  <message id="440020" name="duplicateKeyDetected">
+    <text>Duplicate key detected:  {0}</text>
+  </message>
+
+  <message id="440030" name="internalError">
+    <text>Storage manager internal errror:  {0}</text>
+  </message>
+
+</resourceBundle>
+

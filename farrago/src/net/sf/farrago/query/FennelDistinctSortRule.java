@@ -1,0 +1,99 @@
+/*
+// Farrago is a relational database management system.
+// Copyright (C) 2003-2004 John V. Sichi.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
+package net.sf.farrago.query;
+
+import net.sf.farrago.util.*;
+
+import net.sf.saffron.core.*;
+import net.sf.saffron.opt.*;
+import net.sf.saffron.rel.*;
+import net.sf.saffron.util.*;
+
+import openjava.ptree.*;
+
+import java.util.*;
+
+
+/**
+ * FennelDistinctSortRule is a rule for implementing DISTINCT via a Fennel
+ * sort.  A DISTINCT is recognized as an Aggregate with no AggCalls and the
+ * same number of outputs as inputs.
+ *
+ * @author John V. Sichi
+ * @version $Id$
+ */
+class FennelDistinctSortRule extends VolcanoRule
+{
+    //~ Constructors ----------------------------------------------------------
+
+    /**
+     * Creates a new FennelDistinctSortRule object.
+     */
+    public FennelDistinctSortRule()
+    {
+        super(
+            new RuleOperand(
+                AggregateRel.class,
+                new RuleOperand [] { new RuleOperand(SaffronRel.class,null) }));
+    }
+
+    //~ Methods ---------------------------------------------------------------
+
+    // implement VolcanoRule
+    public CallingConvention getOutConvention()
+    {
+        return FennelRel.FENNEL_CALLING_CONVENTION;
+    }
+
+    // implement VolcanoRule
+    public void onMatch(VolcanoRuleCall call)
+    {
+        AggregateRel agg = (AggregateRel) call.rels[0];
+        if (agg.getAggCalls().length > 0) {
+            return;
+        }
+        SaffronRel relInput = call.rels[1];
+        int n = relInput.getRowType().getFieldCount();
+        if (agg.getGroupCount() < n) {
+            return;
+        }
+
+        SaffronRel fennelInput =
+            convert(planner,relInput,FennelRel.FENNEL_CALLING_CONVENTION);
+        if (fennelInput == null) {
+            return;
+        }
+
+        Integer [] keyProjection = FennelRelUtil.newIotaProjection(n);
+
+        // REVIEW:  should cluster be from agg or relInput?
+        boolean discardDuplicates = true;
+        FennelSortRel sort =
+            new FennelSortRel(
+                agg.getCluster(),
+                fennelInput,
+                keyProjection,
+                discardDuplicates);
+        call.transformTo(sort);
+    }
+}
+
+
+// End FennelDistinctSortRule.java

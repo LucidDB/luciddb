@@ -1,0 +1,46 @@
+/*
+// $Id$
+// Fennel is a relational database kernel.
+// Copyright (C) 1999-2004 John V. Sichi.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
+#include "fennel/common/CommonPreamble.h"
+#include "fennel/synch/SynchObj.h"
+#include "fennel/synch/Thread.h"
+
+FENNEL_BEGIN_CPPFILE("$Id$");
+
+void convertTimeout(uint iMilliseconds,boost::xtime &atv)
+{
+    boost::xtime_get(&atv,boost::TIME_UTC);
+    if (isMAXU(iMilliseconds)) {
+        // FIXME:  Solaris doesn't like bogus huge times like
+        // ACE_Time_Value::max_time, so this uses NOW+10HRS.  Instead, should
+        // precalculate a real time much farther in the future and keep it
+        // around as a singleton.
+        atv.sec += 36000;
+    } else if (iMilliseconds) {
+        long sec = iMilliseconds/1000;
+        long nsec = (iMilliseconds%1000)*1000000;
+        atv.sec += sec;
+        atv.nsec += nsec;
+    }
+}
+
+FENNEL_END_CPPFILE("$Id$");
+
+// End SynchObj.cpp

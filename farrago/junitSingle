@@ -1,0 +1,24 @@
+#!/bin/bash
+# $Id$
+# Run a single Junit test case from the default test package
+
+if [ ! "$1" ]; then 
+   echo "Error: specify a .sql filename or an unqualified test class name"; 
+   exit; 
+fi
+
+if [ ! "$2" ]; then
+   target=junit
+else
+   target="$2"
+fi
+
+if [ -e "$1" ]; then
+   # Interpret the argument as the name of an .sql script to run
+   ant -Djunit.class=net.sf.farrago.test.FarragoSqlTest \
+       -Dfileset.unitsql=$1 $target
+else
+   # Interpret the argument as the name of a test case
+   ant -Djunit.class=net.sf.farrago.test.$1 $target
+fi
+

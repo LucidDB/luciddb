@@ -1,0 +1,23 @@
+#!/bin/bash
+# 
+# $Id$
+# Saffron preprocessor and data engine
+# (C) Copyright 2002-2004 Disruptive Technologies, Inc.
+# You must accept the terms in LICENSE.html to use this software.
+
+export SRCROOT=`pwd`
+export ANT_HOME=$HOME/apache-ant-1.6.0
+export MACKER_HOME=$HOME/macker-0.4.1
+export JALOPY_HOME=$HOME/jalopy-0.6.1
+export JAVACC_HOME=$HOME/javacc-3.2
+export JUNIT_HOME=$HOME/junit3.8.1
+# The following 3 components are optional; uncomment them if you have them.
+#export TOMCAT_HOME=$HOME/jakarta-tomcat-4.0.3
+#export DYNAMICJAVA_HOME=$HOME/DynamicJava-1.1.1
+#export WEBLOGIC_HOME=$HOME/bea/wlserver6.1
+export CLASSPATH=$CLASSPATH:$JAVACC_HOME/bin/lib/javacc.jar
+export CLASSPATH=$CLASSPATH:$SRCROOT/classes
+export CLASSPATH=$CLASSPATH:$SRCROOT/lib/boot.jar
+$ANT_HOME/bin/ant $*
+
+# end build

@@ -1,0 +1,274 @@
+<html>
+
+<head>
+<title>Farrago SQL/MED Support</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" />
+
+</head>
+
+<body>
+
+<h1>Farrago SQL/MED Support</h1>
+
+This document describes current plans for supporting SQL/MED
+(Management of External Data), which is the post-SQL99 standard for
+providing uniform relational access to foreign data (both relational
+and non-relational) in other servers.
+
+<h2>Overview</h2>
+
+SQL/MED defines several very independent interfaces:
+
+<ul>
+
+<li>An SQL DDL interface for defining access to foreign data.
+
+<li>An underlying programming-language-neutral service provider
+interface to be implemented by foreign data wrappers (drivers for
+various kinds of data).  This interface is wide, complex, and
+non-trivial to implement.  For example, in order to support metadata
+import, an implementation must support SQL queries against the
+standard INFORMATION_SCHEMA (probably not something the developer of a
+flat-file driver wants to deal with).
+
+<li>Datalink interfaces (not covered in this document).
+
+</ul>
+
+The current plan is to support the standard DDL interface but not (or
+at least not initially) the standard foreign data wrapper service
+provider interface.  Instead, Farrago defines a somewhat simpler
+non-standard service provider interface together with some prepackaged
+implementations:
+
+<ul>
+
+<li>FennelRowStore: for access to data stored by Fennel in
+transactional row format.  This is not really foreign data, but is
+represented as such for architectural uniformity.  A normal CREATE
+TABLE statement uses this implicitly.  Eventually the CREATE TABLE
+statement will be extended to allow creation of other types of table
+storage (e.g. FennelColumnStore for column-store format).
+
+<li>JDBC:  for access to data stored in foreign SQL databases.
+
+<li>MDR:  for access to metadata stored in an MDR repository
+(including Farrago's own system catalog).
+
+</ul>
+
+Eventually, if standard SQL/MED foreign data wrapper drivers become
+popular, Farrago will either provide a bridge for them as another
+implementation of its non-standard interface, or will make its own
+non-standard interface obsolete.  The standard DDL will remain
+unchanged in any event.
+
+<h2>Foreign Data Wrapper Definition</h2>
+
+The standard SQL/MED DDL statement to install a driver is CREATE
+FOREIGN DATA WRAPPER:
+
+<pre><code>
+CREATE FOREIGN DATA WRAPPER foreign-data-wrapper-name
+[ LIBRARY 'libraryName' ]
+LANGUAGE language-name
+[ OPTIONS ( opt-name1 'opt-value1' [, opt-name2 'opt-value2' ... ] ) ]
+</code></pre>
+
+Initially, Farrago requires the LANGUAGE to be JAVA.  The LIBRARY
+name can specify either a path to a JAR or 'class X.Y.Z' where X.Y.Z
+is the fully qualified name of a class already available in the
+server's classpath.  Here's an example for a foreign data wrapper
+capable of fetching XML files via TCP/IP:
+
+<pre><code>
+CREATE FOREIGN DATA WRAPPER xml_tcpip
+LIBRARY '/home/jvs/wrappers/FarragoXmlSourceReader.jar'
+LANGUAGE JAVA
+OPTIONS ( protocol 'TCP/IP' )
+</code></pre>
+
+According to the standard, foreign data wrappers are catalog objects.
+In Farrago, they are implicitly created under the SYS_BOOT catalog
+(and so must have top-level unique names).
+
+<h2>Foreign Server Definition</h2>
+
+Once a foreign data wrapper has been installed, it can be bound to data
+provided by a particular server with the CREATE SERVER statement:
+
+<pre><code>
+CREATE SERVER foreign-server-name
+[ TYPE 'server-type' ]
+[ VERSION 'server-version' ]
+FOREIGN DATA WRAPPER foreign-data-wrapper-name
+[ OPTIONS ( ... ) ]
+</code></pre>
+
+Example using the previously defined wrapper:
+
+<pre><code>
+CREATE SERVER movie_catalog
+TYPE 'ANY'
+VERSION '1.1'
+FOREIGN DATA WRAPPER xml_tcpip
+OPTIONS ( url 'http://www.movie-fun-facts.org' )
+</code></pre>
+
+Any type of web server would be allowed, but it would have to support
+HTTP version 1.1 (and the wrapper would expect HTTP features to work
+accordingly).  As with foreign data wrappers, foreign servers are
+created under the SYS_BOOT catalog, and their names must not conflict
+with any other server (or catalog) in the system.
+
+<p>
+
+According to the SQL/MED standard, defining a foreign server does not
+make its data accessible (the CREATE FOREIGN TABLE or IMPORT FOREIGN
+SCHEMA statements described later are required first).  However,
+Farrago introduces a non-standard mechanism for direct access.  Each
+foreign server defined implies a corresponding top-level virtual
+catalog.  These catalogs are virtual in the sense that no local
+metadata is stored for them (and no INFORMATION_SCHEMA is defined).
+Instead, metadata is acquired on-the-fly during query processing.  For
+example, after the above CREATE SERVER example, the following query
+might be legal:
+
+<pre><code>
+SELECT DISTINCT r.name
+FROM movie_catalog.review_facts.reviewers r,
+     movie_catalog.movie_facts.actors a
+WHERE r.name=a.name
+</code></pre>
+
+This queries the names of all actors who have the same names as movie
+reviewers.  The FarragoXmlSourceReader wrapper implementation might map
+each subdirectory under the root URL to a schema, and xml files in those
+subdirectories to tables.  However, a metadata query like
+
+<pre><code>
+SELECT * 
+FROM movie_catalog.information_schema.table
+</code></pre>
+
+would fail unless the FarragoXmlSourceReader implementation happened
+to support the INFORMATION_SCHEMA (unlikely in this case, but more
+likely for a JDBC foreign data wrapper).
+
+<p>
+
+Virtual catalogs are read-only (it is not possible to create new
+schemas, tables, or other objects under them).
+
+<h2>Foreign Table Definition</h2>
+
+In order for metadata about a foreign table to be stored in the
+LOCALDB catalog, a CREATE FOREIGN TABLE statement is required:
+
+<pre><code>
+CREATE FOREIGN TABLE table-name
+SERVER foreign-server-name
+[ ( basic-column-definition1 [, basic-column-definition2 ... ] ) ]
+[ OPTIONS ( ... ) ]
+
+</code></pre>
+
+A basic-column-definition consists of a name, a datatype, and (optionally)
+a column-level OPTIONS clause.
+
+<p>
+
+For example:
+
+<pre><code>
+CREATE FOREIGN TABLE movie_schema.reviewers
+SERVER movie_catalog
+OPTIONS ( directory 'review_facts', file 'reviewers.xml' )
+</code></pre>
+
+Here, the foreign XML file previously referenced implicitly (via SQL
+identifiers in the virtual catalog) is now referenced explicitly (via
+wrapper-specific options).  The local schema MOVIE_SCHEMA must already
+exist under the LOCALDB catalog.  Since column definitions were
+omitted, the wrapper must be capable of deriving these automatically
+from the XML file contents.  Now, we can issue a query like
+
+<pre><code>
+SELECT * 
+FROM movie_schema.reviewers
+</code></pre>
+
+or a metadata query like
+
+<pre><code>
+SELECT column_name
+FROM localhost.information_schema
+WHERE table_schema = 'MOVIE_SCHEMA' 
+AND table_name = 'REVIEWERS'
+</code></pre>
+
+<h2>Foreign Schema Import</h2>
+
+In order to import metadata for a large number of tables at once, SQL/MED
+provides the IMPORT FOREIGN SCHEMA statement:
+
+<pre><code>
+IMPORT FOREIGN SCHEMA foreign-schema-name
+[ LIMIT TO ( table1 [, table2 ... ] ) | EXCEPT ( table3 [, table4 ... ] ) ]
+FROM SERVER foreign-server-name
+INTO local-schema-name
+</code></pre>
+
+For the running example:
+
+<pre><code>
+IMPORT FOREIGN SCHEMA movie_facts
+FROM SERVER movie_catalog
+INTO localhost.movie_schema
+</code></pre>
+
+Note that as with CREATE FOREIGN TABLE, local schema MOVIE_SCHEMA must
+already exist before the IMPORT statement is executed.
+
+<h2>Additional DDL</h2>
+
+SQL/MED defines statements such as DROP/ALTER for foreign data
+wrappers, servers, and tables.  It also defines additional DDL for
+controlling mapping of users and routines.  For the details, consult
+the standard.
+
+<h2>Java Interfaces</h2>
+
+The interfaces which must be implemented in order to write a new
+foreign data wrapper are defined in 
+<a 
+href="../api/net/sf/farrago/namespace/package-summary.html#package_description">
+package net.sf.farrago.namespace</a>.  The FarragoNamedColumnSet
+interface is the most challenging--it's really just an import of
+Saffron's table interface, meaning the implementor must understand
+some of Saffron optimization, code generation, etc.  Over time a
+package of abstract bases will be built up which will ease the
+construction of wrappers for simple-minded data.
+
+<h2>Repository Model</h2>
+
+Since CWM does not cover any SQL/MED metadata, the repository model
+for foreign data will be in the Farrago extension model (FEM).  Each
+foreign CwmTable will have an association with a corresponding foreign
+server, together with options specified when it was created.  Catalog
+initialization will also create a representation for the local server,
+to which CwmTables stored locally by Fennel will be attached.  Catalog
+initialization will also create virtual catalogs for the local MDR
+repository metadata (using FarragoMdrForeignDataWrapper).  Below is a
+UML structure diagram for the SQL/MED model:
+
+<hr>
+<img src="MedStructure.gif">
+(Apologies for that interloper in the background!)
+<hr>
+
+The two associations (WrapperAccessesServer and ServerStoresTable) also
+imply dependencies for DROP RESTRICT/CASCADE.
+
+</body>
+</html>

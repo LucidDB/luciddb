@@ -1,0 +1,141 @@
+
+<html>
+
+<head>
+<title>Farrago Roadmap</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" />
+
+</head>
+
+<body>
+
+<h1>Farrago Roadmap</h1>
+
+<hr>
+
+This document sketches the medium-term release plan for the Farrago
+project.  It's light on details, which will be filled in once there
+are owners for tasks.  Some of the Farrago-level tasks may require
+one or more subtasks at the level of the Fennel kernel.  The current
+task list can be viewed from
+
+<a href="http://sourceforge.net/pm/task.php?group_project_id=30032&group_id=80183&func=browse">
+Sourceforge's Task Manager
+</a>.
+
+The intention of defining a roadmap is to have some basis for task
+definition, prioritization, and sense of progress.
+
+<hr>
+
+<h2>Developer-only Releases</h2>
+
+Currently, the project is in "developer only" mode where it makes no
+sense for anyone other than a developer to even look at it.  However,
+during this time, we'll still do regular releases just to have some
+consistent code snapshots out there for prospective developers to play with.
+
+<hr>
+
+<h2>TPC-W Release</h2>
+
+The first non-developer release should contain just enough to demonstrate
+a working, integrated system that can execute a reasonable subset of
+SQL via JDBC.  In order to have clear exit criteria for this release,
+the 
+<a href="http://www.tpc.org/tpcw">TPC-W benchmark</a>
+has been selected as an integration test because it
+
+<ul>
+
+<li>has a <a href="http://www.ece.wisc.edu/~pharm/tpcw.shtml"> Java
+implementation</a> available which matches our target architecture
+well (in particular, it's servlet-based, so it does not require a
+remote JDBC driver)
+
+<li>uses fairly simple SQL
+
+<li>as a benchmark, can be used to drive an initial tuning effort
+
+<li>as a standard, is something we'll want to get around to eventually anyway
+
+</ul>
+
+Note that the intention is to use TPC-W as a sample application, not
+to get any meaningful performance numbers (if the initial numbers
+aren't terrible, it means something isn't actually working yet!).  If
+something (e.g. a subquery) is the only thing that doesn't work, we'll
+just disable it and declare victory.
+
+<hr>
+
+<h2>SQL92 Functionality and Performance Releases</h2>
+
+Once the basics are dealt with, we can move on to the tricky stuff.
+The goal here is to move towards competitiveness and compatibility
+with existing systems.  These will most likely be split up into
+multiple releases (possibly in parallel):
+
+<ul>
+
+<li>
+view definition and rewrite
+
+<li>Information Schema views into catalog
+
+<li>JDBC metadata support
+
+<li>advanced datatype support
+
+<li>access control
+
+<li>referential integrity
+
+<li>advanced SQL expression support (with commonly used expressions in
+kernel rather than Java)
+
+<li>ODBC driver and optimized JDBC client driver, both of which may
+bypass Java altogether on the server side for result set retrieval
+
+<li>performance tuning
+
+<li>hash join (acquire if possible)
+
+<li>merge sort (to replace btree-insertion sort above; acquire if possible)
+
+<li>storage management, backup/restore, etc.
+
+<li>blobs
+
+<li>distributed transaction support
+
+<li>Fennel persistence for MDR
+
+<li>resource balancing
+
+<li>heterogeneous queries
+
+</ul>
+
+<h2>Diversification Releases</h2> 
+
+If the project survives through to
+this point, then many paths (e.g. federation, clustering, analytics,
+hardware acceleration, etc.) open up.  However, it's a bad idea to
+start on any of these before the basics are in place.
+
+<hr>
+
+<b>
+  <table border="1" width="100%" class="clsStd">
+    <tr>
+      <td>End <i>$Id$</i></td>
+    </tr>
+  </table>
+  <p>&nbsp;</p>
+</b>
+
+</body>
+
+</html>
+

@@ -1,0 +1,23 @@
+0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/expressions/datatypes.sql#1 $
+0: jdbc:farrago:> -- Test expressions with different datatypes
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- VARCHAR comparison
+0: jdbc:farrago:> select name from sales.emps where city='San Francisco';
++-------+
+| NAME  |
++-------+
+| Eric  |
++-------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test CHAR pad/truncation and VARCHAR truncation
+0: jdbc:farrago:> create schema s;
+0: jdbc:farrago:> create table t(i int not null primary key,c char(10),v varchar(10));
+0: jdbc:farrago:> insert into t values (1,'goober','goober');
+0: jdbc:farrago:> insert into t values (2,'endoplasmic reticulum','endoplasmic reticulum');
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> select * from t;
+'I','C','V'
+'1','goober    ','goober'
+'2','endoplasmi','endoplasmi'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

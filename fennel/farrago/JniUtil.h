@@ -1,0 +1,224 @@
+/*
+// $Id$
+// Fennel is a relational database kernel.
+// Copyright (C) 1999-2004 John V. Sichi.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
+#ifndef Fennel_JniUtil_Included
+#define Fennel_JniUtil_Included
+
+#include "fennel/common/AtomicCounter.h"
+
+#include <jni.h>
+
+FENNEL_BEGIN_NAMESPACE
+
+/**
+ * Helper for JniEnvRef.
+ */
+class JniExceptionChecker
+{
+    JNIEnv *pEnv;
+    
+public:
+    explicit JniExceptionChecker(JNIEnv *pEnvInit)
+    {
+        pEnv = pEnvInit;
+    }
+    
+    ~JniExceptionChecker();
+
+    JNIEnv *operator->() const
+    {
+        return pEnv;
+    }
+};
+
+/**
+ * Wrapper for a JNIEnv pointer.  This allows us to automatically
+ * progagate exceptions from all calls to JNIEnv by using
+ * the
+ * <a href="http://www.boost.org/libs/smart_ptr/sp_techniques.html#wrapper">
+ * call wrapper technique</a> (except without the shared_ptrs, because
+ * they're too slow!).
+ */
+class JniEnvRef
+{
+    JNIEnv *pEnv;
+    
+public:
+    /**
+     * Explicit constructor:  use supplied JNIEnv pointer.
+     */
+    explicit JniEnvRef(JNIEnv *pEnvInit)
+    {
+        pEnv = pEnvInit;
+    }
+
+    void operator = (JniEnvRef const &other)
+    {
+        pEnv = other.pEnv;
+    }
+
+    JniExceptionChecker operator->() const
+    {
+        return JniExceptionChecker(pEnv);
+    }
+
+    JNIEnv *get()
+    {
+        return pEnv;
+    }
+
+    void handleExcn(std::exception &ex);
+};
+
+/**
+ * An implementation of JniEnvRef which can be used in contexts where
+ * no JNIEnv * is available for initialization.
+ */
+class JniEnvAutoRef : public JniEnvRef
+{
+public:
+    /**
+     * Default constructor:  use thread-local JNIEnv pointer.
+     */
+    explicit JniEnvAutoRef();
+
+};
+
+/**
+ * Static utility methods for dealing with JNI.
+ */
+class JniUtil 
+{
+    friend class JniEnvAutoRef;
+    
+    /**
+     * Loaded JavaVM instance.  For now we can only deal with one at a time.
+     */
+    static JavaVM *pVm;
+
+    /**
+     * Required JNI version.
+     */
+    static const jint jniVersion = JNI_VERSION_1_2;
+
+    /**
+     * java.lang.Class.getName()
+     */
+    static jmethodID methGetClassName;
+
+    /**
+     * java.util.Collection.iterator()
+     */
+    static jmethodID methIterator;
+    
+    /**
+     * java.util.Iterator.hasNext()
+     */
+    static jmethodID methHasNext;
+    
+    /**
+     * java.util.Iterator.next()
+     */
+    static jmethodID methNext;
+
+    /**
+     * Get the JNIEnv for the current thread.  This can be used in contexts
+     * where the JNIEnv hasn't been passed down from the native entry point.
+     *
+     * @return current thread's JNIEnv
+     */
+    static JNIEnv *getJavaEnv();
+
+public:
+    /**
+     * Java method JavaTupleStream.fillBuffer.
+     */
+    static jmethodID methFillBuffer;
+
+    /**
+     * Java method FennelJavaStreamMap.getJavaStreamHandle.
+     */
+    static jmethodID methGetJavaStreamHandle;
+
+    /**
+     * Java method FennelJavaStreamMap.getIndexRoot.
+     */
+    static jmethodID methGetIndexRoot;
+
+    /**
+     * Initialize our JNI support.
+     *
+     * @param pVm the VM in which we're loaded
+     */
+    static jint init(JavaVM *pVm);
+
+    /**
+     * Call java.lang.Class.getName().
+     *
+     * @param jClass the Class of interest
+     *
+     * @return the fully-qualified class name
+     */
+    static std::string getClassName(jclass jClass);
+
+    /**
+     * Convert a Java string to a C++ string.
+     *
+     * @param pEnv the current thread's JniEnvRef
+     *
+     * @param jString the Java string
+     *
+     * @return the converted C++ string
+     */
+    static std::string toStdString(JniEnvRef pEnv,jstring jString);
+
+    /**
+     * Call java.util.Collection.iterator().
+     *
+     * @param pEnv the JniEnvRef for the current thread
+     *
+     * @param jCollection the Java collection
+     *
+     * @return the new Java iterator
+     */
+    static jobject getIter(JniEnvRef pEnv,jobject jCollection);
+
+    /**
+     * Call java.util.Iterator.hasNext/next()
+     *
+     * @param pEnv the JniEnvRef for the current thread
+     *
+     * @param jIter the iterator to advance
+     *
+     * @return next object from iterator, or NULL if !hasNext()
+     */
+    static jobject getNextFromIter(JniEnvRef pEnv,jobject jIter);
+
+    /**
+     * Counter for all handles opened by Farrago.
+     */
+    static AtomicCounter handleCount;
+};
+
+FENNEL_END_NAMESPACE
+
+#endif
+
+// End JniUtil.h

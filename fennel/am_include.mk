@@ -1,0 +1,15 @@
+COMMON_INCLUDES=\
+	-I$(stlport_location)/stlport \
+	-I$(boost_location) \
+	-I$(top_srcdir) \
+	-I$(top_srcdir)/..
+
+INCLUDES=$(COMMON_INCLUDES) $(EXTRA_INCLUDES)
+
+AM_LDFLAGS=\
+-L$(stlport_location)/lib -l$(STLPORT_LIB) \
+-L$(BOOST_THREADLIB_DIR) -l$(BOOST_THREADLIB) $(EXTRA_LDFLAGS)
+
+AM_ETAGSFLAGS = --c++ --members
+
+noinst_HEADERS=$(wildcard *.h)

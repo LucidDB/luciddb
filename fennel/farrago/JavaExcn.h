@@ -1,0 +1,67 @@
+/*
+// $Id$
+// Fennel is a relational database kernel.
+// Copyright (C) 1999-2004 John V. Sichi.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
+#ifndef Fennel_JavaExcn_Included
+#define Fennel_JavaExcn_Included
+
+#include "fennel/common/FennelExcn.h"
+
+#include "fennel/farrago/JniUtil.h"
+
+FENNEL_BEGIN_NAMESPACE
+
+/**
+ * Exception class for wrapping Java exceptions.
+ */
+class JavaExcn : public FennelExcn
+{
+    jthrowable javaException;
+    
+public:
+    /**
+     * Constant for return value of what().
+     */
+    static ParamVal RTTI_WHAT_JavaExcn;
+    
+    /**
+     * Construct a new JavaExcn.
+     *
+     * @param javaExceptionInit the wrapped Java exception
+     */
+    explicit JavaExcn(
+        jthrowable javaExceptionInit);
+    
+    /**
+     * @return the wrapped Java exception
+     */
+    jthrowable getJavaException() const;
+
+    /**
+     * Override std::exception.  This returns "JavaExcn"; we make use of
+     * this as a substitute for RTTI, which is incompatible with JNI.
+     */
+    virtual const char * what() const throw();
+};
+
+FENNEL_END_NAMESPACE
+
+#endif
+
+// End JavaExcn.h

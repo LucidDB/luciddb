@@ -1,0 +1,31 @@
+0: jdbc:farrago:> -- $Id: //open/farrago/initsql/createStorageWrappers.sql#1 $
+0: jdbc:farrago:> -- This script creates the builtin storage data wrappers
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !set verbose true
+0: jdbc:farrago:> !autocommit off
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- create wrapper for access to MDR repositories
+0: jdbc:farrago:> create foreign data wrapper sys_mdr
+. . . . . . . . > library 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'
+. . . . . . . . > language java;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- create access to system's own CWM repository
+0: jdbc:farrago:> create server sys_cwm
+. . . . . . . . > foreign data wrapper sys_mdr
+. . . . . . . . > options(root_package_name 'CWM');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- create access to system's own Farrago-specific portion of repository
+0: jdbc:farrago:> create server sys_fem
+. . . . . . . . > foreign data wrapper sys_mdr
+. . . . . . . . > options(root_package_name 'FEM');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- create wrapper for access to JDBC data
+0: jdbc:farrago:> create foreign data wrapper sys_jdbc
+. . . . . . . . > library 'class net.sf.farrago.namespace.jdbc.MedJdbcForeignDataWrapper'
+. . . . . . . . > language java;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> commit;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

@@ -1,0 +1,327 @@
+<html>
+
+<head>
+<title>Farrago Table Indexing</title>
+<link rel="stylesheet" type="text/css" href="../stylesheet.css" />
+
+</head>
+
+<body>
+
+<h1>Overview</h1> 
+
+This document describes how logical Farrago table definitions are
+mapped to physical implementations (currently always BTrees) when
+stored using Fennel.
+
+<h2>Limitations</h2>
+
+Currently every table must have a primary key and exactly one
+clustered index (which need not be unique, and need not include the
+primary key).  When a clustered index definition is omitted, the
+primary key is used.  A table may have any number of unclustered
+indexes, both unique and non-unique.
+
+<p>
+
+The primary key requirement is not standard SQL (even though it ought
+to be).  Eventually omission of a primary key will be allowed, and will
+result in generation of a hidden system-owned surrogate key.
+
+<h2>Example DDL</h2>
+
+We'll use a single table as an example:
+
+<pre><code>
+create table ENLISTMENT(
+    NAME varchar(128) not null,
+    RANK char(3),
+    SERIALNO integer not null constraint SERIALNO_PK primary key,
+    PLATOONID integer not null)
+
+create clustered index ENLISTMENT_CX on ENLISTMENT(NAME)
+
+create index ENLISTMENT_PLATOONID on ENLISTMENT(PLATOONID)
+
+</code></pre>
+
+Since unique constraints result in the creation of system-owned unique
+indexes for enforcement, three indexes result from this DDL statement.
+The constraint index will be referred to by its constraint name (SERIALNO_PK).
+
+<p>
+
+Each index has a <em>defined key</em> which is the column list
+specified by the DDL statement which created the index.  For this example:
+
+<ul>
+
+<li>The defined key of SERIALNO_PK is (SERIALNO).
+
+<li>The defined key of ENLISTMENT_CX is (NAME).
+
+<li>The defined key of ENLISTMENT_PLATOONID is (PLATOONID).
+
+</ul>
+
+<h2>Clustered Index Storage</h2>
+
+The clustered index is implemented as a BTree which stores all of the
+table data in the order specified by the index definition.  Here's
+some example data as it would be stored in the clustered index:
+
+<table border="1">
+
+<tr>
+<td>NAME</td>
+<td>RANK</td>
+<td>SERIALNO</td>
+<td>PLATOONID</td>
+</tr>
+
+<tr>
+<td>Boyle</td>
+<td>CPL</td>
+<td>1004</td>
+<td>2</td>
+</tr>
+
+<tr>
+<td>Carter</td>
+<td>SGT</td>
+<td>1001</td>
+<td>2</td>
+</tr>
+
+<tr>
+<td>Carter</td>
+<td>PVT</td>
+<td>1003</td>
+<td>2</td>
+</tr>
+
+<tr>
+<td>Lombardi</td>
+<td>PVT</td>
+<td>1002</td>
+<td>1</td>
+</tr>
+
+<tr>
+<td>Pyle</td>
+<td>PVT</td>
+<td>1000</td>
+<td>1</td>
+</tr>
+
+</table>
+
+<p>
+
+Note that there is a duplicate in the defined key NAME of the clustered
+index.  This is allowed since the clustered index was not specified as
+unique.  However, we need a unique locator for every tuple stored, so
+we introduce the concept of an index's <em>distinct key</em>.  For a
+unique index, this is identical to the defined key.  For a non-unique
+clustered index, we append the columns of the primary key (leaving out
+any that were already referenced by the defined key).  In this
+example, the distinct key for ENLISTMENT_CX is (NAME, SERIALNO).
+
+<h2>Unclustered Index Storage</h2>
+
+The distinct key for a clustered index can be thought of as a logical
+ROWID.  In fact, this is how it is used when an unclustered index is
+stored.  Each tuple in the BTree implementing an unclustered index
+consists of the unclustered index's defined key plus the columns of
+the clustered index's distinct key (again leaving out any redundant
+columns from the unclustered index's defined key).  Here is the data
+stored for SERIALNO_PK:
+
+<table border="1">
+
+<tr>
+<td>SERIALNO</td>
+<td>NAME</td>
+</tr>
+
+<tr>
+<td>1000</td>
+<td>Pyle</td>
+</tr>
+
+<tr>
+<td>1001</td>
+<td>Carter</td>
+</tr>
+
+<tr>
+<td>1002</td>
+<td>Lombardi</td>
+</tr>
+
+<tr>
+<td>1003</td>
+<td>Carter</td>
+</tr>
+
+<tr>
+<td>1004</td>
+<td>Boyle</td>
+</tr>
+
+</table>
+
+<p>
+
+Note that in this case, adding on the clustered index key does not make the
+unclustered index key "more unique" since it is already unique; but
+it does give us an indirect access path from SERIALNO to tuple:  first
+search SERIALNO_PK to convert the SERIALNO into a NAME, and then use
+the (NAME,SERIALNO) combination to search ENLISTMENT_CX, which stores the
+values for all other columns.
+
+<p>
+
+For non-unique index ENLISTMENT_PLATOONID, adding on the distinct key
+of the clustered index serves both purposes:
+
+<table border="1">
+
+<tr>
+<td>PLATOONID</td>
+<td>NAME</td>
+<td>SERIALNO</td>
+</tr>
+
+<tr>
+<td>1</td>
+<td>Lombardi</td>
+<td>1002</td>
+</tr>
+
+<tr>
+<td>1</td>
+<td>Pyle</td>
+<td>1000</td>
+</tr>
+
+<tr>
+<td>2</td>
+<td>Boyle</td>
+<td>1004</td>
+</tr>
+
+<tr>
+<td>2</td>
+<td>Carter</td>
+<td>1001</td>
+</tr>
+
+<tr>
+<td>2</td>
+<td>Carter</td>
+<td>1003</td>
+</tr>
+
+</table>
+
+<p>
+
+In this case of a non-unique unclustered index, the full tuple stored
+in the BTree forms the distinct key for the unclustered index.  To
+summarize distinct keys:
+
+<ul>
+
+<li>The distinct key of SERIALNO_PK is (SERIALNO).
+
+<li>The distinct key of ENLISTMENT_CX is (NAME,SERIALNO).
+
+<li>The distinct key of ENLISTMENT_PLATOONID is (PLATOONID,NAME,SERIALNO).
+
+</ul>
+
+
+<h2>Index Coverage</h2>
+
+When processing a query, the optimizer chooses an access path based on
+what indexes are available.  A filter on the clustered index defined
+key can be implemented as a direct search against the clustered
+index.  For example,
+
+<pre><code>
+select NAME,RANK,SERIALNO
+from ENLISTMENT
+where NAME='Pyle'
+
+</code></pre>
+
+A filter on an unclustered index normally requires an indirect search
+as described previously.  However, if the unclustered index "covers"
+all columns referenced by the query, then a direct search can be used
+and the clustered index can be ignored.  For example,
+
+<pre><code>
+select NAME
+from ENLISTMENT
+where SERIALNO=1000
+</pre></code>
+
+In this case, SERIALNO_PK can be used for a direct lookup.
+
+<p>
+
+So, the <em>coverage</em> for a clustered index is the entire table,
+while the coverage for an unclustered index is the combination of its
+defined key with the distinct key of the clustered index.  
+
+Examples:
+
+<ul>
+
+<li>The coverage of SERIALNO_PK is (SERIALNO,NAME).
+
+<li>The coverage of ENLISTMENT_CX is (NAME,RANK,SERIALNO,PLATOONID).
+
+<li>The coverage of ENLISTMENT_PLATOONID is (PLATOONID,NAME,SERIALNO).
+
+</ul>
+
+<h2>Collation Key</h2>
+
+In addition to coverage, the optimizer is also interested in sort
+order (e.g. for satisfying ORDER BY or merge join requirements).  For
+each index, a <em>collation key</em> can be defined which is the list
+of columns according to which tuples are guaranteed to be returned in
+order by a sequential scan of the index.  For a clustered index, this
+is identical to the distinct key.  For an unclustered index, the
+collation key is identical to the coverage.
+
+Examples:
+
+<ul>
+
+<li>The collation key of SERIALNO_PK is (SERIALNO,NAME).
+
+<li>The collation key of ENLISTMENT_CX is (NAME,SERIALNO).
+
+<li>The collation key of ENLISTMENT_PLATOONID is (PLATOONID,NAME,SERIALNO).
+
+</ul>
+
+<hr>
+
+<b>
+  <table border="1" width="100%" class="clsStd">
+    <tr>
+      <td>End <i>$Id$</i></td>
+    </tr>
+  </table>
+  <p>&nbsp;</p>
+</b>
+
+</body>
+
+</html>
+
+

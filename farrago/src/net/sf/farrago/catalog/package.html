@@ -1,0 +1,135 @@
+<html>
+<head>
+<title>Package net.sf.farrago.catalog</title>
+</head>
+<body>
+
+Implements the Farrago metadata catalog.
+
+<hr>
+
+The Farrago catalog is implemented as an instance of the <a
+href="http://mdr.netbeans.org">Netbeans MDR</a> repository.  {@link
+net.sf.farrago.catalog.FarragoCatalog} takes care of starting up and
+shutting down the repository, as well as exposing root packages and
+providing utilities for querying and updating the catalog.
+
+<h3>Catalog Build</h3>
+
+The diagram below provides an overview of the build-time processing
+which orchestrates catalog definition and access:
+
+<hr>
+
+<img src="../../../../../MetaModelFlow.gif">
+
+<hr>
+
+There are two inputs to the process:
+
+<ul>
+
+<li>The standard <a href="http://www.omg.org/cwm">CWM</a> data
+warehouse metamodel.  The XMI definition for this metamodel is
+provided by OMG.
+
+<li>Farrago-specific extensions, referred to as FEM (the Farrago
+Extension Metamodel).  The UML definition for this metamodel is
+maintained by the Farrago developers (using the community edition of
+the Poseidon UML modeling tool from <a
+href="http://www.gentleware.com">Gentleware</a>.
+
+</ul>
+
+Currently, the two inputs are completely disjoint; FEM does not
+reference any CWM elements; it just defines a separate model.
+(Eventually, some parts of FEM will actually extend CWM.)
+
+<p>
+
+The first step of the catalog build is to combine the two models into
+a single XMI file before further processing.  This requires a bit of
+XMI massaging; custom XSL scripts make this reasonably painless.
+(Since MDR uses MOF, we use the <a
+href="http://mdr.netbeans.org/uml2mof">UML2MOF tool</a> to convert
+FEM.)  Some filtering is also performed; for example, Farrago only
+uses the following CWM packages:
+
+<ul>
+<li>org.omg::CWM::ObjectModel::Behavioral
+<li>org.omg::CWM::ObjectModel::Core
+<li>org.omg::CWM::ObjectModel::Instance
+<li>org.omg::CWM::Foundation::DataTypes
+<li>org.omg::CWM::Foundation::KeysIndexes
+</ul>
+
+<p>
+Next, the combined metamodel is imported into a new MDR repository
+instance and stored in an extent named FarragoMetamodel.  A singleton
+instance of this metamodel is instantiated with extent name
+FarragoCatalog; this will store actual catalog data.
+
+<p>
+
+Besides storage, model-specific Java interfaces are also required for
+accessing the catalog at runtime.  For example, a table is represented
+by {@link net.sf.farrago.cwm.relational.CwmTable}.  The build calls
+MDR to generate these from the metamodel.  The CWM interfaces are
+generated under package {@link net.sf.farrago.cwm}, and the FEM
+interfaces are generated under package {@link net.sf.farrago.fem}.
+Custom code-generators in {@link net.sf.farrago.catalog.codegen } take
+care of generating convenience class {@link
+net.sf.farrago.FarragoMetadataFactory } and C++ code used for JNI
+access to the model (TODO: link).
+
+<p>
+
+As shown at the bottom of the diagram, a DTD is also generated which
+describes the XMI format of catalog import/export data (all of which is
+implemented by MDR).
+
+<p>
+
+For more details on the build process, please study the createCatalog
+target in //open/farrago/build.xml.
+
+<h3>Catalog Population</h3>
+
+In addition to preparing an empty catalog, the build also populates it
+with some initial metadata.  Currently, this includes:
+
+<ul>
+
+<li>supported datatypes
+
+<li>sample schema SALES with tables EMPS and DEPTS
+
+<li>initial configuration information</li>
+
+</ul>
+
+Eventually, this will include many other things such as the
+INFORMATION_SCHEMA definition, lists of supported functions,
+system-owned schemas and procedures, etc.  (The sample SALES schema is
+only for developer testing and will not be present in released
+distributions.)
+
+<p>
+
+Once the system is fully initialized, DDL statements executed by users
+can also modify the catalog.  The geneneric DDL implementation is in
+{@link net.sf.farrago.ddl}.  Specific validation and storage rules for
+various catalog objects are supplied by taking advantage of MDR's <a
+href="http://mdr.netbeans.org/custom_implementations.html">custom
+implementation feature</a>.  To supply a custom implementation, all
+that is necessary is to define a class with the same name as the
+generated interface but with "Impl" on the end.  So, for example,
+class {@link net.sf.farrago.cwm.relational.CwmTableImpl} provides the
+custom implementation for interface {@link
+net.sf.farrago.cwm.relational.CwmTable}.  These custom implementation
+classes can also implement Farrago-specific interfaces such as {@link
+net.sf.farrago.ddl.DdlValidatedElement} and {@link
+net.sf.farrago.ddl.DdlStoredElement}.
+
+</body>
+</html>

@@ -1,0 +1,152 @@
+/*
+// $Id$
+// Saffron preprocessor and data engine
+// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// You must accept the terms in LICENSE.html to use this software.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
+package net.sf.saffron.sql;
+
+import net.sf.saffron.util.Util;
+
+import java.util.*;
+
+/**
+ * A <code>SqlUpdate</code> is a node of a parse tree which represents
+ * an INSERT statement.
+ */
+public class SqlUpdate extends SqlCall
+{
+
+    // constants representing operand positions
+    public static final int TARGET_TABLE_OPERAND = 0;
+    public static final int SOURCE_EXPRESSION_LIST_OPERAND = 1;
+    public static final int TARGET_COLUMN_LIST_OPERAND = 2;
+    public static final int CONDITION_OPERAND = 3;
+    public static final int SOURCE_SELECT_OPERAND = 4;
+    public static final int OPERAND_COUNT = 5;
+    
+    //~ Constructors ----------------------------------------------------------
+
+    public SqlUpdate(
+        SqlSpecialOperator operator,
+        SqlIdentifier targetTable,
+        SqlNodeList targetColumnList,
+        SqlNodeList sourceExpressionList,
+        SqlNode condition)
+    {
+        super(operator,new SqlNode[OPERAND_COUNT]);
+        operands[TARGET_TABLE_OPERAND] = targetTable;
+        operands[SOURCE_EXPRESSION_LIST_OPERAND] = sourceExpressionList;
+        operands[TARGET_COLUMN_LIST_OPERAND] = targetColumnList;
+        operands[CONDITION_OPERAND] = condition;
+        assert(sourceExpressionList.size() == targetColumnList.size());
+    }
+
+    //~ Methods ---------------------------------------------------------------
+
+    /**
+     * .
+     *
+     * @return the identifier for the target table of the insertion
+     */
+    public SqlIdentifier getTargetTable()
+    {
+        return (SqlIdentifier) operands[TARGET_TABLE_OPERAND];
+    }
+
+    /**
+     * .
+     *
+     * @return the list of target column names
+     */
+    public SqlNodeList getTargetColumnList()
+    {
+        return (SqlNodeList) operands[TARGET_COLUMN_LIST_OPERAND];
+    }
+
+    /**
+     * .
+     *
+     * @return the list of source expressions
+     */
+    public SqlNodeList getSourceExpressionList()
+    {
+        return (SqlNodeList) operands[SOURCE_EXPRESSION_LIST_OPERAND];
+    }
+
+    /**
+     * Get the filter condition for rows to be updated.
+     *
+     * @return the condition expression for the data to be updated, or null for
+     * all rows in the table
+     */
+    public SqlCall getCondition()
+    {
+        return (SqlCall) operands[CONDITION_OPERAND];
+    }
+
+    /**
+     * Get the source SELECT expression for the data to be updated.  This
+     * returns null before the statement
+     * has been expanded by SqlValidator.createInternalSelect.
+     *
+     * @return the source SELECT for the data to be updated
+     */
+    public SqlSelect getSourceSelect()
+    {
+        return (SqlSelect) operands[SOURCE_SELECT_OPERAND];
+    }
+
+    // implement SqlNode
+    public void unparse(
+        SqlWriter writer,
+        int leftPrec,
+        int rightPrec)
+    {
+        writer.print("UPDATE ");
+        getTargetTable().unparse(writer,operator.leftPrec,operator.rightPrec);
+        if (getTargetColumnList() != null) {
+            getTargetColumnList().unparse(
+                writer,operator.leftPrec,operator.rightPrec);
+        }
+        writer.print("SET ");
+        Iterator targetColumnIter =
+            getTargetColumnList().getList().iterator();
+        Iterator sourceExpressionIter =
+            getSourceExpressionList().getList().iterator();
+        while (targetColumnIter.hasNext()) {
+            writer.println();
+            SqlIdentifier id = (SqlIdentifier) targetColumnIter.next();
+            id.unparse(writer,operator.leftPrec,operator.rightPrec);
+            writer.print(" = ");
+            SqlNode sourceExp = (SqlNode) sourceExpressionIter.next();
+            sourceExp.unparse(writer,operator.leftPrec,operator.rightPrec);
+            if (targetColumnIter.hasNext()) {
+                writer.print(",");
+            }
+        }
+        if (getCondition() != null) {
+            writer.println();
+            writer.print("WHERE ");
+            getCondition().unparse(
+                writer,operator.leftPrec,operator.rightPrec);
+        }
+    }
+}
+
+// End SqlUpdate.java

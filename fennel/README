@@ -1,0 +1,69 @@
+Fennel
+
+----------------------------------------------------------------------
+OVERVIEW
+
+The Fennel project is a database kernel in C++; it is intended for
+embedding in higher-level RDBMS projects, in particular the
+companion Farrago project (http://farrago.sourceforge.net).
+
+Contact perfecthash@users.sf.net if you're interested in contributing,
+and I'll send you instructions for accessing the Perforce server used
+for source control.
+
+----------------------------------------------------------------------
+BUILD
+
+See file INSTALL for details.  The current subdirectory structure is
+as follows:
+
+common:  low-level data structures
+
+synch:  threading-related classes
+
+device:  file allocation and I/O
+
+cache:  caching of file pages
+
+segment:  logical page allocation and access
+
+txn:  transaction logging and recovery
+
+tuple:  tuple representation
+
+btree:  B-plus tree implementation
+
+db:  database implementation (top-level container)
+
+xo:  tuple stream implementation
+
+test:  unit tests
+
+farrago:  JNI integration for the companion project Farrago
+
+----------------------------------------------------------------------
+
+LICENSE
+
+ This program is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Lesser General Public License
+ as published by the Free Software Foundation; either version 2.1
+ of the License, or (at your option) any later version.
+
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU Lesser General Public License for more details.
+
+ You should have received a copy of the GNU Lesser General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+All code copyright (C) 1999-2003, John V. Sichi
+See file COPYING for details.
+
+------------------------------------------------------------
+ACKNOWLEDGEMENTS
+
+The project is currently hosted on Sourceforge
+http://fennel.sourceforge.net

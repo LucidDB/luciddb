@@ -1,0 +1,85 @@
+/*
+// $Id$
+// Saffron preprocessor and data engine
+// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// You must accept the terms in LICENSE.html to use this software.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
+package net.sf.saffron.runtime;
+
+/**
+ * <code>HashableArray</code> provides a <code>Object[]</code> with a {@link
+ * #hashCode} and an {@link #equals} function, so it can be used as a key in
+ * a {@link java.util.Hashtable}.
+ */
+public class HashableArray
+{
+    //~ Instance fields -------------------------------------------------------
+
+    Object [] a;
+
+    //~ Constructors ----------------------------------------------------------
+
+    public HashableArray(Object [] a)
+    {
+        this.a = a;
+    }
+
+    //~ Methods ---------------------------------------------------------------
+
+    // override Object
+    public boolean equals(Object o)
+    {
+        return o instanceof HashableArray
+            && arraysAreEqual(this.a,((HashableArray) o).a);
+    }
+
+    // override Object
+    public int hashCode()
+    {
+        return arrayHashCode(a);
+    }
+
+    static int arrayHashCode(Object [] a)
+    {
+        // hash algorithm borrowed from java.lang.String
+        int h = 0;
+        for (int i = 0; i < a.length; i++) {
+            h = (31 * h) + a[i].hashCode();
+        }
+        return h;
+    }
+
+    /**
+     * Return whether two arrays are equal (shallow compare).
+     */
+    static boolean arraysAreEqual(Object [] a1,Object [] a2)
+    {
+        if (a1.length != a2.length) {
+            return false;
+        }
+        for (int i = 0; i < a1.length; i++) {
+            // we don't need to use 'equals', cuz synthetic classes are always
+            // made of real classes
+            if (!a1[i].equals(a2[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+}
+; // End HashableArray.java

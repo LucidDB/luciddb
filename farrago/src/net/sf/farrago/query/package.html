@@ -1,0 +1,630 @@
+<html>
+<head>
+<title>Package net.sf.farrago.query</title>
+</head>
+<body>
+
+Implements Farrago query processing.
+
+<hr>
+
+<h2>Farrago Query Processing</h2> 
+
+This document provides an overview of how Farrago produces a JDBC
+ResultSet corresponding to the text of a SELECT statement.  This
+should provide some appreciation for the term <em>SQL engine</em>,
+as well as a grasp of the most important interfaces and components
+in the system.
+
+<p>
+
+We'll use a simple, innocent-looking statement as an example:
+
+<pre>
+<code>
+select *,42 as the_answer 
+from sales.depts as d
+where deptno = 10
+</code>
+</pre>
+
+<h3>Parsing</h3>
+
+Our story begins when the prepareImpl method of {@link
+net.sf.farrago.jdbc.FarragoJdbcConnection} processes an
+SQL string by creating a new instance of {@link
+net.sf.farrago.parser.FarragoParser} and asking it to parse the
+statement.  This is accomplished via an extension of {@link
+net.sf.saffron.sql.parser.SqlParser}, and the result (assuming no syntax
+error is thrown) is a tree of {@link net.sf.saffron.sql.SqlNode}
+objects:
+
+<hr>
+<img src="../../../../../design/ParseTree.gif">
+<hr>
+
+<h3>Query Implementation Cache Lookup</h3>
+
+FarragoJdbcConnection delegates the rest of the preparation to the
+prepareStmt method of {@link net.sf.farrago.db.FarragoDatabase}, which
+manages a shared cache of query plan implementations.  For this
+discussion, we'll assume nothing is cached initially, so
+FarragoDatabase creates a new instance of {@link
+net.sf.farrago.query.FarragoPreparingStmt} to oversee the preparation
+process, and calls its validate() and implement() methods.
+
+<p>
+
+TODO:  details on caching
+
+<h3>Validation</h3>
+
+After parsing, the parse tree must be validated.  prepareSql in {@link
+net.sf.saffron.oj.stmt.OJStatement} is called, this time taking the
+root SqlNode and an instance of {@link
+net.sf.saffron.sql.SqlValidator} (we supply a {@link
+net.sf.farrago.query.FarragoSqlValidator}).  SqlValidator walks the parse
+tree performing validation tasks such as type inference, resolving
+identifiers, and expanding '*' in select lists; this results in a
+transformation of the parse tree (or a thrown exception if validation
+fails):
+
+<hr>
+<img src="../../../../../design/ValidatedTree.gif">
+<hr>
+
+In addition, notice that the validator has augmented the parse tree
+with a scope tree (in this case a simple two-level linear tree since
+there are no joins).  The top-level scope represents the columns
+produced by the SELECT list; the bottom scope represents the columns
+to be read from table SALES.DEPT.  Note that each SqlIdentifier node in the
+validated tree is either 
+
+<ul>
+
+<li>
+a table reference (e.g. SALES.DEPT)
+
+<li>
+a reference to a column produced by a lower-level scope
+(e.g. D.DEPTNO)
+
+<li>
+a new column being produced at this scope
+(e.g. THE_ANSWER)
+
+</ul>
+
+In the presence of subqueries, there are other possibilities such as a
+reference to a column produced by an enclosing scope.
+
+<h3>Translation to Relational Algebra</h3>
+
+The next step is to convert the validated SQL parse tree into a
+relational algebra expression.  The dirty work is all performed by
+{@link net.sf.saffron.sql2rel.SqlToRelConverter}, relying on the
+validator's scope and type information.  The result is again a tree, but this
+time of instances of {@link net.sf.saffron.rel.SaffronRel}.  The
+target set of relational expressions is constrained to the following
+abstract operators:
+
+<ul>
+<li>{@link net.sf.saffron.rel.TableAccessRel}
+<li>{@link net.sf.saffron.rel.TableModificationRel}
+<li>{@link net.sf.saffron.rel.ProjectRel}
+<li>{@link net.sf.saffron.rel.FilterRel}
+<li>{@link net.sf.saffron.rel.JoinRel}
+<li>{@link net.sf.saffron.rel.CorrelatorRel}
+<li>{@link net.sf.saffron.rel.AggregateRel}
+<li>{@link net.sf.saffron.rel.UnionRel}
+<li>{@link net.sf.saffron.rel.IntersectRel}
+<li>{@link net.sf.saffron.rel.MinusRel}
+<li>{@link net.sf.saffron.rel.OneRowRel}
+</ul>
+
+The <code>EXPLAIN PLAN</code> statement can be used to see the
+translated tree for our example:
+
+<pre>
+<code>
+explain plan without implementation for
+select *,42 as the_answer 
+from sales.depts as d
+where deptno = 10
+</code>
+</pre>
+
+This yields:
+
+<pre>
+<code>
+ProjectRel(DEPTNO=[$0], NAME=[$1], THE_ANSWER=[42])
+  FilterRel(condition=[=($0,10):BOOLEAN])
+    FennelIndexScanRel(table=[SALES.DEPTS], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY],preserveOrder=[false])
+</code>
+</pre>
+
+Here's a graphical representation:
+
+<hr>
+<img src="../../../../../design/RelationalTree.gif">
+<hr>
+
+The three-dimensional boxes are relational algebra nodes (instances of
+SaffronRel); the two-dimensional boxes are validated row expressions
+represented by the {@link net.sf.saffron.rex.RexNode} object model.
+Besides children and row expressions, relational expressions may
+have additional attributes; e.g. ProjectRel has an array of names to
+be assigned to the columns it produces, and FennelIndexScanRel has a
+reference to the table to be scanned.  Within a row expression,
+a {@link net.sf.saffron.rex.RexInputRef} may refer to the output of a
+child relational expression via variables with names like
+<code>$N</code> (hence the <code>$0</code> in the
+ProjectRel's expression refers to something different from the
+<code>$0</code> in the FilterRel's condition expression, since
+the expression is relative to the containing SaffronRel).
+
+<p>
+
+<em>Note for Nit-Pickers</em>: the EXPLAIN PLAN output above is not
+completely abstract, since TableAccessRel has already been replaced with
+FennelIndexScanRel during translation.
+
+<h3>Optimization</h3>
+
+Query optimization transforms the abstract relational algebra
+expression described above into an equivalent expression consisting
+only of operators for which physical implementations are available.
+For an overview of the process, see {@link net.sf.saffron.opt the
+Saffron optimizer docs}.  To tailor the optimization process for our
+requirements, {@link net.sf.farrago.query.FarragoPlanner} subclasses
+{@link net.sf.saffron.opt.VolcanoPlanner} to define Farrago-specific
+rules, relational expressions, and calling conventions.
+
+<p>
+
+Farrago constrains the optimizer to the following calling conventions:
+
+<ul>
+
+<li>FENNEL:  data processing implemented by Fennel TupleStreams (TODO:
+link)
+
+<li>ITERATOR:  data processing implemented in Java by classes which
+implement the Iterator streaming interface
+
+<li>RESULT_SET:  data returned via JDBC result sets, either as the
+output of a Farrago query, or as leaf-level input from foreign
+databases (NOTE:  this isn't implemented yet)
+
+</ul>
+
+To see the output of the optimizer, we can use <code>EXPLAIN
+PLAN</code> again:
+
+<pre>
+<code>
+explain plan for
+select *,42 as the_answer 
+from sales.depts as d
+where deptno = 10
+</code>
+</pre>
+
+(This time <code>WITHOUT IMPLEMENTATION</code> was left out, and the
+default is WITH IMPLEMENTATION, which is what we want.)  This yields:
+
+<pre>
+<code>
+IterCalcRel(DEPTNO=[$0], NAME=[$1], THE_ANSWER=[42])
+  FennelToIteratorConverter
+    FennelIndexSearchRel(table=[SALES.DEPTS], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false],outer=[false],inputKeyProj=[*],inputJoinProj=[[]])
+      IteratorToFennelConverter
+        IterCalcRel(field#0=[CAST(10):INTEGER])
+          IterOneRowRel
+</code>
+</pre>
+
+which corresponds to the following relational expression tree:
+
+<hr>
+<img src="../../../../../design/OptimizedTree.gif">
+<hr>
+
+Wow, what happened?  The optimizer found that the table's clustered
+index could satisfy the WHERE clause, and accordingly transformed the
+query using a {@link net.sf.farrago.query.FennelIndexSearchRel} for
+the table access.  (It knew how to do this because FarragoPlanner told
+it about {@link net.sf.farrago.query.FennelScanToSearchRule}.)  What's
+interesting is that this search is sandwiched between Java iterators.
+The lowest level ({@link net.sf.saffron.oj.rel.IterOneRowRel})
+produces a single row with no columns; the next level up ({@link
+net.sf.saffron.oj.rel.IterCalcRel}) produces the constant DEPTNO value
+(10) which we're searching for.  (This can remain anonymous as
+<code>field#0</code> since Fennel accesses data by tuple position, not
+value.)  Now, the optimizer wants to feed this into the Fennel search
+as the input key, but the search has FENNEL calling convention, while
+IterCalcRel has ITERATOR calling convention.  So, a {@link
+net.sf.saffron.rel.convert.ConverterRel} is required; in this case,
+{@link net.sf.farrago.query.IteratorToFennelConverter}.
+
+<p>
+
+But wait, there's more!  The FennelIndexSearchRel is going to produce
+matching rows in FENNEL representation, but in order to compute the
+select list and return results via JDBC, we need another converter:
+{@link net.sf.farrago.query.FennelToIteratorConverter}.  The top-level
+IterCalcRel then implements the original abstract ProjectRel.
+
+<h3>Physical Implementation</h3>
+
+Once the optimizer has decided on the best implementation, it's time
+to generate corresponding executable code.  This is the job of {@link
+net.sf.saffron.opt.RelImplementor}, which walks the optimized
+SaffronRel tree calling implement on each expression, producing the
+parse tree representation of a Java class.  From this, the query
+processor generates the Java class definition as text, saves it to a
+file, and then invokes the Java compiler and loads the resulting
+classfile.  Here's the Java class generated for our example:
+
+<pre>
+<code>
+package net.sf.farrago.dynamic.stmt14db0e3;
+
+public class ExecutableStmt
+{
+    public static class VARCHAR_128_ISO_8859_1 extends net.sf.farrago.runtime.EncodedCharPointer
+    {
+        protected java.lang.String getCharsetName()
+        {
+            return "ISO-8859-1";
+        }
+    }
+
+    public static class Ojp_2 extends net.sf.farrago.runtime.FarragoSyntheticObject
+    {
+        public int DEPTNO;
+
+        public net.sf.saffron.runtime.Dummy_1e22c75.VARCHAR_128_ISO_8859_1 NAME;
+
+        public Ojp_2()
+        {
+        }
+
+        public Ojp_2( int DEPTNO, net.sf.saffron.runtime.Dummy_1e22c75.VARCHAR_128_ISO_8859_1 NAME )
+        {
+            this.DEPTNO = DEPTNO;
+            this.NAME = NAME;
+        }
+    }
+
+    public static class Ojp_3 extends net.sf.farrago.runtime.FarragoSyntheticObject
+    {
+        public int DEPTNO;
+        
+        public net.sf.saffron.runtime.Dummy_1e22c75.VARCHAR_128_ISO_8859_1 NAME;
+        
+        public int THE_ANSWER;
+
+        public Ojp_3()
+        {
+        }
+
+        public Ojp_3( int DEPTNO, net.sf.saffron.runtime.Dummy_1e22c75.VARCHAR_128_ISO_8859_1 NAME, int THE_ANSWER )
+        {
+            this.DEPTNO = DEPTNO;
+            this.NAME = NAME;
+            this.THE_ANSWER = THE_ANSWER;
+        }
+    }
+    
+    public static class Ojp_4 extends net.sf.farrago.runtime.FarragoSyntheticObject
+    {
+        public int $f0;
+
+        public Ojp_4()
+        {
+        }
+
+        public Ojp_4( int $f0 )
+        {
+            this.$f0 = $f0;
+        }
+    }
+
+    public static class Ojp_5 extends net.sf.farrago.runtime.FarragoSyntheticObject
+    {
+        public Ojp_5()
+        {
+        }
+    }
+
+    public static java.lang.Object execute( final net.sf.farrago.runtime.FarragoRuntimeContext connection )
+        throws java.sql.SQLException
+    {
+        return new net.sf.saffron.runtime.CalcIterator( connection.newFennelIterator( new net.sf.farrago.runtime.FennelTupleReader(){
+            
+            public java.lang.Object unmarshalTuple( java.nio.ByteBuffer byteBuffer, byte[] byteArray, java.nio.ByteBuffer sliceBuffer )
+            {
+                net.sf.saffron.runtime.Dummy_1e22c75.Ojp_2 oj_var2 = new net.sf.saffron.runtime.Dummy_1e22c75.Ojp_2();
+                int oj_var3 = byteBuffer.position();
+                oj_var2.DEPTNO = sliceBuffer.getInt( 0 );
+                int oj_var4 = oj_var3 + sliceBuffer.getShort( 4 );
+                oj_var2.NAME.setPointer( byteArray, 6 + oj_var3, oj_var4 );
+                sliceBuffer.position( oj_var4 - oj_var3 );
+                return oj_var2;
+            }
+        }, "&lt;BIG-FAT-XML-STRING/&gt;", new net.sf.saffron.runtime.CalcIterator( java.util.Collections.singletonList( new net.sf.saffron.runtime.Dummy_1e22c75.Ojp_5() ).iterator() ){
+            
+            private net.sf.saffron.runtime.Dummy_1e22c75.Ojp_4 oj_var1 = new net.sf.saffron.runtime.Dummy_1e22c75.Ojp_4();
+            
+            protected java.lang.Object calcNext()
+            {
+                while (inputIterator.hasNext()) {
+                    net.sf.saffron.runtime.Dummy_1e22c75.Ojp_5 oj_var0 = (net.sf.saffron.runtime.Dummy_1e22c75.Ojp_5) inputIterator.next();
+                    oj_var1.$f0 = (int) 10;
+                    return oj_var1;
+                }
+                return null;
+            }
+        } ) ) ){
+            
+            private net.sf.saffron.runtime.Dummy_1e22c75.Ojp_3 oj_var6 = new net.sf.saffron.runtime.Dummy_1e22c75.Ojp_3();
+
+            
+            protected java.lang.Object calcNext()
+            {
+                while (inputIterator.hasNext()) {
+                    net.sf.saffron.runtime.Dummy_1e22c75.Ojp_2 oj_var5 = (net.sf.saffron.runtime.Dummy_1e22c75.Ojp_2) inputIterator.next();
+                    oj_var6.DEPTNO = oj_var5.DEPTNO;
+                    oj_var6.NAME = oj_var5.NAME;
+                    oj_var6.THE_ANSWER = 42;
+                    return oj_var6;
+                }
+                return null;
+            }
+        };
+    }
+
+}
+</code>
+</pre>
+
+Yeesh, that's ugly!  And that's after I replaced a
+huge XML string in the middle with BIG-FAT-XML-STRING.  How can we
+interpret this in the context of the implementation plan?
+
+<ul>
+
+<li>The static inner classes represent the runtime types of the output
+rows and columns for each relational expression.  For example, Ojp_2
+has fields DEPTNO and NAME, and represents the results of searching
+the table.  VARCHAR_128_ISO_8859_1 is the non-primitive type for the
+NAME column, embodying additional type information such as its
+precision and character set.
+
+<li>Method execute() is the top-level Iterator producing the result set.
+Its body is, well, a true farrago of anonymous inner classes.  The
+details are beyond the scope of this document, but we'll cover a few
+of the more important points.
+
+<li>The execute() method gets passed an instance of
+FarragoRuntimeContext, which it uses for services such as
+communicating with Fennel.
+
+<li>The first calcNext() method corresponds to the lowest-level
+IterCalcRel.  It computes the constant DEPTNO search key (10).  Note
+that the call to java.util.Collections.singletonList came from IterOneRowRel.
+
+<li>The second calcNext() method corresponds to the top-level
+IterCalcRel.  It passes through DEPTNO and NAME and tacks on
+THE_ANSWER (42).
+
+<li>The unmarshalTuple() method contains code generated to read data from
+the Fennel TupleStream using java.nio.
+
+<li>The Fennel portion of the plan is represented by
+BIG-FAT-XML-STRING.  On execution, this will be compiled into a graph
+of Fennel TupleStreams which do work such as BTree access.  More on
+this below.
+
+</ul>
+
+<h3>Fennel Implementation</h3>
+
+Let's look more deeply into the Fennel portion of the plan.  When
+RelImplementor reaches a FennelToIteratorConverter in its traversal of
+the optimized tree, the corresponding implement method performs a
+sub-traversal of the connected subtree of nodes implementing the
+{@link net.sf.farrago.query.FennelRel} interface.  Rather than
+generating Java code, these nodes generate (via the
+FennelRel.toTupleStreamDef method) a tree of {@link
+net.sf.farrago.fem.fennel.FemTupleStreamDef} instances specifying the
+Fennel portion of the plan.  FennelRelToIteratorConverter exports this
+tree as an XMI string which is then "burned into" the generated Java
+code.
+
+Here's the XML for our example:
+
+<pre>
+<code>
+&lt;XMI xmi.version = '1.2' xmlns:CWM = 'org.omg.xmi.namespace.CWM' xmlns:FEM = 'org.omg.xmi.namespace.FEM'
+  xmlns:CWMRDB = 'org.omg.xmi.namespace.CWMRDB' xmlns:FEMFennel = 'org.omg.xmi.namespace.FEMFennel'
+  xmlns:FEMConfig = 'org.omg.xmi.namespace.FEMConfig' timestamp = 'Sun Oct 05 18:10:35 PDT 2003'&gt;
+  &lt;XMI.header&gt;
+    &lt;XMI.documentation&gt;
+      &lt;XMI.exporter&gt;Netbeans XMI Writer&lt;/XMI.exporter&gt;
+      &lt;XMI.exporterVersion&gt;1.0&lt;/XMI.exporterVersion&gt;
+    &lt;/XMI.documentation&gt;
+  &lt;/XMI.header&gt;
+  &lt;XMI.content&gt;
+    &lt;FEMFennel:CmdOpenTupleStream xmi.id = 'a1'&gt;
+      &lt;FEMFennel:CmdOpenTupleStream.tupleStreamDef&gt;
+        &lt;FEMFennel:IndexSearchDef xmi.id = 'a2' cachePageQuota = '2' cachePageMin = '2'
+          cachePageMax = '2' rootPageId = '3' uniqueKey = 'true'&gt;
+          &lt;FEMFennel:KeyAccessorDef.keyProj&gt;
+            &lt;FEMFennel:TupleProjection xmi.id = 'a3'&gt;
+              &lt;FEMFennel:TupleProjection.AttrProjection&gt;
+                &lt;FEMFennel:TupleAttrProjection xmi.id = 'a4' attributeIndex = '0'/&gt;
+              &lt;/FEMFennel:TupleProjection.AttrProjection&gt;
+            &lt;/FEMFennel:TupleProjection&gt;
+          &lt;/FEMFennel:KeyAccessorDef.keyProj&gt;
+          &lt;FEMFennel:IndexAccessorDef.tupleDesc&gt;
+            &lt;FEMFennel:TupleDescriptor xmi.id = 'a5'&gt;
+              &lt;FEMFennel:TupleDescriptor.AttrDescriptor&gt;
+                &lt;FEMFennel:TupleAttrDescriptor xmi.id = 'a6' typeOrdinal = '5' isNullable = 'false'
+                  byteLength = '0'/&gt;
+                &lt;FEMFennel:TupleAttrDescriptor xmi.id = 'a7' typeOrdinal = '12' isNullable = 'false'
+                  byteLength = '128'/&gt;
+              &lt;/FEMFennel:TupleDescriptor.AttrDescriptor&gt;
+            &lt;/FEMFennel:TupleDescriptor&gt;
+          &lt;/FEMFennel:IndexAccessorDef.tupleDesc&gt;
+          &lt;FEMFennel:IndexScanDef.outputProj&gt;
+            &lt;FEMFennel:TupleProjection xmi.id = 'a8'&gt;
+              &lt;FEMFennel:TupleProjection.AttrProjection&gt;
+                &lt;FEMFennel:TupleAttrProjection xmi.id = 'a9' attributeIndex = '0'/&gt;
+                &lt;FEMFennel:TupleAttrProjection xmi.id = 'a10' attributeIndex = '1'/&gt;
+              &lt;/FEMFennel:TupleProjection.AttrProjection&gt;
+            &lt;/FEMFennel:TupleProjection&gt;
+          &lt;/FEMFennel:IndexScanDef.outputProj&gt;
+          &lt;FEMFennel:TupleStreamDef.Input&gt;
+            &lt;FEMFennel:JavaTupleStreamDef xmi.id = 'a11' cachePageQuota = '1' cachePageMin = '1'
+              cachePageMax = '1' javaObjHandle = '138595040'&gt;
+              &lt;FEMFennel:JavaTupleStreamDef.tupleDesc&gt;
+                &lt;FEMFennel:TupleDescriptor xmi.id = 'a12'&gt;
+                  &lt;FEMFennel:TupleDescriptor.AttrDescriptor&gt;
+                    &lt;FEMFennel:TupleAttrDescriptor xmi.id = 'a13' typeOrdinal = '5' isNullable = 'false'
+                      byteLength = '0'/&gt;
+                  &lt;/FEMFennel:TupleDescriptor.AttrDescriptor&gt;
+                &lt;/FEMFennel:TupleDescriptor&gt;
+              &lt;/FEMFennel:JavaTupleStreamDef.tupleDesc&gt;
+            &lt;/FEMFennel:JavaTupleStreamDef&gt;
+          &lt;/FEMFennel:TupleStreamDef.Input&gt;
+        &lt;/FEMFennel:IndexSearchDef&gt;
+      &lt;/FEMFennel:CmdOpenTupleStream.tupleStreamDef&gt;
+      &lt;FEMFennel:TxnCmd.TxnHandle&gt;
+        &lt;FEMFennel:TxnHandle xmi.idref = 'a14'/&gt;
+      &lt;/FEMFennel:TxnCmd.TxnHandle&gt;
+    &lt;/FEMFennel:CmdOpenTupleStream&gt;
+    &lt;FEMFennel:TxnHandle xmi.id = 'a14' longHandle = '138233024'/&gt;
+  &lt;/XMI.content&gt;
+&lt;/XMI&gt;
+</code>
+</pre>
+
+(The easiest way to obtain this XML is to set
+net.sf.farrago.fennel.FennelStorage.level=FINE in
+FarragoTrace.properties and then dig through FarragoTrace.log after
+executing an SQL statement.  Search for "CmdOpenTupleStream".  For
+more information on the Java representation of Fennel TupleStreams,
+see the <a href="../../../../../design/jni.html">JNI design
+doc</a>.)
+
+<p>
+
+The root of the TupleStream tree above is the FEMFennel:IndexSearchDef
+node.  The leaf is the FEMFennel:JavaTupleStreamDef node, which tells
+Fennel how to get the search key from the lower-level Java iterators.
+(TBD: more about this and {@link
+net.sf.farrago.query.IteratorToFennelConverter}).
+
+<h3>Execution</h3>
+
+Whew.  Now we actually want to execute the generated code.  This part
+is easy.  We use reflection to invoke the generated execute() method,
+which returns an Iterator instance, and pass that to a new instance of
+{@link net.sf.farrago.runtime.FarragoIteratorResultSet}, which
+produces JDBC result data and metadata, as well as taking care of
+cleanup when the result set is closed.
+
+<h4>Try This at Home</h4>
+
+You can see the Fennel portion of the data processing by setting
+net.sf.farrago.fennel.xo.level=FINE in FarragoTrace.properties,
+executing an SQL statement, and then perusing FarragoTrace.log.
+<em>Warning:</em> The output can be huge for non-trivial queries.
+Here's the output for our example:
+
+<pre>
+<code>
+Oct 5, 2003 6:32:11 PM net.sf.farrago.catalog.FarragoCatalog <init>
+CONFIG: Fennel parameter databaseDir=/home/jvs/open/farrago/catalog
+Oct 5, 2003 6:32:11 PM net.sf.farrago.catalog.FarragoCatalog <init>
+CONFIG: Fennel parameter databaseInitSize=1000
+Oct 5, 2003 6:32:12 PM net.sf.farrago.catalog.FarragoCatalog <init>
+CONFIG: Fennel successfully loaded
+Oct 5, 2003 6:32:12 PM net.sf.farrago.catalog.FarragoCatalog <init>
+INFO: Catalog successfully loaded
+Oct 5, 2003 6:32:12 PM net.sf.farrago.jdbc.FarragoJdbcStatement execute
+INFO: select *,42 as the_answer from sales.depts d where deptno=10
+Oct 5, 2003 6:32:33 PM net.sf.farrago.fennel.xo.FemJavaTupleStreamDef <native>
+FINE: [ 10 ]
+Oct 5, 2003 6:32:33 PM net.sf.farrago.fennel.xo.FemIndexSearchDef <native>
+FINE: [ 10, 'Sales' ]
+</code>
+</pre>
+
+The entry for FemJavaTupleStreamDef is the search key read from Java,
+and the entry for FemIndexSearchDef is the result of the search which
+is returned to Java.
+
+<h3>Palliatives</h3>
+
+If you have read through this entire doc, you are probably wondering
+how such a heavyweight procedure is ever going to provide decent
+performance in the context of the kind of rapid-fire statement
+execution used in transactional applications.  Here are some planned
+improvements:
+
+<ul>
+
+<li>
+When the optimizer estimates that query execution will be very brief,
+we won't bother compiling the generated Java code.  Instead, we'll
+interpret it using DynamicJava.  (For now, we always use DynamicJava.)
+
+<li>
+The generated Java code is going to look very different once the code
+generator has been overhauled for full SQL expression evaluation.  The
+current implementation is just "proof of concept" quality.
+
+<li>
+To improve performance of one-shot queries, the Fennel plan could be
+left in object format and passed to Fennel directly rather than having
+to export it as XMI and later import it on execution.
+For re-executed statements, we already keep a cache of reusable Fennel
+TupleStream trees rather than reconstructing one at the start of each
+execution.
+
+<li>
+Wherever Java overhead turns out to be too high (perhaps for example,
+generating the search key for use by Fennel in the example query),
+Fennel will be enhanced to do the job instead (e.g. by allowing
+constant tuple data to be represented directly in the stream
+definition).  A project is already in progress to implement all
+builtin SQL expressions via C++ (the Fennel calculator component).
+However, the need to call extensions written in Java or other
+languages will always be present, which is why we started with the
+most general case first.
+
+<li>
+Applications using prepared SQL statements or stored procedures will
+pay the query preparation cost only once during query
+preparation; repeated executions will invoke the generated Java class
+directly.
+
+<li>
+For less sophisticated applications, we'll implement transparent query
+implementation caching with pattern matching for not-quite-identical
+queries (e.g. different only by the literal values used in an INSERT).
+Query plan caching for identical queries is already implemented by
+FarragoDatabase (after some match-improving normalization such as
+fully qualifying identifiers is performed by validation).
+
+</ul>
+
+TODO:  overview of datatype issues.
+
+</body>
+</html>
+

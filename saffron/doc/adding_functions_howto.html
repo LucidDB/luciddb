@@ -1,0 +1,115 @@
+<HTML>
+<HEAD>
+<TITLE>Adding new Operators and Functions Howto</TITLE>
+</HEAD>
+<BODY>
+<h1>Adding new Operators and Functions Howto</h1>
+<p>Author: Wael Chatila<br>
+Revision: $Id$</p>
+<hr>
+
+This document will discuss the hands on step-by-step process of adding a new operator or function to the system. It can be divided into four components where you need to add code. The four components are:
+
+<ul>
+<li>	SAFFRON 	- the Parser  (java)
+<li>	SAFFRON 	- the Validator (java)
+<li>	SAFFRON 	- the CalcRelImplementor (java)
+<li>	FENNEL 	- the Calculator (C++)
+</ul>
+
+The Calculator hands on adding process is maintained in another document and is not covered in this document. Please see //depot/…. <b>TBD</b>
+<p>
+In addition to implement the necessary code in every component you also have to add unit tests. What the tests should cover depends on the component. Here is a general guideline.
+<p>
+<h2>Parser Tests</h2>
+file: //open/saffron/src/net/sf/saffron/sql/parser/SqlParserTest.java
+<ul>
+<li>	Tests that the operator in a query parses ok…kind of surprising, I know.
+<li>	Precedence and Associativity.
+<li>	As many edge cases as you can think of.
+</ul>
+
+<h2>Validation Tests</h2>
+file: //open/saffron/src/net/sf/saffron/test/SaffronSqlValidationTest.java (see base class)
+<ul>
+<li>	Check that your new operation can handle operands of the expected type. E.g. TRUE AND FALSE validates OK.
+<li>	Check your operation with illegal types and verify that a certain type checking error happened. E.g. ‘this is a string’ AND TRUE  => “AND(VARCHAR(16), BOOLEAN) undefined”.
+<li>	Edge cases?
+</ul>
+
+
+<h2>Calc Implementation Tests</h2>
+file: //open/saffron/src/net/sf/saffron/test/Rex2CalcPlanTestCase.java
+<ul>
+<li>	Check that your new operator, when used in a query, generates the correct assembly code.
+<li>	In your query, try using the operator in different ways.
+<li>	Edge cases?
+</ul>
+
+
+
+<h2>The Parser</h2>
+This section describes what files you should start looking in and modify in order to start adding your operator.
+<p>
+
+The file //open/saffron/src/net/sf/saffron/sql/parser/CommonParser.jj<br> contains parser generating code definitions. After modifying this file, run the ant build in order to regenerate the actual parser class that will do the hard labor parsing job. 
+The CommonParser.jj file will schematically look something like this (This layout is not entirely correct or exhaustive but will nevertheless give you an idea on where you might put your new parser definitions).
+<BR>
+<code><table>
+<tr><td>Expression() = </td><td>{</td></tr>
+<tr><td></td><td>	Expression2()</td></tr>
+<tr><td></td><td>			( (<LIKE> | <SIMILAR>)  [<ESCAPE> Expression2()] )</td></tr>
+<tr><td></td><td>}</td></tr>
+
+<tr><td>Expression2() = </td><td>{	</td></tr>
+<tr><td></td><td>Expression3() </td></tr>
+<tr><td></td><td>( <IN> … </td></tr>
+<tr><td></td><td>| <BETWEEN> Expression3() </td></tr>
+<tr><td></td><td>| BinaryOperator() Expression3()</td></tr>
+<tr><td></td><td>| PostFixOperator()</td></tr>
+<tr><td></td><td>)+</td></tr>
+<tr><td></td>  <td>}</td></tr>
+
+<tr><td>Expression3() =</td><td> {</td></tr>
+<tr><td></td><td>	PrefixOperator() Expression3()</td></tr>
+<tr><td></td><td>	| AtomicRowExpression()</td></tr>
+<td></td><td>		   }</td></tr>
+
+
+<tr><td>AtomicRowExpression() = </td><td>{</td></tr>
+<tr><td></td><td>	Literal()</td></tr>
+<tr><td></td><td>				| DynamicParam()</td></tr>
+<tr><td></td><td>				| FunctionCall()</td></tr>
+<tr><td></td><td>				| CompoundIdentifier() </td></tr>
+<tr><td></td>			         <td>}</td></tr>
+
+<tr><td>Literal() = </td><td>{ integers, doubles, strings and so on }</td></tr>
+
+</table>
+</code>
+<p>
+Create a new operator/function in <i>//open/saffron/src/net/sf/saffron/sql/SqlOperatorTable.java</i> or<i>//open/saffron/src/net/sf/saffron/sql/SqlFunctionTable.java</i> if needed.<br>
+You might need to update //open/saffron/src/net/sf/saffron/sql/SqlKind.java
+<p>
+In addition to precedence and associativity values, every operator or function is created with strategy objects for figuring out 
+<ol>
+<li>	What type the operation should return (TypeInference)
+<li>	What type unknown parameters should take (ParamTypeInference)
+<li>	What types the operation is allowed to take. (AllowdArgInference)
+</ol>
+
+These objects are later used in the Validator. If you are lucky you may not need to make any modifications of changes to the Validator. But in order to be lucky you need to write validation tests for your operator first.
+
+<h2>The Validator</h2>
+The Validator lives in //open/saffron/src/net/sf/saffron/sql/SqlValidator.java<br>
+Some validation code reside in //open/saffron/src/net/sf/saffron/sql/SqlOperator.java<br>
+Other files?<br>
+A good approach is to write your tests first and if they fail make the necessary changes in order for them to run again.<br>
+
+<h2>The CalcRelImplementor</h2>
+file: //open/saffron/src/net/sf/saffron/opt/CalcRelImplementor.java<br>
+In this file the high level SQL operator is translated into calc assembly.<br>
+A recommended approach on where to make you changes is to first write your test case. That way you first get a clearer idea on how the SQL operator should translate into assembly. Secondly, by running the test, the Implementor and other parts in the system (RexBuilder etc) should give you assertion errors pointing you to where you might need to add your new code. <br>
+
+</BODY>
+</HTML>

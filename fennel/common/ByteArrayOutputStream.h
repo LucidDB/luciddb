@@ -1,0 +1,70 @@
+/*
+// $Id$
+// Fennel is a relational database kernel.
+// Copyright (C) 1999-2004 John V. Sichi.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
+#ifndef Fennel_ByteArrayOutputStream_Included
+#define Fennel_ByteArrayOutputStream_Included
+
+#include "fennel/common/ByteOutputStream.h"
+
+FENNEL_BEGIN_NAMESPACE
+
+/**
+ * ByteArrayOutputStream implements the ByteOutputStream interface by writing
+ * data to an existing fixed-size array of bytes.
+ */
+class ByteArrayOutputStream : public ByteOutputStream
+{
+    PBuffer pBuffer;
+    uint cbBuffer;
+    
+    // implement the ByteOutputStream interface
+    virtual void flushBuffer(uint cbRequested);
+    virtual void closeImpl();
+    
+    explicit ByteArrayOutputStream(
+        PBuffer pBuffer,
+        uint cbBuffer);
+
+public:
+    /**
+     * Factory method for creating a new ByteArrayOutputStream.
+     *
+     * @param pBuffer byte array to fill
+     *
+     * @param cbBuffer buffer capacity
+     *
+     * @return shared_ptr to new ByteArrayOutputStream
+     */
+    static SharedByteArrayOutputStream newByteArrayOutputStream(
+        PBuffer pBuffer,
+        uint cbBuffer);
+
+    /**
+     * Clear any data written to the buffer, leaving it in the same
+     * state as after construction.
+     */
+    void clear();
+};
+
+FENNEL_END_NAMESPACE
+
+#endif
+
+// End ByteArrayOutputStream.h

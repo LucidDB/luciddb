@@ -1,0 +1,199 @@
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT
+AC_PREREQ(2.54)
+AC_REVISION($Id:$)
+
+AC_CANONICAL_BUILD
+AC_CANONICAL_HOST
+AC_CANONICAL_TARGET
+
+AC_CONFIG_HEADERS(config.h)
+AC_CONFIG_SRCDIR([test/TestLocalCondition.cpp])
+
+AM_INIT_AUTOMAKE(fennel, 0.3)
+
+dnl Define CXXFLAGS before AC_PROG_CXX to suppress the default autoconf
+dnl compiler options
+CXXFLAGS="-pipe -ftemplate-depth-32 \
+-Wall -Wno-unused-parameter \
+-D_REENTRANT -D_STLP_USE_DYNAMIC_LIB=1 -D_STLP_NO_ANACHRONISMS=1"
+
+dnl Checks for programs.
+AC_PROG_CXX
+AC_PROG_AWK
+AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_MAKE_SET
+AC_PROG_LEX
+AC_PROG_YACC
+
+dnl Checks for header files.
+AC_HEADER_DIRENT
+AC_HEADER_STDC
+AC_CHECK_HEADERS(fcntl.h limits.h malloc.h unistd.h aio.h sched.h uuid/uuid.h)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_C_INLINE
+AC_TYPE_MODE_T
+AC_TYPE_SIZE_T
+
+dnl Checks for library functions.
+AC_FUNC_MMAP
+AC_CHECK_FUNCS(strerror)
+AC_CHECK_LIB(uuid,uuid_generate)
+
+dnl Check for Boost location
+AC_ARG_WITH([boost],
+    AC_HELP_STRING([--with-boost],[location of unzipped Boost directory]),
+    [ boost_location=$withval ],
+    AC_MSG_ERROR([--with-boost=/path/to/boost_x_y_z must be specified.]))
+AC_CHECK_FILE([$boost_location/boost/config.hpp],
+    ,
+    AC_MSG_ERROR([invalid Boost location specified]))
+AC_SUBST(boost_location)
+
+dnl Check for STLport location
+AC_ARG_WITH([stlport],
+    AC_HELP_STRING([--with-stlport],[location of unzipped STLport directory]),
+    [ stlport_location=$withval ],
+    AC_MSG_ERROR([--with-stlport=/path/to/stlport_x_y_z must be specified.]))
+AC_CHECK_FILE([$stlport_location/stlport/stl/_config.h],
+        ,
+        AC_MSG_ERROR([invalid STLport location specified]))
+AC_SUBST(stlport_location)
+
+
+dnl Check whether Farrago support is desired
+AC_ARG_WITH([farrago],
+    AC_HELP_STRING([--with-farrago],[whether to include Farrago support]),
+    [ with_farrago=$withval ],
+    [ with_farrago=no ])
+
+dnl Farrago requires Java
+if test "$with_farrago" = "yes"
+then
+    farrago_subdir="farrago"
+    if test "x$JAVA_HOME" = "x"; then
+        AC_MSG_ERROR([Farrago build requires Java, but $JAVA_HOME is not set])
+    fi
+    AC_SUBST(JAVA_HOME)
+else
+    farrago_subdir=""
+fi
+AC_SUBST(farrago_subdir)
+
+dnl Linuxy defaults
+BOOST_LINKAGE=runtime-link-dynamic/shared-linkable-true
+BOOST_TOOLSET=gcc-stlport
+DLLEXT=so
+STLPORT_LIB_BASE=stlport_gcc
+EXTRA_LDFLAGS="-lpthread -lstdc++ -lgcc_s -lrt"
+boost_jam_platform=linuxx86
+lib_path_var=LD_LIBRARY_PATH
+jdk_platform=linux
+
+dnl TODO:  figure out how to reliably determine the correct boost_jam_platform
+dnl On SuSE amd64, it came out just linux without the x86.
+
+dnl Cygwin tweaks.
+if test "$target_os" = "cygwin" 
+then
+    if test "$with_farrago" = "yes"; then
+        AC_MSG_ERROR([Farrago build is not supported on Cygwin; use mingw])
+    fi
+    dnl libtool requires libdl.a, which doesn't exist on Cygwin
+    AC_CHECK_LIB(dl, regerror, [], 
+        AC_MSG_ERROR(["You must make libdl available by doing ln -s libcygwin.a libdl.a under /usr/lib"]))
+    BOOST_LINKAGE=runtime-link-dynamic
+    DLLEXT=dll
+    STLPORT_LIB_BASE=stlport_cygwin
+    boost_jam_platform=cygwinx86
+    lib_path_var=PATH
+fi
+
+dnl On Cygwin and Mingw, libfenneltest cannot be built
+dnl as a shared library because of forward references, so build it
+dnl as a convenience library instead.  But on other platforms, building
+dnl it as a shared library helps reduce test executable sizes.
+AM_CONDITIONAL(STATIC_TEST_LIBRARY,\
+test "$target_os" = "cygwin" -o "$target_os" = "mingw32")
+
+dnl TODO:  combine common mingw/cygwin stuff under host rather than target.
+
+dnl NOTE:  The postdeps line below took a while to figure out.
+dnl It allows the latest libtool to make a special exception for
+dnl linking the static -stdc++ into fennel dynamic libs.
+
+dnl Mingw tweaks
+if test "$target_os" = "mingw32"
+then
+    CXXFLAGS="$CXXFLAGS -mthreads"
+    postdeps="-lstdc++"
+    EXTRA_LDFLAGS="-lstdc++ -lws2_32 -lrpcrt4 -Wl,--kill-at -no-undefined"
+    BOOST_LINKAGE=runtime-link-dynamic
+    DLLEXT=dll
+    boost_jam_platform=cygwinx86
+    jdk_platform=win32
+    lib_path_var=PATH
+    BOOST_TOOLSET=gcc-nocygwin
+fi
+
+BOOST_OPTIONS_SUFFIX=stlport-opts/threading-multi
+
+dnl Debug setting
+dnl Note:  even without-debug, we still include -g for profiling;
+dnl binaries can be stripped post-build for real release
+AC_ARG_WITH([debug],
+    AC_HELP_STRING([--without-debug],[build a production version]),
+    [with_debug=$withval],
+    [with_debug=yes])
+if test "$with_debug" = "yes"
+then
+    CXXFLAGS="$CXXFLAGS -g -DDEBUG"
+    CXXFLAGS="$CXXFLAGS -D_STLP_DEBUG=1 -D_STLP_DEBUG_UNINITIALIZED=1"
+    BOOST_DEBUG_OR_RELEASE=debug
+    BOOST_THREADLIB=boost_threadd
+    STLPORT_LIB=${STLPORT_LIB_BASE}_stldebug
+else
+    CXXFLAGS="$CXXFLAGS -O3 -g -DNDEBUG"
+    BOOST_DEBUG_OR_RELEASE=release
+    BOOST_THREADLIB=boost_thread
+    STLPORT_LIB=$STLPORT_LIB_BASE
+fi
+
+dnl Shared library support
+AC_DISABLE_STATIC
+AC_PROG_LIBTOOL
+AC_SUBST(LIBTOOL_DEPS)
+
+BOOST_THREADLIB_DIR=$boost_location/libs/thread/build/bin/libboost_thread.$DLLEXT/$BOOST_TOOLSET/$BOOST_DEBUG_OR_RELEASE/$BOOST_LINKAGE/$BOOST_OPTIONS_SUFFIX
+
+DIST_DIR=$PACKAGE-$VERSION
+
+AC_SUBST(boost_jam_platform)
+AC_SUBST(jdk_platform)
+AC_SUBST(target_os)
+AC_SUBST(lib_path_var)
+AC_SUBST(BOOST_THREADLIB)
+AC_SUBST(BOOST_THREADLIB_DIR)
+AC_SUBST(BOOST_TOOLSET)
+AC_SUBST(STLPORT_LIB)
+AC_SUBST(MINGW_LDFLAGS)
+AC_SUBST(EXTRA_LDFLAGS)
+AC_SUBST(DIST_DIR)
+
+AC_CONFIG_FILES([fennelenv.sh build/defineVariables.sh \
+Makefile common/Makefile \
+synch/Makefile device/Makefile cache/Makefile segment/Makefile \
+txn/Makefile tuple/Makefile btree/Makefile \
+db/Makefile xo/Makefile libfennel/Makefile test/Makefile farrago/Makefile \
+calc/Makefile])
+
+dnl Get rid of this in a little while.  It's here to clean up some
+dnl old scripts that are no longer generated.
+AC_CONFIG_COMMANDS([default],[[rm -f build/buildBoost.sh build/buildSTLport.sh build/buildMingwDist.sh]],[[]])
+
+AC_OUTPUT

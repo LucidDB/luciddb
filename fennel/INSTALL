@@ -1,0 +1,106 @@
+So far, Fennel development has been targeted to Linux x86, Cygwin, and
+Mingw, so the code is unlikely to build or run without modification on
+any other platform.  If you are building for Mingw, read INSTALL.mingw
+also before attempting the instructions below.
+
+======================================================================
+SIMPLE CONFIGURATION
+
+The Fennel build is based on GNU autotools.  Versions known to work
+are automake v1.7.6 and above; autoconf v2.57 and above; libtool v1.5
+and above; and make v3.79.1 and above.
+
+Fennel itself relies on the Boost library from http://www.boost.org
+(at least v1.30), and STLport from http://www.stlport.com (at least
+v4.5.3).
+
+The simplest way to configure and build Fennel is to run:
+
+./initBuild.sh [--with-farrago|--without-farrago]
+
+This script will execute all of the steps laid out below, but assumes
+the presence of the //open/thirdparty directory from the Perforce
+source control sever that Fennel resides on (see README).  Map
+//open/thirdparty to a directory called thirdparty with the same root
+directory as Fennel.  The initBuild.sh script will change to
+../thirdparty, extract the copies of Boost and STLport archived there
+and build both Boost and STLport.
+
+If you wish to obtain your own copies of Boost and STLport, or don't
+want to maintain the required directory structure, the following are
+step-by-step instructions for configuring and building Fennel without
+using initBuild.sh.
+
+======================================================================
+CONFIGURE
+
+To configure, run:
+
+autoreconf --install (not needed if building from a tarball)
+./configure --with-boost=$BOOST_DIR \
+    --with-stlport=$STLPORT_DIR [--with-farrago]
+
+(If you are building with support for the companion project Farrago,
+you must have JAVA_HOME defined.  See http://farrago.sourceforge.net
+if you don't know what Farrago is.)
+
+Fennel relies on the Boost library from http://www.boost.org (at least
+v1.30), and STLport from http://www.stlport.com (at least v4.5.3).
+You must supply the source locations for these two libraries via
+--with-boost and --with-stlport.  Instructions are provided below on
+how to build these libraries for use by Fennel.  (This is only
+required for the first build; after that the third-party libraries
+never change until an upgrade is required.)
+
+======================================================================
+THIRD-PARTY LIBS
+
+configure generates scripts in the build subdirectory which will build
+the third-party libraries for you; run them as follows (if you
+experience errors with buildStlportLibs.sh, read the comments at the
+top of the script to resolve the problem):
+
+cd build
+buildStlportLibs.sh
+buildBoostLibs.sh
+
+======================================================================
+MAIN BUILD
+
+Once those scripts complete, you can build fennel itself:
+
+cd ..
+make
+
+The default is a debug build; for a release build, specify
+--without-debug.  
+
+======================================================================
+RUN TESTS
+
+I have not yet tried "make install" so I doubt
+that it does anything correctly; for now, just run from the build
+directly.  For this to work, you need to modify your LD_LIBRARY_PATH;
+configure generates a script for this purpose, which you should source
+before running anything which links with Fennel:
+
+. fennelenv.sh
+
+To test the build, execute the command "make check", which will run
+all unit tests.
+
+======================================================================
+DEBUG
+
+To debug, run gdb on an executable in the test/.libs directory.  (gdb
+doesn't work on the wrappers in the test directory.)  On Cygwin, gdb
+encounters spurious segfaults from pthreads (the location is
+KERNEL32!IsBadWritePtr).  You can continue past these, or if there are
+too many, use this gdb command:
+
+handle SIGSEGV nostop noprint
+
+Of course, if you're trying to track down a real segfault, that's not
+very helpful, but the Cygwin build probably isn't very useful for much
+anyway.  Mingw debugging does not have this problem.
+======================================================================

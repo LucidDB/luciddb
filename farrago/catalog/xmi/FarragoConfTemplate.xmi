@@ -1,0 +1,35 @@
+<?xml version = '1.0' encoding = 'ISO-8859-1' ?>
+
+<!-- Farrago developer configuration file.  FarragoConf.xmi is -->
+<!-- generated from FarragoConfTemplate.xmi; see task importConfig in -->
+<!-- build.xml.  -->
+
+<XMI xmi.version = '1.2' xmlns:FEM = 'org.omg.xmi.namespace.FEM'
+  timestamp = 'Sat May 24 23:49:55 PDT 2003'>
+  <XMI.header/>
+  <XMI.content>
+    <FEMConfig:FarragoConfig 
+      name = 'Current'
+      fennelDisabled = '@fennel.disabled@'
+      userCatalogEnabled = 'false'
+      codeCacheMaxBytes='-1'
+      checkpointInterval='300'
+      >
+      <FEMConfig:FarragoConfig.fennelConfig>
+        <FEMConfig:FennelConfig
+          databaseDir='@databaseDir@'
+          databaseInitSize='1000'
+          databaseIncrementSize='1'
+          tempInitSize='1000'
+          tempIncrementSize='1'
+          databaseShadowLogInitSize='2000'
+          databaseTxnLogInitSize='2000'
+          cachePagesMax='1000'
+          cachePagesInit='1000'
+          cachePageSize='4096'
+          resourceDir='@resourceDir@'
+          />
+      </FEMConfig:FarragoConfig.fennelConfig>
+    </FEMConfig:FarragoConfig>
+  </XMI.content>
+</XMI>

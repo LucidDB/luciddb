@@ -1,0 +1,87 @@
+/*
+// $Id$
+// Fennel is a relational database kernel.
+// Copyright (C) 1999-2004 John V. Sichi.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
+#ifndef Fennel_DeviceAccessSchedulerParams_Included
+#define Fennel_DeviceAccessSchedulerParams_Included
+
+FENNEL_BEGIN_NAMESPACE
+
+class ConfigMap;
+
+/**
+ * DeviceAccessSchedulerParams defines parameters used to create a
+ * DeviceAccessScheduler.
+ */
+class DeviceAccessSchedulerParams 
+{
+public:
+    static ParamName paramSchedulerType;
+    static ParamName paramThreadCount;
+    static ParamName paramMaxRequests;
+
+    static ParamVal valThreadPoolScheduler;
+    static ParamVal valIoCompletionPortScheduler;
+    static ParamVal valAioPollingScheduler;
+    static ParamVal valAioSignalScheduler;
+    
+    /**
+     * Enumeration of available scheduler implementations
+     */
+    enum SchedulerType {
+        THREAD_POOL_SCHEDULER,
+        IO_COMPLETION_PORT_SCHEDULER,
+        AIO_POLLING_SCHEDULER,
+        AIO_SIGNAL_SCHEDULER
+    };
+
+    /**
+     * Type of scheduler to create.
+     */
+    SchedulerType schedulerType;
+    
+    /**
+     * Suggested number of threads to dedicate to scheduling
+     * activities; the scheduler may adjust this number based on
+     * maxSimultaneousRequests.
+     */
+    uint nThreads;
+
+    /**
+     * The maximum number of simultaneous requests that this scheduler should
+     * be able to handle; additional requests will be queued.
+     */
+    uint maxRequests;
+    
+    /**
+     * Define a default set of scheduler parameters.
+     */
+    DeviceAccessSchedulerParams();
+
+    /**
+     * Read parameter settings from a ConfigMap.
+     */
+    void readConfig(ConfigMap const &configMap);
+};
+
+FENNEL_END_NAMESPACE
+
+#endif
+
+// End DeviceAccessSchedulerParams.h

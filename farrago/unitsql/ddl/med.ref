@@ -1,0 +1,214 @@
+0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/ddl/med.sql#1 $
+0: jdbc:farrago:> -- Test SQL/MED DDL
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- create a private wrapper for mdr (don't use the standard mdr wrapper)
+0: jdbc:farrago:> create foreign data wrapper test_mdr
+. . . . . . . . > library 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'
+. . . . . . . . > language java;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test name uniqueness:  should fail
+0: jdbc:farrago:> create foreign data wrapper test_mdr
+. . . . . . . . > library 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'
+. . . . . . . . > language java;
+Error: DataWrapper TEST_MDR already exists within Catalog SYS_BOOT;
+duplicate name encountered near line 1, column 29 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create server mof_server
+. . . . . . . . > foreign data wrapper test_mdr
+. . . . . . . . > options(
+. . . . . . . . >     extent_name 'MOF', 
+. . . . . . . . >     schema_name 'Model',
+. . . . . . . . >     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test name uniqueness:  should fail
+0: jdbc:farrago:> create server mof_server
+. . . . . . . . > foreign data wrapper test_mdr
+. . . . . . . . > options(
+. . . . . . . . >     extent_name 'MOF', 
+. . . . . . . . >     schema_name 'Model',
+. . . . . . . . >     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr');
+Error: DataServer MOF_SERVER already exists within Catalog SYS_BOOT;
+duplicate name encountered near line 1, column 15 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test name uniqueness relative to a real catalog:  should fail
+0: jdbc:farrago:> create server localdb
+. . . . . . . . > foreign data wrapper test_mdr
+. . . . . . . . > options(
+. . . . . . . . >     extent_name 'MOF', 
+. . . . . . . . >     schema_name 'Model',
+. . . . . . . . >     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr');
+Error: Catalog LOCALDB already exists within Catalog SYS_BOOT;
+duplicate name encountered near line 1, column 15 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test a direct table reference without creating a foreign table
+0: jdbc:farrago:> select "name" from mof_server."Model"."Exception" order by 1;
++------------------+
+|       name       |
++------------------+
+| NameNotFound     |
+| NameNotResolved  |
++------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- create a local schema to hold foreign table definitions
+0: jdbc:farrago:> create schema mof_schema;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- create a view with direct table reference
+0: jdbc:farrago:> create view mof_schema.exception_names as
+. . . . . . . . > select "name" from mof_server."Model"."Exception";
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test same query as above, but against view
+0: jdbc:farrago:> select * from mof_schema.exception_names order by 1;
++------------------+
+|       name       |
++------------------+
+| NameNotFound     |
+| NameNotResolved  |
++------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- create a foreign table
+0: jdbc:farrago:> -- (specifying datatypes, and using fixed-width char to make sure the
+0: jdbc:farrago:> -- requested type is actually imposed and not ignored)
+0: jdbc:farrago:> create foreign table mof_schema.mof_exception(
+. . . . . . . . >     name char(20),
+. . . . . . . . >     annotation varchar(128),
+. . . . . . . . >     container varchar(128),
+. . . . . . . . >     scope varchar(128),
+. . . . . . . . >     visibility varchar(128),
+. . . . . . . . >     "mofId" varchar(128),
+. . . . . . . . >     "mofClassName" varchar(128))
+. . . . . . . . > server mof_server
+. . . . . . . . > options(class_name 'Exception');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test same query as above, but against foreign table
+0: jdbc:farrago:> select name from mof_schema.mof_exception order by 1;
++-----------------------+
+|         NAME          |
++-----------------------+
+| NameNotFound          |
+| NameNotResolved       |
++-----------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- create a foreign table (inferring datatypes)
+0: jdbc:farrago:> create foreign table mof_schema.mof_exception_inferred
+. . . . . . . . > server mof_server
+. . . . . . . . > options(class_name 'Exception');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test same query as above, but against inferred foreign table
+0: jdbc:farrago:> select "name" from mof_schema.mof_exception_inferred order by 1;
++------------------+
+|       name       |
++------------------+
+| NameNotFound     |
+| NameNotResolved  |
++------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- create a view against foreign table
+0: jdbc:farrago:> create view mof_schema.foreign_exception_names as
+. . . . . . . . > select name from mof_schema.mof_exception;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test same query as above, but against view
+0: jdbc:farrago:> select * from mof_schema.foreign_exception_names order by 1;
++-----------------------+
+|         NAME          |
++-----------------------+
+| NameNotFound          |
+| NameNotResolved       |
++-----------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test DROP FOREIGN DATA WRAPPER with RESTRICT:  should fail
+0: jdbc:farrago:> drop foreign data wrapper test_mdr restrict;
+Error: DataWrapper SYS_BOOT.TEST_MDR can only be dropped with CASCADE because other objects still reference it (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test DROP SERVER with RESTRICT:  should fail
+0: jdbc:farrago:> drop server mof_server restrict;
+Error: DataServer SYS_BOOT.MOF_SERVER can only be dropped with CASCADE because other objects still reference it (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test DROP SERVER with CASCADE
+0: jdbc:farrago:> drop server mof_server cascade;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- table mof_exception and boths views should be gone now
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from mof_schema.mof_exception;
+Error: Table 'MOF_SCHEMA.MOF_EXCEPTION' not found (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from mof_schema.exception_names;
+Error: Table 'MOF_SCHEMA.EXCEPTION_NAMES' not found (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from mof_schema.foreign_exception_names;
+Error: Table 'MOF_SCHEMA.FOREIGN_EXCEPTION_NAMES' not found (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should be OK to drop wrapper now
+0: jdbc:farrago:> drop foreign data wrapper test_mdr restrict;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- now make sure entries are gone from catalog too
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select "name" from sys_fem.med."DataWrapper" order by 1;
++-----------+
+|   name    |
++-----------+
+| SYS_JDBC  |
+| SYS_MDR   |
++-----------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select "name" from sys_fem.med."DataServer" order by 1;
++--------------+
+|     name     |
++--------------+
+| HSQLDB_DEMO  |
+| SYS_CWM      |
+| SYS_FEM      |
++--------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test JDBC wrapper
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test a direct table reference without creating a foreign table
+0: jdbc:farrago:> select * from hsqldb_demo.sales.dept order by deptno;
++---------+-------------+-----------+
+| DEPTNO  |    DNAME    |    LOC    |
++---------+-------------+-----------+
+| 10      | ACCOUNTING  | NEW YORK  |
+| 20      | RESEARCH    | DALLAS    |
+| 30      | SALES       | CHICAGO   |
+| 40      | OPERATIONS  | BOSTON    |
++---------+-------------+-----------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create schema demo_schema;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- create a foreign table (specifying datatypes)
+0: jdbc:farrago:> create foreign table demo_schema.dept(
+. . . . . . . . >     dno integer,
+. . . . . . . . >     dname char(20),
+. . . . . . . . >     loc char(20))
+. . . . . . . . > server hsqldb_demo
+. . . . . . . . > options(table_name 'DEPT');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test same query as above, but against foreign table
+0: jdbc:farrago:> select * from demo_schema.dept order by dno;
++------+-----------------------+-----------------------+
+| DNO  |         DNAME         |          LOC          |
++------+-----------------------+-----------------------+
+| 10   | ACCOUNTING            | NEW YORK              |
+| 20   | RESEARCH              | DALLAS                |
+| 30   | SALES                 | CHICAGO               |
+| 40   | OPERATIONS            | BOSTON                |
++------+-----------------------+-----------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- create a foreign table (inferring datatypes)
+0: jdbc:farrago:> create foreign table demo_schema.dept_inferred
+. . . . . . . . > server hsqldb_demo
+. . . . . . . . > options(table_name 'DEPT');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test same query as above, but against foreign table with inferred types
+0: jdbc:farrago:> select * from demo_schema.dept_inferred order by deptno;
++---------+-------------+-----------+
+| DEPTNO  |    DNAME    |    LOC    |
++---------+-------------+-----------+
+| 10      | ACCOUNTING  | NEW YORK  |
+| 20      | RESEARCH    | DALLAS    |
+| 30      | SALES       | CHICAGO   |
+| 40      | OPERATIONS  | BOSTON    |
++---------+-------------+-----------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

@@ -1,0 +1,3630 @@
+<html>
+
+<head>
+<meta name=Generator content="Microsoft Office HTML Filter 2.0">
+<meta http-equiv=Content-Type content="text/html; charset=iso-8859-1">
+<meta name=Originator content="Microsoft Word 9">
+<title>Calculator Technical Spec</title>
+<style>
+<!--
+ 
+p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{
+	margin:0in;
+	margin-bottom:.0001pt;
+	font-size:12.0pt;
+	font-family:"Times New Roman";}
+h1
+	{margin-right:0in;
+	margin-left:0in;
+	font-size:18.0pt;
+	font-family:Verdana;}
+h2
+	{margin-right:0in;
+	margin-left:0in;
+	font-size:14.0pt;
+	font-family:Verdana;}
+h3
+	{
+	margin-top:12.0pt;
+	margin-right:0in;
+	margin-bottom:3.0pt;
+	margin-left:0in;
+	page-break-after:avoid;
+	font-size:12.0pt;
+	font-family:Verdana;}
+h4
+	{
+	margin:0in;
+	margin-bottom:.0001pt;
+	text-align:center;
+	page-break-after:avoid;
+	font-size:20.0pt;
+	font-family:"Courier New";
+	font-weight:normal;}
+h5
+	{
+	margin:0in;
+	margin-bottom:.0001pt;
+	page-break-after:avoid;
+	font-size:12.0pt;
+	font-family:"Times New Roman";
+	font-weight:normal;}
+h6
+	{
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:.5in;
+	margin-bottom:.0001pt;
+	page-break-after:avoid;
+	font-size:12.0pt;
+	font-family:"Times New Roman";
+	font-weight:normal;}
+p.MsoHeading7, li.MsoHeading7, div.MsoHeading7
+	{
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:.5in;
+	margin-bottom:.0001pt;
+	page-break-after:avoid;
+	font-size:12.0pt;
+	font-family:"Times New Roman";}
+p.MsoHeading8, li.MsoHeading8, div.MsoHeading8
+	{
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:1.0in;
+	margin-bottom:.0001pt;
+	page-break-after:avoid;
+	font-size:12.0pt;
+	font-family:"Times New Roman";}
+p.MsoHeading9, li.MsoHeading9, div.MsoHeading9
+	{
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:1.0in;
+	margin-bottom:.0001pt;
+	page-break-after:avoid;
+	font-size:12.0pt;
+	font-family:"Times New Roman";}
+p.MsoBodyText, li.MsoBodyText, div.MsoBodyText
+	{margin:0in;
+	margin-bottom:.0001pt;
+	font-size:12.0pt;
+	font-family:"Courier New";
+	font-weight:bold;}
+p.MsoBodyTextIndent, li.MsoBodyTextIndent, div.MsoBodyTextIndent
+	{margin-top:0in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:1.0in;
+	margin-bottom:.0001pt;
+	font-size:12.0pt;
+	font-family:"Times New Roman";}
+p.MsoBodyText2, li.MsoBodyText2, div.MsoBodyText2
+	{margin:0in;
+	margin-bottom:.0001pt;
+	text-align:center;
+	font-size:12.0pt;
+	font-family:"Times New Roman";}
+p.MsoBodyTextIndent2, li.MsoBodyTextIndent2, div.MsoBodyTextIndent2
+	{margin-top:0in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:1.0in;
+	margin-bottom:.0001pt;
+	font-size:12.0pt;
+	font-family:"Times New Roman";}
+p.MsoBodyTextIndent3, li.MsoBodyTextIndent3, div.MsoBodyTextIndent3
+	{margin-top:0in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:1.5in;
+	margin-bottom:.0001pt;
+	font-size:12.0pt;
+	font-family:"Times New Roman";}
+a:link, span.MsoHyperlink
+	{color:blue;
+	text-decoration:underline;}
+a:visited, span.MsoHyperlinkFollowed
+	{color:blue;
+	text-decoration:underline;}
+pre
+	{margin:0in;
+	margin-bottom:.0001pt;
+	font-size:10.0pt;
+	font-family:"Courier New";}
+p.HTMLBody, li.HTMLBody, div.HTMLBody
+	{
+	margin:0in;
+	margin-bottom:.0001pt;
+	text-autospace:none;
+	font-size:10.0pt;
+	font-family:Arial;}
+span.opcode
+	{
+	letter-spacing:0pt;}
+ol
+	{margin-bottom:0in;}
+ul
+	{margin-bottom:0in;}
+-->
+</style>
+</head>
+
+<body lang=EN-US link=blue vlink=blue>
+
+<div class=Section1>
+
+<h1>Calculator Technical Specification</h1>
+
+<p class=MsoNormal>John Kalucki</p>
+
+<p class=MsoNormal>2/22/2004</p>
+
+<p class=MsoNormal>Copyright <span style='font-family:Symbol;'>Ó</span>2003-2004, Disruptive Tech, Inc.</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>Note:&nbsp; This
+document was created in MSWord, Office2000 with the Compact HTML export utility
+installed.</p>
+
+<h1>Overview</h1>
+
+<p class=MsoNormal><b>Calculator</b> is a portable C++ component that executes
+small <b>programs</b> very efficiently. Programs consist of a list of <b>instructions</b>,
+input data, <b>literals</b> (constants), and scratch memory. Generally programs
+result in some output data. A simple <b>virtual machine</b> (VM) executes
+programs and terminates. </p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>A typical Calculator object life-cycle &amp; use-pattern:</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>1.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Instantiate Calculator</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>2.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Assemble Instructions: Create and Insert Instructions into
+Calculator</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>3.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Allocate Required Memory</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>4.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Bind Input, Output, and Literals to Calculator</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>5.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Execute Program</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>6.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Check Status Register</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>7.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Utilize Output </p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>8.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>As Needed: Bind New Input. </p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>9.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>As Needed: Bind new Output</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>10.<span style='font:7.0pt "Times New Roman"'>&nbsp;
+</span>As Needed: Jump to #5</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>11.<span style='font:7.0pt "Times New Roman"'>&nbsp;
+</span>Destroy Calculator</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>12.<span style='font:7.0pt "Times New Roman"'>&nbsp;
+</span>De-allocate memory</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>Calculator will be installed as a component of <a
+href="http://sourceforge.net/projects/fennel/">Fennel</a>. Coding standards,
+build environment, etc. are to follow the Fennel project&#8217;s example. Calculator
+will introduce no additional dependencies to Fennel. </p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>The primary goals of this Calculator design are Execution
+Performance and, as a pair: Extensibility and Maintainability. Overall
+performance for the single execution case will be considered as well as case
+where the same program is executed repeatedly over a varying set of inputs and
+outputs.</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>Calculator can call <b>external functions </b>for
+extensibility and to efficiently handle complex operations. For example, string
+concatenation could involve a call to strncpy() instead of having the VM
+perform a painful byte-by-byte copy of the string. A strongly-typed version of
+external functions called <b>extended instructions</b> allows Calculator to be
+extended in a type-safe way.</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>Calculator will interact directly and indirectly with a
+number of other components. A <b>compiler</b> will create programs. Typically
+the compiler will instantiate instruction objects and insert them into a list.
+Once finished, the compiler will ask the instruction for a serial
+representation and create a text version of the program. The compiler may, at
+its option, also create the program text directly, but will give up the
+implicit type checking and other features.</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>An <b>Execution Object (XO)</b> will call the <b>assembler</b>
+with a text program. The assembler will allocate some of the register sets, and
+re-create the instruction object list, inserting the instructions into a
+Calculator object. Later, the XO can bind data, and execute Calculator.</p>
+
+<h1>Memory Architecture</h1>
+
+<h2>Register Sets</h2>
+
+<p class=MsoNormal>Memory is modeled as a number of <b>register sets</b>. Each
+register set is stored in an array. Individual registers are accessed by an
+0-based index into the set. Register sets are currently a simple abstraction from
+Fennel Tuples. </p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>Calculator will perform all memory allocation during
+instantiation and configuration and no memory allocation during typical
+execution paths. <b>Warning Messages</b> and <b>Error Messages</b> may be
+allocated at runtime, however. See Warnings &amp; Errors below. The caller will
+be responsible for allocating and de-allocating register sets.</p>
+
+<p class=MsoNormal><b>&nbsp;</b></p>
+
+<p class=MsoNormal>Note: External functions and extended instructions may
+perform resource allocation as a side-effect. Calculator makes no attempt to
+track resource allocation. The program writer must explicitly call appropriate
+external functions to de-allocate such memory. </p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>There are five register sets defined:</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>1.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Input: </p>
+
+<p class=MsoNormal style='margin-left:1.0in;text-indent:-.25in;'>a.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Input of program data. (i.e. function arguments)</p>
+
+<p class=MsoNormal style='margin-left:1.0in;text-indent:-.25in;'>b.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Generally contains&nbsp;
+tuple data handed to XO.</p>
+
+<p class=MsoNormal style='margin-left:1.0in;text-indent:-.25in;'>c.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Intended to be the main variant when Calculator programs are
+executed repeatedly.</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>2.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Output:</p>
+
+<p class=MsoNormal style='margin-left:1.0in;text-indent:-.25in;'>a.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Output of program data. (i.e. function return values)</p>
+
+<p class=MsoNormal style='margin-left:1.0in;text-indent:-.25in;'>b.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Generally contains the tuple to be passed out of the XO.</p>
+
+<p class=MsoNormal style='margin-left:1.0in;text-indent:-.25in;'>c.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Storage of intermediate results between program executions.
+(e.g. Aggregation Functions)</p>
+
+<p class=MsoNormal style='margin-left:1.0in;text-indent:-.25in;'>d.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>A compiler might also choose to store metadata such as
+exceptions, errors, warnings, overflow indicator bits, etc. in the output
+register set, but this usage is discouraged. Storing such data here requires
+the XO to filter the tuple before passing it on to the next XO.</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>3.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Local: (&#8220;Intermediates&#8221;)</p>
+
+<p class=MsoNormal style='margin-left:1.0in;text-indent:-.25in;'>a.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>General purpose intermediate storage.</p>
+
+<p class=MsoNormal style='margin-left:1.0in;text-indent:-.25in;'>b.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Intermediate storage for integral types. (i.e. main memory)</p>
+
+<p class=MsoNormal style='margin-left:1.0in;text-indent:-.25in;'>c.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Pre-allocated &#8220;heap space&#8221; for scratch storage of strings and
+other Large Objects.</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>4.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Literals: (&#8220;Constants&#8221;)</p>
+
+<p class=MsoNormal style='margin-left:1.0in;text-indent:-.25in;'>a.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>When Calculator programs are executed repeatedly, static
+literals need not be mixed with changing input tuples.</p>
+
+<p class=MsoNormal style='margin-left:1.0in;text-indent:-.25in;'>b.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Literal register set is allocated and set by the assembler,
+not by the XO.</p>
+
+<p class=MsoNormal style='margin-left:1.0in;text-indent:-.25in;'>c.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>For a very small increase in Calculator complexity, there is
+potentially a win in reduction of binding overhead.</p>
+
+<p class=MsoNormal style='margin-left:1.0in;text-indent:-.25in;'>d.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Explicitly supporting literals in a register set obviates the
+need for a literal addressing mode and its associated complexity (e.g. <span
+class=Code><span style='font-size:11.0pt;font-family:
+"Courier New"'>ADD Local(4), $0x200</span></span> is not needed. $0x200 is
+loaded from the Literals register instead: <span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>ADD
+Local(4), Literal(3)</span></span>)</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>5.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Status:</p>
+
+<p class=MsoNormal style='margin-left:1.0in;text-indent:-.25in;'>a.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Provide a generic and flexible location for programs to
+communicate with the XO.</p>
+
+<p class=MsoNormal style='margin-left:1.0in;text-indent:-.25in;'>b.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Prevents status information from mixing with the output
+register set, obviating the need for filtering the output tuple in the XO.</p>
+
+<p class=MsoNormal style='margin-left:1.0in;text-indent:-.25in;'>c.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Allows for rich interaction between programs and XO without
+also requiring modification to Calculator.</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>Register sets will not be cleared or otherwise manipulated
+by Calculator object. Only two types of objects within the Calculator component
+will manipulate register sets: the assembler and subclasses of the Instruction
+class. By not clearing register sets, the output register set may also be used
+as input as well as output for instructions.</p>
+
+<h2>Addressing Modes</h2>
+
+<p class=MsoNormal>Genuflecting to John Hennessy and Dave Patterson,
+Calculator&#8217;s addressing modes will be orthogonal:</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>1.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>All operands of all instructions that reference memory can use
+all addressing modes</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>2.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>All register sets are readable and writeable by all
+instructions. However, sensible programming conventions would discourage
+inappropriate use of sets. (e.g. writing to the input and literal register
+sets)</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>3.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>All memory locations of a given type (and/or length, see
+Storage, below) can be used interchangeably.</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>4.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>No &#8220;special&#8221; registers.</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>5.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>All memory accesses will be typed. (Instructions will cast all
+accesses as the desired type.)</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>Efficiency is paramount! Operands in programs will be
+indexes into a given register set. For example: Output[4] or Input[0]. The <span
+class=Code><span style='font-size:11.0pt;font-family:
+"Courier New"'>RegisterReference </span></span>class will provide an
+abstraction to allow various implementations of, experiments with, and
+debug-level instrumentation of, all memory access.</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>A consideration: <span class=Code><span style='font-size:
+11.0pt;font-family:"Courier New"'>RegisterReference</span></span>
+may cache the abstract register set reference &#8220;Local [4]&#8221; as a direct pointer
+to memory by setting the <span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>CachePointer</span></span>
+property. Tuning may indicate that this is valuable when applied to register
+sets that do not change, such as the Literal set and the Local set, but
+reference invalidation costs for sets that typically re-bound before each
+execution may not be worth the cost. The implication is that local memory
+access may be somewhat faster than Input or Output access. <b>TBD</b>.</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>A consideration: Add an additional indexing addressing mode
+that allows easier manipulation of one-dimensional and multi-dimensional
+arrays, jump tables for CASE statements, and perhaps the register sets
+themselves. For example, the 80386 architecture supports a Scale/Index/Base
+addressing mode. Addresses are calculated as (Scale * Index) + Base. <b>TBD</b></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>Nested rows issues? <b>TBD</b></p>
+
+<p class=MsoNormal>Multiple rows per execution? (e.g. batch) <b>TBD</b>.</p>
+
+<h2>Storage</h2>
+
+<p class=MsoNormal><b><u>Portability Invariant</u></b>: A given program and
+input should produce (nearly) identical output on each and every supported
+hardware type. Calculator must be independent of underlying hardware &#8211; with
+sole and notable exception of rounding errors in floating point numbers. </p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>Native type support, storage, typedefs, etc. are provided by
+Fennel Tuples. Fennel supports types beyond the native C++ types, such as
+VARCHAR, VARBINARY, and so forth. Therefore Calculator types are defined by the
+Fennel enum <span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>StandardTypeDescriptorOrdinal.</span></span></p>
+
+<h2>Types</h2>
+
+<p class=MsoNormal>The Calculator is strongly typed:</p>
+
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal>Default
+     execution mode will assume that a program is type correct.</li>
+ <li class=MsoNormal>Behavior
+     may be undefined if type violations occur.</li>
+ <li class=MsoNormal>Calculator
+     is strongly typed within instructions but not between instructions and
+     underlying tuples. Runtime type checking is not supported!</li>
+ <li class=MsoNormal>Explicit
+     type conversions are required for type promotion, demotion and
+     transformation.</li>
+ <li class=MsoNormal>With
+     the exception of extended instructions and external functions, the return
+     type of all other instructions is implicitly determined by the associated
+     input types. Note: The serialized version of&nbsp; programs may redundantly require output type to be
+     declared to enforce a regular representation and make parsing easier for
+     the assembler.</li>
+ <li class=MsoNormal>Instructions
+     that take two operands typically require that both operands be of the same
+     type, unless noted otherwise.</li>
+ <li class=MsoNormal>Trace
+     and debug modes may or may/not enforce typing. <b>TBD</b>.</li>
+</ul>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>The implication is that the compiler must be aware of types,
+and must <u>always</u> Do The Right Thing.</p>
+
+<h2>Type Mappings</h2>
+
+<p class=MsoNormal>Mappings between SQL types and C++ native types is provided
+by the Fennel Tuple code.</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>Tuple represent NULL values with a NULL pointer. </p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>SQL&#8217;s DECIMAL type is not
+directly supported by Calculator. The compiler should handle this type by generating
+appropriate programs.</p>
+
+<p class=MsoNormal style='margin-bottom:12.0pt'>Non-native types supported by
+Fennel Tuples, such as VARCHAR, are simply represented by a pointer in the
+Calculator, and perhaps also an integer containing the length of the array.</p>
+
+<p class=MsoNormal>When represented as strings, for example in serialized
+programs, the mapping from StandardTypeDescriptorOrdinal to strings is defined
+by <span class=Code><span style='font-size:11.0pt;
+font-family:"Courier New"'>standardTypetoString() </span></span><span
+class=Code>located in fennel/calc/StandardTypeToString.cpp.</span></p>
+
+<p class=MsoNormal align=center style='text-align:center'><span class=Code>&nbsp;</span></p>
+
+<div align=center>
+
+<table border=1 cellspacing=0 cellpadding=0 width=336 style='width:251.8pt;
+ margin-left:53.6pt;border-collapse:collapse;border:none;'>
+ <tr style='height:12.75pt'>
+  <td width=217 nowrap valign=bottom style='width:162.45pt;border:solid windowtext .5pt;
+  padding:.05in .05in .05in .05in;height:12.75pt'>
+  <p class=MsoNormal>Fennel/Tuple/</p>
+  <p class=MsoNormal>StandardTypeDescriptorOrdinal</p>
+  </td>
+  <td width=119 nowrap valign=bottom style='width:89.35pt;border:solid windowtext .5pt;
+  border-left:none;padding:.05in .05in .05in .05in;
+  height:12.75pt'>
+  <p class=MsoNormal>String </p>
+  <p class=MsoNormal>Representation</p>
+  </td>
+ </tr>
+ <tr style='height:12.75pt'>
+  <td width=217 nowrap valign=bottom style='width:162.45pt;border:solid windowtext .5pt;
+  border-top:none;padding:.05in .05in .05in .05in;
+  height:12.75pt'>
+  <p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+  <p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>STANDARD_TYPE_INT_8</span></span></p>
+  </td>
+  <td width=119 nowrap valign=bottom style='width:89.35pt;border-top:none;
+  border-left:none;border-bottom:solid windowtext .5pt;border-right:solid windowtext .5pt;
+  padding:.05in .05in .05in .05in;height:12.75pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span class=Code><span
+  style='font-size:11.0pt;font-family:"Courier New"'>s1</span></span></p>
+  </td>
+ </tr>
+ <tr style='height:12.75pt'>
+  <td width=217 nowrap valign=bottom style='width:162.45pt;border:solid windowtext .5pt;
+  border-top:none;padding:.05in .05in .05in .05in;
+  height:12.75pt'>
+  <p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>STANDARD_TYPE_UINT_8</span></span></p>
+  </td>
+  <td width=119 nowrap valign=bottom style='width:89.35pt;border-top:none;
+  border-left:none;border-bottom:solid windowtext .5pt;border-right:solid windowtext .5pt;
+  padding:.05in .05in .05in .05in;height:12.75pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span class=Code><span
+  style='font-size:11.0pt;font-family:"Courier New"'>u1</span></span></p>
+  </td>
+ </tr>
+ <tr style='height:12.75pt'>
+  <td width=217 nowrap valign=bottom style='width:162.45pt;border:solid windowtext .5pt;
+  border-top:none;padding:.05in .05in .05in .05in;
+  height:12.75pt'>
+  <p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>STANDARD_TYPE_INT_16</span></span></p>
+  </td>
+  <td width=119 nowrap valign=bottom style='width:89.35pt;border-top:none;
+  border-left:none;border-bottom:solid windowtext .5pt;border-right:solid windowtext .5pt;
+  padding:.05in .05in .05in .05in;height:12.75pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span class=Code><span
+  style='font-size:11.0pt;font-family:"Courier New"'>s2</span></span></p>
+  </td>
+ </tr>
+ <tr style='height:12.75pt'>
+  <td width=217 nowrap valign=bottom style='width:162.45pt;border:solid windowtext .5pt;
+  border-top:none;padding:.05in .05in .05in .05in;
+  height:12.75pt'>
+  <p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>STANDARD_TYPE_UINT_16</span></span></p>
+  </td>
+  <td width=119 nowrap valign=bottom style='width:89.35pt;border-top:none;
+  border-left:none;border-bottom:solid windowtext .5pt;border-right:solid windowtext .5pt;
+  padding:.05in .05in .05in .05in;height:12.75pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span class=Code><span
+  style='font-size:11.0pt;font-family:"Courier New"'>u2</span></span></p>
+  </td>
+ </tr>
+ <tr style='height:12.75pt'>
+  <td width=217 nowrap valign=bottom style='width:162.45pt;border:solid windowtext .5pt;
+  border-top:none;padding:.05in .05in .05in .05in;
+  height:12.75pt'>
+  <p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>STANDARD_TYPE_INT_32</span></span></p>
+  </td>
+  <td width=119 nowrap valign=bottom style='width:89.35pt;border-top:none;
+  border-left:none;border-bottom:solid windowtext .5pt;border-right:solid windowtext .5pt;
+  padding:.05in .05in .05in .05in;height:12.75pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span class=Code><span
+  style='font-size:11.0pt;font-family:"Courier New"'>s4</span></span></p>
+  </td>
+ </tr>
+ <tr style='height:12.75pt'>
+  <td width=217 nowrap valign=bottom style='width:162.45pt;border:solid windowtext .5pt;
+  border-top:none;padding:.05in .05in .05in .05in;
+  height:12.75pt'>
+  <p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>STANDARD_TYPE_UINT_32</span></span></p>
+  </td>
+  <td width=119 nowrap valign=bottom style='width:89.35pt;border-top:none;
+  border-left:none;border-bottom:solid windowtext .5pt;border-right:solid windowtext .5pt;
+  padding:.05in .05in .05in .05in;height:12.75pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span class=Code><span
+  style='font-size:11.0pt;font-family:"Courier New"'>u4</span></span></p>
+  </td>
+ </tr>
+ <tr style='height:12.75pt'>
+  <td width=217 nowrap valign=bottom style='width:162.45pt;border:solid windowtext .5pt;
+  border-top:none;padding:.05in .05in .05in .05in;
+  height:12.75pt'>
+  <p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>STANDARD_TYPE_INT_64</span></span></p>
+  </td>
+  <td width=119 nowrap valign=bottom style='width:89.35pt;border-top:none;
+  border-left:none;border-bottom:solid windowtext .5pt;border-right:solid windowtext .5pt;
+  padding:.05in .05in .05in .05in;height:12.75pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span class=Code><span
+  style='font-size:11.0pt;font-family:"Courier New"'>s8</span></span></p>
+  </td>
+ </tr>
+ <tr style='height:12.75pt'>
+  <td width=217 nowrap valign=bottom style='width:162.45pt;border:solid windowtext .5pt;
+  border-top:none;padding:.05in .05in .05in .05in;
+  height:12.75pt'>
+  <p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>STANDARD_TYPE_UINT_64</span></span></p>
+  </td>
+  <td width=119 nowrap valign=bottom style='width:89.35pt;border-top:none;
+  border-left:none;border-bottom:solid windowtext .5pt;border-right:solid windowtext .5pt;
+  padding:.05in .05in .05in .05in;height:12.75pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span class=Code><span
+  style='font-size:11.0pt;font-family:"Courier New"'>u8</span></span></p>
+  </td>
+ </tr>
+ <tr style='height:12.75pt'>
+  <td width=217 nowrap valign=bottom style='width:162.45pt;border:solid windowtext .5pt;
+  border-top:none;padding:.05in .05in .05in .05in;
+  height:12.75pt'>
+  <p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>STANDARD_TYPE_REAL</span></span></p>
+  </td>
+  <td width=119 nowrap valign=bottom style='width:89.35pt;border-top:none;
+  border-left:none;border-bottom:solid windowtext .5pt;border-right:solid windowtext .5pt;
+  padding:.05in .05in .05in .05in;height:12.75pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span class=Code><span
+  style='font-size:11.0pt;font-family:"Courier New"'>r</span></span></p>
+  </td>
+ </tr>
+ <tr style='height:12.75pt'>
+  <td width=217 nowrap valign=bottom style='width:162.45pt;border:solid windowtext .5pt;
+  border-top:none;padding:.05in .05in .05in .05in;
+  height:12.75pt'>
+  <p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>STANDARD_TYPE_DOUBLE</span></span></p>
+  </td>
+  <td width=119 nowrap valign=bottom style='width:89.35pt;border-top:none;
+  border-left:none;border-bottom:solid windowtext .5pt;border-right:solid windowtext .5pt;
+  padding:.05in .05in .05in .05in;height:12.75pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span class=Code><span
+  style='font-size:11.0pt;font-family:"Courier New"'>d</span></span></p>
+  </td>
+ </tr>
+ <tr style='height:12.75pt'>
+  <td width=217 nowrap valign=bottom style='width:162.45pt;border:solid windowtext .5pt;
+  border-top:none;padding:.05in .05in .05in .05in;
+  height:12.75pt'>
+  <p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>STANDARD_TYPE_CHAR</span></span></p>
+  </td>
+  <td width=119 nowrap valign=bottom style='width:89.35pt;border-top:none;
+  border-left:none;border-bottom:solid windowtext .5pt;border-right:solid windowtext .5pt;
+  padding:.05in .05in .05in .05in;height:12.75pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span class=Code><span
+  style='font-size:11.0pt;font-family:"Courier New"'>c</span></span></p>
+  </td>
+ </tr>
+ <tr style='height:12.75pt'>
+  <td width=217 nowrap valign=bottom style='width:162.45pt;border:solid windowtext .5pt;
+  border-top:none;padding:.05in .05in .05in .05in;
+  height:12.75pt'>
+  <p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>STANDARD_TYPE_VARCHAR</span></span></p>
+  </td>
+  <td width=119 nowrap valign=bottom style='width:89.35pt;border-top:none;
+  border-left:none;border-bottom:solid windowtext .5pt;border-right:solid windowtext .5pt;
+  padding:.05in .05in .05in .05in;height:12.75pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span class=Code><span
+  style='font-size:11.0pt;font-family:"Courier New"'>vc</span></span></p>
+  </td>
+ </tr>
+ <tr style='height:12.75pt'>
+  <td width=217 nowrap valign=bottom style='width:162.45pt;border:solid windowtext .5pt;
+  border-top:none;padding:.05in .05in .05in .05in;
+  height:12.75pt'>
+  <p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>STANDARD_TYPE_BINARY</span></span></p>
+  </td>
+  <td width=119 nowrap valign=bottom style='width:89.35pt;border-top:none;
+  border-left:none;border-bottom:solid windowtext .5pt;border-right:solid windowtext .5pt;
+  padding:.05in .05in .05in .05in;height:12.75pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span class=Code><span
+  style='font-size:11.0pt;font-family:"Courier New"'>b</span></span></p>
+  </td>
+ </tr>
+ <tr style='height:12.75pt'>
+  <td width=217 nowrap valign=bottom style='width:162.45pt;border:solid windowtext .5pt;
+  border-top:none;padding:.05in .05in .05in .05in;
+  height:12.75pt'>
+  <p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>STANDARD_TYPE_VARBINARY</span></span></p>
+  </td>
+  <td width=119 nowrap valign=bottom style='width:89.35pt;border-top:none;
+  border-left:none;border-bottom:solid windowtext .5pt;border-right:solid windowtext .5pt;
+  padding:.05in .05in .05in .05in;height:12.75pt'>
+  <p class=MsoNormal align=center style='text-align:center'><span class=Code><span
+  style='font-size:11.0pt;font-family:"Courier New"'>vb</span></span></p>
+  </td>
+ </tr>
+</table>
+
+</div>
+
+<p class=MsoNormal><span class=Code>&nbsp;</span></p>
+
+<h1>Internationalization</h1>
+
+<p class=MsoNormal>Internationalization issues are expected to be transparent
+to Calculator. Byte arrays are represented by pointers.</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<h1>Isolation</h1>
+
+<p class=MsoNormal>It&#8217;s a Mad Mad Mad Mad World. Under normal running
+conditions, Calculator will make no attempt to isolate the C++ process from
+potentially ill side effects of Calculator program execution. This
+responsibility is completely up to the program compiler and the author of
+extended instructions.</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>&nbsp;Risks not
+handled, include, but are not limited to:</p>
+
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal>C++
+     memory corruption - Anywhere the address space, not just in register sets!</li>
+ <li class=MsoNormal>C++
+     stack corruption &#8211; Another example of memory corruption.</li>
+ <li class=MsoNormal>C++
+     program counter corruption &#8211; e.g. jump to hyperspace, segmentation fault,
+     core dump.</li>
+ <li class=MsoNormal>VM
+     program counter corruption &#8211; e.g. jump to hyperspace, segmentation fault,
+     core dump.</li>
+ <li class=MsoNormal>VM
+     program non-termination. &#8211; i.e. Calculator.exec() does not return.</li>
+ <li class=MsoNormal>Resource
+     leakage from external function calls &#8211; Typically memory leakage, but
+     potentially file descriptors or any other resource that an external
+     function call could abandon.</li>
+ <li class=MsoNormal>Unaligned
+     memory access &#8211; e.g. bus error, core dump.</li>
+ <li class=MsoNormal>Security,
+     Access control violations, etc.</li>
+</ul>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>Some of these risks could be mitigated by only allowing a tightly
+controlled list of external functions to be called. </p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>Risks handled:</p>
+
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal>Division
+     by Zero &#8211; Generates a warning.</li>
+ <li class=MsoNormal>Modulus
+     by Zero &#8211; Generates a warning.</li>
+ <li class=MsoNormal>Arithmetic
+     Overflow: <b>TBD</b></li>
+ <li class=MsoNormal>Arithmetic
+     Underflow: <b>TBD</b></li>
+</ul>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>Each instruction that may bump into these risks will have to
+handle them in a well defined manner and provide the appropriate error, warning
+or exception. </p>
+
+<h1>Calculator Programs</h1>
+
+<h2>Representation</h2>
+
+<p class=MsoNormal>Calculator programs can be created and represented in
+several ways:</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>1)<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>In-process C++ can access the instruction set OO hierarchy
+directly, cons up instruction objects, order them into programs, and have
+Calculator execute them. This is the typical Fennel access mode.</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>2)<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Out-of-process C++ can link in Calculator code to access the
+instruction set OO hierarchy directly. Each instruction can convert itself into
+a serialized (string) representation.&nbsp;
+The serial representation can be transmitted to another C++ process for
+assembly and execution. See Assembler section for details on the format of
+these strings.</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;text-autospace:none'>3)<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>In
+or Out of process Java creates, via some arbitrary method, a string
+representation of a program. The program can be transmitted to a C++ process. </p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;text-autospace:none'>4)<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Out-of-process
+C++ can also use method #3.</p>
+
+<h2>Flow Control</h2>
+
+<p class=MsoNormal>All jumps are to absolute instruction &#8220;addresses&#8221;. The
+effective address of an instruction is determined solely by the order that it
+is inserted into Calculator. The first instruction inserted is at address 0 &#8211;
+that is to say, instruction addresses are 0-indexed</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>Jump labels, instead of absolute jump addresses would make programs
+easier to read and debug, but would add complexity to Calculator and perhaps to
+the compiler. For now, labels are not supported. A compiler and program writer
+might consider implementing labels as a convenience in creating programs.</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>A consideration: May want to provide some support for
+efficient processing of SQL CASE statements, such as the SIB addressing mode
+mentioned above.</p>
+
+<h2>Exceptions</h2>
+
+<p class=MsoBodyText><span style='font-family:"Times New Roman"'>Yet to be
+fully specified. TBD</span></p>
+
+<p class=MsoNormal>Will use the RAISE instruction.</p>
+
+<p class=MsoNormal>May want to support catch, throw, try, finally.</p>
+
+<p class=MsoNormal>When an exception is thrown in a program, Calculator will
+eventually throw a C++ exception that the caller to Calculator.exec() is
+encouraged to catch and decode.</p>
+
+<p class=MsoNormal>Format and values of object thrown by exception <b>TBD</b>.</p>
+
+<h2>Extended Instructions</h2>
+
+<p class=MsoNormal>Implemented, but not currently documented. <b>TBD</b></p>
+
+<h2>External Functions</h2>
+
+<p class=MsoBodyText><span style='font-family:"Times New Roman"'>Yet to be
+specified. TBD</span></p>
+
+<p class=MsoNormal>Will have some form of static lookup table of supported
+functions. </p>
+
+<p class=MsoNormal>Assembler will have to convert a string function name into a
+function pointer.</p>
+
+<p class=MsoNormal>Will have to support a pointer type.</p>
+
+<p class=MsoNormal>John Sichi has recommended looking at Functors. Look at
+Boost Functors. May be useful here.</p>
+
+<p class=MsoNormal>Provide/find optimized str(3) functions that handle SQL
+semantics correctly. (e.g.&nbsp;
+ignoring trailing spaces, varbinary blobs of unequal length)</p>
+
+<p class=MsoNormal>Consider resource allocation issues.</p>
+
+<p class=MsoNormal>Consider how to represent Null stings vs. empty strings,
+etc.</p>
+
+<h2>NULL</h2>
+
+<p class=MsoNormal>Fennel Tuples represent NULL values as a NULL pointer.
+RegisterReference handles this convention.</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>All instructions will be NULL-aware and will implement
+appropriate SQL NULL semantics.</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>If a Local register may be set to NULL, and if Calculator
+will be called more than once, the Local register set must have the <span
+class=Code><span style='font-size:11.0pt;font-family:
+"Courier New"'>PointerReset </span></span>property set. This property causes
+Calculator to reset the tuple pointer back to its original location before the
+next call to exec().</p>
+
+<p class=MsoBodyText><span style='font-family:"Times New Roman";font-weight:
+normal'>&nbsp;</span></p>
+
+<p class=MsoBodyText><span style='font-family:"Times New Roman";font-weight:
+normal'>Writing programs to test every location for IsNotNULL before each write
+could be a real bear. Program writers are encouraged to make liberal use of
+Local registers to avoid this problem. It&#8217;s possible that this representation
+of NULL is simply not strong enough, and Tuples will have to be changed to
+reflect this problem.</span><span style='font-family:"Times New Roman"'> TBD</span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>Effect on strings and external functions? <b>TBD</b></p>
+
+<h2>Warnings and Errors</h2>
+
+<p class=MsoNormal>The compiler must take warning recovery and error handling
+into account. The compiler can decide if it wishes to perform <b>exception
+avoidance</b> by testing for common errors within the program, or let
+Calculator execute and handle the issue.</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>Warning and error codes codes are taken from Section 22.1
+SQLSTATE of the SQL99 specification. Arbitrarily, Calculator&#8217;s
+implementation-defined errors are in the Class <b>5Z</b>. This choice should be
+rationalized. <b>TBD</b>.</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>Warnings are the result of correctable problems. Program
+execution always continues after warnings and side-effects are well defined.
+Warning messages are coded and placed onto a deque (double-ended queue) for
+later access. A deque is used to allow interpretation of warnings in the order
+that they occurred (iterate from deque.begin()) or to allow interpretation of
+the last warning first (iterate from deque.end())</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>Warnings:</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<table border=1 cellspacing=0 cellpadding=0 style='border-collapse:collapse;
+ border:none;'>
+ <tr>
+  <td width=178 valign=top style='width:133.55pt;border:solid windowtext .75pt;
+  padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Warning</span></span></p>
+  </td>
+  <td width=108 valign=top style='width:80.9pt;border:solid windowtext .75pt;
+  border-left:none;padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Code Class/Subclass</span></span></p>
+  </td>
+  <td width=214 valign=top style='width:160.6pt;border:solid windowtext .75pt;
+  border-left:none;padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Side-effect(s)</span></span></p>
+  </td>
+  <td width=446 valign=top style='width:334.4pt;border:solid windowtext .75pt;
+  border-left:none;padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Comments</span></span></p>
+  </td>
+ </tr>
+ <tr>
+  <td width=178 valign=top style='width:133.55pt;border:solid windowtext .75pt;
+  border-top:none;padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Division By Zero</span></span></p>
+  </td>
+  <td width=108 valign=top style='width:80.9pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext .75pt;border-right:solid windowtext .75pt;
+  padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>22012</span></span></p>
+  </td>
+  <td width=214 valign=top style='width:160.6pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext .75pt;border-right:solid windowtext .75pt;
+  padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Result contains a NULL.
+  </span></span></p>
+  </td>
+  <td width=446 valign=top style='width:334.4pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext .75pt;border-right:solid windowtext .75pt;
+  padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>SQL99 spec appears to
+  state that DIV/0 is an error. A side-effect is not specified. Consider making
+  Division By Zero an Error. TBD</span></span></p>
+  </td>
+ </tr>
+ <tr>
+  <td width=178 valign=top style='width:133.55pt;border:solid windowtext .75pt;
+  border-top:none;padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Overflow</span></span></p>
+  </td>
+  <td width=108 valign=top style='width:80.9pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext .75pt;border-right:solid windowtext .75pt;
+  padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>22003</span></span></p>
+  </td>
+  <td width=214 valign=top style='width:160.6pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext .75pt;border-right:solid windowtext .75pt;
+  padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Round or Truncate? TBD</span></span></p>
+  </td>
+  <td width=446 valign=top style='width:334.4pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext .75pt;border-right:solid windowtext .75pt;
+  padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>SQL99 says
+  implementation may round or truncate</span></span></p>
+  </td>
+ </tr>
+ <tr>
+  <td width=178 valign=top style='width:133.55pt;border:solid windowtext .75pt;
+  border-top:none;padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Underflow</span></span></p>
+  </td>
+  <td width=108 valign=top style='width:80.9pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext .75pt;border-right:solid windowtext .75pt;
+  padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>22003</span></span></p>
+  </td>
+  <td width=214 valign=top style='width:160.6pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext .75pt;border-right:solid windowtext .75pt;
+  padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Round or Truncate? TBD</span></span></p>
+  </td>
+  <td width=446 valign=top style='width:334.4pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext .75pt;border-right:solid windowtext .75pt;
+  padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Does this even exist?</span></span></p>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>Errors are problems that are not correctable, or problems
+with side-effects that are not well defined. Program execution always
+terminates immediately after errors. Error status is indicated in the last
+element of the warning deque. An exception is thrown after the error message is
+added to the warning queue. Format of this exception <b>TBD</b>.</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>Errors:</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<table border=1 cellspacing=0 cellpadding=0 style='border-collapse:collapse;
+ border:none;'>
+ <tr>
+  <td width=178 valign=top style='width:133.8pt;border:solid windowtext .75pt;
+  padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Error</span></span></p>
+  </td>
+  <td width=107 valign=top style='width:80.5pt;border:solid windowtext .75pt;
+  border-left:none;padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Code</span></span></p>
+  </td>
+  <td width=214 valign=top style='width:160.6pt;border:solid windowtext .75pt;
+  border-left:none;padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Side-effect(s)</span></span></p>
+  </td>
+  <td width=446 valign=top style='width:334.55pt;border:solid windowtext .75pt;
+  border-left:none;padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Comments</span></span></p>
+  </td>
+ </tr>
+ <tr>
+  <td width=178 valign=top style='width:133.8pt;border:solid windowtext .75pt;
+  border-top:none;padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Segmentation Fault</span></span></p>
+  </td>
+  <td width=107 valign=top style='width:80.5pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext .75pt;border-right:solid windowtext .75pt;
+  padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>5Z001</span></span></p>
+  </td>
+  <td width=214 valign=top style='width:160.6pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext .75pt;border-right:solid windowtext .75pt;
+  padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td width=446 valign=top style='width:334.55pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext .75pt;border-right:solid windowtext .75pt;
+  padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>PC falls off end of
+  program and/or jumps to a non-existent location.</span></span></p>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<h2>Instruction Set</h2>
+
+<table border=1 cellpadding=0 width=768 style='width:8.0in;margin-left:.05in;'>
+ <tr>
+  <td rowspan=2 valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal style='margin-bottom:12.0pt'><span class=opcode><span
+  style='font-size:11.0pt;font-family:"Arial Narrow"'>Base
+  Class Name</span></span></p>
+  </td>
+  <td rowspan=2 valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal style='margin-bottom:12.0pt'><span class=opcode><span
+  style='font-size:11.0pt;font-family:"Arial Narrow"'>Object
+  Name</span></span></p>
+  </td>
+  <td width=74 rowspan=2 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal style='margin-bottom:12.0pt'><span class=opcode><span
+  style='font-size:11.0pt;font-family:"Arial Narrow"'>OpCode
+  Mnemonic</span></span><span style='font-size:11.0pt;
+  font-family:"Arial Narrow"'><br>
+  <span class=opcode>&amp; </span><br>
+  <span class=opcode>String Rep-resentation</span></span></p>
+  </td>
+  <td width=99 rowspan=2 valign=top style='width:74.0pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Operands</span></span></p>
+  </td>
+  <td rowspan=2 valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal style='margin-bottom:12.0pt'><span class=opcode><span
+  style='font-size:11.0pt;font-family:"Arial Narrow"'>Comment</span></span></p>
+  </td>
+  <td width=38 colspan=4 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'><span
+  class=opcode><span style='font-size:11.0pt;
+  font-family:"Arial Narrow"'>Type Support</span></span></p>
+  </td>
+ </tr>
+ <tr>
+  <td width=38 valign=top style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal style='margin-left:1.35pt'><span class=opcode><span
+  style='font-size:11.0pt;font-family:"Arial Narrow"'>bool</span></span></p>
+  </td>
+  <td width=38 valign=top style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal style='margin-left:1.35pt'><span class=opcode><span
+  style='font-size:11.0pt;font-family:"Arial Narrow"'>long</span></span><span
+  style='font-size:11.0pt;font-family:"Arial Narrow"'><br>
+  <span class=opcode>ulong</span></span></p>
+  </td>
+  <td width=38 valign=top style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal style='margin-left:1.35pt'><span class=opcode><span
+  style='font-size:11.0pt;font-family:"Arial Narrow"'>float</span></span><span
+  style='font-size:11.0pt;font-family:"Arial Narrow"'><br>
+  <span class=opcode>long dou-ble</span></span></p>
+  </td>
+  <td width=38 valign=top style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal style='margin-left:1.35pt'><span class=opcode><span
+  style='font-size:11.0pt;font-family:"Arial Narrow"'>T
+  *</span></span></p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:Symbol;'>·</span></span><span
+  class=opcode><span style='font-size:11.0pt;
+  font-family:"Arial Narrow"'>BooleanInstruction</span></span></p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>BoolAnd</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>AND</span></span></p>
+  </td>
+  <td width=99 rowspan=2 valign=top style='width:74.0pt;border:inset .75pt;
+  border-bottom:none;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>result,</span></span></p>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>operand,</span></span></p>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>operand</span></span></p>
+  </td>
+  <td rowspan=2 valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal style='margin-bottom:12.0pt'><span style='font-size:11.0pt;font-family:"Arial Narrow"'><br><br></span></p>
+  </td>
+  <td width=38 rowspan=11 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'><span
+  class=opcode><span style='font-size:11.0pt;
+  font-family:"Arial Narrow"'>Y</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>BoolOr</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>OR</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>BoolEqual</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>EQ</span></span></p>
+  </td>
+  <td width=99 style='width:74.0pt;border-top:none;border-left:inset .75pt;
+  border-bottom:none;border-right:inset .75pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Equivalent to SQL
+  boolean IS</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>BoolNotEqual</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>NE</span></span></p>
+  </td>
+  <td width=99 rowspan=3 style='width:74.0pt;border:inset .75pt;border-top:
+  none;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Equivalent to SQL
+  boolean IS NOT</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>BoolGreater</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>GT</span></span></p>
+  </td>
+  <td rowspan=2 valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>TRUE &gt; FALSE. No
+  need for GE,LE</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>BoolLess</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>LT</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>BoolNot</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>NOT</span></span></p>
+  </td>
+  <td width=99 rowspan=3 style='width:74.0pt;border:inset .75pt;border-bottom:
+  none;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>result,</span></span></p>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>operand</span></span></p>
+  </td>
+  <td style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>BoolMove</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>MOVE</span></span></p>
+  </td>
+  <td style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>BoolIsNull</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>ISNULL</span></span></p>
+  </td>
+  <td style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>BoolIsNotNull</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>ISNOTNULL</span></span></p>
+  </td>
+  <td width=99 style='width:74.0pt;border:inset .75pt;border-top:none;
+  padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>BoolToNull</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>TONULL</span></span></p>
+  </td>
+  <td width=99 style='width:74.0pt;border-top:inset;border-left:inset;
+  border-bottom:outset;border-right:outset;border-width:.75pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>result</span></span></p>
+  </td>
+  <td style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:Symbol;'>··</span></span><span
+  class=opcode><span style='font-size:11.0pt;
+  font-family:"Arial Narrow"'>NativeNative-Instruction</span></span></p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>NativeAdd</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>ADD</span></span></p>
+  </td>
+  <td width=99 rowspan=4 valign=top style='width:74.0pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>result,</span></span></p>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>operand, </span></span></p>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>operand</span></span></p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 colspan=2 rowspan=7 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-top:0in;margin-right:0in;
+  margin-bottom:12.0pt;margin-left:1.35pt;text-align:center'><span
+  class=opcode><span style='font-size:11.0pt;
+  font-family:"Arial Narrow"'>Y</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>NativeSub</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>SUB</span></span></p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>NativeMul</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>MUL</span></span></p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>NativeDiv</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>DIV</span></span></p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>NativeNeg</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>NEG</span></span></p>
+  </td>
+  <td width=99 style='width:74.0pt;border:inset .75pt;border-bottom:none;
+  padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>result,</span></span></p>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>operand</span></span></p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>NativeMove</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>MOVE</span></span></p>
+  </td>
+  <td width=99 style='width:74.0pt;border:inset .75pt;border-top:none;
+  padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>NativeToNull</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>TONULL</span></span></p>
+  </td>
+  <td width=99 style='width:74.0pt;border-top:inset;border-left:inset;
+  border-bottom:outset;border-right:outset;border-width:.75pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>result</span></span></p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:Symbol;'>··</span></span><span
+  class=opcode><span style='font-size:11.0pt;
+  font-family:"Arial Narrow"'>IntegralNative-</span></span><span
+  style='font-size:11.0pt;font-family:"Arial Narrow"'><br>
+  <span class=opcode>Instruction</span></span></p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>IntegralNativeMod</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>MOD</span></span></p>
+  </td>
+  <td width=99 valign=top style='width:74.0pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>result, </span></span></p>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>operand1,</span></span></p>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>operand2</span></span></p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>modulus operator, op1
+  is dividend, op2 is divisor</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 rowspan=6 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>IntegralNativeShiftLeft</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>SHFL</span></span></p>
+  </td>
+  <td width=99 rowspan=2 valign=top style='width:74.0pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>result, </span></span></p>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>operand1,</span></span></p>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>operand2</span></span></p>
+  </td>
+  <td rowspan=2 valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>shift operand1 left or
+  right by operand2 number of bits. Shifts in zeros. operator2 must be positive
+  long or ulong</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>IntegralNativeShiftRight</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>SHFR</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>IntegralNativeAnd</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>AND</span></span></p>
+  </td>
+  <td width=99 rowspan=3 valign=top style='width:74.0pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>result,</span></span></p>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>operand, </span></span></p>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>operand</span></span></p>
+  </td>
+  <td rowspan=2 valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal style='margin-bottom:12.0pt'><span class=opcode><span
+  style='font-size:11.0pt;font-family:"Arial Narrow"'>Bitwise
+  operations</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>IntegralNativeOr</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>OR</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>IntegralNativeXor</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>XOR</span></span></p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>No SQL mapping. Dubious
+  utility.</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:Symbol;'>··</span></span><span
+  class=opcode><span style='font-size:11.0pt;
+  font-family:"Arial Narrow"'>BoolNative-</span></span><span style='font-size:
+  11.0pt;font-family:"Arial Narrow"'><br>
+  <span class=opcode>Instruction</span></span></p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>BoolNativeEqual</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>EQ</span></span></p>
+  </td>
+  <td width=99 rowspan=6 valign=top style='width:74.0pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>result,</span></span></p>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>operand,</span></span></p>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>operand</span></span></p>
+  </td>
+  <td rowspan=8 valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>returns boolean</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 colspan=2 rowspan=8 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal style='margin-left:1.35pt'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>BoolNativeNotEqual</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>NE</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>BoolNativeGreater</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>GT</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>BoolNativeGreaterEqual</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>GE</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>BoolNativeLess</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>LT</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>BoolNativeLessEqual</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>LE</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>BoolNativeIsNull</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>ISNULL</span></span></p>
+  </td>
+  <td width=99 rowspan=2 valign=top style='width:74.0pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>result,</span></span></p>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>operand</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>BoolNativeIsNotNull</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>ISNOTNULL</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:Symbol;'>··</span></span><span
+  class=opcode><span style='font-size:11.0pt;
+  font-family:"Arial Narrow"'>PointerPointer-Instruction</span></span></p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>PointerMove</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>MOVE</span></span></p>
+  </td>
+  <td width=99 valign=top style='width:74.0pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>result,</span></span></p>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>operand1</span></span></p>
+  </td>
+  <td rowspan=2 valign=top style='border:inset .75pt;border-bottom:none;
+  padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Result and Operand1 are
+  pointers.</span></span></p>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Operand2 is Long</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 rowspan=4 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'><span
+  class=opcode><span style='font-size:11.0pt;
+  font-family:"Arial Narrow"'>Y</span></span></p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>PointerAdd</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>ADD</span></span></p>
+  </td>
+  <td width=99 rowspan=2 valign=top style='width:74.0pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>result,</span></span></p>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>operand1,</span></span></p>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>operand2</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>PointerSub</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>SUB</span></span></p>
+  </td>
+  <td rowspan=2 style='border:inset .75pt;border-top:none;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>PointerToNull</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>TONULL</span></span></p>
+  </td>
+  <td width=99 valign=top style='width:74.0pt;border-top:inset;border-left:
+  inset;border-bottom:outset;border-right:outset;border-width:.75pt;padding:
+  1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>result</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:Symbol;'>··</span></span><span
+  class=opcode><span style='font-size:11.0pt;
+  font-family:"Arial Narrow"'>BoolPointer-Instruction</span></span></p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>PointerEqual</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>EQ</span></span></p>
+  </td>
+  <td width=99 rowspan=6 valign=top style='width:74.0pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>result,</span></span></p>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>operand,</span></span></p>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>operand</span></span></p>
+  </td>
+  <td rowspan=8 valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>returns boolean</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 colspan=2 rowspan=8 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal style='margin-left:1.35pt'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>PointerNotEqual</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>NE</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>PointerGreater</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>GT</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>PointerGreaterEqual</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>GE</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>PointerLess</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>LT</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>PointerLessEqual</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>LE</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>PointerIsNull</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>ISNULL</span></span></p>
+  </td>
+  <td width=99 rowspan=2 valign=top style='width:74.0pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>result,</span></span></p>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>operand</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>PointerIsNotNull</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>ISNOTNULL</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:Symbol;'>·</span></span><span
+  class=opcode><span style='font-size:11.0pt;
+  font-family:"Arial Narrow"'>JumpInstruction</span></span></p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Jump</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>JMP</span></span></p>
+  </td>
+  <td width=99 valign=top style='width:74.0pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>location</span></span></p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>unconditional jump</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>JumpTrue</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>JMPT</span></span></p>
+  </td>
+  <td width=99 rowspan=4 valign=top style='width:74.0pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>location,</span></span></p>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>operand</span></span></p>
+  </td>
+  <td rowspan=4 valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>conditional jump,
+  operand is boolean</span></span></p>
+  </td>
+  <td width=38 rowspan=4 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'><span
+  class=opcode><span style='font-size:11.0pt;
+  font-family:"Arial Narrow"'>Y</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>JumpFalse</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>JMPF</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>JumpNull</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>JMPN</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>JumpNotNull</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>JMPNN</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:Symbol;'>·</span></span><span
+  class=opcode><span style='font-size:11.0pt;
+  font-family:"Arial Narrow"'>Instruction</span></span></p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Raise</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>RAISE</span></span></p>
+  </td>
+  <td width=99 valign=top style='width:74.0pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>literal long</span></span></p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Exception. Operands TBD</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:Symbol;'>·</span></span><span
+  class=opcode><span style='font-size:11.0pt;
+  font-family:"Arial Narrow"'>Instruction</span></span></p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Return</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>RETURN</span></span></p>
+  </td>
+  <td width=99 valign=top style='width:74.0pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal>&nbsp;</p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Exit from Calculator.
+  Operand TBD</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'>&nbsp;</p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:Symbol;'>·</span></span><span
+  class=opcode><span style='font-size:11.0pt;
+  font-family:"Arial Narrow"'>ExtendedInstruction</span></span></p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>ExtendedInstruction</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>EXT</span></span></p>
+  </td>
+  <td width=99 valign=top style='width:74.0pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>signature</span></span></p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Signature is a string: <br>
+  &#8220;Fname(type1,type2,type3)&#8221; </span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'><span
+  class=opcode><span style='font-size:11.0pt;
+  font-family:"Arial Narrow"'>?</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'><span
+  class=opcode><span style='font-size:11.0pt;
+  font-family:"Arial Narrow"'>Y</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'><span
+  class=opcode><span style='font-size:11.0pt;
+  font-family:"Arial Narrow"'>Y</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'><span
+  class=opcode><span style='font-size:11.0pt;
+  font-family:"Arial Narrow"'>Y</span></span></p>
+  </td>
+ </tr>
+ <tr>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>CalInstruction</span></span></p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>Call</span></span></p>
+  </td>
+  <td width=74 valign=top style='width:55.15pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>CALL</span></span></p>
+  </td>
+  <td width=99 valign=top style='width:74.0pt;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>TBD</span></span></p>
+  </td>
+  <td valign=top style='padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal><span class=opcode><span style='font-size:11.0pt;font-family:"Arial Narrow"'>TBD</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'><span
+  class=opcode><span style='font-size:11.0pt;
+  font-family:"Arial Narrow"'>?</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'><span
+  class=opcode><span style='font-size:11.0pt;
+  font-family:"Arial Narrow"'>Y</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'><span
+  class=opcode><span style='font-size:11.0pt;
+  font-family:"Arial Narrow"'>Y</span></span></p>
+  </td>
+  <td width=38 style='width:.4in;padding:1.5pt 1.5pt 1.5pt 1.5pt'>
+  <p class=MsoNormal align=center style='margin-left:1.35pt;text-align:center'><span
+  class=opcode><span style='font-size:11.0pt;
+  font-family:"Arial Narrow"'>Y</span></span></p>
+  </td>
+ </tr>
+</table>
+
+<h1>Assembler</h1>
+
+<p class=MsoNormal>The Assembler performs the following functions:</p>
+
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal>Creates
+     Output, Literal, Local and Status Tuples.</li>
+ <li class=MsoNormal>Binds
+     Literal, Local and Status Tuples to Calculator Register sets.</li>
+ <li class=MsoNormal>Initializes
+     literal values in Literal Register Set.</li>
+ <li class=MsoNormal>Verifies
+     the format of serialized programs as they are parsed, including type
+     checking.</li>
+ <li class=MsoNormal>Converts
+     (&#8220;assembles&#8221;) serialized programs (string representation of programs) into
+     instruction objects.</li>
+</ul>
+
+<h2>Serialized Programs</h2>
+
+<p class=MsoNormal>Serialized programs support the following features:</p>
+
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal>A
+     preamble that defines the size and shape of all register sets. This
+     information is effectively a tuple definition for each register set.</li>
+ <li class=MsoNormal>A
+     preamble that optionally contains literals to be initialized in the
+     literal register set.</li>
+ <li class=MsoNormal>Support
+     for all types of literals, including 8-bit arrays VARBINARY, Unicode strings,
+     etc in a 6-bit clean manner.</li>
+ <li class=MsoNormal>A
+     list of instructions, the actual program text, to be created and inserted
+     into the Calculator</li>
+</ul>
+
+<h3>XML Format</h3>
+
+<p class=MsoNormal>For any number of good reasons, Calculator should support
+XML representations of programs. Unfortunately, an XML representation
+introduces the requirement for an XML parser into Fennel, which is not strictly
+necessary for Calculator to work. Therefore, to avoid adding another library
+dependency on Fennel, the text representation of programs will not be XML.</p>
+
+<h3>Boost::Spirit Parser</h3>
+
+<p class=MsoNormal>This parser was considered, but eventually disregarded. The
+template programming style that Spirit is written in is appealing, but contains
+a steep learning curve. Maintenance of this parser could be difficult. Also,
+compile-time errors are rather difficult to decode at times. The developer
+might be forced to only make small changes, and then compile and test.
+Otherwise it can be nearly impossible to tell where an error was introduced.
+Perhaps the Spirit parser can be re-investigated in the future.</p>
+
+<h3>Simple Serialized Format</h3>
+
+<p class=MsoNormal>All of the functionality required can be provided cheaply by
+using a very simple format to represent instructions. Expediency is the goal
+for now. The implementation details of this parser are, at the moment, outside
+the scope of this document. If the parser introduces an additional library
+dependency to Fennel, it must be possible to compile Fennel without the parser.
+For example, fennel/configure should take arguments, similar to <span
+class=Code><span style='font-size:11.0pt;font-family:
+"Courier New"'>&#8211;with-boost&#8211;with-stlport</span></span>, such <span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>as
+&#8211;with-ANTLR &#8211;with-XERCES</span></span>, or the like, to enable serial program
+representation and the associated third-party parsing library.</p>
+
+<h3>BNF (EBNF?) of Simple Serialized Format</h3>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>Note: &lt; whitespace &gt; is allowed between tokens.
+Tokenizer or skip-parser should consume &lt; whitespace &gt;</p>
+
+<p class=MsoNormal>Note: Format is case-sensitive.</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; whitespace &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= &#8220; &#8220; | &#8220;\n&#8221;
+| &#8220;\r&#8221; | &#8220;\t&#8221;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; program &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::=
+&lt;preamble&gt; &#8220;T&#8221; &lt; program text &gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; preamble &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= &lt; registerset def
+&gt; [ &lt;literal set def &gt; &lt; literal values &gt; ]</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; registerset def &gt; ::= &lt; set name
+&gt; </span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[ &#8220;,&#8221; ( &lt; type size &gt; )+ ]</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; terminator &gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; set name &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= &#8220;O&#8221; | # Output</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&#8220;I&#8221; | # Input &#8211; Generally unused.</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&#8220;S&#8221; | # Status</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#8220;L&#8221; | # Local </span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; type size &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= { &lt; fixedlengthtype
+&gt; } |</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+{ &lt; variablelengthtype &gt; &#8220;,&#8221; &lt; bytes &gt; }</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; fixedlengthtype &gt; ::= &lt; integers
+&gt; |</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; reals &gt; |</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; doubles &gt; | </span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;
+chars &gt; | </span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; binary &gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; variablelengthtype &gt;:: = &lt; varchar
+&gt; | &lt; varbinary &gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; literal set def &gt; ::= &#8220;C&#8221;&nbsp;&nbsp; # Literal set, think Constant.</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[ &#8220;,&#8221; ( &lt; type size &gt; )+ ]</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt; terminator &gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; literal values &gt;&nbsp; ::= &#8220;V&#8221;&nbsp;&nbsp;&nbsp; # Values</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+( &lt; literal def&gt; ) *</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; terminator &gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; literal def &gt;&nbsp;&nbsp;&nbsp;&nbsp; ::= &lt; integerval
+&gt; | </span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; realval &gt; | </span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; bytearrayval &gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; integerval &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= [ &#8220;-&#8220; ]</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+( [0-9] ) +</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; realval &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= [ &#8220;-&#8220; ]</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+( [0-9] ) + </span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&#8220;.&#8221;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+( [0-9] ) + </span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; bytearrayval&gt;&nbsp;&nbsp;&nbsp;&nbsp; ::=&nbsp; # TBD See section &#8220;Binary Encoding&#8221;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; program text &gt;&nbsp;&nbsp;&nbsp; ::= ( &lt; instruction &gt;
+) +&nbsp;&nbsp; # a program has 1 or
+more instructions</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; instruction &gt;&nbsp;&nbsp;&nbsp;&nbsp; ::=&nbsp; &lt; opcode &gt; &#8220;,&#8221;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; operand list &gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; terminator &gt; </span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; operand list &gt;&nbsp;&nbsp;&nbsp; ::= { &lt; result &gt; &#8220;,&#8221;
+&lt; operand &gt; [ &#8220;,&#8221; &lt; operand &gt; ] } |</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+{ &lt; set size &gt; } </span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; terminator &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; :: = &#8220;;&#8221;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; result &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= &lt;
+output address &gt; |</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; local address &gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; operand &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= &lt; output
+address &gt; | </span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; input address &gt; | </span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; local address &gt; | </span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; literal address &gt; | </span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; status address &gt; |</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; instruction address &gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; /* &lt; SIB address
+&gt; */</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; output address &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= &#8220;O&#8221;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; type &gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; whitespace &gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; output index &gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; input address &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= &#8220;I&#8221; </span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; type &gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;
+whitespace &gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; input index &gt; </span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; local address &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= &#8220;L&#8221; </span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; type &gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; whitespace &gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; memory index &gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; literal address &gt;&nbsp;&nbsp;&nbsp;&nbsp; ::= &#8220;C&#8221;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; type &gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; whitespace &gt; </span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; literal index &gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; status address &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= &#8220;S&#8221; </span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; type &gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; whitespace &gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;
+literal index &gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; instruction address &gt; ::= &#8220;@&#8221;
+&lt;instruction index &gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>/* &lt; SIB address &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= &#8220;*&#8221; &lt;
+type &gt; &lt; scale &gt; &#8220;,&#8221; &lt; index &gt; &#8220;,&#8221; &lt; base &gt; */</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; type &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+::= &lt; assembly code type &gt; </span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+# see Types section &amp;</span></span></p>
+
+<p class=MsoNormal style='margin-left:2.0in;text-indent:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;# StandardTypeToString</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; set size &gt; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;::= &lt; output index &gt; | </span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; input index&gt; | </span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; local index&gt; |</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&lt; literal index &gt; |</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&lt; status index &gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; output index &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::=
+0 | 1 | ... | &lt;size of output register set &#8211; 1&gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; input index &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+::= 0 | 1 | ... | &lt;size of input register set &#8211; 1&gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; local index &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+::= 0 | 1 | ... | &lt;size of local register set &#8211; 1&gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; literal index &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::= 0 | 1
+| ... | &lt;size of literal register set &#8211; 1&gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; status index &gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ::=
+0 | 1 | ... | &lt;size of status register set &#8211; 1&gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&lt; instruction index &gt;&nbsp;&nbsp; ::= 0 | 1 | . . . | &lt;size of
+program &#8211; 1&gt;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal>Note: May want additional &lt; literal def &gt; definitions,
+for example exponents: 6.0221 * 10^24. <b>TBD</b></p>
+
+<h3>Array Encoding</h3>
+
+<p class=MsoNormal>Character arrays (strings) and binary arrays will be encoded
+to allow transmission and viewing in less than 8-bit clean environments.
+Typically strings passed through the calculator will be encoded with Unicode
+and will therefore contain many non-printable (at least when interpreted as
+ASCII) characters. The format must also support the initialization of VARBINARY
+and other explicitly binary types, even though their use is likely to be
+somewhat rare.</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>Design goals, in rough order are:</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>1.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>CPU Utilization</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>2.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Size Inflation</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>3.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Hand Decoding</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>4.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Human Readable</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>Candidate encoding schemes include, but are not limited to: </p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>1.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Base64</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>2.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Hex (each byte represented by two characters)</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>3.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>BinHex-like (minus the resource fork features)</p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:-.25in;'>4.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Escaped, yet printable-ASCII.</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>ENCODING FORMAT IS <b>TBD</b>.</p>
+
+<h3 style='margin:0in;margin-bottom:.0001pt'><span style='font-weight:normal'>&nbsp;</span></h3>
+
+<h3 style='margin:0in;margin-bottom:.0001pt'>Example Programs</h3>
+
+<p class=MsoNormal>The following is a list of SQL statements and statement
+fragments and corresponding example compilations of those statements into
+Calculator programs. More efficient representations of the statements certainly
+exist. This list is not intended as a guide to the most efficient
+representation, rather as a possible representation.</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>CREATE TABLE COURSE (</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Heading INT,</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; COG INT,</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; VMG REAL</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>);</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>SELECT COG - Heading as Set</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; FROM COURSE</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;WHERE ( (Heading &gt; 200 AND Heading
+&lt; 220)</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+OR</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+VMG &gt; 10.0)</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+);</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>I s4, s4, r;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+# Input Register Set is:</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+#&nbsp;&nbsp; 0: long
+&quot;Heading&quot;, 1: long &quot;COG&quot;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+# &nbsp;&nbsp;2: real
+&quot;VMG&quot;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>O s4;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+# Output&nbsp; Register Set:</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+#&nbsp;&nbsp; 0: long
+&quot;Set&quot;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>S u1;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+# Status Register Set: unsigned char;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>C u1, u1, u1, u1, u1, u4;&nbsp; # Local Register Set: 5 booleans,</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;&nbsp; represented by unsigned chars</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+#&nbsp;&nbsp; and on s4
+&quot;Set&quot;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>L u1, u1, s4, s4, r;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; # Literal
+Register Set:</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+#&nbsp;&nbsp; boolean, boolean,
+long,</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+#&nbsp;&nbsp; long, real;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>V 1, 0, 200, 220, 10.0;&nbsp;&nbsp;&nbsp; # Values for Literal
+Register Set,</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+#&nbsp;&nbsp; including a TRUE
+and FALSE</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+# Following could be done more</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+#&nbsp;&nbsp; efficently. Drawing
+out the example</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+#&nbsp;&nbsp; here on purpose:</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>T;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+# Start program text</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>GT&nbsp;&nbsp; L u1 0, I s4 0, C s4 2;&nbsp; #00# Heading &gt; 200, store result bool in local 0</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>LT&nbsp;&nbsp; L u1 1, I s4 1, C s4 3;&nbsp; #01# Heading &lt; 220, store result bool in local 1</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>AND&nbsp;
+L u1 2, L u1 0, L u1 1;&nbsp;
+#02# AND local 0 and local 1, result in local 2</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>GT&nbsp;&nbsp; L u1 3, I r&nbsp;
+3, C r&nbsp; 4;&nbsp; #03# VMG &gt; 10.0, result in local 3</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>OR&nbsp;&nbsp; L u1 4, L u1 2, L u1 3;&nbsp; #04# OR result of AND and SOG &gt; 10.0</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>JMPT @ 8&nbsp;&nbsp; , L u1 4;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; #05# Jump if
+WHERE is satisfied</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>MOVE S u1 0, C u1 0;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; #06# Move
+Literal[0] &quot;TRUE&quot; to</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+#&nbsp;&nbsp;&nbsp; Status[0].
+Filter this row.</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>RETURN;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+#07# Exit, filtering row.</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>SUB&nbsp;
+O s4 0, I s4 1, I s4 0;&nbsp;
+#08# Subtract Input[0] from Input[1],</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;&nbsp;&nbsp; into Output[0]</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>MOVE S u1 0, L u1 1;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; #09# Move
+Literal[0] &quot;FALSE&quot; to</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+#&nbsp;&nbsp;&nbsp; Status[0]. Do
+not filter this row.</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>RETURN;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+#10# Exit, passing row onward.</span></span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<h3>MORE EXAMPLES TO FOLLOW IN THIS SPACE</h3>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>For completeness, a demonstration that the language can
+perform more complex algorithms, handle iteration, etc. Also, an argument for
+an indexing addressing mode:</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>// Fibonacci</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>input(long 0) = n, n&gt;=2;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>long prev, temp, curr, count</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>ulong index;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>prev = 1;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //
+mem(0)</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>curr = 1;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //
+mem(1)</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>index = 0;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // mem(2)</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// count mem(3)</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// temp mem(4)</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>out(index++) = prev;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>out(index++) = curr;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>for (count = 0; count &lt; input(0); count++)
+{</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp; temp
+= curr;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp; curr
+= curr + prev;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp; out(index++)
+= curr; </span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp; prev
+= temp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>}</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>Example register set layout:</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>inputs:&nbsp;&nbsp; [0] = n</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>literals: [0] = long 0, [1] = long 1, [2] =
+ulong 0;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>locals:&nbsp;&nbsp; [0] = prev, [1] = curr, [2] = index, [3] = count, [4]
+= temp</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>Program:</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>(Note: Has not been updated to current
+instruction set.)</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>MOVE&nbsp;&nbsp; &amp;0, % long 1;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// prev = 1</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>MOVE&nbsp;&nbsp; &amp;1, % long 1;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// curr = 1</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>MOVE&nbsp;&nbsp; &amp;2, % ulong 0;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //
+index = 0</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>MOVEI&nbsp;
+#0, &amp; long 0, &amp;2;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // note: index is
+implicitly ulong in 3rd operand.</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>ADD&nbsp;&nbsp;&nbsp; &amp;2, &amp; ulong 2, %ulong 1; // note: side
+effect! Read Opands read before writeback.</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>MOVEI&nbsp;
+#0, &amp; long 0, &amp;2;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>ADD&nbsp;&nbsp;&nbsp; &amp;2, &amp; ulong 2, %ulong 1; // an inc
+operator might be nice, but would be redundant</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>MOVE&nbsp;&nbsp; &amp;3, % long 0;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// count = 0</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>_BEGINLOOP;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>JMPGE&nbsp;
+_ENDLOOP, &amp; long 3, $ long 0;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>MOVE&nbsp;&nbsp; &amp;4, &amp; long 1;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// temp = cur</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>ADD&nbsp;&nbsp;&nbsp; &amp;1, &amp; long 1, &amp; long 0;&nbsp;&nbsp;&nbsp; // curr = curr + prev</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>MOVEI&nbsp;
+#0, &amp; long 0, &amp;2;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //
+out(index) = curr</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>ADD&nbsp;&nbsp;&nbsp; &amp;2, &amp; ulong 2, % ulong 1;&nbsp; // index++</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>MOVE&nbsp;&nbsp; &amp;0, &amp; long 4;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// prev = temp</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>ADD&nbsp;&nbsp;&nbsp; &amp;3, &amp; long 3, % long 1;&nbsp;&nbsp;&nbsp; // count++</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>JUMP&nbsp;&nbsp; _BEGINLOOP;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>_ENDLOOP;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>RETURN;</span></span></p>
+
+<h1>Object Tree</h1>
+
+<p class=MsoNormal>The design goal is to group classes first by type then by
+operation to allow base classes to be templated by type. Better combinatorics
+for integral types this way.</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal>Please excuse this diagram represented as an outline.</p>
+
+<p class=MsoNormal>Outline gude:</p>
+
+<p class=MsoNormal style='margin-left:.5in'>Object : Base Class</p>
+
+<p class=MsoNormal style='margin-left:1.0in'>contains</p>
+
+<p class=MsoNormal style='margin-left:1.0in'>contains</p>
+
+<p class=MsoNormal style='margin-left:1.0in;'>[&#8230;]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </p>
+
+<p class=MsoNormal style='margin-left:1.0in'>Member Function ()</p>
+
+<p class=MsoNormal style='margin-left:1.0in'>Member Function ()</p>
+
+<p class=MsoNormal style='margin-left:1.0in'>[&#8230;]</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>Calculator</span></span></p>
+
+<h5 style='margin-left:.5in'><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>Code</span></span></h5>
+
+<p class=MsoNormal style='margin-left:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>Program
+counter</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>Registers</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>Register Reference</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp; Register
+Set Index</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp; Register
+Index</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp; Pointer</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>Registers</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp; Input
+Register Set</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp; Output
+Register Set</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp; Local
+Register Set</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp; Literal
+Register Set</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp; Status
+Register Set</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>Instruction</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>longName()
+pure virtual</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>shortName()
+pure virtual</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>describe()
+pure virtual</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>exec()
+pure virtual private (called from friend class Calculator)</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>bindCalc()
+pure virtual</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>BoolInstruction
+: Instruction</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.0in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.0in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>BoolOr
+: BoolInstruction</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.0in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>BoolAnd
+: BoolInstruction</span></span></p>
+
+<p class=MsoHeading7 style='margin-left:1.0in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>BoolNot
+: BoolInstruction</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>BoolMove
+: BoolInstruction</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>BoolEqual
+: BoolInstruction</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>BoolNotEqual
+: BoolInstruction</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>BoolLess
+: BoolInstruction</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>BoolGreater
+: BoolInstruction</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>BoolIsNull
+: BoolInstruction</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in;text-indent:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>BoolNotNull
+: BoolInstruction</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>NativeInstruction
+&lt;T&gt; : Instruction</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.0in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.0in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>NativeNativeInstruction
+&lt;T&gt; : NativeInstruction</span></span></p>
+
+<p class=MsoHeading9 style='margin-left:1.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoHeading9 style='margin-left:1.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>NativeAdd
+&lt;T&gt; : NativeNativeInstruction // Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:2.0in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>NativeSub
+&lt;T&gt; : NativeNativeInstruction // Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>NativeMul
+&lt;T&gt; : NativeNativeInstruction // Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>NativeDiv
+&lt;T&gt; : NativeNativeInstruction // Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>NativeNeg
+&lt;T&gt; : NativeNativeInstruction // Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>NativeMove
+&lt;T&gt; : NativeNativeInstruction // Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.0in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.0in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>IntegralNativeInstruction
+&lt;T&gt; : NativeInstruction</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>IntegralNativeMod
+&lt;T&gt; : IntegralNativeInstruction&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>IntegralNativeAnd
+&lt;T&gt; : IntegralNativeInstruction&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>IntegralNativeOr
+&lt;T&gt; : IntegralNativeInstruction&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //
+Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>IntegralNativeShiftLeft
+&lt;T&gt; : IntegralNativeInstruction&nbsp;&nbsp;&nbsp; // Concrete</span></span></p>
+
+<p class=MsoBodyTextIndent3><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>IntegralNativeShiftRight
+&lt;T&gt; : IntegralNativeInstruction&nbsp;&nbsp; // Concrete</span></span></p>
+
+<p class=MsoBodyTextIndent3><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoBodyTextIndent3 style='margin-left:1.0in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>BoolNativeInstruction
+&lt;T&gt; : NativeInstruction</span></span></p>
+
+<p class=MsoBodyTextIndent3><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>BoolNativeEqual
+&lt;T&gt; : BoolNativeInstruction&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>BoolNativeNotEqual
+&lt;T&gt; : BoolNativeInstruction&nbsp;&nbsp;&nbsp;&nbsp; // Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>BoolNativeGreater
+&lt;T&gt; : BoolNativeInstruction&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>BoolNativeGreaterEqual
+&lt;T&gt; : BoolNativeInstruction // Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>BoolNativeLess
+&lt;T&gt; : BoolNativeInstruction&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>BoolNativeLessEqual
+&lt;T&gt; : BoolNativeInstruction&nbsp;&nbsp;&nbsp; // Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>BoolNativeIsNull
+&lt;T&gt; : BoolNativeInstruction&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Concrete</span></span></p>
+
+<p class=MsoBodyTextIndent3><span class=Code><span style='font-size:11.0pt;font-family:"Courier New"'>BoolNativeNotNull
+&lt;T&gt; : BoolNativeInstruction&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>PointerInstruction
+&lt;T&gt; : Instruction</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>PointerPointerInstruction
+&lt;T&gt; : PointerInstruction</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp; PointerMove &lt;T&gt; :
+PointerInstruction&nbsp; // Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.0in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>PointerAdd
+&lt;T&gt; : PointerInstruction&nbsp;&nbsp;
+// Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.0in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>PointerSub
+&lt;T&gt; : PointerInstruction&nbsp;&nbsp;
+// Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.0in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>PointerToNull
+&lt;T&gt; : PointerInstruction&nbsp;&nbsp;
+// Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.0in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>BoolPointerInstruction
+&lt;T&gt; : PointerInstruction</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp; PointerEqual &lt;T&gt;
+: PointerInstruction&nbsp; // Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.0in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>PointerNotEqual
+&lt;T&gt; : PointerInstruction&nbsp;&nbsp;
+// Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.0in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>PointerGreater
+&lt;T&gt; : PointerInstruction&nbsp;&nbsp;
+// Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.0in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>PointerGreaterEqual
+&lt;T&gt; : PointerInstruction&nbsp;&nbsp;
+// Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.0in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>PointerLess
+&lt;T&gt; : PointerInstruction&nbsp;&nbsp;
+// Concrete PointerLessEqual &lt;T&gt; : PointerInstruction&nbsp;&nbsp; // Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.0in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>PointerIsNull
+&lt;T&gt; : PointerInstruction&nbsp;&nbsp;
+// Concrete PointerIsNotNull &lt;T&gt; : PointerInstruction&nbsp;&nbsp; // Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.0in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>JumpInstruction
+: Instruction</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.0in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>Jump
+: FlowInstruction&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.0in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>JumpTrue:
+FlowInstruction&nbsp;&nbsp;&nbsp;&nbsp;
+// Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.0in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>JumpFalse:
+FlowInstruction&nbsp;&nbsp;&nbsp; //
+Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.0in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>JumpNull:
+FlowInstruction&nbsp;&nbsp;&nbsp;&nbsp;
+// Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.0in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>JumpNotNull:
+FlowInstruction&nbsp; // Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:1.0in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>ReturnInstruction
+: Instruction&nbsp;&nbsp;&nbsp; //
+Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>ReturnException
+: Instruction&nbsp;&nbsp;&nbsp; //
+Concrete</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>CallInstruction
+: Instruction </span></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;&nbsp;&nbsp;&nbsp; </span></span><span
+class=Code><b><span style='font-size:11.0pt;font-family:"Courier New"'>TBD</span></b></span></p>
+
+<p class=MsoNormal style='margin-left:.5in'><span class=Code><span
+style='font-size:11.0pt;font-family:"Courier New"'>&nbsp;</span></span></p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+<h1>Miscellaneous Topics</h1>
+
+<h2>Programming Conventions</h2>
+
+<h3>General Conventions</h3>
+
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal>Avoid
+     writing into Literal register set. This may be enforced with the <span
+     class=Code><span style='font-size:11.0pt;
+     font-family:"Courier New"'>ReadOnly</span></span> RegisterReference
+     property.</li>
+ <li class=MsoNormal>Writing
+     into Local register set is strictly forbidden. XOs and the tuple
+     unmarshalling code make assumptions that the underlying tuple will not be
+     molested. This may be enforced with the <span class=Code><span
+     style='font-size:11.0pt;font-family:"Courier New"'>ReadOnly</span></span>
+     RegisterReference property.</li>
+ <li class=MsoNormal>Program
+     should explicitly clear status registers.</li>
+ <li class=MsoNormal>XO
+     should check the warning from Calculator after each execution</li>
+</ul>
+
+<h3>Aggregation &amp; Analytic Functions</h3>
+
+<p class=MsoNormal>SQL <b>Aggregate Functions </b>and <b>Analytic Functions</b>
+can be supported by the program writer by appropriate manipulation of Output
+register sets. The &#8220;aggregator buckets&#8221; (nee accumulators) would be modeled as
+Output sets that were passed to various Calculators. There is no requirement
+that Output sets be cleared before use. Reading from Output registers is legal
+and encouraged. Note that setting the <span class=Code><span style='font-size:
+11.0pt;font-family:"Courier New"'>CachePointer</span></span>
+property for Output register sets is likely to be a very bad idea for this
+reason, and also for performance reasons.</p>
+
+<h3>Status Register Conventions</h3>
+
+<ul style='margin-top:0in' type=disc>
+ <li class=MsoNormal>Register
+     [0] is a boolean that signals to a Filter XO if the row should be &#8220;filtered&#8221;,
+     that is dropped, or &#8220;passed&#8221;, that is sent on to the next XO. IFF S[0] ==
+     TRUE -&gt; filter.</li>
+ <li class=MsoNormal>Register
+     [1]: Add more definitions here&#8230;</li>
+</ul>
+
+<h2>Pros &amp; Cons</h2>
+
+<p class=MsoNormal>Calculator setup is mid-weight, not light weight. Have to
+instantiate a number of objects to represent each instruction. This is
+mitigated somewhat by creating exactly one RegisterReference for each register,
+and passing pointers into each Instruction instance.</p>
+
+<h2>Threading Model</h2>
+
+<p class=MsoNormal>Calculator is not thread safe. Each calculator object is
+light weight enough that each thread can reasonably instantiate its own
+Calculator.</p>
+
+<h2>Handles</h2>
+
+<p class=MsoNormal>A handle primitive type might be useful for managing
+resources and utilizing external functions. <b>TBD</b>.</p>
+
+<h2>Tuple Descriptors</h2>
+
+<p class=MsoNormal>XOs will find it necessary to determine the format of the
+Input and Output tuples to perform their processing. getRegisterDescriptors()
+has been provided for this purpose.</p>
+
+<p class=MsoNormal>&nbsp;</p>
+
+</div>
+
+</body>
+
+</html>

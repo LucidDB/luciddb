@@ -1,0 +1,244 @@
+/*
+// $Id$
+// Saffron preprocessor and data engine
+// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// You must accept the terms in LICENSE.html to use this software.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
+package net.sf.saffron.oj.rel;
+
+import net.sf.saffron.core.PlanWriter;
+import net.sf.saffron.core.SaffronField;
+import net.sf.saffron.core.SaffronType;
+import net.sf.saffron.oj.util.OJUtil;
+import net.sf.saffron.opt.CallingConvention;
+import net.sf.saffron.opt.OptUtil;
+import net.sf.saffron.opt.RelImplementor;
+import net.sf.saffron.opt.VolcanoCluster;
+import net.sf.saffron.rel.FilterRel;
+import net.sf.saffron.rel.ProjectRel;
+import net.sf.saffron.rel.ProjectRelBase;
+import net.sf.saffron.rel.SaffronRel;
+import net.sf.saffron.runtime.CalcIterator;
+import net.sf.saffron.util.Util;
+import net.sf.saffron.rex.RexNode;
+import net.sf.saffron.rex.RexUtil;
+import net.sf.saffron.sql.SqlOperatorTable;
+import openjava.mop.OJClass;
+import openjava.ptree.*;
+
+/**
+ * <code>IterCalcRel</code> is an iterator implementation of a combination of
+ * {@link ProjectRel} above an optional {@link FilterRel}.  It takes an
+ * iterator as input, and for each row applies the filter condition if defined.
+ * Rows passing the filter expression are transformed via projection and
+ * returned.  Note that the same object is always returned (with different
+ * values), so parents must not buffer the result.
+ */
+public class IterCalcRel extends ProjectRelBase
+{
+    public final RexNode condition;
+
+    private RexNode [] childExps;
+    
+    //~ Constructors ----------------------------------------------------------
+
+    public IterCalcRel(
+        VolcanoCluster cluster,
+        SaffronRel child,
+        RexNode [] exps,
+        RexNode condition,
+        String [] fieldNames,
+        int flags)
+    {
+        super(cluster,child,exps,fieldNames,flags);
+        assert(child.getConvention() == CallingConvention.ITERATOR);
+        this.condition = condition;
+        if (condition == null) {
+            childExps = exps;
+        } else {
+            childExps = new RexNode[exps.length + 1];
+            System.arraycopy(exps,0,childExps,0,exps.length);
+            childExps[exps.length] = condition;
+        }
+    }
+
+    //~ Methods ---------------------------------------------------------------
+
+    public RexNode [] getChildExps()
+    {
+        return childExps;
+    }
+
+    public void explain(PlanWriter pw)
+    {
+        if (condition == null) {
+            super.explain(pw);
+            return;
+        }
+        String [] terms = new String[1 + childExps.length];
+        defineTerms(terms);
+        terms[exps.length + 1] = "condition";
+        pw.explain(this,terms);
+    }
+
+    public CallingConvention getConvention()
+    {
+        return CallingConvention.ITERATOR;
+    }
+
+    public Object clone()
+    {
+        return new IterCalcRel(
+            cluster,
+            OptUtil.clone(child),
+            RexUtil.clone(exps),
+            (condition == null) ? null : RexUtil.clone(condition),
+            Util.clone(fieldNames),
+            getFlags());
+    }
+
+    public static Object implementAbstract(
+        RelImplementor implementor,
+        SaffronRel rel,
+        Expression childExp,
+        Variable varInputRow,
+        final SaffronType inputRowType,
+        final SaffronType outputRowType,
+        RexNode condition,
+        RexNode [] exps)
+    {
+        OJClass outputRowClass = OJUtil.typeToOJClass(outputRowType);
+        OJClass inputRowClass = OJUtil.typeToOJClass(inputRowType);
+
+        Variable varOutputRow = implementor.newVariable();
+        
+        FieldDeclaration rowVarDecl = new FieldDeclaration(
+            new ModifierList(ModifierList.PRIVATE),
+            TypeName.forOJClass(outputRowClass),
+            varOutputRow.toString(),
+            new AllocationExpression(
+                outputRowClass,
+                new ExpressionList()));
+        
+        StatementList whileBody = new StatementList();
+
+        whileBody.add(
+            new VariableDeclaration(
+                TypeName.forOJClass(inputRowClass),
+                varInputRow.toString(),
+                new CastExpression(
+                    TypeName.forOJClass(inputRowClass),
+                    new MethodCall(
+                        new FieldAccess("inputIterator"),
+                        "next",
+                        new ExpressionList()))));
+
+        MemberDeclarationList memberList = new MemberDeclarationList();
+        
+        StatementList condBody;
+        if (condition != null) {
+            condBody = new StatementList();
+            RexNode rexIsTrue = rel.getCluster().rexBuilder.makeCall(
+                SqlOperatorTable.instance().isTrueOperator,
+                new RexNode[]{condition});
+            Expression conditionExp = implementor.translateViaStatements(
+                rel,rexIsTrue,whileBody,memberList);
+            whileBody.add(
+                new IfStatement(
+                    conditionExp,
+                    condBody));
+        } else {
+            condBody = whileBody;
+        }
+
+        // TODO:  if projection is identity, just return the underlying row
+        // instead
+
+        SaffronField [] fields = outputRowType.getFields();
+        for (int i = 0; i < exps.length; i++) {
+            Expression lhs = new FieldAccess(varOutputRow,fields[i].getName());
+            RexNode rhs = exps[i];
+            implementor.translateAssignment(
+                rel,
+                fields[i].getType(),
+                lhs,
+                rhs,
+                condBody,
+                memberList);
+        }
+        
+        condBody.add(
+            new ReturnStatement(varOutputRow));
+
+        WhileStatement whileStmt = new WhileStatement(
+            new MethodCall(
+                new FieldAccess("inputIterator"),
+                "hasNext",
+                new ExpressionList()),
+            whileBody);
+        
+        StatementList nextMethodBody = new StatementList();
+        nextMethodBody.add(whileStmt);
+        nextMethodBody.add(
+            new ReturnStatement(Literal.constantNull()));
+        
+        MemberDeclaration nextMethodDecl =
+            new MethodDeclaration(
+                new ModifierList(ModifierList.PROTECTED),
+                TypeName.forClass(Object.class),
+                "calcNext",
+                new ParameterList(),
+                null,
+                nextMethodBody);
+
+        memberList.add(rowVarDecl);
+        memberList.add(nextMethodDecl);
+        Expression newIteratorExp = new AllocationExpression(
+            TypeName.forClass(CalcIterator.class),
+            new ExpressionList(childExp),
+            memberList);
+
+        return newIteratorExp;
+    }
+
+    public Object implement(RelImplementor implementor,int ordinal)
+    {
+        if (ordinal != -1) {
+            throw Util.newInternal("implement: ordinal=" + ordinal);
+        }
+        Expression childExp =
+            (Expression) implementor.implementChild(this,0,child);
+        SaffronType outputRowType = getRowType();
+        SaffronType inputRowType = child.getRowType();
+
+        Variable varInputRow = implementor.newVariable();
+        implementor.bind(child,varInputRow);
+        
+        return implementAbstract(
+            implementor,
+            this,
+            childExp,
+            varInputRow,
+            inputRowType,
+            outputRowType,
+            condition,
+            exps);
+    }
+}
+
+// End IterCalcRel.java

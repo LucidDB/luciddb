@@ -1,0 +1,198 @@
+%name-prefix="CalcYY"  /* Give our parser a prefix so it doesn't collide with other parsers */
+%defines               /* Write header file of tokens */
+%locations             /* Do location tracking for better error messages */
+                       /* Automatically used when @n tokens are used */
+%pure_parser           /* Re-entrant parser */
+%start program         /* Explicitly define start symbol to program */
+                       /* By default, the first nonterminal is used as start */
+%{
+#include "fennel/common/CommonPreamble.h"
+#include "fennel/calc/InstructionCommon.h"
+#include "fennel/calc/CalcAssembler.h"
+
+FENNEL_BEGIN_CPPFILE("$Id")
+
+/* Define parameters for yyparse and yylex so we can pass them as
+   arguments and create a re-entrant parser/lexer */
+#define YYPARSE_PARAM parm
+#define YYLEX_PARAM   parm
+#define YYSTYPE       CalcTokenValue
+#define YYERROR_VERBOSE
+#define YYLTYPE       CalcYYLocType
+
+int  CalcYYlex(YYSTYPE*, YYLTYPE*, void*);
+void CalcYYerror(char*);
+
+%}
+
+/* BISON Declarations */
+%token <u.v_uint64> UNSIGNED_INTEGER
+%token <u.v_int64>  NEGATIVE_INTEGER
+%token <u.v_double> REAL
+%token <v_string>   STRING
+
+%token UNKNOWN_TOKEN
+%token COMMA
+%token TERM
+%token CODE_START
+
+%token WS
+%token AT
+
+%token <u.v_regset> REG_LOCAL
+%token <u.v_regset> REG_STATUS
+%token <u.v_regset> REG_LITERAL
+%token <u.v_regset> REG_INPUT
+%token <u.v_regset> REG_OUTPUT
+%token VALUES
+
+%token <u.v_type>   TYPE_FIXED
+%token <u.v_type>   TYPE_VARIABLE
+
+%token <v_opcode>   OPCODE
+
+%type <u.v_uint64> index
+
+%type <u.v_regset> set_name
+
+%type <u.v_pc>     location
+%type <u.p_regref> operand
+%type <u.p_regref> result
+%type <u.p_regref> input_reg
+%type <u.p_regref> output_reg
+%type <u.p_regref> status_reg
+%type <u.p_regref> literal_reg
+%type <u.p_regref> local_reg
+
+%type <u.p_inst>   instruction
+
+/* Grammar follows */
+%%
+program:    { ((CalcAssembler*) parm)->init(); }
+         preamble 
+         CODE_START TERM
+         program_text
+;
+
+preamble: register_sets literal_set_values
+;
+
+register_sets: register_set | register_sets register_set
+;
+
+register_set: set_name { ((CalcAssembler*) parm)->selectRegisterSet($1); } 
+              type_size_list TERM
+;
+
+literal_set_values: { ((CalcAssembler*) parm)->bindRegisters(); }
+                    | literal_set  { ((CalcAssembler*) parm)->bindRegisters(); } literal_values
+;
+
+literal_set: REG_LITERAL { ((CalcAssembler*) parm)->selectRegisterSet($1); } 
+             type_size_list TERM
+;
+
+literal_values: VALUES literal_defs { ((CalcAssembler*) parm)->bindLiteralDone(); } TERM
+;
+
+literal_defs: literal_def | literal_defs COMMA literal_def
+;
+
+/* TODO: Add support for byte array */
+literal_def:  UNSIGNED_INTEGER  { ((CalcAssembler*) parm)->bindNextLiteral<uint64_t>($1); }
+            | NEGATIVE_INTEGER  { ((CalcAssembler*) parm)->bindNextLiteral<int64_t>($1);  }
+            | REAL              { ((CalcAssembler*) parm)->bindNextLiteral<double>($1);   }
+            | STRING            { ((CalcAssembler*) parm)->bindNextLiteral<string>($1);   }
+;
+
+set_name:   REG_LOCAL | REG_STATUS | REG_INPUT | REG_OUTPUT
+;
+
+type_size:   TYPE_FIXED { ((CalcAssembler*) parm)->addRegister($1); }
+           | TYPE_VARIABLE COMMA UNSIGNED_INTEGER
+             { ((CalcAssembler*) parm)->addRegister($1, $3); }
+;
+
+type_size_list:   type_size 
+                | type_size_list COMMA type_size
+;
+ 
+program_text: instructions
+;
+
+instructions: instruction { ((CalcAssembler*) parm)->addInstruction($1); }
+              | instructions
+                instruction { ((CalcAssembler*) parm)->addInstruction($2); } 
+;
+
+/* TODO: Flesh out support for instructions */
+instruction: OPCODE result COMMA operand COMMA operand TERM 
+            {
+              $$ = ((CalcAssembler*) parm)->createInstruction($1, $2, $4, $6, @$);
+            }
+            |
+              OPCODE result COMMA operand TERM 
+            { 
+              $$ = ((CalcAssembler*) parm)->createInstruction($1, $2, $4, @$);
+            }
+            |
+              OPCODE result TERM 
+            { 
+              $$ = ((CalcAssembler*) parm)->createInstruction($1, $2, @$);
+            }
+            |
+              OPCODE location TERM 
+            { 
+              $$ = ((CalcAssembler*) parm)->createInstruction($1, $2, @$);
+            }
+            |
+              OPCODE location COMMA operand TERM 
+            { 
+              $$ = ((CalcAssembler*) parm)->createInstruction($1, $2, $4, @$);
+            }
+            | { throw CalcAssemblerException("Invalid instruction", @$); }
+;
+
+index: UNSIGNED_INTEGER
+;
+
+location: AT index { $$ = $2; ((CalcAssembler*) parm)->saveMaxPC($$); }
+;
+
+result: output_reg | local_reg | status_reg
+;
+
+operand: output_reg | local_reg | input_reg | status_reg | literal_reg
+;
+
+output_reg:  REG_OUTPUT  index { $$ = ((CalcAssembler*) parm)->getRegister($1, $2); };
+input_reg:   REG_INPUT   index { $$ = ((CalcAssembler*) parm)->getRegister($1, $2); };
+status_reg:  REG_STATUS  index { $$ = ((CalcAssembler*) parm)->getRegister($1, $2); };
+literal_reg: REG_LITERAL index { $$ = ((CalcAssembler*) parm)->getRegister($1, $2); };
+local_reg:   REG_LOCAL   index { $$ = ((CalcAssembler*) parm)->getRegister($1, $2); };
+
+%%
+
+int CalcYYlex (YYSTYPE *lvalp, YYLTYPE *llocp, void* parm)
+{
+    /* Check that we are being passed valid input */
+    assert(lvalp);
+    assert(llocp);
+    assert(parm);
+
+    CalcAssembler* pAssembler = (CalcAssembler*) parm;
+    CalcLexer& lexer = pAssembler->getLexer();
+
+    int token = lexer.yylex();
+    *lvalp = lexer.getValue();
+    *llocp = lexer.getLocation();
+       
+    return token;  
+}
+
+void CalcYYerror(char *s)
+{
+    throw CalcAssemblerException(s);
+}
+
+FENNEL_END_CPPFILE("$Id")

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- $Id$ -->
+<!-- Farrago build macro definitions -->
+
+<!-- These XML ENTITY "macros" help avoid redundancy in property -->
+<!-- settings. They can be used with <jvmarg> or <arg> as the line -->
+<!-- attribute. -->
+<!DOCTYPE project [
+
+<!ENTITY FarragoProps
+"
+-Dnet.sf.farrago.home=${farrago.dir}
+-Djava.util.logging.config.file=${FarragoTrace.properties}
+">
+
+]>
+
+<project name="farragoBuildMacros" default="unspecified">
+
+  <!-- NOTE: there's an ant bug preventing the use of mixed case names
+  for macro elements -->
+
+  <!-- Macro for forking ant (and squelching bogus mdr messages) -->
+  <macrodef name="antFork">
+    <attribute name="target" default="unspecifiedTarget"/>
+    <attribute name="classpathref" default="ant.classpath"/>
+    <element name="jvmargs" optional="yes"/>
+    <sequential>
+      <java classname="org.apache.tools.ant.Main" fork="true" failonerror="true"
+        classpathref="@{classpathref}">
+        <jvmargs/>
+        <sysproperty key="org.netbeans.mdr.Logger" value="256"/>
+        <arg value="@{target}"/>
+      </java>
+    </sequential>
+  </macrodef>
+
+  <!-- Customization for javac task -->
+  <presetdef name="javaCompile">
+    <javac debug="on" deprecation="on" source="1.4"/>
+  </presetdef>
+
+  <!-- Customization for java task -->
+  <presetdef name="javaExec">
+    <java fork="yes" failonerror="true">
+      <jvmarg line="${assertions.jvmarg}"/>
+      <jvmarg line="&FarragoProps;"/>
+    </java>
+  </presetdef>
+
+  <!-- Macro for running JSwat -->
+  <macrodef name="jswatDebug">
+    <attribute name="classpath" default="unspecified"/>
+    <attribute name="sourcepath" default="unspecified"/>
+    <attribute name="classname" default="unspecified"/>
+    <element name="jvmargs" optional="yes"/>
+    <element name="programargs" optional="yes"/>
+    <sequential>
+      <java
+        jar="${jswat.dir}/jswat.jar"
+        fork="yes">
+        <sysproperty key="java.ext.dirs" value="${java.home}/../lib"/>
+        <arg value="classpath"/>
+        <arg value="'@{classpath}'"/>
+        <arg value=";"/>
+        <arg value="sourcepath"/>
+        <arg value="'@{sourcepath}'"/>
+        <arg value=";"/>
+        <arg value="options"/>
+        <arg value="stopOnMain"/>
+        <arg value="true"/>
+        <arg value=";"/>
+        <arg value="run"/>
+        <arg line="${assertions.jvmarg}"/>
+        <arg line="&FarragoProps;"/>
+        <jvmargs/>
+        <arg value="@{classname}"/>
+        <programargs/>
+      </java>
+    </sequential>
+  </macrodef>
+ 
+  <!-- Macro for tranforming model -->
+  <macrodef name="transformModel">
+    <attribute name="inputfilename" default="unspecified"/>
+    <attribute name="outputfilename" default="unspecified"/>
+    <sequential>
+	   <xslt style="${xmi.dir}/transformFEM.xsl"
+		  in="@{inputfilename}"
+		  out="@{outputfilename}" />
+	   <replace file="@{outputfilename}"
+		  token="org.omg.xmi.namespace.Model" value="omg.org/mof.Model/1.3" />
+    </sequential>
+  </macrodef>
+
+  <macrodef name="uml2mof">
+    <attribute name="umlmodelname" default="unspecified" />
+    <attribute name="outputfilename" default="unspecified" />
+	<attribute name="umlsansdiagrams" default="unspecified" />
+    <sequential>
+    <xslt style="${xmi.dir}/deleteUmlDiagrams.xsl"
+      in="@{umlmodelname}"
+      out="@{umlsansdiagrams}">
+    </xslt>
+    <java classname="org.netbeans.lib.jmi.uml2mof.Main" 
+        fork="true" failonerror="true">
+      <sysproperty key="org.netbeans.mdr.Logger" value="256"/>
+      <classpath>
+        <pathelement location="${mdrlibs.dir}/openide-util.jar"/>
+        <!-- TODO jvs 12-Feb-2004:  get rid of openide-lookup.jar in a while -->
+        <pathelement location="${mdrlibs.dir}/openide-lookup.jar"/>
+        <pathelement location="${mdrlibs.dir}/uml-1.4.jar"/>
+        <pathelement location="${mdrlibs.dir}/uml2mof.jar"/>
+      </classpath>
+      <arg value="@{umlsansdiagrams}"/>
+      <arg value="@{outputfilename}"/>
+    </java>
+    <delete>
+      <fileset dir="." includes="mdr.bt*"/>
+    </delete>
+    </sequential>
+  </macrodef>
+
+</project>

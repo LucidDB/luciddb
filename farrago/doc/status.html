@@ -1,0 +1,287 @@
+<html>
+
+<head>
+<title>Farrago Status Page</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" />
+
+</head>
+
+<body>
+
+<h1>What's Working Already?</h1>
+
+Here's a laundry list of SQL features which are already working in
+Farrago.  Restrictions are noted inline as well as in subsequent
+sections.  If a sub-feature isn't mentioned (e.g. CHECK clause in
+CREATE TABLE), it isn't available yet.  Everything is supposed to work
+according to the SQL standard, so if something doesn't, that's either
+a bug or an incomplete feature.  Which standard?  Normal procedure is
+to consult the draft SQL200n standard and cross-check it with SQL-92
+or SQL-99 to see if there are any incompatibilities.
+
+<h2>DDL</h2>
+
+<ul>
+
+<li>All identifiers may be up to 128 characters.  Identifiers may be
+quoted (with case-sensitivity) or unquoted (with uppercasing
+before both storage and lookup).  The compound identifier
+"catalog_name"."schema_name"."object_name" fully qualifies a schema
+element.
+
+<li>SET CATALOG: the system currently starts out with several catalogs
+predefined (SYS_BOOT, SYS_CWM, SYS_FEM, and LOCALDB).  Additional
+catalogs can be created implicitly via the SQL/MED CREATE SERVER
+command.  The SYS_BOOT catalog contains internal tables for metadata
+storage, along with things like views for implementing JDBC metadata.
+The SYS_CWM catalog is a virtual catalog exposing the contents of the
+CWM-based repository.  SYS_FEM is similar, but for Farrago extensions
+to CWM.  The LOCALDB catalog stores user metadata about both local and
+foreign tables.  The default catalog starts out as LOCALDB; SET
+CATALOG can be used to change this per-session.
+
+<li>SET SCHEMA: user schemas are created in the LOCALDB catalog.
+SET SCHEMA can be used to change the default schema within the
+current catalog.  The SYS_CWM catalog defines one schema per CWM package
+(e.g. "Core", "Relational", or "KeysIndexes"); the tables in the CWM
+schemas correspond to classes (e.g. schema SYS_CWM."Core" contains
+"ModelElement" and "Feature"; schema SYS_CWM."Relational" contains "Table"
+and "View").  Likewise for SYS_FEM.
+
+<li>CREATE SCHEMA: a schema can be created by itself, or together with
+all of its contents in the same statement.  The AUTHORIZATION clause
+is currently parsed but ignored since users and roles are not yet
+implemented.
+
+<li>CREATE TABLE: every table must have a primary key.  Supported
+column datatypes are BOOLEAN, TINYINT, SMALLINT, INTEGER, BIGINT,
+REAL, DOUBLE (alias DOUBLE PRECISION), VARCHAR (alias CHARACTER
+VARYING), VARBINARY, CHAR (alias CHARACTER), and BINARY.
+
+<li>NOT NULL:  can be specified explicitly on any column; is also implied
+for columns which participate in the table's primary key or clustered index.
+
+<li>DEFAULT: can be specified for any column; otherwise default value
+is NULL.  Currently, default values can only be literals of the appropriate
+datatype (not arbitrary expressions).
+
+<li>PRIMARY KEY/UNIQUE:  constraints can be specified at either the
+column level or the table level.  Constraints can be named, and are
+enforced via implicitly created indexes.
+
+<li>CREATE [UNIQUE] CLUSTERED INDEX: if specified, this must be at the
+end of the CREATE TABLE statement, not in a separate statement.  (Example:  
+<pre><code>
+create table t(i int not null primary key,j int not null,k int)
+create clustered index t_x on t(j);
+create index t_y on t(k);
+<code></pre>
+If not specified, the primary key is used implicitly for clustering.
+Every table has exactly one clustered index.
+
+<li>CREATE [UNIQUE] INDEX: unclustered indexes can be created either
+at the end of the table definition or in separate statements.  Indexes
+are considered to be schema elements but are always created in the same
+schema as their containing table.
+
+<li>CREATE GLOBAL TEMPORARY TABLE: supports ON COMMIT
+{PRESERVE|DELETE} [ROWS] option.  Note that the "GLOBAL TEMPORARY"
+name in the standard is confusing: this is really an
+instantiate-on-reference session-local temporary table with a
+permanent shared metadata definition in the catalog.  Any indexes on a
+temporary table must be specified together with the CREATE TABLE
+statement; indexes may not be subsequently added or dropped (if you
+need that, drop and recreate the table definition).  Beyond that,
+temporary tables support the same features as permanent tables
+(constraints, defaults, etc.).
+
+<li>CREATE VIEW:  all views are currently read-only.
+
+<li>DROP SCHEMA/TABLE/VIEW: both RESTRICT and CASCADE are supported.
+
+<li>DROP INDEX:  only unclustered indexes may be dropped.
+
+<li>TRUNCATE TABLE "tbl":  delete all rows from tbl without logging them
+individually.
+
+<li>ALTER SYSTEM SET "parameterName" = value; change a system
+parameter (TODO: documentation for parameters).
+
+<li>CHECKPOINT:  force an immediate checkpoint.
+
+<li>COMMIT:  commit current transaction.
+
+<li>ROLLBACK:  rollback current transaction.
+
+<li>SAVEPOINT "x":  create a savepoint with name x.
+
+<li>ROLLBACK TO SAVEPOINT "x": partially rollback current transaction
+to savepoint x.
+
+<li><a href="design/sqlmed.html">SQL/MED</a> support: currently under
+development.  CREATE/DROP FOREIGN DATA WRAPPER, CREATE/DROP SERVER,
+and CREATE/DROP FOREIGN TABLE are working already.  Implementations for
+JDBC and MDR are available (the MDR implementation is already being used
+for exposing the catalog contents via SQL).
+JAR support is not yet implemented.
+
+</ul>
+
+<h2>Queries</h2>
+
+<ul>
+
+<li>SELECT [DISTINCT] ... FROM ... WHERE ... ORDER BY
+
+<li>UNION [ALL]
+
+<li>FROM clause may contain tables, views, multi-row VALUES,
+LEFT/RIGHT/INNER/CROSS JOIN, old-style comma list, nested queries,
+and explicit TABLE references.
+
+<li>EXPLAIN PLAN [{WITH|WITHOUT} IMPLEMENTATION] FOR <statement>; shows
+optimizer plan.  WITHOUT IMPLEMENTATION yields unoptimized abstract
+relational plan.  Default is WITH IMPLEMENTATION, which yields
+optimized plan with all physical operators.  Statement to be explained
+can be query or DML (but not DDL).
+
+<li>Row expression support is currently very limited (basic
+equality/inequality comparisons, AND, +, a few others).  
+SESSION_USER, CURRENT_USER,  and SYSTEM_USER are supported
+(but authentication and privileges are not yet implemented).
+
+</ul>
+
+<h2>DML</h2>
+
+<ul>
+
+<li>INSERT
+
+<li>UPDATE
+
+<li>DELETE
+
+</ul>
+
+<h2>JDBC API</h2>
+
+<ul>
+
+<li>local database access (no network client yet)
+
+<li>prepared statements with dynamic parameters (?)
+
+<li>some DatabaseMetaData:  getCatalogs, getSchemas, getTables, getTableTypes
+(no pattern search support)
+
+<li>savepoint API
+
+<li>autocommit or manual commit (either via API or via SQL)
+
+<li>implicit query plan cache
+
+</ul>
+
+<h2>Optimizer</h2>
+
+<ul>
+
+<li>cartesian product join (for inner joins only)
+
+<li>index join (for LEFT, RIGHT, or INNER join;
+single-column equijoin only)
+
+<li>single-column index search (equals predicate only); only one index
+at a time
+
+<li>hybrid Java/Fennel plans
+
+</ul>
+
+<h2>Executor</h2>
+
+<ul>
+
+<li>All row expressions currently implemented via Java code generation.
+
+<li>Generated Java code can either be interpreted by dynamic Java or compiled
+by Sun Java compiler (and then to native code JIT).
+
+<li>Fennel calculator for row expressions is currently under development
+but not yet operational.
+
+<li>All other execution objects are implemented by Fennel, except for
+union (concatenation of Java iterators) and MDR table access.
+
+<li>Each DML statement runs in its own implicit subtransaction as required
+by the standard.
+
+</ul>
+
+<h1>What's Broken?</h1>
+
+Besides the absence of great gobs of standard stuff like aggregates,
+fixed-point numerics, referential integrity, etc., it's worth
+mentioning some serious limitations in the features listed above:
+
+<ul>
+
+<li>The validator is still under development, so when you make an invalid
+request, you'll very likely get ugly internal errors, data corruption,
+printer spontaneous combustion, etc.
+
+<li>ORDER BY descending is not supported (nor is the non-standard
+ORDER BY a+b).
+
+<li>Subqueries and IN predicates are parsed and maybe validated but
+don't actually work yet.  Same for INTERSECT and EXCEPT.
+
+<li>Type inference is missing for some dynamic parameter contexts.
+
+<li>Creating a new index on a table with existing rows will not
+actually index those rows.
+
+<li>You can specify a CHARACTER SET name on CHAR/VARCHAR columns from
+only the single-byte character sets known to Java.
+
+<li>The current sorter implementation is just for show.  If you
+try to sort any significant amount of data, don't hold your breath.
+
+<li>BTree height increase is not yet implemented, so inserting lots of
+data will lead to a long linear chain of pages.  Bulk load for
+multi-level trees is implemented internally, but not yet exposed via SQL.
+
+<li>There's no concurrency control at all, and a few known FIXME's for
+threading problems.  So don't try more than a single session yet.
+
+<li>Updates to unique keys are not ordered correctly, so spurious
+uniqueness violations result for a statement like update t set pk=pk+1
+(where pk is a primary key).  This probably won't be fixed until
+triggers are implemented.
+
+<li>Maximum row length is not enforced yet, so you can get strange internal
+BTree errors as a result for very long rows.
+
+<li>INSERT/UPDATE do not support the explicit DEFAULT keyword.
+
+<li>The amount of performance tuning which has been done so far is
+exactly zero.
+
+<li>Fennel crash recovery should be working, but system tables are
+still stored in MDR's Java BTree implementation, which isn't
+crash-proof.  This will be addressed once Farrago can store the system
+tables itself (development in progress).
+
+<li>The SET SCHEMA command cannot be used to set a schema in a
+virtual catalog based on a SQL/MED server (including the predefined
+SYS_CWM and SYS_FEM catalogs).
+
+</ul>
+
+<a href="mailto:perfecthash@users.sf.net">Feedback</a> on anything inaccurate
+or missing from these lists is always apppreciated.
+
+</body>
+
+</html>

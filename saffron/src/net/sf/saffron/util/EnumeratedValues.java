@@ -1,0 +1,436 @@
+/*
+// $Id$
+// Saffron preprocessor and data engine
+// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// You must accept the terms in LICENSE.html to use this software.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
+package net.sf.saffron.util;
+
+import java.util.HashMap;
+import java.util.Iterator;
+
+
+/**
+ * <code>EnumeratedValues</code> is a helper class for declaring a set of
+ * symbolic constants which have names, ordinals, and possibly descriptions.
+ * The ordinals do not have to be contiguous.
+ * 
+ * <p>
+ * Typically, for a particular set of constants, you derive a class from this
+ * interface, and declare the constants as <code>public static final</code>
+ * members. Give it a private constructor, and a <code>public static final
+ * <i>ClassName</i> instance</code> member to hold the singleton instance.
+ * </p>
+ */
+public class EnumeratedValues implements Cloneable
+{
+    //~ Static fields/initializers --------------------------------------------
+
+    private static final String [] emptyStringArray = new String[0];
+
+    //~ Instance fields -------------------------------------------------------
+
+    /** map symbol names to values */
+    private HashMap valuesByName = new HashMap();
+
+    // the variables below are only set AFTER makeImmutable() has been called
+
+    /**
+     * An array mapping ordinals to {@link Value}s. It is biased by the min
+     * value. It is built by {@link #makeImmutable}.
+     */
+    private Value [] ordinalToValueMap;
+
+    /** the largest ordinal value */
+    private int max = Integer.MIN_VALUE;
+
+    /** the smallest ordinal value */
+    private int min = Integer.MAX_VALUE;
+
+    //~ Constructors ----------------------------------------------------------
+
+    /**
+     * Creates a new empty, mutable enumeration.
+     */
+    public EnumeratedValues()
+    {
+    }
+
+    /**
+     * Creates an enumeration, with an array of values, and freezes it.
+     */
+    public EnumeratedValues(Value [] values)
+    {
+        for (int i = 0; i < values.length; i++) {
+            register(values[i]);
+        }
+        makeImmutable();
+    }
+
+    /**
+     * Creates an enumeration, initialize it with an array of strings, and
+     * freezes it.
+     */
+    public EnumeratedValues(String [] names)
+    {
+        for (int i = 0; i < names.length; i++) {
+            register(new BasicValue(names[i],i,names[i]));
+        }
+        makeImmutable();
+    }
+
+    /**
+     * Create an enumeration, initializes it with arrays of code/name pairs,
+     * and freezes it.
+     */
+    public EnumeratedValues(String [] names,int [] codes)
+    {
+        for (int i = 0; i < names.length; i++) {
+            register(new BasicValue(names[i],codes[i],names[i]));
+        }
+        makeImmutable();
+    }
+
+    /**
+     * Create an enumeration, initializes it with arrays of code/name pairs,
+     * and freezes it.
+     */
+    public EnumeratedValues(
+        String [] names,
+        int [] codes,
+        String [] descriptions)
+    {
+        for (int i = 0; i < names.length; i++) {
+            register(new BasicValue(names[i],codes[i],descriptions[i]));
+        }
+        makeImmutable();
+    }
+
+    //~ Methods ---------------------------------------------------------------
+
+    /**
+     * Returns the description associated with an ordinal; the return value is
+     * null if the ordinal is not a member of the enumeration.
+     *
+     * @pre isImmutable()
+     */
+    public final String getDescription(int ordinal)
+    {
+        assert(isImmutable());
+        final Value value = ordinalToValueMap[ordinal - min];
+        if (value == null) {
+            return null;
+        } else {
+            return value.getDescription();
+        }
+    }
+
+    public final boolean isImmutable()
+    {
+        return (ordinalToValueMap != null);
+    }
+
+    /**
+     * Returns the number of enumerated values currently contained in this enumeration
+     */
+    public final int getSize()
+    {
+        return valuesByName.size();
+    }
+
+    /**
+     * Returns the largest ordinal defined by this enumeration.
+     */
+    public final int getMax()
+    {
+        return max;
+    }
+
+    /**
+     * Returns the smallest ordinal defined by this enumeration.
+     */
+    public final int getMin()
+    {
+        return min;
+    }
+
+    /**
+     * Creates a mutable enumeration from an existing enumeration, which may
+     * already be immutable.
+     */
+    public EnumeratedValues getMutableClone()
+    {
+        return (EnumeratedValues) clone();
+    }
+
+    /**
+     * Returns the name associated with an ordinal; the return value is null
+     * if the ordinal is not a member of the enumeration.
+     *
+     * @pre isImmutable()
+     */
+    public final String getName(int ordinal)
+    {
+        final Value value = getValue(ordinal);
+        return value == null ? null : value.getName();
+    }
+
+    /**
+     * Returns the value associated with an ordinal; the return value is null
+     * if the ordinal is not a member of the enumeration.
+     *
+     * @pre isImmutable()
+     */
+    public final Value getValue(int ordinal)
+    {
+        assert(isImmutable());
+        final Value value = ordinalToValueMap[ordinal - min];
+        if (value == null) {
+            return null;
+        } else {
+            return value;
+        }
+    }
+
+    /**
+     * Returns the ordinal associated with a name
+     *
+     * @throws Error if the name is not a member of the enumeration
+     */
+    public final int getOrdinal(String name)
+    {
+        return getValue(name).getOrdinal();
+    }
+
+    /**
+     * Returns whether <code>ordinal</code> is valid for this enumeration.
+     * This method is particularly useful in pre- and post-conditions, for
+     * example
+     * <blockquote>
+     * <pre>&#64;param axisCode Axis code, must be a {&#64;link AxisCode} value
+     * &#64;pre AxisCode.instance.isValid(axisCode)</pre>
+     * </blockquote>
+     *
+     * @param ordinal Suspected ordinal from this enumeration.
+     *
+     * @return Whether <code>ordinal</code> is valid.
+     */
+    public final boolean isValid(int ordinal)
+    {
+        if ((ordinal < min) || (ordinal > max)) {
+            return false;
+        }
+        if (getName(ordinal) == null) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Returns the names in this enumeration, in no particular order.
+     */
+    public String [] getNames()
+    {
+        return (String []) valuesByName.keySet().toArray(emptyStringArray);
+    }
+
+    /**
+     * Returns the ordinal associated with a name.
+     *
+     * @throws Error if the name is not a member of the enumeration
+     */
+    public Value getValue(String name)
+    {
+        final Value value = (Value) valuesByName.get(name);
+        if (value == null) {
+            throw new Error("Unknown enum name:  " + name);
+        }
+        return value;
+    }
+
+    /**
+     * Returns an error indicating that the value is illegal. (The client
+     * needs to throw the error.)
+     */
+    public Error badValue(int ordinal)
+    {
+        return Util.newInternal(
+            "bad value " + ordinal + "(" + getName(ordinal)
+            + ") for enumeration '" + getClass().getName() + "'");
+    }
+
+    /**
+     * Freezes the enumeration, preventing it from being further modified.
+     */
+    public void makeImmutable()
+    {
+        ordinalToValueMap = new Value[(1 + max) - min];
+        for (
+            Iterator values = valuesByName.values().iterator();
+                values.hasNext();) {
+            Value value = (Value) values.next();
+            final int index = value.getOrdinal() - min;
+            if (ordinalToValueMap[index] != null) {
+                throw Util.newInternal(
+                    "Enumeration has more than one value with ordinal "
+                    + value.getOrdinal());
+            }
+            ordinalToValueMap[index] = value;
+        }
+    }
+
+    /**
+     * Associates a symbolic name with an ordinal value.
+     *
+     * @pre value != null
+     * @pre !isImmutable()
+     * @pre value.getName() != null
+     */
+    public void register(Value value)
+    {
+        assert(value != null);
+        assert(!isImmutable());
+        final String name = value.getName();
+        assert(name != null);
+        Value old = (Value) valuesByName.put(name,value);
+        if (old != null) {
+            throw Util.newInternal(
+                "Enumeration already contained a value '" + old.getName()
+                + "'");
+        }
+        final int ordinal = value.getOrdinal();
+        min = Math.min(min,ordinal);
+        max = Math.max(max,ordinal);
+    }
+
+    /**
+     * Returns an exception indicating that we didn't expect to find this
+     * value here.
+     */
+    public Error unexpected(Value value)
+    {
+        return Util.newInternal(
+            "Was not expecting value '" + value + "' for enumeration '"
+            + getClass().getName() + "' in this context");
+    }
+
+    protected Object clone()
+    {
+        EnumeratedValues clone = null;
+        try {
+            clone = (EnumeratedValues) super.clone();
+        } catch (CloneNotSupportedException ex) {
+            // IMPLEMENT internal error?
+        }
+        clone.valuesByName = (HashMap) valuesByName.clone();
+        clone.ordinalToValueMap = null;
+        return clone;
+    }
+
+    //~ Inner Interfaces ------------------------------------------------------
+
+    /**
+     * A <code>Value</code> represents a member of an enumerated type. If an
+     * enumerated type is not based upon an explicit array of values, an
+     * array of {@link EnumeratedValues.BasicValue}s will implicitly be
+     * created.
+     */
+    public interface Value
+    {
+        String getDescription();
+
+        String getName();
+
+        int getOrdinal();
+    }
+
+    //~ Inner Classes ---------------------------------------------------------
+
+    /**
+     * <code>BasicValue</code> is an obvious implementation of {@link
+     * EnumeratedValues.Value}.
+     */
+    public static class BasicValue implements Value
+    {
+        public final String description_;
+        public final String name_;
+        public final int ordinal_;
+
+        /**
+         * @pre name != null
+         */
+        public BasicValue(String name,int ordinal,String description)
+        {
+            assert(name != null);
+            this.name_ = name;
+            this.ordinal_ = ordinal;
+            this.description_ = description;
+        }
+
+        public String getDescription()
+        {
+            return description_;
+        }
+
+        public String getName()
+        {
+            return name_;
+        }
+
+        public int getOrdinal()
+        {
+            return ordinal_;
+        }
+
+        /**
+         * Returns whether this value is equal to a given string.
+         *
+         * @deprecated I bet you meant to write
+         *             <code>value.name_.equals(s)</code> rather than
+         *             <code>value.equals(s)</code>, didn't you?
+         */
+        public boolean equals(String s)
+        {
+            return super.equals(s);
+        }
+
+        // forwarding function for super.equals
+        public boolean equals(Object o)
+        {
+            return super.equals(o);
+        }
+
+        /**
+         * Returns the value's name.
+         */
+        public String toString()
+        {
+            return name_;
+        }
+
+        public Error unexpected()
+        {
+            return Util.newInternal(
+                "Value " + name_ + " of class " + getClass()
+                + " unexpected here");
+        }
+    }
+}
+
+
+// End EnumeratedValues.java

@@ -1,0 +1,277 @@
+
+<html>
+
+<head>
+<title>Farrago/Fennel Integration via JNI </title>
+<link rel="stylesheet" type="text/css" href="../stylesheet.css" />
+
+</head>
+
+<body>
+
+<h1>Overview</h1> 
+The <a href="../architecture.html">architecture
+doc</a> mentions that Farrago Java code communicates with the Fennel
+C++ kernel via JNI.  This document presents the detailed design for
+that integration.
+
+<h1>Design Goals</h1>
+
+The JNI interface wrapping Fennel is necessarily quite wide, as it has
+to deal with a variety of storage objects and operations which will be
+extended over time.  This implies that the interface should be
+designed carefully with a number of goals in mind.
+
+<ul>
+
+<li>Programmer productivity:  JNI programming is very tedious and
+error-prone.  Everything possible should be done to make life easy for
+those who have to define and maintain this interface.
+
+<li>Safety:  JNI programming errors can result in undetected
+corruption of the JVM and/or the storage manager, and weak typing
+makes it very hard to detect these at compile time.  The interface
+design should attempt to counteract these problems.
+
+<li>Expressiveness:  It must be easy to exchange complex metadata
+between Java and C++ code.
+
+<li>Documentation:  The interface must be well documented since it is
+accessed by many Farrago components.
+
+<li>Integration Completeness:  The JNI interface must provide
+integration support for all aspects of server execution (e.g. tracing,
+exception handling, internationalization).
+
+<li>Efficiency:  Interface methods which are on the critical path for
+query execution must be implemented with minimal overhead.
+
+</ul>
+
+<h1>Approach</h1> 
+
+A well known approach which addresses most of the above design goals
+is the <a href="http://jnipp.sourceforge.net">proxy/peer system</a> in
+which C++ code is generated from Java interfaces.  For Java code that
+needs to call C++, the developer fills in implementations for
+generated peer classes.  Conversely, C++ code that needs to access
+Java makes calls on generated proxy objects which wrap hidden JNI
+method invocations.  The code generation step addresses productivity,
+safety, and expressiveness.
+
+<p>
+
+Generic tools such as <a href="http://sf.net/projects/jace">Jace</a>
+are available which automate the Java-to-C++ code generation process.
+For Farrago, a lightweight homebrew solution was developed along 
+similar lines, but tailored to take full advantage of available metadata.
+
+<p>
+
+The approach starts with a UML model for the data structures to be
+communicated between Java and C++.  This model is a subpackage of FEM
+(TODO: link to FEM docs), so from it Java interfaces and
+implementation classes are generated automatically as part of the
+overall catalog build process (TODO: link to build docs).  However,
+these classes are marked with the 
+<a href="http://mdr.netbeans.org/transmd.html">org.netbeans.mdr.transient</a>
+tag, so instances created at runtime will never be stored in the
+catalog.  
+
+<p>
+
+Once the MDR-based catalog is created, a custom C++ code generator is
+run which produces C++ proxy classes (peers are not yet supported as
+there has been little need so far).  The code generator uses a
+combination of Java reflection and JMI metadata access to transform
+the source model.  The available metadata allows us to take full
+advantage of the type safety afforded by C++ generics.  For example,
+in Java, an JMI association is accessed via a weakly-typed Collection,
+requiring typecasting.  The code generator knows the true type of the
+association end, so it generates an appropriate instantiation of a C++
+template which hides all typecasting.  The generated classes make use
+of a small runtime framework for calling JNI.
+
+<p>
+
+TODO:  diagram
+
+<p>
+
+It should be noted that the choice of this model-driven approach
+brings some design goals into competition.  The extra complexity of
+dealing with a modeling tool introduces a learning curve and may add a
+small drag on productivity (although it's still far superior to
+straight JNI programming).  However, the benefits for safety,
+documentation, and expressiveness are worth the extra hassle.
+
+<h1>FennelStorage Native Interface</h1> 
+
+The only Java class which declares any native methods is
+net.sf.farrago.fennel.FennelStorage (TODO: javadoc link).  Only a few
+native methods are defined.  The most important one is a generic
+execution method for the command pattern described in the next
+section.  The other methods are special cases for efficient execution
+of tuple streams.
+
+<h1>Commands</h1> 
+
+Execution of Fennel storage manager operations is accomplished via the
+<a href="http://c2.com/cgi/wiki?CommandPattern">Command pattern</a>.
+Java code instantiates a command object describing the operation to be
+performed, and then passes this object to FennelDbHandle.executeCmd.
+C++ code interprets the command via the corresponding generated
+proxies and executes it.  Here's a UML diagram of the command class hierarchy:
+
+<hr>
+<img src="FennelCommands.gif">
+<hr>
+
+TODO:  links to detailed docs for available commands
+
+<h1>Handles</h1> 
+
+Fennel commands usually need to refer to existing storage objects such
+as databases and transactions, and sometimes create new ones.  These
+inter-command references are accomplished via handles.  A handle has
+two parts:
+
+<ul>
+
+<li>a dynamically allocated C++ object which stores the handle state,
+including references to other underlying storage objects
+
+<li>a Java object (instances of class
+net.sf.farrago.fem.fennel.FennelHandle) which contains a long integer
+representing the pointer to the C++ object
+
+</ul>
+
+The command model defines associations which allow commands to refer
+to input handles or return output handles:
+
+<hr>
+<img src="FennelHandles.gif">
+<hr>
+
+Since specific associations are defined between individual command
+and handle subclasses, safety is guaranteed (i.e. a
+command can't accidentally pass a transaction handle where a stream
+handle is expected).
+
+<p>
+
+Commands may refer to more than one handle (e.g. CmdRollback always
+refers to a transaction handle, but may also refer to a savepoint handle).
+
+<h2>Complex Return Types</h2>
+
+In most cases encountered so far, complex structures are passed from
+Java to C++ but not in the other direction.  The current code
+generation infrastructure supports read-only proxies, so the few
+instances where the storage manager must return complex information
+are special-cased, e.g. by constructing an XMI string which is
+transformed into Java object representation via the MDR import
+facility.
+
+<h1>Tuple Stream Definition</h1> 
+
+One of the commands, CmdOpenTupleStream, deserves individual mention.
+Its single innocent-looking attribute, tupleStreamDef, is really an
+entire submodel.  Execution of CmdOpenTupleStream results in the
+construction of an entire query execution graph of specialized
+TupleStream nodes.  The only graph topology currently supported is a
+tree, which is why the Input/Consumer association in the model below
+is 1-to-n rather than m-to-n:
+
+<hr>
+<img src="FennelTupleStreams.gif">
+<hr>
+
+The leaf nodes derived from TupleStreamDef in the above inheritance
+hierarchy represent instantiable Fennel TupleStream types.  When
+Fennel interprets CmdOpenTupleStream, it walks the recursive
+TupleStreamDataflowDef association, constructing the appropriate type
+of TupleStream for each node visited, initializing it with the
+defined parameters.  It also ties the streams together into a dataflow
+graph mirroring the TupleStreamDef associations and returns a handle
+to this graph as the result of the command.
+
+<h1>Tuple Stream Execution</h1> 
+
+When a TupleStream graph is executed, it may process a very large
+number of tuples, and in some cases, these tuples must flow through
+the Java virtual machine for filtering, transformation, etc.
+FennelStorage defines a separate native interface for this purpose;
+the interface is designed for efficiency to the extent allowed by
+Java.  There are two cases to consider:  Java processing of tuples
+produced by Fennel, and Fennel processing of tuples produced by Java.
+
+<h2>From Fennel to Java</h2>
+
+For this case, FennelStorage provides the tupleStreamFetch method,
+which takes a stream handle and a byte array as input.  The Fennel
+implementation fills the byte array with data in the same tuple format
+used by Fennel internally.  Tuples are stored contiguously, and only
+complete tuples are returned.  A separate method tupleStreamDescribe
+can be called to retrieve a physical description of the stream output
+format.  This, together with java.nio.ByteBuffer, is used by
+implementations of net.sf.farrago.query.FennelTupleReader to unmarshal
+the data returned by Fennel.
+
+<h2>From Java to Fennel</h2>
+
+In the opposite direction, things are a little more complicated.
+First of all, the stream definition must tell Fennel how to call back
+into Java in order to retrieve tuples.  This is accomplished by
+specifying an instance of JavaTupleStreamDef in the stream definition
+passed to CmdOpenTupleStream.  [TBD: Java object handles or class names
+or whatever ends up being used.]  Fennel uses the attributes in
+JavaTupleStreamDef to locate an instance of Java class
+JavaTupleStream.  During query execution, when a consumer of this
+stream requests tuples, Fennel makes a call to
+JavaTupleStream.fillBuffer, passing a ByteBuffer.  (Note that this
+call sequence bypasses the usual proxy code generation infrastructure
+for control and efficiency.)  This ByteBuffer is actually a direct
+reference to C++ memory compliments of java.nio, eliminating the need
+to copy (TBD: why we don't do the same thing in the tupleStreamFetch
+case).  The JavaTupleStream implementation writes into this ByteBuffer
+via an instance of net.sf.farrago.query.FennelTupleWriter which has
+been provided with the target tuple format.  Once the buffer is filled
+or no more tuples are available, JavaTupleStream.fillBuffer returns to
+Fennel, which continues execution with the consumer stream.
+
+<p>
+
+TODO:  diagram of a tree involving dataflow in both directions
+
+<h1>Configuration Parameters</h1> 
+
+TBD
+
+<h1>Tracing</h1> 
+
+TBD
+
+<h1>Exception Handling</h1> 
+TBD
+
+<h1>Internationalization</h1> 
+TBD
+
+<hr>
+
+<b>
+  <table border="1" width="100%" class="clsStd">
+    <tr>
+      <td>End <i>$Id$</i></td>
+    </tr>
+  </table>
+  <p>&nbsp;</p>
+</b>
+
+</body>
+
+</html>
+
+
