@@ -30,7 +30,7 @@ import java.util.Arrays;
  * @author Stephan Zuercher
  * @version $Id$
  */
-public class FennelPseudoUuid
+public class FennelPseudoUuid implements java.io.Serializable
 {
     //~ Static fields/initializers --------------------------------------------
     public static final int UUID_LENGTH = 16;
