@@ -46,7 +46,7 @@ public class SqlAdvisor
 
     //~ Instance fields -------------------------------------------------------
     private final SqlValidator validator;
-    private final String hintToken = "$suggest$";
+    private final String hintToken = "_suggest_";
 
     //~ Constructors ----------------------------------------------------------
     /**
@@ -105,7 +105,6 @@ public class SqlAdvisor
     public String[] getCompletionHints(String sql, SqlParserPos pp)
         throws SqlParseException
     {
-        sql = prepareSqlForParser(sql);
         SqlParser parser = new SqlParser(sql);
         SqlNode sqlNode = parser.parseQuery();
         try {

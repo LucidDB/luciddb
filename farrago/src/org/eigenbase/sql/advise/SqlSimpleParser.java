@@ -66,7 +66,10 @@ public class SqlSimpleParser
         keywords.add("join");
         keywords.add("on");
         keywords.add("where");
+        keywords.add("group by");
+        keywords.add("having");
         keywords.add("order by");
+        keywords.add("");
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -239,18 +242,26 @@ public class SqlSimpleParser
         Iterator i = tokenList.iterator();
         String curToken = "";
         ArrayList curList = null;
+        ArrayList nokwList = new ArrayList();
         while (i.hasNext()) {
             String token = (String) i.next();
             if (keywords.contains(token) || token.equals("<EOF>")) {
-                if (curToken != "") {
+                if (!curToken.equals("")) {
                     buckets.put(curToken, curList);
                 }
                 curToken = token;
                 curList = new ArrayList();
             } else {
-                curList.add(token);
+                if (curToken.equals("")) {
+                    // this token does not follow any keyword 
+                    // this may not be a subquery, probably just an identifier
+                    nokwList.add(token);
+                } else {
+                    curList.add(token);
+                }
             }
         }
+        buckets.put("", nokwList);
         return buckets;
     }
 
@@ -321,6 +332,7 @@ public class SqlSimpleParser
         st.wordChars(44, 44);
         st.wordChars(46, 46);
         st.wordChars(61, 61);
+        st.wordChars(95, 95);
     }
 
     private SqlKw makeSqlKw(String keyword, List entries) {  
