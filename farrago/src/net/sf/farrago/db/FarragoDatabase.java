@@ -173,7 +173,7 @@ public class FarragoDatabase extends FarragoCompoundAllocation
             // REVIEW:  sequencing from this point on
             if (currentConfig.isUserCatalogEnabled()) {
                 userRepos = sessionFactory.newRepos(this, true);
-                if (userRepos.getSelfAsCwmCatalog() == null) {
+                if (userRepos.getSelfAsCatalog() == null) {
                     // REVIEW:  request this explicitly?
                     userRepos.createSystemObjects();
                 }

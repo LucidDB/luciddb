@@ -93,7 +93,7 @@ public class DdlSetPathStmt extends DdlSetContextStmt
         }
         if (schemaList == null) {
             throw FarragoResource.instance().newValidatorSetPathInvalidExpr(
-                valueString);
+                ddlValidator.getRepos().getLocalizedObjectName(valueString));
         }
     }
 

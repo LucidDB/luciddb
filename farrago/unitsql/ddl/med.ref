@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/med.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/med.sql#2 $
 0: jdbc:farrago:> -- Test SQL/MED DDL
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- create a private wrapper for mdr (don't use the standard mdr wrapper)
@@ -10,8 +10,7 @@
 0: jdbc:farrago:> create foreign data wrapper test_mdr
 . . . . . . . . > library 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'
 . . . . . . . . > language java;
-Error: DataWrapper TEST_MDR already exists within Catalog SYS_BOOT;
-duplicate name encountered near line 1, column 29 (state=,code=0)
+Error: DDL validation error near line 1, column 29: Target catalog "SYS_BOOT" already contains data wrapper "TEST_MDR" with same name (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create server mof_server
 . . . . . . . . > foreign data wrapper test_mdr
@@ -27,8 +26,7 @@ duplicate name encountered near line 1, column 29 (state=,code=0)
 . . . . . . . . >     extent_name 'MOF', 
 . . . . . . . . >     schema_name 'Model',
 . . . . . . . . >     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr');
-Error: DataServer MOF_SERVER already exists within Catalog SYS_BOOT;
-duplicate name encountered near line 1, column 15 (state=,code=0)
+Error: DDL validation error near line 1, column 15: Target catalog "SYS_BOOT" already contains data server "MOF_SERVER" with same name (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test name uniqueness relative to a real catalog:  should fail
 0: jdbc:farrago:> create server localdb
@@ -37,8 +35,7 @@ duplicate name encountered near line 1, column 15 (state=,code=0)
 . . . . . . . . >     extent_name 'MOF', 
 . . . . . . . . >     schema_name 'Model',
 . . . . . . . . >     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr');
-Error: Catalog LOCALDB already exists within Catalog SYS_BOOT;
-duplicate name encountered near line 1, column 15 (state=,code=0)
+Error: DDL validation error near line 1, column 15: Target catalog "SYS_BOOT" already contains catalog "LOCALDB" with same name (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test a direct table reference without creating a foreign table
 0: jdbc:farrago:> select "name" from mof_server."Model"."Exception" order by 1;
@@ -83,23 +80,23 @@ duplicate name encountered near line 1, column 15 (state=,code=0)
 0: jdbc:farrago:> create table mof_schema.local_table_foreign_wrapper(
 . . . . . . . . >     id int not null primary key)
 . . . . . . . . > server mof_server;
-Error: Cannot create local table MOF_SCHEMA.LOCAL_TABLE_FOREIGN_WRAPPER using foreign data wrapper SYS_BOOT.TEST_MDR (state=,code=0)
+Error: Cannot create local table "MOF_SCHEMA"."LOCAL_TABLE_FOREIGN_WRAPPER" using foreign data wrapper "SYS_BOOT"."TEST_MDR" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- and vice versa
 0: jdbc:farrago:> create foreign table mof_schema.foreign_table_local_wrapper(
 . . . . . . . . >     id int not null primary key)
 . . . . . . . . > server sys_mock_data_server;
-Error: Cannot create foreign table MOF_SCHEMA.FOREIGN_TABLE_LOCAL_WRAPPER using local data wrapper SYS_BOOT.SYS_MOCK (state=,code=0)
+Error: Cannot create foreign table "MOF_SCHEMA"."FOREIGN_TABLE_LOCAL_WRAPPER" using local data wrapper "SYS_BOOT"."SYS_MOCK" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- foreign does not allow constraint: should fail
 0: jdbc:farrago:> create foreign table mof_schema.test (name char(20) not null primary key)
 . . . . . . . . > server mof_server
 . . . . . . . . > options(class_name 'Exception');
-Error: ForeignTable TEST does not accept a constraint definition (state=,code=0)
+Error: Constraint definition not allowed on foreign table "MOF_SCHEMA"."TEST" (state=,code=0)
 0: jdbc:farrago:> create foreign table mof_schema.test (name char(20) not null constraint n_unique_name unique)
 . . . . . . . . > server mof_server
 . . . . . . . . > options(class_name 'Exception');
-Error: ForeignTable TEST does not accept a constraint definition (state=,code=0)
+Error: Constraint definition not allowed on foreign table "MOF_SCHEMA"."TEST" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test same query as above, but against foreign table
 0: jdbc:farrago:> select name from mof_schema.mof_exception order by 1;
@@ -139,11 +136,11 @@ Error: ForeignTable TEST does not accept a constraint definition (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test DROP FOREIGN DATA WRAPPER with RESTRICT:  should fail
 0: jdbc:farrago:> drop foreign data wrapper test_mdr restrict;
-Error: DataWrapper SYS_BOOT.TEST_MDR can only be dropped with CASCADE because other objects still reference it (state=,code=0)
+Error: Dropping data wrapper "SYS_BOOT"."TEST_MDR" requires CASCADE because other objects still reference it (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test DROP SERVER with RESTRICT:  should fail
 0: jdbc:farrago:> drop server mof_server restrict;
-Error: DataServer SYS_BOOT.MOF_SERVER can only be dropped with CASCADE because other objects still reference it (state=,code=0)
+Error: Dropping data server "SYS_BOOT"."MOF_SERVER" requires CASCADE because other objects still reference it (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test DROP SERVER with CASCADE
 0: jdbc:farrago:> drop server mof_server cascade;

@@ -60,7 +60,10 @@ VARYING), VARBINARY, CHAR (alias CHARACTER), BINARY, DATE, TIME, and
 TIMESTAMP.  Time precision is currently limited to seconds, but will
 eventually be enhanced to microseconds (which should be the default
 for TIMESTAMP according to the SQL standard).  Timezones are not yet
-supported.
+supported.  Support for <a
+href="design/CollectionTypes.html">multisets</a>, time intervals, and
+<a href="design/UserDefinedTypesAndRoutines.html">user-defined
+types</a> is currently under development.
 
 <li>NOT NULL:  can be specified explicitly on any column; is also implied
 for columns which participate in the table's primary key or clustered index.
@@ -128,6 +131,12 @@ FOREIGN DATA WRAPPER, CREATE/DROP SERVER, and CREATE/DROP FOREIGN
 TABLE are working.  Implementations for JDBC and MDR are
 available (the MDR implementation is already being used for exposing
 the catalog contents via SQL).
+
+<li><a href="design/UserDefinedTypesAndRoutines.html">CREATE FUNCTION</a>:  
+supports functions with SQL-defined bodies consisting 
+of a single RETURN statement).  Support for external Java functions is
+currently under development.
+</li>
 
 </ul>
 

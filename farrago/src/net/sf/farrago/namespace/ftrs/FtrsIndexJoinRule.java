@@ -21,6 +21,7 @@ package net.sf.farrago.namespace.ftrs;
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.query.*;
@@ -101,17 +102,17 @@ class FtrsIndexJoinRule extends RelOptRule
         CwmColumn indexColumn = scanRel.getColumnForFieldAccess(rightOrdinal);
         assert (indexColumn != null);
 
-        if (!repos.isClustered(scanRel.index)) {
+        if (!scanRel.index.isClustered()) {
             // TODO:  support direct join against an unclustered index scan
             return;
         }
 
         // if we're working with a clustered index scan, consider all of
         // the unclustered indexes as well
-        Iterator iter =
-            repos.getIndexes(scanRel.ftrsTable.getCwmColumnSet()).iterator();
+        Iterator iter = FarragoCatalogUtil.getTableIndexes(
+            repos, scanRel.ftrsTable.getCwmColumnSet()).iterator();
         while (iter.hasNext()) {
-            CwmSqlindex index = (CwmSqlindex) iter.next();
+            FemLocalIndex index = (FemLocalIndex) iter.next();
             considerIndex(joinRel, index, scanRel, indexColumn, leftOrdinal,
                 rightOrdinal, leftRel, call);
         }
@@ -119,7 +120,7 @@ class FtrsIndexJoinRule extends RelOptRule
 
     private void considerIndex(
         JoinRel joinRel,
-        CwmSqlindex index,
+        FemLocalIndex index,
         FtrsIndexScanRel scanRel,
         CwmColumn indexColumn,
         int leftOrdinal,
@@ -215,7 +216,7 @@ class FtrsIndexJoinRule extends RelOptRule
         Integer [] inputJoinProj =
             FennelRelUtil.newIotaProjection(leftFieldCount);
 
-        if (!repos.isClustered(index) && repos.isClustered(scanRel.index)) {
+        if (!index.isClustered() && scanRel.index.isClustered()) {
             Integer [] clusteredKeyColumns =
                 FtrsUtil.getClusteredDistinctKeyArray(repos, scanRel.index);
 

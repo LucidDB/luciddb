@@ -175,7 +175,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         // When a table is dropped, all indexes on the table should also be
         // implicitly dropped.
         addDropRule(
-            getRepos().indexPackage.getIndexSpansClass(),
+            getRepos().getKeysIndexesPackage().getIndexSpansClass(),
             new DropRule("spannedClass", null,
                 ReferentialRuleTypeEnum.IMPORTED_KEY_CASCADE));
 
@@ -183,14 +183,14 @@ public class DdlValidator extends FarragoCompoundAllocation
         // CASCADE, they go away (a special case later on takes care of
         // cascading to the dependent object as well).
         addDropRule(
-            getRepos().corePackage.getDependencySupplier(),
+            getRepos().getCorePackage().getDependencySupplier(),
             new DropRule("supplier", null,
                 ReferentialRuleTypeEnum.IMPORTED_KEY_RESTRICT));
 
         // When a dependency gets dropped, take its owner (the client)
         // down with it.
         addDropRule(
-            getRepos().corePackage.getElementOwnership(),
+            getRepos().getCorePackage().getElementOwnership(),
             new DropRule("ownedElement", CwmDependency.class,
                 ReferentialRuleTypeEnum.IMPORTED_KEY_CASCADE));
 
@@ -198,7 +198,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         // This is not true for other namespaces (e.g. a table's constraints
         // are dropped implicitly), so we specify the superInterface filter.
         addDropRule(
-            getRepos().corePackage.getElementOwnership(),
+            getRepos().getCorePackage().getElementOwnership(),
             new DropRule("namespace", CwmSchema.class,
                 ReferentialRuleTypeEnum.IMPORTED_KEY_RESTRICT));
 
@@ -667,16 +667,15 @@ public class DdlValidator extends FarragoCompoundAllocation
                     // simultaneously
                     // REVIEW: error message assumes collection is sorted by
                     // definition order, which may not be guaranteed?
-                    throw res.newValidatorDuplicateNames(
-                        getRepos().getLocalizedObjectName(
-                            null,
-                            element.getName(),
-                            element.refClass()),
-                        getRepos().getLocalizedObjectName(
-                            container,
-                            container.refClass()),
-                        getParserPosString(element),
-                        getParserPosString(other));
+                    throw newPositionalError(
+                        element, 
+                        res.newValidatorDuplicateNames(
+                            getRepos().getLocalizedObjectName(
+                                null,
+                                element.getName(),
+                                element.refClass()),
+                            getRepos().getLocalizedObjectName(container), 
+                            getParserPosString(other)));
                 } else {
                     CwmModelElement newElement;
                     CwmModelElement oldElement;
@@ -691,15 +690,14 @@ public class DdlValidator extends FarragoCompoundAllocation
                     }
 
                     // new object clashes with existing object
-                    throw res.newValidatorNameInUse(
-                        getRepos().getLocalizedObjectName(
-                            null,
-                            oldElement.getName(),
-                            oldElement.refClass()),
-                        getRepos().getLocalizedObjectName(
-                            container,
-                            container.refClass()),
-                        getParserPosString(newElement));
+                    throw newPositionalError(
+                        newElement, 
+                        res.newValidatorNameInUse(
+                            getRepos().getLocalizedObjectName(
+                                null,
+                                oldElement.getName(),
+                                oldElement.refClass()),
+                            getRepos().getLocalizedObjectName(container)));
                 }
             }
             nameMap.put(name, element);
@@ -792,6 +790,16 @@ public class DdlValidator extends FarragoCompoundAllocation
         }
         sessionVariables.schemaSearchPath =
             Collections.unmodifiableList(list);
+    }
+
+    // implement FarragoSessionDdlValidator
+    public FarragoException newPositionalError(
+        RefObject refObj,
+        SqlValidatorException ex)
+    {
+        String msg = getParserPosString(refObj);
+        assert(msg != null);
+        return res.newValidatorPositionContext(msg, ex);
     }
     
     /**

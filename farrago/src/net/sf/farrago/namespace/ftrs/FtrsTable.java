@@ -23,6 +23,7 @@ import java.util.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.query.*;
+import net.sf.farrago.catalog.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
@@ -58,7 +59,9 @@ class FtrsTable extends MedAbstractColumnSet
         return new FtrsIndexScanRel(
             cluster,
             this,
-            getPreparingStmt().getRepos().getClusteredIndex(getCwmColumnSet()),
+            FarragoCatalogUtil.getClusteredIndex(
+                getPreparingStmt().getRepos(),
+                getCwmColumnSet()),
             connection,
             null,
             false);

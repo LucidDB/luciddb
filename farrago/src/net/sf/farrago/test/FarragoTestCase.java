@@ -556,7 +556,7 @@ public abstract class FarragoTestCase extends DiffTestCase
             // NOTE:  don't use DatabaseMetaData.getSchemas since it doesn't
             // work when Fennel is disabled
             Iterator schemaIter =
-                repos.getSelfAsCwmCatalog().getOwnedElement().iterator();
+                repos.getSelfAsCatalog().getOwnedElement().iterator();
             while (schemaIter.hasNext()) {
                 Object obj = schemaIter.next();
                 if (!(obj instanceof CwmSchema)) {
@@ -580,7 +580,7 @@ public abstract class FarragoTestCase extends DiffTestCase
         {
             List list = new ArrayList();
             Iterator iter =
-                repos.medPackage.getFemDataWrapper().refAllOfClass().iterator();
+                repos.getMedPackage().getFemDataWrapper().refAllOfClass().iterator();
             while (iter.hasNext()) {
                 FemDataWrapper wrapper = (FemDataWrapper) iter.next();
                 if (wrapper.getName().startsWith("SYS_")) {

@@ -165,7 +165,8 @@ public abstract class FarragoPluginCache extends FarragoCompoundAllocation
                 return classLoader.loadClass(className);
             }
         } catch (Throwable ex) {
-            throw FarragoResource.instance().newPluginJarLoadFailed(libraryName,
+            throw FarragoResource.instance().newPluginJarLoadFailed(
+                libraryName,
                 ex);
         }
     }
@@ -196,7 +197,8 @@ public abstract class FarragoPluginCache extends FarragoCompoundAllocation
             plugin = (FarragoPlugin) obj;
             plugin.initialize(repos, options);
         } catch (Throwable ex) {
-            throw FarragoResource.instance().newPluginInitFailed(libraryName,
+            throw FarragoResource.instance().newPluginInitFailed(
+                repos.getLocalizedObjectName(libraryName),
                 ex);
         }
         return plugin;

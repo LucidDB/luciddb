@@ -37,7 +37,8 @@ import org.eigenbase.reltype.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FarragoSession extends FarragoAllocation
+public interface FarragoSession
+    extends FarragoAllocation, FarragoStreamFactoryProvider
 {
     //~ Methods ---------------------------------------------------------------
 
@@ -99,7 +100,7 @@ public interface FarragoSession extends FarragoAllocation
      * is specified by CREATE TABLE
      */
     public String getDefaultLocalDataServerName();
-    
+
     /**
      * Initializes the database metadata associated with this session.
      *
@@ -247,13 +248,6 @@ public interface FarragoSession extends FarragoAllocation
      */
     public FarragoSessionRuntimeContext newRuntimeContext(
         FarragoSessionRuntimeParams params);
-
-    /**
-     * Register factories for extension ExecutionStreams in Fennel.
-     *
-     * @param hStreamGraph native handle to unprepared stream graph
-     */
-    public void registerStreamFactories(long hStreamGraph);
 }
 
 

@@ -102,31 +102,28 @@ class FarragoDbSessionIndexMap extends FarragoCompoundAllocation
     //~ Methods ---------------------------------------------------------------
 
     // implement FarragoSessionIndexMap
-    public long getIndexRoot(CwmSqlindex index)
+    public long getIndexRoot(FemLocalIndex index)
     {
-        if (repos.isTemporary(index)) {
+        if (FarragoCatalogUtil.isIndexTemporary(index)) {
             Long root = (Long) tempIndexRootMap.get(index);
             assert (root != null);
             return root.longValue();
         } else {
-            return Long.parseLong(repos.getTagValue(index, "indexRoot"));
+            return Long.parseLong(index.getStorageId());
         }
     }
 
     private void setIndexRoot(
-        CwmSqlindex index,
+        FemLocalIndex index,
         long root)
     {
-        if (repos.isTemporary(index)) {
+        if (FarragoCatalogUtil.isIndexTemporary(index)) {
             Object old = tempIndexRootMap.put(
                     index,
                     new Long(root));
             assert (old == null);
         } else {
-            repos.setTagValue(
-                index,
-                "indexRoot",
-                Long.toString(root));
+            index.setStorageId(Long.toString(root));
         }
     }
 
@@ -137,16 +134,18 @@ class FarragoDbSessionIndexMap extends FarragoCompoundAllocation
     {
         assert (table.isTemporary());
 
-        CwmSqlindex clusteredIndex = repos.getClusteredIndex(table);
+        FemLocalIndex clusteredIndex =
+            FarragoCatalogUtil.getClusteredIndex(repos, table);
 
         if (tempIndexRootMap.containsKey(clusteredIndex)) {
             // already instantiated this table
             return;
         }
 
-        Iterator iter = repos.getIndexes(table).iterator();
+        Iterator iter =
+            FarragoCatalogUtil.getTableIndexes(repos, table).iterator();
         while (iter.hasNext()) {
-            CwmSqlindex index = (CwmSqlindex) iter.next();
+            FemLocalIndex index = (FemLocalIndex) iter.next();
             assert (!tempIndexRootMap.containsKey(index));
             createIndexStorage(wrapperCache, index);
         }
@@ -159,7 +158,7 @@ class FarragoDbSessionIndexMap extends FarragoCompoundAllocation
         List list = new ArrayList(tempIndexRootMap.keySet());
         Iterator iter = list.iterator();
         while (iter.hasNext()) {
-            CwmSqlindex index = (CwmSqlindex) iter.next();
+            FemLocalIndex index = (FemLocalIndex) iter.next();
             dropIndexStorage(privateDataWrapperCache, index, false);
         }
 
@@ -177,9 +176,9 @@ class FarragoDbSessionIndexMap extends FarragoCompoundAllocation
     {
         Iterator iter = tempIndexRootMap.keySet().iterator();
         while (iter.hasNext()) {
-            CwmSqlindex index = (CwmSqlindex) iter.next();
+            FemLocalIndex index = (FemLocalIndex) iter.next();
             String temporaryScope =
-                repos.getIndexTable(index).getTemporaryScope();
+                FarragoCatalogUtil.getIndexTable(index).getTemporaryScope();
             if (temporaryScope.endsWith("PRESERVE")) {
                 continue;
             }
@@ -191,7 +190,7 @@ class FarragoDbSessionIndexMap extends FarragoCompoundAllocation
     // implement FarragoSessionIndexMap
     public void createIndexStorage(
         FarragoDataWrapperCache wrapperCache,
-        CwmSqlindex index)
+        FemLocalIndex index)
     {
         FarragoMedLocalDataServer server =
             getIndexDataServer(wrapperCache,index);
@@ -200,7 +199,7 @@ class FarragoDbSessionIndexMap extends FarragoCompoundAllocation
             indexRoot = server.createIndex(index);
         } catch (SQLException ex) {
             throw FarragoResource.instance().newDataServerIndexCreateFailed(
-                repos.getLocalizedObjectName(index, null),
+                repos.getLocalizedObjectName(index),
                 ex);
         }
         setIndexRoot(index, indexRoot);
@@ -212,10 +211,10 @@ class FarragoDbSessionIndexMap extends FarragoCompoundAllocation
     // implement FarragoSessionIndexMap
     public void dropIndexStorage(
         FarragoDataWrapperCache wrapperCache,
-        CwmSqlindex index,
+        FemLocalIndex index,
         boolean truncate)
     {
-        if (repos.isTemporary(index)) {
+        if (FarragoCatalogUtil.isIndexTemporary(index)) {
             if (!tempIndexRootMap.containsKey(index)) {
                 // index was never created, so nothing to do
                 return;
@@ -231,7 +230,7 @@ class FarragoDbSessionIndexMap extends FarragoCompoundAllocation
                 truncate);
         } catch (SQLException ex) {
             throw FarragoResource.instance().newDataServerIndexDropFailed(
-                repos.getLocalizedObjectName(index, null),
+                repos.getLocalizedObjectName(index),
                 ex);
         }
 
@@ -242,13 +241,13 @@ class FarragoDbSessionIndexMap extends FarragoCompoundAllocation
     }
 
     // implement FarragoSessionIndexMap
-    public CwmSqlindex getIndexById(long id)
+    public FemLocalIndex getIndexById(long id)
     {
-        return (CwmSqlindex) indexIdMap.get(new Long(id));
+        return (FemLocalIndex) indexIdMap.get(new Long(id));
     }
 
     private FarragoMedLocalDataServer getIndexDataServer(
-        FarragoDataWrapperCache wrapperCache,CwmSqlindex index)
+        FarragoDataWrapperCache wrapperCache,FemLocalIndex index)
     {
         FemLocalTable localTable = (FemLocalTable) index.getSpannedClass();
         return (FarragoMedLocalDataServer)

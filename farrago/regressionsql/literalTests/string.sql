@@ -45,8 +45,6 @@ select * from t_char;
 drop table t_char;
 
 -- test varchar datatype
-create schema test;
-set schema 'test';
 create table t_varchar(varchar_col varchar(30) not null primary key, varchar_col2 varchar(1));
 
 -- negative test

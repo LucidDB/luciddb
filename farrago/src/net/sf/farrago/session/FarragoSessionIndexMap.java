@@ -19,6 +19,7 @@
 package net.sf.farrago.session;
 
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.namespace.util.*;
 
 
@@ -34,13 +35,13 @@ public interface FarragoSessionIndexMap
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Get an index by its ID.
+     * Get an index by its repository ID.
      *
-     * @param id index ID
+     * @param id index ID in repository
      *
-     * @return corresponding ID
+     * @return corresponding index
      */
-    public CwmSqlindex getIndexById(long id);
+    public FemLocalIndex getIndexById(long id);
 
     /**
      * Get the root PageId of an index.
@@ -49,7 +50,7 @@ public interface FarragoSessionIndexMap
      *
      * @return root PageId as a long
      */
-    public long getIndexRoot(CwmSqlindex index);
+    public long getIndexRoot(FemLocalIndex index);
 
     /**
      * Called on every reference to a temporary table.  Some implementations
@@ -72,7 +73,7 @@ public interface FarragoSessionIndexMap
      */
     public void createIndexStorage(
         FarragoDataWrapperCache wrapperCache,
-        CwmSqlindex index);
+        FemLocalIndex index);
 
     /**
      * Drop an index and remove its root from this map.
@@ -86,7 +87,7 @@ public interface FarragoSessionIndexMap
      */
     public void dropIndexStorage(
         FarragoDataWrapperCache wrapperCache,
-        CwmSqlindex index,
+        FemLocalIndex index,
         boolean truncate);
 }
 

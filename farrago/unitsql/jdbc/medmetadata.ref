@@ -96,8 +96,7 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Check metadata updated when dropping
 0: jdbc:farrago:> drop foreign table cvs_schema.example;
-Error: Reference to unknown ForeignTable EXAMPLE;
-encountered near line 1, column 31 (state=,code=0)
+Error: DDL validation error near line 1, column 31: Reference to unknown foreign table "EXAMPLE" (state=,code=0)
 0: jdbc:farrago:> !tables
 +------------+--------------+-------------+---------------+----------+-----------+-------------+------------+----------------------------+-----------------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  |  TABLE_TYPE   | REMARKS  | TYPE_CAT  | TYPE_SCHEM  | TYPE_NAME  | SELF_REFERENCING_COL_NAME  | REF_GENERATION  |

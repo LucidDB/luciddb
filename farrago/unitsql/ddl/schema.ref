@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/schema.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/schema.sql#2 $
 0: jdbc:farrago:> -- Test DDL on schemas
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema s;
@@ -16,7 +16,7 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail
 0: jdbc:farrago:> drop schema s restrict;
-Error: Schema LOCALDB.S can only be dropped with CASCADE because other objects still reference it (state=,code=0)
+Error: Dropping schema "LOCALDB"."S" requires CASCADE because other objects still reference it (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !metadata getSchemas
 +----------------+----------------+
@@ -29,7 +29,7 @@ Error: Schema LOCALDB.S can only be dropped with CASCADE because other objects s
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail
 0: jdbc:farrago:> drop schema s;
-Error: Schema LOCALDB.S can only be dropped with CASCADE because other objects still reference it (state=,code=0)
+Error: Dropping schema "LOCALDB"."S" requires CASCADE because other objects still reference it (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !metadata getSchemas
 +----------------+----------------+
@@ -53,8 +53,7 @@ Error: Schema LOCALDB.S can only be dropped with CASCADE because other objects s
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail with duplicate name
 0: jdbc:farrago:> create schema sales;
-Error: Schema SALES already exists within Catalog LOCALDB;
-duplicate name encountered near line 1, column 15 (state=,code=0)
+Error: DDL validation error near line 1, column 15: Target catalog "LOCALDB" already contains schema "SALES" with same name (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- set a nonexistent schema:  should succeed
 0: jdbc:farrago:> set schema 'erehwon';
@@ -73,11 +72,11 @@ Error: At line 1, column 8: Unknown identifier 'SALES' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- set a schema name which evaluates to a non-identifier:  should fail
 0: jdbc:farrago:> set schema '1';
-Error: Invalid schema name '1' in SET SCHEMA statement (state=,code=0)
+Error: Invalid schema name "1" in SET SCHEMA statement (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- set a schema list:  should fail
 0: jdbc:farrago:> set schema 'sales, marketing';
-Error: Invalid schema name 'sales, marketing' in SET SCHEMA statement (state=,code=0)
+Error: Invalid schema name "sales, marketing" in SET SCHEMA statement (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- set a qualifed schema name:  should succeed
 0: jdbc:farrago:> set schema 'localdb.sales';
@@ -114,8 +113,7 @@ Error: At line 1, column 15: Table 'DEPTS' not found (state=,code=0)
 Error: At line 1, column 15: Table 'NT' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create table nt2(i int not null primary key);
-Error: Reference to unknown Schema LOCALDB.N;
-encountered near line 1, column 14 (state=,code=0)
+Error: DDL validation error near line 1, column 14: Reference to unknown schema "LOCALDB"."N" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test an easy compound schema definition
 0: jdbc:farrago:> create schema nice

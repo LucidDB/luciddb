@@ -134,7 +134,7 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
     /**
      * Finds the parse position for an object affected by DDL.  Not all objects
      * have parse positions (e.g. when a table is dropped, referencing views
-     * are implicitly afffected).
+     * are implicitly affected).
      *
      * @param obj the affected object
      *
@@ -253,6 +253,20 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
      * @param schema new schema being created
      */
     public void setCreatedSchemaContext(FemLocalSchema schema);
+
+    /**
+     * Wraps a validation error with position information.
+     *
+     * @param refObj object whose definition should be used for
+     * position information
+     *
+     * @param ex exception to be wrapped
+     *
+     * @return wrapping exception
+     */
+    public FarragoException newPositionalError(
+        RefObject refObj,
+        SqlValidatorException ex);
 }
 
 

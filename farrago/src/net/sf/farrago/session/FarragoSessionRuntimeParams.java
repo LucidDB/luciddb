@@ -82,6 +82,11 @@ public class FarragoSessionRuntimeParams
      * FarragoObjectCache to use for caching FarragoMedDataWrapper instances.
      */
     public FarragoObjectCache sharedDataWrapperCache;
+
+    /**
+     * FarragoStreamFactoryProvider to use for registering stream factories.
+     */
+    public FarragoStreamFactoryProvider streamFactoryProvider;
 }
 
 

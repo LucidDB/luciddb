@@ -452,7 +452,6 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
         {
             return FarragoResource.instance().newParameterValueIncompatible(
                 x.getClass().getName(),
-                paramName,
                 type.toString());
         }
     }
@@ -612,7 +611,6 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
             if (s.length() > maxCharCount) {
                 throw FarragoResource.instance().newParameterValueTooLong(
                     s,
-                    paramName,
                     type.toString());
             }
             return s;
@@ -646,7 +644,6 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
             if (bytes.length > maxByteCount) {
                 throw FarragoResource.instance().newParameterValueTooLong(
                     Util.toStringFromByteArray(bytes,16),
-                    paramName,
                     type.toString());
             }
             return bytes;

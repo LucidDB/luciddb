@@ -646,8 +646,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         FarragoSessionResolvedObject resolved)
     {
         FemDataServer femServer =
-            (FemDataServer) getRepos().getModelElement(
-                getRepos().medPackage.getFemDataServer().refAllOfType(),
+            (FemDataServer) FarragoCatalogUtil.getModelElementByName(
+                getRepos().getMedPackage().getFemDataServer().refAllOfType(),
                 resolved.catalogName);
         if (femServer == null) {
             return null;

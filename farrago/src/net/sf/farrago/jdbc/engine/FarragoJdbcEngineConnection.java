@@ -31,6 +31,7 @@ import net.sf.farrago.db.FarragoDbSession;
 import net.sf.farrago.db.FarragoDatabase;
 import net.sf.farrago.util.FarragoObjectCache;
 import net.sf.farrago.fem.med.FemDataWrapper;
+import net.sf.farrago.catalog.*;
 
 import org.eigenbase.sql.SqlIdentifier;
 
@@ -439,11 +440,11 @@ public class FarragoJdbcEngineConnection implements FarragoConnection
         FarragoDbSession session = (FarragoDbSession)getSession();
         SqlIdentifier wrapperSqlIdent = new SqlIdentifier(wrapperName, null);
         
-        FemDataWrapper wrapper = 
-            (FemDataWrapper) session.getRepos().getModelElement(
-            session.getRepos().medPackage.getFemDataWrapper().refAllOfType(),
-            wrapperSqlIdent.getSimple()
-            );
+        FemDataWrapper wrapper = (FemDataWrapper)
+            FarragoCatalogUtil.getModelElementByName(
+                session.getRepos().getMedPackage().getFemDataWrapper().
+                refAllOfType(),
+                wrapperSqlIdent.getSimple());
          
         if (wrapper != null) {
             if (!wrapper.isForeign()) {

@@ -71,7 +71,13 @@ public abstract class FennelRelUtil
     {
         String tupleAccessorXmiString =
             fennelDbHandle.getAccessorXmiForTupleDescriptorTraced(tupleDesc);
-        return repos.parseTupleAccessor(tupleAccessorXmiString);
+        Collection c =
+            JmiUtil.importFromXmiString(
+                repos.getTransientFarragoPackage(),
+                tupleAccessorXmiString);
+        assert (c.size() == 1);
+        FemTupleAccessor accessor = (FemTupleAccessor) c.iterator().next();
+        return accessor;
     }
 
     /**

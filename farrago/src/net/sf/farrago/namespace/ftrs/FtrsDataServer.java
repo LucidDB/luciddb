@@ -24,6 +24,7 @@ import java.util.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.resource.*;
@@ -103,7 +104,7 @@ class FtrsDataServer extends MedAbstractLocalDataServer
     }
 
     // implement FarragoMedLocalDataServer
-    public long createIndex(CwmSqlindex index)
+    public long createIndex(FemLocalIndex index)
     {
         repos.beginTransientTxn();
         try {
@@ -117,7 +118,7 @@ class FtrsDataServer extends MedAbstractLocalDataServer
 
     // implement FarragoMedLocalDataServer
     public void dropIndex(
-        CwmSqlindex index,
+        FemLocalIndex index,
         long rootPageId,
         boolean truncate)
     {
@@ -139,7 +140,7 @@ class FtrsDataServer extends MedAbstractLocalDataServer
 
     private void initIndexCmd(
         FemIndexCmd cmd,
-        CwmSqlindex index)
+        FemLocalIndex index)
     {
         cmd.setDbHandle(getFennelDbHandle().getFemDbHandle(repos));
         cmd.setTupleDesc(
@@ -156,11 +157,11 @@ class FtrsDataServer extends MedAbstractLocalDataServer
      *
      * @return containing SegmentId
      */
-    static long getIndexSegmentId(CwmSqlindex index)
+    static long getIndexSegmentId(FemLocalIndex index)
     {
         // TODO:  share symbolic enum with Fennel rather than hard-coding
         // values here
-        if (FarragoRepos.isTemporary(index)) {
+        if (FarragoCatalogUtil.isIndexTemporary(index)) {
             return 2;
         } else {
             return 1;

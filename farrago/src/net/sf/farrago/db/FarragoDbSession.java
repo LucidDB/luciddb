@@ -152,7 +152,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
                 database.getFennelDbHandle());
 
         // TODO:  look up from user profile
-        sessionVariables.catalogName = repos.getSelfAsCwmCatalog().getName();
+        sessionVariables.catalogName = repos.getSelfAsCatalog().getName();
 
         this.url = url;
 
@@ -188,7 +188,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             return "SYS_MOCK_DATA_SERVER";
         }
     }
-    
+
     // implement FarragoSession
     public SqlOperatorTable getSqlOperatorTable()
     {
@@ -247,7 +247,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     {
         throw new AssertionError("no default implementation available");
     }
-    
+
     // implement FarragoSession
     public FarragoSession cloneSession(
         FarragoSessionVariables inheritedVariables)
@@ -353,7 +353,8 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     {
         if (name != null) {
             if (findSavepointByName(name, false) != -1) {
-                throw FarragoResource.instance().newSessionDupSavepointName(name);
+                throw FarragoResource.instance().newSessionDupSavepointName(
+                    repos.getLocalizedObjectName(name));
             }
         }
         return newSavepointImpl(name);
@@ -463,6 +464,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         params.indexMap = getSessionIndexMap();
         params.sessionVariables = getSessionVariables().cloneVariables();
         params.sharedDataWrapperCache = getDatabase().getDataWrapperCache();
+        params.streamFactoryProvider = this;
         return params;
     }
 
@@ -488,7 +490,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     {
         if (!(savepoint instanceof FarragoDbSavepoint)) {
             throw FarragoResource.instance().newSessionWrongSavepoint(
-                savepoint.getName());
+                repos.getLocalizedObjectName(savepoint.getName()));
         }
         FarragoDbSavepoint dbSavepoint = (FarragoDbSavepoint) savepoint;
         if (dbSavepoint.session != this) {
@@ -501,8 +503,8 @@ public class FarragoDbSession extends FarragoCompoundAllocation
                 throw FarragoResource.instance().newSessionInvalidSavepointId(
                     new Integer(savepoint.getId()));
             } else {
-                throw FarragoResource.instance()
-                    .newSessionInvalidSavepointName(savepoint.getName());
+                throw FarragoResource.instance().newSessionInvalidSavepointName(
+                        repos.getLocalizedObjectName(savepoint.getName()));
             }
         }
         return iSavepoint;
@@ -566,7 +568,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     {
         // default:  no extensions
     }
-    
+
     FarragoSessionExecutableStmt prepare(
         String sql,
         FarragoAllocationOwner owner,
@@ -630,14 +632,14 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         FarragoSessionDdlValidator ddlValidator =
             newDdlValidator(stmtValidator);
         FarragoSessionParser parser = stmtValidator.getParser();
-        
+
         boolean expectStatement = true;
         if ((analyzedSql != null) && (analyzedSql.paramRowType != null)) {
             expectStatement = false;
         }
         Object parsedObj = parser.parseSqlText(
             ddlValidator, sql, expectStatement);
-        
+
         if (parsedObj instanceof SqlNode) {
             SqlNode sqlNode = (SqlNode) parsedObj;
             pRollback[0] = false;
@@ -752,7 +754,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             SqlIdentifier id = stmt.getCatalogName();
             sessionVariables.catalogName = id.getSimple();
         }
-        
+
         // implement DdlVisitor
         public void visit(DdlSetSchemaStmt stmt)
         {
@@ -764,14 +766,14 @@ public class FarragoDbSession extends FarragoCompoundAllocation
                 sessionVariables.schemaName = id.names[1];
             }
         }
-        
+
         // implement DdlVisitor
         public void visit(DdlSetPathStmt stmt)
         {
             sessionVariables.schemaSearchPath =
                 Collections.unmodifiableList(stmt.getSchemaList());
         }
-        
+
         // implement DdlVisitor
         public void visit(DdlSetSystemParamStmt stmt)
         {

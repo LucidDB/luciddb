@@ -242,8 +242,10 @@ void SchemaPath(FemLocalSchema schema) :
                 CwmSchema searchedSchema = (CwmSchema) iter.next();
                 if (searchedSchema.getNamespace() != schema.getNamespace()) {
                     throw FarragoResource.instance().newValidatorPathBadCatalog(
-                        searchedSchema.getNamespace().getName(),
-                        schema.getNamespace().getName());
+                        getRepos().getLocalizedObjectName(
+                            searchedSchema.getNamespace()),
+                        getRepos().getLocalizedObjectName(
+                            schema.getNamespace()));
                 }
                 FemSqlpathElement element = getRepos().newFemSqlpathElement();
                 element.setSearchedSchemaCatalogName(
@@ -419,9 +421,9 @@ CwmView ViewDefinition() :
 }
 
 
-CwmSqlindex IndexDefinition(CwmTable table) :
+FemLocalIndex IndexDefinition(CwmTable table) :
 {
-    CwmSqlindex index;
+    FemLocalIndex index;
     SqlIdentifier indexName;
     CwmTable specifiedTable;
     List columnNameList;
@@ -437,7 +439,7 @@ CwmSqlindex IndexDefinition(CwmTable table) :
         }
     <INDEX>
         {
-            index = getRepos().newCwmSqlindex();
+            index = getRepos().newFemLocalIndex();
         }
     indexName = SimpleIdentifier()
         {
@@ -450,34 +452,37 @@ CwmSqlindex IndexDefinition(CwmTable table) :
             } else {
                 // TODO:  move rule down into validator
                 if (table != specifiedTable) {
-                    throw FarragoResource.instance().newValidatorIndexBadTable(
-                        farragoParser.getDdlValidator().getParserPosString(
-                            index));
+                    throw farragoParser.getDdlValidator().newPositionalError(
+                        index,
+                        FarragoResource.instance().newValidatorIndexBadTable());
                 }
             }
-            getRepos().indexPackage.getIndexSpansClass().add(table,index);
+            getRepos().getKeysIndexesPackage().getIndexSpansClass().add(
+                table,index);
             // REVIEW:  why is this necessary?  shouldn't association above be
             // sufficient?
             index.setSpannedClass(table);
             if (clustered) {
-                getRepos().setTagValue(index,"clusteredIndex","");
+                index.setClustered(true);
             }
             index.setUnique(unique);
         }
     <LPAREN> columnNameList = SimpleIdentifierCommaList() <RPAREN>
         {
+            int iOrdinal = 0;
             Iterator columnNameIter = columnNameList.iterator();
             while (columnNameIter.hasNext()) {
                 String columnName =
                     ((SqlIdentifier) columnNameIter.next()).names[0];
                 CwmColumn column = farragoParser.getStmtValidator().findColumn(
                     table,columnName);
-                CwmSqlindexColumn indexColumn =
-                    getRepos().newCwmSqlindexColumn();
+                FemLocalIndexColumn indexColumn =
+                    getRepos().newFemLocalIndexColumn();
                 indexColumn.setName(columnName);
                 indexColumn.setAscending(Boolean.TRUE);
                 indexColumn.setFeature(column);
                 indexColumn.setIndex(index);
+                indexColumn.setOrdinal(iOrdinal++);
             }
         }
     {
@@ -496,7 +501,7 @@ CwmTable TableIdentifier() :
             table = (CwmTable)
             farragoParser.getStmtValidator().findSchemaObject(
                 qualifiedTableName,
-                getRepos().relationalPackage.getCwmTable());
+                getRepos().getRelationalPackage().getCwmTable());
         }
     {
         return table;
@@ -513,7 +518,7 @@ CwmView ViewReference() :
         {
             view = (CwmView) farragoParser.getStmtValidator().findSchemaObject(
                 qualifiedViewName,
-                getRepos().relationalPackage.getCwmView());
+                getRepos().getRelationalPackage().getCwmView());
         }
     {
         return view;
@@ -559,13 +564,13 @@ FemRoutine RoutineReference() :
             // and the object found does not match, pretend we
             // found nothing
             if ((routineType != null) && (routineType != routine.getType())) {
-                throw FarragoResource.instance().newValidatorUnknownObject(
-                    routineType.toString() + " " +
-                    getRepos().getLocalizedObjectName(
-                        routine.getNamespace().getName(),
-                        routine.getName(),
-                        null),
-                    getCurrentPosition().toString());
+                throw farragoParser.newPositionalError(
+                    FarragoResource.instance().newValidatorUnknownObject(
+                        routineType.toString() + " " +
+                        getRepos().getLocalizedObjectName(
+                            routine.getNamespace().getName(),
+                            routine.getName(),
+                            null)));
             }
         }
     {
@@ -704,7 +709,8 @@ CwmModelElement TableConstraint(CwmTable table) :
             if (constraintName != null) {
                 constraint.setName(constraintName);
             } else {
-                getRepos().generateConstraintName(constraint);
+                FarragoCatalogUtil.generateConstraintName(
+                    getRepos(), constraint);
             }
             table.getOwnedElement().add(constraint);
         }
@@ -785,7 +791,8 @@ void ColumnConstraint(CwmNamedColumnSet table,CwmColumn column) :
             if (constraintName != null) {
                 constraint.setName(constraintName);
             } else {
-                getRepos().generateConstraintName(constraint);
+                FarragoCatalogUtil.generateConstraintName(
+                    getRepos(), constraint);
             }
         }
     )
@@ -882,7 +889,7 @@ CwmModelElement IndexDrop() :
         {
             return farragoParser.getStmtValidator().findSchemaObject(
                 qualifiedIndexName,
-                getRepos().relationalPackage.getCwmSqlindex());
+                getRepos().getMedPackage().getFemLocalIndex());
         }
 }
 
@@ -1012,7 +1019,7 @@ FemDataWrapper DataWrapperDefinition() :
             wrapper = getRepos().newFemDataWrapper();
             wrapper.setName(wrapperName.getSimple());
             wrapper.setNamespace(
-                getRepos().getCwmCatalog(
+                getRepos().getCatalog(
                     FarragoRepos.SYSBOOT_CATALOG_NAME));
             wrapper.setForeign(isForeign);
         }
@@ -1076,7 +1083,7 @@ FemDataServer DataServerDefinition() :
             server = getRepos().newFemDataServer();
             server.setName(serverName.getSimple());
             server.setNamespace(
-                getRepos().getCwmCatalog(
+                getRepos().getCatalog(
                     FarragoRepos.SYSBOOT_CATALOG_NAME));
         }
     [
@@ -1118,7 +1125,6 @@ FemRoutine FunctionDefinition() :
             function.setType(ProcedureTypeEnum.FUNCTION);
             returnParam = getRepos().newFemRoutineParameter();
             function.setCalledOnNullInput(true);
-            function.setParameterStyle(RoutineParameterStyleEnum.RPS_SQL);
         }
     qualifiedName = CompoundIdentifier2()
         {
@@ -1150,15 +1156,16 @@ FemRoutine FunctionDefinition() :
         {
             function.setStaticDispatch(true);
         }
-    RoutineBody(function)
-        {
-        }
+    (
+        SqlRoutineBody(function)
+        | ExternalRoutineBody(function)
+    )
     {
         return function;
     }
 }
 
-void RoutineBody(FemRoutine routine) :
+void SqlRoutineBody(FemRoutine routine) :
 {
     SqlNode expr;
 }
@@ -1179,10 +1186,70 @@ void RoutineBody(FemRoutine routine) :
         }
         <RETURN> expr = Expression(EXPR_ACCEPT_NONQUERY)
     {
-        // TODO jvs 24-Dec-2004: eventually allow subqueries, non-functional
-        // routine bodies, and external routines.
+        // TODO jvs 24-Dec-2004: eventually allow subqueries and non-functional
+        // routine bodies.
         farragoParser.getDdlValidator().setProcedureText(routine, expr);
     }
+}
+
+void ExternalRoutineBody(FemRoutine routine) :
+{
+    String name;
+}
+{
+    <EXTERNAL> <NAME>
+        (
+             name = Identifier()
+             | name = QuotedString()
+        )
+        {
+            routine.setExternalName(name);
+        }
+    [ RoutineParameterStyle(routine) ]
+        {
+        }
+    [ <EXTERNAL> <SECURITY> (
+        <DEFINER>
+    {
+        routine.setImpersonateDefiner(true);
+    }
+        | <INVOKER>
+    {
+        routine.setImpersonateDefiner(false);
+    }
+        | <IMPLEMENTATION> <DEFINED>
+    {
+        routine.setImpersonateDefiner(true);
+    }
+        )
+    {
+    }
+    ]
+}
+
+void RoutineParameterStyle(FemRoutine routine) :
+{
+}
+{
+    <PARAMETER> <STYLE> (
+        <SQL>
+    {
+        routine.setParameterStyle(
+            RoutineParameterStyleEnum.RPS_SQL);
+    }
+        | <GENERAL>
+    {
+        routine.setParameterStyle(
+            RoutineParameterStyleEnum.RPS_GENERAL);
+    }
+        | <JAVA>
+    {
+        routine.setParameterStyle(
+            RoutineParameterStyleEnum.RPS_JAVA);
+    }
+    )
+        {
+        }
 }
 
 void RoutineCharacteristics(FemRoutine routine) :
@@ -1192,24 +1259,19 @@ void RoutineCharacteristics(FemRoutine routine) :
 {
 // TODO jvs 24-Dec-2004:  prevent conflicting declarations
     (
-        (<LANGUAGE> (<JAVA> | <SQL>))
+        (<LANGUAGE>
+            (<JAVA>
+                {
+                    routine.setLanguage("JAVA");
+                }
+                | <SQL>
+                {
+                    routine.setLanguage("SQL");
+                }
+                ))
     {
-        // TODO jvs 24-Dec-2004:  cross-check this with body and sql-access
     }
-        | (<PARAMETER> <STYLE>
-            (
-                <SQL>
-            {
-                routine.setParameterStyle(
-                    RoutineParameterStyleEnum.RPS_SQL);
-            }
-                | <GENERAL>
-            {
-                routine.setParameterStyle(
-                    RoutineParameterStyleEnum.RPS_GENERAL);
-            }
-            )
-        )
+        | RoutineParameterStyle(routine)
     {
     }
         | (<SPECIFIC> specificName = CompoundIdentifier2())
@@ -1218,12 +1280,14 @@ void RoutineCharacteristics(FemRoutine routine) :
             assert(specificName.names.length == 2);
             if (!specificName.names[0].equals(routine.getNamespace().getName()))
             {
-                throw FarragoResource.instance().
+                throw farragoParser.getDdlValidator().newPositionalError(
+                    routine, 
+                    FarragoResource.instance().
                     newValidatorRoutineSchemaMismatch(
-                        specificName.names[0], 
-                        routine.getNamespace().getName(),
-                        farragoParser.getDdlValidator().getParserPosString(
-                            routine));
+                        getRepos().getLocalizedObjectName(
+                            specificName.names[0]), 
+                        getRepos().getLocalizedObjectName(
+                            routine.getNamespace())));
             }
             routine.setName(specificName.names[1]);
         } else {
@@ -1372,7 +1436,7 @@ FemForeignTable ForeignTableReference() :
             table = (FemForeignTable)
             farragoParser.getStmtValidator().findSchemaObject(
                 qualifiedTableName,
-                getRepos().medPackage.getFemForeignTable());
+                getRepos().getMedPackage().getFemForeignTable());
         }
     {
         return table;
@@ -1487,6 +1551,7 @@ TOKEN :
 | < CREATE: "create" >
 | < DATA: "data" >
 | < DEFAULT_KW: "default" >
+| < DEFINED: "defined" >
 | < DEFINER: "definer" >
 | < DETERMINISTIC: "deterministic" >
 | < DISPATCH: "dispatch" >
@@ -1557,6 +1622,7 @@ String DdlNonReservedKeyWord() :
         | <CATALOG>
         | <CONTAINS>
         | <DATA>
+        | <DEFINED>
         | <DEFINER>
         | <DETERMINISTIC>
         | <DISPATCH>

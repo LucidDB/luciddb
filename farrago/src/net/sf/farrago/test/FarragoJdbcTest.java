@@ -679,7 +679,7 @@ public class FarragoJdbcTest extends FarragoTestCase
             if (throwable instanceof SQLException) {
                 String errorString = throwable.toString();
                 if (errorString.matches(
-                            ".*Cannot assign a value of Java class '.*' to .*")) {
+                            ".*Cannot assign a value of Java class .* to .*")) {
                     break;
                 }
             }
@@ -1535,7 +1535,7 @@ public class FarragoJdbcTest extends FarragoTestCase
             throwable = e;
         }
         assertExceptionMatches(throwable,
-            ".*Value '5.0' is too long for parameter '.2' of type 'CHAR.1.'");
+            ".*Value '5.0' is too long for parameter of type CHAR.1.");
 
         try {
             preparedStmt.setDouble(3, 6.2);
@@ -1545,7 +1545,7 @@ public class FarragoJdbcTest extends FarragoTestCase
             throwable = e;
         }
         assertExceptionMatches(throwable,
-            ".*Value '6.2' is too long for parameter '.2' of type 'CHAR.1.'");
+            ".*Value '6.2' is too long for parameter of type CHAR.1.");
 
         preparedStmt.setBigDecimal(
             3,
@@ -1563,7 +1563,7 @@ public class FarragoJdbcTest extends FarragoTestCase
             throwable = e;
         }
         assertExceptionMatches(throwable,
-            ".*Value 'false' is too long for parameter '.2' of type 'CHAR.1.'");
+            ".*Value 'false' is too long for parameter of type CHAR.1.");
 
         preparedStmt.setString(3, "x");
         preparedStmt.setBoolean(4, true);

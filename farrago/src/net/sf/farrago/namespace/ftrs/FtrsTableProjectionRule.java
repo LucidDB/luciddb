@@ -22,6 +22,7 @@ import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.util.*;
 
@@ -108,10 +109,10 @@ class FtrsTableProjectionRule extends RelOptRule
         // desired projection.  Leave it up to the optimizer to select one
         // based on cost, since sort order and I/O may be in competition.
         FarragoRepos repos = origScan.getPreparingStmt().getRepos();
-        Iterator iter =
-            repos.getIndexes(origScan.ftrsTable.getCwmColumnSet()).iterator();
+        Iterator iter = FarragoCatalogUtil.getTableIndexes(
+            repos, origScan.ftrsTable.getCwmColumnSet()).iterator();
         while (iter.hasNext()) {
-            CwmSqlindex index = (CwmSqlindex) iter.next();
+            FemLocalIndex index = (FemLocalIndex) iter.next();
 
             if (origScan.isOrderPreserving && !index.equals(origScan.index)) {
                 // can't switch indexes if original scan order needs to be
@@ -148,10 +149,10 @@ class FtrsTableProjectionRule extends RelOptRule
 
     private boolean testIndexCoverage(
         FarragoRepos repos,
-        CwmSqlindex index,
+        FemLocalIndex index,
         Integer [] projection)
     {
-        if (repos.isClustered(index)) {
+        if (index.isClustered()) {
             // clustered index guarantees coverage
             return true;
         }

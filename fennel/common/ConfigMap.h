@@ -104,6 +104,19 @@ public:
         long defaultVal = 0) const;
 
     /**
+     * Gets the value of an boolean-typed parameter.
+     *
+     * @param paramName name of the parameter
+     *
+     * @param defaultVal the default value to return if the parameter is not set
+     *
+     * @return the parameter value
+     */
+    bool getBoolParam(
+        std::string paramName,
+        bool defaultVal = false) const;
+
+    /**
      * Determines whether a parameter has an associated value.
      *
      * @param paramName name of the parameter

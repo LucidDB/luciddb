@@ -25,6 +25,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
@@ -110,13 +111,13 @@ class FtrsScanToSearchRule extends RelOptRule
             scan.getColumnForFieldAccess(fieldAccess.index);
         assert (filterColumn != null);
 
-        if (repos.isClustered(scan.index)) {
+        if (scan.index.isClustered()) {
             // if we're working with a clustered index scan, consider all of
             // the unclustered indexes as well
-            Iterator iter =
-                repos.getIndexes(scan.ftrsTable.getCwmColumnSet()).iterator();
+            Iterator iter = FarragoCatalogUtil.getTableIndexes(
+                repos, scan.ftrsTable.getCwmColumnSet()).iterator();
             while (iter.hasNext()) {
-                CwmSqlindex index = (CwmSqlindex) iter.next();
+                FemLocalIndex index = (FemLocalIndex) iter.next();
                 considerIndex(index, scan, filterColumn, right, call,
                     extraFilter);
             }
@@ -129,7 +130,7 @@ class FtrsScanToSearchRule extends RelOptRule
     }
 
     static boolean testIndexColumn(
-        CwmSqlindex index,
+        FemLocalIndex index,
         CwmColumn column)
     {
         List indexedFeatures = index.getIndexedFeature();
@@ -143,7 +144,7 @@ class FtrsScanToSearchRule extends RelOptRule
     }
 
     private void considerIndex(
-        CwmSqlindex index,
+        FemLocalIndex index,
         FtrsIndexScanRel origScan,
         FemAbstractColumn filterColumn,
         RexNode searchValue,
@@ -191,7 +192,7 @@ class FtrsScanToSearchRule extends RelOptRule
             convert(castRel, FennelPullRel.FENNEL_PULL_CONVENTION);
         assert (keyInput != null);
 
-        if (!repos.isClustered(index) && repos.isClustered(origScan.index)) {
+        if (!index.isClustered() && origScan.index.isClustered()) {
             // By itself, an unclustered index is not going to produce the
             // requested rows.  Instead, it will produce clustered index keys,
             // which we'll use to drive a parent search against the clustered

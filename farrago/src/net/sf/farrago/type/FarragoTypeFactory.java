@@ -104,7 +104,7 @@ public interface FarragoTypeFactory extends OJTypeFactory
         Expression expr);
 
     /**
-     * Looks up the java.lang.Class representing a primitive used to
+     * Looks up the {@link java.lang.Class} representing a primitive used to
      * hold a value of the given type.
      *
      * @param type value type
@@ -113,6 +113,17 @@ public interface FarragoTypeFactory extends OJTypeFactory
      * at runtime to represent values of the given type
      */
     public Class getClassForPrimitive(
+        RelDataType type);
+
+    /**
+     * Looks up the {@link java.lang.Class} specified by the JAVA
+     * parameter style for user-defined routines.
+     *
+     * @param type SQL type
+     *
+     * @return corresponding Java class, or null if no mapping is defined
+     */
+    public Class getClassForJavaParamStyle(
         RelDataType type);
 }
 

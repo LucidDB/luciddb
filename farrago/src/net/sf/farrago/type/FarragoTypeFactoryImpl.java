@@ -156,7 +156,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
 
         type = createTypeWithNullability(
             type, 
-            getRepos().isNullable(element));
+            FarragoCatalogUtil.isColumnNullable(getRepos(), element));
 
         return type;
     }
@@ -572,6 +572,38 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             return SqlDateTimeWithoutTZ.getPrimitiveClass();
         default:
             return null;
+        }
+    }
+    
+    // implement FarragoTypeFactory
+    public Class getClassForJavaParamStyle(
+        RelDataType type)
+    {
+        SqlTypeName typeName = type.getSqlTypeName();
+        if (typeName == null) {
+            return null;
+        }
+
+        // NOTE jvs 11-Jan-2005:  per SQL2003-13 section 4.5,
+        // these mappings are based on Appendix B of the JDBC 3.0
+        // spec
+        switch(typeName.getOrdinal()) {
+        case SqlTypeName.Decimal_ordinal:
+            return java.math.BigDecimal.class;
+        case SqlTypeName.Char_ordinal:
+        case SqlTypeName.Varchar_ordinal:
+            return String.class;
+        case SqlTypeName.Binary_ordinal:
+        case SqlTypeName.Varbinary_ordinal:
+            return byte [].class;
+        case SqlTypeName.Date_ordinal:
+            return java.sql.Date.class;
+        case SqlTypeName.Time_ordinal:
+            return java.sql.Time.class;
+        case SqlTypeName.Timestamp_ordinal:
+            return java.sql.Timestamp.class;
+        default:
+            return getClassForPrimitive(type);
         }
     }
     
