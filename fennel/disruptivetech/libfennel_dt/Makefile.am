@@ -18,6 +18,8 @@ libfennel_dt_xo_la_LIBADD=\
 	libfennel_dt_calc.la \
 	-L$(top_builddir)/libfennel \
 	-lfennel_xo \
+	-lfennel_exec \
+	-lfennel_segment \
 	-lfennel_tuple \
 	-lfennel_synch \
 	-lfennel_common
