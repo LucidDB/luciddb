@@ -241,19 +241,18 @@ do { \
 
 #define permFail(msg) \
 do { \
-    throw fennel::constructAssertion(__FILE__,__LINE__, \
-        static_cast<std::ostringstream &>(std::ostringstream() << msg).str().c_str())
+    ostringstream oss; \
+    oss << msg; \
+    throw fennel::constructAssertion(__FILE__,__LINE__, oss.str().c_str()); \
 } while (0)
 
 #else
 
 #define permFail(msg) \
 do { \
-    __assert_fail( \
-        static_cast<std::ostringstream &>(std::ostringstream() << msg).str().c_str(), \
-        __FILE__,\
-        __LINE__,\
-        __ASSERT_FUNCTION); \
+    std::cout << "Internal error: " << msg << std::endl; \
+    assert(false); \
+    throw 0; \
 } while (0)
 
 #endif
