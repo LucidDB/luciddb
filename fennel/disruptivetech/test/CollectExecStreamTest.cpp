@@ -167,6 +167,8 @@ void CollectExecStreamTest::testCollectUncollect()
     verifyOutput(*pOutputStream, rows, rampExpectedGenerator);
 }
 
+#ifndef FENNEL_NO_UNIT_TEST_SUITE
 FENNEL_UNIT_TEST_SUITE(CollectExecStreamTest);
+#endif
 
 // End CollectExecStreamTest.cpp

@@ -26,6 +26,7 @@
 
 using std::vector;
 using std::string;
+using std::ostream;
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -34,17 +35,26 @@ FENNEL_BEGIN_NAMESPACE
  */
 struct MockConsumerExecStreamParams : public SingleInputExecStreamParams
 {
+    /** save data as a vector of strings */
+    bool saveData;
+    /** when not null, echo data to this stream */
+    ostream* echoData;
+
+    MockConsumerExecStreamParams() :saveData(true), echoData(0) {}
 };
 
 /**
- * MockConsumerExecStream consumes data from a single input and writes into a
- * vector of strings.
+ * MockConsumerExecStream consumes data from a single input. It saves the data
+ * as a vector of strings, or echoes the strings to an ostream, or both.
  *
  * @author Julian Hyde
  * @version $Id$
  */
 class MockConsumerExecStream : public SingleInputExecStream
 {
+    bool saveData;
+    ostream* echoData;
+    TupleData inputTuple;
     vector<string> rowStrings;
 
 public:

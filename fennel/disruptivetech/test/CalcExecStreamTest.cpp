@@ -247,6 +247,8 @@ void CalcExecStreamTest::testConstant(
         0xFF);
 }
 
+#ifndef FENNEL_NO_UNIT_TEST_SUITE
 FENNEL_UNIT_TEST_SUITE(CalcExecStreamTest);
+#endif
 
 // End CalcExecStreamTest.cpp

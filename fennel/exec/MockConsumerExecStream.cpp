@@ -44,10 +44,8 @@ ExecStreamResult MockConsumerExecStream::execute(
     default:
         permFail("Bad state " << inAccessor.getState());
     }
-
     assert(inAccessor.isConsumptionPossible());
-    TupleData inputTuple;
-    inputTuple.compute(inAccessor.getTupleDesc()); // todo: do compute at open() time
+
     TuplePrinter tuplePrinter;
 
     // Read rows from the input buffer until we exceed the quantum or read all
@@ -66,10 +64,16 @@ ExecStreamResult MockConsumerExecStream::execute(
             }
         }
         inAccessor.unmarshalTuple(inputTuple);
-        std::ostringstream oss;
-        tuplePrinter.print(oss, inAccessor.getTupleDesc(), inputTuple);
-        const string &s = oss.str();
-        rowStrings.push_back(s);
+
+        if (echoData) {
+            tuplePrinter.print(*echoData, inAccessor.getTupleDesc(), inputTuple);
+        }
+        if (saveData) {
+            std::ostringstream oss;
+            tuplePrinter.print(oss, inAccessor.getTupleDesc(), inputTuple);
+            const string &s = oss.str();
+            rowStrings.push_back(s);
+        }
         inAccessor.consumeTuple();        
     }
     return EXECRC_QUANTUM_EXPIRED;
@@ -79,12 +83,15 @@ void MockConsumerExecStream::prepare(
     MockConsumerExecStreamParams const &params)
 {
     SingleInputExecStream::prepare(params);
+    saveData = params.saveData;
+    echoData = params.echoData;
 }
 
 void MockConsumerExecStream::open(bool restart)
 {
     SingleInputExecStream::open(restart);
     rowStrings.clear();
+    inputTuple.compute(pInAccessor->getTupleDesc());
 }
 
 

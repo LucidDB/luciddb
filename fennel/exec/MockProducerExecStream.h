@@ -23,6 +23,8 @@
 
 #include "fennel/exec/SingleOutputExecStream.h"
 #include "fennel/tuple/TupleData.h"
+#include <string>
+#include <iostream>
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -63,6 +65,21 @@ struct MockProducerExecStreamParams : public SingleOutputExecStreamParams
      * is constant 0.
      */
     SharedMockProducerExecStreamGenerator pGenerator;
+
+    /**
+     * When true, save a copy of each generated tuple for later perusal.
+     * Allowed only when a generator is provided.
+     */
+    bool saveTuples;
+
+    /** 
+     * When not null, print each generated tuple to this stream, for tracing or for
+     * later comparison.  Allowed only when a generator is provided.
+     */
+    std::ostream* echoTuples;
+
+    MockProducerExecStreamParams() :nRows(0), saveTuples(false), echoTuples(0) {}
+
 };
 
 /**
@@ -78,8 +95,13 @@ class MockProducerExecStream : public SingleOutputExecStream
     uint64_t nRowsProduced;
     TupleData outputData;
     SharedMockProducerExecStreamGenerator pGenerator;
-    
+    bool saveTuples;
+    std::ostream* echoTuples;
+    std::vector<std::string> savedTuples;
+
 public:
+    MockProducerExecStream();
+
     // implement ExecStream
     virtual void prepare(MockProducerExecStreamParams const &params);
     virtual void open(bool restart);

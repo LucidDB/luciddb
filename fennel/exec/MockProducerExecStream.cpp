@@ -21,11 +21,21 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/exec/MockProducerExecStream.h"
 #include "fennel/tuple/TupleAccessor.h"
+#include "fennel/tuple/TuplePrinter.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include <boost/scoped_array.hpp>
 
+
 FENNEL_BEGIN_CPPFILE("$Id$");
+
+MockProducerExecStream::MockProducerExecStream()
+{
+    cbTuple = 0;
+    nRowsProduced = nRowsMax = 0;
+    saveTuples = false;
+    echoTuples = 0;
+}
 
 void MockProducerExecStream::prepare(MockProducerExecStreamParams const &params)
 {
@@ -42,22 +52,28 @@ void MockProducerExecStream::prepare(MockProducerExecStreamParams const &params)
         }
     }
     outputData.compute(params.outputTupleDesc);
-    nRowsMax = params.nRows;
     TupleAccessor &tupleAccessor = pOutAccessor->getScratchTupleAccessor();
     assert(tupleAccessor.isFixedWidth());
     cbTuple = tupleAccessor.getMaxByteCount();
+    nRowsMax = params.nRows;
+    saveTuples = params.saveTuples;
+    echoTuples = params.echoTuples;
+    if (saveTuples||echoTuples) assert(pGenerator);
 }
 
 void MockProducerExecStream::open(bool restart)
 {
     SingleOutputExecStream::open(restart);
     nRowsProduced = 0;
+    savedTuples.clear();
+    if (saveTuples) savedTuples.reserve(nRowsMax); // assume it's not too big
 }
 
 ExecStreamResult MockProducerExecStream::execute(
     ExecStreamQuantum const &quantum)
 {
     if (pGenerator) {
+        TuplePrinter tuplePrinter; 
         uint nTuples = 0;
         boost::scoped_array<int64_t> values(new int64_t[outputData.size()]);
         for(int col=0;col<outputData.size();++col) {
@@ -76,6 +92,13 @@ ExecStreamResult MockProducerExecStream::execute(
             assert(rc);
             ++nTuples;
             ++nRowsProduced;
+            if (echoTuples)
+                tuplePrinter.print(*echoTuples, pOutAccessor->getTupleDesc(), outputData);
+            if (saveTuples) {
+                std::ostringstream oss;
+                tuplePrinter.print(oss, pOutAccessor->getTupleDesc(), outputData);
+                savedTuples.push_back(oss.str());
+            }
             if (nTuples >= quantum.nTuplesMax) {
                 return EXECRC_QUANTUM_EXPIRED;
             }

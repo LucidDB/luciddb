@@ -207,6 +207,7 @@ void ExecStreamTest::testCartesianJoinExecStream(
         nRowsOuter*nRowsInner*2*sizeof(int32_t));
 }
 
+#ifndef FENNEL_NO_UNIT_TEST_SUITE
 FENNEL_UNIT_TEST_SUITE(ExecStreamTest);
-
+#endif
 // End ExecStreamTest.cpp

@@ -99,6 +99,8 @@ void CorrelationJoinExecStreamTest::testCorrelationJoin()
                  rampExpectedGenerator);
 }
 
+#ifndef FENNEL_NO_UNIT_TEST_SUITE
 FENNEL_UNIT_TEST_SUITE(CorrelationJoinExecStreamTest);
+#endif
 
 // End CorrelationJoinExecStreamTest.cpp
