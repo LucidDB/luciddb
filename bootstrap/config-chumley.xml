@@ -2,11 +2,11 @@
 
 <!DOCTYPE cruisecontrol [
 
-<!ENTITY open_p4port     "perforce.eigenbase.org:1666">
+<!ENTITY open_p4port     "chumley:1666">
 <!ENTITY open_p4client   "cruise.chumley">
 <!ENTITY open_p4user     "guest">
-<!ENTITY open_root       "//open">
-<!ENTITY open_propfile   "opensource.perforce.properties">
+<!ENTITY open_root       "//open/dt/dev">
+<!ENTITY open_propfile   "chumley.perforce.properties">
 
 <!ENTITY aspen_p4port    "jhyde.dyndns.org:1666">
 <!ENTITY aspen_p4client  "cruise.chumley">
