@@ -691,6 +691,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
         throws SQLException
     {
         BufferedWriter out = getThreadWriter(threadId);
+        int[] widths = null;
 
         try {
             ResultSetMetaData meta = rset.getMetaData();
@@ -699,7 +700,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
 
             String[] values = new String[columns];
             String[] labels = new String[columns];
-            int[] widths = new int[columns];
+            widths = new int[columns];
             for(int i = 0; i < columns; i++) {
                 labels[i] = meta.getColumnLabel(i + 1);
                 widths[i] = Math.max(labels[i].length(),
@@ -739,6 +740,8 @@ public class FarragoTestConcurrentScriptedCommandGenerator
             }
 
             Util.swallow(e, FarragoTrace.getTestTracer());
+
+            printSeparator(out, widths);
         } finally {
             rset.close();
         }
