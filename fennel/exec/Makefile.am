@@ -8,6 +8,7 @@ ExecStream.cpp \
 ExecStreamGraph.cpp \
 MockProducerStream.cpp \
 ScratchBufferStream.cpp \
+SegBufferStream.cpp \
 SourceExecStream.cpp
 
 DESIGN_DOC=SchedulerDesign.cpp

@@ -12,6 +12,7 @@ endif
 
 libfenneltest_la_SOURCES=\
 CacheTestBase.cpp \
+ExecStreamTestBase.cpp \
 PagingTestBase.cpp \
 TestBase.cpp \
 SegmentTestBase.cpp \
@@ -24,7 +25,7 @@ ResourceTest \
 LocalConditionTest \
 TupleTest \
 StandardTypeTest \
-SchedulerTest \
+ExecStreamTest \
 DatabaseTest \
 LogicalTxnTest \
 SegStreamTest \
@@ -43,7 +44,7 @@ ResourceTest_SOURCES=ResourceTest.cpp
 
 LocalConditionTest_SOURCES=LocalConditionTest.cpp
 
-SchedulerTest_SOURCES=SchedulerTest.cpp
+ExecStreamTest_SOURCES=ExecStreamTest.cpp
 
 RandomAccessFileDeviceTest_SOURCES=RandomAccessFileDeviceTest.cpp
 

@@ -278,6 +278,7 @@ inline void ExecStreamBufAccessor::provideBufferForProduction(
     pBufEnd = pEnd;
     pProducer = pStart;
     pConsumer = pStart;
+    state = EXECBUF_NEED_PRODUCTION;
 
     if (!reusable) {
         // indicate that this buffer is not reusable

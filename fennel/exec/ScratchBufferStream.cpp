@@ -35,7 +35,7 @@ void ScratchBufferStream::getResourceRequirements(
     ExecStreamResourceQuantity &minQuantity,
     ExecStreamResourceQuantity &optQuantity)
 {
-    ExecStream::getResourceRequirements(minQuantity,optQuantity);
+    ConduitExecStream::getResourceRequirements(minQuantity,optQuantity);
 
     // one scratch page
     minQuantity.nCachePages += 1;
@@ -104,7 +104,7 @@ ExecStreamResult ScratchBufferStream::execute(ExecStreamQuantum const &)
 void ScratchBufferStream::closeImpl()
 {
     bufferLock.unlock();
-    ExecStream::closeImpl();
+    ConduitExecStream::closeImpl();
 }
 
 ExecStreamBufProvision ScratchBufferStream::getOutputBufProvision() const

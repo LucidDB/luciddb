@@ -308,8 +308,11 @@ scheduler updates its current stream pointer to the corresponding producer
 stream, and loops back to label VISIT_VERTEX.
 
 <li>The scheduler invokes the current stream's execute method, and asserts that
-the return code was neither EXECRC_NEED_OUTPUTBUF nor EXECRC_NO_OUTPUT
+the return code was not EXECRC_NEED_OUTPUTBUF 
 (impossible due to lazy evaluation order).
+
+<li>If the return code was EXECRC_NO_OUTPUT, then the scheduler
+loops back to label VISIT_VERTEX, causing the current node to be re-executed.
 
 <li>If the return code was EXECRC_OUTPUT or EXECRC_EOS, then the scheduler
 updates the current stream pointer to reference the current stream's parent and

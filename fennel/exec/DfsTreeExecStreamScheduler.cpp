@@ -141,6 +141,8 @@ ExecStreamBufAccessor &DfsTreeExecStreamScheduler::readStream(
             // TODO:  assert that at least one input is in state
             // EXECBUF_NEED_PRODUCTION
             break;
+        case EXECRC_NO_OUTPUT:
+            break;
         default:
             permAssert(false);
         }
