@@ -83,13 +83,13 @@ class FennelCartesianJoinRule extends VolcanoRule
         }
 
         SaffronRel fennelLeft =
-            convert(planner,leftRel,FennelPullRel.FENNEL_PULL_CONVENTION);
+            convert(leftRel,FennelPullRel.FENNEL_PULL_CONVENTION);
         if (fennelLeft == null) {
             return;
         }
         
         SaffronRel fennelRight =
-            convert(planner,rightRel,FennelPullRel.FENNEL_PULL_CONVENTION);
+            convert(rightRel,FennelPullRel.FENNEL_PULL_CONVENTION);
         if (fennelRight == null) {
             return;
         }

@@ -96,7 +96,7 @@ public abstract class DiffTestCase extends TestCase
      */
     protected Writer openTestLog() throws Exception
     {
-        File testLogDir = getSourceRoot();
+        File testLogDir = getTestlogRoot();
 
         // walk down the package tree
         String className = getClass().getName();
@@ -143,6 +143,14 @@ public abstract class DiffTestCase extends TestCase
         return new File(
             new File(classesDir).getParentFile(),
             "src");
+    }
+
+    /**
+     * @return the root under which testlogs should be written
+     */
+    protected File getTestlogRoot() throws Exception
+    {
+        return getSourceRoot();
     }
 
     /**

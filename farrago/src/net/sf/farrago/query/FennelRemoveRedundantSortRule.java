@@ -66,7 +66,7 @@ public class FennelRemoveRedundantSortRule extends VolcanoRule
 
         if (inputRel instanceof FennelSortRel) {
             SaffronRel newRel =
-                convert(planner,inputRel,FennelPullRel.FENNEL_PULL_CONVENTION);
+                convert(inputRel,FennelPullRel.FENNEL_PULL_CONVENTION);
             if (newRel == null) {
                 return;
             }

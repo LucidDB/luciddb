@@ -32,6 +32,8 @@ select empno+1 from sales.emps where empno<110;
 
 select empno+1, empno/2 from sales.emps;
 
+select * from sales.emps where name = 'Wilma';
+select * from sales.emps where name = 'wilma';
 --select empno, empno from sales.emps;
 --select empno,*,empno from sales.emps;
 --select 1+2 as empno, empno as empno, age as empno, 1+2 as empno from sales.emps

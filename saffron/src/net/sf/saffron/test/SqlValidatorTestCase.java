@@ -41,7 +41,7 @@ import net.sf.saffron.core.SaffronType;
 /**
  * An abstract base class for implementing tests against {@link net.sf.saffron.sql.SqlValidator} and derived classes.
  *
- * @author wael
+ * @author Wael Chatila
  * @since Jan 12, 2004
  * @version $Id$
  **/
@@ -480,11 +480,22 @@ public abstract class SqlValidatorTestCase extends TestCase {
     public void testNullIf(){
         checkExp("nullif(1,2)");
         checkType("nullif(1,2)","INTEGER");
+        checkType("nullif('a','b')","VARCHAR(1)");
+    }
+
+    public void _testNullIfFails(){
+        //todo
+        checkExpFails("nullif(1,2,3)","(?s)Invalid number of Arguments.*");
     }
 
     public void testCoalesce(){
         checkExp("coalesce('a','b')");
         checkType("coalesce('a','b','c')","VARCHAR(1)");
+    }
+
+    public void testCoalesceFails(){
+        checkExpFails("coalesce('a',1)","(?s).*Illegal mixing of types");
+        checkExpFails("coalesce('a','b',1)","(?s).*Illegal mixing of types");
     }
 
     public void testStringCompare() {

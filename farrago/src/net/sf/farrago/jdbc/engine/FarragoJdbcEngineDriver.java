@@ -131,10 +131,14 @@ public class FarragoJdbcEngineDriver
         // convert to SQLException-style chaining
         Throwable cause = ex.getCause();
         if (cause != null) {
+            // NOTE jvs 18-June-2004:  reverse the order so that
+            // the underlying cause comes out on top
             SQLException sqlCause = newSqlException(cause);
-            sqlExcn.setNextException(sqlCause);
+            sqlCause.setNextException(sqlExcn);
+            return sqlCause;
+        } else {
+            return sqlExcn;
         }
-        return sqlExcn;
     }
 }
 

@@ -98,6 +98,11 @@ protected:
      * Whether this graph has been prepared.
      */
     bool isPrepared;
+
+    /**
+     * Whether to close this graph in dataflow order (producers to consumers)
+     */
+    bool doDataflowClose;
     
     explicit ExecutionStreamGraphImpl();
     virtual SharedExecutionStream getStreamFromVertex(Vertex);

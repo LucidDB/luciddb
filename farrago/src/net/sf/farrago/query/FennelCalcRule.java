@@ -67,7 +67,7 @@ class FennelCalcRule extends VolcanoRule {
     public void onMatch(VolcanoRuleCall call) {
         CalcRel calc = (CalcRel) call.rels[0];
         SaffronRel relInput = call.rels[1];
-        SaffronRel fennelInput = convert(planner, relInput,
+        SaffronRel fennelInput = convert(relInput,
                 FennelPullRel.FENNEL_PULL_CONVENTION);
         if (fennelInput == null) {
             return;

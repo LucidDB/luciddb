@@ -32,14 +32,11 @@ import net.sf.farrago.catalog.FarragoReposTxnContext;
 public interface FarragoSessionParser
 {
     /**
-     * Parses an SQL statement.  If it is a DDL statement, this may implicitly
+     * Parses an SQL statement.  If a DDL statement, implicitly
      * performs uncommitted catalog updates.
      *
      * @param ddlValidator the validator to use for lookup during parsing
      * if this turns out to be a DDL statement
-     *
-     * @param txnContext transaction context to use for initiating
-     * repository transactions
      *
      * @param sql the SQL text to be parsed
      *
@@ -48,7 +45,6 @@ public interface FarragoSessionParser
      */
     public Object parseSqlStatement(
         FarragoSessionDdlValidator ddlValidator,
-        FarragoReposTxnContext txnContext,
         String sql);
 
     /**

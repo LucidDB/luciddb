@@ -1,0 +1,6 @@
+
+private ExecutableStmt.Oj_DATE_0 oj_var0 = new ExecutableStmt.Oj_DATE_0();
+
+oj_var0.assignFrom( connection.getContextVariable_CURRENT_DATE() );
+
+return (ExecutableStmt.Oj_DATE_0) oj_var0;

@@ -662,7 +662,6 @@ require version '${required.ant.version}'."/>
       tofile="${FarragoConf.xmi}" overwrite="true"/>
     <replace file="${FarragoConf.xmi}">
       <replacefilter token="@fennel.disabled@" value="${fennel.disabled}"/>
-      <replacefilter token="@databaseDir@" value="${catalog.dir}"/>
       <replacefilter token="@resourceDir@" value="${fennel.dir}/common"/>
     </replace>
     <antFork target="forked_importConfig"/>
@@ -681,6 +680,7 @@ require version '${required.ant.version}'."/>
       <entry key="java.util.logging.FileHandler.pattern"
         default="${FarragoTrace.log}"/>
       <entry key="java.util.logging.FileHandler.append" default="true"/>
+      <entry key="net.sf.farrago.jdbc.level" default="FINER"/>
     </propertyfile>
   </target>
 

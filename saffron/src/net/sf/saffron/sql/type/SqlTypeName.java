@@ -169,6 +169,21 @@ public class SqlTypeName extends EnumeratedValues.BasicValue {
                 (scale ? 0 : PrecNoScaleNo);
         return (signatures & mask) != 0;
     }
+
+    /**
+     * Returns true if not of a standard sql type.
+     * Non standard types are {@link #Any}, {@link #Null} and {@link #Symbol}
+     */
+    public boolean isSpecial() {
+        switch( ordinal_ ) {
+        case Any_ordinal:
+        case Null_ordinal:
+        case Symbol_ordinal:
+            return true;
+        }
+
+        return false;
+    }
 }
 
 // End SqlTypeName.java

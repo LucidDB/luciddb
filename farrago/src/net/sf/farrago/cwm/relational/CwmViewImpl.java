@@ -80,11 +80,10 @@ public abstract class CwmViewImpl
             // pass this one through
             throw ex;
         } catch (Throwable ex) {
-            // TODO:  if e has parser position information in it, need to either
-            // delete it or adjust it
+            // TODO: if ex has parser position information in it, need to
+            // either delete it or adjust it
             throw validator.res.newValidatorInvalidViewDefinition(
                 getName(),
-                ex.getMessage(),
                 ex);
         } finally {
             validator.releaseReentrantSession(session);

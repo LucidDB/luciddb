@@ -26,7 +26,6 @@ import net.sf.saffron.calc.RexToCalcTranslator;
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
 import net.sf.saffron.core.SaffronTypeFactoryImpl;
-import net.sf.saffron.oj.rel.RexToJavaTranslator;
 import net.sf.saffron.resource.SaffronResource;
 import net.sf.saffron.rex.RexCall;
 import net.sf.saffron.rex.RexNode;
@@ -523,16 +522,6 @@ public abstract class SqlOperator
         return isCharTypeComparable(argTypes);
     }
 
-    /**
-     * Returns an object which can convert a call to this operator into a Java
-     * expression, or null if this operator cannot be converted.
-     *
-     * <p>The base implementation returns null; derived classes can override.
-     */
-    public JavaRexImplementor getJavaImplementor() {
-        return null;
-    }
-
     //~ Inner Classes ---------------------------------------------------------
 
     /**
@@ -847,18 +836,6 @@ public abstract class SqlOperator
             }
         }
     }
-
-    /**
-     * Translates an expression to a Java parse tree.
-     *
-     * <p>TODO: Remove this interface. SqlOperator should not depend upon
-     * {@link net.sf.saffron.oj.rel.JavaRelImplementor} or {@link RexNode}.
-     */
-    public interface JavaRexImplementor {
-        Expression translateToJava(RexCall rex, Expression[] operands,
-                RexToJavaTranslator translator);
-    }
-
 }
 
 

@@ -62,9 +62,13 @@ public abstract class SaffronSqlTester implements SqlTester {
         check(sql,result, SqlTypeName.Double);
     }
 
-    public void checkBoolean(String expression, String result) {
+    public void checkBoolean(String expression, Boolean result) {
         String sql = buildQuery(expression);
-        check(sql,result, SqlTypeName.Boolean);
+        if ( null == result) {
+            checkNull(expression);
+        } else {
+            check(sql,result.toString(), SqlTypeName.Boolean);
+        }
     }
 
     public void checkString(String expression, String result) {

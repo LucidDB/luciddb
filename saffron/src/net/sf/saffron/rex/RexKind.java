@@ -219,12 +219,18 @@ public class RexKind extends EnumeratedValues.BasicValue {
         new RexKind("DynamicParam", DynamicParamORDINAL);
 
     public static final int CastOrdinal = 41;
-    public static final RexKind Cast =
-        new RexKind("Cast", CastOrdinal);
+    public static final RexKind Cast = new RexKind("Cast", CastOrdinal);
 
     public static final int TrimOrdinal = 42;
-    public static final RexKind Trim =
-        new RexKind("Trim", TrimOrdinal);
+    public static final RexKind Trim = new RexKind("Trim", TrimOrdinal);
+
+    /** The LIKE operator */
+    public static final int LikeOrdinal = 43;
+    public static final RexKind Like = new RexKind("LIKE", LikeOrdinal);
+
+    /** The SIMILAR operator */
+    public static final int SimilarOrdinal = 44;
+    public static final RexKind Similar = new RexKind("SIMILAR TO", SimilarOrdinal);
     /**
      * Set of all {@link RexKind} instances.
      */

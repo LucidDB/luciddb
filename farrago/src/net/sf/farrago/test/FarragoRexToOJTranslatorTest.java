@@ -1,0 +1,486 @@
+/*
+// Farrago is a relational database management system.
+// Copyright (C) 2003-2004 John V. Sichi.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+// 
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
+package net.sf.farrago.test;
+
+import net.sf.farrago.query.*;
+import net.sf.farrago.ojrex.*;
+import net.sf.farrago.db.*;
+import net.sf.farrago.jdbc.engine.*;
+import net.sf.farrago.util.*;
+import net.sf.farrago.catalog.*;
+
+import net.sf.saffron.opt.*;
+import net.sf.saffron.rel.*;
+import net.sf.saffron.rex.*;
+import net.sf.saffron.sql.*;
+import net.sf.saffron.sql2rel.*;
+import net.sf.saffron.sql.parser.*;
+import net.sf.saffron.oj.*;
+import net.sf.saffron.oj.rel.*;
+import net.sf.saffron.oj.stmt.*;
+
+import openjava.ptree.*;
+
+import junit.framework.*;
+
+import java.io.*;
+
+/**
+ * FarragoRexToOJTranslatorTest contains unit tests for the translation code in
+ * {@link net.sf.farrago.ojrex}.  Each test case takes a single SQL row
+ * expression string as input, performs code generation, and then diffs the
+ * generated Java code snippet against an expected .ref file under directory
+ * farrago/testlog/FarragoRexToOJTranslatorTest.
+ *
+ * @author John V. Sichi
+ * @version $Id$
+ */
+public class FarragoRexToOJTranslatorTest extends FarragoTestCase
+{
+    /**
+     * Creates a new FarragoRexToOJTranslatorTest object.
+     *
+     * @param testName .
+     *
+     * @throws Exception .
+     */
+    public FarragoRexToOJTranslatorTest(String testName) throws Exception
+    {
+        super(testName);
+    }
+
+    // implement TestCase
+    public static Test suite()
+    {
+        return wrappedSuite(FarragoRexToOJTranslatorTest.class);
+    }
+
+    // override FarragoTestCase
+    protected boolean shouldDiff()
+    {
+        // this test should always work regardless of Fennel availability
+        return true;
+    }
+
+    /**
+     * Tests translation of a single row expression.
+     *
+     * @param rowExpression the text of the row expression to test
+     * (this is used as the single select item in a constructed
+     * EXPLAIN PLAN statement)
+     *
+     * @param tableExpression the table to use in the FROM clause
+     * (don't use anything fancy here like a nested query because the
+     * optimizer used for this test has its hands tied)
+     */
+    private void testTranslation(
+        String rowExpression,
+        String tableExpression)
+        throws Exception
+    {
+        String explainQuery =
+            "EXPLAIN PLAN FOR SELECT " + rowExpression + " FROM "
+            + tableExpression;
+        
+        // hijack necessary internals
+        FarragoJdbcEngineConnection farragoConnection = 
+            (FarragoJdbcEngineConnection) connection;
+        FarragoDbSession session = (FarragoDbSession)
+            farragoConnection.getSession();
+
+        // guarantee release of any resources we allocate on the way
+        FarragoCompoundAllocation allocations = new FarragoCompoundAllocation();
+        FarragoReposTxnContext reposTxn = new FarragoReposTxnContext(catalog);
+        try {
+            reposTxn.beginReadTxn();
+            
+            // create a private code cache: don't pollute the real
+            // database code cache
+            FarragoObjectCache objCache = new FarragoObjectCache(allocations,0);
+
+            // FarragoPreparingStmt does most of the work for us
+            FarragoPreparingStmt stmt = new FarragoPreparingStmt(
+                catalog,
+                session.getDatabase().getFennelDbHandle(),
+                session,
+                objCache,
+                objCache,
+                session.getSessionIndexMap());
+
+            allocations.addAllocation(stmt);
+
+            initPlanner(stmt);
+
+            // parse the EXPLAIN PLAN statement
+            SqlParser sqlParser = new SqlParser(explainQuery);
+            SqlNode sqlNode = sqlParser.parseStmt();
+
+            // prepare it
+            PreparedExplanation explanation = (PreparedExplanation)
+                stmt.prepareSql(
+                    sqlNode,
+                    session.getRuntimeContextClass(),
+                    stmt.getSqlValidator(),
+                    true);
+
+            // dig out the top-level relational expression, which
+            // we just KNOW will be an IterCalcRel
+            SaffronRel topRel = explanation.getRel();
+            assert(topRel instanceof IterCalcRel) : topRel.getClass().getName();
+            IterCalcRel calcRel = (IterCalcRel) topRel;
+
+            // grab the RexNode corresponding to our select item
+            RexNode rexNode = calcRel.getChildExps()[0];
+
+            // create objects needed for codegen
+            SqlToRelConverter sqlToRelConverter = stmt.getSqlToRelConverter();
+            FarragoRelImplementor relImplementor = new FarragoRelImplementor(
+                stmt,
+                sqlToRelConverter.getRexBuilder());
+
+            // perform the codegen
+            StatementList stmtList = new StatementList();
+            MemberDeclarationList memberList = new MemberDeclarationList();
+            Expression translatedExp = relImplementor.translateViaStatements(
+                calcRel,
+                rexNode,
+                stmtList,
+                memberList);
+
+            // dump the generated code
+            Writer writer = openTestLog();
+            PrintWriter printWriter = new PrintWriter(writer);
+            if (!memberList.isEmpty()) {
+                printWriter.println(memberList);
+            }
+            if (!stmtList.isEmpty()) {
+                printWriter.println(stmtList);
+            }
+            printWriter.println("return " + translatedExp + ";");
+            printWriter.close();
+
+            // and diff it against what we expect
+            diffTestLog();
+        } finally {
+            allocations.closeAllocation();
+            reposTxn.commit();
+        }
+    }
+
+    private void initPlanner(FarragoPreparingStmt stmt)
+    {
+        // NOTE jvs 22-June-2004:  We use a very stripped-down planner
+        // so that the optimizer doesn't decide to rewrite our
+        // carefully constructed expressions.  This also guarantees
+        // that the Java calculator is used without having to
+        // mess with system parameters.
+        FarragoPlanner planner = new FarragoPlanner(stmt);
+        planner.addCallingConvention(CallingConvention.NONE);
+        planner.addCallingConvention(CallingConvention.ITERATOR);
+        planner.addCallingConvention(FennelPullRel.FENNEL_PULL_CONVENTION);
+        planner.registerAbstractRels();
+        planner.addRule(new AbstractConverter.ExpandConversionRule());
+        planner.addRule(OJPlannerFactory.IterCalcRule.instance);
+        FennelToIteratorConverter.register(planner);
+        stmt.setPlanner(planner);
+    }
+
+    /**
+     * Tests translation of a single row expression, using the
+     * SALES.EMPS table for context.
+     *
+     * @param rowExpression the text of the row expression to test
+     * (this is used as the single select item in a constructed
+     * EXPLAIN PLAN statement)
+     */
+    private void testTranslation(String rowExpression)
+        throws Exception
+    {
+        testTranslation(rowExpression,"SALES.EMPS");
+    }
+
+    public void testPrimitiveEquals()
+        throws Exception
+    {
+        // NOTE:  choose one nullable and one not null
+        testTranslation("empno = age");
+    }
+
+    public void testPrimitiveEqualsNotNull()
+        throws Exception
+    {
+        // NOTE:  choose both not null
+        testTranslation("empno = empid");
+    }
+
+    public void testPrimitiveLess()
+        throws Exception
+    {
+        // NOTE:  choose one nullable and one not null
+        testTranslation("empno < age");
+    }
+
+    public void testPrimitiveGreater()
+        throws Exception
+    {
+        // NOTE:  choose one nullable and one not null
+        testTranslation("empno > age");
+    }
+
+    public void testPrimitivePlus()
+        throws Exception
+    {
+        // NOTE:  choose one nullable and one not null
+        testTranslation("empno + age");
+    }
+
+    public void testPrimitiveMinus()
+        throws Exception
+    {
+        // NOTE:  choose one nullable and one not null
+        testTranslation("empno - age");
+    }
+
+    public void testPrimitiveTimes()
+        throws Exception
+    {
+        // NOTE:  choose one nullable and one not null
+        testTranslation("empno * age");
+    }
+
+    public void testPrimitiveDivide()
+        throws Exception
+    {
+        // NOTE:  choose one nullable and one not null
+        testTranslation("empno / age");
+    }
+
+    public void testVarcharEquals()
+        throws Exception
+    {
+        // NOTE:  choose one nullable and one not null
+        testTranslation("name = city");
+    }
+
+    public void testVarcharLess()
+        throws Exception
+    {
+        // NOTE:  choose one nullable and one not null
+        testTranslation("name < city");
+    }
+
+    public void testBooleanAnd()
+        throws Exception
+    {
+        // NOTE:  choose one nullable and one not null
+        testTranslation("slacker and manager");
+    }
+
+    public void testBooleanConjunction()
+        throws Exception
+    {
+        // NOTE:  choose one nullable and one not null
+        testTranslation("(empno < age) and (name = city)");
+    }
+
+    public void testBooleanConjunctionNotNull()
+        throws Exception
+    {
+        // NOTE:  choose all not null
+        testTranslation("(empno = empid) and (empno = deptno)");
+    }
+
+    public void testRowConstructorWithLiterals()
+        throws Exception
+    {
+        testTranslation(
+            "row(5,'a las cinco de la tarde',x'58797A',"
+            + "date '2004-10-05',time '17:00:00'," +
+            "timestamp '2004-10-05 17:00:00')");
+    }
+
+    public void testNullableIsTrue()
+        throws Exception
+    {
+        testTranslation("slacker is true");
+    }
+
+    public void testNullableIsFalse()
+        throws Exception
+    {
+        testTranslation("slacker is false");
+    }
+
+    public void testNotNullIsTrue()
+        throws Exception
+    {
+        testTranslation("manager is true");
+    }
+
+    public void testNotNullIsFalse()
+        throws Exception
+    {
+        testTranslation("manager is false");
+    }
+
+    public void testNullableIsNull()
+        throws Exception
+    {
+        testTranslation("age is null");
+    }
+        
+    public void testNullableIsNotNull()
+        throws Exception
+    {
+        testTranslation("age is not null");
+    }
+        
+    public void testNotNullIsNull()
+        throws Exception
+    {
+        testTranslation("empno is null");
+    }
+        
+    public void testNotNullIsNotNull()
+        throws Exception
+    {
+        testTranslation("empno is not null");
+    }
+
+    // FIXME
+    /*
+    public void testDynamicParam()
+        throws Exception
+    {
+        testTranslation("empno + ?");
+    }
+    */
+
+    public void testUser()
+        throws Exception
+    {
+        testTranslation("user");
+    }
+
+    public void testCurrentUser()
+        throws Exception
+    {
+        testTranslation("current_user");
+    }
+
+    public void testSystemUser()
+        throws Exception
+    {
+        testTranslation("system_user");
+    }
+
+    public void testCurrentDate()
+        throws Exception
+    {
+        testTranslation("current_date");
+    }
+
+    public void testCurrentTime()
+        throws Exception
+    {
+        testTranslation("current_time");
+    }
+
+    public void testCurrentTimestamp()
+        throws Exception
+    {
+        testTranslation("current_timestamp");
+    }
+
+    // FIXME
+    /*
+    public void testCastNullToPrimitive()
+        throws Exception
+    {
+        // FIXME:  should take cast(null as int)
+        testTranslation("cast(null as integer)");
+    }
+    */
+
+    // FIXME
+    /*
+    public void testCastNullToVarchar()
+        throws Exception
+    {
+        testTranslation("cast(null as varchar(10))");
+    }
+    */
+
+    public void testCastToVarcharImplicitTruncate()
+        throws Exception
+    {
+        testTranslation(
+            "cast('supercalifragilistiexpialodocious' as varchar(10))");
+    }
+
+    public void testCastToVarchar()
+        throws Exception
+    {
+        testTranslation(
+            "cast('boo' as varchar(10))");
+    }
+
+    // TODO (depends on dtbug 79)
+    /*
+    public void testCastToCharImplicitPad()
+        throws Exception
+    {
+        testTranslation(
+            "cast('boo' as char(10))");
+    }
+    */
+
+    // TODO (depends on dtbug 79)
+    /*
+    public void testCastToCharExact()
+        throws Exception
+    {
+        testTranslation(
+            "cast('0123456789' as char(10))");
+    }
+    */
+
+    // TODO (depends on dtbug 79)
+    /*
+    public void testCastToBinaryImplicitPad()
+        throws Exception
+    {
+        testTranslation(
+            "cast(x'58797A' as binary(10))");
+    }
+    */
+
+    public void testCastToVarbinaryImplicitTruncate()
+        throws Exception
+    {
+        testTranslation(
+            "cast(x'00112233445566778899AABB' as varbinary(10))");
+    }
+    
+    // TODO jvs 22-June-2004:  figure out a way to test codegen for
+    // assignment of nullable value to NOT NULL field
+}
+
+// End FarragoRexToOJTranslatorTest.java

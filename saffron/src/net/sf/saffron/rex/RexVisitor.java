@@ -33,10 +33,10 @@ public interface RexVisitor {
     void visitInputRef(RexInputRef inputRef);
     void visitLiteral(RexLiteral literal);
     void visitCall(RexCall call);
-    void visitCorrel(RexCorrelVariable correlVariable);
-    void visitParam(RexDynamicParam dynamicParam);
+    void visitCorrelVariable(RexCorrelVariable correlVariable);
+    void visitDynamicParam(RexDynamicParam dynamicParam);
     void visitRangeRef(RexRangeRef rangeRef);
-    void visitConVar(RexContextVariable variable);
+    void visitContextVariable(RexContextVariable variable);
     void visitFieldAccess(RexFieldAccess fieldAccess);
 }
 

@@ -78,6 +78,7 @@ public class OJStatement
     public static final String connectionVariable = "connection";
 
     private static final Logger tracer = SaffronTrace.getStatementTracer();
+    private String queryString_ = null;
 
     //~ Instance fields -------------------------------------------------------
 
@@ -356,6 +357,7 @@ public class OJStatement
             SqlValidator validator,
             boolean needValidation)
     {
+        queryString_ = sqlQuery.toString();
         // (re)load trace level etc. from saffron.properties
         if (shouldReloadTrace()) {
             SaffronProperties.instance().apply();
@@ -698,6 +700,9 @@ public class OJStatement
                 new String[0],
                 new ClassDeclarationList(decl));
 
+        if (queryString_ != null) {
+            compUnit.setComment("/** " + queryString_.replaceAll("\n","\n// ") + "\n */");
+        }
         String s;
 
         // hack because DynamicJava cannot resolve fully-qualified inner

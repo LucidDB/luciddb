@@ -22,9 +22,8 @@
 
 package net.sf.saffron.rel;
 
-import net.sf.saffron.core.SaffronType;
-import net.sf.saffron.core.SaffronTypeFactoryImpl;
 import net.sf.saffron.core.SaffronField;
+import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.opt.RuleOperand;
 import net.sf.saffron.opt.VolcanoRule;
 import net.sf.saffron.opt.VolcanoRuleCall;
@@ -65,8 +64,8 @@ public class RemoveTrivialProjectRule extends VolcanoRule
         if (!isIdentity(project.exps, project.getFieldNames(), childRowType)) {
             return;
         }
-        child = call.getPlanner().register(child,project);
-        child = convert(planner,child,project.getConvention());
+        child = call.planner.register(child,project);
+        child = convert(child,project.getConvention());
         if (child != null) {
             call.transformTo(child);
         }

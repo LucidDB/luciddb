@@ -1,0 +1,211 @@
+0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/str.sql#4 $
+0: jdbc:farrago:> -- Full vertical system testing of non function statements
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
+0: jdbc:farrago:> -- and another time to use java. The caller of this script is setting the flag so no need
+0: jdbc:farrago:> -- to do it directly unless you need to do acrobatics.
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select 'w'='w' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> select 'w'>'w' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> select 'W'>'w' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> select 'w'>'W' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> select 'w'>='w' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> select 'a'<'b' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> select 'a'<>'b' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> select 'a'<='b' from values(1);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select substring(name from 1 for 2) from sales.emps order by 1;
++---------+
+| EXPR$0  |
++---------+
+| Er      |
+| Fr      |
+| Jo      |
+| Wi      |
++---------+
+0: jdbc:farrago:> select substring(name from 2) from sales.emps order by 1;
++---------+
+| EXPR$0  |
++---------+
+| ilma    |
+| ohn     |
+| red     |
+| ric     |
++---------+
+0: jdbc:farrago:> select substring(name from 1) from sales.emps order by 1;
++---------+
+| EXPR$0  |
++---------+
+| Eric    |
+| Fred    |
+| John    |
+| Wilma   |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select lower(city) from sales.emps order by 1;
++----------------+
+|     EXPR$0     |
++----------------+
+|                |
+|                |
+| san francisco  |
+| vancouver      |
++----------------+
+0: jdbc:farrago:> select upper(city) from sales.emps order by 1;
++----------------+
+|     EXPR$0     |
++----------------+
+|                |
+|                |
+| SAN FRANCISCO  |
+| VANCOUVER      |
++----------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select overlay(name placing '??' from 1) from sales.emps order by 1;
++---------+
+| EXPR$0  |
++---------+
+| ??ed    |
+| ??hn    |
+| ??ic    |
+| ??lma   |
++---------+
+0: jdbc:farrago:> select overlay(name placing '??' from 2 for 1) from sales.emps order by 1;
++---------+
+| EXPR$0  |
++---------+
+| E??ic   |
+| F??ed   |
+| J??hn   |
+| W??lma  |
++---------+
+0: jdbc:farrago:> select overlay(name placing '??' from 2 for 2) from sales.emps order by 1;
++---------+
+| EXPR$0  |
++---------+
+| E??c    |
+| F??d    |
+| J??n    |
+| W??ma   |
++---------+
+0: jdbc:farrago:> select overlay(city placing '??' from 2 for 3) from sales.emps order by 1;
++---------------+
+|    EXPR$0     |
++---------------+
+|               |
+|               |
+| S??Francisco  |
+| V??ouver      |
++---------------+
+0: jdbc:farrago:> select overlay(name placing '??' from 2 for 4) from sales.emps order by 1;
++---------+
+| EXPR$0  |
++---------+
+| E??     |
+| F??     |
+| J??     |
+| W??     |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select position('wi' in name) from sales.emps order by 1;
++---------+
+| EXPR$0  |
++---------+
+| 0       |
+| 0       |
+| 0       |
+| 0       |
++---------+
+0: jdbc:farrago:> select position('Fran' in city) from sales.emps order by 1;
++---------+
+| EXPR$0  |
++---------+
+| 0       |
+| 0       |
+| 0       |
+| 5       |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select name like '%ma' from sales.emps order by 1;
++---------+
+| EXPR$0  |
++---------+
+| false   |
+| false   |
+| false   |
+| true    |
++---------+
+0: jdbc:farrago:> select name like 'ma' from sales.emps;
++---------+
+| EXPR$0  |
++---------+
+| false   |
+| false   |
+| false   |
+| false   |
++---------+
+0: jdbc:farrago:> select name like '_ma' from sales.emps;
++---------+
+| EXPR$0  |
++---------+
+| false   |
+| false   |
+| false   |
+| false   |
++---------+
+0: jdbc:farrago:> select name like '___ma' from sales.emps order by 1;
++---------+
+| EXPR$0  |
++---------+
+| false   |
+| false   |
+| false   |
+| true    |
++---------+
+0: jdbc:farrago:> --select name like '' from sales.emps;
+0: jdbc:farrago:> --select city like 'san%' from sales.emps order by 1;
+0: jdbc:farrago:> --select city like 'San%' from sales.emps order by 1;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> --select char_length(city) from sales.emps order by 1;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

@@ -161,7 +161,7 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
         {
             final AggregateRel aggregate = (AggregateRel) rel;
             final SaffronRel javaChild =
-                convert(planner,aggregate.child,CallingConvention.JAVA);
+                convert(aggregate.child,CallingConvention.JAVA);
             if (javaChild == null) {
                 return null;
             }
@@ -211,7 +211,7 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
         {
             final DistinctRel distinct = (DistinctRel) rel;
             final SaffronRel javaChild =
-                convert(planner,distinct.child,CallingConvention.JAVA);
+                convert(distinct.child,CallingConvention.JAVA);
             if (javaChild == null) {
                 return null;
             }
@@ -234,7 +234,7 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
         {
             final FilterRel filter = (FilterRel) rel;
             final SaffronRel javaChild =
-                convert(planner,filter.child,CallingConvention.JAVA);
+                convert(filter.child,CallingConvention.JAVA);
             if (javaChild == null) {
                 return null;
             }
@@ -269,12 +269,12 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
                 return null;
             }
             final SaffronRel convertedLeft =
-                convert(planner,join.getLeft(),convention);
+                convert(join.getLeft(),convention);
             if (convertedLeft == null) {
                 return null;
             }
             final SaffronRel convertedRight =
-                convert(planner,join.getRight(),convention);
+                convert(join.getRight(),convention);
             if (convertedRight == null) {
                 return null;
             }
@@ -350,7 +350,7 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
                 return null;
             }
             final SaffronRel javaChild =
-                convert(planner,project.child,CallingConvention.JAVA);
+                convert(project.child,CallingConvention.JAVA);
             if (javaChild == null) {
                 return null;
             }
@@ -382,23 +382,13 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
         {
             final ProjectRel project = (ProjectRel) rel;
             SaffronRel inputRel = project.child;
-            final SaffronRel iterChild = convert(
-                planner,inputRel,CallingConvention.ITERATOR);
+            final SaffronRel iterChild =
+                convert(inputRel,CallingConvention.ITERATOR);
             if (iterChild == null) {
                 return null;
             }
             final RexNode [] exps = project.getChildExps();
             final RexNode condition = null;
-            // FIXME jvs 11-May-2004: This should be calling something
-            // (cluster?) to get an existing JavaRelImplementor, not making one up
-            // out of thin air, since query processing may be using a custom
-            // implementation.
-            final JavaRelImplementor relImplementor =
-                    new JavaRelImplementor(project.getCluster().rexBuilder);
-            if (!relImplementor.canTranslate(iterChild, condition, exps)) {
-                // some of the expressions cannot be translated into Java
-                return null;
-            }
             return new IterCalcRel(
                 project.getCluster(),
                 iterChild,
@@ -441,7 +431,7 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
             RexNode condition = filterRel.condition;
             
             SaffronRel iterChild = convert(
-                planner,inputRel,CallingConvention.ITERATOR);
+                    inputRel,CallingConvention.ITERATOR);
             
             if (iterChild == null) {
                 return;
@@ -480,8 +470,8 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
         public SaffronRel convert(SaffronRel rel) {
             // TODO jvs 11-May-2004:  add canTranslate test
             final CalcRel calc = (CalcRel) rel;
-            final SaffronRel convertedChild = convert(planner, calc.child,
-                    CallingConvention.ITERATOR);
+            final SaffronRel convertedChild =
+                convert(calc.child,CallingConvention.ITERATOR);
             if (convertedChild == null) {
                 // We can't convert the child, so we can't convert rel.
                 return null;
@@ -554,10 +544,7 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
             for (int i = 0; i < newInputs.length; i++) {
                 // Stubborn, because inputs don't appear as operands.
                 newInputs[i] =
-                    convert(
-                        planner,
-                        union.getInputs()[i],
-                        CallingConvention.ITERATOR);
+                    convert(union.getInputs()[i],CallingConvention.ITERATOR);
                 if (newInputs[i] == null) {
                     return null; // cannot convert this input
                 }
@@ -616,10 +603,7 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
             SaffronRel [] newInputs = new SaffronRel[union.getInputs().length];
             for (int i = 0; i < newInputs.length; i++) {
                 newInputs[i] =
-                    convert(
-                        planner,
-                        union.getInputs()[i],
-                        CallingConvention.JAVA);
+                    convert(union.getInputs()[i],CallingConvention.JAVA);
                 if (newInputs[i] == null) {
                     return null; // cannot convert this input
                 }

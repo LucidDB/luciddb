@@ -108,7 +108,7 @@ public interface SaffronType
     /**
      * Returns whether two values are of the same type. E.g.
      *  varchar(5) and varchar(0), are of the same type
-     *  double and float, don't
+     *  double and float, aren't
      */
     boolean isSameType(SaffronType t);
 
@@ -116,16 +116,13 @@ public interface SaffronType
      * Returns whether two values are of the same type family. E.g.
      *  varchar(5) and varchar(0), are of the same type family
      *  double, float, int, bigint, are of the same type family
+     *  varchar(x) and int are NOT of the same type family
      */
     boolean isSameTypeFamily(SaffronType t);
 
     /**
-     * If type represent a string, char, varchar or any other type that can carry a collation
+     * If type represent a char, varchar or any other type that can carry a collation
      * this function must return true, otherwise returns false. <BR>
-     * Comments: Technically this function is not needed. Its possible to do the same with multiple calls to
-     * {@link #isSameTypeFamily}, however having this function is convenient and doesn't only simplify code where
-     * {@link #getCharset}, {@link #setCharset}, {@link #getCollation} and {@link #setCollation}
-     * are used but also slightly simplifies the implementations of the named functions.
      */
     boolean isCharType();
 
@@ -133,35 +130,19 @@ public interface SaffronType
      * Returns this type's character set, or null if this type can carry a
      * character set but no character set is defined.
      *
-     * @throws RuntimeException if this type is not of a kind (string, char,
+     * @throws RuntimeException if this type is not of a kind (char,
      *   varchar, and so forth) that can carry a character set.
      */
     Charset getCharset();
 
     /**
-     * Sets this type's character set.
-     *
-     * @throws RuntimeException if this type is not of a kind (string, char,
-     *   varchar, and so forth) that can carry a character set.
-     */
-     void setCharset(Charset charset);
-
-    /**
      * Returns this type's collation, or null if this type can carry a
      * collation but no collation is defined.
      *
-     * @throws RuntimeException if this type is not of a kind (string, char,
+     * @throws RuntimeException if this type is not of a kind (char,
      *   varchar, and so forth) that can carry a collation.
      */
     SqlCollation getCollation() throws RuntimeException;
-
-    /**
-     * Sets the collation.
-     *
-     * @throws RuntimeException if this type is not of a kind (string, char,
-     *   varchar, and so forth) that can carry a collation.
-     */
-    void setCollation(SqlCollation collation) throws RuntimeException;
 
     /**
      * Returns the maximum number of bytes storage required to store a value

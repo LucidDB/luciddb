@@ -32,9 +32,11 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.ddl.*;
 import net.sf.farrago.namespace.*;
+import net.sf.farrago.ojrex.*;
 
 import net.sf.saffron.sql.*;
 import net.sf.saffron.util.*;
+import net.sf.saffron.oj.rex.*;
 
 import openjava.tools.DebugOut;
 
@@ -74,6 +76,8 @@ public class FarragoDatabase
 
     private FennelDbHandle fennelDbHandle;
 
+    private OJRexImplementorTable ojRexImplementorTable;
+    
     /**
      * Cache of all sorts of stuff.
      */
@@ -274,6 +278,9 @@ public class FarragoDatabase
             // TODO:  parameter for cache size limit
             dataWrapperCache = new FarragoObjectCache(this,Long.MAX_VALUE);
 
+            ojRexImplementorTable =
+                new FarragoOJRexImplementorTable(SqlOperatorTable.std());
+
             // REVIEW:  sequencing from this point on
 
             if (currentConfig.isUserCatalogEnabled()) {
@@ -387,20 +394,33 @@ public class FarragoDatabase
         FemFennelConfig fennelConfig =
             systemCatalog.getCurrentConfig().getFennelConfig();
         Map attributeMap = JmiUtil.getAttributeValues(fennelConfig);
+        FemDatabaseParam param;
         Iterator iter = attributeMap.entrySet().iterator();
         while (iter.hasNext()) {
             Map.Entry entry = (Map.Entry) iter.next();
-            FemDatabaseParam param =
-                systemCatalog.newFemDatabaseParam();
+            param = systemCatalog.newFemDatabaseParam();
             param.setName(entry.getKey().toString());
             param.setValue(entry.getValue().toString());
             cmd.getParams().add(param);
+        }
 
+        // databaseDir is set dynamically, allowing the catalog
+        // to be moved
+        param = systemCatalog.newFemDatabaseParam();
+        param.setName("databaseDir");
+        param.setValue(
+            FarragoProperties.instance().getCatalogDir().getAbsolutePath());
+        cmd.getParams().add(param);
+
+        iter = cmd.getParams().iterator();
+        while (iter.hasNext()) {
+            param = (FemDatabaseParam) iter.next();
             // REVIEW:  use Fennel tracer instead?
             tracer.config(
                 "Fennel parameter " + param.getName() + "="
                 + param.getValue());
         }
+        
         cmd.setCreateDatabase(init);
 
         NativeTrace nativeTrace =
@@ -415,6 +435,14 @@ public class FarragoDatabase
         tracer.config("Fennel successfully loaded");
     }
 
+    /**
+     * @return shared OpenJava implementation table for SQL operators
+     */
+    public OJRexImplementorTable getOJRexImplementorTable()
+    {
+        return ojRexImplementorTable;
+    }
+    
     /**
      * .
      *

@@ -103,7 +103,7 @@ public class FennelRenameRule extends VolcanoRule
             fieldNames[i] = projFieldName;
         }
 
-        SaffronRel fennelInput = convert(planner,inputRel,convention);
+        SaffronRel fennelInput = convert(inputRel,convention);
         if (fennelInput == null) {
             return;
         }

@@ -40,6 +40,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.nio.charset.Charset;
 
 /**
  * Miscellaneous utility functions.
@@ -557,6 +558,10 @@ public class Util extends Toolbox
         throw new ComparisonFailure(message, expected, actual);
     }
 
+    public static Charset getDefaultCharset() {
+        return Charset.forName(SaffronProperties.instance().defaultCharset.get());
+    }
+    
     //~ Inner Classes ---------------------------------------------------------
 
     public static class UtilTestCase extends TestCase

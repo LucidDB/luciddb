@@ -41,6 +41,7 @@ LinearViewSegmentTest \
 VersionedSegmentTest \
 BTreeTxnTest \
 BTreeTest \
+SqlDateTest \
 SqlRegExpTest \
 SqlStringTest \
 SqlStringAsciiTest
@@ -90,6 +91,8 @@ CalcExtMathTest_SOURCES=CalcExtMathTest.cpp
 SqlRegExpTest_SOURCES=SqlStringBuffer.cpp SqlRegExpTest.cpp 
 
 SqlStringTest_SOURCES=SqlStringBuffer.cpp SqlStringTest.cpp 
+
+SqlDateTest_SOURCES=SqlStringBuffer.cpp SqlDateTest.cpp 
 
 SqlStringAsciiTest_SOURCES=SqlStringBuffer.cpp SqlStringAsciiTest.cpp 
 

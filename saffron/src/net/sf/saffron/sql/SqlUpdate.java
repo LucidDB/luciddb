@@ -28,7 +28,7 @@ import java.util.*;
 
 /**
  * A <code>SqlUpdate</code> is a node of a parse tree which represents
- * an INSERT statement.
+ * an UPDATE statement.
  */
 public class SqlUpdate extends SqlCall
 {

@@ -115,7 +115,7 @@ public class DdlSetSystemParamStmt extends DdlStmt
             }
         } catch (Exception ex) {
             throw FarragoResource.instance().newValidatorSysParamTypeMismatch(
-                paramValue.toString(),paramName,ex);
+                paramValue.toString(),paramName);
         }
         
         try {

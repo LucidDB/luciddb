@@ -182,7 +182,7 @@ class FtrsScanToSearchRule extends VolcanoRule
         SaffronRel castRel = OptUtil.createCastRel(nullFilterRel,lhsRowType);
 
         SaffronRel keyInput = convert(
-            planner,castRel,FennelPullRel.FENNEL_PULL_CONVENTION);
+            castRel,FennelPullRel.FENNEL_PULL_CONVENTION);
         assert (keyInput != null);
 
         if (!catalog.isClustered(index)

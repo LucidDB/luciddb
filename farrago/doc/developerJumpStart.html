@@ -275,21 +275,22 @@ make this configurable, since that's not always desirable.)
 Farrago classes use the standard logger naming scheme (logger name
 matches fully-qualified class name, so for detailed catalog tracing of
 the JDBC driver, add <code>net.sf.farrago.jdbc.level=FINE</code>).  However,
-Saffron and Fennel don't use java.util.logging API directly, so they
-have custom logger naming schemes.  Below are some useful trace definitions:
+Fennel doesn't use the java.util.logging API directly, so it
+has a custom logger naming scheme.  Below are some useful trace definitions:
 
 <ul>
 
 <li>add <code>net.sf.farrago.jdbc.level=FINER</code> to trace exceptions which
 are returned via the JDBC driver (this is very useful
 since it traces underlying exceptions as well; these may
-not be visible in a front end such as sqlline)</li>
+not be visible in a front end such as sqlline);
+this is added automatically for developer builds</li>
 
 <li>add <code>net.sf.farrago.db.level=FINE</code> to see all SQL statements
 executed (use FINER to see dynamic parameter values as well)</li>
 
-<li>add <code>net.sf.farrago.saffron.level=FINE</code> to turn on all
-Saffron tracing (no further discrimination is available)
+<li>add <code>net.sf.farrago.query.streamgraph.level=FINE</code> to trace
+Fennel execution stream graphs
 
 <li>add <code>net.sf.fennel.level=FINE</code>. to turn on all
 low-level Fennel tracing (probably more than you want!)
@@ -300,6 +301,9 @@ implementation)
 
 <li>add <code>net.sf.fennel.xo.level=FINE</code> to trace
 tuples processed by TupleStreams
+
+<li>add <code>net.sf.saffron.core.SaffronPlanner.level=FINE</code> to trace
+query optimization
 
 <li>some Fennel classes provide further tracing discrimination (TBD)
 

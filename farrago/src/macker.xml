@@ -31,6 +31,7 @@
     <pattern name="runtime" class="net.sf.farrago.runtime.*" />
     <pattern name="dynamic" class="net.sf.farrago.dynamic.*" />
     <pattern name="session" class="net.sf.farrago.session.*" />
+    <pattern name="ojrex" class="net.sf.farrago.ojrex.*" />
     <pattern name="query" class="net.sf.farrago.query.*" />
     <pattern name="ddl">
       <include class="net.sf.farrago.ddl.*" />
@@ -68,6 +69,7 @@
       <include pattern="runtime"/>
       <include pattern="dynamic"/>
       <include pattern="session"/>
+      <include pattern="ojrex"/>
       <include pattern="query"/>
       <include pattern="ddl"/>
       <include pattern="parser"/>
@@ -328,9 +330,25 @@
       </deny>
     </access-rule>
 
+    <pattern name="ojrex.deps">
+      <include pattern="session.deps" />
+      <include pattern="ojrex" />
+    </pattern>
+
+    <access-rule>
+      <message>ojrex dependency violation</message>
+      <deny>
+        <from pattern="ojrex" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="ojrex.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
     <pattern name="query.deps">
       <include pattern="dynamic.deps" />
-      <include pattern="session.deps" />
+      <include pattern="ojrex.deps" />
       <include pattern="query" />
     </pattern>
 

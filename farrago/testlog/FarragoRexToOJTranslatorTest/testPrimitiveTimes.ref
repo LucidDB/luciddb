@@ -1,0 +1,11 @@
+
+private net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
+
+if (AGE.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.setNull( false );
+    oj_var0.value = EMPNO * AGE.value;
+}
+
+return oj_var0;

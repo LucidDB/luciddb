@@ -25,9 +25,8 @@ import junit.framework.TestCase;
 import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.io.StringWriter;
-import java.io.PrintWriter;
+
+import net.sf.saffron.util.Util;
 
 /**
  * Unit test for {@link CalcProgramBuilder}.
@@ -60,11 +59,10 @@ public class CalcProgramBuilderTest extends TestCase {
         assertEquals("T;", program);
     }
 
-    /** */
     public void testReturnConstant() {
         CalcProgramBuilder.Register litReg = builder.newInt4Literal(100);
         CalcProgramBuilder.Register outReg = builder.newOutput(CalcProgramBuilder.OpType.Int4, -1);
-        builder.addMove(outReg, litReg);
+        CalcProgramBuilder.move.add(builder,outReg, litReg);
         final String program = builder.getProgram();
         final String expected =
                 "O s4;" +
@@ -72,7 +70,33 @@ public class CalcProgramBuilderTest extends TestCase {
                 "V 100;" +
                 "T;" +
                 "MOVE O0, C0;";
-        assertEquals(expected, program);
+        Util.assertEqualsVerbose(expected, program);
+    }
+
+    public void testComments() {
+        CalcProgramBuilder.Register lit0 = builder.newInt4Literal(100);
+        CalcProgramBuilder.Register lit1 = builder.newVarcharLiteral("A");
+        CalcProgramBuilder.Register out0 = builder.newOutput(CalcProgramBuilder.OpType.Int4, -1);
+        CalcProgramBuilder.move.add(builder,out0, lit0);
+        builder.addComment("hej");
+        CalcProgramBuilder.move.add(builder,out0, lit0);
+        builder.addComment("ab");
+        builder.addComment("c");
+        CalcProgramBuilder.move.add(builder,out0, lit0);
+        CalcProgramBuilder.move.add(builder,out0, lit0);
+        builder.addComment("/*d*/");
+        builder.setOutputComments(true);
+        final String program = builder.getProgram();
+        final String expected =
+                "O s4;"+
+                "C s4, vc,2;" +
+                "V 100, 0x41 /* A */;" +
+                "T;" +
+                "MOVE O0, C0 /* 0: hej */;"+
+                "MOVE O0, C0 /* 1: ab c */;"+
+                "MOVE O0, C0 /* 2: */;"+
+                "MOVE O0, C0 /* 3: \\*d*\\ */;";
+        Util.assertEqualsVerbose(expected, program);
     }
 
     public void testRef() {
@@ -87,7 +111,7 @@ public class CalcProgramBuilderTest extends TestCase {
                 "V 100;" +
                 "T;" +
                 "REF O0, C0;";
-        assertEquals(expected, program);
+        Util.assertEqualsVerbose(expected, program);
     }
 
     public void testRefFails() {
@@ -121,14 +145,14 @@ public class CalcProgramBuilderTest extends TestCase {
         CalcProgramBuilder.Register strConst2 = builder.newVarcharLiteral("Hello worlds");
 
         CalcProgramBuilder.Register outReg = builder.newOutput(CalcProgramBuilder.OpType.Int4, -1);
-        builder.addMove(outReg, longConst1);
+        CalcProgramBuilder.move.add(builder,outReg, longConst1);
         final String program = builder.getProgram();
         final String expected = "O s4;" +
                 "C s4, vc,22, vc,24;" +
                 "V 100, 0x48656C6C6F20776F726C64, 0x48656C6C6F20776F726C6473;" +
                 "T;" +
                 "MOVE O0, C0;";
-        assertEquals(expected, program);
+        Util.assertEqualsVerbose(expected, program);
     }
 
     public void testInconstentTypes() {
@@ -149,7 +173,7 @@ public class CalcProgramBuilderTest extends TestCase {
                 "V 0x48656C6C6F20776F726C64, 3, 5;" +
                 "T;" +
                 "CALL 'SUBSTR(O0, C0, C1, C2);";
-        assertEquals(expected, program);
+        Util.assertEqualsVerbose(expected, program);
     }
 
     public void testJmpToNoWhere() {
@@ -166,9 +190,9 @@ public class CalcProgramBuilderTest extends TestCase {
         CalcProgramBuilder.Register out0 = builder.newOutput(CalcProgramBuilder.OpType.Bool, -1);
         CalcProgramBuilder.Register const0 = builder.newBoolLiteral(true);
         CalcProgramBuilder.Register const1 = builder.newBoolLiteral(true);
-        builder.addBoolAnd(out0,const0,const1);
-        builder.addBoolAnd(out0,const0,const1);
-        builder.addBoolAnd(out0,const0,const1);
+        CalcProgramBuilder.boolAnd.add(builder, out0,const0,const1);
+        CalcProgramBuilder.boolAnd.add(builder, out0,const0,const1);
+        CalcProgramBuilder.boolAnd.add(builder, out0,const0,const1);
         builder.addJump(2); //jumping back
         assertExceptionIsThrown("(?s)(?i).*Loops are forbidden. Can not jump to a previous line.*");
     }
@@ -177,7 +201,7 @@ public class CalcProgramBuilderTest extends TestCase {
         CalcProgramBuilder.Register out0 = builder.newOutput(CalcProgramBuilder.OpType.Bool, -1);
         CalcProgramBuilder.Register const0 = builder.newBoolLiteral(true);
         CalcProgramBuilder.Register const1 = builder.newBoolLiteral(true);
-        builder.addBoolAnd(out0,const0,const1);
+        CalcProgramBuilder.boolAnd.add(builder, out0,const0,const1);
         builder.addJump(1); //jumping to itself
         assertExceptionIsThrown("(?s)(?i).*Can not jump to the same line as the instruction.*");
     }
@@ -186,7 +210,7 @@ public class CalcProgramBuilderTest extends TestCase {
         CalcProgramBuilder.Register out0 = builder.newOutput(CalcProgramBuilder.OpType.Bool, -1);
         CalcProgramBuilder.Register const0 = builder.newBoolLiteral(true);
         CalcProgramBuilder.Register const1 = builder.newBoolLiteral(false);
-        builder.addBoolAnd(out0,const0,const1);
+        CalcProgramBuilder.boolAnd.add(builder, out0,const0,const1);
         builder.addLabelJump("label$0");
         builder.addLabelJumpTrue("label$0",out0);
         builder.addLabelJumpFalse("label$1",out0);
@@ -194,7 +218,7 @@ public class CalcProgramBuilderTest extends TestCase {
         builder.addLabelJumpNull("label$1",out0);
         builder.addLabelJumpNotNull("label$1",out0);
         builder.addLabel("label$1");
-        builder.addBoolAnd(out0,const0,const1);
+        CalcProgramBuilder.boolAnd.add(builder, out0,const0,const1);
 
         final String program = builder.getProgram();
         String expected = "O bo;" +
@@ -208,16 +232,16 @@ public class CalcProgramBuilderTest extends TestCase {
                 "JMPN @6, O0;" +
                 "JMPNN @6, O0;" +
                 "AND O0, C0, C1;";
-        assertEquals(expected, program);
+        Util.assertEqualsVerbose(expected, program);
     }
 
     public void testLabelJumpFails() {
         CalcProgramBuilder.Register out0 = builder.newOutput(CalcProgramBuilder.OpType.Bool, -1);
         CalcProgramBuilder.Register const0 = builder.newBoolLiteral(true);
         CalcProgramBuilder.Register const1 = builder.newBoolLiteral(true);
-        builder.addBoolAnd(out0,const0,const1);
+        builder.move.add(builder, out0,const0);
         builder.addLabelJump("gone");
-        builder.addBoolAnd(out0,const0,const1);
+        CalcProgramBuilder.boolAnd.add(builder, out0,const0,const1);
         assertExceptionIsThrown("(?s)(?i).*label 'gone' not defined.*");
     }
 
@@ -411,7 +435,7 @@ public class CalcProgramBuilderTest extends TestCase {
         Object[] args2 = new Object[] {const0,in0};
         Object[] args3 = new Object[] {const0,in0,in1};
 
-        Iterator it = getMethods("addIntergalNative\\w*");
+        Iterator it = getMethods("addIntegralNative\\w*");
         while (it.hasNext()) {
             Method method = (Method) it.next();
             args=args2;
@@ -419,30 +443,6 @@ public class CalcProgramBuilderTest extends TestCase {
                 args=args3;
             }
             assertExceptionIsThrown(method, args, "(?s).*Expected a non constant register.*");
-        }
-
-        args2 = new Object[] {in0,in2};
-        args3 = new Object[] {in0,in1,in2};
-        it = getMethods("addIntergalNative\\w*");
-        while (it.hasNext()) {
-            Method method = (Method) it.next();
-            args=args2;
-            if (method.getParameterTypes().length==3) {
-                args=args3;
-            }
-            assertExceptionIsThrown(method, args, "(?s).*Expected a register of Integer type.*");
-        }
-
-        args2 = new Object[] {in2,in1};
-        args3 = new Object[] {in2,in1,in0};
-        it = getMethods("addIntergalNative\\w*");
-        while (it.hasNext()) {
-            Method method = (Method) it.next();
-            args=args2;
-            if (method.getParameterTypes().length==3) {
-                args=args3;
-            }
-            assertExceptionIsThrown(method, args, "(?s).*Expected a register of Integer type.*");
         }
 
         CalcProgramBuilder.Register const1 = builder.newInt4Literal(-1);
@@ -461,7 +461,7 @@ public class CalcProgramBuilderTest extends TestCase {
         CalcProgramBuilder.Register const1 = builder.newVarcharLiteral("hey");
         CalcProgramBuilder.Register in0 = builder.newInput(CalcProgramBuilder.OpType.Varbinary, 5);
         CalcProgramBuilder.Register in1 = builder.newInput(CalcProgramBuilder.OpType.Varchar, 8);
-        CalcProgramBuilder.Register out0 = builder.newInput(CalcProgramBuilder.OpType.Varchar, 10);
+        CalcProgramBuilder.Register out0 = builder.newOutput(CalcProgramBuilder.OpType.Bool, -1);
         CalcProgramBuilder.Register out1 = builder.newOutput(CalcProgramBuilder.OpType.Varbinary, 6);
         CalcProgramBuilder.Register in2 = builder.newInput(CalcProgramBuilder.OpType.Real, -1);
         CalcProgramBuilder.Register in3 = builder.newInput(CalcProgramBuilder.OpType.Bool, -1);
@@ -481,9 +481,9 @@ public class CalcProgramBuilderTest extends TestCase {
         }
 
         // Testing PointerBoolean operators
-        args2 = new Object[] {in0,in1};
-        args3 = new Object[] {in0,in1,in2};
-        it = getMethods("addIntergalNative\\w*");
+        args2 = new Object[] {out1,in1};
+        args3 = new Object[] {out1,in1,in2};
+        it = getMethods("addPointer\\w*");
         while (it.hasNext()) {
             Method method = (Method) it.next();
             if (method.getName().equals("addPointerMove") ||
@@ -499,11 +499,16 @@ public class CalcProgramBuilderTest extends TestCase {
             assertExceptionIsThrown(method, args, "(?s).*Expected a register of Boolean type.*");
         }
 
-        args2 = new Object[] {in3,in3};
-        args3 = new Object[] {in3,in3,in0};
-        it = getMethods("addIntergalNative\\w*");
+        args2 = new Object[] {out0,in3};
+        args3 = new Object[] {out0,in3,in0};
+        it = getMethods("addPointer\\w*");
         while (it.hasNext()) {
             Method method = (Method) it.next();
+            if (method.getName().equals("addPointerMove") ||
+               (method.getName().equals("addPointerAdd")))
+            {
+                continue;
+            }
             args=args2;
             if (method.getParameterTypes().length==3) {
                 args=args3;
@@ -511,12 +516,9 @@ public class CalcProgramBuilderTest extends TestCase {
             assertExceptionIsThrown(method, args, "(?s).*Expected a register of Pointer type.*");
         }
 
-        args3 = new Object[] {in3,in0,in3};
-        it = getMethods("addIntergalNative\\w*");
-        while (it.hasNext()) {
-            Method method = (Method) it.next();
-            assertExceptionIsThrown(method, args3, "(?s).*Expected a register of Pointer type.*");
-        }
+        args3 = new Object[] {out1,out0,in3};
+        assertExceptionIsThrown("addPointerAdd",
+                                args3,"(?s).*Expected a register of Pointer type.*");
 
         args = new Object[] {out1,in1,in1};
         assertExceptionIsThrown("addPointerAdd",

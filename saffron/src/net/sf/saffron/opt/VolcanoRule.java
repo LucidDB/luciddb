@@ -47,9 +47,6 @@ public abstract class VolcanoRule
      */
     protected String description;
 
-    /** Current planner; set by {@link VolcanoPlanner#addRule}. */
-    protected VolcanoPlanner planner;
-
     /** Root of operand tree. */
     final RuleOperand operand;
 
@@ -107,7 +104,6 @@ public abstract class VolcanoRule
      * transformed to another type, the rule will be invoked again.
      * </p>
      *
-     * @param planner Planner
      * @param rel Relexp to convert
      * @param toConvention Desired calling convention
      *
@@ -117,22 +113,14 @@ public abstract class VolcanoRule
      * @post return == null || return.getConvention() == toConvention
      */
     protected static SaffronRel convert(
-        SaffronPlanner planner,
-        SaffronRel rel,
+            SaffronRel rel,
         CallingConvention toConvention)
     {
         if (rel.getConvention() == toConvention) {
             return rel;
         }
+        VolcanoPlanner planner = rel.getCluster().planner;
         return planner.changeConvention(rel,toConvention);
-    }
-
-    /**
-     * Returns the current {@link VolcanoPlanner}.
-     */
-    VolcanoPlanner getPlanner()
-    {
-        return planner;
     }
 
     private static String guessDescription(String className)

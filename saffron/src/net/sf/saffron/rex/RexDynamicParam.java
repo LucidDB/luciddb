@@ -56,7 +56,7 @@ public class RexDynamicParam extends RexVariable
     }
 
     public void accept(RexVisitor visitor) {
-        visitor.visitParam(this);
+        visitor.visitDynamicParam(this);
     }
 }
 

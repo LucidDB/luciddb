@@ -369,6 +369,9 @@ public class SqlOperatorTable
             {
                 boolean res = super.check(call, validator, scope, node, operandNbr);
                 if (!res) return res;
+                if (SqlLiteral.isNullLiteral(node)) {
+                    throw SaffronResource.instance().newArgumentMustNotBeNull(call.operator.name);
+                }
                 if (operandNbr == 0) {
                     if (node instanceof SqlLiteral) {
                         final SqlLiteral arg = ((SqlLiteral) node);
@@ -482,6 +485,34 @@ public class SqlOperatorTable
              {
                  boolean res = super.check(call, validator, scope, node, operandNbr);
                  if (!res) return res;
+                 if (SqlLiteral.isNullLiteral(node)) {
+                     throw SaffronResource.instance().newArgumentMustNotBeNull(call.operator.name);
+                 }
+                 if (operandNbr == 0) {
+                     if (node instanceof SqlLiteral) {
+                     } else {
+                         throw SaffronResource.instance().newArgumentMustBeLiteral(
+                             call.operator.name);
+                     }
+                 }
+                 return res;
+             }
+         };
+
+    /**
+      * Parameter type-checking strategy
+      * type must be a nullable varchar literal.
+      */
+     public static final SqlOperator.AllowedArgInference typeNullableVarcharLiteral =
+         new SqlOperator.AllowedArgInference
+                 (new SqlTypeName[][]{SqlOperatorTable.varcharNullableTypes}) {
+
+             public boolean check(SqlCall call, SqlValidator validator,
+                                  SqlValidator.Scope scope,
+                                  SqlNode node, int operandNbr)
+             {
+                 boolean res = super.check(call, validator, scope, node, operandNbr);
+                 if (!res) return res;
                  if (operandNbr == 0) {
                      if (node instanceof SqlLiteral) {
                      } else {
@@ -504,6 +535,9 @@ public class SqlOperatorTable
              public void check(SqlValidator validator, SqlValidator.Scope scope, SqlCall call) {
                  // check that the 2nd argument is a varchar literal
                  super.check(validator, scope, call);
+                 if (SqlLiteral.isNullLiteral(call.getOperands()[1])) {
+                     throw SaffronResource.instance().newArgumentMustNotBeNull(call.operator.name);
+                 }
                  if (call.getOperands()[1] instanceof SqlLiteral) {
                  } else {
                      throw SaffronResource.instance().newArgumentMustBeLiteral(
@@ -692,6 +726,18 @@ public class SqlOperatorTable
     /**
      * Parameter type-checking strategy
      * type must be
+     * positive integer literal
+     * OR varchar literal
+     */
+    public static final SqlOperator.CompositeAllowedArgInference
+            typePositiveIntegerLiteral_or_VarcharLiteral =
+        new SqlOperator.CompositeAllowedArgInference(
+                new SqlOperator.AllowedArgInference[]{typePositiveIntegerLiteral,
+                                                     typeVarcharLiteral} );
+
+    /**
+     * Parameter type-checking strategy
+     * type must be
      * nullable aType, nullable aType
      * OR nullable numeric, nullable numeric.
      * OR nullable binary, nullable binary.
@@ -814,7 +860,6 @@ public class SqlOperatorTable
     /**
      * Retrieves the singleton, creating it if necessary.
      *
-     * @see #std
      */
     public static SqlOperatorTable instance()
     {
@@ -1045,8 +1090,8 @@ public class SqlOperatorTable
     }
 
     //~ Methods ---------------------------------------------------------------
-    public static SqlCall createCall(String funName, SqlNode[] operands) {
-        List funs = instance().lookupFunctionsByName(funName);
+    public SqlCall createCall(String funName, SqlNode[] operands) {
+        List funs = lookupFunctionsByName(funName);
         if (!funs.isEmpty()){
             return ((SqlFunction) funs.get(0)).createCall(operands);
         }

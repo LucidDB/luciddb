@@ -22,7 +22,6 @@
 
 package net.sf.saffron.opt;
 
-import net.sf.saffron.core.SaffronPlanner;
 import net.sf.saffron.trace.SaffronTrace;
 import net.sf.saffron.opt.OptUtil;
 import net.sf.saffron.rel.SaffronRel;
@@ -46,28 +45,26 @@ public class VolcanoRuleCall
     public final VolcanoRule rule;
     public final SaffronRel [] rels;
     private static final Logger tracer = SaffronTrace.getPlannerTracer();
+    public final VolcanoPlanner planner;
 
     //~ Constructors ----------------------------------------------------------
 
-    protected VolcanoRuleCall(RuleOperand operand,SaffronRel [] rels)
+    protected VolcanoRuleCall(VolcanoPlanner planner, RuleOperand operand,
+            SaffronRel [] rels)
     {
+        this.planner = planner;
         this.operand0 = operand;
         this.rule = operand.rule;
         this.rels = rels;
         assert(rels.length == rule.operands.length);
     }
 
-    VolcanoRuleCall(RuleOperand operand)
+    VolcanoRuleCall(VolcanoPlanner planner, RuleOperand operand)
     {
-        this(operand,new SaffronRel[operand.rule.operands.length]);
+        this(planner, operand,new SaffronRel[operand.rule.operands.length]);
     }
 
     //~ Methods ---------------------------------------------------------------
-
-    public SaffronPlanner getPlanner()
-    {
-        return rule.planner;
-    }
 
     /**
      * Called by the rule whenever it finds a match.
@@ -79,13 +76,13 @@ public class VolcanoRuleCall
             if (rel == rels[0]) {
                 return;
             }
-            if (rel instanceof RelSubset || rule.planner.isRegistered(rel)) {
+            if (rel instanceof RelSubset || planner.isRegistered(rel)) {
                 return;
             }
             tracer.fine(
                 "Rule " + rule + " arguments " + OptUtil.toString(rels)
                 + " created " + rel);
-            Util.discard(rule.planner.register(rel,rels[0]));
+            Util.discard(planner.register(rel,rels[0]));
         } catch (Throwable e) {
             throw Util.newInternal(
                 e,
@@ -148,7 +145,7 @@ public class VolcanoRuleCall
             if (ascending) {
                 assert(previousOperand.parent == operand);
                 final SaffronRel childRel = rels[previousOperandOrdinal];
-                RelSet set = rule.planner.getSet(childRel);
+                RelSet set = planner.getSet(childRel);
                 successors = set.getParentRels();
             } else {
                 int parentOrdinal = operand.parent.ordinalInRule;

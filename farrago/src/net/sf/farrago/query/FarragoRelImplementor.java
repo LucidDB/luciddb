@@ -26,7 +26,9 @@ import net.sf.saffron.rex.*;
 import net.sf.saffron.core.*;
 import net.sf.saffron.oj.util.*;
 import net.sf.saffron.oj.rel.*;
+import net.sf.saffron.oj.rex.*;
 import net.sf.farrago.type.*;
+import net.sf.farrago.ojrex.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
@@ -44,12 +46,12 @@ import java.util.*;
  * @version $Id$
  */
 public class FarragoRelImplementor extends JavaRelImplementor
-        implements FennelRelImplementor
+    implements FennelRelImplementor
 {
     FarragoPreparingStmt preparingStmt;
     OJClass ojAssignableValue;
     OJClass ojBytePointer;
-    OJClass ojNullablePrimitive;
+    OJRexImplementorTable ojRexImplementorTable;
 
     private Set streamDefSet;
     
@@ -62,16 +64,18 @@ public class FarragoRelImplementor extends JavaRelImplementor
         this.preparingStmt = preparingStmt;
         ojAssignableValue = OJClass.forClass(AssignableValue.class);
         ojBytePointer = OJClass.forClass(BytePointer.class);
-        ojNullablePrimitive = OJClass.forClass(NullablePrimitive.class);
 
         streamDefSet = new HashSet();
+
+        ojRexImplementorTable =
+            preparingStmt.getSession().getOJRexImplementorTable();
     }
 
     // implement FennelRelImplementor
     public FemExecutionStreamDef visitFennelChild(FennelRel rel)
     {
         FemExecutionStreamDef streamDef = rel.toStreamDef(this);
-        registerRelStreamDef(streamDef,rel);
+        registerRelStreamDef(streamDef,rel,null);
         return streamDef;
     }
 
@@ -80,7 +84,8 @@ public class FarragoRelImplementor extends JavaRelImplementor
      * from a {@link FennelRel} via our {@link FennelRelImplementor}
      * interface.
      */ 
-    public Object visitChildInternal(SaffronRel child) {
+    public Object visitChildInternal(SaffronRel child)
+    {
         if (child instanceof FennelRel) {
             return ((FennelRel) child).implementFennelChild(this);
         }
@@ -92,12 +97,21 @@ public class FarragoRelImplementor extends JavaRelImplementor
         return streamDefSet;
     }
 
+    public FarragoPreparingStmt getPreparingStmt()
+    {
+        return preparingStmt;
+    }
+
     // implement FennelRelImplementor
     public void registerRelStreamDef(
         FemExecutionStreamDef streamDef,
-        SaffronRel rel)
+        SaffronRel rel,
+        SaffronType rowType)
     {
-        registerStreamDef(streamDef,rel,rel.getRowType());
+        if (rowType == null) {
+            rowType = rel.getRowType();
+        }
+        registerStreamDef(streamDef,rel,rowType);
     }
 
     private void registerStreamDef(
@@ -159,11 +173,21 @@ public class FarragoRelImplementor extends JavaRelImplementor
         return streamName;
     }
 
-    // override JavaRelImplementor
-    protected RexToJavaTranslator newTranslator(SaffronRel rel)
+    // implement JavaRelImplementor
+    public Variable getConnectionVariable()
     {
-        // REVIEW:  should probably just fail here
-        return new FarragoRexToJavaTranslator(this,rel,null,null);
+        return preparingStmt.getConnectionVariable();
+    }
+    
+    // override JavaRelImplementor
+    protected RexToOJTranslator newTranslator(SaffronRel rel)
+    {
+        // NOTE jvs 14-June-2004:  since we aren't given stmtList/memberList,
+        // this translator is not usable for actual code generation, but
+        // it's sufficient for use in TranslationTester, which is
+        // currently the only caller
+        return new FarragoRexToOJTranslator(
+            this,rel,ojRexImplementorTable,null,null);
     }
 
     // override JavaRelImplementor
@@ -173,9 +197,9 @@ public class FarragoRelImplementor extends JavaRelImplementor
         StatementList stmtList,
         MemberDeclarationList memberList)
     {
-        FarragoRexToJavaTranslator translator = new FarragoRexToJavaTranslator(
-            this,rel,stmtList,memberList);
-        return translator.go(exp);
+        FarragoRexToOJTranslator translator = new FarragoRexToOJTranslator(
+            this,rel,ojRexImplementorTable,stmtList,memberList);
+        return translator.translateRexNode(exp);
     }
     
     // override JavaRelImplementor
@@ -187,9 +211,9 @@ public class FarragoRelImplementor extends JavaRelImplementor
         StatementList stmtList,
         MemberDeclarationList memberList)
     {
-        FarragoRexToJavaTranslator translator = new FarragoRexToJavaTranslator(
-            this,rel,stmtList,memberList);
-        Expression rhsExp = translator.go(rhs);
+        FarragoRexToOJTranslator translator = new FarragoRexToOJTranslator(
+            this,rel,ojRexImplementorTable,stmtList,memberList);
+        Expression rhsExp = translator.translateRexNode(rhs);
         translator.convertCastOrAssignment(
             lhsType,
             rhs.getType(),

@@ -116,7 +116,12 @@ you are branching from the latest version.  In this example:
 p4 sync //open/dev/...
 </code></pre>
 
-will do the trick.
+will do the trick.  Also, make sure you have no files open before
+starting the integration.  This is very important, and is true for the
+other integrations described later on.  Run <code>p4 opened</code> and
+make sure that the response is "File(s) not opened on this client."
+Mixing real changes with integrations will lead to much gnashing of
+teeth and tearing of hair.
 
 <p>
 
@@ -175,7 +180,7 @@ extra steps:
 
 <li><code>p4 sync</code> as usual.  Make sure you sync both the shared
 tree and your private branch location, otherwise you'll experience
-unpleasant anomalies later.
+unpleasant anomalies later.  And make sure you have no files open.
 
 <li><code>p4 integrate -t -b dev_to_pmarlowe</code>
 
@@ -223,7 +228,7 @@ same as above:
 
 <ol>
 
-<li><code>p4 sync</code>.
+<li><code>p4 sync</code>.  And make sure you have no files open.
 
 <li><code>p4 integrate -t -r -b dev_to_pmarlowe</code>.  The
 <code>-r</code> tells Perforce to go in the reverse direction.  Since

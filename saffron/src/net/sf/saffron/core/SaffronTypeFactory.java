@@ -23,6 +23,9 @@
 package net.sf.saffron.core;
 
 import net.sf.saffron.sql.type.SqlTypeName;
+import net.sf.saffron.sql.SqlCollation;
+
+import java.nio.charset.Charset;
 
 
 /**
@@ -93,6 +96,18 @@ public interface SaffronTypeFactory
      * @return output type, same as input type except with specified nullability
      */
     SaffronType createTypeWithNullability(SaffronType type,boolean nullable);
+
+    /**
+     * Creates a Type which is the same as another type but with possibily
+     * different charset or collation. For types without a concept of
+     * charset or collation this function must throw an error
+     * @pre type.isCharType()==true
+     * @param type input type
+     * @return output type, same as input type except with specified charset
+     * and collation
+     */
+    SaffronType createTypeWithCharsetAndCollation(SaffronType type,
+            Charset charset, SqlCollation collation);
 
     /**
      * Returns the most general of a set of types (that is, one type to which

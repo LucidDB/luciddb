@@ -411,8 +411,7 @@ public class VolcanoPlannerTest extends TestCase
         {
             NoneSingleRel singleRel = (NoneSingleRel) call.rels[0];
             SaffronRel childRel = call.rels[1];
-            SaffronRel physInput =
-                convert(planner,childRel,PHYS_CALLING_CONVENTION);
+            SaffronRel physInput = convert(childRel,PHYS_CALLING_CONVENTION);
             call.transformTo(
                 new PhysSingleRel(singleRel.getCluster(),physInput));
         }
@@ -445,8 +444,7 @@ public class VolcanoPlannerTest extends TestCase
         {
             NoneSingleRel singleRel = (NoneSingleRel) call.rels[0];
             SaffronRel childRel = call.rels[1];
-            SaffronRel physInput =
-                convert(planner,childRel,PHYS_CALLING_CONVENTION);
+            SaffronRel physInput = convert(childRel,PHYS_CALLING_CONVENTION);
             call.transformTo(
                 new PhysSingleRel(singleRel.getCluster(),physInput));
         }

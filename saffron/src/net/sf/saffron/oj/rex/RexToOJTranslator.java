@@ -1,0 +1,367 @@
+/*
+// $Id$
+// Saffron preprocessor and data engine
+// Copyright (C) 2002-2004 Disruptive Technologies, Inc.
+// Copyright (C) 2002-2004 John V. Sichi
+// You must accept the terms in LICENSE.html to use this software.
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public License
+// as published by the Free Software Foundation; either version 2.1
+// of the License, or (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+// 
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
+package net.sf.saffron.oj.rex;
+
+import net.sf.saffron.rex.*;
+import net.sf.saffron.core.*;
+import net.sf.saffron.oj.*;
+import net.sf.saffron.oj.rel.*;
+import net.sf.saffron.oj.util.*;
+import net.sf.saffron.rel.*;
+import net.sf.saffron.rex.*;
+import net.sf.saffron.sql.*;
+import net.sf.saffron.sql.fun.*;
+import net.sf.saffron.sql.type.*;
+import net.sf.saffron.util.*;
+
+import openjava.mop.*;
+import openjava.ptree.*;
+
+import java.math.*;
+import java.util.*;
+import java.sql.*;
+
+import java.sql.Date;
+
+/**
+ * Converts expressions in logical format ({@link RexNode}) into
+ * OpenJava code.
+ *
+ * @author John V. Sichi
+ * @version $Id$
+ */
+public class RexToOJTranslator implements RexVisitor
+{
+    private final JavaRelImplementor implementor;
+    
+    private final SaffronRel contextRel;
+    
+    private final OJRexImplementorTable implementorTable;
+    
+    private Expression translatedExpr;
+
+    /**
+     * Creates a translator.
+     *
+     * @param implementor implementation context
+     *
+     * @param contextRel relational expression which is the context for the
+     *   row-expressions which are to be translated
+     *
+     * @param implementorTable table of implementation functors for Rex
+     * operators; if null, {@link OJRexImplementorTableImpl#instance} is used
+     */
+    public RexToOJTranslator(
+        JavaRelImplementor implementor,
+        SaffronRel contextRel,
+        OJRexImplementorTable implementorTable)
+    {
+        if (implementorTable == null) {
+            implementorTable = OJRexImplementorTableImpl.instance();
+        }
+        
+        this.implementor = implementor;
+        this.contextRel = contextRel;
+        this.implementorTable = implementorTable;
+    }
+
+    protected void setTranslation(Expression expr)
+    {
+        translatedExpr = expr;
+    }
+
+    protected Expression getTranslation()
+    {
+        return translatedExpr;
+    }
+
+    protected OJRexImplementorTable getImplementorTable()
+    {
+        return implementorTable;
+    }
+
+    public JavaRelImplementor getRelImplementor()
+    {
+        return implementor;
+    }
+    
+    // implement RexVisitor
+    public void visitInputRef(RexInputRef inputRef)
+    {
+        WhichInputResult inputAndCol = whichInput(inputRef.index, contextRel);
+        if (inputAndCol == null) {
+            throw Util.newInternal("input not found");
+        }
+        final Variable v = implementor.findInputVariable(inputAndCol.input);
+        SaffronType rowType = inputAndCol.input.getRowType();
+        final SaffronField field = rowType.getFields()[inputAndCol.fieldIndex];
+        setTranslation(new FieldAccess(v, field.getName()));
+    }
+    
+    // implement RexVisitor
+    public void visitLiteral(RexLiteral literal)
+    {
+        // Refer to RexLiteral.valueMatchesType for the type/value combinations
+        // we need to handle here.
+        final Object value = literal.getValue();
+        Calendar calendar;
+        long timeInMillis;
+        switch (literal._typeName.ordinal_) {
+        case SqlTypeName.Null_ordinal:
+            setTranslation(Literal.constantNull());
+            break;
+        case SqlTypeName.Char_ordinal:
+            setTranslation(Literal.makeLiteral(((NlsString) value).getValue()));
+            break;
+        case SqlTypeName.Boolean_ordinal:
+             setTranslation(Literal.makeLiteral((Boolean) value));
+             break;
+        case SqlTypeName.Decimal_ordinal:
+            BigDecimal bd = (BigDecimal) value;
+            if (bd.scale() > 0) {
+                // If the value is a fraction, translate to a double.
+                setTranslation(Literal.makeLiteral(bd.doubleValue()));
+                break;
+            } else {
+                // Fit the value into an int if possible, otherwise long.
+                long longValue = ((BigDecimal) value).longValue();
+                int intValue = (int) longValue;
+                if (longValue == intValue) {
+                    setTranslation(Literal.makeLiteral(intValue));
+                } else {
+                    setTranslation(Literal.makeLiteral(longValue));
+                }
+                break;
+            }
+        case SqlTypeName.Double_ordinal:
+            setTranslation(
+                Literal.makeLiteral(((BigDecimal) value).doubleValue()));
+            break;
+        case SqlTypeName.Binary_ordinal:
+            setTranslation(convertByteArrayLiteral((byte []) value));
+            break;
+        case SqlTypeName.Bit_ordinal:
+            byte[] bytes = ((BitString) value).getAsByteArray();
+            setTranslation(convertByteArrayLiteral(bytes));
+            break;
+        case SqlTypeName.Timestamp_ordinal:
+            calendar = (Calendar) value;
+            timeInMillis = calendar.getTimeInMillis();
+            setTranslation(Literal.makeLiteral(new Timestamp(timeInMillis)));
+            break;
+        case SqlTypeName.Time_ordinal:
+            calendar = (Calendar) value;
+            timeInMillis = calendar.getTimeInMillis();
+            setTranslation(Literal.makeLiteral(new Time(timeInMillis)));
+            break;
+        case SqlTypeName.Date_ordinal:
+            calendar = (Calendar) value;
+            timeInMillis = calendar.getTimeInMillis();
+            setTranslation(Literal.makeLiteral(new Date(timeInMillis)));
+            break;
+        default:
+            throw Util.newInternal(
+                "Bad literal value " + value +
+                " (" + value.getClass() + "); breaches " +
+                "post-condition on RexLiteral.getValue()");
+        }
+    }
+
+    // implement RexVisitor
+    public void visitCall(RexCall call)
+    {
+        RexNode[] operands = call.getOperands();
+        Expression[] exprs = new Expression[operands.length];
+        for (int i = 0; i < operands.length; i++) {
+            RexNode operand = operands[i];
+            exprs[i] = translateRexNode(operand);
+        }
+        OJRexImplementor implementor = implementorTable.get(call.getOperator());
+        if (implementor == null) {
+            throw Util.needToImplement(call);
+        }
+        setTranslation(implementor.implement(this,call,exprs));
+    }
+
+    // implement RexVisitor
+    public void visitCorrelVariable(RexCorrelVariable correlVariable)
+    {
+        throw Util.needToImplement("Row-expression RexCorrelVariable");
+    }
+    
+    // implement RexVisitor
+    public void visitDynamicParam(RexDynamicParam dynamicParam)
+    {
+        throw Util.needToImplement("Row-expression RexDynamicParam");
+    }
+    
+    // implement RexVisitor
+    public void visitRangeRef(RexRangeRef rangeRef)
+    {
+        final WhichInputResult inputAndCol = whichInput(
+            rangeRef.offset, contextRel);
+        if (inputAndCol == null) {
+            throw Util.newInternal("input not found");
+        }
+        final SaffronType inputRowType = inputAndCol.input.getRowType();
+        // Simple case is if the range refers to every field of the
+        // input. Return the whole input.
+        final Variable inputExpr =
+            implementor.findInputVariable(inputAndCol.input);
+        final SaffronType rangeType = rangeRef.getType();
+        if (inputAndCol.fieldIndex == 0 &&
+            rangeType == inputRowType) {
+            setTranslation(inputExpr);
+            return;
+        }
+        // More complex case is if the range refers to a subset of
+        // the input's fields. Generate "new Type(argN,...,argM)".
+        final SaffronField [] rangeFields = rangeType.getFields();
+        final SaffronField [] inputRowFields = inputRowType.getFields();
+        final ExpressionList args = new ExpressionList();
+        for (int i = 0; i < rangeFields.length; i++) {
+            args.add(
+                new FieldAccess(
+                    inputExpr,
+                    inputRowFields[inputAndCol.fieldIndex + i].getName()));
+        }
+        setTranslation(
+            new AllocationExpression(
+                OJUtil.typeToOJClass(rangeType), args));
+    }
+    
+    // implement RexVisitor
+    public void visitContextVariable(RexContextVariable variable)
+    {
+        throw Util.needToImplement("Row-expression RexContextVariable");
+    }
+    
+    // implement RexVisitor
+    public void visitFieldAccess(RexFieldAccess fieldAccess)
+    {
+        // TODO jvs 27-May-2004:  rex-to-Java field name translation
+        setTranslation(
+            new FieldAccess(
+                translateRexNode(fieldAccess.getReferenceExpr()),
+                fieldAccess.getName()));
+    }
+
+    public Expression translateRexNode(RexNode node)
+    {
+        if (node instanceof JavaRowExpression) {
+            return ((JavaRowExpression) node).expression;
+        } else {
+            node.accept(this);
+            Expression expr = translatedExpr;
+            translatedExpr = null;
+            return expr;
+        }
+    }
+    
+    protected ArrayInitializer convertByteArrayLiteralToInitializer(
+        byte [] bytes)
+    {
+        ExpressionList byteList = new ExpressionList();
+        for (int i = 0; i < bytes.length; ++i) {
+            byteList.add(Literal.makeLiteral(bytes[i]));
+        }
+        return new ArrayInitializer(byteList);
+    }
+
+    protected Expression convertByteArrayLiteral(byte [] bytes)
+    {
+        return new ArrayAllocationExpression(
+            TypeName.forOJClass(OJSystem.BYTE),
+            new ExpressionList(null),
+            convertByteArrayLiteralToInitializer(bytes));
+    }
+    
+    public boolean canConvertCall(RexCall call)
+    {
+        OJRexImplementor implementor = implementorTable.get(call.getOperator());
+        if (implementor == null) {
+            return false;
+        }
+        return implementor.canImplement(call);
+    }
+    
+    /**
+     * Returns the ordinal of the input relational expression which a given
+     * column ordinal comes from.
+     *
+     * <p>For example, if <code>rel</code> has inputs
+     * <code>I(a, b, c)</code> and <code>J(d, e)</code>, then
+     * <code>whichInput(0, rel)</code> returns 0 (column a),
+     * <code>whichInput(2, rel)</code> returns 0 (column c),
+     * <code>whichInput(3, rel)</code> returns 1 (column d).</p>
+     *
+     * @param fieldIndex Index of field
+     * @param rel   Relational expression
+     * @return  a {@link WhichInputResult}
+     *     if found, otherwise null.
+     */
+    private static WhichInputResult whichInput(int fieldIndex, SaffronRel rel)
+    {
+        assert fieldIndex >= 0;
+        final SaffronRel [] inputs = rel.getInputs();
+        for (int inputIndex = 0, firstFieldIndex = 0;
+             inputIndex < inputs.length; inputIndex++)
+        {
+            SaffronRel input = inputs[inputIndex];
+            // Index of first field in next input. Special case if this
+            // input has no fields: it's ambiguous (we could be looking
+            // at the first field of the next input) but we allow it.
+            final int fieldCount = input.getRowType().getFieldCount();
+            final int lastFieldIndex = firstFieldIndex + fieldCount;
+            if ((lastFieldIndex > fieldIndex) ||
+                ((fieldCount == 0) && (lastFieldIndex == fieldIndex)))
+            {
+                final int fieldIndex2 = fieldIndex - firstFieldIndex;
+                return new WhichInputResult(input, inputIndex, fieldIndex2);
+            }
+            firstFieldIndex = lastFieldIndex;
+        }
+        return null;
+    }
+
+    /**
+     * Result of call to {@link #whichInput}, contains the input relational
+     * expression, its index, and the index of the field within that
+     * relational expression.
+     */
+    private static class WhichInputResult
+    {
+        final SaffronRel input;
+        final int inputIndex;
+        final int fieldIndex;
+        
+        WhichInputResult(SaffronRel input, int inputIndex,int fieldIndex)
+        {
+            this.input = input;
+            this.inputIndex = inputIndex;
+            this.fieldIndex = fieldIndex;
+        }
+    }
+}
+
+// End RexToOJTranslator.java

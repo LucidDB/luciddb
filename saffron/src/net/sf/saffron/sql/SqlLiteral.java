@@ -673,19 +673,17 @@ public class SqlLiteral extends SqlNode
                     bitString.getBitCount());
         case SqlTypeName.Char_ordinal:
             NlsString string = (NlsString) _value;
-            SaffronType type = typeFactory.createSqlType(SqlTypeName.Varchar,
-                    string.getValue().length());
-            // REVIEW remove dependencies on validator
-            SqlValidator.setCharsetIfCharType(type, string.getCharset());
-            type.setCollation(string.getCollation());
-            SqlValidator.setCollationIfCharType(type, null, SqlCollation.Coercibility.Coercible);
-            SqlValidator.checkCharsetAndCollateConsistentIfCharType(type);
             if (null==string.getCharset()) {
-                string.setCharset(type.getCharset());
+                string.setCharset(Util.getDefaultCharset());
             }
             if (null==string.getCollation()) {
-                string.setCollation(type.getCollation());
+                string.setCollation(new
+                        SqlCollation(SqlCollation.Coercibility.Coercible));
             }
+            SaffronType type = typeFactory.createSqlType(SqlTypeName.Varchar,
+                    string.getValue().length());
+            type = typeFactory.createTypeWithCharsetAndCollation(type,
+                    string.getCharset(),string.getCollation());
             return type;
 
         case SqlTypeName.Symbol_ordinal:

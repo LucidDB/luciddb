@@ -25,8 +25,10 @@ import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
 import net.sf.saffron.util.Util;
 import net.sf.saffron.sql.fun.SqlStdOperatorTable;
+import net.sf.saffron.resource.SaffronResource;
 
 import java.util.List;
+import java.util.ArrayList;
 
 /**
  * An operator describing a <code>CASE</code>, <code>NULLIF</code> or
@@ -101,9 +103,9 @@ import java.util.List;
  * <li>The <i>else</i> expression is stored as a regular {@link SqlNode}.</li>
  * </ul></p>
  *
- * @author wael
+ * @author Wael Chatila
  * @since Mar 14, 2004
- * @version $Id: //open/dev/saffron/src/net/sf/saffron/sql/SqlCaseOperator.java#2 $
+ * @version $Id$
  **/
 
 public abstract class SqlCaseOperator extends SqlOperator
@@ -123,6 +125,7 @@ public abstract class SqlCaseOperator extends SqlOperator
         SqlCase caseCall = (SqlCase) call;
         List whenList = caseCall.getWhenOperands();
         List thenList = caseCall.getThenOperands();
+        List nullList = new ArrayList();
         SaffronType[] argTypes = new SaffronType[whenList.size()*2+1];
         assert(whenList.size()==thenList.size());
 
@@ -140,6 +143,8 @@ public abstract class SqlCaseOperator extends SqlOperator
             SqlNode node = (SqlNode) thenList.get(i);
             if (!SqlLiteral.isNullLiteral(node)) {
                 foundNotNull = true;
+            } else {
+                nullList.add(node);
             }
             argTypes[i*2+1]= validator.deriveType(scope, node);
         }
@@ -147,6 +152,8 @@ public abstract class SqlCaseOperator extends SqlOperator
         SqlNode elseClause = caseCall.getElseOperand();
         if (!SqlLiteral.isNullLiteral(elseClause)) {
             foundNotNull=true;
+        } else {
+            nullList.add(elseClause);
         }
 
         if (!foundNotNull) {
@@ -157,7 +164,12 @@ public abstract class SqlCaseOperator extends SqlOperator
 
 
         argTypes[argTypes.length-1] = validator.deriveType(scope, elseClause);
-        return this.getType(validator.typeFactory,argTypes);
+        SaffronType ret = this.getType(validator.typeFactory,argTypes);
+        for (int i = 0; i < nullList.size(); i++) {
+            SqlNode node = (SqlNode) nullList.get(i);
+            validator.setValidatedNodeType(node, ret);
+        }
+        return ret;
     }
 
     public SaffronType getType(SaffronTypeFactory typeFactory,
@@ -171,8 +183,12 @@ public abstract class SqlCaseOperator extends SqlOperator
         }
 
         thenTypes[thenTypes.length-1] = argTypes[argTypes.length-1];
-
-        return super.getType(typeFactory, thenTypes);
+        SaffronType ret = super.getType(typeFactory, thenTypes);
+        if (null == ret) {
+            throw SaffronResource.instance().newValidationError(
+                    "Illegal mixing of types");
+        }
+        return ret;
     }
 
     public int getSyntax()

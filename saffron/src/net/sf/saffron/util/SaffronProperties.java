@@ -239,6 +239,16 @@ public class SaffronProperties extends Properties
             new StringProperty(this, "saffron.default.collation.strength",
                     "primary");
 
+    /**
+     * The boolean property "saffron.calc.comments.generate" determines if to
+     * generate comments in calculator programs in order to make debugging easier.
+     * The default is "true".
+     * Used in {@link net.sf.saffron.sql.SqlCollation}
+     * and {@link net.sf.saffron.sql.SqlLiteral#SqlLiteral}
+     */
+    public final BooleanProperty generateCalcProgramComments =
+            new BooleanProperty(this,"saffron.calc.comments.generate", true);
+
     //~ Constructors ----------------------------------------------------------
 
     /**

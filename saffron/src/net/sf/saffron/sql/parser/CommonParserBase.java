@@ -36,7 +36,7 @@ import java.util.Set;
  */
 public abstract class CommonParserBase
 {
-    protected final SqlStdOperatorTable opTab = SqlOperatorTable.std();
+    public SqlStdOperatorTable opTab = SqlOperatorTable.std();
 
     /**
      * Accept any kind of expression in this context.

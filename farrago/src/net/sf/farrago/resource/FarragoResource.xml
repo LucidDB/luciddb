@@ -175,7 +175,7 @@ encountered near {1}</text>
 </exception>
 
 <exception id="420320" name="ValidatorInvalidViewDefinition">
-    <text>Invalid definition for view {0}:  {1}</text>
+    <text>Invalid definition for view {0}</text>
 </exception>
 
 <exception id="420330" name="ValidatorInvalidViewDynamicParam">

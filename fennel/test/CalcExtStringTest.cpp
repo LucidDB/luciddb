@@ -822,17 +822,17 @@ CalcExtStringTest::testCalcExtStringPosA()
     pg << ",,;" << endl;
     pg << "T;" << endl;
     // varchar common
-    pg << "CALL 'strPosA(L0, C0, C1);" << endl;
-    pg << "CALL 'strPosA(L1, C0, C2);" << endl;
+    pg << "CALL 'strPosA(L0, C1, C0);" << endl;
+    pg << "CALL 'strPosA(L1, C2, C0);" << endl;
     // varchar null 
-    pg << "CALL 'strPosA(L2, C6, C1);" << endl;
-    pg << "CALL 'strPosA(L3, C0, C6);" << endl;
+    pg << "CALL 'strPosA(L2, C1, C6);" << endl;
+    pg << "CALL 'strPosA(L3, C6, C0);" << endl;
     // char common
-    pg << "CALL 'strPosA(L4, C3, C4);" << endl;
-    pg << "CALL 'strPosA(L5, C3, C5);" << endl;
+    pg << "CALL 'strPosA(L4, C4, C3);" << endl;
+    pg << "CALL 'strPosA(L5, C5, C3);" << endl;
     // char null
-    pg << "CALL 'strPosA(L6, C7, C4);" << endl;
-    pg << "CALL 'strPosA(L7, C3, C7);" << endl;
+    pg << "CALL 'strPosA(L6, C4, C7);" << endl;
+    pg << "CALL 'strPosA(L7, C7, C3);" << endl;
     // make output available
     refLocalOutput(pg, 8);
 
@@ -1188,7 +1188,7 @@ CalcExtStringTest::testCalcExtStringTrim()
     ostringstream pg(""), outloc("");
     int i;
 
-    for (i = 0; i <= 12; i++) {
+    for (i = 0; i <= 14; i++) {
         outloc << "vc,5, ";
     }
     outloc << "vc,5;" << endl;
@@ -1196,32 +1196,37 @@ CalcExtStringTest::testCalcExtStringTrim()
     pg << "O " << outloc.str();
     pg << "L " << outloc.str();
     pg << "C vc,5, c,5, s4, s4, ";  // data[0-3]
-    pg << "vc,5, c,5, s4;" << endl; // nulls[4-6]
+    pg << "vc,5, c,5, s4, "; // nulls[4-6]
+    pg << "c,1, vc,1;" << endl; //tokens[7-8]
     pg << "V 0x" << stringToHex(" abc ");   // vc const
     pg << ", 0x" << stringToHex(" hij ");   // char const
-    pg << ", 1, 0,,,;" << endl;
+    pg << ", 1, 0,,,";
+    pg << ", 0x" << stringToHex(" "); //space token
+    pg << ", 0x" << stringToHex(" ") << ";" << endl;
     pg << "T;" << endl;
 
     // varchar common cases
-    pg << "CALL 'strTrimA(L0, C0, C2, C2);" << endl; // trim both
-    pg << "CALL 'strTrimA(L1, C0, C2, C3);" << endl; // trim left
-    pg << "CALL 'strTrimA(L2, C0, C3, C2);" << endl; // trim right
-    pg << "CALL 'strTrimA(L3, C0, C3, C3);" << endl; // trim none
+    pg << "CALL 'strTrimA(L0, C8, C0, C2, C2);" << endl; // trim both
+    pg << "CALL 'strTrimA(L1, C8, C0, C2, C3);" << endl; // trim left
+    pg << "CALL 'strTrimA(L2, C8, C0, C3, C2);" << endl; // trim right
+    pg << "CALL 'strTrimA(L3, C8, C0, C3, C3);" << endl; // trim none
     // varchar null cases
-    pg << "CALL 'strTrimA(L4, C4, C2, C2);" << endl;
-    pg << "CALL 'strTrimA(L5, C0, C6, C2);" << endl;
-    pg << "CALL 'strTrimA(L6, C0, C2, C6);" << endl;
+    pg << "CALL 'strTrimA(L4, C4, C0, C2, C2);" << endl;
+    pg << "CALL 'strTrimA(L5, C7, C4, C2, C2);" << endl;
+    pg << "CALL 'strTrimA(L6, C7, C0, C6, C2);" << endl;
+    pg << "CALL 'strTrimA(L7, C7, C0, C2, C6);" << endl;
     // char common cases
-    pg << "CALL 'strTrimA(L7, C1, C2, C2);" << endl; // trim both
-    pg << "CALL 'strTrimA(L8, C1, C2, C3);" << endl; // trim left
-    pg << "CALL 'strTrimA(L9, C1, C3, C2);" << endl; // trim right
-    pg << "CALL 'strTrimA(L10, C1, C3, C3);" << endl; // trim none
+    pg << "CALL 'strTrimA(L8, C7, C1, C2, C2);" << endl; // trim both
+    pg << "CALL 'strTrimA(L9, C7, C1, C2, C3);" << endl; // trim left
+    pg << "CALL 'strTrimA(L10, C7, C1, C3, C2);" << endl; // trim right
+    pg << "CALL 'strTrimA(L11, C7, C1, C3, C3);" << endl; // trim none
     // char null cases
-    pg << "CALL 'strTrimA(L11, C5, C2, C2);" << endl;
-    pg << "CALL 'strTrimA(L12, C1, C6, C2);" << endl;
-    pg << "CALL 'strTrimA(L13, C1, C2, C6);" << endl;
+    pg << "CALL 'strTrimA(L12, C7, C5, C2, C2);" << endl;    
+    pg << "CALL 'strTrimA(L13, C7, C5, C2, C2);" << endl;
+    pg << "CALL 'strTrimA(L14, C7, C1, C6, C2);" << endl;
+    pg << "CALL 'strTrimA(L15, C7, C1, C2, C6);" << endl;
     // make output available
-    refLocalOutput(pg, 14);
+    refLocalOutput(pg, 16);
 
     Calculator calc;
     
@@ -1250,16 +1255,18 @@ CalcExtStringTest::testCalcExtStringTrim()
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[4]));
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[5]));
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[6]));
+    BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[7]));
 
     // char common cases
-    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[7], "hij"));
-    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[8], "hij "));
-    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[9], " hij"));
-    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[10], " hij "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[8], "hij"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[9], "hij "));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[10], " hij"));
+    BOOST_CHECK_EQUAL(0, cmpTupStr(outTuple[11], " hij "));
     // char null cases
-    BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[11]));
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[12]));
     BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[13]));
+    BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[14]));
+    BOOST_CHECK_EQUAL(1, cmpTupNull(outTuple[15]));
 }
 
 

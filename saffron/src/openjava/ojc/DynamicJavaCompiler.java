@@ -41,6 +41,18 @@ import java.io.StringReader;
  *     <code>pakkage.Outer$Inner</code> to <code>pakkage.Outer.Inner</code>.
  *     </li>
  *
+ * <li>Problem with final parameters (workaround is to declare parameter
+ *     as non-final and then copy into a final local).
+ *
+ * <li>Problem with anonymous byte [] initializers
+ *     (workaround is to initialize array byte-by-byte).
+ *
+ * <li>Problem with thread-safety when interpreting code
+       for the first time (need to patch).
+ *
+ * <li>Problem with thread-safety on GlobalContext.classCount
+ *     (need to patch).
+ *
  * </ul>
  *
  * <p> <b>Version</b>. To build and run this class, you will need to download

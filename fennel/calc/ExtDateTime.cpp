@@ -23,11 +23,12 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/calc/ExtendedInstructionTable.h"
+#include "fennel/calc/SqlDate.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 void
-ConvertDateToString(
+CastDateToStrA(
         RegisterRef<char*>* result,
         RegisterRef<int64_t>* date)
 {
@@ -39,22 +40,48 @@ ConvertDateToString(
         result->length(0);
     } else {
         // Produce a result like "2004-05-12"
-        char * ptr = result->pointer(); // preserve old value if possible
-        // FIXME use real date library
-        char buf[11];           // extra byte for NUL
-        int64_t d = date->value();
-        int64_t daysSinceEpoch = d / (24 * 60 * 60 * 1000);
-        int year = (daysSinceEpoch / 365) + 1970;
-        int month = daysSinceEpoch / 30 + 1;
-        int day = daysSinceEpoch % 30 + 1;
-        int len = sprintf(buf, "%04d-%02d-%02d", year, month, day);
-        assert(len == 10);
-        memcpy(ptr, buf, len);
-        result->pointer(ptr, len);
+        int64_t v = date->value() * 1000;
+        int len = SqlDateToStr<1,1,SQLDATE>(result->pointer(), result->storage(),v);
+        result->length(len);
     }
 }
-void foo(char c) 
-{}
+
+void
+CastTimeToStrA(
+        RegisterRef<char*>* result,
+        RegisterRef<int64_t>* time)
+{
+    assert(time->type() == STANDARD_TYPE_INT_64);
+    assert(result->type() == STANDARD_TYPE_VARCHAR);
+
+    if (time->isNull()) {
+        result->toNull();
+        result->length(0);
+    } else {
+        int64_t v = time->value() * 1000;
+        int len = SqlDateToStr<1,1,SQLTIME>(result->pointer(), result->storage(),v);
+        result->length(len);
+    }
+}
+
+void
+CastTimestampToStrA(
+        RegisterRef<char*>* result,
+        RegisterRef<int64_t>* tstamp)
+{
+    assert(tstamp->type() == STANDARD_TYPE_INT_64);
+    assert(result->type() == STANDARD_TYPE_VARCHAR);
+
+    if (tstamp->isNull()) {
+        result->toNull();
+        result->length(0);
+    } else {
+        int64_t v = tstamp->value() * 1000;
+        int len = SqlDateToStr<1,1,SQLTIMESTAMP>(result->pointer(), result->storage(),v);
+        result->length(len);
+    }
+}
+
 
 void
 ExtDateTimeRegister(ExtendedInstructionTable* eit)
@@ -65,9 +92,19 @@ ExtDateTimeRegister(ExtendedInstructionTable* eit)
     params_V_I64.push_back(STANDARD_TYPE_VARCHAR);
     params_V_I64.push_back(STANDARD_TYPE_INT_64);
 
-    eit->add("ConvertDateToString", params_V_I64,
+    eit->add("CastDateToStrA", params_V_I64,
              (ExtendedInstruction2<char*, int64_t>*) NULL,
-             &ConvertDateToString);
+             &CastDateToStrA);
+
+    eit->add("CastTimeToStrA", params_V_I64,
+             (ExtendedInstruction2<char*, int64_t>*) NULL,
+             &CastTimeToStrA);
+
+    eit->add("CastTimestampToStrA", params_V_I64,
+             (ExtendedInstruction2<char*, int64_t>*) NULL,
+             &CastTimestampToStrA);
+
+
 }
 
 

@@ -32,21 +32,21 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad:  column mismatch
 0: jdbc:farrago:> create view v3(empno, name, id) as select empno, name from sales.emps;
-Error: Invalid definition for view V3:  Column name count does not match query (state=,code=0)
+Error: Column name count does not match query (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad:  duplicate column names
 0: jdbc:farrago:> create view v4(empno,empno) as select empno, name from sales.emps;
-Error: Invalid definition for view V4:  Duplicate definition for ViewColumn EMPNO within View S.V4;
+Error: Duplicate definition for ViewColumn EMPNO within View S.V4;
 encountered near line 1, column 22;
 earlier definition was near line 1, column 22 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad:  invalid view def
 0: jdbc:farrago:> create view v5 as select * from nonexistent_table;
-Error: Invalid definition for view V5:  Table 'NONEXISTENT_TABLE' not found (state=,code=0)
+Error: Table 'NONEXISTENT_TABLE' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad:  view with dynamic params
 0: jdbc:farrago:> create view v6 as select * from sales.emps where empno = ?;
-Error: Invalid definition for view V6:  Dynamic parameters are illegal in views (state=,code=0)
+Error: Dynamic parameters are illegal in views (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad:  duplicate view name
 0: jdbc:farrago:> create view v1 as select * from sales.emps;
@@ -55,7 +55,7 @@ duplicate name encountered near line 1, column 13 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad:  ORDER BY in view
 0: jdbc:farrago:> create view v7 as select * from sales.emps order by name;
-Error: Invalid definition for view V7:  ORDER BY is illegal in views (state=,code=0)
+Error: ORDER BY is illegal in views (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- add extra dependencies to make drop schema cascade work harder
 0: jdbc:farrago:> 

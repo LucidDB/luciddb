@@ -343,7 +343,7 @@ public class SqlParserTest extends TestCase
             "SELECT *" + NL + "FROM `T`" + NL + "WHERE (`X` LIKE '%abc%')");
 
         check(
-            "select * from t where x+1 not siMilaR '%abc%' ESCAPE 'e'",
+            "select * from t where x+1 not siMilaR to '%abc%' ESCAPE 'e'",
             "SELECT *" + NL + "FROM `T`" + NL + "WHERE (NOT ((`X` + 1) SIMILAR '%abc%' ESCAPE 'e'))");
 
         //TODO which has higher precedence, LIKE or AND?

@@ -91,7 +91,7 @@ public class Rex2CalcPlanTestCase extends TestCase
 
     //--- Helper Functions ------------------------------------------------
     private void check(String sql, String expectedProgram,
-            boolean nullSemanics, boolean shortCircuit)
+            boolean nullSemanics, boolean shortCircuit, boolean doComments)
     {
         TestContext testContext = getTestContext();
         final SqlNode sqlQuery;
@@ -128,6 +128,7 @@ public class Rex2CalcPlanTestCase extends TestCase
         RexToCalcTranslator translator = new RexToCalcTranslator(rexBuilder,
                 project.getChildExps(), condition);
         translator.setGenerateShortCircuit(shortCircuit);
+        translator.setGenerateComments(doComments);
         String actual = translator.getProgram(null).trim();
         String expected = expectedProgram.trim();
         if (!expected.equals(actual)) {
@@ -268,7 +269,7 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "REF O0, I0;" + NL +
                 "REF O1, I0;" + NL +
                 "RETURN;";
-        check(sql, prg,false,false);
+        check(sql, prg,false,false,false);
     }
 
     public void testSimplyEqualsFilter()
@@ -291,7 +292,31 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "MOVE S0, C1;" + NL +
                 "REF O0, I0;" + NL +
                 "RETURN;" + NL;
-        check(sql, prg,true,false);
+        check(sql, prg,true,false,false);
+    }
+
+    public void testSimplyEqualsFilterWithComments()
+    {
+        String sql="select \"empno\" from \"emps\" where \"name\"='Wael' and 123=0";
+        String prg =
+                "O s4;"+NL+
+                "I vc,0, s4;"+NL+
+                "L bo, s4, bo, bo;"+NL+
+                "S bo;"+NL+
+                "C bo, bo, vc,8, vc,48, s4, s4, s4;"+NL+
+                "V 1, 0, 0x5761656C /* Wael */, 0x49534F2D383835392D3124656E5F5553247072696D617279 /* ISO-8859-1$en_US$primary */, 0, 123, 0;"+NL+
+                "T;"+NL+
+                "CALL 'strCmpA(L1, I0, C2) /* 0: */;"+NL+
+                "EQ L0, L1, C4 /* 1: =($1, _ISO-8859-1'Wael' COLLATE ISO-8859-1$en_US$primary) */;"+NL+
+                "EQ L2, C5, C6 /* 2: =(123, 0) */;"+NL+
+                "AND L3, L0, L2 /* 3: AND(=($1, _ISO-8859-1'Wael' COLLATE ISO-8859-1$en_US$primary), =(123, 0)) */;"+NL+
+                "JMPT @7, L3 /* 4: */;"+NL+
+                "MOVE S0, C0 /* 5: */;"+NL+
+                "RETURN /* 6: */;"+NL+
+                "MOVE S0, C1 /* 7: */;"+NL+
+                "REF O0, I1 /* 8: */;"+NL+
+                "RETURN /* 9: */;";
+        check(sql, prg,false,false,true);
     }
 
     public void testSimplyEqualsFilterShortCircuit()
@@ -317,7 +342,7 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "MOVE S0, C1;" + NL +
                 "REF O0, I0;" + NL +
                 "RETURN;" + NL;
-        check(sql, prg,true,true);
+        check(sql, prg,true,true,false);
     }
 
     public void testBooleanExpressions() {
@@ -342,7 +367,7 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "MOVE S0, C1;" + NL +
                 "REF O0, I0;" + NL +
                 "RETURN;" + NL;
-        check(sql, prg,false,false);
+        check(sql, prg,false,false,false);
     }
 
     public void testScalarExpression() {
@@ -369,7 +394,7 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "SUB L7, L6, C3;" + NL +
                 "REF O0, L7;" + NL +
                 "RETURN;" + NL;
-        check(sql, prg,true,false);
+        check(sql, prg,true,false,false);
     }
 
 
@@ -385,7 +410,7 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "V 1, 0, 0x46726564, 0x49534F2D383835392D3124656E5F5553247072696D617279, 0, 10, 2;" + NL +
                 "T;" + NL +
                 "ISNOTNULL L0, I0;" + NL +
-                "CALL 'strCmpA(L2, I0, C2, C3);" + NL +
+                "CALL 'strCmpA(L2, I0, C2);" + NL +
                 "EQ L1, L2, C4;" + NL +
                 "AND L3, L0, L1;" + NL +
                 "ISNOTNULL L4, I1;" + NL +
@@ -400,7 +425,7 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "REF O0, I0;" + NL +
                 "REF O1, L8;" + NL +
                 "RETURN;" + NL;
-        check(sql, prg,true,false);
+        check(sql, prg,true,false,false);
     }
 
      public void testNumbers() {
@@ -428,7 +453,7 @@ public class Rex2CalcPlanTestCase extends TestCase
                  "GE L8, L7, C7;" + NL +         // x >= 5
                  "REF O0, L8;" + NL +
                  "RETURN;" + NL;
-        check(sql, prg,false,false);
+        check(sql, prg,false,false,false);
     }
 
     public void testHexBitBinaryString() {
@@ -453,7 +478,7 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "REF O1, L2;" + NL +
                 "REF O2, L3;" + NL +
                 "RETURN;" + NL;
-        check(sql, prg,false,false);
+        check(sql, prg,false,false,false);
     }
 
     public void testStringLiterals() {
@@ -475,7 +500,7 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "REF O1, C4;" + NL +
                 "REF O2, C5;" + NL +
                 "RETURN;" + NL;
-        check(sql, prg,false,false);
+        check(sql, prg,false,false,false);
     }
 
     public void testSimpleCompare() {
@@ -523,7 +548,7 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "REF O4, L15;" + NL +
                 "REF O5, L15;" + NL +
                 "RETURN;" + NL;
-        check(sql, prg,false,false);
+        check(sql, prg,false,false,false);
     }
 
     public void testArithmeticOperators() {
@@ -546,7 +571,7 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "CALL 'ABS(L3, C3);" + NL +
                 "CALL 'ABS(L4, C4);" + NL +
                 "CALL 'LN(L5, C3);" + NL +
-                "CALL 'LOG(L6, C3);" + NL +
+                "CALL 'LOG10(L6, C3);" + NL +
                 "REF O0, L1;" + NL +
                 "REF O1, L2;" + NL +
                 "REF O2, L3;" + NL +
@@ -554,7 +579,7 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "REF O4, L5;" + NL +
                 "REF O5, L6;" + NL +
                 "RETURN;" + NL;
-        check(sql, prg,false,false);
+        check(sql, prg,false,false,false);
     }
 
     public void testFunctionInFunction() {
@@ -577,7 +602,7 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "CALL 'POW(L3, C3, L2);" + NL +
                 "REF O0, L3;" + NL +
                 "RETURN;" + NL;
-        check(sql, prg,false,false);
+        check(sql, prg,false,false,false);
     }
 
     public void testCaseExpressions() {
@@ -599,25 +624,56 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "MOVE S0, C1;" + NL +
                 "ADD L2, C3, C3;" + NL +        // 1 + 1
                 "EQ L3, L2, C3;" + NL +         // WHEN 1 + 1 = 1
-                "JMPF @10, L3;" + NL +
+                "JMPF @11, L3;" + NL +
+                "JMPN @11, L3;" + NL +
                 "MOVE L1, C4;" + NL +           // THEN
-                "JMP @15;" + NL +
+                "JMP @17;" + NL +
                 "EQ L4, L2, C5;" + NL +         // WHEN 1 + 1 = 2
-                "JMPF @14, L4;" + NL +
+                "JMPF @16, L4;" + NL +
+                "JMPN @16, L4;" + NL +
                 "MOVE L1, C6;" + NL +           // THEN
-                "JMP @15;" + NL +
+                "JMP @17;" + NL +
                 "MOVE L1, C7;" + NL +           // ELSE NULL
                 "EQ L6, C3, C3;" + NL +         // SECOND CASE 1 = 1
-                "JMPF @20, L6;" + NL +
+                "JMPF @23, L6;" + NL +
+                "JMPN @23, L6;" + NL +
                 "ADD L7, L2, C5;" + NL +        // 1 + 1 + 2
                 "MOVE L5, L7;" + NL +
-                "JMP @22;" + NL +
+                "JMP @25;" + NL +
                 "ADD L8, C5, C2;" + NL +        // ELSE 2 + 10
                 "MOVE L5, L8;" + NL +
                 "REF O0, L1;" + NL +
                 "REF O1, L5;" + NL +
                 "RETURN;" + NL;
-        check(sql, prg,false,false);
+        check(sql, prg,false,false,false);
+    }
+
+    public void testNullifExpression() {
+        String sql = "SELECT nullif(1,2) "+
+                " FROM \"emps\" WHERE \"empno\" > 10";
+        String prg =
+                "O s4;" + NL +
+                "I s4;" + NL +
+                "L bo, s4, bo;" + NL +
+                "S bo;" + NL +
+                "C bo, bo, s4, s4, s4, s4;" + NL +
+                "V 1, 0, 10, 1, 2, ;" + NL +
+                "T;" + NL +
+                "GT L0, I0, C2;" + NL +
+                "JMPT @4, L0;" + NL +
+                "MOVE S0, C0;" + NL +
+                "RETURN;" + NL +
+                "MOVE S0, C1;" + NL +
+                "EQ L2, C3, C4;" + NL +
+                "JMPF @10, L2;" + NL +
+                "JMPN @10, L2;" + NL +
+                "MOVE L1, C5;" + NL +
+                "JMP @11;" + NL +
+                "MOVE L1, C3;" + NL +
+                "REF O0, L1;" + NL +
+                "RETURN;";
+
+        check(sql, prg,false,false,false);
     }
 
     public void testCoalesce() {
@@ -637,18 +693,20 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "RETURN;" + NL +
                 "MOVE S0, C1;" + NL +
                 "ISNOTNULL L2, C3;" + NL +
-                "JMPF @9, L2;" + NL +
+                "JMPF @10, L2;" + NL +
+                "JMPN @10, L2;" + NL +
                 "MOVE L1, C3;" + NL +
-                "JMP @15;" + NL +
+                "JMP @17;" + NL +
                 "ISNOTNULL L4, C4;" + NL +
-                "JMPF @13, L4;" + NL +
+                "JMPF @15, L4;" + NL +
+                "JMPN @15, L4;" + NL +
                 "MOVE L3, C4;" + NL +
-                "JMP @14;" + NL +
+                "JMP @16;" + NL +
                 "MOVE L3, C5;" + NL +
                 "MOVE L1, L3;" + NL +
                 "REF O0, L1;" + NL +
                 "RETURN;" + NL;
-        check(sql, prg,false,false);
+        check(sql, prg,false,false,false);
     }
 
     public void testStringEq() {
@@ -691,11 +749,11 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "MOVE S0, C0;" + NL +
                 "RETURN;" + NL +
                 "MOVE S0, C1;" + NL +
-                "CALL 'strCmpA(L2, C3, C4, C5);" + NL +
+                "CALL 'strCmpA(L2, C3, C4);" + NL +
                 instr + " L1, L2, C6;" + NL +
                 "REF O0, L1;" + NL +
                 "RETURN;" + NL;
-        check(sql, prg,false,false);
+        check(sql, prg,false,false,false);
     }
 
     public void testStringFunctions() {
@@ -709,31 +767,32 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "substring('a' from 1)," +
                 "substring('a' from 1 for 10)," +
                 "substring('a' from 'a' for '\\' )," +
-                "'a'||'a'" +
+                "'a'||'a'||'b'" +
                 " FROM \"emps\" WHERE \"empno\" > 10";
         String prg =
                 "O s4, vc,2, vc,2, s4, vc,2, vc,2, vc,2, vc,2, vc,2, vc,2;" + NL +
                 "I s4;" + NL +
                 "L bo, s4, vc,2, vc,2, s4, vc,2, vc,2, vc,2, vc,2, vc,2, vc,2;" + NL +
                 "S bo;" + NL +
-                "C bo, bo, s4, vc,2, vc,20, s4, s4, vc,2;" + NL +
-                "V 1, 0, 10, 0x61, 0x49534F2D383835392D31, 1, 1, 0x5C;" + NL +
+                "C bo, bo, s4, vc,2, s4, s4, vc,2, vc,2;" + NL +
+                "V 1, 0, 10, 0x61, 1, 1, 0x5C, 0x62;" + NL +
                 "T;" + NL +
                 "GT L0, I0, C2;" + NL +
                 "JMPT @4, L0;" + NL +
                 "MOVE S0, C0;" + NL +
                 "RETURN;" + NL +
                 "MOVE S0, C1;" + NL +
-                "CALL 'CHAR_LENGTH(L1, C3, C4);" + NL +
+                "CALL 'strLenCharA(L1, C3);" + NL +
                 "CALL 'strToUpperA(L2, C3);" + NL +
                 "CALL 'strToLowerA(L3, C3);" + NL +
-                "CALL 'POSITION(L4, C3, C3);" + NL +
-                "CALL 'TRIM(L5, C3, C3, C5, C5);" + NL +
-                "CALL 'OVERLAY(L6, C3, C3, C6);" + NL +
-                "CALL 'SUBSTRING(L7, C3, C6);" + NL +
-                "CALL 'SUBSTRING(L8, C3, C6, C2);" + NL +
-                "CALL 'SUBSTRING(L9, C3, C3, C7);" + NL +
-                "CALL 'CONCAT(L10, C3, C3);" + NL +
+                "CALL 'strPosA(L4, C3, C3);" + NL +
+                "CALL 'strTrimA(L5, C3, C3, C4, C4);" + NL +
+                "CALL 'strOverlayA4(L6, C3, C3, C5);" + NL +
+                "CALL 'strSubStringA3(L7, C3, C5);" + NL +
+                "CALL 'strSubStringA4(L8, C3, C5, C2);" + NL +
+                "CALL 'strSubStringA4(L9, C3, C3, C6);" + NL +
+                "CALL 'strCatA3(L10, C3, C3);" + NL +
+                "CALL 'strCatA2(L10, C7);" + NL +
                 "REF O0, L1;" + NL +
                 "REF O1, L2;" + NL +
                 "REF O2, L3;" + NL +
@@ -745,7 +804,40 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "REF O8, L9;" + NL +
                 "REF O9, L10;" + NL +
                 "RETURN;" + NL;
-        check(sql, prg,false,false);
+        check(sql, prg,false,false,false);
+    }
+
+     public void testLikeAndSimilar() {
+        String sql =
+                "SELECT "+
+                "'a' like 'b'" +
+                ",'a' like 'b' escape 'c'" +
+                ",'a' similar to 'a'" +
+                ",'a' similar to 'a' escape 'c'" +
+                " FROM \"emps\" WHERE \"empno\" > 10";
+        String prg =
+                "O bo, bo, bo, bo;" + NL +
+                "I s4;" + NL +
+                "L bo, bo, bo, bo, bo;" + NL +
+                "S bo;" + NL +
+                "C bo, bo, s4, vc,2, vc,2, vc,0, vc,2;" + NL +
+                "V 1, 0, 10, 0x61, 0x62, 0x, 0x63;" + NL +
+                "T;" + NL +
+                "GT L0, I0, C2;" + NL +
+                "JMPT @4, L0;" + NL +
+                "MOVE S0, C0;" + NL +
+                "RETURN;" + NL +
+                "MOVE S0, C1;" + NL +
+                "CALL 'strLikeA(L1, C3, C4, C5);" + NL +
+                "CALL 'strLikeA(L2, C3, C4, C6);" + NL +
+                "CALL 'strSimilarA(L3, C3, C3, C5);" + NL +
+                "CALL 'strSimilarA(L4, C3, C3, C6);" + NL +
+                "REF O0, L1;" + NL +
+                "REF O1, L2;" + NL +
+                "REF O2, L3;" + NL +
+                "REF O3, L4;" + NL +
+                "RETURN;";
+        check(sql, prg,false,false,false);
     }
 
     public void testBetween() {
@@ -768,8 +860,8 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "MOVE S0, C1;" + NL +
                 "REF O0, I0;" + NL +
                 "RETURN;";
-        check(sql1, prg1,false,false);
-        check(sql2, prg1,false,false);
+        check(sql1, prg1,false,false,false);
+        check(sql2, prg1,false,false,false);
         String sql3 ="select \"empno\"  from \"emps\" where \"empno\" not between 40 and 60";
         String prg2 =
                 "O s4;" + NL +
@@ -789,7 +881,7 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "MOVE S0, C1;" + NL +
                 "REF O0, I0;" + NL +
                 "RETURN;";
-        check(sql3, prg2,false,false);
+        check(sql3, prg2,false,false,false);
         String sql4 ="select \"empno\"  from \"emps\" where \"empno\" between symmetric 40 and 60";
         String prg3 =
                 "O s4;" + NL +
@@ -812,7 +904,7 @@ public class Rex2CalcPlanTestCase extends TestCase
                 "MOVE S0, C1;" + NL +
                 "REF O0, I0;" + NL +
                 "RETURN;";
-        check(sql4, prg3,false,false);
+        check(sql4, prg3,false,false,false);
 
     }
 }

@@ -205,7 +205,7 @@ class FtrsIndexJoinRule extends VolcanoRule
         }
 
         SaffronRel fennelInput = convert(
-            planner,castRel,FennelPullRel.FENNEL_PULL_CONVENTION);
+            castRel,FennelPullRel.FENNEL_PULL_CONVENTION);
 
         // tell the index search to propagate everything from its input as join
         // fields

@@ -541,7 +541,8 @@ public class SqlValidator
         return type;
     }
 
-    private void setValidatedNodeType(SqlNode node,SaffronType type)
+    //REVIEW wael 06/22/04: changed from private to package access
+    void setValidatedNodeType(SqlNode node,SaffronType type)
     {
         if (type.equals(unknownType)) {
             // don't set anything until we know what it is, and don't overwrite
@@ -549,44 +550,6 @@ public class SqlValidator
             return;
         }
         nodeToTypeMap.put(node,type);
-    }
-
-    /**
-     * Helper function. If {@param type} is of charType and type.getCollation() is null,
-     * create a new {@link SqlCollation} and assign it to type.
-     * @param type
-     * @param collationName The collation name a created SqlCollation would have.
-     *                      If <code>null</code> the default collation name will be used
-     * @param coericbility The coercibility value a created SqlCollation would have
-     */
-    public static void setCollationIfCharType(SaffronType type, String collationName,
-                                       SqlCollation.Coercibility coericbility) {
-        if (type.isCharType() && (null==type.getCollation())) {
-            SqlCollation newCollation;
-            if (null==collationName) {
-                newCollation = new SqlCollation(coericbility);
-            } else {
-                newCollation = new SqlCollation(collationName, coericbility);
-            }
-            type.setCollation(newCollation);
-        }
-    }
-
-    /**
-     * Helper function. If {@param type} is of charType and type.getCharset() is null,
-     * assign the charset {@param charset} to type. If charset is null. The default value will be used.
-     * @param type
-     * @param charset The charset to set to {@param type}.
-     * @throws RuntimeException If {@param charset} is <i>not</i> null and type.getCharset() is <i>not</i> null
-     */
-    public static void setCharsetIfCharType(SaffronType type, Charset charset) {
-        if (type.isCharType() && (null==type.getCharset())) {
-            if (null==charset){
-                charset = Charset.forName(
-                    SaffronProperties.instance().defaultCharset.get());
-            }
-            type.setCharset(charset);
-        }
     }
 
     public static void checkCharsetAndCollateConsistentIfCharType(SaffronType type) {
@@ -627,10 +590,18 @@ public class SqlValidator
                 // TODO jvs 26-May-2004: share code with other exit path
                 // below.
 
-                setCharsetIfCharType(type, null);
-                //todo: should get the implicit collation from repository instead of null
-                setCollationIfCharType(type, null, SqlCollation.Coercibility.Implicit);
-                checkCharsetAndCollateConsistentIfCharType(type);
+                if (type.isCharType()) {
+                    Charset charset = type.getCharset()==null?
+                            Util.getDefaultCharset() :
+                            type.getCharset();
+                    SqlCollation collation = type.getCollation()==null?
+                            new SqlCollation(SqlCollation.Coercibility.Implicit) :
+                            type.getCollation();
+                    //todo: should get the implicit collation from repository instead of null
+                    type = typeFactory.createTypeWithCharsetAndCollation(type,
+                            charset, collation);
+                    checkCharsetAndCollateConsistentIfCharType(type);
+                }
                 return type;
             }
 
@@ -670,10 +641,18 @@ public class SqlValidator
                     type = fieldType;
                 }
             }
-            setCharsetIfCharType(type, null);
-            //todo: should get the implicit collation from repository instead of null
-            setCollationIfCharType(type, null, SqlCollation.Coercibility.Implicit);
-            checkCharsetAndCollateConsistentIfCharType(type);
+            if (type.isCharType()) {
+                Charset charset = type.getCharset()==null?
+                        Util.getDefaultCharset() :
+                        type.getCharset();
+                SqlCollation collation = type.getCollation()==null?
+                        new SqlCollation(SqlCollation.Coercibility.Implicit) :
+                        type.getCollation();
+                //todo: should get the implicit collation from repository instead of null
+                type = typeFactory.createTypeWithCharsetAndCollation(type,
+                        charset, collation);
+                checkCharsetAndCollateConsistentIfCharType(type);
+            }
             return type;
         }
         //~ SqlLiteral ----------------------------------------------------------------------
@@ -794,7 +773,10 @@ public class SqlValidator
                         SqlCollation resultCol = SqlCollation.getCoercibilityDyadicOperator(col1,  col2);
 
                         if (type.isCharType()) {
-                            type.setCollation(resultCol);
+                            type =
+                             typeFactory.createTypeWithCharsetAndCollation(type
+                                            ,type.getCharset()
+                                            ,resultCol);
                         }
                     }
                 }
@@ -807,7 +789,11 @@ public class SqlValidator
                     if (operandType.isCharType()){
                         SqlCollation collation = operandType.getCollation();
                         assert(null!=collation) : "An implicit or explicit collation should have been set";
-                        type.setCollation(new SqlCollation(collation.getCollationName(), collation.getCoercibility()));
+                        type=typeFactory.createTypeWithCharsetAndCollation(type,
+                                type.getCharset(),
+                                new SqlCollation(collation.getCollationName(),
+                                        collation.getCoercibility())
+                        );
                     }
                 }
                 checkCharsetAndCollateConsistentIfCharType(type);
@@ -835,8 +821,10 @@ public class SqlValidator
             // REVIEW:  should dynamic parameter types always be nullable?
             SaffronType newInferredType= typeFactory.createTypeWithNullability(inferredType,true);
             if (inferredType.isCharType()) {
-                newInferredType.setCharset(inferredType.getCharset());
-                newInferredType.setCollation(inferredType.getCollation());
+                newInferredType=typeFactory.createTypeWithCharsetAndCollation(newInferredType,
+                        inferredType.getCharset(),
+                        inferredType.getCollation()
+                );
             }
             setValidatedNodeType(node, newInferredType);
         } else if (node instanceof SqlNodeList) {

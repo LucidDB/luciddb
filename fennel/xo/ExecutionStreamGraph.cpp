@@ -37,6 +37,7 @@ ExecutionStreamGraphImpl::ExecutionStreamGraphImpl()
 {
     isPrepared = false;
     isOpen = false;
+    doDataflowClose = false;
 }
 
 void ExecutionStreamGraphImpl::setTxn(SharedLogicalTxn pTxnInit)
@@ -149,7 +150,7 @@ void ExecutionStreamGraphImpl::open()
     std::for_each(
         sortedStreams.begin(),
         sortedStreams.end(),
-        boost::bind(&TupleStream::open,_1,false));
+        boost::bind(&ExecutionStream::open,_1,false));
 }
 
 void ExecutionStreamGraphImpl::closeImpl()
@@ -159,11 +160,17 @@ void ExecutionStreamGraphImpl::closeImpl()
         // in case prepare was never called
         sortStreams();
     }
-    // proceed in reverse dataflow order (from consumers to producers)
-    std::for_each(
-        sortedStreams.rbegin(),
-        sortedStreams.rend(),
-        boost::bind(&ClosableObject::close,_1));
+    if (doDataflowClose) {
+        std::for_each(
+            sortedStreams.begin(),
+            sortedStreams.end(),
+            boost::bind(&ClosableObject::close,_1));
+    } else {
+        std::for_each(
+            sortedStreams.rbegin(),
+            sortedStreams.rend(),
+            boost::bind(&ClosableObject::close,_1));
+    }
     pTxn.reset();
 
     // release any scratch memory

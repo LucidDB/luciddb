@@ -94,6 +94,13 @@ public abstract class FarragoTestCase extends DiffTestCase
         return new File(homeDir,"src");
     }
 
+    // override DiffTestCase
+    protected File getTestlogRoot() throws Exception
+    {
+        String homeDir = FarragoProperties.instance().homeDir.get(true);
+        return new File(homeDir,"testlog");
+    }
+
     //~ Methods ---------------------------------------------------------------
 
     /**
@@ -271,7 +278,15 @@ public abstract class FarragoTestCase extends DiffTestCase
         assertEquals(refList,actualSet);
     }
 
-    private static FarragoJdbcEngineDriver newJdbcEngineDriver()
+    /**
+     * Retrieve a new instance of the FarragoJdbcEngineDriver
+     * configured for this test.
+     *
+     * @return an instance of FarragoJdbcEngineDriver (or a subclass)
+     *
+     * @throws Exception
+     */
+    protected static FarragoJdbcEngineDriver newJdbcEngineDriver()
         throws Exception
     {
         String driverName =
@@ -332,6 +347,17 @@ public abstract class FarragoTestCase extends DiffTestCase
             System.setErr(savedErr);
             inputStream.close();
         }
+    }
+
+    // override DiffTestCase
+    protected Writer openTestLog() throws Exception
+    {
+        File testClassDir = new File(
+            getTestlogRoot(),
+            ReflectUtil.getUnqualifiedClassName(getClass()));
+        testClassDir.mkdirs();
+        File testLogFile = new File(testClassDir,getName());
+        return new OutputStreamWriter(openTestLogOutputStream(testLogFile));
     }
 
     protected boolean shouldDiff()

@@ -49,7 +49,7 @@ public abstract class SqlDateTimeWithoutTZ extends NullablePrimitive
      */
     public SqlDateTimeWithoutTZ()
     {
-        timeZoneOffset = cal.getTimeZone().getRawOffset();
+        //        timeZoneOffset = cal.getTimeZone().getRawOffset();
     }
 
     /**
@@ -57,7 +57,7 @@ public abstract class SqlDateTimeWithoutTZ extends NullablePrimitive
      * @param tzOffset
      */
     public SqlDateTimeWithoutTZ(int tzOffset) {
-        timeZoneOffset = tzOffset;
+        timeZoneOffset =  0 ; //tzOffset;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -110,7 +110,7 @@ public abstract class SqlDateTimeWithoutTZ extends NullablePrimitive
             setNull(true);
             return;
         } else if (date instanceof Long) {
-            value = ((Long)date).longValue() + timeZoneOffset;
+            value = ((Long)date).longValue()  + timeZoneOffset;
             return;
         } else if (date instanceof java.util.Date) {
             value = ((java.util.Date)date).getTime() + timeZoneOffset; // set tzOffset?

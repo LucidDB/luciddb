@@ -160,7 +160,11 @@ JAVACODE Calendar parseDateTime(String s, String dfString, int millis) throws Pa
 
     java.text.SimpleDateFormat df = new java.text.SimpleDateFormat(dfString);
 	df.setLenient(false);
-    Calendar cal = Calendar.getInstance(/* need locale? */);
+    // should be gmt.  use local tz for now.
+    // java.util.TimeZone tz = new java.util.SimpleTimeZone(0, "GMT+00:00");
+    Calendar cal = Calendar.getInstance(/*tz */ );
+    // df.setCalendar(cal);
+    
     try {
         cal.setTime(df.parse(s));
         cal.add(Calendar.MILLISECOND,millis);
@@ -975,7 +979,7 @@ SqlNode Expression(ExprContext exprContext) :
         (
                 <LIKE> { op = opTab.likeOperator; }
             |
-                <SIMILAR> { op = opTab.similarOperator; }
+                <SIMILAR> <TO> { op = opTab.similarOperator; }
         )
         e = Expression2(EXPR_ACCEPT_SUBQUERY) { list.add(e); }
         [
@@ -1402,7 +1406,7 @@ SqlIdentifier TypeName() :
             if (varchar) {
                 typeName = new SqlIdentifier("VARCHAR");
             } else {
-                typeName = new SqlIdentifier("CHARACTER");
+                typeName = new SqlIdentifier("CHAR");
             }
         }
 		| <VARCHAR> { typeName = new SqlIdentifier("VARCHAR"); }
@@ -1715,6 +1719,7 @@ TOKEN :
 | < TIMESTAMP: "timestamp" >
 | < TIMEZONE_HOUR: "timezone_hour" >
 | < TIMEZONE_MINUTE: "timezone_minute" >
+| < TO: "to" >
 | < TRAILING: "trailing" >
 | < TRUE: "true" >
 | < UNION: "union" >

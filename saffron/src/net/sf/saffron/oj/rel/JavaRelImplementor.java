@@ -25,6 +25,7 @@ package net.sf.saffron.oj.rel;
 import net.sf.saffron.core.SaffronField;
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.oj.util.OJUtil;
+import net.sf.saffron.oj.rex.*;
 import net.sf.saffron.opt.CallingConvention;
 import net.sf.saffron.opt.RelImplementor;
 import net.sf.saffron.rel.JoinRel;
@@ -58,10 +59,9 @@ import java.util.logging.Logger;
  * </p>
  *
  * <p>
- * TODO jvs 29-Sept-2003:  This class is way too Java-dependent to remain in
- * opt.  Most of it needs to be factored out to oj, leaving an interface or
- * abstract base class behind.  I intentionally left one macker failure
- * unsuppressed so that this will get some attention.
+ * TODO jvs 14-June-2004:  some of JavaRelImplementor is specific to
+ * the JAVA calling convention; those portions should probably be
+ * factored out into a subclass.
  * </p>
  */
 public class JavaRelImplementor implements RelImplementor
@@ -85,61 +85,16 @@ public class JavaRelImplementor implements RelImplementor
     Statement _exitStatement;
     public final RexBuilder _rexBuilder;
 
-    // REVIEW jvs 15-Dec-2003: Maybe use the {@link
-    // net.sf.saffron.util.Glossary#PrototypePattern} to generalize this to all
-    // operators?
-    private final Map _mapRexBinaryToOpenJava;
+    private int nextVariableId;
+
     private static final Logger tracer = SaffronTrace.getRelImplementorTracer();
-
-    /**
-     * Looks up the {@link BinaryExpression} symbolic constant corresponding
-     * to an SqlOperator.
-     *
-     * @param op operator to look up
-     *
-     * @return corresponding ordinal as an Integer, or null if not found
-     */
-    public Integer getBinaryExpressionOrdinal(SqlOperator op)
-    {
-        return (Integer) _mapRexBinaryToOpenJava.get(op);
-    }
-
-    private static Map createRexBinaryToOpenJavaMap(RexBuilder rexBuilder)
-    {
-        HashMap map = new HashMap();
-        map.put(
-            rexBuilder._opTab.equalsOperator,
-            new Integer(BinaryExpression.EQUAL));
-        map.put(
-            rexBuilder._opTab.lessThanOperator,
-            new Integer(BinaryExpression.LESS));
-        map.put(
-            rexBuilder._opTab.greaterThanOperator,
-            new Integer(BinaryExpression.GREATER));
-        map.put(
-            rexBuilder._opTab.plusOperator,
-            new Integer(BinaryExpression.PLUS));
-        map.put(
-            rexBuilder._opTab.minusOperator,
-            new Integer(BinaryExpression.MINUS));
-        map.put(
-            rexBuilder._opTab.multiplyOperator,
-            new Integer(BinaryExpression.TIMES));
-        map.put(
-            rexBuilder._opTab.divideOperator,
-            new Integer(BinaryExpression.DIVIDE));
-        map.put(
-            rexBuilder._opTab.andOperator,
-            new Integer(BinaryExpression.LOGICAL_AND));
-        return Collections.unmodifiableMap(map);
-    }
 
     //~ Constructors ----------------------------------------------------------
 
     public JavaRelImplementor(RexBuilder rexBuilder)
     {
         _rexBuilder = rexBuilder;
-        _mapRexBinaryToOpenJava = createRexBinaryToOpenJavaMap(_rexBuilder);
+        nextVariableId = 0;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -408,7 +363,17 @@ public class JavaRelImplementor implements RelImplementor
 
     public Variable newVariable()
     {
-        return Variable.generateUniqueVariable();
+        return new Variable ("oj_var" + generateVariableId());
+    }
+
+    private int generateVariableId()
+    {
+        return nextVariableId++;
+    }
+
+    public Variable getConnectionVariable()
+    {
+        throw Util.needToImplement("getConnectionVariable");
     }
 
     public void popStatementList(StatementList stmtList)
@@ -436,8 +401,8 @@ public class JavaRelImplementor implements RelImplementor
      */
     public Expression translate(JavaRel rel,RexNode exp)
     {
-        RexToJavaTranslator translator = newTranslator(rel);
-        return translator.go(exp);
+        RexToOJTranslator translator = newTranslator(rel);
+        return translator.translateRexNode(exp);
     }
 
     /**
@@ -450,7 +415,7 @@ public class JavaRelImplementor implements RelImplementor
      */
     public boolean canTranslate(SaffronRel rel, RexNode condition,
             RexNode[] exps) {
-        RexToJavaTranslator translator = newTranslator(rel);
+        RexToOJTranslator translator = newTranslator(rel);
         TranslationTester tester = new TranslationTester(translator);
         if (condition != null && !tester.canTranslate(condition)) {
             return false;
@@ -531,21 +496,21 @@ public class JavaRelImplementor implements RelImplementor
      */
     public ExpressionList translateList(JavaRel rel, RexNode[] exps) {
         final ExpressionList list = new ExpressionList();
-        RexToJavaTranslator translator = newTranslator(rel);
+        RexToOJTranslator translator = newTranslator(rel);
         for (int i = 0; i < exps.length; i++) {
-            list.add(translator.go(exps[i]));
+            list.add(translator.translateRexNode(exps[i]));
         }
         return list;
     }
 
     /**
-     * Creates a {@link RexToJavaTranslator} with which to translate the
+     * Creates a {@link RexToOJTranslator} with which to translate the
      * {@link RexNode row-expressions} within a relational expression
-     * into Java expressions.
+     * into OpenJava expressions.
      */
-    protected RexToJavaTranslator newTranslator(SaffronRel rel)
+    protected RexToOJTranslator newTranslator(SaffronRel rel)
     {
-        return new RexToJavaTranslator(this,rel);
+        return new RexToOJTranslator(this,rel,null);
     }
 
     /**
@@ -657,7 +622,7 @@ public class JavaRelImplementor implements RelImplementor
      * if it is an ancestor, there is no current value, and this method returns
      * null.
      */
-    Variable findInputVariable(SaffronRel rel)
+    public Variable findInputVariable(SaffronRel rel)
     {
         while (true) {
             Frame frame = (Frame) _mapRel2Frame.get(rel);
@@ -855,9 +820,9 @@ public class JavaRelImplementor implements RelImplementor
      * whether an expression can be translated.
      */
     public static class TranslationTester {
-        private final RexToJavaTranslator translator;
+        private final RexToOJTranslator translator;
 
-        public TranslationTester(RexToJavaTranslator translator) {
+        public TranslationTester(RexToOJTranslator translator) {
             this.translator = translator;
         }
         /**

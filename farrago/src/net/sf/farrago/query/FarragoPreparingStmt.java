@@ -213,21 +213,22 @@ public class FarragoPreparingStmt extends OJStatement
             });
         planner = new FarragoPlanner(this);
         planner.init();
-
-        // FIXME:  should be beginTrans(false) for read-only, but that prevents
-        // creation of transient objects for communication with Fennel
-        catalog.getRepository().beginTrans(true);
     }
 
     //~ Methods ---------------------------------------------------------------
 
+    public void setPlanner(FarragoPlanner planner)
+    {
+        this.planner = planner;
+    }
+    
     public SqlOperatorTable getSqlOperatorTable()
     {
         return session.getSqlOperatorTable();
     }
 
     /**
-     * Perform validation.
+     * Perform validation on an SQL statement.
      *
      * @param sqlNode unvalidated SQL statement
      *
@@ -235,8 +236,19 @@ public class FarragoPreparingStmt extends OJStatement
      */
     public SqlNode validate(SqlNode sqlNode)
     {
-        validator = new FarragoSqlValidator(this);
-        return validator.validate(sqlNode);
+        return getSqlValidator().validate(sqlNode);
+    }
+
+    /**
+     * @return the SqlValidator for this statement (creating it if
+     * it does not yet exist)
+     */
+    public SqlValidator getSqlValidator()
+    {
+        if (validator == null) {
+            validator = new FarragoSqlValidator(this);
+        }
+        return validator;
     }
 
     /**
@@ -250,7 +262,7 @@ public class FarragoPreparingStmt extends OJStatement
     {
         boolean needValidation = false;
         if (validator == null) {
-            validator = new FarragoSqlValidator(this);
+            getSqlValidator();
             needValidation = true;
         }
 
@@ -353,13 +365,22 @@ public class FarragoPreparingStmt extends OJStatement
      */
     public void prepareViewInfo(SqlNode sqlNode,FarragoSessionViewInfo info)
     {
-        getSqlToRelConverter(validator,this);
+        getSqlToRelConverter();
         SaffronRel rootRel = sqlToRelConverter.convertValidatedQuery(sqlNode);
         info.resultMetaData = new FarragoResultSetMetaData(
             rootRel.getRowType());
         info.parameterMetaData = new FarragoParameterMetaData(
             getParamRowType());
         info.dependencies = Collections.unmodifiableSet(directDependencies);
+    }
+
+    /**
+     * @return the SqlToRelConverter used by this stmt (creating it
+     * if it does not yet exist)
+     */
+    public SqlToRelConverter getSqlToRelConverter()
+    {
+        return getSqlToRelConverter(validator,this);
     }
 
     private SaffronType getParamRowType()
@@ -396,10 +417,8 @@ public class FarragoPreparingStmt extends OJStatement
         VolcanoPlannerFactory.setThreadInstance(savedPlannerFactory);
         ClassMap.setInstance(savedClassMap);
         OJUtil.threadDeclarers.set(savedDeclarer);
-        // Now that preparation is complete, we can commit.
         // TODO:  obtain locks to ensure that objects we intend to operate
-        // on don't change.
-        catalog.getRepository().endTrans();
+        // on don't change after we end repository txn.
         if (javaCodeDir != null) {
             javaCodeDir.closeAllocation();
             javaCodeDir = null;
@@ -433,17 +452,16 @@ public class FarragoPreparingStmt extends OJStatement
     {
         // REVIEW:  recycling may be dangerous since SqlToRelConverter is
         // stateful
-
-        // NOTE:  keep around sqlToRelConverterInstance for use during
-        // activities like loading default values
-        sqlToRelConverter = new SqlToRelConverter(
-            validator,
-            connection.getSaffronSchema(),
-            getEnvironment(),
-            connection,
-            new FarragoRexBuilder(farragoTypeFactory));
-        sqlToRelConverter.setDefaultValueFactory(
-            new CatalogDefaultValueFactory());
+        if (sqlToRelConverter == null) {
+            sqlToRelConverter = new SqlToRelConverter(
+                validator,
+                connection.getSaffronSchema(),
+                getEnvironment(),
+                connection,
+                new FarragoRexBuilder(farragoTypeFactory));
+            sqlToRelConverter.setDefaultValueFactory(
+                new CatalogDefaultValueFactory());
+        }
         return sqlToRelConverter;
     }
 
@@ -493,6 +511,14 @@ public class FarragoPreparingStmt extends OJStatement
     public FarragoIndexMap getIndexMap()
     {
         return indexMap;
+    }
+
+    /**
+     * @return session which invoked statement preparation
+     */
+    public FarragoSession getSession()
+    {
+        return session;
     }
 
     // implement SaffronConnection

@@ -22,13 +22,13 @@
 
 package net.sf.saffron.rel;
 
+import net.sf.saffron.core.SaffronField;
+import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.opt.RuleOperand;
 import net.sf.saffron.opt.VolcanoRule;
 import net.sf.saffron.opt.VolcanoRuleCall;
 import net.sf.saffron.rex.*;
 import net.sf.saffron.util.Util;
-import net.sf.saffron.core.SaffronType;
-import net.sf.saffron.core.SaffronField;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -202,41 +202,9 @@ public class SwapJoinRule extends VolcanoRule
                     exps,
                     fieldNames,
                     ProjectRel.Flags.Boxed);
-            SaffronRel rel = call.getPlanner().register(project,newJoin);
+            SaffronRel rel = call.planner.register(project,newJoin);
             Util.discard(rel);
         }
-    }
-
-    /**
-     * Ensures that every name in an array is distinct.
-     */
-    private static void makeUnique(String [] names) {
-        int k = 0;
-        for (int i = 0; i < names.length; i++) {
-            String name = names[i];
-            if (contains(names,name,i)) {
-                for (;; k++) {
-                    name = "$expr" + k;
-                    if (!contains(names,name,i)) {
-                        names[i] = name;
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Whether <code>names</code> contains <code>name</code> in the first
-     * <code>count</code> positions.
-     */
-    private static boolean contains(String [] names, String name, int count) {
-        for (int i = 0; i < count; i++) {
-            if (names[i].equals(name)) {
-                return true;
-            }
-        }
-        return false;
     }
 }
 

@@ -36,6 +36,7 @@ import net.sf.farrago.fennel.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.trace.*;
+import net.sf.saffron.util.SaffronProperties;
 
 import org.netbeans.api.mdr.*;
 import org.netbeans.mdr.*;
@@ -151,7 +152,7 @@ public class FarragoCatalog
                     true);
             } catch (IOException ex) {
                 throw FarragoResource.instance().newCatalogFileLockFailed(
-                    catalogFile.toString(),ex);
+                    catalogFile.toString());
             }
         }
 
@@ -310,8 +311,7 @@ public class FarragoCatalog
      */
     public String getDefaultCharsetName()
     {
-        // REVIEW:  should this be configurable and/or based on default locale?
-        return "ISO-8859-1";
+        return SaffronProperties.instance().defaultCharset.get();
     }
 
     /**
@@ -321,8 +321,7 @@ public class FarragoCatalog
      */
     public String getDefaultCollationName()
     {
-        // REVIEW:  should this be configurable and/or based on default locale?
-        return "iso-8859-1$en_US";
+        return SaffronProperties.instance().defaultCollation.get();
     }
 
     /**

@@ -199,6 +199,9 @@ public class FarragoDbStmtContext
                     boolean found = resultSet.next();
                     assert (found);
                     updateCount = resultSet.getInt(1);
+                    // REVIEW: jvp 20-Jun-2004 workaround limitations of 
+                    // other libraries
+                    while (resultSet.next());
                 } else {
                     updateCount = 0;
                 }

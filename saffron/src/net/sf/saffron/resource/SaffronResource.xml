@@ -66,6 +66,11 @@
     <text>Parser Error: {0}</text>
 </exception>
 
+<exception id="10" name="ArgumentMustNotBeNull">
+    <text>Argument to function ''{0}'' must not be NULL</text>
+</exception>
+
+
 <!-- ====================================================================== -->
 <!-- Parser resources 100,000 - 110,000 -->
 <!-- ====================================================================== -->
@@ -81,6 +86,9 @@
 </exception>
 <exception id="120001" name="InvalidArgument">
     <text>Argument {0,number,#} to function ''{1}'' is invalid: {2}</text>
+</exception>
+<exception id="120002" name="InvalidNbrOfArgument">
+    <text>Invalid number of arguments to function ''{0}''. Was expecting {1,number,#} arguments</text>
 </exception>
 <exception id="120010" name="CannotCastValue">
     <text>Cast function cannot convert value of type {0} to type {1}</text>

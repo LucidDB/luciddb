@@ -34,6 +34,7 @@ import net.sf.saffron.util.Util;
 
 import java.math.BigDecimal;
 import java.util.Calendar;
+import java.nio.charset.Charset;
 
 /**
  * Factory for row expressions.
@@ -236,6 +237,18 @@ public class RexBuilder {
     }
 
     public RexNode makeInputRef(SaffronType type,int i) {
+        if (type.isCharType()) {
+            Charset charset = type.getCharset()==null?
+                    Util.getDefaultCharset() :
+                    type.getCharset();
+            SqlCollation collation = type.getCollation()==null?
+                    new SqlCollation(SqlCollation.Coercibility.Implicit) :
+                    type.getCollation();
+            //todo: should get the implicit collation from repository instead of null
+            type = _typeFactory.createTypeWithCharsetAndCollation(type,
+                    charset, collation);
+        }
+
         return new RexInputRef(i,type);
     }
 
@@ -335,10 +348,17 @@ public class RexBuilder {
      */
     public RexLiteral makeCharLiteral(NlsString str) {
         Util.pre(str != null, "str != null");
+        if (null==str.getCharset()) {
+            str.setCharset(Util.getDefaultCharset());
+        }
+        if (null==str.getCollation()) {
+            str.setCollation(new
+                    SqlCollation(SqlCollation.Coercibility.Coercible));
+        }
         SaffronType type = _typeFactory.createSqlType(SqlTypeName.Varchar,
                 str.getValue().length());
-        type.setCollation(str.getCollation());
-        type.setCharset(str.getCharset());
+        type=_typeFactory.createTypeWithCharsetAndCollation(type,str.getCharset(),
+                str.getCollation());
         return makeLiteral(str, type, SqlTypeName.Char);
     }
 

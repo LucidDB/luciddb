@@ -1,0 +1,1 @@
+return !SLACKER.isNull() && SLACKER.value;

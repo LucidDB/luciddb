@@ -45,7 +45,7 @@ public class RexCorrelVariable extends RexVariable {
     }
 
     public void accept(RexVisitor visitor) {
-        visitor.visitCorrel(this);
+        visitor.visitCorrelVariable(this);
     }
 }
 

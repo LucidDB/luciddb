@@ -86,9 +86,9 @@ CalcExtDateTimeTest::testCalcExtConvertDateToString()
     pg << "O vc,10;" << endl;
     pg << "L vc,10;" << endl;
     pg << "C s8;" << endl;
-    pg << "V 86500000;" << endl;
+    pg << "V 115200000;" << endl; // (in PDT).
     pg << "T;" << endl;
-    pg << "CALL 'ConvertDateToString(L0, C0);" << endl;
+    pg << "CALL 'CastDateToStrA(L0, C0);" << endl;
     pg << "REF O0, L0;" << endl;
 
     Calculator calc;

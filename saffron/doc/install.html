@@ -46,7 +46,7 @@
   <li><a href="#4_Get_the_source_code">Get the source code</a></li>
   <li><a href="#5_Build">Build</a></li>
   <li><a href="#6_Run_the_unit_tests">Run the unit tests</a></li>
-  <li><a href="#6_Run_tomcat">Run Walden</a></li>
+  <li><a href="#7_Run_Walden">Run Walden</a></li>
   <li><a href="#Appendix_A_Product_installation_instructions">Appendix A: Product installation instructions</a></li>
   <li><a href="#Appendix_B_Coding_guidelines">Appendix B: Coding guidelines</a></li>
   <li><a href="#Appendix_C_How_to">Appendix C: How to</a><ol>
@@ -132,6 +132,14 @@ build</pre>
 <blockquote>
 <pre>build test</pre>
 </blockquote>
+
+<p>The detailed results of the tests are stored in the
+<code>testlog</code> directory.  Tracing (via
+<code>java.util.logging</code>) is automatically configured.  By
+default, the trace file is <code>trace/SaffronTrace.log</code>.  You
+can change the tracing level and trace file location by editing
+<code>trace/SaffronTrace.properties</code>.</p>
+
 <p>Or you can run <a href="api/saffron/test/Main.html">class <code>
 saffron.test.Main</code></a> using any JUnit test harness. You can control the 
 behavior of the test by creating a file called <code>saffron.properties</code>. 

@@ -21,7 +21,6 @@
       >
       <FEMConfig:FarragoConfig.fennelConfig>
         <FEMConfig:FennelConfig
-          databaseDir='@databaseDir@'
           databaseInitSize='1000'
           databaseIncrementSize='1'
           tempInitSize='1000'

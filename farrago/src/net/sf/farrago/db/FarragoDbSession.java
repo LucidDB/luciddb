@@ -37,6 +37,7 @@ import net.sf.farrago.runtime.*;
 import net.sf.saffron.sql.*;
 import net.sf.saffron.util.*;
 import net.sf.saffron.oj.stmt.*;
+import net.sf.saffron.oj.rex.*;
 
 import java.util.*;
 import java.util.logging.*;
@@ -181,8 +182,15 @@ public class FarragoDbSession
     }
 
     // implement FarragoSession
-    public SqlOperatorTable getSqlOperatorTable() {
+    public SqlOperatorTable getSqlOperatorTable()
+    {
         return SqlOperatorTable.instance();
+    }
+    
+    // implement FarragoSession
+    public OJRexImplementorTable getOJRexImplementorTable()
+    {
+        return database.getOJRexImplementorTable();
     }
     
     // implement FarragoSession
@@ -344,7 +352,12 @@ public class FarragoDbSession
         return info;
     }
 
-    SessionIndexMap getSessionIndexMap()
+    public FarragoDatabase getDatabase()
+    {
+        return database;
+    }
+
+    public SessionIndexMap getSessionIndexMap()
     {
         return sessionIndexMap;
     }
@@ -352,11 +365,6 @@ public class FarragoDbSession
     Map getTxnCodeCache()
     {
         return txnCodeCache;
-    }
-
-    FarragoDatabase getDatabase()
-    {
-        return database;
     }
 
     FennelTxnContext getFennelTxnContext()
@@ -527,6 +535,15 @@ public class FarragoDbSession
         tracer.info(sql);
         FarragoReposTxnContext reposTxnContext =
             new FarragoReposTxnContext(catalog);
+
+        // TODO jvs 21-June-2004: It would be preferable to start with a read
+        // lock and only upgrade to write once we know we're dealing with DDL.
+        // However, at the moment that doesn't work because a write txn is
+        // required for creating transient objects.  And MDR doesn't support
+        // upgrade.  It might be possible to reorder catalog access to solve
+        // this.
+        reposTxnContext.beginWriteTxn();
+        
         boolean rollback = true;
         FarragoSessionDdlValidator ddlValidator = null;
         try {
@@ -540,7 +557,6 @@ public class FarragoDbSession
             FarragoSessionParser parser = ddlValidator.getParser();
             Object parsedObj = parser.parseSqlStatement(
                 ddlValidator,
-                reposTxnContext,
                 sql);
             if (parsedObj instanceof SqlNode) {
                 SqlNode sqlNode = (SqlNode) parsedObj;
@@ -582,6 +598,8 @@ public class FarragoDbSession
             if (rollback) {
                 tracer.fine("rolling back DDL");
                 reposTxnContext.rollback();
+            } else {
+                reposTxnContext.commit();
             }
         }
         return null;

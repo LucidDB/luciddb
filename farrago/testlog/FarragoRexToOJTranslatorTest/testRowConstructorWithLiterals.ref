@@ -1,0 +1,29 @@
+
+private byte[] oj_var0 = new byte[3];
+
+
+private ExecutableStmt.Oj_DATE_0 oj_var1 = new ExecutableStmt.Oj_DATE_0();
+
+
+private ExecutableStmt.Oj_TIME_0 oj_var2 = new ExecutableStmt.Oj_TIME_0();
+
+
+private ExecutableStmt.Oj_TIMESTAMP_0 oj_var3 = new ExecutableStmt.Oj_TIMESTAMP_0();
+
+
+private ExecutableStmt.Ojp_0 oj_var4 = new ExecutableStmt.Ojp_0();
+
+oj_var0[0] = 88;
+oj_var0[1] = 121;
+oj_var0[2] = 122;
+oj_var1.assignFrom( 1096959600000l );
+oj_var2.assignFrom( 90000000l );
+oj_var3.assignFrom( 1097020800000l );
+oj_var4.EXPR$0 = (int) 5;
+oj_var4.EXPR$1.assignFrom( "a las cinco de la tarde" );
+oj_var4.EXPR$2.assignFrom( oj_var0 );
+oj_var4.EXPR$3.assignFrom( oj_var1 );
+oj_var4.EXPR$4.assignFrom( oj_var2 );
+oj_var4.EXPR$5.assignFrom( oj_var3 );
+
+return oj_var4;

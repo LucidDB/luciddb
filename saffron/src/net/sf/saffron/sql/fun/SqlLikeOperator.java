@@ -38,11 +38,11 @@ import net.sf.saffron.sql.*;
  * {@link net.sf.saffron.sql.parser.SqlParser parser} will generate
  * a eqvivalent to <code>NOT (src LIKE pattern ...)</code>
  *
- * @author wael
+ * @author Wael Chatila
  * @since Jan 21, 2004
  * @version $Id$
  **/
-public class SqlLikeOperator extends SqlSpecialOperator
+public abstract class SqlLikeOperator extends SqlSpecialOperator
 {
     SqlLikeOperator(String name, SqlKind kind)
     {
@@ -51,10 +51,6 @@ public class SqlLikeOperator extends SqlSpecialOperator
                 SqlOperatorTable.useFirstKnownParam,
                 /** this is not correct in general */
                 SqlOperatorTable.typeNullableStringStringString);
-    }
-
-    public void test(SqlTester tester) {
-        /* empty implementation */
     }
 
     public void unparse(SqlWriter writer,

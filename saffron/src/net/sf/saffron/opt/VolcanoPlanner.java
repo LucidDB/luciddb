@@ -191,7 +191,6 @@ public class VolcanoPlanner implements SaffronPlanner
         }
 
         // Each of this rule's operands is an 'entry point' for a rule call.
-        rule.planner = this;
         Walker operandWalker = new Walker(rule.operand);
         int ordinalInRule = 0;
         ArrayList operandsOfRule = new ArrayList();
@@ -774,9 +773,9 @@ public class VolcanoPlanner implements SaffronPlanner
             if (operand.matches(rel)) {
                 final VolcanoRuleCall ruleCall;
                 if (deferred) {
-                    ruleCall = new DeferringRuleCall(operand);
+                    ruleCall = new DeferringRuleCall(this, operand);
                 } else {
-                    ruleCall = new VolcanoRuleCall(operand);
+                    ruleCall = new VolcanoRuleCall(this, operand);
                 }
                 ruleCall.match(rel);
             }
@@ -1071,9 +1070,9 @@ loop:
      */
     private static class DeferringRuleCall extends VolcanoRuleCall
     {
-        DeferringRuleCall(RuleOperand operand)
+        DeferringRuleCall(VolcanoPlanner planner, RuleOperand operand)
         {
-            super(operand);
+            super(planner, operand);
         }
 
         /**
@@ -1082,8 +1081,8 @@ loop:
          */
         protected void onMatch()
         {
-            final VolcanoRuleMatch match = new VolcanoRuleMatch(operand0,rels);
-            rule.planner.ruleQueue.addMatch(match);
+            final VolcanoRuleMatch match = new VolcanoRuleMatch(planner, operand0,rels);
+            planner.ruleQueue.addMatch(match);
         }
     }
 }

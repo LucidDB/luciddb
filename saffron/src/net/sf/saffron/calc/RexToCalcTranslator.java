@@ -32,6 +32,7 @@ import net.sf.saffron.sql.fun.SqlStdOperatorTable;
 import net.sf.saffron.sql.fun.SqlTrimFunction;
 import net.sf.saffron.sql.type.SqlTypeName;
 import net.sf.saffron.util.Util;
+import net.sf.saffron.util.SaffronProperties;
 
 import java.util.HashMap;
 
@@ -94,6 +95,8 @@ public class RexToCalcTranslator implements RexVisitor
         _conditionExp = conditionExp;
         _rexBuilder = rexBuilder;
 
+        setGenerateComments(SaffronProperties.instance().
+                generateCalcProgramComments.get());
         SaffronTypeFactory fac = _rexBuilder.getTypeFactory();
         _knownTypes = new TypePair[] {
             new TypePair(fac.createSqlType(SqlTypeName.Integer),
@@ -282,10 +285,10 @@ public class RexToCalcTranslator implements RexVisitor
             String prepareOutput = newLabel();
             _builder.addLabelJumpTrue(prepareOutput,filterResult);
             // row didnt match
-            _builder.addMove(statusReg, _trueReg);
+            CalcProgramBuilder.move.add(_builder,statusReg, _trueReg);
             _builder.addReturn();
             _builder.addLabel(prepareOutput);
-            _builder.addMove(statusReg, _falseReg);
+            CalcProgramBuilder.move.add(_builder,statusReg, _falseReg);
         }
 
         // row matched. Now calculate all the outputs
@@ -327,15 +330,21 @@ public class RexToCalcTranslator implements RexVisitor
     }
 
     public void visitCall(RexCall call) {
+        int before = _builder.getCurrentLineNumber();
         implementNode(call);
+        int after = _builder.getCurrentLineNumber();
+        assert(after>=before);
+        if (0!=(after-before)) {
+            _builder.addComment(call.toString());
+        }
     }
 
-    public void visitCorrel(RexCorrelVariable correlVariable) {
+    public void visitCorrelVariable(RexCorrelVariable correlVariable) {
         throw SaffronResource.instance().newProgramImplementationError(
                 "Don't know how to implement rex node=" + correlVariable);
     }
 
-    public void visitParam(RexDynamicParam dynamicParam) {
+    public void visitDynamicParam(RexDynamicParam dynamicParam) {
         throw SaffronResource.instance().newProgramImplementationError(
                 "Don't know how to implement rex node=" + dynamicParam);
     }
@@ -345,7 +354,7 @@ public class RexToCalcTranslator implements RexVisitor
                 "Don't know how to implement rex node=" + rangeRef);
     }
 
-    public void visitConVar(RexContextVariable variable) {
+    public void visitContextVariable(RexContextVariable variable) {
         throw SaffronResource.instance().newProgramImplementationError(
                 "Don't know how to implement rex node=" + variable);
     }
@@ -383,16 +392,16 @@ public class RexToCalcTranslator implements RexVisitor
             CalcProgramBuilder.Register result = _builder.newLocal(CalcProgramBuilder.OpType.Bool, -1);
             assert(result.getOpType().getOrdinal()==
                    getCalcRegisterDescriptor(call).getType().getOrdinal());
-            _builder.addMove(result, getResult(call.operands[1]));
+            CalcProgramBuilder.move.add(_builder,result, getResult(call.operands[1]));
 
             String restOfInstructions = newLabel();
             _builder.addLabelJump(restOfInstructions);
             _builder.addLabel(shortCut);
 
             if (op.kind.isA(SqlKind.And)) {
-                _builder.addMove(result, _falseReg);
+                CalcProgramBuilder.move.add(_builder,result, _falseReg);
             } else {
-                _builder.addMove(result, _trueReg);
+                CalcProgramBuilder.move.add(_builder,result, _trueReg);
             }
 
             setResult(call, result);
@@ -455,8 +464,10 @@ public class RexToCalcTranslator implements RexVisitor
                     CalcProgramBuilder.OpType.Varchar,
                     collationToUse,
                     CalcProgramBuilder.stringByteCount(collationToUse));
-            new CalcProgramBuilder.ExtInstrDef("strCmpA",4).add(_builder,
-                    new CalcProgramBuilder.Register[]{strCmpResult,reg1,reg2,colReg});
+            //TODO this is only for ascci cmp. Need to pump in colReg when a
+            //fennel function that can take it is born
+            new CalcProgramBuilder.ExtInstrDef("strCmpA",3).add(_builder,
+                    new CalcProgramBuilder.Register[]{strCmpResult,reg1,reg2});
             CalcProgramBuilder.Register zero = _builder.newInt4Literal(0);
             CalcProgramBuilder.Register[] regs =
                     new CalcProgramBuilder.Register[] {resultOfCall, strCmpResult, zero};
@@ -488,19 +499,23 @@ public class RexToCalcTranslator implements RexVisitor
             return;
         }
 
-        // -------------- SPECUAL CASES -------------
+        // -------------- SPECIAL CASES -------------
         // Special case when we cast null to some value.
-        if (op.equals(_opTab.castFunc) &&
-                RexLiteral.isNullLiteral(call.operands[0])) {
-            // If the type is one which requires an explicit storage
-            // specification, tell it we need 0 bytes; otherwise keep it at
-            // -1.
-            if (resultDesc.getBytes() >= 0) {
-                resultDesc = new CalcProgramBuilder.RegisterDescriptor(
-                        resultDesc.getType(), 0);
-            }
+        if (op.equals(_opTab.castFunc)) {
+            if (RexLiteral.isNullLiteral(call.operands[0])) {
+                // If the type is one which requires an explicit storage
+                // specification, tell it we need 0 bytes; otherwise keep it at
+                // -1.
+                if (resultDesc.getBytes() >= 0) {
+                    resultDesc = new CalcProgramBuilder.RegisterDescriptor(
+                            resultDesc.getType(), 0);
+                }
 
-            resultOfCall = _builder.newLiteral(resultDesc, null);
+                resultOfCall = _builder.newLiteral(resultDesc, null);
+            } else {
+                implementCast(call);
+                return;
+            }
         }
         // NOT SPECIAL CASE - ALL GENERAL EXTENDED FUNCTION CALL COMES HERE
         else if (op instanceof SqlFunction)
@@ -511,6 +526,7 @@ public class RexToCalcTranslator implements RexVisitor
             if (_opTab.lookupFunctionsByName(fun.name).isEmpty()) {
                 throw SaffronResource.instance().newProgramImplementationError("Function "+fun+" unknown");
             }
+
 
             // not very cpu efficent...
             new CalcRexImplementorTableImpl.InstrImplementor(
@@ -525,6 +541,67 @@ public class RexToCalcTranslator implements RexVisitor
 
         assert null!=resultOfCall;
         setResult(call, resultOfCall);
+    }
+
+    /**
+     * Generates instructions for various kinds of casting.
+     * @param call
+     * @pre call.operands.length == 1
+     */
+    private void implementCast(RexCall call) {
+        Util.pre(1==call.operands.length, "call.operands.length==1");
+
+        SaffronType argType = call.operands[0].getType();
+        SaffronType returnType = call.getType();
+        CalcProgramBuilder.RegisterDescriptor resultDesc =
+                getCalcRegisterDescriptor(call);
+
+        if (returnType.isCharType() && argType.getSqlTypeName().equals(SqlTypeName.Date))
+        {
+            new CalcRexImplementorTableImpl.InstrImplementor(
+                    ExtInstructionDefTable.castDateToStr).implement(call, this);
+            return;
+        }
+
+        if (returnType.isCharType() && argType.getSqlTypeName().equals(SqlTypeName.Time)) {
+           new CalcRexImplementorTableImpl.InstrImplementor(
+                   ExtInstructionDefTable.castTimeToStr).implement(call, this);
+            return;
+        }
+
+        if (returnType.isCharType() && argType.getSqlTypeName().equals(SqlTypeName.Timestamp)) {
+           new CalcRexImplementorTableImpl.InstrImplementor(
+                   ExtInstructionDefTable.castTimestampToStr).implement(call, this);
+            return;
+        }
+
+        if (returnType.isCharType() && argType.isCharType()) {
+            RexNode op = call.operands[0];
+            implementNode(op);
+            CalcProgramBuilder.RegisterDescriptor argDesc =
+                    getCalcRegisterDescriptor(op);
+
+            CalcProgramBuilder.Register resReg = _builder.newLocal(resultDesc);
+            CalcProgramBuilder.Register opReg = getResult(op);
+
+            if (resultDesc.getBytes() < argDesc.getBytes()) {
+                CalcProgramBuilder.Register oneReg =
+                        _builder.newInt4Literal(1);
+                CalcProgramBuilder.Register nReg =
+                        _builder.newInt4Literal(resultDesc.getBytes());
+                CalcProgramBuilder.Register[] regs =
+                        new CalcProgramBuilder.Register[]
+                        {resReg, opReg, oneReg, nReg};
+                ExtInstructionDefTable.substring.add(_builder, regs);
+            } else {
+                CalcProgramBuilder.move.add(_builder, resReg, opReg);
+            }
+            setResult(call, resReg);
+            return;
+        }
+        assert false : "unimplemented cast. From "
+                +call.toString() + ". To "+returnType.toString();
+
     }
 
     private boolean isStrCmp(RexCall call) {
@@ -579,6 +656,10 @@ public class RexToCalcTranslator implements RexVisitor
 
     public void setGenerateShortCircuit(boolean generateShortCircuit) {
         this._generateShortCircuit = generateShortCircuit;
+    }
+
+    public void setGenerateComments(boolean outputComments) {
+        _builder.setOutputComments(outputComments);
     }
 }
 

@@ -34,12 +34,14 @@ import net.sf.saffron.oj.*;
 import net.sf.saffron.rel.*;
 import net.sf.saffron.util.*;
 import net.sf.saffron.sql.type.*;
+import net.sf.saffron.sql.SqlCollation;
 
 import openjava.mop.*;
 
 import java.util.*;
 import java.sql.*;
 import java.sql.Date;
+import java.nio.charset.Charset;
 
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
@@ -159,22 +161,22 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
 
         addPrecisionPrototype(
             new FarragoPrecisionType(
-                getSimpleType("VARCHAR"),false,0,0,null));
+                getSimpleType("VARCHAR"),false,0,0,null,null));
         addPrecisionPrototype(
             new FarragoPrecisionType(
-                getSimpleType("VARBINARY"),false,0,0,null));
+                getSimpleType("VARBINARY"),false,0,0,null,null));
         addPrecisionPrototype(
             new FarragoPrecisionType(
-                getSimpleType("CHAR"),false,0,0,null));
+                getSimpleType("CHAR"),false,0,0,null,null));
         addPrecisionPrototype(
             new FarragoPrecisionType(
-                getSimpleType("BINARY"),false,0,0,null));
+                getSimpleType("BINARY"),false,0,0,null,null));
         addPrecisionPrototype(
             new FarragoPrecisionType(
-                getSimpleType("BIT"),false,0,0,null));
+                getSimpleType("BIT"),false,0,0,null,null));
         addPrecisionPrototype(
             new FarragoPrecisionType(
-                getSimpleType("DECIMAL"),false,0,0,null));
+                getSimpleType("DECIMAL"),false,0,0,null,null));
 
         // Date/time types
         addPrecisionPrototype(
@@ -208,8 +210,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     // override SaffronTypeFactoryImpl
     public SaffronType createSqlType(SqlTypeName typeName)
     {
-        if (typeName.equals(SqlTypeName.Null)
-            || typeName.equals(SqlTypeName.Any))
+        if (typeName.isSpecial())
         {
             return super.createSqlType(typeName);
         }
@@ -251,12 +252,22 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                     length, null);
             break;
         default:
+            String charsetName;
+            SqlCollation collation;
+            if (precisionType.isCharType()) {
+                charsetName = catalog.getDefaultCharsetName();
+                collation = new SqlCollation(SqlCollation.Coercibility.Coercible);
+            } else {
+                charsetName = null;
+                collation = null;
+            }
             precisionType = new FarragoPrecisionType(
                     precisionType.getSimpleType(),
                     false,
                     length,
                     scale,
-                    catalog.getDefaultCharsetName());
+                    charsetName,
+                    collation);
         }
         precisionType.factory = this;
         return canonize(precisionType);
@@ -290,8 +301,12 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         // assert (pPrecision != null);
         Integer pScale = column.getScale();
         String charsetName = column.getCharacterSetName();
+        SqlCollation collation;
         if (charsetName.equals("")) {
             charsetName = null;
+            collation = null;
+        } else {
+            collation = new SqlCollation(SqlCollation.Coercibility.Implicit);
         }
         FarragoType specializedType =
             new FarragoPrecisionType(
@@ -299,7 +314,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                 getCatalog().isNullable(column),
                 pPrecision.intValue(),
                 (pScale == null) ? 0 : pScale.intValue(),
-                charsetName);
+                charsetName,
+                collation);
         specializedType.factory = this;
         return (FarragoType) canonize(specializedType);
     }
@@ -396,7 +412,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                                 isNullable,
                                 precision,
                                 metaData.getScale(iOneBased),
-                                catalog.getDefaultCharsetName());
+                                null,
+                                null);
                         specializedType.factory = factory;
                         return (FarragoType) canonize(specializedType);
                     } catch (SQLException ex) {
@@ -431,7 +448,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             // TODO:  cleanup
             prototype = new FarragoPrecisionType(
                 getSimpleType("VARCHAR"),isNullable,128,0,
-                catalog.getDefaultCharsetName());
+                catalog.getDefaultCharsetName(),
+                new SqlCollation(SqlCollation.Coercibility.Coercible));
             prototype.factory = this;
             prototype = (FarragoType) canonize(prototype);
         }
@@ -459,20 +477,56 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             return canonize(dtType);
         }
         if (atomicType instanceof FarragoPrecisionType) {
+            String charsetName;
+            SqlCollation collation;
             FarragoPrecisionType precisionType;
             precisionType = (FarragoPrecisionType) type;
-            precisionType = new FarragoPrecisionType(
+            if (atomicType.isCharType()) {
+                charsetName = precisionType.getCharsetName();
+                collation = precisionType.getCollation();
+            } else {
+                charsetName = null;
+                collation = null;
+            }
+             precisionType = new FarragoPrecisionType(
                 precisionType.getSimpleType(),
                 nullable,
                 precisionType.getPrecision(),
                 precisionType.getScale(),
-                precisionType.getCharsetName());
+                charsetName,
+                collation);
             precisionType.factory = this;
             return canonize(precisionType);
         } else {
             return createTypeForPrimitiveBySqlsimpleType(
                 atomicType.getSimpleType(),nullable);
         }
+    }
+
+    public SaffronType createTypeWithCharsetAndCollation(SaffronType type,
+            Charset charset, SqlCollation collation) {
+        assert(type.isCharType()) : "type.isCharType()==true";
+        if (!(type instanceof FarragoAtomicType)) {
+            return super.createTypeWithCharsetAndCollation(type,
+                    charset, collation);
+        }
+
+        if (type instanceof FarragoPrecisionType) {
+            FarragoPrecisionType precisionType;
+            precisionType = (FarragoPrecisionType) type;
+            precisionType = new FarragoPrecisionType(
+                precisionType.getSimpleType(),
+                precisionType.isNullable(),
+                precisionType.getPrecision(),
+                precisionType.getScale(),
+                charset.name(),
+                collation);
+            precisionType.factory = this;
+            return canonize(precisionType);
+        }
+
+        throw Util.needToImplement("Need to implement "+type);
+
     }
 
     private FarragoType createTypeForPrimitive(

@@ -347,6 +347,10 @@ public class RexLiteral extends RexNode
             return ((BitString) _value).getAsByteArray();
         case SqlTypeName.Char_ordinal:
             return ((NlsString) _value).getValue();
+        case SqlTypeName.Date_ordinal:
+        case SqlTypeName.Time_ordinal:
+        case SqlTypeName.Timestamp_ordinal:
+            return new Long(((Calendar)_value).getTimeInMillis());
         default:
             return _value;
         }

@@ -43,7 +43,7 @@ public class RexContextVariable extends RexVariable
     }
 
     public void accept(RexVisitor visitor) {
-        visitor.visitConVar(this);
+        visitor.visitContextVariable(this);
     }
 }
 

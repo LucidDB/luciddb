@@ -32,18 +32,9 @@ import net.sf.farrago.session.FarragoSessionDdlValidator;
  */
 public interface FarragoParserWrapper
 {
-
 	/**
-	 * @return the validator to use for validating DDL statements as they are parsed.
+	 * @return the validator to use for validating DDL statements as they are
+	 * parsed.
 	 */
 	public FarragoSessionDdlValidator getDdlValidator();
-
-    /**
-     * Start a repository write transaction.  This is called by parserImpl when
-     * it's sure the statement is DDL and before it starts making any catalog
-     * updates.
-     */
-    public void startReposWriteTxn();
-
-
 }

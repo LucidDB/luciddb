@@ -31,14 +31,14 @@ import net.sf.saffron.sql.type.SqlTypeName;
  * singleton classes {@link net.sf.saffron.sql.SqlOperatorTable}
  * are visited by calling their test functions.
  *
- * @author wael
+ * @author Wael Chatila
  * @since May 22, 2004
  * @version $Id$
  **/
 public interface SqlTester {
     void checkScalarExact(String expression, String result);
     void checkScalarApprox(String expression, String result);
-    void checkBoolean(String expression, String result);
+    void checkBoolean(String expression, Boolean result);
     void checkString(String expression, String result);
     void checkNull(String expression);
 

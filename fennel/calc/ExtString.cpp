@@ -217,8 +217,8 @@ strOverlayA5(RegisterRef<char*>* result,
 
 void
 strPosA(RegisterRef<int32_t>* result,
-        RegisterRef<char*>* str,
-        RegisterRef<char*>* find)
+        RegisterRef<char*>* find,
+        RegisterRef<char*>* str)
 {
     assert(str->type() == find->type());
     assert(StandardTypeDescriptor::isTextArray(str->type()));
@@ -333,6 +333,7 @@ strToUpperA(RegisterRef<char*>* result,
 
 void
 strTrimA(RegisterRef<char*>* result,
+         RegisterRef<char*>* tokens,
          RegisterRef<char*>* str,
          RegisterRef<int32_t>* trimLeft,
          RegisterRef<int32_t>* trimRight)
@@ -340,7 +341,8 @@ strTrimA(RegisterRef<char*>* result,
     assert(StandardTypeDescriptor::isTextArray(str->type()));
     assert(result->type() == STANDARD_TYPE_VARCHAR);
 
-    if (str->isNull() || trimLeft->isNull() || trimRight->isNull()) {
+    if (tokens->isNull() || str->isNull() || 
+        trimLeft->isNull() || trimRight->isNull()) {
         result->toNull();
         result->length(0);
     } else {
@@ -558,24 +560,44 @@ ExtStringRegister(ExtendedInstructionTable* eit)
              (ExtendedInstruction2<char*, char*>*) NULL,
              &strToUpperA);
 
-    vector<StandardTypeDescriptorOrdinal> params_1V_1F_2I;
-    params_1V_1F_2I.push_back(STANDARD_TYPE_VARCHAR);
-    params_1V_1F_2I.push_back(STANDARD_TYPE_CHAR);
-    params_1V_1F_2I.push_back(STANDARD_TYPE_INT_32);
-    params_1V_1F_2I.push_back(STANDARD_TYPE_INT_32);
 
-    eit->add("strTrimA", params_1V_1F_2I,
-             (ExtendedInstruction4<char*, char*, int32_t, int32_t>*) NULL,
+    
+    eit->add("strTrimA", params_1V_2F_2I,
+             (ExtendedInstruction5<char*, char*, char*, int32_t, int32_t>*) NULL,
              &strTrimA);
 
-    vector<StandardTypeDescriptorOrdinal> params_2V_2I;
-    params_2V_2I.push_back(STANDARD_TYPE_VARCHAR);
-    params_2V_2I.push_back(STANDARD_TYPE_VARCHAR);
-    params_2V_2I.push_back(STANDARD_TYPE_INT_32);
-    params_2V_2I.push_back(STANDARD_TYPE_INT_32);
 
-    eit->add("strTrimA", params_2V_2I,
-             (ExtendedInstruction4<char*, char*, int32_t, int32_t>*) NULL,
+    vector<StandardTypeDescriptorOrdinal> params_1V_1F_1V_2I;
+    params_1V_1F_1V_2I.push_back(STANDARD_TYPE_VARCHAR);
+    params_1V_1F_1V_2I.push_back(STANDARD_TYPE_CHAR);
+    params_1V_1F_1V_2I.push_back(STANDARD_TYPE_VARCHAR);
+    params_1V_1F_1V_2I.push_back(STANDARD_TYPE_INT_32);
+    params_1V_1F_1V_2I.push_back(STANDARD_TYPE_INT_32);
+
+    eit->add("strTrimA", params_1V_1F_1V_2I,
+             (ExtendedInstruction5<char*, char*, char*, int32_t, int32_t>*) NULL,
+             &strTrimA);
+
+    vector<StandardTypeDescriptorOrdinal> params_1V_1V_1F_2I;
+    params_1V_1V_1F_2I.push_back(STANDARD_TYPE_VARCHAR);
+    params_1V_1V_1F_2I.push_back(STANDARD_TYPE_VARCHAR);
+    params_1V_1V_1F_2I.push_back(STANDARD_TYPE_CHAR);
+    params_1V_1V_1F_2I.push_back(STANDARD_TYPE_INT_32);
+    params_1V_1V_1F_2I.push_back(STANDARD_TYPE_INT_32);
+
+    eit->add("strTrimA", params_1V_1V_1F_2I,
+             (ExtendedInstruction5<char*, char*, char*, int32_t, int32_t>*) NULL,
+             &strTrimA);
+
+    vector<StandardTypeDescriptorOrdinal> params_1V_2V_2I;
+    params_1V_2V_2I.push_back(STANDARD_TYPE_VARCHAR);
+    params_1V_2V_2I.push_back(STANDARD_TYPE_VARCHAR);
+    params_1V_2V_2I.push_back(STANDARD_TYPE_VARCHAR);
+    params_1V_2V_2I.push_back(STANDARD_TYPE_INT_32);
+    params_1V_2V_2I.push_back(STANDARD_TYPE_INT_32);
+
+    eit->add("strTrimA", params_1V_2V_2I,
+             (ExtendedInstruction5<char*, char*, char*, int32_t, int32_t>*) NULL,
              &strTrimA);
 
 }

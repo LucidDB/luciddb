@@ -8,7 +8,14 @@
 
 <!-- XML ENTITY "macros" -->
 <!DOCTYPE project [
+
 <!ENTITY EnableAssertions "-ea -esa">
+
+<!ENTITY SaffronProps
+"
+-Djava.util.logging.config.file=${SaffronTrace.properties}
+">
+
 ]>
 
 <project name="saffron" default="compile">
@@ -74,6 +81,15 @@
   <property name="CombinedParser.jj" 
     location="${java.dir}/net/sf/saffron/sql/parser/CombinedParser.jj"/>
   <property name="test.log.dir" location="testlog"/>
+
+  <!-- tracing properties -->
+  <property name="trace.dir" location="trace"/>
+
+  <property name="SaffronTrace.properties"
+    location="${trace.dir}/SaffronTrace.properties"/>
+
+  <property name="SaffronTrace.log"
+    location="${trace.dir}/SaffronTrace.log"/>
 
   <!-- third-party libraries -->
   <path id="saffron.3p.classpath">
@@ -171,10 +187,11 @@
 
   <target name="test" depends="junit"/>
 
-  <target name="junit" depends="setup.runtime">
+  <target name="junit" depends="setup.runtime,setup.trace">
     <junit printsummary="yes" fork="yes" failureproperty="junit.failure">
       <classpath refid="saffron.build.classpath"/>
       <jvmarg line="&EnableAssertions;"/>
+      <jvmarg line="&SaffronProps;"/>
       <jvmarg value="-Dsaffron.package.name=net.sf.saffron.runtime"/>
       <jvmarg value="-Dsaffron.java.dir=${examples.dir}"/>
       <jvmarg value="-Dsaffron.class.dir=${classes.dir}"/>
@@ -184,16 +201,17 @@
       <formatter type="xml" if="integration.build"/>
       <test name="net.sf.saffron.test.Main" todir="${test.log.dir}"/>
     </junit>
-
+    <delete file="${SaffronTrace.log}.lck"/>
     <fail if="junit.failure"/>
   </target>
 
-  <target name="test.sql" depends="compile"
+  <target name="test.sql" depends="compile,setup.trace"
       description="Runs only SQL-related tests.">
     <junit printsummary="yes" fork="yes" haltonfailure="true">
       <classpath refid="saffron.build.classpath"/>
       <jvmarg value="-Dsaffron.class.dir=${classes.dir}"/>
       <jvmarg line="&EnableAssertions;"/>
+      <jvmarg line="&SaffronProps;"/>
       <formatter type="plain" usefile="false" />
       <batchtest>
         <fileset dir="${classes.dir}">
@@ -202,12 +220,15 @@
         </fileset>
       </batchtest>
     </junit>
+    <delete file="${SaffronTrace.log}.lck"/>
   </target>
 
-  <target name="test.opt" depends="compile"
+  <target name="test.opt" depends="compile,setup.trace"
       description="Runs only the optimizer tests.">
     <junit printsummary="yes" fork="yes" haltonfailure="true">
       <classpath refid="saffron.build.classpath"/>
+      <jvmarg line="&EnableAssertions;"/>
+      <jvmarg line="&SaffronProps;"/>
       <formatter type="plain" usefile="false" />
       <batchtest>
         <fileset dir="${classes.dir}">
@@ -215,9 +236,10 @@
         </fileset>
       </batchtest>
     </junit>
+    <delete file="${SaffronTrace.log}.lck"/>
   </target>
 
-  <target name="clean" depends="clean.examples">
+  <target name="clean" depends="clean.examples,clean.test.logs">
     <delete includeEmptyDirs="true" quiet="true">
       <fileset dir="${classes.dir}">
         <include name="**/*.class"/>
@@ -274,6 +296,14 @@
       <fileset dir="${examples.dir}" includes="net/sf/saffron/runtime/**/Dummy_*.java"/>
       <fileset dir="${classes.dir}" includes="net/sf/saffron/runtime/**/Dummy_*.class"/>
     </delete>
+  </target>
+
+  <target name="clean.test.logs">
+    <delete includeEmptyDirs="true" quiet="true">
+      <fileset dir="${test.log.dir}" includes="*.xml"/>
+      <fileset dir="${test.log.dir}" includes="*.txt"/>
+    </delete>
+    <delete quiet="true" file="${SaffronTrace.log}"/>
   </target>
 
   <target name="compile"
@@ -623,16 +653,34 @@ You should set pscp.user, pscp.password and pscp.path in build.properties">
 		pathsep="${path.separator}" refid="saffron.build.classpath"/>
   </target>
 
+  <target name="setup.trace">
+    <mkdir dir="${trace.dir}"/>
+    <touch file="${SaffronTrace.properties}"/>
+    <propertyfile file="${SaffronTrace.properties}"
+      comment="Saffron developer tracing configuration (do not add comments)">
+      <entry key="handlers" default="java.util.logging.FileHandler"/>
+      <entry key="java.util.logging.FileHandler.formatter"
+        default="java.util.logging.SimpleFormatter"/>
+      <entry key=".level" default="CONFIG"/>
+      <entry key="java.util.logging.FileHandler.pattern"
+        default="${SaffronTrace.log}"/>
+      <entry key="java.util.logging.FileHandler.append" default="true"/>
+    </propertyfile>
+  </target>
+
+
   <target name="run.sales.Test" depends="setup.runtime">
     <java classpathref="saffron.build.classpath"
 		classname="sales.Test"
         fork="yes">
       <jvmarg line="&EnableAssertions;"/>
+      <jvmarg line="&SaffronProps;"/>
       <jvmarg value="-Dsaffron.package.name=saffron.runtime"/>
       <jvmarg value="-Dsaffron.java.dir=${examples.dir}"/>
       <jvmarg value="-Dsaffron.class.dir=${classes.dir}"/>
       <jvmarg value="-Dsaffron.java.compiler.args='-classpath ${saffron.build.classpath.prop} -d ${classes.dir} -verbose'"/>
     </java>
+    <delete file="${SaffronTrace.log}.lck"/>
   </target>
 
   <target name="test.all" 
@@ -642,17 +690,19 @@ You should set pscp.user, pscp.password and pscp.path in build.properties">
     </antcall>
   </target>
 
-  <target name="run.saffron.test.Main" depends="setup.runtime">
+  <target name="run.saffron.test.Main" depends="setup.runtime,setup.trace">
     <java classpathref="saffron.build.classpath"
         classname="net.sf.saffron.test.Main"
         fork="yes" failonerror="true">
       <jvmarg line="&EnableAssertions;"/>
+      <jvmarg line="&SaffronProps;"/>
       <jvmarg value="-Dsaffron.package.name=net.sf.saffron.runtime"/>
       <jvmarg value="-Dsaffron.java.dir=${examples.dir}"/>
       <jvmarg value="-Dsaffron.class.dir=${classes.dir}"/>
       <jvmarg value="-Dsaffron.test.everything=${test.everything}"/>
       <jvmarg value="-Dsaffron.java.compiler.args=-classpath ${saffron.build.classpath.prop} -d ${classes.dir} -verbose"/>
     </java>
+    <delete file="${SaffronTrace.log}.lck"/>
   </target>
 
   <target name="run.walden.text" depends="setup.runtime">
@@ -660,11 +710,13 @@ You should set pscp.user, pscp.password and pscp.path in build.properties">
 		classname="net.sf.saffron.walden.Main"
         fork="no">
       <jvmarg line="&EnableAssertions;"/>
+      <jvmarg line="&SaffronProps;"/>
       <arg value="-Dsaffron.package.name=net.sf.saffron.runtime"/>
       <arg value="-Dsaffron.java.dir=${examples.dir}"/>
       <arg value="-Dsaffron.class.dir=${classes.dir}"/>
       <arg value="-Dsaffron.java.compiler.args=-classpath ${saffron.build.classpath.prop} -d ${classes.dir} -verbose"/>
     </java>
+    <delete file="${SaffronTrace.log}.lck"/>
   </target>
 
   <target name="applet.jar">

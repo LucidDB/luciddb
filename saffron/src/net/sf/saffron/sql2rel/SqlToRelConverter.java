@@ -504,7 +504,9 @@ public class SqlToRelConverter {
                             op, convertExpression(bb,operands[0]),
                             convertExpression(bb,operands[1]));
                 } else if ((call.operator instanceof SqlFunction)
-                           || (call.operator instanceof SqlRowOperator))
+                           || (call.operator instanceof SqlRowOperator)
+                           || (call.operator.equals(SqlOperatorTable.std().likeOperator))
+                           || (call.operator.equals(SqlOperatorTable.std().similarOperator)))
                 {
                     if (call.operator.equals(
                             SqlOperatorTable.std().characterLengthFunc)) {

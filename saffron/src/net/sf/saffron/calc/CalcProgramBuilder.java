@@ -62,6 +62,7 @@ public class CalcProgramBuilder
     protected RegisterSets m_registerSets = new RegisterSets();
     protected final HashMap m_literals = new HashMap();
     protected final HashMap m_labels = new HashMap();
+    private boolean m_outputComments = false;
 
     private static final Logger tracer = SaffronTrace.getCalcTracer();
 
@@ -111,7 +112,7 @@ public class CalcProgramBuilder
     public static final InstructionDef
             boolAnd = new BoolInstructionDef(andInstruction,3);
     public static final InstructionDef
-            integralNativeAnd = new IntergalNativeInstructionDef(andInstruction,3);
+            integralNativeAnd = new IntegralNativeInstructionDef(andInstruction,3);
     //~ DIV ----------------
     public static final InstructionDef
             nativeDiv = new NativeInstructionDef("DIV",3) {
@@ -175,7 +176,7 @@ public class CalcProgramBuilder
             nativeMinus = new NativeInstructionDef("SUB",3);
     //~ MOD  ----------------
     public static final InstructionDef
-            integralNativeMod = new IntergalNativeInstructionDef("MOD",3) {
+            integralNativeMod = new IntegralNativeInstructionDef("MOD",3) {
         void add(CalcProgramBuilder builder, Register[] regs) {
             //check if divide by zero if op2 is a constant
             builder.assertNotDivideByZero(regs[2]);
@@ -209,7 +210,7 @@ public class CalcProgramBuilder
             };
     //~ MUL ----------------
     public static final InstructionDef
-            integralNativeMul = new IntergalNativeInstructionDef("MUL",3);
+            integralNativeMul = new IntegralNativeInstructionDef("MUL",3);
     //~ NOT ----------------
     public static final InstructionDef
             boolNot = new BoolInstructionDef("NOT",2);
@@ -224,7 +225,7 @@ public class CalcProgramBuilder
     public static final InstructionDef
             boolOr = new BoolInstructionDef(orInstruction,3);
     public static final InstructionDef
-            integralNativeOr = new IntergalNativeInstructionDef(orInstruction,3);
+            integralNativeOr = new IntegralNativeInstructionDef(orInstruction,3);
     //~ PREFIX MINUS --------
     public static final InstructionDef
             nativeNeg = new NativeInstructionDef("NEG",2);
@@ -236,7 +237,7 @@ public class CalcProgramBuilder
             integralNativeShiftRight = new IntegralNativeShift("SHFR");
     //~ XOR ----------------
     public static final InstructionDef
-            integralNativeXor = new IntergalNativeInstructionDef("XOR",3);
+            integralNativeXor = new IntegralNativeInstructionDef("XOR",3);
 
 
     // -- Inner classes -------------------------------------------------------
@@ -337,6 +338,9 @@ public class CalcProgramBuilder
                 final ByteBuffer buf = charset.encode(s);
                 writer.print("0x");
                 writer.print(Util.toStringFromByteArray(buf.array(), 16));
+                if (m_outputComments) {
+                    writer.print(formatComment(s));
+                }
             }
             else if (m_value instanceof byte[])
             {
@@ -497,11 +501,15 @@ public class CalcProgramBuilder
     class Instruction {
         private String m_opCode;
         private Operand[] m_operands;
+        private String m_comment;
+        private Integer m_lineNumber;
 
 
         public Instruction(String opCode, Operand[] operands) {
             m_opCode = opCode;
             m_operands = operands;
+            m_comment = null;
+            m_lineNumber = null;
         }
 
         final void print(PrintWriter writer) {
@@ -509,6 +517,15 @@ public class CalcProgramBuilder
             if (null!=m_operands) {
                 writer.print(' ');
                 printOperands(writer, m_operands);
+            }
+
+            if (m_outputComments) {
+                assert(null!=m_lineNumber);
+                String comment = m_lineNumber+":";
+                if  (null!=m_comment) {
+                    comment += " "+m_comment;
+                }
+                writer.print(formatComment(comment));
             }
             writer.print(m_separator);
         }
@@ -520,6 +537,21 @@ public class CalcProgramBuilder
         final public Operand[] getOperands()
         {
             return m_operands;
+        }
+
+        public String getComment() {
+            if (null==m_comment) {
+                return "";
+            }
+            return m_comment;
+        }
+
+        public void setComment(String comment) {
+            m_comment = comment;
+        }
+
+        public void setLineNumber(int line) {
+            m_lineNumber = new Integer(line);
         }
     }
 
@@ -622,23 +654,32 @@ public class CalcProgramBuilder
          * and calls the {@link #add(CalcProgramBuilder,Register[])} method.
          */
         final void add(CalcProgramBuilder builder, List registers) {
-            assert registers.size() == regCount :
-                    "Wrong nbr of params for instruction "+name ;
             add(builder, (Register[])
                     registers.toArray(new Register[registers.size()]));
+        }
+
+        final void add(CalcProgramBuilder builder, Register reg0, Register reg1) {
+            add(builder, new Register[]{reg0,reg1});
+        }
+
+        final void add(CalcProgramBuilder builder, Register reg0,
+                Register reg1, Register reg2) {
+            add(builder, new Register[]{reg0,reg1,reg2});
         }
 
         /**
          * Adds this instruction to a program.
          */
         void add(CalcProgramBuilder builder, Register[] regs) {
+            assert regs.length == regCount :
+                    "Wrong nbr of params for instruction "+name ;
             builder.assertOperandsNotNull(regs);
             builder.addInstruction(name, regs);
         }
     };
 
-    static class IntergalNativeInstructionDef extends InstructionDef {
-        IntergalNativeInstructionDef(String name, int regCount) {
+    static class IntegralNativeInstructionDef extends InstructionDef {
+        IntegralNativeInstructionDef(String name, int regCount) {
             super(name,regCount);
         }
 
@@ -755,17 +796,36 @@ public class CalcProgramBuilder
             assert(this.regCount == regs.length) :
                     "Wrong nbr of params for instruction "+name +
                     " Expected="+this.regCount+" but was="+regs.length;
+            add(builder,regs,name);
+        }
+
+        protected void add(CalcProgramBuilder builder, Register[] regs,
+                String funName) {
             Register result = regs[0];
             Register[] registers = new Register[regs.length - 1];
             System.arraycopy(regs, 1, registers, 0, registers.length);
             builder.compilationAssert(result!=null,"Result can not be null");
             builder.assertOperandsNotNull(registers);
             builder.addInstruction("CALL",
-                    new FunctionCall(result, name, registers));
+                    new FunctionCall(result, funName, registers));
         }
     }
 
-    static class IntegralNativeShift extends IntergalNativeInstructionDef {
+    /**
+     * Defines an extended instruction with name depending on the number or
+     * operands.
+     */
+    static class ExtInstrSizeDef extends ExtInstrDef  {
+        ExtInstrSizeDef(String name) {
+            super(name, -1);
+        }
+
+        void add(CalcProgramBuilder builder, Register[] regs) {
+            add(builder,regs, name+regs.length);
+        }
+    }
+
+    static class IntegralNativeShift extends IntegralNativeInstructionDef {
         IntegralNativeShift(String name) {
             super(name, 3);
         }
@@ -811,6 +871,10 @@ public class CalcProgramBuilder
             throw SaffronResource.instance().newProgramCompilationError("Separator must be ';'[\\n] or '\\n'");
         }
         this.m_separator = separator;
+    }
+
+    public void setOutputComments(boolean outputComments) {
+        this.m_outputComments = outputComments;
     }
 
     protected void compilationAssert(boolean cond, String msg) {
@@ -867,9 +931,11 @@ public class CalcProgramBuilder
      * Replaces a label with a line number
      */
     private void bindReferences() {
-        for (int i = 0; i < m_instructions.size(); i++) {
+        Iterator it = m_instructions.iterator();
+        for (int i = 0; it.hasNext(); i++) {
             //Look for instructions that have Line as operands
-            Instruction instruction = (Instruction) m_instructions.get(i);
+            Instruction instruction = (Instruction) it.next();
+            instruction.setLineNumber(i);
             Operand[] operands = instruction.getOperands();
             for (int j = 0; (null!=operands) && (j < operands.length); j++) {
                 Operand operand = operands[j];
@@ -1015,8 +1081,9 @@ public class CalcProgramBuilder
      */
     private void validate()
     {
-        for(int i=0;i<m_instructions.size();i++) {
-            Instruction inst = (Instruction) m_instructions.get(i);
+        Iterator it = m_instructions.iterator();
+        for(int i=0;it.hasNext() ;i++) {
+            Instruction inst = (Instruction) it.next();
             String op = inst.getOpCode();
             //this try-catch clause will pick up any compiler excpetions messages and wrap it into a msg containg
             //what line went wrong
@@ -1263,12 +1330,47 @@ public class CalcProgramBuilder
     protected void addInstruction(String operator, Operand[] operands)
     {
         assertOperandsNotNull(operands);
-        m_instructions.add(new Instruction(operator, operands));
+        addInstruction(new Instruction(operator, operands));
     }
 
     protected void addInstruction(String operator)
     {
-        m_instructions.add(new Instruction(operator, null));
+        addInstruction(new Instruction(operator, null));
+    }
+
+    protected void addInstruction(Instruction inst) {
+        m_instructions.add(inst);
+    }
+
+    /**
+     * Adds an comment string to the last instruction.
+     * Some special character sequences are modified, see {@link #formatComment}
+     * @pre at least one instruction needs to have been added prior to calling
+     * this function.
+     * @param comment
+     */
+    protected void addComment(String comment) {
+        if (0==m_instructions.size()){
+            throw Util.needToImplement(
+                    "TODO need to handle case when  instruction list is empty");
+        }
+        Instruction inst = (Instruction) m_instructions.toArray()[m_instructions.size()-1];
+        inst.setComment((inst.getComment()+" "+comment).trim());
+    }
+
+    /**
+     * Formats a "logical" comment into a "physical" comment the calculator
+     * recognises. E.g.<br>
+     * <code>formatCommnet("yo wassup?")</code> outputs<br>
+     * <code>' &#47;* yo wassup? *&#47;'</code> NB the inital space.<br>
+     * If comment contains the character sequences '&#47;*' or '*&#47' they will
+     * be replace by \* and *\ respectively.
+     */
+    private String formatComment(String comment) {
+        return " /* "+
+                comment.replaceAll("/\\*","\\\\\\*").replaceAll("\\*/","\\*\\\\")+
+                " */";
+        /* all 6 \'s are needed */
     }
 
     // assert helper functions---
@@ -1468,7 +1570,7 @@ public class CalcProgramBuilder
         int line = m_instructions.size();
         m_labels.put(label, new java.lang.Integer(line));
     }
-    
+
     // Bool related instructions----------------------
 
     /** @deprecated */
@@ -1714,7 +1816,6 @@ public class CalcProgramBuilder
     {
         pointerBoolIsNotNull.add(this, new Register[]{result,op1});
     }
-
 
 }
 

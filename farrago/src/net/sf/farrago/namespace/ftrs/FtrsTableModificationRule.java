@@ -78,7 +78,7 @@ class FtrsTableModificationRule extends VolcanoRule
         }
         
         SaffronRel fennelInput =
-            convert(planner,inputRel,FennelPullRel.FENNEL_PULL_CONVENTION);
+            convert(inputRel,FennelPullRel.FENNEL_PULL_CONVENTION);
         if (fennelInput == null) {
             return;
         }

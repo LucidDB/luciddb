@@ -34,9 +34,10 @@ class FarragoSqlValidator extends SqlValidator
 {
     FarragoSqlValidator(FarragoPreparingStmt preparingStmt)
     {
-        super(preparingStmt.getSqlOperatorTable(),
-                preparingStmt,
-                preparingStmt.getFarragoTypeFactory());
+        super(
+            preparingStmt.getSqlOperatorTable(),
+            preparingStmt,
+            preparingStmt.getFarragoTypeFactory());
     }
 
     // override SqlValidator

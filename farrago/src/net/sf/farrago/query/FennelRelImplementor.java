@@ -21,6 +21,7 @@ package net.sf.farrago.query;
 import net.sf.farrago.fem.fennel.FemExecutionStreamDef;
 import net.sf.saffron.opt.RelImplementor;
 import net.sf.saffron.rel.SaffronRel;
+import net.sf.saffron.core.SaffronType;
 
 /**
  * Callback used to hold state while converting a tree of {@link FennelRel}
@@ -49,10 +50,13 @@ public interface FennelRelImplementor extends RelImplementor {
      * @param streamDef new stream definition
      *
      * @param rel SaffronRel which stream implements
+     *
+     * @param rowType row type for stream, or null to use rel's row type
      */
     public void registerRelStreamDef(
         FemExecutionStreamDef streamDef,
-        SaffronRel rel);
+        SaffronRel rel,
+        SaffronType rowType);
 }
 
 // End FennelRelImplementor.java

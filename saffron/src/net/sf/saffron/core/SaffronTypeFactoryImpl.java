@@ -185,20 +185,39 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
                         return createTypeWithNullability(fieldType,nullable);
                     }
                 });
-       } else if (type instanceof SqlType) {
+        } else if (type instanceof SqlType) {
             SqlType sqlType = (SqlType) type;
-            sqlType.setIsNullable(nullable);
-            return sqlType;
+            return sqlType.createWithNullability(nullable);
         } else if (type instanceof JavaType) {
             JavaType javaType = (JavaType) type;
-            javaType.setIsNullable(nullable);
-            return javaType;
+            if (javaType.isCharType()) {
+                return new JavaType(javaType.clazz, nullable,
+                        javaType.charset, javaType.collation);
+            } else {
+                return new JavaType(javaType.clazz, nullable);
+            }
         }
         else {
             // REVIEW: CrossType if it stays around; otherwise get rid of this
             // comment
             return type;
         }
+    }
+
+    public SaffronType createTypeWithCharsetAndCollation(SaffronType type,
+            Charset charset, SqlCollation collation) {
+        Util.pre(type.isCharType()==true,"Not a chartype");
+        Util.pre(charset!=null,"charset!=null");
+        Util.pre(collation!=null,"collation!=null");
+        if (type instanceof SqlType) {
+            SqlType sqlType = (SqlType) type;
+            return sqlType.createWithCharsetAndCollation(charset,collation);
+        } else if (type instanceof JavaType) {
+            JavaType javaType = (JavaType) type;
+            return new JavaType(javaType.clazz, javaType.isNullable(),
+                    charset, collation);
+        }
+        throw Util.needToImplement("need to implement "+type);
     }
 
     public static SaffronTypeFactory threadInstance()
@@ -406,7 +425,7 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
         }
 
         public boolean isSameType(SaffronType t) {
-            return false;
+            throw Util.needToImplement("need to implement");
         }
 
         public boolean isSameTypeFamily(SaffronType t) {
@@ -417,15 +436,7 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             throw Util.needToImplement("need to implement");
         }
 
-        public void setCharset(Charset charset) {
-            throw Util.needToImplement("need to implement");
-        }
-
         public SqlCollation getCollation() throws RuntimeException {
-            throw Util.needToImplement("need to implement");
-        }
-
-        public void setCollation(SqlCollation collation) throws RuntimeException {
             throw Util.needToImplement("need to implement");
         }
 
@@ -438,7 +449,7 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
         }
 
         public SqlTypeName getSqlTypeName() {
-            return null;
+            throw Util.needToImplement("need to implement");
         }
 
     }
@@ -692,15 +703,24 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
                 clazz.equals(boolean.class)||
                 clazz.equals(byte[].class)||
                 clazz.equals(String.class);
+        }
 
+        public JavaType(Class clazz, boolean nullable) {
+            this(clazz);
+            this.isNullable = nullable;
+        }
+
+        public JavaType(Class clazz, boolean nullable,
+                Charset charset, SqlCollation collation) {
+            this(clazz);
+            Util.pre(isCharType(),"Need to be a chartype");
+            this.isNullable = nullable;
+            this.charset = charset;
+            this.collation = collation;
         }
 
         public boolean isNullable() {
             return isNullable;
-        }
-
-        void setIsNullable(boolean isNullable) {
-            this.isNullable = isNullable;
         }
 
         public boolean isAssignableFrom(SaffronType t, boolean coerce) {
@@ -774,13 +794,6 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             return this.charset;
         }
 
-        public void setCharset(Charset charset) throws RuntimeException {
-            if (!isCharType()) {
-                throw Util.newInternal(computeDigest()+" is not defined to carry a charset");
-            }
-            this.charset=charset;
-        }
-
         public SqlCollation getCollation() throws RuntimeException {
             if (!isCharType()) {
                 throw Util.newInternal(computeDigest()+" is not defined to carry a collation");
@@ -788,19 +801,12 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             return this.collation;
         }
 
-        public void setCollation(SqlCollation collation) throws RuntimeException {
-            if (!isCharType()) {
-                throw Util.newInternal(computeDigest()+" is not defined to carry a collation");
-            }
-            this.collation=collation;
-        }
-
         public SqlTypeName getSqlTypeName() {
             return JavaToSqlTypeConversionRules.instance().lookup(this);
         }
 
         public boolean isCharType() {
-            return clazz.equals(String.class);
+            return clazz.equals(String.class) || clazz.equals(char.class);
         }
     }
 
@@ -860,17 +866,18 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
      *
      * <p>TODO: Make protected. (jhyde, 2004/5/26)
      */
-    public class SqlType implements SaffronType {
+    public class SqlType implements SaffronType, Cloneable {
         private final SqlTypeName typeName;
         private boolean isNullable=true;
         private final int precision;
         private final int scale;
         private final String digest;
+        private SqlCollation collation;
+        private Charset charset;
 
         public static final int SCALE_NOT_SPECIFIED = Integer.MIN_VALUE;
         public static final int PRECISION_NOT_SPECIFIED = -1;
-        private SqlCollation collation;
-        private Charset charset;
+
 
         /**
          * Constructs a type with no parameters.
@@ -898,6 +905,7 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             this.scale = SCALE_NOT_SPECIFIED;
             this.digest = typeName.name_ + "(" + precision + ")";
         }
+
         /**
          * Constructs a type with precision/length and scale.
          * @param typeName Type name
@@ -911,8 +919,38 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             this.digest = typeName.name_ + "(" + precision + ", " + scale + ")";
         }
 
-        protected void setIsNullable(boolean isNullable) {
-            this.isNullable = isNullable;
+        /**
+         * Constructs a type with nullablity
+         */
+        public SqlType createWithNullability(boolean nullable) {
+            SqlType ret = null;
+            try {
+                ret = (SqlType) this.clone();
+            }
+            catch (CloneNotSupportedException e) {
+                throw Util.newInternal(e);
+            }
+            ret.isNullable=nullable;
+            return ret;
+        }
+
+        /**
+         * Constructs a typ charset and collation
+         * @pre isCharType == true
+         */
+        public SqlType createWithCharsetAndCollation(Charset charset,
+                SqlCollation collation) {
+            Util.pre(this.isCharType()==true,"Not an chartype");
+            SqlType ret;
+            try {
+                ret = (SqlType) this.clone();
+            }
+            catch (CloneNotSupportedException e) {
+                throw Util.newInternal(e);
+            }
+            ret.charset = charset;
+            ret.collation = collation;
+            return ret;
         }
 
         public int getPrecision() {
@@ -1027,25 +1065,11 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             return this.charset;
         }
 
-        public void setCharset(Charset charset) throws RuntimeException {
-            if (!isCharType()) {
-                throw Util.newInternal(typeName.toString()+" is not defined to carry a charset");
-            }
-            this.charset=charset;
-        }
-
         public SqlCollation getCollation() throws RuntimeException {
             if (!isCharType()){
                 throw Util.newInternal(typeName.toString()+" is not defined to carry a collation");
             }
             return this.collation;
-        }
-
-        public void setCollation(SqlCollation collation) throws RuntimeException {
-            if (!isCharType()){
-                throw Util.newInternal(typeName.toString()+" is not defined to carry a collation");
-            }
-            this.collation=collation;
         }
 
         public boolean isCharType() {
@@ -1105,6 +1129,8 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             rules.put(byte.class, SqlTypeName.Tinyint);
             rules.put(Byte.class, SqlTypeName.Tinyint);
 
+            rules.put(Float.class, SqlTypeName.Real);
+            rules.put(float.class, SqlTypeName.Real);
             rules.put(Double.class, SqlTypeName.Double);
             rules.put(double.class, SqlTypeName.Double);
 
@@ -1138,6 +1164,8 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
         private static HashMap coerceRules = null;
 
         private AssignableFromRules(){
+            rules = new HashMap();
+
             HashSet rule;
 
             //Smallint is assignable from...
@@ -1254,11 +1282,9 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             rule.add(SqlTypeName.Varchar);
 
         }
-        // REVIEW: LES is thread safety an issue here?  Adding a synch, just
-        // for sanity ...
-        public static synchronized AssignableFromRules instance() {
+
+        public synchronized static AssignableFromRules instance() {
             if (null==instance){
-                 rules = new HashMap();
                 instance = new AssignableFromRules();
             }
             return instance;
@@ -1296,7 +1322,6 @@ public class SaffronTypeFactoryImpl implements SaffronTypeFactory
             return rule.contains(from);
         }
     }
-
 }
 
 

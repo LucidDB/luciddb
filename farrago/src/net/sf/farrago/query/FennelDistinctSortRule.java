@@ -77,7 +77,7 @@ class FennelDistinctSortRule extends VolcanoRule
         }
 
         SaffronRel fennelInput =
-            convert(planner,relInput,FennelPullRel.FENNEL_PULL_CONVENTION);
+            convert(relInput,FennelPullRel.FENNEL_PULL_CONVENTION);
         if (fennelInput == null) {
             return;
         }

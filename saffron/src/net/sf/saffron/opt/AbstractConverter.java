@@ -126,6 +126,7 @@ public class AbstractConverter extends ConverterRel
 
         public void onMatch(VolcanoRuleCall call)
         {
+            final VolcanoPlanner planner = call.planner;
             AbstractConverter converter = (AbstractConverter) call.rels[0];
             final RelSubset converterSubset = planner.getSubset(converter);
             if (!planner.getCost(converterSubset).isInfinite()) {
@@ -147,7 +148,7 @@ public class AbstractConverter extends ConverterRel
             // Since we couldn't convert directly, create abstract converters to
             // all sibling subsets. This will cause them to be important, and
             // hence rules will fire which may generate the conversion we need.
-            final RelSet set = getPlanner().getSet(child);
+            final RelSet set = planner.getSet(child);
             for (int i = 0; i < set.subsets.size(); i++) {
                 RelSubset subset = (RelSubset) set.subsets.get(i);
                 if (

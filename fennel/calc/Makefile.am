@@ -16,6 +16,7 @@ CalcGrammar.ypp \
 CalcLexer.lpp \
 CalcAssembler.cpp \
 CalcInit.cpp \
+SqlDate.cpp \
 SqlString.cpp \
 SqlRegExp.cpp \
 SqlStringAscii.cpp \

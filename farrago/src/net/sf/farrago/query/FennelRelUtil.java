@@ -206,11 +206,12 @@ public abstract class FennelRelUtil
 
         // TODO:  numeric, date, etc.
         try {
-            String charsetName = precisionType.getCharsetName();
-            if (charsetName == null) {
+
+            if (!precisionType.isCharType()) {
                 return precisionType.getPrecision();
             } else {
-                Charset charset = Charset.forName(charsetName);
+                assert(null!=precisionType.getCharsetName());
+                Charset charset = precisionType.getCharset();
                 return (int) charset.newEncoder().maxBytesPerChar()
                     * precisionType.getPrecision();
             }

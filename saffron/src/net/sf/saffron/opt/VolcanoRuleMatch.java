@@ -53,16 +53,17 @@ class VolcanoRuleMatch extends VolcanoRuleCall
      *
      * @pre rels[i] != null
      */
-    VolcanoRuleMatch(RuleOperand operand0,SaffronRel [] rels)
+    VolcanoRuleMatch(VolcanoPlanner planner, RuleOperand operand0,
+            SaffronRel [] rels)
     {
-        super(operand0,(SaffronRel []) rels.clone());
+        super(planner, operand0,(SaffronRel []) rels.clone());
         for (int i = 0; i < rels.length; i++) {
             assert(rels[i] != null);
         }
 
         // Try to deduce which subset the result will belong to. Assume --
         // for now -- that the set is the same as the root relexp.
-        targetSet = rule.planner.getSet(rels[0]);
+        targetSet = planner.getSet(rels[0]);
         assert targetSet != null;
         digest = computeDigest();
     }
@@ -76,7 +77,6 @@ class VolcanoRuleMatch extends VolcanoRuleCall
 
     double computeImportance()
     {
-        final VolcanoPlanner planner = rule.planner;
         assert rels[0] != null;
         RelSubset subset = planner.getSubset(rels[0]);
         double importance = 0;

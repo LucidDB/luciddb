@@ -25,12 +25,13 @@ import net.sf.farrago.runtime.FarragoRuntimeContext;
 import net.sf.farrago.runtime.FarragoRuntimeContextParams;
 import net.sf.farrago.util.FarragoAllocation;
 import net.sf.saffron.sql.SqlOperatorTable;
+import net.sf.saffron.oj.rex.OJRexImplementorTable;
 
 import java.sql.DatabaseMetaData;
 
 /**
  * FarragoSession represents an internal API to the Farrago database.  It is
- * designed to server as a basis for the implementation of standard API's such
+ * designed to serve as a basis for the implementation of standard API's such
  * as JDBC.
  *
  * @author John V. Sichi
@@ -39,9 +40,15 @@ import java.sql.DatabaseMetaData;
 public interface FarragoSession extends FarragoAllocation
 {
     /**
-     * @return Sql Function Table
+     * @return table of known SQL operators and functions to use for validation
      */
     public SqlOperatorTable getSqlOperatorTable();
+
+    /**
+     * @return table of implementations corresponding to result
+     * of {@link #getSqlOperatorTable}
+     */
+    public OJRexImplementorTable getOJRexImplementorTable();
 
     /**
      * @return JDBC URL used to establish this session

@@ -96,6 +96,8 @@ public class RexCall extends RexNode {
         case SqlKind.FunctionORDINAL: return RexKind.Other;
         case SqlKind.CaseORDINAL: return RexKind.Other;
         case SqlKind.OtherORDINAL: return RexKind.Other;
+        case SqlKind.LikeORDINAL: return RexKind.Like;
+        case SqlKind.SimilarORDINAL: return RexKind.Similar;
         default:
             throw kind.unexpected();
         }
@@ -137,6 +139,14 @@ public class RexCall extends RexNode {
 
     public RexKind getKind() {
         return kind;
+    }
+
+    public RexNode [] getOperands() {
+        return operands;
+    }
+
+    public SqlOperator getOperator() {
+        return op;
     }
 }
 

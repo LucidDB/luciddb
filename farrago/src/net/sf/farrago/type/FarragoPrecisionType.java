@@ -69,19 +69,26 @@ public class FarragoPrecisionType extends FarragoAtomicType
      * @param isNullable .
      * @param precision .
      * @param scale .
-     * @param charsetName .
+     * @param charsetName . Must be null if not of char type
+     * @param collation . Must be null if not of char type
      */
     FarragoPrecisionType(
         CwmSqlsimpleType simpleType,
         boolean isNullable,
         int precision,
         int scale,
-        String charsetName)
+        String charsetName,
+        SqlCollation collation)
     {
         super(simpleType,isNullable);
         this.precision = precision;
         this.scale = scale;
+        if (!isCharType()) {
+            assert(null==charsetName);
+            assert(null==collation);
+        }
         this.charsetName = charsetName;
+        this.collation = collation;
         computeDigest();
     }
 
@@ -95,6 +102,9 @@ public class FarragoPrecisionType extends FarragoAtomicType
      */
     public String getCharsetName()
     {
+        if (!isCharType()) {
+            throw Util.newInternal(digest+" is not defined to carry a charset");
+        }
         return charsetName;
     }
 
@@ -110,17 +120,6 @@ public class FarragoPrecisionType extends FarragoAtomicType
     }
 
     /** implement SaffronType */
-    public void setCharset(Charset charset) {
-        if (!isCharType()) {
-            throw Util.newInternal(digest+" is not defined to carry a charset");
-        }
-
-        if (null!=charset) { //review wael 4-April-2004: this if statement should go away eventually
-            charsetName=charset.name();
-        }
-    }
-
-    /** implement SaffronType */
     public SqlCollation getCollation() throws RuntimeException {
         if (!isCharType()) {
             throw Util.newInternal(digest+" is not defined to carry a collation");
@@ -128,20 +127,12 @@ public class FarragoPrecisionType extends FarragoAtomicType
         return this.collation;
     }
 
-    /** implement SaffronType */
-    public void setCollation(SqlCollation collation) throws RuntimeException {
-        if (!isCharType()) {
-            throw Util.newInternal(digest+" is not defined to carry a collation");
-        }
-        this.collation=collation;
-    }
-
     // implement FarragoAtomicType
     public boolean requiresValueAccess()
     {
         return false;
     }
-    
+
     // override FarragoAtomicType
     public int getPrecision()
     {
@@ -255,6 +246,11 @@ public class FarragoPrecisionType extends FarragoAtomicType
         if (charsetName != null) {
             sb.append('_');
             sb.append(charsetName.replace('-','_'));
+        }
+        if (collation != null) {
+            sb.append('_');
+            sb.append(collation.getCollationName().
+                    replace('-','_').replace('$','_'));
         }
         if (isNullable()) {
             sb.append("_NULLABLE");

@@ -120,14 +120,12 @@ class MedMdrJoinRule extends VolcanoRule
         }
         */
 
-        SaffronRel iterLeft =
-            convert(planner,leftRel,CallingConvention.ITERATOR);
+        SaffronRel iterLeft = convert(leftRel,CallingConvention.ITERATOR);
         if (iterLeft == null) {
             return;
         }
         
-        SaffronRel iterRight =
-            convert(planner,rightRel,CallingConvention.ITERATOR);
+        SaffronRel iterRight = convert(rightRel,CallingConvention.ITERATOR);
         if (iterRight == null) {
             return;
         }

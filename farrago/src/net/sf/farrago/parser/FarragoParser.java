@@ -81,8 +81,6 @@ public class FarragoParser implements FarragoSessionParser, FarragoParserWrapper
     private FarragoParserImpl parserImpl;
     private boolean doneParsing;
 
-    private FarragoReposTxnContext txnContext;
-
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -182,11 +180,9 @@ public class FarragoParser implements FarragoSessionParser, FarragoParserWrapper
     // implement FarragoSessionParser
     public Object parseSqlStatement(
         FarragoSessionDdlValidator ddlValidator,
-        FarragoReposTxnContext txnContext,
         String sql)
     {
         this.ddlValidator = ddlValidator;
-        this.txnContext = txnContext;
 
         parserImpl = new FarragoParserImpl(new StringReader(sql));
         parserImpl.farragoParser = this;
@@ -200,16 +196,6 @@ public class FarragoParser implements FarragoSessionParser, FarragoParserWrapper
         } finally {
             doneParsing = true;
         }
-    }
-
-    /**
-     * Start a repository write transaction.  This is called by parserImpl when
-     * it's sure the statement is DDL and before it starts making any catalog
-     * updates.
-     */
-    public void startReposWriteTxn()
-    {
-        txnContext.beginWriteTxn();
     }
 }
 

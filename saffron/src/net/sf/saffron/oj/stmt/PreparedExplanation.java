@@ -72,6 +72,11 @@ public class PreparedExplanation implements PreparedResult
         return false;
     }
 
+    public SaffronRel getRel()
+    {
+        return rel;
+    }
+
     public Object execute()
     {
         final String explanation = getCode();

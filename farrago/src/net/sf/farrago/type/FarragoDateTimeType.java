@@ -49,7 +49,7 @@ public class FarragoDateTimeType extends FarragoPrecisionType {
             boolean hasTZ,
             int precision,
             FarragoTypeFactory typeFactory) {
-        super(simpleType,isNullable,precision,0,null);
+        super(simpleType,isNullable,precision,0,null,null);
         assertSupportedType(simpleType, precision);
         hasTimeZone = hasTZ;
         computeDateTimeDigest();
