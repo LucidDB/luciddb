@@ -20,7 +20,13 @@ package net.sf.farrago.query;
 
 
 /**
- * Special exception to flag a reference to an unvalidated dependency.
+ * Special exception to flag a reference to an unvalidated dependency.  When
+ * such a dependency is detected (usually in the context of a compound CREATE
+ * SCHEMA statement), we throw this exception to terminate processing of the
+ * current object.  The DDL validator catches it and recovers, marking the
+ * object as needing another try, and moves on to other objects.  If the
+ * validator reaches a fixpoint, it means there is an object definition cycle
+ * (which is illegal).
  *
  * @author John V. Sichi
  * @version $Id$

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udf.sql#6 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udf.sql#7 $
 0: jdbc:farrago:> -- Test DDL for user-defined functions
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udftest;
@@ -356,7 +356,7 @@ Error: DDL validation error near line 1, column 8: Return type of routine "UDFTE
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test stored binding for builtins vs routines
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function upper(in x varchar(128))
+0: jdbc:farrago:> create function "UPPER"(in x varchar(128))
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > contains sql
 . . . . . . . . > return x||'_plus_one';
@@ -369,7 +369,7 @@ Error: DDL validation error near line 1, column 8: Return type of routine "UDFTE
 0: jdbc:farrago:> create function tweedledum()
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > contains sql
-. . . . . . . . > return information_schema.upper('cobol');
+. . . . . . . . > return information_schema."UPPER"('cobol');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values tweedledee();
 +-----------------+

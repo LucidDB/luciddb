@@ -1127,13 +1127,7 @@ SqlNode OrderItem() :
     e = Expression(EXPR_ACCEPT_SUBQUERY)
     (
         <ASC> { return e; }
-    |   <ASCENDING> { return e; }
     |   <DESC>
-        {
-            pos = getPos();
-            return opTab.descendingOperator.createCall(e, pos);
-        }
-    |   <DESCENDING>
         {
             pos = getPos();
             return opTab.descendingOperator.createCall(e, pos);
@@ -1477,7 +1471,7 @@ SqlCollation CollateClause() :
     String collation ="";
 }
 {
-    <COLLATE> <COLLATION_NAME> {
+    <COLLATE> <COLLATION_ID> {
         return new SqlCollation(
             getToken(0).image, SqlCollation.Coercibility.Explicit);
     }
@@ -1498,17 +1492,19 @@ SqlNode AtomicRowExpression() :
 |
     e = DynamicParam() { return e; }
 |
-        // NOTE jvs 18-Jan-2005:  use syntactic lookahead to discriminate
-        // compound identifiers from function calls in which the function
-        // name is a compound identifier
-    LOOKAHEAD(CompoundIdentifier() <LPAREN>)
-    e = NamedFunctionCall() { return e; }
-|
     e = BuiltinFunctionCall() { return e; }
 |
     e = JdbcFunctionCall() { return e; }
 |
     e = MultisetConstructor() { return e; }
+|
+        // NOTE jvs 18-Jan-2005:  use syntactic lookahead to discriminate
+        // compound identifiers from function calls in which the function
+        // name is a compound identifier
+    LOOKAHEAD(FunctionName() <LPAREN>)
+    e = NamedFunctionCall() { return e; }
+|
+    e = ContextVariable() { return e; }
 |
     e = CompoundIdentifier() { return e; }
 |
@@ -1698,7 +1694,6 @@ SqlNode StringLiteral(SqlParserPos pos, boolean strict) :
 
 |
     {
-        SqlCollation collation = null;
         String charSet = null;
     }
     (    <PREFIXED_STRING_LITERAL> { charSet = SqlParserUtil.getCharacterSet(token.image); }
@@ -1717,12 +1712,6 @@ SqlNode StringLiteral(SqlParserPos pos, boolean strict) :
             nfrags++;
         }
     )*
-    [ collation = CollateClause()
-        {
-            // set the collation of the head fragment: validator will propagate it
-            ((SqlCharStringLiteral) frags.get(0)).setCollation(collation);
-        }
-    ]
         {
             assert (nfrags > 0);
             if (nfrags == 1)
@@ -1900,11 +1889,18 @@ String Identifier() :
     String kw;
 }
 {
-    (<A> | <IDENTIFIER>) {return getToken(0).image.toUpperCase();}
-|
-    <QUOTED_IDENTIFIER> { return SqlParserUtil.strip(getToken(0).image, "\""); }
-|
-    kw = NonReservedKeyWord() {return kw;}
+    <IDENTIFIER>
+        {
+            return getToken(0).image.toUpperCase();
+        }
+    | <QUOTED_IDENTIFIER>
+        {
+            return SqlParserUtil.strip(getToken(0).image, "\"");
+        }
+    | kw = NonReservedKeyWord()
+        {
+            return kw;
+        }
 }
 
 /**
@@ -1913,14 +1909,13 @@ String Identifier() :
 SqlIdentifier SimpleIdentifier() :
 {
     String p;
-    SqlCollation collation=null;
     SqlParserPos pos;
 }
 {
     p = Identifier(){pos = getPos();}
-        [collation = CollateClause()]
-
-    {return new SqlIdentifier(p,collation, pos);}
+    {
+        return new SqlIdentifier(p,pos);
+    }
 }
 
 /**
@@ -1944,14 +1939,12 @@ SqlIdentifier CompoundIdentifier() :
 {
     List list = new ArrayList();
     String p;
-    SqlCollation collation=null;
     SqlParserPos pos;
 }
 {
     (p = Identifier() {pos = getPos();list.add(p);})
     (<DOT> p = Identifier() {list.add(p);})*
-    [collation = CollateClause()]
-    {return new SqlIdentifier(SqlParserUtil.toStringArray(list),collation, pos);}
+    {return new SqlIdentifier(SqlParserUtil.toStringArray(list), pos);}
 }
 
 //TODO: real parse errors.
@@ -2005,9 +1998,7 @@ SqlDataTypeSpec DataType() :
 }
 
 // Some SQL type names need special handling due to the fact that they have
-// spaces in them but are not quoted.  Note that
-// whenever a typename is also a keyword (like CHARACTER), it has to be added
-// here.
+// spaces in them but are not quoted.
 SqlIdentifier TypeName() :
 {
     SqlIdentifier typeName = null;
@@ -2022,19 +2013,24 @@ SqlIdentifier TypeName() :
     |   <TIME> { typeName = new SqlIdentifier(SqlTypeName.Time.name,pos); }
     |   <TIMESTAMP> { typeName = new SqlIdentifier(SqlTypeName.Timestamp.name,pos); }
     |   <DECIMAL> { typeName = new SqlIdentifier(SqlTypeName.Decimal.name,pos); }
+    |   <DEC> { typeName = new SqlIdentifier(SqlTypeName.Decimal.name,pos); }
+    |   <NUMERIC> { typeName = new SqlIdentifier(SqlTypeName.Decimal.name,pos); }
     |   <BOOLEAN> { typeName = new SqlIdentifier(SqlTypeName.Boolean.name,pos); }
     |   <INTEGER> { typeName = new SqlIdentifier(SqlTypeName.Integer.name,pos); }
-    |   <BINARY> { typeName = new SqlIdentifier(SqlTypeName.Binary.name,pos); }
+    |   <INT> { typeName = new SqlIdentifier(SqlTypeName.Integer.name,pos); }
+    |   ( <BINARY> { typeName = new SqlIdentifier(SqlTypeName.Binary.name,pos); })
+    [ <VARYING> { typeName = new SqlIdentifier(SqlTypeName.Varbinary.name, pos); } ]
     |   <VARBINARY> { typeName = new SqlIdentifier(SqlTypeName.Varbinary.name,pos); }
     |   <TINYINT> { typeName = new SqlIdentifier(SqlTypeName.Tinyint.name,pos); }
     |   <SMALLINT> { typeName = new SqlIdentifier(SqlTypeName.Smallint.name,pos); }
     |   <BIGINT> { typeName = new SqlIdentifier(SqlTypeName.Bigint.name,pos); }
-    |   <REAL> [ <PRECISION> ] { typeName = new SqlIdentifier(SqlTypeName.Real.name,pos); }
+    |   <REAL> { typeName = new SqlIdentifier(SqlTypeName.Real.name,pos); }
     |   <DOUBLE> [ <PRECISION> ] { typeName = new SqlIdentifier(SqlTypeName.Double.name,pos); }
+    |   <FLOAT> { typeName = new SqlIdentifier(SqlTypeName.Float.name,pos); }
     |   <BIT> { typeName = new SqlIdentifier(SqlTypeName.Bit.name,pos); }
     |   <MULTISET> { typeName = new SqlIdentifier(SqlTypeName.Multiset.name,pos); }
 
-    |   typeName = SimpleIdentifier()
+    |   typeName = CompoundIdentifier()
 
     )
     {
@@ -2059,7 +2055,7 @@ SqlNode BuiltinFunctionCall() :
 {
     //~ FUNCTIONS WITH SPECIAL SYNTAX ---------------------------------------
 
-    (   ("CAST" | "\"CAST\"")
+    (   <CAST>
 
     <LPAREN> e = Expression(EXPR_ACCEPT_SUBQUERY) { args = startList(e); }
                <AS>
@@ -2074,7 +2070,7 @@ SqlNode BuiltinFunctionCall() :
 
     )
 |
-    (   ("EXTRACT" | "\"EXTRACT\"")
+    (   <EXTRACT>
     { SqlIntervalQualifier.TimeUnit unit; }
     <LPAREN>
         (
@@ -2095,7 +2091,7 @@ SqlNode BuiltinFunctionCall() :
     }
     )
 |
-    (   ("POSITION" | "\"POSITION\"")
+    (   <POSITION>
     {
         pos = getPos();
     }
@@ -2107,7 +2103,7 @@ SqlNode BuiltinFunctionCall() :
                    }
     )
 |
-    (   ("CONVERT" | "\"CONVERT\"")
+    (   <CONVERT>
     {
         pos = getPos();
     }
@@ -2122,7 +2118,7 @@ SqlNode BuiltinFunctionCall() :
                    }
     )
 |
-    (  ("TRANSLATE" | "\"TRANSLATE\"")
+    (  <TRANSLATE>
     {
         pos = getPos();
     }
@@ -2137,7 +2133,7 @@ SqlNode BuiltinFunctionCall() :
                    }
     )
 |
-    (  ("OVERLAY" | "\"OVERLAY\"")
+    (  <OVERLAY>
     {
         pos = getPos();
     }
@@ -2156,7 +2152,7 @@ SqlNode BuiltinFunctionCall() :
                    }
     )
 |
-    (   ("SUBSTRING" | "\"SUBSTRING\"")
+    (   <SUBSTRING>
     {
         pos = getPos();
     }
@@ -2177,7 +2173,7 @@ SqlNode BuiltinFunctionCall() :
         SqlLiteral flag = null;
         SqlNode trimChars = null;
     }
-    (  ("TRIM" | "\"TRIM\"")
+    (  <TRIM>
     {
         pos = getPos();
     }
@@ -2239,7 +2235,7 @@ SqlNode NamedFunctionCall() :
 }
 {
     (
-        qualifiedName = CompoundIdentifier()
+        qualifiedName = FunctionName()
         {
             pos = getPos();
         }
@@ -2291,6 +2287,98 @@ SqlNode NamedFunctionCall() :
 
         }
     )
+}
+
+/**
+ * Parses the name of a function (either a compound identifier or
+ * a reserved word which can be used as a function name).
+ */
+SqlIdentifier FunctionName() :
+{
+    SqlIdentifier qualifiedName;
+}
+{
+    (qualifiedName = CompoundIdentifier()
+        | qualifiedName = ReservedFunctionName())
+        {
+            return qualifiedName;
+        }
+}
+
+/**
+ * Parses a reserved word which is used as the name of a function.
+ */
+SqlIdentifier ReservedFunctionName() :
+{
+    SqlIdentifier name;
+}
+{
+    (
+        <ABS>
+        | <AVG>
+        | <CARDINALITY>
+        | <CEIL>
+        | <CEILING>
+        | <CHAR_LENGTH>
+        | <CHARACTER_LENGTH>
+        | <COALESCE>
+        | <COLLECT>
+        | <COUNT>
+        | <CURRENT_DATE>
+        | <CURRENT_TIME>
+        | <CURRENT_TIMESTAMP>
+        | <ELEMENT>
+        | <EXP>
+        | <FLOOR>
+        | <FUSION>
+        | <LN>
+        | <LOCALTIME>
+        | <LOCALTIMESTAMP>
+        | <LOWER>
+        | <MAX>
+        | <MIN>
+        | <MOD>
+        | <NULLIF>
+        | <OCTET_LENGTH>
+        | <POWER>
+        | <SQRT>
+        | <SUM>
+        | <UPPER>)
+        {
+            name = new SqlIdentifier(
+                getToken(0).image.toUpperCase(), getPos());
+        }
+    {
+        return name;
+    }
+}
+
+SqlIdentifier ContextVariable() :
+{
+    SqlIdentifier name;
+}
+{
+    (
+        <CURRENT_DATE>
+        | <CURRENT_DEFAULT_TRANSFORM_GROUP>
+        | <CURRENT_PATH>
+        | <CURRENT_ROLE>
+        | <CURRENT_TIME>
+        | <CURRENT_TIMESTAMP>
+        | <CURRENT_USER>
+        | <LOCALTIME>
+        | <LOCALTIMESTAMP>
+        | <SESSION_USER>
+        | <SYSTEM_USER>
+        | <USER>
+    )
+        {
+            name = new SqlIdentifier(
+                getToken(0).image.toUpperCase(), getPos());
+        }
+    {
+        return name;
+    }
 }
 
 /**
@@ -2463,122 +2551,509 @@ SqlPostfixOperator PostfixRowOperator() :
 TOKEN :
 {
   < A: "A" >
+| < ABS: "ABS" >
+| < ABSOLUTE: "ABSOLUTE" >
+| < ACTION: "ACTION" >
+| < ADA: "ADA" >
+| < ADD: "ADD" >
+| < ADMIN: "ADMIN" >
+| < AFTER: "AFTER" >
 | < ALL: "ALL" >
+| < ALLOCATE: "ALLOCATE" >
+| < ALWAYS: "ALWAYS" >
+| < ALTER: "ALTER" >
 | < AND: "AND" >
+| < ANY: "ANY" >
+| < ARE: "ARE" >
+| < ARRAY: "ARRAY" >
 | < AS: "AS" >
 | < ASC: "ASC" >
-| < ASCENDING: "ASCENDING" >
+| < ASENSITIVE: "ASENSITIVE" >
+| < ASSERTION: "ASSERTION" >
+| < ASSIGNMENT: "ASSIGNMENT" >
 | < ASYMMETRIC: "ASYMMETRIC" >
+| < AT: "AT" >
+| < ATOMIC: "ATOMIC" >
+| < ATTRIBUTE: "ATTRIBUTE" >
+| < ATTRIBUTES: "ATTRIBUTES" >
+| < AUTHORIZATION: "AUTHORIZATION" >
+| < AVG: "AVG" >
+| < BEFORE: "BEFORE" >
+| < BEGIN: "BEGIN" >
+| < BERNOULLI: "BERNOULLI" >
 | < BETWEEN: "BETWEEN" >
 | < BIGINT: "BIGINT" >
 | < BINARY: "BINARY" >
 | < BIT: "BIT" >
+| < BLOB: "BLOB" >
 | < BOOLEAN: "BOOLEAN" >
 | < BOTH: "BOTH" >
+| < BREADTH: "BREADTH" >
 | < BY: "BY" >
+| < C: "C" >
 | < CALL: "CALL" >
+| < CALLED: "CALLED" >
+| < CARDINALITY: "CARDINALITY" >
+| < CASCADE: "CASCADE" >
+| < CASCADED: "CASCADED" >
 | < CASE: "CASE" >
+| < CAST: "CAST" >
+| < CATALOG: "CATALOG" >
+| < CATALOG_NAME: "CATALOG_NAME" >
+| < CEIL: "CEIL" >
+| < CEILING: "CEILING" >
+| < CHAIN: "CHAIN" >
 | < CHAR: "CHAR" >
+| < CHAR_LENGTH: "CHAR_LENGTH" >
 | < CHARACTER: "CHARACTER" >
+| < CHARACTER_LENGTH: "CHARACTER_LENGTH" >
+| < CHARACTER_SET_CATALOG: "CHARACTER_SET_CATALOG" >
+| < CHARACTER_SET_NAME: "CHARACTER_SET_NAME" >
+| < CHARACTER_SET_SCHEMA: "CHARACTER_SET_SCHEMA" >
+| < CHARACTERISTICS: "CHARACTERISTICTS" >
+| < CHARACTERS: "CHARACTERS" >
+| < CHECK: "CHECK" >
+| < CLASS_ORIGIN: "CLASS_ORIGIN" >
+| < CLOB: "CLOB" >
+| < CLOSE: "CLOSE" >
+| < COALESCE: "COLAESCE" >
+| < COBOL: "COBOL" >
 | < COLLATE: "COLLATE" >
+| < COLLATION: "COLLATION" >
+| < COLLATION_CATALOG: "COLLATION_CATALOG" >
+| < COLLATION_NAME: "COLLATION_NAME" >
+| < COLLATION_SCHEMA: "COLLATION_SCHEMA" >
 | < COLLECT: "COLLECT" >
+| < COLUMN: "COLUMN" >
+| < COLUMN_NAME: "COLUMN_NAME" >
+| < COMMAND_FUNCTION: "COMMAND_FUNCTION" >
+| < COMMAND_FUNCTION_CODE: "COMMAND_FUNCTION_CODE" >
+| < COMMIT: "COMMIT" >
+| < COMMITTED: "COMMITTED" >
+| < CONDITION: "CONDITION" >
+| < CONDITION_NUMBER: "CONDITION_NUMBER" >
+| < CONNECT: "CONNECT" >
+| < CONNECTION: "CONNECTION" >
+| < CONNECTION_NAME: "CONNECTION_NAME" >
+| < CONSTRAINT: "CONSTRAINT" >
+| < CONSTRAINT_CATALOG: "CONSTRAINT_CATALOG" >
+| < CONSTRAINT_NAME: "CONSTRAINT_NAME" >
+| < CONSTRAINT_SCHEMA: "CONSTRAINT_SCHEMA" >
+| < CONSTRAINTS: "CONSTRAINTS" >
+| < CONSTRUCTOR: "CONSTRUCTOR" >
+| < CONTAINS: "CONTAINS" >
+| < CONVERT: "CONVERT" >
+| < CONTINUE: "CONTINUE" >
+| < CORR: "CORR" >
+| < CORRESPONDING: "CORRESPONDING" >
+| < COUNT: "COUNT" >
+| < COVAR_POP: "COVAR_POP" >
+| < COVAR_SAMP: "COVAR_SAMP" >
+| < CREATE: "CREATE" >
 | < CROSS: "CROSS" >
+| < CUBE: "CUBE" >
+| < CUME_DIST: "CUME_DIST" >
 | < CURRENT: "CURRENT" >
+| < CURRENT_DATE: "CURRENT_DATE" >
+| < CURRENT_DEFAULT_TRANSFORM_GROUP: "CURRENT_DEFAULT_TRANSFORM_GROUP" >
+| < CURRENT_PATH: "CURRENT_PATH" >
+| < CURRENT_ROLE: "CURRENT_ROLE" >
+| < CURRENT_TIME: "CURRENT_TIME" >
+| < CURRENT_TIMESTAMP: "CURRENT_TIMESTAMP" >
+| < CURRENT_TRANSFORM_GROUP_FOR_TYPE: "CURRENT_TRANSFORM_GROUP_FOR_TYPE" >
+| < CURRENT_USER: "CURRENT_USER" >
+| < CURSOR: "CURSOR" >
+| < CURSOR_NAME: "CURSOR_NAME" >
+| < CYCLE: "CYCLE" >
+| < DATA: "DATA" >
 | < DATE: "DATE" >
+| < DATETIME_INTERVAL_CODE: "DATETIME_INTERVAL_CODE" >
+| < DATETIME_INTERVAL_PRECISION: "DATETIME_INTERVAL_PRECISION" >
 | < DAY: "DAY" >
+| < DEALLOCATE: "DEALLOCATE" >
+| < DEC: "DEC" >
 | < DECIMAL: "DECIMAL" >
+| < DECLARE: "DECLARE" >
+| < DEFAULT_KW: "DEFAULT" >
+| < DEFAULTS: "DEFAULTS" >
+| < DEFERRABLE: "DEFERRABLE" >
+| < DEFERRED: "DEFERRED" >
+| < DEFINED: "DEFINED" >
+| < DEFINER: "DEFINER" >
+| < DEGREE: "DEGREE" >
 | < DELETE: "DELETE" >
+| < DENSE_RANK: "DENSE_RANK" >
+| < DEPTH: "DEPTH" >
+| < DEREF: "DEREF" >
+| < DERIVED: "DERIVED" >
+| < DESCRIBE: "DESCRIBE" >
 | < DESC: "DESC" >
-| < DESCENDING: "DESCENDING" >
+| < DESCRIPTOR: "DESCRIPTOR" >
+| < DETERMINISTIC: "DETERMINISTIC" >
+| < DIAGNOSTICS: "DIAGNOSTICS" >
+| < DISCONNECT: "DISCONNECT" >
+| < DISPATCH: "DISPATCH" >
 | < DISTINCT: "DISTINCT" >
+| < DOMAIN: "DOMAIN" >
 | < DOUBLE: "DOUBLE" >
+| < DROP: "DROP" >
+| < DYNAMIC: "DYNAMIC" >
+| < DYNAMIC_FUNCTION: "DYNAMIC_FUNCTION" >
+| < DYNAMIC_FUNCTION_CODE: "DYNAMIC_FUNCTION_CODE" >
+| < EACH: "EACH" >
+| < ELEMENT: "ELEMENT" >
 | < ELSE: "ELSE" >
 | < END: "END" >
+| < END_EXEC: "END-EXEC" >
+| < EQUALS: "EQUALS" >
 | < ESCAPE: "ESCAPE" >
+| < EVERY: "EVERY" >
 | < EXCEPT: "EXCEPT" >
+| < EXCEPTION: "EXCEPTION" >
+| < EXCLUDE: "EXCLUDE" >
+| < EXCLUDING: "EXCLUDING" >
+| < EXEC: "EXEC" >
+| < EXECUTE: "EXECUTE" >
 | < EXISTS: "EXISTS" >
+| < EXP: "EXP" >
 | < EXPLAIN: "EXPLAIN" >
+| < EXTERNAL: "EXTERNAL" >
+| < EXTRACT: "EXTRACT" >
 | < FALSE: "FALSE" >
+| < FETCH: "FETCH" >
+| < FILTER: "FILTER" >
+| < FINAL: "FINAL" >
 | < FIRST: "FIRST" >
+| < FLOAT: "FLOAT" >
+| < FLOOR: "FLOOR" >
 | < FOLLOWING: "FOLLOWING" >
 | < FOR: "FOR" >
+| < FOREIGN: "FOREIGN" >
+| < FORTRAN: "FORTRAN" >
+| < FOUND: "FOUND" >
+| < FREE: "FREE" >
 | < FROM: "FROM" >
 | < FULL: "FULL" >
+| < FUNCTION: "FUNCTION" >
+| < FUSION: "FUSION" >
+| < G: "G" >
+| < GENERAL: "GENERAL" >
+| < GENERATED: "GENERATED" >
+| < GET: "GET" >
+| < GLOBAL: "GLOBAL" >
+| < GO: "GO" >
+| < GOTO: "GOTO" >
+| < GRANT: "GRANT" >
+| < GRANTED: "GRANTED" >
 | < GROUP: "GROUP" >
+| < GROUPING: "GROUPING" >
 | < HAVING: "HAVING" >
+| < HIERARCHY: "HIERARCHY" >
+| < HOLD: "HOLD" >
 | < HOUR: "HOUR" >
+| < IDENTITY: "IDENTITY" >
+| < IMMEDIATE: "IMMEDIATE" >
 | < IMPLEMENTATION: "IMPLEMENTATION" >
 | < IN: "IN" >
+| < INDICATOR: "INDICATOR" >
+| < INCLUDING: "INCLUDING" >
+| < INCREMENT: "INCREMENT" >
+| < INITIALLY: "INITIALLY" >
 | < INNER: "INNER" >
+| < INOUT: "INOUT" >
+| < INPUT: "INPUT" >
+| < INSENSITIVE: "INSENSITIVE" >
 | < INSERT: "INSERT" >
+| < INSTANCE: "INSTANCE" >
+| < INSTANTIABLE: "INSTANTIABLE" >
+| < INT: "INT" >
 | < INTEGER: "INTEGER" >
 | < INTERSECT: "INTERSECT" >
+| < INTERSECTION: "INTERSECTION" >
 | < INTERVAL: "INTERVAL" >
 | < INTO: "INTO" >
+| < INVOKER: "INVOKER" >
 | < IS: "IS" >
+| < ISOLATION: "ISOLATION" >
+| < JAVA: "JAVA" >
 | < JOIN: "JOIN" >
+| < K: "K" >
+| < KEY: "KEY" >
+| < KEY_MEMBER: "KEY_MEMBER" >
+| < KEY_TYPE: "KEY_TYPE" >
+| < LANGUAGE: "LANGUAGE" >
+| < LARGE: "LARGE" >
+| < LATERAL: "LATERAL" >
 | < LEADING: "LEADING" >
 | < LEFT: "LEFT" >
 | < LAST: "LAST" >
+| < LENGTH: "LENGTH" >
+| < LEVEL: "LEVEL" >
+| < LIBRARY: "LIBRARY" >
 | < LIKE: "LIKE" >
+| < LN: "LN" >
+| < LOCAL: "LOCAL" >
+| < LOCALTIME: "LOCALTIME" >
+| < LOCALTIMESTAMP: "LOCALTIMESTAMP" >
+| < LOCATOR: "LOCATOR" >
+| < LOWER: "LOWER" >
+| < M: "M" >
+| < MAP: "MAP" >
+| < MATCH: "MATCH" >
+| < MATCHED: "MATCHED" >
+| < MAX: "MAX" >
+| < MAXVALUE: "MAXVALUE" >
 | < MEMBER: "MEMBER" >
+| < MERGE: "MERGE" >
+| < MESSAGE_LENGTH: "MESSAGE_LENGTH" >
+| < MESSAGE_OCTET_LENGTH: "MESSAGE_OCTET_LENGTH" >
+| < MESSAGE_TEXT: "MESSAGE_TEXT" >
+| < METHOD: "METHOD" >
+| < MIN: "MIN" >
 | < MINUTE: "MINUTE" >
+| < MINVALUE: "MINVALUE" >
+| < MOD: "MOD" >
+| < MODIFIES: "MODIFIES" >
+| < MODULE: "MODULE" >
 | < MONTH: "MONTH" >
+| < MORE_KW: "MORE" >
 | < MULTISET: "MULTISET" >
+| < MUMPS: "MUMPS" >
+| < NAME: "NAME" >
+| < NAMES: "NAMES" >
+| < NATIONAL: "NATIONAL" >
 | < NATURAL: "NATURAL" >
+| < NCHAR: "NCHAR" >
+| < NCLOB: "NCLOB" >
+| < NESTING: "NESTING" >
+| < NEW: "NEW" >
+| < NEXT: "NEXT" >
+| < NO: "NO" >
+| < NONE: "NONE" >
+| < NORMALIZE: "NORMALIZE" >
+| < NORMALIZED: "NORMALIZED" >
 | < NOT: "NOT" >
 | < NULL: "NULL" >
+| < NULLABLE: "NULLABLE" >
+| < NULLIF: "NULLIF" >
 | < NULLS: "NULLS" >
+| < NUMBER: "NUMBER" >
+| < NUMERIC: "NUMERIC" >
+| < OBJECT: "OBJECT" >
+| < OCTET_LENGTH: "OCTET_LENGTH" >
+| < OCTETS: "OCTETS" >
 | < OF: "OF" >
+| < OLD: "OLD" >
 | < ON: "ON" >
+| < ONLY: "ONLY" >
+| < OPEN: "OPEN" >
+| < OPTION: "OPTION" >
+| < OPTIONS: "OPTIONS" >
 | < OR: "OR" >
 | < ORDER: "ORDER" >
+| < ORDERING: "ORDERING" >
+| < ORDINALITY: "ORDINALITY" >
+| < OTHERS: "OTHERS" >
+| < OUT: "OUT" >
 | < OUTER: "OUTER" >
+| < OUTPUT: "OUTPUT" >
 | < OVER: "OVER" >
 | < OVERLAPS: "OVERLAPS" >
+| < OVERLAY: "OVERLAY" >
+| < OVERRIDING: "OVERRIDING" >
+| < PAD: "PAD" >
+| < PARAMETER: "PARAMETER" >
+| < PARAMETER_MODE: "PARAMETER_MODE" >
+| < PARAMETER_NAME: "PARAMETER_NAME" >
+| < PARAMETER_ORDINAL_POSITION: "PARAMETER_ORDINAL_POSITION" >
+| < PARAMETER_SPECIFIC_CATALOG: "PARAMETER_SPECIFIC_CATALOG" >
+| < PARAMETER_SPECIFIC_NAME: "PARAMETER_SPECIFIC_NAME" >
+| < PARAMETER_SPECIFIC_SCHEMA: "PARAMETER_SPECIFIC_SCHEMA" >
+| < PARTIAL: "PARTIAL" >
 | < PARTITION: "PARTITION" >
+| < PASCAL: "PASCAL" >
+| < PATH: "PATH" >
+| < PERCENT_RANK: "PERCENT_RANK" >
+| < PERCENTILE_CONT: "PERCENTILE_CONT" >
+| < PERCENTILE_DISC: "PERCENTILE_DISC" >
 | < PLACING: "PLACING" >
 | < PLAN: "PLAN" >
+| < PLI: "PLI" >
+| < POSITION: "POSITION" >
+| < POWER: "POWER" >
 | < PRECEDING: "PRECEDING" >
 | < PRECISION: "PRECISION" >
+| < PREPARE: "PREPARE" >
+| < PRESERVE: "PRESERVE" >
+| < PRIMARY: "PRIMARY" >
+| < PRIOR: "PRIOR" >
+| < PRIVILEGES: "PRIVILEGES" >
+| < PROCEDURE: "PROCEDURE" >
+| < PUBLIC: "PUBLIC" >
 | < RANGE: "RANGE" >
+| < RANK: "RANK" >
+| < READ: "READ" >
+| < READS: "READS" >
 | < REAL: "REAL" >
+| < RECURSIVE: "RECURSIVE" >
+| < REF: "REF" >
+| < REFERENCES: "REFERENCES" >
+| < REFERENCING: "REFERENCING" >
+| < REGR_AVGX: "REGR_AVGX" >
+| < REGR_AVGY: "REGR_AVGY" >
+| < REGR_COUNT: "REGR_COUNT" >
+| < REGR_INTERCEPT: "REGR_INTERCEPT" >
+| < REGR_R2: "REGR_R2" >
+| < REGR_SLOPE: "REGR_SLOPE" >
+| < REGR_SXX: "REGR_SXX" >
+| < REGR_SXY: "REGR_SXY" >
+| < RELATIVE: "RELATIVE" >
+| < RELEASE: "RELEASE" >
+| < REPEATABLE: "REPEATABLE" >
+| < RESTART: "RESTART" >
+| < RESTRICT: "RESTRICT" >
+| < RESULT: "RESULT" >
+| < RETURN: "RETURN" >
+| < RETURNED_CARDINALITY: "RETURNED_CARDINALITY" >
+| < RETURNED_LENGTH: "RETURNED_LENGTH" >
+| < RETURNED_OCTET_LENGTH: "RETURNED_OCTET_LENGTH" >
+| < RETURNED_SQLSTATE: "RETURNED_SQLSTATE" >
+| < RETURNS: "RETURNS" >
+| < REVOKE: "REVOKE" >
 | < RIGHT: "RIGHT" >
+| < ROLE: "ROLE" >
+| < ROLLBACK: "ROLLBACK" >
+| < ROLLUP: "ROLLUP" >
+| < ROUTINE: "ROUTINE" >
+| < ROUTINE_CATALOG: "ROUTINE_CATALOG" >
+| < ROUTINE_NAME: "ROUTINE_NAME" >
+| < ROUTINE_SCHEMA: "ROUTINE_SCHEMA" >
 | < ROW: "ROW" >
+| < ROW_COUNT: "ROW_COUNT" >
+| < ROW_NUMBER: "ROW_NUMBER" >
 | < ROWS: "ROWS" >
+| < SAVEPOINT: "SAVEPOINT" >
+| < SCALE: "SCALE" >
+| < SCHEMA: "SCHEMA" >
+| < SCHEMA_NAME: "SCHEMA_NAME" >
+| < SCOPE: "SCOPE" >
+| < SCOPE_CATALOGS: "SCOPE_CATALOGS" >
+| < SCOPE_NAME: "SCOPE_NAME" >
+| < SCOPE_SCHEMA: "SCOPE_SCHEMA" >
+| < SCROLL: "SCROLL" >
+| < SEARCH: "SEARCH" >
 | < SECOND: "SECOND" >
+| < SECTION: "SECTION" >
+| < SECURITY: "SECURITY" >
 | < SELECT: "SELECT" >
+| < SELF: "SELF" >
+| < SENSITIVE: "SENSITIVE" >
+| < SEQUENCE: "SEQUENCE" >
+| < SERIALIZABLE: "SERIALIZABLE" >
+| < SERVER: "SERVER" >
+| < SERVER_NAME: "SERVER_NAME" >
+| < SESSION: "SESSION" >
+| < SESSION_USER: "SESSION_USER" >
 | < SET: "SET" >
+| < SETS: "SETS" >
 | < SIMILAR: "SIMILAR" >
+| < SIMPLE: "SIMPLE" >
+| < SIZE: "SIZE" >
 | < SMALLINT: "SMALLINT" >
+| < SOME: "SOME" >
+| < SOURCE: "SOURCE" >
+| < SPACE: "SPACE" >
+| < SPECIFIC: "SPECIFIC" >
+| < SPECIFIC_NAME: "SPECIFIC_NAME" >
+| < SPECIFICTYPE: "SPECIFICTYPE" >
+| < SQL: "SQL" >
+| < SQLEXCEPTION: "SQLEXCEPTION" >
+| < SQLSTATE: "SQLSTATE" >
+| < SQLWARNING: "SQLWARNING" >
+| < SQRT: "SQRT" >
+| < START: "START" >
+| < STATE: "STATE" >
+| < STATEMENT: "STATEMENT" >
+| < STATIC: "STATIC" >
+| < STDDEV_POP: "STDDEV_POP" >
+| < STDDEV_SAMP: "STDDEV_SAMP" >
+| < STRUCTURE: "STRUCTURE" >
+| < STYLE: "STYLE" >
+| < SUBCLASS_ORIGIN: "SUBCLASS_ORIGIN" >
 | < SUBMULTISET: "SUBMULTISET" >
+| < SUBSTRING: "SUBSTRING" >
+| < SUM: "SUM" >
 | < SYMMETRIC: "SYMMETRIC" >
+| < SYSTEM: "SYSTEM" >
+| < SYSTEM_USER: "SYSTEM_USER" >
 | < TABLE: "TABLE" >
+| < TABLE_NAME: "TABLE_NAME" >
+| < TABLESAMPLE: "TABLESAMPLE" >
+| < TEMPORARY: "TEMPORARY" >
 | < THEN: "THEN" >
+| < TIES: "TIES" >
 | < TIME: "TIME" >
 | < TIMESTAMP: "TIMESTAMP" >
 | < TIMEZONE_HOUR: "TIMEZONE_HOUR" >
 | < TIMEZONE_MINUTE: "TIMEZONE_MINUTE" >
 | < TINYINT: "TINYINT" >
 | < TO: "TO" >
+| < TOP_LEVEL_COUNT: "TOP_LEVEL_COUNT" >
 | < TRAILING: "TRAILING" >
+| < TRANSACTION: "TRANSACTION" >
+| < TRANSACTIONS_ACTIVE: "TRANSACTIONS_ACTIVE" >
+| < TRANSACTIONS_COMMITTED: "TRANSACTIONS_COMMITTED" >
+| < TRANSACTIONS_ROLLED_BACK: "TRANSACTIONS_ROLLED_BACK" >
+| < TRANSFORM: "TRANSFORM" >
+| < TRANSFORMS: "TRANSFORMS" >
+| < TRANSLATE: "TRANSLATE" >
+| < TRANSLATION: "TRANSLATION" >
+| < TREAT: "TREAT" >
+| < TRIGGER: "TRIGGER" >
+| < TRIGGER_CATALOG: "TRIGGER_CATALOG" >
+| < TRIGGER_NAME: "TRIGGER_NAME" >
+| < TRIGGER_SCHEMA: "TRIGGER_SCHEMA" >
+| < TRIM: "TRIM" >
 | < TRUE: "TRUE" >
+| < TYPE: "TYPE" >
+| < UESCAPE: "UESCAPE" >
 | < UNBOUNDED: "UNBOUNDED" >
+| < UNCOMMITTED: "UNCOMMITTED" >
+| < UNDER: "UNDER" >
 | < UNION: "UNION" >
 | < UNIQUE: "UNIQUE" >
 | < UNKNOWN: "UNKNOWN" >
+| < UNNAMED: "UNNAMED" >
 | < UNNEST: "UNNEST" >
 | < UPDATE: "UPDATE" >
+| < UPPER: "UPPER" >
+| < USAGE: "USAGE" >
+| < USER: "USER" >
+| < USER_DEFINED_TYPE_CATALOG: "USER_DEFINED_TYPE_CATALOG" >
+| < USER_DEFINED_TYPE_CODE: "USER_DEFINED_TYPE_CODE" >
+| < USER_DEFINED_TYPE_NAME: "USER_DEFINED_TYPE_NAME" >
+| < USER_DEFINED_TYPE_SCHEMA: "USER_DEFINED_TYPE_SCHEMA" >
 | < USING: "USING" >
+| < VALUE: "VALUE" >
 | < VALUES: "VALUES" >
+| < VAR_POP: "VAR_POP" >
+| < VAR_SAMP: "VAR_SAMP" >
 | < VARCHAR: "VARCHAR" >
 | < VARBINARY: "VARBINARY" >
 | < VARYING: "VARYING" >
+| < VERSION: "VERSION" >
+| < VIEW: "VIEW" >
 | < WHEN: "WHEN" >
+| < WHENEVER: "WHENEVER" >
 | < WHERE: "WHERE" >
+| < WIDTH_BUCKET: "WIDTH_BUCKET" >
 | < WINDOW: "WINDOW" >
 | < WITH: "WITH" >
+| < WITHIN: "WITHIN" >
 | < WITHOUT: "WITHOUT" >
+| < WORK: "WORK" >
+| < WRAPPER: "WRAPPER" >
+| < WRITE: "WRITE" >
 | < YEAR: "YEAR" >
 | < ZONE: "ZONE" >
 }
@@ -2597,16 +3072,235 @@ TOKEN :
  * Parses a non-reserved keyword for use as an identifier.  Specializations
  * of this parser can use this as a base for implementing the
  * NonReservedKeyWord() production.
+ *
+ *<p>
+ *
+ * When adding keywords to this list, be sure that they are not reserved
+ * by the SQL:2003 standard (see productions for "non-reserved word"
+ * and "reserved word" in reference below).
+ *
+ * @sql.2003 Part 2 Section 5.2
  */
 String CommonNonReservedKeyWord() :
 {
 }
 {
     (
-        <ASC>
-        | <ASCENDING>
+        <A>
+        | <ABSOLUTE>
+        | <ACTION>
+        | <ADA>
+        | <ADD>
+        | <ADMIN>
+        | <AFTER>
+        | <ALWAYS>
+        | <ASC>
+        | <ASSERTION>
+        | <ASSIGNMENT>
+        | <ATTRIBUTE>
+        | <ATTRIBUTES>
+        | <BEFORE>
+        | <BERNOULLI>
+        | <BREADTH>
+        | <C>
+        | <CASCADE>
+        | <CATALOG>
+        | <CATALOG_NAME>
+        | <CHAIN>
+        | <CHARACTER_SET_CATALOG>
+        | <CHARACTER_SET_NAME>
+        | <CHARACTER_SET_SCHEMA>
+        | <CHARACTERISTICS>
+        | <CHARACTERS>
+        | <CLASS_ORIGIN>
+        | <COBOL>
+        | <COLLATION>
+        | <COLLATION_CATALOG>
+        | <COLLATION_NAME>
+        | <COLLATION_SCHEMA>
+        | <COLUMN_NAME>
+        | <COMMAND_FUNCTION>
+        | <COMMAND_FUNCTION_CODE>
+        | <COMMITTED>
+        | <CONDITION_NUMBER>
+        | <CONNECTION>
+        | <CONNECTION_NAME>
+        | <CONSTRAINT_CATALOG>
+        | <CONSTRAINT_NAME>
+        | <CONSTRAINT_SCHEMA>
+        | <CONSTRAINTS>
+        | <CONSTRUCTOR>
+        | <CONTAINS>
+        | <CONTINUE>
+        | <CURSOR_NAME>
+        | <DATA>
+        | <DATETIME_INTERVAL_CODE>
+        | <DATETIME_INTERVAL_PRECISION>
+        | <DEFAULTS>
+        | <DEFERRABLE>
+        | <DEFERRED>
+        | <DEFINED>
+        | <DEFINER>
+        | <DEGREE>
+        | <DEPTH>
+        | <DERIVED>
+        | <DESC>
+        | <DESCRIPTOR>
+        | <DIAGNOSTICS>
+        | <DISPATCH>
+        | <DOMAIN>
+        | <DYNAMIC_FUNCTION>
+        | <DYNAMIC_FUNCTION_CODE>
+        | <EQUALS>
+        | <EXCEPTION>
+        | <EXCLUDE>
+        | <EXCLUDING>
+        | <FINAL>
+        | <FIRST>
+        | <FOLLOWING>
+        | <FORTRAN>
+        | <FOUND>
+        | <G>
+        | <GENERAL>
+        | <GENERATED>
+        | <GO>
+        | <GOTO>
+        | <GRANTED>
+        | <HIERARCHY>
+        | <IMMEDIATE>
         | <IMPLEMENTATION>
+        | <INCLUDING>
+        | <INCREMENT>
+        | <INITIALLY>
+        | <INPUT>
+        | <INSTANCE>
+        | <INSTANTIABLE>
+        | <INVOKER>
+        | <ISOLATION>
+        | <JAVA>
+        | <K>
+        | <KEY>
+        | <KEY_MEMBER>
+        | <KEY_TYPE>
+        | <LAST>
+        | <LENGTH>
+        | <LEVEL>
+        | <LIBRARY>
+        | <LOCATOR>
+        | <M>
+        | <MAP>
+        | <MATCHED>
+        | <MAXVALUE>
+        | <MESSAGE_LENGTH>
+        | <MESSAGE_OCTET_LENGTH>
+        | <MESSAGE_TEXT>
+        | <MINVALUE>
+        | <MORE_KW>
+        | <MUMPS>
+        | <NAME>
+        | <NAMES>
+        | <NESTING>
+        | <NEXT>
+        | <NORMALIZED>
+        | <NULLABLE>
+        | <NULLS>
+        | <NUMBER>
+        | <OBJECT>
+        | <OCTETS>
+        | <OPTION>
+        | <OPTIONS>
+        | <ORDERING>
+        | <ORDINALITY>
+        | <OTHERS>
+        | <OUTPUT>
+        | <OVERRIDING>
+        | <PAD>
+        | <PARAMETER_MODE>
+        | <PARAMETER_NAME>
+        | <PARAMETER_ORDINAL_POSITION>
+        | <PARAMETER_SPECIFIC_CATALOG>
+        | <PARAMETER_SPECIFIC_NAME>
+        | <PARAMETER_SPECIFIC_SCHEMA>
+        | <PARTIAL>
+        | <PASCAL>
+        | <PATH>
+        | <PLACING>
         | <PLAN>
+        | <PLI>
+        | <PRECEDING>
+        | <PRESERVE>
+        | <PRIOR>
+        | <PRIVILEGES>
+        | <PUBLIC>
+        | <READ>
+        | <RELATIVE>
+        | <REPEATABLE>
+        | <RESTART>
+        | <RESTRICT>
+        | <RETURNED_CARDINALITY>
+        | <RETURNED_LENGTH>
+        | <RETURNED_OCTET_LENGTH>
+        | <RETURNED_SQLSTATE>
+        | <ROLE>
+        | <ROUTINE>
+        | <ROUTINE_CATALOG>
+        | <ROUTINE_NAME>
+        | <ROUTINE_SCHEMA>
+        | <ROW_COUNT>
+        | <SCALE>
+        | <SCHEMA>
+        | <SCHEMA_NAME>
+        | <SCOPE_CATALOGS>
+        | <SCOPE_NAME>
+        | <SCOPE_SCHEMA>
+        | <SECTION>
+        | <SECURITY>
+        | <SELF>
+        | <SEQUENCE>
+        | <SERIALIZABLE>
+        | <SERVER>
+        | <SERVER_NAME>
+        | <SESSION>
+        | <SETS>
+        | <SIMPLE>
+        | <SIZE>
+        | <SOURCE>
+        | <SPACE>
+        | <SPECIFIC_NAME>
+        | <STATE>
+        | <STATEMENT>
+        | <STRUCTURE>
+        | <STYLE>
+        | <SUBCLASS_ORIGIN>
+        | <TABLE_NAME>
+        | <TEMPORARY>
+        | <TIES>
+        | <TOP_LEVEL_COUNT>
+        | <TRANSACTION>
+        | <TRANSACTIONS_ACTIVE>
+        | <TRANSACTIONS_COMMITTED>
+        | <TRANSACTIONS_ROLLED_BACK>
+        | <TRANSFORM>
+        | <TRANSFORMS>
+        | <TRIGGER_CATALOG>
+        | <TRIGGER_NAME>
+        | <TRIGGER_SCHEMA>
+        | <TYPE>
+        | <UNBOUNDED>
+        | <UNCOMMITTED>
+        | <UNDER>
+        | <UNNAMED>
+        | <USAGE>
+        | <USER_DEFINED_TYPE_CATALOG>
+        | <USER_DEFINED_TYPE_CODE>
+        | <USER_DEFINED_TYPE_NAME>
+        | <USER_DEFINED_TYPE_SCHEMA>
+        | <VERSION>
+        | <VIEW>
+        | <WRAPPER>
+        | <WORK>
+        | <WRITE>
+        | <ZONE>
     )
         {
             return getToken(0).image.toUpperCase();
@@ -2750,7 +3444,7 @@ MORE :
 
 TOKEN :
 {
-< COLLATION_NAME:
+< COLLATION_ID:
     (<LETTER>|<DIGIT>)+ (<LETTER>|<DIGIT>|":"|"."|"-"|"_")*
     "$"
     (<LETTER>|"_")+

@@ -72,12 +72,24 @@ public class DdlRelationalHandler extends DdlHandler
     }
     
     // implement FarragoSessionDdlHandler
+    public void validateModification(CwmCatalog catalog)
+    {
+        validateDefinition(catalog);
+    }
+    
+    // implement FarragoSessionDdlHandler
     public void validateDefinition(FemLocalSchema schema)
     {
         validator.validateUniqueNames(
             schema,
             schema.getOwnedElement(),
             true);
+    }
+    
+    // implement FarragoSessionDdlHandler
+    public void validateModification(FemLocalSchema schema)
+    {
+        validateDefinition(schema);
     }
     
     // implement FarragoSessionDdlHandler
@@ -137,13 +149,6 @@ public class DdlRelationalHandler extends DdlHandler
     
     public void validateLocalTable(FemLocalTable table, boolean creation)
     {
-        // need to validate columns first
-        Iterator columnIter = table.getFeature().iterator();
-        while (columnIter.hasNext()) {
-            FemStoredColumn column = (FemStoredColumn) columnIter.next();
-            validateLocalTableColumn(column);
-        }
-
         FemDataServer dataServer = table.getServer();
         FemDataWrapper dataWrapper = dataServer.getWrapper();
         if (dataWrapper.isForeign()) {
@@ -152,10 +157,7 @@ public class DdlRelationalHandler extends DdlHandler
                 repos.getLocalizedObjectName(dataWrapper));
         }
 
-        validator.validateUniqueNames(
-            table,
-            table.getFeature(),
-            false);
+        validateAttributeSet(table);
 
         Collection indexes = FarragoCatalogUtil.getTableIndexes(repos, table);
 
@@ -219,12 +221,6 @@ public class DdlRelationalHandler extends DdlHandler
         if (creation) {
             medHandler.validateMedColumnSet(table);
         }
-    }
-    
-    // implement FarragoSessionDdlHandler
-    public void validateModification(CwmView view)
-    {
-        // nothing to do
     }
     
     // implement FarragoSessionDdlHandler
@@ -307,75 +303,6 @@ public class DdlRelationalHandler extends DdlHandler
 
         validator.createDependency(
             view, analyzedSql.dependencies, "ViewUsage");
-    }
-
-    // implement FarragoSessionDdlHandler
-    public void validateDefinition(CwmColumn column)
-    {
-        // let the containing table handle this by calling
-        // validateColumn, since sometimes it has extra work to
-        // do first
-    }
-    
-    public void validateLocalTableColumn(FemStoredColumn column)
-    {
-        validateAttribute(column);
-
-        String defaultExpression = column.getInitialValue().getBody();
-        if (!defaultExpression.equalsIgnoreCase("NULL")) {
-            FarragoSession session = validator.newReentrantSession();
-            try {
-                validateDefaultClause(column, session, defaultExpression);
-            } catch (Throwable ex) {
-                throw validator.newPositionalError(
-                    column,
-                    validator.res.newValidatorBadDefaultClause(
-                        repos.getLocalizedObjectName(column), 
-                        ex));
-            } finally {
-                validator.releaseReentrantSession(session);
-            }
-        }
-    }
-    
-    private void validateDefaultClause(
-        FemStoredColumn column,
-        FarragoSession session,
-        String defaultExpression)
-    {
-        String sql = "VALUES(" + defaultExpression + ")";
-        FarragoSessionStmtContext stmtContext = session.newStmtContext();
-        stmtContext.prepare(sql, false);
-        RelDataType rowType = stmtContext.getPreparedRowType();
-        assert (rowType.getFieldList().size() == 1);
-
-        if (stmtContext.getPreparedParamType().getFieldList().size() > 0) {
-            throw validator.newPositionalError(
-                column,
-                validator.res.newValidatorBadDefaultParam(
-                    repos.getLocalizedObjectName(column)));
-        }
-
-        // SQL standard is very picky about what can go in a DEFAULT clause
-        RelDataType sourceType = rowType.getFields()[0].getType();
-        RelDataTypeFamily sourceTypeFamily = sourceType.getFamily();
-
-        RelDataType targetType =
-            validator.getTypeFactory().createCwmElementType(column);
-        RelDataTypeFamily targetTypeFamily = targetType.getFamily();
-
-        if (sourceTypeFamily != targetTypeFamily) {
-            throw validator.newPositionalError(
-                column,
-                validator.res.newValidatorBadDefaultType(
-                    repos.getLocalizedObjectName(column),
-                    targetTypeFamily.toString(),
-                    sourceTypeFamily.toString()));
-        }
-
-        // TODO:  additional rules from standard, like no truncation allowed.
-        // Maybe just execute SELECT with and without cast to target type and
-        // make sure the same value comes back.
     }
 
     public FemLocalIndex createUniqueConstraintIndex(

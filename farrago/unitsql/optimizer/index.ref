@@ -212,7 +212,7 @@
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from emps where deptno=20 and gender='M';
 'column0'
-'IterCalcRel(NAME=[$1], condition=[=($3, _ISO-8859-1'M' COLLATE ISO-8859-1$en_US$primary)])'
+'IterCalcRel(NAME=[$1], condition=[=($3, _ISO-8859-1'M')])'
 '  FennelToIteratorConverter'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]])'
 '      IteratorToFennelConverter'

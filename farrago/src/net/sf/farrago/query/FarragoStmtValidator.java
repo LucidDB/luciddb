@@ -63,6 +63,8 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
     private final FarragoSessionIndexMap indexMap;
     private final FarragoObjectCache sharedDataWrapperCache;
     private final FarragoSessionParser parser;
+    
+    private SqlParserPos parserPos;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -180,7 +182,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
                 namedColumnSet.getFeature(),
                 columnName);
         if (column == null) {
-            throw parser.newPositionalError(
+            throw newPositionalError(
                 FarragoResource.instance().newValidatorUnknownObjectInScope(
                     getRepos().getLocalizedObjectName(
                         null,
@@ -264,7 +266,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         CwmCatalog catalog = getRepos().getCatalog(catalogName);
 
         if ((catalog == null) && throwIfNotFound) {
-            throw parser.newPositionalError(
+            throw newPositionalError(
                 FarragoResource.instance().newValidatorUnknownObject(
                     getRepos().getLocalizedObjectName(
                         null,
@@ -314,7 +316,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
             if (!throwIfNotFound) {
                 return null;
             }
-            throw parser.newPositionalError(
+            throw newPositionalError(
                 FarragoResource.instance().newValidatorUnknownObject(
                     getRepos().getLocalizedObjectName(
                         catalog.getName(),
@@ -339,7 +341,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
             }
         }
         if (wrapper == null) {
-            throw parser.newPositionalError(
+            throw newPositionalError(
                 FarragoResource.instance().newValidatorUnknownObject(
                     getRepos().getLocalizedObjectName(
                         null,
@@ -357,7 +359,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
                 getRepos().getMedPackage().getFemDataServer().refAllOfType(),
                 serverName.getSimple());
         if (server == null) {
-            throw parser.newPositionalError(
+            throw newPositionalError(
                 FarragoResource.instance().newValidatorUnknownObject(
                     getRepos().getLocalizedObjectName(
                         null,
@@ -399,7 +401,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         }
 
         if (element == null) {
-            throw parser.newPositionalError(
+            throw newPositionalError(
                 FarragoResource.instance().newValidatorUnknownObject(
                 getRepos().getLocalizedObjectName(schemaName,
                     qualifiedName.names[qualifiedName.names.length - 1],
@@ -469,12 +471,25 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
     }
     
     // implement FarragoSessionStmtValidator
-    public CwmSqldataType findSqldataType(String typeName)
+    public CwmSqldataType findSqldataType(SqlIdentifier typeName)
     {
-        Collection types =
+        Collection types;
+        CwmModelElement modelElement;
+
+        if (!typeName.isSimple()) {
+            modelElement = findSchemaObject(
+                typeName,
+                getRepos().getSql2003Package().getFemSqlobjectType());
+            checkValidated(modelElement);
+            return (CwmSqldataType) modelElement;
+        }
+
+        String simpleName = typeName.getSimple();
+
+        types =
             getRepos().getRelationalPackage().getCwmSqlsimpleType().refAllOfClass();
-        CwmModelElement modelElement =
-            FarragoCatalogUtil.getModelElementByName(types, typeName);
+        modelElement =
+            FarragoCatalogUtil.getModelElementByName(types, simpleName);
         if (modelElement != null) {
             return (CwmSqldataType) modelElement;
         }
@@ -482,25 +497,42 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         types =
             getRepos().getDataTypesPackage().getCwmTypeAlias().refAllOfClass();
         modelElement = FarragoCatalogUtil.getModelElementByName(
-            types, typeName);
+            types, simpleName);
         if (modelElement != null) {
             CwmTypeAlias alias = (CwmTypeAlias) modelElement;
             return (CwmSqldataType) alias.getType();
         }
 
-        types = getRepos().getSql2003Package().getFemSqlcollectionType().refAllOfType();
-        modelElement = FarragoCatalogUtil.getModelElementByName(
-            types, typeName);
-        if (modelElement != null) {
-            return (CwmSqldataType) modelElement;
+        Iterator iter = sessionVariables.schemaSearchPath.iterator();
+        while (iter.hasNext()) {
+            SqlIdentifier id = (SqlIdentifier) iter.next();
+            CwmSchema searchedSchema = lookupSchema(id, false);
+            if (searchedSchema == null) {
+                continue;
+            }
+            modelElement = FarragoCatalogUtil.getModelElementByNameAndType(
+                searchedSchema.getOwnedElement(),
+                simpleName,
+                FemSqlobjectType.class);
+            if (modelElement != null) {
+                checkValidated(modelElement);
+                return (CwmSqldataType) modelElement;
+            }
         }
-
-        throw parser.newPositionalError(
+            
+        throw newPositionalError(
             FarragoResource.instance().newValidatorUnknownObject(
                 getRepos().getLocalizedObjectName(
                     null,
-                    typeName,
+                    simpleName,
                     getRepos().getRelationalPackage().getCwmSqldataType())));
+    }
+
+    private void checkValidated(CwmModelElement element)
+    {
+        if (element.getVisibility() == null) {
+            throw new FarragoUnvalidatedDependencyException();
+        }
     }
 
     // implement FarragoSessionStmtValidator
@@ -561,6 +593,24 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         }
 
         return resolved;
+    }
+
+    // implement FarragoSessionStmtValidator
+    public void setParserPosition(SqlParserPos pos)
+    {
+        this.parserPos = pos;
+    }
+    
+    private FarragoException newPositionalError(
+        SqlValidatorException ex)
+    {
+        if (parserPos == null) {
+            return parser.newPositionalError(ex);
+        } else {
+            String msg = parserPos.toString();
+            return FarragoResource.instance().newValidatorPositionContext(
+                msg, ex);
+        }
     }
 }
 

@@ -1,25 +1,11 @@
+// NOTE jvs 1-Feb-2005:  convenience functions belong in
+// FarragoAbstractParserImpl, not here, unless they depend on
+// information which is only available in the generated parser class
+// (e.g. token).
+
 /*****************************************
  * Convenience Functions                 *
  *****************************************/
-
-JAVACODE void convertSqlDataTypeSpecToCwmType(
-    SqlDataTypeSpec dataType,
-    FemSqltypedElement element)
-{
-    CwmSqldataType type =
-        farragoParser.getStmtValidator().findSqldataType(
-            dataType.getTypeName().getSimple());
-    element.setType(type);
-    if (dataType.getPrecision() > 0) {
-        element.setPrecision(new Integer(dataType.getPrecision()));
-    }
-    if (dataType.getScale() > 0) {
-        element.setScale(new Integer(dataType.getScale()));
-    }
-    if (dataType.getCharSetName() != null) {
-        element.setCharacterSetName(dataType.getCharSetName());
-    }
-}
 
 JAVACODE SqlParserPos getEndPos()
 {
@@ -261,6 +247,8 @@ CwmModelElement SchemaObjectDefinition() :
         |
         modelElement = JarDefinition()
         |
+        modelElement = UserDefinedTypeDefinition()
+        |
         modelElement = ExtensionModelSchemaObjDefinition()
     )
         {
@@ -494,7 +482,7 @@ FemLocalIndex IndexDefinition(CwmTable table) :
         }
     indexName = SimpleIdentifier()
         {
-            index.setName(indexName.names[0]);
+            index.setName(indexName.getSimple());
         }
     <ON> specifiedTable = TableIdentifier()
         {
@@ -524,7 +512,7 @@ FemLocalIndex IndexDefinition(CwmTable table) :
             Iterator columnNameIter = columnNameList.iterator();
             while (columnNameIter.hasNext()) {
                 String columnName =
-                    ((SqlIdentifier) columnNameIter.next()).names[0];
+                    ((SqlIdentifier) columnNameIter.next()).getSimple();
                 CwmColumn column = farragoParser.getStmtValidator().findColumn(
                     table,columnName);
                 FemLocalIndexColumn indexColumn =
@@ -665,7 +653,7 @@ void BasicColumnDefinition(CwmNamedColumnSet table,FemAbstractColumn column) :
     columnName = SimpleIdentifier()
         {
             table.getFeature().add(column);
-            column.setName(columnName.names[0]);
+            column.setName(columnName.getSimple());
         }
     TypedElement(column)
 }
@@ -673,8 +661,6 @@ void BasicColumnDefinition(CwmNamedColumnSet table,FemAbstractColumn column) :
 void TypedElement(FemAbstractTypedElement element) :
 {
     SqlDataTypeSpec dataType;
-    FemSqltypedElement typedElement = FarragoCatalogUtil.toFemSqltypedElement(
-        element);
 }
 {
     dataType = DataType()
@@ -687,17 +673,19 @@ void TypedElement(FemAbstractTypedElement element) :
                 getRepos().newFemSqltypeAttribute();
             componentType.setName("COMPONENT");
             colType.getFeature().add(componentType);
-            convertSqlDataTypeSpecToCwmType(
-                dataType,
-                FarragoCatalogUtil.toFemSqltypedElement(componentType));
+            farragoParser.getDdlValidator().setSqlDefinition(
+                componentType,
+                dataType);
+            FemSqltypedElement typedElement =
+                FarragoCatalogUtil.toFemSqltypedElement(element);
             typedElement.setType(colType);
             return;
         }
     ]
     {
-        convertSqlDataTypeSpecToCwmType(
-            dataType,
-            typedElement);
+        farragoParser.getDdlValidator().setSqlDefinition(
+            element,
+            dataType);
     }
 }
 
@@ -705,6 +693,7 @@ CwmColumn ColumnDefinition(CwmTable table) :
 {
     FemStoredColumn column;
     SqlNode defaultClause;
+    SqlCollation sqlCollation;
 }
 {
     {
@@ -716,16 +705,19 @@ CwmColumn ColumnDefinition(CwmTable table) :
     [
         defaultClause = DefaultClause() 
         {
-            CwmExpression defaultExpression =
-            getRepos().newCwmExpression();
-            defaultExpression.setBody(defaultClause.toSqlString(null));
-            defaultExpression.setLanguage("SQL");
-            column.setInitialValue(defaultExpression);
+            setDefaultExpression(column, defaultClause);
         }
     ]
         {
         }
     ( ColumnConstraint(table,column) )*
+        {
+        }
+    [ sqlCollation = CollateClause()
+        {
+            column.setCollationName(sqlCollation.getCollationName());
+        }
+    ]
         {
         }
     OptionalStorageOptions(column)
@@ -790,7 +782,7 @@ CwmUniqueConstraint TableUniqueConstraint(CwmTable table) :
             Iterator columnNameIter = columnNameList.iterator();
             while (columnNameIter.hasNext()) {
                 String columnName =
-                    ((SqlIdentifier) columnNameIter.next()).names[0];
+                    ((SqlIdentifier) columnNameIter.next()).getSimple();
                 CwmColumn column = farragoParser.getStmtValidator().findColumn(
                     table,columnName);
                 constraint.getFeature().add(column);
@@ -1010,7 +1002,7 @@ DdlStmt SystemParamAssignment() :
         }
     {
         return new DdlSetSystemParamStmt(
-            paramName.names[0],paramValue);
+            paramName.getSimple(),paramValue);
     }
 }
 
@@ -1052,7 +1044,7 @@ DdlStmt Rollback() :
         }
     {
         if (savepointName != null) {
-            return new DdlRollbackStmt(savepointName.names[0]);
+            return new DdlRollbackStmt(savepointName.getSimple());
         } else {
             return new DdlRollbackStmt(null);
         }
@@ -1068,7 +1060,7 @@ DdlStmt Savepoint() :
         {
         }
     {
-        return new DdlSavepointStmt(savepointName.names[0]);
+        return new DdlSavepointStmt(savepointName.getSimple());
     }
 }
 
@@ -1081,7 +1073,7 @@ DdlStmt ReleaseSavepoint() :
         {
         }
     {
-        return new DdlReleaseSavepointStmt(savepointName.names[0]);
+        return new DdlReleaseSavepointStmt(savepointName.getSimple());
     }
 }
 
@@ -1547,6 +1539,80 @@ FemJar JarDefinition() :
     }
 }
 
+CwmSqldataType UserDefinedTypeDefinition() :
+{
+    SqlIdentifier qualifiedName;
+    CwmSqldataType typeDef;
+}
+{
+    // TODO jvs 1-Feb-2005:  UNDER, AS-less, methods, distinct types,
+    // [NOT] FINAL, [NOT] INSTANTIABLE, references, cast defs
+    <TYPE> qualifiedName = CompoundIdentifier2()
+        {
+        }
+    <AS> typeDef = ObjectTypeDefinition()
+        {
+        }
+    {
+        farragoParser.getDdlValidator().setSchemaObjectName(
+            typeDef, qualifiedName);
+        return typeDef;
+    }
+}
+
+FemSqlobjectType ObjectTypeDefinition() :
+{
+    FemSqlobjectType typeDef = getRepos().newFemSqlobjectType();
+}
+{
+    <LPAREN>
+         AttributeDefinition(typeDef)
+         (<COMMA> AttributeDefinition(typeDef))* <RPAREN>
+        {
+        }    
+    {
+        return typeDef;
+    }
+}
+
+void AttributeDefinition(FemSqlobjectType typeDef) :
+{
+    SqlIdentifier name;
+    SqlDataTypeSpec dataType;
+    FemSqltypeAttribute attrDef = getRepos().newFemSqltypeAttribute();
+    SqlNode defaultClause;
+    SqlCollation sqlCollation;
+}
+{
+    name = SimpleIdentifier()
+        {
+            attrDef.setName(name.getSimple());
+        }
+    dataType = DataType()
+        {
+            farragoParser.getDdlValidator().setSqlDefinition(
+                attrDef,
+                dataType);
+        }
+    [ defaultClause = DefaultClause()
+        {
+            setDefaultExpression(attrDef, defaultClause);
+        }
+    ]
+        {
+        }
+    [ sqlCollation = CollateClause()
+        {
+            attrDef.setCollationName(sqlCollation.getCollationName());
+        }
+    ]
+        {
+        }
+    {
+        typeDef.getFeature().add(attrDef);
+    }
+}
+
 FemDataServer DataServerReference() :
 {
     SqlIdentifier name;
@@ -1702,73 +1768,11 @@ CwmModelElement ForeignTableDrop() :
 
 TOKEN :
 {
-  < ALTER: "ALTER" >
-| < AUTHORIZATION: "AUTHORIZATION" >
-| < CALLED: "CALLED" >
-| < CASCADE: "CASCADE" >
-| < CATALOG: "CATALOG" >
-| < CHECKPOINT: "CHECKPOINT" >
+  < CHECKPOINT: "CHECKPOINT" >
 | < CLUSTERED: "CLUSTERED" >
-| < COMMIT: "COMMIT" >
-| < CONSTRAINT: "CONSTRAINT" >
-| < CONTAINS: "CONTAINS" >
-| < CREATE: "CREATE" >
-| < DATA: "DATA" >
-| < DEFAULT_KW: "DEFAULT" >
-| < DEFINED: "DEFINED" >
-| < DEFINER: "DEFINER" >
-| < DETERMINISTIC: "DETERMINISTIC" >
-| < DISPATCH: "DISPATCH" >
-| < DROP: "DROP" >
-| < EXTERNAL: "EXTERNAL" >
-| < FOREIGN: "FOREIGN" >
-| < FUNCTION: "FUNCTION" >
-| < GENERAL: "GENERAL" >
-| < GLOBAL: "GLOBAL" >
 | < INDEX: "INDEX" >
-| < INOUT: "INOUT" >
-| < INPUT: "INPUT" >
-| < INVOKER: "INVOKER" >
 | < JAR: "JAR" >
-| < JAVA: "JAVA" >
-| < MAX: "MAX" >
-| < MIN: "MIN" >
-| < KEY: "KEY" >
-| < LANGUAGE: "LANGUAGE" >
-| < LIBRARY: "LIBRARY" >
-| < LOCAL: "LOCAL" >
-| < MODIFIES: "MODIFIES" >
-| < OPTIONS: "OPTIONS" >
-| < NAME: "NAME" >
-| < NO: "NO" >
-| < OUT: "OUT" >
-| < PARAMETER: "PARAMETER" >
-| < PATH: "PATH" >
-| < PRESERVE: "PRESERVE" >
-| < PRIMARY: "PRIMARY" >
-| < PROCEDURE: "PROCEDURE" >
-| < READS: "READS" >
-| < RELEASE: "RELEASE" >
-| < RESTRICT: "RESTRICT" >
-| < RETURN: "RETURN" >
-| < RETURNS: "RETURNS" >
-| < ROLLBACK: "ROLLBACK" >
-| < ROUTINE: "ROUTINE" >
-| < SAVEPOINT: "SAVEPOINT" >
-| < SCHEMA: "SCHEMA" >
-| < SECURITY: "SECURITY" >
-| < SERVER: "SERVER" >
-| < SPECIFIC: "SPECIFIC" >
-| < SQL: "SQL" >
-| < STATIC: "STATIC" >
-| < STYLE: "STYLE" >
-| < SYSTEM: "SYSTEM" >
-| < TEMPORARY: "TEMPORARY" >
 | < TRUNCATE: "TRUNCATE" >
-| < TYPE: "TYPE" >
-| < VERSION: "VERSION" >
-| < VIEW: "VIEW" >
-| < WRAPPER: "WRAPPER" >
 }
 
 /**
@@ -1776,53 +1780,22 @@ TOKEN :
  * implementations based on CommonDdlParser.jj should include this as
  * well as CommonParser.jj's CommonNonReservedKeyWord() in their
  * implementation of the NonReservedKeyWord() production.
+ *
+ *<p>
+ *
+ * When adding keywords to this list, be sure that they are not reserved
+ * by the SQL:2003 standard (see productions for "non-reserved word"
+ * and "reserved word" in reference below).
+ *
+ * @sql.2003 Part 2 Section 5.2
  */
 String DdlNonReservedKeyWord() :
 {
 }
 {
     (
-        <CALLED>
-        | <CASCADE>
-        | <CATALOG>
-        | <CONTAINS>
-        | <DATA>
-        | <DEFINED>
-        | <DEFINER>
-        | <DETERMINISTIC>
-        | <DISPATCH>
-        | <EXTERNAL>
-        | <GENERAL>
-        | <INDEX>
-        | <INPUT>
-        | <INVOKER>
+          <INDEX>
         | <JAR>
-        | <JAVA>
-        | <KEY>
-        | <LIBRARY>
-        | <MAX>
-        | <MIN>
-        | <MODIFIES>
-        | <NAME>
-        | <NO>
-        | <OPTIONS>
-        | <PARAMETER>
-        | <PATH>
-        | <PRESERVE>
-        | <READS>
-        | <RESTRICT>
-        | <RETURN>
-        | <RETURNS>
-        | <SCHEMA>
-        | <SECURITY>
-        | <SERVER>
-        | <SPECIFIC>
-        | <STATIC>
-        | <STYLE>
-        | <TEMPORARY>
-        | <VERSION>
-        | <VIEW>
-        | <WRAPPER>
     )
         {
             return getToken(0).image.toUpperCase();

@@ -855,7 +855,7 @@ public class SqlParserTest extends TestCase
 
     public void testOrder()
     {
-        check("select * from emp order by empno, gender desc, deptno asc, empno ascending, name descending",
+        check("select * from emp order by empno, gender desc, deptno asc, empno asc, name desc",
             "(SELECT *" + NL + "FROM `EMP` "
             + "ORDER BY `EMPNO`, `GENDER` DESC, `DEPTNO`, `EMPNO`, `NAME` DESC)");
     }
@@ -1282,7 +1282,8 @@ public class SqlParserTest extends TestCase
             "COALESCE(`V1`, `V2`, `V3`)");
     }
 
-    public void testLiteralCollate()
+    // FIXME jvs 2-Feb-2005:  disabled due to dtbug 280
+    public void _testLiteralCollate()
     {
         checkExp("'string' collate latin1$sv_SE$mega_strength",
             "'string' COLLATE ISO-8859-1$sv_SE$mega_strength");
@@ -1411,8 +1412,8 @@ public class SqlParserTest extends TestCase
     {
         checkExp("convert('abc' using conversion)",
             "CONVERT('abc' USING `CONVERSION`)");
-        checkExp("translate('abc' using translation)",
-            "TRANSLATE('abc' USING `TRANSLATION`)");
+        checkExp("translate('abc' using lazy_translation)",
+            "TRANSLATE('abc' USING `LAZY_TRANSLATION`)");
     }
 
     public void testOverlay()

@@ -326,7 +326,7 @@ values presto();
 
 -- test stored binding for builtins vs routines
 
-create function upper(in x varchar(128))
+create function "UPPER"(in x varchar(128))
 returns varchar(128)
 contains sql
 return x||'_plus_one';
@@ -339,7 +339,7 @@ return upper('cobol');
 create function tweedledum()
 returns varchar(128)
 contains sql
-return information_schema.upper('cobol');
+return information_schema."UPPER"('cobol');
 
 values tweedledee();
 

@@ -25,6 +25,10 @@ import org.eigenbase.sql.parser.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.session.*;
 
+import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.relational.*;
+
 import java.io.*;
 
 /**
@@ -85,6 +89,43 @@ public abstract class FarragoAbstractParserImpl extends SqlAbstractParserImpl
      * @throws Exception if not a non-reserved keyword
      */
     public abstract String NonReservedKeyWord() throws Exception;
+
+    /**
+     * Tests whether the current input is a reserved function name.
+     *
+     * @return identifier if a reserved function name
+     *
+     * @throws Exception if not a reserved function name
+     */
+    public abstract SqlIdentifier ReservedFunctionName() throws Exception;
+
+    /**
+     * Tests whether the current input is a context variable name.
+     *
+     * @return identifier if a context variable name
+     *
+     * @throws Exception if not a context variable name
+     */
+    public abstract SqlIdentifier ContextVariable() throws Exception;
+
+    /**
+     * Converts the SQL representation of a default value into
+     * its catalog representation.
+     *
+     * @param attribute attribute for which default value is being defined
+     *
+     * @param defaultClause SQL representation
+     */
+    protected void setDefaultExpression(
+        FemAbstractAttribute attribute,
+        SqlNode defaultClause)
+    {
+        CwmExpression defaultExpression =
+            getRepos().newCwmExpression();
+        defaultExpression.setBody(defaultClause.toSqlString(null));
+        defaultExpression.setLanguage("SQL");
+        attribute.setInitialValue(defaultExpression);
+    }
 }
 
 // End FarragoAbstractParserImpl.java

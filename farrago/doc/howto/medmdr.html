@@ -718,7 +718,7 @@ create foreign table mof_schema.exceptions(
     name varchar(20),
     annotation varchar(1),
     container char(54),
-    scope varchar(20),
+    "SCOPE" varchar(20),
     visibility varchar(20),
     exception_id char(54),
     unused_name varchar(20))
@@ -740,9 +740,10 @@ unavailable.
 In this case, the CREATE FOREIGN TABLE command overrides the default
 names and datatypes known to the repository.  The names are defined as
 case insensitive, so no identifier quotes will be required when
-querying this table.  And the datatypes are more reasonable than the
-defaults (e.g. we know that the MOFID's for this repository are
-fixed-length 54-character strings).
+querying this table, except for the <code>scope</code> column whose
+name happens to be a SQL reserved word.  And the datatypes are more
+reasonable than the defaults (e.g. we know that the MOFID's for this
+repository are fixed-length 54-character strings).
 
 <li>
 The table name <code>exceptions</code> is never seen by the repository

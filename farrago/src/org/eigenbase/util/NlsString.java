@@ -146,9 +146,12 @@ public class NlsString
         ret.append("'");
         ret.append(Util.replace(value, "'", "''"));
         ret.append("'");
-        if (suffix && (null != collation)) {
-            ret.append(" ");
-            ret.append(collation.toString());
+        // NOTE jvs 3-Feb-2005:  see dtbug 280 for why this should go away
+        if (false) {
+            if (suffix && (null != collation)) {
+                ret.append(" ");
+                ret.append(collation.toString());
+            }
         }
         return ret.toString();
     }

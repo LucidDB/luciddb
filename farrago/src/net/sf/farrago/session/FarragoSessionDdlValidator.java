@@ -163,6 +163,28 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
     public SqlParserPos getParserOffset(RefObject obj);
 
     /**
+     * Associates an SQL definition with a catalog object.  This is called
+     * from the parser; later, this information is retrieved during validation
+     * via {@link #getSqlDefinition}.
+     *
+     * @param obj object being defined
+     *
+     * @param sqlNode SQL definition
+     */
+    public void setSqlDefinition(RefObject obj, SqlNode sqlNode);
+
+    /**
+     * Retrieves an SQL definition previously associated with a catalog
+     * object via {@link #setSqlDefinition}.  As a side effect, also
+     * restores parser context for this object if available.
+     *
+     * @param obj object being validated
+     *
+     * @return SQL definition
+     */
+    public SqlNode getSqlDefinition(RefObject obj);
+
+    /**
      * Sets the name of a new object being defined, and adds the object to
      * the correct schema.
      *

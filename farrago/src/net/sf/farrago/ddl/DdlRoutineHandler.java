@@ -46,7 +46,8 @@ import java.util.*;
 
 /**
  * DdlRelationalHandler defines DDL handler methods for user-defined
- * routines and related objects such as jars.
+ * routines and related objects such as types and jars.  TODO:
+ * rename this class to DdlUserDefHandler
  *
  * @author John V. Sichi
  * @version $Id$
@@ -303,6 +304,12 @@ public class DdlRoutineHandler extends DdlHandler
                 repos.getLocalizedObjectName(jar),
                 ex);
         }
+    }
+
+    // implement FarragoSessionDdlHandler
+    public void validateDefinition(FemSqlobjectType typeDef)
+    {
+        validateAttributeSet(typeDef);
     }
 }
 

@@ -22,8 +22,10 @@ package net.sf.farrago.parser;
 import net.sf.farrago.session.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.parser.impl.*;
 
 import java.io.*;
+import java.util.*;
 
 import org.eigenbase.util.*;
 import org.eigenbase.sql.*;
@@ -102,12 +104,74 @@ public abstract class FarragoAbstractParser implements FarragoSessionParser
                 return parserImpl.SqlExpressionEof();
             }
         } catch (Exception ex) {
+            if (ex instanceof ParseException) {
+                ex = cleanupParseException((ParseException) ex);
+            }
             throw EigenbaseResource.instance().newParserError(
                 ex.getMessage(),
                 ex);
         } finally {
             sourceString = null;
         }
+    }
+
+    /**
+     * Removes or transforms misleading information from a parse exception.
+     *
+     *<p>
+     *
+     * TODO jvs 1-Feb-2005:  figure out how to move this up to SqlParser
+     * level in such a way that we can share it.
+     *
+     * @param ex dirty excn
+     *
+     * @return clean excn
+     */
+    private Exception cleanupParseException(ParseException ex)
+    {
+        if (ex.expectedTokenSequences == null) {
+            return ex;
+        }
+        int iIdentifier = Arrays.asList(ex.tokenImage).indexOf("<IDENTIFIER>");
+
+        boolean id = false;
+        for (int i = 0; i < ex.expectedTokenSequences.length; ++i) {
+            if (ex.expectedTokenSequences[i][0] == iIdentifier) {
+                id = true;
+                break;
+            }
+        }
+
+        if (!id) {
+            return ex;
+        }
+
+        // Since <IDENTIFIER> was one of the possible productions,
+        // we know that the parser will also have included all
+        // of the non-reserved keywords (which are treated as
+        // identifiers in non-keyword contexts).  So, now we need
+        // to clean those out, since they're totally irrelevant.
+
+        List list = new ArrayList();
+        for (int i = 0; i < ex.expectedTokenSequences.length; ++i) {
+            int [] sequence = ex.expectedTokenSequences[i];
+            String token = getTokenVal(ex.tokenImage[sequence[0]]);
+            if (token != null) {
+                if (isNonReserved(parserImpl, token)) {
+                    continue;
+                }
+                if (isReservedFunctionName(parserImpl, token)) {
+                    continue;
+                }
+                if (isContextVariable(parserImpl, token)) {
+                    continue;
+                }
+            }
+            list.add(sequence);
+        }
+
+        ex.expectedTokenSequences = (int [][]) list.toArray(new int [0][]);
+        return ex;
     }
 
     // implement FarragoSessionParser
@@ -199,6 +263,30 @@ public abstract class FarragoAbstractParser implements FarragoSessionParser
         parserImpl.ReInit(new StringReader(keyword));
         try {
             parserImpl.NonReservedKeyWord();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    private static boolean isReservedFunctionName(
+        FarragoAbstractParserImpl parserImpl, String keyword)
+    {
+        parserImpl.ReInit(new StringReader(keyword));
+        try {
+            parserImpl.ReservedFunctionName();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    private static boolean isContextVariable(
+        FarragoAbstractParserImpl parserImpl, String keyword)
+    {
+        parserImpl.ReInit(new StringReader(keyword));
+        try {
+            parserImpl.ContextVariable();
             return true;
         } catch (Exception e) {
             return false;

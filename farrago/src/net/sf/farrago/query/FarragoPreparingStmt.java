@@ -794,11 +794,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         addDependency(table);
 
         if (table.getVisibility() == null) {
-            // Oops, we're processing a compound CREATE SCHEMA statement, and
-            // this referenced table hasn't been validated yet.  Throw a
-            // special exception to terminate processing of the current
-            // dependent view definition, and we'll try again later once the
-            // table has been validated.
             throw new FarragoUnvalidatedDependencyException();
         }
 

@@ -34,6 +34,7 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
 
 
 /**
@@ -206,7 +207,7 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      *
      * @return type definition
      */
-    public CwmSqldataType findSqldataType(String typeName);
+    public CwmSqldataType findSqldataType(SqlIdentifier typeName);
 
     /**
      * Resolve a (possibly qualified) name of a schema object.
@@ -237,6 +238,12 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
       */
     public String [] getAllSchemaObjectNames(String [] names);
 
+    /**
+     * Sets the parser position to use for context in error messages.
+     *
+     * @param pos new position to set, or null to clear
+     */
+    public void setParserPosition(SqlParserPos pos);
 }
 
 

@@ -73,19 +73,24 @@ public abstract class DdlHandler
     {
         return validator;
     }
+
+    public void validateAttributeSet(CwmClass cwmClass)
+    {
+        validator.validateUniqueNames(
+            cwmClass,
+            cwmClass.getFeature(),
+            false);
+
+        Iterator iter = cwmClass.getFeature().iterator();
+        while (iter.hasNext()) {
+            FemAbstractAttribute attribute = (FemAbstractAttribute) iter.next();
+            validateAttribute(attribute);
+        }
+    }
     
     public void validateBaseColumnSet(FemBaseColumnSet columnSet)
     {
-        validator.validateUniqueNames(
-            columnSet,
-            columnSet.getFeature(),
-            false);
-
-        Iterator iter = columnSet.getFeature().iterator();
-        while (iter.hasNext()) {
-            FemStoredColumn column = (FemStoredColumn) iter.next();
-            validateAttribute(column);
-        }
+        validateAttributeSet(columnSet);
 
         // REVIEW jvs 21-Jan-2005:  something fishy here...
 
@@ -122,15 +127,58 @@ public abstract class DdlHandler
         }
         
         validateTypedElement(attribute);
+
+        String defaultExpression = attribute.getInitialValue().getBody();
+        if (!defaultExpression.equalsIgnoreCase("NULL")) {
+            FarragoSession session = validator.newReentrantSession();
+            try {
+                validateDefaultClause(attribute, session, defaultExpression);
+            } catch (Throwable ex) {
+                throw validator.newPositionalError(
+                    attribute,
+                    validator.res.newValidatorBadDefaultClause(
+                        repos.getLocalizedObjectName(attribute), 
+                        ex));
+            } finally {
+                validator.releaseReentrantSession(session);
+            }
+        }
+    }
+
+    private void convertSqlToCatalogType(
+        SqlDataTypeSpec dataType,
+        FemSqltypedElement element)
+    {
+        CwmSqldataType type =
+            validator.getStmtValidator().findSqldataType(
+                dataType.getTypeName());
+        
+        element.setType(type);
+        if (dataType.getPrecision() > 0) {
+            element.setPrecision(new Integer(dataType.getPrecision()));
+        }
+        if (dataType.getScale() > 0) {
+            element.setScale(new Integer(dataType.getScale()));
+        }
+        if (dataType.getCharSetName() != null) {
+            element.setCharacterSetName(dataType.getCharSetName());
+        }
     }
     
     public void validateTypedElement(FemAbstractTypedElement abstractElement)
     {
         FemSqltypedElement element = FarragoCatalogUtil.toFemSqltypedElement(
             abstractElement);
+
+        SqlDataTypeSpec dataType = (SqlDataTypeSpec)
+            validator.getSqlDefinition(abstractElement);
+
+        if (dataType != null) {
+            convertSqlToCatalogType(dataType, element);
+        }
         
-        SqlTypeName typeName = SqlTypeName.get(
-            element.getType().getName());
+        CwmSqldataType type = (CwmSqldataType) element.getType();
+        SqlTypeName typeName = SqlTypeName.get(type.getName());
 
         // NOTE: parser only generates precision, but CWM discriminates
         // precision from length, so we take care of it below
@@ -152,7 +200,7 @@ public abstract class DdlHandler
                 throw validator.newPositionalError(
                     abstractElement,
                     validator.res.newValidatorPrecRequired(
-                        repos.getLocalizedObjectName(element.getType()),
+                        repos.getLocalizedObjectName(type),
                         repos.getLocalizedObjectName(abstractElement)));
             }
         } else {
@@ -160,7 +208,7 @@ public abstract class DdlHandler
                 throw validator.newPositionalError(
                     abstractElement,
                     validator.res.newValidatorPrecUnexpected(
-                        repos.getLocalizedObjectName(element.getType()),
+                        repos.getLocalizedObjectName(type),
                         repos.getLocalizedObjectName(abstractElement)));
             }
         }
@@ -171,7 +219,7 @@ public abstract class DdlHandler
                 throw validator.newPositionalError(
                     abstractElement,
                     validator.res.newValidatorScaleUnexpected(
-                        repos.getLocalizedObjectName(element.getType()),
+                        repos.getLocalizedObjectName(type),
                         repos.getLocalizedObjectName(abstractElement)));
             }
         }
@@ -215,17 +263,14 @@ public abstract class DdlHandler
                 throw validator.newPositionalError(
                     abstractElement,
                     validator.res.newValidatorCharsetUnexpected(
-                        repos.getLocalizedObjectName(element.getType()),
+                        repos.getLocalizedObjectName(type),
                         repos.getLocalizedObjectName(abstractElement)));
             }
         }
 
         // now, enforce type-defined limits
-        CwmSqldataType cwmType = validator.getStmtValidator().findSqldataType(
-            element.getType().getName());
-
-        if (cwmType instanceof CwmSqlsimpleType) {
-            CwmSqlsimpleType simpleType = (CwmSqlsimpleType) cwmType;
+        if (type instanceof CwmSqlsimpleType) {
+            CwmSqlsimpleType simpleType = (CwmSqlsimpleType) type;
 
             if (element.getLength() != null) {
                 Integer maximum = simpleType.getCharacterMaximumLength();
@@ -266,15 +311,17 @@ public abstract class DdlHandler
                             repos.getLocalizedObjectName(abstractElement)));
                 }
             }
-        } else if (cwmType instanceof FemSqlcollectionType) {
+        } else if (type instanceof FemSqlcollectionType) {
             FemSqlcollectionType collectionType =
-                (FemSqlcollectionType) element.getType();
+                (FemSqlcollectionType) type;
             FemSqltypeAttribute componentType = (FemSqltypeAttribute)
                 collectionType.getFeature().get(0);
             validateAttribute(componentType);
+        } else if (type instanceof FemSqlobjectType) {
+            // nothing special to do for structured types, which were
+            // already validated on creation
         } else {
-            Util.permAssert(false,
-                "only simple and collection types are supported");
+            throw Util.needToImplement(type);
         }
 
         // REVIEW jvs 18-April-2004: I had to put these in because CWM
@@ -287,6 +334,8 @@ public abstract class DdlHandler
         if (element.getCharacterSetName() == null) {
             element.setCharacterSetName("");
         }
+
+        validator.getStmtValidator().setParserPosition(null);
     }
 
     /**
@@ -316,7 +365,8 @@ public abstract class DdlHandler
             lookupName = typeName.getName();
         }
         CwmSqldataType cwmType = 
-            validator.getStmtValidator().findSqldataType(lookupName);
+            validator.getStmtValidator().findSqldataType(
+                new SqlIdentifier(lookupName, null));
         column.setType(cwmType);
         if (typeName != null) {
             if (typeName.allowsPrec()) {
@@ -358,6 +408,46 @@ public abstract class DdlHandler
             }
         }
         return ex;
+    }
+    
+    private void validateDefaultClause(
+        FemAbstractAttribute attribute,
+        FarragoSession session,
+        String defaultExpression)
+    {
+        String sql = "VALUES(" + defaultExpression + ")";
+        FarragoSessionStmtContext stmtContext = session.newStmtContext();
+        stmtContext.prepare(sql, false);
+        RelDataType rowType = stmtContext.getPreparedRowType();
+        assert (rowType.getFieldList().size() == 1);
+
+        if (stmtContext.getPreparedParamType().getFieldList().size() > 0) {
+            throw validator.newPositionalError(
+                attribute,
+                validator.res.newValidatorBadDefaultParam(
+                    repos.getLocalizedObjectName(attribute)));
+        }
+
+        // SQL standard is very picky about what can go in a DEFAULT clause
+        RelDataType sourceType = rowType.getFields()[0].getType();
+        RelDataTypeFamily sourceTypeFamily = sourceType.getFamily();
+
+        RelDataType targetType =
+            validator.getTypeFactory().createCwmElementType(attribute);
+        RelDataTypeFamily targetTypeFamily = targetType.getFamily();
+
+        if (sourceTypeFamily != targetTypeFamily) {
+            throw validator.newPositionalError(
+                attribute,
+                validator.res.newValidatorBadDefaultType(
+                    repos.getLocalizedObjectName(attribute),
+                    targetTypeFamily.toString(),
+                    sourceTypeFamily.toString()));
+        }
+
+        // TODO:  additional rules from standard, like no truncation allowed.
+        // Maybe just execute SELECT with and without cast to target type and
+        // make sure the same value comes back.
     }
 }
 

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/optimizer/namespace.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/optimizer/namespace.sql#2 $
 0: jdbc:farrago:> -- Test queries which make use of foreign namespaces
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- force usage of Java calculator
@@ -243,7 +243,7 @@
 '    IteratorToFennelConverter'
 '      IterCalcRel(EXCEPTION_NAME=[$0], PARAM_NAME=[$7])'
 '        MedMdrJoinRel(condition=[=($5, $9)], joinType=[inner])'
-'          IterCalcRel(name=[$0], annotation=[$1], container=[$2], scope=[$3], visibility=[$4], mofId=[$5], mofClassName=[$6], condition=[=($0, _ISO-8859-1'NameNotResolved' COLLATE ISO-8859-1$en_US$primary)])'
+'          IterCalcRel(name=[$0], annotation=[$1], container=[$2], scope=[$3], visibility=[$4], mofId=[$5], mofClassName=[$6], condition=[=($0, _ISO-8859-1'NameNotResolved')])'
 '            MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Exception]])'
 '          MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Parameter]])'
 0: jdbc:farrago:> 
@@ -339,7 +339,7 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(PARAM_NAME=[$0], EXCEPTION_NAME=[$8], condition=[=($0, _ISO-8859-1'name' COLLATE ISO-8859-1$en_US$primary)])'
+'      IterCalcRel(PARAM_NAME=[$0], EXCEPTION_NAME=[$8], condition=[=($0, _ISO-8859-1'name')])'
 '        MedMdrJoinRel(condition=[=($2, $13)], joinType=[left])'
 '          MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Parameter]])'
 '          MedMdrClassExtentRel(table=[[MOF_REPOSITORY, MODEL, Exception]])'

@@ -1,0 +1,137 @@
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udf.sql#7 $
+0: jdbc:farrago:> -- Test DDL for user-defined types
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create schema udttest;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set schema 'udttest';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set path 'udttest';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test something basic
+0: jdbc:farrago:> create type rectilinear_coord as (
+. . . . . . . . >     x double,
+. . . . . . . . >     y double
+. . . . . . . . > );
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test default values
+0: jdbc:farrago:> create type rectilinear_coord0 as (
+. . . . . . . . >     x double default 0,
+. . . . . . . . >     y double default 0
+. . . . . . . . > );
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test nested type
+0: jdbc:farrago:> create type circle as (
+. . . . . . . . >     center rectilinear_coord,
+. . . . . . . . >     radius double
+. . . . . . . . > );
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  at least one attribute required
+0: jdbc:farrago:> create type no_attributes as ();
+Error: net.sf.farrago.parser.impl.ParseException: Encountered ")" at line 1, column 31.
+Was expecting one of:
+    <IDENTIFIER> ...
+    <QUOTED_IDENTIFIER> ... (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  unknown attribute type
+0: jdbc:farrago:> create type bad_attrtype as (
+. . . . . . . . >     x foobar
+. . . . . . . . > );
+Error: DDL validation error near line 1, column 35: Reference to unknown datatype "FOOBAR" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  constraints not allowed on attributes
+0: jdbc:farrago:> create type bad_constraint as (
+. . . . . . . . >     x int not null
+. . . . . . . . > );
+Error: net.sf.farrago.parser.impl.ParseException: Encountered "not" at line 1, column 43.
+Was expecting one of:
+    "CHARACTER" ...
+    "COLLATE" ...
+    "DEFAULT" ...
+    "(" ...
+    ")" ...
+    "," ... (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  default value type mismatch
+0: jdbc:farrago:> create type bad_default as (
+. . . . . . . . >     x double default 'zero'
+. . . . . . . . > );
+Error: DDL validation error near line 1, column 34: Type mismatch in DEFAULT clause for structured type attribute "X";
+column type family is NUMERIC but default value type family is CHARACTER (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  self-referencing nested type
+0: jdbc:farrago:> create type linked_list_node as (
+. . . . . . . . >     x int,
+. . . . . . . . >     next linked_list_node
+. . . . . . . . > );
+Error: Object definition contains recursive cycle (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  mutual nesting
+0: jdbc:farrago:> create schema cardiopulmonary
+. . . . . . . . > create type heart as (
+. . . . . . . . >     partner lung
+. . . . . . . . > )
+. . . . . . . . > create type lung as (
+. . . . . . . . >     partner heart
+. . . . . . . . > )
+. . . . . . . . > ;
+Error: Object definition contains recursive cycle (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test out-of-order definitions
+0: jdbc:farrago:> create schema musculoskeletal
+. . . . . . . . > create type muscle as (
+. . . . . . . . >     s skeleton
+. . . . . . . . > )
+. . . . . . . . > create type skeleton as (
+. . . . . . . . >     x double
+. . . . . . . . > )
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test path resolution and explicit qualification
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create type tire as (
+. . . . . . . . >     inner_radius double,
+. . . . . . . . >     outer_radius double,
+. . . . . . . . >     tread double
+. . . . . . . . > );
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create schema spare_types
+. . . . . . . . > create type tire as (
+. . . . . . . . >     radius double,
+. . . . . . . . >     tread double
+. . . . . . . . > )
+. . . . . . . . > create type toothbrush as (
+. . . . . . . . >     firmness double,
+. . . . . . . . >     length double,
+. . . . . . . . >     head_angle double,
+. . . . . . . . >     electric boolean
+. . . . . . . . > )
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test explicit qualification
+0: jdbc:farrago:> create type toiletries as (
+. . . . . . . . >     tb spare_types.toothbrush,
+. . . . . . . . >     c udttest.circle
+. . . . . . . . > );
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  wrong schema
+0: jdbc:farrago:> create type bad_schema as (
+. . . . . . . . >     tb udttest.toothbrush
+. . . . . . . . > );
+Error: DDL validation error near line 1, column 33: Reference to unknown structured object type "TOOTHBRUSH" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test implicit path lookup
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set path 'spare_types';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create type washroom as (
+. . . . . . . . >     tb toothbrush
+. . . . . . . . > );
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  not on path
+0: jdbc:farrago:> create type line_segment as (
+. . . . . . . . >     endpoint1 rectilinear_coord,
+. . . . . . . . >     endpoint2 rectilinear_coord
+. . . . . . . . > );
+Error: DDL validation error near line 1, column 35: Reference to unknown datatype "RECTILINEAR_COORD" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

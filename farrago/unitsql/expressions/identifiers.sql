@@ -5,7 +5,7 @@
 
 -- Test normal identifiers
 create table sales.idtest (
-    count integer primary key,
+    obj_count integer primary key,
     "Desc" varchar(40)
 );
 
@@ -18,7 +18,7 @@ values ( 15, 'lamps' ),
        ( 20, 'cameras' ),
        ( 44, 'frogs' );
 
-select Count, "Desc" from sales.idtest;
+select Obj_Count, "Desc" from sales.idtest;
 
 drop table sales.idtest;
 

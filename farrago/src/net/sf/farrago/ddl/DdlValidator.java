@@ -106,11 +106,17 @@ public class DdlValidator extends FarragoCompoundAllocation
      */
     private MultiMap dropRules;
 
-    /** Map from parsed object to SqlParserPos. */
+    /** Map from catalog object to SqlParserPos for beginning of definition. */
     private final Map parserContextMap;
 
-    /** Map from parsed object to SqlParserPos for offset of body. */
+    /** Map from catalog object to SqlParserPos for offset of body. */
     private final Map parserOffsetMap;
+
+    /**
+     * Map from catalog object to associated SQL definition
+     * (not all objects have these).
+     */
+    private final Map sqlMap;
 
     /**
      * Map containing scheduled validation actions.  The key is the MofId of
@@ -167,13 +173,15 @@ public class DdlValidator extends FarragoCompoundAllocation
         this.stmtValidator = stmtValidator;
         stmtValidator.addAllocation(this);
 
-        // NOTE jvs 25-Jan-2004:  Use LinkedHashXXX everywhere, since order
-        // matters in some cases.
+        // NOTE jvs 25-Jan-2004:  Use LinkedHashXXX, since order
+        // matters for these.
         schedulingMap = new LinkedHashMap();
         validatedMap = new LinkedHashMap();
-        parserContextMap = new LinkedHashMap();
-        parserOffsetMap = new LinkedHashMap();
         deleteQueue = new LinkedHashSet();
+
+        parserContextMap = new HashMap();
+        parserOffsetMap = new HashMap();
+        sqlMap = new HashMap();
 
         dropRules = new MultiMap();
 
@@ -345,12 +353,16 @@ public class DdlValidator extends FarragoCompoundAllocation
     // implement FarragoSessionDdlValidator
     public String getParserPosString(RefObject obj)
     {
-        SqlParserPos parserContext =
-            (SqlParserPos) parserContextMap.get(obj);
+        SqlParserPos parserContext = getParserPos(obj);
         if (parserContext == null) {
             return null;
         }
         return parserContext.toString();
+    }
+
+    private SqlParserPos getParserPos(RefObject obj)
+    {
+        return (SqlParserPos) parserContextMap.get(obj);
     }
 
     // implement FarragoSessionDdlValidator
@@ -363,6 +375,23 @@ public class DdlValidator extends FarragoCompoundAllocation
     public SqlParserPos getParserOffset(RefObject obj)
     {
         return (SqlParserPos) parserOffsetMap.get(obj);
+    }
+    
+    // implement FarragoSessionDdlValidator
+    public void setSqlDefinition(RefObject obj, SqlNode sqlNode)
+    {
+        sqlMap.put(obj, sqlNode);
+    }
+    
+    // implement FarragoSessionDdlValidator
+    public SqlNode getSqlDefinition(RefObject obj)
+    {
+        SqlNode sqlNode = (SqlNode) sqlMap.get(obj);
+        SqlParserPos parserContext = getParserPos(obj);
+        if (parserContext != null) {
+            stmtValidator.setParserPosition(parserContext);
+        }
+        return sqlNode;
     }
     
     // implement FarragoSessionDdlValidator
@@ -793,8 +822,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         RefObject refObj,
         SqlValidatorException ex)
     {
-        SqlParserPos parserContext =
-            (SqlParserPos) parserContextMap.get(refObj);
+        SqlParserPos parserContext = getParserPos(refObj);
         assert(parserContext != null);
         String msg = parserContext.toString();
         FarragoException contextExcn = res.newValidatorPositionContext(msg, ex);
@@ -947,21 +975,15 @@ public class DdlValidator extends FarragoCompoundAllocation
         CwmModelElement modelElement,
         Object action)
     {
-        if (action == VALIDATE_MODIFICATION) {
-            boolean fired = invokeHandler(
-                modelElement,
-                "validateModification");
-            if (fired) {
-                return true;
-            } else {
-                action = VALIDATE_CREATION;
-            }
-        }
-        
+        stmtValidator.setParserPosition(null);
         if (action == VALIDATE_CREATION) {
             return invokeHandler(
                 modelElement,
                 "validateDefinition");
+        } else if (action == VALIDATE_MODIFICATION) {
+            return invokeHandler(
+                modelElement,
+                "validateModification");
         } else if (action == VALIDATE_DELETION) {
             return invokeHandler(
                 modelElement,

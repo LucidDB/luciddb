@@ -54,7 +54,7 @@ create foreign table mof_schema.mof_exception(
     name char(20),
     annotation varchar(128),
     container varchar(128),
-    scope varchar(128),
+    "SCOPE" varchar(128),
     visibility varchar(128),
     "mofId" varchar(128),
     "mofClassName" varchar(128))

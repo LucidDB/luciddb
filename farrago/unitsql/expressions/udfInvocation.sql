@@ -311,19 +311,19 @@ specific confusing_integer
 contains sql
 return 'V2INTEGER:  '||cast(x as varchar(128))
 
-create function upper(in x integer)
+create function "UPPER"(in x integer)
 returns integer
 specific upper1
 contains sql
 return x+1
 
-create function upper(in x varchar(128))
+create function "UPPER"(in x varchar(128))
 returns varchar(128)
 specific upper2
 contains sql
 return x||'_plus_one'
 
-create function lower(in x integer)
+create function "LOWER"(in x integer)
 returns integer
 contains sql
 return x-1
@@ -376,7 +376,7 @@ values upper(7);
 
 values upper('cobol');
 
-values information_schema.upper('cobol');
+values information_schema."UPPER"('cobol');
 
 values lower(7);
 
