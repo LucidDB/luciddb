@@ -227,7 +227,9 @@ public class OJPlannerFactory
         {
             final AggregateRel aggregate = (AggregateRel) rel;
             final RelNode javaChild =
-                convert(aggregate.child, CallingConvention.JAVA);
+                mergeTraitsAndConvert(
+                    aggregate.getTraits(), CallingConvention.JAVA, 
+                    aggregate.child);
             if (javaChild == null) {
                 return null;
             }
@@ -276,7 +278,9 @@ public class OJPlannerFactory
         {
             final DistinctRel distinct = (DistinctRel) rel;
             final RelNode javaChild =
-                convert(distinct.child, CallingConvention.JAVA);
+                mergeTraitsAndConvert(
+                    distinct.getTraits(), CallingConvention.JAVA,
+                    distinct.child);
             if (javaChild == null) {
                 return null;
             }
@@ -298,7 +302,8 @@ public class OJPlannerFactory
         {
             final FilterRel filter = (FilterRel) rel;
             final RelNode javaChild =
-                convert(filter.child, CallingConvention.JAVA);
+                mergeTraitsAndConvert(
+                    filter.getTraits(), CallingConvention.JAVA, filter.child);
             if (javaChild == null) {
                 return null;
             }
@@ -331,16 +336,18 @@ public class OJPlannerFactory
                 // possible)
                 return null;
             }
-            final RelNode convertedLeft = convert(
-                    join.getLeft(),
-                    convention);
+            final RelNode convertedLeft = mergeTraitsAndConvert(
+                    join.getTraits(),
+                    convention,
+                    join.getLeft());
             if (convertedLeft == null) {
                 return null;
             }
             final RelNode convertedRight =
-                convert(
-                    join.getRight(),
-                    convention);
+                mergeTraitsAndConvert(
+                    join.getTraits(),
+                    convention,
+                    join.getRight());
             if (convertedRight == null) {
                 return null;
             }
@@ -368,6 +375,8 @@ public class OJPlannerFactory
 
         public RelNode convert(RelNode rel)
         {
+            // REVIEW: SWZ: 3/5/2005: Might need to propagate other 
+            // traits fro OneRowRel to JavaOneRowRel
             final OneRowRel oneRow = (OneRowRel) rel;
             return new JavaOneRowRel(oneRow.getCluster());
         }
@@ -392,7 +401,9 @@ public class OJPlannerFactory
                 return null;
             }
             final RelNode javaChild =
-                convert(project.child, CallingConvention.JAVA);
+                mergeTraitsAndConvert(
+                    project.getTraits(), CallingConvention.JAVA,
+                    project.child);
             if (javaChild == null) {
                 return null;
             }
@@ -454,7 +465,9 @@ public class OJPlannerFactory
             RelNode [] newInputs = new RelNode[union.getInputs().length];
             for (int i = 0; i < newInputs.length; i++) {
                 newInputs[i] =
-                    convert(union.getInputs()[i], CallingConvention.JAVA);
+                    mergeTraitsAndConvert(
+                        union.getTraits(), CallingConvention.JAVA,
+                        union.getInputs()[i]);
                 if (newInputs[i] == null) {
                     return null; // cannot convert this input
                 }
