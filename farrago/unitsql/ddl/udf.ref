@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udf.sql#7 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udf.sql#8 $
 0: jdbc:farrago:> -- Test DDL for user-defined functions
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udftest;
@@ -10,12 +10,12 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test SQL-defined functions
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function celsius_to_fahrenheit(in c double)
+0: jdbc:farrago:> create function celsius_to_fahrenheit(c double)
 . . . . . . . . > returns double
 . . . . . . . . > contains sql
 . . . . . . . . > return c*1.8 + 32;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function add_integers(in i int,in j int)
+0: jdbc:farrago:> create function add_integers(i int,j int)
 . . . . . . . . > returns int
 . . . . . . . . > contains sql
 . . . . . . . . > return i + j;
@@ -30,21 +30,21 @@ Error: DDL validation error near line 1, column 16: Reference to unknown procedu
 0: jdbc:farrago:> -- test overloading
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail
-0: jdbc:farrago:> create function celsius_to_fahrenheit(in c real)
+0: jdbc:farrago:> create function celsius_to_fahrenheit(c real)
 . . . . . . . . > returns real
 . . . . . . . . > contains sql
 . . . . . . . . > return c*1.8 + 32;
 Error: DDL validation error near line 1, column 8: Target schema "LOCALDB"."UDFTEST" already contains routine "CELSIUS_TO_FAHRENHEIT" with same name (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should succeed:  specific name avoids conflict
-0: jdbc:farrago:> create function celsius_to_fahrenheit(in c real)
+0: jdbc:farrago:> create function celsius_to_fahrenheit(c real)
 . . . . . . . . > returns real
 . . . . . . . . > specific celsius_to_fahrenheit_real
 . . . . . . . . > contains sql
 . . . . . . . . > return c*1.8 + 32;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  schema for specific name must match schema for invocation name
-0: jdbc:farrago:> create function add_integers(in i int,in j int)
+0: jdbc:farrago:> create function add_integers(i int,j int)
 . . . . . . . . > returns int
 . . . . . . . . > specific udftest2.add_ints
 . . . . . . . . > contains sql
@@ -56,7 +56,7 @@ Error: DDL validation error near line 1, column 8: Schema "UDFTEST2" for specifi
 0: jdbc:farrago:> drop function celsius_to_fahrenheit_real;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test redundant language specification
-0: jdbc:farrago:> create function celsius_to_fahrenheit(in c real)
+0: jdbc:farrago:> create function celsius_to_fahrenheit(c real)
 . . . . . . . . > returns real
 . . . . . . . . > language sql
 . . . . . . . . > contains sql
@@ -64,38 +64,52 @@ Error: DDL validation error near line 1, column 8: Schema "UDFTEST2" for specifi
 0: jdbc:farrago:> drop function celsius_to_fahrenheit;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test redundant parameter style specification
-0: jdbc:farrago:> create function celsius_to_fahrenheit(in c real)
+0: jdbc:farrago:> create function celsius_to_fahrenheit(c real)
 . . . . . . . . > returns real
 . . . . . . . . > parameter style sql
 . . . . . . . . > contains sql
 . . . . . . . . > return c*1.8 + 32;
 0: jdbc:farrago:> drop function celsius_to_fahrenheit;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail:  can't declare OUT parameter to function
-0: jdbc:farrago:> create function add_integers(out i int,in j int)
+0: jdbc:farrago:> -- should fail:  can't declare explicit IN parameter to function
+0: jdbc:farrago:> create function add_integers(in i int,j int)
 . . . . . . . . > returns int
 . . . . . . . . > contains sql
 . . . . . . . . > return i + j;
-Error: DDL validation error near line 1, column 29: Parameters to routine "UDFTEST"."ADD_INTEGERS" may not be declared as OUT or INOUT because it is a function (state=,code=0)
+Error: DDL validation error near line 1, column 29: Parameter mode to routine "UDFTEST"."ADD_INTEGERS" may not be declared because it is a function (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  can't declare OUT parameter to function
+0: jdbc:farrago:> create function add_integers(out i int,j int)
+. . . . . . . . > returns int
+. . . . . . . . > contains sql
+. . . . . . . . > return i + j;
+Error: DDL validation error near line 1, column 29: Parameter mode to routine "UDFTEST"."ADD_INTEGERS" may not be declared because it is a function (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  can't declare INOUT parameter to function
-0: jdbc:farrago:> create function add_integers(inout i int,in j int)
+0: jdbc:farrago:> create function add_integers(inout i int,j int)
 . . . . . . . . > returns int
 . . . . . . . . > contains sql
 . . . . . . . . > return i + j;
-Error: DDL validation error near line 1, column 29: Parameters to routine "UDFTEST"."ADD_INTEGERS" may not be declared as OUT or INOUT because it is a function (state=,code=0)
+Error: DDL validation error near line 1, column 29: Parameter mode to routine "UDFTEST"."ADD_INTEGERS" may not be declared because it is a function (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  reference to bogus parameter
+0: jdbc:farrago:> create function add_integers(i int,j int)
+. . . . . . . . > returns int
+. . . . . . . . > contains sql
+. . . . . . . . > return i + j + k;
+Error: At line 1, column 83: Unknown identifier 'K' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test various modifiers
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  NO SQL can't be specified for SQL-defined routines
-0: jdbc:farrago:> create function add_integers(in i int,in j int)
+0: jdbc:farrago:> create function add_integers(i int,j int)
 . . . . . . . . > returns int
 . . . . . . . . > no sql
 . . . . . . . . > return i + j;
 Error: DDL validation error near line 1, column 8: NO SQL cannot be specified for routine "UDFTEST"."ADD_INTEGERS" with SQL definition (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- a bit of a fib, but should pass
-0: jdbc:farrago:> create function add_integers(in i int,in j int)
+0: jdbc:farrago:> create function add_integers(i int,j int)
 . . . . . . . . > returns int
 . . . . . . . . > reads sql data
 . . . . . . . . > return i + j;
@@ -103,14 +117,14 @@ Error: DDL validation error near line 1, column 8: NO SQL cannot be specified fo
 0: jdbc:farrago:> drop function add_integers;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- a bit of a fib, but should pass
-0: jdbc:farrago:> create function add_integers(in i int,in j int)
+0: jdbc:farrago:> create function add_integers(i int,j int)
 . . . . . . . . > returns int
 . . . . . . . . > modifies sql data
 . . . . . . . . > return i + j;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop function add_integers;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function add_integers(in i int,in j int)
+0: jdbc:farrago:> create function add_integers(i int,j int)
 . . . . . . . . > returns int
 . . . . . . . . > contains sql
 . . . . . . . . > deterministic
@@ -118,7 +132,7 @@ Error: DDL validation error near line 1, column 8: NO SQL cannot be specified fo
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop function add_integers;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function add_integers(in i int,in j int)
+0: jdbc:farrago:> create function add_integers(i int,j int)
 . . . . . . . . > returns int
 . . . . . . . . > contains sql
 . . . . . . . . > not deterministic
@@ -126,7 +140,7 @@ Error: DDL validation error near line 1, column 8: NO SQL cannot be specified fo
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop function add_integers;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function add_integers(in i int,in j int)
+0: jdbc:farrago:> create function add_integers(i int,j int)
 . . . . . . . . > returns int
 . . . . . . . . > contains sql
 . . . . . . . . > returns null on null input
@@ -134,7 +148,7 @@ Error: DDL validation error near line 1, column 8: NO SQL cannot be specified fo
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop function add_integers;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function add_integers(in i int,in j int)
+0: jdbc:farrago:> create function add_integers(i int,j int)
 . . . . . . . . > returns int
 . . . . . . . . > contains sql
 . . . . . . . . > called on null input
@@ -144,7 +158,7 @@ Error: DDL validation error near line 1, column 8: NO SQL cannot be specified fo
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test dependencies and cascade/restrict
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function to_upper(in v varchar(128))
+0: jdbc:farrago:> create function to_upper(v varchar(128))
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > contains sql
 . . . . . . . . > return upper(v);
@@ -153,12 +167,12 @@ Error: DDL validation error near line 1, column 8: NO SQL cannot be specified fo
 . . . . . . . . > select to_upper(name)
 . . . . . . . . > from sales.depts;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function to_upper2(in v varchar(128))
+0: jdbc:farrago:> create function to_upper2(v varchar(128))
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > contains sql
 . . . . . . . . > return upper(v);
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function to_uppertrim(in v varchar(128))
+0: jdbc:farrago:> create function to_uppertrim(v varchar(128))
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > contains sql
 . . . . . . . . > return trim(trailing ' ' from to_upper2(v));
@@ -178,23 +192,23 @@ Error: Dropping routine "UDFTEST"."TO_UPPER2" requires CASCADE because other obj
 0: jdbc:farrago:> -- should succeed now that to_uppertrim is gone
 0: jdbc:farrago:> drop function to_upper2;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function add_integers(in i int,in j int)
+0: jdbc:farrago:> create function add_integers(i int,j int)
 . . . . . . . . > returns int
 . . . . . . . . > contains sql
 . . . . . . . . > return i + j;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail
 0: jdbc:farrago:> create schema badpath
-. . . . . . . . > create function double_integer(in i int)
+. . . . . . . . > create function double_integer(i int)
 . . . . . . . . > returns int
 . . . . . . . . > contains sql
 . . . . . . . . > return add_integers(i,i);
-Error: At line 1, column 96: No match found for function signature ADD_INTEGERS(<NUMERIC>, <NUMERIC>) (state=,code=0)
+Error: At line 1, column 93: No match found for function signature ADD_INTEGERS(<NUMERIC>, <NUMERIC>) (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should succeed
 0: jdbc:farrago:> create schema goodpath
 . . . . . . . . > path udftest
-. . . . . . . . > create function double_integer(in i int)
+. . . . . . . . > create function double_integer(i int)
 . . . . . . . . > returns int
 . . . . . . . . > contains sql
 . . . . . . . . > return add_integers(i,i);
@@ -202,67 +216,62 @@ Error: At line 1, column 96: No match found for function signature ADD_INTEGERS(
 0: jdbc:farrago:> -- begin tests for mismatched Java/SQL
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  cannot specify both SQL body and external name
-0: jdbc:farrago:> create function get_java_property(in name varchar(128))
+0: jdbc:farrago:> create function get_java_property(name varchar(128))
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > contains sql
 . . . . . . . . > external name 'class java.lang.System.getProperty'
 . . . . . . . . > return 'undefined';
-Error: net.sf.farrago.parser.impl.ParseException: Encountered "return" at line 1, column 142.
+Error: net.sf.farrago.parser.impl.ParseException: Encountered "return" at line 1, column 139.
 Was expecting one of:
     <EOF> 
     "EXTERNAL" ...
     "PARAMETER" ... (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  cannot specify language SQL with external name
-0: jdbc:farrago:> create function get_java_property(in name varchar(128))
+0: jdbc:farrago:> create function get_java_property(name varchar(128))
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > language sql
 . . . . . . . . > contains sql
 . . . . . . . . > external name 'class java.lang.System.getProperty';
-Error: DDL validation error near line 1, column 8: External routine "UDFTEST"."GET_JAVA_PROPERTY" cannot specify non-JAVA language (state=,code=0)
+Error: DDL validation error near line 1, column 8: Body required for routine "UDFTEST"."GET_JAVA_PROPERTY" with language SQL (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  cannot specify parameter style SQL with external name
-0: jdbc:farrago:> create function get_java_property(in name varchar(128))
+0: jdbc:farrago:> create function get_java_property(name varchar(128))
 . . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
 . . . . . . . . > parameter style sql
 . . . . . . . . > contains sql
 . . . . . . . . > external name 'class java.lang.System.getProperty';
 Error: DDL validation error near line 1, column 8: External JAVA routine "UDFTEST"."GET_JAVA_PROPERTY" cannot specify non-JAVA parameter style (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  cannot specify parameter style SQL with external name
-0: jdbc:farrago:> create function get_java_property(in name varchar(128))
+0: jdbc:farrago:> create function get_java_property(name varchar(128))
 . . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
 . . . . . . . . > contains sql
 . . . . . . . . > external name 'class java.lang.System.getProperty'
 . . . . . . . . > parameter style sql;
 Error: DDL validation error near line 1, column 8: External JAVA routine "UDFTEST"."GET_JAVA_PROPERTY" cannot specify non-JAVA parameter style (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  cannot specify language JAVA with SQL body
-0: jdbc:farrago:> create function celsius_to_fahrenheit(in c double)
+0: jdbc:farrago:> create function celsius_to_fahrenheit(c double)
 . . . . . . . . > returns double
 . . . . . . . . > language java
 . . . . . . . . > contains sql
 . . . . . . . . > return c*1.8 + 32;
-Error: DDL validation error near line 1, column 8: Non-SQL language cannot be specified for routine "UDFTEST"."CELSIUS_TO_FAHRENHEIT" with SQL definition (state=,code=0)
+Error: DDL validation error near line 1, column 8: External routine "UDFTEST"."CELSIUS_TO_FAHRENHEIT" cannot specify a body (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  cannot specify parameter style JAVA with SQL body
-0: jdbc:farrago:> create function celsius_to_fahrenheit(in c double)
+0: jdbc:farrago:> create function celsius_to_fahrenheit(c double)
 . . . . . . . . > returns double
 . . . . . . . . > parameter style java
 . . . . . . . . > contains sql
 . . . . . . . . > return c*1.8 + 32;
-Error: DDL validation error near line 1, column 8: Non-SQL parameter style cannot be specified for routine "UDFTEST"."CELSIUS_TO_FAHRENHEIT" with SQL definition (state=,code=0)
+Error: DDL validation error near line 1, column 8: Parameter style cannot be specified for routine "UDFTEST"."CELSIUS_TO_FAHRENHEIT" with language SQL (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test external Java routines
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function get_java_property(in name varchar(128))
-. . . . . . . . > returns varchar(128)
-. . . . . . . . > no sql
-. . . . . . . . > external name 'class java.lang.System.getProperty';
-0: jdbc:farrago:> drop function get_java_property;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- test redundant language specification
-0: jdbc:farrago:> create function get_java_property(in name varchar(128))
+0: jdbc:farrago:> create function get_java_property(name varchar(128))
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > language java
 . . . . . . . . > no sql
@@ -270,58 +279,66 @@ Error: DDL validation error near line 1, column 8: Non-SQL parameter style canno
 0: jdbc:farrago:> drop function get_java_property;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test redundant parameter style specification
-0: jdbc:farrago:> create function get_java_property(in name varchar(128))
+0: jdbc:farrago:> create function get_java_property(name varchar(128))
 . . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
 . . . . . . . . > parameter style java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class java.lang.System.getProperty';
 0: jdbc:farrago:> drop function get_java_property;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  missing method spec
-0: jdbc:farrago:> create function get_java_property(in name varchar(128))
+0: jdbc:farrago:> create function get_java_property(name varchar(128))
 . . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class foobar';
 Error: DDL validation error near line 1, column 8: Invalid external Java method specification "class foobar" specified for routine "UDFTEST"."GET_JAVA_PROPERTY" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  unknown class
-0: jdbc:farrago:> create function get_java_property(in name varchar(128))
+0: jdbc:farrago:> create function get_java_property(name varchar(128))
 . . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class java.lang.Rodent.getProperty';
 Error: java.lang.ClassNotFoundException: java.lang.Rodent (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  unknown method 
-0: jdbc:farrago:> create function get_java_property(in name varchar(128))
+0: jdbc:farrago:> create function get_java_property(name varchar(128))
 . . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class java.lang.System.getHotels';
 Error: DDL validation error near line 1, column 8: Unknown external Java method "java.lang.System.getHotels(java.lang.String)" referenced by routine "UDFTEST"."GET_JAVA_PROPERTY" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  method not found due to parameter type mismatch
-0: jdbc:farrago:> create function get_java_property(in name int)
+0: jdbc:farrago:> create function get_java_property(name int)
 . . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class java.lang.System.getProperty';
 Error: DDL validation error near line 1, column 8: Unknown external Java method "java.lang.System.getProperty(int)" referenced by routine "UDFTEST"."GET_JAVA_PROPERTY" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  parameter type mismatch for explicit method spec
-0: jdbc:farrago:> create function get_java_property(in name int)
+0: jdbc:farrago:> create function get_java_property(name int)
 . . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class java.lang.System.getProperty(java.lang.String)';
 Error: DDL validation error near line 1, column 8: Type of routine parameter "NAME" in routine "UDFTEST"."GET_JAVA_PROPERTY" is INTEGER but external Java method "java.lang.System.getProperty(java.lang.String)" takes type class java.lang.String for corresponding parameter (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  return type mismatch
-0: jdbc:farrago:> create function get_java_property(in name varchar(128))
+0: jdbc:farrago:> create function get_java_property(name varchar(128))
 . . . . . . . . > returns int
+. . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class java.lang.System.getProperty';
 Error: DDL validation error near line 1, column 8: Return type of routine "UDFTEST"."GET_JAVA_PROPERTY" is INTEGER but external Java method "java.lang.System.getProperty(java.lang.String)" has return type class java.lang.String (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test explicit selection of method from overloads
-0: jdbc:farrago:> create function to_hex_string(in i int)
+0: jdbc:farrago:> create function to_hex_string(i int)
 . . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name 
 . . . . . . . . > 'class net.sf.farrago.test.FarragoTestUDR.toHexString(java.lang.Integer)';
@@ -329,7 +346,7 @@ Error: DDL validation error near line 1, column 8: Return type of routine "UDFTE
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test early definition binding
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function magic(in i bigint)
+0: jdbc:farrago:> create function magic(i bigint)
 . . . . . . . . > returns int
 . . . . . . . . > specific magic10
 . . . . . . . . > contains sql
@@ -340,7 +357,7 @@ Error: DDL validation error near line 1, column 8: Return type of routine "UDFTE
 . . . . . . . . > contains sql
 . . . . . . . . > return magic(1);
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function magic(in i int)
+0: jdbc:farrago:> create function magic(i int)
 . . . . . . . . > returns int
 . . . . . . . . > specific magic20
 . . . . . . . . > contains sql
@@ -356,7 +373,7 @@ Error: DDL validation error near line 1, column 8: Return type of routine "UDFTE
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test stored binding for builtins vs routines
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function "UPPER"(in x varchar(128))
+0: jdbc:farrago:> create function "UPPER"(x varchar(128))
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > contains sql
 . . . . . . . . > return x||'_plus_one';
@@ -388,31 +405,33 @@ Error: DDL validation error near line 1, column 8: Return type of routine "UDFTE
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test conflict detection
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create procedure set_java_property(in name varchar(128),in val varchar(128))
+0: jdbc:farrago:> create procedure set_java_property(in name varchar(128),val varchar(128))
+. . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.setSystemProperty';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  procedures cannot be overloaded on parameter type
 0: jdbc:farrago:> create procedure set_java_property(in name char(128),in val char(128))
+. . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.setSystemProperty';
 Error: DDL validation error near line 1, column 8: Invocation name and parameter type signature of routine "UDFTEST"."SET_JAVA_PROPERTY" conflicts with another routine (state=,code=0)
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function piffle(in i int)
+0: jdbc:farrago:> create function piffle(i int)
 . . . . . . . . > returns int
 . . . . . . . . > specific piffle1
 . . . . . . . . > contains sql
 . . . . . . . . > return 20;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should succeed:  functions can be overloaded on parameter type
-0: jdbc:farrago:> create function piffle(in d double)
+0: jdbc:farrago:> create function piffle(d double)
 . . . . . . . . > returns int
 . . . . . . . . > specific piffle2
 . . . . . . . . > contains sql
 . . . . . . . . > return 20;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail
-0: jdbc:farrago:> create function piffle(in d double)
+0: jdbc:farrago:> create function piffle(d double)
 . . . . . . . . > returns int
 . . . . . . . . > specific piffle3
 . . . . . . . . > contains sql
@@ -421,7 +440,7 @@ Error: DDL validation error near line 1, column 8: Invocation name and parameter
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  even though the parameter type is different, it is
 0: jdbc:farrago:> -- in the same type precedence equivalence class
-0: jdbc:farrago:> create function piffle(in f float)
+0: jdbc:farrago:> create function piffle(f float)
 . . . . . . . . > returns int
 . . . . . . . . > specific piffle4
 . . . . . . . . > contains sql

@@ -11,8 +11,9 @@ set path 'jartest';
 
 call sqlj.install_jar('file:plugin/FarragoMedJdbc.jar','medjar',0);
 
-create function get_driver_for_url(in url varchar(2000))
+create function get_driver_for_url(url varchar(2000))
 returns varchar(2000)
+language java
 no sql
 external name 
 'medjar:net.sf.farrago.namespace.jdbc.MedJdbcUDR.getDriverForUrl';
@@ -22,6 +23,7 @@ create procedure test_connection(
     in url varchar(2000),
     in user_name varchar(2000),
     in password varchar(2000))
+language java
 no sql
 external name 
 'medjar:net.sf.farrago.namespace.jdbc.MedJdbcUDR.testConnection';
@@ -33,29 +35,33 @@ call test_connection(
 cast(null as varchar(128)));
 
 -- should fail:  invalid external name
-create function bad1(in url varchar(2000))
+create function bad1(url varchar(2000))
 returns varchar(2000)
+language java
 no sql
 external name 
 'net.sf.farrago.namespace.jdbc.MedJdbcUDR.getDriverForUrl';
 
 -- should fail:  invalid jar name
-create function bad2(in url varchar(2000))
+create function bad2(url varchar(2000))
 returns varchar(2000)
+language java
 no sql
 external name 
 'jar jar binks:net.sf.farrago.namespace.jdbc.MedJdbcUDR.testConnection';
 
 -- should fail:  unknown jar
-create function bad3(in url varchar(2000))
+create function bad3(url varchar(2000))
 returns varchar(2000)
+language java
 no sql
 external name 
 'nojar:net.sf.farrago.namespace.jdbc.MedJdbcUDR.testConnection';
 
 -- should fail:  no such method
-create function bad4(in url varchar(2000))
+create function bad4(url varchar(2000))
 returns varchar(2000)
+language java
 no sql
 external name 
 'medjar:net.sf.farrago.namespace.jdbc.MedJdbcUDR.connectToODBC';
@@ -71,8 +77,9 @@ drop procedure test_connection;
 call sqlj.remove_jar('medjar',0);
 
 -- should fail since jar is gone now
-create function get_driver_for_url(in url varchar(2000))
+create function get_driver_for_url(url varchar(2000))
 returns varchar(2000)
+language java
 no sql
 external name 
 'medjar:net.sf.farrago.namespace.jdbc.MedJdbcUDR.getDriverForUrl';
@@ -83,8 +90,9 @@ external name
 
 create jar medjar library 'file:plugin/FarragoMedJdbc.jar' options(0);
 
-create function get_driver_for_url(in url varchar(2000))
+create function get_driver_for_url(url varchar(2000))
 returns varchar(2000)
+language java
 no sql
 external name 
 'medjar:net.sf.farrago.namespace.jdbc.MedJdbcUDR.getDriverForUrl';
@@ -98,8 +106,9 @@ drop jar medjar options(0) restrict;
 drop jar medjar options(0) cascade;
 
 -- should fail since jar is gone now
-create function get_driver_for_url(in url varchar(2000))
+create function get_driver_for_url(url varchar(2000))
 returns varchar(2000)
+language java
 no sql
 external name 
 'medjar:net.sf.farrago.namespace.jdbc.MedJdbcUDR.getDriverForUrl';

@@ -34,6 +34,93 @@ Error: DDL validation error near line 1, column 34: Must define distinct datatyp
 . . . . . . . . >     y double default 0
 . . . . . . . . > ) final;
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- structured type with a single user-defined constructor
+0: jdbc:farrago:> create type rectilinear_coord_non0 as (
+. . . . . . . . >     x double default 100.0,
+. . . . . . . . >     y double default 100.0
+. . . . . . . . > ) final
+. . . . . . . . > constructor method rectilinear_coord_non0(x_init double,y_init double) 
+. . . . . . . . > returns rectilinear_coord_non0 
+. . . . . . . . > self as result
+. . . . . . . . > contains sql
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  method name mismatch
+0: jdbc:farrago:> create specific method rectilinear_coord_nonzero
+. . . . . . . . > for rectilinear_coord_non0
+. . . . . . . . > begin
+. . . . . . . . >     set self.x = z_init; set self.y = y_init; return self
+. . . . . . . . > ; end;
+Error: DDL validation error near line 1, column 24: Reference to unknown routine "RECTILINEAR_COORD_NONZERO" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  unknown param ref
+0: jdbc:farrago:> create specific method rectilinear_coord_non0
+. . . . . . . . > for rectilinear_coord_non0
+. . . . . . . . > begin
+. . . . . . . . >     set self.x = z_init; set self.y = y_init; return self
+. . . . . . . . > ; end;
+Error: At line 1, column 1: Unknown identifier 'Z_INIT' (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  unknown target ref
+0: jdbc:farrago:> create specific method rectilinear_coord_non0
+. . . . . . . . > for rectilinear_coord_non0
+. . . . . . . . > begin
+. . . . . . . . >     set self.z = x_init; set self.y = y_init; return self
+. . . . . . . . > ; end;
+Error: Unknown target field "Z" in constructor assignment (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  bad type assignment
+0: jdbc:farrago:> create specific method rectilinear_coord_non0
+. . . . . . . . > for rectilinear_coord_non0
+. . . . . . . . > begin
+. . . . . . . . >     set self.x = cast(x_init as varchar(20)); set self.y = y_init; return self
+. . . . . . . . > ; end;
+Error: Result expression type VARCHAR(20) cannot be assigned to declared type DOUBLE of structured type attribute "X" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should succeed
+0: jdbc:farrago:> create specific method rectilinear_coord_non0
+. . . . . . . . > for rectilinear_coord_non0
+. . . . . . . . > begin
+. . . . . . . . >     set self.x = x_init; set self.y = y_init; return self
+. . . . . . . . > ; end;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- structured type with overloaded constructors
+0: jdbc:farrago:> create type rectilinear_coord_overloaded as (
+. . . . . . . . >     x double default 50.0,
+. . . . . . . . >     y double default 50.0
+. . . . . . . . > ) final
+. . . . . . . . > constructor method rectilinear_coord_overloaded()
+. . . . . . . . > returns rectilinear_coord_overloaded
+. . . . . . . . > self as result
+. . . . . . . . > contains sql
+. . . . . . . . > specific rectilinear_coord_overload0,
+. . . . . . . . > constructor method rectilinear_coord_overloaded(x_init double) 
+. . . . . . . . > returns rectilinear_coord_overloaded
+. . . . . . . . > self as result
+. . . . . . . . > contains sql
+. . . . . . . . > specific rectilinear_coord_overload1,
+. . . . . . . . > constructor method rectilinear_coord_overloaded(x_init double,y_init double) 
+. . . . . . . . > returns rectilinear_coord_overloaded
+. . . . . . . . > self as result
+. . . . . . . . > contains sql
+. . . . . . . . > specific rectilinear_coord_overload2
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create specific method rectilinear_coord_overload0
+. . . . . . . . > for rectilinear_coord_overloaded
+. . . . . . . . > begin
+. . . . . . . . >     set self.x = 100.0; set self.y = 100.0; return self; end;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create specific method rectilinear_coord_overload1
+. . . . . . . . > for rectilinear_coord_overloaded
+. . . . . . . . > begin
+. . . . . . . . >     set self.x = x_init; return self; end;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create specific method rectilinear_coord_overload2
+. . . . . . . . > for rectilinear_coord_overloaded
+. . . . . . . . > begin
+. . . . . . . . >     set self.x = x_init; set self.y = y_init; return self; end;
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- structured type nesting
 0: jdbc:farrago:> create type circle as (
 . . . . . . . . >     center rectilinear_coord0,
@@ -45,6 +132,61 @@ Error: DDL validation error near line 1, column 34: Must define distinct datatyp
 . . . . . . . . >     major_axis double,
 . . . . . . . . >     minor_axis double
 . . . . . . . . > ) final instantiable;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  constructor name must match type name
+0: jdbc:farrago:> create type bad_constructor_name as (
+. . . . . . . . >     x double,
+. . . . . . . . >     y double
+. . . . . . . . > ) final
+. . . . . . . . > constructor method bad_constructor_nombre(x_init double,y_init double) 
+. . . . . . . . > returns bad_constructor_name
+. . . . . . . . > self as result
+. . . . . . . . > contains sql
+. . . . . . . . > ;
+Error: DDL validation error near line 1, column 93: Name of constructor routine "UDTTEST"."BAD_CONSTRUCTOR_NOMBRE" must match name of structured object type "UDTTEST"."BAD_CONSTRUCTOR_NAME" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  constructor language must be SQL for now
+0: jdbc:farrago:> create type bad_constructor_language as (
+. . . . . . . . >     x double,
+. . . . . . . . >     y double
+. . . . . . . . > ) final
+. . . . . . . . > constructor method bad_constructor_language(x_init double,y_init double) 
+. . . . . . . . > returns bad_constructor_language
+. . . . . . . . > self as result
+. . . . . . . . > language java
+. . . . . . . . > contains sql
+. . . . . . . . > ;
+Error: java.lang.UnsupportedOperationException: class java.lang.String: constructor methods with language JAVA (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  constructor must return self type 
+0: jdbc:farrago:> create type bad_constructor_type as (
+. . . . . . . . >     x double,
+. . . . . . . . >     y double
+. . . . . . . . > ) final
+. . . . . . . . > constructor method bad_constructor_type(x_init double,y_init double) 
+. . . . . . . . > returns int
+. . . . . . . . > self as result
+. . . . . . . . > contains sql
+. . . . . . . . > ;
+Error: DDL validation error near line 1, column 93: Return type of constructor routine "UDTTEST"."BAD_CONSTRUCTOR_TYPE" must be type being constructed (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  conflicting constructor methods
+0: jdbc:farrago:> create type duplicate_constructor as (
+. . . . . . . . >     x double,
+. . . . . . . . >     y double
+. . . . . . . . > ) final
+. . . . . . . . > constructor method duplicate_constructor(x_init double,y_init double) 
+. . . . . . . . > returns duplicate_constructor
+. . . . . . . . > self as result
+. . . . . . . . > contains sql
+. . . . . . . . > specific duplicate_constructor1,
+. . . . . . . . > constructor method duplicate_constructor(x_init double,y_init double) 
+. . . . . . . . > returns duplicate_constructor
+. . . . . . . . > self as result
+. . . . . . . . > contains sql
+. . . . . . . . > specific duplicate_constructor2
+. . . . . . . . > ;
+Error: DDL validation error near line 1, column 256: Invocation name and parameter type signature of routine "UDTTEST"."DUPLICATE_CONSTRUCTOR2" conflicts with another routine (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  must specify finality
 0: jdbc:farrago:> create type square as (
@@ -130,7 +272,7 @@ Error: Object definition contains recursive cycle (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  can't specify UDT for distinct type
 0: jdbc:farrago:> create type simolean_currency as ellipse final;
-Error: DDL validation error near line 1, column 34: Must define representation for distinct datatype "UDTTEST"."SIMOLEAN_CURRENCY" as a predefined type. (state=,code=0)
+Error: DDL validation error near line 1, column 34: Must define representation for distinct datatype "UDTTEST"."SIMOLEAN_CURRENCY" as a predefined type (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test out-of-order definitions
 0: jdbc:farrago:> create schema musculoskeletal
@@ -201,6 +343,9 @@ Error: DDL validation error near line 1, column 35: Reference to unknown datatyp
 . . . . . . . . >     pair_id int not null primary key
 . . . . . . . . > );
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify that table may have same name as type
+0: jdbc:farrago:> create table rectilinear_coord0(i int not null primary key);
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test views which access typed columns
 0: jdbc:farrago:> create view viewed_coord_list as
 . . . . . . . . > select scl.pair_id, scl.coord1, scl.coord2.y
@@ -223,6 +368,51 @@ Error: DDL validation error near line 1, column 35: Reference to unknown datatyp
 +------+
 | 0.0  |
 +------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test default constructor for type that also has user-defined constructor
+0: jdbc:farrago:> select t.p.x
+. . . . . . . . > from (select new rectilinear_coord_non0() as p from (values(0))) as t;
++--------+
+|   X    |
++--------+
+| 100.0  |
++--------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test user-defined constructor
+0: jdbc:farrago:> select t.p.x, t.p.y
+. . . . . . . . > from (select new rectilinear_coord_non0(20,30) as p from (values(0))) as t;
++-------+-------+
+|   X   |   Y   |
++-------+-------+
+| 20.0  | 30.0  |
++-------+-------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test overloaded default constructor
+0: jdbc:farrago:> select t.p.x, t.p.y
+. . . . . . . . > from (select new rectilinear_coord_overloaded() as p from (values(0))) as t;
++--------+--------+
+|   X    |   Y    |
++--------+--------+
+| 100.0  | 100.0  |
++--------+--------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test overloaded 1-arg constructor
+0: jdbc:farrago:> select t.p.x, t.p.y
+. . . . . . . . > from (select new rectilinear_coord_overloaded(10) as p from (values(0))) as t;
++-------+-------+
+|   X   |   Y   |
++-------+-------+
+| 10.0  | 50.0  |
++-------+-------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test overloaded 2-arg constructor
+0: jdbc:farrago:> select t.p.x, t.p.y
+. . . . . . . . > from (select new rectilinear_coord_overloaded(10,10) as p from (values(0))) t;
++-------+-------+
+|   X   |   Y   |
++-------+-------+
+| 10.0  | 10.0  |
++-------+-------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- FIXME:  test nested constructors
 0: jdbc:farrago:> -- select t.c.radius, t.c.center.y

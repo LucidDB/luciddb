@@ -22,12 +22,19 @@
 package org.eigenbase.sql2rel;
 
 import org.eigenbase.reltype.*;
-import org.eigenbase.relopt.RelOptTable;
-import org.eigenbase.rex.RexNode;
+import org.eigenbase.relopt.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
 
 
 /**
  * DefaultValueFactory supplies default values for INSERT, UPDATE, and NEW.
+ *
+ *<p>
+ *
+ * TODO jvs 26-Feb-2005:  rename this to InitializerExpressionFactory, since
+ * it is in the process of being generalized to handle constructor
+ * invocations and eventually generated columns.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -51,18 +58,25 @@ public interface DefaultValueFactory
         int iColumn);
 
     /**
-     * Creates an expression which evaluates to the default value for a
+     * Creates an expression which evaluates to the initializer expression for a
      * particular attribute of a structured type.
      *
      * @param type the structured type
      *
+     * @param constructor the constructor invoked to initialize the type
+     *
      * @param the 0-based offset of the attribute in the type
+     *
+     * @param constructorArgs arguments passed to the constructor
+     * invocation
      *
      * @retunr default value expression
      */
-    public RexNode newAttributeDefaultValue(
+    public RexNode newAttributeInitializer(
         RelDataType type,
-        int iAttribute);
+        SqlFunction constructor,
+        int iAttribute,
+        RexNode [] constructorArgs);
 }
 
 

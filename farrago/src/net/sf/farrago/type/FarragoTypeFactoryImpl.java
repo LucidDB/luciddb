@@ -205,8 +205,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             FemSqlobjectType objectType =
                 (FemSqlobjectType) classifier;
             // first, create an anonymous row type
-            RelDataType structType = createStructTypeFromFeatureList(
-                objectType.getFeature());
+            RelDataType structType = createStructTypeFromClassifier(
+                objectType);
             // then, christen it
             SqlIdentifier id = FarragoCatalogUtil.getQualifiedName(objectType);
             return canonize(
@@ -218,9 +218,11 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     }
     
     // implement FarragoTypeFactory
-    public RelDataType createStructTypeFromFeatureList(
-        final List featureList)
+    public RelDataType createStructTypeFromClassifier(
+        CwmClassifier classifier)
     {
+        final List featureList =
+            FarragoCatalogUtil.getStructuralFeatures(classifier);
         if (featureList.isEmpty()) {
             return null;
         }

@@ -852,13 +852,12 @@ public class SqlValidator
                     if (resolvedNs != null) {
                         // There's a table with the name we seek.
                         type = resolvedNs.getRowType();
-                    } else if (scope instanceof ListScope
-                            && ((type =
-                                ((ListScope) scope).resolveColumn(name, id)) != null)) {
-                        // There's a column with the name we seek in precisely
-                        // one of the tables.
-                        ;
-                    } else {
+                    } else if (scope instanceof ListScope) {
+                        // See if there's a column with the name we seek in
+                        // precisely one of the tables in this scope.
+                        type = ((ListScope) scope).resolveColumn(name, id);
+                    }
+                    if (type == null) {
                         throw newValidationError(id,
                             EigenbaseResource.instance().newUnknownIdentifier(
                                 name));
@@ -984,21 +983,21 @@ public class SqlValidator
                         // SqlIdentifier.)
                         function = null;
                     } else {
-                        if (unresolvedFunction.getFunctionType() ==
-                            SqlFunction.SqlFuncTypeName.UserDefinedConstructor)
-                        {
-                            // TODO jvs 12-Feb-2005:  support real constructor
-                            // methods
-                            return deriveConstructorType(
-                                call,
-                                unresolvedFunction);
-                        }
                         function = SqlUtil.lookupRoutine(
                             opTab,
                             unresolvedFunction.getNameAsId(),
                             argTypes,
                             unresolvedFunction.getFunctionType() ==
                             SqlFunction.SqlFuncTypeName.UserDefinedProcedure);
+                        if (unresolvedFunction.getFunctionType() ==
+                            SqlFunction.SqlFuncTypeName.UserDefinedConstructor)
+                        {
+                            return deriveConstructorType(
+                                call,
+                                unresolvedFunction,
+                                function,
+                                argTypes);
+                        }
                     }
                     if (function == null) {
                         handleUnresolvedFunction(
@@ -1098,9 +1097,11 @@ public class SqlValidator
 
     private RelDataType deriveConstructorType(
         SqlCall call,
-        SqlFunction constructor)
+        SqlFunction unresolvedConstructor,
+        SqlFunction resolvedConstructor,
+        RelDataType [] argTypes)
     {
-        SqlIdentifier sqlIdentifier = constructor.getSqlIdentifier();
+        SqlIdentifier sqlIdentifier = unresolvedConstructor.getSqlIdentifier();
         assert(sqlIdentifier != null);
         RelDataType type = catalogReader.getNamedType(sqlIdentifier);
         if (type == null) {
@@ -1110,15 +1111,30 @@ public class SqlValidator
                 EigenbaseResource.instance().newUnknownDatatypeName(
                     sqlIdentifier.toString()));
         }
-        // TODO jvs 12-Feb-2005:  constructor method lookup
+
+        if (resolvedConstructor == null) {
+            if (call.getOperands().length > 0) {
+                // This is not a default constructor invocation, and
+                // no user-defined constructor could be found
+                handleUnresolvedFunction(call, unresolvedConstructor, argTypes);
+            }
+        }
+
         if (shouldExpandIdentifiers()) {
-            call.operator = new SqlFunction(
-                type.getSqlIdentifier(),
-                null,
-                null,
-                null,
-                null,
-                SqlFunction.SqlFuncTypeName.UserDefinedConstructor);
+            if (resolvedConstructor != null) {
+                call.operator = resolvedConstructor;
+            } else {
+                // fake a fully-qualified call to the default constructor
+                ReturnTypeInference returnTypeInference =
+                    new ReturnTypeInferenceImpl.FixedReturnTypeInference(type);
+                call.operator = new SqlFunction(
+                    type.getSqlIdentifier(),
+                    returnTypeInference,
+                    null,
+                    null,
+                    null,
+                    SqlFunction.SqlFuncTypeName.UserDefinedConstructor);
+            }
         }
         return type;
     }

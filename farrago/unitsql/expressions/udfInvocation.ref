@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/expressions/udfInvocation.sql#8 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/expressions/udfInvocation.sql#9 $
 0: jdbc:farrago:> -- Test queries with UDF invocations
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udftest;
@@ -8,45 +8,45 @@
 0: jdbc:farrago:> set path 'udftest';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test basic SQL-defined function
-0: jdbc:farrago:> create function celsius_to_fahrenheit(in c double)
+0: jdbc:farrago:> create function celsius_to_fahrenheit(c double)
 . . . . . . . . > returns double
 . . . . . . . . > contains sql
 . . . . . . . . > return c*1.8 + 32;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test usage of rewritten builtin
-0: jdbc:farrago:> create function coalesce2(in x varchar(128),in y varchar(128))
+0: jdbc:farrago:> create function coalesce2(x varchar(128),y varchar(128))
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > contains sql
 . . . . . . . . > return coalesce(x,y);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  implicit cast not allowed
-0: jdbc:farrago:> create function bad_atoi(in x varchar(128))
+0: jdbc:farrago:> create function bad_atoi(x varchar(128))
 . . . . . . . . > returns integer
 . . . . . . . . > contains sql
 . . . . . . . . > return x;
 Error: Result expression type VARCHAR(128) from routine "UDFTEST"."BAD_ATOI" does not match declared return type INTEGER (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test that explicit cast does occur
-0: jdbc:farrago:> create function good_atoi(in x varchar(128))
+0: jdbc:farrago:> create function good_atoi(x varchar(128))
 . . . . . . . . > returns integer
 . . . . . . . . > contains sql
 . . . . . . . . > return cast(x as integer);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test something mildly complicated
-0: jdbc:farrago:> create function stirfry(in x varchar(128))
+0: jdbc:farrago:> create function stirfry(x varchar(128))
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > contains sql
 . . . . . . . . > return case when x like 'A%' then upper(x)||'gator' else lower(x) end;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test CALLED ON NULL INPUT
-0: jdbc:farrago:> create function replace_null(in x varchar(128))
+0: jdbc:farrago:> create function replace_null(x varchar(128))
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > contains sql
 . . . . . . . . > called on null input
 . . . . . . . . > return coalesce(x,'null and void');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test RETURNS NULL ON NULL INPUT
-0: jdbc:farrago:> create function dont_replace_null(in x varchar(128))
+0: jdbc:farrago:> create function dont_replace_null(x varchar(128))
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > contains sql
 . . . . . . . . > returns null on null input
@@ -55,80 +55,93 @@ Error: Result expression type VARCHAR(128) from routine "UDFTEST"."BAD_ATOI" doe
 0: jdbc:farrago:> -- test external Java function
 0: jdbc:farrago:> create function noargs()
 . . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.noargs';
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function substring24(in s varchar(128))
+0: jdbc:farrago:> create function substring24(s varchar(128))
 . . . . . . . . > returns varchar(2)
+. . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.substring24';
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function prim_int_to_hex_string(in i int)
+0: jdbc:farrago:> create function prim_int_to_hex_string(i int)
 . . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.toHexString';
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function obj_int_to_hex_string(in i int)
+0: jdbc:farrago:> create function obj_int_to_hex_string(i int)
 . . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > called on null input
 . . . . . . . . > external name 
 . . . . . . . . > 'class net.sf.farrago.test.FarragoTestUDR.toHexString(java.lang.Integer)';
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function null_preserving_int_to_hex_string(in i int)
+0: jdbc:farrago:> create function null_preserving_int_to_hex_string(i int)
 . . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > returns null on null input
 . . . . . . . . > external name 
 . . . . . . . . > 'class net.sf.farrago.test.FarragoTestUDR.toHexString(java.lang.Integer)';
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function atoi(in s varchar(128))
+0: jdbc:farrago:> create function atoi(s varchar(128))
 . . . . . . . . > returns int
+. . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.atoi';
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function atoi_with_null_for_err(in s varchar(128))
+0: jdbc:farrago:> create function atoi_with_null_for_err(s varchar(128))
 . . . . . . . . > returns int
+. . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.atoiWithNullForErr';
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create function get_java_property(in name varchar(128))
+0: jdbc:farrago:> create function get_java_property(name varchar(128))
 . . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class java.lang.System.getProperty';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create procedure set_java_property(in name varchar(128),in val varchar(128))
+. . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.setSystemProperty';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create function access_sql_illegal()
 . . . . . . . . > returns int
+. . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.accessSql';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create function access_sql_legal()
 . . . . . . . . > returns int
+. . . . . . . . > language java
 . . . . . . . . > contains sql
 . . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.accessSql';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create function throw_sql_exception()
 . . . . . . . . > returns int
+. . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.throwSQLException';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create function throw_npe()
 . . . . . . . . > returns int
+. . . . . . . . > language java
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.throwNPE';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test a function that uses another function
-0: jdbc:farrago:> create function celsius_to_rankine(in c double)
+0: jdbc:farrago:> create function celsius_to_rankine(c double)
 . . . . . . . . > returns double
 . . . . . . . . > contains sql
 . . . . . . . . > return celsius_to_fahrenheit(c) + 459.67;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  we don't allow recursion
-0: jdbc:farrago:> create function factorial(in x integer)
+0: jdbc:farrago:> create function factorial(x integer)
 . . . . . . . . > returns integer
 . . . . . . . . > contains sql
 . . . . . . . . > return case when x = 1 then x else x*factorial(x-1) end;
@@ -136,11 +149,11 @@ Error: Object definition contains recursive cycle (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  we don't allow mutual recursion either
 0: jdbc:farrago:> create schema crypto
-. . . . . . . . > create function alice(in x double)
+. . . . . . . . > create function alice(x double)
 . . . . . . . . > returns double
 . . . . . . . . > contains sql
 . . . . . . . . > return bob(x*13)
-. . . . . . . . > create function bob(in x double)
+. . . . . . . . > create function bob(x double)
 . . . . . . . . > returns double
 . . . . . . . . > contains sql
 . . . . . . . . > return alice(x/17);
@@ -148,11 +161,11 @@ Error: Object definition contains recursive cycle (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test forward reference
 0: jdbc:farrago:> create schema crypto2
-. . . . . . . . > create function alice(in x double)
+. . . . . . . . > create function alice(x double)
 . . . . . . . . > returns double
 . . . . . . . . > contains sql
 . . . . . . . . > return bob(x*13)
-. . . . . . . . > create function bob(in x double)
+. . . . . . . . > create function bob(x double)
 . . . . . . . . > returns double
 . . . . . . . . > contains sql
 . . . . . . . . > return x/17;
@@ -424,25 +437,25 @@ Error: java.lang.NullPointerException: null (state=,code=0)
 . . . . . . . . > contains sql
 . . . . . . . . > return 5
 . . . . . . . . > 
-. . . . . . . . > create function confusing(in x integer)
+. . . . . . . . > create function confusing(x integer)
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > specific confusing_integer
 . . . . . . . . > contains sql
 . . . . . . . . > return 'INTEGER:  '||cast(x as varchar(128))
 . . . . . . . . > 
-. . . . . . . . > create function confusing(in x smallint)
+. . . . . . . . > create function confusing(x smallint)
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > specific confusing_smallint
 . . . . . . . . > contains sql
 . . . . . . . . > return 'SMALLINT:  '||cast(x as varchar(128))
 . . . . . . . . > 
-. . . . . . . . > create function confusing(in x varchar(128))
+. . . . . . . . > create function confusing(x varchar(128))
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > specific confusing_varchar
 . . . . . . . . > contains sql
 . . . . . . . . > return 'VARCHAR:  '||x
 . . . . . . . . > 
-. . . . . . . . > create function confusing(in x char(20))
+. . . . . . . . > create function confusing(x char(20))
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > specific confusing_char
 . . . . . . . . > contains sql
@@ -456,43 +469,43 @@ Error: java.lang.NullPointerException: null (state=,code=0)
 . . . . . . . . > contains sql
 . . . . . . . . > return 17
 . . . . . . . . > 
-. . . . . . . . > create function amusing(in x smallint,in y varchar(128))
+. . . . . . . . > create function amusing(x smallint,y varchar(128))
 . . . . . . . . > returns integer
 . . . . . . . . > specific amusing1
 . . . . . . . . > contains sql
 . . . . . . . . > return 9
 . . . . . . . . > 
-. . . . . . . . > create function amusing(in x bigint,in y int)
+. . . . . . . . > create function amusing(x bigint,y int)
 . . . . . . . . > returns integer
 . . . . . . . . > specific amusing2
 . . . . . . . . > contains sql
 . . . . . . . . > return 10
 . . . . . . . . > 
-. . . . . . . . > create function amusing(in x int,in y bigint)
+. . . . . . . . > create function amusing(x int,y bigint)
 . . . . . . . . > returns integer
 . . . . . . . . > specific amusing3
 . . . . . . . . > contains sql
 . . . . . . . . > return 11
 . . . . . . . . > 
-. . . . . . . . > create function confusing(in x integer)
+. . . . . . . . > create function confusing(x integer)
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > specific confusing_integer
 . . . . . . . . > contains sql
 . . . . . . . . > return 'V2INTEGER:  '||cast(x as varchar(128))
 . . . . . . . . > 
-. . . . . . . . > create function "UPPER"(in x integer)
+. . . . . . . . > create function "UPPER"(x integer)
 . . . . . . . . > returns integer
 . . . . . . . . > specific upper1
 . . . . . . . . > contains sql
 . . . . . . . . > return x+1
 . . . . . . . . > 
-. . . . . . . . > create function "UPPER"(in x varchar(128))
+. . . . . . . . > create function "UPPER"(x varchar(128))
 . . . . . . . . > returns varchar(128)
 . . . . . . . . > specific upper2
 . . . . . . . . > contains sql
 . . . . . . . . > return x||'_plus_one'
 . . . . . . . . > 
-. . . . . . . . > create function "LOWER"(in x integer)
+. . . . . . . . > create function "LOWER"(x integer)
 . . . . . . . . > returns integer
 . . . . . . . . > contains sql
 . . . . . . . . > return x-1

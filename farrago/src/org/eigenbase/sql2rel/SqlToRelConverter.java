@@ -735,21 +735,20 @@ public class SqlToRelConverter
         SqlFunction constructor,
         RexNode [] exprs)
     {
-        // TODO jvs 12-Feb-2005:  pass exprs to constructor method
-        SqlIdentifier typeName = constructor.getSqlIdentifier();
-        RelDataType type = validator.getCatalogReader().getNamedType(typeName);
+        RelDataType type = constructor.getType(validator.typeFactory, exprs);
 
         int n = type.getFieldList().size();
-        RexNode [] defaultExprs = new RexNode[n];
+        RexNode [] initializationExprs = new RexNode[n];
         for (int i = 0; i < n; ++i) {
-            defaultExprs[i] = defaultValueFactory.newAttributeDefaultValue(
-                type, i);
+            initializationExprs[i] =
+                defaultValueFactory.newAttributeInitializer(
+                    type, constructor, i, exprs);
         }
 
         RexNode [] defaultCasts = RexUtil.generateCastExpressions(
             rexBuilder,
             type,
-            defaultExprs);
+            initializationExprs);
 
         return rexBuilder.makeNewInvocation(type, defaultCasts);
     }
@@ -2066,9 +2065,11 @@ public class SqlToRelConverter
             return rexBuilder.constantNull();
         }
 
-        public RexNode newAttributeDefaultValue(
+        public RexNode newAttributeInitializer(
             RelDataType type,
-            int iAttribute)
+            SqlFunction constructor,
+            int iAttribute,
+            RexNode [] constructorArgs)
         {
             return rexBuilder.constantNull();
         }

@@ -705,16 +705,12 @@ public class DdlValidator extends FarragoCompoundAllocation
         Iterator iter = collection.iterator();
         while (iter.hasNext()) {
             CwmModelElement element = (CwmModelElement) iter.next();
-            String name = element.getName();
-            if (name == null) {
+            Object nameKey = getNameKey(element, includeType);
+            if (nameKey == null) {
                 continue;
             }
 
-            // TODO:  implement includeType, since SQL standard says object
-            // names within a schema are distinguished by type.  However, it's
-            // tricky, since some types (e.g. table and view) should be treated
-            // as the same.  So, need a set of special-case base classes.
-            CwmModelElement other = (CwmModelElement) nameMap.get(name);
+            CwmModelElement other = (CwmModelElement) nameMap.get(nameKey);
             if (other != null) {
                 if (isNewObject(other) && isNewObject(element)) {
                     // clash between two new objects being defined
@@ -754,8 +750,32 @@ public class DdlValidator extends FarragoCompoundAllocation
                             getRepos().getLocalizedObjectName(container)));
                 }
             }
-            nameMap.put(name, element);
+            nameMap.put(nameKey, element);
         }
+    }
+
+    private Object getNameKey(
+        CwmModelElement element,
+        boolean includeType)
+    {
+        String name = element.getName();
+        if (name == null) {
+            return null;
+        }
+        if (!includeType) {
+            return name;
+        }
+        Class typeClass;
+        // TODO jvs 25-Feb-2005:  provide a mechanism for generalizing these
+        // special case
+        if (element instanceof CwmNamedColumnSet) {
+            typeClass = CwmNamedColumnSet.class;
+        } else if (element instanceof CwmCatalog) {
+            typeClass = CwmCatalog.class;
+        } else {
+            typeClass = element.getClass();
+        }
+        return typeClass.toString() + ":" + name;
     }
 
     // implement FarragoSessionDdlValidator

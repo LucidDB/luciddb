@@ -78,13 +78,13 @@ public interface FarragoTypeFactory extends OJTypeFactory
 
     /**
      * Creates a type which represents a structured row based on a
-     * list of attribute definitions from the catalog.
+     * classifier definition from the catalog.
      *
-     * @param features list of FemAbstractTypedElement
+     * @param classifier definition of classifier
      *
-     * @return generated type, or null if cwmClass had no features
+     * @return generated type, or null if classifier had no features
      */
-    public RelDataType createStructTypeFromFeatureList(List features);
+    public RelDataType createStructTypeFromClassifier(CwmClassifier classifier);
 
     /**
      * Creates a type which represents the row datatype of a JDBC

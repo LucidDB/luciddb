@@ -81,11 +81,18 @@ public class FarragoUserDefinedRoutine
             paramTypes,
             routine.getType() == ProcedureTypeEnum.PROCEDURE
             ? SqlFuncTypeName.UserDefinedProcedure
-            : SqlFuncTypeName.UserDefinedFunction);
+            : ((routine.getSpecification() == null) ?
+                SqlFuncTypeName.UserDefinedFunction
+                : SqlFuncTypeName.UserDefinedConstructor));
         this.stmtValidator = stmtValidator;
         this.preparingStmt = preparingStmt;
         this.routine = routine;
         this.returnType = returnType;
+    }
+
+    public FarragoPreparingStmt getPreparingStmt()
+    {
+        return preparingStmt;
     }
 
     public FemRoutine getFemRoutine()
@@ -484,14 +491,19 @@ public class FarragoUserDefinedRoutine
 
     public static String removeReturnPrefix(String body)
     {
-        assert(body.startsWith(RETURN_PREFIX));
+        assert(hasReturnPrefix(body));
         return body.substring(RETURN_PREFIX.length());
     }
 
     public static String addReturnPrefix(String body)
     {
-        assert (!body.startsWith(RETURN_PREFIX));
+        assert (!hasReturnPrefix(body));
         return RETURN_PREFIX + body;
+    }
+
+    public static boolean hasReturnPrefix(String body)
+    {
+        return body.startsWith(RETURN_PREFIX);
     }
 }
 

@@ -76,12 +76,14 @@ public abstract class DdlHandler
 
     public void validateAttributeSet(CwmClass cwmClass)
     {
+        List structuralFeatures =
+            FarragoCatalogUtil.getStructuralFeatures(cwmClass);
         validator.validateUniqueNames(
             cwmClass,
-            cwmClass.getFeature(),
+            structuralFeatures,
             false);
 
-        Iterator iter = cwmClass.getFeature().iterator();
+        Iterator iter = structuralFeatures.iterator();
         while (iter.hasNext()) {
             FemAbstractAttribute attribute = (FemAbstractAttribute) iter.next();
             validateAttribute(attribute);
@@ -110,6 +112,9 @@ public abstract class DdlHandler
 
     public void validateAttribute(FemAbstractAttribute attribute)
     {
+        // REVIEW jvs 26-Feb-2005:  This relies on the fact that
+        // attributes always come before operations.  We'll need to
+        // take this into account in the implementation of ALTER TYPE.
         int ordinal = attribute.getOwner().getFeature().indexOf(attribute);
         assert (ordinal != -1);
         attribute.setOrdinal(ordinal);

@@ -217,7 +217,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
 
             // if default schema is set, get all table names in this schema
             FemLocalSchema schema = FarragoCatalogUtil.getSchemaByName(
-                catalog, sessionVariables.schemaName);
+                repos, catalog, sessionVariables.schemaName);
             if (schema != null) {
                 List tableNames = getAllObjectNamesByType(
                     schema.getOwnedElement(),
@@ -229,7 +229,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         // looking for table names under the specified schema
         else if (names.length == 2) {
             FemLocalSchema schema = FarragoCatalogUtil.getSchemaByName(
-                catalog, names[0]);
+                repos, catalog, names[0]);
             if (schema != null) {
                 List tableNames = getAllObjectNamesByType(
                     schema.getOwnedElement(),
@@ -310,7 +310,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
             return null;
         }
         FemLocalSchema schema =
-            FarragoCatalogUtil.getSchemaByName(catalog, simpleName);
+            FarragoCatalogUtil.getSchemaByName(repos, catalog, simpleName);
         // REVIEW:  parser context may be past schema name already
         if (schema == null) {
             if (!throwIfNotFound) {
@@ -382,21 +382,15 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         RefClass refClass)
     {
         FarragoSessionResolvedObject resolved =
-            resolveSchemaObjectName(qualifiedName.names);
+            resolveSchemaObjectName(qualifiedName.names, refClass);
 
         CwmModelElement element = null;
-
         String schemaName = null;
 
         if (resolved != null) {
             schemaName = resolved.schemaName;
             if (resolved.object != null) {
                 element = resolved.object;
-                if (!element.refIsInstanceOf(
-                            refClass.refMetaObject(),
-                            true)) {
-                    element = null;
-                }
             }
         }
 
@@ -513,7 +507,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
             modelElement = FarragoCatalogUtil.getModelElementByNameAndType(
                 searchedSchema.getOwnedElement(),
                 simpleName,
-                FemUserDefinedType.class);
+                repos.getSql2003Package().getFemUserDefinedType());
             if (modelElement != null) {
                 checkValidated(modelElement);
                 return (CwmSqldataType) modelElement;
@@ -537,7 +531,8 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
 
     // implement FarragoSessionStmtValidator
     public FarragoSessionResolvedObject resolveSchemaObjectName(
-        String [] names)
+        String [] names,
+        RefClass refClass)
     {
         FarragoSessionResolvedObject resolved =
             new FarragoSessionResolvedObject();
@@ -578,16 +573,17 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
 
         resolved.schema =
             FarragoCatalogUtil.getSchemaByName(
-                resolved.catalog, resolved.schemaName);
+                repos, resolved.catalog, resolved.schemaName);
         if (resolved.schema == null) {
             // TODO:  throw ValidatorUnknownObject for schema
             return null;
         }
 
         resolved.object =
-            FarragoCatalogUtil.getModelElementByName(
+            FarragoCatalogUtil.getModelElementByNameAndType(
                 resolved.schema.getOwnedElement(),
-                resolved.objectName);
+                resolved.objectName,
+                refClass);
         if (resolved.object == null) {
             return null;
         }

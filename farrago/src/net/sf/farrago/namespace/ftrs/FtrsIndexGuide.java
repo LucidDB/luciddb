@@ -69,7 +69,7 @@ class FtrsIndexGuide
         repos = typeFactory.getRepos();
         
         unflattenedRowType =
-            typeFactory.createStructTypeFromFeatureList(table.getFeature());
+            typeFactory.createStructTypeFromClassifier(table);
         
         int n = unflattenedRowType.getFieldList().size();
         flatteningMap = new int[n];

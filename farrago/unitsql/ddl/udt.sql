@@ -32,6 +32,89 @@ create type rectilinear_coord0 as (
     y double default 0
 ) final;
 
+-- structured type with a single user-defined constructor
+create type rectilinear_coord_non0 as (
+    x double default 100.0,
+    y double default 100.0
+) final
+constructor method rectilinear_coord_non0(x_init double,y_init double) 
+returns rectilinear_coord_non0 
+self as result
+contains sql
+;
+
+-- should fail:  method name mismatch
+create specific method rectilinear_coord_nonzero
+for rectilinear_coord_non0
+begin
+    set self.x = z_init; set self.y = y_init; return self
+; end;
+
+-- should fail:  unknown param ref
+create specific method rectilinear_coord_non0
+for rectilinear_coord_non0
+begin
+    set self.x = z_init; set self.y = y_init; return self
+; end;
+
+-- should fail:  unknown target ref
+create specific method rectilinear_coord_non0
+for rectilinear_coord_non0
+begin
+    set self.z = x_init; set self.y = y_init; return self
+; end;
+
+-- should fail:  bad type assignment
+create specific method rectilinear_coord_non0
+for rectilinear_coord_non0
+begin
+    set self.x = cast(x_init as varchar(20)); set self.y = y_init; return self
+; end;
+
+-- should succeed
+create specific method rectilinear_coord_non0
+for rectilinear_coord_non0
+begin
+    set self.x = x_init; set self.y = y_init; return self
+; end;
+
+-- structured type with overloaded constructors
+create type rectilinear_coord_overloaded as (
+    x double default 50.0,
+    y double default 50.0
+) final
+constructor method rectilinear_coord_overloaded()
+returns rectilinear_coord_overloaded
+self as result
+contains sql
+specific rectilinear_coord_overload0,
+constructor method rectilinear_coord_overloaded(x_init double) 
+returns rectilinear_coord_overloaded
+self as result
+contains sql
+specific rectilinear_coord_overload1,
+constructor method rectilinear_coord_overloaded(x_init double,y_init double) 
+returns rectilinear_coord_overloaded
+self as result
+contains sql
+specific rectilinear_coord_overload2
+;
+
+create specific method rectilinear_coord_overload0
+for rectilinear_coord_overloaded
+begin
+    set self.x = 100.0; set self.y = 100.0; return self; end;
+
+create specific method rectilinear_coord_overload1
+for rectilinear_coord_overloaded
+begin
+    set self.x = x_init; return self; end;
+
+create specific method rectilinear_coord_overload2
+for rectilinear_coord_overloaded
+begin
+    set self.x = x_init; set self.y = y_init; return self; end;
+
 -- structured type nesting
 create type circle as (
     center rectilinear_coord0,
@@ -43,6 +126,57 @@ create type ellipse as (
     major_axis double,
     minor_axis double
 ) final instantiable;
+
+-- should fail:  constructor name must match type name
+create type bad_constructor_name as (
+    x double,
+    y double
+) final
+constructor method bad_constructor_nombre(x_init double,y_init double) 
+returns bad_constructor_name
+self as result
+contains sql
+;
+
+-- should fail:  constructor language must be SQL for now
+create type bad_constructor_language as (
+    x double,
+    y double
+) final
+constructor method bad_constructor_language(x_init double,y_init double) 
+returns bad_constructor_language
+self as result
+language java
+contains sql
+;
+
+-- should fail:  constructor must return self type 
+create type bad_constructor_type as (
+    x double,
+    y double
+) final
+constructor method bad_constructor_type(x_init double,y_init double) 
+returns int
+self as result
+contains sql
+;
+
+-- should fail:  conflicting constructor methods
+create type duplicate_constructor as (
+    x double,
+    y double
+) final
+constructor method duplicate_constructor(x_init double,y_init double) 
+returns duplicate_constructor
+self as result
+contains sql
+specific duplicate_constructor1,
+constructor method duplicate_constructor(x_init double,y_init double) 
+returns duplicate_constructor
+self as result
+contains sql
+specific duplicate_constructor2
+;
 
 -- should fail:  must specify finality
 create type square as (
@@ -174,6 +308,9 @@ create table stored_coord_list(
     pair_id int not null primary key
 );
 
+-- verify that table may have same name as type
+create table rectilinear_coord0(i int not null primary key);
+
 -- test views which access typed columns
 create view viewed_coord_list as
 select scl.pair_id, scl.coord1, scl.coord2.y
@@ -186,6 +323,26 @@ from (select new rectilinear_coord() as p from (values(0))) as t;
 -- test default constructor (non-null default value)
 select t.p.x
 from (select new rectilinear_coord0() as p from (values(0))) as t;
+
+-- test default constructor for type that also has user-defined constructor
+select t.p.x
+from (select new rectilinear_coord_non0() as p from (values(0))) as t;
+
+-- test user-defined constructor
+select t.p.x, t.p.y
+from (select new rectilinear_coord_non0(20,30) as p from (values(0))) as t;
+
+-- test overloaded default constructor
+select t.p.x, t.p.y
+from (select new rectilinear_coord_overloaded() as p from (values(0))) as t;
+
+-- test overloaded 1-arg constructor
+select t.p.x, t.p.y
+from (select new rectilinear_coord_overloaded(10) as p from (values(0))) as t;
+
+-- test overloaded 2-arg constructor
+select t.p.x, t.p.y
+from (select new rectilinear_coord_overloaded(10,10) as p from (values(0))) t;
 
 -- FIXME:  test nested constructors
 -- select t.c.radius, t.c.center.y

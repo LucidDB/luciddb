@@ -10,12 +10,12 @@ set path 'udftest';
 
 -- test SQL-defined functions
 
-create function celsius_to_fahrenheit(in c double)
+create function celsius_to_fahrenheit(c double)
 returns double
 contains sql
 return c*1.8 + 32;
 
-create function add_integers(in i int,in j int)
+create function add_integers(i int,j int)
 returns int
 contains sql
 return i + j;
@@ -29,20 +29,20 @@ drop routine add_integers;
 -- test overloading
 
 -- should fail
-create function celsius_to_fahrenheit(in c real)
+create function celsius_to_fahrenheit(c real)
 returns real
 contains sql
 return c*1.8 + 32;
 
 -- should succeed:  specific name avoids conflict
-create function celsius_to_fahrenheit(in c real)
+create function celsius_to_fahrenheit(c real)
 returns real
 specific celsius_to_fahrenheit_real
 contains sql
 return c*1.8 + 32;
 
 -- should fail:  schema for specific name must match schema for invocation name
-create function add_integers(in i int,in j int)
+create function add_integers(i int,j int)
 returns int
 specific udftest2.add_ints
 contains sql
@@ -53,7 +53,7 @@ drop function celsius_to_fahrenheit;
 drop function celsius_to_fahrenheit_real;
 
 -- test redundant language specification
-create function celsius_to_fahrenheit(in c real)
+create function celsius_to_fahrenheit(c real)
 returns real
 language sql
 contains sql
@@ -61,35 +61,47 @@ return c*1.8 + 32;
 drop function celsius_to_fahrenheit;
 
 -- test redundant parameter style specification
-create function celsius_to_fahrenheit(in c real)
+create function celsius_to_fahrenheit(c real)
 returns real
 parameter style sql
 contains sql
 return c*1.8 + 32;
 drop function celsius_to_fahrenheit;
 
+-- should fail:  can't declare explicit IN parameter to function
+create function add_integers(in i int,j int)
+returns int
+contains sql
+return i + j;
+
 -- should fail:  can't declare OUT parameter to function
-create function add_integers(out i int,in j int)
+create function add_integers(out i int,j int)
 returns int
 contains sql
 return i + j;
 
 -- should fail:  can't declare INOUT parameter to function
-create function add_integers(inout i int,in j int)
+create function add_integers(inout i int,j int)
 returns int
 contains sql
 return i + j;
 
+-- should fail:  reference to bogus parameter
+create function add_integers(i int,j int)
+returns int
+contains sql
+return i + j + k;
+
 -- test various modifiers
 
 -- should fail:  NO SQL can't be specified for SQL-defined routines
-create function add_integers(in i int,in j int)
+create function add_integers(i int,j int)
 returns int
 no sql
 return i + j;
 
 -- a bit of a fib, but should pass
-create function add_integers(in i int,in j int)
+create function add_integers(i int,j int)
 returns int
 reads sql data
 return i + j;
@@ -97,14 +109,14 @@ return i + j;
 drop function add_integers;
 
 -- a bit of a fib, but should pass
-create function add_integers(in i int,in j int)
+create function add_integers(i int,j int)
 returns int
 modifies sql data
 return i + j;
 
 drop function add_integers;
 
-create function add_integers(in i int,in j int)
+create function add_integers(i int,j int)
 returns int
 contains sql
 deterministic
@@ -112,7 +124,7 @@ return i + j;
 
 drop function add_integers;
 
-create function add_integers(in i int,in j int)
+create function add_integers(i int,j int)
 returns int
 contains sql
 not deterministic
@@ -120,7 +132,7 @@ return i + j;
 
 drop function add_integers;
 
-create function add_integers(in i int,in j int)
+create function add_integers(i int,j int)
 returns int
 contains sql
 returns null on null input
@@ -128,7 +140,7 @@ return i + j;
 
 drop function add_integers;
 
-create function add_integers(in i int,in j int)
+create function add_integers(i int,j int)
 returns int
 contains sql
 called on null input
@@ -138,7 +150,7 @@ drop function add_integers;
 
 -- test dependencies and cascade/restrict
 
-create function to_upper(in v varchar(128))
+create function to_upper(v varchar(128))
 returns varchar(128)
 contains sql
 return upper(v);
@@ -147,12 +159,12 @@ create view upper_crust as
 select to_upper(name)
 from sales.depts;
 
-create function to_upper2(in v varchar(128))
+create function to_upper2(v varchar(128))
 returns varchar(128)
 contains sql
 return upper(v);
 
-create function to_uppertrim(in v varchar(128))
+create function to_uppertrim(v varchar(128))
 returns varchar(128)
 contains sql
 return trim(trailing ' ' from to_upper2(v));
@@ -170,14 +182,14 @@ drop function to_uppertrim;
 -- should succeed now that to_uppertrim is gone
 drop function to_upper2;
 
-create function add_integers(in i int,in j int)
+create function add_integers(i int,j int)
 returns int
 contains sql
 return i + j;
 
 -- should fail
 create schema badpath
-create function double_integer(in i int)
+create function double_integer(i int)
 returns int
 contains sql
 return add_integers(i,i);
@@ -185,7 +197,7 @@ return add_integers(i,i);
 -- should succeed
 create schema goodpath
 path udftest
-create function double_integer(in i int)
+create function double_integer(i int)
 returns int
 contains sql
 return add_integers(i,i);
@@ -193,42 +205,44 @@ return add_integers(i,i);
 -- begin tests for mismatched Java/SQL
 
 -- should fail:  cannot specify both SQL body and external name
-create function get_java_property(in name varchar(128))
+create function get_java_property(name varchar(128))
 returns varchar(128)
 contains sql
 external name 'class java.lang.System.getProperty'
 return 'undefined';
 
 -- should fail:  cannot specify language SQL with external name
-create function get_java_property(in name varchar(128))
+create function get_java_property(name varchar(128))
 returns varchar(128)
 language sql
 contains sql
 external name 'class java.lang.System.getProperty';
 
 -- should fail:  cannot specify parameter style SQL with external name
-create function get_java_property(in name varchar(128))
+create function get_java_property(name varchar(128))
 returns varchar(128)
+language java
 parameter style sql
 contains sql
 external name 'class java.lang.System.getProperty';
 
 -- should fail:  cannot specify parameter style SQL with external name
-create function get_java_property(in name varchar(128))
+create function get_java_property(name varchar(128))
 returns varchar(128)
+language java
 contains sql
 external name 'class java.lang.System.getProperty'
 parameter style sql;
 
 -- should fail:  cannot specify language JAVA with SQL body
-create function celsius_to_fahrenheit(in c double)
+create function celsius_to_fahrenheit(c double)
 returns double
 language java
 contains sql
 return c*1.8 + 32;
 
 -- should fail:  cannot specify parameter style JAVA with SQL body
-create function celsius_to_fahrenheit(in c double)
+create function celsius_to_fahrenheit(c double)
 returns double
 parameter style java
 contains sql
@@ -236,14 +250,7 @@ return c*1.8 + 32;
 
 -- test external Java routines
 
-create function get_java_property(in name varchar(128))
-returns varchar(128)
-no sql
-external name 'class java.lang.System.getProperty';
-drop function get_java_property;
-
--- test redundant language specification
-create function get_java_property(in name varchar(128))
+create function get_java_property(name varchar(128))
 returns varchar(128)
 language java
 no sql
@@ -251,52 +258,60 @@ external name 'class java.lang.System.getProperty';
 drop function get_java_property;
 
 -- test redundant parameter style specification
-create function get_java_property(in name varchar(128))
+create function get_java_property(name varchar(128))
 returns varchar(128)
+language java
 parameter style java
 no sql
 external name 'class java.lang.System.getProperty';
 drop function get_java_property;
 
 -- should fail:  missing method spec
-create function get_java_property(in name varchar(128))
+create function get_java_property(name varchar(128))
 returns varchar(128)
+language java
 no sql
 external name 'class foobar';
 
 -- should fail:  unknown class
-create function get_java_property(in name varchar(128))
+create function get_java_property(name varchar(128))
 returns varchar(128)
+language java
 no sql
 external name 'class java.lang.Rodent.getProperty';
 
 -- should fail:  unknown method 
-create function get_java_property(in name varchar(128))
+create function get_java_property(name varchar(128))
 returns varchar(128)
+language java
 no sql
 external name 'class java.lang.System.getHotels';
 
 -- should fail:  method not found due to parameter type mismatch
-create function get_java_property(in name int)
+create function get_java_property(name int)
 returns varchar(128)
+language java
 no sql
 external name 'class java.lang.System.getProperty';
 
 -- should fail:  parameter type mismatch for explicit method spec
-create function get_java_property(in name int)
+create function get_java_property(name int)
 returns varchar(128)
+language java
 no sql
 external name 'class java.lang.System.getProperty(java.lang.String)';
 
 -- should fail:  return type mismatch
-create function get_java_property(in name varchar(128))
+create function get_java_property(name varchar(128))
 returns int
+language java
 no sql
 external name 'class java.lang.System.getProperty';
 
 -- test explicit selection of method from overloads
-create function to_hex_string(in i int)
+create function to_hex_string(i int)
 returns varchar(128)
+language java
 no sql
 external name 
 'class net.sf.farrago.test.FarragoTestUDR.toHexString(java.lang.Integer)';
@@ -304,7 +319,7 @@ external name
 
 -- test early definition binding
 
-create function magic(in i bigint)
+create function magic(i bigint)
 returns int
 specific magic10
 contains sql
@@ -315,7 +330,7 @@ returns int
 contains sql
 return magic(1);
 
-create function magic(in i int)
+create function magic(i int)
 returns int
 specific magic20
 contains sql
@@ -326,7 +341,7 @@ values presto();
 
 -- test stored binding for builtins vs routines
 
-create function "UPPER"(in x varchar(128))
+create function "UPPER"(x varchar(128))
 returns varchar(128)
 contains sql
 return x||'_plus_one';
@@ -348,30 +363,32 @@ values tweedledum();
 
 -- test conflict detection
 
-create procedure set_java_property(in name varchar(128),in val varchar(128))
+create procedure set_java_property(in name varchar(128),val varchar(128))
+language java
 no sql
 external name 'class net.sf.farrago.test.FarragoTestUDR.setSystemProperty';
 
 -- should fail:  procedures cannot be overloaded on parameter type
 create procedure set_java_property(in name char(128),in val char(128))
+language java
 no sql
 external name 'class net.sf.farrago.test.FarragoTestUDR.setSystemProperty';
 
-create function piffle(in i int)
+create function piffle(i int)
 returns int
 specific piffle1
 contains sql
 return 20;
 
 -- should succeed:  functions can be overloaded on parameter type
-create function piffle(in d double)
+create function piffle(d double)
 returns int
 specific piffle2
 contains sql
 return 20;
 
 -- should fail
-create function piffle(in d double)
+create function piffle(d double)
 returns int
 specific piffle3
 contains sql
@@ -379,7 +396,7 @@ return 20;
 
 -- should fail:  even though the parameter type is different, it is
 -- in the same type precedence equivalence class
-create function piffle(in f float)
+create function piffle(f float)
 returns int
 specific piffle4
 contains sql

@@ -265,7 +265,7 @@ public abstract class FarragoCatalogUtil
     public static CwmModelElement getModelElementByNameAndType(
         Collection collection,
         String name,
-        Class type)
+        RefClass type)
     {
         Iterator iter = collection.iterator();
         while (iter.hasNext()) {
@@ -273,7 +273,7 @@ public abstract class FarragoCatalogUtil
             if (!element.getName().equals(name)) {
                 continue;
             }
-            if (type.isInstance(element)) {
+            if (element.refIsInstanceOf(type.refMetaObject(), true)) {
                 return element;
             }
         }
@@ -304,6 +304,8 @@ public abstract class FarragoCatalogUtil
     /**
      * Looks up a schema by name in a catalog.
      *
+     * @param repos repos storing catalog
+     *
      * @param catalog CwmCatalog to search
      *
      * @param schemaName name of schema to find
@@ -311,13 +313,14 @@ public abstract class FarragoCatalogUtil
      * @return schema definition, or null if not found
      */
     public static FemLocalSchema getSchemaByName(
+        FarragoRepos repos,
         CwmCatalog catalog,
         String schemaName)
     {
         return (FemLocalSchema) getModelElementByNameAndType(
             catalog.getOwnedElement(),
             schemaName,
-            FemLocalSchema.class);
+            repos.getSql2003Package().getFemLocalSchema());
     }
 
     /**
@@ -427,6 +430,27 @@ public abstract class FarragoCatalogUtil
                     return delegateMethod.invoke(element, args);
                 }
             });
+    }
+
+    /**
+     * Returns a collection of just the structural features of a classifier,
+     * hiding other features such as operations.
+     *
+     * @param classifier to access
+     *
+     * @return list of structural features
+     */
+    public static List getStructuralFeatures(CwmClassifier classifier)
+    {
+        List structuralFeatures = new ArrayList();
+        Iterator iter = classifier.getFeature().iterator();
+        while (iter.hasNext()) {
+            Object obj = iter.next();
+            if (obj instanceof CwmStructuralFeature) {
+                structuralFeatures.add(obj);
+            }
+        }
+        return structuralFeatures;
     }
 }
 

@@ -229,8 +229,7 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
         Map columnPropMap = new HashMap();
 
         RelDataType rowType =
-            typeFactory.createStructTypeFromFeatureList(
-                baseColumnSet.getFeature());
+            typeFactory.createStructTypeFromClassifier(baseColumnSet);
 
         Iterator iter = baseColumnSet.getFeature().iterator();
         while (iter.hasNext()) {

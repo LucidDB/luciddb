@@ -215,11 +215,14 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      * @param names array of 1 or more name components, from
      * most general to most specific
      *
+     * @param refClass type of object to resolve
+     *
      * @return FarragoSessionResolvedObject, or null if object definitely
      * doesn't exist
      */
     public FarragoSessionResolvedObject resolveSchemaObjectName(
-        String [] names);
+        String [] names,
+        RefClass refClass);
 
     /**
       * Gets schema object names as specified. They can be schema or table

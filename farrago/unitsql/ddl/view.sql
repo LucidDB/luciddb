@@ -30,6 +30,9 @@ create view v6 as select * from sales.emps where empno = ?;
 -- bad:  duplicate view name
 create view v1 as select * from sales.emps;
 
+-- bad:  duplicate view name (views and tables conflict)
+create view sales.depts as select * from sales.emps;
+
 -- bad:  ORDER BY in view
 create view v7 as select * from sales.emps order by name;
 

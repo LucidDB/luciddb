@@ -71,11 +71,22 @@ public class DdlRoutineHandler extends DdlHandler
                 returnParam = param;
             } else {
                 if (routine.getType().equals(ProcedureTypeEnum.FUNCTION)) {
-                    if (param.getKind() != ParameterDirectionKindEnum.PDK_IN) {
+                    if ((param.getKind() != null) && (param.getType() == null))
+                    {
                         throw validator.newPositionalError(
                             param,
                             validator.res.newValidatorFunctionOutputParam(
                                 repos.getLocalizedObjectName(routine)));
+                    }
+                    param.setKind(ParameterDirectionKindEnum.PDK_IN);
+                } else {
+                    if (param.getKind() == null) {
+                        param.setKind(ParameterDirectionKindEnum.PDK_IN);
+                    }
+                    if (param.getKind() != ParameterDirectionKindEnum.PDK_IN) {
+                        // TODO jvs 25-Feb-2005:  implement OUT and INOUT
+                        // params to procedures
+                        throw Util.needToImplement(param.getKind());
                     }
                 }
                 param.setOrdinal(iOrdinal);
@@ -90,7 +101,11 @@ public class DdlRoutineHandler extends DdlHandler
                     repos.getLocalizedObjectName(routine)));
         }
 
-        if (routine.getBody() != null) {
+        // TODO jvs 11-Jan-2005:  enum for supported languages
+        if (routine.getLanguage() == null) {
+            routine.setLanguage("SQL");
+        }
+        if (routine.getLanguage().equals("SQL")) {
             validateSqlRoutine(routine, returnParam);
         } else {
             validateJavaRoutine(routine, returnParam);
@@ -121,38 +136,78 @@ public class DdlRoutineHandler extends DdlHandler
                 validator.res.newValidatorRoutineConflict(
                     repos.getLocalizedObjectName(routine)));
         }
+
+        if (routine.getSpecification() != null) {
+            // This is a method.  For now, it can only be a constructor method.
+            CwmClassifier classifier = routine.getSpecification().getOwner();
+            if (!routine.getInvocationName().equals(classifier.getName())) {
+                throw validator.newPositionalError(
+                    routine,
+                    validator.res.newValidatorConstructorName(
+                        repos.getLocalizedObjectName(routine),
+                        repos.getLocalizedObjectName(classifier)));
+            }
+            if (!routine.getLanguage().equals("SQL")) {
+                throw Util.needToImplement(
+                    "constructor methods with language "
+                    + routine.getLanguage());
+            }
+            if (returnParam.getType() != classifier) {
+                throw validator.newPositionalError(
+                    routine,
+                    validator.res.newValidatorConstructorType(
+                        repos.getLocalizedObjectName(routine)));
+            }
+        }
     }
 
+    // implement FarragoSessionDdlHandler
+    public void validateModification(FemRoutine routine)
+    {
+        validateDefinition(routine);
+    }
+    
     private void validateSqlRoutine(
         FemRoutine routine,
         FemRoutineParameter returnParam)
     {
-        if (routine.getLanguage() == null) {
-            routine.setLanguage("SQL");
-        }
-        // TODO jvs 11-Jan-2005:  enum for supported languages
-        if (!routine.getLanguage().equals("SQL")) {
-            throw validator.newPositionalError(
-                routine,
-                validator.res.newValidatorRoutineBodySqlOnly(
-                    repos.getLocalizedObjectName(routine)));
-        }
         if (routine.getDataAccess() == RoutineDataAccessEnum.RDA_NO_SQL) {
             throw validator.newPositionalError(
                 routine,
                 validator.res.newValidatorRoutineNoSql(
                     repos.getLocalizedObjectName(routine)));
         }
-        if (routine.getParameterStyle() == null) {
+        if (routine.getParameterStyle() != null) {
+            // FIXME jvs 26-Feb-2005:  remove this if and else below; should
+            // never set parameter style in this case, but need to
+            // edit model to make it optional
+            if (routine.getParameterStyle()
+                != RoutineParameterStyleEnum.RPS_SQL)
+            {
+                throw validator.newPositionalError(
+                    routine,
+                    validator.res.newValidatorRoutineNoParamStyle(
+                        repos.getLocalizedObjectName(routine)));
+            }
+        } else {
             routine.setParameterStyle(RoutineParameterStyleEnum.RPS_SQL);
         }
-        if (routine.getParameterStyle() !=
-            RoutineParameterStyleEnum.RPS_SQL)
-        {
-            throw validator.newPositionalError(
-                routine,
-                validator.res.newValidatorRoutineSqlParamStyleOnly(
-                    repos.getLocalizedObjectName(routine)));
+        if (routine.getBody() == null) {
+            if (routine.getExternalName() == null) {
+                // must be a method declaration and we haven't seen
+                // the definition yet
+                CwmProcedureExpression dummyBody =
+                    repos.newCwmProcedureExpression();
+                dummyBody.setLanguage("SQL");
+                dummyBody.setBody(";");
+                routine.setBody(dummyBody);
+                return;
+            } else {
+                throw validator.newPositionalError(
+                    routine,
+                    validator.res.newValidatorRoutineBodyMissing(
+                        repos.getLocalizedObjectName(routine)));
+            }
         }
         FarragoSession session = validator.newReentrantSession();
         try {
@@ -173,15 +228,23 @@ public class DdlRoutineHandler extends DdlHandler
         FemRoutine routine, 
         FemRoutineParameter returnParam)
     {
+        if (routine.getBody() != null) {
+            if ((routine.getBody().getLanguage() != null)
+                && !routine.getBody().getLanguage().equals("JAVA"))
+            {
+                throw validator.newPositionalError(
+                    routine,
+                    validator.res.newValidatorRoutineExternalNoBody(
+                        repos.getLocalizedObjectName(routine)));
+            }
+        }
+        
         CwmProcedureExpression dummyBody =
             repos.newCwmProcedureExpression();
         dummyBody.setLanguage("JAVA");
         dummyBody.setBody(";");
         routine.setBody(dummyBody);
         
-        if (routine.getLanguage() == null) {
-            routine.setLanguage("JAVA");
-        }
         if (!routine.getLanguage().equals("JAVA")) {
             throw validator.newPositionalError(
                 routine,
@@ -196,6 +259,12 @@ public class DdlRoutineHandler extends DdlHandler
                 routine,
                 validator.res.newValidatorRoutineJavaParamStyleOnly(
                     repos.getLocalizedObjectName(routine)));
+        }
+
+        if (routine.getExternalName() == null) {
+            // must be a method declaration and we haven't seen
+            // the definition yet
+            return;
         }
 
         FarragoUserDefinedRoutineLookup lookup =
@@ -248,7 +317,27 @@ public class DdlRoutineHandler extends DdlHandler
             });
 
         tracer.fine(routine.getBody().getBody());
-        
+
+        if (FarragoUserDefinedRoutine.hasReturnPrefix(
+                routine.getBody().getBody()))
+        {
+            validateReturnBody(
+                routine, session, paramRowType, returnParam);
+        } else {
+            validateConstructorBody(
+                routine, session, paramRowType,
+                (FemSqlobjectType) returnParam.getType());
+        }
+    }
+
+    private void validateReturnBody(
+        FemRoutine routine,
+        FarragoSession session, 
+        RelDataType paramRowType,
+        FemRoutineParameter returnParam)
+        throws Throwable
+    {
+        FarragoTypeFactory typeFactory = validator.getTypeFactory();
         FarragoSessionAnalyzedSql analyzedSql;
         try {
             analyzedSql = session.analyzeSql(
@@ -258,6 +347,13 @@ public class DdlRoutineHandler extends DdlHandler
         } catch (Throwable ex) {
             throw adjustExceptionParserPosition(routine, ex);
         }
+
+        validator.createDependency(
+            routine, analyzedSql.dependencies, "RoutineUsage");
+        
+        routine.getBody().setBody(
+            FarragoUserDefinedRoutine.addReturnPrefix(
+                analyzedSql.canonicalString));
         
         if (analyzedSql.hasDynamicParams) {
             // TODO jvs 29-Dec-2004:  add a test for this; currently
@@ -276,13 +372,67 @@ public class DdlRoutineHandler extends DdlHandler
                 repos.getLocalizedObjectName(routine),
                 declaredReturnType.toString());
         }
+    }
 
+    private void validateConstructorBody(
+        FemRoutine routine,
+        FarragoSession session, 
+        RelDataType paramRowType,
+        FemSqlobjectType objectType)
+    {
+        FarragoTypeFactory typeFactory = validator.getTypeFactory();
+        SqlDialect sqlDialect = new SqlDialect(session.getDatabaseMetaData());
+        FarragoSessionParser parser = session.newParser();
+        SqlNodeList nodeList = (SqlNodeList)
+            parser.parseSqlText(
+                validator,
+                routine.getBody().getBody(),
+                true);
+        Iterator iter = nodeList.getList().iterator();
+        StringBuffer newBody = new StringBuffer();
+        newBody.append("BEGIN ");
+        Set dependencies = new HashSet();
+        while (iter.hasNext()) {
+            SqlCall call = (SqlCall) iter.next();
+            SqlIdentifier lhs = (SqlIdentifier) call.getOperands()[0];
+            SqlNode expr = call.getOperands()[1];
+            FemSqltypeAttribute attribute = (FemSqltypeAttribute)
+                FarragoCatalogUtil.getModelElementByName(
+                    objectType.getFeature(),
+                    lhs.getSimple());
+            if (attribute == null) {
+                throw validator.res.newValidatorConstructorAssignmentUnknown(
+                    repos.getLocalizedObjectName(lhs.getSimple()));
+            }
+            FarragoSessionAnalyzedSql analyzedSql;
+            // TODO jvs 26-Feb-2005:  need to figure out how to
+            // adjust parser pos in error msgs
+            analyzedSql = session.analyzeSql(
+                expr.toSqlString(sqlDialect),
+                paramRowType);
+            if (analyzedSql.hasDynamicParams) {
+                throw validator.res.newValidatorInvalidRoutineDynamicParam();
+            }
+            RelDataType lhsType =
+                typeFactory.createCwmElementType(attribute);
+            RelDataType rhsType = analyzedSql.resultType;
+            if (!SqlTypeUtil.canAssignFrom(lhsType, rhsType)) {
+                throw validator.res.newValidatorConstructorAssignmentType(
+                    rhsType.toString(),
+                    lhsType.toString(),
+                    repos.getLocalizedObjectName(attribute));
+            }
+            newBody.append("SET SELF.");
+            newBody.append(lhs.toSqlString(sqlDialect));
+            newBody.append(" = ");
+            newBody.append(analyzedSql.canonicalString);
+            newBody.append("; ");
+            dependencies.addAll(analyzedSql.dependencies);
+        }
+        newBody.append("RETURN SELF; END");
+        routine.getBody().setBody(newBody.toString());
         validator.createDependency(
-            routine, analyzedSql.dependencies, "RoutineUsage");
-        
-        routine.getBody().setBody(
-            FarragoUserDefinedRoutine.addReturnPrefix(
-                analyzedSql.canonicalString));
+            routine, dependencies, "RoutineUsage");
     }
 
     public void validateRoutineParam(FemRoutineParameter param)

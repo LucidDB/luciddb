@@ -267,7 +267,7 @@ column type family is {1} but default value type family is {2}</text>
 
 <exception id="420470" name="ValidatorFunctionOutputParam"
     className="org.eigenbase.sql.SqlValidatorException">
-<text>Parameters to {0} may not be declared as OUT or INOUT because it is a function</text>
+<text>Parameter mode to {0} may not be declared because it is a function</text>
 </exception>
 
 <exception id="420480" name="ValidatorRoutineNoSql"
@@ -277,6 +277,10 @@ column type family is {1} but default value type family is {2}</text>
 
 <exception id="420490" name="ValidatorFunctionReturnType">
 <text>Result expression type {0} from {1} does not match declared return type {2}</text>
+</exception>
+
+<exception id="420495" name="ValidatorConstructorAssignmentType">
+<text>Result expression type {0} cannot be assigned to declared type {1} of {2}</text>
 </exception>
 
 <exception id="420500" name="ValidatorPathBadCatalog">
@@ -303,9 +307,9 @@ column type family is {1} but default value type family is {2}</text>
 <text>Unable to evaluate expression in SET statement</text>
 </exception>
 
-<exception id="420560" name="ValidatorRoutineBodySqlOnly"
+<exception id="420560" name="ValidatorRoutineBodyMissing"
     className="org.eigenbase.sql.SqlValidatorException">
-<text>Non-SQL language cannot be specified for {0} with SQL definition</text>
+<text>Body required for {0} with language SQL</text>
 </exception>
 
 <exception id="420570" name="ValidatorRoutineExternalJavaOnly"
@@ -313,14 +317,19 @@ column type family is {1} but default value type family is {2}</text>
 <text>External {0} cannot specify non-JAVA language</text>
 </exception>
 
+<exception id="420575" name="ValidatorRoutineExternalNoBody"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>External {0} cannot specify a body</text>
+</exception>
+
 <exception id="420580" name="ValidatorRoutineJavaParamStyleOnly"
     className="org.eigenbase.sql.SqlValidatorException">
 <text>External JAVA {0} cannot specify non-JAVA parameter style</text>
 </exception>
 
-<exception id="420590" name="ValidatorRoutineSqlParamStyleOnly"
+<exception id="420590" name="ValidatorRoutineNoParamStyle"
     className="org.eigenbase.sql.SqlValidatorException">
-<text>Non-SQL parameter style cannot be specified for {0} with SQL definition</text>
+<text>Parameter style cannot be specified for {0} with language SQL</text>
 </exception>
 
 <exception id="420600" name="ValidatorRoutineInvalidJavaMethod"
@@ -379,7 +388,21 @@ column type family is {1} but default value type family is {2}</text>
 
 <exception id="420710" name="ValidatorDistinctTypePredefined"
     className="org.eigenbase.sql.SqlValidatorException">
-<text>Must define representation for {0} as a predefined type.</text>
+<text>Must define representation for {0} as a predefined type</text>
+</exception>
+
+<exception id="420720" name="ValidatorConstructorName"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Name of constructor {0} must match name of {1}</text>
+</exception>
+
+<exception id="420730" name="ValidatorConstructorType"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>Return type of constructor {0} must be type being constructed</text>
+</exception>
+
+<exception id="420740" name="ValidatorConstructorAssignmentUnknown">
+<text>Unknown target field {0} in constructor assignment</text>
 </exception>
 
 <!-- ====================================================================== -->
@@ -753,6 +776,10 @@ column type family is {1} but default value type family is {2}</text>
 
 <message id="510045" name="UmlUserDefinedType">
 <text>user-defined type</text>
+</message>
+
+<message id="510046" name="UmlOperation">
+<text>method</text>
 </message>
 
 <!-- End of last error section ============================================ -->

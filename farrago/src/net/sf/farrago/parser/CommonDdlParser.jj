@@ -56,6 +56,8 @@ Object FarragoSqlStmtEof() :
         obj = DdlStmtEof()
     |
         obj = SqlStmtEof()
+    |
+        obj = PsmBody() <EOF>
     )
         { return obj; }
 }
@@ -244,6 +246,8 @@ CwmModelElement SchemaObjectDefinition() :
         modelElement = FunctionDefinition()
         |
         modelElement = ProcedureDefinition()
+        |
+        modelElement = ConstructorDefinition()
         |
         modelElement = JarDefinition()
         |
@@ -735,7 +739,7 @@ SqlNode DefaultClause() :
 {
     <DEFAULT_KW> (
         // TODO:  allow USER, CURRENT_USER, CURRENT_ROLE, SESSION_USER,
-        // SYSTEM_USER, CURRENT_PATH, <datatime value function>,
+        // SYSTEM_USER, CURRENT_PATH, <datetime value function>,
         // <implicitly typed value specification>
         expression = Literal()
     )
@@ -1190,14 +1194,12 @@ FemRoutine FunctionDefinition() :
 {
     FemRoutine function;
     SqlIdentifier qualifiedName;
-    FemRoutineParameter returnParam;
 }
 {
     <FUNCTION>
         {
             function = getRepos().newFemRoutine();
             function.setType(ProcedureTypeEnum.FUNCTION);
-            returnParam = getRepos().newFemRoutineParameter();
             function.setCalledOnNullInput(true);
         }
     qualifiedName = CompoundIdentifier2()
@@ -1217,11 +1219,8 @@ FemRoutine FunctionDefinition() :
     <LPAREN> [ RoutineParamList(function) ] <RPAREN>
         {
         }
-    <RETURNS> TypedElement(returnParam)
+    ReturnsClause(function)
         {
-            returnParam.setName("RETURN");
-            returnParam.setKind(ParameterDirectionKindEnum.PDK_RETURN);
-            function.getParameter().add(returnParam);
         }
     RoutineCharacteristics(function)
         {
@@ -1231,12 +1230,106 @@ FemRoutine FunctionDefinition() :
             function.setStaticDispatch(true);
         }
     (
-        SqlRoutineBody(function)
+        SqlFunctionBody(function)
         | ExternalRoutineBody(function)
     )
     {
         return function;
     }
+}
+
+FemRoutine ConstructorDefinition() :
+{
+    FemRoutine method;
+    SqlIdentifier constructorName;
+    SqlIdentifier typeName;
+    // TODO jvs 26-Feb-2005:  support silly RETURNS clause and
+    // method reference by invocation name and parameters
+    SqlParserPos defStart, defEnd;
+}
+{
+    <SPECIFIC> <METHOD> constructorName = CompoundIdentifier2()
+        {
+            method = (FemRoutine)
+            farragoParser.getStmtValidator().findSchemaObject(
+                constructorName,
+                getRepos().getSql2003Package().getFemRoutine());
+        }
+    <FOR> typeName = CompoundIdentifier2()
+        {
+            // TODO jvs 26-Feb-2005:  cross-check
+        }
+    RightsClause(method)
+        {
+            defStart = getEndPos();
+            farragoParser.getDdlValidator().setParserOffset(method, defStart);
+        }
+    PsmBody()
+        {
+            defEnd = getEndPos();
+            String bodyText = farragoParser.getSubstring(defStart, defEnd);
+            CwmProcedureExpression procedureExpr =
+                getRepos().newCwmProcedureExpression();
+            procedureExpr.setLanguage("SQL");
+            procedureExpr.setBody(bodyText);
+            method.setBody(procedureExpr);
+        }
+    {
+        return method;
+    }
+}
+
+SqlNode PsmBody() :
+{
+    // TODO jvs 26-Feb-2005:  once we implement SQL/PSM, this should
+    // accept any statement list; right now this is all special-cased
+    // for UDT constructors
+    SqlNodeList list = new SqlNodeList(getPos());
+    SqlNode stmt;
+}
+{
+    <BEGIN> (
+        stmt = ConstructorAssignment()
+    {
+        list.add(stmt);
+    }
+        )* <RETURN> <SELF> <SEMICOLON> <END>
+        {
+        }
+    {
+        return list;
+    }
+}
+
+SqlNode ConstructorAssignment() :
+{
+    SqlIdentifier attributeName;
+    SqlNode expr;
+}
+{
+    <SET> <SELF> <DOT> attributeName = SimpleIdentifier()
+         <EQ> expr = Expression(EXPR_ACCEPT_NONQUERY) <SEMICOLON>
+        {
+        }
+    {
+        return opTab.equalsOperator.createCall(
+            attributeName,
+            expr,
+            getPos());
+    }
+}
+
+void ReturnsClause(FemRoutine function) :
+{
+    FemRoutineParameter returnParam = getRepos().newFemRoutineParameter();
+}
+{
+    <RETURNS> TypedElement(returnParam)
+        {
+            returnParam.setName("RETURN");
+            returnParam.setKind(ParameterDirectionKindEnum.PDK_RETURN);
+            function.getParameter().add(returnParam);
+        }
 }
 
 FemRoutine ProcedureDefinition() :
@@ -1275,24 +1368,13 @@ FemRoutine ProcedureDefinition() :
     }
 }
 
-void SqlRoutineBody(FemRoutine routine) :
+void SqlFunctionBody(FemRoutine routine) :
 {
     SqlNode expr;
     SqlParserPos defStart, defEnd;
 }
 {
-    [ <SQL> <SECURITY>
-        (
-            <INVOKER>
-        {
-            routine.setImpersonateDefiner(false);
-        }
-            | <DEFINER>
-        {
-            routine.setImpersonateDefiner(true);
-        }
-        )
-    ]
+    RightsClause(routine)
         {
         }
     <RETURN>
@@ -1314,6 +1396,26 @@ void SqlRoutineBody(FemRoutine routine) :
             procedureExpr.setBody(
                 FarragoUserDefinedRoutine.addReturnPrefix(bodyText));
             routine.setBody(procedureExpr);
+        }
+}
+
+void RightsClause(FemRoutine routine) :
+{
+}
+{
+    [ <SQL> <SECURITY>
+        (
+            <INVOKER>
+        {
+            routine.setImpersonateDefiner(false);
+        }
+            | <DEFINER>
+        {
+            routine.setImpersonateDefiner(true);
+        }
+        )
+    ]
+        {
         }
 }
 
@@ -1560,11 +1662,63 @@ FemUserDefinedType UserDefinedTypeDefinition() :
     UserDefinedTypeOptions(typeDef)
         {
         }
+    MethodSpecificationList(typeDef)
+        {
+        }
     {
         farragoParser.getDdlValidator().setSchemaObjectName(
             typeDef, qualifiedName);
         return typeDef;
     }
+}
+
+void MethodSpecificationList(FemUserDefinedType typeDef) :
+{
+}
+{
+    (MethodSpecification(typeDef) (<COMMA> MethodSpecification(typeDef))*)?
+        {
+        }
+}
+
+void MethodSpecification(FemUserDefinedType typeDef) :
+{
+    SqlIdentifier name, returnTypeName;
+    FemRoutine method;
+}
+{
+    // TODO jvs 25-Feb-2005:  non-constructor methods
+    <CONSTRUCTOR> <METHOD>
+         name = SimpleIdentifier()
+        {
+            method = getRepos().newFemRoutine();
+            method.setType(ProcedureTypeEnum.FUNCTION);
+            farragoParser.getDdlValidator().setSchemaObjectName(
+                method, name);
+            method.setInvocationName(method.getName());
+            method.setCalledOnNullInput(true);
+            // TODO jvs 25-Feb-2005:  mark as constructor
+            CwmOperation operation = getRepos().newCwmOperation();
+            operation.setOwner(typeDef);
+            operation.setName(method.getName());
+            operation.setAbstract(false);
+            method.setSpecification(operation);
+        }
+    <LPAREN> [ RoutineParamList(method) ] <RPAREN>
+        {
+            // TODO jvs 25-Feb-2005:  copy parameters to operation
+        }
+    ReturnsClause(method)
+        {
+        }
+    <SELF> <AS> <RESULT>
+        {
+            // REVIEW jvs 25-Feb-2005:  according to SQL:2003, SPECIFIC
+            // NAME has to come before SELF AS RESULT
+        }
+    RoutineCharacteristics(method)
+        {
+        }
 }
 
 void UserDefinedTypeOptions(FemUserDefinedType typeDef) :

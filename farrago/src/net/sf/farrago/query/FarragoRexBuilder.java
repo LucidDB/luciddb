@@ -22,9 +22,11 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.cwm.behavioral.*;
 
+import org.eigenbase.util.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.reltype.*;
 
@@ -68,41 +70,35 @@ class FarragoRexBuilder extends JavaRexBuilder
 
         FarragoUserDefinedRoutine routine = (FarragoUserDefinedRoutine) op;
         FemRoutine femRoutine = routine.getFemRoutine();
-
-        preparingStmt.addDependency(femRoutine);
-
-        Map paramNameToArgMap = new HashMap();
-        Map paramNameToTypeMap = new HashMap();
-        RelDataType [] paramTypes = routine.getParamTypes();
-
-        RexNode [] castExprs = new RexNode[exprs.length];
-        List paramNames = new ArrayList();
-        Iterator paramIter = femRoutine.getParameter().iterator();
-        for (int i = 0; paramIter.hasNext(); ++i) {
-            FemRoutineParameter param = (FemRoutineParameter) paramIter.next();
-            if (param.getKind() == ParameterDirectionKindEnum.PDK_RETURN) {
-                break;
-            }
-            paramNames.add(param.getName());
-            RexNode argCast = makeCast(paramTypes[i], exprs[i]);
-            paramNameToArgMap.put(param.getName(), argCast);
-            paramNameToTypeMap.put(param.getName(), paramTypes[i]);
-            castExprs[i] = argCast;
-        }
+        FarragoRoutineInvocation invocation = new FarragoRoutineInvocation(
+            routine, exprs);
 
         RexNode returnNode;
         if (femRoutine.getBody().getLanguage().equals("SQL")) {
             // replace calls to SQL-defined routines by
             // inline expansion of body
-            returnNode = preparingStmt.expandFunction(
-                femRoutine.getBody().getBody(),
-                paramNameToArgMap,
-                paramNameToTypeMap);
+            String bodyString = femRoutine.getBody().getBody();
+            bodyString = FarragoUserDefinedRoutine.removeReturnPrefix(
+                bodyString);
+            SqlParser parser = new SqlParser(bodyString);
+            SqlNode sqlExpr;
+            try {
+                sqlExpr = parser.parseExpression();
+            } catch (SqlParseException e) {
+                throw Util.newInternal(e,
+                    "Error while parsing routine definition:  " + bodyString);
+            }
+            returnNode = preparingStmt.expandInvocationExpression(
+                sqlExpr,
+                invocation);
         } else {
             // leave calls to external functions alone
-            returnNode = super.makeCall(op, castExprs);
+            returnNode = super.makeCall(
+                op,
+                invocation.getArgCastExprs());
         }
 
+        RelDataType [] paramTypes = routine.getParamTypes();
         if (!femRoutine.isCalledOnNullInput()
             && (paramTypes.length > 0))
         {

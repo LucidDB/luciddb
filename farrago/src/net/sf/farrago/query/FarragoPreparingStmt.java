@@ -32,6 +32,7 @@ import javax.jmi.reflect.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.cwm.behavioral.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
@@ -541,23 +542,12 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         return relNode;
     }
 
-    RexNode expandFunction(
-        String bodyString,
-        Map paramNameToArgMap,
-        final Map paramNameToTypeMap)
+    RexNode expandInvocationExpression(
+        SqlNode sqlExpr,
+        FarragoRoutineInvocation invocation)
     {
         expansionDepth++;
         stopCollectingDirectDependencies();
-
-        bodyString = FarragoUserDefinedRoutine.removeReturnPrefix(bodyString);
-        SqlParser parser = new SqlParser(bodyString);
-        SqlNode sqlExpr;
-        try {
-            sqlExpr = parser.parseExpression();
-        } catch (SqlParseException e) {
-            throw Util.newInternal(e,
-                "Error while parsing routine definition:  " + bodyString);
-        }
 
         // NOTE jvs 2-Jan-2005: We already validated the expression during DDL,
         // but we stored the original pre-validation expression, and validation
@@ -565,14 +555,14 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         // we must recapitulate here.
         sqlExpr = getSqlValidator().validateParameterizedExpression(
             sqlExpr,
-            paramNameToTypeMap);
+            invocation.getParamNameToTypeMap());
 
         // TODO jvs 1-Jan-2005: support a RexVariableBinding (like "let" in
         // Lisp), and avoid expansion of parameters which are referenced more
         // than once
 
         RexNode rexNode = sqlToRelConverter.convertExpression(
-            sqlExpr, paramNameToArgMap);
+            sqlExpr, invocation.getParamNameToArgMap());
         --expansionDepth;
         return rexNode;
     }
@@ -672,7 +662,9 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     public RelOptTable getTableForMember(String [] names)
     {
         FarragoSessionResolvedObject resolved =
-            stmtValidator.resolveSchemaObjectName(names);
+            stmtValidator.resolveSchemaObjectName(
+                names,
+                getRepos().getRelationalPackage().getCwmNamedColumnSet());
 
         if (resolved.object == null) {
             return getForeignTableFromNamespace(resolved);
@@ -703,8 +695,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                     getFarragoTypeFactory());
         } else if (columnSet instanceof CwmView) {
             RelDataType rowType =
-                getFarragoTypeFactory().createStructTypeFromFeatureList(
-                    columnSet.getFeature());
+                getFarragoTypeFactory().createStructTypeFromClassifier(
+                    columnSet);
             relOptTable = new FarragoView(columnSet, rowType);
         } else {
             throw Util.needToImplement(columnSet);
@@ -810,7 +802,9 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     public SqlValidator.Table getTable(String [] names)
     {
         FarragoSessionResolvedObject resolved =
-            stmtValidator.resolveSchemaObjectName(names);
+            stmtValidator.resolveSchemaObjectName(
+                names,
+                getRepos().getRelationalPackage().getCwmNamedColumnSet());
 
         if (resolved == null) {
             return null;
@@ -835,8 +829,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         }
 
         RelDataType rowType =
-            getFarragoTypeFactory().createStructTypeFromFeatureList(
-                table.getFeature());
+            getFarragoTypeFactory().createStructTypeFromClassifier(
+                table);
         return new ValidatorTable(
             resolved.getQualifiedName(),
             rowType);
@@ -969,6 +963,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     private class ReposDefaultValueFactory implements DefaultValueFactory,
         FarragoObjectCache.CachedObjectFactory
     {
+        private Map constructorToSqlMap = new HashMap();
+        
         // implement DefaultValueFactory
         public RexNode newColumnDefaultValue(
             RelOptTable table,
@@ -985,16 +981,70 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         }
 
         // implement DefaultValueFactory
-        public RexNode newAttributeDefaultValue(
+        public RexNode newAttributeInitializer(
             RelDataType type,
-            int iAttribute)
+            SqlFunction constructor,
+            int iAttribute,
+            RexNode [] constructorArgs)
         {
             SqlIdentifier typeName = type.getSqlIdentifier();
             CwmSqldataType cwmType = stmtValidator.findSqldataType(typeName);
             assert(cwmType instanceof FemSqlobjectType);
             FemSqltypeAttribute attribute =
                 (FemSqltypeAttribute) cwmType.getFeature().get(iAttribute);
+            if (constructor instanceof FarragoUserDefinedRoutine) {
+                RexNode initializer = convertConstructorAssignment(
+                    (FarragoUserDefinedRoutine) constructor,
+                    attribute,
+                    constructorArgs);
+                if (initializer != null) {
+                    return initializer;
+                }
+            }
             return convertExpression(attribute.getInitialValue());
+        }
+
+        private RexNode convertConstructorAssignment(
+            FarragoUserDefinedRoutine constructor,
+            FemSqltypeAttribute attribute,
+            RexNode [] constructorArgs)
+        {
+            SqlNodeList nodeList = (SqlNodeList)
+                constructorToSqlMap.get(constructor.getFemRoutine());
+            if (nodeList == null) {
+                String body = constructor.getFemRoutine().getBody().getBody();
+                // TODO jvs 26-Feb-2005:  need a utility method for detecting
+                // this, and need to catch it earlier (during validation) and
+                // report it properly
+                if (body.equals(";")) {
+                    throw Util.newInternal(
+                        "call to constructor which has been declared "
+                        + "but not yet defined");
+                }
+                FarragoSessionParser parser = getSession().newParser();
+                nodeList = (SqlNodeList) parser.parseSqlText(
+                    null,
+                    body,
+                    true);
+                constructorToSqlMap.put(constructor.getFemRoutine(), nodeList);
+            }
+            Iterator iter = nodeList.getList().iterator();
+            SqlNode rhs = null;
+            while (iter.hasNext()) {
+                SqlCall call = (SqlCall) iter.next();
+                SqlIdentifier lhs = (SqlIdentifier) call.getOperands()[0];
+                if (lhs.getSimple().equals(attribute.getName())) {
+                    rhs = call.getOperands()[1];
+                    break;
+                }
+            }
+            if (rhs == null) {
+                return null;
+            }
+            FarragoRoutineInvocation invocation = new FarragoRoutineInvocation(
+                constructor,
+                constructorArgs);
+            return expandInvocationExpression(rhs, invocation);
         }
 
         private RexNode convertExpression(CwmExpression cwmExp)
