@@ -29,10 +29,12 @@ import java.util.NoSuchElementException;
 /**
  * ArrayQueue is a queue implementation backed by an array.  Grows by
  * doubling the existing size, but never shrinks.  Queue entries are
- * allowed to wrap around array boundaries.
+ * allowed to wrap around array boundaries.  ArrayQueue does not allow
+ * <code>null</code> entries.
  *
  * <p>Contains the necessary methods to implement JDK 1.5's Queue
- * interface.
+ * interface.  Also, some methods can be removed by extending JDK
+ * 1.5's AbstractQueue class.
  *
  * <p>{@link #offer(Object) Offering} (adding) items to the queue,
  * {@link #poll() polling} (removing) items from the queue, and 
@@ -139,10 +141,16 @@ public class ArrayQueue
      * capacity may grow as a result of this call.
      *
      * @param o the element to insert
-     * @return true since it's always possible to add an element to this queue
+     * @return <code>false</code> if o is <code>null</code>, otherwise
+     *         <code>true</code> since it's always possible to add an
+     *         element to this queue.
      */
     public boolean offer(Object o)
     {
+        if (o == null) {
+            return false;
+        }
+
         int newEnd = increment(end);
         if (newEnd == start) {
             // queue is full, allocate more space

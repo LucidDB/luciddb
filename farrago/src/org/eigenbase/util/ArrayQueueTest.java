@@ -325,4 +325,28 @@ public class ArrayQueueTest
         assertEquals(Arrays.asList(new String[] { "a", "b", "c" }),
                      Arrays.asList(queue2.toArray(new String[3])));
     }
+
+    public void testOfferNull()
+    {
+        ArrayQueue queue = new ArrayQueue();
+        assertTrue(!queue.offer(null));
+        assertEquals(0, queue.size());
+
+        assertTrue(queue.offer("1"));
+        assertTrue(!queue.offer(null));
+        assertTrue(queue.offer("2"));
+        assertTrue(!queue.offer(null));
+        assertTrue(queue.offer("3"));
+        assertTrue(!queue.offer(null));
+
+        assertEquals(3, queue.size());
+
+        assertEquals("1", queue.poll());
+        assertEquals("2", queue.poll());
+        assertEquals("3", queue.poll());
+
+        assertNull(queue.poll());
+        assertEquals(0, queue.size());
+        assertTrue(queue.isEmpty());
+    }
 }
