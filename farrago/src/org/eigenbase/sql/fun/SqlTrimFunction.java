@@ -1,24 +1,28 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2004-2004 Disruptive Technologies, Inc.
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 package org.eigenbase.sql.fun;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
@@ -28,8 +32,6 @@ import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.Util;
 
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Definition of the "TRIM" builtin SQL function.
@@ -38,22 +40,33 @@ import java.util.List;
  * @since May 28, 2004
  * @version $Id$
  **/
-public class SqlTrimFunction extends SqlFunction {
-    public SqlTrimFunction() {
+public class SqlTrimFunction extends SqlFunction
+{
+    //~ Constructors ----------------------------------------------------------
+
+    public SqlTrimFunction()
+    {
         super("TRIM", SqlKind.Trim, null, null,
-                SqlOperatorTable.typeNullableStringStringOfSameType,
-                SqlFunction.SqlFuncTypeName.String);
+            SqlOperatorTable.typeNullableStringStringOfSameType,
+            SqlFunction.SqlFuncTypeName.String);
     }
 
-    public OperandsCountDescriptor getOperandsCountDescriptor() {
+    //~ Methods ---------------------------------------------------------------
+
+    public OperandsCountDescriptor getOperandsCountDescriptor()
+    {
         return new OperandsCountDescriptor(3);
     }
 
-    public void unparse(SqlWriter writer, SqlNode[] operands,
-            int leftPrec, int rightPrec) {
+    public void unparse(
+        SqlWriter writer,
+        SqlNode [] operands,
+        int leftPrec,
+        int rightPrec)
+    {
         writer.print(name);
         writer.print("(");
-        assert(operands[0] instanceof Flag);
+        assert (operands[0] instanceof Flag);
         operands[0].unparse(writer, 0, 0);
         writer.print(" ");
         operands[1].unparse(writer, leftPrec, rightPrec);
@@ -62,17 +75,23 @@ public class SqlTrimFunction extends SqlFunction {
         writer.print(")");
     }
 
-    protected String getSignatureTemplate(final int operandsCount) {
+    protected String getSignatureTemplate(final int operandsCount)
+    {
         switch (operandsCount) {
-        case 2: return "{0}({1} FROM {2})";
-        case 3: return "{0}({1} {2} FROM {3})";
+        case 2:
+            return "{0}({1} FROM {2})";
+        case 3:
+            return "{0}({1} {2} FROM {3})";
         }
-        assert(false);
+        assert (false);
         return null;
     }
 
-    public SqlCall createCall(SqlNode[] operands, ParserPosition parserPosition) {
-        assert(3==operands.length);
+    public SqlCall createCall(
+        SqlNode [] operands,
+        ParserPosition parserPosition)
+    {
+        assert (3 == operands.length);
         if (null == operands[0]) {
             operands[0] = Flag.createBoth(parserPosition);
         }
@@ -83,41 +102,48 @@ public class SqlTrimFunction extends SqlFunction {
         return super.createCall(operands, parserPosition);
     }
 
-    protected void checkArgTypes(SqlCall call, SqlValidator validator,
-            SqlValidator.Scope scope) {
+    protected void checkArgTypes(
+        SqlCall call,
+        SqlValidator validator,
+        SqlValidator.Scope scope)
+    {
         for (int i = 1; i < 3; i++) {
-            if (!SqlOperatorTable.typeNullableString.check(
-                    call,validator, scope, call.operands[i], 0)) {
-                throw call.newValidationSignatureError(
-                        validator, scope);
+            if (!SqlOperatorTable.typeNullableString.check(call, validator,
+                        scope, call.operands[i], 0)) {
+                throw call.newValidationSignatureError(validator, scope);
             }
         }
     }
 
-
-    public RelDataType getType(RelDataTypeFactory typeFactory,
-            RelDataType[] argTypes) {
-        assert(3 == argTypes.length);
-        return SqlOperatorTable.makeNullableIfOperandsAre(
-                typeFactory,argTypes, argTypes[2]);
+    public RelDataType getType(
+        RelDataTypeFactory typeFactory,
+        RelDataType [] argTypes)
+    {
+        assert (3 == argTypes.length);
+        return SqlOperatorTable.makeNullableIfOperandsAre(typeFactory,
+            argTypes, argTypes[2]);
     }
 
-    public RelDataType getType(SqlValidator validator,
-            SqlValidator.Scope scope, SqlCall call) {
+    public RelDataType getType(
+        SqlValidator validator,
+        SqlValidator.Scope scope,
+        SqlCall call)
+    {
         checkArgTypes(call, validator, scope);
 
-        SqlNode[] ops = new SqlNode[2];
+        SqlNode [] ops = new SqlNode[2];
         for (int i = 1; i < call.operands.length; i++) {
             ops[i - 1] = call.operands[i];
         }
 
         isCharTypeComparableThrows(validator, scope, ops);
         RelDataType type = validator.deriveType(scope, call.operands[2]);
-        return SqlOperatorTable.makeNullableIfOperandsAre(
-                validator,scope,call,type);
+        return SqlOperatorTable.makeNullableIfOperandsAre(validator, scope,
+            call, type);
     }
 
-    public void test(SqlTester tester) {
+    public void test(SqlTester tester)
+    {
         tester.checkString("trim('a' from 'aAa')", "A");
         tester.checkString("trim(both 'a' from 'aAa')", "A");
         tester.checkString("trim(leading 'a' from 'aAa')", "Aa");
@@ -126,27 +152,46 @@ public class SqlTrimFunction extends SqlFunction {
         tester.checkNull("trim('a' from cast(null as varchar))");
     }
 
+    //~ Inner Classes ---------------------------------------------------------
+
     /**
      * Enumerates the types of flags
      */
-    public static class Flag extends SqlSymbol {
+    public static class Flag extends SqlSymbol
+    {
         public final int _left;
         public final int _right;
 
-        private Flag(String name, int left, int right, ParserPosition parserPosition) {
+        private Flag(
+            String name,
+            int left,
+            int right,
+            ParserPosition parserPosition)
+        {
             super(name, parserPosition);
             _left = left;
             _right = right;
         }
 
-        public static final SqlSymbol createBoth(ParserPosition parserPosition)
-                { return new Flag("Both", 1, 1,parserPosition);}
-        public static final SqlSymbol createLeading(ParserPosition parserPosition)
-                { return new Flag("Leading", 1, 0,parserPosition);}
-        public static final SqlSymbol createTrailing(ParserPosition parserPosition)
-                { return new Flag("Trailing", 0, 1,parserPosition);}
+        public static final SqlSymbol createBoth(
+            ParserPosition parserPosition)
+        {
+            return new Flag("Both", 1, 1, parserPosition);
+        }
 
+        public static final SqlSymbol createLeading(
+            ParserPosition parserPosition)
+        {
+            return new Flag("Leading", 1, 0, parserPosition);
+        }
+
+        public static final SqlSymbol createTrailing(
+            ParserPosition parserPosition)
+        {
+            return new Flag("Trailing", 0, 1, parserPosition);
+        }
     }
 }
+
 
 // End SqlTrimFunction.java

@@ -1,39 +1,39 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.oj.util;
 
-import org.eigenbase.relopt.RelOptUtil;
-import org.eigenbase.relopt.VisitorRelVisitor;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rex.RexCorrelVariable;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexShuttle;
+import java.util.Enumeration;
+import java.util.Hashtable;
+
 import openjava.mop.Environment;
 import openjava.mop.OJClass;
 import openjava.ptree.*;
 
-import java.util.Enumeration;
-import java.util.Hashtable;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.VisitorRelVisitor;
+import org.eigenbase.rex.RexCorrelVariable;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexShuttle;
 
 
 /**
@@ -66,7 +66,9 @@ public class UnboundVariableCollector extends RexShuttle
     {
         UnboundVariableCollector unboundVars =
             new UnboundVariableCollector(rel.getCluster().env);
-        RelOptUtil.go(new VisitorRelVisitor(unboundVars),rel);
+        RelOptUtil.go(
+            new VisitorRelVisitor(unboundVars),
+            rel);
         return unboundVars;
     }
 
@@ -99,7 +101,9 @@ public class UnboundVariableCollector extends RexShuttle
             statementList.add(
                 new ExpressionStatement(
                     new AssignmentExpression(
-                        new FieldAccess(SelfAccess.makeThis(),name),
+                        new FieldAccess(
+                            SelfAccess.makeThis(),
+                            name),
                         AssignmentExpression.EQUALS,
                         new Variable(name))));
         }
@@ -140,7 +144,9 @@ public class UnboundVariableCollector extends RexShuttle
         while (names.hasMoreElements()) {
             String name = (String) names.nextElement();
             OJClass clazz = (OJClass) mapNameToClass.get(name);
-            parameterList.add(new Parameter(TypeName.forOJClass(clazz),name));
+            parameterList.add(new Parameter(
+                    TypeName.forOJClass(clazz),
+                    name));
         }
         return parameterList;
     }
@@ -153,7 +159,9 @@ public class UnboundVariableCollector extends RexShuttle
         if (info != null) {
             // variable's type is known in the enclosing environment,
             // therefore it must be inherited from that environment
-            mapNameToClass.put(v.toString(),info.getType());
+            mapNameToClass.put(
+                v.toString(),
+                info.getType());
         }
         return v;
     }

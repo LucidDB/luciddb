@@ -17,10 +17,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.session;
 
 import net.sf.farrago.catalog.FarragoReposTxnContext;
+
 
 /**
  * FarragoSessionParser represents an object capable of parsing Farrago
@@ -31,6 +31,8 @@ import net.sf.farrago.catalog.FarragoReposTxnContext;
  */
 public interface FarragoSessionParser
 {
+    //~ Methods ---------------------------------------------------------------
+
     /**
      * Parses an SQL statement.  If a DDL statement, implicitly
      * performs uncommitted catalog updates.
@@ -58,7 +60,6 @@ public interface FarragoSessionParser
      */
     public String getSQLKeywords();
 
-
     /**
      * @return a comma-separated list of string functions available with this
      * database
@@ -83,16 +84,17 @@ public interface FarragoSessionParser
      */
     public String getSystemFunctions();
 
-	/**
-	 * @return validator to use for validating DDL statements as they are
-	 * parsed
-	 */
-	public FarragoSessionDdlValidator getDdlValidator();
-    
+    /**
+     * @return validator to use for validating DDL statements as they are
+     * parsed
+     */
+    public FarragoSessionDdlValidator getDdlValidator();
+
     /**
      * @return validator to use for validating statements as they are parse
      */
     public FarragoSessionStmtValidator getStmtValidator();
 }
+
 
 // End FarragoSessionParser.java

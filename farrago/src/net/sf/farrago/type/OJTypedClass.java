@@ -16,11 +16,9 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.type;
 
 import openjava.mop.*;
-
 import openjava.ptree.*;
 
 
@@ -47,9 +45,15 @@ class OJTypedClass extends OJClass
      * @param decl synthetic class declaration
      * @param type FarragoType being represented
      */
-    OJTypedClass(OJClass declarer,ClassDeclaration decl,FarragoType type)
+    OJTypedClass(
+        OJClass declarer,
+        ClassDeclaration decl,
+        FarragoType type)
     {
-        super(declarer.getEnvironment(),declarer,decl);
+        super(
+            declarer.getEnvironment(),
+            declarer,
+            decl);
         this.type = type;
     }
 

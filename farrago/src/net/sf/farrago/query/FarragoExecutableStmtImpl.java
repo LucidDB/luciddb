@@ -6,27 +6,27 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.query;
 
-import net.sf.farrago.util.*;
-import net.sf.farrago.type.*;
+import java.util.*;
+
 import net.sf.farrago.session.*;
+import net.sf.farrago.type.*;
+import net.sf.farrago.util.*;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 
-import java.util.*;
 
 /**
  * FarragoExecutableStmtImpl is an abstract base for implementations of
@@ -35,13 +35,15 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-abstract class FarragoExecutableStmtImpl
-    extends FarragoCompoundAllocation
+abstract class FarragoExecutableStmtImpl extends FarragoCompoundAllocation
     implements FarragoSessionExecutableStmt
 {
-    private final boolean isDml;
+    //~ Instance fields -------------------------------------------------------
 
+    private final boolean isDml;
     private RelDataType dynamicParamRowType;
+
+    //~ Constructors ----------------------------------------------------------
 
     protected FarragoExecutableStmtImpl(
         RelDataType dynamicParamRowType,
@@ -50,6 +52,8 @@ abstract class FarragoExecutableStmtImpl
         this.isDml = isDml;
         this.dynamicParamRowType = forgetTypeFactory(dynamicParamRowType);
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     // implement FarragoSessionExecutableStmt
     public boolean isDml()
@@ -68,20 +72,17 @@ abstract class FarragoExecutableStmtImpl
     {
         return Collections.EMPTY_SET;
     }
-    
-    protected static RelDataType forgetTypeFactory(
-        RelDataType rowType)
+
+    protected static RelDataType forgetTypeFactory(RelDataType rowType)
     {
         // Need to forget about the type factory that was used during stmt
         // preparation so that it can be garbage collected.  So, create a
         // private type factory here and use it to create a copy of the row
         // type.
-
         // TODO:  a better solution would be to serialize this in the form of
         // ResultSetMetaData.  This would (a) guarantee no references; (b) allow
         // for an accurate memory usage computation and (c) allow for
         // persistent caching.  Use RmiJdbc serialization support?
-        
         RelDataTypeFactory newTypeFactory = new RelDataTypeFactoryImpl();
 
         final RelDataTypeField [] fields = rowType.getFields();
@@ -92,14 +93,13 @@ abstract class FarragoExecutableStmtImpl
             if (!(fields[i].getType() instanceof FarragoType)) {
                 continue;
             }
-            
+
             FarragoType farragoType = (FarragoType) fields[i].getType();
             farragoType.forgetFactory();
         }
-        
+
         return newTypeFactory.createProjectType(
-            new RelDataTypeFactory.FieldInfo() 
-            {
+            new RelDataTypeFactory.FieldInfo() {
                 public int getFieldCount()
                 {
                     return fields.length;
@@ -117,5 +117,6 @@ abstract class FarragoExecutableStmtImpl
             });
     }
 }
+
 
 // End FarragoExecutableStmtImpl.java

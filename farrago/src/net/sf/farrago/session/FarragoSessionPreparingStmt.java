@@ -6,28 +6,28 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.session;
 
-import net.sf.farrago.util.*;
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.type.*;
 import net.sf.farrago.fennel.*;
+import net.sf.farrago.type.*;
+import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql2rel.*;
+
 
 /**
  * FarragoSessionPreparingStmt represents the process of Farrago-specific
@@ -46,6 +46,8 @@ import org.eigenbase.sql2rel.*;
  */
 public interface FarragoSessionPreparingStmt extends FarragoAllocation
 {
+    //~ Methods ---------------------------------------------------------------
+
     /**
      * Performs validation on an SQL statement.
      *
@@ -63,14 +65,16 @@ public interface FarragoSessionPreparingStmt extends FarragoAllocation
      * @return prepared FarragoSessionExecutableStmt
      */
     public FarragoSessionExecutableStmt prepare(SqlNode sqlNode);
-        
+
     /**
      * Partially prepares this statement for use as a view definition.
      *
      * @param info receives view info
      */
-    public void prepareViewInfo(SqlNode sqlNode,FarragoSessionViewInfo info);
-    
+    public void prepareViewInfo(
+        SqlNode sqlNode,
+        FarragoSessionViewInfo info);
+
     /**
      * Sets up the environment the FarragoPreparingStmt needs in order to
      * implement (i.e. to generate code).  When preparing a parsed query (by
@@ -94,61 +98,64 @@ public interface FarragoSessionPreparingStmt extends FarragoAllocation
      * @return prepared FarragoSessionExecutableStmt
      */
     public FarragoSessionExecutableStmt implement(
-        RelNode rootRel, SqlKind sqlKind, boolean logical);
-    
+        RelNode rootRel,
+        SqlKind sqlKind,
+        boolean logical);
+
     /**
      * @return generic stmt validator
      */
     public FarragoSessionStmtValidator getStmtValidator();
-    
+
     /**
      * @return the SqlOperatorTable used for operator lookup during this stmt's
      * preparation
      */
     public SqlOperatorTable getSqlOperatorTable();
-    
+
     /**
      * @return the SqlValidator for this statement (creating it if
      * it does not yet exist)
      */
     public SqlValidator getSqlValidator();
-    
+
     /**
      * @return the SqlToRelConverter used by this stmt (creating it
      * if it does not yet exist)
      */
     public SqlToRelConverter getSqlToRelConverter();
-    
+
     /**
      * @return the RelOptCluster used by this stmt (possibly creating the
      * SqlToRelConverter as a side effect if it does not yet exist).
      */
     public RelOptCluster getRelOptCluster();
-    
+
     /**
      * @return repos for this stmt
      */
     public FarragoRepos getRepos();
-    
+
     /**
      * @return handle to Fennel database accessed by this stmt
      */
     public FennelDbHandle getFennelDbHandle();
-    
+
     /**
      * @return type factory for this stmt
      */
     public FarragoTypeFactory getFarragoTypeFactory();
-    
+
     /**
      * @return FarragoIndexMap to use for accessing index storage
      */
     public FarragoIndexMap getIndexMap();
-    
+
     /**
      * @return session which invoked statement preparation
      */
     public FarragoSession getSession();
 }
+
 
 // End FarragoSessionPreparingStmt.java

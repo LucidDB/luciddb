@@ -1,45 +1,43 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package net.sf.saffron.oj.rel;
 
-import org.eigenbase.relopt.RelOptPlanWriter;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.oj.OJTypeFactory;
-import org.eigenbase.oj.util.JavaRowExpression;
-import org.eigenbase.oj.util.OJUtil;
-import org.eigenbase.oj.rel.*;
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.rel.AbstractRelNode;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexUtil;
-import org.eigenbase.util.Util;
+import java.util.HashSet;
+
 import openjava.mop.OJClass;
 import openjava.ptree.*;
 
-import java.util.HashSet;
+import org.eigenbase.oj.OJTypeFactory;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.oj.util.JavaRowExpression;
+import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.rel.AbstractRelNode;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelOptCost;
+import org.eigenbase.relopt.RelOptPlanWriter;
+import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexUtil;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -109,15 +107,11 @@ import java.util.HashSet;
  */
 public class ExpressionReaderRel extends AbstractRelNode implements JavaRel
 {
-    //~ Instance fields -------------------------------------------------------
-
     protected CallingConvention convention;
     protected RexNode exp;
 
     /** Whether the rows are distinct; set by {@link #deriveRowType}. */
     private boolean distinct;
-
-    //~ Constructors ----------------------------------------------------------
 
     /**
      * Creates an <code>ExpressionReaderRel</code>.
@@ -134,22 +128,25 @@ public class ExpressionReaderRel extends AbstractRelNode implements JavaRel
      *        the row type is "java.lang.String" then the row type will be
      *        "Record{$f0:String}".
      */
-    public ExpressionReaderRel(RelOptCluster cluster, RexNode exp, RelDataType rowType)
+    public ExpressionReaderRel(
+        RelOptCluster cluster,
+        RexNode exp,
+        RelDataType rowType)
     {
         super(cluster);
         if (rowType != null) {
-            exp = cluster.rexBuilder.makeCast(rowType.getArrayType(), exp);
+            exp = cluster.rexBuilder.makeCast(
+                    rowType.getArrayType(),
+                    exp);
         }
         this.exp = exp;
         this.convention = chooseConvention(exp);
         Util.discard(getRowType()); // force derivation of row-type
     }
 
-    //~ Methods ---------------------------------------------------------------
-
     public RexNode [] getChildExps()
     {
-        return new RexNode[] { exp };
+        return new RexNode [] { exp };
     }
 
     public CallingConvention getConvention()
@@ -170,7 +167,10 @@ public class ExpressionReaderRel extends AbstractRelNode implements JavaRel
 
     public Object clone()
     {
-        return new ExpressionReaderRel(cluster,RexUtil.clone(exp), rowType);
+        return new ExpressionReaderRel(
+            cluster,
+            RexUtil.clone(exp),
+            rowType);
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
@@ -179,17 +179,19 @@ public class ExpressionReaderRel extends AbstractRelNode implements JavaRel
         double dRows = arrayLength;
         double dCpu = arrayLength;
         double dIo = 0;
-        return planner.makeCost(dRows,dCpu,dIo);
+        return planner.makeCost(dRows, dCpu, dIo);
     }
 
     public void explain(RelOptPlanWriter pw)
     {
-        pw.explain(this,new String [] { "expression" });
+        pw.explain(
+            this,
+            new String [] { "expression" });
     }
 
     public ParseTree implement(JavaRelImplementor implementor)
     {
-        return implementor.translate(this,exp);
+        return implementor.translate(this, exp);
     }
 
     protected RelDataType deriveRowType()
@@ -197,30 +199,30 @@ public class ExpressionReaderRel extends AbstractRelNode implements JavaRel
         final RelDataType type = exp.getType();
         final RelDataType componentType = type.getComponentType();
         if (componentType == null) {
-            throw Util.newInternal(
-                "expression " + exp + " is not relational "
+            throw Util.newInternal("expression " + exp + " is not relational "
                 + "(array, iterator, enumeration, map or hashtable)");
         }
         distinct = isDistinct(exp);
         if (false) {
             return cluster.typeFactory.createProjectType(
-                    new RelDataType[] {componentType}, new String[] {"$f0"});
+                new RelDataType [] { componentType },
+                new String [] { "$f0" });
         } else {
             return componentType;
         }
     }
 
-    private boolean isDistinct(RexNode exp) {
+    private boolean isDistinct(RexNode exp)
+    {
         final RelDataType type = exp.getType();
-        final OJClass ojClass = ((OJTypeFactory) cluster.typeFactory).toOJClass(null,type);
+        final OJClass ojClass =
+            ((OJTypeFactory) cluster.typeFactory).toOJClass(null, type);
         if (Util.clazzSet.isAssignableFrom(ojClass)) {
             return true;
-        } else if (exp instanceof JavaRowExpression &&
-                ((JavaRowExpression) exp).expression instanceof
-                ArrayAllocationExpression) {
+        } else if (exp instanceof JavaRowExpression
+                && ((JavaRowExpression) exp).expression instanceof ArrayAllocationExpression) {
             ArrayAllocationExpression arrayAlloc =
-                (ArrayAllocationExpression)
-                    ((JavaRowExpression) exp).expression;
+                (ArrayAllocationExpression) ((JavaRowExpression) exp).expression;
             return isDistinct(arrayAlloc);
         } else {
             return false;
@@ -237,7 +239,7 @@ public class ExpressionReaderRel extends AbstractRelNode implements JavaRel
     {
         HashSet values = new HashSet();
         final ArrayInitializer initializer = arrayAlloc.getInitializer();
-        for (int i = 0,n = initializer.size(); i < n; i++) {
+        for (int i = 0, n = initializer.size(); i < n; i++) {
             final VariableInitializer variableInitializer = initializer.get(i);
             if (!(variableInitializer instanceof Literal)) {
                 return false; // value is not a literal

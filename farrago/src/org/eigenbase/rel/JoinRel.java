@@ -1,37 +1,36 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.rel;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexUtil;
 import org.eigenbase.util.Util;
-
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.ArrayList;
 
 
 /**
@@ -68,9 +67,8 @@ public class JoinRel extends AbstractRelNode
         this.right = right;
         this.condition = condition;
         this.variablesStopped = variablesStopped;
-        assert(
-            (joinType == JoinType.INNER) || (joinType == JoinType.LEFT)
-                || (joinType == JoinType.FULL)); // RIGHT not allowed
+        assert ((joinType == JoinType.INNER) || (joinType == JoinType.LEFT)
+            || (joinType == JoinType.FULL)); // RIGHT not allowed
         this.joinType = joinType;
     }
 
@@ -88,7 +86,7 @@ public class JoinRel extends AbstractRelNode
 
     public RelNode [] getInputs()
     {
-        return new RelNode [] { left,right };
+        return new RelNode [] { left, right };
     }
 
     public int getJoinType()
@@ -118,8 +116,8 @@ public class JoinRel extends AbstractRelNode
 
     public void childrenAccept(RelVisitor visitor)
     {
-        visitor.visit(left,0,this);
-        visitor.visit(right,1,this);
+        visitor.visit(left, 0, this);
+        visitor.visit(right, 1, this);
     }
 
     public Object clone()
@@ -137,7 +135,7 @@ public class JoinRel extends AbstractRelNode
     {
         pw.explain(
             this,
-            new String [] { "left","right","condition","joinType" },
+            new String [] { "left", "right", "condition", "joinType" },
             new Object [] { JoinType.toString(joinType) });
     }
 
@@ -149,7 +147,9 @@ public class JoinRel extends AbstractRelNode
         variablesStopped.add(name);
     }
 
-    public void replaceInput(int ordinalInParent,RelNode p)
+    public void replaceInput(
+        int ordinalInParent,
+        RelNode p)
     {
         switch (ordinalInParent) {
         case 0:
@@ -183,20 +183,20 @@ public class JoinRel extends AbstractRelNode
         RelDataType leftType = left.getRowType();
         RelDataType rightType = right.getRowType();
 
-        switch(joinType) {
+        switch (joinType) {
         case JoinType.LEFT:
-            rightType = cluster.typeFactory.createTypeWithNullability(
-                rightType,true);
+            rightType =
+                cluster.typeFactory.createTypeWithNullability(rightType, true);
             break;
         case JoinType.RIGHT:
-            leftType = cluster.typeFactory.createTypeWithNullability(
-                leftType,true);
+            leftType =
+                cluster.typeFactory.createTypeWithNullability(leftType, true);
             break;
         case JoinType.FULL:
-            leftType = cluster.typeFactory.createTypeWithNullability(
-                leftType,true);
-            rightType = cluster.typeFactory.createTypeWithNullability(
-                rightType,true);
+            leftType =
+                cluster.typeFactory.createTypeWithNullability(leftType, true);
+            rightType =
+                cluster.typeFactory.createTypeWithNullability(rightType, true);
             break;
         default:
             break;
@@ -206,25 +206,31 @@ public class JoinRel extends AbstractRelNode
 
     public static RelDataType createJoinType(
         RelDataTypeFactory typeFactory,
-        RelDataType leftType, RelDataType rightType)
+        RelDataType leftType,
+        RelDataType rightType)
     {
         ArrayList nameList = new ArrayList();
         ArrayList typeList = new ArrayList();
         addFields(leftType, typeList, nameList);
         addFields(rightType, typeList, nameList);
-        String [] fieldNames = (String [])
-                nameList.toArray(new String[nameList.size()]);
-        RelDataType [] types = (RelDataType [])
-                typeList.toArray(new RelDataType[typeList.size()]);
+        String [] fieldNames =
+            (String []) nameList.toArray(new String[nameList.size()]);
+        RelDataType [] types =
+            (RelDataType []) typeList.toArray(
+                new RelDataType[typeList.size()]);
         return typeFactory.createProjectType(types, fieldNames);
     }
 
-    private static void addFields(RelDataType type, ArrayList typeList,
-            ArrayList nameList) {
+    private static void addFields(
+        RelDataType type,
+        ArrayList typeList,
+        ArrayList nameList)
+    {
         final RelDataTypeField [] fields = type.getFields();
         for (int i = 0; i < fields.length; i++) {
             RelDataTypeField field = fields[i];
             String name = field.getName();
+
             // Ensure that name is unique from all previous field names
             if (nameList.contains(name)) {
                 String nameBase = name;

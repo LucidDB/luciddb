@@ -1,36 +1,33 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package net.sf.saffron.web.applet;
 
-import org.eigenbase.util.SaffronProperties;
+import java.applet.Applet;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.*;
+
 import net.sf.saffron.walden.Interpreter;
 import net.sf.saffron.walden.PrintHandler;
 
-import java.applet.Applet;
-
-import java.awt.*;
-import java.awt.event.*;
-
-import java.io.*;
+import org.eigenbase.util.SaffronProperties;
 
 
 /**
@@ -44,18 +41,11 @@ import java.io.*;
  */
 public class WaldenApplet extends Applet
 {
-    //~ Static fields/initializers --------------------------------------------
-
     private static final int pad = 8;
     private static final String newline = System.getProperty("line.separator");
-
-    //~ Instance fields -------------------------------------------------------
-
     private Interpreter interpreter;
     private TextArea outputArea;
     private TextArea textArea;
-
-    //~ Methods ---------------------------------------------------------------
 
     public void init()
     {
@@ -117,9 +107,10 @@ public class WaldenApplet extends Applet
     {
         int width = getWidth();
         int height = getHeight();
-        textArea.setBounds(pad,pad,width - (2 * pad),(height - (pad * 3)) / 2);
+        textArea.setBounds(pad, pad, width - (2 * pad),
+            (height - (pad * 3)) / 2);
         int top = textArea.getY() + textArea.getHeight() + pad;
-        outputArea.setBounds(pad,top,width - (2 * pad),height - pad - top);
+        outputArea.setBounds(pad, top, width - (2 * pad), height - pad - top);
     }
 
     /**
@@ -137,17 +128,22 @@ public class WaldenApplet extends Applet
         }
         Writer outWriter =
             new Writer() {
-                public void write(char [] cbuf,int off,int len)
+                public void write(
+                    char [] cbuf,
+                    int off,
+                    int len)
                     throws IOException
                 {
-                    writeToOutput(new String(cbuf,off,len));
+                    writeToOutput(new String(cbuf, off, len));
                 }
 
-                public void flush() throws IOException
+                public void flush()
+                    throws IOException
                 {
                 }
 
-                public void close() throws IOException
+                public void close()
+                    throws IOException
                 {
                 }
             };
@@ -158,7 +154,7 @@ public class WaldenApplet extends Applet
                     try {
                         interpreter.run(
                             inReader,
-                            new PrintHandler(interpreter,pw,true));
+                            new PrintHandler(interpreter, pw, true));
                     } catch (Throwable e) {
                         pw.println("Interpreter received exception: ");
                         e.printStackTrace(pw);

@@ -1,40 +1,38 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package net.sf.saffron.oj.rel;
 
-import org.eigenbase.oj.rel.*;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.oj.util.OJUtil;
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.rel.AggregateRel;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.util.Util;
 import openjava.mop.OJClass;
 import openjava.mop.OJField;
 import openjava.mop.Toolbox;
 import openjava.ptree.*;
+
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.rel.AggregateRel;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelOptCost;
+import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -46,8 +44,8 @@ import openjava.ptree.*;
  * <i>for each child</i>
  *   HashableArray groups = new HashableArray(
  *     new Object[] {
- *   	 <i>child</i>.field4,
- *   	 <i>child</i>.field2});
+ *        <i>child</i>.field4,
+ *        <i>child</i>.field2});
  *   Object[] aggs = h.get(groups);
  *   if (aggs == null) {
  *     aggs = new Object[<<aggCount>>];
@@ -60,13 +58,13 @@ import openjava.ptree.*;
  * <i>end for</i>
  * Iterator keys = h.keys();
  * while (keys.hasNext()) {
- * 	 T row = new T();
- * 	 HashableArray groups = (HashableArray) keys.next();
- * 	 row.c0 = groups[0];
- * 	 row.c1 = groups[1];
- * 	 Object[] aggs = h.get(groups);
- * 	 row.c2 = <i>agg result code {aggs[0]}</i>
- * 	 row.c3 = <i>agg result code {aggs[1]}</i>
+ *      T row = new T();
+ *      HashableArray groups = (HashableArray) keys.next();
+ *      row.c0 = groups[0];
+ *      row.c1 = groups[1];
+ *      Object[] aggs = h.get(groups);
+ *      row.c2 = <i>agg result code {aggs[0]}</i>
+ *      row.c3 = <i>agg result code {aggs[1]}</i>
  *   <i>emit row to parent</i>
  * }</pre>
  * </blockquote>
@@ -91,11 +89,7 @@ import openjava.ptree.*;
  */
 public class JavaAggregateRel extends AggregateRel implements JavaLoopRel
 {
-    //~ Instance fields -------------------------------------------------------
-
     Variable var_h;
-
-    //~ Constructors ----------------------------------------------------------
 
     public JavaAggregateRel(
         RelOptCluster cluster,
@@ -103,10 +97,8 @@ public class JavaAggregateRel extends AggregateRel implements JavaLoopRel
         int groupCount,
         Call [] aggCalls)
     {
-        super(cluster,child,groupCount,aggCalls);
+        super(cluster, child, groupCount, aggCalls);
     }
-
-    //~ Methods ---------------------------------------------------------------
 
     public CallingConvention getConvention()
     {
@@ -116,17 +108,17 @@ public class JavaAggregateRel extends AggregateRel implements JavaLoopRel
     // implement RelNode
     public Object clone()
     {
-        return new JavaAggregateRel(cluster,child,groupCount,aggCalls);
+        return new JavaAggregateRel(cluster, child, groupCount, aggCalls);
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         double dRows = child.getRows();
-        double
+        double 
         // reflects memory cost also
         dCpu = Util.nLogN(dRows) + (aggCalls.length * 4);
         double dIo = 0;
-        return planner.makeCost(dRows,dCpu,dIo);
+        return planner.makeCost(dRows, dCpu, dIo);
     }
 
     public ParseTree implement(JavaRelImplementor implementor)
@@ -157,38 +149,38 @@ public class JavaAggregateRel extends AggregateRel implements JavaLoopRel
         this.var_h = implementor.newVariable();
         Variable var_keys = implementor.newVariable();
         stmtList.add(
-                new VariableDeclaration(
-                        new TypeName("java.util.HashMap"),
-                        var_h.toString(),
-                        new AllocationExpression(
-                                new TypeName("java.util.HashMap"),
-                                null)));
+            new VariableDeclaration(
+                new TypeName("java.util.HashMap"),
+                var_h.toString(),
+                new AllocationExpression(
+                    new TypeName("java.util.HashMap"),
+                    null)));
         Expression o = implementor.visitJavaChild(this, 0, (JavaRel) child);
-        assert(o == null);
+        assert (o == null);
         stmtList.add(
-                new VariableDeclaration(
-                        new TypeName("java.util.Iterator"),
-                        var_keys.toString(),
-                        new MethodCall(
-                                new MethodCall(var_h,"keySet",null),
-                                "iterator",
-                                null)));
+            new VariableDeclaration(
+                new TypeName("java.util.Iterator"),
+                var_keys.toString(),
+                new MethodCall(
+                    new MethodCall(var_h, "keySet", null),
+                    "iterator",
+                    null)));
         StatementList stmtList2 = new StatementList();
         stmtList.add(
-                new WhileStatement(
-                        new MethodCall(var_keys,"hasNext",null),
-                        stmtList2));
+            new WhileStatement(
+                new MethodCall(var_keys, "hasNext", null),
+                stmtList2));
 
         //       T row = new T();
         OJClass rowType = OJUtil.typeToOJClass(getRowType());
         Variable var_row = implementor.newVariable();
         stmtList2.add(
-                new VariableDeclaration(
-                        TypeName.forOJClass(rowType),
-                        var_row.toString(),
-                        new AllocationExpression(
-                                TypeName.forOJClass(rowType),
-                                null)));
+            new VariableDeclaration(
+                TypeName.forOJClass(rowType),
+                var_row.toString(),
+                new AllocationExpression(
+                    TypeName.forOJClass(rowType),
+                    null)));
         Variable var_groups = implementor.newVariable();
         if (groupCount == 1) {
             //       Object groups = keys.next();
@@ -196,19 +188,21 @@ public class JavaAggregateRel extends AggregateRel implements JavaLoopRel
             int i = 0;
             OJField field = rowType.getDeclaredFields()[i];
             stmtList2.add(
-                    new VariableDeclaration(
-                            TypeName.forOJClass(Toolbox.clazzObject),
-                            var_groups.toString(),
-                            new MethodCall(var_keys,"next",null)));
+                new VariableDeclaration(
+                    TypeName.forOJClass(Toolbox.clazzObject),
+                    var_groups.toString(),
+                    new MethodCall(var_keys, "next", null)));
             stmtList2.add(
-                    new ExpressionStatement(
-                            new AssignmentExpression(
-                                    new FieldAccess(var_row,field.getName()),
-                                    AssignmentExpression.EQUALS,
-                                    Toolbox.castObject(
-                                            var_groups,
-                                            Toolbox.clazzObject,
-                                            field.getType()))));
+                new ExpressionStatement(
+                    new AssignmentExpression(
+                        new FieldAccess(
+                            var_row,
+                            field.getName()),
+                        AssignmentExpression.EQUALS,
+                        Toolbox.castObject(
+                            var_groups,
+                            Toolbox.clazzObject,
+                            field.getType()))));
         } else {
             // HashableArray groups = (HashableArray) keys.next();
             // row.c0 = (T0) groups[0];
@@ -220,56 +214,64 @@ public class JavaAggregateRel extends AggregateRel implements JavaLoopRel
             //       Object agg = h.get(groups);
             //       row.c2 = <<agg result code {agg}>>
             stmtList2.add(
-                    new VariableDeclaration(
-                            TypeName.forOJClass(Toolbox.clazzObject),
-                            var_aggs.toString(),
-                            new MethodCall(
-                                    var_h,
-                                    "get",
-                                    new ExpressionList(var_groups))));
+                new VariableDeclaration(
+                    TypeName.forOJClass(Toolbox.clazzObject),
+                    var_aggs.toString(),
+                    new MethodCall(
+                        var_h,
+                        "get",
+                        new ExpressionList(var_groups))));
             int i = 0;
             OJField field = rowType.getDeclaredFields()[groupCount + i];
             stmtList2.add(
-                    new ExpressionStatement(
-                            new AssignmentExpression(
-                                    new FieldAccess(var_row,field.getName()),
-                                    AssignmentExpression.EQUALS,
-                                    aggCalls[i].implementResult(var_aggs))));
+                new ExpressionStatement(
+                    new AssignmentExpression(
+                        new FieldAccess(
+                            var_row,
+                            field.getName()),
+                        AssignmentExpression.EQUALS,
+                        aggCalls[i].implementResult(var_aggs))));
         } else {
             //       Object[] aggs = (Object[]) h.get(groups);
             //       row.c2 = <<agg result code {aggs[0]}>>
             //       row.c3 = <<agg result code {aggs[1]}>>
             stmtList2.add(
-                    new VariableDeclaration(
-                            TypeName.forOJClass(Toolbox.clazzObjectArray),
-                            var_aggs.toString(),
-                            new CastExpression(
-                                    Toolbox.clazzObjectArray,
-                                    new MethodCall(
-                                            var_h,
-                                            "get",
-                                            new ExpressionList(var_groups)))));
+                new VariableDeclaration(
+                    TypeName.forOJClass(Toolbox.clazzObjectArray),
+                    var_aggs.toString(),
+                    new CastExpression(
+                        Toolbox.clazzObjectArray,
+                        new MethodCall(
+                            var_h,
+                            "get",
+                            new ExpressionList(var_groups)))));
             OJField [] fields = rowType.getDeclaredFields();
             for (int i = 0; i < aggCalls.length; i++) {
                 OJField field = fields[groupCount + i];
                 stmtList2.add(
-                        new ExpressionStatement(
-                                new AssignmentExpression(
-                                        new FieldAccess(var_row,field.getName()),
-                                        AssignmentExpression.EQUALS,
-                                        aggCalls[i].implementResult(
-                                                new ArrayAccess(
-                                                        var_aggs,
-                                                        Literal.makeLiteral(i))))));
+                    new ExpressionStatement(
+                        new AssignmentExpression(
+                            new FieldAccess(
+                                var_row,
+                                field.getName()),
+                            AssignmentExpression.EQUALS,
+                            aggCalls[i].implementResult(
+                                new ArrayAccess(
+                                    var_aggs,
+                                    Literal.makeLiteral(i))))));
             }
         }
-        implementor.bind(this,var_row);
-        implementor.generateParentBody(this,stmtList2);
+        implementor.bind(this, var_row);
+        implementor.generateParentBody(this, stmtList2);
         return null;
     }
 
-    public void implementJavaParent(JavaRelImplementor implementor, int ordinal) {
+    public void implementJavaParent(
+        JavaRelImplementor implementor,
+        int ordinal)
+    {
         assert ordinal == 0;
+
         // Generate
         //   HashableArray groups = new HashableArray(
         //     new Object[] {
@@ -294,7 +296,7 @@ public class JavaAggregateRel extends AggregateRel implements JavaLoopRel
                 new VariableDeclaration(
                     TypeName.forOJClass(Toolbox.clazzObject),
                     var_groups.toString(),
-                    implementor.translateInputField(this,0,i)));
+                    implementor.translateInputField(this, 0, i)));
         } else {
             //   HashableArray groups = new HashableArray(
             //     new Object[] {
@@ -349,9 +351,7 @@ public class JavaAggregateRel extends AggregateRel implements JavaLoopRel
                     new AssignmentExpression(
                         var_aggs,
                         AssignmentExpression.EQUALS,
-                        aggCalls[i].implementStartAndNext(
-                            implementor,
-                            this))));
+                        aggCalls[i].implementStartAndNext(implementor, this))));
         } else {
             //     aggs = new Object[] {
             //       <<aggs[0] start code>>,
@@ -359,7 +359,7 @@ public class JavaAggregateRel extends AggregateRel implements JavaLoopRel
             ExpressionList startList = new ExpressionList();
             for (int i = 0; i < aggCalls.length; i++) {
                 startList.add(
-                    aggCalls[i].implementStartAndNext(implementor,this));
+                    aggCalls[i].implementStartAndNext(implementor, this));
             }
             ifBlock.add(
                 new ExpressionStatement(
@@ -378,19 +378,17 @@ public class JavaAggregateRel extends AggregateRel implements JavaLoopRel
                 new MethodCall(
                     var_h,
                     "put",
-                    new ExpressionList(var_groups,var_aggs))));
+                    new ExpressionList(var_groups, var_aggs))));
         implementor.popStatementList(ifBlock);
 
         // <<agg inc code {aggs[0], child row}>>
         // <<agg inc code {aggs[1], child row}>>
         implementor.pushStatementList(elseBlock);
         for (int i = 0; i < aggCalls.length; i++) {
-            assert(aggCalls[i].getArgs().length == 1);
-            aggCalls[i].implementNext(
-                implementor,
-                this,
+            assert (aggCalls[i].getArgs().length == 1);
+            aggCalls[i].implementNext(implementor, this,
                 (aggCalls.length == 1) ? (Expression) var_aggs
-                                       : (Expression) new ArrayAccess(
+                : (Expression) new ArrayAccess(
                     var_aggs,
                     Literal.makeLiteral(i)));
         }

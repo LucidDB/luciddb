@@ -1,36 +1,35 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.runtime;
 
-import org.eigenbase.test.EigenbaseTestCase;
-
 import java.util.*;
+
+import org.eigenbase.test.EigenbaseTestCase;
 
 
 /**
  * <code>BufferedIterator</code> converts a regular iterator into one which
  * implements {@link Iterable} (and {@link Enumeration} for good measure).
- * 
+ *
  * <p>
  * <i>Implementation note</i>: The first time you read from it, it duplicates
  * objects into a list. The next time, it creates an iterator from that list.
@@ -44,7 +43,7 @@ import java.util.*;
  *
  * @since 26 April, 2002
  */
-public class BufferedIterator implements Iterator,Iterable,Enumeration
+public class BufferedIterator implements Iterator, Iterable, Enumeration
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -57,7 +56,7 @@ public class BufferedIterator implements Iterator,Iterable,Enumeration
     public BufferedIterator(Iterator iterator)
     {
         this.list = new ArrayList();
-        this.clonerator = new Clonerator(iterator,list);
+        this.clonerator = new Clonerator(iterator, list);
         this.iterator = clonerator;
     }
 
@@ -118,7 +117,7 @@ public class BufferedIterator implements Iterator,Iterable,Enumeration
             // read later stuff from the clonerator.
             iterator =
                 new CompoundIterator(
-                    new Iterator [] { list.iterator(),clonerator });
+                    new Iterator [] { list.iterator(), clonerator });
         }
     }
 
@@ -126,7 +125,8 @@ public class BufferedIterator implements Iterator,Iterable,Enumeration
 
     public static class Test extends EigenbaseTestCase
     {
-        public Test(String s) throws Exception
+        public Test(String s)
+            throws Exception
         {
             super(s);
         }
@@ -135,7 +135,7 @@ public class BufferedIterator implements Iterator,Iterable,Enumeration
         // test BufferedIterator
         public void testBufferedIterator()
         {
-            String [] abc = new String [] { "a","b","c" };
+            String [] abc = new String [] { "a", "b", "c" };
             Iterator source = makeIterator(abc);
             BufferedIterator iterator = new BufferedIterator(source);
             assertTrue(iterator.hasNext());
@@ -147,23 +147,23 @@ public class BufferedIterator implements Iterator,Iterable,Enumeration
             // restart before we get to the end
             iterator.restart();
             assertTrue(iterator.hasNext());
-            assertEquals(iterator,abc);
+            assertEquals(iterator, abc);
             assertTrue(!iterator.hasNext());
             assertTrue(!iterator.hasNext());
             iterator.restart();
-            assertEquals(iterator,abc);
+            assertEquals(iterator, abc);
         }
 
         // --------------------------------------------------------------------
         // test Clonerator
         public void testClonerator()
         {
-            String [] ab = new String [] { "a","b" };
+            String [] ab = new String [] { "a", "b" };
             Iterator source = makeIterator(ab);
             List list = new ArrayList();
-            Clonerator clonerator = new Clonerator(source,list);
-            assertEquals(clonerator,ab);
-            assertEquals(list,ab);
+            Clonerator clonerator = new Clonerator(source, list);
+            assertEquals(clonerator, ab);
+            assertEquals(list, ab);
         }
 
         // --------------------------------------------------------------------
@@ -171,33 +171,37 @@ public class BufferedIterator implements Iterator,Iterable,Enumeration
         public void testCompoundIter()
         {
             Iterator iterator =
-                new CompoundIterator(
-                    new Iterator [] {
-                        makeIterator(new String [] { "a","b" }),
+                new CompoundIterator(new Iterator [] {
+                        makeIterator(new String [] { "a", "b" }),
                         makeIterator(new String [] { "c" })
                     });
-            assertEquals(iterator,new String [] { "a","b","c" });
+            assertEquals(
+                iterator,
+                new String [] { "a", "b", "c" });
         }
 
         public void testCompoundIterEmpty()
         {
             Iterator iterator = new CompoundIterator(new Iterator [] {  });
-            assertEquals(iterator,new String [] {  });
+            assertEquals(
+                iterator,
+                new String [] {  });
         }
 
         public void testCompoundIterFirstEmpty()
         {
             Iterator iterator =
-                new CompoundIterator(
-                    new Iterator [] {
+                new CompoundIterator(new Iterator [] {
                         makeIterator(new String [] {  }),
-                        makeIterator(new String [] { "a",null }),
+                        makeIterator(new String [] { "a", null }),
                         makeIterator(new String [] {  }),
                         makeIterator(new String [] {  }),
-                        makeIterator(new String [] { "b","c" }),
+                        makeIterator(new String [] { "b", "c" }),
                         makeIterator(new String [] {  })
                     });
-            assertEquals(iterator,new String [] { "a",null,"b","c" });
+            assertEquals(
+                iterator,
+                new String [] { "a", null, "b", "c" });
         }
     }
 
@@ -209,7 +213,9 @@ public class BufferedIterator implements Iterator,Iterable,Enumeration
         Iterator iterator;
         List list;
 
-        Clonerator(Iterator iterator,List list)
+        Clonerator(
+            Iterator iterator,
+            List list)
         {
             this.iterator = iterator;
             this.list = list;

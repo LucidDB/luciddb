@@ -1,23 +1,22 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.util;
@@ -32,12 +31,12 @@ import java.lang.reflect.Method;
  * method call by looking for a method in itself with identical parameters.
  * If no such method is found, it forwards the call to a fallback object,
  * which must implement all of the interfaces which this proxy implements.
- * 
+ *
  * <p>
  * It is useful in creating a wrapper class around an interface which may
  * change over time.
  * </p>
- * 
+ *
  * <p>
  * Example:
  * <blockquote>
@@ -67,14 +66,19 @@ public abstract class DelegatingInvocationHandler implements InvocationHandler
 {
     //~ Methods ---------------------------------------------------------------
 
-    public Object invoke(Object proxy,Method method,Object [] args)
+    public Object invoke(
+        Object proxy,
+        Method method,
+        Object [] args)
         throws Throwable
     {
         Class clazz = getClass();
         Method matchingMethod;
         try {
             matchingMethod =
-                clazz.getMethod(method.getName(),method.getParameterTypes());
+                clazz.getMethod(
+                    method.getName(),
+                    method.getParameterTypes());
         } catch (NoSuchMethodException e) {
             matchingMethod = null;
         } catch (SecurityException e) {
@@ -83,10 +87,12 @@ public abstract class DelegatingInvocationHandler implements InvocationHandler
         try {
             if (matchingMethod != null) {
                 // Invoke the method in the derived class.
-                return matchingMethod.invoke(this,args);
+                return matchingMethod.invoke(this, args);
             } else {
                 // Invoke the method on the proxy.
-                return method.invoke(getTarget(),args);
+                return method.invoke(
+                    getTarget(),
+                    args);
             }
         } catch (InvocationTargetException e) {
             throw e.getTargetException();

@@ -16,22 +16,21 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.runtime;
 
-import net.sf.farrago.util.*;
+import java.sql.*;
+import java.util.*;
+import java.util.logging.*;
+
 import net.sf.farrago.trace.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
+import net.sf.farrago.util.*;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.runtime.*;
 
-import java.sql.*;
-
-import java.util.*;
-import java.util.logging.*;
 
 /**
  * FarragoIteratorResultSet is a refinement of IteratorResultSet
@@ -42,9 +41,10 @@ import java.util.logging.*;
  */
 public class FarragoIteratorResultSet extends IteratorResultSet
 {
+    //~ Static fields/initializers --------------------------------------------
+
     private static final Logger tracer =
         FarragoTrace.getFarragoIteratorResultSetTracer();
-
     private static final Logger jdbcTracer =
         FarragoTrace.getFarragoJdbcEngineDriverTracer();
 
@@ -69,7 +69,7 @@ public class FarragoIteratorResultSet extends IteratorResultSet
         RelDataType rowType,
         FarragoAllocation allocation)
     {
-        super(iterator,new SyntheticColumnGetter(clazz));
+        super(iterator, new SyntheticColumnGetter(clazz));
         this.rowType = rowType;
         this.allocation = allocation;
         if (tracer.isLoggable(Level.FINE)) {
@@ -80,7 +80,8 @@ public class FarragoIteratorResultSet extends IteratorResultSet
     //~ Methods ---------------------------------------------------------------
 
     // implement ResultSet
-    public boolean next() throws SQLException
+    public boolean next()
+        throws SQLException
     {
         try {
             if (tracer.isLoggable(Level.FINE)) {
@@ -89,18 +90,20 @@ public class FarragoIteratorResultSet extends IteratorResultSet
             return super.next();
         } catch (Throwable ex) {
             // trace exceptions as part of JDBC API
-            throw FarragoUtil.newSqlException(ex,jdbcTracer);
+            throw FarragoUtil.newSqlException(ex, jdbcTracer);
         }
     }
-    
+
     // implement ResultSet
-    public ResultSetMetaData getMetaData() throws SQLException
+    public ResultSetMetaData getMetaData()
+        throws SQLException
     {
         return new FarragoResultSetMetaData(rowType);
     }
 
     // implement ResultSet
-    public void close() throws SQLException
+    public void close()
+        throws SQLException
     {
         if (tracer.isLoggable(Level.FINE)) {
             tracer.fine(toString());

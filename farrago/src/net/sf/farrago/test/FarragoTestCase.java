@@ -16,33 +16,30 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.test;
 
-import junit.extensions.*;
+import java.io.*;
+import java.sql.*;
+import java.util.*;
+import java.util.logging.*;
+import java.util.regex.Pattern;
 
+import junit.extensions.*;
 import junit.framework.*;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.jdbc.engine.*;
-import net.sf.farrago.util.*;
-import net.sf.farrago.trace.*;
 import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.config.*;
+import net.sf.farrago.fem.med.*;
+import net.sf.farrago.jdbc.engine.*;
+import net.sf.farrago.trace.*;
+import net.sf.farrago.util.*;
 
 import org.eigenbase.test.*;
 import org.eigenbase.util.SaffronProperties;
 
-import java.io.*;
-
-import java.sql.*;
-
-import java.util.*;
-import java.util.regex.Pattern;
-import java.util.logging.*;
-
 import sqlline.SqlLine;
+
 
 /**
  * FarragoTestCase is a common base for Farrago JUnit tests.  Subclasses must
@@ -80,7 +77,7 @@ public abstract class FarragoTestCase extends DiffTestCase
      * Saved copy of Fennel configuration parameters.
      */
     private static SortedMap savedFennelConfig;
-    
+
     //~ Instance fields -------------------------------------------------------
 
     /** ResultSet for processing queries. */
@@ -101,37 +98,40 @@ public abstract class FarragoTestCase extends DiffTestCase
      *
      * @throws Exception .
      */
-    protected FarragoTestCase(String testName) throws Exception
+    protected FarragoTestCase(String testName)
+        throws Exception
     {
         super(testName);
     }
 
-    // override DiffTestCase
-    protected File getSourceRoot() throws Exception
-    {
-        String homeDir = FarragoProperties.instance().homeDir.get(true);
-        return new File(homeDir,"src");
-    }
-
-    // override DiffTestCase
-    protected File getTestlogRoot() throws Exception
-    {
-        String homeDir = FarragoProperties.instance().homeDir.get(true);
-        return new File(homeDir,"testlog");
-    }
-
     //~ Methods ---------------------------------------------------------------
+
+    // override DiffTestCase
+    protected File getSourceRoot()
+        throws Exception
+    {
+        String homeDir = FarragoProperties.instance().homeDir.get(true);
+        return new File(homeDir, "src");
+    }
+
+    // override DiffTestCase
+    protected File getTestlogRoot()
+        throws Exception
+    {
+        String homeDir = FarragoProperties.instance().homeDir.get(true);
+        return new File(homeDir, "testlog");
+    }
 
     /**
      * One-time setup routine.
      *
      * @throws Exception .
      */
-    public static void staticSetUp() throws Exception
+    public static void staticSetUp()
+        throws Exception
     {
         FarragoJdbcEngineDriver driver = newJdbcEngineDriver();
-        connection = DriverManager.getConnection(
-            driver.getUrlPrefix());
+        connection = DriverManager.getConnection(driver.getUrlPrefix());
         FarragoJdbcEngineConnection farragoConnection =
             (FarragoJdbcEngineConnection) connection;
         repos = farragoConnection.getSession().getRepos();
@@ -145,11 +145,12 @@ public abstract class FarragoTestCase extends DiffTestCase
             JmiUtil.getAttributeValues(
                 repos.getCurrentConfig().getFennelConfig());
         reposTxn.commit();
-        
+
         runCleanup();
     }
 
-    protected static void runCleanup() throws Exception
+    protected static void runCleanup()
+        throws Exception
     {
         Cleanup cleanup = new Cleanup("cleanup");
         try {
@@ -166,7 +167,8 @@ public abstract class FarragoTestCase extends DiffTestCase
      *
      * @throws Exception .
      */
-    public static void staticTearDown() throws Exception
+    public static void staticTearDown()
+        throws Exception
     {
         if (repos != null) {
             restoreParameters();
@@ -184,8 +186,7 @@ public abstract class FarragoTestCase extends DiffTestCase
      */
     static void restoreParameters()
     {
-        FarragoReposTxnContext reposTxn =
-            new FarragoReposTxnContext(repos);
+        FarragoReposTxnContext reposTxn = new FarragoReposTxnContext(repos);
         reposTxn.beginWriteTxn();
         JmiUtil.setAttributeValues(
             repos.getCurrentConfig(),
@@ -195,7 +196,7 @@ public abstract class FarragoTestCase extends DiffTestCase
             savedFennelConfig);
         reposTxn.commit();
     }
-        
+
     // NOTE: Repos open/close is slow and causes sporadic problems when done
     // in quick succession, so only do it once for the entire test suite
     // instead of the Junit-recommended once per test case.
@@ -240,19 +241,21 @@ public abstract class FarragoTestCase extends DiffTestCase
 
         TestSetup wrapper =
             new TestSetup(suite) {
-                protected void setUp() throws Exception
+                protected void setUp()
+                    throws Exception
                 {
                     staticSetUp();
                 }
 
-                protected void tearDown() throws Exception
+                protected void tearDown()
+                    throws Exception
                 {
                     staticTearDown();
                 }
             };
         return wrapper;
     }
-    
+
     /**
      * .
      *
@@ -261,7 +264,8 @@ public abstract class FarragoTestCase extends DiffTestCase
      *
      * @throws Exception .
      */
-    protected int getResultSetCount() throws Exception
+    protected int getResultSetCount()
+        throws Exception
     {
         int n = 0;
         while (resultSet.next()) {
@@ -272,35 +276,38 @@ public abstract class FarragoTestCase extends DiffTestCase
     }
 
     // implement TestCase
-    protected void setUp() throws Exception
+    protected void setUp()
+        throws Exception
     {
         if (connection == null) {
-            assert(!individualTest) : "You forgot to implement suite()";
+            assert (!individualTest) : "You forgot to implement suite()";
             individualTest = true;
             staticSetUp();
         }
-        
+
         tracer.info("Entering test case " + getName());
         super.setUp();
         stmt = connection.createStatement();
-        
+
         // discard any cached query plans
         stmt.executeUpdate("alter system set \"codeCacheMaxBytes\" = min");
         stmt.executeUpdate("alter system set \"codeCacheMaxBytes\" = max");
-        
+
         resultSet = null;
     }
 
     // implement TestCase
-    protected void tearDown() throws Exception
+    protected void tearDown()
+        throws Exception
     {
         tearDownImpl();
         if (individualTest) {
             staticTearDown();
         }
     }
-    
-    protected void tearDownImpl() throws Exception
+
+    protected void tearDownImpl()
+        throws Exception
     {
         try {
             if (resultSet != null) {
@@ -337,7 +344,8 @@ public abstract class FarragoTestCase extends DiffTestCase
      *
      * @throws Exception .
      */
-    protected void compareResultSet(Set refSet) throws Exception
+    protected void compareResultSet(Set refSet)
+        throws Exception
     {
         Set actualSet = new HashSet();
         while (resultSet.next()) {
@@ -345,7 +353,7 @@ public abstract class FarragoTestCase extends DiffTestCase
             actualSet.add(s);
         }
         resultSet.close();
-        assertEquals(refSet,actualSet);
+        assertEquals(refSet, actualSet);
     }
 
     /**
@@ -356,7 +364,8 @@ public abstract class FarragoTestCase extends DiffTestCase
      *
      * @throws Exception .
      */
-    protected void compareResultList(List refList) throws Exception
+    protected void compareResultList(List refList)
+        throws Exception
     {
         List actualSet = new ArrayList();
         while (resultSet.next()) {
@@ -364,7 +373,7 @@ public abstract class FarragoTestCase extends DiffTestCase
             actualSet.add(s);
         }
         resultSet.close();
-        assertEquals(refList,actualSet);
+        assertEquals(refList, actualSet);
     }
 
     /**
@@ -383,28 +392,23 @@ public abstract class FarragoTestCase extends DiffTestCase
         if (driverName == null) {
             return new FarragoJdbcEngineDriver();
         }
-        return (FarragoJdbcEngineDriver)
-            Class.forName(driverName).newInstance();
+        return (FarragoJdbcEngineDriver) Class.forName(driverName).newInstance();
     }
 
-    protected void runSqlLineTest(String sqlFile) throws Exception
+    protected void runSqlLineTest(String sqlFile)
+        throws Exception
     {
         FarragoJdbcEngineDriver driver = newJdbcEngineDriver();
-        assert(sqlFile.endsWith(".sql"));
-        File sqlFileSansExt = new File(
-            sqlFile.substring(0,sqlFile.length() - 4));
-        String [] args = new String [] {
-            "-u",
-            driver.getUrlPrefix(),
-            "-d",
-            "net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver",
-            "-n",
-            "guest",
-            "--force=true",
-            "--silent=true",
-            "--showWarnings=false",
-            "--maxWidth=1024"
-        };
+        assert (sqlFile.endsWith(".sql"));
+        File sqlFileSansExt =
+            new File(sqlFile.substring(0, sqlFile.length() - 4));
+        String [] args =
+            new String [] {
+                "-u", driver.getUrlPrefix(), "-d",
+                "net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver", "-n",
+                "guest", "--force=true", "--silent=true",
+                "--showWarnings=false", "--maxWidth=1024"
+            };
         PrintStream savedOut = System.out;
         PrintStream savedErr = System.err;
 
@@ -414,18 +418,20 @@ public abstract class FarragoTestCase extends DiffTestCase
         // to make sure the connection is closed properly, append the
         // !quit command
         String quitCommand = "\n!quit\n";
-        ByteArrayInputStream quitStream = new ByteArrayInputStream(
-            quitCommand.getBytes());
+        ByteArrayInputStream quitStream =
+            new ByteArrayInputStream(quitCommand.getBytes());
 
-        SequenceInputStream sequenceStream = new SequenceInputStream(
-            inputStream,quitStream);
+        SequenceInputStream sequenceStream =
+            new SequenceInputStream(inputStream, quitStream);
         try {
-            OutputStream outputStream = openTestLogOutputStream(sqlFileSansExt);
+            OutputStream outputStream =
+                openTestLogOutputStream(sqlFileSansExt);
             PrintStream printStream = new PrintStream(outputStream);
             System.setOut(printStream);
             System.setErr(printStream);
+
             // tell SqlLine not to exit (this boolean is active-low)
-            System.setProperty("sqlline.system.exit","true");
+            System.setProperty("sqlline.system.exit", "true");
             SqlLine.mainWithInputRedirection(args, sequenceStream);
             printStream.flush();
             if (shouldDiff()) {
@@ -439,13 +445,16 @@ public abstract class FarragoTestCase extends DiffTestCase
     }
 
     // override DiffTestCase
-    protected Writer openTestLog() throws Exception
+    protected Writer openTestLog()
+        throws Exception
     {
-        File testClassDir = new File(
-            getTestlogRoot(),
-            ReflectUtil.getUnqualifiedClassName(getClass()));
+        File testClassDir =
+            new File(
+                getTestlogRoot(),
+                ReflectUtil.getUnqualifiedClassName(getClass()));
         testClassDir.mkdirs();
-        File testLogFile = new File(testClassDir,getName());
+        File testLogFile = new File(testClassDir,
+                getName());
         return new OutputStreamWriter(openTestLogOutputStream(testLogFile));
     }
 
@@ -456,7 +465,7 @@ public abstract class FarragoTestCase extends DiffTestCase
         }
         return FarragoProperties.instance().testDiff.get();
     }
-    
+
     //~ Inner Classes ---------------------------------------------------------
 
     /**
@@ -464,21 +473,25 @@ public abstract class FarragoTestCase extends DiffTestCase
      */
     public static class Cleanup extends FarragoTestCase
     {
-        public Cleanup(String name) throws Exception
+        public Cleanup(String name)
+            throws Exception
         {
             super(name);
         }
-        
-        public void execute() throws Exception
+
+        public void execute()
+            throws Exception
         {
             restoreParameters();
             dropSchemas();
             dropDataWrappers();
         }
 
-        private void dropSchemas() throws Exception
+        private void dropSchemas()
+            throws Exception
         {
             List list = new ArrayList();
+
             // NOTE:  don't use DatabaseMetaData.getSchemas since it doesn't
             // work when Fennel is disabled
             Iterator schemaIter =
@@ -497,17 +510,16 @@ public abstract class FarragoTestCase extends DiffTestCase
             Iterator iter = list.iterator();
             while (iter.hasNext()) {
                 String name = (String) iter.next();
-                stmt.execute(
-                    "drop schema \"" + name + "\" cascade");
+                stmt.execute("drop schema \"" + name + "\" cascade");
             }
         }
 
-        private void dropDataWrappers() throws Exception
+        private void dropDataWrappers()
+            throws Exception
         {
             List list = new ArrayList();
             Iterator iter =
-                repos.medPackage.getFemDataWrapper()
-                .refAllOfClass().iterator();
+                repos.medPackage.getFemDataWrapper().refAllOfClass().iterator();
             while (iter.hasNext()) {
                 FemDataWrapper wrapper = (FemDataWrapper) iter.next();
                 if (wrapper.getName().startsWith("SYS_")) {
@@ -518,12 +530,11 @@ public abstract class FarragoTestCase extends DiffTestCase
             iter = list.iterator();
             while (iter.hasNext()) {
                 String name = (String) iter.next();
-                stmt.execute(
-                    "drop foreign data wrapper \"" + name + "\" cascade");
+                stmt.execute("drop foreign data wrapper \"" + name
+                    + "\" cascade");
             }
         }
     }
-    
 }
 
 

@@ -6,23 +6,23 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.impl;
 
-import net.sf.farrago.namespace.*;
-import net.sf.farrago.fennel.*;
-
 import java.util.*;
+
+import net.sf.farrago.fennel.*;
+import net.sf.farrago.namespace.*;
+
 
 /**
  * MedAbstractLocalDataServer is an abstract base class for
@@ -31,18 +31,23 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class MedAbstractLocalDataServer
-    extends MedAbstractDataServer
+public abstract class MedAbstractLocalDataServer extends MedAbstractDataServer
     implements FarragoMedLocalDataServer
 {
+    //~ Instance fields -------------------------------------------------------
+
     private FennelDbHandle fennelDbHandle;
+
+    //~ Constructors ----------------------------------------------------------
 
     protected MedAbstractLocalDataServer(
         String serverMofId,
         Properties props)
     {
-        super(serverMofId,props);
+        super(serverMofId, props);
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     /**
      * @return the Fennel database handle to use for accessing local storage
@@ -58,5 +63,6 @@ public abstract class MedAbstractLocalDataServer
         this.fennelDbHandle = fennelDbHandle;
     }
 }
+
 
 // End MedAbstractLocalDataServer.java

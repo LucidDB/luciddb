@@ -16,22 +16,21 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.ftrs;
+
+import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.util.*;
 import net.sf.farrago.query.*;
+import net.sf.farrago.util.*;
 
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.rel.*;
-import org.eigenbase.util.*;
-import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexInputRef;
-
-import java.util.*;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.util.*;
 
 
 /**
@@ -50,11 +49,10 @@ class FtrsTableProjectionRule extends RelOptRule
      */
     public FtrsTableProjectionRule()
     {
-        super(
-            new RelOptRuleOperand(
+        super(new RelOptRuleOperand(
                 ProjectRel.class,
                 new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(FtrsIndexScanRel.class,null)
+                    new RelOptRuleOperand(FtrsIndexScanRel.class, null)
                 }));
     }
 
@@ -81,10 +79,8 @@ class FtrsTableProjectionRule extends RelOptRule
         }
 
         // REVIEW:  what about AnonFields?
-        
         // TODO:  rather than failing, split into parts that can be
         // pushed down and parts that can't
-        
         int n = origProject.getChildExps().length;
         Integer [] projectedColumns = new Integer[n];
         RelDataType rowType = origScan.ftrsTable.getRowType();
@@ -123,7 +119,7 @@ class FtrsTableProjectionRule extends RelOptRule
                 continue;
             }
 
-            if (!testIndexCoverage(repos,index,projectedColumns)) {
+            if (!testIndexCoverage(repos, index, projectedColumns)) {
                 continue;
             }
 
@@ -160,7 +156,7 @@ class FtrsTableProjectionRule extends RelOptRule
             return true;
         }
         Integer [] indexProjection =
-            FtrsUtil.getUnclusteredCoverageArray(repos,index);
+            FtrsUtil.getUnclusteredCoverageArray(repos, index);
         return Arrays.asList(indexProjection).containsAll(
             Arrays.asList(projection));
     }

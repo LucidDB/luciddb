@@ -1,26 +1,28 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2004 Disruptive Technologies, Inc.
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 package org.eigenbase.util.property;
 
 import java.util.Properties;
+
 
 /**
  * Definition and accessor for an integer property.
@@ -29,7 +31,10 @@ import java.util.Properties;
  * @since May 4, 2004
  * @version $Id$
  **/
-public class IntegerProperty extends Property {
+public class IntegerProperty extends Property
+{
+    //~ Constructors ----------------------------------------------------------
+
     /**
      * Creates a Integer property.
      *
@@ -39,17 +44,24 @@ public class IntegerProperty extends Property {
      *    file, for example "com.acme.trace.Verbosity".
      * @param defaultValue Default value, null if there is no default.
      */
-    public IntegerProperty(Properties properties, String path,
-            int defaultValue) {
-        super(properties, path, Integer.toString(defaultValue));
+    public IntegerProperty(
+        Properties properties,
+        String path,
+        int defaultValue)
+    {
+        super(properties, path,
+            Integer.toString(defaultValue));
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     /**
      * Retrieves the value of this integer property.
      * If the property has no value, returns the default value.
      * If there is no default value, returns 0.
      */
-    public int get() {
+    public int get()
+    {
         final String value = getInternal(null, false);
         if (value == null) {
             return 0;
@@ -62,7 +74,8 @@ public class IntegerProperty extends Property {
      * If the property has no value, returns the default value.
      * If there is no default value, returns the given default value.
      */
-    public int get(int defaultValue) {
+    public int get(int defaultValue)
+    {
         final String value = getInternal(null, false);
         if (value == null) {
             return defaultValue;
@@ -70,5 +83,6 @@ public class IntegerProperty extends Property {
         return Integer.parseInt(value);
     }
 }
+
 
 // End IntegerProperty.java

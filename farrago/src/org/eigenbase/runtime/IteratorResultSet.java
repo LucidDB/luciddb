@@ -1,43 +1,37 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.runtime;
 
-import org.eigenbase.util.Util;
-
 import java.io.InputStream;
 import java.io.Reader;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-
 import java.math.BigDecimal;
-
 import java.net.URL;
-
 import java.sql.*;
 import java.sql.Date;
-
 import java.util.*;
+
+import org.eigenbase.util.Util;
 
 
 /**
@@ -58,7 +52,6 @@ public class IteratorResultSet implements ResultSet
     private final String [] columnNames;
     private int row; // 0-based
     private TimeoutQueueIterator timeoutIter;
-
     protected boolean wasNull;
     private long timeoutMillis;
 
@@ -70,13 +63,15 @@ public class IteratorResultSet implements ResultSet
      *
      * @pre iterator != null
      */
-    public IteratorResultSet(Iterator iterator,ColumnGetter columnGetter)
+    public IteratorResultSet(
+        Iterator iterator,
+        ColumnGetter columnGetter)
     {
         Util.pre(iterator != null, "iterator != null");
         this.iterator = iterator;
         String [] columnNames = columnGetter.getColumnNames();
-        this.columnNames = columnNames == null ? Util.emptyStringArray :
-                columnNames;
+        this.columnNames =
+            (columnNames == null) ? Util.emptyStringArray : columnNames;
         this.columnGetter = columnGetter;
     }
 
@@ -104,17 +99,20 @@ public class IteratorResultSet implements ResultSet
         timeoutIter.start();
     }
 
-    public boolean isAfterLast() throws SQLException
+    public boolean isAfterLast()
+        throws SQLException
     {
         return false;
     }
 
-    public Array getArray(int i) throws SQLException
+    public Array getArray(int i)
+        throws SQLException
     {
         return null;
     }
 
-    public Array getArray(String colName) throws SQLException
+    public Array getArray(String colName)
+        throws SQLException
     {
         return null;
     }
@@ -131,32 +129,38 @@ public class IteratorResultSet implements ResultSet
         throw new UnsupportedOperationException();
     }
 
-    public boolean isBeforeFirst() throws SQLException
+    public boolean isBeforeFirst()
+        throws SQLException
     {
         return false;
     }
 
-    public BigDecimal getBigDecimal(int columnIndex,int scale)
+    public BigDecimal getBigDecimal(
+        int columnIndex,
+        int scale)
         throws SQLException
     {
         throw new UnsupportedOperationException();
     }
 
-    public BigDecimal getBigDecimal(String columnName,int scale)
+    public BigDecimal getBigDecimal(
+        String columnName,
+        int scale)
         throws SQLException
     {
         throw new UnsupportedOperationException();
     }
 
-    public BigDecimal getBigDecimal(int columnIndex) throws SQLException
+    public BigDecimal getBigDecimal(int columnIndex)
+        throws SQLException
     {
-       	return BigDecimal.valueOf(toLong(getRaw(columnIndex))); 
+        return BigDecimal.valueOf(toLong(getRaw(columnIndex)));
     }
 
     public BigDecimal getBigDecimal(String columnName)
         throws SQLException
     {
-       	return BigDecimal.valueOf(toLong(getRaw(columnName))); 
+        return BigDecimal.valueOf(toLong(getRaw(columnName)));
     }
 
     public InputStream getBinaryStream(int columnIndex)
@@ -171,47 +175,56 @@ public class IteratorResultSet implements ResultSet
         throw new UnsupportedOperationException();
     }
 
-    public Blob getBlob(int i) throws SQLException
+    public Blob getBlob(int i)
+        throws SQLException
     {
         return null;
     }
 
-    public Blob getBlob(String colName) throws SQLException
+    public Blob getBlob(String colName)
+        throws SQLException
     {
         return null;
     }
 
-    public boolean getBoolean(int columnIndex) throws SQLException
+    public boolean getBoolean(int columnIndex)
+        throws SQLException
     {
         return toBoolean(getRaw(columnIndex));
     }
 
-    public boolean getBoolean(String columnName) throws SQLException
+    public boolean getBoolean(String columnName)
+        throws SQLException
     {
         return toBoolean(getRaw(columnName));
     }
 
-    public byte getByte(int columnIndex) throws SQLException
+    public byte getByte(int columnIndex)
+        throws SQLException
     {
         return toByte(getRaw(columnIndex));
     }
 
-    public byte getByte(String columnName) throws SQLException
+    public byte getByte(String columnName)
+        throws SQLException
     {
         return toByte(getRaw(columnName));
     }
 
-    public byte [] getBytes(int columnIndex) throws SQLException
+    public byte [] getBytes(int columnIndex)
+        throws SQLException
     {
         return (byte []) getRaw(columnIndex);
     }
 
-    public byte [] getBytes(String columnName) throws SQLException
+    public byte [] getBytes(String columnName)
+        throws SQLException
     {
         return (byte []) getRaw(columnName);
     }
 
-    public Reader getCharacterStream(int columnIndex) throws SQLException
+    public Reader getCharacterStream(int columnIndex)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
@@ -222,121 +235,148 @@ public class IteratorResultSet implements ResultSet
         throw new UnsupportedOperationException();
     }
 
-    public Clob getClob(int i) throws SQLException
-    {
-        return null;
-    }
-
-    public Clob getClob(String colName) throws SQLException
-    {
-        return null;
-    }
-
-    public int getConcurrency() throws SQLException
-    {
-        return 0;
-    }
-
-    public String getCursorName() throws SQLException
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    public Date getDate(int columnIndex) throws SQLException
-    {
-        return toDate(getRaw(columnIndex));
-    }
-
-    public Date getDate(String columnName) throws SQLException
-    {
-        return toDate(getRaw(columnName));
-    }
-
-    public Date getDate(int columnIndex,Calendar cal) throws SQLException
-    {
-        return null;
-    }
-
-    public Date getDate(String columnName,Calendar cal)
+    public Clob getClob(int i)
         throws SQLException
     {
         return null;
     }
 
-    public double getDouble(int columnIndex) throws SQLException
+    public Clob getClob(String colName)
+        throws SQLException
+    {
+        return null;
+    }
+
+    public int getConcurrency()
+        throws SQLException
+    {
+        return 0;
+    }
+
+    public String getCursorName()
+        throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public Date getDate(int columnIndex)
+        throws SQLException
+    {
+        return toDate(getRaw(columnIndex));
+    }
+
+    public Date getDate(String columnName)
+        throws SQLException
+    {
+        return toDate(getRaw(columnName));
+    }
+
+    public Date getDate(
+        int columnIndex,
+        Calendar cal)
+        throws SQLException
+    {
+        return null;
+    }
+
+    public Date getDate(
+        String columnName,
+        Calendar cal)
+        throws SQLException
+    {
+        return null;
+    }
+
+    public double getDouble(int columnIndex)
+        throws SQLException
     {
         return toDouble(getRaw(columnIndex));
     }
 
-    public double getDouble(String columnName) throws SQLException
+    public double getDouble(String columnName)
+        throws SQLException
     {
         return toDouble(getRaw(columnName));
     }
 
-    public void setFetchDirection(int direction) throws SQLException
+    public void setFetchDirection(int direction)
+        throws SQLException
     {
     }
 
-    public int getFetchDirection() throws SQLException
-    {
-        return 0;
-    }
-
-    public void setFetchSize(int rows) throws SQLException
-    {
-    }
-
-    public int getFetchSize() throws SQLException
+    public int getFetchDirection()
+        throws SQLException
     {
         return 0;
     }
 
-    public boolean isFirst() throws SQLException
+    public void setFetchSize(int rows)
+        throws SQLException
+    {
+    }
+
+    public int getFetchSize()
+        throws SQLException
+    {
+        return 0;
+    }
+
+    public boolean isFirst()
+        throws SQLException
     {
         return false;
     }
 
-    public float getFloat(int columnIndex) throws SQLException
+    public float getFloat(int columnIndex)
+        throws SQLException
     {
         return toFloat(getRaw(columnIndex));
     }
 
-    public float getFloat(String columnName) throws SQLException
+    public float getFloat(String columnName)
+        throws SQLException
     {
         return toFloat(getRaw(columnName));
     }
 
-    public int getInt(int columnIndex) throws SQLException
+    public int getInt(int columnIndex)
+        throws SQLException
     {
         return toInt(getRaw(columnIndex));
     }
 
-    public int getInt(String columnName) throws SQLException
+    public int getInt(String columnName)
+        throws SQLException
     {
         return toInt(getRaw(columnName));
     }
 
-    public boolean isLast() throws SQLException
+    public boolean isLast()
+        throws SQLException
     {
         return false;
     }
 
-    public long getLong(int columnIndex) throws SQLException
+    public long getLong(int columnIndex)
+        throws SQLException
     {
         return toLong(getRaw(columnIndex));
     }
 
-    public long getLong(String columnName) throws SQLException
+    public long getLong(String columnName)
+        throws SQLException
     {
         return toLong(getRaw(columnName));
     }
 
-    public ResultSetMetaData getMetaData() throws SQLException
+    public ResultSetMetaData getMetaData()
+        throws SQLException
     {
         return new MetaData();
     }
 
-    public Object getObject(int columnIndex) throws SQLException
+    public Object getObject(int columnIndex)
+        throws SQLException
     {
         Object o = getRaw(columnIndex);
         if (o == null) {
@@ -347,115 +387,146 @@ public class IteratorResultSet implements ResultSet
         return o;
     }
 
-    public Object getObject(String columnName) throws SQLException
+    public Object getObject(String columnName)
+        throws SQLException
     {
         return getObject(findColumn(columnName));
     }
 
-    public Object getObject(int i,Map map) throws SQLException
+    public Object getObject(
+        int i,
+        Map map)
+        throws SQLException
     {
         return null;
     }
 
-    public Object getObject(String colName,Map map) throws SQLException
+    public Object getObject(
+        String colName,
+        Map map)
+        throws SQLException
     {
         return null;
     }
 
-    public Ref getRef(int i) throws SQLException
+    public Ref getRef(int i)
+        throws SQLException
     {
         return null;
     }
 
-    public Ref getRef(String colName) throws SQLException
+    public Ref getRef(String colName)
+        throws SQLException
     {
         return null;
     }
 
-    public int getRow() throws SQLException
+    public int getRow()
+        throws SQLException
     {
         return row + 1;
     }
 
-    public short getShort(int columnIndex) throws SQLException
+    public short getShort(int columnIndex)
+        throws SQLException
     {
         return toShort(getRaw(columnIndex));
     }
 
-    public short getShort(String columnName) throws SQLException
+    public short getShort(String columnName)
+        throws SQLException
     {
         return toShort(getRaw(columnName));
     }
 
-    public Statement getStatement() throws SQLException
+    public Statement getStatement()
+        throws SQLException
     {
         return null;
     }
 
-    public String getString(int columnIndex) throws SQLException
+    public String getString(int columnIndex)
+        throws SQLException
     {
         return toString(getRaw(columnIndex));
     }
 
-    public String getString(String columnName) throws SQLException
+    public String getString(String columnName)
+        throws SQLException
     {
         return toString(getRaw(columnName));
     }
 
-    public Time getTime(int columnIndex) throws SQLException
+    public Time getTime(int columnIndex)
+        throws SQLException
     {
         return toTime(getRaw(columnIndex));
     }
 
-    public Time getTime(String columnName) throws SQLException
+    public Time getTime(String columnName)
+        throws SQLException
     {
         return toTime(getRaw(columnName));
     }
 
-    public Time getTime(int columnIndex,Calendar cal) throws SQLException
-    {
-        return null;
-    }
-
-    public Time getTime(String columnName,Calendar cal)
+    public Time getTime(
+        int columnIndex,
+        Calendar cal)
         throws SQLException
     {
         return null;
     }
 
-    public Timestamp getTimestamp(int columnIndex) throws SQLException
+    public Time getTime(
+        String columnName,
+        Calendar cal)
+        throws SQLException
+    {
+        return null;
+    }
+
+    public Timestamp getTimestamp(int columnIndex)
+        throws SQLException
     {
         return toTimestamp(getRaw(columnIndex));
     }
 
-    public Timestamp getTimestamp(String columnName) throws SQLException
+    public Timestamp getTimestamp(String columnName)
+        throws SQLException
     {
         return toTimestamp(getRaw(columnName));
     }
 
-    public Timestamp getTimestamp(int columnIndex,Calendar cal)
+    public Timestamp getTimestamp(
+        int columnIndex,
+        Calendar cal)
         throws SQLException
     {
         return null;
     }
 
-    public Timestamp getTimestamp(String columnName,Calendar cal)
+    public Timestamp getTimestamp(
+        String columnName,
+        Calendar cal)
         throws SQLException
     {
         return null;
     }
 
-    public int getType() throws SQLException
+    public int getType()
+        throws SQLException
     {
         return 0;
     }
 
-    public URL getURL(int columnIndex) throws SQLException
+    public URL getURL(int columnIndex)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
 
-    public URL getURL(String columnName) throws SQLException
+    public URL getURL(String columnName)
+        throws SQLException
     {
         throw new UnsupportedOperationException();
     }
@@ -472,33 +543,40 @@ public class IteratorResultSet implements ResultSet
         throw new UnsupportedOperationException();
     }
 
-    public SQLWarning getWarnings() throws SQLException
+    public SQLWarning getWarnings()
+        throws SQLException
     {
         return null;
     }
 
-    public boolean absolute(int row) throws SQLException
+    public boolean absolute(int row)
+        throws SQLException
     {
         return relative(row - getRow());
     }
 
-    public void afterLast() throws SQLException
+    public void afterLast()
+        throws SQLException
     {
     }
 
-    public void beforeFirst() throws SQLException
+    public void beforeFirst()
+        throws SQLException
     {
     }
 
-    public void cancelRowUpdates() throws SQLException
+    public void cancelRowUpdates()
+        throws SQLException
     {
     }
 
-    public void clearWarnings() throws SQLException
+    public void clearWarnings()
+        throws SQLException
     {
     }
 
-    public void close() throws SQLException
+    public void close()
+        throws SQLException
     {
         if (timeoutIter != null) {
             final long noTimeout = 0;
@@ -507,11 +585,13 @@ public class IteratorResultSet implements ResultSet
         }
     }
 
-    public void deleteRow() throws SQLException
+    public void deleteRow()
+        throws SQLException
     {
     }
 
-    public int findColumn(String columnName) throws SQLException
+    public int findColumn(String columnName)
+        throws SQLException
     {
         for (int i = 0; i < columnNames.length; i++) {
             if (columnName.equals(columnNames[i])) {
@@ -521,38 +601,44 @@ public class IteratorResultSet implements ResultSet
         throw new SQLException("column '" + columnName + "' not found");
     }
 
-    public boolean first() throws SQLException
+    public boolean first()
+        throws SQLException
     {
         return false;
     }
 
-    public void insertRow() throws SQLException
+    public void insertRow()
+        throws SQLException
     {
     }
 
-    public boolean last() throws SQLException
+    public boolean last()
+        throws SQLException
     {
         return false;
     }
 
-    public void moveToCurrentRow() throws SQLException
+    public void moveToCurrentRow()
+        throws SQLException
     {
     }
 
-    public void moveToInsertRow() throws SQLException
+    public void moveToInsertRow()
+        throws SQLException
     {
     }
 
     // ------------------------------------------------------------------------
     // the remaining methods implement ResultSet
-    public boolean next() throws SQLException
+    public boolean next()
+        throws SQLException
     {
         if (timeoutIter != null) {
             try {
                 long endTime = System.currentTimeMillis() + timeoutMillis;
                 if (timeoutIter.hasNext(timeoutMillis)) {
-                    long remainingTimeout = endTime -
-                            System.currentTimeMillis();
+                    long remainingTimeout =
+                        endTime - System.currentTimeMillis();
                     if (remainingTimeout <= 0) {
                         // The call to hasNext() took longer than we
                         // expected -- we're out of time.
@@ -584,16 +670,19 @@ public class IteratorResultSet implements ResultSet
         }
     }
 
-    public boolean previous() throws SQLException
+    public boolean previous()
+        throws SQLException
     {
         return false;
     }
 
-    public void refreshRow() throws SQLException
+    public void refreshRow()
+        throws SQLException
     {
     }
 
-    public boolean relative(int rows) throws SQLException
+    public boolean relative(int rows)
+        throws SQLException
     {
         if (rows < 0) {
             throw newDirectionError();
@@ -606,97 +695,144 @@ public class IteratorResultSet implements ResultSet
         return true;
     }
 
-    public boolean rowDeleted() throws SQLException
+    public boolean rowDeleted()
+        throws SQLException
     {
         return false;
     }
 
-    public boolean rowInserted() throws SQLException
+    public boolean rowInserted()
+        throws SQLException
     {
         return false;
     }
 
-    public boolean rowUpdated() throws SQLException
+    public boolean rowUpdated()
+        throws SQLException
     {
         return false;
     }
 
-    public void updateArray(int columnIndex,Array x) throws SQLException
-    {
-    }
-
-    public void updateArray(String columnName,Array x)
+    public void updateArray(
+        int columnIndex,
+        Array x)
         throws SQLException
     {
     }
 
-    public void updateAsciiStream(int columnIndex,InputStream x,int length)
+    public void updateArray(
+        String columnName,
+        Array x)
         throws SQLException
     {
     }
 
-    public void updateAsciiStream(String columnName,InputStream x,int length)
+    public void updateAsciiStream(
+        int columnIndex,
+        InputStream x,
+        int length)
         throws SQLException
     {
     }
 
-    public void updateBigDecimal(int columnIndex,BigDecimal x)
+    public void updateAsciiStream(
+        String columnName,
+        InputStream x,
+        int length)
         throws SQLException
     {
     }
 
-    public void updateBigDecimal(String columnName,BigDecimal x)
+    public void updateBigDecimal(
+        int columnIndex,
+        BigDecimal x)
         throws SQLException
     {
     }
 
-    public void updateBinaryStream(int columnIndex,InputStream x,int length)
+    public void updateBigDecimal(
+        String columnName,
+        BigDecimal x)
         throws SQLException
     {
     }
 
-    public void updateBinaryStream(String columnName,InputStream x,int length)
+    public void updateBinaryStream(
+        int columnIndex,
+        InputStream x,
+        int length)
         throws SQLException
     {
     }
 
-    public void updateBlob(int columnIndex,Blob x) throws SQLException
-    {
-    }
-
-    public void updateBlob(String columnName,Blob x) throws SQLException
-    {
-    }
-
-    public void updateBoolean(int columnIndex,boolean x)
+    public void updateBinaryStream(
+        String columnName,
+        InputStream x,
+        int length)
         throws SQLException
     {
     }
 
-    public void updateBoolean(String columnName,boolean x)
+    public void updateBlob(
+        int columnIndex,
+        Blob x)
         throws SQLException
     {
     }
 
-    public void updateByte(int columnIndex,byte x) throws SQLException
-    {
-    }
-
-    public void updateByte(String columnName,byte x) throws SQLException
-    {
-    }
-
-    public void updateBytes(int columnIndex,byte [] x)
+    public void updateBlob(
+        String columnName,
+        Blob x)
         throws SQLException
     {
     }
 
-    public void updateBytes(String columnName,byte [] x)
+    public void updateBoolean(
+        int columnIndex,
+        boolean x)
         throws SQLException
     {
     }
 
-    public void updateCharacterStream(int columnIndex,Reader x,int length)
+    public void updateBoolean(
+        String columnName,
+        boolean x)
+        throws SQLException
+    {
+    }
+
+    public void updateByte(
+        int columnIndex,
+        byte x)
+        throws SQLException
+    {
+    }
+
+    public void updateByte(
+        String columnName,
+        byte x)
+        throws SQLException
+    {
+    }
+
+    public void updateBytes(
+        int columnIndex,
+        byte [] x)
+        throws SQLException
+    {
+    }
+
+    public void updateBytes(
+        String columnName,
+        byte [] x)
+        throws SQLException
+    {
+    }
+
+    public void updateCharacterStream(
+        int columnIndex,
+        Reader x,
+        int length)
         throws SQLException
     {
     }
@@ -704,139 +840,212 @@ public class IteratorResultSet implements ResultSet
     public void updateCharacterStream(
         String columnName,
         Reader reader,
-        int length) throws SQLException
-    {
-    }
-
-    public void updateClob(int columnIndex,Clob x) throws SQLException
-    {
-    }
-
-    public void updateClob(String columnName,Clob x) throws SQLException
-    {
-    }
-
-    public void updateDate(int columnIndex,Date x) throws SQLException
-    {
-    }
-
-    public void updateDate(String columnName,Date x) throws SQLException
-    {
-    }
-
-    public void updateDouble(int columnIndex,double x)
+        int length)
         throws SQLException
     {
     }
 
-    public void updateDouble(String columnName,double x)
+    public void updateClob(
+        int columnIndex,
+        Clob x)
         throws SQLException
     {
     }
 
-    public void updateFloat(int columnIndex,float x) throws SQLException
-    {
-    }
-
-    public void updateFloat(String columnName,float x)
+    public void updateClob(
+        String columnName,
+        Clob x)
         throws SQLException
     {
     }
 
-    public void updateInt(int columnIndex,int x) throws SQLException
-    {
-    }
-
-    public void updateInt(String columnName,int x) throws SQLException
-    {
-    }
-
-    public void updateLong(int columnIndex,long x) throws SQLException
-    {
-    }
-
-    public void updateLong(String columnName,long x) throws SQLException
-    {
-    }
-
-    public void updateNull(int columnIndex) throws SQLException
-    {
-    }
-
-    public void updateNull(String columnName) throws SQLException
-    {
-    }
-
-    public void updateObject(int columnIndex,Object x,int scale)
+    public void updateDate(
+        int columnIndex,
+        Date x)
         throws SQLException
     {
     }
 
-    public void updateObject(int columnIndex,Object x)
+    public void updateDate(
+        String columnName,
+        Date x)
         throws SQLException
     {
     }
 
-    public void updateObject(String columnName,Object x,int scale)
+    public void updateDouble(
+        int columnIndex,
+        double x)
         throws SQLException
     {
     }
 
-    public void updateObject(String columnName,Object x)
+    public void updateDouble(
+        String columnName,
+        double x)
         throws SQLException
     {
     }
 
-    public void updateRef(int columnIndex,Ref x) throws SQLException
-    {
-    }
-
-    public void updateRef(String columnName,Ref x) throws SQLException
-    {
-    }
-
-    public void updateRow() throws SQLException
-    {
-    }
-
-    public void updateShort(int columnIndex,short x) throws SQLException
-    {
-    }
-
-    public void updateShort(String columnName,short x)
+    public void updateFloat(
+        int columnIndex,
+        float x)
         throws SQLException
     {
     }
 
-    public void updateString(int columnIndex,String x)
+    public void updateFloat(
+        String columnName,
+        float x)
         throws SQLException
     {
     }
 
-    public void updateString(String columnName,String x)
+    public void updateInt(
+        int columnIndex,
+        int x)
         throws SQLException
     {
     }
 
-    public void updateTime(int columnIndex,Time x) throws SQLException
-    {
-    }
-
-    public void updateTime(String columnName,Time x) throws SQLException
-    {
-    }
-
-    public void updateTimestamp(int columnIndex,Timestamp x)
+    public void updateInt(
+        String columnName,
+        int x)
         throws SQLException
     {
     }
 
-    public void updateTimestamp(String columnName,Timestamp x)
+    public void updateLong(
+        int columnIndex,
+        long x)
         throws SQLException
     {
     }
 
-    public boolean wasNull() throws SQLException
+    public void updateLong(
+        String columnName,
+        long x)
+        throws SQLException
+    {
+    }
+
+    public void updateNull(int columnIndex)
+        throws SQLException
+    {
+    }
+
+    public void updateNull(String columnName)
+        throws SQLException
+    {
+    }
+
+    public void updateObject(
+        int columnIndex,
+        Object x,
+        int scale)
+        throws SQLException
+    {
+    }
+
+    public void updateObject(
+        int columnIndex,
+        Object x)
+        throws SQLException
+    {
+    }
+
+    public void updateObject(
+        String columnName,
+        Object x,
+        int scale)
+        throws SQLException
+    {
+    }
+
+    public void updateObject(
+        String columnName,
+        Object x)
+        throws SQLException
+    {
+    }
+
+    public void updateRef(
+        int columnIndex,
+        Ref x)
+        throws SQLException
+    {
+    }
+
+    public void updateRef(
+        String columnName,
+        Ref x)
+        throws SQLException
+    {
+    }
+
+    public void updateRow()
+        throws SQLException
+    {
+    }
+
+    public void updateShort(
+        int columnIndex,
+        short x)
+        throws SQLException
+    {
+    }
+
+    public void updateShort(
+        String columnName,
+        short x)
+        throws SQLException
+    {
+    }
+
+    public void updateString(
+        int columnIndex,
+        String x)
+        throws SQLException
+    {
+    }
+
+    public void updateString(
+        String columnName,
+        String x)
+        throws SQLException
+    {
+    }
+
+    public void updateTime(
+        int columnIndex,
+        Time x)
+        throws SQLException
+    {
+    }
+
+    public void updateTime(
+        String columnName,
+        Time x)
+        throws SQLException
+    {
+    }
+
+    public void updateTimestamp(
+        int columnIndex,
+        Timestamp x)
+        throws SQLException
+    {
+    }
+
+    public void updateTimestamp(
+        String columnName,
+        Timestamp x)
+        throws SQLException
+    {
+    }
+
+    public boolean wasNull()
+        throws SQLException
     {
         return wasNull;
     }
@@ -846,18 +1055,21 @@ public class IteratorResultSet implements ResultSet
      */
     protected Object getRaw(int columnIndex)
     {
-        return columnGetter.get(current,columnIndex);
+        return columnGetter.get(current, columnIndex);
     }
 
-    protected Object getRaw(String columnName) throws SQLException
+    protected Object getRaw(String columnName)
+        throws SQLException
     {
         return getRaw(findColumn(columnName));
     }
 
-    private SQLException newConversionError(Object o,Class clazz)
+    private SQLException newConversionError(
+        Object o,
+        Class clazz)
     {
-        return new SQLException(
-            "cannot convert " + o.getClass() + "(" + o + ") to " + clazz);
+        return new SQLException("cannot convert " + o.getClass() + "(" + o
+            + ") to " + clazz);
     }
 
     private SQLException newDirectionError()
@@ -868,14 +1080,15 @@ public class IteratorResultSet implements ResultSet
     private SQLException newFetchError(Throwable e)
     {
         final SQLException sqlEx =
-                new SQLException("error while fetching from cursor");
+            new SQLException("error while fetching from cursor");
         if (e != null) {
             sqlEx.initCause(e);
         }
         return sqlEx;
     }
 
-    private boolean toBoolean(Object o) throws SQLException
+    private boolean toBoolean(Object o)
+        throws SQLException
     {
         if (o == null) {
             wasNull = true;
@@ -891,11 +1104,13 @@ public class IteratorResultSet implements ResultSet
                 return true;
             }
             return false;
+
             //throw newConversionError(o,boolean.class);
         }
     }
 
-    private byte toByte(Object o) throws SQLException
+    private byte toByte(Object o)
+        throws SQLException
     {
         if (o == null) {
             wasNull = true;
@@ -910,7 +1125,8 @@ public class IteratorResultSet implements ResultSet
         }
     }
 
-    private java.sql.Date toDate(Object o) throws SQLException
+    private java.sql.Date toDate(Object o)
+        throws SQLException
     {
         if (o == null) {
             wasNull = true;
@@ -923,11 +1139,12 @@ public class IteratorResultSet implements ResultSet
         } else if (o instanceof java.util.Date) {
             return new java.sql.Date(((java.util.Date) o).getTime());
         } else {
-            throw newConversionError(o,java.sql.Date.class);
+            throw newConversionError(o, java.sql.Date.class);
         }
     }
 
-    private double toDouble(Object o) throws SQLException
+    private double toDouble(Object o)
+        throws SQLException
     {
         if (o == null) {
             wasNull = true;
@@ -943,14 +1160,16 @@ public class IteratorResultSet implements ResultSet
             try {
                 return Double.parseDouble(((String) o).trim());
             } catch (NumberFormatException e) {
-                throw new SQLException("Fail to convert to internal representation");
+                throw new SQLException(
+                    "Fail to convert to internal representation");
             }
         } else {
             return (double) toLong_(o);
         }
     }
 
-    private float toFloat(Object o) throws SQLException
+    private float toFloat(Object o)
+        throws SQLException
     {
         if (o == null) {
             wasNull = true;
@@ -966,14 +1185,16 @@ public class IteratorResultSet implements ResultSet
             try {
                 return Float.parseFloat(((String) o).trim());
             } catch (NumberFormatException e) {
-                throw new SQLException("Fail to convert to internal representation");
+                throw new SQLException(
+                    "Fail to convert to internal representation");
             }
         } else {
             return (float) toLong_(o);
         }
     }
 
-    private int toInt(Object o) throws SQLException
+    private int toInt(Object o)
+        throws SQLException
     {
         if (o == null) {
             wasNull = true;
@@ -988,7 +1209,8 @@ public class IteratorResultSet implements ResultSet
         }
     }
 
-    private long toLong(Object o) throws SQLException
+    private long toLong(Object o)
+        throws SQLException
     {
         if (o == null) {
             wasNull = true;
@@ -999,7 +1221,8 @@ public class IteratorResultSet implements ResultSet
         return toLong_(o);
     }
 
-    private long toLong_(Object o) throws SQLException
+    private long toLong_(Object o)
+        throws SQLException
     {
         if (o instanceof Long) {
             return ((Long) o).longValue();
@@ -1025,14 +1248,15 @@ public class IteratorResultSet implements ResultSet
             try {
                 return Long.parseLong(((String) o).trim());
             } catch (NumberFormatException e) {
-            	throw newConversionError(o, long.class);
+                throw newConversionError(o, long.class);
             }
         } else {
             throw newConversionError(o, long.class);
         }
     }
 
-    private short toShort(Object o) throws SQLException
+    private short toShort(Object o)
+        throws SQLException
     {
         if (o == null) {
             wasNull = true;
@@ -1054,14 +1278,15 @@ public class IteratorResultSet implements ResultSet
             return null;
         } else if (o instanceof byte []) {
             // convert to hex string
-            return Util.toStringFromByteArray((byte []) o,16);
+            return Util.toStringFromByteArray((byte []) o, 16);
         } else {
             wasNull = false;
             return o.toString();
         }
     }
 
-    private Time toTime(Object o) throws SQLException
+    private Time toTime(Object o)
+        throws SQLException
     {
         if (o == null) {
             wasNull = true;
@@ -1072,11 +1297,12 @@ public class IteratorResultSet implements ResultSet
         if (o instanceof Time) {
             return (Time) o;
         } else {
-            throw newConversionError(o,Time.class);
+            throw newConversionError(o, Time.class);
         }
     }
 
-    private Timestamp toTimestamp(Object o) throws SQLException
+    private Timestamp toTimestamp(Object o)
+        throws SQLException
     {
         if (o == null) {
             wasNull = true;
@@ -1087,7 +1313,7 @@ public class IteratorResultSet implements ResultSet
         if (o instanceof Timestamp) {
             return (Timestamp) o;
         } else {
-            throw newConversionError(o,Timestamp.class);
+            throw newConversionError(o, Timestamp.class);
         }
     }
 
@@ -1101,7 +1327,9 @@ public class IteratorResultSet implements ResultSet
     {
         String [] getColumnNames();
 
-        Object get(Object o,int columnIndex);
+        Object get(
+            Object o,
+            int columnIndex);
     }
 
     //~ Inner Classes ---------------------------------------------------------
@@ -1131,17 +1359,17 @@ public class IteratorResultSet implements ResultSet
             return columnNames;
         }
 
-        public Object get(Object o,int columnIndex)
+        public Object get(
+            Object o,
+            int columnIndex)
         {
             try {
                 return fields[columnIndex - 1].get(o);
             } catch (IllegalArgumentException e) {
-                throw Util.newInternal(
-                    e,
+                throw Util.newInternal(e,
                     "Error while retrieving field " + fields[columnIndex - 1]);
             } catch (IllegalAccessException e) {
-                throw Util.newInternal(
-                    e,
+                throw Util.newInternal(e,
                     "Error while retrieving field " + fields[columnIndex - 1]);
             }
         }
@@ -1152,8 +1380,7 @@ public class IteratorResultSet implements ResultSet
             final Field [] fields = clazz.getFields();
             for (int i = 0; i < fields.length; i++) {
                 Field field = fields[i];
-                if (
-                    Modifier.isPublic(field.getModifiers())
+                if (Modifier.isPublic(field.getModifiers())
                         && !Modifier.isStatic(field.getModifiers())) {
                     list.add(field);
                 }
@@ -1167,57 +1394,68 @@ public class IteratorResultSet implements ResultSet
     // way for reflection.
     public class MetaData implements ResultSetMetaData
     {
-        public boolean isAutoIncrement(int column) throws SQLException
+        public boolean isAutoIncrement(int column)
+            throws SQLException
         {
             return false;
         }
 
-        public boolean isCaseSensitive(int column) throws SQLException
+        public boolean isCaseSensitive(int column)
+            throws SQLException
         {
             return false;
         }
 
-        public String getCatalogName(int column) throws SQLException
+        public String getCatalogName(int column)
+            throws SQLException
         {
             return null;
         }
 
-        public String getColumnClassName(int column) throws SQLException
+        public String getColumnClassName(int column)
+            throws SQLException
         {
             return null;
         }
 
-        public int getColumnCount() throws SQLException
+        public int getColumnCount()
+            throws SQLException
         {
             return columnNames.length;
         }
 
-        public int getColumnDisplaySize(int column) throws SQLException
+        public int getColumnDisplaySize(int column)
+            throws SQLException
         {
             return 0;
         }
 
-        public String getColumnLabel(int column) throws SQLException
+        public String getColumnLabel(int column)
+            throws SQLException
         {
             return getColumnName(column);
         }
 
-        public String getColumnName(int column) throws SQLException
+        public String getColumnName(int column)
+            throws SQLException
         {
             return columnNames[column - 1];
         }
 
-        public int getColumnType(int column) throws SQLException
+        public int getColumnType(int column)
+            throws SQLException
         {
             return 0;
         }
 
-        public String getColumnTypeName(int column) throws SQLException
+        public String getColumnTypeName(int column)
+            throws SQLException
         {
             return null;
         }
 
-        public boolean isCurrency(int column) throws SQLException
+        public boolean isCurrency(int column)
+            throws SQLException
         {
             return false;
         }
@@ -1228,47 +1466,56 @@ public class IteratorResultSet implements ResultSet
             return false;
         }
 
-        public int isNullable(int column) throws SQLException
+        public int isNullable(int column)
+            throws SQLException
         {
             return 0;
         }
 
-        public int getPrecision(int column) throws SQLException
+        public int getPrecision(int column)
+            throws SQLException
         {
             return 0;
         }
 
-        public boolean isReadOnly(int column) throws SQLException
+        public boolean isReadOnly(int column)
+            throws SQLException
         {
             return false;
         }
 
-        public int getScale(int column) throws SQLException
+        public int getScale(int column)
+            throws SQLException
         {
             return 0;
         }
 
-        public String getSchemaName(int column) throws SQLException
+        public String getSchemaName(int column)
+            throws SQLException
         {
             return null;
         }
 
-        public boolean isSearchable(int column) throws SQLException
+        public boolean isSearchable(int column)
+            throws SQLException
         {
             return false;
         }
 
-        public boolean isSigned(int column) throws SQLException
+        public boolean isSigned(int column)
+            throws SQLException
         {
             return false;
         }
 
-        public String getTableName(int column) throws SQLException
+        public String getTableName(int column)
+            throws SQLException
         {
             return null;
         }
 
-        public boolean isWritable(int column) throws SQLException
+        public boolean isWritable(int column)
+            throws SQLException
         {
             return false;
         }
@@ -1288,9 +1535,11 @@ public class IteratorResultSet implements ResultSet
             return new String [] { "column0" };
         }
 
-        public Object get(Object o,int columnIndex)
+        public Object get(
+            Object o,
+            int columnIndex)
         {
-            assert(columnIndex == 1);
+            assert (columnIndex == 1);
             return o;
         }
     }
@@ -1306,7 +1555,7 @@ public class IteratorResultSet implements ResultSet
 
         public SyntheticColumnGetter(Class clazz)
         {
-            assert(SyntheticObject.class.isAssignableFrom(clazz));
+            assert (SyntheticObject.class.isAssignableFrom(clazz));
             this.fields = clazz.getFields();
             this.columnNames = new String[fields.length];
             for (int i = 0; i < fields.length; i++) {
@@ -1319,7 +1568,9 @@ public class IteratorResultSet implements ResultSet
             return columnNames;
         }
 
-        public Object get(Object o,int columnIndex)
+        public Object get(
+            Object o,
+            int columnIndex)
         {
             try {
                 return fields[columnIndex - 1].get(o);
@@ -1335,7 +1586,9 @@ public class IteratorResultSet implements ResultSet
      * Indicates that an operation timed out. This is not an error; you can
      * retry the operation.
      */
-    public static class SqlTimeoutException extends SQLException{};
+    public static class SqlTimeoutException extends SQLException
+    {
+    }
 }
 
 

@@ -6,36 +6,17 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.mdr;
-
-import net.sf.farrago.namespace.*;
-import net.sf.farrago.namespace.impl.*;
-
-import net.sf.farrago.util.*;
-import net.sf.farrago.type.*;
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.query.*;
-
-import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
-import org.eigenbase.util.*;
-import org.eigenbase.oj.stmt.*;
-
-import org.netbeans.api.mdr.*;
-
-import openjava.mop.*;
-import openjava.ptree.*;
 
 import java.sql.*;
 import java.util.*;
@@ -43,8 +24,24 @@ import java.util.*;
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
-// TODO:  change most asserts into proper exceptions
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.namespace.*;
+import net.sf.farrago.namespace.impl.*;
+import net.sf.farrago.query.*;
+import net.sf.farrago.type.*;
+import net.sf.farrago.util.*;
 
+import openjava.mop.*;
+import openjava.ptree.*;
+
+import org.eigenbase.oj.stmt.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
+import org.netbeans.api.mdr.*;
+
+
+// TODO:  change most asserts into proper exceptions
 // TODO:  throw exception on unknown option?
 
 /**
@@ -56,37 +53,36 @@ import javax.jmi.reflect.*;
  */
 class MedMdrDataServer extends MedAbstractDataServer
 {
+    //~ Static fields/initializers --------------------------------------------
+
     public static final String PROP_STORAGE_FACTORY_CLASS =
-    "STORAGE_FACTORY_CLASS";
-    
+        "STORAGE_FACTORY_CLASS";
     public static final String PROP_EXTENT_NAME = "EXTENT_NAME";
-    
     public static final String PROP_CLASS_NAME = "CLASS_NAME";
-    
     public static final String PROP_ROOT_PACKAGE_NAME = "ROOT_PACKAGE_NAME";
-    
     public static final String PROP_SCHEMA_NAME = "SCHEMA_NAME";
 
+    //~ Instance fields -------------------------------------------------------
+
     FarragoRepos repos;
-    
     MDRepository repository;
-
     RefPackage extentPackage;
-
     RefPackage rootPackage;
-
     boolean foreignRepository;
-
     String schemaName;
-    
+
+    //~ Constructors ----------------------------------------------------------
+
     MedMdrDataServer(
         String serverMofId,
         Properties props,
         FarragoRepos repos)
     {
-        super(serverMofId,props);
+        super(serverMofId, props);
         this.repos = repos;
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     /**
      * @return the root package
@@ -107,24 +103,20 @@ class MedMdrDataServer extends MedAbstractDataServer
     void initialize()
     {
         Properties props = getProperties();
-        
+
         Properties storageProps = new Properties();
         storageProps.putAll(props);
-        
-        String storageFactoryClassName = getNonStorageProperty(
-            props,PROP_STORAGE_FACTORY_CLASS);
-        String extentName = getNonStorageProperty(
-            props,PROP_EXTENT_NAME);
-        String rootPackageName = getNonStorageProperty(
-            props,PROP_ROOT_PACKAGE_NAME);
 
-        schemaName = getNonStorageProperty(
-            props,PROP_SCHEMA_NAME);
-            
+        String storageFactoryClassName =
+            getNonStorageProperty(props, PROP_STORAGE_FACTORY_CLASS);
+        String extentName = getNonStorageProperty(props, PROP_EXTENT_NAME);
+        String rootPackageName =
+            getNonStorageProperty(props, PROP_ROOT_PACKAGE_NAME);
+
+        schemaName = getNonStorageProperty(props, PROP_SCHEMA_NAME);
+
         if (extentName != null) {
-            initAsForeignServer(
-                storageFactoryClassName,
-                extentName,
+            initAsForeignServer(storageFactoryClassName, extentName,
                 storageProps);
         } else {
             initAsCatalogServer();
@@ -143,8 +135,8 @@ class MedMdrDataServer extends MedAbstractDataServer
         }
         MedMdrNameDirectory directory = getMdrNameDirectory();
         String [] names = rootPackageName.split("\\.");
-        rootPackage = directory.lookupRefPackage(names,names.length);
-        assert(rootPackage != null);
+        rootPackage = directory.lookupRefPackage(names, names.length);
+        assert (rootPackage != null);
     }
 
     private void initAsForeignServer(
@@ -153,13 +145,12 @@ class MedMdrDataServer extends MedAbstractDataServer
         Properties storageProps)
     {
         foreignRepository = true;
-        repository = MdrUtil.loadRepository(
-            storageFactoryClassName,
-            storageProps);
+        repository =
+            MdrUtil.loadRepository(storageFactoryClassName, storageProps);
         extentPackage = repository.getExtent(extentName);
         rootPackage = extentPackage;
     }
-    
+
     private void initAsCatalogServer()
     {
         foreignRepository = false;
@@ -168,7 +159,9 @@ class MedMdrDataServer extends MedAbstractDataServer
         rootPackage = extentPackage;
     }
 
-    private String getNonStorageProperty(Properties props,String propName)
+    private String getNonStorageProperty(
+        Properties props,
+        String propName)
     {
         String value = props.getProperty(propName);
         props.remove(propName);
@@ -177,10 +170,10 @@ class MedMdrDataServer extends MedAbstractDataServer
 
     private MedMdrNameDirectory getMdrNameDirectory()
     {
-        assert(repository != null);
-        return new MedMdrNameDirectory(this,rootPackage);
+        assert (repository != null);
+        return new MedMdrNameDirectory(this, rootPackage);
     }
-    
+
     // implement FarragoMedDataServer
     public FarragoMedNameDirectory getNameDirectory()
         throws SQLException
@@ -190,9 +183,9 @@ class MedMdrDataServer extends MedAbstractDataServer
 
     MedMdrNameDirectory getExtentNameDirectory()
     {
-        return new MedMdrNameDirectory(this,extentPackage);
+        return new MedMdrNameDirectory(this, extentPackage);
     }
-    
+
     // implement FarragoMedDataServer
     public FarragoMedColumnSet newColumnSet(
         String [] localName,
@@ -202,9 +195,9 @@ class MedMdrDataServer extends MedAbstractDataServer
         Map columnPropMap)
         throws SQLException
     {
-        assert(repository != null);
+        assert (repository != null);
         String className = tableProps.getProperty(PROP_CLASS_NAME);
-        assert(className != null);
+        assert (className != null);
 
         MedMdrNameDirectory directory = getMdrNameDirectory();
         return directory.lookupColumnSetAndImposeType(
@@ -215,7 +208,8 @@ class MedMdrDataServer extends MedAbstractDataServer
     }
 
     // implement FarragoMedDataServer
-    public Object getRuntimeSupport(Object param) throws SQLException
+    public Object getRuntimeSupport(Object param)
+        throws SQLException
     {
         if (param == null) {
             return repository;
@@ -223,14 +217,14 @@ class MedMdrDataServer extends MedAbstractDataServer
         String [] qualifiedName = (String []) param;
         return getExtentNameDirectory().lookupRefBaseObject(qualifiedName);
     }
-    
+
     // implement FarragoMedDataServer
     public void registerRules(RelOptPlanner planner)
     {
         super.registerRules(planner);
         planner.addRule(new MedMdrJoinRule());
     }
-    
+
     // implement FarragoAllocation
     public void closeAllocation()
     {
@@ -254,5 +248,6 @@ class MedMdrDataServer extends MedAbstractDataServer
                 arg));
     }
 }
+
 
 // End MedMdrDataServer.java

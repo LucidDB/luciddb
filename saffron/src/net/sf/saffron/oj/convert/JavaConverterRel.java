@@ -1,41 +1,39 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package net.sf.saffron.oj.convert;
 
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelOptPlanWriter;
+import openjava.ptree.ParseTree;
+import openjava.ptree.Variable;
+
+import org.eigenbase.oj.rel.JavaLoopRel;
 import org.eigenbase.oj.rel.JavaRel;
 import org.eigenbase.oj.rel.JavaRelImplementor;
-import org.eigenbase.oj.rel.JavaLoopRel;
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.convert.ConverterRel;
 import org.eigenbase.rel.convert.ConverterRule;
 import org.eigenbase.rel.convert.FactoryConverterRule;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelOptPlanWriter;
+import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.util.Util;
-import openjava.ptree.ParseTree;
-import openjava.ptree.Variable;
 
 
 /**
@@ -43,36 +41,37 @@ import openjava.ptree.Variable;
  * <code>inConvention</code> to {@link
  * org.eigenbase.relopt.CallingConvention#ARRAY}.
  */
-public class JavaConverterRel extends ConverterRel
-        implements JavaRel, JavaLoopRel
+public class JavaConverterRel extends ConverterRel implements JavaRel,
+    JavaLoopRel
 {
-    //~ Instance fields -------------------------------------------------------
-
     /**
      * The convertlet actually does the work.
      */
     private final JavaConvertlet _convertlet;
+
     /** Scratch storage for some of the converlet implementations. Convertlets
      * can be used several times in the same plan, so they have to store temp
      * stuff here.
      */
     Variable var_v;
 
-    //~ Constructors ----------------------------------------------------------
-
-    JavaConverterRel(RelOptCluster cluster,RelNode child,
-            JavaConvertlet convertlet)
+    JavaConverterRel(
+        RelOptCluster cluster,
+        RelNode child,
+        JavaConvertlet convertlet)
     {
-        super(cluster,child);
+        super(cluster, child);
         _convertlet = convertlet;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    private static final String [] terms = { "child", "convention" };
 
-    private static final String[] terms = {"child", "convention"};
-
-    public void explain(RelOptPlanWriter pw) {
-        pw.explain(this, terms, new Object[] {getConvention().getName()});
+    public void explain(RelOptPlanWriter pw)
+    {
+        pw.explain(
+            this,
+            terms,
+            new Object [] { getConvention().getName() });
     }
 
     public CallingConvention getConvention()
@@ -83,19 +82,21 @@ public class JavaConverterRel extends ConverterRel
     // implement RelNode
     public Object clone()
     {
-        return new JavaConverterRel(cluster,child,_convertlet);
+        return new JavaConverterRel(cluster, child, _convertlet);
     }
 
-    public ParseTree implement(JavaRelImplementor implementor) {
+    public ParseTree implement(JavaRelImplementor implementor)
+    {
         return _convertlet.implement(implementor, this);
     }
 
-    public void implementJavaParent(JavaRelImplementor implementor,
-            int ordinal) {
+    public void implementJavaParent(
+        JavaRelImplementor implementor,
+        int ordinal)
+    {
         assert ordinal == 0; // converters have exactly 1 child
         _convertlet.implementJavaParent(implementor, this);
     }
-
 }
 
 

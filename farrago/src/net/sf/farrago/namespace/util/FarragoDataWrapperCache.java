@@ -6,29 +6,29 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.util;
 
-import net.sf.farrago.namespace.*;
-import net.sf.farrago.resource.*;
-import net.sf.farrago.util.*;
+import java.util.*;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fennel.*;
+import net.sf.farrago.namespace.*;
 import net.sf.farrago.plugin.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.util.*;
 
 import org.eigenbase.util.*;
 
-import java.util.*;
 
 /**
  * FarragoDataWrapperCache serves as a private cache of
@@ -40,8 +40,12 @@ import java.util.*;
  */
 public class FarragoDataWrapperCache extends FarragoPluginCache
 {
+    //~ Instance fields -------------------------------------------------------
+
     private FennelDbHandle fennelDbHandle;
-    
+
+    //~ Constructors ----------------------------------------------------------
+
     /**
      * Creates an empty cache.
      *
@@ -60,9 +64,11 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
         FarragoRepos repos,
         FennelDbHandle fennelDbHandle)
     {
-        super(owner,sharedCache,repos);
+        super(owner, sharedCache, repos);
         this.fennelDbHandle = fennelDbHandle;
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     /**
      * Loads a data wrapper, or uses a cached instance.  If the requested
@@ -86,10 +92,9 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
         Properties options)
     {
         // TODO:  for cache hits, assert that libraryName and properties match?
-
         // first try private cache
-        FarragoMedDataWrapper wrapper = (FarragoMedDataWrapper)
-            searchPrivateCache(mofId);
+        FarragoMedDataWrapper wrapper =
+            (FarragoMedDataWrapper) searchPrivateCache(mofId);
         if (wrapper != null) {
             // already privately cached
             return wrapper;
@@ -97,11 +102,10 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
 
         // otherwise, try shared cache (pin exclusive since wrappers
         // may only be usable by one thread at a time)
-        WrapperFactory factory = new WrapperFactory(mofId,libraryName,options);
-        FarragoObjectCache.Entry entry = getSharedCache().pin(
-            mofId,
-            factory,
-            true);
+        WrapperFactory factory =
+            new WrapperFactory(mofId, libraryName, options);
+        FarragoObjectCache.Entry entry =
+            getSharedCache().pin(mofId, factory, true);
 
         wrapper = (FarragoMedDataWrapper) addToPrivateCache(entry);
         return wrapper;
@@ -126,33 +130,32 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
         Properties options)
     {
         // TODO:  for cache hits, assert that properties match?
-
         // first try private cache
-        FarragoMedDataServer server = (FarragoMedDataServer)
-            searchPrivateCache(mofId);
+        FarragoMedDataServer server =
+            (FarragoMedDataServer) searchPrivateCache(mofId);
         if (server != null) {
             // already privately cached
             return server;
         }
-        
+
         // otherwise, try shared cache
-        ServerFactory factory = new ServerFactory(mofId,dataWrapper,options);
-        FarragoObjectCache.Entry entry = getSharedCache().pin(
-            mofId,
-            factory,
-            true);
-        
+        ServerFactory factory = new ServerFactory(mofId, dataWrapper, options);
+        FarragoObjectCache.Entry entry =
+            getSharedCache().pin(mofId, factory, true);
+
         server = (FarragoMedDataServer) addToPrivateCache(entry);
         return server;
     }
 
+    //~ Inner Classes ---------------------------------------------------------
+
     private class WrapperFactory
-        implements FarragoObjectCache.CachedObjectFactory 
+        implements FarragoObjectCache.CachedObjectFactory
     {
         private String mofId;
         private String libraryName;
         private Properties options;
-        
+
         WrapperFactory(
             String mofId,
             String libraryName,
@@ -165,21 +168,22 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
 
         // implement CachedObjectFactory
         public void initializeEntry(
-            Object key,FarragoObjectCache.UninitializedEntry entry)
+            Object key,
+            FarragoObjectCache.UninitializedEntry entry)
         {
-            assert(mofId == key);
-            
-            FarragoMedDataWrapper wrapper = (FarragoMedDataWrapper)
-                initializePlugin(
-                    libraryName,"DataWrapperClassName",options);
-            
+            assert (mofId == key);
+
+            FarragoMedDataWrapper wrapper =
+                (FarragoMedDataWrapper) initializePlugin(libraryName,
+                    "DataWrapperClassName", options);
+
             // TODO:  some kind of resource usage estimations for wrappers
-            entry.initialize(wrapper,1);
+            entry.initialize(wrapper, 1);
         }
     }
 
     private class ServerFactory
-        implements FarragoObjectCache.CachedObjectFactory 
+        implements FarragoObjectCache.CachedObjectFactory
     {
         private String mofId;
         private FarragoMedDataWrapper dataWrapper;
@@ -197,15 +201,14 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
 
         // implement CachedObjectFactory
         public void initializeEntry(
-            Object key,FarragoObjectCache.UninitializedEntry entry)
+            Object key,
+            FarragoObjectCache.UninitializedEntry entry)
         {
-            assert(mofId == key);
+            assert (mofId == key);
 
             FarragoMedDataServer server;
             try {
-                server = dataWrapper.newServer(
-                    mofId,
-                    options);
+                server = dataWrapper.newServer(mofId, options);
             } catch (Throwable ex) {
                 throw FarragoResource.instance().newDataServerInitFailed(ex);
             }
@@ -215,11 +218,12 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
                     (FarragoMedLocalDataServer) server;
                 localServer.setFennelDbHandle(fennelDbHandle);
             }
-            
+
             // TODO:  some kind of resource usage estimations for wrappers
-            entry.initialize(server,1);
+            entry.initialize(server, 1);
         }
     }
 }
+
 
 // End FarragoDataWrapperCache.java

@@ -18,6 +18,7 @@
 */
 package net.sf.farrago.test.regression;
 
+
 /**
  * FarragoTestCommand represents a command, sequentially executed by
  * {@link FarragoTestCommandExecutor}, during a concurrency test
@@ -31,6 +32,8 @@ package net.sf.farrago.test.regression;
  */
 public interface FarragoTestCommand
 {
+    //~ Methods ---------------------------------------------------------------
+
     /**
      * Executes this command.  The FarragoTestCommandExecutor provides
      * access to a JDBC connection and previously prepared statements.
@@ -55,22 +58,25 @@ public interface FarragoTestCommand
      * Assumes the error is indicated by a java.sql.SQLException.  Optionally checks
      * for the expected error condition by matching the error message against a
      * regular expression. (Scans the list of chained SQLExceptions).
-     * 
+     *
      * @param comment a brief description of the expected error
      * @param pattern null, or a regular expression that matches the expected error message.
      */
-    FarragoTestCommand markToFail(String comment, String pattern);
+    FarragoTestCommand markToFail(
+        String comment,
+        String pattern);
 
+    //~ Inner Classes ---------------------------------------------------------
 
     /** Indicates that a command should have failed, but instead succeeded,
      * which is a test error */
-    public static class ShouldHaveFailedException extends RuntimeException 
+    public static class ShouldHaveFailedException extends RuntimeException
     {
         public final String description;
-        public ShouldHaveFailedException(String description) 
+
+        public ShouldHaveFailedException(String description)
         {
             this.description = description;
         }
     }
-    
 }

@@ -1,40 +1,40 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.sql;
+
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.rex.RexNode;
+import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.util.Util;
 
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A <code>SqlOperator</code> is a type of node in a SQL parse tree (it is NOT
@@ -43,6 +43,11 @@ import java.util.List;
  */
 public abstract class SqlOperator
 {
+    //~ Static fields/initializers --------------------------------------------
+
+    public static final String NL = System.getProperty("line.separator");
+    private static final String AnonymousReplaceString = "FUNCTIONNAME";
+
     //~ Instance fields -------------------------------------------------------
 
     public String name;
@@ -64,14 +69,12 @@ public abstract class SqlOperator
 
     /** used to get the return type of operator/function */
     private final TypeInference typeInference;
+
     /** used to inference unknown params */
     private final ParamTypeInference paramTypeInference;
+
     /** used to validate operands */
     protected final AllowedArgInference argTypeInference;
-
-    public static final String NL = System.getProperty("line.separator");
-
-    private static final String AnonymousReplaceString = "FUNCTIONNAME";
 
     //~ Constructors ----------------------------------------------------------
 
@@ -80,15 +83,20 @@ public abstract class SqlOperator
      *
      * @pre kind != null
      */
+
     // @pre paramTypes != null
     SqlOperator(
-        String name,SqlKind kind,int leftPrecedence,int rightPrecedence,
+        String name,
+        SqlKind kind,
+        int leftPrecedence,
+        int rightPrecedence,
         TypeInference typeInference,
         ParamTypeInference paramTypeInference,
         AllowedArgInference argTypeInference)
     {
         Util.pre(kind != null, "kind != null");
-//        Util.pre(argTypeInference != null, "argTypeInference != null");
+
+        //        Util.pre(argTypeInference != null, "argTypeInference != null");
         this.name = name;
         this.kind = kind;
         this.leftPrec = leftPrecedence;
@@ -102,28 +110,29 @@ public abstract class SqlOperator
      * Creates an operator specifying left/right associativity.
      */
     SqlOperator(
-        String name,SqlKind kind,int prec,boolean isLeftAssoc,
+        String name,
+        SqlKind kind,
+        int prec,
+        boolean isLeftAssoc,
         TypeInference typeInference,
         ParamTypeInference paramTypeInference,
         AllowedArgInference argTypeInference)
     {
-        this(
-            name,
-            kind,
-            (2 * prec) + (isLeftAssoc ? 0 : 1),
-            (2 * prec) + (isLeftAssoc ? 1 : 0),
-            typeInference,
+        this(name, kind, (2 * prec) + (isLeftAssoc ? 0 : 1),
+            (2 * prec) + (isLeftAssoc ? 1 : 0), typeInference,
             paramTypeInference, argTypeInference);
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    public AllowedArgInference getAllowedArgInference() {
+    public AllowedArgInference getAllowedArgInference()
+    {
         return this.argTypeInference;
     }
 
-    public OperandsCountDescriptor getOperandsCountDescriptor() {
-        if (null!=argTypeInference) {
+    public OperandsCountDescriptor getOperandsCountDescriptor()
+    {
+        if (null != argTypeInference) {
             return new OperandsCountDescriptor(argTypeInference.getArgCount());
         }
 
@@ -131,8 +140,9 @@ public abstract class SqlOperator
         // or give argTypeInference a value.
         throw Util.needToImplement(this);
     }
-    
-    public String toString() {
+
+    public String toString()
+    {
         return name;
     }
 
@@ -146,7 +156,8 @@ public abstract class SqlOperator
      * {@param operandsCount} can is used with functions that can take a variable
      * number of operands.
      */
-    protected String getSignatureTemplate(final int operandsCount) {
+    protected String getSignatureTemplate(final int operandsCount)
+    {
         return null;
     }
 
@@ -175,9 +186,11 @@ public abstract class SqlOperator
     /**
      * Creates a call to this operand with an array of operands.
      */
-    public SqlCall createCall(SqlNode [] operands, ParserPosition pos)
+    public SqlCall createCall(
+        SqlNode [] operands,
+        ParserPosition pos)
     {
-        return new SqlCall(this,operands, pos);
+        return new SqlCall(this, operands, pos);
     }
 
     /**
@@ -185,32 +198,48 @@ public abstract class SqlOperator
      */
     public SqlCall createCall(ParserPosition pos)
     {
-        return createCall(new SqlNode[0], pos);
+        return createCall(
+            new SqlNode[0],
+            pos);
     }
 
     /**
      * Creates a call to this operand with a single operand.
      */
-    public SqlCall createCall(SqlNode operand, ParserPosition pos)
+    public SqlCall createCall(
+        SqlNode operand,
+        ParserPosition pos)
     {
-        return createCall(new SqlNode [] { operand }, pos);
+        return createCall(
+            new SqlNode [] { operand },
+            pos);
     }
 
     /**
      * Creates a call to this operand with two operands.
      */
-    public SqlCall createCall(SqlNode operand1,SqlNode operand2, ParserPosition pos)
+    public SqlCall createCall(
+        SqlNode operand1,
+        SqlNode operand2,
+        ParserPosition pos)
     {
-        return createCall(new SqlNode [] { operand1,operand2 }, pos);
+        return createCall(
+            new SqlNode [] { operand1, operand2 },
+            pos);
     }
 
     /**
      * Creates a call to this operand with three operands.
      */
     public SqlCall createCall(
-        SqlNode operand1,SqlNode operand2,SqlNode operand3, ParserPosition pos)
+        SqlNode operand1,
+        SqlNode operand2,
+        SqlNode operand3,
+        ParserPosition pos)
     {
-        return createCall(new SqlNode [] { operand1,operand2,operand3 }, pos);
+        return createCall(
+            new SqlNode [] { operand1, operand2, operand3 },
+            pos);
     }
 
     /**
@@ -237,7 +266,7 @@ public abstract class SqlOperator
     // override Object
     public int hashCode()
     {
-        return kind.getOrdinal()*31 + name.hashCode();
+        return (kind.getOrdinal() * 31) + name.hashCode();
     }
 
     /**
@@ -246,11 +275,12 @@ public abstract class SqlOperator
      * @param call the SqlCall node for the call.
      * @param validator the active validator.
      */
-    void validateCall(SqlCall call, SqlValidator validator)
+    void validateCall(
+        SqlCall call,
+        SqlValidator validator)
     {
-        return;                         // default is to do nothing
+        return; // default is to do nothing
     }
-
 
     /**
      * Deduces the type of a call to this operator, assuming that the types of
@@ -262,7 +292,10 @@ public abstract class SqlOperator
      * should override this method; others should generally use a type-inference
      * strategy to share code.)
      */
-    public RelDataType getType(RelDataTypeFactory typeFactory, RelDataType[] argTypes) {
+    public RelDataType getType(
+        RelDataTypeFactory typeFactory,
+        RelDataType [] argTypes)
+    {
         if (typeInference != null) {
             return typeInference.getType(typeFactory, argTypes);
         }
@@ -277,12 +310,18 @@ public abstract class SqlOperator
      * are needed  to determine the type of the call.  If the call type depends
      * on the values of the operands, then override this method.
      */
-    public RelDataType getType(RelDataTypeFactory typeFactory, RexNode[] exprs) {
-        return getType(typeFactory, getTypes(exprs));
+    public RelDataType getType(
+        RelDataTypeFactory typeFactory,
+        RexNode [] exprs)
+    {
+        return getType(
+            typeFactory,
+            getTypes(exprs));
     }
 
-    private RelDataType[] getTypes(RexNode[] exprs) {
-        RelDataType[] types = new RelDataType[exprs.length];
+    private RelDataType [] getTypes(RexNode [] exprs)
+    {
+        RelDataType [] types = new RelDataType[exprs.length];
         for (int i = 0; i < types.length; i++) {
             types[i] = exprs[i].getType();
         }
@@ -301,10 +340,13 @@ public abstract class SqlOperator
      * should override this method; others should generally use a type-inference
      * strategy to share code.)
      */
-    public RelDataType getType(SqlValidator validator,
-            SqlValidator.Scope scope, SqlCall call) {
+    public RelDataType getType(
+        SqlValidator validator,
+        SqlValidator.Scope scope,
+        SqlCall call)
+    {
         // Check that there's the right number of arguments.
-        checkNumberOfArg(argTypeInference,call);
+        checkNumberOfArg(argTypeInference, call);
 
         checkArgTypes(call, validator, scope);
 
@@ -317,8 +359,10 @@ public abstract class SqlOperator
      * Operators (such as "ROW" and "AS") which do not check their arguments
      * can override this method.
      */
-    protected void checkArgTypes(SqlCall call, SqlValidator validator,
-            SqlValidator.Scope scope)
+    protected void checkArgTypes(
+        SqlCall call,
+        SqlValidator validator,
+        SqlValidator.Scope scope)
     {
         // Check that all of the arguments are of the right type, or are at
         // least assignable to the right type.
@@ -328,11 +372,13 @@ public abstract class SqlOperator
             throw Util.needToImplement(this);
         }
 
-        argTypeInference.check(validator,scope,call);
+        argTypeInference.check(validator, scope, call);
     }
 
-    protected boolean checkArgTypesNoThrow(SqlCall call,
-            SqlValidator validator, SqlValidator.Scope scope)
+    protected boolean checkArgTypesNoThrow(
+        SqlCall call,
+        SqlValidator validator,
+        SqlValidator.Scope scope)
     {
         // Check that all of the arguments are of the right type, or are at
         // least assignable to the right type.
@@ -348,14 +394,18 @@ public abstract class SqlOperator
         return true;
     }
 
-    protected void checkNumberOfArg(AllowedArgInference argType,
-            SqlCall call) {
-        OperandsCountDescriptor od = call.operator.getOperandsCountDescriptor();
-        if (!od.getNoLimit() &&
-            !od.getPossibleNumOfOperands().contains(
-                new Integer(call.operands.length))){
-            throw EigenbaseResource.instance().newWrongNumOfArguments(""+call,
-                    call.getParserPosition().toString());
+    protected void checkNumberOfArg(
+        AllowedArgInference argType,
+        SqlCall call)
+    {
+        OperandsCountDescriptor od =
+            call.operator.getOperandsCountDescriptor();
+        if (!od.getNoLimit()
+                && !od.getPossibleNumOfOperands().contains(
+                    new Integer(call.operands.length))) {
+            throw EigenbaseResource.instance().newWrongNumOfArguments(
+                "" + call,
+                call.getParserPosition().toString());
         }
     }
 
@@ -364,11 +414,15 @@ public abstract class SqlOperator
      * We have already checked that the number and types of arguments are as
      * required.
      */
-    protected RelDataType inferType(SqlValidator validator,
-                                    SqlValidator.Scope scope, SqlCall call) {
+    protected RelDataType inferType(
+        SqlValidator validator,
+        SqlValidator.Scope scope,
+        SqlCall call)
+    {
         if (typeInference != null) {
             return typeInference.getType(validator, scope, call);
         }
+
         // Derived type should have overridden this method, since it didn't
         // supply a type inference rule.
         throw Util.needToImplement(this);
@@ -378,7 +432,8 @@ public abstract class SqlOperator
      * Returns a string describing the expected argument types of a call, e.g.
      * "SUBSTR(VARCHAR, INTEGER, INTEGER)".
      */
-    public String getAllowedSignatures() {
+    public String getAllowedSignatures()
+    {
         return getAllowedSignatures(name);
     }
 
@@ -387,12 +442,13 @@ public abstract class SqlOperator
      * "SUBSTRING(VARCHAR, INTEGER, INTEGER)" where the name SUBSTRING can
      * be replaced by a specifed name.
      */
-    public String getAllowedSignatures(String opNameToUse) {
-        assert(null!=argTypeInference) :
-                "If you see this, assign argTypeInference a value " +
-                "or override this function";
-        return replaceAnonymous(argTypeInference.getAllowedSignatures(this),
-                opNameToUse).trim();
+    public String getAllowedSignatures(String opNameToUse)
+    {
+        assert (null != argTypeInference) : "If you see this, assign argTypeInference a value "
+        + "or override this function";
+        return replaceAnonymous(
+            argTypeInference.getAllowedSignatures(this),
+            opNameToUse).trim();
     }
 
     /**
@@ -401,15 +457,19 @@ public abstract class SqlOperator
      * @param list
      * @return
      */
-    protected String getSignature(final ArrayList list){
-        return replaceAnonymous(getAnonymousSignature(list),name);
+    protected String getSignature(final ArrayList list)
+    {
+        return replaceAnonymous(
+            getAnonymousSignature(list),
+            name);
     }
 
     /**
      * Returns a string of all allowed types, permutated with an anonymous
      * lookupMakeCallObj/fun name represented by the string <code>{0}</code>
      */
-    protected String getAnonymousSignature(final ArrayList list){
+    protected String getAnonymousSignature(final ArrayList list)
+    {
         StringBuffer ret = new StringBuffer();
         String template = getSignatureTemplate(list.size());
         if (null == template) {
@@ -424,21 +484,24 @@ public abstract class SqlOperator
             }
             ret.append(")'");
         } else {
-            Object[] values = new Object[list.size() + 1];
+            Object [] values = new Object[list.size() + 1];
             values[0] = AnonymousReplaceString;
             ret.append("'");
-            for (int i = 0; i <list.size(); i++) {
+            for (int i = 0; i < list.size(); i++) {
                 values[i + 1] = "<" + list.get(i) + ">";
             }
             ret.append(MessageFormat.format(template, values));
             ret.append("'");
-            assert list.size() + 1 == values.length;
+            assert (list.size() + 1) == values.length;
         }
 
         return ret.toString();
     }
 
-    protected String replaceAnonymous(String original, String name) {
+    protected String replaceAnonymous(
+        String original,
+        String name)
+    {
         return original.replaceAll(AnonymousReplaceString, name);
     }
 
@@ -456,32 +519,33 @@ public abstract class SqlOperator
      *         and if they are comparable, i.e. of the same charset and
      *         collation of same charset
      */
-    public static boolean isCharTypeComparable(RelDataType[] argTypes){
-        Util.pre(null!=argTypes,"null!=argTypes");
-        Util.pre(2<=argTypes.length,"2<=argTypes.length");
+    public static boolean isCharTypeComparable(RelDataType [] argTypes)
+    {
+        Util.pre(null != argTypes, "null!=argTypes");
+        Util.pre(2 <= argTypes.length, "2<=argTypes.length");
 
-        for (int j=0;j<(argTypes.length-1);j++){
-             RelDataType t0 = argTypes[j];
-             RelDataType t1 = argTypes[j+1];
+        for (int j = 0; j < (argTypes.length - 1); j++) {
+            RelDataType t0 = argTypes[j];
+            RelDataType t1 = argTypes[j + 1];
 
             if (!t0.isCharType() || !t1.isCharType()) {
                 return false;
             }
 
-             if (null == t0.getCharset()) {
-                 throw Util.newInternal(
-                    "RelDataType object should have been assigned a " +
-                    "(default) charset when calling deriveType");
+            if (null == t0.getCharset()) {
+                throw Util.newInternal(
+                    "RelDataType object should have been assigned a "
+                    + "(default) charset when calling deriveType");
             } else if (!t0.getCharset().equals(t1.getCharset())) {
                 return false;
             }
 
             if (null == t0.getCollation()) {
                 throw Util.newInternal(
-                    "RelDataType object should have been assigned a " +
-                    "(default) collation when calling deriveType");
+                    "RelDataType object should have been assigned a "
+                    + "(default) collation when calling deriveType");
             } else if (!t0.getCollation().getCharset().equals(
-                    t1.getCollation().getCharset())) {
+                        t1.getCollation().getCharset())) {
                 return false;
             }
         }
@@ -489,30 +553,33 @@ public abstract class SqlOperator
         return true;
     }
 
-     public void isCharTypeComparableThrows(RelDataType[] argTypes){
+    public void isCharTypeComparableThrows(RelDataType [] argTypes)
+    {
         if (!isCharTypeComparable(argTypes)) {
-            String msg="";
+            String msg = "";
             for (int i = 0; i < argTypes.length; i++) {
-                if (i>0) {
-                    msg+=", ";
+                if (i > 0) {
+                    msg += ", ";
                 }
                 RelDataType argType = argTypes[i];
-                msg+=argType.toString();
+                msg += argType.toString();
             }
             throw EigenbaseResource.instance().newTypeNotComparableEachOther(msg);
         }
-     }
+    }
 
-    public void isCharTypeComparableThrows(SqlValidator validator,
-                                           SqlValidator.Scope scope,
-                                           SqlNode[] operands) {
-        if (!isCharTypeComparable(validator,scope,operands)) {
-            String msg="";
+    public void isCharTypeComparableThrows(
+        SqlValidator validator,
+        SqlValidator.Scope scope,
+        SqlNode [] operands)
+    {
+        if (!isCharTypeComparable(validator, scope, operands)) {
+            String msg = "";
             for (int i = 0; i < operands.length; i++) {
-                if (i>0) {
-                    msg+=", ";
+                if (i > 0) {
+                    msg += ", ";
                 }
-                msg+=operands[i].toString();
+                msg += operands[i].toString();
             }
             throw EigenbaseResource.instance().newOperandNotComparable(msg);
         }
@@ -522,19 +589,24 @@ public abstract class SqlOperator
      * @param start zero based index
      * @param stop zero based index
      */
-    public static boolean isCharTypeComparable(RelDataType[] argTypes,
-                                        int start, int stop){
-        int n = stop-start+1;
-        RelDataType[] subset = new RelDataType[n];
-        System.arraycopy(argTypes, start, subset, 0, n );
+    public static boolean isCharTypeComparable(
+        RelDataType [] argTypes,
+        int start,
+        int stop)
+    {
+        int n = stop - start + 1;
+        RelDataType [] subset = new RelDataType[n];
+        System.arraycopy(argTypes, start, subset, 0, n);
         return isCharTypeComparable(subset);
     }
 
-    public static boolean isCharTypeComparable(SqlValidator validator,
-                                           SqlValidator.Scope scope,
-                                           SqlNode[] operands) {
-        Util.pre(null!=operands,"null!=operands");
-        Util.pre(2<=operands.length,"2<=operands.length");
+    public static boolean isCharTypeComparable(
+        SqlValidator validator,
+        SqlValidator.Scope scope,
+        SqlNode [] operands)
+    {
+        Util.pre(null != operands, "null!=operands");
+        Util.pre(2 <= operands.length, "2<=operands.length");
 
         return isCharTypeComparable(collectTypes(validator, scope, operands));
     }
@@ -542,102 +614,19 @@ public abstract class SqlOperator
     /**
      * Iterates over all operands and collect their type.
      */
-    public static RelDataType[] collectTypes(SqlValidator validator,
-                SqlValidator.Scope scope,
-                SqlNode[] operands) {
-        RelDataType[] types = new RelDataType[operands.length];
+    public static RelDataType [] collectTypes(
+        SqlValidator validator,
+        SqlValidator.Scope scope,
+        SqlNode [] operands)
+    {
+        RelDataType [] types = new RelDataType[operands.length];
         for (int i = 0; i < operands.length; i++) {
             types[i] = validator.deriveType(scope, operands[i]);
         }
         return types;
     }
 
-    //~ Inner Classes ---------------------------------------------------------
-
-    /**
-     * A class that describes how many operands a operator can take
-     */
-    public static class OperandsCountDescriptor {
-        List possibleList;
-        boolean noLimit;
-
-        public static final OperandsCountDescriptor variadic =
-                                            new OperandsCountDescriptor();
-
-        private OperandsCountDescriptor() {
-            possibleList = null;
-            noLimit = true;
-        }
-
-        public OperandsCountDescriptor(int count) {
-            possibleList = Util.toList(new Object[]{ new Integer(count) });
-            noLimit = false;
-        }
-
-        public OperandsCountDescriptor(int count1, int count2) {
-            possibleList = Util.toList(new Object[]{
-                new Integer(count1),
-                new Integer(count2)
-            });
-            noLimit = false;
-        }
-
-        public OperandsCountDescriptor(int count1, int count2, int count3) {
-            possibleList = Util.toList(new Object[]{
-                new Integer(count1),
-                new Integer(count2),
-                new Integer(count3)
-            });
-            noLimit = false;
-        }
-
-        /**
-         * Returns a list with items containing how many operands a operator can
-         * accept
-         * @pre noLimit == false
-         */
-        public List getPossibleNumOfOperands() {
-            Util.pre(!noLimit,"!noLimit");
-            return possibleList;
-        }
-
-        public boolean getNoLimit() {
-            return noLimit;
-        }
-    }
-
-    /**
-     * Strategy to infer the type of an operator call from the type of the
-     * operands.
-     *
-     * <p>This class is an example of the
-     * {@link org.eigenbase.util.Glossary#StrategyPattern strategy pattern}.
-     * This makes sense because many operators have similar, straightforward
-     * strategies, such as to take the type of the first operand.</p>
-     */
-    public static abstract class TypeInference {
-        // REVIEW jvs 26-May-2004:  I think we should try to eliminate one
-        // of these methods; they are redundant.
-
-        public abstract RelDataType getType(SqlValidator validator,
-                SqlValidator.Scope scope,
-                SqlCall call);
-        public abstract RelDataType getType(RelDataTypeFactory typeFactory,
-                RelDataType[] argTypes);
-
-        /**
-         * Iterates over all of {@param call}'s operands and derive their types
-         * before calling and returning the result from
-         * {@link #getType(org.eigenbase.reltype.RelDataTypeFactory, org.eigenbase.reltype.RelDataType[])}
-         */
-        protected final RelDataType collectTypesFromCall(SqlValidator validator,
-                SqlValidator.Scope scope,
-                SqlCall call) {
-            return getType(
-                    validator.typeFactory,collectTypes(validator, scope,
-                            call.operands));
-        }
-    }
+    //~ Inner Interfaces ------------------------------------------------------
 
     /**
      * Strategy to infer the type of an operator call from the type of the
@@ -650,93 +639,18 @@ public abstract class SqlOperator
      * This makes sense because many operators have similar, straightforward
      * strategies, such as to take the type of the first operand.</p>
      */
-    public interface TypeInferenceTransform {
-
+    public interface TypeInferenceTransform
+    {
         /**
          * @param typeToTransform A type that is comming from an call to a
          * {@link TypeInference}  object.
          * @return A new type depending on
          * @param typeToTransform and @param argTypes
          */
-        RelDataType getType(RelDataTypeFactory typeFactory,
-                RelDataType[] argTypes, RelDataType typeToTransform);
-    }
-
-    /**
-     * Strategy to infer the type of an operator call from the type of the
-     * operands by using one {@link TypeInference} rules and a combination of
-     * {@link TypeInferenceTransform}s
-     *
-     * <p>This class is an example of the
-     * {@link org.eigenbase.util.Glossary#StrategyPattern strategy pattern}.
-     * This makes sense because many operators have similar, straightforward
-     * strategies, such as to take the type of the first operand.</p>
-     */
-    public static class CascadeTypeInference extends TypeInference{
-
-        final TypeInference rule;
-        final TypeInferenceTransform[] transforms;
-
-        /**
-         * Creates a CascadeTypeInference from a rule and an array of one or
-         * more transforms.
-         *
-         * @pre null!=rule
-         * @pre null!=transforms
-         * @pre transforms.length > 0
-         * @pre transforms[i] != null
-         */
-        CascadeTypeInference(TypeInference rule,
-                TypeInferenceTransform[] transforms) {
-            Util.pre(null!=rule,"null!=rule");
-            Util.pre(null!=transforms,"null!=transforms");
-            Util.pre(transforms.length > 0,"transforms.length>0");
-            for (int i = 0; i < transforms.length; i++) {
-                Util.pre(transforms[i] != null, "transforms[i] != null");
-            }
-            this.rule = rule;
-            this.transforms = transforms;
-        }
-
-        /**
-         * Creates a CascadeTypeInference from a rule and a single transform.
-         *
-         * @pre null!=rule
-         * @pre null!=transform
-         */
-        CascadeTypeInference(TypeInference rule,
-                TypeInferenceTransform transform) {
-            this(rule, new TypeInferenceTransform[]{transform});
-        }
-
-        /**
-         * Creates a CascadeTypeInference from a rule and two transforms.
-         *
-         * @pre null!=rule
-         * @pre null!=transform0
-         * @pre null!=transform1
-         */
-        CascadeTypeInference(TypeInference rule,
-                TypeInferenceTransform transform0,
-                TypeInferenceTransform transform1) {
-            this(rule, new TypeInferenceTransform[]{transform0,transform1});
-        }
-
-        public RelDataType getType(SqlValidator validator,
-                SqlValidator.Scope scope,
-                SqlCall call) {
-            return collectTypesFromCall(validator, scope, call);
-        }
-
-        public RelDataType getType(RelDataTypeFactory typeFactory,
-                RelDataType[] argTypes) {
-            RelDataType ret = rule.getType(typeFactory, argTypes);
-            for (int i = 0; i < transforms.length; i++) {
-                TypeInferenceTransform transform = transforms[i];
-                ret = transform.getType(typeFactory, argTypes, ret);
-            }
-            return ret;
-        }
+        RelDataType getType(
+            RelDataTypeFactory typeFactory,
+            RelDataType [] argTypes,
+            RelDataType typeToTransform);
     }
 
     /**
@@ -766,43 +680,230 @@ public abstract class SqlOperator
             RelDataType [] operandTypes);
     }
 
+    //~ Inner Classes ---------------------------------------------------------
+
+    /**
+     * A class that describes how many operands a operator can take
+     */
+    public static class OperandsCountDescriptor
+    {
+        public static final OperandsCountDescriptor variadic =
+            new OperandsCountDescriptor();
+        List possibleList;
+        boolean noLimit;
+
+        private OperandsCountDescriptor()
+        {
+            possibleList = null;
+            noLimit = true;
+        }
+
+        public OperandsCountDescriptor(int count)
+        {
+            possibleList = Util.toList(new Object [] { new Integer(count) });
+            noLimit = false;
+        }
+
+        public OperandsCountDescriptor(
+            int count1,
+            int count2)
+        {
+            possibleList =
+                Util.toList(
+                    new Object [] { new Integer(count1), new Integer(count2) });
+            noLimit = false;
+        }
+
+        public OperandsCountDescriptor(
+            int count1,
+            int count2,
+            int count3)
+        {
+            possibleList =
+                Util.toList(
+                    new Object [] {
+                        new Integer(count1), new Integer(count2),
+                        new Integer(count3)
+                    });
+            noLimit = false;
+        }
+
+        /**
+         * Returns a list with items containing how many operands a operator can
+         * accept
+         * @pre noLimit == false
+         */
+        public List getPossibleNumOfOperands()
+        {
+            Util.pre(!noLimit, "!noLimit");
+            return possibleList;
+        }
+
+        public boolean getNoLimit()
+        {
+            return noLimit;
+        }
+    }
+
+    /**
+     * Strategy to infer the type of an operator call from the type of the
+     * operands.
+     *
+     * <p>This class is an example of the
+     * {@link org.eigenbase.util.Glossary#StrategyPattern strategy pattern}.
+     * This makes sense because many operators have similar, straightforward
+     * strategies, such as to take the type of the first operand.</p>
+     */
+    public static abstract class TypeInference
+    {
+        // REVIEW jvs 26-May-2004:  I think we should try to eliminate one
+        // of these methods; they are redundant.
+        public abstract RelDataType getType(
+            SqlValidator validator,
+            SqlValidator.Scope scope,
+            SqlCall call);
+
+        public abstract RelDataType getType(
+            RelDataTypeFactory typeFactory,
+            RelDataType [] argTypes);
+
+        /**
+         * Iterates over all of {@param call}'s operands and derive their types
+         * before calling and returning the result from
+         * {@link #getType(org.eigenbase.reltype.RelDataTypeFactory, org.eigenbase.reltype.RelDataType[])}
+         */
+        protected final RelDataType collectTypesFromCall(
+            SqlValidator validator,
+            SqlValidator.Scope scope,
+            SqlCall call)
+        {
+            return getType(
+                validator.typeFactory,
+                collectTypes(validator, scope, call.operands));
+        }
+    }
+
+    /**
+     * Strategy to infer the type of an operator call from the type of the
+     * operands by using one {@link TypeInference} rules and a combination of
+     * {@link TypeInferenceTransform}s
+     *
+     * <p>This class is an example of the
+     * {@link org.eigenbase.util.Glossary#StrategyPattern strategy pattern}.
+     * This makes sense because many operators have similar, straightforward
+     * strategies, such as to take the type of the first operand.</p>
+     */
+    public static class CascadeTypeInference extends TypeInference
+    {
+        final TypeInference rule;
+        final TypeInferenceTransform [] transforms;
+
+        /**
+         * Creates a CascadeTypeInference from a rule and an array of one or
+         * more transforms.
+         *
+         * @pre null!=rule
+         * @pre null!=transforms
+         * @pre transforms.length > 0
+         * @pre transforms[i] != null
+         */
+        CascadeTypeInference(
+            TypeInference rule,
+            TypeInferenceTransform [] transforms)
+        {
+            Util.pre(null != rule, "null!=rule");
+            Util.pre(null != transforms, "null!=transforms");
+            Util.pre(transforms.length > 0, "transforms.length>0");
+            for (int i = 0; i < transforms.length; i++) {
+                Util.pre(transforms[i] != null, "transforms[i] != null");
+            }
+            this.rule = rule;
+            this.transforms = transforms;
+        }
+
+        /**
+         * Creates a CascadeTypeInference from a rule and a single transform.
+         *
+         * @pre null!=rule
+         * @pre null!=transform
+         */
+        CascadeTypeInference(
+            TypeInference rule,
+            TypeInferenceTransform transform)
+        {
+            this(rule, new TypeInferenceTransform [] { transform });
+        }
+
+        /**
+         * Creates a CascadeTypeInference from a rule and two transforms.
+         *
+         * @pre null!=rule
+         * @pre null!=transform0
+         * @pre null!=transform1
+         */
+        CascadeTypeInference(
+            TypeInference rule,
+            TypeInferenceTransform transform0,
+            TypeInferenceTransform transform1)
+        {
+            this(rule, new TypeInferenceTransform [] { transform0, transform1 });
+        }
+
+        public RelDataType getType(
+            SqlValidator validator,
+            SqlValidator.Scope scope,
+            SqlCall call)
+        {
+            return collectTypesFromCall(validator, scope, call);
+        }
+
+        public RelDataType getType(
+            RelDataTypeFactory typeFactory,
+            RelDataType [] argTypes)
+        {
+            RelDataType ret = rule.getType(typeFactory, argTypes);
+            for (int i = 0; i < transforms.length; i++) {
+                TypeInferenceTransform transform = transforms[i];
+                ret = transform.getType(typeFactory, argTypes, ret);
+            }
+            return ret;
+        }
+    }
+
     /**
      * Strategy to check for allowed operand types of an operator call.
      */
     public static class AllowedArgInference
     {
-        protected SqlTypeName[][] m_types;
+        protected SqlTypeName [][] m_types;
 
         public AllowedArgInference()
-        {   //empty constructor
+        { //empty constructor
         }
 
-        public AllowedArgInference(SqlTypeName[][] types)
+        public AllowedArgInference(SqlTypeName [][] types)
         {
-            Util.pre(null!=types,"null!=types");
-            Util.pre(types.length>0,"types.length>0");
+            Util.pre(null != types, "null!=types");
+            Util.pre(types.length > 0, "types.length>0");
 
             //only Null types specified? Prohibit! need more than null
-            for (int i = 0; i < types.length; i++)
-            {
-                Util.pre(types[i].length>0,"Need to define a type");
-                boolean foundOne=false;
+            for (int i = 0; i < types.length; i++) {
+                Util.pre(types[i].length > 0, "Need to define a type");
+                boolean foundOne = false;
                 for (int j = 0; j < types[i].length; j++) {
                     SqlTypeName sqlType = types[i][j];
-                    if (!sqlType.equals(SqlTypeName.Null)){
-                        foundOne=true;
+                    if (!sqlType.equals(SqlTypeName.Null)) {
+                        foundOne = true;
                         break;
                     }
                 }
 
-                if (!foundOne)
-                {
-                    Util.pre(false,"Must have at least one non-null type");
+                if (!foundOne) {
+                    Util.pre(false, "Must have at least one non-null type");
                 }
             }
 
-
-            this.m_types=types;
+            this.m_types = types;
         }
 
         /**
@@ -812,14 +913,18 @@ public abstract class SqlOperator
          * @param operandNbr
          * @pre call!=null
          */
-        public void checkThrows(SqlValidator validator, SqlValidator.Scope scope,
-                                SqlCall call, SqlNode node, int operandNbr) {
-            Util.pre(null!=call,"null!=call");
-            if (!check(call,validator,scope,node,operandNbr)){
+        public void checkThrows(
+            SqlValidator validator,
+            SqlValidator.Scope scope,
+            SqlCall call,
+            SqlNode node,
+            int operandNbr)
+        {
+            Util.pre(null != call, "null!=call");
+            if (!check(call, validator, scope, node, operandNbr)) {
                 throw call.newValidationSignatureError(validator, scope);
             }
         }
-
 
         /**
          * Checks if a node is of correct type
@@ -833,57 +938,67 @@ public abstract class SqlOperator
          * a check can be made to see if a <code>node</code> is of type int by calling
          * <code>typeStringInt.check(validator,scope,node,1);</code>
          */
-        public boolean check(SqlCall call, SqlValidator validator, SqlValidator.Scope scope,
-                SqlNode node, int operandNbr)
+        public boolean check(
+            SqlCall call,
+            SqlValidator validator,
+            SqlValidator.Scope scope,
+            SqlNode node,
+            int operandNbr)
         {
-            RelDataType anyType = validator.typeFactory.createSqlType(SqlTypeName.Any);
-            RelDataType actualType = validator.deriveType(scope,node);
+            RelDataType anyType =
+                validator.typeFactory.createSqlType(SqlTypeName.Any);
+            RelDataType actualType = validator.deriveType(scope, node);
 
             //for each operand, iterater over its allowed types...
-            for (int j = 0; j < m_types[operandNbr].length; j++)
-            {
+            for (int j = 0; j < m_types[operandNbr].length; j++) {
                 SqlTypeName typeName = m_types[operandNbr][j];
                 RelDataType expectedType =
-                        RelDataTypeFactoryImpl.createSqlTypeIgnorePrecOrScale(validator.typeFactory, typeName);
-                assert(expectedType != null);
-                if(anyType.equals(expectedType)) {
+                    RelDataTypeFactoryImpl.createSqlTypeIgnorePrecOrScale(validator.typeFactory,
+                        typeName);
+                assert (expectedType != null);
+                if (anyType.equals(expectedType)) {
                     // If the argument type is defined as any type, we don't need to check
                     return true;
-                }
-                else if (expectedType.isAssignableFrom(actualType, false)){
+                } else if (expectedType.isAssignableFrom(actualType, false)) {
                     return true;
                 }
             }
             return false;
         }
 
-        public void check(SqlValidator validator, SqlValidator.Scope scope, SqlCall call)
+        public void check(
+            SqlValidator validator,
+            SqlValidator.Scope scope,
+            SqlCall call)
         {
             if (!checkNoThrowing(call, validator, scope)) {
                 throw call.newValidationSignatureError(validator, scope);
             }
         }
 
-        public boolean checkNoThrowing(SqlCall call, SqlValidator validator,
-                             SqlValidator.Scope scope) {
-            assert(getArgCount()==call.operands.length);
+        public boolean checkNoThrowing(
+            SqlCall call,
+            SqlValidator validator,
+            SqlValidator.Scope scope)
+        {
+            assert (getArgCount() == call.operands.length);
 
-            for(int i=0;i<call.operands.length;i++)
-            {
+            for (int i = 0; i < call.operands.length; i++) {
                 SqlNode operand = call.operands[i];
-                if (!check(call,validator,scope,operand,i))
-                {
+                if (!check(call, validator, scope, operand, i)) {
                     return false;
                 }
             }
             return true;
         }
 
-        public int getArgCount() {
+        public int getArgCount()
+        {
             return m_types.length;
         }
 
-        public SqlTypeName[][] getTypes(){
+        public SqlTypeName [][] getTypes()
+        {
             return m_types;
         }
 
@@ -891,45 +1006,43 @@ public abstract class SqlOperator
          * Returns a string describing the expected argument types of a call, e.g.
          * "SUBSTR(VARCHAR, INTEGER, INTEGER)".
          */
-        public String getAllowedSignatures(SqlOperator op) {
+        public String getAllowedSignatures(SqlOperator op)
+        {
             StringBuffer buf = new StringBuffer();
             ArrayList list = new ArrayList();
-            getAllowedSignatures(0,list,buf, op);
+            getAllowedSignatures(0, list, buf, op);
             return buf.toString().trim();
         }
 
         /**
          * Helper function to {@link #getAllowedSignatures(SqlOperator)}
          */
-        protected void getAllowedSignatures(int depth,
-                                            ArrayList list,
-                                            StringBuffer buf,
-                                            SqlOperator op) {
-            assert(null!=m_types[depth]);
-            assert(m_types[depth].length>0);
+        protected void getAllowedSignatures(
+            int depth,
+            ArrayList list,
+            StringBuffer buf,
+            SqlOperator op)
+        {
+            assert (null != m_types[depth]);
+            assert (m_types[depth].length > 0);
 
-            for (int i = 0; i < m_types[depth].length; i++)
-            {
+            for (int i = 0; i < m_types[depth].length; i++) {
                 SqlTypeName type = m_types[depth][i];
-                if (type.equals(SqlTypeName.Null)){
+                if (type.equals(SqlTypeName.Null)) {
                     continue;
                 }
 
                 list.add(type);
-                if (depth+1<m_types.length)
-                {
-                    getAllowedSignatures(depth+1,list,buf,op);
-                }
-                else
-                {
+                if ((depth + 1) < m_types.length) {
+                    getAllowedSignatures(depth + 1, list, buf, op);
+                } else {
                     buf.append(op.getAnonymousSignature(list));
                     buf.append(NL);
                 }
-                list.remove(list.size()-1);
+                list.remove(list.size() - 1);
             }
         }
     }
-
 
     /**
      * This class allows multiple existing {@link #AllowedArgInference} rules
@@ -944,28 +1057,35 @@ public abstract class SqlOperator
      *
      * </code></pre></blockquote>
      */
-    public static class CompositeAllowedArgInference extends AllowedArgInference{
-        private AllowedArgInference[] m_allowedRules;
+    public static class CompositeAllowedArgInference
+        extends AllowedArgInference
+    {
+        private AllowedArgInference [] m_allowedRules;
 
-        public CompositeAllowedArgInference(AllowedArgInference[] allowedRules) {
-            Util.pre(null!=allowedRules,"null!=allowedRules");
-            Util.pre(allowedRules.length>1,"Not a composite type");
+        public CompositeAllowedArgInference(
+            AllowedArgInference [] allowedRules)
+        {
+            Util.pre(null != allowedRules, "null!=allowedRules");
+            Util.pre(allowedRules.length > 1, "Not a composite type");
             int firstArgsLength = allowedRules[0].getArgCount();
             for (int i = 1; i < allowedRules.length; i++) {
-                Util.pre(allowedRules[i].getArgCount()==firstArgsLength,"All must have the same operand length");
+                Util.pre(allowedRules[i].getArgCount() == firstArgsLength,
+                    "All must have the same operand length");
             }
             m_allowedRules = allowedRules;
         }
 
-        public AllowedArgInference[] getRules() {
+        public AllowedArgInference [] getRules()
+        {
             return m_allowedRules;
         }
 
-        public String getAllowedSignatures(SqlOperator op) {
+        public String getAllowedSignatures(SqlOperator op)
+        {
             StringBuffer ret = new StringBuffer();
             for (int i = 0; i < m_allowedRules.length; i++) {
                 AllowedArgInference rule = m_allowedRules[i];
-                if (i>0){
+                if (i > 0) {
                     ret.append(NL);
                 }
                 ret.append(rule.getAllowedSignatures(op));
@@ -973,23 +1093,29 @@ public abstract class SqlOperator
             return ret.toString();
         }
 
-        public SqlTypeName[][] getTypes()
+        public SqlTypeName [][] getTypes()
         {
             throw Util.newInternal("Should not be called");
         }
 
-        public int getArgCount() {
+        public int getArgCount()
+        {
             //check made in constructor to verify that all rules have the same nbrOfArgs
             //take and return the first one
             return m_allowedRules[0].getArgCount();
         }
 
-        public boolean check(SqlCall call, SqlValidator validator,
-                             SqlValidator.Scope scope, SqlNode node, int operandNbr) {
-            Util.pre(m_allowedRules.length>=1,"m_allowedRules.length>=1");
+        public boolean check(
+            SqlCall call,
+            SqlValidator validator,
+            SqlValidator.Scope scope,
+            SqlNode node,
+            int operandNbr)
+        {
+            Util.pre(m_allowedRules.length >= 1, "m_allowedRules.length>=1");
             for (int i = 0; i < m_allowedRules.length; i++) {
                 AllowedArgInference rule = m_allowedRules[i];
-                if(rule.check(call, validator,scope, node,operandNbr)) {
+                if (rule.check(call, validator, scope, node, operandNbr)) {
                     return true;
                 }
             }
@@ -997,26 +1123,25 @@ public abstract class SqlOperator
         }
 
         public void check(
-                SqlValidator validator,
-                SqlValidator.Scope scope,
-                SqlCall call) {
+            SqlValidator validator,
+            SqlValidator.Scope scope,
+            SqlCall call)
+        {
             int nbrOfTypeErrors = 0;
 
             for (int i = 0; i < m_allowedRules.length; i++) {
                 AllowedArgInference rule = m_allowedRules[i];
 
-                if (!rule.checkNoThrowing(call,validator,scope))
-                {
+                if (!rule.checkNoThrowing(call, validator, scope)) {
                     nbrOfTypeErrors++;
                 }
             }
 
-            if (nbrOfTypeErrors==m_allowedRules.length) {
+            if (nbrOfTypeErrors == m_allowedRules.length) {
                 throw call.newValidationSignatureError(validator, scope);
             }
         }
     }
-
 }
 
 

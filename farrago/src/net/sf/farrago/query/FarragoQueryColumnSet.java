@@ -6,21 +6,21 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.query;
 
-import net.sf.farrago.namespace.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.namespace.*;
+
 
 /**
  * FarragoQueryColumnSet represents a specialization of
@@ -32,6 +32,8 @@ import net.sf.farrago.cwm.relational.*;
  */
 public interface FarragoQueryColumnSet extends FarragoMedColumnSet
 {
+    //~ Methods ---------------------------------------------------------------
+
     /**
      * @return the FarragoPreparingStmt acting on this column set
      */
@@ -48,7 +50,7 @@ public interface FarragoQueryColumnSet extends FarragoMedColumnSet
      * @return the CwmNamedColumnSet corresponding to this column set
      */
     public CwmNamedColumnSet getCwmColumnSet();
-        
+
     /**
      * Sets the CwmNamedColumnSet corresponding to this column set.
      *
@@ -57,5 +59,6 @@ public interface FarragoQueryColumnSet extends FarragoMedColumnSet
      */
     public void setCwmColumnSet(CwmNamedColumnSet cwmColumnSet);
 }
+
 
 // End FarragoQueryColumnSet.java

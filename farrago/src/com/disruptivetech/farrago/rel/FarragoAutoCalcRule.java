@@ -1,65 +1,63 @@
 /*
+// $Id$
 // Farrago is a relational database management system.
-// Copyright (C) 2003-2004 John V. Sichi.
-// Copyright (C) 2003-2004 Disruptive Tech
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package com.disruptivetech.farrago.rel;
 
-import net.sf.farrago.query.*;
-import net.sf.farrago.trace.FarragoTrace;
-
 import com.disruptivetech.farrago.calc.RexToCalcTranslator;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataTypeFactoryImpl;
-import org.eigenbase.oj.rel.JavaRelImplementor;
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.relopt.RelOptRuleOperand;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.rel.CalcRel;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.RelNode;
 
-import org.eigenbase.rex.RexCall;
-import org.eigenbase.rex.RexDynamicParam;
-import org.eigenbase.rex.RexFieldAccess;
-import org.eigenbase.rex.RexInputRef;
-import org.eigenbase.rex.RexNode;
-
-import org.eigenbase.util.Util;
-
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
-
 import java.util.logging.*;
-import java.io.StringWriter;
-import java.io.PrintWriter;
+
+import net.sf.farrago.query.*;
+import net.sf.farrago.trace.FarragoTrace;
+
+import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.rel.CalcRel;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.relopt.RelOptRule;
+import org.eigenbase.relopt.RelOptRuleCall;
+import org.eigenbase.relopt.RelOptRuleOperand;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.RelDataTypeFactoryImpl;
+import org.eigenbase.rex.RexCall;
+import org.eigenbase.rex.RexDynamicParam;
+import org.eigenbase.rex.RexFieldAccess;
+import org.eigenbase.rex.RexInputRef;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.util.Util;
+
 
 /**
  * FarragoAutoCalcRule is a rule for implementing {@link CalcRel} via
  * a combination of the Fennel Calculator ({@link FennelCalcRel}) and
  * the Java Calculator ({@link org.eigenbase.oj.rel.IterCalcRel}).
- * 
+ *
  * <p>This rule does not attempt to transform the matching
  * {@link org.eigenbase.relopt.RelOptRuleCall} if the entire CalcRel
  * can be implemented entirely via one calculator or the other.  A
@@ -125,29 +123,52 @@ import java.io.PrintWriter;
  * In this case, rows that don't match the conditional expression
  * would not reach the Fennel calculator.
  */
-public class FarragoAutoCalcRule
-    extends RelOptRule
+public class FarragoAutoCalcRule extends RelOptRule
 {
+    //~ Static fields/initializers --------------------------------------------
+
     private static final Logger ruleTracer =
-    	FarragoTrace.getOptimizerRuleTracer();
+        FarragoTrace.getOptimizerRuleTracer();
 
     /**
      * The singleton instance.
      */
     public static final FarragoAutoCalcRule instance =
-    	new FarragoAutoCalcRule();
+        new FarragoAutoCalcRule();
+
+    /** Used for iterative over forests by level. */
+    private static final Object DEPTH_MARKER = new Object();
+
+    /** Represents a RexNode that can be implemented by either calculator. */
+    private static final Integer REL_TYPE_EITHER = new Integer(-1);
+
+    /**
+     * Represents a RexNode that can only be implemented by the Java
+     * calculator.
+     */
+    private static final Integer REL_TYPE_JAVA = new Integer(1);
+
+    /**
+     * Represents a RexNode that can only be implemented by the Fennel
+     * calculator.
+     */
+    private static final Integer REL_TYPE_FENNEL = new Integer(2);
+
+    //~ Constructors ----------------------------------------------------------
 
     /**
      * Creates a new FarragoAutoCalcRule object.
      */
     private FarragoAutoCalcRule()
     {
-        super(new RelOptRuleOperand(CalcRel.class,
-                              new RelOptRuleOperand[] {
-                                  new RelOptRuleOperand(RelNode.class, null)
-                              }));
+        super(new RelOptRuleOperand(
+                CalcRel.class,
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(RelNode.class, null)
+                }));
     }
 
+    //~ Methods ---------------------------------------------------------------
 
     /**
      * Called when this rule matches a rel.  First uses
@@ -166,24 +187,23 @@ public class FarragoAutoCalcRule
         RelNode relInput = call.rels[1];
 
         // Test if we can translate the CalcRel to a fennel calc program
-        RelNode fennelInput = convert(relInput,
-                                         FennelPullRel.FENNEL_PULL_CONVENTION);
+        RelNode fennelInput =
+            convert(relInput, FennelPullRel.FENNEL_PULL_CONVENTION);
 
-        final RexToCalcTranslator translator = new RexToCalcTranslator(
-            calc.getCluster().rexBuilder,
-            calc._projectExprs,
-            calc._conditionExpr);
+        final RexToCalcTranslator translator =
+            new RexToCalcTranslator(calc.getCluster().rexBuilder,
+                calc._projectExprs, calc._conditionExpr);
 
         if (fennelInput != null) {
             boolean canTranslate = true;
-            for(int i = 0; i < calc._projectExprs.length; i++) {
+            for (int i = 0; i < calc._projectExprs.length; i++) {
                 if (!translator.canTranslate(calc._projectExprs[i], true)) {
                     canTranslate = false;
                     break;
                 }
             }
-            if (calc._conditionExpr != null && 
-                !translator.canTranslate(calc._conditionExpr, true)) {
+            if ((calc._conditionExpr != null)
+                    && !translator.canTranslate(calc._conditionExpr, true)) {
                 canTranslate = false;
             }
 
@@ -202,8 +222,7 @@ public class FarragoAutoCalcRule
 
         if (convertedChild != null) {
             if (relImplementor.canTranslate(convertedChild,
-                                            calc._conditionExpr,
-                                            calc._projectExprs)) {
+                        calc._conditionExpr, calc._projectExprs)) {
                 // yes: do nothing, let IterCalcRule handle this CalcRel
                 return;
             }
@@ -211,7 +230,6 @@ public class FarragoAutoCalcRule
 
         transform(relImplementor, translator, call, calc);
     }
-
 
     /**
      * Traverse the forest of expressions in <code>calc</code> and
@@ -224,10 +242,11 @@ public class FarragoAutoCalcRule
      * no node in the first level of nodes requires a specific calc,
      * depth 0 is arbitrarily implemented in Java.
      */
-    private void transform(JavaRelImplementor javaRelImplementor,
-                           RexToCalcTranslator calcTranslator,
-                           RelOptRuleCall ruleCall,
-                           CalcRel calc)
+    private void transform(
+        JavaRelImplementor javaRelImplementor,
+        RexToCalcTranslator calcTranslator,
+        RelOptRuleCall ruleCall,
+        CalcRel calc)
     {
         ArrayList relDataList = buildRelDataTree(calc);
 
@@ -244,7 +263,7 @@ public class FarragoAutoCalcRule
         tdata.relType = REL_TYPE_EITHER;
         tdata.usedRelDepth = false;
 
-        while(!relDataQueue.isEmpty()) {
+        while (!relDataQueue.isEmpty()) {
             // remove first node
             Object relDataItem = relDataQueue.remove(0);
 
@@ -275,18 +294,16 @@ public class FarragoAutoCalcRule
                 continue;
             }
 
-
-            RelData relData = (RelData)relDataItem;
+            RelData relData = (RelData) relDataItem;
             RexNode node = relData.node;
 
             if (node instanceof RexCall) {
-                RexCall call = (RexCall)node;
+                RexCall call = (RexCall) node;
 
-                boolean isJavaRel = canImplementInJava(calc,
-                                                       javaRelImplementor,
-                                                       call);
-                boolean isFennelRel = canImplementInFennel(calcTranslator,
-                                                           call);
+                boolean isJavaRel =
+                    canImplementInJava(calc, javaRelImplementor, call);
+                boolean isFennelRel =
+                    canImplementInFennel(calcTranslator, call);
 
                 // REVIEW: SZ: 8/4/2004: Ideally, this test would be
                 // performed much earlier and this rule would not
@@ -302,8 +319,7 @@ public class FarragoAutoCalcRule
                 // repeatedly.
                 if (!isJavaRel && !isFennelRel) {
                     throw Util.newInternal("Implementation of "
-                                           + call.getOperator().name
-                                           + " not found");
+                        + call.getOperator().name + " not found");
                 }
 
                 adjustDepth(relData, relDepth, tdata, isJavaRel, isFennelRel);
@@ -333,13 +349,14 @@ public class FarragoAutoCalcRule
         transform(ruleCall, calc, tdata.maxRelDepth, relDataList);
     }
 
-
     /**
      * Given that rel type alternates with increasing depth, two
      * depths have the same rel type if they are both odd or both
      * even.
      */
-    private boolean sameRelType(int relDepthA, int relDepthB)
+    private boolean sameRelType(
+        int relDepthA,
+        int relDepthB)
     {
         return (relDepthA & 0x1) == (relDepthB & 0x1);
     }
@@ -357,29 +374,30 @@ public class FarragoAutoCalcRule
      * @param isJavaRel if this node can be implemented in the Java Calc
      * @param isFennelRel if this node can be implemented in the Fennel Calc
      */
-    private void adjustDepth(RelData relData,
-                             int relDepth,
-                             TransformData tdata,
-                             boolean isJavaRel,
-                             boolean isFennelRel)
+    private void adjustDepth(
+        RelData relData,
+        int relDepth,
+        TransformData tdata,
+        boolean isJavaRel,
+        boolean isFennelRel)
     {
         if (tdata.relType == REL_TYPE_EITHER) {
-            assert(relDepth == 0);
+            assert (relDepth == 0);
 
             if (!isJavaRel) {
                 tdata.relType = REL_TYPE_FENNEL;
             } else if (!isFennelRel) {
                 tdata.relType = REL_TYPE_JAVA;
             }
-            
+
             relData.relDepth = relDepth;
             tdata.maxRelDepth = relDepth;
             tdata.usedRelDepth = true;
-        } else if ((tdata.relType == REL_TYPE_JAVA && !isJavaRel) ||
-                   (tdata.relType == REL_TYPE_FENNEL && !isFennelRel)) {
+        } else if (((tdata.relType == REL_TYPE_JAVA) && !isJavaRel)
+                || ((tdata.relType == REL_TYPE_FENNEL) && !isFennelRel)) {
             // Node is mismatched for the rel we'll be using.
-            if (relData.parent != null &&
-                relData.parent.relDepth < relDepth) {
+            if ((relData.parent != null)
+                    && (relData.parent.relDepth < relDepth)) {
                 // Pull this node up to previous depth.
                 relData.relDepth = relDepth - 1;
             } else {
@@ -388,11 +406,11 @@ public class FarragoAutoCalcRule
                 tdata.maxRelDepth = Math.max(tdata.maxRelDepth, relDepth + 1);
             }
         } else {
-            if (relDepth > 0 && isJavaRel && isFennelRel) {
+            if ((relDepth > 0) && isJavaRel && isFennelRel) {
                 // Pull this node up to the previous depth.
                 relData.relDepth = relDepth - 1;
-            } else if (relData.parent != null &&
-                       sameRelType(relDepth, relData.parent.relDepth)) {
+            } else if ((relData.parent != null)
+                    && sameRelType(relDepth, relData.parent.relDepth)) {
                 // Pull this node up to the parent's depth
                 // (regardless of how far up that is).
                 relData.relDepth = relData.parent.relDepth;
@@ -404,7 +422,6 @@ public class FarragoAutoCalcRule
         }
     }
 
-
     /**
      * Traverse the forest of expressions, creating new RexInputRefs
      * to pass data between levels.  When RexInputRefs are encountered
@@ -414,10 +431,11 @@ public class FarragoAutoCalcRule
      * insert a RexInputRef at the current level to refer to the
      * RexCall at the lower level.
      */
-    private void transform(RelOptRuleCall ruleCall,
-                           CalcRel calc,
-                           final int maxRelDepth,
-                           List relDataList)
+    private void transform(
+        RelOptRuleCall ruleCall,
+        CalcRel calc,
+        final int maxRelDepth,
+        List relDataList)
     {
         ArrayList relDataQueue = new ArrayList(relDataList);
         relDataQueue.add(DEPTH_MARKER);
@@ -430,7 +448,7 @@ public class FarragoAutoCalcRule
         // RexFieldAccesses that cannot be implemented with their
         // parents have a RexInputRef inserted between the parent and
         // RexDynamicRef/RexFieldAccess (see processCallChildren).
-        while(!relDataQueue.isEmpty()) {
+        while (!relDataQueue.isEmpty()) {
             Object relDataItem = relDataQueue.remove(0);
             if (relDataItem == DEPTH_MARKER) {
                 if (relDataQueue.isEmpty()) {
@@ -443,7 +461,7 @@ public class FarragoAutoCalcRule
                 continue;
             }
 
-            RelData relData = (RelData)relDataItem;
+            RelData relData = (RelData) relDataItem;
             RexNode node = relData.node;
 
             List children = Collections.EMPTY_LIST;
@@ -451,9 +469,8 @@ public class FarragoAutoCalcRule
             if (node instanceof RexInputRef) {
                 if (relData.relDepth < maxRelDepth) {
                     // Copy RexInputRefs down to the lowest level.
-                    RelData childRelData = new RelData(node,
-                                                       relData.isConditional,
-                                                       relData);
+                    RelData childRelData =
+                        new RelData(node, relData.isConditional, relData);
                     childRelData.relDepth = relData.relDepth + 1;
 
                     relData.children = new ArrayList();
@@ -461,15 +478,14 @@ public class FarragoAutoCalcRule
 
                     children = relData.children;
                 }
-            } else if (node instanceof RexCall ||
-                       node instanceof RexFieldAccess) {
-                assert(relData.relDepth >= expectedRelDepth);
+            } else if (node instanceof RexCall
+                    || node instanceof RexFieldAccess) {
+                assert (relData.relDepth >= expectedRelDepth);
 
                 if (relData.relDepth > expectedRelDepth) {
                     // insert an input reference
-                    RelData inputRefData = new RelData(null,
-                                                       relData.isConditional,
-                                                       relData.parent);
+                    RelData inputRefData =
+                        new RelData(null, relData.isConditional, relData.parent);
                     inputRefData.children = new ArrayList();
                     inputRefData.children.add(relData);
 
@@ -489,10 +505,8 @@ public class FarragoAutoCalcRule
                     // pull children up into this RelData, if necessary
                     children = new ArrayList();
 
-                    processCallChildren(children,
-                                        relData,
-                                        expectedRelDepth,
-                                        maxRelDepth);
+                    processCallChildren(children, relData, expectedRelDepth,
+                        maxRelDepth);
                 }
             }
 
@@ -503,22 +517,20 @@ public class FarragoAutoCalcRule
             }
         }
 
-
         relDataQueue = new ArrayList(relDataList);
         relDataQueue.add(DEPTH_MARKER);
 
         expectedRelDepth = 0;
 
         ArrayList levelExpressions = new ArrayList(maxRelDepth + 1);
-        for(int i = 0; i <= maxRelDepth; i++) {
+        for (int i = 0; i <= maxRelDepth; i++) {
             levelExpressions.add(null);
         }
 
         // REVIEW: push this step into its own function
-
         // Figure out what the actual RexNode trees for each level and
         // projection are.
-        while(!relDataQueue.isEmpty()) {
+        while (!relDataQueue.isEmpty()) {
             Object relDataItem = relDataQueue.remove(0);
             if (relDataItem == DEPTH_MARKER) {
                 if (relDataQueue.isEmpty()) {
@@ -531,27 +543,27 @@ public class FarragoAutoCalcRule
             }
 
             ArrayList expressions =
-                (ArrayList)levelExpressions.get(expectedRelDepth);
+                (ArrayList) levelExpressions.get(expectedRelDepth);
             if (expressions == null) {
                 expressions = new ArrayList();
                 levelExpressions.set(expectedRelDepth, expressions);
             }
 
-            RelData relData = (RelData)relDataItem;
+            RelData relData = (RelData) relDataItem;
             RexNode node = relData.node;
 
-            assert(relData.relDepth == expectedRelDepth);
+            assert (relData.relDepth == expectedRelDepth);
 
             List children = Collections.EMPTY_LIST;
 
-            if (node == null || node instanceof RexInputRef) {
+            if ((node == null) || node instanceof RexInputRef) {
                 if (expectedRelDepth < maxRelDepth) {
-                    RelData childRelData = ((RelData)relData.children.get(0));
+                    RelData childRelData = ((RelData) relData.children.get(0));
                     int index = childRelData.position;
 
-                    RelDataType type = (node == null
-                                        ? childRelData.node.getType()
-                                        : node.getType());
+                    RelDataType type =
+                        ((node == null) ? childRelData.node.getType()
+                        : node.getType());
 
                     RexInputRef inputRef = new RexInputRef(index, type);
 
@@ -561,13 +573,12 @@ public class FarragoAutoCalcRule
                 } else {
                     expressions.add(node.clone());
                 }
-            } else if (node instanceof RexCall ||
-                       node instanceof RexFieldAccess) {
+            } else if (node instanceof RexCall
+                    || node instanceof RexFieldAccess) {
                 children = new ArrayList();
 
-                RexNode clonedCall = transformCallChildren(relData,
-                                                           children,
-                                                           maxRelDepth);
+                RexNode clonedCall =
+                    transformCallChildren(relData, children, maxRelDepth);
 
                 expressions.add(clonedCall);
             } else {
@@ -585,18 +596,16 @@ public class FarragoAutoCalcRule
             traceWriter.println(calc.toString());
 
             int depth = 0;
-            for(Iterator i = levelExpressions.iterator(); i.hasNext(); ) {
-                ArrayList expressions = (ArrayList)i.next();
+            for (Iterator i = levelExpressions.iterator(); i.hasNext();) {
+                ArrayList expressions = (ArrayList) i.next();
                 traceWriter.println("Rel Depth " + depth++);
 
                 int index = 0;
-                for(Iterator j = expressions.iterator(); j.hasNext(); ) {
-                    RexNode node = (RexNode)j.next();
+                for (Iterator j = expressions.iterator(); j.hasNext();) {
+                    RexNode node = (RexNode) j.next();
 
-                    traceWriter.println("\t"
-                                        + String.valueOf(index++)
-                                        + ": "
-                                        + node.toString());
+                    traceWriter.println("\t" + String.valueOf(index++) + ": "
+                        + node.toString());
                 }
                 traceWriter.println();
             }
@@ -604,65 +613,66 @@ public class FarragoAutoCalcRule
             ruleTracer.finer(msg);
         }
 
-
         // REVIEW: push this step into its own function
-
         // Generate the actual CalcRel objects that represent the
         // decomposition of the original CalcRel.
         RelDataTypeFactory typeFactory =
             RelDataTypeFactoryImpl.threadInstance();
 
         RelNode resultCalcRel = calc.child;
-        for(int i = levelExpressions.size() - 1; i >= 0; i--) {
-            ArrayList expressions = (ArrayList)levelExpressions.get(i);
+        for (int i = levelExpressions.size() - 1; i >= 0; i--) {
+            ArrayList expressions = (ArrayList) levelExpressions.get(i);
 
             if (i > 0) {
                 int numNodes = expressions.size();
-                RexNode[] nodes = new RexNode[numNodes];
-                RelDataType[] types = new RelDataType[numNodes];
-                String[] names = new String[numNodes];
-                for(int j = 0; j < numNodes; j++) {
-                    nodes[j] = (RexNode)expressions.get(j);
+                RexNode [] nodes = new RexNode[numNodes];
+                RelDataType [] types = new RelDataType[numNodes];
+                String [] names = new String[numNodes];
+                for (int j = 0; j < numNodes; j++) {
+                    nodes[j] = (RexNode) expressions.get(j);
                     types[j] = nodes[j].getType();
                     names[j] = "$" + j;
                 }
 
-                RelDataType rowType = typeFactory.createProjectType(types,
-                                                                    names);
+                RelDataType rowType =
+                    typeFactory.createProjectType(types, names);
 
-                resultCalcRel = new CalcRel(calc.getCluster(),
-                                            resultCalcRel,
-                                            rowType,
-                                            nodes,
-                                            null);
+                resultCalcRel =
+                    new CalcRel(
+                        calc.getCluster(),
+                        resultCalcRel,
+                        rowType,
+                        nodes,
+                        null);
             } else {
                 RelData lastRelData =
-                    (RelData)relDataList.get(relDataList.size() - 1);
+                    (RelData) relDataList.get(relDataList.size() - 1);
 
                 int numNodes = expressions.size();
                 RexNode conditional = null;
 
                 if (lastRelData.isConditional) {
-                    conditional = (RexNode)expressions.get(numNodes - 1);
+                    conditional = (RexNode) expressions.get(numNodes - 1);
                     numNodes--;
                 }
 
-                RexNode[] nodes = new RexNode[numNodes];
-                for(int j = 0; j < numNodes; j++) {
-                    nodes[j] = (RexNode)expressions.get(j);
+                RexNode [] nodes = new RexNode[numNodes];
+                for (int j = 0; j < numNodes; j++) {
+                    nodes[j] = (RexNode) expressions.get(j);
                 }
 
-                resultCalcRel = new CalcRel(calc.getCluster(),
-                                            resultCalcRel,
-                                            calc.rowType,
-                                            nodes,
-                                            conditional);
+                resultCalcRel =
+                    new CalcRel(
+                        calc.getCluster(),
+                        resultCalcRel,
+                        calc.rowType,
+                        nodes,
+                        conditional);
             }
         }
 
         ruleCall.transformTo(resultCalcRel);
     }
-
 
     /**
      * Iterate over a RexCall's (or RexFieldAccess's) children,
@@ -671,19 +681,19 @@ public class FarragoAutoCalcRule
      * RexCall (if necessary), and recursively processing child
      * RexCalls and RexFieldAccesses at the same depth.
      */
-    private void processCallChildren(List children,
-                                     RelData relData,
-                                     int expectedRelDepth,
-                                     int maxRelDepth)
+    private void processCallChildren(
+        List children,
+        RelData relData,
+        int expectedRelDepth,
+        int maxRelDepth)
     {
-        for(ListIterator i = relData.children.listIterator(); i.hasNext(); ) {
-            RelData child = (RelData)i.next();
+        for (ListIterator i = relData.children.listIterator(); i.hasNext();) {
+            RelData child = (RelData) i.next();
 
             if (child.node instanceof RexInputRef) {
                 if (child.relDepth < maxRelDepth) {
-                    RelData childRelData = new RelData(child.node,
-                                                       child.isConditional,
-                                                       child);
+                    RelData childRelData =
+                        new RelData(child.node, child.isConditional, child);
                     childRelData.relDepth = child.relDepth + 1;
 
                     child.children = new ArrayList();
@@ -693,29 +703,25 @@ public class FarragoAutoCalcRule
                 }
             } else if (child.node instanceof RexDynamicParam) {
                 if (child.relDepth > expectedRelDepth) {
-                    RelData inputRefData = new RelData(null,
-                                                       relData.isConditional,
-                                                       relData);
+                    RelData inputRefData =
+                        new RelData(null, relData.isConditional, relData);
                     inputRefData.children = new ArrayList();
                     inputRefData.children.add(child);
                     i.set(inputRefData);
 
                     children.add(child);
                 }
-            } else if (child.node instanceof RexCall ||
-                       child.node instanceof RexFieldAccess) {
+            } else if (child.node instanceof RexCall
+                    || child.node instanceof RexFieldAccess) {
                 if (child.relDepth == expectedRelDepth) {
-                    processCallChildren(children,
-                                        child,
-                                        expectedRelDepth,
-                                        maxRelDepth);
+                    processCallChildren(children, child, expectedRelDepth,
+                        maxRelDepth);
                 } else {
                     children.add(child);
                 }
             }
         }
     }
-
 
     /**
      * Traverse a RexCall's or RexFieldAccess's children and create
@@ -726,56 +732,58 @@ public class FarragoAutoCalcRule
      * @return the RexNode that should replace relData.node in the
      *         expression.
      */
-    private RexNode transformCallChildren(RelData relData,
-                                          List children,
-                                          int maxRelDepth)
+    private RexNode transformCallChildren(
+        RelData relData,
+        List children,
+        int maxRelDepth)
     {
-        assert(relData.node instanceof RexCall || 
-               relData.node instanceof RexFieldAccess);
+        assert (relData.node instanceof RexCall
+            || relData.node instanceof RexFieldAccess);
 
-        RexNode clonedCall = (RexNode)relData.node.clone();
+        RexNode clonedCall = (RexNode) relData.node.clone();
 
-        for(int i = 0; i < relData.children.size(); i++) {
-            RelData child = (RelData)relData.children.get(i);
+        for (int i = 0; i < relData.children.size(); i++) {
+            RelData child = (RelData) relData.children.get(i);
 
-            if (child.node == null || child.node instanceof RexInputRef) {
+            if ((child.node == null) || child.node instanceof RexInputRef) {
                 if (child.relDepth < maxRelDepth) {
-                    assert(child.children.size() == 1);
-                    RelData grandChild = ((RelData)child.children.get(0));
+                    assert (child.children.size() == 1);
+                    RelData grandChild = ((RelData) child.children.get(0));
 
                     int position = grandChild.position;
 
                     RexInputRef inputRef =
-                        new RexInputRef(position, grandChild.node.getType());
+                        new RexInputRef(position,
+                            grandChild.node.getType());
 
                     if (relData.node instanceof RexCall) {
-                        ((RexCall)clonedCall).operands[i] = inputRef;
+                        ((RexCall) clonedCall).operands[i] = inputRef;
                     } else {
-                        ((RexFieldAccess)clonedCall).expr = inputRef;
+                        ((RexFieldAccess) clonedCall).expr = inputRef;
                     }
 
                     children.add(grandChild);
                 }
-            } else if (child.node instanceof RexCall ||
-                       child.node instanceof RexFieldAccess) {
+            } else if (child.node instanceof RexCall
+                    || child.node instanceof RexFieldAccess) {
                 if (child.relDepth == relData.relDepth) {
-                    RexNode clonedChildCall = 
+                    RexNode clonedChildCall =
                         transformCallChildren(child, children, maxRelDepth);
 
-
                     if (relData.node instanceof RexCall) {
-                        ((RexCall)clonedCall).operands[i] = clonedChildCall;
+                        ((RexCall) clonedCall).operands[i] = clonedChildCall;
                     } else {
-                        ((RexFieldAccess)clonedCall).expr = clonedChildCall;
+                        ((RexFieldAccess) clonedCall).expr = clonedChildCall;
                     }
                 } else {
                     RexInputRef inputRef =
-                        new RexInputRef(child.position, child.node.getType());
+                        new RexInputRef(child.position,
+                            child.node.getType());
 
                     if (relData.node instanceof RexCall) {
-                        ((RexCall)clonedCall).operands[i] = inputRef;
+                        ((RexCall) clonedCall).operands[i] = inputRef;
                     } else {
-                        ((RexFieldAccess)clonedCall).expr = inputRef;
+                        ((RexFieldAccess) clonedCall).expr = inputRef;
                     }
 
                     children.add(child);
@@ -786,19 +794,20 @@ public class FarragoAutoCalcRule
         return clonedCall;
     }
 
-    private boolean canImplementInJava(CalcRel calc,
-                                       JavaRelImplementor impl,
-                                       RexCall call)
+    private boolean canImplementInJava(
+        CalcRel calc,
+        JavaRelImplementor impl,
+        RexCall call)
     {
         return impl.canTranslate(calc, call, false);
     }
 
-    private boolean canImplementInFennel(RexToCalcTranslator translator,
-                                         RexCall call)
+    private boolean canImplementInFennel(
+        RexToCalcTranslator translator,
+        RexCall call)
     {
         return translator.canTranslate(call, false);
     }
-
 
     /**
      * Creates a forest of trees based on the project and conditional
@@ -811,8 +820,8 @@ public class FarragoAutoCalcRule
     {
         ArrayList baseNodes = new ArrayList();
         ArrayList baseRelData = new ArrayList();
-        if (calc._projectExprs != null && calc._projectExprs.length > 0) {
-            for(int i = 0; i < calc._projectExprs.length; i++) {
+        if ((calc._projectExprs != null) && (calc._projectExprs.length > 0)) {
+            for (int i = 0; i < calc._projectExprs.length; i++) {
                 RexNode projectExpr = calc._projectExprs[i];
                 baseNodes.add(projectExpr);
 
@@ -829,69 +838,65 @@ public class FarragoAutoCalcRule
         return baseRelData;
     }
 
-
-    private void buildRelDataTree(List relDataList, List nodeList)
+    private void buildRelDataTree(
+        List relDataList,
+        List nodeList)
     {
-        assert(relDataList != null);
-        assert(nodeList != null);
-        assert(relDataList.size() == nodeList.size());
+        assert (relDataList != null);
+        assert (nodeList != null);
+        assert (relDataList.size() == nodeList.size());
 
         Iterator r = relDataList.iterator();
         Iterator n = nodeList.iterator();
-        while(r.hasNext()) {
+        while (r.hasNext()) {
             Object relDataItem = r.next();
-            RexNode node = (RexNode)n.next();
+            RexNode node = (RexNode) n.next();
 
             if (node instanceof RexCall) {
-                RelData relData = (RelData)relDataItem;
-                RexCall call = (RexCall)node;
+                RelData relData = (RelData) relDataItem;
+                RexCall call = (RexCall) node;
 
                 relData.children = new ArrayList(call.operands.length);
 
-                for(int i = 0; i < call.operands.length; i++) {
+                for (int i = 0; i < call.operands.length; i++) {
                     RexNode op = call.operands[i];
 
-                    relData.children.add(new RelData(op,
-                                                     relData.isConditional,
-                                                     relData));
+                    relData.children.add(
+                        new RelData(op, relData.isConditional, relData));
                 }
 
-                buildRelDataTree(relData.children,
-                                 Arrays.asList(call.operands));
+                buildRelDataTree(
+                    relData.children,
+                    Arrays.asList(call.operands));
             } else if (node instanceof RexFieldAccess) {
-                RelData relData = (RelData)relDataItem;
-                RexFieldAccess fieldAccess = (RexFieldAccess)node;
+                RelData relData = (RelData) relDataItem;
+                RexFieldAccess fieldAccess = (RexFieldAccess) node;
 
                 relData.children = new ArrayList(1);
 
-                relData.children.add(new RelData(fieldAccess.expr,
-                                                 relData.isConditional,
-                                                 relData));
+                relData.children.add(
+                    new RelData(fieldAccess.expr, relData.isConditional,
+                        relData));
 
-                buildRelDataTree(relData.children,
-                                 Collections.singletonList(fieldAccess.expr));
+                buildRelDataTree(
+                    relData.children,
+                    Collections.singletonList(fieldAccess.expr));
             }
         }
     }
 
+    //~ Inner Classes ---------------------------------------------------------
+
     // REVIEW: SZ: 8/4/2004: In retrospect, RelData is a bad name for
     // this class.  Should probably be renamed to NodeData or
     // something.
+
     /**
      * RelData represents information concerning the final location of
      * RexNodes in a series of <code>CalcRel</code>s.
      */
     private static class RelData
     {
-        private RelData(RexNode node,
-                        boolean isConditional,
-                        RelData parent)
-        {
-            this.node = node;
-            this.isConditional = isConditional;
-            this.parent = parent;
-        }
-
         /** Data regarding the children of the RexCall. */
         List children;
 
@@ -909,8 +914,17 @@ public class FarragoAutoCalcRule
          * conditional expression tree.
          */
         final boolean isConditional;
-
         int position;
+
+        private RelData(
+            RexNode node,
+            boolean isConditional,
+            RelData parent)
+        {
+            this.node = node;
+            this.isConditional = isConditional;
+            this.parent = parent;
+        }
     }
 
     /**
@@ -923,22 +937,4 @@ public class FarragoAutoCalcRule
         Integer relType;
         boolean usedRelDepth;
     }
-
-    /** Used for iterative over forests by level. */
-    private static final Object DEPTH_MARKER = new Object();
-
-    /** Represents a RexNode that can be implemented by either calculator. */
-    private static final Integer REL_TYPE_EITHER = new Integer(-1);
-
-    /**
-     * Represents a RexNode that can only be implemented by the Java
-     * calculator.
-     */
-    private static final Integer REL_TYPE_JAVA = new Integer(1);
-
-    /**
-     * Represents a RexNode that can only be implemented by the Fennel
-     * calculator.
-     */
-    private static final Integer REL_TYPE_FENNEL = new Integer(2);
 }

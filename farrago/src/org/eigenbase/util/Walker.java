@@ -1,29 +1,27 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.util;
 
 import java.io.PrintWriter;
-
 import java.util.Enumeration;
 import java.util.Stack;
 
@@ -55,7 +53,7 @@ public class Walker implements Enumeration
     {
         stack = new Stack();
         currentFrame = null;
-        visit(null,root);
+        visit(null, root);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -79,10 +77,7 @@ public class Walker implements Enumeration
     {
         Frame f = getAncestorFrame(iDepth);
         return (f == null) ? (-1)
-                           : ((f.parent == null) ? 0
-                                                 : arrayFind(
-            f.parent.children,
-            f.node));
+        : ((f.parent == null) ? 0 : arrayFind(f.parent.children, f.node));
     }
 
     /**
@@ -107,9 +102,7 @@ public class Walker implements Enumeration
         // We can't use currentFrame.parent.iChild because moveToNext() may
         // have changed it.
         return (currentFrame.parent == null) ? 0
-                                             : arrayFind(
-            currentFrame.parent.children,
-            currentFrame.node);
+        : arrayFind(currentFrame.parent.children, currentFrame.node);
     }
 
     /**
@@ -143,26 +136,26 @@ public class Walker implements Enumeration
     {
         PrintWriter pw = new PrintWriter(System.out);
         Region usa =
-            new Region(
-                "USA",
+            new Region("USA",
                 new Region [] {
-                    new Region("CA",
+                    new Region(
+                        "CA",
                         new Region [] {
                             new Region(
                                 "San Francisco",
                                 new Region [] {
                                     new Region(
                                         "WesternAddition",
-                                        new Region [] { new Region(
-                                                "Haight",
-                                                null) }),
-                                    new Region("Soma",null)
-                                }),new Region("Los Angeles",null)
+                                        new Region [] {
+                                            new Region("Haight", null)
+                                        }), new Region("Soma", null)
+                                }), new Region("Los Angeles", null)
                         }),
-                    new Region("WA",
+                    new Region(
+                        "WA",
                         new Region [] {
-                            new Region("Seattle",null),
-                            new Region("Tacoma",null)
+                            new Region("Seattle", null),
+                            new Region("Tacoma", null)
                         })
                 });
 
@@ -175,14 +168,14 @@ public class Walker implements Enumeration
             }
         }
 
-        Region.walkUntil(walker,"CA");
+        Region.walkUntil(walker, "CA");
         walker.prune();
         Region region = (Region) walker.nextElement(); // should be WA
         pw.println(region.name);
         pw.flush();
 
         walker = new Walker(usa);
-        Region.walkUntil(walker,"USA");
+        Region.walkUntil(walker, "USA");
         walker.prune();
         region = (Region) walker.nextElement(); // should be null
         if (region == null) {
@@ -191,28 +184,28 @@ public class Walker implements Enumeration
         pw.flush();
 
         walker = new Walker(usa);
-        Region.walkUntil(walker,"Los Angeles");
+        Region.walkUntil(walker, "Los Angeles");
         walker.prune();
         region = (Region) walker.nextElement(); // should be WA
         pw.println(region.name);
         pw.flush();
 
         walker = new Walker(usa);
-        Region.walkUntil(walker,"Haight");
+        Region.walkUntil(walker, "Haight");
         walker.prune();
         region = (Region) walker.nextElement(); // should be Soma
         pw.println(region.name);
         pw.flush();
 
         walker = new Walker(usa);
-        Region.walkUntil(walker,"Soma");
+        Region.walkUntil(walker, "Soma");
         walker.prune();
         region = (Region) walker.nextElement(); // should be Los Angeles
         pw.println(region.name);
         pw.flush();
 
         walker = new Walker(usa);
-        Region.walkUntil(walker,"CA");
+        Region.walkUntil(walker, "CA");
         walker.pruneSiblings();
         region = (Region) walker.nextElement(); // should be Los Angeles
         if (region == null) {
@@ -221,7 +214,7 @@ public class Walker implements Enumeration
         }
 
         walker = new Walker(usa);
-        Region.walkUntil(walker,"Soma");
+        Region.walkUntil(walker, "Soma");
         walker.pruneSiblings();
         region = (Region) walker.nextElement(); // should be Los Angeles
         if (region == null) {
@@ -286,7 +279,9 @@ public class Walker implements Enumeration
         return null;
     }
 
-    private static int arrayFind(Object [] array,Object o)
+    private static int arrayFind(
+        Object [] array,
+        Object o)
     {
         for (int i = 0; i < array.length; i++) {
             if (array[i] == o) {
@@ -307,11 +302,10 @@ public class Walker implements Enumeration
         // Unwind stack until we find a level we have not completed.
         do {
             Frame frame = (Frame) stack.peek();
-            if (
-                (frame.children != null)
+            if ((frame.children != null)
                     && (++frame.iChild < frame.children.length)) {
                 // Here is an unvisited child.  Visit it.
-                visit(frame,frame.children[frame.iChild]);
+                visit(frame, frame.children[frame.iChild]);
                 return;
             }
             stack.pop();
@@ -319,10 +313,12 @@ public class Walker implements Enumeration
         nextNode = null;
     }
 
-    private void visit(Frame parent,Object node)
+    private void visit(
+        Frame parent,
+        Object node)
     {
         nextNode = node;
-        stack.addElement(new Frame(parent,node));
+        stack.addElement(new Frame(parent, node));
     }
 
     //~ Inner Classes ---------------------------------------------------------
@@ -334,7 +330,9 @@ public class Walker implements Enumeration
         Object [] children;
         int iChild;
 
-        Frame(Frame parent,Object node)
+        Frame(
+            Frame parent,
+            Object node)
         {
             this.parent = parent;
             this.node = node;
@@ -348,7 +346,9 @@ public class Walker implements Enumeration
         String name;
         Region [] children;
 
-        Region(String name,Region [] children)
+        Region(
+            String name,
+            Region [] children)
         {
             this.name = name;
             this.children = children;
@@ -359,7 +359,9 @@ public class Walker implements Enumeration
             return children;
         }
 
-        public static void walkUntil(Walker walker,String name)
+        public static void walkUntil(
+            Walker walker,
+            String name)
         {
             while (walker.hasMoreElements()) {
                 Region region = (Region) walker.nextElement();

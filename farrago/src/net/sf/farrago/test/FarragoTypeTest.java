@@ -19,10 +19,11 @@
  */
 package net.sf.farrago.test;
 
-import junit.framework.Test;
-import junit.framework.Assert;
-
 import java.sql.SQLException;
+
+import junit.framework.Assert;
+import junit.framework.Test;
+
 
 /**
  * <code>FarragoTypeTest</code> tests type conversion
@@ -31,7 +32,8 @@ import java.sql.SQLException;
  * @since Dec 29, 2003
  * @version $Id$
  **/
-public class FarragoTypeTest extends FarragoTestCase {
+public class FarragoTypeTest extends FarragoTestCase
+{
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -41,14 +43,17 @@ public class FarragoTypeTest extends FarragoTestCase {
      *
      * @throws Exception .
      */
-    public FarragoTypeTest(String testName) throws Exception {
+    public FarragoTypeTest(String testName)
+        throws Exception
+    {
         super(testName);
     }
 
     //~ Methods ---------------------------------------------------------------
 
     // implement TestCase
-    public static Test suite() {
+    public static Test suite()
+    {
         return wrappedSuite(FarragoTypeTest.class);
     }
 
@@ -57,8 +62,10 @@ public class FarragoTypeTest extends FarragoTestCase {
      *
      * @throws Exception .
      */
-    public void testIntPlusChar() throws Exception {
-        String sql =  "select 1+'hello' from values(1)";
+    public void testIntPlusChar()
+        throws Exception
+    {
+        String sql = "select 1+'hello' from values(1)";
         try {
             stmt = connection.prepareStatement(sql);
         } catch (SQLException e) {
@@ -68,8 +75,9 @@ public class FarragoTypeTest extends FarragoTestCase {
         Assert.fail("Expected failure due to 1+'hello'");
     }
 
-
-    public void _testDefaultValue() throws Exception {
+    public void _testDefaultValue()
+        throws Exception
+    {
         String sql = "SELECT 999 AS DEFAULT_VALUE FROM VALUES(0)";
         try {
             stmt = connection.prepareStatement(sql);
@@ -78,60 +86,70 @@ public class FarragoTypeTest extends FarragoTestCase {
         }
     }
 
-    public void _testIntPlusInt() throws Exception {
+    public void _testIntPlusInt()
+        throws Exception
+    {
         String sql = "select 1+1.0 from values(1)";
         resultSet = stmt.executeQuery(sql);
         if (repos.isFennelEnabled()) {
-            assertEquals(4, getResultSetCount());
+            assertEquals(
+                4,
+                getResultSetCount());
         } else {
-            assertEquals(1, getResultSetCount());
+            assertEquals(
+                1,
+                getResultSetCount());
         }
     }
 
-    public void _testSubstringFunc() throws Exception {
+    public void _testSubstringFunc()
+        throws Exception
+    {
         String sql = "select SUBSTR('aa',1,2) from values('aaa')";
         resultSet = stmt.executeQuery(sql);
     }
 
     // todo: test that substr(varchar(10),?,5) returns varchar(5)
     // because 5 < 10
-
     // todo: test that substr(varchar(10),?,15) returns varchar(10)
     // because 10<15
-
     // todo: test that substr(varchar(10),?,variable) returns varchar(10)
-
     // todo: test taht substr(?,?,date) fails because there's not a conversion
     // to integer (I don't think there is)
-
     // todo: test that substr(char(10),int,int) returns varchar(10), because
     // there's  a conversion from char to varchar
-
     // todo: test "select * from values 1, 2 + 3" (should be in parser test)
-
-    public void __testWrongParamSubstrFunc() throws Exception {
+    public void __testWrongParamSubstrFunc()
+        throws Exception
+    {
         String sql = "select SUBSTR('fff',1,1) from values('aaa')";
         resultSet = stmt.executeQuery(sql);
     }
 
-    public void __testUpperfunc() throws Exception {
+    public void __testUpperfunc()
+        throws Exception
+    {
         String sql = "select UPPER(12312) from values('aaa')";
         resultSet = stmt.executeQuery(sql);
     }
 
-    public void __testCombinedFunc() throws Exception {
+    public void __testCombinedFunc()
+        throws Exception
+    {
         String sql = "select UPPER(SUBSTR('aa',1,'bbcc')) from values('aaaa')";
         try {
             resultSet = stmt.executeQuery(sql);
         } catch (SQLException e) {
-            e.printStackTrace();  //To change body of catch statement use Options | File Templates.
+            e.printStackTrace(); //To change body of catch statement use Options | File Templates.
         }
     }
 
-    public void testDummy() {
+    public void testDummy()
+    {
         // Do nothing.
         // Add this test to avoid no test found exception after rename all the unit tests
     }
 }
+
 
 // End FarragoTypeTest.java

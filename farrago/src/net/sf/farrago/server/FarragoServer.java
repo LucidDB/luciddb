@@ -6,33 +6,33 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.server;
 
-import net.sf.farrago.jdbc.engine.*;
+import java.io.*;
+import java.rmi.*;
+import java.rmi.registry.*;
+import java.util.*;
+
 import net.sf.farrago.db.*;
-import net.sf.farrago.session.*;
-import net.sf.farrago.resource.*;
 import net.sf.farrago.fem.config.*;
+import net.sf.farrago.jdbc.engine.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
 
 import org.objectweb.rmijdbc.*;
 
-import java.io.*;
-import java.util.*;
-import java.rmi.*;
-import java.rmi.registry.*;
-
 import sun.misc.*;
+
 
 /**
  * FarragoServer is a wrapper for an RmiJdbc server.
@@ -42,8 +42,12 @@ import sun.misc.*;
  */
 public class FarragoServer
 {
+    //~ Static fields/initializers --------------------------------------------
+
     private static Registry rmiRegistry;
-    
+
+    //~ Methods ---------------------------------------------------------------
+
     /**
      * Defines the main entry point for the Farrago server.  Customized servers
      * can provide their own which call run() with an extended implementation
@@ -68,10 +72,10 @@ public class FarragoServer
     {
         FarragoResource res = FarragoResource.instance();
         System.out.println(res.getServerLoadingDatabase());
-        
+
         // Load the session factory
         FarragoSessionFactory sessionFactory = jdbcDriver.newSessionFactory();
-        
+
         // Load the database instance
         FarragoDatabase db = FarragoDatabase.pinReference(sessionFactory);
 
@@ -125,16 +129,17 @@ public class FarragoServer
     {
         FarragoResource res = FarragoResource.instance();
         System.out.println(res.getServerShuttingDown());
+
         // NOTE:  use groundReferences=1 in shutdownConditional
         // to account for our baseline reference
         if (FarragoDatabase.shutdownConditional(1)) {
             System.out.println(res.getServerShutdownComplete());
+
             // TODO: should find a way to prevent new messages BEFORE shutdown
             unbindRegistry();
             return true;
         } else {
-            System.out.println(
-                res.getServerSessionsExist());
+            System.out.println(res.getServerSessionsExist());
             return false;
         }
     }
@@ -170,9 +175,8 @@ public class FarragoServer
     public void runConsole()
     {
         FarragoResource res = FarragoResource.instance();
-        
+
         // TODO:  install signal handlers also
-        
         InputStreamReader inReader = new InputStreamReader(System.in);
         LineNumberReader lineReader = new LineNumberReader(inReader);
         for (;;) {
@@ -201,5 +205,6 @@ public class FarragoServer
         System.exit(0);
     }
 }
+
 
 // End FarragoServer.java

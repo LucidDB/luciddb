@@ -1,43 +1,40 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Farrago is a relational database management system.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package com.disruptivetech.farrago.volcano;
 
-import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.trace.EigenbaseTrace;
-import org.eigenbase.rel.RelVisitor;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.AbstractRelNode;
-import org.eigenbase.util.Util;
-
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.logging.Logger;
 import java.util.logging.Level;
-import java.io.StringWriter;
-import java.io.PrintWriter;
+import java.util.logging.Logger;
+
+import org.eigenbase.rel.AbstractRelNode;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.RelVisitor;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.trace.EigenbaseTrace;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -52,6 +49,10 @@ import java.io.PrintWriter;
  */
 public class RelSubset extends AbstractRelNode
 {
+    //~ Static fields/initializers --------------------------------------------
+
+    private static final Logger tracer = EigenbaseTrace.getPlannerTracer();
+
     //~ Instance fields -------------------------------------------------------
 
     /** List of the relational expressions for which this subset is an input. */
@@ -68,11 +69,13 @@ public class RelSubset extends AbstractRelNode
 
     /** whether findBestPlan is being called */
     boolean active;
-    private static final Logger tracer = EigenbaseTrace.getPlannerTracer();
 
     //~ Constructors ----------------------------------------------------------
 
-    RelSubset(RelOptCluster cluster,RelSet set,CallingConvention convention)
+    RelSubset(
+        RelOptCluster cluster,
+        RelSet set,
+        CallingConvention convention)
     {
         super(cluster);
         this.set = set;
@@ -127,8 +130,7 @@ public class RelSubset extends AbstractRelNode
     // implement RelNode
     public void explain(RelOptPlanWriter pw)
     {
-        pw.explainSubset(
-            id + ": RelSubset(" + convention + ")",
+        pw.explainSubset(id + ": RelSubset(" + convention + ")",
             (RelNode) rels.get(0));
     }
 
@@ -177,13 +179,11 @@ public class RelSubset extends AbstractRelNode
         set.addInternal(rel);
         Set variablesSet = RelOptUtil.getVariablesSet(rel);
         Set variablesStopped = rel.getVariablesStopped();
-        Set variablesPropagated = Util.minus(variablesSet,variablesStopped);
-        assert(
-            set.variablesPropagated.containsAll(variablesPropagated));
+        Set variablesPropagated = Util.minus(variablesSet, variablesStopped);
+        assert (set.variablesPropagated.containsAll(variablesPropagated));
         Set variablesUsed = RelOptUtil.getVariablesUsed(rel);
-        assert(set.variablesUsed.containsAll(variablesUsed));
-        propagateCostImprovements(
-            (VolcanoPlanner) (rel.getCluster().planner),
+        assert (set.variablesUsed.containsAll(variablesUsed));
+        propagateCostImprovements((VolcanoPlanner) (rel.getCluster().planner),
             rel);
     }
 
@@ -193,7 +193,7 @@ public class RelSubset extends AbstractRelNode
     RelNode buildCheapestPlan(RelOptPlanner planner)
     {
         CheapestPlanReplacer replacer = new CheapestPlanReplacer(planner);
-        RelNode cheapest = RelOptUtil.go(replacer,this);
+        RelNode cheapest = RelOptUtil.go(replacer, this);
         return cheapest;
     }
 
@@ -207,8 +207,8 @@ public class RelSubset extends AbstractRelNode
     {
         final RelOptCost cost = planner.getCost(rel);
         if (cost.isLt(bestCost)) {
-            tracer.finer("Subset cost improved: subset [" + this +
-                    "] cost was " + bestCost + " now " + cost);
+            tracer.finer("Subset cost improved: subset [" + this
+                + "] cost was " + bestCost + " now " + cost);
             bestCost = cost;
             best = rel;
 
@@ -218,9 +218,9 @@ public class RelSubset extends AbstractRelNode
             for (int i = 0; i < parents.size(); i++) {
                 RelNode parent = (RelNode) parents.get(i);
                 final RelSubset parentSubset = planner.getSubset(parent);
-                parentSubset.propagateCostImprovements(planner,parent);
+                parentSubset.propagateCostImprovements(planner, parent);
             }
-            planner.checkForSatisfiedConverters(set,rel);
+            planner.checkForSatisfiedConverters(set, rel);
         }
     }
 
@@ -240,7 +240,10 @@ public class RelSubset extends AbstractRelNode
             this.planner = planner;
         }
 
-        public void visit(RelNode p,int ordinal,RelNode parent)
+        public void visit(
+            RelNode p,
+            int ordinal,
+            RelNode parent)
         {
             if (p instanceof RelSubset) {
                 RelSubset subset = (RelSubset) p;
@@ -252,18 +255,22 @@ public class RelSubset extends AbstractRelNode
                         // out why we reached impasse.
                         StringWriter sw = new StringWriter();
                         final PrintWriter pw = new PrintWriter(sw);
-                        pw.println("Node [" + expr +
-                                "] could not be implemented; planner state:");
+                        pw.println("Node [" + expr
+                            + "] could not be implemented; planner state:");
                         ((VolcanoPlanner) planner).dump(pw);
                         pw.flush();
                         tracer.fine(sw.toString());
                     }
-                    Error e = Util.newInternal(
-                            "node could not be implemented: " + expr);
-                    tracer.throwing(getClass().getName(), "visit", e);
+                    Error e =
+                        Util.newInternal("node could not be implemented: "
+                            + expr);
+                    tracer.throwing(
+                        getClass().getName(),
+                        "visit",
+                        e);
                     throw e;
                 }
-                parent.replaceInput(ordinal,cheapest);
+                parent.replaceInput(ordinal, cheapest);
                 p = cheapest;
             }
             p.childrenAccept(this);

@@ -1,34 +1,35 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2004-2004 Disruptive Tech
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 package net.sf.saffron.oj.convert;
 
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.oj.rel.JavaRelImplementor;
-import org.eigenbase.oj.rel.JavaRel;
-import org.eigenbase.oj.util.OJUtil;
-import org.eigenbase.util.Util;
-import org.eigenbase.rel.convert.ConverterRel;
-import openjava.ptree.*;
-import openjava.mop.Toolbox;
 import openjava.mop.OJClass;
+import openjava.mop.Toolbox;
+import openjava.ptree.*;
+
+import org.eigenbase.oj.rel.JavaRel;
+import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.rel.convert.ConverterRel;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.util.Util;
+
 
 /**
  * Thunk to convert between {@link CallingConvention#HASHTABLE}
@@ -38,13 +39,17 @@ import openjava.mop.OJClass;
  * @since May 27, 2004
  * @version $Id$
  **/
-public class HashtableToJavaConvertlet extends JavaConvertlet {
-    public HashtableToJavaConvertlet() {
-        super(CallingConvention.HASHTABLE,CallingConvention.JAVA);
+public class HashtableToJavaConvertlet extends JavaConvertlet
+{
+    public HashtableToJavaConvertlet()
+    {
+        super(CallingConvention.HASHTABLE, CallingConvention.JAVA);
     }
 
-    public ParseTree implement(JavaRelImplementor implementor,
-            ConverterRel converter) {
+    public ParseTree implement(
+        JavaRelImplementor implementor,
+        ConverterRel converter)
+    {
         // Generate
         //   Hashtable h = <<exp>>;
         //   for (Enumeration keys = h.keys(); keys.hasMoreElements();) {
@@ -59,7 +64,8 @@ public class HashtableToJavaConvertlet extends JavaConvertlet {
         Variable variable_key = implementor.newVariable();
         Variable variable_value = implementor.newVariable();
         StatementList forBody = new StatementList();
-        Expression exp = implementor.visitJavaChild(converter, 0, (JavaRel) converter.child);
+        Expression exp =
+            implementor.visitJavaChild(converter, 0, (JavaRel) converter.child);
         stmtList.add(
             new VariableDeclaration(
                 TypeName.forOJClass(Util.clazzHashtable),
@@ -71,9 +77,9 @@ public class HashtableToJavaConvertlet extends JavaConvertlet {
                 new VariableDeclarator [] {
                     new VariableDeclarator(
                         variable_keys.toString(),
-                        new MethodCall(variable_h,"keys",null))
+                        new MethodCall(variable_h, "keys", null))
                 },
-                new MethodCall(variable_keys,"hasMoreElements",null),
+                new MethodCall(variable_keys, "hasMoreElements", null),
                 new ExpressionList(),
                 forBody));
         forBody.add(
@@ -81,7 +87,7 @@ public class HashtableToJavaConvertlet extends JavaConvertlet {
                 TypeName.forOJClass(Toolbox.clazzObject),
                 new VariableDeclarator(
                     variable_key.toString(),
-                    new MethodCall(variable_keys,"nextElement",null))));
+                    new MethodCall(variable_keys, "nextElement", null))));
         forBody.add(
             new VariableDeclaration(
                 TypeName.forOJClass(Toolbox.clazzObject),
@@ -94,15 +100,16 @@ public class HashtableToJavaConvertlet extends JavaConvertlet {
         OJClass rowType = OJUtil.typeToOJClass(converter.getRowType());
         Variable variable_row =
             implementor.bind(
-                    converter,
+                converter,
                 forBody,
                 new AllocationExpression(
                     TypeName.forOJClass(rowType),
-                    new ExpressionList(variable_key,variable_value)));
+                    new ExpressionList(variable_key, variable_value)));
         Util.discard(variable_row);
-        implementor.generateParentBody(converter,forBody);
+        implementor.generateParentBody(converter, forBody);
         return null;
     }
 }
+
 
 // End HashtableToJavaConvertlet.java

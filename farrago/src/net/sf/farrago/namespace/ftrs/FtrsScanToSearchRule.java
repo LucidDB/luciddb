@@ -16,26 +16,25 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.ftrs;
+
+import java.util.*;
+import java.util.List;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.query.*;
 
-import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
+import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
-import org.eigenbase.oj.util.*;
-import org.eigenbase.util.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-
-import java.util.*;
-import java.util.List;
+import org.eigenbase.util.*;
 
 
 /**
@@ -54,11 +53,10 @@ class FtrsScanToSearchRule extends RelOptRule
      */
     public FtrsScanToSearchRule()
     {
-        super(
-            new RelOptRuleOperand(
+        super(new RelOptRuleOperand(
                 FilterRel.class,
                 new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(FtrsIndexScanRel.class,null)
+                    new RelOptRuleOperand(FtrsIndexScanRel.class, null)
                 }));
     }
 
@@ -107,8 +105,8 @@ class FtrsScanToSearchRule extends RelOptRule
             return;
         }
         RexInputRef fieldAccess = (RexInputRef) left;
-        CwmColumn filterColumn = scan.getColumnForFieldAccess(
-            fieldAccess.index);
+        CwmColumn filterColumn =
+            scan.getColumnForFieldAccess(fieldAccess.index);
         assert (filterColumn != null);
 
         if (repos.isClustered(scan.index)) {
@@ -118,22 +116,25 @@ class FtrsScanToSearchRule extends RelOptRule
                 repos.getIndexes(scan.ftrsTable.getCwmColumnSet()).iterator();
             while (iter.hasNext()) {
                 CwmSqlindex index = (CwmSqlindex) iter.next();
-                considerIndex(index,scan,filterColumn,right,call,extraFilter);
+                considerIndex(index, scan, filterColumn, right, call,
+                    extraFilter);
             }
         } else {
             // if we're already working with an unclustered index scan, either
             // we can convert the filter or not; no other indexes are involved
-            considerIndex(scan.index,scan,filterColumn,right,call,extraFilter);
+            considerIndex(scan.index, scan, filterColumn, right, call,
+                extraFilter);
         }
     }
 
-    static boolean testIndexColumn(CwmSqlindex index,CwmColumn column)
+    static boolean testIndexColumn(
+        CwmSqlindex index,
+        CwmColumn column)
     {
         List indexedFeatures = index.getIndexedFeature();
         CwmIndexedFeature indexedFeature =
             (CwmIndexedFeature) indexedFeatures.get(0);
-        CwmColumn indexedColumn =
-            (CwmColumn) indexedFeature.getFeature();
+        CwmColumn indexedColumn = (CwmColumn) indexedFeature.getFeature();
         if (!column.equals(indexedColumn)) {
             return false;
         }
@@ -151,14 +152,14 @@ class FtrsScanToSearchRule extends RelOptRule
         FarragoRepos repos = origScan.getPreparingStmt().getRepos();
 
         // TODO:  support compound keys
-        if (!testIndexColumn(index,filterColumn)) {
+        if (!testIndexColumn(index, filterColumn)) {
             return;
         }
 
-        boolean isUnique = index.isUnique()
-            && (index.getIndexedFeature().size() == 1);
+        boolean isUnique =
+            index.isUnique() && (index.getIndexedFeature().size() == 1);
 
-        RexNode[] searchExps = new RexNode [] { searchValue };
+        RexNode [] searchExps = new RexNode [] { searchValue };
 
         // Generate a one-row relation producing the key to search for.
         OneRowRel oneRowRel = new OneRowRel(origScan.getCluster());
@@ -172,27 +173,24 @@ class FtrsScanToSearchRule extends RelOptRule
 
         // Add a filter to remove nulls, since they can never match the
         // equals condition.
-        RelNode nullFilterRel = RelOptUtil.createNullFilter(keyRel,null);
+        RelNode nullFilterRel = RelOptUtil.createNullFilter(keyRel, null);
 
         // Generate code to cast the literal to the index column type.
         FarragoTypeFactory typeFactory =
             origScan.getPreparingStmt().getFarragoTypeFactory();
         RelDataType lhsRowType =
-            typeFactory.createColumnType(filterColumn,true);
-        RelNode castRel = RelOptUtil.createCastRel(nullFilterRel,lhsRowType);
+            typeFactory.createColumnType(filterColumn, true);
+        RelNode castRel = RelOptUtil.createCastRel(nullFilterRel, lhsRowType);
 
-        RelNode keyInput = convert(
-            castRel,FennelPullRel.FENNEL_PULL_CONVENTION);
+        RelNode keyInput =
+            convert(castRel, FennelPullRel.FENNEL_PULL_CONVENTION);
         assert (keyInput != null);
 
-        if (!repos.isClustered(index)
-            && repos.isClustered(origScan.index))
-        {
+        if (!repos.isClustered(index) && repos.isClustered(origScan.index)) {
             // By itself, an unclustered index is not going to produce the
             // requested rows.  Instead, it will produce clustered index keys,
             // which we'll use to drive a parent search against the clustered
             // index.
-
             if (origScan.isOrderPreserving) {
                 // Searching on an unclustered index would destroy the required
                 // scan ordering, so we can't do that.
@@ -200,9 +198,7 @@ class FtrsScanToSearchRule extends RelOptRule
             }
 
             Integer [] clusteredKeyColumns =
-                FtrsUtil.getClusteredDistinctKeyArray(
-                    repos,
-                    origScan.index);
+                FtrsUtil.getClusteredDistinctKeyArray(repos, origScan.index);
             FtrsIndexScanRel unclusteredScan =
                 new FtrsIndexScanRel(
                     origScan.getCluster(),
@@ -212,27 +208,32 @@ class FtrsScanToSearchRule extends RelOptRule
                     clusteredKeyColumns,
                     origScan.isOrderPreserving);
             FtrsIndexSearchRel unclusteredSearch =
-                new FtrsIndexSearchRel(
-                    unclusteredScan,keyInput,isUnique,false,null,null);
+                new FtrsIndexSearchRel(unclusteredScan, keyInput, isUnique,
+                    false, null, null);
             FtrsIndexSearchRel clusteredSearch =
-                new FtrsIndexSearchRel(
-                    origScan,unclusteredSearch,true,false,null,null);
-            transformCall(call,clusteredSearch,extraFilter);
+                new FtrsIndexSearchRel(origScan, unclusteredSearch, true,
+                    false, null, null);
+            transformCall(call, clusteredSearch, extraFilter);
         } else {
             // A direct search against an index is easier.
             FtrsIndexSearchRel search =
-                new FtrsIndexSearchRel(
-                    origScan,keyInput,isUnique,false,null,null);
-            transformCall(call,search,extraFilter);
+                new FtrsIndexSearchRel(origScan, keyInput, isUnique, false,
+                    null, null);
+            transformCall(call, search, extraFilter);
         }
     }
 
     private void transformCall(
-        RelOptRuleCall call,RelNode searchRel,RexNode extraFilter)
+        RelOptRuleCall call,
+        RelNode searchRel,
+        RexNode extraFilter)
     {
         if (extraFilter != null) {
-            searchRel = new FilterRel(
-                searchRel.getCluster(),searchRel,extraFilter);
+            searchRel =
+                new FilterRel(
+                    searchRel.getCluster(),
+                    searchRel,
+                    extraFilter);
         }
         call.transformTo(searchRel);
     }

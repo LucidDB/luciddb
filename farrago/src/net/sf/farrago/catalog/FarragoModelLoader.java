@@ -6,28 +6,30 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.catalog;
 
 import java.io.*;
 import java.util.*;
-import org.netbeans.mdr.*;
+
+import net.sf.farrago.FarragoPackage;
+import net.sf.farrago.util.FarragoProperties;
+import net.sf.farrago.util.MdrUtil;
+
 import org.netbeans.api.mdr.*;
+import org.netbeans.mdr.*;
 import org.netbeans.mdr.persistence.btreeimpl.btreestorage.*;
 import org.netbeans.mdr.persistence.jdbcimpl.*;
-import net.sf.farrago.FarragoPackage;
-import net.sf.farrago.util.MdrUtil;
-import net.sf.farrago.util.FarragoProperties;
+
 
 // NOTE:  This class gets compiled independently of everything else since
 // it is used by build-time utilities such as ProxyGen.  That means it must
@@ -42,11 +44,13 @@ import net.sf.farrago.util.FarragoProperties;
  */
 public class FarragoModelLoader
 {
-    private MDRepository mdrRepos;
+    //~ Instance fields -------------------------------------------------------
 
+    private MDRepository mdrRepos;
     private String storageFactoryClassName;
-    
     private Properties storageProps = new Properties();
+
+    //~ Methods ---------------------------------------------------------------
 
     public void close()
     {
@@ -60,24 +64,25 @@ public class FarragoModelLoader
     {
         return mdrRepos;
     }
-        
-    public FarragoPackage loadModel(String extentName,boolean userRepos)
+
+    public FarragoPackage loadModel(
+        String extentName,
+        boolean userRepos)
     {
         if (userRepos) {
             setUserReposProperties();
         } else {
             setSystemReposProperties();
         }
-        mdrRepos = MdrUtil.loadRepository(
-            storageFactoryClassName,
-            storageProps);
+        mdrRepos =
+            MdrUtil.loadRepository(storageFactoryClassName, storageProps);
         return (FarragoPackage) mdrRepos.getExtent(extentName);
     }
 
     private File getSystemReposFileSansExt()
     {
         File catalogDir = FarragoProperties.instance().getCatalogDir();
-        return new File(catalogDir,"FarragoCatalog");
+        return new File(catalogDir, "FarragoCatalog");
     }
 
     public File getSystemReposFile()
@@ -90,7 +95,7 @@ public class FarragoModelLoader
         File reposFile = getSystemReposFileSansExt();
 
         storageFactoryClassName = BtreeFactory.class.getName();
-            
+
         setStorageProperty(
             "org.netbeans.mdr.persistence.Dir",
             reposFile.toString());
@@ -99,27 +104,22 @@ public class FarragoModelLoader
     private void setUserReposProperties()
     {
         storageFactoryClassName = JdbcStorageFactory.class.getName();
-        setStorageProperty(
-            JdbcStorageFactory.STORAGE_URL,
-            "jdbc:farrago:");
-        setStorageProperty(
-            JdbcStorageFactory.STORAGE_USER_NAME,
-            "MDR");
-        setStorageProperty(
-            JdbcStorageFactory.STORAGE_SCHEMA_NAME,
-            "MDR");
-        setStorageProperty(
-            JdbcStorageFactory.STORAGE_DRIVER_CLASS_NAME,
+        setStorageProperty(JdbcStorageFactory.STORAGE_URL, "jdbc:farrago:");
+        setStorageProperty(JdbcStorageFactory.STORAGE_USER_NAME, "MDR");
+        setStorageProperty(JdbcStorageFactory.STORAGE_SCHEMA_NAME, "MDR");
+        setStorageProperty(JdbcStorageFactory.STORAGE_DRIVER_CLASS_NAME,
             "net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver");
-        setStorageProperty(
-            JdbcStorageFactory.STORAGE_DATATYPE_STREAMABLE,
+        setStorageProperty(JdbcStorageFactory.STORAGE_DATATYPE_STREAMABLE,
             "VARBINARY(10000)");
     }
 
-    private void setStorageProperty(String name,String value)
+    private void setStorageProperty(
+        String name,
+        String value)
     {
-        storageProps.put(name,value);
+        storageProps.put(name, value);
     }
 }
+
 
 // End FarragoModelLoader.java

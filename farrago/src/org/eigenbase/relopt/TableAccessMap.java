@@ -1,30 +1,31 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.relopt;
 
 import java.util.*;
-import org.eigenbase.relopt.*;
+
 import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+
 
 /**
  * <code>TableAccessMap</code> represents the tables accessed by a query plan,
@@ -36,27 +37,33 @@ import org.eigenbase.rel.*;
  */
 public class TableAccessMap
 {
-    private Map accessMap;
+    //~ Static fields/initializers --------------------------------------------
 
     /**
      * Table is accessed for read only.
      */
     public static final String READ_ACCESS = "R";
-    
+
     /**
      * Table is accessed for write only.
      */
     public static final String WRITE_ACCESS = "W";
-    
+
     /**
      * Table is accessed for both read and write.
      */
     public static final String READWRITE_ACCESS = "RW";
-    
+
     /**
      * Table is not accessed at all.
      */
     public static final String NO_ACCESS = "N";
+
+    //~ Instance fields -------------------------------------------------------
+
+    private Map accessMap;
+
+    //~ Constructors ----------------------------------------------------------
 
     /**
      * Construct a TableAccessMap for all tables accessed by a RelNode and
@@ -67,8 +74,12 @@ public class TableAccessMap
     public TableAccessMap(RelNode rel)
     {
         accessMap = new HashMap();
-        RelOptUtil.go(new TableRelVisitor(),rel);
+        RelOptUtil.go(
+            new TableRelVisitor(),
+            rel);
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     /**
      * Determine whether a table is accessed at all.
@@ -93,7 +104,7 @@ public class TableAccessMap
     {
         return getTableAccessMode(table).indexOf("R") > -1;
     }
-    
+
     /**
      * Determine whether a table is accessed for write.
      *
@@ -127,12 +138,17 @@ public class TableAccessMap
         return Arrays.asList(table.getQualifiedName());
     }
 
+    //~ Inner Classes ---------------------------------------------------------
+
     private class TableRelVisitor extends RelVisitor
     {
         // implement RelVisitor
-        public void visit(RelNode p,int ordinal,RelNode parent)
+        public void visit(
+            RelNode p,
+            int ordinal,
+            RelNode parent)
         {
-            super.visit(p,ordinal,parent);
+            super.visit(p, ordinal, parent);
             RelOptTable table = p.getTable();
             if (table == null) {
                 return;
@@ -148,7 +164,7 @@ public class TableAccessMap
             if ((oldAccess != null) && !oldAccess.equals(newAccess)) {
                 newAccess = READWRITE_ACCESS;
             }
-            accessMap.put(key,newAccess);
+            accessMap.put(key, newAccess);
         }
     }
 }

@@ -1,26 +1,28 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 package org.eigenbase.runtime;
 
 import java.util.Date;
+
 
 /**
  * A counting semaphore. Conceptually, a semaphore maintains a set of permits.
@@ -41,10 +43,13 @@ import java.util.Date;
  */
 public class Semaphore
 {
+    //~ Static fields/initializers --------------------------------------------
+
+    private static final boolean verbose = false;
+
     //~ Instance fields -------------------------------------------------------
 
     private int count;
-    private static final boolean verbose = false;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -89,22 +94,19 @@ public class Semaphore
         long endTime = enterTime + timeoutMillisec;
         long currentTime = enterTime;
         if (verbose) {
-            System.out.println("tryAcquire: enter=" + enterTime % 100000 +
-                    ", timeout=" + timeoutMillisec +
-                    ", count=" + count +
-                    ", this=" + this +
-                    ", date=" + new Date());
+            System.out.println("tryAcquire: enter=" + (enterTime % 100000)
+                + ", timeout=" + timeoutMillisec + ", count=" + count
+                + ", this=" + this + ", date=" + new Date());
         }
 
-        while (count <= 0 && currentTime < endTime)
-        {
+        while ((count <= 0) && (currentTime < endTime)) {
             // REVIEW (jhyde, 2004/7/23): the equivalent method in the JDK 1.5
             //   Semaphore class throws InterruptedException; maybe we should
             //   too.
             try {
                 // Note that wait(0) means no timeout (wait forever), whereas
                 // tryAcquire(0) means don't wait
-                assert endTime - currentTime > 0 : "wait(0) means no timeout!";
+                assert (endTime - currentTime) > 0 : "wait(0) means no timeout!";
                 wait(endTime - currentTime);
             } catch (InterruptedException e) {
             }
@@ -112,32 +114,32 @@ public class Semaphore
         }
 
         if (verbose) {
-            System.out.println("enter=" + enterTime % 100000 +
-                    ", now=" + currentTime % 100000 +
-                    ", end=" + endTime % 100000 +
-                    ", timeout=" + timeoutMillisec +
-                    ", remain=" + (endTime - currentTime) +
-                    ", count=" + count +
-                    ", this=" + this +
-                    ", date=" + new Date());
+            System.out.println("enter=" + (enterTime % 100000) + ", now="
+                + (currentTime % 100000) + ", end=" + (endTime % 100000)
+                + ", timeout=" + timeoutMillisec + ", remain="
+                + (endTime - currentTime) + ", count=" + count + ", this="
+                + this + ", date=" + new Date());
         }
+
         // we may have either been timed out or notified
         // let's check which is the case
-        if (count <= 0)
-        {
-            if (verbose) System.out.println("false");
+        if (count <= 0) {
+            if (verbose) {
+                System.out.println("false");
+            }
+
             // lock still not released - we were timed out!
             return false;
-        }
-        else
-        {
-            if (verbose) System.out.println("true");
+        } else {
+            if (verbose) {
+                System.out.println("true");
+            }
+
             // we have control, decrement the count
             count--;
             return true;
         }
     }
-
 
     /**
      * Releases a permit, returning it to the semaphore.
@@ -148,5 +150,6 @@ public class Semaphore
         notify();
     }
 }
+
 
 // End Semaphore.java

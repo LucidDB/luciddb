@@ -16,20 +16,17 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.util;
 
-import org.eigenbase.util.*;
-
-import org.netbeans.api.xmi.*;
-import org.netbeans.lib.jmi.util.*;
-
 import java.io.*;
-
 import java.util.*;
 
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
+
+import org.eigenbase.util.*;
+import org.netbeans.api.xmi.*;
+import org.netbeans.lib.jmi.util.*;
 
 
 /**
@@ -53,11 +50,14 @@ public abstract class JmiUtil
     public static SortedMap getAttributeValues(RefObject src)
     {
         RefClass refClass = src.refClass();
-        Iterator iter = getFeatures(refClass,Attribute.class,false).iterator();
+        Iterator iter =
+            getFeatures(refClass, Attribute.class, false).iterator();
         SortedMap map = new TreeMap();
         while (iter.hasNext()) {
             Attribute attr = (Attribute) iter.next();
-            map.put(attr.getName(),src.refGetValue(attr));
+            map.put(
+                attr.getName(),
+                src.refGetValue(attr));
         }
         return map;
     }
@@ -91,7 +91,9 @@ public abstract class JmiUtil
             if (!map.containsKey(attr.getName())) {
                 continue;
             }
-            dst.refSetValue(attr,map.get(attr.getName()));
+            dst.refSetValue(
+                attr,
+                map.get(attr.getName()));
         }
     }
 
@@ -110,23 +112,27 @@ public abstract class JmiUtil
      * @return attribute list
      */
     public static List getFeatures(
-        RefClass refClass,Class filterClass,boolean includeMultiValued)
+        RefClass refClass,
+        Class filterClass,
+        boolean includeMultiValued)
     {
-        assert(StructuralFeature.class.isAssignableFrom(filterClass));
+        assert (StructuralFeature.class.isAssignableFrom(filterClass));
         List list = new ArrayList();
         MofClass mofClass = (MofClass) refClass.refMetaObject();
         List superList = mofClass.allSupertypes();
         Iterator iter = superList.iterator();
         while (iter.hasNext()) {
             MofClass mofSuper = (MofClass) iter.next();
-            addFeatures(list,mofSuper,filterClass,includeMultiValued);
+            addFeatures(list, mofSuper, filterClass, includeMultiValued);
         }
-        addFeatures(list,mofClass,filterClass,includeMultiValued);
+        addFeatures(list, mofClass, filterClass, includeMultiValued);
         return list;
     }
 
     private static void addFeatures(
-        List list,MofClass mofClass,Class filterClass,
+        List list,
+        MofClass mofClass,
+        Class filterClass,
         boolean includeMultiValued)
     {
         Iterator iter = mofClass.getContents().iterator();
@@ -155,10 +161,12 @@ public abstract class JmiUtil
      * @param dst RefObject to copy to
      * @param src RefObject to copy from
      */
-    public static void copyAttributes(RefObject dst,RefObject src)
+    public static void copyAttributes(
+        RefObject dst,
+        RefObject src)
     {
         SortedMap map = getAttributeValues(src);
-        setAttributeValues(dst,map);
+        setAttributeValues(dst, map);
     }
 
     /**
@@ -173,7 +181,7 @@ public abstract class JmiUtil
         XMIWriter xmiWriter = XMIWriterFactory.getDefault().createXMIWriter();
         ByteArrayOutputStream outStream = new ByteArrayOutputStream();
         try {
-            xmiWriter.write(outStream,collection,"1.2");
+            xmiWriter.write(outStream, collection, "1.2");
         } catch (IOException ex) {
             throw Util.newInternal(ex);
         }
@@ -216,7 +224,7 @@ public abstract class JmiUtil
         RefClass refClass = refObject.refClass();
         MofClass mofClass = (MofClass) refClass.refMetaObject();
         RefObject cloned = refClass.refCreateInstance(Collections.EMPTY_LIST);
-        copyAttributes(cloned,refObject);
+        copyAttributes(cloned, refObject);
         return cloned;
     }
 
@@ -230,7 +238,9 @@ public abstract class JmiUtil
     public static Class getJavaInterfaceForRefClass(RefClass refClass)
         throws ClassNotFoundException
     {
-        return getJavaInterfaceForProxy(refClass.getClass(),"Class$Impl");
+        return getJavaInterfaceForProxy(
+            refClass.getClass(),
+            "Class$Impl");
     }
 
     /**
@@ -243,19 +253,22 @@ public abstract class JmiUtil
     public static Class getJavaInterfaceForRefPackage(RefPackage refPackage)
         throws ClassNotFoundException
     {
-        return getJavaInterfaceForProxy(refPackage.getClass(),"$Impl");
+        return getJavaInterfaceForProxy(
+            refPackage.getClass(),
+            "$Impl");
     }
 
     private static Class getJavaInterfaceForProxy(
-        Class proxyClass,String classSuffix)
+        Class proxyClass,
+        String classSuffix)
         throws ClassNotFoundException
     {
         // REVIEW: This hack is dependent on the way MDR names
         // implementation classes.
         String className = proxyClass.getName();
         assert (className.endsWith(classSuffix));
-        className = className.substring(
-            0,className.length() - classSuffix.length());
+        className =
+            className.substring(0, className.length() - classSuffix.length());
         return Class.forName(className);
     }
 
@@ -272,8 +285,10 @@ public abstract class JmiUtil
     {
         String mofId = refObject.refMofId();
         int colonPos = mofId.indexOf(':');
-        assert(colonPos > -1);
-        return Long.parseLong(mofId.substring(colonPos+1),16);
+        assert (colonPos > -1);
+        return Long.parseLong(
+            mofId.substring(colonPos + 1),
+            16);
     }
 
     /**
@@ -313,8 +328,7 @@ public abstract class JmiUtil
      *
      * @return model element name
      */
-    public static String getMetaObjectName(
-        RefBaseObject refObject)
+    public static String getMetaObjectName(RefBaseObject refObject)
     {
         ModelElement modelElement;
         if (refObject instanceof ModelElement) {
@@ -346,8 +360,7 @@ public abstract class JmiUtil
         }
         if (prefix != null) {
             accessorName =
-                prefix
-                + Character.toUpperCase(accessorName.charAt(0))
+                prefix + Character.toUpperCase(accessorName.charAt(0))
                 + accessorName.substring(1);
         }
         return accessorName;
@@ -365,11 +378,11 @@ public abstract class JmiUtil
     {
         // Look up the Java interface generated for the class being queried.
         TagProvider tagProvider = new TagProvider();
-        String className = tagProvider.getImplFullName(
-            (ModelElement) (refClass.refMetaObject()),
-            TagProvider.INSTANCE);
-        assert(className.endsWith("Impl"));
-        className = className.substring(0,className.length() - 4);
+        String className =
+            tagProvider.getImplFullName((ModelElement) (refClass.refMetaObject()),
+                TagProvider.INSTANCE);
+        assert (className.endsWith("Impl"));
+        className = className.substring(0, className.length() - 4);
         try {
             return Class.forName(className);
         } catch (ClassNotFoundException ex) {
@@ -409,17 +422,14 @@ public abstract class JmiUtil
     public static void assertConstraints(RefObject obj)
     {
         RefClass refClass = obj.refClass();
-        Iterator featureIter = getFeatures(
-            refClass,
-            Attribute.class,
-            false).iterator();
+        Iterator featureIter =
+            getFeatures(refClass, Attribute.class, false).iterator();
         while (featureIter.hasNext()) {
             Attribute attr = (Attribute) featureIter.next();
             if (attr.getMultiplicity().getLower() != 0) {
-                assert (obj.refGetValue(attr) != null) :
-                    "Missing value for mandatory attribute "
-                    + ((ModelElement) refClass.refMetaObject()).getName() + "."
-                    + attr.getName();
+                assert (obj.refGetValue(attr) != null) : "Missing value for mandatory attribute "
+                + ((ModelElement) refClass.refMetaObject()).getName() + "."
+                + attr.getName();
             }
         }
     }

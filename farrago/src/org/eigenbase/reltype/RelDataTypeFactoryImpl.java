@@ -1,31 +1,25 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.reltype;
-
-import org.eigenbase.sql.SqlCollation;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.util.Util;
-import openjava.ptree.util.SyntheticClass;
 
 import java.io.PrintWriter;
 import java.lang.reflect.Array;
@@ -39,6 +33,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import openjava.ptree.util.SyntheticClass;
+
+import org.eigenbase.sql.SqlCollation;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -103,12 +102,14 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             fields[i] =
                 new FieldImpl(
                     fieldInfo.getFieldName(i),
-                    i, fieldInfo.getFieldType(i));
+                    i,
+                    fieldInfo.getFieldType(i));
         }
         return canonize(new RecordType(fields));
     }
 
-    public RelDataType getComponentType(RelDataType type) {
+    public RelDataType getComponentType(RelDataType type)
+    {
         return null;
     }
 
@@ -132,9 +133,7 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
                 }
                 outputTypes[j] = leastRestrictive(inputTypes);
             }
-            return createProjectType(
-                outputTypes,
-                fieldNames);
+            return createProjectType(outputTypes, fieldNames);
         } else {
             // REVIEW jvs 1-Mar-2004: I adapted this from
             // SqlOperatorTable.useNullableBiggest to keep tests happy.  But at
@@ -144,7 +143,8 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
                 // For now, we demand that types are assignable, and assume
                 // some asymmetry in the definition of isAssignableFrom.
                 RelDataType type = types[i];
-                RelDataType nullType = type.getFactory().createSqlType(SqlTypeName.Null);
+                RelDataType nullType =
+                    type.getFactory().createSqlType(SqlTypeName.Null);
                 if (type.equals(nullType)) {
                     continue;
                 }
@@ -162,7 +162,9 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
     }
 
     // copy a non-record type, setting nullability
-    private RelDataType copySimpleType(RelDataType type, boolean nullable)
+    private RelDataType copySimpleType(
+        RelDataType type,
+        boolean nullable)
     {
         if (type instanceof SqlType) {
             SqlType sqlType = (SqlType) type;
@@ -171,18 +173,16 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             JavaType javaType = (JavaType) type;
             if (javaType.isCharType()) {
                 return new JavaType(javaType.clazz, nullable,
-                                    javaType.charset, javaType.collation);
+                    javaType.charset, javaType.collation);
             } else {
                 return new JavaType(javaType.clazz, nullable);
             }
-        }
-        else {
+        } else {
             // REVIEW: CrossType if it stays around; otherwise get rid of this
             // comment
             return type;
         }
     }
-
 
     // Recursively copy a record type.
     // This is distinct from copyRecordTypeWithNullability() below simply
@@ -190,8 +190,7 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
     private RelDataType copyRecordType(final RecordType type)
     {
         return createProjectType(
-            new FieldInfo()
-            {
+            new FieldInfo() {
                 public int getFieldCount()
                 {
                     return type.getFieldCount();
@@ -204,20 +203,19 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
 
                 public RelDataType getFieldType(int index)
                 {
-                    RelDataType fieldType =
-                        type.getFields()[index].getType();
-                    return copyType(fieldType);  // recur
+                    RelDataType fieldType = type.getFields()[index].getType();
+                    return copyType(fieldType); // recur
                 }
             });
     }
 
     // recursively copy a record type, setting nullability
     private RelDataType copyRecordTypeWithNullability(
-        final RecordType type, final boolean nullable)
+        final RecordType type,
+        final boolean nullable)
     {
         return createProjectType(
-            new FieldInfo()
-            {
+            new FieldInfo() {
                 public int getFieldCount()
                 {
                     return type.getFieldCount();
@@ -230,48 +228,56 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
 
                 public RelDataType getFieldType(int index)
                 {
-                    RelDataType fieldType =
-                        type.getFields()[index].getType();
-                    return createTypeWithNullability(fieldType,nullable); // recur
+                    RelDataType fieldType = type.getFields()[index].getType();
+                    return createTypeWithNullability(fieldType, nullable); // recur
                 }
             });
     }
 
-
     // implement RelDataType
     public RelDataType createTypeWithNullability(
-        final RelDataType type,final boolean nullable)
+        final RelDataType type,
+        final boolean nullable)
     {
         if (type instanceof RecordType) {
             return copyRecordTypeWithNullability((RecordType) type, nullable);
-        } else
+        } else {
             return copySimpleType(type, nullable);
+        }
     }
-
 
     // implement RelDataType
     public RelDataType copyType(RelDataType type)
     {
         if (type instanceof RecordType) {
             return copyRecordType((RecordType) type);
-        } else
-            return copySimpleType(type, type.isNullable());
+        } else {
+            return copySimpleType(
+                type,
+                type.isNullable());
+        }
     }
 
-    public RelDataType createTypeWithCharsetAndCollation(RelDataType type,
-            Charset charset, SqlCollation collation) {
-        Util.pre(type.isCharType()==true,"Not a chartype");
-        Util.pre(charset!=null,"charset!=null");
-        Util.pre(collation!=null,"collation!=null");
+    public RelDataType createTypeWithCharsetAndCollation(
+        RelDataType type,
+        Charset charset,
+        SqlCollation collation)
+    {
+        Util.pre(type.isCharType() == true, "Not a chartype");
+        Util.pre(charset != null, "charset!=null");
+        Util.pre(collation != null, "collation!=null");
         if (type instanceof SqlType) {
             SqlType sqlType = (SqlType) type;
-            return sqlType.createWithCharsetAndCollation(charset,collation);
+            return sqlType.createWithCharsetAndCollation(charset, collation);
         } else if (type instanceof JavaType) {
             JavaType javaType = (JavaType) type;
-            return new JavaType(javaType.clazz, javaType.isNullable(),
-                    charset, collation);
+            return new JavaType(
+                javaType.clazz,
+                javaType.isNullable(),
+                charset,
+                collation);
         }
-        throw Util.needToImplement("need to implement "+type);
+        throw Util.needToImplement("need to implement " + type);
     }
 
     public static RelDataTypeFactory threadInstance()
@@ -289,7 +295,7 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         if (type2 != null) {
             return type2;
         } else {
-            map.put(type,type);
+            map.put(type, type);
             return type;
         }
     }
@@ -302,7 +308,7 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         ArrayList fieldList = new ArrayList();
         for (int i = 0; i < types.length; i++) {
             RelDataType type = types[i];
-            addFields(type,fieldList);
+            addFields(type, fieldList);
         }
         return (RelDataTypeField []) fieldList.toArray(
             new RelDataTypeField[fieldList.size()]);
@@ -314,17 +320,19 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
     private static RelDataType [] getTypeArray(RelDataType [] types)
     {
         ArrayList typeList = new ArrayList();
-        getTypeArray(types,typeList);
+        getTypeArray(types, typeList);
         return (RelDataType []) typeList.toArray(
             new RelDataType[typeList.size()]);
     }
 
-    private static void getTypeArray(RelDataType [] types,ArrayList typeList)
+    private static void getTypeArray(
+        RelDataType [] types,
+        ArrayList typeList)
     {
         for (int i = 0; i < types.length; i++) {
             RelDataType type = types[i];
             if (type instanceof CrossType) {
-                getTypeArray(((CrossType) type).types,typeList);
+                getTypeArray(((CrossType) type).types, typeList);
             } else {
                 typeList.add(type);
             }
@@ -334,12 +342,14 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
     /**
      * Adds all fields in <code>type</code> to <code>fieldList</code>.
      */
-    private static void addFields(RelDataType type,ArrayList fieldList)
+    private static void addFields(
+        RelDataType type,
+        ArrayList fieldList)
     {
         if (type instanceof CrossType) {
             final CrossType crossType = (CrossType) type;
             for (int i = 0; i < crossType.types.length; i++) {
-                addFields(crossType.types[i],fieldList);
+                addFields(crossType.types[i], fieldList);
             }
         } else {
             RelDataTypeField [] fields = type.getFields();
@@ -348,6 +358,106 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
                 fieldList.add(field);
             }
         }
+    }
+
+    public static boolean isJavaType(RelDataType t)
+    {
+        return t instanceof JavaType;
+    }
+
+    public static boolean isSqlType(RelDataType t)
+    {
+        return t instanceof SqlType;
+    }
+
+    public static RelDataType createSqlTypeIgnorePrecOrScale(
+        RelDataTypeFactory fac,
+        SqlTypeName typeName)
+    {
+        if (typeName.allowsPrecScale(true, true)) {
+            return fac.createSqlType(typeName, 0, 0);
+        }
+
+        if (typeName.allowsPrecNoScale()) {
+            return fac.createSqlType(typeName, 0);
+        }
+
+        return fac.createSqlType(typeName);
+    }
+
+    private RelDataTypeField [] fieldsOf(Class clazz)
+    {
+        final Field [] fields = clazz.getFields();
+        ArrayList list = new ArrayList();
+        for (int i = 0; i < fields.length; i++) {
+            Field field = fields[i];
+            if (Modifier.isStatic(field.getModifiers())) {
+                continue;
+            }
+            list.add(
+                new FieldImpl(
+                    field.getName(),
+                    list.size(),
+                    createJavaType(field.getType())));
+        }
+        return (RelDataTypeField []) list.toArray(
+            new RelDataTypeField[list.size()]);
+    }
+
+    public RelDataType createSqlType(SqlTypeName typeName)
+    {
+        Util.pre(typeName != null, "typeName != null");
+        return new SqlType(typeName);
+    }
+
+    public RelDataType createSqlType(
+        SqlTypeName typeName,
+        int length)
+    {
+        Util.pre(typeName != null, "typeName != null");
+        Util.pre(length >= 0, "length >= 0");
+        return new SqlType(typeName, length);
+    }
+
+    public RelDataType createSqlType(
+        SqlTypeName typeName,
+        int length,
+        int scale)
+    {
+        Util.pre(typeName != null, "typeName != null");
+        Util.pre(length >= 0, "length >= 0");
+        return new SqlType(typeName, length, scale);
+    }
+
+    /**
+     * Returns the maximum number of bytes storage required by each character
+     * in a given character set. Currently always returns 1.
+     *
+     * @param charsetName Name of the character set
+     * @return
+     */
+    public static int getMaxBytesPerChar(String charsetName)
+    {
+        assert charsetName.equals("ISO-8859-1") : charsetName;
+        return 1;
+    }
+
+    /**
+     * @pre to!=null && from !=null
+     * @param to
+     * @param from
+     * @param coerce
+     */
+    public boolean assignableFrom(
+        SqlTypeName to,
+        SqlTypeName from,
+        boolean coerce)
+    {
+        Util.pre((to != null) && (from != null), "to!=null && from !=null");
+
+        AssignableFromRules assignableFromRules =
+            AssignableFromRules.instance();
+        return assignableFromRules.isAssignableFrom(to, from, coerce);
     }
 
     //~ Inner Classes ---------------------------------------------------------
@@ -422,12 +532,13 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         public boolean isJoin()
         {
             throw Util.newInternal("todo: remove isJoin");
+
             //return false;
         }
 
         public RelDataType [] getJoinTypes()
         {
-            assert(isJoin());
+            assert (isJoin());
             throw Util.newInternal("not reached");
         }
 
@@ -462,7 +573,8 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
 
         protected abstract String computeDigest();
 
-        public boolean equalsSansNullability(RelDataType type) {
+        public boolean equalsSansNullability(RelDataType type)
+        {
             return equals(type);
         }
 
@@ -471,7 +583,10 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             return false;
         }
 
-        public void format(Object value, PrintWriter pw) {
+        public void format(
+            Object value,
+            PrintWriter pw)
+        {
             if (value == null) {
                 pw.print("<null>");
             } else {
@@ -479,42 +594,53 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             }
         }
 
-        public boolean isAssignableFrom(RelDataType t, boolean coerce) {
+        public boolean isAssignableFrom(
+            RelDataType t,
+            boolean coerce)
+        {
             return false;
         }
 
-        public boolean isSameType(RelDataType t) {
+        public boolean isSameType(RelDataType t)
+        {
             throw Util.needToImplement("need to implement");
         }
 
-        public boolean isSameTypeFamily(RelDataType t) {
+        public boolean isSameTypeFamily(RelDataType t)
+        {
             return false;
         }
 
-        public Charset getCharset() {
+        public Charset getCharset()
+        {
             throw Util.needToImplement("need to implement");
         }
 
-        public SqlCollation getCollation() throws RuntimeException {
+        public SqlCollation getCollation()
+            throws RuntimeException
+        {
             throw Util.needToImplement("need to implement");
         }
 
-        public boolean isCharType() {
+        public boolean isCharType()
+        {
             return false;
         }
 
-        public int getMaxBytesStorage() {
+        public int getMaxBytesStorage()
+        {
             return -1;
         }
 
-        public int getPrecision() {
+        public int getPrecision()
+        {
             throw Util.needToImplement("need to implement");
         }
 
-        public SqlTypeName getSqlTypeName() {
+        public SqlTypeName getSqlTypeName()
+        {
             throw Util.needToImplement("need to implement");
         }
-
     }
 
     /**
@@ -541,10 +667,10 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         {
             super(getFieldArray(types));
             this.types = types;
-            assert(types != null);
-            assert(types.length >= 1);
+            assert (types != null);
+            assert (types.length >= 1);
             for (int i = 0; i < types.length; i++) {
-                assert(!(types[i] instanceof CrossType));
+                assert (!(types[i] instanceof CrossType));
             }
             this.digest = computeDigest();
         }
@@ -563,7 +689,7 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
 
         public int getFieldOrdinal(String fieldName)
         {
-            final int ordinal = SyntheticClass.getOrdinal(fieldName,false);
+            final int ordinal = SyntheticClass.getOrdinal(fieldName, false);
             if (ordinal >= 0) {
                 return ordinal;
             }
@@ -585,7 +711,7 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
 
         public RelDataType [] getJoinTypes()
         {
-            assert(isJoin());
+            assert (isJoin());
             return types;
         }
 
@@ -618,10 +744,13 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
          * @pre name != null
          * @pre type != null
          */
-        public FieldImpl(String name, int index, RelDataType type)
+        public FieldImpl(
+            String name,
+            int index,
+            RelDataType type)
         {
-            assert(name != null);
-            assert(type != null);
+            assert (name != null);
+            assert (type != null);
             this.name = name;
             this.index = index;
             this.type = type;
@@ -647,7 +776,9 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             throw new UnsupportedOperationException();
         }
 
-        public void set(Object o,Object value)
+        public void set(
+            Object o,
+            Object value)
         {
             throw new UnsupportedOperationException();
         }
@@ -694,32 +825,12 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
                     sb.append(", ");
                 }
                 RelDataTypeField field = fields[i];
-                sb.append(
-                    field.getType().getFullTypeString() + " " + field.getName());
+                sb.append(field.getType().getFullTypeString() + " "
+                    + field.getName());
             }
             sb.append(")");
             return sb.toString();
         }
-    }
-
-    public static boolean isJavaType(RelDataType t){
-        return t instanceof JavaType;
-    }
-
-    public static boolean isSqlType(RelDataType t){
-        return t instanceof SqlType;
-    }
-
-    public static RelDataType createSqlTypeIgnorePrecOrScale(RelDataTypeFactory fac, SqlTypeName typeName) {
-        if (typeName.allowsPrecScale(true,true)) {
-            return fac.createSqlType(typeName,0,0);
-        }
-
-        if (typeName.allowsPrecNoScale()) {
-            return fac.createSqlType(typeName,0);
-        }
-
-        return fac.createSqlType(typeName);
     }
 
     /**
@@ -741,46 +852,55 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             this.digest = computeDigest();
 
             isNullable =
-                clazz.equals(Integer.class)||
-                clazz.equals(int.class)||
-                clazz.equals(Long.class)||
-                clazz.equals(long.class)||
-                clazz.equals(Integer.class)||
-                clazz.equals(int.class)||
-                clazz.equals(Byte.class)||
-                clazz.equals(byte.class)||
-                clazz.equals(Double.class)||
-                clazz.equals(double.class)||
-                clazz.equals(Boolean.class)||
-                clazz.equals(boolean.class)||
-                clazz.equals(byte[].class)||
-                clazz.equals(String.class);
+                clazz.equals(Integer.class) || clazz.equals(int.class)
+                    || clazz.equals(Long.class) || clazz.equals(long.class)
+                    || clazz.equals(Integer.class) || clazz.equals(int.class)
+                    || clazz.equals(Byte.class) || clazz.equals(byte.class)
+                    || clazz.equals(Double.class)
+                    || clazz.equals(double.class)
+                    || clazz.equals(Boolean.class)
+                    || clazz.equals(boolean.class)
+                    || clazz.equals(byte [].class)
+                    || clazz.equals(String.class);
         }
 
-        public JavaType(Class clazz, boolean nullable) {
+        public JavaType(
+            Class clazz,
+            boolean nullable)
+        {
             this(clazz);
             this.isNullable = nullable;
         }
 
-        public JavaType(Class clazz, boolean nullable,
-                Charset charset, SqlCollation collation) {
+        public JavaType(
+            Class clazz,
+            boolean nullable,
+            Charset charset,
+            SqlCollation collation)
+        {
             this(clazz);
-            Util.pre(isCharType(),"Need to be a chartype");
+            Util.pre(
+                isCharType(),
+                "Need to be a chartype");
             this.isNullable = nullable;
             this.charset = charset;
             this.collation = collation;
         }
 
-        public boolean isNullable() {
+        public boolean isNullable()
+        {
             return isNullable;
         }
 
-        public boolean isAssignableFrom(RelDataType t, boolean coerce) {
+        public boolean isAssignableFrom(
+            RelDataType t,
+            boolean coerce)
+        {
             if (!(t instanceof JavaType) && !(t instanceof SqlType)) {
                 return false;
             }
             SqlTypeName thisSqlTypeName = getSqlTypeName();
-            if (null==thisSqlTypeName) {
+            if (null == thisSqlTypeName) {
                 return false; //REVIEW wael 8/05/2004: shouldnt we assert instead?
             }
             SqlTypeName thatSqlTypeName;
@@ -788,24 +908,28 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             if (t instanceof SqlType) {
                 thatSqlTypeName = ((SqlType) t).getTypeName();
             } else {
-                thatSqlTypeName= JavaToSqlTypeConversionRules.instance().lookup(t);
-                if (null==thatSqlTypeName) {
+                thatSqlTypeName =
+                    JavaToSqlTypeConversionRules.instance().lookup(t);
+                if (null == thatSqlTypeName) {
                     return false;
                 }
             }
 
-            RelDataTypeFactory  fac = getFactory();
-            RelDataType thisType = createSqlTypeIgnorePrecOrScale(fac, thisSqlTypeName);
-            RelDataType thatType = createSqlTypeIgnorePrecOrScale(fac, thatSqlTypeName);
+            RelDataTypeFactory fac = getFactory();
+            RelDataType thisType =
+                createSqlTypeIgnorePrecOrScale(fac, thisSqlTypeName);
+            RelDataType thatType =
+                createSqlTypeIgnorePrecOrScale(fac, thatSqlTypeName);
             return thisType.isAssignableFrom(thatType, coerce);
         }
 
-
-        public boolean isSameType(RelDataType t) {
+        public boolean isSameType(RelDataType t)
+        {
             return t instanceof JavaType && clazz.equals(((JavaType) t).clazz);
         }
 
-        public boolean isSameTypeFamily(RelDataType t) {
+        public boolean isSameTypeFamily(RelDataType t)
+        {
             //TODO implement real rules
             return isSameType(t);
         }
@@ -815,12 +939,14 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             return "JavaType(" + clazz + ")";
         }
 
-        public RelDataType getArrayType() {
-            final Class arrayClass = Array.newInstance(clazz,0).getClass();
+        public RelDataType getArrayType()
+        {
+            final Class arrayClass = Array.newInstance(clazz, 0).getClass();
             return createJavaType(arrayClass);
         }
 
-        public RelDataType getComponentType() {
+        public RelDataType getComponentType()
+        {
             final Class componentType = clazz.getComponentType();
             if (componentType == null) {
                 return null;
@@ -829,7 +955,10 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             }
         }
 
-        public void format(Object value, PrintWriter pw) {
+        public void format(
+            Object value,
+            PrintWriter pw)
+        {
             if (value == null) {
                 pw.print("null");
             } else if (String.class.isAssignableFrom(clazz)) {
@@ -839,83 +968,35 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             }
         }
 
-        public Charset getCharset() throws RuntimeException {
+        public Charset getCharset()
+            throws RuntimeException
+        {
             if (!isCharType()) {
-                throw Util.newInternal(computeDigest()+" is not defined to carry a charset");
+                throw Util.newInternal(computeDigest()
+                    + " is not defined to carry a charset");
             }
             return this.charset;
         }
 
-        public SqlCollation getCollation() throws RuntimeException {
+        public SqlCollation getCollation()
+            throws RuntimeException
+        {
             if (!isCharType()) {
-                throw Util.newInternal(computeDigest()+" is not defined to carry a collation");
+                throw Util.newInternal(computeDigest()
+                    + " is not defined to carry a collation");
             }
             return this.collation;
         }
 
-        public SqlTypeName getSqlTypeName() {
+        public SqlTypeName getSqlTypeName()
+        {
             return JavaToSqlTypeConversionRules.instance().lookup(this);
         }
 
-        public boolean isCharType() {
+        public boolean isCharType()
+        {
             return clazz.equals(String.class) || clazz.equals(char.class);
         }
-    }
-
-    private RelDataTypeField[] fieldsOf(Class clazz) {
-        final Field[] fields = clazz.getFields();
-        ArrayList list = new ArrayList();
-        for (int i = 0; i < fields.length; i++) {
-            Field field = fields[i];
-            if (Modifier.isStatic(field.getModifiers())) {
-                continue;
-            }
-            list.add(new FieldImpl(field.getName(),
-                    list.size(), createJavaType(field.getType())));
-        }
-        return (RelDataTypeField[]) list.toArray(new RelDataTypeField[list.size()]);
-    }
-
-    public RelDataType createSqlType(SqlTypeName typeName) {
-        Util.pre(typeName != null, "typeName != null");
-        return new SqlType(typeName);
-    }
-
-    public RelDataType createSqlType(SqlTypeName typeName, int length) {
-        Util.pre(typeName != null, "typeName != null");
-        Util.pre(length >= 0, "length >= 0");
-        return new SqlType(typeName, length);
-    }
-
-    public RelDataType createSqlType(SqlTypeName typeName, int length, int scale) {
-        Util.pre(typeName != null, "typeName != null");
-        Util.pre(length >= 0, "length >= 0");
-        return new SqlType(typeName, length, scale);
-    }
-
-    /**
-     * Returns the maximum number of bytes storage required by each character
-     * in a given character set. Currently always returns 1.
-     *
-     * @param charsetName Name of the character set
-     * @return
-     */
-    public static int getMaxBytesPerChar(String charsetName) {
-        assert charsetName.equals("ISO-8859-1") : charsetName;
-        return 1;
-    }
-
-    /**
-     * @pre to!=null && from !=null
-     * @param to
-     * @param from
-     * @param coerce
-     */
-    public boolean assignableFrom(SqlTypeName to, SqlTypeName from, boolean coerce) {
-        Util.pre(to!=null && from!=null,"to!=null && from !=null");
-
-        AssignableFromRules assignableFromRules = AssignableFromRules.instance();
-        return assignableFromRules.isAssignableFrom(to, from, coerce);
     }
 
     /**
@@ -923,27 +1004,29 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
      *
      * <p>TODO: Make protected. (jhyde, 2004/5/26)
      */
-    public class SqlType implements RelDataType, Cloneable {
+    public class SqlType implements RelDataType, Cloneable
+    {
+        public static final int SCALE_NOT_SPECIFIED = Integer.MIN_VALUE;
+        public static final int PRECISION_NOT_SPECIFIED = -1;
         private final SqlTypeName typeName;
-        private boolean isNullable=true;
+        private boolean isNullable = true;
         private final int precision;
         private final int scale;
         private final String digest;
         private SqlCollation collation;
         private Charset charset;
 
-        public static final int SCALE_NOT_SPECIFIED = Integer.MIN_VALUE;
-        public static final int PRECISION_NOT_SPECIFIED = -1;
-
-
         /**
          * Constructs a type with no parameters.
          * @param typeName Type name
          * @pre typeName.allowsNoPrecNoScale(false,false)
          */
-        SqlType(SqlTypeName typeName) {
-            Util.pre(typeName.allowsPrecScale(false,false),
-                     "typeName.allowsPrecScale(false,false), typeName="+typeName.name_);
+        SqlType(SqlTypeName typeName)
+        {
+            Util.pre(
+                typeName.allowsPrecScale(false, false),
+                "typeName.allowsPrecScale(false,false), typeName="
+                + typeName.name_);
             this.typeName = typeName;
             this.precision = PRECISION_NOT_SPECIFIED;
             this.scale = SCALE_NOT_SPECIFIED;
@@ -955,8 +1038,13 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
          * @param typeName Type name
          * @pre typeName.allowsPrecNoScale(true,false)
          */
-        SqlType(SqlTypeName typeName, int precision) {
-            Util.pre(typeName.allowsPrecScale(true,false), "typeName.allowsPrecScale(true,false)");
+        SqlType(
+            SqlTypeName typeName,
+            int precision)
+        {
+            Util.pre(
+                typeName.allowsPrecScale(true, false),
+                "typeName.allowsPrecScale(true,false)");
             this.typeName = typeName;
             this.precision = precision;
             this.scale = SCALE_NOT_SPECIFIED;
@@ -968,26 +1056,33 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
          * @param typeName Type name
          * @pre typeName.allowsPrecScale(true,true)
          */
-        SqlType(SqlTypeName typeName, int precision, int scale) {
-            Util.pre(typeName.allowsPrecScale(true,true), "typeName.allowsPrecScale(true,true)");
+        SqlType(
+            SqlTypeName typeName,
+            int precision,
+            int scale)
+        {
+            Util.pre(
+                typeName.allowsPrecScale(true, true),
+                "typeName.allowsPrecScale(true,true)");
             this.typeName = typeName;
             this.precision = precision;
             this.scale = scale;
-            this.digest = typeName.name_ + "(" + precision + ", " + scale + ")";
+            this.digest =
+                typeName.name_ + "(" + precision + ", " + scale + ")";
         }
 
         /**
          * Constructs a type with nullablity
          */
-        public SqlType createWithNullability(boolean nullable) {
+        public SqlType createWithNullability(boolean nullable)
+        {
             SqlType ret = null;
             try {
                 ret = (SqlType) this.clone();
-            }
-            catch (CloneNotSupportedException e) {
+            } catch (CloneNotSupportedException e) {
                 throw Util.newInternal(e);
             }
-            ret.isNullable=nullable;
+            ret.isNullable = nullable;
             return ret;
         }
 
@@ -995,14 +1090,15 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
          * Constructs a typ charset and collation
          * @pre isCharType == true
          */
-        public SqlType createWithCharsetAndCollation(Charset charset,
-                SqlCollation collation) {
-            Util.pre(this.isCharType()==true,"Not an chartype");
+        public SqlType createWithCharsetAndCollation(
+            Charset charset,
+            SqlCollation collation)
+        {
+            Util.pre(this.isCharType() == true, "Not an chartype");
             SqlType ret;
             try {
                 ret = (SqlType) this.clone();
-            }
-            catch (CloneNotSupportedException e) {
+            } catch (CloneNotSupportedException e) {
                 throw Util.newInternal(e);
             }
             ret.charset = charset;
@@ -1011,7 +1107,8 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         }
 
         //implement RelDataType
-        public int getPrecision() {
+        public int getPrecision()
+        {
             return precision;
         }
 
@@ -1020,81 +1117,100 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             return typeName;
         }
 
-        public String toString() {
+        public String toString()
+        {
             return digest;
         }
 
-        public String getFullTypeString() {
+        public String getFullTypeString()
+        {
             return digest;
         }
 
-        public int hashCode() {
+        public int hashCode()
+        {
             return digest.hashCode();
         }
 
-        public boolean equals(Object obj) {
-            return obj instanceof SqlType &&
-                    ((SqlType) obj).digest.equals(digest);
+        public boolean equals(Object obj)
+        {
+            return obj instanceof SqlType
+                && ((SqlType) obj).digest.equals(digest);
         }
 
-        public boolean isSameType(RelDataType t) {
+        public boolean isSameType(RelDataType t)
+        {
             if (t instanceof JavaType) {
-                SqlTypeName thatSqlTypeName= JavaToSqlTypeConversionRules.instance().lookup(t);
-                if (null==thatSqlTypeName) {
+                SqlTypeName thatSqlTypeName =
+                    JavaToSqlTypeConversionRules.instance().lookup(t);
+                if (null == thatSqlTypeName) {
                     return false;
                 }
                 return this.getSqlTypeName().equals(thatSqlTypeName);
             }
-            return t instanceof SqlType &&
-                ((SqlType) t).typeName.getOrdinal()==this.typeName.getOrdinal();
+            return t instanceof SqlType
+                && (((SqlType) t).typeName.getOrdinal() == this.typeName
+                .getOrdinal());
         }
 
-        public boolean isSameTypeFamily(RelDataType t) {
+        public boolean isSameTypeFamily(RelDataType t)
+        {
             //TODO implement real rules
             return isSameType(t);
         }
 
-        public RelDataTypeFactory getFactory() {
+        public RelDataTypeFactory getFactory()
+        {
             return RelDataTypeFactoryImpl.this;
         }
 
-        public RelDataTypeField getField(String fieldName) {
+        public RelDataTypeField getField(String fieldName)
+        {
             throw new UnsupportedOperationException();
         }
 
-        public int getFieldCount() {
+        public int getFieldCount()
+        {
             throw new UnsupportedOperationException();
         }
 
-        public int getFieldOrdinal(String fieldName) {
+        public int getFieldOrdinal(String fieldName)
+        {
             throw new UnsupportedOperationException();
         }
 
-        public RelDataTypeField[] getFields() {
+        public RelDataTypeField [] getFields()
+        {
             throw new UnsupportedOperationException();
         }
 
-        public RelDataType getComponentType() {
+        public RelDataType getComponentType()
+        {
             return null;
         }
 
-        public RelDataType getArrayType() {
+        public RelDataType getArrayType()
+        {
             throw Util.needToImplement(this);
         }
 
-        public boolean isJoin() {
+        public boolean isJoin()
+        {
             return false;
         }
 
-        public RelDataType[] getJoinTypes() {
+        public RelDataType [] getJoinTypes()
+        {
             throw new UnsupportedOperationException();
         }
 
-        public boolean isProject() {
+        public boolean isProject()
+        {
             return false;
         }
 
-        public boolean equalsSansNullability(RelDataType type) {
+        public boolean equalsSansNullability(RelDataType type)
+        {
             return equals(type);
         }
 
@@ -1103,37 +1219,51 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             return isNullable;
         }
 
-        public boolean isAssignableFrom(RelDataType t, boolean coerce) {
+        public boolean isAssignableFrom(
+            RelDataType t,
+            boolean coerce)
+        {
             SqlTypeName thatSqlTypeName;
 
-            AssignableFromRules assignableFromRules = AssignableFromRules.instance();
+            AssignableFromRules assignableFromRules =
+                AssignableFromRules.instance();
             if (t instanceof JavaType) {
-                thatSqlTypeName= JavaToSqlTypeConversionRules.instance().lookup(t);
-                if (null==thatSqlTypeName) {
+                thatSqlTypeName =
+                    JavaToSqlTypeConversionRules.instance().lookup(t);
+                if (null == thatSqlTypeName) {
                     return false;
                 }
-                return assignableFromRules.isAssignableFrom(this.typeName,thatSqlTypeName, coerce);
+                return assignableFromRules.isAssignableFrom(this.typeName,
+                    thatSqlTypeName, coerce);
             } else {
                 return t instanceof SqlType
-                    && assignableFromRules.isAssignableFrom(this.typeName,((SqlType) t).typeName, coerce);
+                    && assignableFromRules.isAssignableFrom(this.typeName,
+                        ((SqlType) t).typeName, coerce);
             }
         }
 
-         public Charset getCharset() throws RuntimeException {
+        public Charset getCharset()
+            throws RuntimeException
+        {
             if (!isCharType()) {
-                throw Util.newInternal(typeName.toString()+" is not defined to carry a charset");
+                throw Util.newInternal(typeName.toString()
+                    + " is not defined to carry a charset");
             }
             return this.charset;
         }
 
-        public SqlCollation getCollation() throws RuntimeException {
-            if (!isCharType()){
-                throw Util.newInternal(typeName.toString()+" is not defined to carry a collation");
+        public SqlCollation getCollation()
+            throws RuntimeException
+        {
+            if (!isCharType()) {
+                throw Util.newInternal(typeName.toString()
+                    + " is not defined to carry a collation");
             }
             return this.collation;
         }
 
-        public boolean isCharType() {
+        public boolean isCharType()
+        {
             switch (typeName.getOrdinal()) {
             case SqlTypeName.Char_ordinal:
             case SqlTypeName.Varchar_ordinal:
@@ -1143,10 +1273,12 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             }
         }
 
-        public int getMaxBytesStorage() {
+        public int getMaxBytesStorage()
+        {
             switch (typeName.getOrdinal()) {
             case SqlTypeName.Char_ordinal:
             case SqlTypeName.Varchar_ordinal:
+
                 // FIXME (jhyde, 2004/5/26): Assumes UCS-2 encoding, 2 bytes
                 // per character.
                 return precision * 2;
@@ -1154,9 +1286,11 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             case SqlTypeName.Varbinary_ordinal:
                 return precision;
             case SqlTypeName.Bit_ordinal:
+
                 // One byte for each 8 bits.
                 return (precision + 7) / 8;
             case SqlTypeName.Null_ordinal:
+
                 // Null is tricky. By the time null values are used in actual
                 // programs they have generally been converted to another type,
                 // with an implicit cast. So CAST(NULL AS VARCHAR(3)) should
@@ -1172,17 +1306,20 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
         /**
          * get the SqlTypeName for this RelDataType.
          */
-        public SqlTypeName getSqlTypeName() {
+        public SqlTypeName getSqlTypeName()
+        {
             return this.typeName;
         }
     }
 
-    public static class JavaToSqlTypeConversionRules {
+    public static class JavaToSqlTypeConversionRules
+    {
         private static final JavaToSqlTypeConversionRules instance =
-                new JavaToSqlTypeConversionRules();
+            new JavaToSqlTypeConversionRules();
         private final HashMap rules = new HashMap();
 
-        private JavaToSqlTypeConversionRules(){
+        private JavaToSqlTypeConversionRules()
+        {
             rules.put(Integer.class, SqlTypeName.Integer);
             rules.put(int.class, SqlTypeName.Integer);
             rules.put(Long.class, SqlTypeName.Bigint);
@@ -1196,7 +1333,7 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             rules.put(double.class, SqlTypeName.Double);
 
             rules.put(boolean.class, SqlTypeName.Boolean);
-            rules.put(byte[].class, SqlTypeName.Varbinary);
+            rules.put(byte [].class, SqlTypeName.Varbinary);
             rules.put(String.class, SqlTypeName.Varchar);
 
             rules.put(Date.class, SqlTypeName.Date);
@@ -1208,7 +1345,8 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
          * Returns the {@link org.eigenbase.util.Glossary#SingletonPattern
          * singleton} instance.
          */
-        public static JavaToSqlTypeConversionRules instance() {
+        public static JavaToSqlTypeConversionRules instance()
+        {
             return instance;
         }
 
@@ -1217,7 +1355,8 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
          * @param t The Java class to lookup
          * @return a corresponding SqlTypeName if found, otherwise null is returned
          */
-        public SqlTypeName lookup(RelDataType t) {
+        public SqlTypeName lookup(RelDataType t)
+        {
             JavaType javaType = (JavaType) t;
             return (SqlTypeName) rules.get(javaType.clazz);
         }
@@ -1225,15 +1364,18 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
 
     // REVIEW 7/05/04 Wael: We should split this up in
     // Cast rules, symmetric and asymmetric assignable rules
-    public static class AssignableFromRules {
+    public static class AssignableFromRules
+    {
         private static AssignableFromRules instance = null;
         private static HashMap rules = null;
         private static HashMap coerceRules = null;
 
-        private AssignableFromRules(){
+        private AssignableFromRules()
+        {
             rules = new HashMap();
 
             HashSet rule;
+
             // Tinyint is assignable from...
             rule = new HashSet();
             rule.add(SqlTypeName.Tinyint);
@@ -1337,7 +1479,7 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             rule.add(SqlTypeName.Timestamp);
             rules.put(SqlTypeName.Date, rule);
 
-             // Time is assignable from ...
+            // Time is assignable from ...
             rule = new HashSet();
             rule.add(SqlTypeName.Time);
             rule.add(SqlTypeName.Timestamp);
@@ -1414,29 +1556,37 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             rule.add(SqlTypeName.Timestamp);
         }
 
-        public synchronized static AssignableFromRules instance() {
-            if (null==instance){
+        public synchronized static AssignableFromRules instance()
+        {
+            if (null == instance) {
                 instance = new AssignableFromRules();
             }
             return instance;
         }
 
-        public boolean isAssignableFrom(SqlTypeName to, SqlTypeName from,
-                boolean coerce)
+        public boolean isAssignableFrom(
+            SqlTypeName to,
+            SqlTypeName from,
+            boolean coerce)
         {
             HashMap ruleset = coerce ? coerceRules : rules;
-            return isAssignableFrom(to,from,ruleset);
+            return isAssignableFrom(to, from, ruleset);
         }
 
-         public boolean isAssignableFrom(SqlTypeName to, SqlTypeName from) {
-             return isAssignableFrom(to, from, false);
-         }
-
-        private boolean isAssignableFrom(SqlTypeName to, SqlTypeName from,
-                HashMap ruleset)
+        public boolean isAssignableFrom(
+            SqlTypeName to,
+            SqlTypeName from)
         {
-            assert(null!=to);
-            assert(null!=from);
+            return isAssignableFrom(to, from, false);
+        }
+
+        private boolean isAssignableFrom(
+            SqlTypeName to,
+            SqlTypeName from,
+            HashMap ruleset)
+        {
+            assert (null != to);
+            assert (null != from);
 
             if (to.equals(SqlTypeName.Null)) {
                 return false;
@@ -1445,9 +1595,10 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
             }
 
             HashSet rule = (HashSet) ruleset.get(to);
-            if (null==rule){
+            if (null == rule) {
                 //if you hit this assert, see the constructor of this class on how to add new rule
-                throw Util.newInternal("No assign rules for "+to+" defined");
+                throw Util.newInternal("No assign rules for " + to
+                    + " defined");
             }
 
             return rule.contains(from);
@@ -1457,4 +1608,3 @@ public class RelDataTypeFactoryImpl implements RelDataTypeFactory
 
 
 // End RelDataTypeFactoryImpl.java
-

@@ -17,23 +17,22 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.fem.med;
 
+import java.util.*;
+
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.ddl.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.ddl.*;
+import net.sf.farrago.namespace.FarragoMedColumnSet;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.type.FarragoTypeFactory;
-import net.sf.farrago.namespace.FarragoMedColumnSet;
+
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeField;
-
 import org.netbeans.mdr.handlers.*;
 import org.netbeans.mdr.storagemodel.*;
-
-import java.util.*;
 
 
 /**
@@ -43,8 +42,10 @@ import java.util.*;
  * @version $Id$
  */
 public abstract class FemBaseColumnSetImpl extends InstanceHandler
-    implements FemBaseColumnSet, DdlValidatedElement
+    implements FemBaseColumnSet,
+        DdlValidatedElement
 {
+    //~ Constructors ----------------------------------------------------------
 
     /**
      * Creates a new FemLocalTableImpl object.
@@ -59,7 +60,9 @@ public abstract class FemBaseColumnSetImpl extends InstanceHandler
     //~ Methods ---------------------------------------------------------------
 
     // implement DdlValidatedElement
-    public void validateDefinition(DdlValidator validator, boolean creation) 
+    public void validateDefinition(
+        DdlValidator validator,
+        boolean creation)
     {
         if (getServer().getWrapper().isForeign()) {
             // It is a foreign table
@@ -74,21 +77,21 @@ public abstract class FemBaseColumnSetImpl extends InstanceHandler
             FemDataWrapper dataWrapper = dataServer.getWrapper();
             if (!dataWrapper.isForeign()) {
                 throw validator.res.newValidatorForeignTableButLocalWrapper(
-                        repos.getLocalizedObjectName(this, null),
-                        repos.getLocalizedObjectName(dataWrapper, null));
+                    repos.getLocalizedObjectName(this, null),
+                    repos.getLocalizedObjectName(dataWrapper, null));
             }
 
             validateCommon(validator);
 
             FarragoMedColumnSet columnSet =
-                    dataServer.validateColumnSet(validator, this);
+                dataServer.validateColumnSet(validator, this);
 
             List columnList = getFeature();
             if (columnList.isEmpty()) {
                 // derive column information
                 RelDataType rowType = columnSet.getRowType();
                 int n = rowType.getFieldCount();
-                RelDataTypeField[] fields = rowType.getFields();
+                RelDataTypeField [] fields = rowType.getFields();
                 for (int i = 0; i < n; ++i) {
                     CwmColumn column = repos.newFemStoredColumn();
                     columnList.add(column);
@@ -96,16 +99,17 @@ public abstract class FemBaseColumnSetImpl extends InstanceHandler
                     CwmColumnImpl.validateCommon(validator, column);
                 }
             }
-
         } else {
             validateCommon(validator);
         }
     }
 
-
     private void validateCommon(DdlValidator validator)
     {
-        validator.validateUniqueNames(this, getFeature(), false);
+        validator.validateUniqueNames(
+            this,
+            getFeature(),
+            false);
 
         if (!getFeature().isEmpty()) {
             // columns were specified; we are to validate them
@@ -126,24 +130,27 @@ public abstract class FemBaseColumnSetImpl extends InstanceHandler
                 continue;
             }
             throw validator.res.newValidatorNoConstrainAllow(
-                    getLocalizedName(validator, this));
+                getLocalizedName(validator, this));
         }
     }
 
-    private String getLocalizedName(DdlValidator validator, FemBaseColumnSetImpl femBaseColumnSet)
+    private String getLocalizedName(
+        DdlValidator validator,
+        FemBaseColumnSetImpl femBaseColumnSet)
     {
         return validator.getRepos().getLocalizedObjectName(
-                null,
-                femBaseColumnSet.getName(),
-                femBaseColumnSet.refClass());
+            null,
+            femBaseColumnSet.getName(),
+            femBaseColumnSet.refClass());
     }
-
 
     // implement DdlValidatedElement
-    public void validateDeletion(DdlValidator validator,boolean truncation)
+    public void validateDeletion(
+        DdlValidator validator,
+        boolean truncation)
     {
     }
-
 }
-// FemBaseColumnSetImp.java
 
+
+// FemBaseColumnSetImp.java

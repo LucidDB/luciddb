@@ -1,40 +1,33 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package net.sf.saffron.oj.xlat;
 
-import org.eigenbase.reltype.*;
-import org.eigenbase.relopt.*;
-import net.sf.saffron.trace.*;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import net.sf.saffron.oj.rel.ExpressionReaderRel;
 import net.sf.saffron.oj.rel.ForTerminatorRel;
-import org.eigenbase.oj.util.JavaRexBuilder;
-import org.eigenbase.oj.util.OJUtil;
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.oj.rel.JavaRelImplementor;
-import org.eigenbase.oj.rel.JavaRel;
-import org.eigenbase.rel.*;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.util.Util;
+import net.sf.saffron.trace.*;
+
 import openjava.mop.Environment;
 import openjava.mop.OJClass;
 import openjava.mop.QueryEnvironment;
@@ -42,10 +35,17 @@ import openjava.mop.Toolbox;
 import openjava.ptree.*;
 import openjava.ptree.util.QueryExpander;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.eigenbase.oj.rel.JavaRel;
+import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.oj.util.JavaRexBuilder;
+import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.util.Util;
+
 
 /**
  * <code>OJQueryExpander</code> passes over a parse tree, and converts
@@ -59,21 +59,16 @@ import java.util.logging.Logger;
 public class OJQueryExpander extends QueryExpander
 {
     private static final Logger tracer = SaffronTrace.getQueryExpanderTracer();
-
-    //~ Instance fields -------------------------------------------------------
-
     private RelDataType rootRowType;
     private final RelOptConnection connection;
 
-    //~ Constructors ----------------------------------------------------------
-
-    public OJQueryExpander(Environment env, RelOptConnection connection)
+    public OJQueryExpander(
+        Environment env,
+        RelOptConnection connection)
     {
         super(env);
         this.connection = connection;
     }
-
-    //~ Methods ---------------------------------------------------------------
 
     /**
      * @return the row Type for the root relational expression encountered
@@ -105,18 +100,23 @@ public class OJQueryExpander extends QueryExpander
         Variable variable,
         StatementList body)
     {
-        RelNode rel = convertExpToUnoptimizedRel(exp,eager,null,null);
+        RelNode rel = convertExpToUnoptimizedRel(exp, eager, null, null);
         if (rel == null) {
             return null;
         }
+
         // Project out the one and only field.
         if (rel.getRowType().getFieldCount() == 1) {
             final RelDataTypeField field0 = rel.getRowType().getFields()[0];
-            rel = new ProjectRel(rel.getCluster(),
+            rel = new ProjectRel(
+                    rel.getCluster(),
                     rel,
-                    new RexNode[] {rel.getCluster().rexBuilder.makeInputRef(
-                            field0.getType(),0)},
-                    new String[]{field0.getName()},
+                    new RexNode [] {
+                        rel.getCluster().rexBuilder.makeInputRef(
+                            field0.getType(),
+                            0)
+                    },
+                    new String [] { field0.getName() },
                     ProjectRel.Flags.None);
         } else {
             //assert false;
@@ -126,12 +126,11 @@ public class OJQueryExpander extends QueryExpander
         if (rel.getConvention() != convention) {
             RelNode previous = rel;
             try {
-                rel = planner.changeConvention(rel,convention);
-                assert(rel != null);
+                rel = planner.changeConvention(rel, convention);
+                assert (rel != null);
                 planner.setRoot(rel);
             } catch (Throwable e) {
-                throw Util.newInternal(
-                    e,
+                throw Util.newInternal(e,
                     "Error while converting relational expression ["
                     + previous + "] to calling convention [" + convention
                     + "]");
@@ -147,13 +146,13 @@ public class OJQueryExpander extends QueryExpander
             }
             tracer.log(Level.FINE,
                 "Change convention: rel#" + previous.getId() + ":"
-                + previous.getConvention() + " to rel#" + rel.getId()
-                + ":" + rel.getConvention());
-            assert(rel.getConvention() == convention);
+                + previous.getConvention() + " to rel#" + rel.getId() + ":"
+                + rel.getConvention());
+            assert (rel.getConvention() == convention);
         }
         planner = planner.chooseDelegate();
         RelNode bestExp = planner.findBestExp();
-        assert(bestExp != null) : "could not implement exp";
+        assert (bestExp != null) : "could not implement exp";
         return (JavaRel) bestExp;
     }
 
@@ -162,8 +161,8 @@ public class OJQueryExpander extends QueryExpander
     {
         while (true) {
             Expression exp0 = exp;
-            exp = expandExpression_(exp0,null,CallingConvention.ARRAY);
-            assert(exp != null);
+            exp = expandExpression_(exp0, null, CallingConvention.ARRAY);
+            assert (exp != null);
             if (exp == exp0) {
                 return exp;
             }
@@ -184,11 +183,12 @@ public class OJQueryExpander extends QueryExpander
     {
         boolean eager = true;
         CallingConvention convention = CallingConvention.JAVA;
-        JavaRel best = convertExpToOptimizedRel(
-            exp,eager,convention,variable,body);
+        JavaRel best =
+            convertExpToOptimizedRel(exp, eager, convention, variable, body);
 
         // spit out java statement block
-        JavaRelImplementor implementor = new JavaRelImplementor(best.getCluster().rexBuilder);
+        JavaRelImplementor implementor =
+            new JavaRelImplementor(best.getCluster().rexBuilder);
         Object o = implementor.implementRoot(best);
         return new Block((StatementList) o);
     }
@@ -223,9 +223,11 @@ public class OJQueryExpander extends QueryExpander
             // will already have pushed a QueryEnvironment but another can't do
             // any harm
             QueryEnvironment qenv =
-                new QueryEnvironment(getEnvironment(),queryExp);
+                new QueryEnvironment(
+                    getEnvironment(),
+                    queryExp);
             QueryInfo newQueryInfo =
-                new QueryInfo(queryInfo,qenv,this,queryExp);
+                new QueryInfo(queryInfo, qenv, this, queryExp);
             return newQueryInfo.convertQueryToRel(queryExp);
         }
         if (exp instanceof BinaryExpression) {
@@ -238,26 +240,33 @@ public class OJQueryExpander extends QueryExpander
                 Expression rightExp = binaryExp.getRight();
                 if (queryInfo == null) {
                     queryInfo =
-                        new QueryInfo(queryInfo,getEnvironment(),this,exp);
+                        new QueryInfo(
+                            queryInfo,
+                            getEnvironment(),
+                            this,
+                            exp);
                 }
-                RelNode left = convertExpToUnoptimizedRel(
-                    leftExp,true,queryInfo,null);
-                RelNode right = convertExpToUnoptimizedRel(
-                    rightExp,true,queryInfo,null);
+                RelNode left =
+                    convertExpToUnoptimizedRel(leftExp, true, queryInfo, null);
+                RelNode right =
+                    convertExpToUnoptimizedRel(rightExp, true, queryInfo, null);
                 RelOptCluster cluster =
-                    QueryInfo.createCluster(queryInfo,getEnvironment());
-                cluster.originalExpression = ((JavaRexBuilder)
-                        cluster.rexBuilder).makeJava(cluster.env, exp);
+                    QueryInfo.createCluster(
+                        queryInfo,
+                        getEnvironment());
+                cluster.originalExpression =
+                    ((JavaRexBuilder) cluster.rexBuilder).makeJava(cluster.env,
+                        exp);
                 switch (binaryExp.getOperator()) {
                 case BinaryExpression.UNION:
                     return new UnionRel(
                         cluster,
-                        new RelNode [] { left,right },
+                        new RelNode [] { left, right },
                         false);
                 case BinaryExpression.EXCEPT:
-                    return new MinusRel(cluster,left,right);
+                    return new MinusRel(cluster, left, right);
                 case BinaryExpression.INTERSECT:
-                    return new IntersectRel(cluster,left,right);
+                    return new IntersectRel(cluster, left, right);
                 default:
                     throw Util.newInternal("bad case");
                 }
@@ -271,7 +280,7 @@ public class OJQueryExpander extends QueryExpander
         if (!eager) {
             return null;
         }
-tryit:
+tryit: 
         if (exp instanceof MethodCall) {
             MethodCall call = (MethodCall) exp;
             String name = call.getName();
@@ -311,7 +320,7 @@ tryit:
             String tableName = Literal.stripString(literal.toString());
             final Environment env = getEnvironment();
             RelOptTable table =
-                Toolbox.getTable(env,refexpr,schemaName,tableName);
+                Toolbox.getTable(env, refexpr, schemaName, tableName);
             if (table == null) {
                 break tryit;
             }
@@ -323,7 +332,9 @@ tryit:
             return rel;
         }
 
-        OJClass clazz = Util.getType(getEnvironment(),exp);
+        OJClass clazz = Util.getType(
+                getEnvironment(),
+                exp);
 
         // An array cast is not meant literally -- it tells us what the row
         // type is.
@@ -343,20 +354,25 @@ tryit:
             RelOptCluster cluster;
             RexNode rexExp = null;
             if (queryInfo != null) {
-                rexExp = queryInfo.convertExpToInternal(
+                rexExp =
+                    queryInfo.convertExpToInternal(
                         exp,
                         new RelNode [] {  });
                 cluster = queryInfo.cluster;
             } else {
                 // there's no query current, but we still need a cluster
-                cluster = QueryInfo.createCluster(queryInfo,getEnvironment());
-                rexExp = ((JavaRexBuilder) cluster.rexBuilder).makeJava(
-                        getEnvironment(), exp);
+                cluster = QueryInfo.createCluster(
+                        queryInfo,
+                        getEnvironment());
+                rexExp =
+                    ((JavaRexBuilder) cluster.rexBuilder).makeJava(
+                        getEnvironment(),
+                        exp);
                 cluster.originalExpression = rexExp;
             }
             final RelDataType rowType =
-                    OJUtil.ojToType(cluster.typeFactory,desiredRowType);
-            RelNode rel = new ExpressionReaderRel(cluster,rexExp,rowType);
+                OJUtil.ojToType(cluster.typeFactory, desiredRowType);
+            RelNode rel = new ExpressionReaderRel(cluster, rexExp, rowType);
             if (queryInfo != null) {
                 queryInfo.leaves.add(rel);
             }
@@ -370,7 +386,7 @@ tryit:
     {
         // spit out java statement block
         JavaRelImplementor implementor =
-                new JavaRelImplementor(rel.getCluster().rexBuilder);
+            new JavaRelImplementor(rel.getCluster().rexBuilder);
         Object o = implementor.implementRoot(rel);
         return (Expression) o;
     }
@@ -379,8 +395,8 @@ tryit:
     {
         boolean eager = true;
         CallingConvention convention = CallingConvention.EXISTS;
-        JavaRel rel = convertExpToOptimizedRel(
-            exp,eager,convention,null,null);
+        JavaRel rel =
+            convertExpToOptimizedRel(exp, eager, convention, null, null);
         return convertRelToExp(rel);
     }
 
@@ -429,7 +445,7 @@ tryit:
             // emps)"
             CastExpression castExp = (CastExpression) exp;
             Environment env = getEnvironment();
-            OJClass clazz = Util.getType(env,castExp);
+            OJClass clazz = Util.getType(env, castExp);
             boolean retainCast;
             if (clazz.isArray()) {
                 if (desiredRowType == null) {
@@ -468,16 +484,18 @@ tryit:
                     convention);
             if (retainCast) {
                 expanded =
-                    new CastExpression(castExp.getTypeSpecifier(),expanded);
+                    new CastExpression(
+                        castExp.getTypeSpecifier(),
+                        expanded);
             }
             return expanded;
         }
 
         boolean eager = false;
-        JavaRel rel = convertExpToOptimizedRel(
-            exp,eager,convention,null,null);
+        JavaRel rel =
+            convertExpToOptimizedRel(exp, eager, convention, null, null);
         if (exp instanceof QueryExpression) {
-            assert(rel != null);
+            assert (rel != null);
         }
         if (rel != null) {
             if (tracer.isLoggable(Level.FINE)) {
@@ -486,9 +504,10 @@ tryit:
                     new RelOptPlanWriter(new PrintWriter(sw));
                 rel.explain(pw);
                 pw.flush();
-                tracer.log(Level.FINE,
-                        "Converted expression {0} into rel expression {1}",
-                        new Object[] {exp, sw.toString()});
+                tracer.log(
+                    Level.FINE,
+                    "Converted expression {0} into rel expression {1}",
+                    new Object [] { exp, sw.toString() });
             }
             rootRowType = rel.getRowType();
             return convertRelToExp(rel);
@@ -497,7 +516,9 @@ tryit:
             if (binaryExp.getOperator() == BinaryExpression.IN) {
                 // "in" outside a query context, e.g. "if (1 in new int[]
                 // {1,2,3})"
-                return expandIn(binaryExp.getLeft(),binaryExp.getRight());
+                return expandIn(
+                    binaryExp.getLeft(),
+                    binaryExp.getRight());
             }
         } else if (exp instanceof UnaryExpression) {
             UnaryExpression unaryExp = (UnaryExpression) exp;
@@ -525,7 +546,9 @@ tryit:
      * }</pre>
      * </blockquote>
      */
-    private Expression expandIn(Expression seekExp,Expression queryExp)
+    private Expression expandIn(
+        Expression seekExp,
+        Expression queryExp)
     {
         return expandExists(
             new QueryExpression(
@@ -533,7 +556,7 @@ tryit:
                 true,
                 null,
                 null,
-                new BinaryExpression(seekExp,BinaryExpression.IN,queryExp),
+                new BinaryExpression(seekExp, BinaryExpression.IN, queryExp),
                 null));
     }
 

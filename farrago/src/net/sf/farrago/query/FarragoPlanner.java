@@ -17,22 +17,24 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.query;
 
-import org.eigenbase.util.*;
-import org.eigenbase.oj.*;
-import org.eigenbase.oj.rel.*;
-import org.eigenbase.relopt.*;
-import org.eigenbase.rel.*;
-import org.eigenbase.rel.convert.*;
-import net.sf.farrago.fem.config.CalcVirtualMachine;
-import net.sf.farrago.fem.config.CalcVirtualMachineEnum;
+import com.disruptivetech.farrago.rel.*;
 
 // FIXME jvs 25-Aug-2004:  This is just a temporary circular dependency
 // until the required session plugin infrastructure is available.
 import com.disruptivetech.farrago.volcano.*;
-import com.disruptivetech.farrago.rel.*;
+
+import net.sf.farrago.fem.config.CalcVirtualMachine;
+import net.sf.farrago.fem.config.CalcVirtualMachineEnum;
+
+import org.eigenbase.oj.*;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.convert.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.util.*;
+
 
 /**
  * FarragoPlanner extends {@link VolcanoPlanner} to request Farrago-specific
@@ -70,7 +72,7 @@ public class FarragoPlanner extends VolcanoPlanner
     public void init()
     {
         boolean fennelEnabled = stmt.getRepos().isFennelEnabled();
-        
+
         // Only register calling conventions we're interested in.  Eventually
         // we probably want to expand this set once the various converters are
         // accurately costed.  For now, this guarantees determinism in unit
@@ -83,7 +85,6 @@ public class FarragoPlanner extends VolcanoPlanner
         // NOTE: don't call IterConverterRel.init and friends; their presence
         // just confuses the optimizer, and we explicitly supply all the
         // conversion rules we need
-
         registerAbstractRels();
 
         addRule(new AbstractConverter.ExpandConversionRule());
@@ -99,8 +100,7 @@ public class FarragoPlanner extends VolcanoPlanner
         addRule(new FennelSortRule());
         addRule(new FennelDistinctSortRule());
         addRule(
-            new FennelRenameRule(
-                FennelPullRel.FENNEL_PULL_CONVENTION,
+            new FennelRenameRule(FennelPullRel.FENNEL_PULL_CONVENTION,
                 "FennelPullRenameRule"));
         addRule(new FennelCartesianJoinRule());
 
@@ -110,25 +110,22 @@ public class FarragoPlanner extends VolcanoPlanner
             stmt.getRepos().getCurrentConfig().getCalcVirtualMachine();
         if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_FENNEL)) {
             // use Fennel for calculating expressions
-            assert(fennelEnabled);
+            assert (fennelEnabled);
             addRule(FennelCalcRule.instance);
         }
 
-        if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_JAVA) ||
-            calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO))
-        {
+        if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_JAVA)
+                || calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO)) {
             // use Java code generation for calculating expressions
             addRule(IterRules.IterCalcRule.instance);
-            
+
             // TODO jvs 6-May-2004:  these should be redundant now, but when
             // I remove them, some queries fail.  Find out why.
             addRule(IterRules.ProjectToIteratorRule.instance);
             addRule(IterRules.ProjectedFilterToIteratorRule.instance);
         }
 
-        if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO)
-            && fennelEnabled)
-        {
+        if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO) && fennelEnabled) {
             // add rule for pure calculator usage plus rule for
             // decomposing rels into mixed Java/Fennel impl
             addRule(FennelCalcRule.instance);

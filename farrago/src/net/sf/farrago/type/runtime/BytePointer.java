@@ -16,11 +16,9 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.type.runtime;
 
 import java.io.*;
-
 import java.nio.*;
 
 
@@ -28,7 +26,7 @@ import java.nio.*;
  * BytePointer is instantiated during execution to refer to a contiguous
  * subset of a byte array.  It exists to avoid the need to instantiate a new
  * object for each variable-width value read.
- * 
+ *
  * <p>
  * NOTE:  BytePointer is not declared to implement NullableValue, although it
  * actually provides the necessary method implementations.  Instead, the
@@ -41,17 +39,19 @@ import java.nio.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class BytePointer extends ByteArrayInputStream implements AssignableValue
+public class BytePointer extends ByteArrayInputStream
+    implements AssignableValue
 {
     //~ Static fields/initializers --------------------------------------------
 
     public static final String ENFORCE_PRECISION_METHOD_NAME =
-    "enforceBytePrecision";
-
+        "enforceBytePrecision";
     public static final String SET_POINTER_METHOD_NAME = "setPointer";
-    
+
     /** Read-only global for 0-length byte array */
     public static final byte [] emptyBytes = new byte[0];
+
+    //~ Instance fields -------------------------------------------------------
 
     // WARNING: The superclass field named count is totally misnamed; it should
     // be end.  Watch out for this.
@@ -61,7 +61,7 @@ public class BytePointer extends ByteArrayInputStream implements AssignableValue
      * be created.
      */
     private byte [] ownBytes;
-    
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -100,7 +100,7 @@ public class BytePointer extends ByteArrayInputStream implements AssignableValue
             return buf;
         }
         byte [] copy = new byte[count - pos];
-        System.arraycopy(buf,pos,copy,0,count - pos);
+        System.arraycopy(buf, pos, copy, 0, count - pos);
         return copy;
     }
 
@@ -111,7 +111,10 @@ public class BytePointer extends ByteArrayInputStream implements AssignableValue
      * @param pos position in buffer to point at
      * @param end buffer position at which valid data ends
      */
-    public void setPointer(byte [] buf,int pos,int end)
+    public void setPointer(
+        byte [] buf,
+        int pos,
+        int end)
     {
         if (this.buf == null) {
             // if we've been set to a NULL value, someone has to explicitly
@@ -144,7 +147,7 @@ public class BytePointer extends ByteArrayInputStream implements AssignableValue
             } else {
                 setNull(false);
                 byte [] bytes = getBytesForString(string);
-                setPointer(bytes,0,bytes.length);
+                setPointer(bytes, 0, bytes.length);
             }
         }
     }
@@ -158,7 +161,10 @@ public class BytePointer extends ByteArrayInputStream implements AssignableValue
      *
      * @param padByte byte to pad with
      */
-    public void enforceBytePrecision(int precision,boolean needPad,byte padByte)
+    public void enforceBytePrecision(
+        int precision,
+        boolean needPad,
+        byte padByte)
     {
         if (isNull()) {
             return;
@@ -170,7 +176,7 @@ public class BytePointer extends ByteArrayInputStream implements AssignableValue
         } else if (needPad && (len < precision)) {
             // pad
             allocateOwnBytes(precision);
-            System.arraycopy(buf,pos,ownBytes,0,len);
+            System.arraycopy(buf, pos, ownBytes, 0, len);
             buf = ownBytes;
             for (; len < precision; ++len) {
                 buf[len] = padByte;
@@ -182,7 +188,7 @@ public class BytePointer extends ByteArrayInputStream implements AssignableValue
 
     private void allocateOwnBytes(int n)
     {
-        if ((ownBytes == null) || ownBytes.length < n) {
+        if ((ownBytes == null) || (ownBytes.length < n)) {
             ownBytes = new byte[n];
         }
     }
@@ -197,7 +203,7 @@ public class BytePointer extends ByteArrayInputStream implements AssignableValue
         if (buf == null) {
             return;
         }
-        byteBuffer.put(buf,pos,count - pos);
+        byteBuffer.put(buf, pos, count - pos);
     }
 
     /**
@@ -208,7 +214,9 @@ public class BytePointer extends ByteArrayInputStream implements AssignableValue
      *
      * @param offset starting byte offset within buffer
      */
-    public final void writeToBufferAbsolute(ByteBuffer byteBuffer,int offset)
+    public final void writeToBufferAbsolute(
+        ByteBuffer byteBuffer,
+        int offset)
     {
         if (buf == null) {
             return;
@@ -216,7 +224,7 @@ public class BytePointer extends ByteArrayInputStream implements AssignableValue
         int savedPos = byteBuffer.position();
         try {
             byteBuffer.position(offset);
-            byteBuffer.put(buf,pos,count - pos);
+            byteBuffer.put(buf, pos, count - pos);
         } finally {
             byteBuffer.position(savedPos);
         }
@@ -269,7 +277,7 @@ public class BytePointer extends ByteArrayInputStream implements AssignableValue
         if (buf == null) {
             return null;
         }
-        return new String(buf,pos,count - pos);
+        return new String(buf, pos, count - pos);
     }
 }
 

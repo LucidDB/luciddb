@@ -1,32 +1,32 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.sql.parser;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.eigenbase.sql.SqlOperatorTable;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Abstract base for parsers generated from CommonParser.jj.
@@ -36,15 +36,7 @@ import java.util.Set;
  */
 public abstract class CommonParserBase
 {
-    /**
-     * Operator table containing the standard SQL operators and functions.
-     */
-    public final SqlStdOperatorTable opTab = SqlOperatorTable.std();
-
-    /**
-     * Operator table containing any session-specific operators and functions.
-     */
-    public SqlOperatorTable extOpTab;
+    //~ Static fields/initializers --------------------------------------------
 
     /**
      * Accept any kind of expression in this context.
@@ -59,23 +51,15 @@ public abstract class CommonParserBase
     /**
      * Accept only non-query expressions in this context.
      */
-    protected static final ExprContext EXPR_ACCEPT_NONQUERY = new ExprContext();
+    protected static final ExprContext EXPR_ACCEPT_NONQUERY =
+        new ExprContext();
 
     /**
      * Accept only parenthesized queries or non-query expressions
      * in this context.
      */
-    protected static final ExprContext EXPR_ACCEPT_SUBQUERY = new ExprContext();
-
-
-    protected int nDynamicParams;
-
-    /**
-     * Type-safe enum for context of acceptable expressions.
-     */
-    protected static class ExprContext
-    {
-    }
+    protected static final ExprContext EXPR_ACCEPT_SUBQUERY =
+        new ExprContext();
 
     // A list of SQL 92 reserved words. Please see http://www.postgresql.org/docs/7.4/static/sql-keywords-appendix.html
     // for detail.
@@ -311,6 +295,21 @@ public abstract class CommonParserBase
         SQL92ReservedWords.add("zone");
     }
 
+    //~ Instance fields -------------------------------------------------------
+
+    /**
+     * Operator table containing the standard SQL operators and functions.
+     */
+    public final SqlStdOperatorTable opTab = SqlOperatorTable.std();
+
+    /**
+     * Operator table containing any session-specific operators and functions.
+     */
+    public SqlOperatorTable extOpTab;
+    protected int nDynamicParams;
+
+    //~ Methods ---------------------------------------------------------------
+
     /**
      *
      * @return a set of string function name
@@ -347,6 +346,15 @@ public abstract class CommonParserBase
         return opTab.systemFuncNames;
     }
 
+    //~ Inner Classes ---------------------------------------------------------
+
+    /**
+     * Type-safe enum for context of acceptable expressions.
+     */
+    protected static class ExprContext
+    {
+    }
 }
+
 
 // End CommonParserBase.java

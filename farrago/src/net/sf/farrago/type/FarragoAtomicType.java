@@ -17,21 +17,20 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.type;
+
+import java.io.PrintWriter;
+import java.nio.charset.Charset;
+import java.sql.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.resource.*;
 
 import org.eigenbase.reltype.*;
-import org.eigenbase.util.Util;
 import org.eigenbase.sql.SqlCollation;
 import org.eigenbase.sql.type.SqlTypeName;
-
-import java.sql.*;
-import java.io.PrintWriter;
-import java.nio.charset.Charset;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -46,7 +45,6 @@ public abstract class FarragoAtomicType extends FarragoType
     //~ Instance fields -------------------------------------------------------
 
     private final CwmSqlsimpleType simpleType;
-
     private final boolean isNullable;
 
     /** One-element array containing the "this" field. */
@@ -68,8 +66,8 @@ public abstract class FarragoAtomicType extends FarragoType
         Util.pre(simpleType != null, "simpleType != null");
         this.simpleType = simpleType;
         this.isNullable = isNullable;
-        fields[0] = new FarragoTypeFactoryImpl.ExposedFieldImpl(
-            "this", 0, this);
+        fields[0] =
+            new FarragoTypeFactoryImpl.ExposedFieldImpl("this", 0, this);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -119,7 +117,7 @@ public abstract class FarragoAtomicType extends FarragoType
     protected void computeDigest()
     {
         StringBuffer sb = new StringBuffer();
-        generateTypeString(sb,true);
+        generateTypeString(sb, true);
         if (!isNullable) {
             sb.append(" NOT NULL");
         }
@@ -130,7 +128,7 @@ public abstract class FarragoAtomicType extends FarragoType
     public String toString()
     {
         StringBuffer sb = new StringBuffer();
-        generateTypeString(sb,false);
+        generateTypeString(sb, false);
         return sb.toString();
     }
 
@@ -140,7 +138,9 @@ public abstract class FarragoAtomicType extends FarragoType
         return digest;
     }
 
-    protected void generateTypeString(StringBuffer sb,boolean withDetail)
+    protected void generateTypeString(
+        StringBuffer sb,
+        boolean withDetail)
     {
         sb.append(simpleType.getName());
         if (takesPrecision()) {
@@ -154,7 +154,9 @@ public abstract class FarragoAtomicType extends FarragoType
         }
     }
 
-    public void format(Object value, PrintWriter pw)
+    public void format(
+        Object value,
+        PrintWriter pw)
     {
         pw.print(value);
     }
@@ -227,6 +229,7 @@ public abstract class FarragoAtomicType extends FarragoType
         case Types.TIME:
             return new Integer(0);
         case Types.TIMESTAMP:
+
             // TODO jvs 26-July-2004:  should be 6 for microseconds,
             // but we can't support that yet
             return new Integer(0);
@@ -280,29 +283,36 @@ public abstract class FarragoAtomicType extends FarragoType
     }
 
     /** implement RelDataType */
-    public boolean isCharType() {
+    public boolean isCharType()
+    {
         FarragoTypeFamily family = getFamily();
         return (family == FarragoTypeFamily.CHARACTER);
     }
 
     /** implement RelDataType */
-    public Charset getCharset() {
-        throw Util.newInternal(digest+" is not defined to carry a charset");
+    public Charset getCharset()
+    {
+        throw Util.newInternal(digest + " is not defined to carry a charset");
     }
 
     /** implement RelDataType */
-    public void setCharset(Charset charset) {
-        throw Util.newInternal(digest+" is not defined to carry a charset");
+    public void setCharset(Charset charset)
+    {
+        throw Util.newInternal(digest + " is not defined to carry a charset");
     }
 
     /** implement RelDataType */
-    public SqlCollation getCollation() throws RuntimeException {
-        throw Util.newInternal(digest+" is not defined to carry a collation");
+    public SqlCollation getCollation()
+        throws RuntimeException
+    {
+        throw Util.newInternal(digest + " is not defined to carry a collation");
     }
 
     /** implement RelDataType */
-    public void setCollation(SqlCollation collation) throws RuntimeException {
-        throw Util.newInternal(digest+" is not defined to carry a collation");
+    public void setCollation(SqlCollation collation)
+        throws RuntimeException
+    {
+        throw Util.newInternal(digest + " is not defined to carry a collation");
     }
 
     /**
@@ -354,8 +364,8 @@ public abstract class FarragoAtomicType extends FarragoType
             return false;
         }
         FarragoAtomicType that = (FarragoAtomicType) other;
-        return  this.simpleType.getTypeNumber().intValue() ==
-                that.simpleType.getTypeNumber().intValue();
+        return this.simpleType.getTypeNumber().intValue() == that.simpleType.getTypeNumber()
+            .intValue();
     }
 
     // implement RelDataType
@@ -420,15 +430,14 @@ public abstract class FarragoAtomicType extends FarragoType
      */
     public Class getClassForPrimitive()
     {
-        assert(hasClassForPrimitive())
-            : "Atomic Type does not have primitive representation";
+        assert (hasClassForPrimitive()) : "Atomic Type does not have primitive representation";
         return null;
     }
 
-    public SqlTypeName getSqlTypeName() {
+    public SqlTypeName getSqlTypeName()
+    {
         return SqlTypeName.get(this.simpleType.getName());
     }
-
 }
 
 

@@ -1,35 +1,37 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2003-2003 Disruptive Technologies, Inc.
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 package org.eigenbase.sql;
+
+import java.nio.charset.Charset;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeFactoryImpl;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.resource.EigenbaseResource;
+import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.SaffronProperties;
 import org.eigenbase.util.Util;
 
-import java.nio.charset.Charset;
 
 /**
  * This should really be a subtype of SqlCall ...
@@ -43,23 +45,25 @@ import java.nio.charset.Charset;
  * @since Jun 4, 2004
  * @version $Id$
  **/
-public class SqlDataType extends SqlNode {
+public class SqlDataType extends SqlNode
+{
+    //~ Instance fields -------------------------------------------------------
 
     private final SqlIdentifier typeName;
     private final int scale;
     private final int precision;
-
     private RelDataType type;
-
     private final String charSetName;
 
+    //~ Constructors ----------------------------------------------------------
 
-    public RelDataType getType() {
-        return type;
-    }
-    
-    public SqlDataType(final SqlIdentifier typeName, int precision , int scale,
-            String charSetName, ParserPosition parserPosition) {
+    public SqlDataType(
+        final SqlIdentifier typeName,
+        int precision,
+        int scale,
+        String charSetName,
+        ParserPosition parserPosition)
+    {
         super(parserPosition);
         this.typeName = typeName;
         this.scale = scale;
@@ -67,19 +71,30 @@ public class SqlDataType extends SqlNode {
         this.charSetName = charSetName;
     }
 
-    public SqlIdentifier getTypeName() {
+    //~ Methods ---------------------------------------------------------------
+
+    public RelDataType getType()
+    {
+        return type;
+    }
+
+    public SqlIdentifier getTypeName()
+    {
         return typeName;
     }
 
-    public int getScale() {
+    public int getScale()
+    {
         return scale;
     }
 
-    public int getPrecision() {
+    public int getPrecision()
+    {
         return precision;
     }
 
-    public String getCharSetName() {
+    public String getCharSetName()
+    {
         return charSetName;
     }
 
@@ -106,9 +121,13 @@ public class SqlDataType extends SqlNode {
      * @param rightPrec The precedence of the {@link SqlNode} immediately
      *   following this node in a depth-first scan of the parse tree
      */
-    public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
+    public void unparse(
+        SqlWriter writer,
+        int leftPrec,
+        int rightPrec)
+    {
         String name = typeName.getSimple();
-        if (SqlTypeName.containsName(name)){
+        if (SqlTypeName.containsName(name)) {
             //we have a built in data type
             writer.print(name);
 
@@ -125,24 +144,32 @@ public class SqlDataType extends SqlNode {
             }
         } else {
             // else we have a user defined type
-            typeName.unparse(writer,leftPrec,rightPrec);
+            typeName.unparse(writer, leftPrec, rightPrec);
         }
     }
 
-    public Object clone() {
-        return new SqlDataType(typeName, precision, scale, charSetName, getParserPosition());
+    public Object clone()
+    {
+        return new SqlDataType(
+            typeName,
+            precision,
+            scale,
+            charSetName,
+            getParserPosition());
     }
 
     /**
      * @throws {@link EigenbaseResource#newUnknownDatatypeName} if
      * {@link SqlDataType#typeName#getSimple()} is not defined.
      */
-
-    public RelDataType deriveType(SqlValidator validator) {
+    public RelDataType deriveType(SqlValidator validator)
+    {
         String name = typeName.getSimple();
+
         //for now we only support builtin datatypes
         if (!SqlTypeName.containsName(name)) {
             ParserPosition pos = getParserPosition();
+
             //assert(pos==null) : "need to add pos data now when pos!=null";
             //todo: klo 7/26/2004 modify the unknowdatatypename message to include parser position
             throw EigenbaseResource.instance().newUnknownDatatypeName(name);
@@ -151,16 +178,17 @@ public class SqlDataType extends SqlNode {
         SqlTypeName sqlTypeName = SqlTypeName.get(name);
         RelDataTypeFactory typeFactory = validator.typeFactory;
 
-        if (precision>0 && scale>0 && sqlTypeName.allowsPrecScale(true,true))
-        {
+        if ((precision > 0) && (scale > 0)
+                && sqlTypeName.allowsPrecScale(true, true)) {
             type = typeFactory.createSqlType(sqlTypeName, precision, scale);
-        } else if (precision>0 && sqlTypeName.allowsPrecNoScale()) {
+        } else if ((precision > 0) && sqlTypeName.allowsPrecNoScale()) {
             type = typeFactory.createSqlType(sqlTypeName, precision);
         } else if (sqlTypeName.allowsNoPrecNoScale()) {
             type = typeFactory.createSqlType(sqlTypeName);
         } else {
-            type = RelDataTypeFactoryImpl.createSqlTypeIgnorePrecOrScale(
-                    typeFactory, sqlTypeName);
+            type =
+                RelDataTypeFactoryImpl.createSqlTypeIgnorePrecOrScale(typeFactory,
+                    sqlTypeName);
         }
 
         if (type.isCharType()) {
@@ -168,8 +196,8 @@ public class SqlDataType extends SqlNode {
             //"If TD is a fixed-length, variable-length or large object character string, then the collating sequence
             //of the result of the <cast specification> is the default collating sequence for the character
             //repertoire of TD and the result of the <cast specification> has the Coercible coercibility characteristic."
-            SqlCollation collation = new SqlCollation(
-                    SqlCollation.Coercibility.Coercible);
+            SqlCollation collation =
+                new SqlCollation(SqlCollation.Coercibility.Coercible);
 
             Charset charset;
             if (null == charSetName) {
@@ -177,11 +205,13 @@ public class SqlDataType extends SqlNode {
             } else {
                 charset = Charset.forName(charSetName);
             }
-            type = typeFactory.createTypeWithCharsetAndCollation(
-                    type, charset, collation);
+            type =
+                typeFactory.createTypeWithCharsetAndCollation(type, charset,
+                    collation);
         }
         return type;
     }
 }
+
 
 // End SqlDataType.java

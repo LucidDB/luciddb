@@ -16,18 +16,18 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.session;
 
+import java.sql.*;
+
+import net.sf.farrago.query.FarragoPreparingStmt;
+import net.sf.farrago.util.*;
+
+import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.rel.RelNode;
 import org.eigenbase.sql.SqlKind;
 
-import net.sf.farrago.util.*;
-import net.sf.farrago.query.FarragoPreparingStmt;
-
-import java.sql.*;
 
 /**
  * FarragoSessionStmtContext represents a context for executing SQL statements
@@ -47,6 +47,8 @@ import java.sql.*;
  */
 public interface FarragoSessionStmtContext extends FarragoAllocation
 {
+    //~ Methods ---------------------------------------------------------------
+
     /**
      * @return the session from which this statement context was created
      */
@@ -76,8 +78,9 @@ public interface FarragoSessionStmtContext extends FarragoAllocation
      * @param isExecDirect whether the statement is being prepared
      * as part of direct execution
      */
-    public void prepare(String sql,boolean isExecDirect);
-
+    public void prepare(
+        String sql,
+        boolean isExecDirect);
 
     /**
      * Prepares a query or DML statement (not DDL), provided as a query plan.
@@ -116,7 +119,9 @@ public interface FarragoSessionStmtContext extends FarragoAllocation
      *
      * @param arg value to set
      */
-    public void setDynamicParam(int iParam,Object arg);
+    public void setDynamicParam(
+        int iParam,
+        Object arg);
 
     /**
      * Clears any settings for all dynamic parameters.
@@ -158,5 +163,6 @@ public interface FarragoSessionStmtContext extends FarragoAllocation
 
     public int getQueryTimeout();
 }
+
 
 // End FarragoSessionStmtContext.java

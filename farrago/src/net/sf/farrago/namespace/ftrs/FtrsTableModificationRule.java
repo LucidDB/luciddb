@@ -16,7 +16,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.ftrs;
 
 import net.sf.farrago.query.*;
@@ -42,10 +41,11 @@ class FtrsTableModificationRule extends RelOptRule
      */
     public FtrsTableModificationRule()
     {
-        super(
-            new RelOptRuleOperand(
+        super(new RelOptRuleOperand(
                 TableModificationRel.class,
-                new RelOptRuleOperand [] { new RelOptRuleOperand(RelNode.class,null) }));
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(RelNode.class, null)
+                }));
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -71,14 +71,13 @@ class FtrsTableModificationRule extends RelOptRule
         // Require input types to match expected types exactly.  This
         // is accomplished by the usage of CoerceInputsRule.
         if (!RelOptUtil.areRowTypesEqual(
-                inputRel.getRowType(),
-                tableModification.getExpectedInputRowType(0)))
-        {
+                    inputRel.getRowType(),
+                    tableModification.getExpectedInputRowType(0))) {
             return;
         }
-        
+
         RelNode fennelInput =
-            convert(inputRel,FennelPullRel.FENNEL_PULL_CONVENTION);
+            convert(inputRel, FennelPullRel.FENNEL_PULL_CONVENTION);
         if (fennelInput == null) {
             return;
         }

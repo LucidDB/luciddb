@@ -16,13 +16,11 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.util;
 
 import java.lang.reflect.*;
-import java.util.*;
-
 import java.nio.*;
+import java.util.*;
 
 
 /**
@@ -33,22 +31,22 @@ import java.nio.*;
  */
 public abstract class ReflectUtil
 {
-    private static Map primitiveToBoxingMap;
+    //~ Static fields/initializers --------------------------------------------
 
+    private static Map primitiveToBoxingMap;
     private static Map primitiveToByteBufferReadMethod;
-    
     private static Map primitiveToByteBufferWriteMethod;
-    
+
     static {
         primitiveToBoxingMap = new HashMap();
-        primitiveToBoxingMap.put(Boolean.TYPE,Boolean.class);
-        primitiveToBoxingMap.put(Byte.TYPE,Byte.class);
-        primitiveToBoxingMap.put(Character.TYPE,Character.class);
-        primitiveToBoxingMap.put(Double.TYPE,Double.class);
-        primitiveToBoxingMap.put(Float.TYPE,Float.class);
-        primitiveToBoxingMap.put(Integer.TYPE,Integer.class);
-        primitiveToBoxingMap.put(Long.TYPE,Long.class);
-        primitiveToBoxingMap.put(Short.TYPE,Short.class);
+        primitiveToBoxingMap.put(Boolean.TYPE, Boolean.class);
+        primitiveToBoxingMap.put(Byte.TYPE, Byte.class);
+        primitiveToBoxingMap.put(Character.TYPE, Character.class);
+        primitiveToBoxingMap.put(Double.TYPE, Double.class);
+        primitiveToBoxingMap.put(Float.TYPE, Float.class);
+        primitiveToBoxingMap.put(Integer.TYPE, Integer.class);
+        primitiveToBoxingMap.put(Long.TYPE, Long.class);
+        primitiveToBoxingMap.put(Short.TYPE, Short.class);
 
         primitiveToByteBufferReadMethod = new HashMap();
         primitiveToByteBufferWriteMethod = new HashMap();
@@ -64,11 +62,12 @@ public abstract class ReflectUtil
                     continue;
                 }
                 primitiveToByteBufferReadMethod.put(
-                    method.getReturnType(),method);
+                    method.getReturnType(),
+                    method);
+
                 // special case for Boolean:  treat as byte
                 if (method.getReturnType().equals(Byte.TYPE)) {
-                    primitiveToByteBufferReadMethod.put(
-                        Boolean.TYPE,method);
+                    primitiveToByteBufferReadMethod.put(Boolean.TYPE, method);
                 }
             } else if (method.getName().startsWith("put")) {
                 if (paramTypes.length != 2) {
@@ -77,17 +76,16 @@ public abstract class ReflectUtil
                 if (!paramTypes[1].isPrimitive()) {
                     continue;
                 }
-                primitiveToByteBufferWriteMethod.put(
-                    paramTypes[1],method);
+                primitiveToByteBufferWriteMethod.put(paramTypes[1], method);
+
                 // special case for Boolean:  treat as byte
                 if (paramTypes[1].equals(Byte.TYPE)) {
-                    primitiveToByteBufferWriteMethod.put(
-                        Boolean.TYPE,method);
+                    primitiveToByteBufferWriteMethod.put(Boolean.TYPE, method);
                 }
             }
         }
     }
-    
+
     //~ Methods ---------------------------------------------------------------
 
     /**
@@ -100,7 +98,7 @@ public abstract class ReflectUtil
      */
     public static Method getByteBufferReadMethod(Class clazz)
     {
-        assert(clazz.isPrimitive());
+        assert (clazz.isPrimitive());
         return (Method) primitiveToByteBufferReadMethod.get(clazz);
     }
 
@@ -114,7 +112,7 @@ public abstract class ReflectUtil
      */
     public static Method getByteBufferWriteMethod(Class clazz)
     {
-        assert(clazz.isPrimitive());
+        assert (clazz.isPrimitive());
         return (Method) primitiveToByteBufferWriteMethod.get(clazz);
     }
 
@@ -128,7 +126,7 @@ public abstract class ReflectUtil
      */
     public static Class getBoxingClass(Class primitiveClass)
     {
-        assert(primitiveClass.isPrimitive());
+        assert (primitiveClass.isPrimitive());
         return (Class) primitiveToBoxingMap.get(primitiveClass);
     }
 
@@ -146,8 +144,9 @@ public abstract class ReflectUtil
         if (lastDot < 0) {
             return className;
         }
-        return className.substring(lastDot+1);
+        return className.substring(lastDot + 1);
     }
 }
+
 
 // End ReflectUtil.java

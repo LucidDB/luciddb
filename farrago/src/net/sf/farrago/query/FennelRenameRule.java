@@ -17,18 +17,17 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.query;
-
-import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
-import org.eigenbase.rel.*;
-import org.eigenbase.util.*;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexInputRef;
 
 import java.util.*;
 import java.util.List;
+
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.RexInputRef;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.util.*;
 
 
 /**
@@ -40,19 +39,24 @@ import java.util.List;
  */
 public class FennelRenameRule extends RelOptRule
 {
+    //~ Instance fields -------------------------------------------------------
+
     private CallingConvention convention;
-    
+
     //~ Constructors ----------------------------------------------------------
 
     /**
      * Creates a new FennelRenameRule object.
      */
-    public FennelRenameRule(CallingConvention convention,String description)
+    public FennelRenameRule(
+        CallingConvention convention,
+        String description)
     {
-        super(
-            new RelOptRuleOperand(
+        super(new RelOptRuleOperand(
                 ProjectRel.class,
-                new RelOptRuleOperand [] { new RelOptRuleOperand(RelNode.class,null) }));
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(RelNode.class, null)
+                }));
         this.convention = convention;
         this.description = description;
     }
@@ -103,14 +107,18 @@ public class FennelRenameRule extends RelOptRule
             fieldNames[i] = projFieldName;
         }
 
-        RelNode fennelInput = convert(inputRel,convention);
+        RelNode fennelInput = convert(inputRel, convention);
         if (fennelInput == null) {
             return;
         }
 
         if (needRename) {
-            FennelRenameRel rename = new FennelRenameRel(
-                project.getCluster(),fennelInput,fieldNames,convention);
+            FennelRenameRel rename =
+                new FennelRenameRel(
+                    project.getCluster(),
+                    fennelInput,
+                    fieldNames,
+                    convention);
             call.transformTo(rename);
         } else {
             // REVIEW:  Probably shouldn't do this.  Instead, make generic

@@ -17,8 +17,14 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.catalog;
+
+import java.io.*;
+import java.sql.*;
+import java.util.*;
+import java.util.logging.*;
+
+import javax.jmi.reflect.*;
 
 import net.sf.farrago.*;
 import net.sf.farrago.cwm.*;
@@ -34,21 +40,13 @@ import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.resource.*;
-import net.sf.farrago.util.*;
 import net.sf.farrago.trace.*;
-import org.eigenbase.util.SaffronProperties;
+import net.sf.farrago.util.*;
 
+import org.eigenbase.util.SaffronProperties;
 import org.netbeans.api.mdr.*;
 import org.netbeans.mdr.*;
 
-import java.io.*;
-
-import java.sql.*;
-
-import java.util.*;
-import java.util.logging.*;
-
-import javax.jmi.reflect.*;
 
 /**
  * FarragoRepos represents a loaded instance of an MDR repository containing
@@ -57,9 +55,9 @@ import javax.jmi.reflect.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoRepos
-    extends FarragoMetadataFactory
-    implements FarragoAllocation, FarragoTransientTxnContext
+public class FarragoRepos extends FarragoMetadataFactory
+    implements FarragoAllocation,
+        FarragoTransientTxnContext
 {
     //~ Static fields/initializers --------------------------------------------
 
@@ -127,13 +125,14 @@ public class FarragoRepos
     /** MofId for current instance of FemFarragoConfig. */
     private final String currentConfigMofId;
 
-
     //~ Constructors ----------------------------------------------------------
 
     /**
      * Open a Farrago repository.
      */
-    public FarragoRepos(FarragoAllocationOwner owner,boolean userRepos)
+    public FarragoRepos(
+        FarragoAllocationOwner owner,
+        boolean userRepos)
     {
         owner.addAllocation(this);
         tracer.fine("Loading catalog");
@@ -146,17 +145,14 @@ public class FarragoRepos
         if (!userRepos) {
             File reposFile = modelLoader.getSystemReposFile();
             try {
-                new FarragoFileLockAllocation(
-                    owner,
-                    reposFile,
-                    true);
+                new FarragoFileLockAllocation(owner, reposFile, true);
             } catch (IOException ex) {
                 throw FarragoResource.instance().newCatalogFileLockFailed(
                     reposFile.toString());
             }
         }
 
-        farragoPackage = modelLoader.loadModel("FarragoCatalog",userRepos);
+        farragoPackage = modelLoader.loadModel("FarragoCatalog", userRepos);
         if (farragoPackage == null) {
             throw FarragoResource.instance().newCatalogUninitialized();
         }
@@ -175,15 +171,17 @@ public class FarragoRepos
         try {
             NBMDRepositoryImpl nbRepos = (NBMDRepositoryImpl) mdrRepository;
             Map props = new HashMap();
-            String memStorageId = nbRepos.mountStorage(
-                FarragoTransientStorageFactory.class.getName(),
-                props);
+            String memStorageId =
+                nbRepos.mountStorage(
+                    FarragoTransientStorageFactory.class.getName(),
+                    props);
             beginReposTxn(true);
-            RefPackage memExtent = nbRepos.createExtent(
-                "TransientCatalog",
-                farragoPackage.refMetaObject(),
-                null,
-                memStorageId);
+            RefPackage memExtent =
+                nbRepos.createExtent(
+                    "TransientCatalog",
+                    farragoPackage.refMetaObject(),
+                    null,
+                    memStorageId);
             endReposTxn(false);
             FarragoTransientStorage.ignoreCommit = true;
             transientFarragoPackage = (FarragoPackage) memExtent;
@@ -193,15 +191,13 @@ public class FarragoRepos
         }
 
         // TODO jvs 5-May-2004:  do the above for model extensions also
-
         Collection configs =
             configPackage.getFemFarragoConfig().refAllOfClass();
 
         // TODO: multiple named configurations.  For now, build should have
         // imported exactly one configuration named Current.
         assert (configs.size() == 1);
-        immutableConfig =
-            (FemFarragoConfig) configs.iterator().next();
+        immutableConfig = (FemFarragoConfig) configs.iterator().next();
         assert (immutableConfig.getName().equals("Current"));
         currentConfigMofId = immutableConfig.refMofId();
 
@@ -257,8 +253,7 @@ public class FarragoRepos
     public FemFarragoConfig getCurrentConfig()
     {
         // TODO:  prevent updates
-        return (FemFarragoConfig)
-            mdrRepository.getByMofId(currentConfigMofId);
+        return (FemFarragoConfig) mdrRepository.getByMofId(currentConfigMofId);
     }
 
     /**
@@ -270,7 +265,7 @@ public class FarragoRepos
      */
     public boolean isClustered(CwmSqlindex index)
     {
-        return getTag(index,"clusteredIndex") != null;
+        return getTag(index, "clusteredIndex") != null;
     }
 
     /**
@@ -411,7 +406,9 @@ public class FarragoRepos
      *
      * @return CwmModelElement found, or null if not found
      */
-    public CwmModelElement getModelElement(Collection collection,String name)
+    public CwmModelElement getModelElement(
+        Collection collection,
+        String name)
     {
         Iterator iter = collection.iterator();
         while (iter.hasNext()) {
@@ -433,7 +430,9 @@ public class FarragoRepos
      * @return CwmModelElement found, or null if not found
      */
     public CwmModelElement getTypedModelElement(
-        Collection collection,String name,Class type)
+        Collection collection,
+        String name,
+        Class type)
     {
         Iterator iter = collection.iterator();
         while (iter.hasNext()) {
@@ -475,8 +474,7 @@ public class FarragoRepos
                 return false;
             }
         }
-        CwmSqlindex clusteredIndex =
-            getClusteredIndex((CwmTable) owner);
+        CwmSqlindex clusteredIndex = getClusteredIndex((CwmTable) owner);
         if (clusteredIndex != null) {
             Iterator iter = clusteredIndex.getIndexedFeature().iterator();
             while (iter.hasNext()) {
@@ -528,11 +526,10 @@ public class FarragoRepos
      *
      * @return catalog definition, or null if not found
      */
-    public CwmCatalog getCwmCatalog(
-        String catalogName)
+    public CwmCatalog getCwmCatalog(String catalogName)
     {
         Collection catalogs = relationalPackage.getCwmCatalog().refAllOfType();
-        return (CwmCatalog) getModelElement(catalogs,catalogName);
+        return (CwmCatalog) getModelElement(catalogs, catalogName);
     }
 
     /**
@@ -562,10 +559,14 @@ public class FarragoRepos
      *
      * @return table definition, or null if not found
      */
-    public CwmTable getTable(CwmNamespace schema,String tableName)
+    public CwmTable getTable(
+        CwmNamespace schema,
+        String tableName)
     {
         return (CwmTable) getTypedModelElement(
-            schema.getOwnedElement(),tableName,CwmTable.class);
+            schema.getOwnedElement(),
+            tableName,
+            CwmTable.class);
     }
 
     /**
@@ -576,7 +577,9 @@ public class FarragoRepos
      *
      * @return tag, or null if not found
      */
-    public CwmTaggedValue getTag(CwmModelElement element,String tagName)
+    public CwmTaggedValue getTag(
+        CwmModelElement element,
+        String tagName)
     {
         Collection tags =
             corePackage.getTaggedElement().getTaggedValue(element);
@@ -603,11 +606,11 @@ public class FarragoRepos
         String tagName,
         String tagValue)
     {
-        CwmTaggedValue tag = getTag(element,tagName);
+        CwmTaggedValue tag = getTag(element, tagName);
         if (tag == null) {
             tag = newCwmTaggedValue();
             tag.setTag(tagName);
-            corePackage.getTaggedElement().add(element,tag);
+            corePackage.getTaggedElement().add(element, tag);
         }
         tag.setValue(tagValue);
     }
@@ -620,9 +623,11 @@ public class FarragoRepos
      *
      * @return tag value, or null if not found
      */
-    public String getTagValue(CwmModelElement element,String tagName)
+    public String getTagValue(
+        CwmModelElement element,
+        String tagName)
     {
-        CwmTaggedValue tag = getTag(element,tagName);
+        CwmTaggedValue tag = getTag(element, tagName);
         if (tag == null) {
             return null;
         } else {
@@ -655,7 +660,7 @@ public class FarragoRepos
         String name =
             "SYS$CONSTRAINT_INDEX$" + constraint.getNamespace().getName()
             + "$" + constraint.getName();
-        index.setName(uniquifyGeneratedName(constraint,name));
+        index.setName(uniquifyGeneratedName(constraint, name));
     }
 
     /**
@@ -671,11 +676,13 @@ public class FarragoRepos
             String name =
                 "SYS$UNIQUE_KEY$"
                 + generateUniqueConstraintColumnList(constraint);
-            constraint.setName(uniquifyGeneratedName(constraint,name));
+            constraint.setName(uniquifyGeneratedName(constraint, name));
         }
     }
 
-    private void defineTypeAlias(String aliasName,CwmSqlsimpleType type)
+    private void defineTypeAlias(
+        String aliasName,
+        CwmSqlsimpleType type)
     {
         CwmTypeAlias typeAlias = newCwmTypeAlias();
         typeAlias.setName(aliasName);
@@ -721,7 +728,10 @@ public class FarragoRepos
     public void beginTransientTxn()
     {
         tracer.fine("Begin transient repository transaction");
-        tracer.throwing("FOO","BAR",new Throwable());
+        tracer.throwing(
+            "FOO",
+            "BAR",
+            new Throwable());
         mdrRepository.beginTrans(true);
     }
 
@@ -729,7 +739,10 @@ public class FarragoRepos
     public void endTransientTxn()
     {
         tracer.fine("End transient repository transaction");
-        tracer.throwing("FOO","BAR",new Throwable());
+        tracer.throwing(
+            "FOO",
+            "BAR",
+            new Throwable());
         mdrRepository.endTrans(false);
     }
 
@@ -745,7 +758,10 @@ public class FarragoRepos
         } else {
             tracer.fine("Begin read-only repository transaction");
         }
-        tracer.throwing("FOO","BAR",new Throwable());
+        tracer.throwing(
+            "FOO",
+            "BAR",
+            new Throwable());
         mdrRepository.beginTrans(writable);
     }
 
@@ -761,7 +777,10 @@ public class FarragoRepos
         } else {
             tracer.fine("Commit repository transaction");
         }
-        tracer.throwing("FOO","BAR",new Throwable());
+        tracer.throwing(
+            "FOO",
+            "BAR",
+            new Throwable());
         mdrRepository.endTrans(rollback);
     }
 
@@ -804,7 +823,6 @@ public class FarragoRepos
         // (4) review classes in package net.sf.farrago.type
         // (5) since I've already done all the easy cases, you'll probably
         // need lots of extra fancy semantics elsewhere
-
         type = newCwmSqlsimpleType();
         type.setName("BOOLEAN");
         type.setTypeNumber(new Integer(Types.BOOLEAN));
@@ -829,7 +847,7 @@ public class FarragoRepos
         type.setNumericPrecision(new Integer(32));
         type.setNumericPrecisionRadix(new Integer(2));
         type.setNumericScale(new Integer(0));
-        defineTypeAlias("INT",type);
+        defineTypeAlias("INT", type);
 
         type = newCwmSqlsimpleType();
         type.setName("BIGINT");
@@ -849,17 +867,18 @@ public class FarragoRepos
         type.setTypeNumber(new Integer(Types.DOUBLE));
         type.setNumericPrecision(new Integer(52));
         type.setNumericPrecisionRadix(new Integer(2));
-        defineTypeAlias("DOUBLE PRECISION",type);
-        defineTypeAlias("FLOAT",type);
+        defineTypeAlias("DOUBLE PRECISION", type);
+        defineTypeAlias("FLOAT", type);
 
         type = newCwmSqlsimpleType();
         type.setName("VARCHAR");
         type.setTypeNumber(new Integer(Types.VARCHAR));
+
         // NOTE: this is an upper bound based on usage of 2-byte length
         // indicators in stored tuples; there are further limits based on page
         // size (imposed during table creation)
         type.setCharacterMaximumLength(new Integer(65535));
-        defineTypeAlias("CHARACTER VARYING",type);
+        defineTypeAlias("CHARACTER VARYING", type);
 
         type = newCwmSqlsimpleType();
         type.setName("VARBINARY");
@@ -870,7 +889,7 @@ public class FarragoRepos
         type.setName("CHAR");
         type.setTypeNumber(new Integer(Types.CHAR));
         type.setCharacterMaximumLength(new Integer(65535));
-        defineTypeAlias("CHARACTER",type);
+        defineTypeAlias("CHARACTER", type);
 
         type = newCwmSqlsimpleType();
         type.setName("BINARY");
@@ -889,7 +908,6 @@ public class FarragoRepos
         // TIMESTAMP is microseconds, so some more work is required to
         // support that.  Default precision for TIME is seconds,
         // which is already the case.
-
         type = newCwmSqlsimpleType();
         type.setName("TIME");
         type.setTypeNumber(new Integer(Types.TIME));
@@ -909,9 +927,8 @@ public class FarragoRepos
         type.setName("DECIMAL");
         type.setTypeNumber(new Integer(Types.DECIMAL));
         type.setNumericPrecision(new Integer(39));
-        defineTypeAlias("DEC",type);
+        defineTypeAlias("DEC", type);
     }
-
 
     /**
      * Generated names are normally unique by construction.  However, if they
@@ -923,13 +940,15 @@ public class FarragoRepos
      *
      * @return uniquified name
      */
-    private String uniquifyGeneratedName(RefObject refObj,String name)
+    private String uniquifyGeneratedName(
+        RefObject refObj,
+        String name)
     {
         if (name.length() <= maxNameLength) {
             return name;
         }
         String mofId = refObj.refMofId();
-        return name.substring(0,maxNameLength - (mofId.length() + 1)) + "_"
+        return name.substring(0, maxNameLength - (mofId.length() + 1)) + "_"
         + mofId;
     }
 
@@ -941,12 +960,10 @@ public class FarragoRepos
      *
      * @return FemTupleAccessor for accessing tuples conforming to tupleDesc
      */
-    public FemTupleAccessor parseTupleAccessor(
-        String tupleAccessorXmiString)
+    public FemTupleAccessor parseTupleAccessor(String tupleAccessorXmiString)
     {
         Collection c =
-            JmiUtil.importFromXmiString(
-                transientFarragoPackage,
+            JmiUtil.importFromXmiString(transientFarragoPackage,
                 tupleAccessorXmiString);
         assert (c.size() == 1);
         FemTupleAccessor accessor = (FemTupleAccessor) c.iterator().next();

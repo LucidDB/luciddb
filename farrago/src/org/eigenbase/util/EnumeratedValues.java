@@ -1,23 +1,22 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.util;
@@ -30,7 +29,7 @@ import java.util.Iterator;
  * <code>EnumeratedValues</code> is a helper class for declaring a set of
  * symbolic constants which have names, ordinals, and possibly descriptions.
  * The ordinals do not have to be contiguous.
- * 
+ *
  * <p>
  * Typically, for a particular set of constants, you derive a class from this
  * interface, and declare the constants as <code>public static final</code>
@@ -90,7 +89,7 @@ public class EnumeratedValues implements Cloneable
     public EnumeratedValues(String [] names)
     {
         for (int i = 0; i < names.length; i++) {
-            register(new BasicValue(names[i],i,names[i]));
+            register(new BasicValue(names[i], i, names[i]));
         }
         makeImmutable();
     }
@@ -99,10 +98,12 @@ public class EnumeratedValues implements Cloneable
      * Create an enumeration, initializes it with arrays of code/name pairs,
      * and freezes it.
      */
-    public EnumeratedValues(String [] names,int [] codes)
+    public EnumeratedValues(
+        String [] names,
+        int [] codes)
     {
         for (int i = 0; i < names.length; i++) {
-            register(new BasicValue(names[i],codes[i],names[i]));
+            register(new BasicValue(names[i], codes[i], names[i]));
         }
         makeImmutable();
     }
@@ -117,7 +118,7 @@ public class EnumeratedValues implements Cloneable
         String [] descriptions)
     {
         for (int i = 0; i < names.length; i++) {
-            register(new BasicValue(names[i],codes[i],descriptions[i]));
+            register(new BasicValue(names[i], codes[i], descriptions[i]));
         }
         makeImmutable();
     }
@@ -132,7 +133,7 @@ public class EnumeratedValues implements Cloneable
      */
     public final String getDescription(int ordinal)
     {
-        assert(isImmutable());
+        assert (isImmutable());
         final Value value = ordinalToValueMap[ordinal - min];
         if (value == null) {
             return null;
@@ -188,7 +189,7 @@ public class EnumeratedValues implements Cloneable
     public final String getName(int ordinal)
     {
         final Value value = getValue(ordinal);
-        return value == null ? null : value.getName();
+        return (value == null) ? null : value.getName();
     }
 
     /**
@@ -199,7 +200,7 @@ public class EnumeratedValues implements Cloneable
      */
     public final Value getValue(int ordinal)
     {
-        assert(isImmutable());
+        assert (isImmutable());
         final Value value = ordinalToValueMap[ordinal - min];
         if (value == null) {
             return null;
@@ -278,9 +279,9 @@ public class EnumeratedValues implements Cloneable
      */
     public Error badValue(int ordinal)
     {
-        return Util.newInternal(
-            "bad value " + ordinal + "(" + getName(ordinal)
-            + ") for enumeration '" + getClass().getName() + "'");
+        return Util.newInternal("bad value " + ordinal + "("
+            + getName(ordinal) + ") for enumeration '" + getClass().getName()
+            + "'");
     }
 
     /**
@@ -289,8 +290,7 @@ public class EnumeratedValues implements Cloneable
     public void makeImmutable()
     {
         ordinalToValueMap = new Value[(1 + max) - min];
-        for (
-            Iterator values = valuesByName.values().iterator();
+        for (Iterator values = valuesByName.values().iterator();
                 values.hasNext();) {
             Value value = (Value) values.next();
             final int index = value.getOrdinal() - min;
@@ -312,19 +312,18 @@ public class EnumeratedValues implements Cloneable
      */
     public void register(Value value)
     {
-        assert(value != null);
-        assert(!isImmutable());
+        assert (value != null);
+        assert (!isImmutable());
         final String name = value.getName();
-        assert(name != null);
-        Value old = (Value) valuesByName.put(name,value);
+        assert (name != null);
+        Value old = (Value) valuesByName.put(name, value);
         if (old != null) {
-            throw Util.newInternal(
-                "Enumeration already contained a value '" + old.getName()
-                + "'");
+            throw Util.newInternal("Enumeration already contained a value '"
+                + old.getName() + "'");
         }
         final int ordinal = value.getOrdinal();
-        min = Math.min(min,ordinal);
-        max = Math.max(max,ordinal);
+        min = Math.min(min, ordinal);
+        max = Math.max(max, ordinal);
     }
 
     /**
@@ -333,9 +332,9 @@ public class EnumeratedValues implements Cloneable
      */
     public Error unexpected(Value value)
     {
-        return Util.newInternal(
-            "Was not expecting value '" + value + "' for enumeration '"
-            + getClass().getName() + "' in this context");
+        return Util.newInternal("Was not expecting value '" + value
+            + "' for enumeration '" + getClass().getName()
+            + "' in this context");
     }
 
     protected Object clone()
@@ -383,9 +382,12 @@ public class EnumeratedValues implements Cloneable
         /**
          * @pre name != null
          */
-        public BasicValue(String name,int ordinal,String description)
+        public BasicValue(
+            String name,
+            int ordinal,
+            String description)
         {
-            assert(name != null);
+            assert (name != null);
             this.name_ = name;
             this.ordinal_ = ordinal;
             this.description_ = description;
@@ -434,9 +436,8 @@ public class EnumeratedValues implements Cloneable
 
         public Error unexpected()
         {
-            return Util.newInternal(
-                "Value " + name_ + " of class " + getClass()
-                + " unexpected here");
+            return Util.newInternal("Value " + name_ + " of class "
+                + getClass() + " unexpected here");
         }
     }
 }

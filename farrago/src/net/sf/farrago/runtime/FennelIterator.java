@@ -16,16 +16,14 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.runtime;
+
+import java.nio.*;
+import java.util.*;
 
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.util.*;
-
-import java.nio.*;
-
-import java.util.*;
 
 
 /**
@@ -85,8 +83,7 @@ public class FennelIterator implements Iterator
             return true;
         }
         byteBuffer.clear();
-        int cb = streamGraph.fetch(
-            streamHandle,bufferAsArray);
+        int cb = streamGraph.fetch(streamHandle, bufferAsArray);
         if (cb == 0) {
             byteBuffer = null;
             bufferAsArray = null;
@@ -107,7 +104,7 @@ public class FennelIterator implements Iterator
         ByteBuffer sliceBuffer = byteBuffer.slice();
         sliceBuffer.order(byteBuffer.order());
         Object obj =
-            tupleReader.unmarshalTuple(byteBuffer,bufferAsArray,sliceBuffer);
+            tupleReader.unmarshalTuple(byteBuffer, bufferAsArray, sliceBuffer);
         int newPosition = byteBuffer.position() + sliceBuffer.position();
 
         // eat final alignment padding

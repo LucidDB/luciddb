@@ -1,43 +1,31 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.util;
-
-import junit.framework.ComparisonFailure;
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.textui.TestRunner;
-import org.eigenbase.sql.parser.ParserPosition;
-import org.eigenbase.runtime.ThreadIterator;
-import org.eigenbase.runtime.TimeoutQueueIterator;
-import org.eigenbase.runtime.TimeoutIteratorTest;
-import openjava.mop.Toolbox;
-import openjava.ptree.Expression;
-import openjava.ptree.StatementList;
 
 import java.io.File;
 import java.io.PrintWriter;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -45,7 +33,21 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import java.math.BigDecimal;
+
+import junit.framework.ComparisonFailure;
+import junit.framework.Test;
+import junit.framework.TestSuite;
+import junit.textui.TestRunner;
+
+import openjava.mop.Toolbox;
+import openjava.ptree.Expression;
+import openjava.ptree.StatementList;
+
+import org.eigenbase.runtime.ThreadIterator;
+import org.eigenbase.runtime.TimeoutIteratorTest;
+import org.eigenbase.runtime.TimeoutQueueIterator;
+import org.eigenbase.sql.parser.ParserPosition;
+
 
 /**
  * Miscellaneous utility functions.
@@ -63,12 +65,13 @@ public class Util extends Toolbox
     public static final Object [] emptyObjectArray = new Object[0];
     public static final String [] emptyStringArray = new String[0];
     private static boolean driversLoaded = false;
+
     /**
      * Regular expression for a valid java identifier which contains no
      * underscores and can therefore be returned intact by {@link #toJavaId}.
       */
     private static final Pattern javaIdPattern =
-            Pattern.compile("[a-zA-Z_$][a-zA-Z0-9$]*");
+        Pattern.compile("[a-zA-Z_$][a-zA-Z0-9$]*");
 
     //~ Methods ---------------------------------------------------------------
 
@@ -115,7 +118,10 @@ public class Util extends Toolbox
      * @param e Exception
      * @param logger If not null, logs exception to this logger
      */
-    public static final void swallow(Throwable e, Logger logger) {
+    public static final void swallow(
+        Throwable e,
+        Logger logger)
+    {
         if (logger != null) {
             logger.log(Level.FINER, "Discarding exception", e);
         }
@@ -124,7 +130,9 @@ public class Util extends Toolbox
     /**
      * Returns whether two strings are equal or are both null.
      */
-    public static final boolean equal(String s0,String s1)
+    public static final boolean equal(
+        String s0,
+        String s1)
     {
         if (s0 == null) {
             return s1 == null;
@@ -161,7 +169,9 @@ public class Util extends Toolbox
     /**
      * Combines two integers into a hash code.
      */
-    public static int hash(int i,int j)
+    public static int hash(
+        int i,
+        int j)
     {
         return (i << 4) ^ j;
     }
@@ -170,9 +180,11 @@ public class Util extends Toolbox
      * Computes a hash code from an existing hash code and an object (which
      * may be null).
      */
-    public static int hash(int h, Object o) {
-        int k = o == null ? 0 :
-                o.hashCode();
+    public static int hash(
+        int h,
+        Object o)
+    {
+        int k = (o == null) ? 0 : o.hashCode();
         return ((h << 4) | h) ^ k;
     }
 
@@ -180,7 +192,10 @@ public class Util extends Toolbox
      * Computes a hash code from an existing hash code and an array of objects
      * (which may be null).
      */
-    public static int hashArray(int h, Object[] a) {
+    public static int hashArray(
+        int h,
+        Object [] a)
+    {
         // The hashcode for a null array and an empty array should be different
         // than h, so use magic numbers.
         if (a == null) {
@@ -198,7 +213,8 @@ public class Util extends Toolbox
     /**
      * Runs the test suite.
      */
-    public static void main(String [] args) throws Exception
+    public static void main(String [] args)
+        throws Exception
     {
         TestRunner.run(suite());
     }
@@ -207,7 +223,9 @@ public class Util extends Toolbox
      * Return a set of the elements which are in <code>set1</code> but not in
      * <code>set2</code>, without modifying either.
      */
-    public static Set minus(Set set1,Set set2)
+    public static Set minus(
+        Set set1,
+        Set set2)
     {
         if (set1.isEmpty()) {
             return set1;
@@ -235,12 +253,17 @@ public class Util extends Toolbox
      * arrays of objects and primitive values; for regular objects, we print
      * all public fields.
      */
-    public static void print(PrintWriter pw,Object o)
+    public static void print(
+        PrintWriter pw,
+        Object o)
     {
-        print(pw,o,0);
+        print(pw, o, 0);
     }
 
-    public static void print(PrintWriter pw,Object o,int indent)
+    public static void print(
+        PrintWriter pw,
+        Object o,
+        int indent)
     {
         if (o == null) {
             pw.print("null");
@@ -248,16 +271,11 @@ public class Util extends Toolbox
         }
         Class clazz = o.getClass();
         if (o instanceof String) {
-            printJavaString(pw,(String) o,true);
-        } else if (
-            (clazz == Integer.class)
-                || (clazz == Boolean.class)
-                || (clazz == Character.class)
-                || (clazz == Byte.class)
-                || (clazz == Short.class)
-                || (clazz == Long.class)
-                || (clazz == Float.class)
-                || (clazz == Double.class)
+            printJavaString(pw, (String) o, true);
+        } else if ((clazz == Integer.class) || (clazz == Boolean.class)
+                || (clazz == Character.class) || (clazz == Byte.class)
+                || (clazz == Short.class) || (clazz == Long.class)
+                || (clazz == Float.class) || (clazz == Double.class)
                 || (clazz == Void.class)) {
             pw.print(o.toString());
         } else if (clazz.isArray()) {
@@ -279,7 +297,10 @@ public class Util extends Toolbox
                 for (int j = 0; j < indent; j++) {
                     pw.print("\t");
                 }
-                print(pw,Array.get(o,i),indent + 1);
+                print(
+                    pw,
+                    Array.get(o, i),
+                    indent + 1);
             }
             pw.print("}");
         } else if (o instanceof Iterator) {
@@ -291,7 +312,10 @@ public class Util extends Toolbox
                 if (i++ > 0) {
                     pw.println(",");
                 }
-                print(pw,iter.next(),indent + 1);
+                print(
+                    pw,
+                    iter.next(),
+                    indent + 1);
             }
             pw.print("}");
         } else if (o instanceof Enumeration) {
@@ -303,7 +327,10 @@ public class Util extends Toolbox
                 if (i++ > 0) {
                     pw.println(",");
                 }
-                print(pw,enum.nextElement(),indent + 1);
+                print(
+                    pw,
+                    enum.nextElement(),
+                    indent + 1);
             }
             pw.print("}");
         } else {
@@ -331,7 +358,7 @@ public class Util extends Toolbox
                 } catch (IllegalAccessException e) {
                     throw newInternal(e);
                 }
-                print(pw,val,indent + 1);
+                print(pw, val, indent + 1);
             }
             pw.print("}");
         }
@@ -355,20 +382,22 @@ public class Util extends Toolbox
                 //pw.print("");
             }
         } else {
-            String s1 = replace(s,"\\","\\\\");
-            String s2 = replace(s1,"\"","\\\"");
-            String s3 = replace(s2,"\n\r","\\n");
-            String s4 = replace(s3,"\n","\\n");
-            String s5 = replace(s4,"\r","\\r");
+            String s1 = replace(s, "\\", "\\\\");
+            String s2 = replace(s1, "\"", "\\\"");
+            String s3 = replace(s2, "\n\r", "\\n");
+            String s4 = replace(s3, "\n", "\\n");
+            String s5 = replace(s4, "\r", "\\r");
             pw.print("\"");
             pw.print(s5);
             pw.print("\"");
         }
     }
 
-    public static void println(PrintWriter pw,Object o)
+    public static void println(
+        PrintWriter pw,
+        Object o)
     {
-        print(pw,o,0);
+        print(pw, o, 0);
         pw.println();
     }
 
@@ -379,17 +408,20 @@ public class Util extends Toolbox
      * <code>toStringFromByteArray(new byte[] {0xAB, 0xCD}, 16)</code> returns
      * <code>ABCD</code>.
      */
-    public static String toStringFromByteArray(byte[] value, int radix) {
-        assert 2 == radix || 16 == radix :
-                "Make sure that the algorithm below works for your radix";
-        if (0 == value.length){
+    public static String toStringFromByteArray(
+        byte [] value,
+        int radix)
+    {
+        assert (2 == radix) || (16 == radix) : "Make sure that the algorithm below works for your radix";
+        if (0 == value.length) {
             return "";
         }
 
-        int trick = radix*radix;
+        int trick = radix * radix;
         StringBuffer ret = new StringBuffer();
         for (int i = 0; i < value.length; i++) {
-            ret.append(Integer.toString(trick|(0x0ff & value[i]),radix).substring(1));
+            ret.append(
+                Integer.toString(trick | (0x0ff & value[i]), radix).substring(1));
         }
 
         return ret.toString().toUpperCase();
@@ -407,7 +439,8 @@ public class Util extends Toolbox
      * the output string to have a precision of 20
      * (no rounding will be done, just a truncate).
      */
-    public static String toScientificNotation(BigDecimal bd) {
+    public static String toScientificNotation(BigDecimal bd)
+    {
         final int truncateAt = 20;
         String unscaled = bd.unscaledValue().toString();
         if (bd.signum() < 0) {
@@ -421,10 +454,13 @@ public class Util extends Toolbox
         if (bd.signum() < 0) {
             ret.append('-');
         }
+
         //do truncation
-        unscaled = unscaled.substring(0, Math.min(truncateAt, len));
+        unscaled = unscaled.substring(
+                0,
+                Math.min(truncateAt, len));
         ret.append(unscaled.charAt(0));
-        if (unscaled.length()>1) {
+        if (unscaled.length() > 1) {
             ret.append(".");
             ret.append(unscaled.substring(1));
         }
@@ -438,7 +474,10 @@ public class Util extends Toolbox
      * Replaces every occurrence of <code>find</code> in <code>s</code> with
      * <code>replace</code>.
      */
-    public static final String replace(String s,String find,String replace)
+    public static final String replace(
+        String s,
+        String find,
+        String replace)
     {
         // let's be optimistic
         int found = s.indexOf(find);
@@ -456,7 +495,7 @@ public class Util extends Toolbox
             }
             sb.append(replace);
             start += find.length();
-            found = s.indexOf(find,start);
+            found = s.indexOf(find, start);
             if (found == -1) {
                 found = s.length();
             }
@@ -472,8 +511,11 @@ public class Util extends Toolbox
     /**
      * Creates a file-protocol URL for the given file.
      **/
-    public static URL toURL(File file) throws MalformedURLException {
+    public static URL toURL(File file)
+        throws MalformedURLException
+    {
         String path = file.getAbsolutePath();
+
         // This is a bunch of weird code that is required to
         // make a valid URL on the Windows platform, due
         // to inconsistencies in what getAbsolutePath returns.
@@ -511,13 +553,13 @@ public class Util extends Toolbox
      */
     public static String stripDoubleQuotes(String value)
     {
-        assert(value.charAt(0) == '"');
-        assert(value.charAt(value.length() - 1) == '"');
-        String s5 = value.substring(1,value.length() - 1);
-        String s4 = Util.replace(s5,"\\r","\r");
-        String s3 = Util.replace(s4,"\\n","\n");
-        String s2 = Util.replace(s3,"\\\"","\"");
-        String s1 = Util.replace(s2,"\\\\","\\");
+        assert (value.charAt(0) == '"');
+        assert (value.charAt(value.length() - 1) == '"');
+        String s5 = value.substring(1, value.length() - 1);
+        String s4 = Util.replace(s5, "\\r", "\r");
+        String s3 = Util.replace(s4, "\\n", "\n");
+        String s2 = Util.replace(s3, "\\\"", "\"");
+        String s1 = Util.replace(s2, "\\\\", "\\");
         return s1;
     }
 
@@ -549,13 +591,17 @@ public class Util extends Toolbox
      *
      * @testcase {@link org.eigenbase.util.UtilTest#testToJavaId}
      */
-    public static String toJavaId(String s, int ordinal) {
+    public static String toJavaId(
+        String s,
+        int ordinal)
+    {
         // If it's already a valid Java id (and doesn't contain any
         // underscores), return it unchanged.
         if (javaIdPattern.matcher(s).matches()) {
             // prepend "ID$" to string so it doesn't clash with java keywords
-            return "ID$"+ ordinal +"$" + s;
+            return "ID$" + ordinal + "$" + s;
         }
+
         // Escape underscores and other undesirables.
         StringBuffer buf = new StringBuffer(s.length() + 10);
         buf.append("ID$");
@@ -565,11 +611,10 @@ public class Util extends Toolbox
             char c = s.charAt(i);
             if (c == '_') {
                 buf.append("__");
-            } else if (c < 0x7F /* Normal ascii character */
-                && !Character.isISOControl(c)
-                && (i == 0 ?
-                    Character.isJavaIdentifierStart(c) :
-                    Character.isJavaIdentifierPart(c))) {
+            } else if ((c < 0x7F) /* Normal ascii character */
+                    && !Character.isISOControl(c)
+                    && ((i == 0) ? Character.isJavaIdentifierStart(c)
+                    : Character.isJavaIdentifierPart(c))) {
                 buf.append(c);
             } else {
                 buf.append("_");
@@ -580,7 +625,8 @@ public class Util extends Toolbox
         return buf.toString();
     }
 
-    public static Test suite() throws Exception
+    public static Test suite()
+        throws Exception
     {
         TestSuite suite = new TestSuite();
         suite.addTestSuite(UtilTest.class);
@@ -590,11 +636,11 @@ public class Util extends Toolbox
         return suite;
     }
 
-
     /**
      * Converts the elements of an array into a {@link java.util.List}
      */
-    public static List toList(final Object[] array) {
+    public static List toList(final Object [] array)
+    {
         List ret = new ArrayList(array.length);
         for (int i = 0; i < array.length; i++) {
             ret.add(array[i]);
@@ -615,7 +661,9 @@ public class Util extends Toolbox
     /**
      * Equivalent to {@link Vector#toArray(Object[])}.
      */
-    public static Object [] toArray(Vector v,Object [] a)
+    public static Object [] toArray(
+        Vector v,
+        Object [] a)
     {
         int elementCount = v.size();
         if (a.length < elementCount) {
@@ -652,26 +700,32 @@ public class Util extends Toolbox
             return;
         }
         String jdbcDrivers =
-                SaffronProperties.instance().testJdbcDrivers.get();
-        StringTokenizer tok = new StringTokenizer(jdbcDrivers,",");
+            SaffronProperties.instance().testJdbcDrivers.get();
+        StringTokenizer tok = new StringTokenizer(jdbcDrivers, ",");
         while (tok.hasMoreTokens()) {
             String jdbcDriver = tok.nextToken();
             try {
                 Class.forName(jdbcDriver);
             } catch (ClassNotFoundException e) {
-                System.out.println(
-                    "Warning: could not find driver " + jdbcDriver);
+                System.out.println("Warning: could not find driver "
+                    + jdbcDriver);
             }
         }
         driversLoaded = true;
     }
 
-    public static void assertEqualsVerbose(String expected, String actual) {
-        if (expected == null && actual == null)
+    public static void assertEqualsVerbose(
+        String expected,
+        String actual)
+    {
+        if ((expected == null) && (actual == null)) {
             return;
-        if (expected != null && expected.equals(actual))
+        }
+        if ((expected != null) && expected.equals(actual)) {
             return;
+        }
         String s = actual;
+
         // Convert [string with "quotes" split
         // across lines]
         // into ["string with \"quotes\" split" + NL +
@@ -682,12 +736,10 @@ public class Util extends Toolbox
         final String lineBreak = "\" + NL + " + lineSeparator + "\"";
         s = Pattern.compile("\r\n|\r|\n").matcher(s).replaceAll(lineBreak);
         s = "\"" + s + "\"";
-        String message = "Expected:" + lineSeparator +
-                expected + lineSeparator +
-                "Actual: " + lineSeparator +
-                actual + lineSeparator +
-                "Actual java: " + lineSeparator +
-                s + lineSeparator;
+        String message =
+            "Expected:" + lineSeparator + expected + lineSeparator
+            + "Actual: " + lineSeparator + actual + lineSeparator
+            + "Actual java: " + lineSeparator + s + lineSeparator;
         throw new ComparisonFailure(message, expected, actual);
     }
 
@@ -697,8 +749,10 @@ public class Util extends Toolbox
      * @throws java.nio.charset.IllegalCharsetNameException - If the given charset name is illegal
      * @throws java.nio.charset.UnsupportedCharsetException - If no support for the named charset is available in this instance of the Java virtual machine
      */
-    public static Charset getDefaultCharset() {
-        return Charset.forName(SaffronProperties.instance().defaultCharset.get());
+    public static Charset getDefaultCharset()
+    {
+        return Charset.forName(
+            SaffronProperties.instance().defaultCharset.get());
     }
 
     /**
@@ -706,7 +760,8 @@ public class Util extends Toolbox
      * {@link ParserPosition#getBeginLine} and {@link ParserPosition#getBeginColumn}
      * respectively
      */
-    public static String encountedAt(ParserPosition pos) {
+    public static String encountedAt(ParserPosition pos)
+    {
         StringBuffer ret = new StringBuffer();
         ret.append("encountered at line ");
         ret.append(pos.getBeginLine());
@@ -718,11 +773,14 @@ public class Util extends Toolbox
     /**
      * Returns whether two objects are equal. Either may be null.
      */
-    public static boolean equals(Object o0, Object o1) {
+    public static boolean equals(
+        Object o0,
+        Object o1)
+    {
         if (o0 == o1) {
             return true;
         }
-        if (o0 == null || o1 == null) {
+        if ((o0 == null) || (o1 == null)) {
             return false;
         }
         return o0.equals(o1);

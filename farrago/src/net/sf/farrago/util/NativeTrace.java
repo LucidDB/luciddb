@@ -16,7 +16,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.util;
 
 import java.util.logging.*;
@@ -84,11 +83,14 @@ public class NativeTrace
      * @param iLevel level (from Level enum) at which to trace
      * @param message trace message text
      */
-    private void trace(String loggerSuffix,int iLevel,String message)
+    private void trace(
+        String loggerSuffix,
+        int iLevel,
+        String message)
     {
         Logger tracer = getLogger(loggerSuffix);
         Level level = Level.parse(Integer.toString(iLevel));
-        tracer.logp(level,loggerPrefix + loggerSuffix,"<native>",message);
+        tracer.logp(level, loggerPrefix + loggerSuffix, "<native>", message);
     }
 }
 

@@ -6,32 +6,32 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.query;
 
-import net.sf.farrago.runtime.*;
-import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
-import net.sf.farrago.session.*;
-
-import org.eigenbase.util.*;
-import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
-
 import java.io.*;
+import java.lang.reflect.*;
 import java.sql.*;
 import java.util.*;
-import java.lang.reflect.*;
+
+import net.sf.farrago.runtime.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.type.*;
+import net.sf.farrago.util.*;
+
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
+
 
 /**
  * FarragoExecutableJavaStmt implements FarragoSessionExecutableStmt via a
@@ -52,20 +52,20 @@ import java.lang.reflect.*;
  */
 class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
 {
+    //~ Instance fields -------------------------------------------------------
+
     private final File packageDir;
 
     // TODO jvs 4-June-2004:  don't pin a Class object; instead, remember
     // just the class name, and dynamically load it per-execution.  This
     // will keep cache memory usage down.
     private final Class rowClass;
-    
     private final RelDataType rowType;
-
     private final Method method;
-
     private final String xmiFennelPlan;
-
     private final Set referencedObjectIds;
+
+    //~ Constructors ----------------------------------------------------------
 
     FarragoExecutableJavaStmt(
         File packageDir,
@@ -77,7 +77,7 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
         boolean isDml,
         Set referencedObjectIds)
     {
-        super(dynamicParamRowType,isDml);
+        super(dynamicParamRowType, isDml);
 
         this.packageDir = packageDir;
         this.rowClass = rowClass;
@@ -88,21 +88,22 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
         rowType = forgetTypeFactory(preparedRowType);
     }
 
+    //~ Methods ---------------------------------------------------------------
+
     // implement FarragoSessionExecutableStmt
     public RelDataType getRowType()
     {
         return rowType;
     }
-    
+
     // implement FarragoSessionExecutableStmt
     public Set getReferencedObjectIds()
     {
         return referencedObjectIds;
     }
-    
+
     // implement FarragoSessionExecutableStmt
-    public ResultSet execute(
-        FarragoSessionRuntimeContext runtimeContext)
+    public ResultSet execute(FarragoSessionRuntimeContext runtimeContext)
     {
         try {
             if (xmiFennelPlan != null) {
@@ -117,24 +118,19 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
             // to prefetch any data, since the Fennel streams aren't open yet.
             // In particular, Java iterator implementations must not do
             // prefetch in the constructor (always wait for hasNext/next).
-            
-            Iterator iter = (Iterator) method.invoke(
-                null,
-                new Object [] 
-                {
-                    runtimeContext
-                });
-            ResultSet resultSet = new FarragoIteratorResultSet(
-                iter,
-                rowClass,
-                rowType,
-                runtimeContext);
-            
+            Iterator iter =
+                (Iterator) method.invoke(
+                    null,
+                    new Object [] { runtimeContext });
+            ResultSet resultSet =
+                new FarragoIteratorResultSet(iter, rowClass, rowType,
+                    runtimeContext);
+
             if (xmiFennelPlan != null) {
                 // Finally, it's safe to open all streams.
                 runtimeContext.openStreams();
             }
-            
+
             runtimeContext = null;
             return resultSet;
         } catch (IllegalAccessException e) {
@@ -147,17 +143,15 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
             }
         }
     }
-    
+
     // implement FarragoSessionExecutableStmt
     public long getMemoryUsage()
     {
-
         // TODO: a better approximation.  This only sums the bytecode size of
         // the compiled classes.  Other allocations to estimate are loaded
         // class overhead (e.g. constants and reflection info), type
         // descriptor, JIT code size, and "this" object and fields such as
         // packageDir/referencedObjectIds.
-        
         long nBytes = 0;
         File [] files = packageDir.listFiles();
         for (int i = 0; i < files.length; ++i) {
@@ -174,5 +168,6 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
         return nBytes;
     }
 }
+
 
 // End FarragoExecutableJavaStmt.java

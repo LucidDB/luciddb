@@ -17,8 +17,11 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.query;
+
+import java.nio.charset.*;
+import java.sql.*;
+import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
@@ -27,19 +30,14 @@ import net.sf.farrago.fennel.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.rel.*;
-import org.eigenbase.util.*;
-import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexBuilder;
+import org.eigenbase.rex.RexNode;
 import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.util.*;
 
-import java.nio.charset.*;
-
-import java.sql.*;
-
-import java.util.*;
 
 /**
  * Static utilities for FennelRel implementations.  Examples in the comments
@@ -88,14 +86,11 @@ public abstract class FennelRelUtil
         FarragoRepos repos,
         RelDataType rowType)
     {
-        FemTupleDescriptor tupleDesc =
-            repos.newFemTupleDescriptor();
+        FemTupleDescriptor tupleDesc = repos.newFemTupleDescriptor();
         RelDataTypeField [] fields = rowType.getFields();
         for (int i = 0; i < fields.length; ++i) {
             assert (fields[i].getType() instanceof FarragoType);
-            addTupleAttrDescriptor(
-                repos,
-                tupleDesc,
+            addTupleAttrDescriptor(repos, tupleDesc,
                 (FarragoType) fields[i].getType());
         }
         return tupleDesc;
@@ -113,8 +108,7 @@ public abstract class FennelRelUtil
         FarragoRepos repos,
         Integer [] projection)
     {
-        FemTupleProjection tupleProj =
-            repos.newFemTupleProjection();
+        FemTupleProjection tupleProj = repos.newFemTupleProjection();
 
         for (int i = 0; i < projection.length; ++i) {
             FemTupleAttrProjection attrProj =
@@ -151,7 +145,9 @@ public abstract class FennelRelUtil
      *
      * @return generated array
      */
-    public static Integer [] newBiasedIotaProjection(int n,int base)
+    public static Integer [] newBiasedIotaProjection(
+        int n,
+        int base)
     {
         Integer [] array = new Integer[n];
         for (int i = 0; i < n; ++i) {
@@ -167,8 +163,7 @@ public abstract class FennelRelUtil
     {
         assert (type instanceof FarragoAtomicType);
         FarragoAtomicType atomicType = (FarragoAtomicType) type;
-        FemTupleAttrDescriptor attrDesc =
-            repos.newFemTupleAttrDescriptor();
+        FemTupleAttrDescriptor attrDesc = repos.newFemTupleAttrDescriptor();
         tupleDesc.getAttrDescriptor().add(attrDesc);
         attrDesc.setTypeOrdinal(
             convertSqlTypeNumberToFennelTypeOrdinal(
@@ -181,12 +176,11 @@ public abstract class FennelRelUtil
         FarragoRepos repos,
         List indexColumnList)
     {
-        FemTupleProjection tupleProj =
-            repos.newFemTupleProjection();
+        FemTupleProjection tupleProj = repos.newFemTupleProjection();
         Iterator indexColumnIter = indexColumnList.iterator();
         while (indexColumnIter.hasNext()) {
-            FemAbstractColumn column = (FemAbstractColumn)
-                indexColumnIter.next();
+            FemAbstractColumn column =
+                (FemAbstractColumn) indexColumnIter.next();
             FemTupleAttrProjection attrProj =
                 repos.newFemTupleAttrProjection();
             tupleProj.getAttrProjection().add(attrProj);
@@ -194,11 +188,11 @@ public abstract class FennelRelUtil
         }
         return tupleProj;
     }
-    
+
     private static int getByteLength(FarragoAtomicType type)
     {
-        if (type instanceof FarragoPrimitiveType ||
-                type  instanceof FarragoDateTimeType) {
+        if (type instanceof FarragoPrimitiveType
+                || type instanceof FarragoDateTimeType) {
             // for primitives, length is implied by datatype
             return 0;
         }
@@ -207,22 +201,19 @@ public abstract class FennelRelUtil
 
         // TODO:  numeric, date, etc.
         try {
-
             if (!precisionType.isCharType()) {
                 if (precisionType.getSqlTypeName().equals(SqlTypeName.Bit)) {
-                    return (precisionType.getPrecision()+7) / 8;
+                    return (precisionType.getPrecision() + 7) / 8;
                 }
                 return precisionType.getPrecision();
             } else {
-                assert(null!=precisionType.getCharsetName());
+                assert (null != precisionType.getCharsetName());
                 Charset charset = precisionType.getCharset();
-                return (int) charset.newEncoder().maxBytesPerChar()
-                    * precisionType.getPrecision();
+                return (int) charset.newEncoder().maxBytesPerChar() * precisionType
+                    .getPrecision();
             }
-                
         } catch (Exception ex) {
-            throw Util.newInternal(
-                ex,
+            throw Util.newInternal(ex,
                 "Unsupported charset " + precisionType.getCharsetName());
         }
     }
@@ -248,7 +239,7 @@ public abstract class FennelRelUtil
             return 5; // STANDARD_TYPE_INT_32
         case Types.DATE:
         case Types.TIME:
-        case Types.TIMESTAMP:    
+        case Types.TIMESTAMP:
         case Types.BIGINT:
             return 7; // STANDARD_TYPE_INT_64
         case Types.VARCHAR:

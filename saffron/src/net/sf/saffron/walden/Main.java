@@ -1,49 +1,45 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package net.sf.saffron.walden;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Properties;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import net.sf.saffron.oj.stmt.OJStatement;
-import org.eigenbase.runtime.VarDecl;
-import org.eigenbase.util.SaffronProperties;
-import org.eigenbase.util.Util;
 
 import openjava.mop.Environment;
 import openjava.mop.OJClass;
-
 import openjava.ptree.ClassDeclaration;
 import openjava.ptree.Expression;
 import openjava.ptree.ParseTree;
-
 import openjava.tools.parser.ParseException;
 import openjava.tools.parser.Parser;
 
-import java.io.*;
-
-import java.util.ArrayList;
-import java.util.Properties;
+import org.eigenbase.runtime.VarDecl;
+import org.eigenbase.util.SaffronProperties;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -57,8 +53,6 @@ import java.util.Properties;
  */
 public class Main
 {
-    //~ Methods ---------------------------------------------------------------
-
     /**
      * Returns a set of queries. Used by <code>walden/index.jsp</code>.
      */
@@ -95,17 +89,17 @@ public class Main
                 if (equals < 0) {
                     property = arg;
                 } else {
-                    property = arg.substring(0,equals); // e.g. "foo.bar"
+                    property = arg.substring(0, equals); // e.g. "foo.bar"
                     value = arg.substring(equals + 1); // e.g. "value"
                 }
-                properties.setProperty(property,value);
+                properties.setProperty(property, value);
             }
         }
         Interpreter interpreter = new Interpreter();
         InputStreamReader reader = new InputStreamReader(System.in);
-        PrintWriter pw = new PrintWriter(System.out,true);
-        Handler handler = new PrintHandler(interpreter,pw,true);
-        interpreter.run(reader,handler);
+        PrintWriter pw = new PrintWriter(System.out, true);
+        Handler handler = new PrintHandler(interpreter, pw, true);
+        interpreter.run(reader, handler);
     }
 
     /**
@@ -119,8 +113,6 @@ public class Main
         return suite;
     }
 
-    //~ Inner Classes ---------------------------------------------------------
-
     /**
      * JUnit test suite for {@link Main}.
      */
@@ -133,28 +125,30 @@ public class Main
 
         public void _testOne()
         {
-            assertInterpret(new String [] { "1" },new String [] { "1" });
+            assertInterpret(
+                new String [] { "1" },
+                new String [] { "1" });
         }
 
         public void _testTwo()
         {
             assertInterpret(
-                new String [] { "\"x\"","null" },
-                new String [] { "x","null" });
+                new String [] { "\"x\"", "null" },
+                new String [] { "x", "null" });
         }
 
         public void testDeclaration()
         {
             assertInterpret(
-                new String [] { "int i = 2","i + 3" },
-                new String [] { "i: int: 2","int: 5" });
+                new String [] { "int i = 2", "i + 3" },
+                new String [] { "i: int: 2", "int: 5" });
         }
 
         public void testSelect()
         {
             assertInterpret(
                 new String [] { "select from new int[] {1,2,3}" },
-                new String [] { "class int[]: {","1,","2,","3}" });
+                new String [] { "class int[]: {", "1,", "2,", "3}" });
         }
 
         public void testVoid()
@@ -164,27 +158,33 @@ public class Main
                 new String [] { "void" });
         }
 
-        private void assertInterpret(String input,String output)
+        private void assertInterpret(
+            String input,
+            String output)
         {
             StringWriter sw = new StringWriter();
             Interpreter interpreter = new Interpreter();
             InputStreamReader reader = new InputStreamReader(System.in);
             Handler handler =
-                new PrintHandler(interpreter,new PrintWriter(sw),false);
-            interpreter.run(reader,handler);
-            assertEquals(output,sw.toString());
+                new PrintHandler(interpreter, new PrintWriter(sw), false);
+            interpreter.run(reader, handler);
+            assertEquals(
+                output,
+                sw.toString());
         }
 
         private void assertInterpret(
             String [] inputLines,
             String [] outputLines)
         {
-            String input = linesToString(inputLines,";" + Util.lineSeparator);
-            String output = linesToString(outputLines,Util.lineSeparator);
-            assertInterpret(input,output);
+            String input = linesToString(inputLines, ";" + Util.lineSeparator);
+            String output = linesToString(outputLines, Util.lineSeparator);
+            assertInterpret(input, output);
         }
 
-        private String linesToString(String [] lines,String sep)
+        private String linesToString(
+            String [] lines,
+            String sep)
         {
             StringWriter sw = new StringWriter();
             for (int i = 0; i < lines.length; i++) {

@@ -1,33 +1,25 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2004 Disruptive Tech
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.sql;
-
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.sql.parser.ParserUtil;
-import org.eigenbase.sql.parser.ParserPosition;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.util.*;
 
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -37,6 +29,14 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.TimeZone;
+
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.parser.ParserUtil;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.util.*;
+
 
 /**
  * A <code>SqlLiteral</code> is a constant. It is, appropriately, immutable.
@@ -139,425 +139,6 @@ import java.util.TimeZone;
  */
 public class SqlLiteral extends SqlNode
 {
-    //~ Static fields/initializers --------------------------------------------
-
-    // NOTE jvs 26-Jan-2004:  There's no singleton constant for a NULL literal.
-    // Instead, nulls must be instantiated via createNull(), because
-    // different instances have different context-dependent types.
-
-
-    //~ Inner Classes   -------------------------------------------------------
-
-
-    /**
-     * DateLiteral for wrapping java date/time types.
-     * This is sort of an odd thing to do - a static nested class that extends
-     * its super class.
-     */
-    public static class DateLiteral extends SqlLiteral {
-        protected boolean _hasTimeZone;
-        protected String _formatString = ParserUtil.DateFormatStr;
-
-        /**
-         *  Construct a new dateformat object for the given string.
-         *  DateFormat objects aren't thread safe
-         * @param dfString
-         * @return date format object
-         */
-        public static DateFormat getDateFormat(String dfString) {
-            SimpleDateFormat df = new SimpleDateFormat(dfString);
-            df.setLenient(false);
-            return df;
-        }
-
-
-        public DateLiteral(Calendar d, ParserPosition parserPosition)
-        {
-            this(d,false, SqlTypeName.Date, parserPosition);
-        }
-
-        public DateLiteral(Calendar d, boolean tz, ParserPosition parserPosition) {
-            this(d, tz, SqlTypeName.Date, parserPosition);
-        }
-
-        protected DateLiteral(Calendar d, boolean tz, SqlTypeName typeName,  ParserPosition parserPosition) {
-            super(d, typeName, parserPosition);
-            _hasTimeZone = tz;
-        }
-
-        public String toValue() {
-            return Long.toString(getCal().getTimeInMillis());
-        }
-
-        private Date getDate() {
-            return new java.sql.Date(getCal().getTimeInMillis() -
-                    Calendar.getInstance().getTimeZone().getRawOffset());
-        }
-
-        public Calendar getCal() {
-            return (Calendar) _value;
-        }
-        /**
-         * technically, a sql date doesn't come with a tz, but time and ts
-         * inherit this, and the calendar object has one, so it seems harmless.
-         * @return timezone
-         */
-        public TimeZone getTimeZone() {
-            assert _hasTimeZone : "Attempt to get timezone on Literal date: " + getCal() + ", which has no timezone";
-            return getCal().getTimeZone();
-        }
-
-        public String toString() {
-            return "DATE '" +
-                    getDateFormat(_formatString).format(getDate()) +
-                    "'";
-        }
-
-        public RelDataType createSqlType(RelDataTypeFactory typeFactory) {
-            return typeFactory.createSqlType(SqlTypeName.Date);
-        }
-
-        public void unparse(SqlWriter writer,int leftPrec,int rightPrec) {
-            writer.print(this.toString());
-        }
-
-    }
-
-    public static class TimeLiteral extends DateLiteral {
-        public final int _precision;
-
-        protected TimeLiteral(Calendar t, int p, boolean hasTZ,
-                SqlTypeName typeName, ParserPosition parserPosition) {
-            super(t,hasTZ,typeName, parserPosition);
-            _precision = p;
-            _formatString = ParserUtil.TimeFormatStr;
-       }
-
-        /**
-         * Constructor is private; use {@link #createTime}.
-         */
-        private TimeLiteral(Calendar t, int p, ParserPosition parserPosition) {
-           this(t,p,false,SqlTypeName.Time, parserPosition);
-        }
-
-        private Time getTime() {
-            long millis = getCal().getTimeInMillis();
-            int tzOffset =
-                    Calendar.getInstance().getTimeZone().getOffset(millis);
-            return new java.sql.Time(millis - tzOffset);
-        }
-
-        public int getPrec() {
-            return _precision;
-        }
-
-        public String toString() {
-            return "TIME '" + toFormattedString() + "'";
-        }
-
-        public String toFormattedString() {
-            String result =
-                    new SimpleDateFormat(_formatString).
-                                format(getTime()) ;
-            if (_precision > 0) {
-                assert(_precision<=3);
-                // get the millisecond count.  millisecond => at most 3 digits.
-                String digits = Long.toString(getCal().getTimeInMillis());
-                result = result + "." +
-                        digits.substring(digits.length() - 3, digits.length() - 3 + _precision);
-            } else {
-                assert(0==getCal().get(Calendar.MILLISECOND));
-            }
-            return result;
-        }
-
-        public RelDataType createSqlType(RelDataTypeFactory typeFactory) {
-            return typeFactory.createSqlType(_typeName, _precision);
-        }
-    }
-
-
-    /**
-     * This is largely a place holder, the type allows to determine what this object is,
-     *  but most of its functionality comes from above.
-     */
-    public static class TimestampLiteral extends TimeLiteral {
-
-        public TimestampLiteral(Calendar cal, int p, boolean hasTZ, ParserPosition parserPosition) {
-            super(cal, p, hasTZ, SqlTypeName.Timestamp, parserPosition);
-            _formatString = ParserUtil.TimestampFormatStr;
-        }
-
-        public TimestampLiteral(Calendar cal, int p, ParserPosition parserPosition) {
-            this(cal, p, false, parserPosition);
-        }
-
-        public Timestamp getTimestamp() {
-            return new java.sql.Timestamp(getCal().getTimeInMillis());
-        }
-
-        public String toString() {
-            return "TIMESTAMP '" + toFormattedString() + "'";
-        }
-    }
-
-    public static class Numeric extends SqlLiteral {
-        //~ Member variables -----------
-        private Integer m_prec;
-        private Integer m_scale;
-        private boolean m_isExact;
-
-        public Integer getPrec() {
-            return m_prec;
-        }
-
-        public Integer getScale() {
-            return m_scale;
-        }
-
-        //~ Methods -----------
-        public static Numeric createExact(String s, ParserPosition parserPosition){
-            BigDecimal value;
-            int prec;
-            int scale;
-
-            int i=s.indexOf('.');
-            if (i>=0 && (s.length()-1!=i)) {
-                value = ParserUtil.parseDecimal(s);
-                scale = s.length()-i-1;
-                assert scale == value.scale() : s;
-                prec = s.length()-1;
-            }
-            else if (i>=0 && (s.length()-1==i)) {
-                value = ParserUtil.parseInteger(s.substring(0,i));
-                scale = 0;
-                prec = s.length()-1;
-            }
-            else {
-                value = ParserUtil.parseInteger(s);
-                scale = 0;
-                prec = s.length();
-            }
-            return new Numeric(value,new Integer(prec),new Integer(scale), true, parserPosition);
-        }
-
-        public static Numeric createApprox(String s, ParserPosition parserPosition){
-            BigDecimal value = ParserUtil.parseDecimal(s);
-            return new Numeric(value,null,null, false, parserPosition);
-        }
-
-        protected Numeric(BigDecimal value, Integer prec, Integer scale, boolean isExact, ParserPosition parserPosition) {
-            super(value, isExact ? SqlTypeName.Decimal : SqlTypeName.Double, parserPosition);
-            this.m_prec = prec;
-            this.m_scale = scale;
-            this.m_isExact = isExact;
-        }
-
-        public boolean isExact() {
-            return m_isExact;
-        }
-
-        public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
-            writer.print(toValue());
-        }
-
-        public String toValue() {
-            BigDecimal bd = (BigDecimal) _value;
-            if (m_isExact) {
-                return _value.toString();
-            }
-            return Util.toScientificNotation(bd);
-        }
-
-        public RelDataType createSqlType(RelDataTypeFactory typeFactory) {
-            if (m_isExact){
-                int scale = m_scale.intValue();
-                if (0 == scale) {
-                    BigDecimal bd = (BigDecimal) _value;
-                    SqlTypeName result;
-                    long l = bd.longValue();
-                    if (l >= Integer.MIN_VALUE && l <= Integer.MAX_VALUE) {
-                        result = SqlTypeName.Integer;
-                    } else {
-                        result = SqlTypeName.Bigint;
-                    }
-                    return typeFactory.createSqlType(result);
-                }
-                //else we have a decimal
-                return typeFactory.createSqlType(
-                        SqlTypeName.Decimal,
-                        m_prec.intValue(),
-                        scale);
-            }
-            // else we have a a float, real or double.  make them all double for now.
-            return typeFactory.createSqlType(SqlTypeName.Double);
-        }
-
-    }
-
-    /** abstract base for char, bit, and binary (hex) strings */
-    public static abstract class StringLiteral extends SqlLiteral {
-
-        protected StringLiteral(Object value, SqlTypeName typeName, ParserPosition pos) {
-            super(value, typeName, pos);
-        }
-
-
-        /** Concatenate string literals. A static method, to concatenate all at once,
-         * since pairwise concatenation means too much string copying.
-         * @param lits a StringLiteral[], not empty, homogeneous to subtype.
-         * @return a new StringLiteral, of that same subtype, whose value is the
-         * string concatenation of the values of the lits.
-         * @throws ClassCastException if the lits are not homogeneous.
-         * @throws ArrayIndexOutOfBoundsException if lits is an empty array.
-         */
-        public static StringLiteral concat(StringLiteral[] lits) {
-            if (lits.length == 1)
-                return lits[0];         // nothing to do
-            return lits[0].concat1(lits);
-        }
-
-        /** helper routine for {@link concat}. 
-         * @param lits homogeneous StringLiteral[] args.
-         * @return StringLiteral with concatenated value.
-         * this == lits[0], used only for method dispatch.
-         */
-        protected abstract StringLiteral concat1(StringLiteral[] lits);
-    }
-
-
-    /** a character string literal. _value is an NlsString and _typeName is SqlTypeName.Char */
-    public static class CharString extends StringLiteral {
-        protected CharString(NlsString val, ParserPosition pos) {
-            super(val, SqlTypeName.Char, pos);
-        }
-
-        /** @return the underlying NlsString */
-        public NlsString getNlsString() {
-            return (NlsString) _value;
-        }
-
-        /** @return the collation */
-        public SqlCollation getCollation() {
-            return getNlsString().getCollation();
-        }
-
-        /** Sets the collation.
-         * (Convenient for the sql parser to do this after construction)
-         */
-        public void setCollation(SqlCollation collation) {
-            getNlsString().setCollation(collation);
-        }
-
-        /**
-         * Creates a string literal in the system character set.
-         * @param s a string (without the sql single quotes)
-         */
-        public static CharString create(String s, ParserPosition pos) {
-            return create(s, null, pos);
-        }
-
-        /**
-         * Creates a string literal, with optional character-set.
-         * @param s a string (without the sql single quotes)
-         * @param charSet character set name, null means take system default
-         * @return A string literal
-         */
-        public static CharString create(String s, String charSet,
-                                           ParserPosition pos) {
-            NlsString slit = new NlsString(s, charSet, null);
-            return new CharString(slit, pos);
-        }
-
-        public void unparse(SqlWriter writer,int leftPrec,int rightPrec) {
-            if (false) {
-                String stringValue = ((NlsString) _value).getValue();
-                writer.print(writer.dialect.quoteStringLiteral(stringValue));
-            }
-            assert _value instanceof NlsString;
-            writer.print(_value.toString());
-        }
-
-        protected StringLiteral concat1(StringLiteral[] lits) {
-            NlsString[] args = new NlsString[lits.length];
-            for (int i = 0; i < lits.length; i++)
-                args[i] = ((CharString)lits[i]).getNlsString();
-            return new CharString(NlsString.concat(args), lits[0].getParserPosition());
-        }
-    }
-
-    /** a bit string literal:
-     * _value is a BitString and _typename is SqlTypeName.Bit
-     */
-    public static class BitStringLiteral extends StringLiteral {
-        protected BitStringLiteral(BitString val, ParserPosition pos) {
-            super(val, SqlTypeName.Bit, pos);
-        }
-
-        /** @return the underlying BitString */
-        public BitString getBitString() {
-            return (BitString) _value;
-        }
-
-        /* Creates a literal like B'0101' */
-        public static BitStringLiteral create(String s, ParserPosition pos) {
-            BitString bits = BitString.createFromBitString(s);
-            return new BitStringLiteral(bits, pos);
-        }
-
-        public void unparse(SqlWriter writer,int leftPrec,int rightPrec) {
-            assert _value instanceof BitString;
-            writer.print("B'");
-            writer.print(_value.toString());
-            writer.print("'");
-        }
-
-        protected StringLiteral concat1(StringLiteral[] lits) {
-            BitString[] args = new BitString[lits.length];
-            for (int i = 0; i < lits.length; i++)
-                args[i] = ((BitStringLiteral)lits[i]).getBitString();
-            return new BitStringLiteral(BitString.concat(args), lits[0].getParserPosition());
-        }
-    }
-
-    /** a binary (or hex) string literal.
-     * _value is again a BitString and _typename is SqlTypeName.Binary
-     */
-    public static class BinaryStringLiteral extends StringLiteral {
-        protected BinaryStringLiteral(BitString val, ParserPosition pos) {
-            super(val, SqlTypeName.Binary, pos);
-        }
-
-        /** @return the underlying BitString */
-        public BitString getBitString() {
-            return (BitString) _value;
-        }
-
-        /* Creates a literal like X'ABAB'. Although it matters when we derive a
-         * type for this beastie, we don't care at this point whether the number of
-         * hexits is odd or even.
-         */
-        public static BinaryStringLiteral create(String s, ParserPosition pos) {
-            BitString bits = BitString.createFromHexString(s);
-            return new BinaryStringLiteral(bits, pos);
-        }
-
-        public void unparse(SqlWriter writer,int leftPrec,int rightPrec) {
-            assert _value instanceof BitString;
-            writer.print("X'");
-            writer.print(((BitString) _value).toHexString());
-            writer.print("'");
-        }
-
-        protected StringLiteral concat1(StringLiteral[] lits) {
-            BitString[] args = new BitString[lits.length];
-            for (int i = 0; i < lits.length; i++)
-                args[i] = ((BinaryStringLiteral)lits[i]).getBitString();
-            return new BinaryStringLiteral(BitString.concat(args), lits[0].getParserPosition());
-        }
-    }
-
-
     //~ Instance fields -------------------------------------------------------
 
     /**
@@ -568,6 +149,7 @@ public class SqlLiteral extends SqlNode
      * {@link SqlTypeName#Integer}.
      */
     public final SqlTypeName _typeName;
+
     /**
      * The value of this literal. The type of the value must be appropriate
      * for the typeName, as defined by the {@link #valueMatchesType} method.
@@ -582,15 +164,21 @@ public class SqlLiteral extends SqlNode
      * @pre typeName != null
      * @pre valueMatchesType(value,typeName)
      */
-    protected SqlLiteral(Object value, SqlTypeName typeName, ParserPosition parserPosition)
+    protected SqlLiteral(
+        Object value,
+        SqlTypeName typeName,
+        ParserPosition parserPosition)
     {
         super(parserPosition);
         this._value = value;
         this._typeName = typeName;
         Util.pre(typeName != null, "typeName != null");
-        Util.pre(valueMatchesType(value, typeName),
-                "valueMatchesType(value,typeName)");
+        Util.pre(
+            valueMatchesType(value, typeName),
+            "valueMatchesType(value,typeName)");
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     /**
      * @return value of {@link #_typeName}
@@ -604,42 +192,38 @@ public class SqlLiteral extends SqlNode
      * Whether value is appropriate for its type. (We have rules about these
      * things.)
      */
-    public static boolean valueMatchesType(Object value,
-            SqlTypeName typeName) {
+    public static boolean valueMatchesType(
+        Object value,
+        SqlTypeName typeName)
+    {
         switch (typeName.ordinal_) {
         case SqlTypeName.Boolean_ordinal:
-            return value == null || value instanceof Boolean;
-
+            return (value == null) || value instanceof Boolean;
         case SqlTypeName.Null_ordinal:
             return value == null;
-
         case SqlTypeName.Decimal_ordinal:
         case SqlTypeName.Double_ordinal:
             return value instanceof BigDecimal;
-
         case SqlTypeName.Date_ordinal:
         case SqlTypeName.Time_ordinal:
         case SqlTypeName.Timestamp_ordinal:
             return value instanceof Calendar;
-
         case SqlTypeName.Binary_ordinal:
+
             // created from X'ABC' (odd length) or X'AB' (even length)
             return value instanceof BitString; // created from B'0101'
-
         case SqlTypeName.Bit_ordinal:
             return value instanceof BitString; // created from B'0101'
-
         case SqlTypeName.Char_ordinal:
             return value instanceof NlsString;
-
         case SqlTypeName.Symbol_ordinal:
+
             // We grudgingly allow the value to be a String, because
             // SqlSymbol extends SqlLiteral and implements
             // EnumeratedValues.Value, and it would be silly if it were its
             // own value!
-            return value instanceof EnumeratedValues.Value ||
-                    value instanceof String;
-
+            return value instanceof EnumeratedValues.Value
+                || value instanceof String;
         case SqlTypeName.Integer_ordinal: // not allowed -- use Decimal
         case SqlTypeName.Varchar_ordinal: // not allowed -- use Char
         case SqlTypeName.Varbinary_ordinal: // not allowed -- use Binary
@@ -647,8 +231,6 @@ public class SqlLiteral extends SqlNode
             throw typeName.unexpected();
         }
     }
-
-    //~ Methods ---------------------------------------------------------------
 
     public SqlKind getKind()
     {
@@ -671,6 +253,7 @@ public class SqlLiteral extends SqlNode
     {
         return ((Boolean) ((SqlLiteral) node)._value).booleanValue();
     }
+
     /**
      * For calc program builder - value may be different than {@link #unparse}
      * Typical values:<ul>
@@ -682,18 +265,21 @@ public class SqlLiteral extends SqlNode
      *
      * @return string representation of the value
      */
-    public String toValue() {
+    public String toValue()
+    {
         if (_value == null) {
             return null;
         }
         switch (_typeName.ordinal_) {
         case SqlTypeName.Char_ordinal:
+
             // We want 'It''s superman!', not _ISO-8859-1'It''s superman!'
             return ((NlsString) _value).getValue();
         default:
             return _value.toString();
         }
     }
+
     /**
      * Creates a NULL literal.
      */
@@ -705,29 +291,42 @@ public class SqlLiteral extends SqlNode
     /**
      * Creates a boolean literal.
      */
-    public static SqlLiteral createBoolean(boolean b, ParserPosition parserPosition)
+    public static SqlLiteral createBoolean(
+        boolean b,
+        ParserPosition parserPosition)
     {
-        return b ? new SqlLiteral(Boolean.TRUE, SqlTypeName.Boolean, parserPosition)
-                :  new SqlLiteral(Boolean.FALSE, SqlTypeName.Boolean, parserPosition);
+        return b
+        ? new SqlLiteral(Boolean.TRUE, SqlTypeName.Boolean, parserPosition)
+        : new SqlLiteral(Boolean.FALSE, SqlTypeName.Boolean, parserPosition);
     }
 
     public static SqlLiteral createUnknown(ParserPosition parserPosition)
     {
-       return new SqlLiteral(null, SqlTypeName.Boolean, parserPosition);
+        return new SqlLiteral(null, SqlTypeName.Boolean, parserPosition);
     }
 
-    public static SqlLiteral create(int i, ParserPosition parserPosition)
+    public static SqlLiteral create(
+        int i,
+        ParserPosition parserPosition)
     {
         switch (i) {
         case 0:
-            return  new SqlLiteral(new BigDecimal(0), SqlTypeName.Decimal, parserPosition);
+            return new SqlLiteral(
+                new BigDecimal(0),
+                SqlTypeName.Decimal,
+                parserPosition);
         case 1:
-            return new SqlLiteral(new BigDecimal(1), SqlTypeName.Decimal, parserPosition);
+            return new SqlLiteral(
+                new BigDecimal(1),
+                SqlTypeName.Decimal,
+                parserPosition);
         default:
-            return new SqlLiteral(new BigDecimal(i), SqlTypeName.Decimal, parserPosition);
+            return new SqlLiteral(
+                new BigDecimal(i),
+                SqlTypeName.Decimal,
+                parserPosition);
         }
     }
-
 
     /**
      * Creates a literal which represents a parser symbol, for example the
@@ -735,15 +334,17 @@ public class SqlLiteral extends SqlNode
      *
      * @see SqlSymbol
      */
-    public static SqlLiteral createFlag(EnumeratedValues.Value o, ParserPosition parserPosition)
+    public static SqlLiteral createFlag(
+        EnumeratedValues.Value o,
+        ParserPosition parserPosition)
     {
-        return new SqlLiteral(o, SqlTypeName.Symbol, parserPosition );
+        return new SqlLiteral(o, SqlTypeName.Symbol, parserPosition);
     }
 
     public boolean equals(Object obj)
     {
         return (obj instanceof SqlLiteral)
-            && equals(((SqlLiteral) obj)._value,_value);
+            && equals(((SqlLiteral) obj)._value, _value);
     }
 
     public int hashCode()
@@ -770,16 +371,21 @@ public class SqlLiteral extends SqlNode
 
     public Object clone()
     {
-        return new SqlLiteral(_value, _typeName, getParserPosition());
+        return new SqlLiteral(
+            _value,
+            _typeName,
+            getParserPosition());
     }
 
-    public void unparse(SqlWriter writer,int leftPrec,int rightPrec)
+    public void unparse(
+        SqlWriter writer,
+        int leftPrec,
+        int rightPrec)
     {
         switch (_typeName.ordinal_) {
         case SqlTypeName.Boolean_ordinal:
-            writer.print(_value == null ? "UNKNOWN" :
-                    ((Boolean) _value).booleanValue() ? "TRUE" :
-                    "FALSE");
+            writer.print((_value == null) ? "UNKNOWN"
+                : (((Boolean) _value).booleanValue() ? "TRUE" : "FALSE"));
             break;
         case SqlTypeName.Null_ordinal:
             writer.print("NULL");
@@ -789,6 +395,7 @@ public class SqlLiteral extends SqlNode
         case SqlTypeName.Double_ordinal:
         case SqlTypeName.Binary_ordinal:
         case SqlTypeName.Bit_ordinal:
+
             // should be handled in subtype
             throw _typeName.unexpected();
         default:
@@ -796,58 +403,66 @@ public class SqlLiteral extends SqlNode
         }
     }
 
-    private static boolean equals(Object o1,Object o2)
+    private static boolean equals(
+        Object o1,
+        Object o2)
     {
         return (o1 == null) ? (o2 == null) : o1.equals(o2);
     }
 
-    public RelDataType createSqlType(RelDataTypeFactory typeFactory) {
+    public RelDataType createSqlType(RelDataTypeFactory typeFactory)
+    {
         BitString bitString;
         switch (_typeName.ordinal_) {
         case SqlTypeName.Null_ordinal:
         case SqlTypeName.Boolean_ordinal:
             RelDataType ret = typeFactory.createSqlType(_typeName);
-            ret = typeFactory.createTypeWithNullability(ret, null==_value);
+            ret = typeFactory.createTypeWithNullability(ret, null == _value);
             return ret;
         case SqlTypeName.Binary_ordinal:
+
             // REVIEW: should this be Binary, not Varbinary?
             bitString = (BitString) _value;
             int bitCount = bitString.getBitCount();
-            if (bitCount % 8 == 0) {
+            if ((bitCount % 8) == 0) {
                 return typeFactory.createSqlType(SqlTypeName.Varbinary,
-                        bitCount / 8);
+                    bitCount / 8);
             } else {
-                return typeFactory.createSqlType(SqlTypeName.Bit,
-                        bitCount);
+                return typeFactory.createSqlType(SqlTypeName.Bit, bitCount);
             }
         case SqlTypeName.Bit_ordinal:
             assert _value instanceof BitString;
             bitString = (BitString) _value;
-            return typeFactory.createSqlType(SqlTypeName.Bit,
-                    bitString.getBitCount());
+            return typeFactory.createSqlType(
+                SqlTypeName.Bit,
+                bitString.getBitCount());
         case SqlTypeName.Char_ordinal:
             NlsString string = (NlsString) _value;
-            if (null==string.getCharset()) {
+            if (null == string.getCharset()) {
                 string.setCharset(Util.getDefaultCharset());
             }
-            if (null==string.getCollation()) {
-                string.setCollation(new
-                        SqlCollation(SqlCollation.Coercibility.Coercible));
+            if (null == string.getCollation()) {
+                string.setCollation(
+                    new SqlCollation(SqlCollation.Coercibility.Coercible));
             }
-            RelDataType type = typeFactory.createSqlType(SqlTypeName.Varchar,
+            RelDataType type =
+                typeFactory.createSqlType(
+                    SqlTypeName.Varchar,
                     string.getValue().length());
-            type = typeFactory.createTypeWithCharsetAndCollation(type,
-                    string.getCharset(),string.getCollation());
+            type =
+                typeFactory.createTypeWithCharsetAndCollation(
+                    type,
+                    string.getCharset(),
+                    string.getCollation());
             return type;
-
         case SqlTypeName.Symbol_ordinal:
+
             // Existing code expects symbols to have a null type.
             if (true) {
                 return null;
             }
-            throw Util.newInternal("symbol does not have a SQL type: " +
-                    _value);
-
+            throw Util.newInternal("symbol does not have a SQL type: "
+                + _value);
         case SqlTypeName.Integer_ordinal: // handled in derived class
         case SqlTypeName.Time_ordinal: // handled in derived class
         case SqlTypeName.Varchar_ordinal: // should never happen
@@ -858,18 +473,574 @@ public class SqlLiteral extends SqlNode
         }
     }
 
-    public static DateLiteral createDate(Calendar calendar, ParserPosition parserPosition) {
+    public static DateLiteral createDate(
+        Calendar calendar,
+        ParserPosition parserPosition)
+    {
         return new DateLiteral(calendar, parserPosition);
     }
 
-    public static TimestampLiteral createTimestamp(Calendar calendar,
-            int precision, ParserPosition parserPosition) {
-        return new TimestampLiteral(calendar,precision, parserPosition);
+    public static TimestampLiteral createTimestamp(
+        Calendar calendar,
+        int precision,
+        ParserPosition parserPosition)
+    {
+        return new TimestampLiteral(calendar, precision, parserPosition);
     }
 
-    public static TimeLiteral createTime(Calendar calendar, int precision, ParserPosition parserPosition) {
-        return new TimeLiteral(calendar,precision, parserPosition);
+    public static TimeLiteral createTime(
+        Calendar calendar,
+        int precision,
+        ParserPosition parserPosition)
+    {
+        return new TimeLiteral(calendar, precision, parserPosition);
+    }
+
+    //~ Inner Classes ---------------------------------------------------------
+
+    // NOTE jvs 26-Jan-2004:  There's no singleton constant for a NULL literal.
+    // Instead, nulls must be instantiated via createNull(), because
+    // different instances have different context-dependent types.
+
+    /**
+     * DateLiteral for wrapping java date/time types.
+     * This is sort of an odd thing to do - a static nested class that extends
+     * its super class.
+     */
+    public static class DateLiteral extends SqlLiteral
+    {
+        protected boolean _hasTimeZone;
+        protected String _formatString = ParserUtil.DateFormatStr;
+
+        public DateLiteral(
+            Calendar d,
+            ParserPosition parserPosition)
+        {
+            this(d, false, SqlTypeName.Date, parserPosition);
+        }
+
+        public DateLiteral(
+            Calendar d,
+            boolean tz,
+            ParserPosition parserPosition)
+        {
+            this(d, tz, SqlTypeName.Date, parserPosition);
+        }
+
+        protected DateLiteral(
+            Calendar d,
+            boolean tz,
+            SqlTypeName typeName,
+            ParserPosition parserPosition)
+        {
+            super(d, typeName, parserPosition);
+            _hasTimeZone = tz;
+        }
+
+        /**
+         *  Construct a new dateformat object for the given string.
+         *  DateFormat objects aren't thread safe
+         * @param dfString
+         * @return date format object
+         */
+        public static DateFormat getDateFormat(String dfString)
+        {
+            SimpleDateFormat df = new SimpleDateFormat(dfString);
+            df.setLenient(false);
+            return df;
+        }
+
+        public String toValue()
+        {
+            return Long.toString(getCal().getTimeInMillis());
+        }
+
+        private Date getDate()
+        {
+            return new java.sql.Date(getCal().getTimeInMillis()
+                - Calendar.getInstance().getTimeZone().getRawOffset());
+        }
+
+        public Calendar getCal()
+        {
+            return (Calendar) _value;
+        }
+
+        /**
+         * technically, a sql date doesn't come with a tz, but time and ts
+         * inherit this, and the calendar object has one, so it seems harmless.
+         * @return timezone
+         */
+        public TimeZone getTimeZone()
+        {
+            assert _hasTimeZone : "Attempt to get timezone on Literal date: "
+            + getCal() + ", which has no timezone";
+            return getCal().getTimeZone();
+        }
+
+        public String toString()
+        {
+            return "DATE '" + getDateFormat(_formatString).format(getDate())
+            + "'";
+        }
+
+        public RelDataType createSqlType(RelDataTypeFactory typeFactory)
+        {
+            return typeFactory.createSqlType(SqlTypeName.Date);
+        }
+
+        public void unparse(
+            SqlWriter writer,
+            int leftPrec,
+            int rightPrec)
+        {
+            writer.print(this.toString());
+        }
+    }
+
+    public static class TimeLiteral extends DateLiteral
+    {
+        public final int _precision;
+
+        protected TimeLiteral(
+            Calendar t,
+            int p,
+            boolean hasTZ,
+            SqlTypeName typeName,
+            ParserPosition parserPosition)
+        {
+            super(t, hasTZ, typeName, parserPosition);
+            _precision = p;
+            _formatString = ParserUtil.TimeFormatStr;
+        }
+
+        /**
+         * Constructor is private; use {@link #createTime}.
+         */
+        private TimeLiteral(
+            Calendar t,
+            int p,
+            ParserPosition parserPosition)
+        {
+            this(t, p, false, SqlTypeName.Time, parserPosition);
+        }
+
+        private Time getTime()
+        {
+            long millis = getCal().getTimeInMillis();
+            int tzOffset =
+                Calendar.getInstance().getTimeZone().getOffset(millis);
+            return new java.sql.Time(millis - tzOffset);
+        }
+
+        public int getPrec()
+        {
+            return _precision;
+        }
+
+        public String toString()
+        {
+            return "TIME '" + toFormattedString() + "'";
+        }
+
+        public String toFormattedString()
+        {
+            String result =
+                new SimpleDateFormat(_formatString).format(getTime());
+            if (_precision > 0) {
+                assert (_precision <= 3);
+
+                // get the millisecond count.  millisecond => at most 3 digits.
+                String digits = Long.toString(getCal().getTimeInMillis());
+                result =
+                    result + "."
+                    + digits.substring(digits.length() - 3,
+                        digits.length() - 3 + _precision);
+            } else {
+                assert (0 == getCal().get(Calendar.MILLISECOND));
+            }
+            return result;
+        }
+
+        public RelDataType createSqlType(RelDataTypeFactory typeFactory)
+        {
+            return typeFactory.createSqlType(_typeName, _precision);
+        }
+    }
+
+    /**
+     * This is largely a place holder, the type allows to determine what this object is,
+     *  but most of its functionality comes from above.
+     */
+    public static class TimestampLiteral extends TimeLiteral
+    {
+        public TimestampLiteral(
+            Calendar cal,
+            int p,
+            boolean hasTZ,
+            ParserPosition parserPosition)
+        {
+            super(cal, p, hasTZ, SqlTypeName.Timestamp, parserPosition);
+            _formatString = ParserUtil.TimestampFormatStr;
+        }
+
+        public TimestampLiteral(
+            Calendar cal,
+            int p,
+            ParserPosition parserPosition)
+        {
+            this(cal, p, false, parserPosition);
+        }
+
+        public Timestamp getTimestamp()
+        {
+            return new java.sql.Timestamp(getCal().getTimeInMillis());
+        }
+
+        public String toString()
+        {
+            return "TIMESTAMP '" + toFormattedString() + "'";
+        }
+    }
+
+    public static class Numeric extends SqlLiteral
+    {
+        private Integer m_prec;
+        private Integer m_scale;
+        private boolean m_isExact;
+
+        protected Numeric(
+            BigDecimal value,
+            Integer prec,
+            Integer scale,
+            boolean isExact,
+            ParserPosition parserPosition)
+        {
+            super(value, isExact ? SqlTypeName.Decimal : SqlTypeName.Double,
+                parserPosition);
+            this.m_prec = prec;
+            this.m_scale = scale;
+            this.m_isExact = isExact;
+        }
+
+        public Integer getPrec()
+        {
+            return m_prec;
+        }
+
+        public Integer getScale()
+        {
+            return m_scale;
+        }
+
+        public static Numeric createExact(
+            String s,
+            ParserPosition parserPosition)
+        {
+            BigDecimal value;
+            int prec;
+            int scale;
+
+            int i = s.indexOf('.');
+            if ((i >= 0) && ((s.length() - 1) != i)) {
+                value = ParserUtil.parseDecimal(s);
+                scale = s.length() - i - 1;
+                assert scale == value.scale() : s;
+                prec = s.length() - 1;
+            } else if ((i >= 0) && ((s.length() - 1) == i)) {
+                value = ParserUtil.parseInteger(s.substring(0, i));
+                scale = 0;
+                prec = s.length() - 1;
+            } else {
+                value = ParserUtil.parseInteger(s);
+                scale = 0;
+                prec = s.length();
+            }
+            return new Numeric(
+                value,
+                new Integer(prec),
+                new Integer(scale),
+                true,
+                parserPosition);
+        }
+
+        public static Numeric createApprox(
+            String s,
+            ParserPosition parserPosition)
+        {
+            BigDecimal value = ParserUtil.parseDecimal(s);
+            return new Numeric(value, null, null, false, parserPosition);
+        }
+
+        public boolean isExact()
+        {
+            return m_isExact;
+        }
+
+        public void unparse(
+            SqlWriter writer,
+            int leftPrec,
+            int rightPrec)
+        {
+            writer.print(toValue());
+        }
+
+        public String toValue()
+        {
+            BigDecimal bd = (BigDecimal) _value;
+            if (m_isExact) {
+                return _value.toString();
+            }
+            return Util.toScientificNotation(bd);
+        }
+
+        public RelDataType createSqlType(RelDataTypeFactory typeFactory)
+        {
+            if (m_isExact) {
+                int scale = m_scale.intValue();
+                if (0 == scale) {
+                    BigDecimal bd = (BigDecimal) _value;
+                    SqlTypeName result;
+                    long l = bd.longValue();
+                    if ((l >= Integer.MIN_VALUE) && (l <= Integer.MAX_VALUE)) {
+                        result = SqlTypeName.Integer;
+                    } else {
+                        result = SqlTypeName.Bigint;
+                    }
+                    return typeFactory.createSqlType(result);
+                }
+
+                //else we have a decimal
+                return typeFactory.createSqlType(
+                    SqlTypeName.Decimal,
+                    m_prec.intValue(),
+                    scale);
+            }
+
+            // else we have a a float, real or double.  make them all double for now.
+            return typeFactory.createSqlType(SqlTypeName.Double);
+        }
+    }
+
+    /** abstract base for char, bit, and binary (hex) strings */
+    public static abstract class StringLiteral extends SqlLiteral
+    {
+        protected StringLiteral(
+            Object value,
+            SqlTypeName typeName,
+            ParserPosition pos)
+        {
+            super(value, typeName, pos);
+        }
+
+        /** Concatenate string literals. A static method, to concatenate all at once,
+         * since pairwise concatenation means too much string copying.
+         * @param lits a StringLiteral[], not empty, homogeneous to subtype.
+         * @return a new StringLiteral, of that same subtype, whose value is the
+         * string concatenation of the values of the lits.
+         * @throws ClassCastException if the lits are not homogeneous.
+         * @throws ArrayIndexOutOfBoundsException if lits is an empty array.
+         */
+        public static StringLiteral concat(StringLiteral [] lits)
+        {
+            if (lits.length == 1) {
+                return lits[0]; // nothing to do
+            }
+            return lits[0].concat1(lits);
+        }
+
+        /** helper routine for {@link concat}.
+         * @param lits homogeneous StringLiteral[] args.
+         * @return StringLiteral with concatenated value.
+         * this == lits[0], used only for method dispatch.
+         */
+        protected abstract StringLiteral concat1(StringLiteral [] lits);
+    }
+
+    /** a character string literal. _value is an NlsString and _typeName is SqlTypeName.Char */
+    public static class CharString extends StringLiteral
+    {
+        protected CharString(
+            NlsString val,
+            ParserPosition pos)
+        {
+            super(val, SqlTypeName.Char, pos);
+        }
+
+        /** @return the underlying NlsString */
+        public NlsString getNlsString()
+        {
+            return (NlsString) _value;
+        }
+
+        /** @return the collation */
+        public SqlCollation getCollation()
+        {
+            return getNlsString().getCollation();
+        }
+
+        /** Sets the collation.
+         * (Convenient for the sql parser to do this after construction)
+         */
+        public void setCollation(SqlCollation collation)
+        {
+            getNlsString().setCollation(collation);
+        }
+
+        /**
+         * Creates a string literal in the system character set.
+         * @param s a string (without the sql single quotes)
+         */
+        public static CharString create(
+            String s,
+            ParserPosition pos)
+        {
+            return create(s, null, pos);
+        }
+
+        /**
+         * Creates a string literal, with optional character-set.
+         * @param s a string (without the sql single quotes)
+         * @param charSet character set name, null means take system default
+         * @return A string literal
+         */
+        public static CharString create(
+            String s,
+            String charSet,
+            ParserPosition pos)
+        {
+            NlsString slit = new NlsString(s, charSet, null);
+            return new CharString(slit, pos);
+        }
+
+        public void unparse(
+            SqlWriter writer,
+            int leftPrec,
+            int rightPrec)
+        {
+            if (false) {
+                String stringValue = ((NlsString) _value).getValue();
+                writer.print(writer.dialect.quoteStringLiteral(stringValue));
+            }
+            assert _value instanceof NlsString;
+            writer.print(_value.toString());
+        }
+
+        protected StringLiteral concat1(StringLiteral [] lits)
+        {
+            NlsString [] args = new NlsString[lits.length];
+            for (int i = 0; i < lits.length; i++) {
+                args[i] = ((CharString) lits[i]).getNlsString();
+            }
+            return new CharString(
+                NlsString.concat(args),
+                lits[0].getParserPosition());
+        }
+    }
+
+    /** a bit string literal:
+     * _value is a BitString and _typename is SqlTypeName.Bit
+     */
+    public static class BitStringLiteral extends StringLiteral
+    {
+        protected BitStringLiteral(
+            BitString val,
+            ParserPosition pos)
+        {
+            super(val, SqlTypeName.Bit, pos);
+        }
+
+        /** @return the underlying BitString */
+        public BitString getBitString()
+        {
+            return (BitString) _value;
+        }
+
+        /* Creates a literal like B'0101' */
+        public static BitStringLiteral create(
+            String s,
+            ParserPosition pos)
+        {
+            BitString bits = BitString.createFromBitString(s);
+            return new BitStringLiteral(bits, pos);
+        }
+
+        public void unparse(
+            SqlWriter writer,
+            int leftPrec,
+            int rightPrec)
+        {
+            assert _value instanceof BitString;
+            writer.print("B'");
+            writer.print(_value.toString());
+            writer.print("'");
+        }
+
+        protected StringLiteral concat1(StringLiteral [] lits)
+        {
+            BitString [] args = new BitString[lits.length];
+            for (int i = 0; i < lits.length; i++) {
+                args[i] = ((BitStringLiteral) lits[i]).getBitString();
+            }
+            return new BitStringLiteral(
+                BitString.concat(args),
+                lits[0].getParserPosition());
+        }
+    }
+
+    /** a binary (or hex) string literal.
+     * _value is again a BitString and _typename is SqlTypeName.Binary
+     */
+    public static class BinaryStringLiteral extends StringLiteral
+    {
+        protected BinaryStringLiteral(
+            BitString val,
+            ParserPosition pos)
+        {
+            super(val, SqlTypeName.Binary, pos);
+        }
+
+        /** @return the underlying BitString */
+        public BitString getBitString()
+        {
+            return (BitString) _value;
+        }
+
+        /* Creates a literal like X'ABAB'. Although it matters when we derive a
+         * type for this beastie, we don't care at this point whether the number of
+         * hexits is odd or even.
+         */
+        public static BinaryStringLiteral create(
+            String s,
+            ParserPosition pos)
+        {
+            BitString bits = BitString.createFromHexString(s);
+            return new BinaryStringLiteral(bits, pos);
+        }
+
+        public void unparse(
+            SqlWriter writer,
+            int leftPrec,
+            int rightPrec)
+        {
+            assert _value instanceof BitString;
+            writer.print("X'");
+            writer.print(((BitString) _value).toHexString());
+            writer.print("'");
+        }
+
+        protected StringLiteral concat1(StringLiteral [] lits)
+        {
+            BitString [] args = new BitString[lits.length];
+            for (int i = 0; i < lits.length; i++) {
+                args[i] = ((BinaryStringLiteral) lits[i]).getBitString();
+            }
+            return new BinaryStringLiteral(
+                BitString.concat(args),
+                lits[0].getParserPosition());
+        }
     }
 }
+
 
 // End SqlLiteral.java

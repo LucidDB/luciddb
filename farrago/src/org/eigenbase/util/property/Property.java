@@ -1,28 +1,30 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2004 Disruptive Technologies, Inc.
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 package org.eigenbase.util.property;
+
+import java.util.Properties;
 
 import org.eigenbase.util.Util;
 
-import java.util.Properties;
 
 /**
  * Definition and accessor for a property.
@@ -33,10 +35,15 @@ import java.util.Properties;
  * @since May 4, 2004
  * @version $Id$
  **/
-public abstract class Property {
+public abstract class Property
+{
+    //~ Instance fields -------------------------------------------------------
+
     protected final Properties _properties;
     public final String _path;
     private final String _defaultValue;
+
+    //~ Constructors ----------------------------------------------------------
 
     /**
      * Creates a Property and associates it with an underlying properties
@@ -48,12 +55,17 @@ public abstract class Property {
      *    file, for example "com.acme.trace.Verbosity".
      * @param defaultValue Default value, null if there is no default.
      */
-    protected Property(Properties properties, String path,
-            String defaultValue) {
+    protected Property(
+        Properties properties,
+        String path,
+        String defaultValue)
+    {
         _properties = properties;
         _path = path;
         _defaultValue = defaultValue;
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     /**
      * @return this property's name (typically a dotted path)
@@ -67,7 +79,8 @@ public abstract class Property {
      * Returns the default value of this property. Derived classes (for example
      * those with special rules) can override.
      */
-    protected String getDefaultValue() {
+    protected String getDefaultValue()
+    {
         return _defaultValue;
     }
 
@@ -75,7 +88,10 @@ public abstract class Property {
      * Retrieves the value of a property, using a given default value, and
      * optionally failing if there is no value.
      */
-    protected String getInternal(String defaultValue, boolean required) {
+    protected String getInternal(
+        String defaultValue,
+        boolean required)
+    {
         String value = _properties.getProperty(_path, defaultValue);
         if (value != null) {
             return value;
@@ -92,5 +108,6 @@ public abstract class Property {
         return value;
     }
 }
+
 
 // End Property.java

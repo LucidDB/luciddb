@@ -1,31 +1,32 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 package org.eigenbase.oj.rel;
 
-import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+
 
 /**
  * A collection of optimizer rules related to the  {@link
@@ -35,6 +36,8 @@ import org.eigenbase.rex.*;
  */
 public abstract class IterRules
 {
+    //~ Inner Classes ---------------------------------------------------------
+
     /**
      * Rule to converts a {@link UnionRel} to {@link
      * CallingConvention#ITERATOR iterator calling convention}.
@@ -45,14 +48,11 @@ public abstract class IterRules
         {
             this("UnionToIteratorRule");
         }
-        
+
         protected UnionToIteratorRule(String description)
         {
-            super(
-                UnionRel.class,
-                CallingConvention.NONE,
-                CallingConvention.ITERATOR,
-                description);
+            super(UnionRel.class, CallingConvention.NONE,
+                CallingConvention.ITERATOR, description);
         }
 
         public RelNode convert(RelNode rel)
@@ -68,12 +68,14 @@ public abstract class IterRules
             for (int i = 0; i < newInputs.length; i++) {
                 // Stubborn, because inputs don't appear as operands.
                 newInputs[i] =
-                    convert(union.getInputs()[i],CallingConvention.ITERATOR);
+                    convert(union.getInputs()[i], CallingConvention.ITERATOR);
                 if (newInputs[i] == null) {
                     return null; // cannot convert this input
                 }
             }
-            return new IterConcatenateRel(union.getCluster(),newInputs);
+            return new IterConcatenateRel(
+                union.getCluster(),
+                newInputs);
         }
     }
 
@@ -84,7 +86,7 @@ public abstract class IterRules
         {
             super("HomogeneousUnionToIteratorRule");
         }
-        
+
         public RelNode convert(RelNode rel)
         {
             final UnionRel unionRel = (UnionRel) rel;
@@ -92,7 +94,7 @@ public abstract class IterRules
             RelNode [] inputs = unionRel.getInputs();
             for (int i = 0; i < inputs.length; ++i) {
                 RelDataType inputType = inputs[i].getRowType();
-                if (!RelOptUtil.areRowTypesEqual(inputType,unionType)) {
+                if (!RelOptUtil.areRowTypesEqual(inputType, unionType)) {
                     return null;
                 }
             }
@@ -104,13 +106,10 @@ public abstract class IterRules
     {
         public OneRowToIteratorRule()
         {
-            super(
-                OneRowRel.class,
-                CallingConvention.NONE,
-                CallingConvention.ITERATOR,
-                "OneRowToIteratorRule");
+            super(OneRowRel.class, CallingConvention.NONE,
+                CallingConvention.ITERATOR, "OneRowToIteratorRule");
         }
-        
+
         public RelNode convert(RelNode rel)
         {
             final OneRowRel oneRow = (OneRowRel) rel;
@@ -123,16 +122,19 @@ public abstract class IterRules
      */
     public static class IterCalcRule extends ConverterRule
     {
-        private IterCalcRule() {
-            super(CalcRel.class, CallingConvention.NONE,
-                    CallingConvention.ITERATOR, "IterCalcRule");
-        }
         public static final IterCalcRule instance = new IterCalcRule();
 
-        public RelNode convert(RelNode rel) {
+        private IterCalcRule()
+        {
+            super(CalcRel.class, CallingConvention.NONE,
+                CallingConvention.ITERATOR, "IterCalcRule");
+        }
+
+        public RelNode convert(RelNode rel)
+        {
             final CalcRel calc = (CalcRel) rel;
             final RelNode convertedChild =
-                convert(calc.child,CallingConvention.ITERATOR);
+                convert(calc.child, CallingConvention.ITERATOR);
             if (convertedChild == null) {
                 // We can't convert the child, so we can't convert rel.
                 return null;
@@ -143,18 +145,18 @@ public abstract class IterRules
             final JavaRelImplementor relImplementor =
                 rel.getCluster().getPlanner().getJavaRelImplementor(rel);
             if (!relImplementor.canTranslate(convertedChild,
-                                             calc._conditionExpr,
-                                             calc._projectExprs)) {
+                        calc._conditionExpr, calc._projectExprs)) {
                 // Some of the expressions cannot be translated into Java
                 return null;
             }
-            
-            return new IterCalcRel(rel.getCluster(),
-                                   convertedChild,
-                                   calc._projectExprs,
-                                   calc._conditionExpr,
-                                   RelOptUtil.getFieldNames(calc.getRowType()),
-                                   IterCalcRel.Flags.Boxed);
+
+            return new IterCalcRel(
+                rel.getCluster(),
+                convertedChild,
+                calc._projectExprs,
+                calc._conditionExpr,
+                RelOptUtil.getFieldNames(calc.getRowType()),
+                IterCalcRel.Flags.Boxed);
         }
     }
 
@@ -163,22 +165,21 @@ public abstract class IterRules
      */
     public static class ProjectToIteratorRule extends ConverterRule
     {
-        private ProjectToIteratorRule() {
-            super(
-                    ProjectRel.class,
-                    CallingConvention.NONE,
-                    CallingConvention.ITERATOR,
-                    "ProjectToIteratorRule");
-        }
         public static ProjectToIteratorRule instance =
-                new ProjectToIteratorRule();
+            new ProjectToIteratorRule();
+
+        private ProjectToIteratorRule()
+        {
+            super(ProjectRel.class, CallingConvention.NONE,
+                CallingConvention.ITERATOR, "ProjectToIteratorRule");
+        }
 
         public RelNode convert(RelNode rel)
         {
             final ProjectRel project = (ProjectRel) rel;
             RelNode inputRel = project.child;
             final RelNode iterChild =
-                convert(inputRel,CallingConvention.ITERATOR);
+                convert(inputRel, CallingConvention.ITERATOR);
             if (iterChild == null) {
                 return null;
             }
@@ -210,17 +211,17 @@ public abstract class IterRules
      */
     public static class ProjectedFilterToIteratorRule extends RelOptRule
     {
+        public static final ProjectedFilterToIteratorRule instance =
+            new ProjectedFilterToIteratorRule();
+
         private ProjectedFilterToIteratorRule()
         {
-            super(
-                new RelOptRuleOperand(
+            super(new RelOptRuleOperand(
                     ProjectRel.class,
                     new RelOptRuleOperand [] {
-                        new RelOptRuleOperand(FilterRel.class,null) }
-                    ));
+                        new RelOptRuleOperand(FilterRel.class, null)
+                    }));
         }
-        public static final ProjectedFilterToIteratorRule instance =
-                new ProjectedFilterToIteratorRule();
 
         // implement RelOptRule
         public CallingConvention getOutConvention()
@@ -235,15 +236,14 @@ public abstract class IterRules
 
             RelNode inputRel = filterRel.child;
             RexNode condition = filterRel.condition;
-            
-            RelNode iterChild = convert(
-                    inputRel,CallingConvention.ITERATOR);
-            
+
+            RelNode iterChild = convert(inputRel, CallingConvention.ITERATOR);
+
             if (iterChild == null) {
                 return;
             }
-            
-            final RexNode[] exps = project.getChildExps();
+
+            final RexNode [] exps = project.getChildExps();
 
             // REVIEW: want to move canTranslate into RelImplementor
             // and implement it for Java & C++ calcs.
@@ -253,17 +253,19 @@ public abstract class IterRules
                 // some of the expressions cannot be translated into Java
                 return;
             }
-            IterCalcRel calcRel = new IterCalcRel(
-                project.getCluster(),
-                iterChild,
-                exps,
-                condition,
-                project.getFieldNames(),
-                project.getFlags());
+            IterCalcRel calcRel =
+                new IterCalcRel(
+                    project.getCluster(),
+                    iterChild,
+                    exps,
+                    condition,
+                    project.getFieldNames(),
+                    project.getFlags());
 
             call.transformTo(calcRel);
         }
     }
 }
+
 
 // End IterRules.java

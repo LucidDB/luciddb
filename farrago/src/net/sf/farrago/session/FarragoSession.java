@@ -6,25 +6,26 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.session;
+
+import java.sql.DatabaseMetaData;
 
 import net.sf.farrago.catalog.FarragoRepos;
 import net.sf.farrago.util.FarragoAllocation;
-import org.eigenbase.sql.SqlOperatorTable;
-import org.eigenbase.oj.rex.OJRexImplementorTable;
 
-import java.sql.DatabaseMetaData;
+import org.eigenbase.oj.rex.OJRexImplementorTable;
+import org.eigenbase.sql.SqlOperatorTable;
+
 
 /**
  * FarragoSession represents an internal API to the Farrago database.  It is
@@ -36,6 +37,8 @@ import java.sql.DatabaseMetaData;
  */
 public interface FarragoSession extends FarragoAllocation
 {
+    //~ Methods ---------------------------------------------------------------
+
     /**
      * @return table of known SQL operators and functions to use for validation
      */
@@ -51,7 +54,7 @@ public interface FarragoSession extends FarragoAllocation
      * @return JDBC URL used to establish this session
      */
     public String getUrl();
-    
+
     /**
      * @return repos accessed by this session
      */
@@ -117,14 +120,14 @@ public interface FarragoSession extends FarragoAllocation
      */
     public FarragoSessionPreparingStmt newPreparingStmt(
         FarragoSessionStmtValidator stmtValidator);
-    
+
     /**
      * Creates a new SQL statement validator.
      *
      * @return new validator
      */
     public FarragoSessionStmtValidator newStmtValidator();
-    
+
     /**
      * Creates a new validator for DDL commands.
      *
@@ -134,7 +137,7 @@ public interface FarragoSession extends FarragoAllocation
      */
     public FarragoSessionDdlValidator newDdlValidator(
         FarragoSessionStmtValidator stmtValidator);
-    
+
     /**
      * Clones this session.  TODO:  document what this entails.
      *
@@ -154,7 +157,7 @@ public interface FarragoSession extends FarragoAllocation
      * Commits current transaction if any.
      */
     public void commit();
-    
+
     /**
      * Rolls back current transaction if any.
      *
@@ -209,5 +212,6 @@ public interface FarragoSession extends FarragoAllocation
     public FarragoSessionRuntimeContext newRuntimeContext(
         FarragoSessionRuntimeParams params);
 }
+
 
 // End FarragoSession.java

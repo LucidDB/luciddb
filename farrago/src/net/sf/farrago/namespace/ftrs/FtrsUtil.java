@@ -6,18 +6,20 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.ftrs;
+
+import java.sql.*;
+import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
@@ -26,13 +28,10 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fennel.*;
+import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.query.*;
 
-import java.sql.*;
-
-import java.util.*;
 
 /**
  * Static utilities for FTRS.
@@ -42,6 +41,8 @@ import java.util.*;
  */
 abstract class FtrsUtil
 {
+    //~ Methods ---------------------------------------------------------------
+
     /**
      * Get a list of columns covered by an unclustered index.
      *
@@ -62,8 +63,8 @@ abstract class FtrsUtil
         CwmSqlindex clusteredIndex =
             repos.getClusteredIndex(index.getSpannedClass());
         List indexColumnList = new ArrayList();
-        appendDefinedKey(indexColumnList,index);
-        appendClusteredDistinctKey(repos,clusteredIndex,indexColumnList);
+        appendDefinedKey(indexColumnList, index);
+        appendClusteredDistinctKey(repos, clusteredIndex, indexColumnList);
         return indexColumnList;
     }
 
@@ -85,7 +86,7 @@ abstract class FtrsUtil
         FarragoRepos repos,
         CwmSqlindex index)
     {
-        List list = getUnclusteredCoverageColList(repos,index);
+        List list = getUnclusteredCoverageColList(repos, index);
         Integer [] projection = new Integer[list.size()];
         Iterator iter = list.iterator();
         int i = 0;
@@ -117,11 +118,11 @@ abstract class FtrsUtil
     {
         assert (repos.isClustered(index));
         List indexColumnList = new ArrayList();
-        appendClusteredDistinctKey(repos,index,indexColumnList);
+        appendClusteredDistinctKey(repos, index, indexColumnList);
         Integer [] array = new Integer[indexColumnList.size()];
         for (int i = 0; i < array.length; ++i) {
-            FemAbstractColumn column = (FemAbstractColumn)
-                indexColumnList.get(i);
+            FemAbstractColumn column =
+                (FemAbstractColumn) indexColumnList.get(i);
             array[i] = new Integer(column.getOrdinal());
         }
         return array;
@@ -133,12 +134,12 @@ abstract class FtrsUtil
     {
         List indexColumnList = new ArrayList();
         if (repos.isClustered(index)) {
-            appendClusteredDistinctKey(repos,index,indexColumnList);
+            appendClusteredDistinctKey(repos, index, indexColumnList);
         } else {
             if (index.isUnique()) {
-                appendDefinedKey(indexColumnList,index);
+                appendDefinedKey(indexColumnList, index);
             } else {
-                return getUnclusteredCoverageColList(repos,index);
+                return getUnclusteredCoverageColList(repos, index);
             }
         }
         return indexColumnList;
@@ -162,12 +163,12 @@ abstract class FtrsUtil
         CwmSqlindex index)
     {
         if (repos.isClustered(index)) {
-            return getClusteredDistinctKeyArray(repos,index);
+            return getClusteredDistinctKeyArray(repos, index);
         } else {
-            return getUnclusteredCoverageArray(repos,index);
+            return getUnclusteredCoverageArray(repos, index);
         }
     }
-    
+
     /**
      * Get a FemTupleProjection which specifies how to extract the distinct
      * key from the result of getCoverageTupleDescriptor.  The projected
@@ -190,9 +191,8 @@ abstract class FtrsUtil
     {
         if (repos.isClustered(index)) {
             List indexColumnList = new ArrayList();
-            appendClusteredDistinctKey(repos,index,indexColumnList);
-            return FennelRelUtil.createTupleProjectionFromColumnList(
-                repos,
+            appendClusteredDistinctKey(repos, index, indexColumnList);
+            return FennelRelUtil.createTupleProjectionFromColumnList(repos,
                 indexColumnList);
         }
 
@@ -207,7 +207,7 @@ abstract class FtrsUtil
             // index tuple as a key to make it unique (the inclusion of the
             // clustering key guarantees this); that way we can perform
             // deletions and rollbacks without requiring linear search.
-            n = getUnclusteredCoverageColList(repos,index).size();
+            n = getUnclusteredCoverageColList(repos, index).size();
         }
         return FennelRelUtil.createTupleProjection(
             repos,
@@ -227,9 +227,9 @@ abstract class FtrsUtil
         CwmSqlindex index)
     {
         if (typeFactory.getRepos().isClustered(index)) {
-            return getClusteredCoverageTupleDescriptor(typeFactory,index);
+            return getClusteredCoverageTupleDescriptor(typeFactory, index);
         } else {
-            return getUnclusteredCoverageTupleDescriptor(typeFactory,index);
+            return getUnclusteredCoverageTupleDescriptor(typeFactory, index);
         }
     }
 
@@ -256,13 +256,14 @@ abstract class FtrsUtil
             // clustered index tuple is full table tuple
             int n = index.getSpannedClass().getFeature().size();
             return FennelRelUtil.createTupleProjection(
-                repos,FennelRelUtil.newIotaProjection(n));
+                repos,
+                FennelRelUtil.newIotaProjection(n));
         }
 
-        List indexColumnList = getUnclusteredCoverageColList(repos,index);
+        List indexColumnList = getUnclusteredCoverageColList(repos, index);
 
-        return FennelRelUtil.createTupleProjectionFromColumnList(
-            repos,indexColumnList);
+        return FennelRelUtil.createTupleProjectionFromColumnList(repos,
+            indexColumnList);
     }
 
     private static void appendConstraintColumns(
@@ -279,7 +280,9 @@ abstract class FtrsUtil
         }
     }
 
-    private static void appendDefinedKey(List list,CwmSqlindex index)
+    private static void appendDefinedKey(
+        List list,
+        CwmSqlindex index)
     {
         Iterator iter = index.getIndexedFeature().iterator();
         while (iter.hasNext()) {
@@ -297,8 +300,8 @@ abstract class FtrsUtil
         CwmSqlindex clusteredIndex,
         List indexColumnList)
     {
-        assert(repos.isClustered(clusteredIndex));
-        appendDefinedKey(indexColumnList,clusteredIndex);
+        assert (repos.isClustered(clusteredIndex));
+        appendDefinedKey(indexColumnList, clusteredIndex);
         if (!clusteredIndex.isUnique()) {
             appendConstraintColumns(
                 indexColumnList,
@@ -311,8 +314,7 @@ abstract class FtrsUtil
         CwmSqlindex index)
     {
         FarragoRepos repos = typeFactory.getRepos();
-        FemTupleDescriptor tupleDesc =
-            repos.newFemTupleDescriptor();
+        FemTupleDescriptor tupleDesc = repos.newFemTupleDescriptor();
         Iterator columnIter = index.getSpannedClass().getFeature().iterator();
         while (columnIter.hasNext()) {
             Object obj = columnIter.next();
@@ -323,7 +325,7 @@ abstract class FtrsUtil
             FennelRelUtil.addTupleAttrDescriptor(
                 repos,
                 tupleDesc,
-                typeFactory.createColumnType(column,true));
+                typeFactory.createColumnType(column, true));
         }
         return tupleDesc;
     }
@@ -333,19 +335,19 @@ abstract class FtrsUtil
         CwmSqlindex index)
     {
         FarragoRepos repos = typeFactory.getRepos();
-        FemTupleDescriptor tupleDesc =
-            repos.newFemTupleDescriptor();
-        List colList = getUnclusteredCoverageColList(repos,index);
+        FemTupleDescriptor tupleDesc = repos.newFemTupleDescriptor();
+        List colList = getUnclusteredCoverageColList(repos, index);
         Iterator columnIter = colList.iterator();
         while (columnIter.hasNext()) {
             CwmColumn column = (CwmColumn) columnIter.next();
             FennelRelUtil.addTupleAttrDescriptor(
                 repos,
                 tupleDesc,
-                typeFactory.createColumnType(column,true));
+                typeFactory.createColumnType(column, true));
         }
         return tupleDesc;
     }
 }
+
 
 // End FtrsUtil.java

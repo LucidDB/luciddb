@@ -1,43 +1,23 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package net.sf.saffron.oj.xlat;
-
-import junit.framework.AssertionFailedError;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-import org.eigenbase.reltype.*;
-import org.eigenbase.relopt.*;
-import net.sf.saffron.jdbc.SaffronJdbcConnection;
-import net.sf.saffron.oj.stmt.OJStatement;
-import org.eigenbase.rel.JoinRel;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.ParseException;
-import org.eigenbase.sql.parser.SqlParser;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.util.NlsString;
-import org.eigenbase.util.Util;
-import openjava.ptree.*;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -47,6 +27,27 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+
+import junit.framework.AssertionFailedError;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
+import net.sf.saffron.jdbc.SaffronJdbcConnection;
+import net.sf.saffron.oj.stmt.OJStatement;
+
+import openjava.ptree.*;
+
+import org.eigenbase.rel.JoinRel;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.ParseException;
+import org.eigenbase.sql.parser.SqlParser;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.util.NlsString;
+import org.eigenbase.util.Util;
+
 
 /**
  * A <code>SqlToOpenjavaConverter</code> converts a tree of {@link SqlNode}
@@ -59,8 +60,6 @@ import java.util.List;
  */
 public class SqlToOpenjavaConverter
 {
-    //~ Static fields/initializers --------------------------------------------
-
     /**
      * Maps names of {@link SqlBinaryOperator} to codes of
      * {@link BinaryExpression}, wrapped as {@link Integer}. For example,
@@ -68,26 +67,22 @@ public class SqlToOpenjavaConverter
      * <code>Integer({@link BinaryExpression#DIVIDE}</code>.
      */
     static final HashMap mapBinarySqlToOj = new HashMap();
+
     /**
      * Inverse of {@link #mapBinarySqlToOj}.
      */
     static final HashMap mapBinaryOjToSql = new HashMap();
+
     static {
         initMaps();
     }
 
-    //~ Instance fields -------------------------------------------------------
-
     private final SqlValidator validator;
-
-    //~ Constructors ----------------------------------------------------------
 
     public SqlToOpenjavaConverter(SqlValidator validator)
     {
         this.validator = validator;
     }
-
-    //~ Methods ---------------------------------------------------------------
 
     public Expression convertQuery(SqlNode query)
     {
@@ -104,22 +99,17 @@ public class SqlToOpenjavaConverter
         final SqlNode where = query.getWhere();
         final SqlValidator.SelectScope selectScope = validator.getScope(query);
         final ExpressionList convertedSelectList =
-            convertSelectList(selectScope,selectList);
+            convertSelectList(selectScope, selectList);
         final ExpressionList convertedGroup =
-            convertGroup(selectScope,groupList);
-        final Expression convertedFrom = convertFrom(selectScope,from);
+            convertGroup(selectScope, groupList);
+        final Expression convertedFrom = convertFrom(selectScope, from);
         final Expression convertedWhere =
-            (where == null) ? null : convertExpression(selectScope,where);
+            (where == null) ? null : convertExpression(selectScope, where);
         final ExpressionList convertedOrder =
-            convertOrder(selectScope,orderList);
+            convertOrder(selectScope, orderList);
         QueryExpression queryExpression =
-            new QueryExpression(
-                convertedSelectList,
-                true,
-                convertedGroup,
-                convertedFrom,
-                convertedWhere,
-                convertedOrder);
+            new QueryExpression(convertedSelectList, true, convertedGroup,
+                convertedFrom, convertedWhere, convertedOrder);
         if (query.isDistinct()) {
             throw new UnsupportedOperationException(
                 "SELECT DISTINCT is not implemented"); // todo:
@@ -149,10 +139,10 @@ public class SqlToOpenjavaConverter
         case SqlKind.AsORDINAL:
             operands = ((SqlCall) node).getOperands();
             return new AliasedExpression(
-                convertExpression(scope,operands[0]),
+                convertExpression(scope, operands[0]),
                 operands[1].toString());
         case SqlKind.IdentifierORDINAL:
-            return convertIdentifier(scope,(SqlIdentifier) node);
+            return convertIdentifier(scope, (SqlIdentifier) node);
         case SqlKind.LiteralORDINAL:
             return convertLiteral((SqlLiteral) node);
         default:
@@ -170,9 +160,9 @@ public class SqlToOpenjavaConverter
                     }
                     int op = integer.intValue();
                     return new BinaryExpression(
-                        convertExpression(scope,operands[0]),
+                        convertExpression(scope, operands[0]),
                         op,
-                        convertExpression(scope,operands[1]));
+                        convertExpression(scope, operands[1]));
                 } else if (call.operator instanceof SqlFunction) {
                     throw new UnsupportedOperationException("todo:" + node);
                 } else if (call.operator instanceof SqlPrefixOperator) {
@@ -188,13 +178,15 @@ public class SqlToOpenjavaConverter
         }
     }
 
-    private Expression convertFrom(SqlValidator.Scope scope,SqlNode from)
+    private Expression convertFrom(
+        SqlValidator.Scope scope,
+        SqlNode from)
     {
         switch (from.getKind().getOrdinal()) {
         case SqlKind.AsORDINAL:
             final SqlNode [] operands = ((SqlCall) from).getOperands();
             return new AliasedExpression(
-                convertFrom(scope,operands[0]),
+                convertFrom(scope, operands[0]),
                 operands[1].toString());
         case SqlKind.IdentifierORDINAL:
             Expression e = new Variable(OJStatement.connectionVariable);
@@ -209,7 +201,7 @@ public class SqlToOpenjavaConverter
             } else {
                 throw Util.newInternal("improperly qualified id:  " + id);
             }
-            return new TableReference(e,schemaName,tableName);
+            return new TableReference(e, schemaName, tableName);
         case SqlKind.JoinORDINAL:
             final SqlJoin join = (SqlJoin) from;
             SqlNode left = join.getLeft();
@@ -217,9 +209,10 @@ public class SqlToOpenjavaConverter
             SqlNode condition = join.getCondition();
             boolean isNatural = join.isNatural();
             SqlJoinOperator.JoinType joinType = join.getJoinType();
-            SqlJoinOperator.ConditionType conditionType = join.getConditionType();
-            Expression leftExp = convertFrom(scope,left);
-            Expression rightExp = convertFrom(scope,right);
+            SqlJoinOperator.ConditionType conditionType =
+                join.getConditionType();
+            Expression leftExp = convertFrom(scope, left);
+            Expression rightExp = convertFrom(scope, right);
             Expression conditionExp = null;
             int convertedJoinType = convertJoinType(joinType);
             if (isNatural) {
@@ -229,22 +222,20 @@ public class SqlToOpenjavaConverter
             if (condition != null) {
                 switch (conditionType.getOrdinal()) {
                 case SqlJoinOperator.ConditionType.On_ORDINAL:
-                    conditionExp = convertExpression(scope,condition);
+                    conditionExp = convertExpression(scope, condition);
                     break;
                 case SqlJoinOperator.ConditionType.Using_ORDINAL:
                     SqlNodeList list = (SqlNodeList) condition;
                     for (int i = 0; i < list.size(); i++) {
                         final SqlNode columnName = list.get(i);
-                        assert(columnName instanceof SqlIdentifier);
-                        Expression exp = convertExpression(scope,columnName);
+                        assert (columnName instanceof SqlIdentifier);
+                        Expression exp = convertExpression(scope, columnName);
                         if (i == 0) {
                             conditionExp = exp;
                         } else {
                             conditionExp =
-                                new BinaryExpression(
-                                    conditionExp,
-                                    BinaryExpression.LOGICAL_AND,
-                                    exp);
+                                new BinaryExpression(conditionExp,
+                                    BinaryExpression.LOGICAL_AND, exp);
                         }
                     }
                 default:
@@ -256,17 +247,11 @@ public class SqlToOpenjavaConverter
             }
             if (convertedJoinType == JoinRel.JoinType.RIGHT) {
                 // "class Join" does not support RIGHT, so swap...
-                return new JoinExpression(
-                    rightExp,
-                    leftExp,
-                    JoinRel.JoinType.LEFT,
-                    conditionExp);
+                return new JoinExpression(rightExp, leftExp,
+                    JoinRel.JoinType.LEFT, conditionExp);
             } else {
-                return new JoinExpression(
-                    leftExp,
-                    rightExp,
-                    convertedJoinType,
-                    conditionExp);
+                return new JoinExpression(leftExp, rightExp,
+                    convertedJoinType, conditionExp);
             }
         case SqlKind.SelectORDINAL:
         case SqlKind.IntersectORDINAL:
@@ -274,7 +259,7 @@ public class SqlToOpenjavaConverter
         case SqlKind.UnionORDINAL:
             return convertQueryRecursive(from);
         case SqlKind.ValuesORDINAL:
-            return convertValues(scope,(SqlCall) from);
+            return convertValues(scope, (SqlCall) from);
         default:
             throw Util.newInternal("not a join operator " + from);
         }
@@ -307,7 +292,9 @@ public class SqlToOpenjavaConverter
         }
         ExpressionList list = new ExpressionList();
         for (int i = 0; i < groupList.size(); i++) {
-            Expression expression = convertExpression(scope,groupList.get(i));
+            Expression expression = convertExpression(
+                    scope,
+                    groupList.get(i));
             list.add(expression);
         }
         return list;
@@ -320,6 +307,7 @@ public class SqlToOpenjavaConverter
         case SqlTypeName.Decimal_ordinal:
         case SqlTypeName.Double_ordinal:
             BigDecimal bd = (BigDecimal) value;
+
             // Convert to integer if possible.
             if (bd.scale() == 0) {
                 int i = bd.intValue();
@@ -335,7 +323,8 @@ public class SqlToOpenjavaConverter
             if (value != null) {
                 return Literal.makeLiteral((Boolean) value);
             }
-            // fall through to handle UNKNOWN (the boolean NULL value)
+
+        // fall through to handle UNKNOWN (the boolean NULL value)
         case SqlTypeName.Null_ordinal:
             return Literal.constantNull();
         default:
@@ -353,7 +342,7 @@ public class SqlToOpenjavaConverter
         ExpressionList result = new ExpressionList();
         for (int i = 0; i < orderList.size(); i++) {
             SqlNode order = orderList.get(i);
-            result.add(convertExpression(scope,order));
+            result.add(convertExpression(scope, order));
         }
         return result;
     }
@@ -382,7 +371,7 @@ public class SqlToOpenjavaConverter
             final SqlNode [] operands = call.getOperands();
             final Expression left = convertQueryRecursive(operands[0]);
             final Expression right = convertQueryRecursive(operands[1]);
-            return new BinaryExpression(left,op,right);
+            return new BinaryExpression(left, op, right);
         } else {
             throw Util.newInternal("not a query: " + query);
         }
@@ -404,17 +393,30 @@ public class SqlToOpenjavaConverter
         addBinary("*", BinaryExpression.TIMES);
     }
 
-    private static void addBinary(String name, int code) {
-        mapBinarySqlToOj.put(name,new Integer(code));
-        mapBinaryOjToSql.put(new Integer(code),name);
+    private static void addBinary(
+        String name,
+        int code)
+    {
+        mapBinarySqlToOj.put(
+            name,
+            new Integer(code));
+        mapBinaryOjToSql.put(
+            new Integer(code),
+            name);
     }
 
     private static HashMap createPrefixMap()
     {
         HashMap map = new HashMap();
-        map.put("NOT",new Integer(UnaryExpression.NOT));
-        map.put("-",new Integer(UnaryExpression.MINUS));
-        map.put("+",new Integer(UnaryExpression.PLUS));
+        map.put(
+            "NOT",
+            new Integer(UnaryExpression.NOT));
+        map.put(
+            "-",
+            new Integer(UnaryExpression.MINUS));
+        map.put(
+            "+",
+            new Integer(UnaryExpression.PLUS));
         return map;
     }
 
@@ -443,7 +445,7 @@ public class SqlToOpenjavaConverter
         Expression e = new Variable(identifier.names[0]);
         for (int i = 1; i < identifier.names.length; i++) {
             String name = identifier.names[i];
-            e = new FieldAccess(e,name);
+            e = new FieldAccess(e, name);
         }
         return e;
     }
@@ -456,14 +458,15 @@ public class SqlToOpenjavaConverter
         ExpressionList selectList = new ExpressionList();
         for (int i = 0; i < operands.length; ++i) {
             // TODO:  when column-aliases are supported and provided, use them
-            Expression value = convertExpression(scope,operands[i]);
+            Expression value = convertExpression(scope, operands[i]);
             Expression alias =
-                new AliasedExpression(value,scope.deriveAlias(operands[i],i));
+                new AliasedExpression(value,
+                    scope.deriveAlias(operands[i], i));
             selectList.add(alias);
         }
 
         // SELECT value-list FROM onerow
-        return new QueryExpression(selectList,true,null,null,null,null);
+        return new QueryExpression(selectList, true, null, null, null, null);
     }
 
     private ExpressionList convertSelectList(
@@ -471,16 +474,18 @@ public class SqlToOpenjavaConverter
         SqlNodeList selectList)
     {
         ExpressionList list = new ExpressionList();
-        selectList = validator.expandStar(selectList,scope.select);
+        selectList = validator.expandStar(selectList, scope.select);
         for (int i = 0; i < selectList.size(); i++) {
             final SqlNode node = selectList.get(i);
-            Expression expression = convertExpression(scope,node);
+            Expression expression = convertExpression(scope, node);
             list.add(expression);
         }
         return list;
     }
 
-    private Expression convertValues(SqlValidator.Scope scope,SqlCall values)
+    private Expression convertValues(
+        SqlValidator.Scope scope,
+        SqlCall values)
     {
         SqlNodeList rowConstructorList =
             (SqlNodeList) (values.getOperands()[0]);
@@ -498,14 +503,12 @@ public class SqlToOpenjavaConverter
         while (iter.hasNext()) {
             SqlCall rowConstructor = (SqlCall) iter.next();
             QueryExpression queryExpr =
-                convertRowConstructor(scope,rowConstructor);
+                convertRowConstructor(scope, rowConstructor);
             if (expr == null) {
                 expr = queryExpr;
             } else {
                 expr =
-                    new BinaryExpression(
-                        expr,
-                        BinaryExpression.UNION,
+                    new BinaryExpression(expr, BinaryExpression.UNION,
                         queryExpr);
             }
         }
@@ -513,10 +516,10 @@ public class SqlToOpenjavaConverter
         SqlValidator.Scope valuesScope = scope.getScopeFromNode(values);
 
         // TODO:  don't do this if query already supplied a non-generated alias
-        return new AliasedExpression(expr,valuesScope.getAlias());
+        return new AliasedExpression(
+            expr,
+            valuesScope.getAlias());
     }
-
-    //~ Inner Classes ---------------------------------------------------------
 
     /**
      * Unit test for <code>SqlToOpenjavaConverter</code>.
@@ -530,7 +533,8 @@ public class SqlToOpenjavaConverter
 
         public void testOrder(TestCase test)
         {
-            check("select * from \"emps\" order by \"empno\" asc, \"salary\", \"deptno\" desc");
+            check(
+                "select * from \"emps\" order by \"empno\" asc, \"salary\", \"deptno\" desc");
         }
 
         private void check(String s)
@@ -543,9 +547,10 @@ public class SqlToOpenjavaConverter
                 throw new AssertionFailedError(e.toString());
             }
             final SqlValidator validator =
-                    new SqlValidator(SqlOperatorTable.instance(),
-                            testContext.seeker,
-                            testContext.schema.getTypeFactory());
+                new SqlValidator(
+                    SqlOperatorTable.instance(),
+                    testContext.seeker,
+                    testContext.schema.getTypeFactory());
             final SqlToOpenjavaConverter converter =
                 new SqlToOpenjavaConverter(validator);
             final Expression expression = converter.convertQuery(sqlQuery);
@@ -563,7 +568,9 @@ public class SqlToOpenjavaConverter
         private final RelOptSchema schema;
         private final boolean upperCase;
 
-        public SchemaCatalogReader(RelOptSchema schema,boolean upperCase)
+        public SchemaCatalogReader(
+            RelOptSchema schema,
+            boolean upperCase)
         {
             this.schema = schema;
             this.upperCase = upperCase;
@@ -575,20 +582,25 @@ public class SqlToOpenjavaConverter
                 return null;
             }
             final RelOptTable table =
-                schema.getTableForMember(new String[]{maybeUpper(names[0])});
+                schema.getTableForMember(
+                    new String [] { maybeUpper(names[0]) });
             if (table != null) {
                 return new SqlValidator.Table() {
-                    public RelDataType getRowType() {
-                        return table.getRowType();
-                    }
-                    public String [] getQualifiedName() {
-                        return null;
-                    }
+                        public RelDataType getRowType()
+                        {
+                            return table.getRowType();
+                        }
+
+                        public String [] getQualifiedName()
+                        {
+                            return null;
+                        }
 
                         public List getColumnNames()
                         {
                             final RelDataType rowType = table.getRowType();
-                            final RelDataTypeField [] fields = rowType.getFields();
+                            final RelDataTypeField [] fields =
+                                rowType.getFields();
                             ArrayList list = new ArrayList();
                             for (int i = 0; i < fields.length; i++) {
                                 RelDataTypeField field = fields[i];
@@ -629,9 +641,10 @@ public class SqlToOpenjavaConverter
             } catch (SQLException e) {
                 throw Util.newInternal(e);
             }
-            connection = ((SaffronJdbcConnection) jdbcConnection).saffronConnection;
+            connection =
+                ((SaffronJdbcConnection) jdbcConnection).saffronConnection;
             schema = connection.getRelOptSchema();
-            seeker = new SchemaCatalogReader(schema,false);
+            seeker = new SchemaCatalogReader(schema, false);
             OJStatement.setupFactories();
         }
 

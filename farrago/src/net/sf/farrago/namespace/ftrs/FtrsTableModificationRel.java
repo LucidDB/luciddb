@@ -16,21 +16,21 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.ftrs;
+
+import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.query.*;
 
-import org.eigenbase.relopt.*;
 import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.util.*;
 
-import java.util.*;
 
 /**
  * FtrsTableModificationRel is the relational expression corresponding to
@@ -66,7 +66,8 @@ class FtrsTableModificationRel extends TableModificationRel
         Operation operation,
         List updateColumnList)
     {
-        super(cluster,ftrsTable,connection,child,operation,updateColumnList);
+        super(cluster, ftrsTable, connection, child, operation,
+            updateColumnList);
         this.ftrsTable = ftrsTable;
     }
 
@@ -128,8 +129,8 @@ class FtrsTableModificationRel extends TableModificationRel
         Collection columns = ftrsTable.getCwmColumnSet().getFeature();
         for (int i = 0; i < n; i++) {
             String columnName = (String) getUpdateColumnList().get(i);
-            CwmColumn column = (CwmColumn)
-                getRepos().getModelElement(columns,columnName);
+            CwmColumn column =
+                (CwmColumn) getRepos().getModelElement(columns, columnName);
             list.add(column);
         }
         return list;
@@ -159,13 +160,11 @@ class FtrsTableModificationRel extends TableModificationRel
             tableWriterDef = repos.newFemTableDeleterDef();
             break;
         case TableModificationRel.Operation.UPDATE_ORDINAL:
-            FemTableUpdaterDef tableUpdaterDef =
-                repos.newFemTableUpdaterDef();
+            FemTableUpdaterDef tableUpdaterDef = repos.newFemTableUpdaterDef();
             tableWriterDef = tableUpdaterDef;
             updateCwmColumnList = getUpdateCwmColumnList();
             tableUpdaterDef.setUpdateProj(
-                FennelRelUtil.createTupleProjectionFromColumnList(
-                    repos,
+                FennelRelUtil.createTupleProjectionFromColumnList(repos,
                     updateCwmColumnList));
             break;
         default:
@@ -185,15 +184,13 @@ class FtrsTableModificationRel extends TableModificationRel
         // also.  For updates, there is another consideration:  indexes which
         // are updated in place cannot be rolled back individually, so
         // they must come last (after any possible constraint violations).
-
         CwmSqlindex clusteredIndex = repos.getClusteredIndex(table);
         boolean clusteredFirst = clusteredIndex.isUnique();
 
         List firstList = new ArrayList();
         List secondList = new ArrayList();
 
-        Iterator indexIter =
-            repos.getIndexes(table).iterator();
+        Iterator indexIter = repos.getIndexes(table).iterator();
         while (indexIter.hasNext()) {
             CwmSqlindex index = (CwmSqlindex) indexIter.next();
 
@@ -202,8 +199,7 @@ class FtrsTableModificationRel extends TableModificationRel
             if (updateCwmColumnList != null) {
                 if (index != clusteredIndex) {
                     List coverageList =
-                        FtrsUtil.getUnclusteredCoverageColList(
-                            repos,index);
+                        FtrsUtil.getUnclusteredCoverageColList(repos, index);
                     if (!coverageList.removeAll(updateCwmColumnList)) {
                         // no intersection between update list and index
                         // coverage, so skip this index entirely
@@ -211,8 +207,8 @@ class FtrsTableModificationRel extends TableModificationRel
                     }
                 }
 
-                List distinctKeyList = FtrsUtil.getDistinctKeyColList(
-                    repos,index);
+                List distinctKeyList =
+                    FtrsUtil.getDistinctKeyColList(repos, index);
                 if (!distinctKeyList.removeAll(updateCwmColumnList)) {
                     // distinct key is not being changed, so it's safe to
                     // attempt update-in-place
@@ -222,30 +218,26 @@ class FtrsTableModificationRel extends TableModificationRel
 
             FemIndexWriterDef indexWriter =
                 repos.fennelPackage.getFemIndexWriterDef()
-                                         .createFemIndexWriterDef();
+                    .createFemIndexWriterDef();
             if (!repos.isTemporary(index)) {
                 indexWriter.setRootPageId(
                     getPreparingStmt().getIndexMap().getIndexRoot(index));
             } else {
                 indexWriter.setRootPageId(-1);
             }
-            indexWriter.setSegmentId(
-                FtrsDataServer.getIndexSegmentId(index));
-            indexWriter.setIndexId(
-                JmiUtil.getObjectId(index));
+            indexWriter.setSegmentId(FtrsDataServer.getIndexSegmentId(index));
+            indexWriter.setIndexId(JmiUtil.getObjectId(index));
             indexWriter.setTupleDesc(
-                FtrsUtil.getCoverageTupleDescriptor(typeFactory,index));
+                FtrsUtil.getCoverageTupleDescriptor(typeFactory, index));
             indexWriter.setKeyProj(
-                FtrsUtil.getDistinctKeyProjection(repos,index));
+                FtrsUtil.getDistinctKeyProjection(repos, index));
             indexWriter.setUpdateInPlace(updateInPlace);
 
-            indexWriter.setDistinctness(
-                index.isUnique()
-                ? DistinctnessEnum.DUP_FAIL
-                : DistinctnessEnum.DUP_ALLOW);
+            indexWriter.setDistinctness(index.isUnique()
+                ? DistinctnessEnum.DUP_FAIL : DistinctnessEnum.DUP_ALLOW);
             if (index != clusteredIndex) {
                 indexWriter.setInputProj(
-                    FtrsUtil.getCoverageProjection(repos,index));
+                    FtrsUtil.getCoverageProjection(repos, index));
             }
 
             boolean prepend = false;
@@ -263,7 +255,7 @@ class FtrsTableModificationRel extends TableModificationRel
                 secondList.add(indexWriter);
             } else {
                 if (prepend) {
-                    firstList.add(0,indexWriter);
+                    firstList.add(0, indexWriter);
                 } else {
                     firstList.add(indexWriter);
                 }

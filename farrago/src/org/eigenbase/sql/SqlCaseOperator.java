@@ -1,37 +1,38 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2004 Disruptive Tech
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.sql;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.util.Util;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.fun.SqlCastFunction;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.resource.EigenbaseResource;
+import org.eigenbase.sql.fun.SqlCastFunction;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.parser.ParserPosition;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.util.Util;
 
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * An operator describing a <code>CASE</code>, <code>NULLIF</code> or
@@ -110,37 +111,39 @@ import java.util.ArrayList;
  * @since Mar 14, 2004
  * @version $Id$
  **/
-
 public abstract class SqlCaseOperator extends SqlOperator
 {
     //~ Constructors ----------------------------------------------------------
 
     public SqlCaseOperator()
     {
-        super("CASE",SqlKind.Case,1,true, null,
-                SqlOperatorTable.useReturnForParam, null);
+        super("CASE", SqlKind.Case, 1, true, null,
+            SqlOperatorTable.useReturnForParam, null);
     }
 
     //~ Methods ---------------------------------------------------------------
 
-
-    protected void checkArgTypes(SqlCall call, SqlValidator validator,
-            SqlValidator.Scope scope) {
-
+    protected void checkArgTypes(
+        SqlCall call,
+        SqlValidator validator,
+        SqlValidator.Scope scope)
+    {
         SqlCase caseCall = (SqlCase) call;
         List whenList = caseCall.getWhenOperands();
         List thenList = caseCall.getThenOperands();
-        assert(whenList.size()==thenList.size());
+        assert (whenList.size() == thenList.size());
 
         //checking that search conditions are ok...
-        RelDataType boolType = validator.typeFactory.
-                createSqlType(SqlTypeName.Boolean);
+        RelDataType boolType =
+            validator.typeFactory.createSqlType(SqlTypeName.Boolean);
         for (int i = 0; i < whenList.size(); i++) {
             SqlNode node = (SqlNode) whenList.get(i);
+
             //should throw validation error if something wrong...
-            RelDataType type = validator.deriveType(scope,node);
+            RelDataType type = validator.deriveType(scope, node);
             if (!boolType.isSameType(type)) {
-                throw EigenbaseResource.instance().newExpectedBoolean(node.getParserPosition().toString());
+                throw EigenbaseResource.instance().newExpectedBoolean(
+                    node.getParserPosition().toString());
             }
         }
 
@@ -152,8 +155,10 @@ public abstract class SqlCaseOperator extends SqlOperator
             }
         }
 
-        if (!SqlUtil.isNullLiteral(caseCall.getElseOperand(), false)) {
-            foundNotNull=true;
+        if (!SqlUtil.isNullLiteral(
+                    caseCall.getElseOperand(),
+                    false)) {
+            foundNotNull = true;
         }
 
         if (!foundNotNull) {
@@ -163,32 +168,37 @@ public abstract class SqlCaseOperator extends SqlOperator
         }
     }
 
-    protected RelDataType inferType(SqlValidator validator,
-            SqlValidator.Scope scope, SqlCall call) {
+    protected RelDataType inferType(
+        SqlValidator validator,
+        SqlValidator.Scope scope,
+        SqlCall call)
+    {
         SqlCase caseCall = (SqlCase) call;
         List thenList = caseCall.getThenOperands();
         ArrayList nullList = new ArrayList();
-        RelDataType[] argTypes = new RelDataType[thenList.size()+1];
+        RelDataType [] argTypes = new RelDataType[thenList.size() + 1];
         for (int i = 0; i < thenList.size(); i++) {
             SqlNode node = (SqlNode) thenList.get(i);
-            argTypes[i] =
-                    validator.deriveType(scope,node);
+            argTypes[i] = validator.deriveType(scope, node);
             if (SqlUtil.isNullLiteral(node, false)) {
                 nullList.add(node);
             }
         }
         SqlNode elseOp = caseCall.getElseOperand();
-        argTypes[argTypes.length-1] =
-                validator.deriveType(scope, caseCall.getElseOperand());
+        argTypes[argTypes.length - 1] =
+            validator.deriveType(
+                scope,
+                caseCall.getElseOperand());
         if (SqlUtil.isNullLiteral(elseOp, false)) {
-                nullList.add(elseOp);
+            nullList.add(elseOp);
         }
-        RelDataType ret = SqlOperatorTable.useNullableBiggest.getType(
-                validator.typeFactory, argTypes);
+        RelDataType ret =
+            SqlOperatorTable.useNullableBiggest.getType(validator.typeFactory,
+                argTypes);
         if (null == ret) {
             //todo use position data when available
             throw EigenbaseResource.instance().newIllegalMixingOfTypes(
-                    call.getParserPosition().toString());
+                call.getParserPosition().toString());
         }
         for (int i = 0; i < nullList.size(); i++) {
             SqlNode node = (SqlNode) nullList.get(i);
@@ -197,23 +207,27 @@ public abstract class SqlCaseOperator extends SqlOperator
         return ret;
     }
 
-    public RelDataType getType(RelDataTypeFactory typeFactory,
-            RelDataType[] argTypes) {
-        assert (argTypes.length % 2) == 1 :
-                "odd number of arguments expected: " + argTypes.length;
+    public RelDataType getType(
+        RelDataTypeFactory typeFactory,
+        RelDataType [] argTypes)
+    {
+        assert (argTypes.length % 2) == 1 : "odd number of arguments expected: "
+        + argTypes.length;
         assert argTypes.length > 1 : argTypes.length;
-        RelDataType[] thenTypes = new RelDataType[(argTypes.length-1)/2+1];
-        for (int i=0,j=1; j < (argTypes.length-1); i++,j+=2) {
+        RelDataType [] thenTypes =
+            new RelDataType[((argTypes.length - 1) / 2) + 1];
+        for (int i = 0, j = 1; j < (argTypes.length - 1); i++, j += 2) {
             thenTypes[i] = argTypes[j];
         }
 
-        thenTypes[thenTypes.length-1] = argTypes[argTypes.length-1];
-        RelDataType ret = SqlOperatorTable.useNullableBiggest.getType(
-                typeFactory, thenTypes);
+        thenTypes[thenTypes.length - 1] = argTypes[argTypes.length - 1];
+        RelDataType ret =
+            SqlOperatorTable.useNullableBiggest.getType(typeFactory, thenTypes);
         return ret;
     }
 
-    public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor() {
+    public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()
+    {
         return OperandsCountDescriptor.variadic;
     }
 
@@ -222,9 +236,11 @@ public abstract class SqlCaseOperator extends SqlOperator
         return SqlSyntax.Special;
     }
 
-    public SqlCall createCall(SqlNode [] operands, ParserPosition parserPosition)
+    public SqlCall createCall(
+        SqlNode [] operands,
+        ParserPosition parserPosition)
     {
-        return new SqlCase(this,operands, parserPosition);
+        return new SqlCase(this, operands, parserPosition);
     }
 
     public SqlCase createCall(
@@ -239,16 +255,20 @@ public abstract class SqlCaseOperator extends SqlOperator
             List list = whenList.getList();
             for (int i = 0; i < list.size(); i++) {
                 SqlNode e = (SqlNode) list.get(i);
-                list.set(i, stdOps.equalsOperator.createCall(caseIdentifier, e, parserPosition));
+                list.set(
+                    i,
+                    stdOps.equalsOperator.createCall(caseIdentifier, e,
+                        parserPosition));
             }
         }
 
-        if (null==elseClause) {
+        if (null == elseClause) {
             elseClause = SqlLiteral.createNull(parserPosition);
         }
 
         return (SqlCase) createCall(
-            new SqlNode [] {whenList,thenList,elseClause}, parserPosition);
+            new SqlNode [] { whenList, thenList, elseClause },
+            parserPosition);
     }
 
     public void unparse(

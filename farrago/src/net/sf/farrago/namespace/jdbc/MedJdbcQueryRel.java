@@ -6,33 +6,33 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.jdbc;
+
+import java.sql.*;
 
 import net.sf.farrago.util.*;
 
+import openjava.mop.*;
+import openjava.ptree.*;
+
+import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.oj.stmt.*;
+import org.eigenbase.rel.jdbc.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.util.*;
-import org.eigenbase.rel.jdbc.*;
-import org.eigenbase.oj.stmt.*;
-import org.eigenbase.oj.rel.JavaRelImplementor;
 
-import openjava.ptree.*;
-import openjava.mop.*;
-
-import java.sql.*;
 
 /**
  * MedJdbcQueryRel adapts JdbcQuery to the SQL/MED framework.
@@ -42,8 +42,12 @@ import java.sql.*;
  */
 class MedJdbcQueryRel extends JdbcQuery
 {
+    //~ Instance fields -------------------------------------------------------
+
     private MedJdbcColumnSet columnSet;
-    
+
+    //~ Constructors ----------------------------------------------------------
+
     MedJdbcQueryRel(
         MedJdbcColumnSet columnSet,
         RelOptCluster cluster,
@@ -52,9 +56,12 @@ class MedJdbcQueryRel extends JdbcQuery
         SqlDialect dialect,
         SqlSelect sql)
     {
-        super(cluster,rowType,connection,dialect,sql,new JdbcDataSource(""));
+        super(cluster, rowType, connection, dialect, sql,
+            new JdbcDataSource(""));
         this.columnSet = columnSet;
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     // override JdbcQuery
     public ParseTree implement(JavaRelImplementor implementor)
@@ -80,5 +87,6 @@ class MedJdbcQueryRel extends JdbcQuery
             new ExpressionList());
     }
 }
+
 
 // End MedJdbcQueryRel.java

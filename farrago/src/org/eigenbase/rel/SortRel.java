@@ -1,32 +1,32 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.RelOptPlanWriter;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelOptPlanWriter;
+import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.RexNode;
+
 
 /**
  * Relational expression which imposes a
@@ -37,7 +37,6 @@ public class SortRel extends SingleRel
     //~ Instance fields -------------------------------------------------------
 
     protected final RelFieldCollation [] collations;
-
     protected final RexNode [] fieldExps;
 
     //~ Constructors ----------------------------------------------------------
@@ -55,15 +54,17 @@ public class SortRel extends SingleRel
         RelNode child,
         RelFieldCollation [] collations)
     {
-        super(cluster,child);
+        super(cluster, child);
         this.collations = collations;
 
         fieldExps = new RexNode[collations.length];
         final RelDataTypeField [] fields = getRowType().getFields();
         for (int i = 0; i < collations.length; ++i) {
             int iField = collations[i].iField;
-            fieldExps[i] = cluster.rexBuilder.makeInputRef(
-                    fields[iField].getType(), iField);
+            fieldExps[i] =
+                cluster.rexBuilder.makeInputRef(
+                    fields[iField].getType(),
+                    iField);
         }
     }
 
@@ -101,7 +102,7 @@ public class SortRel extends SingleRel
         for (int j = 0; j < collations.length; ++j) {
             terms[i++] = "sort" + j;
         }
-        pw.explain(this,terms);
+        pw.explain(this, terms);
     }
 }
 

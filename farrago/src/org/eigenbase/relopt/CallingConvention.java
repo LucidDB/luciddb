@@ -1,33 +1,32 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.relopt;
 
+import org.eigenbase.oj.rel.JavaLoopRel;
+import org.eigenbase.oj.rel.JavaRel;
+import org.eigenbase.oj.rel.ResultSetRel;
+import org.eigenbase.rel.RelNode;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.Util;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.oj.rel.ResultSetRel;
-import org.eigenbase.oj.rel.JavaRel;
-import org.eigenbase.oj.rel.JavaLoopRel;
 
 
 /**
@@ -50,8 +49,8 @@ public class CallingConvention extends EnumeratedValues.BasicValue
      * be implemented.
      */
     public static final int NONE_ORDINAL = -1;
-    public static final CallingConvention NONE = new CallingConvention(
-            "NONE",NONE_ORDINAL, RelNode.class);
+    public static final CallingConvention NONE =
+        new CallingConvention("NONE", NONE_ORDINAL, RelNode.class);
 
     /**
      * The <code>JAVA</code> calling convention means that the expression is
@@ -77,8 +76,8 @@ public class CallingConvention extends EnumeratedValues.BasicValue
      * </p>
      */
     public static final int JAVA_ORDINAL = 0;
-    public static final CallingConvention JAVA = new CallingConvention(
-            "JAVA", JAVA_ORDINAL, JavaLoopRel.class);
+    public static final CallingConvention JAVA =
+        new CallingConvention("JAVA", JAVA_ORDINAL, JavaLoopRel.class);
 
     /**
      * The <code>ITERATOR</code> calling convention means that the expression
@@ -88,8 +87,8 @@ public class CallingConvention extends EnumeratedValues.BasicValue
      * org.eigenbase.rel.convert.ConverterRel}.
      */
     public static final int ITERATOR_ORDINAL = 1;
-    public static final CallingConvention ITERATOR = new CallingConvention(
-            "ITERATOR", ITERATOR_ORDINAL, JavaRel.class);
+    public static final CallingConvention ITERATOR =
+        new CallingConvention("ITERATOR", ITERATOR_ORDINAL, JavaRel.class);
 
     /**
      * The <code>ARRAY</code> calling convention results in a Java expression
@@ -98,8 +97,8 @@ public class CallingConvention extends EnumeratedValues.BasicValue
      * each row returned).
      */
     public static final int ARRAY_ORDINAL = 2;
-    public static final CallingConvention ARRAY = new CallingConvention(
-            "ARRAY", ARRAY_ORDINAL, JavaRel.class);
+    public static final CallingConvention ARRAY =
+        new CallingConvention("ARRAY", ARRAY_ORDINAL, JavaRel.class);
 
     /**
      * The <code>COLLECTION</code> calling convention results in a Java
@@ -107,24 +106,20 @@ public class CallingConvention extends EnumeratedValues.BasicValue
      * typically a {@link java.util.ArrayList}.
      */
     public static final int COLLECTION_ORDINAL = 3;
-    public static final CallingConvention COLLECTION = new CallingConvention(
-            "COLLECTION",COLLECTION_ORDINAL, JavaRel.class);
-
+    public static final CallingConvention COLLECTION =
+        new CallingConvention("COLLECTION", COLLECTION_ORDINAL, JavaRel.class);
     public static final int VECTOR_ORDINAL = 4;
-    public static final CallingConvention VECTOR = new CallingConvention(
-            "VECTOR",VECTOR_ORDINAL, JavaRel.class);
-
+    public static final CallingConvention VECTOR =
+        new CallingConvention("VECTOR", VECTOR_ORDINAL, JavaRel.class);
     public static final int ENUMERATION_ORDINAL = 5;
-    public static final CallingConvention ENUMERATION = new CallingConvention(
-            "ENUMERATION", ENUMERATION_ORDINAL, JavaRel.class);
-
+    public static final CallingConvention ENUMERATION =
+        new CallingConvention("ENUMERATION", ENUMERATION_ORDINAL, JavaRel.class);
     public static final int MAP_ORDINAL = 6;
-    public static final CallingConvention MAP = new CallingConvention(
-            "MAP", MAP_ORDINAL, JavaRel.class);
-
+    public static final CallingConvention MAP =
+        new CallingConvention("MAP", MAP_ORDINAL, JavaRel.class);
     public static final int HASHTABLE_ORDINAL = 7;
-    public static final CallingConvention HASHTABLE = new CallingConvention(
-            "HASHTABLE", HASHTABLE_ORDINAL, JavaRel.class);
+    public static final CallingConvention HASHTABLE =
+        new CallingConvention("HASHTABLE", HASHTABLE_ORDINAL, JavaRel.class);
 
     /**
      * The <code>ITERABLE</code> calling convention means that the expression
@@ -133,16 +128,16 @@ public class CallingConvention extends EnumeratedValues.BasicValue
      * implements {@link org.eigenbase.runtime.Iterable}.
      */
     public static final int ITERABLE_ORDINAL = 8;
-    public static final CallingConvention ITERABLE = new CallingConvention(
-            "ITERABLE",ITERABLE_ORDINAL, JavaRel.class);
+    public static final CallingConvention ITERABLE =
+        new CallingConvention("ITERABLE", ITERABLE_ORDINAL, JavaRel.class);
 
     /**
      * The <code>EXISTS</code> calling convention is only allowed for a
      * terminator.
      */
     public static final int EXISTS_ORDINAL = 9;
-    public static final CallingConvention EXISTS = new CallingConvention(
-            "EXISTS",EXISTS_ORDINAL, JavaRel.class);
+    public static final CallingConvention EXISTS =
+        new CallingConvention("EXISTS", EXISTS_ORDINAL, JavaRel.class);
 
     /**
      * The <code>RESULT_SET</code> calling convention means that the
@@ -151,16 +146,19 @@ public class CallingConvention extends EnumeratedValues.BasicValue
      * iterator, the default object type is {@link org.eigenbase.runtime.Row}.
      */
     public static final int RESULT_SET_ORDINAL = 10;
-    public static final CallingConvention RESULT_SET = new CallingConvention(
-            "RESULT_SET",RESULT_SET_ORDINAL, ResultSetRel.class);
-
+    public static final CallingConvention RESULT_SET =
+        new CallingConvention("RESULT_SET", RESULT_SET_ORDINAL,
+            ResultSetRel.class);
     public static final CallingConvention [] values =
         new CallingConvention [] {
-            NONE,JAVA,ITERATOR,ARRAY,COLLECTION,VECTOR,ENUMERATION,MAP,
-            HASHTABLE,ITERABLE,EXISTS,RESULT_SET,
+            NONE, JAVA, ITERATOR, ARRAY, COLLECTION, VECTOR, ENUMERATION, MAP,
+            HASHTABLE, ITERABLE, EXISTS, RESULT_SET,
         };
     public static final EnumeratedValues enumeration =
         new EnumeratedValues(values);
+
+    //~ Instance fields -------------------------------------------------------
+
     /**
      * Interface that a relational expression of this calling convention
      * must implement. Must be a sub-interface of {@link RelNode}.
@@ -169,14 +167,20 @@ public class CallingConvention extends EnumeratedValues.BasicValue
 
     //~ Constructors ----------------------------------------------------------
 
-    public CallingConvention(String name,int ordinal, Class interfaze)
+    public CallingConvention(
+        String name,
+        int ordinal,
+        Class interfaze)
     {
-        super(name,ordinal,null);
+        super(name, ordinal, null);
         this._interface = interfaze;
-        Util.pre(RelNode.class.isAssignableFrom(interfaze),
-                "RelNode.class.isAssignableFrom(interfaze)");
-        maxOrdinal = Math.max(ordinal,maxOrdinal);
+        Util.pre(
+            RelNode.class.isAssignableFrom(interfaze),
+            "RelNode.class.isAssignableFrom(interfaze)");
+        maxOrdinal = Math.max(ordinal, maxOrdinal);
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     public static int generateOrdinal()
     {

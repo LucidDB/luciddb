@@ -1,32 +1,32 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.sql;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.parser.ParserPosition;
-import org.eigenbase.resource.EigenbaseResource;
-
 import java.util.ArrayList;
+
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.resource.EigenbaseResource;
+import org.eigenbase.sql.parser.ParserPosition;
+
 
 /**
  * A <code>SqlCall</code> is a call to an {@link SqlOperator operator}.
@@ -43,12 +43,14 @@ public class SqlCall extends SqlNode
 
     //~ Constructors ----------------------------------------------------------
 
-    SqlCall(SqlOperator operator,SqlNode [] operands, ParserPosition parserPosition)
+    SqlCall(
+        SqlOperator operator,
+        SqlNode [] operands,
+        ParserPosition parserPosition)
     {
         super(parserPosition);
         this.operator = operator;
         this.operands = operands;
-
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -65,7 +67,9 @@ public class SqlCall extends SqlNode
 
     // REVIEW jvs 10-Sept-2003:  I added this to allow for some rewrite by
     // SqlValidator.  Is mutability OK?
-    public void setOperand(int i,SqlNode operand)
+    public void setOperand(
+        int i,
+        SqlNode operand)
     {
         operands[i] = operand;
     }
@@ -77,21 +81,24 @@ public class SqlCall extends SqlNode
 
     public Object clone()
     {
-        return operator.createCall(SqlNode.cloneArray(operands), getParserPosition());
+        return operator.createCall(
+            SqlNode.cloneArray(operands),
+            getParserPosition());
     }
 
-    public void unparse(SqlWriter writer,int leftPrec,int rightPrec)
+    public void unparse(
+        SqlWriter writer,
+        int leftPrec,
+        int rightPrec)
     {
-        if (
-            (leftPrec > operator.leftPrec)
+        if ((leftPrec > operator.leftPrec)
                 || (operator.rightPrec <= rightPrec)
-                || (writer.alwaysUseParentheses
-                && isA(SqlKind.Expression))) {
+                || (writer.alwaysUseParentheses && isA(SqlKind.Expression))) {
             writer.print('(');
-            operator.unparse(writer,operands,0,0);
+            operator.unparse(writer, operands, 0, 0);
             writer.print(')');
         } else {
-            operator.unparse(writer,operands,leftPrec,rightPrec);
+            operator.unparse(writer, operands, leftPrec, rightPrec);
         }
     }
 
@@ -99,13 +106,16 @@ public class SqlCall extends SqlNode
      * Returns a string describing the actual argument types of a call, e.g.
      * "SUBSTR(VARCHAR(12), NUMBER(3,2), INTEGER)".
      */
-    protected String getCallSignature(SqlValidator validator, SqlValidator.Scope scope) {
+    protected String getCallSignature(
+        SqlValidator validator,
+        SqlValidator.Scope scope)
+    {
         StringBuffer buf = new StringBuffer();
         ArrayList signatureList = new ArrayList();
         for (int i = 0; i < operands.length; i++) {
             final SqlNode operand = operands[i];
-            final RelDataType argType = validator.deriveType(scope,operand);
-            if (null==argType) {
+            final RelDataType argType = validator.deriveType(scope, operand);
+            if (null == argType) {
                 continue;
             }
             signatureList.add(argType.toString());
@@ -114,12 +124,15 @@ public class SqlCall extends SqlNode
         return buf.toString();
     }
 
-
-    public RuntimeException newValidationSignatureError(SqlValidator validator, SqlValidator.Scope scope)
+    public RuntimeException newValidationSignatureError(
+        SqlValidator validator,
+        SqlValidator.Scope scope)
     {
         return EigenbaseResource.instance().newCanNotApplyOp2Type(
-            operator.name, getCallSignature(validator, scope),
-            operator.getAllowedSignatures(),getParserPosition().toString());
+            operator.name,
+            getCallSignature(validator, scope),
+            operator.getAllowedSignatures(),
+            getParserPosition().toString());
     }
 }
 

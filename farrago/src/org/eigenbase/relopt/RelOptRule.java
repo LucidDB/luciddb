@@ -1,23 +1,22 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.relopt;
@@ -30,7 +29,7 @@ import org.eigenbase.util.Util;
  * A <code>RelOptRule</code> transforms an expression into another. It has a
  * list of {@link RelOptRuleOperand}s, which determine whether the rule can be
  * applied to a particular section of the tree.
- * 
+ *
  * <p>
  * The optimizer figures out which rules are applicable, then calls {@link
  * #onMatch} on each of them.
@@ -70,7 +69,8 @@ public abstract class RelOptRule
 
     //~ Methods ---------------------------------------------------------------
 
-    public int hashCode() {
+    public int hashCode()
+    {
         // Conventionally, hashCode() and equals() should use the same
         // criteria, whereas here we only look at the description. This is
         // okay, because the planner requires all rule instances to have
@@ -78,7 +78,8 @@ public abstract class RelOptRule
         return description.hashCode();
     }
 
-    public boolean equals(Object obj) {
+    public boolean equals(Object obj)
+    {
         if (!(obj instanceof RelOptRule)) {
             return false;
         }
@@ -91,12 +92,13 @@ public abstract class RelOptRule
      * <p>The base implementation checks that the rules have the same class
      * and that the operands are equal; derived classes can override.
      */
-    protected boolean equals(RelOptRule that) {
+    protected boolean equals(RelOptRule that)
+    {
         // Include operands and class in the equality criteria just in case
         // they have chosen a poor description.
-        return this.description.equals(that.description) &&
-                this.getClass() == that.getClass() &&
-                this.operand.equals(that.operand);
+        return this.description.equals(that.description)
+            && (this.getClass() == that.getClass())
+            && this.operand.equals(that.operand);
     }
 
     /**
@@ -104,7 +106,7 @@ public abstract class RelOptRule
      * this method is called, {@link RelOptRuleCall#rels call.rels} holds
      * the set of relational expressions which match the operands to the
      * rule; <code>call.rels[0]</code> is the root expression.
-     * 
+     *
      * <p>
      * Typically a rule would check that the nodes are valid matches, creates
      * a new expression, then calls back {@link RelOptRuleCall#transformTo}
@@ -131,7 +133,7 @@ public abstract class RelOptRule
      * Converts a relational expression to a given calling convention, if it
      * is not already of that convention. If the conversion is not possible,
      * returns null.
-     * 
+     *
      * <p>
      * The <code>stubborn</code> parameter controls how hard we try. Using
      * <code>true</code> causes an expression explosion. If the expression
@@ -149,14 +151,14 @@ public abstract class RelOptRule
      * @post return == null || return.getConvention() == toConvention
      */
     protected static RelNode convert(
-            RelNode rel,
+        RelNode rel,
         CallingConvention toConvention)
     {
         if (rel.getConvention() == toConvention) {
             return rel;
         }
         RelOptPlanner planner = rel.getCluster().planner;
-        return planner.changeConvention(rel,toConvention);
+        return planner.changeConvention(rel, toConvention);
     }
 
     private static String guessDescription(String className)

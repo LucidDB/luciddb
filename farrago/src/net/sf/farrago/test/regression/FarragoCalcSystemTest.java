@@ -17,22 +17,24 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.test.regression;
 
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.test.SqlOperatorIterator;
-import org.eigenbase.util.Util;
-import net.sf.farrago.test.FarragoTestCase;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-import java.util.Iterator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import net.sf.farrago.test.FarragoTestCase;
+
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.test.SqlOperatorIterator;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.util.Util;
+
 
 /**
  * This class contains tests that do full vertical system testing downto the
@@ -42,31 +44,45 @@ import java.util.Set;
  * @since April 19, 2004
  * @version $Id$
  **/
-public class FarragoCalcSystemTest extends FarragoTestCase{
+public class FarragoCalcSystemTest extends FarragoTestCase
+{
+    //~ Static fields/initializers --------------------------------------------
 
     public static final String vmFennel =
-            "alter system set \"calcVirtualMachine\" = 'CALCVM_FENNEL'";
+        "alter system set \"calcVirtualMachine\" = 'CALCVM_FENNEL'";
     public static final String vmJava =
-            "alter system set \"calcVirtualMachine\" = 'CALCVM_JAVA'";
+        "alter system set \"calcVirtualMachine\" = 'CALCVM_JAVA'";
     public static final String vmAuto =
-            "alter system set \"calcVirtualMachine\" = 'CALCVM_AUTO'";
+        "alter system set \"calcVirtualMachine\" = 'CALCVM_AUTO'";
+
+    //~ Instance fields -------------------------------------------------------
+
     String sqlToExceute;
     String vmFlag;
 
-    public FarragoCalcSystemTest(String vmFlag,
-                                 String sql,
-                                 String testName) throws Exception {
+    //~ Constructors ----------------------------------------------------------
+
+    public FarragoCalcSystemTest(
+        String vmFlag,
+        String sql,
+        String testName)
+        throws Exception
+    {
         super(testName);
         this.vmFlag = vmFlag;
         this.sqlToExceute = sql;
     }
 
-    public static Test suite() throws Exception
+    //~ Methods ---------------------------------------------------------------
+
+    public static Test suite()
+        throws Exception
     {
         SqlStdOperatorTable opTab = SqlOperatorTable.std();
         TestSuite suite = new TestSuite();
 
         HashSet exclude = new HashSet();
+
         // do not test operators added to exclude list.
         // Functions to be excluded are typically those that return not null if
         // input is null or
@@ -140,37 +156,39 @@ public class FarragoCalcSystemTest extends FarragoTestCase{
         // Do not add a function to this exclude list unless you first add a
         // test for it elsewhere.
         // ------------
-
         SqlOperatorIterator operatorIt = new SqlOperatorIterator();
+
         // iterating over all operators
-        while(operatorIt.hasNext()) {
+        while (operatorIt.hasNext()) {
             SqlOperator op = (SqlOperator) operatorIt.next();
-            assert(null != op.name) : "Opertor name must not be null";
+            assert (null != op.name) : "Opertor name must not be null";
             if (exclude.contains(op)) {
                 continue;
             }
-
 
             List nbrOfArgsList =
                 op.getOperandsCountDescriptor().getPossibleNumOfOperands();
             assert (nbrOfArgsList.size() > 0);
             Iterator it = nbrOfArgsList.iterator();
+
             // iterating over possible call signatures
             while (it.hasNext()) {
                 Integer n = (Integer) it.next();
-                SqlNode[] operands = new SqlNode[n.intValue()];
+                SqlNode [] operands = new SqlNode[n.intValue()];
                 SqlOperator.AllowedArgInference allowedTypes =
-                        op.getAllowedArgInference();
+                    op.getAllowedArgInference();
                 if (allowedTypes instanceof SqlOperator.CompositeAllowedArgInference) {
-                    allowedTypes = ((SqlOperator.CompositeAllowedArgInference) allowedTypes).getRules()[0];
+                    allowedTypes =
+                        ((SqlOperator.CompositeAllowedArgInference) allowedTypes)
+                            .getRules()[0];
                 }
 
                 if (null == allowedTypes) {
-                    throw Util.needToImplement("Need to add to exclude list" +
-                            " and manually add test");
+                    throw Util.needToImplement("Need to add to exclude list"
+                        + " and manually add test");
                 }
 
-                for (int i=0; i < n.intValue(); i++) {
+                for (int i = 0; i < n.intValue(); i++) {
                     SqlTypeName typeName = allowedTypes.getTypes()[i][0];
                     if (typeName.equals(SqlTypeName.Null)) {
                         typeName = allowedTypes.getTypes()[i][1];
@@ -178,18 +196,28 @@ public class FarragoCalcSystemTest extends FarragoTestCase{
                         typeName = SqlTypeName.Boolean;
                     }
 
-                    SqlDataType dt = new SqlDataType(
-                            new SqlIdentifier(typeName.name_,null),0,0,null,null);
+                    SqlDataType dt =
+                        new SqlDataType(new SqlIdentifier(typeName.name_, null),
+                            0,
+                            0,
+                            null,
+                            null);
 
-                    operands[i] = opTab.castFunc.createCall(
-                            SqlLiteral.createNull(null), dt,null);
+                    operands[i] =
+                        opTab.castFunc.createCall(
+                            SqlLiteral.createNull(null),
+                            dt,
+                            null);
                 }
-                SqlCall call = op.createCall(operands,null);
+                SqlCall call = op.createCall(operands, null);
 
-                String sql = "SELECT "+call.toString()+" FROM VALUES(1)";
-                String testName = "NULL-TEST-"+op.name+"-";
-                suite.addTest(new FarragoCalcSystemTest(vmFennel, sql, testName+"FENNEL"));
-//                suite.addTest(new FarragoCalcSystemTest(vmJava, sql, testName+"JAVA"));
+                String sql = "SELECT " + call.toString() + " FROM VALUES(1)";
+                String testName = "NULL-TEST-" + op.name + "-";
+                suite.addTest(
+                    new FarragoCalcSystemTest(vmFennel, sql,
+                        testName + "FENNEL"));
+
+                //                suite.addTest(new FarragoCalcSystemTest(vmJava, sql, testName+"JAVA"));
             }
         }
 
@@ -197,12 +225,16 @@ public class FarragoCalcSystemTest extends FarragoTestCase{
     }
 
     // implement TestCase
-    protected void setUp() throws Exception {
+    protected void setUp()
+        throws Exception
+    {
         super.setUp();
         stmt.execute(vmFlag);
     }
 
-    protected void runTest() throws Throwable {
+    protected void runTest()
+        throws Throwable
+    {
         resultSet = stmt.executeQuery(sqlToExceute);
         Set refSet = new HashSet();
         refSet.add(null);

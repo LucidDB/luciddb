@@ -6,27 +6,29 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.mdr;
 
-import net.sf.farrago.util.JmiUtil;
-import org.eigenbase.relopt.*;
-import org.eigenbase.rel.JoinRel;
-import org.eigenbase.rel.RelNode;
+import java.util.List;
 
 import javax.jmi.model.Reference;
 import javax.jmi.model.StructuralFeature;
-import java.util.List;
+
+import net.sf.farrago.util.JmiUtil;
+
+import org.eigenbase.rel.JoinRel;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.relopt.*;
+
 
 /**
  * MedMdrJoinRule is a rule for converting a JoinRel into a
@@ -37,29 +39,28 @@ import java.util.List;
  */
 class MedMdrJoinRule extends RelOptRule
 {
+    //~ Constructors ----------------------------------------------------------
+
     MedMdrJoinRule()
     {
         // TODO:  allow join to work on inputs other
         // than MedMdrClassExtentRel (e.g. filters, projects, other joins)
-        super(
-            new RelOptRuleOperand(
+        super(new RelOptRuleOperand(
                 JoinRel.class,
                 new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(
-                        RelNode.class,
-                        null),
-                    new RelOptRuleOperand(
-                        MedMdrClassExtentRel.class,
-                        null)
+                    new RelOptRuleOperand(RelNode.class, null),
+                    new RelOptRuleOperand(MedMdrClassExtentRel.class, null)
                 }));
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     // implement RelOptRule
     public CallingConvention getOutConvention()
     {
         return CallingConvention.ITERATOR;
     }
-    
+
     // implement RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
@@ -71,15 +72,14 @@ class MedMdrJoinRule extends RelOptRule
         if (!joinRel.getVariablesStopped().isEmpty()) {
             return;
         }
-        
+
         if ((joinRel.getJoinType() != JoinRel.JoinType.INNER)
-            && (joinRel.getJoinType() != JoinRel.JoinType.LEFT))
-        {
+                && (joinRel.getJoinType() != JoinRel.JoinType.LEFT)) {
             return;
         }
 
         int [] joinFieldOrdinals = new int[2];
-        if (!RelOptUtil.analyzeSimpleEquiJoin(joinRel,joinFieldOrdinals)) {
+        if (!RelOptUtil.analyzeSimpleEquiJoin(joinRel, joinFieldOrdinals)) {
             return;
         }
         int leftOrdinal = joinFieldOrdinals[0];
@@ -87,16 +87,17 @@ class MedMdrJoinRule extends RelOptRule
 
         // on right side, must join to reference field which refers to
         // left side type
-        List features = JmiUtil.getFeatures(
-            rightRel.mdrClassExtent.refClass,StructuralFeature.class,false);
+        List features =
+            JmiUtil.getFeatures(rightRel.mdrClassExtent.refClass,
+                StructuralFeature.class, false);
         Reference reference;
         if (rightOrdinal == features.size()) {
             // join to mofId: this is a many-to-one join (primary key lookup on
             // right hand side), which we will represent with a null reference
             reference = null;
         } else {
-            StructuralFeature feature = (StructuralFeature)
-                features.get(rightOrdinal);
+            StructuralFeature feature =
+                (StructuralFeature) features.get(rightOrdinal);
             if (!(feature instanceof Reference)) {
                 return;
             }
@@ -106,6 +107,7 @@ class MedMdrJoinRule extends RelOptRule
         // TODO:  verify that leftOrdinal specifies a MOFID of an
         // appropriate type; also, verify that left and right
         // are from same repository
+
         /*
         Classifier referencedType = reference.getReferencedEnd().getType();
         Classifier leftType =
@@ -119,13 +121,12 @@ class MedMdrJoinRule extends RelOptRule
             return;
         }
         */
-
-        RelNode iterLeft = convert(leftRel,CallingConvention.ITERATOR);
+        RelNode iterLeft = convert(leftRel, CallingConvention.ITERATOR);
         if (iterLeft == null) {
             return;
         }
-        
-        RelNode iterRight = convert(rightRel,CallingConvention.ITERATOR);
+
+        RelNode iterRight = convert(rightRel, CallingConvention.ITERATOR);
         if (iterRight == null) {
             return;
         }
@@ -141,5 +142,6 @@ class MedMdrJoinRule extends RelOptRule
                 reference));
     }
 }
+
 
 // End MedMdrJoinRule.java

@@ -1,25 +1,30 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2003-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 package org.eigenbase.rex;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.math.BigDecimal;
+import java.util.Calendar;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.SqlSymbol;
@@ -29,10 +34,6 @@ import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.NlsString;
 import org.eigenbase.util.Util;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.math.BigDecimal;
-import java.util.Calendar;
 
 /**
  * Constant value in a row-expression.
@@ -141,8 +142,6 @@ import java.util.Calendar;
  **/
 public class RexLiteral extends RexNode
 {
-    //~ Static fields/initializers --------------------------------------------
-
     //~ Instance fields -------------------------------------------------------
 
     /**
@@ -153,10 +152,12 @@ public class RexLiteral extends RexNode
      * private, it doesn't really matter how the values are stored.
      */
     private final Object _value;
+
     /**
      * The real type of this literal, as reported by {@link #getType}.
      */
     private final RelDataType _type;
+
     /**
      * An indication of the broad type of this literal -- even if its type
      * isn't a SQL type. Sometimes this will be different than the SQL type;
@@ -175,56 +176,57 @@ public class RexLiteral extends RexNode
      * @pre valueMatchesType(value,typeName)
      * @pre (value == null) == type.isNullable()
      */
-    RexLiteral(Object value, RelDataType type, SqlTypeName typeName)
+    RexLiteral(
+        Object value,
+        RelDataType type,
+        SqlTypeName typeName)
     {
         Util.pre(type != null, "_type != null");
-        Util.pre(valueMatchesType(value,typeName),
-                "valueMatchesType(value,typeName)");
+        Util.pre(
+            valueMatchesType(value, typeName),
+            "valueMatchesType(value,typeName)");
         Util.pre((value == null) == type.isNullable(),
-                "(value == null) == type.isNullable()");
+            "(value == null) == type.isNullable()");
         this._value = value;
         this._type = type;
         this._typeName = typeName;
         this.digest = toJavaString(value, typeName);
     }
 
+    //~ Methods ---------------------------------------------------------------
+
     /**
      * Whether value is appropriate for its type. (We have rules about these
      * things.)
      */
-    public static boolean valueMatchesType(Object value,
-            SqlTypeName typeName) {
+    public static boolean valueMatchesType(
+        Object value,
+        SqlTypeName typeName)
+    {
         switch (typeName.ordinal_) {
         case SqlTypeName.Boolean_ordinal:
+
             // Unlike SqlLiteral, we do not allow boolean null.
             return value instanceof Boolean;
-
         case SqlTypeName.Null_ordinal:
             return value == null;
-
         case SqlTypeName.Decimal_ordinal:
         case SqlTypeName.Double_ordinal:
             return value instanceof BigDecimal;
-
         case SqlTypeName.Date_ordinal:
         case SqlTypeName.Time_ordinal:
         case SqlTypeName.Timestamp_ordinal:
             return value instanceof Calendar;
-
         case SqlTypeName.Binary_ordinal:
-            return value instanceof byte[];
-
+            return value instanceof byte [];
         case SqlTypeName.Bit_ordinal:
             return value instanceof BitString;
-
         case SqlTypeName.Char_ordinal:
             return value instanceof NlsString;
-
         case SqlTypeName.Symbol_ordinal:
-            // Unlike SqlLiteral, we DO allow a String value.
-            return value instanceof SqlSymbol ||
-                    value instanceof String;
 
+            // Unlike SqlLiteral, we DO allow a String value.
+            return value instanceof SqlSymbol || value instanceof String;
         case SqlTypeName.Integer_ordinal: // not allowed -- use Decimal
         case SqlTypeName.Varchar_ordinal: // not allowed -- use Char
         case SqlTypeName.Varbinary_ordinal: // not allowed -- use Binary
@@ -233,7 +235,10 @@ public class RexLiteral extends RexNode
         }
     }
 
-    private static String toJavaString(Object value, SqlTypeName typeName) {
+    private static String toJavaString(
+        Object value,
+        SqlTypeName typeName)
+    {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         printAsJava(value, pw, typeName, false);
@@ -244,7 +249,8 @@ public class RexLiteral extends RexNode
     /**
      * Prints the value this literal as a Java string constant.
      */
-    public void printAsJava(PrintWriter pw) {
+    public void printAsJava(PrintWriter pw)
+    {
         printAsJava(_value, pw, _typeName, true);
     }
 
@@ -264,13 +270,20 @@ public class RexLiteral extends RexNode
      * @param pw Writer to write to
      * @param typeName Type family
      */
-    private static void printAsJava(Object value, PrintWriter pw,
-            SqlTypeName typeName, boolean java) {
+    private static void printAsJava(
+        Object value,
+        PrintWriter pw,
+        SqlTypeName typeName,
+        boolean java)
+    {
         switch (typeName.ordinal_) {
         case SqlTypeName.Char_ordinal:
             NlsString nlsString = (NlsString) value;
             if (java) {
-                Util.printJavaString(pw, nlsString.getValue(), true);
+                Util.printJavaString(
+                    pw,
+                    nlsString.getValue(),
+                    true);
             } else {
                 pw.print(nlsString.toString());
             }
@@ -285,8 +298,8 @@ public class RexLiteral extends RexNode
             pw.print(value.toString());
             break;
         case SqlTypeName.Binary_ordinal:
-            assert value instanceof byte[];
-            pw.print(Util.toStringFromByteArray((byte[]) value, 16));
+            assert value instanceof byte [];
+            pw.print(Util.toStringFromByteArray((byte []) value, 16));
             break;
         case SqlTypeName.Bit_ordinal:
             assert value instanceof BitString;
@@ -309,19 +322,20 @@ public class RexLiteral extends RexNode
             pw.print(value.toString());
             break;
         default:
-            Util.pre(valueMatchesType(value, typeName),
-                    "valueMatchesType(value, typeName)");
+            Util.pre(
+                valueMatchesType(value, typeName),
+                "valueMatchesType(value, typeName)");
             throw Util.needToImplement(typeName);
         }
     }
 
-    //~ Methods ---------------------------------------------------------------
-
-    public RelDataType getType() {
+    public RelDataType getType()
+    {
         return _type;
     }
 
-    public RexKind getKind() {
+    public RexKind getKind()
+    {
         return RexKind.Literal;
     }
 
@@ -350,7 +364,7 @@ public class RexLiteral extends RexNode
         case SqlTypeName.Date_ordinal:
         case SqlTypeName.Time_ordinal:
         case SqlTypeName.Timestamp_ordinal:
-            return new Long(((Calendar)_value).getTimeInMillis());
+            return new Long(((Calendar) _value).getTimeInMillis());
         default:
             return _value;
         }
@@ -364,7 +378,7 @@ public class RexLiteral extends RexNode
     public boolean equals(Object obj)
     {
         return (obj instanceof RexLiteral)
-            && equals(((RexLiteral) obj)._value,_value);
+            && equals(((RexLiteral) obj)._value, _value);
     }
 
     public int hashCode()
@@ -382,9 +396,10 @@ public class RexLiteral extends RexNode
         return ((NlsString) ((RexLiteral) node)._value).getValue();
     }
 
-    public static boolean isNullLiteral(RexNode node) {
-        return node instanceof RexLiteral &&
-                ((RexLiteral) node)._value == null;
+    public static boolean isNullLiteral(RexNode node)
+    {
+        return node instanceof RexLiteral
+            && (((RexLiteral) node)._value == null);
     }
 
     public Object clone()
@@ -392,14 +407,18 @@ public class RexLiteral extends RexNode
         return new RexLiteral(_value, _type, _typeName);
     }
 
-    private static boolean equals(Object o1,Object o2)
+    private static boolean equals(
+        Object o1,
+        Object o2)
     {
         return (o1 == null) ? (o2 == null) : o1.equals(o2);
     }
 
-    public void accept(RexVisitor visitor) {
+    public void accept(RexVisitor visitor)
+    {
         visitor.visitLiteral(this);
     }
 }
+
 
 // End RexLiteral.java

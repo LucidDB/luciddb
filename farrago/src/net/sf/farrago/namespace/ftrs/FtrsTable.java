@@ -16,18 +16,18 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.ftrs;
 
-import net.sf.farrago.namespace.impl.*;
+import java.util.*;
+
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.query.*;
 
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.rel.*;
 
-import java.util.*;
 
 /**
  * An implementation of RelOptTable for accessing data stored in FTRS.
@@ -45,19 +45,20 @@ class FtrsTable extends MedAbstractColumnSet
         Properties tableProps,
         Map columnPropMap)
     {
-        super(localName,null,rowType,tableProps,columnPropMap);
+        super(localName, null, rowType, tableProps, columnPropMap);
     }
 
     //~ Methods ---------------------------------------------------------------
 
     // implement RelOptTable
-    public RelNode toRel(RelOptCluster cluster,RelOptConnection connection)
+    public RelNode toRel(
+        RelOptCluster cluster,
+        RelOptConnection connection)
     {
         return new FtrsIndexScanRel(
             cluster,
             this,
-            getPreparingStmt().getRepos().getClusteredIndex(
-                getCwmColumnSet()),
+            getPreparingStmt().getRepos().getClusteredIndex(getCwmColumnSet()),
             connection,
             null,
             false);

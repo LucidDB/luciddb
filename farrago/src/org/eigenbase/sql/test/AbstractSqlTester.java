@@ -1,28 +1,28 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.sql.test;
 
 import org.eigenbase.sql.type.SqlTypeName;
+
 
 /**
  * A SqlTester is a tester of sql queries. The queries tested are specified in
@@ -36,49 +36,72 @@ import org.eigenbase.sql.type.SqlTypeName;
  * @since May 22, 2004
  * @version $Id$
  **/
-public abstract class AbstractSqlTester implements SqlTester {
-    public String getQueryEndString() {
-        return "FROM VALUES(1)".intern();
-    };
+public abstract class AbstractSqlTester implements SqlTester
+{
+    //~ Methods ---------------------------------------------------------------
 
-    public String getQueryStartString() {
+    public String getQueryEndString()
+    {
+        return "FROM VALUES(1)".intern();
+    }
+
+    public String getQueryStartString()
+    {
         return "SELECT".intern();
     }
 
-    private String buildQuery(String expression) {
-        String sql = getQueryStartString() + " " +
-                     expression + " " +
-                     getQueryEndString();
+    private String buildQuery(String expression)
+    {
+        String sql =
+            getQueryStartString() + " " + expression + " "
+            + getQueryEndString();
         return sql;
     }
 
-    public void checkScalarExact(String expression, String result) {
+    public void checkScalarExact(
+        String expression,
+        String result)
+    {
         String sql = buildQuery(expression);
-        check(sql,result, SqlTypeName.Integer);
+        check(sql, result, SqlTypeName.Integer);
     }
 
-    public void checkScalarApprox(String expression, String result) {
+    public void checkScalarApprox(
+        String expression,
+        String result)
+    {
         String sql = buildQuery(expression);
-        check(sql,result, SqlTypeName.Double);
+        check(sql, result, SqlTypeName.Double);
     }
 
-    public void checkBoolean(String expression, Boolean result) {
+    public void checkBoolean(
+        String expression,
+        Boolean result)
+    {
         String sql = buildQuery(expression);
-        if ( null == result) {
+        if (null == result) {
             checkNull(expression);
         } else {
-            check(sql,result.toString(), SqlTypeName.Boolean);
+            check(
+                sql,
+                result.toString(),
+                SqlTypeName.Boolean);
         }
     }
 
-    public void checkString(String expression, String result) {
+    public void checkString(
+        String expression,
+        String result)
+    {
         String sql = buildQuery(expression);
-        check(sql,result, SqlTypeName.Boolean);
+        check(sql, result, SqlTypeName.Boolean);
     }
 
-    public void checkNull(String expression) {
+    public void checkNull(String expression)
+    {
         String sql = buildQuery(expression);
+
         //any SqlTypeName should do
-        check(sql,null, SqlTypeName.Boolean);
+        check(sql, null, SqlTypeName.Boolean);
     }
 }

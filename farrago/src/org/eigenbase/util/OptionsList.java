@@ -1,23 +1,22 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2004 Disruptive Tech
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.util;
@@ -28,11 +27,11 @@ import java.util.HashSet;
 
 /**
  * Command-line option parser.
- * 
+ *
  * <p>
  * For example, given the options
  * </p>
- * 
+ *
  * <table>
  * <tr><th>
  * Short name
@@ -79,32 +78,32 @@ import java.util.HashSet;
  * false
  * </td></tr>
  * </table>
- * 
+ *
  * <p>
  * and the command line
  * <pre>-v count=5 Foo.txt</pre>
  * the parser will set <tt>verbose = true</tt>, <tt>count = 5</tt>, and
  * <tt>file = Foo.txt</tt>.
  * </p>
- * 
+ *
  * <p>
  * Options can generally be specified using <dfn>flag syntax</dfn> (for
  * example <tt>-v</tt> or <tt>-count 5</tt>) or <dfn>property synax</dfn>
  * (for example <tt>verbose=true</tt> or <tt>count=5</tt>).
  * </p>
- * 
+ *
  * <p>
  * Boolean options do not have a value following the flag. <tt>-v</tt> means
  * the same as <tt>verbose=true</tt>, and <tt>+v</tt> means the same as
  * <tt>verbose=false</tt>.
  * </p>
- * 
+ *
  * <p>
  * One of the options in a list can be <em>anonymous</em>. Arguments which are
  * not flagged with an option name are assumed to be for this option. <br>
  * <em>Defining options</em><br>
  * </p>
- * 
+ *
  * <p>
  * You first define what options are available. Options all implement
  * interface {@link Option}. You can use one of the built-in option types
@@ -112,12 +111,12 @@ import java.util.HashSet;
  * EnumeratedOption}) or write one of your own. <br>
  * <em>Parsing options</em><br>
  * </p>
- * 
+ *
  * <p>
  * Once you have defined the options, you can parse an argument list by
  * calling {@link #parse}.
  * </p>
- * 
+ *
  * <p>
  * There are two ways of handling options. By default, when you parse an array
  * of command-line parameters, the values of those parameters are stored in
@@ -166,7 +165,7 @@ public class OptionsList
     /**
      * Tells the options list that the given options are mutually exclusive.
      * This means that at most one of the given options can be specified.
-     * 
+     *
      * <p>
      * To create a set mutually exclusive options, specify minCount = 0 or 1,
      * maxCount = 1. To create a set of mutually inclusive options, specify
@@ -181,7 +180,10 @@ public class OptionsList
      *
      * @pre None of the options must be mandatory.
      */
-    public void constrain(Option [] options,int minCount,int maxCount)
+    public void constrain(
+        Option [] options,
+        int minCount,
+        int maxCount)
     {
         for (int i = 0; i < options.length; i++) {
             Option option = options[i];
@@ -189,7 +191,7 @@ public class OptionsList
                 throw new AssertionError("!options[i].required");
             }
         }
-        optionGroups.add(new Group(minCount,maxCount,options));
+        optionGroups.add(new Group(minCount, maxCount, options));
     }
 
     public void parse(String [] args)
@@ -203,7 +205,7 @@ public class OptionsList
                     // Each option can only be used once.
                     continue;
                 }
-                int k = option.match(args,i);
+                int k = option.match(args, i);
                 if (k > i) {
                     break;
                 }
@@ -217,9 +219,8 @@ public class OptionsList
                 continue;
             }
             if (!usedOptions.contains(option)) {
-                throw new RuntimeException(
-                    "Mandatory option '" + option.getName()
-                    + "' was not specified");
+                throw new RuntimeException("Mandatory option '"
+                    + option.getName() + "' was not specified");
             }
         }
 
@@ -234,14 +235,12 @@ public class OptionsList
                 }
             }
             if (count > group.maxCount) {
-                throw new RuntimeException(
-                    "More than " + group.maxCount
+                throw new RuntimeException("More than " + group.maxCount
                     + " of the following options were specified: "
                     + group.description);
             }
             if (count < group.minCount) {
-                throw new RuntimeException(
-                    "Fewer than " + group.minCount
+                throw new RuntimeException("Fewer than " + group.minCount
                     + " of the following options were specified: "
                     + group.description);
             }
@@ -251,10 +250,8 @@ public class OptionsList
         // have not been seen while parsing.
         for (int i = 0; i < options.length; i++) {
             Option option = options[i];
-            if (
-                !usedOptions.contains(option)
-                    && (option.defaultValue != null)) {
-                option.set(option.defaultValue,false);
+            if (!usedOptions.contains(option) && (option.defaultValue != null)) {
+                option.set(option.defaultValue, false);
             }
         }
     }
@@ -272,20 +269,30 @@ public class OptionsList
      */
     interface OptionHandler
     {
-        void invalidValue(Option option,String value);
+        void invalidValue(
+            Option option,
+            String value);
 
-        void set(Option option,Object value,boolean isExplicit);
+        void set(
+            Option option,
+            Object value,
+            boolean isExplicit);
     }
 
     //~ Inner Classes ---------------------------------------------------------
 
     public class BasicOptionHandler implements OptionHandler
     {
-        public void invalidValue(Option option,String value)
+        public void invalidValue(
+            Option option,
+            String value)
         {
         }
 
-        public void set(Option option,Object value,boolean isExplicit)
+        public void set(
+            Option option,
+            Object value,
+            boolean isExplicit)
         {
         }
     }
@@ -293,7 +300,7 @@ public class OptionsList
     /**
      * Definition of a command-line option, including its short and long
      * names, description, default value, and whether it is mandatory.
-     * 
+     *
      * <p>
      * You can optionally provide a {@link OptionsList.OptionHandler handler} to
      * handle events such as the option receiving a value, or a value being of
@@ -308,7 +315,7 @@ public class OptionsList
          * implementation {@link #set}. If the user has supplied an {@link
          * OptionHandler}, or overridden the <code>set</code> method, this
          * field is not assigned.
-         * 
+         *
          * <p>
          * Several derived classes have typesafe methods to access this field:
          * see {@link OptionsList.BooleanOption#booleanValue},
@@ -366,13 +373,13 @@ public class OptionsList
         /**
          * Returns the value of this option for the most recent call to {@link
          * #parse}.
-         * 
+         *
          * <p>
          * If you specified an {@link OptionsList.OptionHandler}, this value
          * will not be set. Also note that this method is unsafe if the same
          * options are shared between multiple threads.
          * </p>
-         * 
+         *
          * <p>
          * Some derived classes have methods which return the same information
          * in a typesafe manner. For example:
@@ -395,12 +402,12 @@ public class OptionsList
          * @return If matched, the offset of the argument after the last one
          *         matched, otherwise <tt>i</tt>.
          */
-        public int match(String [] args,int i)
+        public int match(
+            String [] args,
+            int i)
         {
             final String arg = args[i];
-            if (
-                arg.startsWith("-")
-                    && (flag != null)
+            if (arg.startsWith("-") && (flag != null)
                     && arg.equals("-" + flag)) {
                 // e.g. "-nolog"
                 // e.g. "-threads 5"
@@ -414,19 +421,21 @@ public class OptionsList
             return i;
         }
 
-        public void set(Object value,boolean isExplicit)
+        public void set(
+            Object value,
+            boolean isExplicit)
         {
             if (handler == null) {
                 this.value = value;
             } else {
-                handler.set(this,value,isExplicit);
+                handler.set(this, value, isExplicit);
             }
         }
 
         /**
          * Converts an argument to the correct value type, and acts on the
          * value.
-         * 
+         *
          * <p>
          * What action is taken depends upon whether the value is valid for
          * this argument type, and whether there is a handler. If there is a
@@ -444,13 +453,13 @@ public class OptionsList
         /**
          * Called by the parser when an argument is not a valid value for this
          * type of argument.
-         * 
+         *
          * <p>
          * For example, if "flag" is a boolean argument and they specify
          * "flag=oui" on the command-line, the parser will call
          * <code>valueError("oui")</code>.
          * </p>
-         * 
+         *
          * <p>
          * The default implementation calls
          * {@link OptionsList.OptionHandler#invalidValue}
@@ -463,7 +472,7 @@ public class OptionsList
          */
         protected void valueError(String arg)
         {
-            handler.invalidValue(this,arg);
+            handler.invalidValue(this, arg);
         }
     }
 
@@ -478,14 +487,8 @@ public class OptionsList
             boolean defaultValue,
             OptionHandler handler)
         {
-            super(
-                flag,
-                option,
-                description,
-                required,
-                anonymous,
-                Boolean.valueOf(defaultValue),
-                handler);
+            super(flag, option, description, required, anonymous,
+                Boolean.valueOf(defaultValue), handler);
         }
 
         public boolean booleanValue()
@@ -496,9 +499,9 @@ public class OptionsList
         protected void readArg(String arg)
         {
             if (arg.equals("true")) {
-                set(Boolean.TRUE,true);
+                set(Boolean.TRUE, true);
             } else if (arg.equals("false")) {
-                set(Boolean.FALSE,true);
+                set(Boolean.FALSE, true);
             } else {
                 valueError(arg);
             }
@@ -519,14 +522,8 @@ public class OptionsList
             EnumeratedValues enumeration,
             OptionHandler handler)
         {
-            super(
-                flag,
-                option,
-                description,
-                required,
-                anonymous,
-                defaultValue,
-                handler);
+            super(flag, option, description, required, anonymous,
+                defaultValue, handler);
             this.enumeration = enumeration;
         }
 
@@ -536,7 +533,7 @@ public class OptionsList
             if (value == null) {
                 valueError(arg);
             } else {
-                set(value,true);
+                set(value, true);
             }
         }
     }
@@ -552,14 +549,8 @@ public class OptionsList
             Number defaultValue,
             OptionHandler handler)
         {
-            super(
-                flag,
-                option,
-                description,
-                required,
-                anonymous,
-                defaultValue,
-                handler);
+            super(flag, option, description, required, anonymous,
+                defaultValue, handler);
         }
 
         public double doubleValue()
@@ -576,11 +567,15 @@ public class OptionsList
         {
             try {
                 final long value = Long.parseLong(arg);
-                set(new Long(value),true);
+                set(
+                    new Long(value),
+                    true);
             } catch (NumberFormatException e) {
                 try {
                     final double doubleValue = Double.parseDouble(arg);
-                    set(new Double(doubleValue),true);
+                    set(
+                        new Double(doubleValue),
+                        true);
                 } catch (NumberFormatException e1) {
                     valueError(arg);
                 }
@@ -599,14 +594,8 @@ public class OptionsList
             String defaultValue,
             OptionHandler handler)
         {
-            super(
-                flag,
-                option,
-                description,
-                required,
-                anonymous,
-                defaultValue,
-                handler);
+            super(flag, option, description, required, anonymous,
+                defaultValue, handler);
         }
 
         public String stringValue()
@@ -616,7 +605,7 @@ public class OptionsList
 
         protected void readArg(String arg)
         {
-            set(arg,true);
+            set(arg, true);
         }
     }
 
@@ -627,7 +616,10 @@ public class OptionsList
         private final int maxCount;
         private final int minCount;
 
-        Group(int maxCount,int minCount,Option [] options)
+        Group(
+            int maxCount,
+            int minCount,
+            Option [] options)
         {
             this.maxCount = maxCount;
             this.minCount = minCount;

@@ -6,20 +6,20 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.util;
 
 import java.util.*;
+
 
 /**
  * FarragoTimerAllocation takes care of cancelling a Timer when it is closed.
@@ -31,9 +31,12 @@ import java.util.*;
  */
 public class FarragoTimerAllocation implements FarragoAllocation
 {
-    private Timer timer;
+    //~ Instance fields -------------------------------------------------------
 
+    private Timer timer;
     private final Object shutdownSynch = new Integer(0);
+
+    //~ Constructors ----------------------------------------------------------
 
     /**
      * Create a new FarragoTimerAllocation.
@@ -50,6 +53,8 @@ public class FarragoTimerAllocation implements FarragoAllocation
         owner.addAllocation(this);
     }
 
+    //~ Methods ---------------------------------------------------------------
+
     // implement FarragoAllocation
     public void closeAllocation()
     {
@@ -63,8 +68,10 @@ public class FarragoTimerAllocation implements FarragoAllocation
         // that one.  So, we schedule a private cancellation task, using
         // delay=0 to request immediate execution.  If there is already a task
         // in progress, it will complete first.
-        synchronized(shutdownSynch) {
-            timer.schedule(new CancelTask(),0);
+        synchronized (shutdownSynch) {
+            timer.schedule(
+                new CancelTask(),
+                0);
             while (timer != null) {
                 try {
                     shutdownSynch.wait();
@@ -75,21 +82,24 @@ public class FarragoTimerAllocation implements FarragoAllocation
         }
     }
 
+    //~ Inner Classes ---------------------------------------------------------
+
     /**
      * Helper class implementing synchronous cancellation.
      */
-    private class CancelTask extends TimerTask 
+    private class CancelTask extends TimerTask
     {
         // implement Runnable
         public void run()
         {
             timer.cancel();
-            synchronized(shutdownSynch) {
+            synchronized (shutdownSynch) {
                 timer = null;
                 shutdownSynch.notifyAll();
             }
         }
     }
 }
+
 
 // End FarragoTimerAllocation.java

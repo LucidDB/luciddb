@@ -16,12 +16,11 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.type;
 
-import org.eigenbase.reltype.*;
-
 import java.sql.*;
+
+import org.eigenbase.reltype.*;
 
 
 /**
@@ -49,47 +48,55 @@ public class FarragoResultSetMetaData extends FarragoJdbcMetaDataImpl
     //~ Methods ---------------------------------------------------------------
 
     // implement ResultSetMetaData
-    public boolean isAutoIncrement(int column) throws SQLException
+    public boolean isAutoIncrement(int column)
+        throws SQLException
     {
         return false;
     }
 
     // implement ResultSetMetaData
-    public boolean isCaseSensitive(int column) throws SQLException
+    public boolean isCaseSensitive(int column)
+        throws SQLException
     {
         // TODO
         return false;
     }
 
     // implement ResultSetMetaData
-    public String getCatalogName(int column) throws SQLException
+    public String getCatalogName(int column)
+        throws SQLException
     {
         // TODO
         return "";
     }
 
     // implement ResultSetMetaData
-    public String getColumnClassName(int column) throws SQLException
+    public String getColumnClassName(int column)
+        throws SQLException
     {
         return getFieldClassName(column);
     }
 
     // implement ResultSetMetaData
-    public int getColumnCount() throws SQLException
+    public int getColumnCount()
+        throws SQLException
     {
         return getFieldCount();
     }
 
     // implement ResultSetMetaData
-    public int getColumnDisplaySize(int column) throws SQLException
+    public int getColumnDisplaySize(int column)
+        throws SQLException
     {
         int precision = getPrecision(column);
         int type = getColumnType(column);
-        switch(type) {
+        switch (type) {
         case Types.BOOLEAN:
+
             // 5 for max(strlen("true"),strlen("false"))
             return 5;
         case Types.DATE:
+
             // 10 for strlen("yyyy-mm-dd")
             return 10;
         case Types.TIME:
@@ -109,99 +116,115 @@ public class FarragoResultSetMetaData extends FarragoJdbcMetaDataImpl
                 return 20 + precision;
             }
         default:
+
             // TODO:  adjust for numeric formatting, etc.
             return precision;
         }
     }
 
     // implement ResultSetMetaData
-    public String getColumnLabel(int column) throws SQLException
+    public String getColumnLabel(int column)
+        throws SQLException
     {
         return getColumnName(column);
     }
 
     // implement ResultSetMetaData
-    public String getColumnName(int column) throws SQLException
+    public String getColumnName(int column)
+        throws SQLException
     {
         return getFieldName(column);
     }
 
     // implement ResultSetMetaData
-    public int getColumnType(int column) throws SQLException
+    public int getColumnType(int column)
+        throws SQLException
     {
         return getFieldType(column);
     }
 
     // implement ResultSetMetaData
-    public String getColumnTypeName(int column) throws SQLException
+    public String getColumnTypeName(int column)
+        throws SQLException
     {
         return getFieldTypeName(column);
     }
 
     // implement ResultSetMetaData
-    public boolean isCurrency(int column) throws SQLException
+    public boolean isCurrency(int column)
+        throws SQLException
     {
         return false;
     }
 
     // implement ResultSetMetaData
-    public boolean isDefinitelyWritable(int column) throws SQLException
+    public boolean isDefinitelyWritable(int column)
+        throws SQLException
     {
         return false;
     }
 
     // implement ResultSetMetaData
-    public int isNullable(int column) throws SQLException
+    public int isNullable(int column)
+        throws SQLException
     {
         return isFieldNullable(column);
     }
 
     // implement ResultSetMetaData
-    public int getPrecision(int column) throws SQLException
+    public int getPrecision(int column)
+        throws SQLException
     {
         return getFieldPrecision(column);
     }
 
     // implement ResultSetMetaData
-    public int getScale(int column) throws SQLException
+    public int getScale(int column)
+        throws SQLException
     {
         return getFieldScale(column);
     }
 
     // implement ResultSetMetaData
-    public boolean isReadOnly(int column) throws SQLException
+    public boolean isReadOnly(int column)
+        throws SQLException
     {
         return true;
     }
 
     // implement ResultSetMetaData
-    public String getSchemaName(int column) throws SQLException
+    public String getSchemaName(int column)
+        throws SQLException
     {
         // TODO
         return "";
     }
 
     // implement ResultSetMetaData
-    public boolean isSearchable(int column) throws SQLException
+    public boolean isSearchable(int column)
+        throws SQLException
     {
         return true;
     }
 
     // implement ResultSetMetaData
-    public boolean isSigned(int column) throws SQLException
+    public boolean isSigned(int column)
+        throws SQLException
     {
         return isFieldSigned(column);
     }
 
     // implement ResultSetMetaData
-    public String getTableName(int column) throws SQLException
+    public String getTableName(int column)
+        throws SQLException
     {
         // TODO
         return "";
     }
 
     // implement ResultSetMetaData
-    public boolean isWritable(int column) throws SQLException
+    public boolean isWritable(int column)
+        throws SQLException
     {
         return false;
     }

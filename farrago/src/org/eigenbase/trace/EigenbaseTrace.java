@@ -1,31 +1,33 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2004-2004 Disruptive Tech
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 package org.eigenbase.trace;
 
-import org.eigenbase.oj.stmt.OJStatement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.oj.stmt.OJStatement;
 import org.eigenbase.relopt.RelOptPlanner;
 
-import java.util.logging.Logger;
-import java.util.logging.Level;
 
 /**
  * Contains all of the {@link java.util.logging.Logger tracers} used within
@@ -52,7 +54,19 @@ import java.util.logging.Level;
  * @since May 24, 2004
  * @version $Id$
  **/
-public abstract class EigenbaseTrace {
+public abstract class EigenbaseTrace
+{
+    //~ Static fields/initializers --------------------------------------------
+
+    /**
+     * The "org.eigenbase.sql.parser" tracer reports parser events in
+     * {@link org.eigenbase.sql.parser.SqlParser} and
+     * other classes (at level {@link Level#FINE} or higher).
+     */
+    public static final Logger parserTracer = getParserTracer();
+
+    //~ Methods ---------------------------------------------------------------
+
     /**
      * The "org.eigenbase.relopt.RelOptPlanner" tracer prints the query
      * optimization process.
@@ -64,7 +78,8 @@ public abstract class EigenbaseTrace {
      * <li>{@link Level#FINEST} prints finer details like rule importances.
      * </ul>
      */
-    public static Logger getPlannerTracer() {
+    public static Logger getPlannerTracer()
+    {
         return Logger.getLogger(RelOptPlanner.class.getName());
     }
 
@@ -72,7 +87,8 @@ public abstract class EigenbaseTrace {
      * The "org.eigenbase.oj.OJStatement" tracer prints the generated
      * program at level {@link java.util.logging.Level#FINE} or higher.
      */
-    public static Logger getStatementTracer() {
+    public static Logger getStatementTracer()
+    {
         return Logger.getLogger(OJStatement.class.getName());
     }
 
@@ -80,21 +96,16 @@ public abstract class EigenbaseTrace {
      * The "org.eigenbase.oj.rel.JavaRelImplementor" tracer reports
      * when expressions are bound to variables ({@link Level#FINE})
      */
-    public static Logger getRelImplementorTracer() {
+    public static Logger getRelImplementorTracer()
+    {
         return Logger.getLogger(JavaRelImplementor.class.getName());
     }
 
-    /**
-     * The "org.eigenbase.sql.parser" tracer reports parser events in
-     * {@link org.eigenbase.sql.parser.SqlParser} and
-     * other classes (at level {@link Level#FINE} or higher).
-     */
-    public static final Logger parserTracer =
-            getParserTracer();
-
-    public static Logger getParserTracer() {
+    public static Logger getParserTracer()
+    {
         return Logger.getLogger("org.eigenbase.sql.parser");
     }
 }
+
 
 // End EigenbaseTrace.java

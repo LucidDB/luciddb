@@ -1,34 +1,34 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Farrago is a relational database management system.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package com.disruptivetech.farrago.volcano;
 
 import junit.framework.TestCase;
-import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
+
+import openjava.mop.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import openjava.mop.*;
+
 
 /**
  * A <code>VolcanoPlannerTest</code> is a unit-test for {@link VolcanoPlanner
@@ -40,18 +40,23 @@ import openjava.mop.*;
  */
 public class VolcanoPlannerTest extends TestCase
 {
+    //~ Static fields/initializers --------------------------------------------
+
     /**
      * Private calling convention representing a physical implementation.
      */
     private static final CallingConvention PHYS_CALLING_CONVENTION =
-        new CallingConvention(
-            "PHYS",
+        new CallingConvention("PHYS",
             CallingConvention.enumeration.getMax() + 1, RelNode.class);
+
+    //~ Constructors ----------------------------------------------------------
 
     public VolcanoPlannerTest(String name)
     {
         super(name);
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     private RelOptCluster newCluster(VolcanoPlanner planner)
     {
@@ -74,9 +79,11 @@ public class VolcanoPlannerTest extends TestCase
 
         planner.addRule(new PhysLeafRule());
 
-        NoneLeafRel leafRel = new NoneLeafRel(newCluster(planner),"a");
-        RelNode convertedRel = planner.changeConvention(
-            leafRel,PHYS_CALLING_CONVENTION);
+        NoneLeafRel leafRel = new NoneLeafRel(
+                newCluster(planner),
+                "a");
+        RelNode convertedRel =
+            planner.changeConvention(leafRel, PHYS_CALLING_CONVENTION);
         planner.setRoot(convertedRel);
         RelNode result = planner.chooseDelegate().findBestExp();
         assertTrue(result instanceof PhysLeafRel);
@@ -94,11 +101,15 @@ public class VolcanoPlannerTest extends TestCase
         planner.addRule(new PhysLeafRule());
         planner.addRule(new GoodSingleRule());
 
-        NoneLeafRel leafRel = new NoneLeafRel(newCluster(planner),"a");
-        NoneSingleRel singleRel = new NoneSingleRel(
-            leafRel.getCluster(),leafRel);
-        RelNode convertedRel = planner.changeConvention(
-            singleRel,PHYS_CALLING_CONVENTION);
+        NoneLeafRel leafRel = new NoneLeafRel(
+                newCluster(planner),
+                "a");
+        NoneSingleRel singleRel =
+            new NoneSingleRel(
+                leafRel.getCluster(),
+                leafRel);
+        RelNode convertedRel =
+            planner.changeConvention(singleRel, PHYS_CALLING_CONVENTION);
         planner.setRoot(convertedRel);
         RelNode result = planner.chooseDelegate().findBestExp();
         assertTrue(result instanceof PhysSingleRel);
@@ -117,11 +128,15 @@ public class VolcanoPlannerTest extends TestCase
         planner.addRule(new PhysLeafRule());
         planner.addRule(new BadSingleRule());
 
-        NoneLeafRel leafRel = new NoneLeafRel(newCluster(planner),"a");
-        NoneSingleRel singleRel = new NoneSingleRel(
-            leafRel.getCluster(),leafRel);
-        RelNode convertedRel = planner.changeConvention(
-            singleRel,PHYS_CALLING_CONVENTION);
+        NoneLeafRel leafRel = new NoneLeafRel(
+                newCluster(planner),
+                "a");
+        NoneSingleRel singleRel =
+            new NoneSingleRel(
+                leafRel.getCluster(),
+                leafRel);
+        RelNode convertedRel =
+            planner.changeConvention(singleRel, PHYS_CALLING_CONVENTION);
         planner.setRoot(convertedRel);
         RelNode result = planner.chooseDelegate().findBestExp();
         assertTrue(result instanceof PhysSingleRel);
@@ -143,31 +158,35 @@ public class VolcanoPlannerTest extends TestCase
         planner.addRule(new PhysProjectRule());
 
         planner.addRule(
-            new ConverterRule(
-                RelNode.class,
-                PHYS_CALLING_CONVENTION,
-                CallingConvention.ITERATOR,
-                "PhysToIteratorRule") {
+            new ConverterRule(RelNode.class, PHYS_CALLING_CONVENTION,
+                CallingConvention.ITERATOR, "PhysToIteratorRule") {
                 public RelNode convert(RelNode rel)
                 {
-                    return new PhysToIteratorConverter(rel.getCluster(),rel);
+                    return new PhysToIteratorConverter(
+                        rel.getCluster(),
+                        rel);
                 }
             });
 
-        PhysLeafRel leafRel = new PhysLeafRel(newCluster(planner),"a");
-        RexInputRef inputRef = new RexInputRef(
-            0,
-            leafRel.getRowType().getFields()[0].getType());
-        ProjectRel projectRel = new ProjectRel(
-            leafRel.getCluster(),
-            leafRel,
-            new RexNode[] {inputRef},
-            new String[] {"this"},
-            ProjectRel.Flags.Boxed);
-        NoneSingleRel singleRel = new NoneSingleRel(
-            projectRel.getCluster(),projectRel);
-        RelNode convertedRel = planner.changeConvention(
-            singleRel,CallingConvention.ITERATOR);
+        PhysLeafRel leafRel = new PhysLeafRel(
+                newCluster(planner),
+                "a");
+        RexInputRef inputRef =
+            new RexInputRef(0,
+                leafRel.getRowType().getFields()[0].getType());
+        ProjectRel projectRel =
+            new ProjectRel(
+                leafRel.getCluster(),
+                leafRel,
+                new RexNode [] { inputRef },
+                new String [] { "this" },
+                ProjectRel.Flags.Boxed);
+        NoneSingleRel singleRel =
+            new NoneSingleRel(
+                projectRel.getCluster(),
+                projectRel);
+        RelNode convertedRel =
+            planner.changeConvention(singleRel, CallingConvention.ITERATOR);
         planner.setRoot(convertedRel);
         RelNode result = planner.chooseDelegate().findBestExp();
         assertTrue(result instanceof PhysToIteratorConverter);
@@ -186,6 +205,8 @@ public class VolcanoPlannerTest extends TestCase
         removeTrivialProject(false);
     }
 
+    //~ Inner Classes ---------------------------------------------------------
+
     private static class TestEnvironment extends Environment
     {
         public String toString()
@@ -193,12 +214,16 @@ public class VolcanoPlannerTest extends TestCase
             return null;
         }
 
-        public void record(String name,OJClass clazz)
+        public void record(
+            String name,
+            OJClass clazz)
         {
             throw new AssertionError();
         }
 
-        public void bindVariable(String name,VariableInfo info)
+        public void bindVariable(
+            String name,
+            VariableInfo info)
         {
             throw new AssertionError();
         }
@@ -208,7 +233,9 @@ public class VolcanoPlannerTest extends TestCase
     {
         private String label;
 
-        protected TestLeafRel(RelOptCluster cluster,String label)
+        protected TestLeafRel(
+            RelOptCluster cluster,
+            String label)
         {
             super(cluster);
             this.label = label;
@@ -238,28 +265,25 @@ public class VolcanoPlannerTest extends TestCase
                 new RelDataType [] {
                     cluster.typeFactory.createJavaType(Void.TYPE)
                 },
-                new String [] {
-                    "this"
-                });
+                new String [] { "this" });
         }
 
         public void explain(RelOptPlanWriter pw)
         {
             pw.explain(
                 this,
-                new String [] {
-                    "label" },
-                new Object [] {
-                    label
-                });
+                new String [] { "label" },
+                new Object [] { label });
         }
     }
 
     private static abstract class TestSingleRel extends SingleRel
     {
-        protected TestSingleRel(RelOptCluster cluster,RelNode child)
+        protected TestSingleRel(
+            RelOptCluster cluster,
+            RelNode child)
         {
-            super(cluster,child);
+            super(cluster, child);
         }
 
         // implement RelNode
@@ -277,31 +301,37 @@ public class VolcanoPlannerTest extends TestCase
 
     private static class NoneSingleRel extends TestSingleRel
     {
-        protected NoneSingleRel(RelOptCluster cluster,RelNode child)
+        protected NoneSingleRel(
+            RelOptCluster cluster,
+            RelNode child)
         {
-            super(cluster,child);
+            super(cluster, child);
         }
 
         // implement RelNode
         public Object clone()
         {
-            return new NoneSingleRel(cluster,child);
+            return new NoneSingleRel(cluster, child);
         }
     }
 
     private static class NoneLeafRel extends TestLeafRel
     {
-        protected NoneLeafRel(RelOptCluster cluster,String label)
+        protected NoneLeafRel(
+            RelOptCluster cluster,
+            String label)
         {
-            super(cluster,label);
+            super(cluster, label);
         }
     }
 
     private static class PhysLeafRel extends TestLeafRel
     {
-        PhysLeafRel(RelOptCluster cluster,String label)
+        PhysLeafRel(
+            RelOptCluster cluster,
+            String label)
         {
-            super(cluster,label);
+            super(cluster, label);
         }
 
         // implement RelNode
@@ -319,9 +349,11 @@ public class VolcanoPlannerTest extends TestCase
 
     private static class PhysSingleRel extends TestSingleRel
     {
-        PhysSingleRel(RelOptCluster cluster,RelNode child)
+        PhysSingleRel(
+            RelOptCluster cluster,
+            RelNode child)
         {
-            super(cluster,child);
+            super(cluster, child);
         }
 
         // implement RelNode
@@ -339,15 +371,17 @@ public class VolcanoPlannerTest extends TestCase
         // implement RelNode
         public Object clone()
         {
-            return new PhysSingleRel(cluster,child);
+            return new PhysSingleRel(cluster, child);
         }
     }
 
     class PhysToIteratorConverter extends ConverterRel
     {
-        public PhysToIteratorConverter(RelOptCluster cluster,RelNode child)
+        public PhysToIteratorConverter(
+            RelOptCluster cluster,
+            RelNode child)
         {
-            super(cluster,child);
+            super(cluster, child);
         }
 
         // implement RelNode
@@ -359,7 +393,7 @@ public class VolcanoPlannerTest extends TestCase
         // implement RelNode
         public Object clone()
         {
-            return new PhysToIteratorConverter(cluster,child);
+            return new PhysToIteratorConverter(cluster, child);
         }
     }
 
@@ -367,10 +401,7 @@ public class VolcanoPlannerTest extends TestCase
     {
         PhysLeafRule()
         {
-            super(
-                new RelOptRuleOperand(
-                    NoneLeafRel.class,
-                    null));
+            super(new RelOptRuleOperand(NoneLeafRel.class, null));
         }
 
         // implement RelOptRule
@@ -384,7 +415,9 @@ public class VolcanoPlannerTest extends TestCase
         {
             NoneLeafRel leafRel = (NoneLeafRel) call.rels[0];
             call.transformTo(
-                new PhysLeafRel(leafRel.getCluster(),leafRel.getLabel()));
+                new PhysLeafRel(
+                    leafRel.getCluster(),
+                    leafRel.getLabel()));
         }
     }
 
@@ -392,13 +425,11 @@ public class VolcanoPlannerTest extends TestCase
     {
         GoodSingleRule()
         {
-            super(
-                new RelOptRuleOperand(
+            super(new RelOptRuleOperand(
                     NoneSingleRel.class,
-                    new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(
-                            RelNode.class,
-                            null)}));
+                    new RelOptRuleOperand [] {
+                        new RelOptRuleOperand(RelNode.class, null)
+                    }));
         }
 
         // implement RelOptRule
@@ -412,9 +443,11 @@ public class VolcanoPlannerTest extends TestCase
         {
             NoneSingleRel singleRel = (NoneSingleRel) call.rels[0];
             RelNode childRel = call.rels[1];
-            RelNode physInput = convert(childRel,PHYS_CALLING_CONVENTION);
+            RelNode physInput = convert(childRel, PHYS_CALLING_CONVENTION);
             call.transformTo(
-                new PhysSingleRel(singleRel.getCluster(),physInput));
+                new PhysSingleRel(
+                    singleRel.getCluster(),
+                    physInput));
         }
     }
 
@@ -425,13 +458,11 @@ public class VolcanoPlannerTest extends TestCase
     {
         BadSingleRule()
         {
-            super(
-                new RelOptRuleOperand(
+            super(new RelOptRuleOperand(
                     NoneSingleRel.class,
-                    new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(
-                            PhysLeafRel.class,
-                            null)}));
+                    new RelOptRuleOperand [] {
+                        new RelOptRuleOperand(PhysLeafRel.class, null)
+                    }));
         }
 
         // implement RelOptRule
@@ -445,9 +476,11 @@ public class VolcanoPlannerTest extends TestCase
         {
             NoneSingleRel singleRel = (NoneSingleRel) call.rels[0];
             RelNode childRel = call.rels[1];
-            RelNode physInput = convert(childRel,PHYS_CALLING_CONVENTION);
+            RelNode physInput = convert(childRel, PHYS_CALLING_CONVENTION);
             call.transformTo(
-                new PhysSingleRel(singleRel.getCluster(),physInput));
+                new PhysSingleRel(
+                    singleRel.getCluster(),
+                    physInput));
         }
     }
 
@@ -455,13 +488,11 @@ public class VolcanoPlannerTest extends TestCase
     {
         PhysProjectRule()
         {
-            super(
-                new RelOptRuleOperand(
+            super(new RelOptRuleOperand(
                     ProjectRel.class,
-                    new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(
-                            RelNode.class,
-                            null)}));
+                    new RelOptRuleOperand [] {
+                        new RelOptRuleOperand(RelNode.class, null)
+                    }));
         }
 
         // implement RelOptRule
@@ -474,10 +505,12 @@ public class VolcanoPlannerTest extends TestCase
         public void onMatch(RelOptRuleCall call)
         {
             RelNode childRel = call.rels[1];
-            call.transformTo(
-                new PhysLeafRel(childRel.getCluster(),"b"));
+            call.transformTo(new PhysLeafRel(
+                    childRel.getCluster(),
+                    "b"));
         }
     }
 }
+
 
 // End VolcanoPlannerTest.java

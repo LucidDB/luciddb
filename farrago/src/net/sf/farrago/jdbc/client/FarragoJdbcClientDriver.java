@@ -6,23 +6,23 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.jdbc.client;
-
-import net.sf.farrago.jdbc.*;
 
 import java.sql.*;
 import java.util.*;
+
+import net.sf.farrago.jdbc.*;
+
 
 /**
  * FarragoJdbcClientDriver implements the Farrago client side of
@@ -33,9 +33,13 @@ import java.util.*;
  */
 public class FarragoJdbcClientDriver extends FarragoAbstractJdbcDriver
 {
+    //~ Static fields/initializers --------------------------------------------
+
     static {
         new FarragoJdbcClientDriver().register();
     }
+
+    //~ Constructors ----------------------------------------------------------
 
     /**
      * Creates a new FarragoJdbcClientDriver object.
@@ -43,6 +47,8 @@ public class FarragoJdbcClientDriver extends FarragoAbstractJdbcDriver
     public FarragoJdbcClientDriver()
     {
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     /**
      * @return the prefix for JDBC URL's understood by this driver;
@@ -54,7 +60,9 @@ public class FarragoJdbcClientDriver extends FarragoAbstractJdbcDriver
     }
 
     // implement Driver
-    public Connection connect(String url,Properties info)
+    public Connection connect(
+        String url,
+        Properties info)
         throws SQLException
     {
         if (!acceptsURL(url)) {
@@ -67,7 +75,7 @@ public class FarragoJdbcClientDriver extends FarragoAbstractJdbcDriver
         } catch (Exception ex) {
             throw new SQLException(ex.getMessage());
         }
-        
+
         // transform the URL into a form understood by
         // RmiJdbc
         String urlRmi = url.substring(getUrlPrefix().length());
@@ -82,8 +90,9 @@ public class FarragoJdbcClientDriver extends FarragoAbstractJdbcDriver
         // NOTE:  can't call DriverManager.connect here, because that
         // would deadlock in the case where client and server are
         // running in the same VM
-        return rmiDriver.connect(urlRmi,info);
+        return rmiDriver.connect(urlRmi, info);
     }
 }
+
 
 // End FarragoJdbcClientDriver.java

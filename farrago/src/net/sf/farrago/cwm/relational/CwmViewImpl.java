@@ -17,28 +17,27 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.cwm.relational;
 
+import java.sql.*;
+import java.util.*;
+import java.util.logging.*;
+
+import javax.jmi.reflect.*;
+
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.ddl.*;
-import net.sf.farrago.util.*;
-import net.sf.farrago.trace.*;
-import net.sf.farrago.type.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.cwm.relational.enumerations.*;
-import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.trace.*;
+import net.sf.farrago.type.*;
+import net.sf.farrago.util.*;
 
 import org.eigenbase.reltype.*;
-
 import org.netbeans.mdr.handlers.*;
 import org.netbeans.mdr.storagemodel.*;
 
-import java.sql.*;
-import java.util.logging.*;
-import java.util.*;
-
-import javax.jmi.reflect.*;
 
 /**
  * CwmViewImpl is a custom implementation for CWM View.
@@ -46,9 +45,11 @@ import javax.jmi.reflect.*;
  * @author Kinkoi Lo
  * @version $Id$
  */
-public abstract class CwmViewImpl
-    extends InstanceHandler implements CwmView, DdlValidatedElement
+public abstract class CwmViewImpl extends InstanceHandler implements CwmView,
+    DdlValidatedElement
 {
+    //~ Static fields/initializers --------------------------------------------
+
     private static final Logger tracer = FarragoTrace.getCwmViewTracer();
 
     //~ Constructors ----------------------------------------------------------
@@ -66,12 +67,14 @@ public abstract class CwmViewImpl
     //~ Methods ---------------------------------------------------------------
 
     // implement DdlValidatedElement
-    public void validateDefinition(DdlValidator validator, boolean creation)
+    public void validateDefinition(
+        DdlValidator validator,
+        boolean creation)
     {
         if (!creation) {
             return;
         }
-        
+
         FarragoSession session = validator.newReentrantSession();
 
         try {
@@ -92,7 +95,8 @@ public abstract class CwmViewImpl
 
     private void validateImpl(
         DdlValidator validator,
-        FarragoSession session) throws SQLException
+        FarragoSession session)
+        throws SQLException
     {
         String sql = getQueryExpression().getBody();
 
@@ -102,9 +106,10 @@ public abstract class CwmViewImpl
 
         List columnList = getFeature();
         boolean implicitColumnNames = true;
-        
+
         if (columnList.size() != 0) {
             implicitColumnNames = false;
+
             // number of explicitly specified columns needs to match the number
             // of columns produced by the query
             if (metaData.getColumnCount() != columnList.size()) {
@@ -129,22 +134,24 @@ public abstract class CwmViewImpl
             } else {
                 column = (CwmColumn) columnList.get(i);
             }
-            typeFactory.convertFieldToCwmColumn(fields[i],column);
-            CwmColumnImpl.validateCommon(validator,column);
+            typeFactory.convertFieldToCwmColumn(fields[i], column);
+            CwmColumnImpl.validateCommon(validator, column);
         }
 
-        validator.validateUniqueNames(this, getFeature(), false);
+        validator.validateUniqueNames(
+            this,
+            getFeature(),
+            false);
 
         getQueryExpression().setBody(viewInfo.validatedSql);
 
-        validator.createDependency(
-            this,
-            viewInfo.dependencies,
-            "ViewUsage");
+        validator.createDependency(this, viewInfo.dependencies, "ViewUsage");
     }
 
     // implement DdlValidatedElement
-    public void validateDeletion(DdlValidator validator, boolean truncation)
+    public void validateDeletion(
+        DdlValidator validator,
+        boolean truncation)
     {
     }
 }

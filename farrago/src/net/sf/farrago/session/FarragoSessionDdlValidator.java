@@ -7,35 +7,34 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.session;
-
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.fennel.*;
-import net.sf.farrago.namespace.util.*;
-import net.sf.farrago.util.*;
-import net.sf.farrago.type.*;
-
-import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.cwm.datatypes.*;
-import net.sf.farrago.fem.med.*;
-
-import org.eigenbase.sql.*;
 
 import java.util.*;
 
 import javax.jmi.reflect.*;
+
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.datatypes.*;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fennel.*;
+import net.sf.farrago.namespace.util.*;
+import net.sf.farrago.type.*;
+import net.sf.farrago.util.*;
+
+import org.eigenbase.sql.*;
+
 
 // TODO:  use this interface everywhere
 
@@ -48,11 +47,13 @@ import javax.jmi.reflect.*;
  */
 public interface FarragoSessionDdlValidator extends FarragoAllocation
 {
+    //~ Methods ---------------------------------------------------------------
+
     /**
      * @return generic stmt validator
      */
     public FarragoSessionStmtValidator getStmtValidator();
-    
+
     /**
      * @return repos storing object definitions being validated
      */
@@ -62,28 +63,28 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
      * @return Handle to Fennel database accessed by this stmt
      */
     public FennelDbHandle getFennelDbHandle();
-    
+
     /**
      * @return type factory to be used for any type-checking during
      * validation
      */
     public FarragoTypeFactory getTypeFactory();
-    
+
     /**
      * @return the FarragoIndexMap to use for managing index storage
      */
     public FarragoIndexMap getIndexMap();
-    
+
     /**
      * @return cache for loaded data wrappers
      */
     public FarragoDataWrapperCache getDataWrapperCache();
-    
+
     /**
      * @return the FarragoSession which invoked this DDL
      */
     public FarragoSession getInvokingSession();
-    
+
     /**
      * @return the parser whose statement is being validated
      */
@@ -93,12 +94,12 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
      * @return default qualifiers to use
      */
     public FarragoSessionVariables getSessionVariables();
-    
+
     /**
      * @return is a DROP RESTRICT being executed?
      */
     public boolean isDropRestrict();
-    
+
     /**
      * Creates a new reentrant session; this is required during validation of
      * some DDL commands (e.g. view creation) for preparation or execution of
@@ -108,14 +109,14 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
      * session must be released by calling releaseReentrantSession
      */
     public FarragoSession newReentrantSession();
-    
+
     /**
      * Releases a FarragoSession acquired with newReentrantSession().
      *
      * @param session the session to release
      */
     public void releaseReentrantSession(FarragoSession session);
-    
+
     /**
      * Determines whether a catalog object is being deleted by this DDL
      * statement.
@@ -125,7 +126,7 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
      * @return true if refObject is being deleted
      */
     public boolean isDeletedObject(RefObject refObject);
-    
+
     /**
      * Determines whether a catalog object is being created by this DDL
      * statement.
@@ -135,7 +136,7 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
      * @return true if refObject is being created
      */
     public boolean isCreatedObject(RefObject refObject);
-    
+
     /**
      * Finds the parse position for an object affected by DDL.  Not all objects
      * have parse positions (e.g. when a table is dropped, referencing views
@@ -147,7 +148,7 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
      * null if the object was not encountered by parsing
      */
     public String getParserPosString(RefObject obj);
-    
+
     /**
      * Sets the name of a new object being defined, and adds the object to
      * the correct schema.
@@ -162,20 +163,20 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
         CwmSchema schema,
         CwmModelElement schemaElement,
         SqlIdentifier qualifiedName);
-    
+
     /**
      * Executes storage management commands for any DdlStoredElements
      * encountered during validation.
      */
     public void executeStorage();
-    
+
     /**
      * Schedules truncation of an existing object.
      *
      * @param modelElement to be truncated
      */
     public void scheduleTruncation(CwmModelElement modelElement);
-    
+
     /**
      * Validates all scheduled operations.  Validation may cause other objects
      * to be changed, so the process continues until a fixpoint is reached.
@@ -183,7 +184,7 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
      * @param ddlStmt DDL statement to be validated
      */
     public void validate(FarragoSessionDdlStmt ddlStmt);
-    
+
     /**
      * Determines whether all of the objects in a collection have distinct
      * names, throwing an appropriate exception if not.
@@ -200,7 +201,7 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
         CwmModelElement container,
         Collection collection,
         boolean includeType);
-    
+
     /**
      * Creates a new dependency.
      *
@@ -215,7 +216,7 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
         CwmNamespace client,
         Collection suppliers,
         String kind);
-    
+
     /**
      * Discards a data wrapper or server from the shared cache
      * (called when it is dropped).
@@ -224,5 +225,6 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
      */
     public void discardDataWrapper(CwmModelElement wrapper);
 }
+
 
 // End FarragoSessionDdlValidator.java

@@ -16,26 +16,25 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.ftrs;
+
+import java.util.*;
+import java.util.List;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.query.*;
-
-import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
-import org.eigenbase.rel.*;
-import org.eigenbase.util.*;
-
-import java.util.*;
-import java.util.List;
 
 import openjava.ptree.Literal;
+
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -61,7 +60,6 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
      * index.
      */
     final Integer [] projectedColumns;
-
     final boolean isOrderPreserving;
 
     //~ Constructors ----------------------------------------------------------
@@ -86,7 +84,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
         Integer [] projectedColumns,
         boolean isOrderPreserving)
     {
-        super(cluster,ftrsTable,connection);
+        super(cluster, ftrsTable, connection);
         this.ftrsTable = ftrsTable;
         this.index = index;
         this.projectedColumns = projectedColumns;
@@ -108,8 +106,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
         if (projectedColumns != null) {
             columnOrdinal = projectedColumns[columnOrdinal].intValue();
         }
-        return (CwmColumn) ftrsTable.getCwmColumnSet().getFeature().get(
-            columnOrdinal);
+        return (CwmColumn) ftrsTable.getCwmColumnSet().getFeature().get(columnOrdinal);
     }
 
     // implement RelNode
@@ -127,7 +124,9 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        return computeCost(planner,getRows());
+        return computeCost(
+            planner,
+            getRows());
     }
 
     // implement RelNode
@@ -170,12 +169,10 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
         }
         pw.explain(
             this,
-            new String [] {
-                "table","projection","index","preserveOrder" },
+            new String [] { "table", "projection", "index", "preserveOrder" },
             new Object [] {
-                Arrays.asList(ftrsTable.getQualifiedName()),
-                projection,index.getName(),
-                Boolean.valueOf(isOrderPreserving)
+                Arrays.asList(ftrsTable.getQualifiedName()), projection,
+                index.getName(), Boolean.valueOf(isOrderPreserving)
             });
     }
 
@@ -189,8 +186,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
     {
         FarragoRepos repos = getPreparingStmt().getRepos();
 
-        FemIndexScanDef scanStream =
-            repos.newFemIndexScanDef();
+        FemIndexScanDef scanStream = repos.newFemIndexScanDef();
 
         defineScanStream(scanStream);
 
@@ -198,7 +194,9 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
     }
 
     // implement RelNode
-    RelOptCost computeCost(RelOptPlanner planner,double dRows)
+    RelOptCost computeCost(
+        RelOptPlanner planner,
+        double dRows)
     {
         // TODO:  compute page-based I/O cost
         // CPU cost is proportional to number of columns projected
@@ -209,11 +207,11 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
         int nIndexCols =
             repos.isClustered(index)
             ? ftrsTable.getCwmColumnSet().getFeature().size()
-            : FtrsUtil.getUnclusteredCoverageColList(repos,index).size();
+            : FtrsUtil.getUnclusteredCoverageColList(repos, index).size();
 
         double dIo = dRows * nIndexCols;
 
-        return planner.makeCost(dRows,dCpu,dIo);
+        return planner.makeCost(dRows, dCpu, dIo);
     }
 
     /**
@@ -234,18 +232,14 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
             // the plan.
             scanStream.setRootPageId(-1);
         }
-        scanStream.setSegmentId(
-            FtrsDataServer.getIndexSegmentId(index));
-        scanStream.setIndexId(
-            JmiUtil.getObjectId(index));
+        scanStream.setSegmentId(FtrsDataServer.getIndexSegmentId(index));
+        scanStream.setIndexId(JmiUtil.getObjectId(index));
 
         scanStream.setTupleDesc(
             FtrsUtil.getCoverageTupleDescriptor(
-                (FarragoTypeFactory) cluster.typeFactory,
-                index));
+                (FarragoTypeFactory) cluster.typeFactory, index));
 
-        scanStream.setKeyProj(
-            FtrsUtil.getDistinctKeyProjection(repos,index));
+        scanStream.setKeyProj(FtrsUtil.getDistinctKeyProjection(repos, index));
 
         Integer [] projection = computeProjectedColumns();
         Integer [] indexProjection;
@@ -257,7 +251,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
             indexProjection = new Integer[projection.length];
             List indexTableColList =
                 Arrays.asList(
-                    FtrsUtil.getUnclusteredCoverageArray(repos,index));
+                    FtrsUtil.getUnclusteredCoverageArray(repos, index));
             for (int i = 0; i < projection.length; ++i) {
                 Integer iTableCol = projection[i];
                 int iIndexCol = indexTableColList.indexOf(iTableCol);
@@ -267,7 +261,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
         }
 
         scanStream.setOutputProj(
-            FennelRelUtil.createTupleProjection(repos,indexProjection));
+            FennelRelUtil.createTupleProjection(repos, indexProjection));
     }
 
     private Integer [] computeProjectedColumns()
@@ -282,9 +276,10 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
     // implement FennelRel
     public RelFieldCollation [] getCollations()
     {
-        Integer [] indexedCols = FtrsUtil.getCollationKeyArray(
-            getPreparingStmt().getRepos(),
-            index);
+        Integer [] indexedCols =
+            FtrsUtil.getCollationKeyArray(
+                getPreparingStmt().getRepos(),
+                index);
         List collationList = new ArrayList();
         for (int i = 0; i < indexedCols.length; ++i) {
             int iCol = indexedCols[i].intValue();
@@ -304,8 +299,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
             }
             collationList.add(collation);
         }
-        return (RelFieldCollation []) collationList.toArray(
-            RelFieldCollation.emptyCollationArray);
+        return (RelFieldCollation []) collationList.toArray(RelFieldCollation.emptyCollationArray);
     }
 }
 

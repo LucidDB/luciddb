@@ -17,7 +17,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.query;
 
 import net.sf.farrago.catalog.*;
@@ -44,9 +43,11 @@ public abstract class FennelSingleRel extends SingleRel implements FennelRel
      * @param cluster RelOptCluster for this rel
      * @param child input rel
      */
-    protected FennelSingleRel(RelOptCluster cluster,RelNode child)
+    protected FennelSingleRel(
+        RelOptCluster cluster,
+        RelNode child)
     {
-        super(cluster,child);
+        super(cluster, child);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -92,7 +93,8 @@ public abstract class FennelSingleRel extends SingleRel implements FennelRel
     }
 
     // implement FennelRel
-    public Object implementFennelChild(FennelRelImplementor implementor) {
+    public Object implementFennelChild(FennelRelImplementor implementor)
+    {
         return implementor.visitChild(this, 0, child);
     }
 }

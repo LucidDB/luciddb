@@ -1,31 +1,30 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.util;
 
-import junit.framework.TestCase;
-
 import java.util.Comparator;
 import java.util.NoSuchElementException;
+
+import junit.framework.TestCase;
 
 
 /**
@@ -48,7 +47,9 @@ public class BinaryHeap
 
     //~ Constructors ----------------------------------------------------------
 
-    public BinaryHeap(boolean isMin,Comparator comparator)
+    public BinaryHeap(
+        boolean isMin,
+        Comparator comparator)
     {
         if (isMin) {
             this.comparator = comparator;
@@ -56,9 +57,11 @@ public class BinaryHeap
             final Comparator comparator1 = comparator;
             this.comparator =
                 new Comparator() {
-                        public int compare(Object o1,Object o2)
+                        public int compare(
+                            Object o1,
+                            Object o2)
                         {
-                            return comparator1.compare(o2,o1);
+                            return comparator1.compare(o2, o1);
                         }
                     };
         }
@@ -86,7 +89,8 @@ public class BinaryHeap
         percolateUp(count);
     }
 
-    public Object peek() throws NoSuchElementException
+    public Object peek()
+        throws NoSuchElementException
     {
         if (count < 1) {
             throw new NoSuchElementException();
@@ -95,7 +99,8 @@ public class BinaryHeap
         }
     }
 
-    public Object pop() throws NoSuchElementException
+    public Object pop()
+        throws NoSuchElementException
     {
         Object o = peek();
         elements[1] = elements[count--];
@@ -128,7 +133,7 @@ public class BinaryHeap
         int newSize = (elements.length * 2) + 3;
         Object [] oldElements = elements;
         elements = new Object[newSize];
-        System.arraycopy(oldElements,1,elements,1,oldElements.length - 1);
+        System.arraycopy(oldElements, 1, elements, 1, oldElements.length - 1);
     }
 
     /**
@@ -157,7 +162,7 @@ public class BinaryHeap
                 return;
             } else if ((i2 + 1) > count) {
                 final Object o2 = elements[i2];
-                if (comparator.compare(o,o2) > 0) {
+                if (comparator.compare(o, o2) > 0) {
                     elements[i] = o2;
                     elements[i2] = o;
                 }
@@ -167,11 +172,11 @@ public class BinaryHeap
                 final Object o3 = elements[i2 + 1];
 
                 // compare with the smaller of [i2], [i2+1]
-                if (comparator.compare(o2,o3) > 0) {
+                if (comparator.compare(o2, o3) > 0) {
                     i2++;
                     o2 = o3;
                 }
-                if (comparator.compare(o,o2) > 0) {
+                if (comparator.compare(o, o2) > 0) {
                     elements[i] = o2;
                     elements[i2] = o;
                     i = i2;
@@ -190,7 +195,7 @@ public class BinaryHeap
         while ((i2 = i / 2) > 0) {
             Object o = elements[i];
             Object o2 = elements[i2];
-            if (comparator.compare(o,o2) >= 0) {
+            if (comparator.compare(o, o2) >= 0) {
                 // 'o' is greater than or equal to its parent, so the heap
                 // property is satisfied, and we can stop
                 return;
@@ -216,12 +221,13 @@ public class BinaryHeap
         public void test()
         {
             final String [] a =
-            { "3","1","4","1","5","9","2","6","5","3","5" };
+            { "3", "1", "4", "1", "5", "9", "2", "6", "5", "3", "5" };
             final BinaryHeap heap =
-                new BinaryHeap(
-                    true,
+                new BinaryHeap(true,
                     new Comparator() {
-                        public int compare(Object o1,Object o2)
+                        public int compare(
+                            Object o1,
+                            Object o2)
                         {
                             return ((Comparable) o1).compareTo(o2);
                         }
@@ -246,16 +252,17 @@ public class BinaryHeap
             }
             validate(heap);
             final String actual = buf.toString();
-            assertEquals("123345569",actual);
+            assertEquals("123345569", actual);
         }
 
         public void testMax()
         {
             BinaryHeap heap =
-                new BinaryHeap(
-                    false,
+                new BinaryHeap(false,
                     new Comparator() {
-                        public int compare(Object o1,Object o2)
+                        public int compare(
+                            Object o1,
+                            Object o2)
                         {
                             return ((Comparable) o1).compareTo(o2);
                         }
@@ -264,10 +271,18 @@ public class BinaryHeap
             heap.insert("sage");
             heap.insert("rosemary");
             heap.insert("thyme");
-            assertEquals("thyme",heap.pop());
-            assertEquals("sage",heap.pop());
-            assertEquals("rosemary",heap.pop());
-            assertEquals("parsley",heap.pop());
+            assertEquals(
+                "thyme",
+                heap.pop());
+            assertEquals(
+                "sage",
+                heap.pop());
+            assertEquals(
+                "rosemary",
+                heap.pop());
+            assertEquals(
+                "parsley",
+                heap.pop());
             assertTrue(heap.isEmpty());
         }
 
@@ -280,7 +295,7 @@ public class BinaryHeap
                 int parent = i / 2;
                 if (parent > 0) {
                     final int c =
-                        heap.comparator.compare(heap.elements[parent],element);
+                        heap.comparator.compare(heap.elements[parent], element);
                     assertTrue(c <= 0);
                 }
             }

@@ -19,9 +19,11 @@
 package net.sf.farrago.query;
 
 import net.sf.farrago.fem.fennel.FemExecutionStreamDef;
-import org.eigenbase.relopt.RelImplementor;
+
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.relopt.RelImplementor;
 import org.eigenbase.reltype.RelDataType;
+
 
 /**
  * Callback used to hold state while converting a tree of {@link FennelRel}
@@ -33,7 +35,10 @@ import org.eigenbase.reltype.RelDataType;
  * @since May 24, 2004
  * @version $Id$
  **/
-public interface FennelRelImplementor extends RelImplementor {
+public interface FennelRelImplementor extends RelImplementor
+{
+    //~ Methods ---------------------------------------------------------------
+
     /**
      * Converts a relational expression into a plan by calling its
      * {@link FennelRel#toStreamDef} method.
@@ -58,5 +63,6 @@ public interface FennelRelImplementor extends RelImplementor {
         RelNode rel,
         RelDataType rowType);
 }
+
 
 // End FennelRelImplementor.java

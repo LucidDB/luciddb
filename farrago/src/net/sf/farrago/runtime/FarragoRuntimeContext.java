@@ -7,37 +7,38 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.runtime;
 
-import org.eigenbase.relopt.*;
-import net.sf.farrago.fennel.*;
+import java.util.*;
+
+import javax.jmi.reflect.*;
+
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.catalog.*;
+import net.sf.farrago.fennel.*;
+import net.sf.farrago.namespace.*;
+import net.sf.farrago.namespace.util.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.resource.*;
-import net.sf.farrago.session.*;
-import net.sf.farrago.namespace.*;
-import net.sf.farrago.namespace.util.*;
 
+import org.eigenbase.relopt.*;
 import org.eigenbase.util.*;
 
-import java.util.*;
-import javax.jmi.reflect.*;
 
 /**
  * FarragoRuntimeContext defines runtime support routines needed by generated
@@ -46,41 +47,33 @@ import javax.jmi.reflect.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoRuntimeContext
-    extends FarragoCompoundAllocation
+public class FarragoRuntimeContext extends FarragoCompoundAllocation
     implements FarragoSessionRuntimeContext,
         RelOptConnection,
         FennelJavaStreamMap
 {
+    //~ Instance fields -------------------------------------------------------
+
     private FarragoRepos repos;
-
     private FarragoObjectCache codeCache;
-
     private Map txnCodeCache;
-
     private FennelTxnContext fennelTxnContext;
-
     private Map streamIdToHandleMap = new HashMap();
-
     private Object [] dynamicParamValues;
-
     private FarragoCompoundAllocation streamOwner;
-
     private FarragoIndexMap indexMap;
-
     private FarragoSessionVariables sessionVariables;
-
     private FarragoDataWrapperCache dataWrapperCache;
-
     private FennelStreamGraph streamGraph;
+
+    //~ Constructors ----------------------------------------------------------
 
     /**
      * Create a new FarragoRuntimeContext.
      *
      * @param params constructor params
      */
-    public FarragoRuntimeContext(
-        FarragoSessionRuntimeParams params)
+    public FarragoRuntimeContext(FarragoSessionRuntimeParams params)
     {
         this.repos = params.repos;
         this.codeCache = params.codeCache;
@@ -90,14 +83,17 @@ public class FarragoRuntimeContext
         this.dynamicParamValues = params.dynamicParamValues;
         this.sessionVariables = params.sessionVariables;
 
-        dataWrapperCache = new FarragoDataWrapperCache(
-            this,
-            params.sharedDataWrapperCache,
-            params.repos,
-            params.fennelTxnContext.getFennelDbHandle());
+        dataWrapperCache =
+            new FarragoDataWrapperCache(
+                this,
+                params.sharedDataWrapperCache,
+                params.repos,
+                params.fennelTxnContext.getFennelDbHandle());
 
         streamOwner = new StreamOwner();
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     // implement RelOptConnection
     public RelOptSchema getRelOptSchema()
@@ -112,13 +108,15 @@ public class FarragoRuntimeContext
         streamOwner.closeAllocation();
         super.closeAllocation();
     }
-    
+
     // implement RelOptConnection
-    public Object contentsAsArray(String qualifier,String tableName)
+    public Object contentsAsArray(
+        String qualifier,
+        String tableName)
     {
         throw new AssertionError();
     }
-    
+
     /**
      * Get an object needed to support the implementation of foreign
      * data access.
@@ -133,10 +131,10 @@ public class FarragoRuntimeContext
         String serverMofId,
         Object param)
     {
-        FemDataServerImpl femServer = (FemDataServerImpl)
-            repos.getMdrRepos().getByMofId(serverMofId);
+        FemDataServerImpl femServer =
+            (FemDataServerImpl) repos.getMdrRepos().getByMofId(serverMofId);
 
-        FarragoMedDataServer server = 
+        FarragoMedDataServer server =
             femServer.loadFromCache(dataWrapperCache);
         try {
             Object obj = server.getRuntimeSupport(param);
@@ -187,7 +185,7 @@ public class FarragoRuntimeContext
     {
         return sessionVariables.currentUserName;
     }
-    
+
     /**
      * Called from generated code.
      *
@@ -197,7 +195,7 @@ public class FarragoRuntimeContext
     {
         return sessionVariables.currentUserName;
     }
-    
+
     /**
      * Called from generated code.
      *
@@ -207,7 +205,7 @@ public class FarragoRuntimeContext
     {
         return sessionVariables.systemUserName;
     }
-    
+
     /**
      * Called from generated code.
      *
@@ -217,7 +215,7 @@ public class FarragoRuntimeContext
     {
         return sessionVariables.sessionUserName;
     }
-    
+
     /**
      * Create a JavaTupleStream (for feeding the results of an Iterator to
      * Fennel) and store it in a handle.  This is called at execution from
@@ -238,13 +236,12 @@ public class FarragoRuntimeContext
             return null;
         }
 
-        JavaTupleStream stream = new JavaTupleStream(tupleWriter,iter);
+        JavaTupleStream stream = new JavaTupleStream(tupleWriter, iter);
 
         streamIdToHandleMap.put(
             new Integer(streamId),
-            getFennelDbHandle().allocateNewObjectHandle(
-                this,stream));
-                
+            getFennelDbHandle().allocateNewObjectHandle(this, stream));
+
         return null;
     }
 
@@ -255,38 +252,40 @@ public class FarragoRuntimeContext
      * @param dummy2 another dummy
      * @return yet another dummy
      */
-    public Object dummyPair(Object dummy1,Object dummy2)
+    public Object dummyPair(
+        Object dummy1,
+        Object dummy2)
     {
-        assert(dummy1 == null);
-        assert(dummy2 == null);
+        assert (dummy1 == null);
+        assert (dummy2 == null);
         return null;
     }
 
     // implement FarragoSessionRuntimeContext
     public void loadFennelPlan(final String xmiFennelPlan)
     {
-        assert(streamGraph == null);
-        
-        FarragoObjectCache.CachedObjectFactory streamFactory = new
-            FarragoObjectCache.CachedObjectFactory()
-            {
+        assert (streamGraph == null);
+
+        FarragoObjectCache.CachedObjectFactory streamFactory =
+            new FarragoObjectCache.CachedObjectFactory() {
                 public void initializeEntry(
                     Object key,
                     FarragoObjectCache.UninitializedEntry entry)
                 {
-                    assert(key.equals(xmiFennelPlan));
+                    assert (key.equals(xmiFennelPlan));
                     streamGraph = prepareStreamGraph(xmiFennelPlan);
+
                     // TODO:  proper memory accounting
-                    long memUsage = FarragoUtil.getStringMemoryUsage(
-                        xmiFennelPlan);
-                    entry.initialize(streamGraph,memUsage);
+                    long memUsage =
+                        FarragoUtil.getStringMemoryUsage(xmiFennelPlan);
+                    entry.initialize(streamGraph, memUsage);
                 }
             };
 
         FarragoObjectCache.Entry cacheEntry = null;
         if (txnCodeCache != null) {
-            cacheEntry = (FarragoObjectCache.Entry)
-                txnCodeCache.get(xmiFennelPlan);
+            cacheEntry =
+                (FarragoObjectCache.Entry) txnCodeCache.get(xmiFennelPlan);
         }
         if (cacheEntry == null) {
             // NOTE jvs 15-July-2004:  to avoid deadlock, grab the catalog
@@ -294,8 +293,7 @@ public class FarragoRuntimeContext
             // order used by statement preparation)
             repos.beginTransientTxn();
             try {
-                cacheEntry =
-                    codeCache.pin(xmiFennelPlan,streamFactory,true);
+                cacheEntry = codeCache.pin(xmiFennelPlan, streamFactory, true);
             } finally {
                 repos.endTransientTxn();
             }
@@ -304,7 +302,7 @@ public class FarragoRuntimeContext
         if (txnCodeCache == null) {
             addAllocation(cacheEntry);
         } else {
-            txnCodeCache.put(xmiFennelPlan,cacheEntry);
+            txnCodeCache.put(xmiFennelPlan, cacheEntry);
         }
 
         if (streamGraph == null) {
@@ -316,8 +314,8 @@ public class FarragoRuntimeContext
     // implement FarragoSessionRuntimeContext
     public void openStreams()
     {
-        assert(streamGraph != null);
-        streamGraph.open(fennelTxnContext,this);
+        assert (streamGraph != null);
+        streamGraph.open(fennelTxnContext, this);
     }
 
     /**
@@ -342,10 +340,10 @@ public class FarragoRuntimeContext
         }
 
         assert (dummies == null);
-        assert(streamGraph != null);
+        assert (streamGraph != null);
 
         FennelStreamHandle streamHandle = getStreamHandle(streamName);
-        
+
         return new FennelIterator(
             tupleReader,
             streamGraph,
@@ -353,12 +351,11 @@ public class FarragoRuntimeContext
             repos.getCurrentConfig().getFennelConfig().getCachePageSize());
     }
 
-    protected FennelStreamHandle getStreamHandle(
-        String globalStreamName)
+    protected FennelStreamHandle getStreamHandle(String globalStreamName)
     {
         repos.beginReposTxn(true);
         try {
-            return streamGraph.findStream(repos,globalStreamName);
+            return streamGraph.findStream(repos, globalStreamName);
         } finally {
             repos.endReposTxn(false);
         }
@@ -369,12 +366,12 @@ public class FarragoRuntimeContext
         boolean success = false;
         FennelStreamGraph newStreamGraph = null;
         try {
-            Collection collection = JmiUtil.importFromXmiString(
-                repos.transientFarragoPackage,xmiFennelPlan);
+            Collection collection =
+                JmiUtil.importFromXmiString(repos.transientFarragoPackage,
+                    xmiFennelPlan);
             assert (collection.size() == 1);
             FemCmdPrepareExecutionStreamGraph cmd =
-                (FemCmdPrepareExecutionStreamGraph)
-                collection.iterator().next();
+                (FemCmdPrepareExecutionStreamGraph) collection.iterator().next();
 
             newStreamGraph = fennelTxnContext.newStreamGraph(streamOwner);
             cmd.setStreamGraphHandle(newStreamGraph.getStreamGraphHandle());
@@ -391,9 +388,9 @@ public class FarragoRuntimeContext
     // implement FennelJavaStreamMap
     public long getJavaStreamHandle(int streamId)
     {
-        FennelJavaHandle handle = (FennelJavaHandle)
-            streamIdToHandleMap.get(new Integer(streamId));
-        assert(handle != null);
+        FennelJavaHandle handle =
+            (FennelJavaHandle) streamIdToHandleMap.get(new Integer(streamId));
+        assert (handle != null);
         return handle.getLongHandle();
     }
 
@@ -403,7 +400,7 @@ public class FarragoRuntimeContext
         CwmSqlindex index = indexMap.getIndexById(pageOwnerId);
         return indexMap.getIndexRoot(index);
     }
-    
+
     /**
      * .
      *
@@ -426,17 +423,19 @@ public class FarragoRuntimeContext
         }
     }
 
-     /**
-     * Called when a nullable value is cast to a NOT NULL type.
-     *
-     * @param obj source value
-     */
+    /**
+    * Called when a nullable value is cast to a NOT NULL type.
+    *
+    * @param obj source value
+    */
     public void checkNotNull(Object obj)
     {
         if (null == obj) {
             throw FarragoResource.instance().newNullNotAllowed();
         }
     }
+
+    //~ Inner Classes ---------------------------------------------------------
 
     /**
      * Inner class for taking care of closing streams without deallocating
@@ -449,13 +448,14 @@ public class FarragoRuntimeContext
             // traverse in reverse order
             ListIterator iter = allocations.listIterator(allocations.size());
             while (iter.hasPrevious()) {
-                FennelStreamGraph streamGraph = (FennelStreamGraph)
-                    iter.previous();
+                FennelStreamGraph streamGraph =
+                    (FennelStreamGraph) iter.previous();
                 streamGraph.close();
             }
             allocations.clear();
         }
     }
 }
+
 
 // End FarragoRuntimeContext.java

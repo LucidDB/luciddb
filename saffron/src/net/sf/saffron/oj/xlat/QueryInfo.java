@@ -1,40 +1,33 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package net.sf.saffron.oj.xlat;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataTypeFactoryImpl;
-import net.sf.saffron.trace.SaffronTrace;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import net.sf.saffron.oj.rel.ExpressionReaderRel;
-import org.eigenbase.oj.util.JavaRexBuilder;
-import org.eigenbase.oj.util.OJUtil;
-import org.eigenbase.relopt.RelOptUtil;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptQuery;
-import org.eigenbase.rel.*;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.util.Util;
+import net.sf.saffron.trace.SaffronTrace;
+
 import openjava.mop.Environment;
 import openjava.mop.OJClass;
 import openjava.mop.QueryEnvironment;
@@ -42,11 +35,17 @@ import openjava.mop.Toolbox;
 import openjava.ptree.*;
 import openjava.tools.parser.ParserConstants;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.eigenbase.oj.util.JavaRexBuilder;
+import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelOptQuery;
+import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.RelDataTypeFactoryImpl;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -63,8 +62,6 @@ import java.util.logging.Logger;
  */
 class QueryInfo
 {
-    //~ Instance fields -------------------------------------------------------
-
     ArrayList leaves = new ArrayList();
     Environment env;
     OJQueryExpander expander;
@@ -72,10 +69,7 @@ class QueryInfo
     RelOptCluster cluster;
     private RelNode root;
     final JavaRexBuilder rexBuilder;
-
     private static final Logger tracer = SaffronTrace.getQueryExpanderTracer();
-
-    //~ Constructors ----------------------------------------------------------
 
     /**
      * Creates a <code>QueryInfo</code>
@@ -92,14 +86,14 @@ class QueryInfo
         this.parent = parent;
         this.env = env;
         this.expander = expander;
-        this.cluster = createCluster(parent,env.getParent());
+        this.cluster = createCluster(
+                parent,
+                env.getParent());
         this.rexBuilder = (JavaRexBuilder) cluster.rexBuilder;
         if (exp != null) {
-            cluster.originalExpression = rexBuilder.makeJava(env,exp);
+            cluster.originalExpression = rexBuilder.makeJava(env, exp);
         }
     }
-
-    //~ Methods ---------------------------------------------------------------
 
     /**
      * Translates an expression into one which references only internal
@@ -111,14 +105,17 @@ class QueryInfo
      */
     public RexNode convertExpToInternal(Expression exp)
     {
-        return convertExpToInternal(exp,new RelNode [] { getRoot() });
+        return convertExpToInternal(
+            exp,
+            new RelNode [] { getRoot() });
     }
 
     public RexNode convertExpToInternal(
         Expression exp,
         RelNode [] inputs)
     {
-        InternalTranslator translator = new InternalTranslator(this,inputs,rexBuilder);
+        InternalTranslator translator =
+            new InternalTranslator(this, inputs, rexBuilder);
         return translator.go(exp);
     }
 
@@ -143,12 +140,8 @@ class QueryInfo
         ArrayList aggCallVector)
     {
         AggInternalTranslator translator =
-            new AggInternalTranslator(
-                this,
-                new RelNode [] { getRoot() },
-                groups,
-                aggInputList,
-                aggCallVector, rexBuilder);
+            new AggInternalTranslator(this, new RelNode [] { getRoot() },
+                groups, aggInputList, aggCallVector, rexBuilder);
         RexNode translated;
         try {
             translated = translator.go(exp);
@@ -159,7 +152,9 @@ class QueryInfo
         return translator.unpickle(translated);
     }
 
-    static RelOptCluster createCluster(QueryInfo queryInfo,Environment env)
+    static RelOptCluster createCluster(
+        QueryInfo queryInfo,
+        Environment env)
     {
         RelOptQuery query;
         if (queryInfo == null) {
@@ -222,9 +217,9 @@ class QueryInfo
                     // as a side-effect, this associates correlName with rel
                     LookupResult lookupResult =
                         lookup.lookup(
-                            new RelNode [] { left,right },
+                            new RelNode [] { left, right },
                             correlName);
-                    assert(lookupResult != null);
+                    assert (lookupResult != null);
                 }
                 cluster.query.mapDeferredToCorrel.clear();
             }
@@ -233,9 +228,9 @@ class QueryInfo
             // coming from right. We'll swap them before we create a
             // JavaNestedLoopJoin.
             String [] variablesL2R =
-                RelOptUtil.getVariablesSetAndUsed(right,left);
+                RelOptUtil.getVariablesSetAndUsed(right, left);
             String [] variablesR2L =
-                RelOptUtil.getVariablesSetAndUsed(left,right);
+                RelOptUtil.getVariablesSetAndUsed(left, right);
             if ((variablesL2R.length > 0) && (variablesR2L.length > 0)) {
                 throw Util.newInternal(
                     "joined expressions must not be mutually dependent: "
@@ -251,33 +246,28 @@ class QueryInfo
             RexNode conditionExp1 =
                 convertExpToInternal(
                     conditionExp,
-                    new RelNode [] { left,right });
-            return new JoinRel(
-                cluster,
-                left,
-                right,
-                conditionExp1,
-                joinType,
+                    new RelNode [] { left, right });
+            return new JoinRel(cluster, left, right, conditionExp1, joinType,
                 variablesStopped);
         } else if (exp instanceof AliasedExpression) {
             AliasedExpression aliasedExp = (AliasedExpression) exp;
             return convertFromExpToRel(aliasedExp.getExpression());
         } else if (exp instanceof QueryExpression) {
             QueryExpression queryExp = (QueryExpression) exp;
-            QueryEnvironment qenv = new QueryEnvironment(env,queryExp);
-            QueryInfo newQueryInfo = new QueryInfo(this,qenv,expander,exp);
+            QueryEnvironment qenv = new QueryEnvironment(env, queryExp);
+            QueryInfo newQueryInfo = new QueryInfo(this, qenv, expander, exp);
             RelNode rel = newQueryInfo.convertQueryToRel(queryExp);
             leaves.add(rel);
             return rel;
         } else {
             // finally, look for relational expressions which can occur
             // anywhere, and fail if we're not looking at one
-            return expander.convertExpToUnoptimizedRel(
-                exp,true,this,null);
+            return expander.convertExpToUnoptimizedRel(exp, true, this, null);
         }
     }
 
-    private static int convertJoinType(int saffronJoinType) {
+    private static int convertJoinType(int saffronJoinType)
+    {
         switch (saffronJoinType) {
         case ParserConstants.INNER:
             return JoinRel.JoinType.INNER;
@@ -339,11 +329,8 @@ class QueryInfo
             RexNode rexWhereClause = null;
             if (whereClause != null) {
                 rexWhereClause =
-                    convertGroupExpToInternal(
-                        whereClause,
-                        preGroups,
-                        aggInputList,
-                        aggCallVector);
+                    convertGroupExpToInternal(whereClause, preGroups,
+                        aggInputList, aggCallVector);
                 whereClause = removeSubqueries(whereClause);
             }
             Expression [] selects = Util.toArray(queryExp.getSelectList());
@@ -352,17 +339,15 @@ class QueryInfo
             for (int i = 0; i < selects.length; i++) {
                 aliases[i] = Util.getAlias(selects[i]);
                 rexSelects[i] =
-                    convertGroupExpToInternal(
-                        selects[i],
-                        preGroups,
-                        aggInputList,
-                        aggCallVector);
+                    convertGroupExpToInternal(selects[i], preGroups,
+                        aggInputList, aggCallVector);
             }
-            AggregateRel.Call [] aggCalls = (AggregateRel.Call [])
-                    aggCallVector.toArray(
-                            new AggregateRel.Call[aggCallVector.size()]);
-            RexNode [] aggInputs = (RexNode [])
-                    aggInputList.toArray(new RexNode[aggInputList.size()]);
+            AggregateRel.Call [] aggCalls =
+                (AggregateRel.Call []) aggCallVector.toArray(
+                    new AggregateRel.Call[aggCallVector.size()]);
+            RexNode [] aggInputs =
+                (RexNode []) aggInputList.toArray(
+                    new RexNode[aggInputList.size()]);
             setRoot(
                 new ProjectRel(
                     cluster,
@@ -371,9 +356,16 @@ class QueryInfo
                     null,
                     ProjectRel.Flags.Boxed));
             setRoot(
-                new AggregateRel(cluster,getRoot(),preGroups.length,aggCalls));
+                new AggregateRel(
+                    cluster,
+                    getRoot(),
+                    preGroups.length,
+                    aggCalls));
             if (whereClause != null) {
-                setRoot(new FilterRel(cluster,getRoot(),rexWhereClause));
+                setRoot(new FilterRel(
+                        cluster,
+                        getRoot(),
+                        rexWhereClause));
             }
             setRoot(
                 new ProjectRel(
@@ -391,10 +383,12 @@ class QueryInfo
             RelDataType relRowType = getRoot().getRowType();
             OJClass queryRowClass = queryExp.getRowType(env);
             final RelDataType queryRowType =
-                OJUtil.ojToType(relRowType.getFactory(),queryRowClass);
+                OJUtil.ojToType(
+                    relRowType.getFactory(),
+                    queryRowClass);
             tracer.log(Level.FINE,
                 "] return [" + getRoot() + "] rowType=[" + relRowType + "]");
-            assert(relRowType == queryRowType);
+            assert (relRowType == queryRowType);
             return getRoot();
         }
 
@@ -402,7 +396,10 @@ class QueryInfo
         if (whereClause != null) {
             RexNode rexWhereClause = convertExpToInternal(whereClause);
             whereClause = removeSubqueries(whereClause);
-            setRoot(new FilterRel(cluster,getRoot(),rexWhereClause));
+            setRoot(new FilterRel(
+                    cluster,
+                    getRoot(),
+                    rexWhereClause));
         }
 
         Expression [] selects = Util.toArray(queryExp.getSelectList());
@@ -439,6 +436,7 @@ class QueryInfo
         tracer.log(Level.FINE,
             "] return [" + getRoot() + "] rowType=[" + relRowType + "]");
         RelDataType fieldType = relRowType;
+
         /*
         if (relRowType.getFieldCount() == 1) {
             fieldType = relRowType.getFields()[0].getType();
@@ -452,12 +450,13 @@ class QueryInfo
         */
         final OJClass queryRowClass = queryExp.getRowType(env);
         RelDataType queryRowType =
-            OJUtil.ojToType(relRowType.getFactory(),queryRowClass);
+            OJUtil.ojToType(
+                relRowType.getFactory(),
+                queryRowClass);
         if (fieldType != queryRowType) {
-            throw Util.newInternal(
-                "rel row type (" + fieldType + ") should equal the "
-                + "row type (" + queryRowType + ") of the query it was "
-                + "translated from");
+            throw Util.newInternal("rel row type (" + fieldType
+                + ") should equal the " + "row type (" + queryRowType
+                + ") of the query it was " + "translated from");
         }
         return getRoot();
     }
@@ -481,7 +480,7 @@ class QueryInfo
         String varName)
     {
         final ArrayList relList = flatten(inputs);
-        if (offset < 0 || offset >= relList.size()) {
+        if ((offset < 0) || (offset >= relList.size())) {
             throw Util.newInternal("could not find input");
         }
         int fieldOffset = 0;
@@ -499,7 +498,9 @@ class QueryInfo
             }
             return new CorrelLookupResult(varName);
         } else {
-            return new LocalLookupResult(fieldOffset, rel.getRowType());
+            return new LocalLookupResult(
+                fieldOffset,
+                rel.getRowType());
         }
     }
 
@@ -567,53 +568,66 @@ class QueryInfo
     {
         while (true) {
             RelNode oldFrom = getRoot();
-            SubqueryFinder subqueryFinder = new SubqueryFinder(this,env);
+            SubqueryFinder subqueryFinder = new SubqueryFinder(this, env);
             Expression oldExp = exp;
-            exp = Util.go(subqueryFinder,oldExp);
+            exp = Util.go(subqueryFinder, oldExp);
             if (oldFrom == getRoot()) {
                 return exp;
             }
         }
     }
 
-
-    private ArrayList flatten(RelNode[] rels) {
+    private ArrayList flatten(RelNode [] rels)
+    {
         ArrayList list = new ArrayList();
         flatten(rels, list);
         return list;
     }
 
-    private void flatten(RelNode[] rels, ArrayList list) {
+    private void flatten(
+        RelNode [] rels,
+        ArrayList list)
+    {
         for (int i = 0; i < rels.length; i++) {
             RelNode rel = rels[i];
             if (leaves.contains(rel)) {
                 list.add(rel);
             } else {
-                flatten(rel.getInputs(), list);
+                flatten(
+                    rel.getInputs(),
+                    list);
             }
         }
     }
 
-    static abstract class LookupResult {
+    static abstract class LookupResult
+    {
     }
 
-    static class LocalLookupResult extends LookupResult {
+    static class LocalLookupResult extends LookupResult
+    {
         /** The offset of the field in the input relation which corresponds to
          * the first field in the relation we were seeking. */
         final int offset;
+
         /** The record type of the relation we were seeking. */
         final RelDataType rowType;
 
-        LocalLookupResult(int offset, RelDataType rowType) {
+        LocalLookupResult(
+            int offset,
+            RelDataType rowType)
+        {
             this.offset = offset;
             this.rowType = rowType;
         }
     }
 
-    static class CorrelLookupResult extends LookupResult {
+    static class CorrelLookupResult extends LookupResult
+    {
         final String varName;
 
-        CorrelLookupResult(String varName) {
+        CorrelLookupResult(String varName)
+        {
             super();
             this.varName = varName;
         }
@@ -627,26 +641,25 @@ class QueryInfo
  */
 class DeferredLookup
 {
-    //~ Instance fields -------------------------------------------------------
-
     QueryInfo queryInfo;
     boolean isParent;
     int offset;
 
-    //~ Constructors ----------------------------------------------------------
-
-    DeferredLookup(QueryInfo queryInfo,int offset,boolean isParent)
+    DeferredLookup(
+        QueryInfo queryInfo,
+        int offset,
+        boolean isParent)
     {
         this.queryInfo = queryInfo;
         this.offset = offset;
         this.isParent = isParent;
     }
 
-    //~ Methods ---------------------------------------------------------------
-
-    QueryInfo.LookupResult lookup(RelNode [] inputs,String varName)
+    QueryInfo.LookupResult lookup(
+        RelNode [] inputs,
+        String varName)
     {
-        return queryInfo.lookup(offset,inputs,isParent,varName);
+        return queryInfo.lookup(offset, inputs, isParent, varName);
     }
 }
 

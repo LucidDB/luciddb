@@ -16,21 +16,18 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.catalog.codegen;
 
-import net.sf.farrago.catalog.FarragoModelLoader;
-import net.sf.farrago.FarragoPackage;
-import net.sf.farrago.util.*;
-
 import java.io.*;
-
 import java.lang.reflect.*;
-
 import java.util.*;
 
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
+
+import net.sf.farrago.FarragoPackage;
+import net.sf.farrago.catalog.FarragoModelLoader;
+import net.sf.farrago.util.*;
 
 
 /**
@@ -50,6 +47,21 @@ import javax.jmi.reflect.*;
  */
 public class ProxyGen
 {
+    //~ Static fields/initializers --------------------------------------------
+
+    private static final Comparator classNameComparator =
+        new Comparator() {
+            public int compare(
+                Object o1,
+                Object o2)
+            {
+                final String name1 = ((Class) o1).getName();
+                final String name2 = ((Class) o2).getName();
+                return name1.compareTo(name2);
+            }
+        };
+
+
     //~ Instance fields -------------------------------------------------------
 
     /** Map from Class to corresponding C++ type name as String. */
@@ -91,28 +103,19 @@ public class ProxyGen
      * which C++ enums are to be generated.
      */
     private Set genEnums = new HashSet();
-
     private String genPrefix;
-
     private String basePrefix;
-
     private String visitorClassName;
-
     private String visitorBaseName;
-    private static final Comparator classNameComparator = new Comparator() {
-                public int compare(Object o1, Object o2) {
-                    final String name1 = ((Class) o1).getName();
-                    final String name2 = ((Class) o2).getName();
-                    return name1.compareTo(name2);
-                }
-            };
 
     //~ Constructors ----------------------------------------------------------
 
     /**
      * Initialize a new ProxyGen.
      */
-    public ProxyGen(String genPrefix,String basePrefix)
+    public ProxyGen(
+        String genPrefix,
+        String basePrefix)
     {
         this.genPrefix = genPrefix;
         this.basePrefix = basePrefix;
@@ -125,25 +128,25 @@ public class ProxyGen
             visitorBaseName = basePrefix + "Visitor";
         }
 
-        cppTypeMap.put(Integer.TYPE,"int32_t");
-        javaTypeMap.put(Integer.TYPE,"I");
+        cppTypeMap.put(Integer.TYPE, "int32_t");
+        javaTypeMap.put(Integer.TYPE, "I");
 
-        cppTypeMap.put(Long.TYPE,"int64_t");
-        javaTypeMap.put(Long.TYPE,"J");
+        cppTypeMap.put(Long.TYPE, "int64_t");
+        javaTypeMap.put(Long.TYPE, "J");
 
-        cppTypeMap.put(Short.TYPE,"int16_t");
-        javaTypeMap.put(Short.TYPE,"S");
+        cppTypeMap.put(Short.TYPE, "int16_t");
+        javaTypeMap.put(Short.TYPE, "S");
 
-        cppTypeMap.put(Double.TYPE,"double");
-        javaTypeMap.put(Double.TYPE,"D");
+        cppTypeMap.put(Double.TYPE, "double");
+        javaTypeMap.put(Double.TYPE, "D");
 
-        cppTypeMap.put(Float.TYPE,"float");
-        javaTypeMap.put(Float.TYPE,"F");
+        cppTypeMap.put(Float.TYPE, "float");
+        javaTypeMap.put(Float.TYPE, "F");
 
-        cppTypeMap.put(Boolean.TYPE,"bool");
-        javaTypeMap.put(Boolean.TYPE,"Z");
+        cppTypeMap.put(Boolean.TYPE, "bool");
+        javaTypeMap.put(Boolean.TYPE, "Z");
 
-        cppTypeMap.put(String.class,"std::string");
+        cppTypeMap.put(String.class, "std::string");
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -162,7 +165,7 @@ public class ProxyGen
             RefClass refClass = (RefClass) iter.next();
             Class clazz = JmiUtil.getJavaInterfaceForRefClass(refClass);
             genInterfaces.add(clazz);
-            javaToJmiMap.put(clazz,refClass);
+            javaToJmiMap.put(clazz, refClass);
         }
     }
 
@@ -180,7 +183,7 @@ public class ProxyGen
             RefClass refClass = (RefClass) iter.next();
             Class clazz = JmiUtil.getJavaInterfaceForRefClass(refClass);
             baseInterfaces.add(clazz);
-            javaToJmiMap.put(clazz,refClass);
+            javaToJmiMap.put(clazz, refClass);
         }
     }
 
@@ -243,7 +246,7 @@ public class ProxyGen
         // First, generate forward references for all classes we're going to
         // generate.  This makes possible any kind of class dependency graph,
         // since objects are always returned by reference.
-        Class[] interfaces = toSortedArray(genInterfaces);
+        Class [] interfaces = toSortedArray(genInterfaces);
         for (int i = 0; i < interfaces.length; i++) {
             Class clazz = interfaces[i];
             generateClassDeclaration(clazz);
@@ -264,11 +267,11 @@ public class ProxyGen
         // Finally, generate the visitor interface with a visitor method
         // overload for each class.
         pw.println("class " + visitorClassName + " : virtual public "
-                   + visitorBaseName);
+            + visitorBaseName);
         pw.println("{");
         pw.println("public:");
         pw.println("static JniProxyVisitTable<" + visitorClassName
-                   + "> visitTbl;");
+            + "> visitTbl;");
         for (int i = 0; i < interfaces.length; i++) {
             Class clazz = interfaces[i];
             generateVisitDeclaration(clazz);
@@ -290,11 +293,10 @@ public class ProxyGen
 
         CppEnumGen enumGen = new CppEnumGen(pw);
 
-        final Class[] enumInterfaces = toSortedArray(genEnums);
+        final Class [] enumInterfaces = toSortedArray(genEnums);
         for (int i = 0; i < enumInterfaces.length; i++) {
             Class enumInterface = enumInterfaces[i];
-            Class enumClass = Class.forName(
-                enumInterface.getName() + "Enum");
+            Class enumClass = Class.forName(enumInterface.getName() + "Enum");
             enumGen.generateEnumForClass(
                 ReflectUtil.getUnqualifiedClassName(enumInterface),
                 enumClass,
@@ -316,10 +318,10 @@ public class ProxyGen
 
         // First, generate static definitions such as all method ID's used by
         // generated getters.
-        pw.println("JniProxyVisitTable<" + visitorClassName
-                   + "> " + visitorClassName + "::visitTbl;");
+        pw.println("JniProxyVisitTable<" + visitorClassName + "> "
+            + visitorClassName + "::visitTbl;");
         pw.println();
-        Class[] interfaces = toSortedArray(genInterfaces);
+        Class [] interfaces = toSortedArray(genInterfaces);
         for (int i = 0; i < interfaces.length; i++) {
             Class clazz = interfaces[i];
             generateStaticDefinitions(clazz);
@@ -328,7 +330,7 @@ public class ProxyGen
         // Next, generate the static method which performs the JNI lookup for
         // methods.
         pw.println("void staticInit" + genPrefix
-                   + "(JniEnvRef pEnv,JniProxyVisitTableBase &visitTbl)");
+            + "(JniEnvRef pEnv,JniProxyVisitTableBase &visitTbl)");
         pw.println("{");
         pw.println("jclass jClass;");
         for (int i = 0; i < interfaces.length; i++) {
@@ -355,9 +357,10 @@ public class ProxyGen
      * Converts collection into an array of classes sorted by name. This is
      * necessary in order to make the output deterministic.
      */
-    private static Class[] toSortedArray(Collection collection) {
-        Class[] classes = (Class[])
-                collection.toArray(new Class[collection.size()]);
+    private static Class [] toSortedArray(Collection collection)
+    {
+        Class [] classes =
+            (Class []) collection.toArray(new Class[collection.size()]);
         Arrays.sort(classes, classNameComparator);
         return classes;
     }
@@ -483,23 +486,23 @@ public class ProxyGen
         String basePackageName = null;
         String basePrefix = null;
         if (args.length > 5) {
-            assert(args.length == 7);
+            assert (args.length == 7);
             basePackageName = args[5];
             basePrefix = args[6];
         }
 
         FarragoModelLoader modelLoader = null;
-        ProxyGen proxyGen = new ProxyGen(genPrefix,basePrefix);
+        ProxyGen proxyGen = new ProxyGen(genPrefix, basePrefix);
         try {
             modelLoader = new FarragoModelLoader();
             FarragoPackage farragoPackage =
-                modelLoader.loadModel("FarragoCatalog",false);
+                modelLoader.loadModel("FarragoCatalog", false);
             proxyGen.addGenClasses(
-                findPackage(farragoPackage,sourcePackageName));
+                findPackage(farragoPackage, sourcePackageName));
 
             if (basePackageName != null) {
                 proxyGen.addBaseClasses(
-                    findPackage(farragoPackage,basePackageName));
+                    findPackage(farragoPackage, basePackageName));
             }
 
             PrintWriter pw = new PrintWriter(defWriter);
@@ -524,14 +527,14 @@ public class ProxyGen
     }
 
     private static RefPackage findPackage(
-        RefPackage rootPackage,String qualifiedName)
+        RefPackage rootPackage,
+        String qualifiedName)
     {
         String [] sourcePackageNames = qualifiedName.split("\\.");
-        RefPackage sourcePackage = JmiUtil.getSubPackage(
-            rootPackage,
-            sourcePackageNames,
-            sourcePackageNames.length);
-        assert(sourcePackage != null);
+        RefPackage sourcePackage =
+            JmiUtil.getSubPackage(rootPackage, sourcePackageNames,
+                sourcePackageNames.length);
+        assert (sourcePackage != null);
         return sourcePackage;
     }
 
@@ -552,8 +555,7 @@ public class ProxyGen
             prefix = genPrefix;
         }
 
-        return ReflectUtil.getUnqualifiedClassName(clazz).replaceFirst(
-            prefix,
+        return ReflectUtil.getUnqualifiedClassName(clazz).replaceFirst(prefix,
             "Proxy");
     }
 
@@ -630,7 +632,7 @@ public class ProxyGen
         if (s != null) {
             return s;
         }
-        return "L" + clazz.getName().replace('.','/') + ";";
+        return "L" + clazz.getName().replace('.', '/') + ";";
     }
 
     private void generateClassDeclaration(Class clazz)
@@ -663,14 +665,14 @@ public class ProxyGen
     private void generateStaticInitialization(Class clazz)
     {
         pw.print("jClass = pEnv->FindClass(\"");
-        pw.print(clazz.getName().replace('.','/'));
+        pw.print(clazz.getName().replace('.', '/'));
         pw.println("\");");
         pw.print("visitTbl.addMethod(");
         pw.print("jClass,");
         pw.print("JniProxyVisitTable<" + visitorClassName
-                 + ">::SharedVisitorMethod(");
+            + ">::SharedVisitorMethod(");
         pw.print("new JniProxyVisitTable<" + visitorClassName
-                 + ">::VisitorMethodImpl<");
+            + ">::VisitorMethodImpl<");
         pw.print(getCppClassName(clazz));
         pw.println(">));");
         Method [] methods = clazz.getDeclaredMethods();

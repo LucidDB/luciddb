@@ -1,27 +1,29 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 package org.eigenbase.runtime;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+
 
 /**
  * Adapter which exposes a 'push' producer on one thread into an
@@ -108,7 +110,8 @@ public class QueueIterator implements Iterator
      *   means don't wait
      */
     public synchronized boolean hasNext(long timeoutMillis)
-            throws TimeoutException {
+        throws TimeoutException
+    {
         if (waitingForProducer_) {
             // wait for producer to produce one
             boolean isLocked = empty.tryAcquire(timeoutMillis);
@@ -126,7 +129,6 @@ public class QueueIterator implements Iterator
         return hasNext_;
     }
 
-
     // implement Iterator
     public synchronized Object next()
     {
@@ -136,6 +138,7 @@ public class QueueIterator implements Iterator
         }
         if (!hasNext_) {
             checkError();
+
             // It is illegal to call next when there are no more objects.
             throw new NoSuchElementException();
         }
@@ -153,7 +156,8 @@ public class QueueIterator implements Iterator
      *   means don't wait
      */
     public synchronized Object next(long timeoutMillis)
-            throws TimeoutException {
+        throws TimeoutException
+    {
         if (waitingForProducer_) {
             // wait for producer to produce one
             boolean isLocked = empty.tryAcquire(timeoutMillis);
@@ -167,6 +171,7 @@ public class QueueIterator implements Iterator
         }
         if (!hasNext_) {
             checkError();
+
             // It is illegal to call next when there are no more objects.
             throw new NoSuchElementException();
         }
@@ -175,7 +180,6 @@ public class QueueIterator implements Iterator
         full.release();
         return o;
     }
-
 
     /**
      * Producer calls <code>put</code> to add another object (which may be
@@ -220,12 +224,16 @@ public class QueueIterator implements Iterator
         }
     }
 
+    //~ Inner Classes ---------------------------------------------------------
+
     /**
      * Thrown by {@link #hasNext(long)} and {@link #next(long)} to indicate that
      * operation timed out before rows were available.
      */
-    public static class TimeoutException extends Exception {
+    public static class TimeoutException extends Exception
+    {
     }
 }
+
 
 // End QueueIterator.java

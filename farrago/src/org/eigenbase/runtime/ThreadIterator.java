@@ -1,31 +1,30 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.runtime;
 
+import java.util.Iterator;
+
 import org.eigenbase.test.EigenbaseTestCase;
 import org.eigenbase.util.Util;
-
-import java.util.Iterator;
 
 
 /**
@@ -118,7 +117,8 @@ public abstract class ThreadIterator extends QueueIterator implements Iterator,
      */
     public static class Test extends EigenbaseTestCase
     {
-        public Test(String s) throws Exception
+        public Test(String s)
+            throws Exception
         {
             super(s);
         }
@@ -142,17 +142,21 @@ public abstract class ThreadIterator extends QueueIterator implements Iterator,
                             }
                         }
                     }.start(
-                    new String [] { "lennon","mccartney",null,"starr" });
+                    new String [] { "lennon", "mccartney", null, "starr" });
             assertTrue(beatles.hasNext());
-            assertEquals(beatles.next(),new Integer(6));
-            assertEquals(beatles.next(),new Integer(9));
+            assertEquals(
+                beatles.next(),
+                new Integer(6));
+            assertEquals(
+                beatles.next(),
+                new Integer(9));
             boolean barf = false;
             try {
                 Util.discard(beatles.next());
             } catch (NullPointerException e) {
                 barf = true;
             }
-            assertTrue("expected a NullPointerException",barf);
+            assertTrue("expected a NullPointerException", barf);
         }
 
         public void testDigits()
@@ -177,9 +181,9 @@ public abstract class ThreadIterator extends QueueIterator implements Iterator,
             assertEquals(
                 digits,
                 new Integer [] {
-                    new Integer(0),new Integer(1),new Integer(2),
-                    new Integer(3),new Integer(4),new Integer(5),
-                    new Integer(6),new Integer(7),new Integer(8),
+                    new Integer(0), new Integer(1), new Integer(2),
+                    new Integer(3), new Integer(4), new Integer(5),
+                    new Integer(6), new Integer(7), new Integer(8),
                     new Integer(9)
                 });
             assertTrue(!digits.hasNext());
@@ -188,16 +192,21 @@ public abstract class ThreadIterator extends QueueIterator implements Iterator,
         public void testEmpty()
         {
             Object [] empty = new Object[0];
-            assertEquals(new ArrayIterator(empty),empty);
+            assertEquals(
+                new ArrayIterator(empty),
+                empty);
         }
 
         public void testXyz()
         {
-            String [] xyz = new String [] { "x","y","z" };
-            assertEquals(new ArrayIterator(xyz),xyz);
+            String [] xyz = new String [] { "x", "y", "z" };
+            assertEquals(
+                new ArrayIterator(xyz),
+                xyz);
         }
     }
 }
+
 
 /**
  * For testing.

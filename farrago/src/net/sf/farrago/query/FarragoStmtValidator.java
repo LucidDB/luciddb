@@ -6,37 +6,36 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.query;
-
-import net.sf.farrago.resource.*;
-import net.sf.farrago.session.*;
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.fennel.*;
-import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
-import net.sf.farrago.namespace.util.*;
-
-import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.cwm.datatypes.*;
-import net.sf.farrago.fem.med.*;
-
-import org.eigenbase.sql.*;
 
 import java.util.*;
 
 import javax.jmi.reflect.*;
+
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.datatypes.*;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fennel.*;
+import net.sf.farrago.namespace.util.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.type.*;
+import net.sf.farrago.util.*;
+
+import org.eigenbase.sql.*;
+
 
 /**
  * FarragoStmtValidator is a default implementation of the
@@ -45,29 +44,23 @@ import javax.jmi.reflect.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoStmtValidator
-    extends FarragoCompoundAllocation
+public class FarragoStmtValidator extends FarragoCompoundAllocation
     implements FarragoSessionStmtValidator
 {
+    //~ Instance fields -------------------------------------------------------
+
     private final FarragoRepos repos;
-
     private final FennelDbHandle fennelDbHandle;
-
     private final FarragoSession session;
-
     private final FarragoTypeFactory typeFactory;
-
     private final FarragoSessionVariables sessionVariables;
-
     private final FarragoObjectCache codeCache;
-
     private final FarragoDataWrapperCache dataWrapperCache;
-
     private final FarragoIndexMap indexMap;
-
     private final FarragoObjectCache sharedDataWrapperCache;
-    
     private final FarragoSessionParser parser;
+
+    //~ Constructors ----------------------------------------------------------
 
     /**
      * Creates a new FarragoStmtValidator object.
@@ -100,13 +93,16 @@ public class FarragoStmtValidator
         this.indexMap = indexMap;
         this.session = session;
         this.sharedDataWrapperCache = sharedDataWrapperCache;
-        
+
         parser = session.newParser();
         sessionVariables = session.getSessionVariables();
         typeFactory = new FarragoTypeFactoryImpl(repos);
-        dataWrapperCache = new FarragoDataWrapperCache(
-            this,sharedDataWrapperCache,repos,fennelDbHandle);
+        dataWrapperCache =
+            new FarragoDataWrapperCache(this, sharedDataWrapperCache, repos,
+                fennelDbHandle);
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     // implement FarragoSessionStmtValidator
     public FarragoSessionParser getParser()
@@ -119,7 +115,7 @@ public class FarragoStmtValidator
     {
         return repos;
     }
-    
+
     // implement FarragoSessionStmtValidator
     public FennelDbHandle getFennelDbHandle()
     {
@@ -137,7 +133,7 @@ public class FarragoStmtValidator
     {
         return typeFactory;
     }
-    
+
     // implement FarragoSessionStmtValidator
     public FarragoSessionVariables getSessionVariables()
     {
@@ -149,7 +145,7 @@ public class FarragoStmtValidator
     {
         return codeCache;
     }
-    
+
     // implement FarragoSessionStmtValidator
     public FarragoDataWrapperCache getDataWrapperCache()
     {
@@ -175,7 +171,8 @@ public class FarragoStmtValidator
     {
         CwmColumn column =
             (CwmColumn) getRepos().getModelElement(
-                namedColumnSet.getFeature(),columnName);
+                namedColumnSet.getFeature(),
+                columnName);
         if (column == null) {
             throw FarragoResource.instance().newValidatorUnknownColumn(
                 columnName,
@@ -219,7 +216,8 @@ public class FarragoStmtValidator
             catalog = getDefaultCatalog();
             simpleName = schemaName.getSimple();
         }
-        CwmSchema schema = getRepos().getSchema(catalog,simpleName);
+        CwmSchema schema = getRepos().getSchema(catalog, simpleName);
+
         // REVIEW:  parser context may be past schema name already
         if (schema == null) {
             throw FarragoResource.instance().newValidatorUnknownObject(
@@ -234,10 +232,11 @@ public class FarragoStmtValidator
 
     // implement FarragoSessionStmtValidator
     public FemDataWrapper findDataWrapper(
-        SqlIdentifier wrapperName,boolean isForeign)
+        SqlIdentifier wrapperName,
+        boolean isForeign)
     {
-        FemDataWrapper wrapper = (FemDataWrapper)
-            getRepos().getModelElement(
+        FemDataWrapper wrapper =
+            (FemDataWrapper) getRepos().getModelElement(
                 getRepos().medPackage.getFemDataWrapper().refAllOfType(),
                 wrapperName.getSimple());
         if (wrapper != null) {
@@ -259,8 +258,8 @@ public class FarragoStmtValidator
     // implement FarragoSessionStmtValidator
     public FemDataServer findDataServer(SqlIdentifier serverName)
     {
-        FemDataServer server = (FemDataServer)
-            getRepos().getModelElement(
+        FemDataServer server =
+            (FemDataServer) getRepos().getModelElement(
                 getRepos().medPackage.getFemDataServer().refAllOfType(),
                 serverName.getSimple());
         if (server == null) {
@@ -278,7 +277,7 @@ public class FarragoStmtValidator
     public FemDataServer getDefaultLocalDataServer()
     {
         // TODO:  make this configurable
-        return findDataServer(new SqlIdentifier("SYS_ROWSTORE",null));
+        return findDataServer(new SqlIdentifier("SYS_ROWSTORE", null));
     }
 
     // implement FarragoSessionStmtValidator
@@ -306,7 +305,9 @@ public class FarragoStmtValidator
             schemaName = resolved.schemaName;
             if (resolved.object != null) {
                 element = resolved.object;
-                if (!element.refIsInstanceOf(refClass.refMetaObject(),true)) {
+                if (!element.refIsInstanceOf(
+                            refClass.refMetaObject(),
+                            true)) {
                     element = null;
                 }
             }
@@ -317,8 +318,7 @@ public class FarragoStmtValidator
                 schemaName = schema.getName();
             }
             throw FarragoResource.instance().newValidatorUnknownObject(
-                getRepos().getLocalizedObjectName(
-                    schemaName,
+                getRepos().getLocalizedObjectName(schemaName,
                     qualifiedName.names[qualifiedName.names.length - 1],
                     refClass),
                 parser.getCurrentPosition().toString());
@@ -331,16 +331,15 @@ public class FarragoStmtValidator
     public CwmSqldataType findSqldataType(String typeName)
     {
         Collection types =
-            getRepos().relationalPackage.
-            getCwmSqlsimpleType().refAllOfClass();
+            getRepos().relationalPackage.getCwmSqlsimpleType().refAllOfClass();
         CwmModelElement modelElement =
-            getRepos().getModelElement(types,typeName);
+            getRepos().getModelElement(types, typeName);
         if (modelElement != null) {
             return (CwmSqldataType) modelElement;
         }
 
         types = getRepos().datatypesPackage.getCwmTypeAlias().refAllOfClass();
-        modelElement = getRepos().getModelElement(types,typeName);
+        modelElement = getRepos().getModelElement(types, typeName);
         if (modelElement != null) {
             CwmTypeAlias alias = (CwmTypeAlias) modelElement;
             return (CwmSqldataType) alias.getType();
@@ -395,15 +394,17 @@ public class FarragoStmtValidator
             return resolved;
         }
 
-        resolved.schema = repos.getSchema(
-            resolved.catalog,resolved.schemaName);
+        resolved.schema =
+            repos.getSchema(resolved.catalog, resolved.schemaName);
         if (resolved.schema == null) {
             // TODO:  throw ValidatorUnknownObject for schema
             return null;
         }
 
-        resolved.object = repos.getModelElement(
-            resolved.schema.getOwnedElement(),resolved.objectName);
+        resolved.object =
+            repos.getModelElement(
+                resolved.schema.getOwnedElement(),
+                resolved.objectName);
         if (resolved.object == null) {
             return null;
         }
@@ -411,5 +412,6 @@ public class FarragoStmtValidator
         return resolved;
     }
 }
+
 
 // End FarragoStmtValidator.java

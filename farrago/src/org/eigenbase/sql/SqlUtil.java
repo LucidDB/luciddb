@@ -1,36 +1,35 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2004 Disruptive Tech
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.sql;
-
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.util.BarfingInvocationHandler;
-import org.eigenbase.util.Util;
 
 import java.lang.reflect.Proxy;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.util.BarfingInvocationHandler;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -42,7 +41,6 @@ import java.util.Arrays;
  */
 public abstract class SqlUtil
 {
-
     //~ Static fields/initializers --------------------------------------------
 
     /**
@@ -51,14 +49,16 @@ public abstract class SqlUtil
      * this dialect to do what you want.
      */
     public static final SqlDialect dummyDialect =
-            new SqlDialect(dummyDatabaseMetaData());
+        new SqlDialect(dummyDatabaseMetaData());
 
     //~ Methods ---------------------------------------------------------------
 
     /**
      * Returns the input with a given alias.
      */
-    public static SqlNode getFromNode(SqlSelect query,String alias)
+    public static SqlNode getFromNode(
+        SqlSelect query,
+        String alias)
     {
         ArrayList list = flatten(query.getFrom());
         for (int i = 0; i < list.size(); i++) {
@@ -70,7 +70,9 @@ public abstract class SqlUtil
         return null;
     }
 
-    static SqlNode andExpressions(SqlNode node1,SqlNode node2)
+    static SqlNode andExpressions(
+        SqlNode node1,
+        SqlNode node2)
     {
         if (node1 == null) {
             return node2;
@@ -86,14 +88,14 @@ public abstract class SqlUtil
         } else {
             list.add(node2);
         }
-        return SqlOperatorTable.std().andOperator.createCall(
-                (SqlNode []) list.toArray(new SqlNode[list.size()]),null);
+        return SqlOperatorTable.std().andOperator.createCall((SqlNode []) list
+                .toArray(new SqlNode[list.size()]), null);
     }
 
     static ArrayList flatten(SqlNode node)
     {
         ArrayList list = new ArrayList();
-        flatten(node,list);
+        flatten(node, list);
         return list;
     }
 
@@ -110,23 +112,31 @@ public abstract class SqlUtil
     /**
      * Returns the <code>n</code>th (0-based) input to a join expression.
      */
-    public static SqlNode getFromNode(SqlSelect query,int ordinal)
+    public static SqlNode getFromNode(
+        SqlSelect query,
+        int ordinal)
     {
         ArrayList list = flatten(query.getFrom());
         return (SqlNode) list.get(ordinal);
     }
 
-    private static void flatten(SqlNode node,ArrayList list)
+    private static void flatten(
+        SqlNode node,
+        ArrayList list)
     {
         switch (node.getKind().getOrdinal()) {
         case SqlKind.JoinORDINAL:
             SqlJoin join = (SqlJoin) node;
-            flatten(join.getLeft(),list);
-            flatten(join.getRight(),list);
+            flatten(
+                join.getLeft(),
+                list);
+            flatten(
+                join.getRight(),
+                list);
             return;
         case SqlKind.AsORDINAL:
             SqlCall call = (SqlCall) node;
-            flatten(call.operands[0],list);
+            flatten(call.operands[0], list);
             return;
         default:
             list.add(node);
@@ -145,12 +155,14 @@ public abstract class SqlUtil
      *     returns false.
      * </ul>
      */
-    public static boolean isNullLiteral(SqlNode node, boolean allowCast)
+    public static boolean isNullLiteral(
+        SqlNode node,
+        boolean allowCast)
     {
         if (node instanceof SqlLiteral) {
             SqlLiteral literal = (SqlLiteral) node;
             if (literal._typeName == SqlTypeName.Null) {
-                assert(null==literal.getValue());
+                assert (null == literal.getValue());
                 return true;
             } else {
                 // We don't regard UNKNOWN -- SqlLiteral(null,Boolean) -- as NULL.
@@ -180,7 +192,8 @@ public abstract class SqlUtil
      * @return Whether the node is a literal
      * @pre node != null
      */
-    public static boolean isLiteral(SqlNode node) {
+    public static boolean isLiteral(SqlNode node)
+    {
         Util.pre(node != null, "node != null");
         return node instanceof SqlLiteral;
     }
@@ -197,6 +210,8 @@ public abstract class SqlUtil
             new DatabaseMetaDataInvocationHandler());
     }
 
+    //~ Inner Classes ---------------------------------------------------------
+
     /**
      * Handles particular {@link DatabaseMetaData} methods; invocations of
      * other methods will fall through to the base class, {@link
@@ -205,17 +220,18 @@ public abstract class SqlUtil
     public static class DatabaseMetaDataInvocationHandler
         extends BarfingInvocationHandler
     {
-        public String getDatabaseProductName() throws SQLException
+        public String getDatabaseProductName()
+            throws SQLException
         {
             return "fooBar";
         }
 
-        public String getIdentifierQuoteString() throws SQLException
+        public String getIdentifierQuoteString()
+            throws SQLException
         {
             return "`";
         }
     }
-
 }
 
 

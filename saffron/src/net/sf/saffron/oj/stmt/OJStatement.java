@@ -1,58 +1,25 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package net.sf.saffron.oj.stmt;
 
-import org.eigenbase.reltype.*;
-import org.eigenbase.relopt.*;
-import net.sf.saffron.oj.OJConnectionRegistry;
-import net.sf.saffron.oj.OJPlannerFactory;
-import org.eigenbase.oj.OJTypeFactoryImpl;
-import net.sf.saffron.oj.OJValidator;
-import org.eigenbase.oj.rel.JavaRel;
-import org.eigenbase.oj.rel.JavaRelImplementor;
-import org.eigenbase.oj.util.ClassCollector;
-import org.eigenbase.oj.util.JavaRexBuilder;
-import org.eigenbase.oj.util.OJUtil;
-import net.sf.saffron.oj.xlat.OJQueryExpander;
-import net.sf.saffron.oj.xlat.OJSchemaExpander;
-import net.sf.saffron.oj.xlat.SqlToOpenjavaConverter;
-import org.eigenbase.relopt.CallingConvention;
 import com.disruptivetech.farrago.volcano.VolcanoPlannerFactory;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rex.RexBuilder;
-import org.eigenbase.runtime.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.ParseException;
-import org.eigenbase.sql.parser.SqlParser;
-import org.eigenbase.sql2rel.SqlToRelConverter;
-import net.sf.saffron.trace.SaffronTrace;
-import org.eigenbase.util.SaffronProperties;
-import org.eigenbase.util.Util;
-import openjava.mop.*;
-import openjava.ojc.JavaCompiler;
-import openjava.ojc.JavaCompilerArgs;
-import openjava.ptree.*;
-import openjava.ptree.util.*;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -67,6 +34,39 @@ import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import net.sf.saffron.oj.OJConnectionRegistry;
+import net.sf.saffron.oj.OJPlannerFactory;
+import net.sf.saffron.oj.OJValidator;
+import net.sf.saffron.oj.xlat.OJQueryExpander;
+import net.sf.saffron.oj.xlat.OJSchemaExpander;
+import net.sf.saffron.oj.xlat.SqlToOpenjavaConverter;
+import net.sf.saffron.trace.SaffronTrace;
+
+import openjava.mop.*;
+import openjava.ojc.JavaCompiler;
+import openjava.ojc.JavaCompilerArgs;
+import openjava.ptree.*;
+import openjava.ptree.util.*;
+
+import org.eigenbase.oj.OJTypeFactoryImpl;
+import org.eigenbase.oj.rel.JavaRel;
+import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.oj.util.ClassCollector;
+import org.eigenbase.oj.util.JavaRexBuilder;
+import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.relopt.*;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.RexBuilder;
+import org.eigenbase.runtime.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.ParseException;
+import org.eigenbase.sql.parser.SqlParser;
+import org.eigenbase.sql2rel.SqlToRelConverter;
+import org.eigenbase.util.SaffronProperties;
+import org.eigenbase.util.Util;
+
 
 /**
  * An <code>OJStatement</code> is used to execute a saffron (or regular Java)
@@ -74,15 +74,9 @@ import java.util.logging.Logger;
  */
 public class OJStatement
 {
-    //~ Static fields/initializers --------------------------------------------
-
     public static final String connectionVariable = "connection";
-
     private static final Logger tracer = SaffronTrace.getStatementTracer();
     private String queryString_ = null;
-
-    //~ Instance fields -------------------------------------------------------
-
     protected Environment env;
     int executionCount = 0;
 
@@ -97,10 +91,7 @@ public class OJStatement
      * be the case.
      */
     protected JavaCompiler javaCompiler;
-
     private final RelOptConnection connection;
-
-    //~ Constructors ----------------------------------------------------------
 
     /**
      * Creates a statement
@@ -112,16 +103,13 @@ public class OJStatement
      */
     public OJStatement(RelOptConnection connection)
     {
-        this.connection = connection == null &&
-                this instanceof RelOptConnection ?
-                (RelOptConnection) this :
-                connection;
+        this.connection =
+            ((connection == null) && this instanceof RelOptConnection)
+            ? (RelOptConnection) this : connection;
         Util.pre(this.connection != null,
-                "connection != null || this instanceof RelOptConnection");
+            "connection != null || this instanceof RelOptConnection");
         this.resultCallingConvention = CallingConvention.RESULT_SET;
     }
-
-    //~ Methods ---------------------------------------------------------------
 
     public Environment getEnvironment()
     {
@@ -143,7 +131,7 @@ public class OJStatement
         ParseTree parseTree,
         Argument [] arguments)
     {
-        BoundMethod thunk = compileAndBind(decl,parseTree,arguments);
+        BoundMethod thunk = compileAndBind(decl, parseTree, arguments);
         try {
             return thunk.call();
         } catch (IllegalAccessException e) {
@@ -158,7 +146,7 @@ public class OJStatement
         ParseTree parseTree,
         Argument [] arguments)
     {
-        BoundMethod thunk = compile(decl,env,parseTree,arguments);
+        BoundMethod thunk = compile(decl, env, parseTree, arguments);
         Object [] args = new Object[thunk.parameterNames.length];
         for (int i = 0; i < thunk.parameterNames.length; i++) {
             String parameterName = thunk.parameterNames[i];
@@ -170,8 +158,8 @@ public class OJStatement
                 }
             }
             if (argument == null) {
-                throw Toolbox.newInternal(
-                    "variable '" + parameterName + "' not found");
+                throw Toolbox.newInternal("variable '" + parameterName
+                    + "' not found");
             }
             args[i] = argument.value;
         }
@@ -207,7 +195,9 @@ public class OJStatement
      * @return the result of evaluating the expression. If the expression is
      *         relational, the return is a {@link java.util.Enumeration}
      */
-    public Object execute(String queryString,Argument [] arguments)
+    public Object execute(
+        String queryString,
+        Argument [] arguments)
     {
         // (re)load trace level etc. from saffron.properties
         if (shouldReloadTrace()) {
@@ -216,14 +206,14 @@ public class OJStatement
         ClassDeclaration decl = init(arguments);
         ParseTree parseTree = parse(queryString);
         OJQueryExpander queryExpander = new OJQueryExpander(env, connection);
-        parseTree = validate(parseTree,queryExpander);
-        return evaluate(decl,parseTree,arguments);
+        parseTree = validate(parseTree, queryExpander);
+        return evaluate(decl, parseTree, arguments);
     }
 
     public ResultSet executeSql(String queryString)
     {
         PreparedResult plan = prepareSql(queryString);
-        assert(!plan.isDml());
+        assert (!plan.isDml());
         return (ResultSet) plan.execute();
     }
 
@@ -239,16 +229,14 @@ public class OJStatement
         javaCompiler = createCompiler();
         String packageName = getTempPackageName();
         String className = getTempClassName();
-        env = new FileEnvironment(env,packageName,className);
+        env = new FileEnvironment(env, packageName, className);
         ClassDeclaration decl =
-            new ClassDeclaration(
-                new ModifierList(ModifierList.PUBLIC),
-                className,
-                null,
-                null,
-                new MemberDeclarationList());
-        OJClass clazz = new OJClass(env,null,decl);
-        env.record(clazz.getName(),clazz);
+            new ClassDeclaration(new ModifierList(ModifierList.PUBLIC),
+                className, null, null, new MemberDeclarationList());
+        OJClass clazz = new OJClass(env, null, decl);
+        env.record(
+            clazz.getName(),
+            clazz);
         env = new ClosedEnvironment(clazz.getEnvironment());
 
         // Ensure that the thread has factories for types and planners. (We'd
@@ -261,7 +249,7 @@ public class OJStatement
         // connectionInfo.jdbcExprFunctor; someone else may have set it.
         if (shouldSetConnectionInfo()) {
             final OJConnectionRegistry.ConnectionInfo connectionInfo =
-                OJConnectionRegistry.instance.get(connection,true);
+                OJConnectionRegistry.instance.get(connection, true);
             connectionInfo.expr = new Variable(connectionVariable);
             connectionInfo.env = env;
         }
@@ -275,8 +263,7 @@ public class OJStatement
                         new EnumerationIterator((Enumeration) argument.value);
                     argument.clazz = argument.value.getClass();
                 }
-                if (
-                    argument.value instanceof Iterator
+                if (argument.value instanceof Iterator
                         && !(argument.value instanceof Iterable)) {
                     argument.value =
                         new BufferedIterator((Iterator) argument.value);
@@ -291,15 +278,16 @@ public class OJStatement
                     // type to the nearest base class which is public. Otherwise
                     // the generated code won't compile.
                     argument.clazz =
-                        visibleBaseClass(argument.clazz,packageName);
+                        visibleBaseClass(argument.clazz, packageName);
                 }
-                env.bindVariable(argument.name,argument);
+                env.bindVariable(argument.name, argument);
             }
         }
         return decl;
     }
 
-    public static void setupFactories() {
+    public static void setupFactories()
+    {
         RelDataTypeFactory typeFactory =
             RelDataTypeFactoryImpl.threadInstance();
         if (typeFactory == null) {
@@ -314,9 +302,9 @@ public class OJStatement
     public Expression parse(String queryString)
     {
         try {
-            return PartialParser.makeExpression(env,"(" + queryString + ")");
+            return PartialParser.makeExpression(env, "(" + queryString + ")");
         } catch (MOPException e) {
-            throw Util.newInternal(e,"while parsing [" + queryString + "]");
+            throw Util.newInternal(e, "while parsing [" + queryString + "]");
         }
     }
 
@@ -331,8 +319,7 @@ public class OJStatement
         try {
             sqlQuery = parser.parseStmt();
         } catch (ParseException e) {
-            throw Util.newInternal(
-                e,
+            throw Util.newInternal(e,
                 "Error while parsing SQL '" + queryString + "'");
         }
         RelOptSchema schema = connection.getRelOptSchema();
@@ -341,14 +328,15 @@ public class OJStatement
             catalogReader = (SqlValidator.CatalogReader) schema;
         } else {
             catalogReader =
-                new SqlToOpenjavaConverter.SchemaCatalogReader(schema,false);
+                new SqlToOpenjavaConverter.SchemaCatalogReader(schema, false);
         }
         setupFactories();
         final SqlValidator validator =
-                new SqlValidator(SqlOperatorTable.instance(),
-                        catalogReader,
-                        schema.getTypeFactory());
-        return prepareSql(sqlQuery,null,validator,true);
+            new SqlValidator(
+                SqlOperatorTable.instance(),
+                catalogReader,
+                schema.getTypeFactory());
+        return prepareSql(sqlQuery, null, validator, true);
     }
 
     /**
@@ -356,12 +344,13 @@ public class OJStatement
      * using a user-supplied validator.
      */
     public PreparedResult prepareSql(
-            SqlNode sqlQuery,
-            Class runtimeContextClass,
-            SqlValidator validator,
-            boolean needValidation)
+        SqlNode sqlQuery,
+        Class runtimeContextClass,
+        SqlValidator validator,
+        boolean needValidation)
     {
         queryString_ = sqlQuery.toString();
+
         // (re)load trace level etc. from saffron.properties
         if (shouldReloadTrace()) {
             SaffronProperties.instance().apply();
@@ -373,9 +362,7 @@ public class OJStatement
 
         final Argument [] arguments =
             new Argument [] {
-                new Argument(
-                    connectionVariable,
-                    runtimeContextClass,
+                new Argument(connectionVariable, runtimeContextClass,
                     connection)
             };
         ClassDeclaration decl = init(arguments);
@@ -384,6 +371,7 @@ public class OJStatement
         boolean explainWithImplementation = false;
         if (sqlQuery.isA(SqlKind.Explain)) {
             explain = true;
+
             // dig out the underlying SQL statement
             SqlExplain sqlExplain = (SqlExplain) sqlQuery;
             sqlQuery = sqlExplain.getExplicandum();
@@ -391,7 +379,7 @@ public class OJStatement
         }
 
         SqlToRelConverter sqlToRelConverter =
-            getSqlToRelConverter(validator,connection);
+            getSqlToRelConverter(validator, connection);
         RelNode rootRel;
         if (needValidation) {
             rootRel = sqlToRelConverter.convertQuery(sqlQuery);
@@ -407,9 +395,12 @@ public class OJStatement
         if (explain) {
             return new PreparedExplanation(rootRel);
         }
-        return implement(rootRel, sqlQuery.getKind(), decl, arguments);
+        return implement(
+            rootRel,
+            sqlQuery.getKind(),
+            decl,
+            arguments);
     }
-
 
     /** optimize a query plan.
      * @param rootRel root of a relational expression
@@ -419,15 +410,14 @@ public class OJStatement
     {
         RelOptPlanner planner = rootRel.getCluster().getPlanner();
         planner.setRoot(rootRel);
-        rootRel = planner.changeConvention(rootRel,resultCallingConvention);
-        assert(rootRel != null);
+        rootRel = planner.changeConvention(rootRel, resultCallingConvention);
+        assert (rootRel != null);
         planner.setRoot(rootRel);
         planner = planner.chooseDelegate();
         rootRel = planner.findBestExp();
-        assert(rootRel != null) : "could not implement exp";
+        assert (rootRel != null) : "could not implement exp";
         return rootRel;
     }
-
 
     /** implement a physical query plan.
      * @param rootRel root of the relational expression.
@@ -437,24 +427,22 @@ public class OJStatement
      * @return an executable plan, a {@link PreparedExecution}.
      */
     private PreparedExecution implement(
-        RelNode rootRel, SqlKind sqlKind,
-        ClassDeclaration decl, Argument[] args)
+        RelNode rootRel,
+        SqlKind sqlKind,
+        ClassDeclaration decl,
+        Argument [] args)
     {
         JavaRelImplementor relImplementor =
             getRelImplementor(rootRel.getCluster().rexBuilder);
         Expression expr = relImplementor.implementRoot((JavaRel) rootRel);
         boolean isDml = sqlKind.isA(SqlKind.Dml);
         ParseTree parseTree = expr;
-        BoundMethod boundMethod = compileAndBind(decl,parseTree,args);
+        BoundMethod boundMethod = compileAndBind(decl, parseTree, args);
         final PreparedExecution plan =
-            new PreparedExecution(
-                parseTree,
-                rootRel.getRowType(),
-                isDml,
-                boundMethod);
+            new PreparedExecution(parseTree,
+                rootRel.getRowType(), isDml, boundMethod);
         return plan;
     }
-
 
     /**
      * Prepares a statement for execution, starting from a relational expression
@@ -469,14 +457,17 @@ public class OJStatement
      * @param args openjava argument list for the generated code.
      */
     public PreparedResult prepareSql(
-        RelNode rootRel, SqlKind sqlKind, boolean needOpt,
-        ClassDeclaration decl, Argument[] args)
+        RelNode rootRel,
+        SqlKind sqlKind,
+        boolean needOpt,
+        ClassDeclaration decl,
+        Argument [] args)
     {
-        if (needOpt)
+        if (needOpt) {
             rootRel = optimize(rootRel);
+        }
         return implement(rootRel, sqlKind, decl, args);
     }
-
 
     /**
      * Protected method to allow subclasses to override construction of
@@ -491,8 +482,7 @@ public class OJStatement
             connection.getRelOptSchema(),
             env,
             connection,
-            new JavaRexBuilder(
-                connection.getRelOptSchema().getTypeFactory()));
+            new JavaRexBuilder(connection.getRelOptSchema().getTypeFactory()));
     }
 
     /**
@@ -508,22 +498,23 @@ public class OJStatement
      * Validates and transforms an expression: expands schemas, validates, and
      * possibly expands queries.
      */
-    public ParseTree validate(ParseTree parseTree,QueryExpander queryExpander)
+    public ParseTree validate(
+        ParseTree parseTree,
+        QueryExpander queryExpander)
     {
         MemberAccessCorrector corrector = new MemberAccessCorrector(env);
-        parseTree = Util.go(corrector,parseTree);
+        parseTree = Util.go(corrector, parseTree);
         OJSchemaExpander schemaExpander = new OJSchemaExpander(env);
-        parseTree = Util.go(schemaExpander,parseTree);
+        parseTree = Util.go(schemaExpander, parseTree);
         OJValidator validator = new OJValidator(env);
-        parseTree = Util.go(validator,parseTree);
+        parseTree = Util.go(validator, parseTree);
         if (queryExpander == null) {
             return parseTree;
         }
         try {
-            parseTree = Util.go(queryExpander,parseTree);
+            parseTree = Util.go(queryExpander, parseTree);
         } catch (Throwable e) {
-            throw Util.newInternal(
-                e,
+            throw Util.newInternal(e,
                 "while validating parse tree " + parseTree);
         }
         return parseTree;
@@ -556,8 +547,8 @@ public class OJStatement
 
     protected String getTempClassName()
     {
-        return
-            "Dummy_" + Integer.toHexString(this.hashCode() + executionCount++);
+        return "Dummy_"
+        + Integer.toHexString(this.hashCode() + executionCount++);
     }
 
     protected boolean shouldAlwaysWriteJavaFile()
@@ -582,13 +573,13 @@ public class OJStatement
             Class compilerClass = Class.forName(compilerClassName);
             return (JavaCompiler) compilerClass.newInstance();
         } catch (ClassNotFoundException e) {
-            throw Util.newInternal(e,"while instantiating compiler");
+            throw Util.newInternal(e, "while instantiating compiler");
         } catch (InstantiationException e) {
-            throw Util.newInternal(e,"while instantiating compiler");
+            throw Util.newInternal(e, "while instantiating compiler");
         } catch (IllegalAccessException e) {
-            throw Util.newInternal(e,"while instantiating compiler");
+            throw Util.newInternal(e, "while instantiating compiler");
         } catch (ClassCastException e) {
-            throw Util.newInternal(e,"while instantiating compiler");
+            throw Util.newInternal(e, "while instantiating compiler");
         }
     }
 
@@ -596,7 +587,9 @@ public class OJStatement
      * Returns the lowest ancestor of <code>clazz</code> which is visible from
      * <code>fromPackage</code>&#46;<code>fromClazz</code>.
      */
-    private static Class visibleBaseClass(Class clazz, String fromPackageName)
+    private static Class visibleBaseClass(
+        Class clazz,
+        String fromPackageName)
     {
         //		String fromClassFullName;
         //		if (fromPackageName == null || fromPackageName.equals("")) {
@@ -613,8 +606,7 @@ public class OJStatement
             if (pakkage == null) {
                 pakkage = Object.class.getPackage();
             }
-            if (
-                !Modifier.isPrivate(modifiers)
+            if (!Modifier.isPrivate(modifiers)
                     && pakkage.getName().equals(fromPackageName)) {
                 return c;
             }
@@ -634,7 +626,9 @@ public class OJStatement
             TypeName typeSpecifier = varDecl.getTypeSpecifier();
             String qname = env.toQualifiedName(typeSpecifier.getName());
             OJClass clazz =
-                env.lookupClass(qname,typeSpecifier.getDimension());
+                env.lookupClass(
+                    qname,
+                    typeSpecifier.getDimension());
             String varName = varDecl.getVariable();
 
             // return new VarDecl[] {
@@ -645,8 +639,12 @@ public class OJStatement
                     OJClass.forClass(VarDecl.class),
                     new ExpressionList(
                         Literal.makeLiteral(varName),
-                        new FieldAccess(TypeName.forOJClass(clazz),"class"),
-                        Util.box(clazz,new Variable(varDecl.getVariable())))));
+                        new FieldAccess(
+                            TypeName.forOJClass(clazz),
+                            "class"),
+                        Util.box(
+                            clazz,
+                            new Variable(varDecl.getVariable())))));
         }
     }
 
@@ -657,23 +655,23 @@ public class OJStatement
         Argument [] arguments)
     {
         if (tracer.isLoggable(Level.FINE)) {
-            tracer.log(Level.FINE, "Before compile, parse tree", new Object[] {
-                parseTree});
+            tracer.log(
+                Level.FINE,
+                "Before compile, parse tree",
+                new Object [] { parseTree });
         }
         ClassCollector classCollector = new ClassCollector(env);
-        Util.discard(Util.go(classCollector,parseTree));
+        Util.discard(Util.go(classCollector, parseTree));
         OJClass [] classes = classCollector.getClasses();
-        SyntheticClass.addMembers(decl,classes);
+        SyntheticClass.addMembers(decl, classes);
 
         // NOTE jvs 14-Jan-2004:  DynamicJava doesn't correctly handle
         // the FINAL modifier on parameters.  So I made the codegen
         // for the method body copy the parameter to a final local
         // variable instead.  The only side-effect is that the parameter
         // names in the method signature is different.
-
         // TODO jvs 28-June-2004:  get rid of this if DynamicJava
         // gets tossed
-
         // form parameter list
         String [] parameterNames = new String[arguments.length];
         String [] javaParameterNames = new String[arguments.length];
@@ -700,7 +698,7 @@ public class OJStatement
         }
         if (parseTree instanceof Expression) {
             Expression expression = (Expression) parseTree;
-            returnType = Util.getType(env,expression);
+            returnType = Util.getType(env, expression);
             if (!returnType.isPrimitive()) {
                 returnType = Util.clazzObject;
             }
@@ -716,11 +714,13 @@ public class OJStatement
             openjava.ptree.Statement statement =
                 (openjava.ptree.Statement) parseTree;
             statementList.add(statement);
-            addDecl(statement,returnDeclList);
+            addDecl(statement, returnDeclList);
         } else if (parseTree instanceof StatementList) {
             StatementList newList = (StatementList) parseTree;
-            for (int i = 0,count = newList.size(); i < count; i++) {
-                addDecl(newList.get(i),returnDeclList);
+            for (int i = 0, count = newList.size(); i < count; i++) {
+                addDecl(
+                    newList.get(i),
+                    returnDeclList);
             }
             statementList.addAll(newList);
         } else {
@@ -744,19 +744,17 @@ public class OJStatement
             returnType);
         String packageName = getTempPackageName();
         CompilationUnit compUnit =
-            new CompilationUnit(
-                packageName,
-                new String[0],
+            new CompilationUnit(packageName, new String[0],
                 new ClassDeclarationList(decl));
 
         if (queryString_ != null) {
-            compUnit.setComment("/** " + queryString_.replaceAll("\n","\n// ") + "\n */");
+            compUnit.setComment("/** "
+                + queryString_.replaceAll("\n", "\n// ") + "\n */");
         }
         String s;
 
         // TODO jvs 28-June-2004:  get rid of this if DynamicJava
         // gets tossed
-
         // hack because DynamicJava cannot resolve fully-qualified inner
         // class names such as "saffron.runtime.Dummy_389838.Ojp_0",
         // and needs dollar signs to help it, but the real Java compiler
@@ -768,15 +766,16 @@ public class OJStatement
         }
         String className = decl.getName();
         packageName = compUnit.getPackage(); // e.g. "abc.def", or null
-        return compile(packageName,className,s,parameterTypes,parameterNames);
+        return compile(packageName, className, s, parameterTypes,
+            parameterNames);
     }
 
     private String generateDynamicJavaCode(CompilationUnit compUnit)
     {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
-        SourceCodeWriter writer = new SourceCodeWriter(pw)
-            {
+        SourceCodeWriter writer =
+            new SourceCodeWriter(pw) {
                 public void visit(TypeName p)
                     throws ParseTreeException
                 {
@@ -804,7 +803,7 @@ public class OJStatement
         JavaCompilerArgs args = javaCompiler.getArgs();
         args.clear();
         String initialArgs =
-                SaffronProperties.instance().javaCompilerArgs.get();
+            SaffronProperties.instance().javaCompilerArgs.get();
         if (initialArgs != null) {
             args.setString(initialArgs);
         }
@@ -815,15 +814,17 @@ public class OJStatement
             fullClassName = packageName + "." + className;
         }
         String javaFileName =
-            Util.replace(fullClassName,".",Util.fileSeparator) + ".java";
+            Util.replace(fullClassName, ".", Util.fileSeparator) + ".java";
         File javaRoot = new File(getJavaRoot());
-        File javaFile = new File(javaRoot,javaFileName);
+        File javaFile = new File(javaRoot, javaFileName);
 
         boolean writeJavaFile = shouldAlwaysWriteJavaFile();
         javaCompiler.getArgs().setDestdir(javaRoot.getAbsolutePath());
         javaCompiler.getArgs().setFullClassName(fullClassName);
         if (javaCompiler.getArgs().supportsSetSource()) {
-            javaCompiler.getArgs().setSource(s, javaFile.toString());
+            javaCompiler.getArgs().setSource(
+                s,
+                javaFile.toString());
         } else {
             writeJavaFile = true;
             args.addFile(javaFile.toString());
@@ -835,15 +836,14 @@ public class OJStatement
                 final boolean print =
                     SaffronProperties.instance().printBeforeCompile.get();
                 if (print) {
-                    System.out.println(
-                        "Compiling " + javaFile + ", class " + fullClassName);
+                    System.out.println("Compiling " + javaFile + ", class "
+                        + fullClassName);
                 }
                 FileWriter fw = new FileWriter(javaFile);
                 fw.write(s);
                 fw.close();
             } catch (java.io.IOException e2) {
-                throw Util.newInternal(
-                    e2,
+                throw Util.newInternal(e2,
                     "while writing java file '" + javaFile + "'");
             }
         }
@@ -856,9 +856,11 @@ public class OJStatement
                     true,
                     javaCompiler.getClassLoader());
             Object o = clazz.newInstance();
-            Method method = clazz.getDeclaredMethod(
-                getTempMethodName(),parameterTypes);
-            return new BoundMethod(o,method,parameterNames);
+            Method method =
+                clazz.getDeclaredMethod(
+                    getTempMethodName(),
+                    parameterTypes);
+            return new BoundMethod(o, method, parameterNames);
         } catch (ClassNotFoundException e) {
             throw Toolbox.newInternal(e);
         } catch (InstantiationException e) {
@@ -870,16 +872,15 @@ public class OJStatement
         }
     }
 
-    //~ Inner Interfaces ------------------------------------------------------
-
     interface Binder
     {
         void declareClass(ClassDeclaration cdecl);
 
-        void declareVariable(String name,OJClass clazz,Object value);
+        void declareVariable(
+            String name,
+            OJClass clazz,
+            Object value);
     }
-
-    //~ Inner Classes ---------------------------------------------------------
 
     /**
      * An <code>Argument</code> supplies a name/value pair to a statement. The
@@ -896,7 +897,10 @@ public class OJStatement
         /**
          * Creates an argument.
          */
-        public Argument(String name,Class clazz,Object value)
+        public Argument(
+            String name,
+            Class clazz,
+            Object value)
         {
             this.name = name;
             this.clazz = clazz;
@@ -907,7 +911,9 @@ public class OJStatement
          * Creates an argument whose type is the runtime type of
          * <code>value</code>.
          */
-        public Argument(String name,Object value)
+        public Argument(
+            String name,
+            Object value)
         {
             this.name = name;
             this.clazz = value.getClass();
@@ -917,9 +923,11 @@ public class OJStatement
         /**
          * Creates an <code>int</code> argument.
          */
-        public Argument(String name,int value)
+        public Argument(
+            String name,
+            int value)
         {
-            this(name,java.lang.Integer.TYPE,new Integer(value));
+            this(name, java.lang.Integer.TYPE, new Integer(value));
         }
 
         public RelOptSchema getRelOptSchema()
@@ -945,7 +953,6 @@ public class OJStatement
             return value;
         }
     }
-
 }
 
 

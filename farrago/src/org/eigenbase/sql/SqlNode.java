@@ -1,31 +1,30 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.parser.ParserPosition;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
+
+import org.eigenbase.sql.parser.ParserPosition;
 
 
 /**
@@ -39,7 +38,10 @@ import java.io.StringWriter;
  */
 public abstract class SqlNode
 {
+    //~ Instance fields -------------------------------------------------------
+
     private final ParserPosition pos;
+
     //~ Constructors ----------------------------------------------------------
 
     SqlNode(ParserPosition pos)
@@ -110,8 +112,8 @@ public abstract class SqlNode
         if (dialect == null) {
             dialect = SqlUtil.dummyDialect;
         }
-        SqlWriter writer = new SqlWriter(dialect,pw);
-        unparse(writer,0,0);
+        SqlWriter writer = new SqlWriter(dialect, pw);
+        unparse(writer, 0, 0);
         pw.flush();
         return sw.toString();
     }
@@ -139,7 +141,10 @@ public abstract class SqlNode
      * @param rightPrec The precedence of the {@link SqlNode} immediately
      *   following this node in a depth-first scan of the parse tree
      */
-    public abstract void unparse(SqlWriter writer,int leftPrec,int rightPrec);
+    public abstract void unparse(
+        SqlWriter writer,
+        int leftPrec,
+        int rightPrec);
 
     public ParserPosition getParserPosition()
     {

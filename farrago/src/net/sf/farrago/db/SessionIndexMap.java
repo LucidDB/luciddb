@@ -6,32 +6,32 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.db;
 
+import java.sql.*;
+import java.util.*;
+
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.util.*;
-import net.sf.farrago.type.*;
-import net.sf.farrago.query.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fennel.*;
-import net.sf.farrago.resource.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.util.*;
+import net.sf.farrago.query.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.type.*;
+import net.sf.farrago.util.*;
 
-import java.util.*;
-import java.sql.*;
 
 /**
  * SessionIndexMap implements FarragoIndexMap, resolving indexes for both
@@ -40,22 +40,23 @@ import java.sql.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class SessionIndexMap
-    extends FarragoCompoundAllocation
+class SessionIndexMap extends FarragoCompoundAllocation
     implements FarragoIndexMap
 {
+    //~ Instance fields -------------------------------------------------------
+
     private FarragoDatabase database;
-    
+
     /**
      * Map from index to root PageId for temporary tables.
      */
     private Map tempIndexRootMap;
-    
+
     /**
      * Map from index ID to index for all tables.
      */
     private Map indexIdMap;
-    
+
     /**
      * Repos for this session.
      */
@@ -65,6 +66,8 @@ class SessionIndexMap
      * Cache for local data wrappers used to manage indexes.
      */
     private FarragoDataWrapperCache dataWrapperCache;
+
+    //~ Constructors ----------------------------------------------------------
 
     /**
      * Create a new SessionIndexMap.
@@ -87,45 +90,50 @@ class SessionIndexMap
         indexIdMap = new HashMap();
         owner.addAllocation(this);
 
-        dataWrapperCache = new FarragoDataWrapperCache(
-            this,
-            database.getDataWrapperCache(),
-            repos,
-            database.getFennelDbHandle());
+        dataWrapperCache =
+            new FarragoDataWrapperCache(
+                this,
+                database.getDataWrapperCache(),
+                repos,
+                database.getFennelDbHandle());
     }
-    
+
+    //~ Methods ---------------------------------------------------------------
+
     // implement FarragoIndexMap
-    public long getIndexRoot(
-        CwmSqlindex index)
+    public long getIndexRoot(CwmSqlindex index)
     {
         if (repos.isTemporary(index)) {
             Long root = (Long) tempIndexRootMap.get(index);
-            assert(root != null);
+            assert (root != null);
             return root.longValue();
         } else {
-            return Long.parseLong(
-                repos.getTagValue(index,"indexRoot"));
+            return Long.parseLong(repos.getTagValue(index, "indexRoot"));
         }
     }
-    
+
     private void setIndexRoot(
-        CwmSqlindex index,long root)
+        CwmSqlindex index,
+        long root)
     {
         if (repos.isTemporary(index)) {
-            Object old = tempIndexRootMap.put(index,new Long(root));
-            assert(old == null);
+            Object old = tempIndexRootMap.put(
+                    index,
+                    new Long(root));
+            assert (old == null);
         } else {
             repos.setTagValue(
-                index,"indexRoot",Long.toString(root));
+                index,
+                "indexRoot",
+                Long.toString(root));
         }
     }
 
     // implement FarragoIndexMap
-    public void instantiateTemporaryTable(
-        CwmTable table)
+    public void instantiateTemporaryTable(CwmTable table)
     {
-        assert(table.isTemporary());
-        
+        assert (table.isTemporary());
+
         CwmSqlindex clusteredIndex = repos.getClusteredIndex(table);
 
         if (tempIndexRootMap.containsKey(clusteredIndex)) {
@@ -136,7 +144,7 @@ class SessionIndexMap
         Iterator iter = repos.getIndexes(table).iterator();
         while (iter.hasNext()) {
             CwmSqlindex index = (CwmSqlindex) iter.next();
-            assert(!tempIndexRootMap.containsKey(index));
+            assert (!tempIndexRootMap.containsKey(index));
             createIndexStorage(index);
         }
     }
@@ -149,10 +157,10 @@ class SessionIndexMap
         Iterator iter = list.iterator();
         while (iter.hasNext()) {
             CwmSqlindex index = (CwmSqlindex) iter.next();
-            dropIndexStorage(index,false);
+            dropIndexStorage(index, false);
         }
-        // TODO:  make Fennel drop temporary indexes on recovery also
 
+        // TODO:  make Fennel drop temporary indexes on recovery also
         // NOTE:  do this last, so that we don't release data wrappers
         // until we're done using them for drops above
         super.closeAllocation();
@@ -170,15 +178,13 @@ class SessionIndexMap
             if (index.getTable().getTemporaryScope().endsWith("PRESERVE")) {
                 continue;
             }
-            dropIndexStorage(index,true);
+            dropIndexStorage(index, true);
         }
     }
 
     // REVIEW:  rollback issues
-
     // implement FarragoIndexMap
-    public void createIndexStorage(
-        CwmSqlindex index)
+    public void createIndexStorage(CwmSqlindex index)
     {
         FarragoMedLocalDataServer server = getIndexDataServer(index);
         long indexRoot;
@@ -186,9 +192,10 @@ class SessionIndexMap
             indexRoot = server.createIndex(index);
         } catch (SQLException ex) {
             throw FarragoResource.instance().newDataServerIndexCreateFailed(
-                repos.getLocalizedObjectName(index,null),ex);
+                repos.getLocalizedObjectName(index, null),
+                ex);
         }
-        setIndexRoot(index,indexRoot);
+        setIndexRoot(index, indexRoot);
         indexIdMap.put(
             new Long(JmiUtil.getObjectId(index)),
             index);
@@ -196,7 +203,8 @@ class SessionIndexMap
 
     // implement FarragoIndexMap
     public void dropIndexStorage(
-        CwmSqlindex index,boolean truncate)
+        CwmSqlindex index,
+        boolean truncate)
     {
         if (repos.isTemporary(index)) {
             if (!tempIndexRootMap.containsKey(index)) {
@@ -207,18 +215,22 @@ class SessionIndexMap
 
         FarragoMedLocalDataServer server = getIndexDataServer(index);
         try {
-            server.dropIndex(index,getIndexRoot(index),truncate);
+            server.dropIndex(
+                index,
+                getIndexRoot(index),
+                truncate);
         } catch (SQLException ex) {
             throw FarragoResource.instance().newDataServerIndexDropFailed(
-                repos.getLocalizedObjectName(index,null),ex);
+                repos.getLocalizedObjectName(index, null),
+                ex);
         }
-        
+
         if (!truncate) {
             indexIdMap.remove(new Long(JmiUtil.getObjectId(index)));
             tempIndexRootMap.remove(index);
         }
     }
-    
+
     // implement FarragoIndexMap
     public CwmSqlindex getIndexById(long id)
     {
@@ -228,11 +240,11 @@ class SessionIndexMap
     private FarragoMedLocalDataServer getIndexDataServer(CwmSqlindex index)
     {
         FemLocalTable localTable = (FemLocalTable) index.getSpannedClass();
-        FemDataServerImpl femServer = (FemDataServerImpl)
-            localTable.getServer();
-        return (FarragoMedLocalDataServer)
-            femServer.loadFromCache(dataWrapperCache);
+        FemDataServerImpl femServer =
+            (FemDataServerImpl) localTable.getServer();
+        return (FarragoMedLocalDataServer) femServer.loadFromCache(dataWrapperCache);
     }
 }
+
 
 // End SessionIndexMap.java

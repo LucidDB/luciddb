@@ -16,12 +16,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.fennel;
+
+import java.sql.*;
 
 import net.sf.farrago.fem.fennel.*;
 
-import java.sql.*;
 
 /**
  * FennelStorage is the JNI interface for calling Fennel from Farrago.  Most
@@ -44,8 +44,6 @@ public class FennelStorage
             System.loadLibrary("farrago");
         }
     }
-
-    //~ Constructors ----------------------------------------------------------
 
     //~ Methods ---------------------------------------------------------------
 
@@ -75,7 +73,9 @@ public class FennelStorage
      * @param handle the handle to change
      * @param obj new object
      */
-    static native void setObjectHandle(long handle,Object obj);
+    static native void setObjectHandle(
+        long handle,
+        Object obj);
 
     /**
      * .
@@ -103,7 +103,8 @@ public class FennelStorage
      *
      * @return output object handle if any
      */
-    static native long executeJavaCmd(FemCmd cmd) throws SQLException;
+    static native long executeJavaCmd(FemCmd cmd)
+        throws SQLException;
 
     /**
      * Open a tuple stream graph.
@@ -115,8 +116,9 @@ public class FennelStorage
     static native void tupleStreamGraphOpen(
         long hStreamGraph,
         long hTxn,
-        FennelJavaStreamMap javaStreamMap) throws SQLException;
-    
+        FennelJavaStreamMap javaStreamMap)
+        throws SQLException;
+
     /**
      * Fetch buffer of rows from a tuple stream.  If unpositioned, this
      * fetches the first rows.
@@ -129,8 +131,9 @@ public class FennelStorage
      */
     static native int tupleStreamFetch(
         long hStream,
-        byte [] byteArray) throws SQLException;
-    
+        byte [] byteArray)
+        throws SQLException;
+
     /**
      * Close a tuple stream graph.
      *
@@ -139,7 +142,8 @@ public class FennelStorage
      */
     static native void tupleStreamGraphClose(
         long hStreamGraph,
-        boolean deallocate) throws SQLException;
+        boolean deallocate)
+        throws SQLException;
 }
 
 

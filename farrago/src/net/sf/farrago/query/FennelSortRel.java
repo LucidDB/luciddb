@@ -17,18 +17,18 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.query;
+
+import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.util.*;
 
-import org.eigenbase.relopt.*;
 import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.util.*;
 
-import java.util.*;
 
 /**
  * FennelSortRel is the relational expression corresponding to a sort
@@ -66,7 +66,7 @@ public class FennelSortRel extends FennelPullSingleRel
         Integer [] keyProjection,
         boolean discardDuplicates)
     {
-        super(cluster,child);
+        super(cluster, child);
 
         // TODO:  validate that keyProject references are distinct
         this.keyProjection = keyProjection;
@@ -111,7 +111,7 @@ public class FennelSortRel extends FennelPullSingleRel
     {
         pw.explain(
             this,
-            new String [] { "child","key","discardDuplicates" },
+            new String [] { "child", "key", "discardDuplicates" },
             new Object [] {
                 Arrays.asList(keyProjection),
                 Boolean.valueOf(discardDuplicates)
@@ -124,12 +124,12 @@ public class FennelSortRel extends FennelPullSingleRel
         FemSortingStreamDef sortingStream =
             getRepos().newFemSortingStreamDef();
 
-        sortingStream.setDistinctness(
-            discardDuplicates
-            ? DistinctnessEnum.DUP_DISCARD
-            : DistinctnessEnum.DUP_ALLOW);
+        sortingStream.setDistinctness(discardDuplicates
+            ? DistinctnessEnum.DUP_DISCARD : DistinctnessEnum.DUP_ALLOW);
         sortingStream.setKeyProj(
-            FennelRelUtil.createTupleProjection(getRepos(),keyProjection));
+            FennelRelUtil.createTupleProjection(
+                getRepos(),
+                keyProjection));
         sortingStream.getInput().add(
             implementor.visitFennelChild((FennelRel) child));
         return sortingStream;

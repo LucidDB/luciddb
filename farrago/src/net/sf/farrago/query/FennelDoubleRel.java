@@ -17,18 +17,18 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.query;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.type.*;
+
+import openjava.ptree.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.*;
 
-import openjava.ptree.*;
 
 /**
  * FennelDoubleRel is a {@link FennelRel} which takes two FennelRels as inputs.
@@ -38,8 +38,12 @@ import openjava.ptree.*;
  */
 abstract class FennelDoubleRel extends AbstractRelNode implements FennelRel
 {
+    //~ Instance fields -------------------------------------------------------
+
     RelNode left;
     RelNode right;
+
+    //~ Constructors ----------------------------------------------------------
 
     /**
      * Creates a new FennelDoubleRel object.
@@ -58,14 +62,18 @@ abstract class FennelDoubleRel extends AbstractRelNode implements FennelRel
         this.right = right;
     }
 
+    //~ Methods ---------------------------------------------------------------
+
     // implement RelNode
     public RelNode [] getInputs()
     {
-        return new RelNode [] { left,right };
+        return new RelNode [] { left, right };
     }
 
     // implement RelNode
-    public void replaceInput(int ordinalInParent,RelNode p)
+    public void replaceInput(
+        int ordinalInParent,
+        RelNode p)
     {
         switch (ordinalInParent) {
         case 0:
@@ -94,14 +102,12 @@ abstract class FennelDoubleRel extends AbstractRelNode implements FennelRel
     // implement RelNode
     public Object implementFennelChild(FennelRelImplementor implementor)
     {
-        Expression expr1 = (Expression)
-                implementor.visitChild(this, 0, left);
-        Expression expr2 = (Expression)
-                implementor.visitChild(this, 1, right);
+        Expression expr1 = (Expression) implementor.visitChild(this, 0, left);
+        Expression expr2 = (Expression) implementor.visitChild(this, 1, right);
         return new MethodCall(
             getPreparingStmt().getConnectionVariable(),
             "dummyPair",
-            new ExpressionList(expr1,expr2));
+            new ExpressionList(expr1, expr2));
     }
 
     // implement RelNode
@@ -110,7 +116,7 @@ abstract class FennelDoubleRel extends AbstractRelNode implements FennelRel
         RelDataType leftType = left.getRowType();
         RelDataType rightType = right.getRowType();
         return cluster.typeFactory.createJoinType(
-            new RelDataType [] { leftType,rightType });
+            new RelDataType [] { leftType, rightType });
     }
 
     /**
@@ -153,5 +159,6 @@ abstract class FennelDoubleRel extends AbstractRelNode implements FennelRel
         return RelFieldCollation.emptyCollationArray;
     }
 }
+
 
 // End FennelDoubleRel.java

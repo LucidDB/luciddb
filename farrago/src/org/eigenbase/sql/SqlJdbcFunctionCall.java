@@ -1,36 +1,37 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.test.SqlTester;
+import java.util.HashMap;
+
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.fun.SqlTrimFunction;
 import org.eigenbase.sql.parser.ParserPosition;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.util.Util;
-import org.eigenbase.resource.EigenbaseResource;
 
-import java.util.HashMap;
 
 /**
  * A <code>SqlJdbcFunctionCall</code> is a node of a parse tree which
@@ -42,72 +43,103 @@ import java.util.HashMap;
  **/
 public class SqlJdbcFunctionCall extends SqlFunction
 {
+    //~ Instance fields -------------------------------------------------------
+
     String jdbcName;
     MakeCall lookupMakeCallObj;
     private SqlCall lookupCall;
-//    private SqlCall thisCall;
-    SqlNode[] thisOperands;
 
-    public SqlCall createCall(SqlNode[] operands, ParserPosition parserPosition) {
+    //    private SqlCall thisCall;
+    SqlNode [] thisOperands;
+
+    //~ Constructors ----------------------------------------------------------
+
+    public SqlJdbcFunctionCall(String name)
+    {
+        super("{fn " + name + "}", null, null, null);
+        jdbcName = name;
+        lookupMakeCallObj = JdbcToInteralLookupTable.lookup(name);
+        lookupCall = null;
+    }
+
+    //~ Methods ---------------------------------------------------------------
+
+    public SqlCall createCall(
+        SqlNode [] operands,
+        ParserPosition parserPosition)
+    {
         thisOperands = operands;
         return super.createCall(operands, parserPosition);
     }
 
-    public SqlJdbcFunctionCall(String name) {
-        super("{fn "+name+"}", null, null, null);
-        jdbcName=name;
-        lookupMakeCallObj = JdbcToInteralLookupTable.lookup(name);
-        lookupCall=null;
-    }
-
-    public void test(SqlTester tester) {
+    public void test(SqlTester tester)
+    {
         /* empty implementation */
     }
 
-    public SqlCall getLookupCall() {
-        if (null==lookupCall) {
+    public SqlCall getLookupCall()
+    {
+        if (null == lookupCall) {
             lookupCall = lookupMakeCallObj.createCall(thisOperands, null);
         }
         return lookupCall;
     }
 
-    public String getAllowedSignatures() {
+    public String getAllowedSignatures()
+    {
         return lookupMakeCallObj.operator.getAllowedSignatures(name);
     }
 
-    public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor() {
+    public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()
+    {
         return OperandsCountDescriptor.variadic;
     }
 
-    public RelDataType getType(SqlValidator validator, SqlValidator.Scope scope,
-                               SqlCall call) {
-        if (null==lookupMakeCallObj) {
-            throw EigenbaseResource.instance().newFunctionUndefined(name, call.getParserPosition().toString());
+    public RelDataType getType(
+        SqlValidator validator,
+        SqlValidator.Scope scope,
+        SqlCall call)
+    {
+        if (null == lookupMakeCallObj) {
+            throw EigenbaseResource.instance().newFunctionUndefined(
+                name,
+                call.getParserPosition().toString());
         }
 
         if (!lookupMakeCallObj.checkNumberOfArg(call.operands.length)) {
             //todo add position data
             throw EigenbaseResource.instance().newWrongNumberOfParam(
-                    name, ""+thisOperands.length, getNumOfArgMismatchMsg(), call.getParserPosition().toString());
+                name,
+                "" + thisOperands.length,
+                getNumOfArgMismatchMsg(),
+                call.getParserPosition().toString());
         }
 
-        if (!lookupMakeCallObj.operator.checkArgTypesNoThrow(getLookupCall(),
-                validator, scope)){
+        if (!lookupMakeCallObj.operator.checkArgTypesNoThrow(
+                    getLookupCall(),
+                    validator,
+                    scope)) {
             throw call.newValidationSignatureError(validator, scope);
         }
         return lookupMakeCallObj.operator.getType(
-                validator, scope, getLookupCall());
+            validator,
+            scope,
+            getLookupCall());
     }
 
-    public RelDataType getType(RelDataTypeFactory typeFactory, RelDataType[] argTypes) {
+    public RelDataType getType(
+        RelDataTypeFactory typeFactory,
+        RelDataType [] argTypes)
+    {
         return lookupMakeCallObj.operator.getType(typeFactory, argTypes);
     }
 
-    private String getNumOfArgMismatchMsg() {
+    private String getNumOfArgMismatchMsg()
+    {
         StringBuffer ret = new StringBuffer();
-        int[] possible = lookupMakeCallObj.getPossibleNumOfOperands();
+        int [] possible = lookupMakeCallObj.getPossibleNumOfOperands();
         for (int i = 0; i < possible.length; i++) {
-            if (i>0) {
+            if (i > 0) {
                 ret.append(" or ");
             }
             ret.append(possible[i]);
@@ -117,39 +149,49 @@ public class SqlJdbcFunctionCall extends SqlFunction
     }
 
     public void unparse(
-            SqlWriter writer,
-            SqlNode[] operands,
-            int leftPrec,
-            int rightPrec) {
+        SqlWriter writer,
+        SqlNode [] operands,
+        int leftPrec,
+        int rightPrec)
+    {
         writer.print("{fn ");
         writer.print(jdbcName);
         writer.print("(");
         for (int i = 0; i < operands.length; i++) {
-            if (i>0) {
+            if (i > 0) {
                 writer.print(", ");
             }
-            operands[i].unparse(writer,leftPrec,rightPrec);
+            operands[i].unparse(writer, leftPrec, rightPrec);
         }
         writer.print(") }");
     }
+
+    //~ Inner Classes ---------------------------------------------------------
 
     /**
      * Represent a Strategy Object to create a {@link SqlCall} by providing
      * the feature of reording, adding/dropping operands.
      */
-    private static class MakeCall {
+    private static class MakeCall
+    {
         final SqlOperator operator;
-        final int[]  order;
-        final int[] numOfArgs;
+        final int [] order;
+        final int [] numOfArgs;
 
-        MakeCall(SqlOperator operator, int numOfArgs) {
-            this.operator=operator;
+        MakeCall(
+            SqlOperator operator,
+            int numOfArgs)
+        {
+            this.operator = operator;
             this.order = null;
-            this.numOfArgs = new int[]{numOfArgs};
+            this.numOfArgs = new int [] { numOfArgs };
         }
 
-        MakeCall(SqlOperator operator, int[] numOfArgs) {
-            this.operator=operator;
+        MakeCall(
+            SqlOperator operator,
+            int [] numOfArgs)
+        {
+            this.operator = operator;
             this.order = null;
             this.numOfArgs = numOfArgs;
         }
@@ -167,21 +209,26 @@ public class SqlJdbcFunctionCall extends SqlFunction
          * @param operator
          * @param order
          */
-        MakeCall(SqlOperator operator, final int numOfArgs, int[] order) {
-            Util.pre(null!=order,"null!=order");
-            Util.pre(order.length > 0,"order.length > 0");
-            Util.pre(numOfArgs==order.length,"numOfArgs==order.length");
-            this.operator=operator;
-            this.order=order;
-            this.numOfArgs = new int[]{order.length};
+        MakeCall(
+            SqlOperator operator,
+            final int numOfArgs,
+            int [] order)
+        {
+            Util.pre(null != order, "null!=order");
+            Util.pre(order.length > 0, "order.length > 0");
+            Util.pre(numOfArgs == order.length, "numOfArgs==order.length");
+            this.operator = operator;
+            this.order = order;
+            this.numOfArgs = new int [] { order.length };
 
             // sanity checking ...
             for (int i = 0; i < order.length; i++) {
-                Util.pre(order[i] < order.length,"order[i] < order.length");
+                Util.pre(order[i] < order.length, "order[i] < order.length");
             }
         }
 
-        final int[] getPossibleNumOfOperands() {
+        final int [] getPossibleNumOfOperands()
+        {
             return this.numOfArgs;
         }
 
@@ -189,9 +236,10 @@ public class SqlJdbcFunctionCall extends SqlFunction
          * Uses the data in {@link this.order} to reorder a SqlNode[] array.
          * @param operands
          */
-        protected SqlNode[] reorder(SqlNode[] operands) {
-            assert(operands.length==order.length);
-            SqlNode[] newOrder = new SqlNode[operands.length];
+        protected SqlNode [] reorder(SqlNode [] operands)
+        {
+            assert (operands.length == order.length);
+            SqlNode [] newOrder = new SqlNode[operands.length];
             for (int i = 0; i < operands.length; i++) {
                 newOrder[order[i]] = operands[i];
             }
@@ -204,11 +252,16 @@ public class SqlJdbcFunctionCall extends SqlFunction
          * the operands reordered, otherwise no change of ordering is applied
          * @param operands
          */
-        SqlCall createCall(SqlNode[] operands, ParserPosition parserPosition) {
-            if (null==order) {
+        SqlCall createCall(
+            SqlNode [] operands,
+            ParserPosition parserPosition)
+        {
+            if (null == order) {
                 return operator.createCall(operands, parserPosition);
             }
-            return operator.createCall(reorder(operands), parserPosition);
+            return operator.createCall(
+                reorder(operands),
+                parserPosition);
         }
 
         /**
@@ -217,9 +270,10 @@ public class SqlJdbcFunctionCall extends SqlFunction
          * of operands direct from the oven, e.g no reording or adding/dropping
          * of operands...else it would make much sense to have this methods
          */
-        boolean checkNumberOfArg(int length) {
+        boolean checkNumberOfArg(int length)
+        {
             for (int i = 0; i < numOfArgs.length; i++) {
-                if (numOfArgs[i]==length) {
+                if (numOfArgs[i] == length) {
                     return true;
                 }
             }
@@ -230,66 +284,110 @@ public class SqlJdbcFunctionCall extends SqlFunction
     /**
      * Lookup table between JDBC functions and internal representation
      */
-    private static class JdbcToInteralLookupTable {
+    private static class JdbcToInteralLookupTable
+    {
         private static final HashMap map;
+
         static {
             SqlStdOperatorTable opTab = SqlOperatorTable.std();
             map = new HashMap();
+
             // A table of all functions can be found at http://java.sun.com/products/jdbc/driverdevs.html
             // which is also provided at the end of this file.
+            map.put(
+                "ABS",
+                new MakeCall(opTab.absFunc, 1));
+            map.put(
+                "LOG",
+                new MakeCall(opTab.lnFunc, 1));
+            map.put(
+                "LOG10",
+                new MakeCall(opTab.logFunc, 1));
+            map.put(
+                "MOD",
+                new MakeCall(opTab.modFunc, 2));
+            map.put(
+                "POWER",
+                new MakeCall(opTab.powFunc, 2));
 
-            //~ SCALARS -------
-            map.put("ABS", new MakeCall(opTab.absFunc,1));
-            map.put("LOG", new MakeCall(opTab.lnFunc,1));
-            map.put("LOG10", new MakeCall(opTab.logFunc,1));
-            map.put("MOD", new MakeCall(opTab.modFunc,2));
-            map.put("POWER", new MakeCall(opTab.powFunc,2));
-            //~ STRING FUNS -------
-            map.put("CONCAT", new MakeCall(opTab.concatOperator,2));
-            map.put("INSERT", new MakeCall(opTab.overlayFunc,4, new int[]{0,2,3,1}));
-            map.put("LCASE", new MakeCall(opTab.lowerFunc,1));
-            map.put("LENGTH", new MakeCall(opTab.characterLengthFunc,1));
-            map.put("LOCATE", new MakeCall(opTab.positionFunc,new int[]{2}));
-            map.put("LTRIM", new MakeCall(opTab.trimFunc,1) {
-                SqlCall createCall(SqlNode[] operands) {
-                    assert(null!=operands);
-                    assert(1==operands.length);
-                    SqlNode[] newOperands = new SqlNode[3];
-                    newOperands[0] = SqlTrimFunction.Flag.createLeading(null);
-                    newOperands[1] = SqlLiteral.CharString.create(" ", null);
-                    newOperands[2] = operands[0];
+            map.put(
+                "CONCAT",
+                new MakeCall(opTab.concatOperator, 2));
+            map.put(
+                "INSERT",
+                new MakeCall(
+                    opTab.overlayFunc,
+                    4,
+                    new int [] { 0, 2, 3, 1 }));
+            map.put(
+                "LCASE",
+                new MakeCall(opTab.lowerFunc, 1));
+            map.put(
+                "LENGTH",
+                new MakeCall(opTab.characterLengthFunc, 1));
+            map.put(
+                "LOCATE",
+                new MakeCall(
+                    opTab.positionFunc,
+                    new int [] { 2 }));
+            map.put(
+                "LTRIM",
+                new MakeCall(opTab.trimFunc, 1) {
+                    SqlCall createCall(SqlNode [] operands)
+                    {
+                        assert (null != operands);
+                        assert (1 == operands.length);
+                        SqlNode [] newOperands = new SqlNode[3];
+                        newOperands[0] =
+                            SqlTrimFunction.Flag.createLeading(null);
+                        newOperands[1] =
+                            SqlLiteral.CharString.create(" ", null);
+                        newOperands[2] = operands[0];
 
-                    return super.createCall(newOperands, null);
-                }
-            });
-            map.put("RTRIM", new MakeCall(opTab.trimFunc,1) {
-                SqlCall createCall(SqlNode[] operands) {
-                    assert(null!=operands);
-                    assert(1==operands.length);
-                    SqlNode[] newOperands = new SqlNode[3];
-                    newOperands[0] = SqlTrimFunction.Flag.createTrailing(null);
-                    newOperands[1] = SqlLiteral.CharString.create(" ", null);
-                    newOperands[2] = operands[0];
+                        return super.createCall(newOperands, null);
+                    }
+                });
+            map.put(
+                "RTRIM",
+                new MakeCall(opTab.trimFunc, 1) {
+                    SqlCall createCall(SqlNode [] operands)
+                    {
+                        assert (null != operands);
+                        assert (1 == operands.length);
+                        SqlNode [] newOperands = new SqlNode[3];
+                        newOperands[0] =
+                            SqlTrimFunction.Flag.createTrailing(null);
+                        newOperands[1] =
+                            SqlLiteral.CharString.create(" ", null);
+                        newOperands[2] = operands[0];
 
-                    return super.createCall(newOperands,null);
-                }
-            });
-            map.put("SUBSTRING", new MakeCall(opTab.substringFunc,3));
-            map.put("UCASE", new MakeCall(opTab.upperFunc,0));
-            //~ TIME FUNS -------
-            map.put("CURDATE", new MakeCall(opTab.currentDateFunc,0));
-            map.put("CURTIME", new MakeCall(opTab.localTimeFunc,0));
-            map.put("NOW", new MakeCall(opTab.currentTimestampFunc,0));
-            //~ SYSTEM FUNS -------
-            //~ CONVERSION FUNS -------
+                        return super.createCall(newOperands, null);
+                    }
+                });
+            map.put(
+                "SUBSTRING",
+                new MakeCall(opTab.substringFunc, 3));
+            map.put(
+                "UCASE",
+                new MakeCall(opTab.upperFunc, 0));
 
+            map.put(
+                "CURDATE",
+                new MakeCall(opTab.currentDateFunc, 0));
+            map.put(
+                "CURTIME",
+                new MakeCall(opTab.localTimeFunc, 0));
+            map.put(
+                "NOW",
+                new MakeCall(opTab.currentTimestampFunc, 0));
         }
 
         /**
          * Tries to lookup a given function name JDBC to an internal
          * representation. Returns null if no function defined.
          */
-        public static MakeCall lookup(String name) {
+        public static MakeCall lookup(String name)
+        {
             return (MakeCall) map.get(name);
         }
     }
@@ -451,6 +549,4 @@ public class SqlJdbcFunctionCall extends SqlFunction
 //                            FLOAT, INTEGER, LONGVARBINARY, LONGVARCHAR,
 //                            REAL, SMALLINT, TIME, TIMESTAMP,
 //                            TINYINT, VARBINARY
-
-
 // End SqlJdbcFunctionCall.java

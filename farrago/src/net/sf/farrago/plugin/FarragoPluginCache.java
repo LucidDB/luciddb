@@ -6,26 +6,26 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.plugin;
-
-import net.sf.farrago.resource.*;
-import net.sf.farrago.util.*;
-import net.sf.farrago.catalog.*;
 
 import java.net.*;
 import java.util.*;
 import java.util.jar.*;
+
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.util.*;
+
 
 /**
  * FarragoPluginCache is an abstract private cache for loading instances of
@@ -43,17 +43,21 @@ import java.util.jar.*;
  */
 public abstract class FarragoPluginCache extends FarragoCompoundAllocation
 {
+    //~ Static fields/initializers --------------------------------------------
+
     /**
      * Prefix used to indicate that a wrapper library is loaded directly from
      * a class rather than a JAR.
      */
     public static final String LIBRARY_CLASS_PREFIX = "class ";
-    
+
+    //~ Instance fields -------------------------------------------------------
+
     private Map mapMofIdToPlugin;
-
     private FarragoObjectCache sharedCache;
-
     private FarragoRepos repos;
+
+    //~ Constructors ----------------------------------------------------------
 
     /**
      * Creates an empty cache.
@@ -75,6 +79,8 @@ public abstract class FarragoPluginCache extends FarragoCompoundAllocation
         this.repos = repos;
         mapMofIdToPlugin = new HashMap();
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     /**
      * @return the underlying repos
@@ -112,14 +118,15 @@ public abstract class FarragoPluginCache extends FarragoCompoundAllocation
      *
      * @return cached plugin object
      */
-    protected Object addToPrivateCache(
-        FarragoObjectCache.Entry entry)
+    protected Object addToPrivateCache(FarragoObjectCache.Entry entry)
     {
         // take ownership of the pinned cache entry
         addAllocation(entry);
 
         Object obj = entry.getValue();
-        mapMofIdToPlugin.put(entry.getKey(),obj);
+        mapMofIdToPlugin.put(
+            entry.getKey(),
+            obj);
         return obj;
     }
 
@@ -138,26 +145,26 @@ public abstract class FarragoPluginCache extends FarragoCompoundAllocation
         String jarAttributeName)
     {
         try {
-            libraryName = FarragoProperties.instance().expandProperties(
-                libraryName);
+            libraryName =
+                FarragoProperties.instance().expandProperties(libraryName);
 
             if (libraryName.startsWith(LIBRARY_CLASS_PREFIX)) {
-                String className = libraryName.substring(
-                    LIBRARY_CLASS_PREFIX.length());
+                String className =
+                    libraryName.substring(LIBRARY_CLASS_PREFIX.length());
                 return Class.forName(className);
             } else {
                 JarFile jar = new JarFile(libraryName);
                 Manifest manifest = jar.getManifest();
                 String className =
-                    manifest.getMainAttributes().getValue(
-                        jarAttributeName);
-                URLClassLoader classLoader = new URLClassLoader(
-                    new URL [] {new URL("file:" + libraryName)});
+                    manifest.getMainAttributes().getValue(jarAttributeName);
+                URLClassLoader classLoader =
+                    new URLClassLoader(new URL [] {
+                            new URL("file:" + libraryName)
+                        });
                 return classLoader.loadClass(className);
             }
         } catch (Throwable ex) {
-            throw FarragoResource.instance().newPluginJarLoadFailed(
-                libraryName,
+            throw FarragoResource.instance().newPluginJarLoadFailed(libraryName,
                 ex);
         }
     }
@@ -179,20 +186,19 @@ public abstract class FarragoPluginCache extends FarragoCompoundAllocation
         String jarAttributeName,
         Properties options)
     {
-        Class pluginClass = loadPluginClass(
-            libraryName,jarAttributeName);
-            
+        Class pluginClass = loadPluginClass(libraryName, jarAttributeName);
+
         FarragoPlugin plugin;
         try {
             plugin = (FarragoPlugin) pluginClass.newInstance();
-            plugin.initialize(repos,options);
+            plugin.initialize(repos, options);
         } catch (Throwable ex) {
-            throw FarragoResource.instance().newPluginInitFailed(
-                libraryName,
+            throw FarragoResource.instance().newPluginInitFailed(libraryName,
                 ex);
         }
         return plugin;
     }
 }
+
 
 // End FarragoPluginCache.java

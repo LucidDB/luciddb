@@ -16,15 +16,15 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.query;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.type.*;
 import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.type.*;
 
-import org.eigenbase.relopt.*;
 import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+
 
 /**
  * FennelCartesianProductRel represents the Fennel implementation of Cartesian
@@ -35,6 +35,8 @@ import org.eigenbase.rel.*;
  */
 class FennelCartesianProductRel extends FennelPullDoubleRel
 {
+    //~ Constructors ----------------------------------------------------------
+
     /**
      * Creates a new FennelCartesianProductRel object.
      *
@@ -47,8 +49,10 @@ class FennelCartesianProductRel extends FennelPullDoubleRel
         RelNode left,
         RelNode right)
     {
-        super(cluster,left,right);
+        super(cluster, left, right);
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     // implement Cloneable
     public Object clone()
@@ -64,16 +68,14 @@ class FennelCartesianProductRel extends FennelPullDoubleRel
     {
         // TODO:  account for buffering I/O and CPU
         double rowCount = getRows();
-        return planner.makeCost(
-            rowCount,
-            0,
-            rowCount*getRowType().getFieldCount());
+        return planner.makeCost(rowCount, 0,
+            rowCount * getRowType().getFieldCount());
     }
 
     // implement RelNode
     public double getRows()
     {
-        return left.getRows()*right.getRows();
+        return left.getRows() * right.getRows();
     }
 
     // override RelNode
@@ -81,8 +83,8 @@ class FennelCartesianProductRel extends FennelPullDoubleRel
     {
         pw.explain(
             this,
-            new String [] { "left","right" },
-            new Object [] {});
+            new String [] { "left", "right" },
+            new Object [] {  });
     }
 
     // implement FennelRel
@@ -128,5 +130,6 @@ class FennelCartesianProductRel extends FennelPullDoubleRel
 
     // TODO:  implement getCollations()
 }
+
 
 // End FennelCartesianProductRel.java

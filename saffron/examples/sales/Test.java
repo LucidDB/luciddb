@@ -1,35 +1,36 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package sales;
 
-import junit.framework.TestCase;
-import org.eigenbase.relopt.RelOptConnection;
-import net.sf.saffron.oj.stmt.OJStatement;
-import org.eigenbase.util.Util;
-import openjava.tools.DebugOut;
-
 import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.*;
+
+import junit.framework.TestCase;
+
+import net.sf.saffron.oj.stmt.OJStatement;
+
+import openjava.tools.DebugOut;
+
+import org.eigenbase.relopt.RelOptConnection;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -42,8 +43,6 @@ import java.util.*;
  */
 public class Test extends TestCase
 {
-    //~ Static fields/initializers --------------------------------------------
-
     static final String nl = System.getProperty("line.separator");
     private static final OJStatement.Argument [] noArguments =
         new OJStatement.Argument[0];
@@ -337,54 +336,60 @@ public class Test extends TestCase
     {
         
         // 0; read from array
-        "select from sales.emps",
+        "select from sales.emps", 
         // 1; read from Vector
-        "select from sales.vectorEmps",
+        "select from sales.vectorEmps", 
         // 2; read from Collection
         "select from sales.collEmps",
         
+
         // 3; read from Enumeration expression
         "select from sales.vectorEmps.elements() as x",
         
+
         // 4; read from Iterator expression
         "select from sales.collEmps.iterator() as x",
         
+
         // 5; read from Enumeration function
         "select from sales.getEmpsEnum() as x",
         
+
         // 6; read from Iterator function
         "select from sales.getEmpsIter() as x",
         
+
         // 7; read from parameterized Enumeration function
         "select from sales.getEmpsFilterEnum(\"F\") as x",
         
+
         // 8; array cast to iterator
         "(java.util.Iterator) (select from sales.emps)",
         
+
         // 9; enumeration cast to iterator
         "(java.util.Iterator) (select from sales.getEmpsFilterEnum(\"M\") as x)",
         
+
         // 10; scan hashtable
         "select {(String) map.key, (sales.Sales.Emp) map.value} "
         + "from sales.mapName2emp as map",
         
+
         // 11; scan HashMap
         "select from sales.htName2deptno as map join sales.depts as dept "
         + "on ((Integer) map.value).intValue() == dept.deptno",
         
+
         // 12; 'union' (copied from 17)
         "(select emp from sales.emps as emp where emp.deptno == 10) "
         + "union "
         + "(select emp from sales.emps as emp where emp.deptno == 20) ",
     };
-
-    //~ Instance fields -------------------------------------------------------
-
     PrintWriter pw;
 
-    //~ Constructors ----------------------------------------------------------
-
-    Test(String [] args) throws SQLException
+    Test(String [] args)
+        throws SQLException
     {
         super("sales test");
         RelOptConnection connection = new SalesInMemoryConnection();
@@ -411,17 +416,16 @@ public class Test extends TestCase
         }
     }
 
-    //~ Methods ---------------------------------------------------------------
-
     public static PrintWriter init(int debug)
     {
         DebugOut.setDebugLevel(debug);
         DebugOut.setDebugOut(System.out);
         boolean autoFlush = true;
-        return new PrintWriter(System.out,autoFlush);
+        return new PrintWriter(System.out, autoFlush);
     }
 
-    public static void main(String [] args) throws SQLException
+    public static void main(String [] args)
+        throws SQLException
     {
         new Test(args);
     }
@@ -448,49 +452,57 @@ public class Test extends TestCase
     void run0(String [] args)
     {
         SalesInMemoryConnection connection = new SalesInMemoryConnection();
-        runOne(connection, pw,"select i from new int[] {1,2,3} as i","",noArguments);
+        runOne(connection, pw, "select i from new int[] {1,2,3} as i", "",
+            noArguments);
     }
 
-    void run1() throws java.sql.SQLException
+    void run1()
+        throws java.sql.SQLException
     {
         initJdbc();
         java.sql.Connection sqlConnection =
             java.sql.DriverManager.getConnection("jdbc:odbc:empdept");
         Sales sales = new Sales(sqlConnection);
         runList(
-                sales,
-                new OJStatement.Argument [] { new OJStatement.Argument(
-                        "sales",
-                        sales) },
-                groupStatements);
+            sales,
+            new OJStatement.Argument [] {
+                new OJStatement.Argument("sales", sales)
+            },
+            groupStatements);
     }
 
-    void run2() throws java.sql.SQLException
+    void run2()
+        throws java.sql.SQLException
     {
         SalesInMemoryConnection connection = new SalesInMemoryConnection();
         runList(
-                connection,
-                new OJStatement.Argument [] { new OJStatement.Argument(
-                        "sales",
-                        connection) },
-                statements);
+            connection,
+            new OJStatement.Argument [] {
+                new OJStatement.Argument("sales", connection)
+            },
+            statements);
     }
 
-    void run3(RelOptConnection connection) throws java.sql.SQLException
+    void run3(RelOptConnection connection)
+        throws java.sql.SQLException
     {
         FakeSalesPlus sales = new FakeSalesPlus();
         runList(
-                connection, new OJStatement.Argument [] { new OJStatement.Argument(
-                    "sales",
-                    sales) },
+            connection,
+            new OJStatement.Argument [] {
+                new OJStatement.Argument("sales", sales)
+            },
             plusStatements);
     }
 
-    void runList(RelOptConnection connection, OJStatement.Argument [] args,
-            String [] statements) throws SQLException
+    void runList(
+        RelOptConnection connection,
+        OJStatement.Argument [] args,
+        String [] statements)
+        throws SQLException
     {
         boolean autoFlush = true;
-        PrintWriter pw = new PrintWriter(System.out,autoFlush);
+        PrintWriter pw = new PrintWriter(System.out, autoFlush);
         try {
             initJdbc();
             for (int i = 0; i < statements.length; i++) {
@@ -501,7 +513,7 @@ public class Test extends TestCase
                 if (statement.indexOf("/*FAILS*/") >= 0) {
                     continue;
                 }
-                runOne(connection, pw,statement,"Statement #" + i,args);
+                runOne(connection, pw, statement, "Statement #" + i, args);
             }
         } finally {
             pw.flush();
@@ -519,30 +531,29 @@ public class Test extends TestCase
         pw.println(desc + " [" + s + "]");
         OJStatement statement = new OJStatement(connection);
         try {
-            Object o = statement.execute(s,args);
+            Object o = statement.execute(s, args);
             pw.println("Result is " + o);
-            Util.print(pw,o);
+            Util.print(pw, o);
             pw.println();
         } catch (Throwable e) {
-            pw.println(
-                "Received exception " + e.getClass() + ": " + e
+            pw.println("Received exception " + e.getClass() + ": " + e
                 + " while executing " + desc + " [" + s + "]");
         }
     }
 
-    private Object run(String s, OJStatement.Argument [] args)
+    private Object run(
+        String s,
+        OJStatement.Argument [] args)
     {
         SalesInMemoryConnection connection = new SalesInMemoryConnection();
         OJStatement statement = new OJStatement(connection);
-        return statement.execute(s,args);
+        return statement.execute(s, args);
     }
 
     private Object run(String s)
     {
-        return run(s,noArguments);
+        return run(s, noArguments);
     }
-
-    //~ Inner Classes ---------------------------------------------------------
 
     public class FakeSalesPlus extends SalesInMemory
     {
@@ -554,8 +565,10 @@ public class Test extends TestCase
         public FakeSalesPlus()
         {
             for (int i = 0; i < emps.length; i++) {
-                htName2deptno.put(emps[i].name,new Integer(emps[i].deptno));
-                mapName2emp.put(emps[i].name,emps[i]);
+                htName2deptno.put(
+                    emps[i].name,
+                    new Integer(emps[i].deptno));
+                mapName2emp.put(emps[i].name, emps[i]);
                 vectorEmps.addElement(emps[i]);
                 collEmps.add(emps[i]);
             }

@@ -1,33 +1,25 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.rel;
-
-import org.eigenbase.trace.*;
-import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexUtil;
-import org.eigenbase.util.Util;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -35,17 +27,27 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexUtil;
+import org.eigenbase.trace.*;
+import org.eigenbase.util.Util;
+
 
 /**
  * Base class for every relational expression ({@link RelNode}).
  */
-public abstract class AbstractRelNode implements RelNode {
+public abstract class AbstractRelNode implements RelNode
+{
     //~ Static fields/initializers --------------------------------------------
 
     // TODO jvs 10-Oct-2003:  Make this thread safe.  Either synchronize, or
     // keep this per-VolcanoPlanner.
+
     /** generator for {@link #id} values */
     static int nextId = 0;
+    private static final Logger tracer = EigenbaseTrace.getPlannerTracer();
 
     //~ Instance fields -------------------------------------------------------
 
@@ -71,7 +73,6 @@ public abstract class AbstractRelNode implements RelNode {
      * on.
      */
     private String correlVariable;
-    private static final Logger tracer = EigenbaseTrace.getPlannerTracer();
 
     //~ Constructors ----------------------------------------------------------
 
@@ -83,7 +84,7 @@ public abstract class AbstractRelNode implements RelNode {
     public AbstractRelNode(RelOptCluster cluster)
     {
         super();
-        assert(cluster != null);
+        assert (cluster != null);
         this.cluster = cluster;
         this.id = nextId++;
         this.digest = getRelTypeName() + "#" + id;
@@ -94,7 +95,6 @@ public abstract class AbstractRelNode implements RelNode {
 
     // override Object (public, does not throw CloneNotSupportedException)
     public abstract Object clone();
-
 
     public boolean isAccessTo(RelOptTable table)
     {
@@ -146,7 +146,7 @@ public abstract class AbstractRelNode implements RelNode {
     {
         if (correlVariable == null) {
             correlVariable = getQuery().createCorrel();
-            getQuery().mapCorrel(correlVariable,this);
+            getQuery().mapCorrel(correlVariable, this);
         }
         return correlVariable;
     }
@@ -194,7 +194,8 @@ public abstract class AbstractRelNode implements RelNode {
         return rowType;
     }
 
-    protected RelDataType deriveRowType() {
+    protected RelDataType deriveRowType()
+    {
         // This method is only called if rowType is null, so you don't NEED to
         // implement it if rowType is always set.
         throw new UnsupportedOperationException();
@@ -229,32 +230,32 @@ public abstract class AbstractRelNode implements RelNode {
     {
         RelNode [] inputs = getInputs();
         for (int i = 0; i < inputs.length; i++) {
-            visitor.visit(inputs[i],i,this);
+            visitor.visit(inputs[i], i, this);
         }
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        throw Util.newInternal(
-            "todo: implement " + getClass() + ".computeSelfCost");
+        throw Util.newInternal("todo: implement " + getClass()
+            + ".computeSelfCost");
     }
 
     public void explain(RelOptPlanWriter pw)
     {
-        pw.explain(this,Util.emptyStringArray,Util.emptyObjectArray);
+        pw.explain(this, Util.emptyStringArray, Util.emptyObjectArray);
     }
 
     public void onRegister(RelOptPlanner planner)
     {
         RelNode [] inputs = getInputs();
         for (int i = 0; i < inputs.length; i++) {
-            RelNode e = planner.register(inputs[i],null);
+            RelNode e = planner.register(inputs[i], null);
             if (e != inputs[i]) {
-                replaceInput(i,e);
+                replaceInput(i, e);
             }
         }
         digest = computeDigest();
-        assert(digest != null);
+        assert (digest != null);
     }
 
     public String recomputeDigest()
@@ -264,12 +265,14 @@ public abstract class AbstractRelNode implements RelNode {
 
     public void registerCorrelVariable(String correlVariable)
     {
-        assert(this.correlVariable == null);
+        assert (this.correlVariable == null);
         this.correlVariable = correlVariable;
-        getQuery().mapCorrel(correlVariable,this);
+        getQuery().mapCorrel(correlVariable, this);
     }
 
-    public void replaceInput(int ordinalInParent,RelNode p)
+    public void replaceInput(
+        int ordinalInParent,
+        RelNode p)
     {
         throw Util.newInternal("replaceInput called on " + this);
     }
@@ -297,14 +300,12 @@ public abstract class AbstractRelNode implements RelNode {
                     String [] terms,
                     Object [] values)
                 {
-                    RelNode[] inputs = rel.getInputs();
-                    RexNode[] childExps = rel.getChildExps();
-                    assert terms.length ==
-                            inputs.length + childExps.length + values.length :
-                            "terms.length=" + terms.length +
-                            " inputs.length=" + inputs.length +
-                            " childExps.length=" + childExps.length +
-                            " values.length=" + values.length;
+                    RelNode [] inputs = rel.getInputs();
+                    RexNode [] childExps = rel.getChildExps();
+                    assert terms.length == (inputs.length + childExps.length
+                        + values.length) : "terms.length=" + terms.length
+                    + " inputs.length=" + inputs.length + " childExps.length="
+                    + childExps.length + " values.length=" + values.length;
                     write(getRelTypeName());
                     write("(");
                     int j = 0;

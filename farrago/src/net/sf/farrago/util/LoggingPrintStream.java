@@ -16,18 +16,16 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.util;
 
 import java.io.*;
-
 import java.util.logging.*;
 
 
 /**
  * LoggingPrintStream is a hack to divert debug information from Saffron into
  * the Farrago trace file.
- * 
+ *
  * <p>
  * TODO:  get Saffron onto the java.util.logging truck
  * </p>
@@ -45,9 +43,11 @@ public class LoggingPrintStream extends PrintStream
      * @param logger the logger to which to send messages
      * @param level the level at which messages should be logged
      */
-    public LoggingPrintStream(Logger logger,Level level)
+    public LoggingPrintStream(
+        Logger logger,
+        Level level)
     {
-        super(new InterceptStream(logger,level),true);
+        super(new InterceptStream(logger, level), true);
     }
 
     //~ Inner Classes ---------------------------------------------------------
@@ -66,7 +66,9 @@ public class LoggingPrintStream extends PrintStream
          * @param logger .
          * @param level .
          */
-        InterceptStream(Logger logger,Level level)
+        InterceptStream(
+            Logger logger,
+            Level level)
         {
             this.logger = logger;
             this.level = level;
@@ -77,7 +79,7 @@ public class LoggingPrintStream extends PrintStream
         {
             String msg = toString().trim();
             if (msg.length() > 0) {
-                logger.log(level,msg);
+                logger.log(level, msg);
             }
             reset();
         }

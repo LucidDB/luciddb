@@ -16,24 +16,24 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.ftrs;
+
+import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.query.*;
 
-import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
-import org.eigenbase.util.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.util.*;
 
-import java.util.*;
 
 /**
  * FtrsIndexJoinRule is a rule for converting a JoinRel into a
@@ -44,20 +44,19 @@ import java.util.*;
  */
 class FtrsIndexJoinRule extends RelOptRule
 {
+    //~ Constructors ----------------------------------------------------------
+
     public FtrsIndexJoinRule()
     {
-        super(
-            new RelOptRuleOperand(
+        super(new RelOptRuleOperand(
                 JoinRel.class,
                 new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(
-                        RelNode.class,
-                        null),
-                    new RelOptRuleOperand(
-                        FtrsIndexScanRel.class,
-                        null)
+                    new RelOptRuleOperand(RelNode.class, null),
+                    new RelOptRuleOperand(FtrsIndexScanRel.class, null)
                 }));
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     // implement RelOptRule
     public CallingConvention getOutConvention()
@@ -76,7 +75,7 @@ class FtrsIndexJoinRule extends RelOptRule
             return;
         }
 
-        switch(joinRel.getJoinType()) {
+        switch (joinRel.getJoinType()) {
         case JoinRel.JoinType.INNER:
         case JoinRel.JoinType.LEFT:
             break;
@@ -86,7 +85,6 @@ class FtrsIndexJoinRule extends RelOptRule
 
         // TODO:  share more code with FtrsScanToSearchRule, and expand
         // set of supported join conditions
-
         if (scanRel.isOrderPreserving) {
             // index join is guaranteed to destroy scan ordering
             return;
@@ -94,7 +92,7 @@ class FtrsIndexJoinRule extends RelOptRule
 
         FarragoRepos repos = scanRel.getPreparingStmt().getRepos();
         int [] joinFieldOrdinals = new int[2];
-        if (!RelOptUtil.analyzeSimpleEquiJoin(joinRel,joinFieldOrdinals)) {
+        if (!RelOptUtil.analyzeSimpleEquiJoin(joinRel, joinFieldOrdinals)) {
             return;
         }
         int leftOrdinal = joinFieldOrdinals[0];
@@ -114,9 +112,8 @@ class FtrsIndexJoinRule extends RelOptRule
             repos.getIndexes(scanRel.ftrsTable.getCwmColumnSet()).iterator();
         while (iter.hasNext()) {
             CwmSqlindex index = (CwmSqlindex) iter.next();
-            considerIndex(
-                joinRel,index,scanRel,
-                indexColumn,leftOrdinal,rightOrdinal,leftRel,call);
+            considerIndex(joinRel, index, scanRel, indexColumn, leftOrdinal,
+                rightOrdinal, leftRel, call);
         }
     }
 
@@ -133,21 +130,17 @@ class FtrsIndexJoinRule extends RelOptRule
         FarragoRepos repos = scanRel.getPreparingStmt().getRepos();
 
         // TODO:  support compound keys
-        boolean isUnique = index.isUnique()
-            && (index.getIndexedFeature().size() == 1);
+        boolean isUnique =
+            index.isUnique() && (index.getIndexedFeature().size() == 1);
 
-        boolean isOuter =
-            (joinRel.getJoinType() == JoinRel.JoinType.LEFT);
+        boolean isOuter = (joinRel.getJoinType() == JoinRel.JoinType.LEFT);
 
-        if (!FtrsScanToSearchRule.testIndexColumn(index,indexColumn)) {
+        if (!FtrsScanToSearchRule.testIndexColumn(index, indexColumn)) {
             return;
         }
 
         // tell the index search how to project the key from its input
-        Integer [] inputKeyProj = new Integer[]
-            {
-                new Integer(leftOrdinal)
-            };
+        Integer [] inputKeyProj = new Integer [] { new Integer(leftOrdinal) };
 
         RelDataTypeField [] leftFields = leftRel.getRowType().getFields();
         RelDataType leftType = leftFields[leftOrdinal].getType();
@@ -160,12 +153,13 @@ class FtrsIndexJoinRule extends RelOptRule
             // can't filter out nulls when isOuter; instead, let Fennel
             // handle the null semantics
             nullFilterRel = leftRel;
-            rightType = rightType.getFactory().createTypeWithNullability(
-                rightType,leftType.isNullable());
+            rightType =
+                rightType.getFactory().createTypeWithNullability(
+                    rightType,
+                    leftType.isNullable());
         } else {
             // filter out null search keys, since they never match
-            nullFilterRel = RelOptUtil.createNullFilter(
-                leftRel,inputKeyProj);
+            nullFilterRel = RelOptUtil.createNullFilter(leftRel, inputKeyProj);
         }
 
         // cast the search keys from the left to the type of the search column
@@ -176,53 +170,49 @@ class FtrsIndexJoinRule extends RelOptRule
             // no cast required
             castRel = nullFilterRel;
         } else {
-            RelDataType castRowType = leftType.getFactory().createJoinType(
-                new RelDataType[] {
-                    leftRel.getRowType(),
-                    rightType
-                });
+            RelDataType castRowType =
+                leftType.getFactory().createJoinType(
+                    new RelDataType [] { leftRel.getRowType(), rightType });
             RexNode [] castExps = new RexNode[leftFieldCount + 1];
             String [] fieldNames = new String[leftFieldCount + 1];
             RexBuilder rexBuilder = leftRel.getCluster().rexBuilder;
             for (int i = 0; i < leftFieldCount; ++i) {
-                castExps[i] = rexBuilder.makeInputRef(
-                    leftFields[i].getType(),i);
+                castExps[i] =
+                    rexBuilder.makeInputRef(
+                        leftFields[i].getType(),
+                        i);
                 fieldNames[i] = leftFields[i].getName();
             }
-            castExps[leftFieldCount] = rexBuilder.makeCast(
-                rightType,castExps[leftOrdinal]);
-            castRel = new ProjectRel(
-                nullFilterRel.getCluster(),
-                nullFilterRel,
-                castExps,
-                fieldNames,
-                ProjectRel.Flags.Boxed);
+            castExps[leftFieldCount] =
+                rexBuilder.makeCast(rightType, castExps[leftOrdinal]);
+            castRel =
+                new ProjectRel(
+                    nullFilterRel.getCluster(),
+                    nullFilterRel,
+                    castExps,
+                    fieldNames,
+                    ProjectRel.Flags.Boxed);
+
             // key now comes from extra cast field instead
-            inputKeyProj = new Integer[]
-                {
-                    new Integer(leftFieldCount)
-                };
+            inputKeyProj = new Integer [] { new Integer(leftFieldCount) };
         }
 
-        RelNode fennelInput = convert(
-            castRel,FennelPullRel.FENNEL_PULL_CONVENTION);
+        RelNode fennelInput =
+            convert(castRel, FennelPullRel.FENNEL_PULL_CONVENTION);
 
         // tell the index search to propagate everything from its input as join
         // fields
-        Integer [] inputJoinProj = FennelRelUtil.newIotaProjection(
-            leftFieldCount);
+        Integer [] inputJoinProj =
+            FennelRelUtil.newIotaProjection(leftFieldCount);
 
         if (!repos.isClustered(index) && repos.isClustered(scanRel.index)) {
             Integer [] clusteredKeyColumns =
-                FtrsUtil.getClusteredDistinctKeyArray(
-                    repos,
-                    scanRel.index);
+                FtrsUtil.getClusteredDistinctKeyArray(repos, scanRel.index);
 
             // REVIEW:  in many cases it would probably be more efficient to
             // hide the unclustered-to-clustered translation inside a special
             // TupleStream, otherwise the left-hand join fields get
             // propagated one extra time.
-
             FtrsIndexScanRel unclusteredScan =
                 new FtrsIndexScanRel(
                     scanRel.getCluster(),
@@ -232,32 +222,30 @@ class FtrsIndexJoinRule extends RelOptRule
                     clusteredKeyColumns,
                     scanRel.isOrderPreserving);
             FtrsIndexSearchRel unclusteredSearch =
-                new FtrsIndexSearchRel(
-                    unclusteredScan,fennelInput,isUnique,isOuter,
-                    inputKeyProj,inputJoinProj);
+                new FtrsIndexSearchRel(unclusteredScan, fennelInput, isUnique,
+                    isOuter, inputKeyProj, inputJoinProj);
 
             // tell the search against the clustered index where to find the
             // keys in the output of the unclustered index search, and what to
             // propagate (everything BUT the clustered index key which was
             // tacked onto the end)
             Integer [] clusteredInputKeyProj =
-                FennelRelUtil.newBiasedIotaProjection(
-                    clusteredKeyColumns.length,
+                FennelRelUtil.newBiasedIotaProjection(clusteredKeyColumns.length,
                     inputJoinProj.length);
 
             FtrsIndexSearchRel clusteredSearch =
-                new FtrsIndexSearchRel(
-                    scanRel,unclusteredSearch,true,isOuter,
-                    clusteredInputKeyProj,inputJoinProj);
+                new FtrsIndexSearchRel(scanRel, unclusteredSearch, true,
+                    isOuter, clusteredInputKeyProj, inputJoinProj);
 
             call.transformTo(clusteredSearch);
         } else {
-            FtrsIndexSearchRel searchRel = new FtrsIndexSearchRel(
-                scanRel,fennelInput,isUnique,isOuter,inputKeyProj,
-                inputJoinProj);
+            FtrsIndexSearchRel searchRel =
+                new FtrsIndexSearchRel(scanRel, fennelInput, isUnique,
+                    isOuter, inputKeyProj, inputJoinProj);
             call.transformTo(searchRel);
         }
     }
 }
+
 
 // End FtrsIndexJoinRule.java

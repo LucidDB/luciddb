@@ -6,29 +6,29 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.test.regression;
+
+import java.io.*;
+import java.sql.*;
+import java.util.*;
+
+import junit.extensions.*;
+import junit.framework.*;
 
 import net.sf.farrago.fem.config.*;
 import net.sf.farrago.test.*;
 import net.sf.farrago.util.*;
 
-import junit.framework.*;
-import junit.extensions.*;
-
-import java.io.*;
-import java.util.*;
-import java.sql.*;
 
 /**
  * FarragoSorterTest tests the sorter with various data sizes and distributions
@@ -39,10 +39,11 @@ import java.sql.*;
  */
 public class FarragoSorterTest extends FarragoTestCase
 {
+    //~ Static fields/initializers --------------------------------------------
+
     private static File testdataDir;
-    
     private static long externalCount = -1;
-    
+
     /**
      * Number of records to generate for in-memory sort.
      */
@@ -63,11 +64,15 @@ public class FarragoSorterTest extends FarragoTestCase
      */
     private static final long EXTERNAL_SCALE_FACTOR = 20;
 
+    //~ Constructors ----------------------------------------------------------
+
     public FarragoSorterTest(String testName)
         throws Exception
     {
         super(testName);
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     // implement TestCase
     public static Test suite()
@@ -75,12 +80,14 @@ public class FarragoSorterTest extends FarragoTestCase
         TestSuite suite = new TestSuite(FarragoSorterTest.class);
         TestSetup wrapper =
             new TestSetup(suite) {
-                protected void setUp() throws Exception
+                protected void setUp()
+                    throws Exception
                 {
                     staticSetUp();
                 }
 
-                protected void tearDown() throws Exception
+                protected void tearDown()
+                    throws Exception
                 {
                     FarragoTestCase.staticTearDown();
                 }
@@ -88,14 +95,15 @@ public class FarragoSorterTest extends FarragoTestCase
         return wrapper;
     }
 
-    public static void staticSetUp() throws Exception
+    public static void staticSetUp()
+        throws Exception
     {
         FarragoTestCase.staticSetUp();
         computeExternalCount();
         initializeDataDir();
 
-        FarragoSqlTest setup = new FarragoSqlTest(
-            "testgen/FarragoSorterTest/setup.sql");
+        FarragoSqlTest setup =
+            new FarragoSqlTest("testgen/FarragoSorterTest/setup.sql");
         setup.run();
     }
 
@@ -103,24 +111,24 @@ public class FarragoSorterTest extends FarragoTestCase
     {
         // create a private directory for generated datafiles
         String homeDir = FarragoProperties.instance().homeDir.get();
-        testdataDir = new File(homeDir,"testgen");
-        testdataDir = new File(testdataDir,"FarragoSorterTest");
-        testdataDir = new File(testdataDir,"data");
+        testdataDir = new File(homeDir, "testgen");
+        testdataDir = new File(testdataDir, "FarragoSorterTest");
+        testdataDir = new File(testdataDir, "data");
 
         // wipe out any existing contents
-        FarragoFileAllocation dirAlloc = new FarragoFileAllocation(testdataDir);
+        FarragoFileAllocation dirAlloc =
+            new FarragoFileAllocation(testdataDir);
         dirAlloc.closeAllocation();
         testdataDir.mkdir();
     }
 
-    private void createForeignTable() throws Exception
+    private void createForeignTable()
+        throws Exception
     {
-        stmt.executeUpdate(
-            "create foreign table sortertest.\"" + getName() + "\"("
-            + "pk bigint not null,"
-            + "val bigint not null) "
-            + "server csv_server "
-            + "options (table_name '" + getName() + "')");
+        stmt.executeUpdate("create foreign table sortertest.\"" + getName()
+            + "\"(" + "pk bigint not null," + "val bigint not null) "
+            + "server csv_server " + "options (table_name '" + getName()
+            + "')");
     }
 
     private static void computeExternalCount()
@@ -132,7 +140,7 @@ public class FarragoSorterTest extends FarragoTestCase
         // first, compute number of bytes in cache
         long nBytes = fennelConfig.getCachePageSize();
         nBytes *= fennelConfig.getCachePagesInit();
-        
+
         // next, scale up to desired sort size
         nBytes *= EXTERNAL_SCALE_FACTOR;
 
@@ -140,21 +148,22 @@ public class FarragoSorterTest extends FarragoTestCase
         externalCount = nBytes / 16;
     }
 
-    private void testDistribution(DistributionGenerator gen) throws Exception
+    private void testDistribution(DistributionGenerator gen)
+        throws Exception
     {
         if (!repos.isFennelEnabled()) {
             // need Fennel sorter
             return;
         }
-        
+
         // create a file to contain the generated data
-        File dataFile = new File(testdataDir,getName() + ".csv");
+        File dataFile = new File(testdataDir, getName() + ".csv");
         FileWriter fileWriter = new FileWriter(dataFile);
         PrintWriter pw = new PrintWriter(fileWriter);
 
         // first line of file is column headings
         pw.println("PK,VAL");
-        
+
         Random random = new Random(0);
 
         // TODO:  use an order-independent checksum instead
@@ -175,16 +184,17 @@ public class FarragoSorterTest extends FarragoTestCase
 
         pw.close();
         fileWriter.close();
-        
+
         createForeignTable();
-        
-        resultSet = stmt.executeQuery(
-            "select pk,val from sortertest.\"" + getName() + "\" order by val");
+
+        resultSet =
+            stmt.executeQuery("select pk,val from sortertest.\"" + getName()
+                + "\" order by val");
 
         long sortSum = 0;
         long pkSortSum = 0;
         long lastVal = Long.MIN_VALUE;
-        
+
         while (resultSet.next()) {
             long pk = resultSet.getLong(1);
             pkSortSum += pk;
@@ -196,104 +206,108 @@ public class FarragoSorterTest extends FarragoTestCase
 
         resultSet.close();
 
-        assertEquals(sum,sortSum);
-        assertEquals(pkSum,pkSortSum);
+        assertEquals(sum, sortSum);
+        assertEquals(pkSum, pkSortSum);
     }
 
     /**
      * Tests an in-memory sort with mostly distinct values.
      */
-    public void testInMemorySparse() throws Exception
+    public void testInMemorySparse()
+        throws Exception
     {
         testDistribution(
-            new UniformDistributionGenerator(
-                IN_MEM_COUNT,IN_MEM_COUNT*SPARSE_FACTOR));
+            new UniformDistributionGenerator(IN_MEM_COUNT,
+                IN_MEM_COUNT * SPARSE_FACTOR));
     }
-    
+
     /**
      * Tests an in-memory sort with many duplicate values.
      */
-    public void testInMemoryDups() throws Exception
+    public void testInMemoryDups()
+        throws Exception
     {
         testDistribution(
-            new UniformDistributionGenerator(
-                IN_MEM_COUNT,IN_MEM_COUNT/DUP_FACTOR));
+            new UniformDistributionGenerator(IN_MEM_COUNT,
+                IN_MEM_COUNT / DUP_FACTOR));
     }
-    
+
     /**
      * Tests an in-memory sort with all values the same.
      */
-    public void testInMemoryDegenerate() throws Exception
+    public void testInMemoryDegenerate()
+        throws Exception
     {
-        testDistribution(
-            new UniformDistributionGenerator(
-                IN_MEM_COUNT,1));
+        testDistribution(new UniformDistributionGenerator(IN_MEM_COUNT, 1));
     }
 
     /**
      * Tests an in-memory sort with sparse values already sorted.
      */
-    public void testInMemoryPresortedSparse() throws Exception
+    public void testInMemoryPresortedSparse()
+        throws Exception
     {
         testDistribution(
-            new RampDistributionGenerator(
-                IN_MEM_COUNT,0,SPARSE_FACTOR));
+            new RampDistributionGenerator(IN_MEM_COUNT, 0, SPARSE_FACTOR));
     }
 
     /**
      * Tests an in-memory sort with duplicate values already sorted.
      */
-    public void testInMemoryPresortedDups() throws Exception
+    public void testInMemoryPresortedDups()
+        throws Exception
     {
         testDistribution(
-            new RampDistributionGenerator(
-                IN_MEM_COUNT,0,1.0/DUP_FACTOR));
+            new RampDistributionGenerator(IN_MEM_COUNT, 0, 1.0 / DUP_FACTOR));
     }
 
     /**
      * Tests an in-memory sort with sparse values already in reverse sort order.
      */
-    public void testInMemoryPresortedSparseReverse() throws Exception
+    public void testInMemoryPresortedSparseReverse()
+        throws Exception
     {
         testDistribution(
-            new RampDistributionGenerator(
-                IN_MEM_COUNT,0,-SPARSE_FACTOR));
+            new RampDistributionGenerator(IN_MEM_COUNT, 0, -SPARSE_FACTOR));
     }
 
     /**
      * Tests an in-memory sort with duplicate values already in reverse sort
      * order.
      */
-    public void testInMemoryPresortedDupsReverse() throws Exception
+    public void testInMemoryPresortedDupsReverse()
+        throws Exception
     {
         testDistribution(
-            new RampDistributionGenerator(
-                IN_MEM_COUNT,0,-1.0/DUP_FACTOR));
+            new RampDistributionGenerator(IN_MEM_COUNT, 0, -1.0 / DUP_FACTOR));
     }
 
     // TODO jvs 12-June-2004: add external sort tests once we have a real
     // sorter
-    
+
     /**
      * Tests an external sort with mostly distinct values.
      */
-    public void _testExternalSparse() throws Exception
+    public void _testExternalSparse()
+        throws Exception
     {
         testDistribution(
-            new UniformDistributionGenerator(
-                externalCount,externalCount*SPARSE_FACTOR));
+            new UniformDistributionGenerator(externalCount,
+                externalCount * SPARSE_FACTOR));
     }
-    
+
+    //~ Inner Classes ---------------------------------------------------------
+
     private static abstract class DistributionGenerator
     {
         long nRecords;
-        
-        abstract long generateValue(long pk);
 
         DistributionGenerator(long nRecords)
         {
             this.nRecords = nRecords;
         }
+
+        abstract long generateValue(long pk);
     }
 
     private static class UniformDistributionGenerator
@@ -301,15 +315,17 @@ public class FarragoSorterTest extends FarragoTestCase
     {
         Random random;
         long maxValue;
-        
-        UniformDistributionGenerator(long nRecords,long maxValue)
+
+        UniformDistributionGenerator(
+            long nRecords,
+            long maxValue)
         {
             super(nRecords);
             this.maxValue = maxValue;
 
             random = new Random(0);
         }
-        
+
         long generateValue(long pk)
         {
             return Math.abs(random.nextLong()) % maxValue;
@@ -321,8 +337,11 @@ public class FarragoSorterTest extends FarragoTestCase
     {
         long intercept;
         double slope;
-        
-        RampDistributionGenerator(long nRecords,long intercept,double slope)
+
+        RampDistributionGenerator(
+            long nRecords,
+            long intercept,
+            double slope)
         {
             super(nRecords);
             this.intercept = intercept;
@@ -331,9 +350,10 @@ public class FarragoSorterTest extends FarragoTestCase
 
         long generateValue(long pk)
         {
-            return (long) (intercept + slope*pk);
+            return (long) (intercept + (slope * pk));
         }
     }
 }
+
 
 // End FarragoSorterTest.java

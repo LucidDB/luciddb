@@ -1,4 +1,3 @@
-
 // Farrago is a relational database management system.
 // (C) Copyright 2004-2004, Disruptive Tech
 //
@@ -15,37 +14,33 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
-
 package net.sf.farrago.test.regression;
 
+import java.io.PrintStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-
-import java.io.PrintStream;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import junit.framework.TestCase;
 
 import net.sf.farrago.trace.FarragoTrace;
 
 import org.eigenbase.runtime.IteratorResultSet;
-
 import org.eigenbase.util.Util;
+
 
 /**
  * FarragoTestCommandGenerator creates instances of {@link FarragoTestCommand}
@@ -76,16 +71,22 @@ import org.eigenbase.util.Util;
  */
 public class FarragoTestCommandGenerator
 {
+    //~ Static fields/initializers --------------------------------------------
+
+    private static final char APOS = '\'';
+    private static final char COMMA = ',';
+    private static final char LEFT_BRACKET = '{';
+    private static final char RIGHT_BRACKET = '}';
+
+    //~ Instance fields -------------------------------------------------------
+
     /**
      * Maps Integer thread IDs to a TreeMap.  The TreeMap vaules map
      * an Integer execution order to a {@link FarragoTestCommand}.
      */
     private TreeMap threadMap;
 
-    private static final char APOS = '\'';
-    private static final char COMMA = ',';
-    private static final char LEFT_BRACKET = '{';
-    private static final char RIGHT_BRACKET = '}';
+    //~ Constructors ----------------------------------------------------------
 
     /**
      * Constructs a new FarragoTestCommandGenerator.
@@ -94,6 +95,8 @@ public class FarragoTestCommandGenerator
     {
         threadMap = new TreeMap();
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     /**
      * Adds a synchronization commands.  When a thread reaches a
@@ -108,9 +111,14 @@ public class FarragoTestCommandGenerator
      * @param order the execution order
      * @return the newly-added command
      */
-    public FarragoTestCommand addSynchronizationCommand(int threadId, int order)
+    public FarragoTestCommand addSynchronizationCommand(
+        int threadId,
+        int order)
     {
-        return addCommand(threadId, order, new SynchronizationCommand());
+        return addCommand(
+            threadId,
+            order,
+            new SynchronizationCommand());
     }
 
     /**
@@ -123,9 +131,15 @@ public class FarragoTestCommandGenerator
      *                (must not be negative)
      * @return the newly-added command
      */
-    public FarragoTestCommand addSleepCommand(int threadId, int order, long millis)
+    public FarragoTestCommand addSleepCommand(
+        int threadId,
+        int order,
+        long millis)
     {
-        return addCommand(threadId, order, new SleepCommand(millis));
+        return addCommand(
+            threadId,
+            order,
+            new SleepCommand(millis));
     }
 
     /**
@@ -137,9 +151,12 @@ public class FarragoTestCommandGenerator
      *            select * from t"</code>)
      * @return the newly-added command
      */
-    public FarragoTestCommand addExplainCommand(int threadId, int order, String sql)
+    public FarragoTestCommand addExplainCommand(
+        int threadId,
+        int order,
+        String sql)
     {
-        assert(sql != null);
+        assert (sql != null);
 
         FarragoTestCommand command = new ExplainCommand(sql);
 
@@ -158,15 +175,17 @@ public class FarragoTestCommandGenerator
      * @see #addFetchAndCompareCommand(int, int, int, String)
      * @return the newly-added command
      */
-    public FarragoTestCommand addPrepareCommand(int threadId, int order, String sql)
+    public FarragoTestCommand addPrepareCommand(
+        int threadId,
+        int order,
+        String sql)
     {
-        assert(sql != null);
+        assert (sql != null);
 
         FarragoTestCommand command = new PrepareCommand(sql);
 
         return addCommand(threadId, order, command);
     }
-
 
     /**
      * Executes a previously {@link #addPrepareCommand(int, int, String)
@@ -197,18 +216,18 @@ public class FarragoTestCommandGenerator
      * @param expected the expected results (see above)
      * @return the newly-added command
      */
-    public FarragoTestCommand addFetchAndCompareCommand(int threadId,
-                                          int order,
-                                          int timeout,
-                                          String expected)
+    public FarragoTestCommand addFetchAndCompareCommand(
+        int threadId,
+        int order,
+        int timeout,
+        String expected)
     {
-        FarragoTestCommand command = new FetchAndCompareCommand(timeout,
-                                                                expected);
+        FarragoTestCommand command =
+            new FetchAndCompareCommand(timeout, expected);
 
         return addCommand(threadId, order, command);
     }
 
-    
     /**
      * Closes a previously {@link #addPrepareCommand(int, int, String)
      * prepared} SQL statement.
@@ -217,11 +236,15 @@ public class FarragoTestCommandGenerator
      * @param order the execution order
      * @return the newly-added command
      */
-    public FarragoTestCommand addCloseCommand(int threadId, int order)
+    public FarragoTestCommand addCloseCommand(
+        int threadId,
+        int order)
     {
-        return addCommand(threadId, order, new CloseCommand());
+        return addCommand(
+            threadId,
+            order,
+            new CloseCommand());
     }
-
 
     /**
      * Executes the given SQL via {@link Statement#executeUpdate(String)}.
@@ -238,16 +261,16 @@ public class FarragoTestCommandGenerator
      * @param sql the insert/update/delete SQL
      * @return the newly-added command
      */
-    public FarragoTestCommand addInsertCommand(int threadId,
-                                 int order,
-                                 int timeout,
-                                 String sql)
+    public FarragoTestCommand addInsertCommand(
+        int threadId,
+        int order,
+        int timeout,
+        String sql)
     {
         FarragoTestCommand command = new InsertCommand(timeout, sql);
 
         return addCommand(threadId, order, command);
     }
-
 
     /**
      * Commits pending transaction on the thread's connection.
@@ -256,11 +279,15 @@ public class FarragoTestCommandGenerator
      * @param order the execution order
      * @return the newly-added command
      */
-    public FarragoTestCommand addCommitCommand(int threadId, int order)
+    public FarragoTestCommand addCommitCommand(
+        int threadId,
+        int order)
     {
-        return addCommand(threadId, order, new CommitCommand());
+        return addCommand(
+            threadId,
+            order,
+            new CommitCommand());
     }
-
 
     /**
      * Rolls back pending transaction on the thread's connection.
@@ -269,48 +296,60 @@ public class FarragoTestCommandGenerator
      * @param order the execution order
      * @return the newly-added command
      */
-    public FarragoTestCommand addRollbackCommand(int threadId, int order)
+    public FarragoTestCommand addRollbackCommand(
+        int threadId,
+        int order)
     {
-        return addCommand(threadId, order, new RollbackCommand());
+        return addCommand(
+            threadId,
+            order,
+            new RollbackCommand());
     }
-
 
     /**
      * Executes a DDL statement immediately.  Assumes the statement
      * returns no information.
      * @return the newly-added command
      */
-    public FarragoTestCommand addDdlCommand(int threadId, int order, String ddl)
+    public FarragoTestCommand addDdlCommand(
+        int threadId,
+        int order,
+        String ddl)
     {
-        return addCommand(threadId, order, new DdlCommand(ddl));
+        return addCommand(
+            threadId,
+            order,
+            new DdlCommand(ddl));
     }
 
     /**
      * Handle adding a command to {@link #threadMap}.
      * @return the newly-added command
      */
-    public FarragoTestCommand addCommand(int threadId, int order, FarragoTestCommand command)
+    public FarragoTestCommand addCommand(
+        int threadId,
+        int order,
+        FarragoTestCommand command)
     {
-        assert(threadId > 0);
-        assert(order > 0);
+        assert (threadId > 0);
+        assert (order > 0);
 
         Integer threadIdKey = new Integer(threadId);
         Integer orderKey = new Integer(order);
 
-        TreeMap commandMap = (TreeMap)threadMap.get(threadIdKey);
+        TreeMap commandMap = (TreeMap) threadMap.get(threadIdKey);
         if (commandMap == null) {
             commandMap = new TreeMap();
             threadMap.put(threadIdKey, commandMap);
         }
 
         // check for duplicate order numbers
-        assert(!commandMap.containsKey(orderKey));
+        assert (!commandMap.containsKey(orderKey));
 
         commandMap.put(orderKey, command);
         return command;
     }
 
-    
     /**
      * Insure that the number of commands is the same for each thread,
      * fill missing order value with null commands, and interleave a
@@ -321,57 +360,62 @@ public class FarragoTestCommandGenerator
     void synchronizeCommandSets()
     {
         int maxCommands = 0;
-        for(Iterator i = threadMap.values().iterator(); i.hasNext(); ) {
-            TreeMap commands = (TreeMap)i.next();
+        for (Iterator i = threadMap.values().iterator(); i.hasNext();) {
+            TreeMap commands = (TreeMap) i.next();
 
             // Fill in missing slots with null (no-op) commands.
-            for(int j = 1; j < ((Integer)commands.lastKey()).intValue(); j++) {
+            for (int j = 1; j < ((Integer) commands.lastKey()).intValue();
+                    j++) {
                 Integer key = new Integer(j);
                 if (!commands.containsKey(key)) {
                     commands.put(key, null);
                 }
             }
 
-            maxCommands = Math.max(maxCommands, commands.size());
+            maxCommands = Math.max(
+                    maxCommands,
+                    commands.size());
         }
 
         // Make sure all threads have the same number of commands.
-        for(Iterator i = threadMap.values().iterator(); i.hasNext(); ) {
-            TreeMap commands = (TreeMap)i.next();
+        for (Iterator i = threadMap.values().iterator(); i.hasNext();) {
+            TreeMap commands = (TreeMap) i.next();
 
             if (commands.size() < maxCommands) {
-                for(int j = commands.size() + 1; j <= maxCommands; j++) {
-                    commands.put(new Integer(j), null);
+                for (int j = commands.size() + 1; j <= maxCommands; j++) {
+                    commands.put(
+                        new Integer(j),
+                        null);
                 }
             }
         }
 
-
         // Interleave synchronization commands before each command.
-        for(Iterator i = threadMap.entrySet().iterator(); i.hasNext(); ) {
-            Map.Entry threadCommandsEntry = (Map.Entry)i.next();
+        for (Iterator i = threadMap.entrySet().iterator(); i.hasNext();) {
+            Map.Entry threadCommandsEntry = (Map.Entry) i.next();
 
-            TreeMap commands = (TreeMap)threadCommandsEntry.getValue();
+            TreeMap commands = (TreeMap) threadCommandsEntry.getValue();
 
             TreeMap synchronizedCommands = new TreeMap();
-            
-            for(Iterator j = commands.entrySet().iterator(); j.hasNext(); ) {
-                Map.Entry commandEntry = (Map.Entry)j.next();
 
-                int orderKey = ((Integer)commandEntry.getKey()).intValue();
-                FarragoTestCommand command = 
-                    (FarragoTestCommand)commandEntry.getValue();
+            for (Iterator j = commands.entrySet().iterator(); j.hasNext();) {
+                Map.Entry commandEntry = (Map.Entry) j.next();
 
-                synchronizedCommands.put(new Integer(orderKey * 2 - 1),
-                                         new AutoSynchronizationCommand());
-                synchronizedCommands.put(new Integer(orderKey * 2),
-                                         command);
+                int orderKey = ((Integer) commandEntry.getKey()).intValue();
+                FarragoTestCommand command =
+                    (FarragoTestCommand) commandEntry.getValue();
+
+                synchronizedCommands.put(
+                    new Integer((orderKey * 2) - 1),
+                    new AutoSynchronizationCommand());
+                synchronizedCommands.put(
+                    new Integer(orderKey * 2),
+                    command);
             }
 
             threadCommandsEntry.setValue(synchronizedCommands);
         }
     }
-
 
     /**
      * Validates that all threads have the same number of
@@ -380,13 +424,13 @@ public class FarragoTestCommandGenerator
     void validateSynchronization(TestCase test)
     {
         int numSyncs = -1;
-        for(Iterator i = threadMap.entrySet().iterator(); i.hasNext(); ) {
-            Map.Entry threadCommandsEntry = (Map.Entry)i.next();
+        for (Iterator i = threadMap.entrySet().iterator(); i.hasNext();) {
+            Map.Entry threadCommandsEntry = (Map.Entry) i.next();
 
-            TreeMap commands = (TreeMap)threadCommandsEntry.getValue();
+            TreeMap commands = (TreeMap) threadCommandsEntry.getValue();
 
             int numSyncsThisThread = 0;
-            for(Iterator j = commands.values().iterator(); j.hasNext(); ) {
+            for (Iterator j = commands.values().iterator(); j.hasNext();) {
                 if (j.next() instanceof SynchronizationCommand) {
                     numSyncsThisThread++;
                 }
@@ -397,9 +441,7 @@ public class FarragoTestCommandGenerator
             } else {
                 test.assertEquals(
                     "mismatched synchronization command count (thread id "
-                    + threadCommandsEntry.getKey()
-                    + ")",
-                    numSyncs,
+                    + threadCommandsEntry.getKey() + ")", numSyncs,
                     numSyncsThisThread);
             }
         }
@@ -413,18 +455,16 @@ public class FarragoTestCommandGenerator
         return threadMap.keySet();
     }
 
-
     /**
      * Returns a {@link Collection} of {@link FarragoTestCommand}
      * objects for the given thread ID.
      */
     Collection getCommands(Integer threadId)
     {
-        assert(threadMap.containsKey(threadId));
+        assert (threadMap.containsKey(threadId));
 
-        return ((TreeMap)threadMap.get(threadId)).values();
+        return ((TreeMap) threadMap.get(threadId)).values();
     }
-
 
     /**
      * Returns an {@link Iterator} of {@link FarragoTestCommand}
@@ -435,32 +475,34 @@ public class FarragoTestCommandGenerator
         return getCommands(threadId).iterator();
     }
 
-    
     /**
      * Prints a description of the commands to be executed for a given
      * thread.
      */
-    void printCommands(PrintStream out, Integer threadId)
+    void printCommands(
+        PrintStream out,
+        Integer threadId)
     {
         int stepNumber = 1;
-        for(Iterator i = getCommandIterator(threadId); i.hasNext(); ) {
-            out.println("\tStep "
-                        + stepNumber++
-                        + ": " 
-                        + i.next().getClass().getName());
+        for (Iterator i = getCommandIterator(threadId); i.hasNext();) {
+            out.println("\tStep " + stepNumber++ + ": "
+                + i.next().getClass().getName());
         }
     }
 
+    //~ Inner Classes ---------------------------------------------------------
 
     /** abstract base to handle SQLExceptions */
     static abstract class AbstractCommand implements FarragoTestCommand
     {
         private boolean shouldFail = false;
-        private String failComment = null;    // describes an expected error
-        private Pattern failPattern = null;   // an expected error message
-        
+        private String failComment = null; // describes an expected error
+        private Pattern failPattern = null; // an expected error message
+
         // implement FarragoTestCommand
-        public FarragoTestCommand markToFail(String comment, String pattern)
+        public FarragoTestCommand markToFail(
+            String comment,
+            String pattern)
         {
             shouldFail = true;
             failComment = comment;
@@ -473,13 +515,13 @@ public class FarragoTestCommandGenerator
             throws Exception;
 
         // implement FarragoTestCommand
-        public void execute(FarragoTestCommandExecutor exec) throws Exception
+        public void execute(FarragoTestCommandExecutor exec)
+            throws Exception
         {
             try {
                 doExecute(exec);
                 if (shouldFail) {
-                    throw new FarragoTestCommand.ShouldHaveFailedException(
-                        failComment);
+                    throw new FarragoTestCommand.ShouldHaveFailedException(failComment);
                 }
             } catch (SQLException err) {
                 if (!shouldFail) {
@@ -487,11 +529,10 @@ public class FarragoTestCommandGenerator
                 }
                 boolean matches = false;
                 if (failPattern == null) {
-                    matches = true;     // by default
+                    matches = true; // by default
                 } else {
-                    for (SQLException err2 = err; 
-                         err2 != null;
-                         err2 = err2.getNextException()) {
+                    for (SQLException err2 = err; err2 != null;
+                            err2 = err2.getNextException()) {
                         String msg = err2.getMessage();
                         if (msg != null) {
                             matches = failPattern.matcher(msg).find();
@@ -506,19 +547,19 @@ public class FarragoTestCommandGenerator
                     throw err;
                 } else {
                     // else swallow it
-                    Util.swallow(err, FarragoTrace.getTestTracer());
+                    Util.swallow(
+                        err,
+                        FarragoTrace.getTestTracer());
                 }
             }
         }
     }
 
-
     /**
      * SynchronizationCommand causes the execution thread to wait for all
      * other threads in the test before continuing.
      */
-    static class SynchronizationCommand
-        extends AbstractCommand
+    static class SynchronizationCommand extends AbstractCommand
     {
         private SynchronizationCommand()
         {
@@ -531,15 +572,13 @@ public class FarragoTestCommandGenerator
         }
     }
 
-
     /**
      * AutoSynchronizationCommand is idential to
      * SynchronizationCommand, except that it is generated
      * automatically by the test harness and is not counted when
      * displaying the step number in which an error occurred.
      */
-    static class AutoSynchronizationCommand
-        extends SynchronizationCommand
+    static class AutoSynchronizationCommand extends SynchronizationCommand
     {
         private AutoSynchronizationCommand()
         {
@@ -547,13 +586,11 @@ public class FarragoTestCommandGenerator
         }
     }
 
-
     /**
      * SleepCommand causes the execution thread to wait for all
      * other threads in the test before continuing.
      */
-    private static class SleepCommand
-        extends AbstractCommand
+    private static class SleepCommand extends AbstractCommand
     {
         private long millis;
 
@@ -569,14 +606,12 @@ public class FarragoTestCommandGenerator
         }
     }
 
-
     /**
      * ExplainCommand executes explain plan commands.  Automatically
      * closes the {@link Statement} before returning from
      * {@link #execute(FarragoTestCommandExecutor)}.
      */
-    private static class ExplainCommand
-        extends AbstractCommand
+    private static class ExplainCommand extends AbstractCommand
     {
         private String sql;
 
@@ -595,13 +630,13 @@ public class FarragoTestCommandGenerator
 
                 try {
                     int rowCount = 0;
-                    while(rset.next()) {
+                    while (rset.next()) {
                         // REVIEW: SZ 6/17/2004: Should we attempt to
                         // validate the results of the explain plan?
                         rowCount++;
                     }
 
-                    assert(rowCount > 0);
+                    assert (rowCount > 0);
                 } finally {
                     rset.close();
                 }
@@ -611,13 +646,11 @@ public class FarragoTestCommandGenerator
         }
     }
 
-
     /**
      * PrepareCommand creates a {@link PreparedStatement}.  Stores the
      * prepared statement in the FarragoTestCommandExecutor.
      */
-    private static class PrepareCommand
-        extends AbstractCommand
+    private static class PrepareCommand extends AbstractCommand
     {
         private String sql;
 
@@ -629,7 +662,7 @@ public class FarragoTestCommandGenerator
         protected void doExecute(FarragoTestCommandExecutor executor)
             throws SQLException
         {
-            PreparedStatement stmt = 
+            PreparedStatement stmt =
                 executor.getConnection().prepareStatement(sql);
 
             executor.setStatement(stmt);
@@ -641,8 +674,7 @@ public class FarragoTestCommandGenerator
      * statement is stored in the FarragoTestCommandExecutor, it does
      * nothing.
      */
-    private static class CloseCommand
-        extends AbstractCommand
+    private static class CloseCommand extends AbstractCommand
     {
         protected void doExecute(FarragoTestCommandExecutor executor)
             throws SQLException
@@ -657,9 +689,7 @@ public class FarragoTestCommandGenerator
         }
     }
 
-
-    private static abstract class CommandWithTimeout
-        extends AbstractCommand
+    private static abstract class CommandWithTimeout extends AbstractCommand
     {
         private int timeout;
 
@@ -671,7 +701,7 @@ public class FarragoTestCommandGenerator
         protected boolean setTimeout(Statement stmt)
             throws SQLException
         {
-            assert(timeout >= 0);
+            assert (timeout >= 0);
 
             if (timeout > 0) {
                 stmt.setQueryTimeout(timeout);
@@ -682,31 +712,30 @@ public class FarragoTestCommandGenerator
         }
     }
 
-
     /**
      * FetchAndCompareCommand executes a previously prepared statement
      * stored in the FarragoTestCommandExecutor and then validates the
      * returned rows against expected data.
      */
-    private static class FetchAndCompareCommand
-        extends CommandWithTimeout
+    private static class FetchAndCompareCommand extends CommandWithTimeout
     {
         private ArrayList expected;
         private ArrayList result;
 
-        private FetchAndCompareCommand(int timeout, String expected)
+        private FetchAndCompareCommand(
+            int timeout,
+            String expected)
         {
             super(timeout);
 
             parseExpected(expected.trim());
         }
 
-
         protected void doExecute(FarragoTestCommandExecutor executor)
             throws SQLException
         {
-            PreparedStatement stmt = 
-                (PreparedStatement)executor.getStatement();
+            PreparedStatement stmt =
+                (PreparedStatement) executor.getStatement();
 
             boolean timeoutSet = setTimeout(stmt);
 
@@ -716,26 +745,28 @@ public class FarragoTestCommandGenerator
             try {
                 int rsetColumnCount = rset.getMetaData().getColumnCount();
 
-                while(rset.next()) {
-                      ArrayList row = new ArrayList();
+                while (rset.next()) {
+                    ArrayList row = new ArrayList();
 
-                      for(int i = 1; i <= rsetColumnCount; i++) {
-                          Object value = rset.getObject(i);
-                          if (rset.wasNull()) {
-                              value = null;
-                          }
+                    for (int i = 1; i <= rsetColumnCount; i++) {
+                        Object value = rset.getObject(i);
+                        if (rset.wasNull()) {
+                            value = null;
+                        }
 
-                          row.add(value);
-                      }
+                        row.add(value);
+                    }
 
-                      rows.add(row);
+                    rows.add(row);
                 }
-            } catch(IteratorResultSet.SqlTimeoutException e) {
+            } catch (IteratorResultSet.SqlTimeoutException e) {
                 if (!timeoutSet) {
                     throw e;
                 }
 
-                Util.swallow(e, FarragoTrace.getTestTracer());
+                Util.swallow(
+                    e,
+                    FarragoTrace.getTestTracer());
             } finally {
                 rset.close();
             }
@@ -744,7 +775,6 @@ public class FarragoTestCommandGenerator
 
             testValues();
         }
-
 
         /**
          * Parse expected values.  See {@link
@@ -768,19 +798,17 @@ public class FarragoTestCommandGenerator
             ArrayList row = null;
             StringBuffer value = new StringBuffer();
 
-            for(int i = 0; i < expected.length(); i++) {
+            for (int i = 0; i < expected.length(); i++) {
                 char ch = expected.charAt(i);
-                char nextCh = (i + 1 < expected.length()
-                               ? expected.charAt(i + 1)
-                               : 0);
-                switch(state) {
+                char nextCh =
+                    (((i + 1) < expected.length()) ? expected.charAt(i + 1) : 0);
+                switch (state) {
                 case STATE_ROW_START: // find start of row
                     if (ch == LEFT_BRACKET) {
                         row = new ArrayList();
                         state = STATE_VALUE_START;
                     }
                     break;
-
                 case STATE_VALUE_START: // start value
                     if (!Character.isWhitespace(ch)) {
                         value.setLength(0);
@@ -794,7 +822,6 @@ public class FarragoTestCommandGenerator
                         }
                     }
                     break;
-
                 case STATE_STRING_VALUE: // handle string values
                     if (ch == APOS) {
                         if (nextCh == APOS) {
@@ -808,13 +835,11 @@ public class FarragoTestCommandGenerator
                         value.append(ch);
                     }
                     break;
-
                 case STATE_OTHER_VALUE: // handle other values (numeric, null)
-                    if (ch != COMMA && ch != RIGHT_BRACKET) {
+                    if ((ch != COMMA) && (ch != RIGHT_BRACKET)) {
                         value.append(ch);
                         break;
                     }
-
                     String stringValue = value.toString().trim();
                     if (stringValue.matches("^-?[0-9]+$")) {
                         row.add(new BigInteger(stringValue));
@@ -827,16 +852,13 @@ public class FarragoTestCommandGenerator
                     } else if (stringValue.equals("null")) {
                         row.add(null);
                     } else {
-                        throw new IllegalStateException(
-                            "unknown value type '"
-                            + stringValue
-                            + "' for FetchAndCompare command");
+                        throw new IllegalStateException("unknown value type '"
+                            + stringValue + "' for FetchAndCompare command");
                     }
-                    
-                    state = STATE_VALUE_END;
-                    
-                    // FALL THROUGH
 
+                    state = STATE_VALUE_END;
+
+                // FALL THROUGH
                 case STATE_VALUE_END: // find comma or end of row
                     if (ch == COMMA) {
                         state = STATE_VALUE_START;
@@ -846,11 +868,8 @@ public class FarragoTestCommandGenerator
                         state = STATE_ROW_START;
                     } else if (!Character.isWhitespace(ch)) {
                         throw new IllegalStateException(
-                            "unexpected character '"
-                            + ch
-                            + "' at position "
-                            + i
-                            + " of expected values");
+                            "unexpected character '" + ch + "' at position "
+                            + i + " of expected values");
                     }
                     break;
                 }
@@ -863,11 +882,11 @@ public class FarragoTestCommandGenerator
 
             if (rows.size() > 1) {
                 Iterator rowIter = rows.iterator();
-                
-                int expectedNumColumns = ((ArrayList)rowIter.next()).size();
 
-                while(rowIter.hasNext()) {
-                    int numColumns = ((ArrayList)rowIter.next()).size();
+                int expectedNumColumns = ((ArrayList) rowIter.next()).size();
+
+                while (rowIter.hasNext()) {
+                    int numColumns = ((ArrayList) rowIter.next()).size();
 
                     if (numColumns != expectedNumColumns) {
                         throw new IllegalStateException(
@@ -885,86 +904,86 @@ public class FarragoTestCommandGenerator
         private void testValues()
         {
             if (expected.size() != result.size()) {
-                dumpData("Expected " + expected.size()
-                         + " rows, got " + result.size());
+                dumpData("Expected " + expected.size() + " rows, got "
+                    + result.size());
             }
 
             Iterator expectedIter = expected.iterator();
             Iterator resultIter = result.iterator();
 
             int rowNum = 1;
-            while(expectedIter.hasNext() && resultIter.hasNext()) {
-                ArrayList expectedRow = (ArrayList)expectedIter.next();
-                ArrayList resultRow = (ArrayList)resultIter.next();
+            while (expectedIter.hasNext() && resultIter.hasNext()) {
+                ArrayList expectedRow = (ArrayList) expectedIter.next();
+                ArrayList resultRow = (ArrayList) resultIter.next();
 
                 testValues(expectedRow, resultRow, rowNum++);
             }
-
         }
 
         /**
          * Validates {@link ResultSet} against expected data.
          */
-        private void testValues(ArrayList expectedRow,
-                                ArrayList resultRow,
-                                int rowNum)
+        private void testValues(
+            ArrayList expectedRow,
+            ArrayList resultRow,
+            int rowNum)
         {
             if (expectedRow.size() != resultRow.size()) {
-                dumpData("Row " + rowNum
-                         + " Expected "
-                         + expected.size()
-                         + " columns, got "
-                         + result.size());
+                dumpData("Row " + rowNum + " Expected " + expected.size()
+                    + " columns, got " + result.size());
             }
 
             Iterator expectedIter = expectedRow.iterator();
             Iterator resultIter = resultRow.iterator();
 
             int colNum = 1;
-            while(expectedIter.hasNext() && resultIter.hasNext()) {
+            while (expectedIter.hasNext() && resultIter.hasNext()) {
                 Object expectedValue = expectedIter.next();
                 Object resultValue = resultIter.next();
 
-                if (expectedValue == null ||
-                    expectedValue instanceof String ||
-                    expectedValue instanceof Boolean) {
+                if ((expectedValue == null) || expectedValue instanceof String
+                        || expectedValue instanceof Boolean) {
                     test(expectedValue, resultValue, rowNum, colNum);
                 } else if (expectedValue instanceof BigInteger) {
-                    BigInteger expectedInt = (BigInteger)expectedValue;
+                    BigInteger expectedInt = (BigInteger) expectedValue;
 
                     if (expectedInt.bitLength() <= 31) {
-                        test(expectedInt.intValue(),
-                             ((Number)resultValue).intValue(),
-                             rowNum,
-                             colNum);
+                        test(
+                            expectedInt.intValue(),
+                            ((Number) resultValue).intValue(),
+                            rowNum,
+                            colNum);
                     } else if (expectedInt.bitLength() <= 63) {
-                        test(expectedInt.longValue(),
-                             ((Number)resultValue).longValue(),
-                             rowNum,
-                             colNum);
+                        test(
+                            expectedInt.longValue(),
+                            ((Number) resultValue).longValue(),
+                            rowNum,
+                            colNum);
                     } else {
                         // REVIEW: how do we return very
                         // large integer values?
                         test(expectedInt, resultValue, rowNum, colNum);
                     }
                 } else if (expectedValue instanceof BigDecimal) {
-                    BigDecimal expectedReal =  (BigDecimal)expectedValue;
+                    BigDecimal expectedReal = (BigDecimal) expectedValue;
 
                     float asFloat = expectedReal.floatValue();
                     double asDouble = expectedReal.doubleValue();
 
-                    if (asFloat != Float.POSITIVE_INFINITY &&
-                        asFloat != Float.NEGATIVE_INFINITY) {
-                        test(asFloat,
-                             ((Number)resultValue).floatValue(),
-                             rowNum,
-                             colNum);
-                    } else if (asDouble != Double.POSITIVE_INFINITY &&
-                               asDouble != Double.NEGATIVE_INFINITY) {
-                        test(asDouble,
-                             ((Number)resultValue).doubleValue(),
-                             rowNum,
-                             colNum);
+                    if ((asFloat != Float.POSITIVE_INFINITY)
+                            && (asFloat != Float.NEGATIVE_INFINITY)) {
+                        test(
+                            asFloat,
+                            ((Number) resultValue).floatValue(),
+                            rowNum,
+                            colNum);
+                    } else if ((asDouble != Double.POSITIVE_INFINITY)
+                            && (asDouble != Double.NEGATIVE_INFINITY)) {
+                        test(
+                            asDouble,
+                            ((Number) resultValue).doubleValue(),
+                            rowNum,
+                            colNum);
                     } else {
                         // REVIEW: how do we return very large decimal
                         // values?
@@ -980,69 +999,93 @@ public class FarragoTestCommandGenerator
             }
         }
 
-        
-        private void test(Object expected, Object got, int rowNum, int colNum)
+        private void test(
+            Object expected,
+            Object got,
+            int rowNum,
+            int colNum)
         {
-            if (expected == null && got == null) {
+            if ((expected == null) && (got == null)) {
                 return;
             }
 
-            if (expected == null || !expected.equals(got)) {
-                reportError(String.valueOf(expected),
-                            String.valueOf(got),
-                            rowNum,
-                            colNum);
+            if ((expected == null) || !expected.equals(got)) {
+                reportError(
+                    String.valueOf(expected),
+                    String.valueOf(got),
+                    rowNum,
+                    colNum);
             }
         }
 
-        private void test(int expected, int got, int rowNum, int colNum)
+        private void test(
+            int expected,
+            int got,
+            int rowNum,
+            int colNum)
         {
             if (expected != got) {
-                reportError(String.valueOf(expected),
-                            String.valueOf(got),
-                            rowNum,
-                            colNum);
+                reportError(
+                    String.valueOf(expected),
+                    String.valueOf(got),
+                    rowNum,
+                    colNum);
             }
         }
 
-        private void test(long expected, long got, int rowNum, int colNum)
+        private void test(
+            long expected,
+            long got,
+            int rowNum,
+            int colNum)
         {
             if (expected != got) {
-                reportError(String.valueOf(expected),
-                            String.valueOf(got),
-                            rowNum,
-                            colNum);
-            }
-        }
-        
-        private void test(float expected, float got, int rowNum, int colNum)
-        {
-            if (expected != got) {
-                reportError(String.valueOf(expected),
-                            String.valueOf(got),
-                            rowNum,
-                            colNum);
+                reportError(
+                    String.valueOf(expected),
+                    String.valueOf(got),
+                    rowNum,
+                    colNum);
             }
         }
 
-        private void test(double expected, double got, int rowNum, int colNum)
+        private void test(
+            float expected,
+            float got,
+            int rowNum,
+            int colNum)
         {
             if (expected != got) {
-                reportError(String.valueOf(expected),
-                            String.valueOf(got),
-                            rowNum,
-                            colNum);
+                reportError(
+                    String.valueOf(expected),
+                    String.valueOf(got),
+                    rowNum,
+                    colNum);
             }
         }
-        
-        private void reportError(String expected,
-                                 String got,
-                                 int rowNum,
-                                 int colNum)
+
+        private void test(
+            double expected,
+            double got,
+            int rowNum,
+            int colNum)
         {
-            dumpData("Row " + rowNum + ", column " + colNum
-                     + ": expected <" + expected
-                     + ">, got <" + got + ">");
+            if (expected != got) {
+                reportError(
+                    String.valueOf(expected),
+                    String.valueOf(got),
+                    rowNum,
+                    colNum);
+            }
+        }
+
+        private void reportError(
+            String expected,
+            String got,
+            int rowNum,
+            int colNum)
+        {
+            dumpData("Row " + rowNum + ", column " + colNum + ": expected <"
+                + expected + ">, got <" + got + ">");
         }
 
         /**
@@ -1056,7 +1099,7 @@ public class FarragoTestCommandGenerator
             StringBuffer fullMessage = new StringBuffer(message);
 
             int rowNum = 1;
-            while(expectedIter.hasNext() || resultIter.hasNext()) {
+            while (expectedIter.hasNext() || resultIter.hasNext()) {
                 StringBuffer expectedOut = new StringBuffer();
                 expectedOut.append("Row ").append(rowNum).append(" exp:");
 
@@ -1065,25 +1108,23 @@ public class FarragoTestCommandGenerator
 
                 Iterator expectedRowIter = null;
                 if (expectedIter.hasNext()) {
-                    ArrayList expectedRow = (ArrayList)expectedIter.next();
+                    ArrayList expectedRow = (ArrayList) expectedIter.next();
                     expectedRowIter = expectedRow.iterator();
                 }
 
                 Iterator resultRowIter = null;
                 if (resultIter.hasNext()) {
-                    ArrayList resultRow = (ArrayList)resultIter.next();
+                    ArrayList resultRow = (ArrayList) resultIter.next();
                     resultRowIter = resultRow.iterator();
                 }
 
-                while((expectedRowIter != null && expectedRowIter.hasNext()) ||
-                      (resultRowIter != null && resultRowIter.hasNext())) {
-                    Object expectedObject = (expectedRowIter != null 
-                                             ? expectedRowIter.next()
-                                             : "");
-                    
-                    Object resultObject = (resultRowIter != null 
-                                           ? resultRowIter.next()
-                                           : "");
+                while (((expectedRowIter != null) && expectedRowIter.hasNext())
+                        || ((resultRowIter != null) && resultRowIter.hasNext())) {
+                    Object expectedObject =
+                        ((expectedRowIter != null) ? expectedRowIter.next() : "");
+
+                    Object resultObject =
+                        ((resultRowIter != null) ? resultRowIter.next() : "");
 
                     String expectedValue;
                     if (expectedObject == null) {
@@ -1099,21 +1140,24 @@ public class FarragoTestCommandGenerator
                         resultValue = resultObject.toString();
                     }
 
-                    int width = Math.max(expectedValue.length(),
-                                         resultValue.length());
+                    int width =
+                        Math.max(
+                            expectedValue.length(),
+                            resultValue.length());
 
                     expectedOut.append(" | ").append(expectedValue);
-                    for(int i = 0; i < width - expectedValue.length(); i++) {
+                    for (int i = 0; i < (width - expectedValue.length());
+                            i++) {
                         expectedOut.append(' ');
                     }
 
                     resultOut.append(" | ").append(resultValue);
-                    for(int i = 0; i < width - resultValue.length(); i++) {
+                    for (int i = 0; i < (width - resultValue.length()); i++) {
                         resultOut.append(' ');
                     }
                 }
 
-                if (expectedRowIter == null && resultRowIter == null) {
+                if ((expectedRowIter == null) && (resultRowIter == null)) {
                     expectedOut.append('|');
                     resultOut.append('|');
                 }
@@ -1121,11 +1165,8 @@ public class FarragoTestCommandGenerator
                 expectedOut.append(" |");
                 resultOut.append(" |");
 
-                fullMessage
-                    .append('\n')
-                    .append(expectedOut.toString())
-                    .append('\n')
-                    .append(resultOut.toString());
+                fullMessage.append('\n').append(expectedOut.toString())
+                    .append('\n').append(resultOut.toString());
 
                 rowNum++;
             }
@@ -1134,17 +1175,17 @@ public class FarragoTestCommandGenerator
         }
     }
 
-
     /**
      * InsertCommand exeutes an insert, update or delete SQL
      * statement.  Uses {@link Statement#executeUpdate(String)}.
      */
-    private static class InsertCommand
-        extends CommandWithTimeout
+    private static class InsertCommand extends CommandWithTimeout
     {
         private String sql;
 
-        private InsertCommand(int timeout, String sql)
+        private InsertCommand(
+            int timeout,
+            String sql)
         {
             super(timeout);
 
@@ -1162,13 +1203,11 @@ public class FarragoTestCommandGenerator
         }
     }
 
-
     /**
      * CommitCommand commits pending transactions via
      * {@link Connection#commit()}.
      */
-    private static class CommitCommand
-        extends AbstractCommand
+    private static class CommitCommand extends AbstractCommand
     {
         protected void doExecute(FarragoTestCommandExecutor executor)
             throws SQLException
@@ -1177,13 +1216,11 @@ public class FarragoTestCommandGenerator
         }
     }
 
-
     /**
      * RollbackCommand rolls back pending transactions via
      * {@link Connection#rollback()}.
      */
-    private static class RollbackCommand
-        extends AbstractCommand
+    private static class RollbackCommand extends AbstractCommand
     {
         protected void doExecute(FarragoTestCommandExecutor executor)
             throws SQLException
@@ -1197,8 +1234,7 @@ public class FarragoTestCommandGenerator
      * {@link Statement} before returning from
      * {@link #doExecute(FarragoTestCommandExecutor)}.
      */
-    private static class DdlCommand
-        extends AbstractCommand
+    private static class DdlCommand extends AbstractCommand
     {
         private String sql;
 

@@ -1,42 +1,42 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.rel.jdbc;
 
-import org.eigenbase.relopt.RelOptConnection;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.reltype.RelDataType;
+import javax.sql.DataSource;
+
+import openjava.ptree.*;
+
 import org.eigenbase.oj.rel.JavaRelImplementor;
 import org.eigenbase.oj.rel.ResultSetRel;
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.rel.AbstractRelNode;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelOptConnection;
+import org.eigenbase.relopt.RelOptCost;
+import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.*;
 import org.eigenbase.util.JdbcDataSource;
 import org.eigenbase.util.Util;
-import openjava.ptree.*;
-
-import javax.sql.DataSource;
 
 
 /**
@@ -51,12 +51,9 @@ import javax.sql.DataSource;
  */
 public class JdbcQuery extends AbstractRelNode implements ResultSetRel
 {
-    public final DataSource dataSource;
     //~ Instance fields -------------------------------------------------------
 
-    public RelOptConnection getConnection() {
-        return connection;
-    }
+    public final DataSource dataSource;
 
     /** The expression which yields the connection object. */
     protected RelOptConnection connection;
@@ -104,17 +101,23 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
         this.connection = connection;
         this.dialect = dialect;
         if (sql == null) {
-            sql = SqlOperatorTable.std().selectOperator.createCall(false, null,
-                    null, null, null, null, null,null);
+            sql = SqlOperatorTable.std().selectOperator.createCall(false,
+                    null, null, null, null, null, null, null);
         } else {
-            Util.pre(sql.isA(SqlKind.Select),
-                    "sql == null || sql.isA(SqlNode.Kind.Select)");
+            Util.pre(
+                sql.isA(SqlKind.Select),
+                "sql == null || sql.isA(SqlNode.Kind.Select)");
         }
         this.sql = sql;
         this.dataSource = dataSource;
     }
 
     //~ Methods ---------------------------------------------------------------
+
+    public RelOptConnection getConnection()
+    {
+        return connection;
+    }
 
     public CallingConvention getConvention()
     {
@@ -131,13 +134,8 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
 
     public Object clone()
     {
-        return new JdbcQuery(
-            cluster,
-            rowType,
-            connection,
-            dialect,
-            (SqlSelect) sql.clone(),
-            dataSource);
+        return new JdbcQuery(cluster, rowType, connection, dialect,
+            (SqlSelect) sql.clone(), dataSource);
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
@@ -162,7 +160,7 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
         // estimate selfishly deals with the cost to THIS system, but it still
         // neglects the effects of latency.
         double io = 0 /*rows*/;
-        return planner.makeCost(rows,cpu,io);
+        return planner.makeCost(rows, cpu, io);
     }
 
     public void onRegister(RelOptPlanner planner)
@@ -174,6 +172,7 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
     public static void register(RelOptPlanner planner)
     {
         // FIXME jvs 29-Aug-2004
+
         /*
         planner.addRule(new TableAccessToQueryRule());
         */
@@ -213,21 +212,21 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
         // into a Java expression which can be 'thawed' into a DataSource
         // at run-time. We should use the OJConnectionRegistry somehow.
         assert dataSource instanceof JdbcDataSource; // hack
+
         // DriverManager.getConnection("jdbc...", "scott", "tiger");
         final String url = ((JdbcDataSource) dataSource)._url;
-        final MethodCall connectionExpr = new MethodCall(
+        final MethodCall connectionExpr =
+            new MethodCall(
                 TypeName.forClass(java.sql.DriverManager.class),
                 "getConnection",
-                new ExpressionList(Literal.makeLiteral(url),
-                        Literal.makeLiteral("SA"),
-                        Literal.makeLiteral("")));
+                new ExpressionList(
+                    Literal.makeLiteral(url),
+                    Literal.makeLiteral("SA"),
+                    Literal.makeLiteral("")));
         return new MethodCall(
-                new MethodCall(
-                        connectionExpr,
-                        "createStatement",
-                        null),
-                "executeQuery",
-                new ExpressionList(Literal.makeLiteral(queryString)));
+            new MethodCall(connectionExpr, "createStatement", null),
+            "executeQuery",
+            new ExpressionList(Literal.makeLiteral(queryString)));
     }
 }
 

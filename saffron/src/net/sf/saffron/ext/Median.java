@@ -1,33 +1,30 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package net.sf.saffron.ext;
 
-import net.sf.saffron.core.AggregationExtender;
-import net.sf.saffron.runtime.SaffronUtil;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+
+import net.sf.saffron.core.AggregationExtender;
+import net.sf.saffron.runtime.SaffronUtil;
 
 
 /**
@@ -41,8 +38,6 @@ import java.util.Comparator;
  */
 public class Median implements AggregationExtender
 {
-    //~ Methods ---------------------------------------------------------------
-
     // Comparable methods
     public Comparable aggregate(Comparable value)
     {
@@ -56,7 +51,9 @@ public class Median implements AggregationExtender
     }
 
     // {Comparable,Comparable} methods
-    public Comparable [] aggregate(Comparable v0,Comparable v1)
+    public Comparable [] aggregate(
+        Comparable v0,
+        Comparable v1)
     {
         throw new UnsupportedOperationException();
     }
@@ -70,7 +67,10 @@ public class Median implements AggregationExtender
         return accumulator1;
     }
 
-    public Object merge(int value,Object accumulator1,Object accumulator2)
+    public Object merge(
+        int value,
+        Object accumulator1,
+        Object accumulator2)
     {
         ((ArrayList) accumulator1).addAll((ArrayList) accumulator2);
         return accumulator1;
@@ -86,25 +86,34 @@ public class Median implements AggregationExtender
         return accumulator1;
     }
 
-    public Object next(Comparable value,Object accumulator)
+    public Object next(
+        Comparable value,
+        Object accumulator)
     {
         ((ArrayList) accumulator).add(value);
         return accumulator;
     }
 
-    public Object next(int value,Object accumulator)
+    public Object next(
+        int value,
+        Object accumulator)
     {
         ((ArrayList) accumulator).add(new Integer(value));
         return accumulator;
     }
 
-    public Object next(Comparable v0,Comparable v1,Object accumulator)
+    public Object next(
+        Comparable v0,
+        Comparable v1,
+        Object accumulator)
     {
-        ((ArrayList) accumulator).add(new Comparable [] { v0,v1 });
+        ((ArrayList) accumulator).add(new Comparable [] { v0, v1 });
         return accumulator;
     }
 
-    public Object result(Comparable value,Object accumulator)
+    public Object result(
+        Comparable value,
+        Object accumulator)
     {
         Object [] a = ((ArrayList) accumulator).toArray();
         Arrays.sort(a);
@@ -115,9 +124,11 @@ public class Median implements AggregationExtender
         return a[i];
     }
 
-    public int result(int value,Object accumulator)
+    public int result(
+        int value,
+        Object accumulator)
     {
-        return SaffronUtil.intValue(result(null,accumulator));
+        return SaffronUtil.intValue(result(null, accumulator));
     }
 
     public Comparable [] result(
@@ -126,7 +137,9 @@ public class Median implements AggregationExtender
         Object accumulator)
     {
         Object [] a = ((ArrayList) accumulator).toArray();
-        Arrays.sort(a,new ArrayComparator());
+        Arrays.sort(
+            a,
+            new ArrayComparator());
         if (a.length < 1) {
             return null;
         }
@@ -144,17 +157,19 @@ public class Median implements AggregationExtender
         return new ArrayList();
     }
 
-    public Object start(Comparable v0,Comparable v1)
+    public Object start(
+        Comparable v0,
+        Comparable v1)
     {
         return new ArrayList();
     }
 
-    //~ Inner Classes ---------------------------------------------------------
-
     private static class ArrayComparator implements Comparator
     {
         // implement Comparator
-        public int compare(Object o,Object p)
+        public int compare(
+            Object o,
+            Object p)
         {
             Object [] a = (Object []) o;
             Object [] b = (Object []) p;

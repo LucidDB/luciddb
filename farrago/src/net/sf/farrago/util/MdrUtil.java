@@ -6,24 +6,25 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.util;
 
 import java.io.*;
 import java.util.*;
-import org.netbeans.mdr.*;
+
 import org.netbeans.api.mdr.*;
+import org.netbeans.mdr.*;
 import org.netbeans.mdr.persistence.btreeimpl.btreestorage.*;
+
 
 // NOTE:  This class gets compiled independently of everything else since
 // it is used by build-time utilities such as ProxyGen.  That means it must
@@ -37,6 +38,8 @@ import org.netbeans.mdr.persistence.btreeimpl.btreestorage.*;
  */
 public abstract class MdrUtil
 {
+    //~ Methods ---------------------------------------------------------------
+
     /**
      * Loads an MDRepository instance.
      *
@@ -84,7 +87,7 @@ public abstract class MdrUtil
 
         try {
             // set desired properties
-            sysProps.put(classNameProp,storageFactoryClassName);
+            sysProps.put(classNameProp, storageFactoryClassName);
             iter = storageProps.entrySet().iterator();
             while (iter.hasNext()) {
                 Map.Entry entry = (Map.Entry) iter.next();
@@ -103,11 +106,14 @@ public abstract class MdrUtil
                 if (entry.getValue() == null) {
                     sysProps.remove(entry.getKey());
                 } else {
-                    sysProps.put(entry.getKey(),entry.getValue());
+                    sysProps.put(
+                        entry.getKey(),
+                        entry.getValue());
                 }
             }
         }
     }
 }
+
 
 // End MdrUtil.java

@@ -1,30 +1,30 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.sql;
 
+import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.parser.ParserPosition;
+
 
 /**
  * An operator describing a query. (Not a query itself.)
@@ -63,7 +63,8 @@ public class SqlSelectOperator extends SqlOperator
 
     public SqlSelectOperator()
     {
-        super("SELECT",SqlKind.Select,1,true, SqlOperatorTable.useScope,null, null);
+        super("SELECT", SqlKind.Select, 1, true, SqlOperatorTable.useScope,
+            null, null);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -73,9 +74,11 @@ public class SqlSelectOperator extends SqlOperator
         return SqlSyntax.Special;
     }
 
-    public SqlCall createCall(SqlNode [] operands, ParserPosition parserPosition)
+    public SqlCall createCall(
+        SqlNode [] operands,
+        ParserPosition parserPosition)
     {
-        return new SqlSelect(this,operands, parserPosition);
+        return new SqlSelect(this, operands, parserPosition);
     }
 
     public SqlSelect createCall(
@@ -90,9 +93,10 @@ public class SqlSelectOperator extends SqlOperator
     {
         return (SqlSelect) createCall(
             new SqlNode [] {
-                SqlLiteral.createBoolean(isDistinct, parserPosition),selectList,fromClause,
-                whereClause,groupBy,having,orderBy
-            }, parserPosition);
+                SqlLiteral.createBoolean(isDistinct, parserPosition),
+                selectList, fromClause, whereClause, groupBy, having, orderBy
+            },
+            parserPosition);
     }
 
     public void unparse(
@@ -107,47 +111,51 @@ public class SqlSelectOperator extends SqlOperator
         }
         SqlNode selectClause = operands[SqlSelect.SELECT_OPERAND];
         if (selectClause == null) {
-            selectClause = new SqlIdentifier("*", selectClause.getParserPosition());
+            selectClause =
+                new SqlIdentifier(
+                    "*",
+                    selectClause.getParserPosition());
         }
-        selectClause.unparse(writer,0,0);
+        selectClause.unparse(writer, 0, 0);
         writer.println();
         writer.print("FROM ");
         SqlNode fromClause = operands[SqlSelect.FROM_OPERAND];
+
         // for FROM clause, use precedence just below join operator to make
         // sure that an unjoined nested select will be properly
         // parenthesized
-        fromClause.unparse(
-            writer,
+        fromClause.unparse(writer,
             SqlOperatorTable.std().joinOperator.leftPrec - 1,
             SqlOperatorTable.std().joinOperator.rightPrec - 1);
         SqlNode whereClause = operands[SqlSelect.WHERE_OPERAND];
         if (whereClause != null) {
             writer.println();
             writer.print("WHERE ");
-            whereClause.unparse(writer,0,0);
+            whereClause.unparse(writer, 0, 0);
         }
         SqlNode groupClause = operands[SqlSelect.GROUP_OPERAND];
         if (groupClause != null) {
             writer.println();
             writer.print("GROUP BY ");
-            groupClause.unparse(writer,0,0);
+            groupClause.unparse(writer, 0, 0);
         }
         SqlNode havingClause = operands[SqlSelect.HAVING_OPERAND];
         if (havingClause != null) {
             writer.println();
             writer.print("HAVING ");
-            havingClause.unparse(writer,0,0);
+            havingClause.unparse(writer, 0, 0);
         }
         SqlNode orderClause = operands[SqlSelect.ORDER_OPERAND];
         if (orderClause != null) {
             writer.println();
             writer.print("ORDER BY ");
-            orderClause.unparse(writer,0,0);
+            orderClause.unparse(writer, 0, 0);
         }
     }
 
-    public void test(SqlTester tester) {
-        tester.check("select * from values(1)","1",SqlTypeName.Integer);
+    public void test(SqlTester tester)
+    {
+        tester.check("select * from values(1)", "1", SqlTypeName.Integer);
     }
 }
 

@@ -16,12 +16,11 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.type.runtime;
 
-import org.eigenbase.util.*;
-
 import java.io.*;
+
+import org.eigenbase.util.*;
 
 
 /**
@@ -45,10 +44,14 @@ public abstract class EncodedCharPointer extends BytePointer
             // If this represents a CHAR, there may be trailing NUL chars.
             // Trim them off.
             int end = pos;
-            while (end < count && buf[end] != '\0') {
+            while ((end < count) && (buf[end] != '\0')) {
                 ++end;
             }
-            return new String(buf,pos,end - pos,getCharsetName());
+            return new String(
+                buf,
+                pos,
+                end - pos,
+                getCharsetName());
         } catch (UnsupportedEncodingException ex) {
             throw Util.newInternal(ex);
         }

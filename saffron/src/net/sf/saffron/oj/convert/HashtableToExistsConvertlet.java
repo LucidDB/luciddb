@@ -1,30 +1,31 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2004-2004 Disruptive Tech
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 package net.sf.saffron.oj.convert;
 
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.oj.rel.JavaRelImplementor;
-import org.eigenbase.oj.rel.JavaRel;
-import org.eigenbase.rel.convert.ConverterRel;
 import openjava.ptree.*;
+
+import org.eigenbase.oj.rel.JavaRel;
+import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.rel.convert.ConverterRel;
+import org.eigenbase.relopt.CallingConvention;
+
 
 /**
  * Thunk to convert between {@link CallingConvention#HASHTABLE}
@@ -34,19 +35,27 @@ import openjava.ptree.*;
  * @since May 27, 2004
  * @version $Id$
  **/
-public class HashtableToExistsConvertlet extends JavaConvertlet {
-    public HashtableToExistsConvertlet() {
-        super(CallingConvention.HASHTABLE,CallingConvention.EXISTS);
+public class HashtableToExistsConvertlet extends JavaConvertlet
+{
+    public HashtableToExistsConvertlet()
+    {
+        super(CallingConvention.HASHTABLE, CallingConvention.EXISTS);
     }
 
-    public ParseTree implement(JavaRelImplementor implementor,
-            ConverterRel converter) {
-        Expression exp = implementor.visitJavaChild(converter, 0, (JavaRel)
-                converter.child);
+    public ParseTree implement(
+        JavaRelImplementor implementor,
+        ConverterRel converter)
+    {
+        Expression exp =
+            implementor.visitJavaChild(converter, 0, (JavaRel) converter.child);
         return new UnaryExpression(
             UnaryExpression.NOT,
-            new MethodCall(exp,"isEmpty",new ExpressionList()));
+            new MethodCall(
+                exp,
+                "isEmpty",
+                new ExpressionList()));
     }
 }
+
 
 // End HashtableToExistsConvertlet.java

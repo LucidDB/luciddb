@@ -1180,6 +1180,7 @@ require version '${required.ant.version}'."/>
     <jalopy backup="true" convention="${src.dir}/jalopy.xml"
       classpathref="farrago.run.classpath" history="FILE" force="true">
       <fileset dir="${src.dir}">
+        <include name="**/*.java"/>
         <exclude name="openjava/**/*.java"/>
       </fileset>
     </jalopy>

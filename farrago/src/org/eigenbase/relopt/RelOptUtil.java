@@ -1,53 +1,55 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.relopt;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.rel.*;
-import org.eigenbase.rex.RexCorrelVariable;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexShuttle;
-import org.eigenbase.rex.RexBuilder;
-import org.eigenbase.rex.RexUtil;
-import org.eigenbase.rex.RexKind;
-import org.eigenbase.rex.RexInputRef;
-import org.eigenbase.rex.RexCall;
-import org.eigenbase.util.Util;
+
+// TODO jvs 29-Aug-2004:  factor out references
+import com.disruptivetech.farrago.volcano.RelSubset;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
 import openjava.ptree.Expression;
 import openjava.ptree.FieldAccess;
 import openjava.ptree.Variable;
 import openjava.ptree.util.SyntheticClass;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.List;
-import java.util.ArrayList;
+import org.eigenbase.rel.*;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.RelDataTypeField;
+import org.eigenbase.rex.RexBuilder;
+import org.eigenbase.rex.RexCall;
+import org.eigenbase.rex.RexCorrelVariable;
+import org.eigenbase.rex.RexInputRef;
+import org.eigenbase.rex.RexKind;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexShuttle;
+import org.eigenbase.rex.RexUtil;
+import org.eigenbase.util.Util;
 
-// TODO jvs 29-Aug-2004:  factor out references
-import com.disruptivetech.farrago.volcano.RelSubset;
 
 /**
  * <code>RelOptUtil</code> defines static utility methods for use in optimizing
@@ -93,7 +95,7 @@ public abstract class RelOptUtil
     public static Set getVariablesSet(RelNode rel)
     {
         VariableSetVisitor visitor = new VariableSetVisitor();
-        go(visitor,rel);
+        go(visitor, rel);
         return visitor.variables;
     }
 
@@ -138,13 +140,16 @@ public abstract class RelOptUtil
         go(
             new VisitorRelVisitor(vuv) {
                 // implement RelVisitor
-                public void visit(RelNode p,int ordinal,RelNode parent)
+                public void visit(
+                    RelNode p,
+                    int ordinal,
+                    RelNode parent)
                 {
                     if (p instanceof RelSubset) {
                         RelSubset subset = (RelSubset) p;
                         vuv.variables.addAll(subset.getVariablesUsed());
                     } else {
-                        super.visit(p,ordinal,parent);
+                        super.visit(p, ordinal, parent);
                     }
 
                     // Important! Remove stopped variables AFTER we visit children.
@@ -161,9 +166,9 @@ public abstract class RelOptUtil
         return (RelNode) ((AbstractRelNode) rel).clone();
     }
 
-    public static RelNode[] clone(RelNode[] rels)
+    public static RelNode [] clone(RelNode [] rels)
     {
-        rels = (RelNode[]) rels.clone();
+        rels = (RelNode []) rels.clone();
         for (int i = 0; i < rels.length; i++) {
             rels[i] = clone(rels[i]);
         }
@@ -174,13 +179,15 @@ public abstract class RelOptUtil
      * Sets a {@link RelVisitor} going on a given relational expression, and
      * returns the result.
      */
-    public static RelNode go(RelVisitor visitor,RelNode p)
+    public static RelNode go(
+        RelVisitor visitor,
+        RelNode p)
     {
         RelHolder root = new RelHolder(p);
         try {
-            visitor.visit(root,-1,null);
+            visitor.visit(root, -1, null);
         } catch (Throwable e) {
-            throw Util.newInternal(e,"while visiting tree");
+            throw Util.newInternal(e, "while visiting tree");
         }
         return root.get();
     }
@@ -189,7 +196,9 @@ public abstract class RelOptUtil
      * Constructs a reference to the <code>field</code><sup>th</sup> field of
      * the <code>ordinal</code><sup>th</sup> input.
      */
-    public static FieldAccess makeFieldAccess(int ordinal,int field)
+    public static FieldAccess makeFieldAccess(
+        int ordinal,
+        int field)
     {
         return new FieldAccess(
             new Variable(makeName(ordinal)),
@@ -200,7 +209,9 @@ public abstract class RelOptUtil
      * Constructs a reference to the <code>field</code><sup>th</sup> field of
      * an expression.
      */
-    public static FieldAccess makeFieldAccess(Expression expr,int field)
+    public static FieldAccess makeFieldAccess(
+        Expression expr,
+        int field)
     {
         return new FieldAccess(
             expr,
@@ -263,11 +274,11 @@ public abstract class RelOptUtil
     }
 
     public static RelDataType createTypeFromProjection(
-        final RelDataType type,final List columnNameList)
+        final RelDataType type,
+        final List columnNameList)
     {
         return type.getFactory().createProjectType(
-            new RelDataTypeFactory.FieldInfo()
-            {
+            new RelDataTypeFactory.FieldInfo() {
                 public int getFieldCount()
                 {
                     return columnNameList.size();
@@ -287,7 +298,8 @@ public abstract class RelOptUtil
     }
 
     public static boolean areRowTypesEqual(
-        RelDataType rowType1,RelDataType rowType2)
+        RelDataType rowType1,
+        RelDataType rowType2)
     {
         if (rowType1 == rowType2) {
             return true;
@@ -324,7 +336,7 @@ public abstract class RelOptUtil
         RelDataType inputType = rel.getRowType();
 
         int n = outputType.getFieldCount();
-        RexNode[] renameExps = new RexNode[n];
+        RexNode [] renameExps = new RexNode[n];
         String [] renameNames = new String[n];
 
         RelDataTypeField [] inputFields = inputType.getFields();
@@ -332,19 +344,21 @@ public abstract class RelOptUtil
 
         final RexBuilder rexBuilder = rel.getCluster().rexBuilder;
         for (int i = 0; i < n; ++i) {
-            assert(inputFields[i].getType().equals(outputFields[i].getType()));
+            assert (inputFields[i].getType().equals(outputFields[i].getType()));
             renameNames[i] = outputFields[i].getName();
-            renameExps[i] = rexBuilder.makeInputRef(
-                inputFields[i].getType(),
-                inputFields[i].getIndex());
+            renameExps[i] =
+                rexBuilder.makeInputRef(
+                    inputFields[i].getType(),
+                    inputFields[i].getIndex());
         }
 
-        ProjectRel renameRel = new ProjectRel(
-            rel.getCluster(),
-            rel,
-            renameExps,
-            renameNames,
-            ProjectRel.Flags.Boxed);
+        ProjectRel renameRel =
+            new ProjectRel(
+                rel.getCluster(),
+                rel,
+                renameExps,
+                renameNames,
+                ProjectRel.Flags.Boxed);
 
         return renameRel;
     }
@@ -384,16 +398,16 @@ public abstract class RelOptUtil
             if (!type.isNullable()) {
                 continue;
             }
-            RexNode newCondition = rexBuilder.makeCall(
-                rexBuilder._opTab.isNotNullOperator,
-                rexBuilder.makeInputRef(type,iField));
+            RexNode newCondition =
+                rexBuilder.makeCall(
+                    rexBuilder._opTab.isNotNullOperator,
+                    rexBuilder.makeInputRef(type, iField));
             if (condition == null) {
                 condition = newCondition;
             } else {
-                condition = rexBuilder.makeCall(
-                    rexBuilder._opTab.andOperator,
-                    condition,
-                    newCondition);
+                condition =
+                    rexBuilder.makeCall(rexBuilder._opTab.andOperator,
+                        condition, newCondition);
             }
         }
         if (condition == null) {
@@ -420,15 +434,14 @@ public abstract class RelOptUtil
         RelDataType castRowType)
     {
         RelDataType rowType = rel.getRowType();
-        if (areRowTypesEqual(rowType,castRowType)) {
+        if (areRowTypesEqual(rowType, castRowType)) {
             // nothing to do
             return rel;
         }
         String [] fieldNames = RelOptUtil.getFieldNames(rowType);
-        RexNode [] castExps = RexUtil.generateCastExpressions(
-            rel.getCluster().rexBuilder,
-            castRowType,
-            rowType);
+        RexNode [] castExps =
+            RexUtil.generateCastExpressions(rel.getCluster().rexBuilder,
+                castRowType, rowType);
         return new ProjectRel(
             rel.getCluster(),
             rel,
@@ -438,7 +451,8 @@ public abstract class RelOptUtil
     }
 
     public static boolean analyzeSimpleEquiJoin(
-        JoinRel joinRel,int [] joinFieldOrdinals)
+        JoinRel joinRel,
+        int [] joinFieldOrdinals)
     {
         RexNode joinExp = joinRel.getCondition();
         if (joinExp.getKind() != RexKind.Equals) {
@@ -492,7 +506,7 @@ public abstract class RelOptUtil
 
         public void childrenAccept(RelVisitor visitor)
         {
-            visitor.visit(p,0,this);
+            visitor.visit(p, 0, this);
         }
 
         public Object clone()
@@ -500,9 +514,11 @@ public abstract class RelOptUtil
             throw new UnsupportedOperationException();
         }
 
-        public void replaceInput(int ordinalInParent,RelNode p)
+        public void replaceInput(
+            int ordinalInParent,
+            RelNode p)
         {
-            assert(ordinalInParent == 0);
+            assert (ordinalInParent == 0);
             this.p = p;
         }
 
@@ -517,13 +533,16 @@ public abstract class RelOptUtil
         HashSet variables = new HashSet();
 
         // implement RelVisitor
-        public void visit(RelNode p,int ordinal,RelNode parent)
+        public void visit(
+            RelNode p,
+            int ordinal,
+            RelNode parent)
         {
             if (p instanceof RelSubset) {
                 RelSubset subset = (RelSubset) p;
                 variables.addAll(subset.getVariablesSet());
             } else {
-                super.visit(p,ordinal,parent);
+                super.visit(p, ordinal, parent);
                 String variable = p.getCorrelVariable();
                 if (variable != null) {
                     variables.add(variable);

@@ -16,17 +16,15 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.type.runtime;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.math.*;
 
 import net.sf.farrago.resource.*;
 
 import org.eigenbase.util.*;
-
-import java.math.*;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 
 
 /**
@@ -38,9 +36,11 @@ import java.lang.reflect.Method;
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class NullablePrimitive
-    implements NullableValue, AssignableValue
+public abstract class NullablePrimitive implements NullableValue,
+    AssignableValue
 {
+    //~ Static fields/initializers --------------------------------------------
+
     /**
      * Name of field storing value.
      */
@@ -50,7 +50,6 @@ public abstract class NullablePrimitive
      * Name of field storing null indicator.
      */
     public static final String NULL_IND_FIELD_NAME = NULL_IND_ACCESSOR_NAME;
-
     private static final Integer INT_ONE = new Integer(1);
     private static final Integer INT_ZERO = new Integer(0);
 
@@ -102,14 +101,16 @@ public abstract class NullablePrimitive
             Boolean b = (Boolean) obj;
             setNumber(b.booleanValue() ? INT_ONE : INT_ZERO);
         } else {
-            assert(obj instanceof String) : obj.getClass().getName();
+            assert (obj instanceof String) : obj.getClass().getName();
             String s = (String) obj;
             Number n;
             try {
                 n = new BigDecimal(s);
             } catch (NumberFormatException ex) {
-                throw FarragoResource.instance().
-                    newAssignFromFailed(s, "NUMERIC", ex.toString());
+                throw FarragoResource.instance().newAssignFromFailed(
+                    s,
+                    "NUMERIC",
+                    ex.toString());
             }
             setNumber(n);
         }
@@ -126,19 +127,21 @@ public abstract class NullablePrimitive
      *
      * @param Class
      */
-    public static Class getPrimitiveClass(Class np) throws NoSuchFieldException
+    public static Class getPrimitiveClass(Class np)
+        throws NoSuchFieldException
     {
-        assert NullablePrimitive.class.isAssignableFrom(np) : "parameter to static getPrimitiveClass must be assignable to NullablePrimitive: " + np.toString();
+        assert NullablePrimitive.class.isAssignableFrom(np) : "parameter to static getPrimitiveClass must be assignable to NullablePrimitive: "
+        + np.toString();
         return np.getField(VALUE_FIELD_NAME).getType();
     }
+
     //~ Inner Classes ---------------------------------------------------------
 
     /**
      * Nullable wrapper for boolean.
      */
-    public static final class NullableBoolean
-        extends NullablePrimitive
-            implements BitReference
+    public static final class NullableBoolean extends NullablePrimitive
+        implements BitReference
     {
         /** Wrapped primitive */
         public boolean value;
@@ -236,7 +239,6 @@ public abstract class NullablePrimitive
             value = number.longValue();
         }
     }
-
 
     /**
      * Nullable wrapper for short.

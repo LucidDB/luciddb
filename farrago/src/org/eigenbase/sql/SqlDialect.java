@@ -1,31 +1,30 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.sql;
 
-import org.eigenbase.util.Util;
-
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+
+import org.eigenbase.util.Util;
 
 
 /**
@@ -53,7 +52,7 @@ public class SqlDialect
             identifierQuoteString =
                 databaseMetaData.getIdentifierQuoteString();
         } catch (SQLException e) {
-            throw Util.newInternal(e,"while quoting identifier");
+            throw Util.newInternal(e, "while quoting identifier");
         }
         identifierQuoteString = identifierQuoteString.trim();
         if (identifierQuoteString.equals("")) {
@@ -62,7 +61,7 @@ public class SqlDialect
         try {
             databaseProductName = databaseMetaData.getDatabaseProductName();
         } catch (SQLException e) {
-            throw Util.newInternal(e,"while detecting database product");
+            throw Util.newInternal(e, "while detecting database product");
         }
     }
 
@@ -96,8 +95,7 @@ public class SqlDialect
             return val; // quoting is not supported
         }
         String val2 =
-            val.replaceAll(
-                identifierQuoteString,
+            val.replaceAll(identifierQuoteString,
                 identifierQuoteString + identifierQuoteString);
         return identifierQuoteString + val2 + identifierQuoteString;
     }
@@ -108,7 +106,7 @@ public class SqlDialect
      */
     public String quoteStringLiteral(String val)
     {
-        val = Util.replace(val,"'","''");
+        val = Util.replace(val, "'", "''");
         return "'" + val + "'";
     }
 

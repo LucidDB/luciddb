@@ -1,28 +1,29 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2003-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 package org.eigenbase.rex;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeField;
+
 
 /**
  * Utility methods concerning row-expressions.
@@ -31,8 +32,13 @@ import org.eigenbase.reltype.RelDataTypeField;
  * @since Nov 23, 2003
  * @version $Id$
  **/
-public class RexUtil {
+public class RexUtil
+{
+    //~ Static fields/initializers --------------------------------------------
+
     public static final RexNode [] emptyExpressionArray = new RexNode[0];
+
+    //~ Methods ---------------------------------------------------------------
 
     public static double getSelectivity(RexNode exp)
     {
@@ -42,15 +48,17 @@ public class RexUtil {
     /**
      * Returns a copy of a row-expression.
      */
-    public static RexNode clone(RexNode exp) {
+    public static RexNode clone(RexNode exp)
+    {
         return (RexNode) exp.clone();
     }
 
     /**
      * Returns a copy of an array of row-expressions.
      */
-    public static RexNode[] clone(RexNode[] exps) {
-        RexNode[] exps2 = new RexNode[exps.length];
+    public static RexNode [] clone(RexNode [] exps)
+    {
+        RexNode [] exps2 = new RexNode[exps.length];
         for (int i = 0; i < exps.length; i++) {
             exps2[i] = clone(exps[i]);
         }
@@ -75,17 +83,15 @@ public class RexUtil {
         RelDataType rhsRowType)
     {
         int n = rhsRowType.getFieldCount();
-        assert(n == lhsRowType.getFieldCount());
+        assert (n == lhsRowType.getFieldCount());
         RexNode [] rhsExps = new RexNode[n];
         for (int i = 0; i < n; ++i) {
-            rhsExps[i] = rexBuilder.makeInputRef(
-                rhsRowType.getFields()[i].getType(),
-                i);
+            rhsExps[i] =
+                rexBuilder.makeInputRef(
+                    rhsRowType.getFields()[i].getType(),
+                    i);
         }
-        return generateCastExpressions(
-            rexBuilder,
-            lhsRowType,
-            rhsExps);
+        return generateCastExpressions(rexBuilder, lhsRowType, rhsExps);
     }
 
     /**
@@ -100,7 +106,9 @@ public class RexUtil {
      * @return cast expressions
      */
     public static RexNode [] generateCastExpressions(
-        RexBuilder rexBuilder, RelDataType lhsRowType, RexNode [] rhsExps)
+        RexBuilder rexBuilder,
+        RelDataType lhsRowType,
+        RexNode [] rhsExps)
     {
         final int fieldCount = lhsRowType.getFieldCount();
         RexNode [] castExps = new RexNode[fieldCount];
@@ -119,5 +127,6 @@ public class RexUtil {
         return castExps;
     }
 }
+
 
 // End RexUtil.java

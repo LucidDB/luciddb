@@ -17,12 +17,13 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.query;
 
 import net.sf.farrago.fem.fennel.FemExecutionStreamDef;
+
 import org.eigenbase.rel.RelFieldCollation;
 import org.eigenbase.rel.RelNode;
+
 
 /**
  * FennelRel defines the interface which must be implemented by any
@@ -38,7 +39,7 @@ public interface FennelRel extends RelNode
 
     // TODO jvs 8-May-2004:  get rid of method getPreparingStmt();
     // instead, add a utility method for getting it from the cluster
-    
+
     /**
      * .
      *
@@ -56,8 +57,7 @@ public interface FennelRel extends RelNode
      *
      * @return generated FemExecutionStreamDef
      */
-    public FemExecutionStreamDef toStreamDef(
-        FennelRelImplementor implementor);
+    public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor);
 
     /**
      * Visits this relational expression as part of the implementation
@@ -73,7 +73,6 @@ public interface FennelRel extends RelNode
      * the output is not guaranteed to be in any particular order
      */
     public RelFieldCollation [] getCollations();
-
 }
 
 

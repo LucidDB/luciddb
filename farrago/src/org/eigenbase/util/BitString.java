@@ -1,26 +1,28 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2004-2004 Disruptive Technologies, Inc.
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 package org.eigenbase.util;
 
 import java.math.BigInteger;
+
 
 /**
  * String of bits.
@@ -48,12 +50,26 @@ import java.math.BigInteger;
  * @since May 28, 2004
  * @version $Id$
  **/
-public class BitString {
-    //~ Member variables -----------
+public class BitString
+{
+    //~ Instance fields -------------------------------------------------------
+
     private String _bits;
     private int _bitCount;
 
-    //~ Methods -----------
+    //~ Constructors ----------------------------------------------------------
+
+    protected BitString(
+        String bits,
+        int bitCount)
+    {
+        assert bits.replaceAll("1", "").replaceAll("0", "").length() == 0 : "bit string '"
+        + bits + "' contains digits other than {0, 1}";
+        _bits = bits;
+        _bitCount = bitCount;
+    }
+
+    //~ Methods ---------------------------------------------------------------
 
     /**
      * Creates a BitString representation out of a Hex String.
@@ -63,10 +79,10 @@ public class BitString {
      * @param s a string, in hex notation
      * @throws NumberFormatException if <code>s</code> is invalid.
      */
-    public static BitString createFromHexString(String s) {
+    public static BitString createFromHexString(String s)
+    {
         int bitCount = s.length() * 4;
-        String bits = bitCount == 0 ? "" :
-                new BigInteger(s, 16).toString(2);
+        String bits = (bitCount == 0) ? "" : new BigInteger(s, 16).toString(2);
         return new BitString(bits, bitCount);
     }
 
@@ -76,44 +92,44 @@ public class BitString {
      * @param s a string of 0s and 1s.
      * @throws NumberFormatException if <code>s</code> is invalid.
      */
-    public static BitString createFromBitString(String s){
+    public static BitString createFromBitString(String s)
+    {
         int n = s.length();
-        if (n > 0)                      // check that S is valid
-            Util.discard(new BigInteger(s, 2)); 
+        if (n > 0) { // check that S is valid
+            Util.discard(new BigInteger(s, 2));
+        }
         return new BitString(s, n);
     }
 
-    protected BitString(String bits, int bitCount) {
-        assert bits.replaceAll("1","").replaceAll("0","").length() == 0 :
-                "bit string '" + bits + "' contains digits other than {0, 1}";
-        _bits = bits;
-        _bitCount = bitCount;
-    }
-
-    public String toString() {
+    public String toString()
+    {
         return toBitString();
     }
 
-    public int getBitCount() {
+    public int getBitCount()
+    {
         return _bitCount;
     }
 
-    public byte[] getAsByteArray() {
+    public byte [] getAsByteArray()
+    {
         return toByteArrayFromBitString(_bits, _bitCount);
     }
 
     /**
      * Returns this bit string as a bit string, such as "10110".
      */
-    public String toBitString() {
+    public String toBitString()
+    {
         return _bits;
     }
 
     /**
      * Converts this bit string to a hex string, such as "7AB".
      */
-    public String toHexString() {
-        byte[] bytes = getAsByteArray();
+    public String toHexString()
+    {
+        byte [] bytes = getAsByteArray();
         String s = Util.toStringFromByteArray(bytes, 16);
         switch (_bitCount % 8) {
         case 1: // B'1' -> X'1'
@@ -127,7 +143,7 @@ public class BitString {
         case 0: // B'10000000' -> X'80', and B'' -> X''
             return s;
         }
-        if (_bitCount % 8 == 4) {
+        if ((_bitCount % 8) == 4) {
             return s.substring(1);
         } else {
             return s;
@@ -139,45 +155,54 @@ public class BitString {
      *
      * @post return.length = (bitCount + 7) / 8
      */
-    public static byte[] toByteArrayFromBitString(String bits, int bitCount)
+    public static byte [] toByteArrayFromBitString(
+        String bits,
+        int bitCount)
     {
         if (bitCount < 0) {
             return new byte[0];
         }
         int byteCount = (bitCount + 7) / 8;
-        byte[] srcBytes;
+        byte [] srcBytes;
         if (bits.length() > 0) {
             BigInteger bigInt = new BigInteger(bits, 2);
             srcBytes = bigInt.toByteArray();
         } else {
             srcBytes = new byte[0];
         }
-        byte[] dest = new byte[byteCount];
+        byte [] dest = new byte[byteCount];
+
         // If the number started with 0s, the array won't be very long. Assume
         // that ret is already initialized to 0s, and just copy into the
         // RHS of it.
         int bytesToCopy = Math.min(byteCount, srcBytes.length);
-        System.arraycopy(srcBytes, srcBytes.length - bytesToCopy,
-                dest, dest.length - bytesToCopy, bytesToCopy);
+        System.arraycopy(srcBytes, srcBytes.length - bytesToCopy, dest,
+            dest.length - bytesToCopy, bytesToCopy);
         return dest;
     }
-
 
     /** Concatenates some BitStrings.
      *  Concatenates all at once, not pairwise, to avoid string copies.
      * @param args BitString[]
      */
-    static public  BitString concat(BitString[] args) {
-        if (args.length < 2)
+    static public BitString concat(BitString [] args)
+    {
+        if (args.length < 2) {
             return args[0];
+        }
         int length = 0;
-        for (int i = 0; i < args.length; i++) 
+        for (int i = 0; i < args.length; i++) {
             length += args[i]._bitCount;
+        }
         StringBuffer sb = new StringBuffer(length);
-        for (int i = 0; i < args.length; i++)
+        for (int i = 0; i < args.length; i++) {
             sb.append(args[i]._bits);
-        return new BitString(sb.toString(), length);
+        }
+        return new BitString(
+            sb.toString(),
+            length);
     }
 }
+
 
 // End BitString.java

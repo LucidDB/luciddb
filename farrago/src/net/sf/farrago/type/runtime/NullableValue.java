@@ -16,8 +16,8 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.type.runtime;
+
 
 /**
  * NullableValue is an interface representing a runtime holder for a nullable
@@ -28,16 +28,18 @@ package net.sf.farrago.type.runtime;
  */
 public interface NullableValue
 {
+    //~ Static fields/initializers --------------------------------------------
+
     /**
      * Name of accessor method for null indicator.
      */
     public static final String NULL_IND_ACCESSOR_NAME = "isNull";
-    
+
     /**
      * Name of accessor method for null indicator.
      */
     public static final String NULL_IND_MUTATOR_NAME = "setNull";
-    
+
     //~ Methods ---------------------------------------------------------------
 
     /**

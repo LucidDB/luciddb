@@ -1,32 +1,34 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2004 Disruptive Technologies, Inc.
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 package org.eigenbase.sql.fun;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.ParserPosition;
 import org.eigenbase.sql.parser.ParserUtil;
 import org.eigenbase.util.Util;
 
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * An operator describing the <code>LIKE</code> and
@@ -49,35 +51,49 @@ import java.util.List;
  **/
 public abstract class SqlLikeOperator extends SqlSpecialOperator
 {
+    //~ Instance fields -------------------------------------------------------
+
     public final boolean negated;
 
-    SqlLikeOperator(String name, SqlKind kind, boolean negated)
+    //~ Constructors ----------------------------------------------------------
+
+    SqlLikeOperator(
+        String name,
+        SqlKind kind,
+        boolean negated)
     {
         // LIKE is right-associative, because that makes it easier to capture
         // dangling ESCAPE clauses: "a like b like c escape d" becomes
         // "a like (b like c escape d)".
-        super(name,kind,15,false,
-                SqlOperatorTable.useNullableBoolean,
-                SqlOperatorTable.useFirstKnownParam,
-                /** this is not correct in general */
-                SqlOperatorTable.typeNullableStringStringString);
+        super(name, kind, 15, false, SqlOperatorTable.useNullableBoolean,
+            SqlOperatorTable.useFirstKnownParam,
+            
+        /** this is not correct in general */
+        SqlOperatorTable.typeNullableStringStringString);
         this.negated = negated;
     }
 
-    public OperandsCountDescriptor getOperandsCountDescriptor() {
-        return new OperandsCountDescriptor(2,3);
+    //~ Methods ---------------------------------------------------------------
+
+    public OperandsCountDescriptor getOperandsCountDescriptor()
+    {
+        return new OperandsCountDescriptor(2, 3);
     }
 
-    protected void checkArgTypes(SqlCall call,
-            SqlValidator validator, SqlValidator.Scope scope) {
+    protected void checkArgTypes(
+        SqlCall call,
+        SqlValidator validator,
+        SqlValidator.Scope scope)
+    {
         switch (call.operands.length) {
         case 2:
-            SqlOperatorTable.typeNullableStringStringOfSameType.
-                    check(validator,scope,call);
+            SqlOperatorTable.typeNullableStringStringOfSameType.check(validator,
+                scope, call);
             break;
         case 3:
-            SqlOperatorTable.typeNullableStringStringStringOfSameType.
-                    check(validator,scope,call);
+            SqlOperatorTable.typeNullableStringStringStringOfSameType.check(validator,
+                scope, call);
+
             //calc implementation should
             //enforce the escape character length to be 1
             break;
@@ -85,13 +101,14 @@ public abstract class SqlLikeOperator extends SqlSpecialOperator
             throw Util.newInternal("unexpected number of args to " + call);
         }
 
-        isCharTypeComparableThrows(validator,scope,call.operands);
+        isCharTypeComparableThrows(validator, scope, call.operands);
     }
 
-    public void unparse(SqlWriter writer,
-            SqlNode[] operands,
-            int leftPrec,
-            int rightPrec)
+    public void unparse(
+        SqlWriter writer,
+        SqlNode [] operands,
+        int leftPrec,
+        int rightPrec)
     {
         operands[0].unparse(writer, this.leftPrec, this.rightPrec);
         writer.print(' ');
@@ -99,14 +116,16 @@ public abstract class SqlLikeOperator extends SqlSpecialOperator
         writer.print(' ');
 
         operands[1].unparse(writer, this.leftPrec, this.rightPrec);
-        if (operands.length == 3)
-        {
+        if (operands.length == 3) {
             writer.print(" ESCAPE ");
             operands[2].unparse(writer, this.leftPrec, this.rightPrec);
         }
     }
 
-    public int reduceExpr(final int opOrdinal, List list) {
+    public int reduceExpr(
+        final int opOrdinal,
+        List list)
+    {
         // Example:
         //   a LIKE b || c ESCAPE d || e AND f
         // |  |    |      |      |      |
@@ -114,28 +133,29 @@ public abstract class SqlLikeOperator extends SqlSpecialOperator
         SqlNode exp0 = (SqlNode) list.get(opOrdinal - 1);
         SqlOperator op = ((ParserUtil.ToTreeListItem) list.get(opOrdinal)).op;
         assert op instanceof SqlLikeOperator;
-        SqlNode exp1 = ParserUtil.toTreeEx(list, opOrdinal + 1, rightPrec,
-                SqlKind.Escape);
+        SqlNode exp1 =
+            ParserUtil.toTreeEx(list, opOrdinal + 1, rightPrec, SqlKind.Escape);
         SqlNode exp2 = null;
-        if (opOrdinal + 2 < list.size()) {
+        if ((opOrdinal + 2) < list.size()) {
             final Object o = list.get(opOrdinal + 2);
             if (o instanceof ParserUtil.ToTreeListItem) {
                 final SqlOperator op2 = ((ParserUtil.ToTreeListItem) o).op;
                 if (op2.kind == SqlKind.Escape) {
-                    exp2 = ParserUtil.toTreeEx(list, opOrdinal + 3, rightPrec,
+                    exp2 =
+                        ParserUtil.toTreeEx(list, opOrdinal + 3, rightPrec,
                             SqlKind.Escape);
                 }
             }
         }
         SqlCall call;
         final ParserPosition pos = null;
-        final SqlNode[] operands;
+        final SqlNode [] operands;
         int end;
         if (exp2 != null) {
-            operands = new SqlNode[] {exp0, exp1, exp2};
+            operands = new SqlNode [] { exp0, exp1, exp2 };
             end = opOrdinal + 4;
         } else {
-            operands = new SqlNode[]{exp0, exp1};
+            operands = new SqlNode [] { exp0, exp1 };
             end = opOrdinal + 2;
         }
         call = createCall(operands, pos);
@@ -143,5 +163,6 @@ public abstract class SqlLikeOperator extends SqlSpecialOperator
         return opOrdinal - 1;
     }
 }
+
 
 // End SqlLikeOperator.java

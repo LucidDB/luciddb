@@ -1,36 +1,33 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package net.sf.saffron.oj.stmt;
 
-import org.eigenbase.reltype.*;
-import org.eigenbase.relopt.*;
-import org.eigenbase.rel.*;
-import org.eigenbase.util.*;
+import java.lang.reflect.*;
+import java.sql.*;
 
 import openjava.ptree.*;
 
-import java.lang.reflect.*;
-import java.sql.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -42,14 +39,10 @@ import java.sql.*;
  */
 public class PreparedExecution implements PreparedResult
 {
-    //~ Instance fields -------------------------------------------------------
-
     private final ParseTree parseTree;
     private final RelDataType rowType;
     private final boolean isDml;
     private final BoundMethod boundMethod;
-
-    //~ Constructors ----------------------------------------------------------
 
     PreparedExecution(
         ParseTree parseTree,
@@ -62,8 +55,6 @@ public class PreparedExecution implements PreparedResult
         this.isDml = isDml;
         this.boundMethod = boundMethod;
     }
-
-    //~ Methods ---------------------------------------------------------------
 
     public String getCode()
     {
@@ -96,7 +87,7 @@ public class PreparedExecution implements PreparedResult
         }
     }
 
-    public void setArgs(Object [] args) 
+    public void setArgs(Object [] args)
     {
         boundMethod.args = args;
     }

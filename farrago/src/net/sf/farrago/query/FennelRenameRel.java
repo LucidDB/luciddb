@@ -17,18 +17,17 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.query;
+
+import java.util.*;
 
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.rel.*;
 import org.eigenbase.util.*;
-
-import java.util.*;
 
 
 /**
@@ -44,7 +43,6 @@ public class FennelRenameRel extends FennelSingleRel
     //~ Instance fields -------------------------------------------------------
 
     private String [] fieldNames;
-
     private CallingConvention convention;
 
     //~ Constructors ----------------------------------------------------------
@@ -62,7 +60,7 @@ public class FennelRenameRel extends FennelSingleRel
         String [] fieldNames,
         CallingConvention convention)
     {
-        super(cluster,child);
+        super(cluster, child);
         this.fieldNames = fieldNames;
         this.convention = convention;
     }
@@ -74,7 +72,7 @@ public class FennelRenameRel extends FennelSingleRel
     {
         return convention;
     }
-    
+
     // implement RelNode
     public boolean isDistinct()
     {
@@ -85,7 +83,10 @@ public class FennelRenameRel extends FennelSingleRel
     public Object clone()
     {
         return new FennelRenameRel(
-            cluster,RelOptUtil.clone(child),fieldNames,convention);
+            cluster,
+            RelOptUtil.clone(child),
+            fieldNames,
+            convention);
     }
 
     // implement RelNode
@@ -122,7 +123,7 @@ public class FennelRenameRel extends FennelSingleRel
     {
         pw.explain(
             this,
-            new String [] { "child","fieldNames" },
+            new String [] { "child", "fieldNames" },
             new Object [] { Arrays.asList(fieldNames) });
     }
 

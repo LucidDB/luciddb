@@ -6,24 +6,24 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.catalog.codegen;
+
+import java.io.*;
+import java.lang.reflect.*;
+import java.util.*;
 
 import net.sf.farrago.util.*;
 
-import java.io.*;
-import java.util.*;
-import java.lang.reflect.*;
 
 // TODO jvs 28-April-2004: move this to a repos-independent codegen utility
 // package and add a main method so it can be used from ant; this is just a
@@ -38,7 +38,11 @@ import java.lang.reflect.*;
  */
 public class CppEnumGen
 {
+    //~ Instance fields -------------------------------------------------------
+
     private PrintWriter pw;
+
+    //~ Constructors ----------------------------------------------------------
 
     /**
      * Creates a new CppEnumGen.
@@ -49,6 +53,8 @@ public class CppEnumGen
     {
         this.pw = pw;
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     /**
      * Generates a single enumeration.  Enumeration values (and their names) is
@@ -104,7 +110,7 @@ public class CppEnumGen
 
         pw.println("};");
         pw.println();
-        
+
         // TODO jvs 28-April-2004:  declare as extern rather than static
         pw.print("static std::string ");
         pw.print(enumName);
@@ -118,10 +124,11 @@ public class CppEnumGen
             pw.print('"');
             pw.print(",");
         }
-        
+
         pw.println("\"\"};");
         pw.println();
     }
 }
+
 
 // End CppEnumGen.java

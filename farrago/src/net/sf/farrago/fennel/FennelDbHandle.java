@@ -6,32 +6,31 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.fennel;
 
-import net.sf.farrago.fem.fennel.*;
-import net.sf.farrago.resource.*;
-import net.sf.farrago.util.*;
-import net.sf.farrago.trace.*;
-import net.sf.farrago.*;
-
 import java.sql.*;
-
 import java.util.*;
 import java.util.logging.*;
 
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
+
+import net.sf.farrago.*;
+import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.trace.*;
+import net.sf.farrago.util.*;
+
 
 /**
  * FennelDbHandle is a public wrapper for FennelStorage, and represents
@@ -42,20 +41,20 @@ import javax.jmi.reflect.*;
  */
 public class FennelDbHandle implements FarragoAllocation
 {
+    //~ Static fields/initializers --------------------------------------------
+
     private static final Logger tracer =
         FarragoTrace.getFennelDbHandleTracer();
 
     //~ Instance fields -------------------------------------------------------
 
     private final FarragoMetadataFactory metadataFactory;
-
     private final FarragoTransientTxnContext transientTxnContext;
-
     private final FennelCmdExecutor cmdExecutor;
-    
     private Map handleAssociationsMap;
-
     private long dbHandle;
+
+    //~ Constructors ----------------------------------------------------------
 
     /**
      * Opens a Fennel database.
@@ -90,6 +89,8 @@ public class FennelDbHandle implements FarragoAllocation
         owner.addAllocation(this);
     }
 
+    //~ Methods ---------------------------------------------------------------
+
     FarragoMetadataFactory getMetadataFactory()
     {
         return metadataFactory;
@@ -103,12 +104,12 @@ public class FennelDbHandle implements FarragoAllocation
     private synchronized Collection getHandleAssociations(
         RefPackage fennelPackage)
     {
-        Collection handleAssociations = (Collection)
-            handleAssociationsMap.get(fennelPackage);
+        Collection handleAssociations =
+            (Collection) handleAssociationsMap.get(fennelPackage);
         if (handleAssociations != null) {
             return handleAssociations;
         }
-        
+
         handleAssociations = new ArrayList();
 
         // Use JMI to find all associations between Cmds and Handles.  This
@@ -128,7 +129,7 @@ public class FennelDbHandle implements FarragoAllocation
             }
         }
 
-        handleAssociationsMap.put(fennelPackage,handleAssociations);
+        handleAssociationsMap.put(fennelPackage, handleAssociations);
         return handleAssociations;
     }
 
@@ -137,8 +138,7 @@ public class FennelDbHandle implements FarragoAllocation
      *
      * @return FemDbHandle for this database
      */
-    public FemDbHandle getFemDbHandle(
-        FarragoMetadataFactory callerFactory)
+    public FemDbHandle getFemDbHandle(FarragoMetadataFactory callerFactory)
     {
         // NOTE:  this stupidity is necessary since user and system catalogs
         // have different metamodels instances.
@@ -163,8 +163,8 @@ public class FennelDbHandle implements FarragoAllocation
                 JmiUtil.exportToXmiString(Collections.singleton(tupleDesc));
             tracer.fine(xmiInput);
         }
-        String xmiOutput = FennelStorage.getAccessorXmiForTupleDescriptor(
-            tupleDesc);
+        String xmiOutput =
+            FennelStorage.getAccessorXmiForTupleDescriptor(tupleDesc);
         tracer.fine(xmiOutput);
         return xmiOutput;
     }
@@ -203,7 +203,9 @@ public class FennelDbHandle implements FarragoAllocation
         while (assocIter.hasNext()) {
             RefAssociation refAssoc = (RefAssociation) assocIter.next();
             AssociationEnd assocEnd = (AssociationEnd) assocIter.next();
-            if (!cmd.refIsInstanceOf(assocEnd.getType(),true)) {
+            if (!cmd.refIsInstanceOf(
+                        assocEnd.getType(),
+                        true)) {
                 continue;
             }
             if (assocEnd.otherEnd().getName().equals("ResultHandle")) {
@@ -215,18 +217,17 @@ public class FennelDbHandle implements FarragoAllocation
                 RefClass resultHandleClass =
                     fennelPackage.refClass(resultHandleType);
                 resultHandle =
-                    (FemHandle) resultHandleClass.refCreateInstance(
-                        Collections.EMPTY_LIST);
+                    (FemHandle) resultHandleClass.refCreateInstance(Collections.EMPTY_LIST);
 
                 // Remember the new handle in the command so the caller can
                 // access it later.
-                refAssoc.refAddLink(cmd,resultHandle);
+                refAssoc.refAddLink(cmd, resultHandle);
                 resultHandleClassName = resultHandleType.getName();
             } else {
                 // Trace input handles.
                 if (exportList != null) {
                     Iterator handleIter =
-                        refAssoc.refQuery(assocEnd,cmd).iterator();
+                        refAssoc.refQuery(assocEnd, cmd).iterator();
                     while (handleIter.hasNext()) {
                         FemHandle handle = (FemHandle) handleIter.next();
                         exportList.add(handle);
@@ -247,8 +248,7 @@ public class FennelDbHandle implements FarragoAllocation
         if (resultHandle != null) {
             resultHandle.setLongHandle(resultHandleLong);
             if (exportList != null) {
-                tracer.fine(
-                    "Returning " + resultHandleClassName + " = '"
+                tracer.fine("Returning " + resultHandleClassName + " = '"
                     + resultHandleLong + "'");
             }
         }
@@ -271,7 +271,8 @@ public class FennelDbHandle implements FarragoAllocation
      * @return native handle
      */
     public static FennelJavaHandle allocateNewObjectHandle(
-        FarragoAllocationOwner owner,Object obj)
+        FarragoAllocationOwner owner,
+        Object obj)
     {
         long hJavaObj = FennelStorage.newObjectHandle(obj);
         FennelJavaHandle h = new FennelJavaHandle(hJavaObj);
@@ -285,9 +286,11 @@ public class FennelDbHandle implements FarragoAllocation
      * @param handle the handle to change
      * @param obj new object
      */
-    public void setObjectHandle(long handle,Object obj)
+    public void setObjectHandle(
+        long handle,
+        Object obj)
     {
-        FennelStorage.setObjectHandle(handle,obj);
+        FennelStorage.setObjectHandle(handle, obj);
     }
 
     // implement FarragoAllocation
@@ -306,12 +309,13 @@ public class FennelDbHandle implements FarragoAllocation
             transientTxnContext.endTransientTxn();
         }
     }
-    
+
     public FarragoException handleNativeException(SQLException ex)
     {
-        return
-            FarragoResource.instance().newFennelUntranslated(ex.getMessage());
+        return FarragoResource.instance().newFennelUntranslated(
+            ex.getMessage());
     }
 }
+
 
 // End FennelDbHandle.java

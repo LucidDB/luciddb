@@ -1,38 +1,36 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package net.sf.saffron.oj.rel;
 
-import org.eigenbase.oj.rel.*;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.UnionRel;
-import org.eigenbase.util.Util;
+import openjava.ptree.Expression;
 import openjava.ptree.ParseTree;
 import openjava.ptree.StatementList;
-import openjava.ptree.Expression;
+
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.UnionRel;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelOptCost;
+import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -41,14 +39,12 @@ import openjava.ptree.Expression;
  */
 public class JavaUnionAllRel extends UnionRel implements JavaLoopRel
 {
-    //~ Constructors ----------------------------------------------------------
-
-    public JavaUnionAllRel(RelOptCluster cluster,RelNode[] inputs)
+    public JavaUnionAllRel(
+        RelOptCluster cluster,
+        RelNode [] inputs)
     {
-        super(cluster,inputs,true);
+        super(cluster, inputs, true);
     }
-
-    //~ Methods ---------------------------------------------------------------
 
     public CallingConvention getConvention()
     {
@@ -58,7 +54,7 @@ public class JavaUnionAllRel extends UnionRel implements JavaLoopRel
     // implement RelNode
     public Object clone()
     {
-        return new JavaUnionAllRel(cluster,inputs);
+        return new JavaUnionAllRel(cluster, inputs);
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
@@ -66,7 +62,7 @@ public class JavaUnionAllRel extends UnionRel implements JavaLoopRel
         double dRows = getRows();
         double dCpu = 0;
         double dIo = 0;
-        return planner.makeCost(dRows,dCpu,dIo);
+        return planner.makeCost(dRows, dCpu, dIo);
     }
 
     // Generate
@@ -82,16 +78,18 @@ public class JavaUnionAllRel extends UnionRel implements JavaLoopRel
     public ParseTree implement(JavaRelImplementor implementor)
     {
         for (int i = 0; i < inputs.length; i++) {
-            Expression expr = implementor.visitJavaChild(this, i, (JavaRel)
-                    inputs[i]);
+            Expression expr =
+                implementor.visitJavaChild(this, i, (JavaRel) inputs[i]);
             assert expr == null;
         }
         return null;
     }
 
-    public void implementJavaParent(JavaRelImplementor implementor,
-            int ordinal) {
-        if (ordinal < 0 || ordinal >= inputs.length) {
+    public void implementJavaParent(
+        JavaRelImplementor implementor,
+        int ordinal)
+    {
+        if ((ordinal < 0) || (ordinal >= inputs.length)) {
             throw Util.newInternal("ordinal '" + ordinal + "' out of bounds");
         }
 
@@ -102,8 +100,8 @@ public class JavaUnionAllRel extends UnionRel implements JavaLoopRel
         //   }
         //   <<next child>>
         StatementList stmtList = implementor.getStatementList();
-        implementor.bind(this,inputs[ordinal]);
-        implementor.generateParentBody(this,stmtList);
+        implementor.bind(this, inputs[ordinal]);
+        implementor.generateParentBody(this, stmtList);
     }
 }
 

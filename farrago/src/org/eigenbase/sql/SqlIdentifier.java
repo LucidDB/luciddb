@@ -1,28 +1,28 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.parser.ParserPosition;
+
 
 /**
  * A <code>SqlIdentifier</code> is an identifier, possibly compound.
@@ -46,25 +46,32 @@ public class SqlIdentifier extends SqlNode
      *
      * @param names Parts of the identifier, length &gt;= 1
      */
-    public SqlIdentifier(String [] names, SqlCollation collation, ParserPosition parserPosition)
+    public SqlIdentifier(
+        String [] names,
+        SqlCollation collation,
+        ParserPosition parserPosition)
     {
         super(parserPosition);
         this.names = names;
-        this.collation=collation;
+        this.collation = collation;
     }
 
-    public SqlIdentifier(String [] names, ParserPosition parserPosition)
+    public SqlIdentifier(
+        String [] names,
+        ParserPosition parserPosition)
     {
         super(parserPosition);
         this.names = names;
-        this.collation=null;
+        this.collation = null;
     }
-
 
     /**
      * Creates a simple identifier, for example <code>foo</code>.
      */
-    public SqlIdentifier(String name, SqlCollation collation, ParserPosition parserPosition)
+    public SqlIdentifier(
+        String name,
+        SqlCollation collation,
+        ParserPosition parserPosition)
     {
         this(new String [] { name }, collation, parserPosition);
     }
@@ -72,7 +79,9 @@ public class SqlIdentifier extends SqlNode
     /**
      * Creates a simple identifier, for example <code>foo</code>.
      */
-    public SqlIdentifier(String name, ParserPosition parserPosition)
+    public SqlIdentifier(
+        String name,
+        ParserPosition parserPosition)
     {
         this(new String [] { name }, null, parserPosition);
     }
@@ -86,10 +95,13 @@ public class SqlIdentifier extends SqlNode
 
     public Object clone()
     {
-        if (null!=collation) {
-            return new SqlIdentifier((String []) names.clone(),(SqlCollation)collation.clone(), getParserPosition());
+        if (null != collation) {
+            return new SqlIdentifier(
+                (String []) names.clone(),
+                (SqlCollation) collation.clone(),
+                getParserPosition());
         }
-        return new SqlIdentifier((String []) names.clone(),null);
+        return new SqlIdentifier((String []) names.clone(), null);
     }
 
     public String toString()
@@ -101,7 +113,10 @@ public class SqlIdentifier extends SqlNode
         return s;
     }
 
-    public void unparse(SqlWriter writer,int leftPrec,int rightPrec)
+    public void unparse(
+        SqlWriter writer,
+        int leftPrec,
+        int rightPrec)
     {
         for (int i = 0; i < names.length; i++) {
             String name = names[i];
@@ -115,24 +130,25 @@ public class SqlIdentifier extends SqlNode
             }
         }
 
-        if (null!=collation) {
+        if (null != collation) {
             writer.print(" ");
-            collation.unparse(writer,leftPrec,rightPrec);
+            collation.unparse(writer, leftPrec, rightPrec);
         }
     }
 
-    public SqlCollation getCollation() {
+    public SqlCollation getCollation()
+    {
         return collation;
     }
 
-    public void setCollation(SqlCollation collation) {
-        this.collation=collation;
+    public void setCollation(SqlCollation collation)
+    {
+        this.collation = collation;
     }
-
 
     public String getSimple()
     {
-        assert(names.length == 1);
+        assert (names.length == 1);
         return names[0];
     }
 }

@@ -17,14 +17,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.test;
 
-import junit.framework.*;
-
 import java.sql.*;
-
 import java.util.*;
+
+import junit.framework.*;
 
 
 /**
@@ -45,7 +43,8 @@ public class FarragoQueryTest extends FarragoTestCase
      *
      * @throws Exception .
      */
-    public FarragoQueryTest(String testName) throws Exception
+    public FarragoQueryTest(String testName)
+        throws Exception
     {
         super(testName);
     }
@@ -61,10 +60,12 @@ public class FarragoQueryTest extends FarragoTestCase
     /**
      * Test a query which involves operation on columns
      */
-    public void testPrimitiveColumnOperation() throws Exception
+    public void testPrimitiveColumnOperation()
+        throws Exception
     {
-        String sql = "select deptno*1, deptno/1, deptno+0,deptno-0,deptno*deptno,deptno/deptno,deptno"+
-                        " from sales.emps order by deptno";
+        String sql =
+            "select deptno*1, deptno/1, deptno+0,deptno-0,deptno*deptno,deptno/deptno,deptno"
+            + " from sales.emps order by deptno";
         preparedStmt = connection.prepareStatement(sql);
         resultSet = preparedStmt.executeQuery();
         if (!repos.isFennelEnabled()) {
@@ -76,18 +77,18 @@ public class FarragoQueryTest extends FarragoTestCase
         refList.add("20");
         refList.add("40");
         compareResultList(refList);
-
     }
 
     /**
      * Test a query which involves comparison with VARBINARY values.
      */
-    public void testVarbinaryComparison() throws Exception
+    public void testVarbinaryComparison()
+        throws Exception
     {
         String sql = "select name from sales.emps where public_key=?";
         preparedStmt = connection.prepareStatement(sql);
-        final byte[] bytes = {0x41, 0x62, 0x63};
-        preparedStmt.setBytes(1,bytes);
+        final byte [] bytes = { 0x41, 0x62, 0x63 };
+        preparedStmt.setBytes(1, bytes);
         resultSet = preparedStmt.executeQuery();
         if (!repos.isFennelEnabled()) {
             return;
@@ -100,10 +101,11 @@ public class FarragoQueryTest extends FarragoTestCase
     /**
      * Test a query which involves sorting VARBINARY values.
      */
-    public void testOrderByVarbinary() throws Exception
+    public void testOrderByVarbinary()
+        throws Exception
     {
-        String sql = "select name,public_key from sales.emps"
-            + " order by public_key";
+        String sql =
+            "select name,public_key from sales.emps" + " order by public_key";
         resultSet = stmt.executeQuery(sql);
         if (!repos.isFennelEnabled()) {
             return;
@@ -115,11 +117,12 @@ public class FarragoQueryTest extends FarragoTestCase
         refList.add("John");
         compareResultList(refList);
     }
-    
+
     /**
      * Test a query using a different catalog.
      */
-    public void testSetCatalog() throws Exception
+    public void testSetCatalog()
+        throws Exception
     {
         String sql = "set catalog sys_cwm";
         stmt.execute(sql);
@@ -135,5 +138,6 @@ public class FarragoQueryTest extends FarragoTestCase
         stmt.execute(sql);
     }
 }
+
 
 // End FarragoQueryTest.java

@@ -6,33 +6,32 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.session;
 
+import javax.jmi.reflect.*;
+
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.datatypes.*;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fennel.*;
+import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.namespace.util.*;
-
-import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.cwm.datatypes.*;
-import net.sf.farrago.fem.med.*;
 
 import org.eigenbase.sql.*;
 
-import javax.jmi.reflect.*;
 
 /**
  * FarragoSessionStmtValidator defines a generic interface for statement
@@ -45,6 +44,8 @@ import javax.jmi.reflect.*;
  */
 public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
 {
+    //~ Methods ---------------------------------------------------------------
+
     /**
      * @return session invoking stmt to be validated
      */
@@ -59,7 +60,7 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      * @return repos to use for validating object references
      */
     public FarragoRepos getRepos();
-    
+
     /**
      * @return FennelDbHandle storing local data to be accessed by
      * validated stmt
@@ -80,7 +81,7 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      * @return cache to use for code lookups during validation
      */
     public FarragoObjectCache getCodeCache();
-    
+
     /**
      * @return private cache to use for validating references to
      * data wrappers
@@ -97,7 +98,7 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      * data wrappers
      */
     public FarragoObjectCache getSharedDataWrapperCache();
-    
+
     /**
      * Looks up a table's column by name, throwing a validation error if not
      * found.
@@ -110,7 +111,7 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
     public CwmColumn findColumn(
         CwmNamedColumnSet namedColumnSet,
         String columnName);
-    
+
     /**
      * Looks up a catalog by name, throwing a validation error if not found.
      *
@@ -119,14 +120,14 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      * @return catalog found
      */
     public CwmCatalog findCatalog(String catalogName);
-    
+
     /**
      * Gets the default catalog for unqualified schema names.
      *
      * @return default catalog
      */
     public CwmCatalog getDefaultCatalog();
-    
+
     /**
      * Looks up a schema by name, throwing a validation error if not found.
      *
@@ -135,7 +136,7 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      * @return schema found
      */
     public CwmSchema findSchema(SqlIdentifier schemaName);
-    
+
     /**
      * Looks up a data wrapper by name, throwing a validation error if not
      * found.
@@ -150,7 +151,7 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
     public FemDataWrapper findDataWrapper(
         SqlIdentifier wrapperName,
         boolean isForeign);
-    
+
     /**
      * Looks up a data server by name, throwing a validation error if not found.
      *
@@ -165,7 +166,7 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      * local table definition
      */
     public FemDataServer getDefaultLocalDataServer();
-    
+
     /**
      * Looks up a schema object by name, throwing a validation error if not
      * found.
@@ -183,7 +184,7 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
         CwmSchema schema,
         SqlIdentifier qualifiedName,
         RefClass refClass);
-    
+
     /**
      * Looks up a SQL datatype by name, throwing an exception if not found.
      *
@@ -192,7 +193,7 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      * @return type definition
      */
     public CwmSqldataType findSqldataType(String typeName);
-    
+
     /**
      * Resolve a (possibly qualified) name of a schema object.
      *
@@ -205,5 +206,6 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
     public FarragoSessionResolvedObject resolveSchemaObjectName(
         String [] names);
 }
+
 
 // End FarragoSessionStmtValidator.java

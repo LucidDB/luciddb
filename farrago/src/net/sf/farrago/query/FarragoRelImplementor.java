@@ -7,36 +7,38 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.query;
 
-import org.eigenbase.rel.*;
-import org.eigenbase.rex.*;
-import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
-import org.eigenbase.oj.util.*;
-import org.eigenbase.oj.rel.*;
-import org.eigenbase.oj.rex.*;
-import net.sf.farrago.type.*;
+import java.util.*;
+
+import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.ojrex.*;
 import net.sf.farrago.runtime.*;
+import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.fem.fennel.*;
+
 import openjava.mop.*;
 import openjava.ptree.*;
 
-import java.util.*;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.oj.rex.*;
+import org.eigenbase.oj.util.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
+
 
 /**
  * FarragoRelImplementor refines {@link JavaRelImplementor} with some Farrago
@@ -48,13 +50,16 @@ import java.util.*;
 public class FarragoRelImplementor extends JavaRelImplementor
     implements FennelRelImplementor
 {
+    //~ Instance fields -------------------------------------------------------
+
     FarragoPreparingStmt preparingStmt;
     OJClass ojAssignableValue;
     OJClass ojBytePointer;
     OJRexImplementorTable ojRexImplementorTable;
-
     private Set streamDefSet;
-    
+
+    //~ Constructors ----------------------------------------------------------
+
     public FarragoRelImplementor(
         FarragoPreparingStmt preparingStmt,
         RexBuilder rexBuilder)
@@ -71,11 +76,13 @@ public class FarragoRelImplementor extends JavaRelImplementor
             preparingStmt.getSession().getOJRexImplementorTable();
     }
 
+    //~ Methods ---------------------------------------------------------------
+
     // implement FennelRelImplementor
     public FemExecutionStreamDef visitFennelChild(FennelRel rel)
     {
         FemExecutionStreamDef streamDef = rel.toStreamDef(this);
-        registerRelStreamDef(streamDef,rel,null);
+        registerRelStreamDef(streamDef, rel, null);
         return streamDef;
     }
 
@@ -83,7 +90,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
      * Override method to deal with the possibility that we are being called
      * from a {@link FennelRel} via our {@link FennelRelImplementor}
      * interface.
-     */ 
+     */
     public Object visitChildInternal(RelNode child)
     {
         if (child instanceof FennelRel) {
@@ -111,7 +118,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
         if (rowType == null) {
             rowType = rel.getRowType();
         }
-        registerStreamDef(streamDef,rel,rowType);
+        registerStreamDef(streamDef, rel, rowType);
     }
 
     private void registerStreamDef(
@@ -124,7 +131,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
             return;
         }
 
-        String streamName = getStreamGlobalName(streamDef,rel);
+        String streamName = getStreamGlobalName(streamDef, rel);
         streamDef.setName(streamName);
         streamDefSet.add(streamDef);
 
@@ -138,9 +145,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
         // recursively ensure all inputs have also been registered
         Iterator iter = streamDef.getInput().iterator();
         while (iter.hasNext()) {
-            registerStreamDef(
-                (FemExecutionStreamDef) iter.next(),
-                null,
+            registerStreamDef((FemExecutionStreamDef) iter.next(), null,
                 rowType);
         }
     }
@@ -165,9 +170,10 @@ public class FarragoRelImplementor extends JavaRelImplementor
             streamName = rel.getRelTypeName() + "#" + rel.getId();
         } else {
             // anonymous stream
-            streamName = 
+            streamName =
                 ReflectUtil.getUnqualifiedClassName(streamDef.getClass());
         }
+
         // make sure stream names are globally unique
         streamName = streamName + ":" + JmiUtil.getObjectId(streamDef);
         return streamName;
@@ -178,7 +184,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
     {
         return preparingStmt.getConnectionVariable();
     }
-    
+
     // override JavaRelImplementor
     protected RexToOJTranslator newTranslator(RelNode rel)
     {
@@ -186,8 +192,8 @@ public class FarragoRelImplementor extends JavaRelImplementor
         // this translator is not usable for actual code generation, but
         // it's sufficient for use in TranslationTester, which is
         // currently the only caller
-        return new FarragoRexToOJTranslator(
-            this,rel,ojRexImplementorTable,null,null);
+        return new FarragoRexToOJTranslator(this, rel, ojRexImplementorTable,
+            null, null);
     }
 
     // override JavaRelImplementor
@@ -197,11 +203,12 @@ public class FarragoRelImplementor extends JavaRelImplementor
         StatementList stmtList,
         MemberDeclarationList memberList)
     {
-        FarragoRexToOJTranslator translator = new FarragoRexToOJTranslator(
-            this,rel,ojRexImplementorTable,stmtList,memberList);
+        FarragoRexToOJTranslator translator =
+            new FarragoRexToOJTranslator(this, rel, ojRexImplementorTable,
+                stmtList, memberList);
         return translator.translateRexNode(exp);
     }
-    
+
     // override JavaRelImplementor
     public void translateAssignment(
         JavaRel rel,
@@ -211,8 +218,9 @@ public class FarragoRelImplementor extends JavaRelImplementor
         StatementList stmtList,
         MemberDeclarationList memberList)
     {
-        FarragoRexToOJTranslator translator = new FarragoRexToOJTranslator(
-            this,rel,ojRexImplementorTable,stmtList,memberList);
+        FarragoRexToOJTranslator translator =
+            new FarragoRexToOJTranslator(this, rel, ojRexImplementorTable,
+                stmtList, memberList);
         Expression rhsExp = translator.translateRexNode(rhs);
         translator.convertCastOrAssignment(
             lhsType,
@@ -220,7 +228,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
             lhsExp,
             rhsExp);
     }
-
 }
+
 
 // End FarragoRelImplementor.java

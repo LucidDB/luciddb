@@ -16,8 +16,11 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.type;
+
+import java.sql.*;
+
+import javax.jmi.model.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
@@ -26,9 +29,6 @@ import org.eigenbase.oj.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
 
-import java.sql.*;
-
-import javax.jmi.model.*;
 
 /**
  * FarragoTypeFactory is a Farrago-specific refinement of the
@@ -48,7 +48,6 @@ public interface FarragoTypeFactory extends OJTypeFactory
      */
     public FarragoRepos getRepos();
 
-
     /**
      * Creates a FarragoType which represents the datatype of a CWM column.
      *
@@ -61,7 +60,9 @@ public interface FarragoTypeFactory extends OJTypeFactory
      *
      * @return generated FarragoType
      */
-    public FarragoType createColumnType(CwmColumn column,boolean validated);
+    public FarragoType createColumnType(
+        CwmColumn column,
+        boolean validated);
 
     /**
      * Creates a type which represents the row datatype of a CWM
@@ -82,7 +83,7 @@ public interface FarragoTypeFactory extends OJTypeFactory
      * @return generated type
      */
     public RelDataType createResultSetType(ResultSetMetaData metaData);
-    
+
     /**
      * Creates a FarragoType which represents a MOF feature.
      *

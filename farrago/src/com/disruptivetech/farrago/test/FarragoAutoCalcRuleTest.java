@@ -1,70 +1,61 @@
 /*
+// $Id$
 // Farrago is a relational database management system.
-// Copyright (C) 2003-2004 John V. Sichi.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package com.disruptivetech.farrago.test;
+
+import com.disruptivetech.farrago.calc.CalcRexImplementorTableImpl;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.ResultSet;
-
 import java.util.Properties;
 
 import junit.extensions.TestSetup;
-
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import net.sf.farrago.db.FarragoDbSession;
 import net.sf.farrago.db.FarragoDbSessionFactory;
-
 import net.sf.farrago.jdbc.engine.FarragoJdbcEngineConnection;
 import net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver;
-
 import net.sf.farrago.ojrex.FarragoOJRexImplementor;
 import net.sf.farrago.ojrex.FarragoOJRexImplementorTable;
 import net.sf.farrago.ojrex.FarragoRexToOJTranslator;
-
 import net.sf.farrago.session.FarragoSession;
 import net.sf.farrago.session.FarragoSessionFactory;
 
-import com.disruptivetech.farrago.calc.CalcRexImplementorTableImpl;
-
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
+import openjava.ptree.*;
 
 import org.eigenbase.oj.rex.OJRexImplementor;
 import org.eigenbase.oj.rex.OJRexImplementorTable;
-
-import org.eigenbase.rex.RexNode;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.rex.RexCall;
-
+import org.eigenbase.rex.RexNode;
 import org.eigenbase.sql.*;
-
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
-
 import org.eigenbase.sql.test.SqlTester;
 
-import openjava.ptree.*;
 
 /**
  * FarragoAutoCalcRuleTest tests FarragoAutoCalcRule.  This class
@@ -78,11 +69,14 @@ import openjava.ptree.*;
  * @author Stephan Zuercher
  * @version $Id$
  */
-public class FarragoAutoCalcRuleTest
-    extends TestCase
+public class FarragoAutoCalcRuleTest extends TestCase
 {
+    //~ Static fields/initializers --------------------------------------------
+
     private static FarragoJdbcEngineConnection farragoConnection;
     private static TestOJRexImplementorTable testOjRexImplementor;
+
+    //~ Constructors ----------------------------------------------------------
 
     /**
      * Creates a new FarragoRexToOJTranslatorTest object.
@@ -94,6 +88,8 @@ public class FarragoAutoCalcRuleTest
         super(testName);
     }
 
+    //~ Methods ---------------------------------------------------------------
+
     // implement TestCase
     public static Test suite()
     {
@@ -104,12 +100,14 @@ public class FarragoAutoCalcRuleTest
     {
         TestSetup wrapper =
             new TestSetup(suite) {
-                protected void setUp() throws Exception
+                protected void setUp()
+                    throws Exception
                 {
                     staticSetUp();
                 }
 
-                protected void tearDown() throws Exception
+                protected void tearDown()
+                    throws Exception
                 {
                     staticTearDown();
                 }
@@ -117,36 +115,36 @@ public class FarragoAutoCalcRuleTest
         return wrapper;
     }
 
-
     public static void staticSetUp()
         throws Exception
     {
         SqlStdOperatorTable opTab = SqlOperatorTable.std();
         testOjRexImplementor = new TestOJRexImplementorTable(opTab);
 
-		SqlFunction cppFunc =
-            new SqlFunction("CPLUS",
-                            SqlKind.Function,
-                            SqlStdOperatorTable.useNullableBiggest,
-                            SqlStdOperatorTable.useFirstKnownParam,
-                            SqlStdOperatorTable.typeNullableNumericNumeric,
-                            SqlFunction.SqlFuncTypeName.Numeric) {
-                public void test(SqlTester tester) {
+        SqlFunction cppFunc =
+            new SqlFunction("CPLUS", SqlKind.Function,
+                SqlStdOperatorTable.useNullableBiggest,
+                SqlStdOperatorTable.useFirstKnownParam,
+                SqlStdOperatorTable.typeNullableNumericNumeric,
+                SqlFunction.SqlFuncTypeName.Numeric) {
+                public void test(SqlTester tester)
+                {
                 }
             };
 
-		opTab.register(cppFunc);
+        opTab.register(cppFunc);
 
-		CalcRexImplementorTableImpl cImplTab =
-                new CalcRexImplementorTableImpl(
-                        CalcRexImplementorTableImpl.std());
+        CalcRexImplementorTableImpl cImplTab =
+            new CalcRexImplementorTableImpl(CalcRexImplementorTableImpl.std());
         CalcRexImplementorTableImpl.setThreadInstance(cImplTab);
-		cImplTab.register(cppFunc, cImplTab.get(opTab.plusOperator));
+        cImplTab.register(
+            cppFunc,
+            cImplTab.get(opTab.plusOperator));
 
         FarragoJdbcEngineDriver driver = newJdbcEngineDriver();
         Connection connection =
             DriverManager.getConnection(driver.getUrlPrefix());
-        farragoConnection = (FarragoJdbcEngineConnection)connection;
+        farragoConnection = (FarragoJdbcEngineConnection) connection;
         connection.setAutoCommit(false);
     }
 
@@ -169,47 +167,37 @@ public class FarragoAutoCalcRuleTest
     public void testJavaPlus()
         throws SQLException
     {
-        testExplain(
-            "select jplus(1, 1) from values(true)");
+        testExplain("select jplus(1, 1) from values(true)");
     }
-
 
     public void testCppPlus()
         throws SQLException
     {
-        testExplain(
-            "select cplus(1, 1) from values(true)");
+        testExplain("select cplus(1, 1) from values(true)");
     }
-
 
     public void testAutoPlus()
         throws SQLException
     {
-        testExplain(
-            "select cplus(1, 1), jplus(2, 2) from values(true)");
+        testExplain("select cplus(1, 1), jplus(2, 2) from values(true)");
     }
-
 
     public void testAutoPlusReverse()
         throws SQLException
     {
-        testExplain(
-            "select jplus(2, 2), cplus(1, 1) from values(true)");
+        testExplain("select jplus(2, 2), cplus(1, 1) from values(true)");
     }
-
 
     public void testAutoPlusNested()
         throws SQLException
     {
-        testExplain(
-            "select cplus(jplus(1, 1), 2) from values(true)");
+        testExplain("select cplus(jplus(1, 1), 2) from values(true)");
     }
 
     public void testAutoPlusNestedReverse()
         throws SQLException
     {
-        testExplain(
-            "select jplus(cplus(1, 1), 2) from values(true)");
+        testExplain("select jplus(cplus(1, 1), 2) from values(true)");
     }
 
     public void testEmps()
@@ -222,8 +210,7 @@ public class FarragoAutoCalcRuleTest
     public void testAutoPlusTable()
         throws SQLException
     {
-        testExplain(
-            "select * from sales.emps where jplus(deptno, 1) = 100");
+        testExplain("select * from sales.emps where jplus(deptno, 1) = 100");
     }
 
     public void testAutoPlusTableNested()
@@ -254,7 +241,6 @@ public class FarragoAutoCalcRuleTest
             "select jplus(cplus(deptno, 1), 2), cplus(jplus(deptno, 1), 2) from sales.emps where cplus(jplus(deptno, 1), 2) = 100 or jplus(cplus(deptno, 1), 2) = 100");
     }
 
-
     public void testNonCallWhere()
         throws SQLException
     {
@@ -271,19 +257,21 @@ public class FarragoAutoCalcRuleTest
             "select deptno + jplus(cplus(deptno, 1), 2), empno from sales.emps");
     }
 
-
     public void testDynamicParameterInConditional()
         throws SQLException
     {
-        PreparedStatement stmt = farragoConnection.prepareStatement(
-            "select name, cplus(1, jplus(2, cplus(3, 4))) from sales.emps where name like ?");
+        PreparedStatement stmt =
+            farragoConnection.prepareStatement(
+                "select name, cplus(1, jplus(2, cplus(3, 4))) from sales.emps where name like ?");
         try {
             stmt.setString(1, "F%");
 
             ResultSet rset = stmt.executeQuery();
             try {
                 assertTrue(rset.next());
-                assertEquals("Fred", rset.getString(1));
+                assertEquals(
+                    "Fred",
+                    rset.getString(1));
                 assertFalse(rset.next());
             } finally {
                 rset.close();
@@ -293,7 +281,6 @@ public class FarragoAutoCalcRuleTest
         }
     }
 
-    
     public void testFieldAccess()
         throws SQLException
     {
@@ -302,7 +289,6 @@ public class FarragoAutoCalcRuleTest
             "select cplus(t.r.\"second\", 1) from (select jrow(deptno, empno) as r from sales.emps) as t");
     }
 
-
     public void testFieldAccess2()
         throws SQLException
     {
@@ -310,7 +296,6 @@ public class FarragoAutoCalcRuleTest
         testExplain(
             "select t.r.\"second\" from (select jrow(deptno, cplus(empno, 1)) as r from sales.emps) as t");
     }
-
 
     // REVIEW: SZ: 7/14/2004: We should probably compare the results
     // to expected values, rather than just assuming that no
@@ -327,7 +312,7 @@ public class FarragoAutoCalcRuleTest
         try {
             ResultSet rset = stmt.executeQuery(query);
             try {
-                while(rset.next()) {
+                while (rset.next()) {
                     System.out.println(rset.getString(1));
                 }
             } finally {
@@ -338,6 +323,7 @@ public class FarragoAutoCalcRuleTest
         }
     }
 
+    //~ Inner Classes ---------------------------------------------------------
 
     /**
      * TestOJRexImplementorTable extends FarragoOJRexImplementorTable
@@ -356,71 +342,73 @@ public class FarragoAutoCalcRuleTest
             super.initStandard(opTab);
 
             SqlFunction jplusFunc =
-                new SqlFunction("JPLUS",
-                                SqlKind.Function,
-                                SqlStdOperatorTable.useNullableBiggest,
-                                SqlStdOperatorTable.useFirstKnownParam,
-                                SqlStdOperatorTable.typeNullableNumericNumeric,
-                                SqlFunction.SqlFuncTypeName.Numeric) {
-                    public void test(SqlTester tester) {
+                new SqlFunction("JPLUS", SqlKind.Function,
+                    SqlStdOperatorTable.useNullableBiggest,
+                    SqlStdOperatorTable.useFirstKnownParam,
+                    SqlStdOperatorTable.typeNullableNumericNumeric,
+                    SqlFunction.SqlFuncTypeName.Numeric) {
+                    public void test(SqlTester tester)
+                    {
                     }
                 };
             opTab.register(jplusFunc);
 
-            registerOperator(jplusFunc, get(opTab.plusOperator));
+            registerOperator(
+                jplusFunc,
+                get(opTab.plusOperator));
 
             SqlFunction jrowFunc =
-                new SqlFunction("JROW",
-                                SqlKind.Function,
-                                null,
-                                SqlOperatorTable.useFirstKnownParam,
-                                SqlStdOperatorTable.typeNullableNumericNumeric,
-                                SqlFunction.SqlFuncTypeName.Numeric)
-                {
-                    public void test(SqlTester tester) {
+                new SqlFunction("JROW", SqlKind.Function, null,
+                    SqlOperatorTable.useFirstKnownParam,
+                    SqlStdOperatorTable.typeNullableNumericNumeric,
+                    SqlFunction.SqlFuncTypeName.Numeric) {
+                    public void test(SqlTester tester)
+                    {
                     }
 
-                    public RelDataType getType(RelDataTypeFactory typeFactory,
-                                               RexNode[] args)
+                    public RelDataType getType(
+                        RelDataTypeFactory typeFactory,
+                        RexNode [] args)
                     {
-                        assert(args.length == 2);
+                        assert (args.length == 2);
 
-                        RelDataType[] types = new RelDataType[] {
-                            args[0].getType(),
-                            args[1].getType()
-                        };
-                        String[] names = new String[] { "first", "second" };
+                        RelDataType [] types =
+                            new RelDataType [] {
+                                args[0].getType(), args[1].getType()
+                            };
+                        String [] names = new String [] { "first", "second" };
 
                         return typeFactory.createProjectType(types, names);
                     }
 
-                    public RelDataType inferType(SqlValidator validator,
-                                                 SqlValidator.Scope scope,
-                                                 SqlCall call)
+                    public RelDataType inferType(
+                        SqlValidator validator,
+                        SqlValidator.Scope scope,
+                        SqlCall call)
                     {
-                        assert(call.getOperands().length == 2);
+                        assert (call.getOperands().length == 2);
 
-                        RelDataType[] types = new RelDataType[] {
-                            validator.getValidatedNodeType(
-                                call.getOperands()[0]),
-                            validator.getValidatedNodeType(
-                                call.getOperands()[1])
-                        };
-                        String[] names = new String[] { "first", "second" };
+                        RelDataType [] types =
+                            new RelDataType [] {
+                                validator.getValidatedNodeType(call
+                                        .getOperands()[0]),
+                                validator.getValidatedNodeType(call
+                                        .getOperands()[1])
+                            };
+                        String [] names = new String [] { "first", "second" };
 
                         return validator.typeFactory.createProjectType(types,
-                                                                       names);
+                            names);
                     }
-
                 };
             opTab.register(jrowFunc);
 
-            OJRexImplementor jrowFuncImpl = new FarragoOJRexImplementor()
-                {
-                    public
-                    Expression implementFarrago(FarragoRexToOJTranslator trans,
-                                                RexCall call,
-                                                Expression[] operands)
+            OJRexImplementor jrowFuncImpl =
+                new FarragoOJRexImplementor() {
+                    public Expression implementFarrago(
+                        FarragoRexToOJTranslator trans,
+                        RexCall call,
+                        Expression [] operands)
                     {
                         // NOTE: this is untested and is probably
                         // never called during this test case.
@@ -431,20 +419,18 @@ public class FarragoAutoCalcRuleTest
                         trans.addStatement(
                             new ExpressionStatement(
                                 new AssignmentExpression(
-                                    new ArrayAccess(rowVar,
-                                                    new Literal(
-                                                        Literal.INTEGER,
-                                                        "0")),
+                                    new ArrayAccess(
+                                        rowVar,
+                                        new Literal(Literal.INTEGER, "0")),
                                     AssignmentExpression.EQUALS,
                                     operands[0])));
 
                         trans.addStatement(
                             new ExpressionStatement(
                                 new AssignmentExpression(
-                                    new ArrayAccess(rowVar,
-                                                    new Literal(
-                                                        Literal.INTEGER,
-                                                        "1")),
+                                    new ArrayAccess(
+                                        rowVar,
+                                        new Literal(Literal.INTEGER, "1")),
                                     AssignmentExpression.EQUALS,
                                     operands[1])));
 
@@ -452,7 +438,7 @@ public class FarragoAutoCalcRuleTest
                     }
                 };
 
-                registerOperator(jrowFunc, jrowFuncImpl);
+            registerOperator(jrowFunc, jrowFuncImpl);
         }
     }
 
@@ -460,8 +446,7 @@ public class FarragoAutoCalcRuleTest
      * TestDbSessionFactory extends FarragoDbSessionFactory and
      * returns a custom TestDbSession instance.
      */
-    private static class TestDbSessionFactory
-        extends FarragoDbSessionFactory
+    private static class TestDbSessionFactory extends FarragoDbSessionFactory
     {
         private OJRexImplementorTable ojRexImplementor;
 
@@ -470,27 +455,28 @@ public class FarragoAutoCalcRuleTest
             this.ojRexImplementor = ojRexImplementor;
         }
 
-        public FarragoSession newSession(String url, Properties info)
+        public FarragoSession newSession(
+            String url,
+            Properties info)
         {
             return new TestDbSession(url, info, this, ojRexImplementor);
         }
     }
-
 
     /**
      * TestDbSession extends FarragoDbSession to provide our custom
      * OJRexImplementor table in place of Farrago's normal
      * implementation.
      */
-    private static class TestDbSession
-        extends FarragoDbSession
+    private static class TestDbSession extends FarragoDbSession
     {
         private OJRexImplementorTable ojRexImplementor;
 
-        public TestDbSession(String url,
-                             Properties info,
-                             FarragoSessionFactory factory,
-                             OJRexImplementorTable ojRexImplementor)
+        public TestDbSession(
+            String url,
+            Properties info,
+            FarragoSessionFactory factory,
+            OJRexImplementorTable ojRexImplementor)
         {
             super(url, info, factory);
 
@@ -503,15 +489,17 @@ public class FarragoAutoCalcRuleTest
         }
     }
 
-
     /**
      * TestJdbcEngineDriver extends FarragoJdbcEngineDriver and
      * provides our custom TestDbSessionFactory in place of Farrago's
      * normal implementation.
      */
-    private static class TestJdbcEngineDriver
-        extends FarragoJdbcEngineDriver
+    private static class TestJdbcEngineDriver extends FarragoJdbcEngineDriver
     {
+        static {
+            new TestJdbcEngineDriver().register();
+        }
+
         public TestJdbcEngineDriver()
         {
         }
@@ -524,10 +512,6 @@ public class FarragoAutoCalcRuleTest
         public String getBaseUrl()
         {
             return "jdbc:farragotest:";
-        }
-
-        static {
-            new TestJdbcEngineDriver().register();
         }
     }
 }

@@ -1,28 +1,28 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.util;
 
 import java.util.*;
+
 
 // REVIEW jvs 7-Jan-2003:  using inheritance from HashMap seems a little
 // dangerous since method like entrySet() won't work as expected; should
@@ -31,7 +31,7 @@ import java.util.*;
 
 /**
  * Map which contains more than one value per key.
- * 
+ *
  * <p>
  * You can either use a <code>MultiMap</code> as a regular map, or you can use
  * the additional methods {@link #putMulti} and {@link #getMulti}. Values are
@@ -68,9 +68,11 @@ public class MultiMap extends HashMap
     /**
      * Adds a value for this key.
      */
-    public void putMulti(Object key,Object value)
+    public void putMulti(
+        Object key,
+        Object value)
     {
-        final Object o = put(key,value);
+        final Object o = put(key, value);
         if (o != null) {
             // We knocked something out. It might be a list, or a singleton
             // object.
@@ -82,7 +84,7 @@ public class MultiMap extends HashMap
                 list.add(o);
             }
             list.add(value);
-            put(key,list);
+            put(key, list);
         }
     }
 
@@ -116,7 +118,7 @@ public class MultiMap extends HashMap
         Iterator keyIter;
         List valueList;
         Iterator valueIter;
-        
+
         EntryIter()
         {
             keyIter = keySet().iterator();
@@ -134,7 +136,7 @@ public class MultiMap extends HashMap
             valueList = getMulti(key);
             valueIter = valueList.iterator();
         }
-        
+
         public boolean hasNext()
         {
             return keyIter.hasNext() || valueIter.hasNext();
@@ -147,8 +149,7 @@ public class MultiMap extends HashMap
             }
             final Object savedKey = key;
             final Object value = valueIter.next();
-            return new Map.Entry()
-                {
+            return new Map.Entry() {
                     public Object getKey()
                     {
                         return savedKey;

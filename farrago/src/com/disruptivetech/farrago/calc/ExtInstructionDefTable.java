@@ -1,25 +1,24 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2004 Disruptive Technologies, Inc.
-// You must accept the terms in LICENSE.html to use this software.
+// Farrago is a relational database management system.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package com.disruptivetech.farrago.calc;
+
 
 /**
  * A class that holds {@link CalcProgramBuilder.ExtInstrDef} and its sub classes
@@ -28,62 +27,60 @@ package com.disruptivetech.farrago.calc;
  * @version $
  * $Id$
  */
-public class ExtInstructionDefTable {
+public class ExtInstructionDefTable
+{
+    //~ Static fields/initializers --------------------------------------------
 
     public static final CalcProgramBuilder.ExtInstrDef abs =
-            new CalcProgramBuilder.ExtInstrDef("ABS", 2);
+        new CalcProgramBuilder.ExtInstrDef("ABS", 2);
     public static final CalcProgramBuilder.ExtInstrDef castA =
-            new CalcProgramBuilder.ExtInstrDef("castA", 2);
+        new CalcProgramBuilder.ExtInstrDef("castA", 2);
     public static final CalcProgramBuilder.ExtInstrDef castDateToMillis =
-            new CalcProgramBuilder.ExtInstrDef("CastDateTimeToInt64", 2);
+        new CalcProgramBuilder.ExtInstrDef("CastDateTimeToInt64", 2);
     public static final CalcProgramBuilder.ExtInstrDef castDateToStr =
-            new CalcProgramBuilder.ExtInstrDef("CastDateToStrA", 2);
+        new CalcProgramBuilder.ExtInstrDef("CastDateToStrA", 2);
     public static final CalcProgramBuilder.InstructionDef castStrAToDate =
-            new CalcProgramBuilder.ExtInstrDef("CastStrAToDate", 2);
+        new CalcProgramBuilder.ExtInstrDef("CastStrAToDate", 2);
     public static final CalcProgramBuilder.InstructionDef castStrAToTime =
-            new CalcProgramBuilder.ExtInstrDef("CastStrAToTime", 2);
+        new CalcProgramBuilder.ExtInstrDef("CastStrAToTime", 2);
     public static final CalcProgramBuilder.InstructionDef castStrAToTimestamp =
-            new CalcProgramBuilder.ExtInstrDef("CastStrAToTimestamp", 2);
+        new CalcProgramBuilder.ExtInstrDef("CastStrAToTimestamp", 2);
     public static final CalcProgramBuilder.ExtInstrDef castTimeToStr =
-            new CalcProgramBuilder.ExtInstrDef("CastTimeToStrA", 2);
+        new CalcProgramBuilder.ExtInstrDef("CastTimeToStrA", 2);
     public static final CalcProgramBuilder.ExtInstrDef castTimestampToStr =
-            new CalcProgramBuilder.ExtInstrDef("CastTimestampToStrA", 2);
+        new CalcProgramBuilder.ExtInstrDef("CastTimestampToStrA", 2);
     public static final CalcProgramBuilder.ExtInstrDef charLength =
-            new CalcProgramBuilder.ExtInstrDef("strLenCharA", 2);
+        new CalcProgramBuilder.ExtInstrDef("strLenCharA", 2);
     public static final CalcProgramBuilder.ExtInstrDef concat =
-            new CalcProgramBuilder.ExtInstrSizeDef("strCatA");
+        new CalcProgramBuilder.ExtInstrSizeDef("strCatA");
     public static final CalcProgramBuilder.ExtInstrDef like =
-            new CalcProgramBuilder.ExtInstrSizeDef("strLikeA");
+        new CalcProgramBuilder.ExtInstrSizeDef("strLikeA");
     public static final CalcProgramBuilder.ExtInstrDef localTime =
-            new CalcProgramBuilder.ExtInstrDef("LocalTime", 1);
+        new CalcProgramBuilder.ExtInstrDef("LocalTime", 1);
     public static final CalcProgramBuilder.ExtInstrDef localTimestamp =
-            new CalcProgramBuilder.ExtInstrDef("LocalTimestamp", 1);
+        new CalcProgramBuilder.ExtInstrDef("LocalTimestamp", 1);
     public static final CalcProgramBuilder.ExtInstrDef log =
-            new CalcProgramBuilder.ExtInstrDef("LN", 2);
+        new CalcProgramBuilder.ExtInstrDef("LN", 2);
     public static final CalcProgramBuilder.ExtInstrDef log10 =
-            new CalcProgramBuilder.ExtInstrDef("LOG10", 2);
+        new CalcProgramBuilder.ExtInstrDef("LOG10", 2);
     public static final CalcProgramBuilder.ExtInstrDef lower =
-            new CalcProgramBuilder.ExtInstrDef("strToLowerA", 2);
+        new CalcProgramBuilder.ExtInstrDef("strToLowerA", 2);
     public static final CalcProgramBuilder.ExtInstrDef overlay =
-            new CalcProgramBuilder.ExtInstrSizeDef("strOverlayA");
+        new CalcProgramBuilder.ExtInstrSizeDef("strOverlayA");
     public static final CalcProgramBuilder.ExtInstrDef position =
-            new CalcProgramBuilder.ExtInstrDef("strPosA",3);
+        new CalcProgramBuilder.ExtInstrDef("strPosA", 3);
     public static final CalcProgramBuilder.ExtInstrDef similar =
-            new CalcProgramBuilder.ExtInstrSizeDef("strSimilarA");
+        new CalcProgramBuilder.ExtInstrSizeDef("strSimilarA");
     public static final CalcProgramBuilder.ExtInstrDef strCmpA =
-            new CalcProgramBuilder.ExtInstrDef("strCmpA", 3);
+        new CalcProgramBuilder.ExtInstrDef("strCmpA", 3);
     public static final CalcProgramBuilder.ExtInstrDef strCmpOct =
-            new CalcProgramBuilder.ExtInstrDef("strCmpOct", 3);
+        new CalcProgramBuilder.ExtInstrDef("strCmpOct", 3);
     public static final CalcProgramBuilder.ExtInstrDef substring =
-            new CalcProgramBuilder.ExtInstrSizeDef("strSubStringA");
+        new CalcProgramBuilder.ExtInstrSizeDef("strSubStringA");
     public static final CalcProgramBuilder.ExtInstrDef trim =
-            new CalcProgramBuilder.ExtInstrDef("strTrimA", 5);
+        new CalcProgramBuilder.ExtInstrDef("strTrimA", 5);
     public static final CalcProgramBuilder.ExtInstrDef upper =
-            new CalcProgramBuilder.ExtInstrDef("strToUpperA", 2);
+        new CalcProgramBuilder.ExtInstrDef("strToUpperA", 2);
     public static final CalcProgramBuilder.ExtInstrDef pow =
-            new CalcProgramBuilder.ExtInstrDef("POW", 3);
-
-
-
-
+        new CalcProgramBuilder.ExtInstrDef("POW", 3);
 }

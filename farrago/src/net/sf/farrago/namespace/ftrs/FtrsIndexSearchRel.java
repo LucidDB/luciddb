@@ -16,21 +16,20 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.ftrs;
+
+import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
-import net.sf.farrago.type.*;
 import net.sf.farrago.query.*;
+import net.sf.farrago.type.*;
 
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.rel.*;
 import org.eigenbase.rex.RexNode;
-
-import java.util.*;
 
 
 /**
@@ -49,13 +48,9 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
 
     /** Aggregation used since multiple inheritance is unavailable. */
     final FtrsIndexScanRel scanRel;
-
     final boolean isUniqueKey;
-
     final boolean isOuter;
-
     final Integer [] inputKeyProj;
-
     final Integer [] inputJoinProj;
 
     //~ Constructors ----------------------------------------------------------
@@ -78,7 +73,9 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
         Integer [] inputKeyProj,
         Integer [] inputJoinProj)
     {
-        super(scanRel.getCluster(),child);
+        super(
+            scanRel.getCluster(),
+            child);
         this.scanRel = scanRel;
         this.isUniqueKey = isUniqueKey;
         this.isOuter = isOuter;
@@ -117,7 +114,9 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         // TODO:  refined costing
-        return scanRel.computeCost(planner,getRows());
+        return scanRel.computeCost(
+            planner,
+            getRows());
     }
 
     // implement RelNode
@@ -125,40 +124,42 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
     {
         if (inputJoinProj != null) {
             // We're implementing a join, so make up an appropriate join type.
-            final RelDataTypeField [] childFields = child.getRowType().getFields();
-            RelDataType leftType = getCluster().typeFactory.createProjectType(
-                new RelDataTypeFactory.FieldInfo()
-                {
-                    public int getFieldCount()
-                    {
-                        return inputJoinProj.length;
-                    }
+            final RelDataTypeField [] childFields =
+                child.getRowType().getFields();
+            RelDataType leftType =
+                getCluster().typeFactory.createProjectType(
+                    new RelDataTypeFactory.FieldInfo() {
+                        public int getFieldCount()
+                        {
+                            return inputJoinProj.length;
+                        }
 
-                    public String getFieldName(int index)
-                    {
-                        int i = inputJoinProj[index].intValue();
-                        return childFields[i].getName();
-                    }
+                        public String getFieldName(int index)
+                        {
+                            int i = inputJoinProj[index].intValue();
+                            return childFields[i].getName();
+                        }
 
-                    public RelDataType getFieldType(int index)
-                    {
-                        int i = inputJoinProj[index].intValue();
-                        return childFields[i].getType();
-                    }
-                });
+                        public RelDataType getFieldType(int index)
+                        {
+                            int i = inputJoinProj[index].intValue();
+                            return childFields[i].getType();
+                        }
+                    });
 
             RelDataType rightType = scanRel.getRowType();
 
             // for outer join, have to make left side nullable
             if (isOuter) {
-                rightType = getFarragoTypeFactory().createTypeWithNullability(
-                    rightType,true);
+                rightType =
+                    getFarragoTypeFactory().createTypeWithNullability(rightType,
+                        true);
             }
 
             return getCluster().typeFactory.createJoinType(
-                new RelDataType[] { leftType, rightType });
+                new RelDataType [] { leftType, rightType });
         } else {
-            assert(!isOuter);
+            assert (!isOuter);
             return scanRel.getRowType();
         }
     }
@@ -166,7 +167,9 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
     // implement RelNode
     public void explain(RelOptPlanWriter pw)
     {
-        Object projection,inputKeyProjObj,inputJoinProjObj;
+        Object projection;
+        Object inputKeyProjObj;
+        Object inputJoinProjObj;
 
         if (scanRel.projectedColumns == null) {
             projection = "*";
@@ -188,17 +191,14 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
         pw.explain(
             this,
             new String [] {
-                "child","table","projection","index","uniqueKey",
-                "preserveOrder","outer","inputKeyProj","inputJoinProj"
+                "child", "table", "projection", "index", "uniqueKey",
+                "preserveOrder", "outer", "inputKeyProj", "inputJoinProj"
             },
             new Object [] {
-                Arrays.asList(scanRel.ftrsTable.getQualifiedName()),
-                projection,
-                scanRel.index.getName(),Boolean.valueOf(isUniqueKey),
+                Arrays.asList(scanRel.ftrsTable.getQualifiedName()), projection,
+                scanRel.index.getName(), Boolean.valueOf(isUniqueKey),
                 Boolean.valueOf(scanRel.isOrderPreserving),
-                Boolean.valueOf(isOuter),
-                inputKeyProjObj,
-                inputJoinProjObj
+                Boolean.valueOf(isOuter), inputKeyProjObj, inputJoinProjObj
             });
     }
 
@@ -207,19 +207,18 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
     {
         FarragoRepos repos = getPreparingStmt().getRepos();
 
-        FemIndexSearchDef searchStream =
-            repos.newFemIndexSearchDef();
+        FemIndexSearchDef searchStream = repos.newFemIndexSearchDef();
 
         scanRel.defineScanStream(searchStream);
         searchStream.setUniqueKey(isUniqueKey);
         searchStream.setOuterJoin(isOuter);
         if (inputKeyProj != null) {
             searchStream.setInputKeyProj(
-                FennelRelUtil.createTupleProjection(repos,inputKeyProj));
+                FennelRelUtil.createTupleProjection(repos, inputKeyProj));
         }
         if (inputJoinProj != null) {
             searchStream.setInputJoinProj(
-                FennelRelUtil.createTupleProjection(repos,inputJoinProj));
+                FennelRelUtil.createTupleProjection(repos, inputJoinProj));
         }
         searchStream.getInput().add(
             implementor.visitFennelChild((FennelRel) child));

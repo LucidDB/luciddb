@@ -17,14 +17,13 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.type;
 
-import org.eigenbase.reltype.*;
-import org.eigenbase.util.*;
-import org.eigenbase.sql.type.SqlTypeName;
-
 import openjava.mop.*;
+
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.util.*;
 
 
 /**
@@ -128,11 +127,15 @@ public abstract class FarragoType implements RelDataType
      * @param coerce - true when using cast rules, rather than implicit
      * @return
      */
-    public boolean isAssignableFrom(RelDataType t, boolean coerce)
+    public boolean isAssignableFrom(
+        RelDataType t,
+        boolean coerce)
     {
         // TODO jvs 22-Jan-2004:  implement real SQL rules
-       return this.getFactory().assignableFrom(this.getSqlTypeName(),
-               t.getSqlTypeName(), coerce);
+        return this.getFactory().assignableFrom(
+            this.getSqlTypeName(),
+            t.getSqlTypeName(),
+            coerce);
     }
 }
 

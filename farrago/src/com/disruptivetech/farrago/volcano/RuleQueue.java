@@ -1,37 +1,34 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Farrago is a relational database management system.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package com.disruptivetech.farrago.volcano;
-
-import org.eigenbase.relopt.*;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.util.BinaryHeap;
-import org.eigenbase.trace.EigenbaseTrace;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.relopt.*;
+import org.eigenbase.trace.EigenbaseTrace;
+import org.eigenbase.util.BinaryHeap;
 
 
 /**
@@ -40,6 +37,10 @@ import java.util.logging.Logger;
  */
 class RuleQueue
 {
+    //~ Static fields/initializers --------------------------------------------
+
+    private static final Logger tracer = EigenbaseTrace.getPlannerTracer();
+
     //~ Instance fields -------------------------------------------------------
 
     /** Maps {@link RelSubset} to {@link Double}. */
@@ -52,10 +53,9 @@ class RuleQueue
 
     /** Compares relexps according to their cached 'importance'. */
     private Comparator relImportanceComparator = new RelImportanceComparator();
-    private BinaryHeap relQueue = new BinaryHeap(true,relImportanceComparator);
+    private BinaryHeap relQueue =
+        new BinaryHeap(true, relImportanceComparator);
     private HashSet rels = new HashSet();
-
-    private static final Logger tracer = EigenbaseTrace.getPlannerTracer();
 
     //~ Constructors ----------------------------------------------------------
 
@@ -75,7 +75,9 @@ class RuleQueue
         double importance = 0;
         for (int i = 0; i < set.subsets.size(); i++) {
             RelSubset subset = (RelSubset) set.subsets.get(i);
-            importance = Math.max(importance,getImportance(subset));
+            importance = Math.max(
+                    importance,
+                    getImportance(subset));
         }
         return importance;
     }
@@ -106,7 +108,9 @@ class RuleQueue
             return;
         }
         relQueue.remove(subset);
-        subsetImportances.put(subset,new Double(importance));
+        subsetImportances.put(
+            subset,
+            new Double(importance));
         relQueue.insert(subset);
     }
 
@@ -159,7 +163,7 @@ class RuleQueue
     {
         assert (rels.add(rel)) : "RuleQueue already contained rel";
         final RelSubset subset = planner.getSubset(rel);
-        assert(subset != null);
+        assert (subset != null);
         add(subset);
     }
 
@@ -171,8 +175,10 @@ class RuleQueue
         if (subsetImportances.get(subset) == null) {
             final double importance = computeImportance(subset);
             final Double previousImportance =
-                (Double) subsetImportances.put(subset,new Double(importance));
-            assert(previousImportance == null);
+                (Double) subsetImportances.put(
+                    subset,
+                    new Double(importance));
+            assert (previousImportance == null);
             relQueue.insert(subset);
         }
     }
@@ -239,15 +245,16 @@ class RuleQueue
                     parents.hasNext();) {
                 RelSubset parent = (RelSubset) parents.next();
                 final double childImportance =
-                    computeImportanceOfChild(subset,parent);
-                importance = Math.max(importance,childImportance);
+                    computeImportanceOfChild(subset, parent);
+                importance = Math.max(importance, childImportance);
             }
         }
         tracer.finest("Importance of [" + subset + "] is " + importance);
         return importance;
     }
 
-    private void dump() {
+    private void dump()
+    {
         if (tracer.isLoggable(Level.FINER)) {
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
@@ -264,11 +271,11 @@ class RuleQueue
         final RelSubset [] subsets =
             (RelSubset []) subsetImportances.keySet().toArray(
                 new RelSubset[0]);
-        Arrays.sort(subsets,relImportanceComparator);
+        Arrays.sort(subsets, relImportanceComparator);
         for (int i = 0; i < subsets.length; i++) {
             RelSubset subset = subsets[i];
-            pw.print(
-                " " + subset.toString() + "=" + subsetImportances.get(subset));
+            pw.print(" " + subset.toString() + "="
+                + subsetImportances.get(subset));
         }
         pw.println("}");
     }
@@ -307,7 +314,9 @@ class RuleQueue
                 double nextImportance = computeImportance(nextSubset);
                 if (nextImportance > importance) {
                     // The queue was out of order. Try it again.
-                    subsetImportances.put(subset,new Double(importance));
+                    subsetImportances.put(
+                        subset,
+                        new Double(importance));
                     subsetImportances.put(
                         nextSubset,
                         new Double(nextImportance));
@@ -320,8 +329,7 @@ class RuleQueue
             final RelNode cheapestMember = findCheapestMember(subset);
             if (cheapestMember != null) {
                 relQueue.insert(subset); // put it back.. there may be more
-                assert (rels.remove(cheapestMember)) :
-                    "candidate rel must be on rule queue";
+                assert (rels.remove(cheapestMember)) : "candidate rel must be on rule queue";
                 return cheapestMember;
             }
 
@@ -340,12 +348,12 @@ class RuleQueue
     VolcanoRuleMatch popMatch()
     {
         dump();
-        assert(hasNextMatch());
+        assert (hasNextMatch());
         final Object [] matches = matchList.toArray();
         for (int i = 0; i < matches.length; i++) {
             assert matches[i] != null : i;
         }
-        Arrays.sort(matches,ruleMatchImportanceComparator);
+        Arrays.sort(matches, ruleMatchImportanceComparator);
         if (tracer.isLoggable(Level.FINER)) {
             tracer.finer("Sorted rule queue:");
             for (int i = 0; i < matches.length; i++) {
@@ -375,8 +383,10 @@ class RuleQueue
         return existed;
     }
 
-    private static boolean matchContains(VolcanoRuleMatch match,
-            RelNode rel) {
+    private static boolean matchContains(
+        VolcanoRuleMatch match,
+        RelNode rel)
+    {
         for (int j = 0; j < match.rels.length; j++) {
             if (match.rels[j] == rel) {
                 return true;
@@ -392,7 +402,9 @@ class RuleQueue
      * with cost 50 will have importance 0.4, and a child with cost 25 will
      * have importance 0.2.
      */
-    private double computeImportanceOfChild(RelSubset child,RelSubset parent)
+    private double computeImportanceOfChild(
+        RelSubset child,
+        RelSubset parent)
     {
         final double parentImportance = getImportance(parent);
         final double childCost = toDouble(planner.getCost(child));
@@ -404,9 +416,8 @@ class RuleQueue
         }
         final double importance = parentImportance * alpha;
         if (tracer.isLoggable(Level.FINEST)) {
-            tracer.finest(
-                "Importance of [" + child + "] to its parent [" + parent
-                + "] is " + importance + " (parent importance="
+            tracer.finest("Importance of [" + child + "] to its parent ["
+                + parent + "] is " + importance + " (parent importance="
                 + parentImportance + ", child cost=" + childCost
                 + ", parent cost=" + parentCost + ")");
         }
@@ -434,7 +445,9 @@ class RuleQueue
      */
     private class RelImportanceComparator implements Comparator
     {
-        public int compare(Object o1,Object o2)
+        public int compare(
+            Object o1,
+            Object o2)
         {
             RelSubset rel1 = (RelSubset) o1;
             RelSubset rel2 = (RelSubset) o2;
@@ -450,7 +463,9 @@ class RuleQueue
      */
     private class RuleMatchImportanceComparator implements Comparator
     {
-        public int compare(Object o1,Object o2)
+        public int compare(
+            Object o1,
+            Object o2)
         {
             VolcanoRuleMatch match1 = (VolcanoRuleMatch) o1;
             VolcanoRuleMatch match2 = (VolcanoRuleMatch) o2;

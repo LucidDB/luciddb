@@ -1,39 +1,36 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2004 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.util;
 
-import openjava.tools.DebugOut;
-
 import java.io.*;
-
 import java.security.AccessControlException;
-
 import java.util.Enumeration;
 import java.util.Properties;
 
-import org.eigenbase.util.property.StringProperty;
+import openjava.tools.DebugOut;
+
 import org.eigenbase.util.property.BooleanProperty;
 import org.eigenbase.util.property.IntegerProperty;
+import org.eigenbase.util.property.StringProperty;
 
 
 /**
@@ -69,20 +66,22 @@ public class SaffronProperties extends Properties
     /** The singleton properties object. */
     private static SaffronProperties properties;
 
+    //~ Instance fields -------------------------------------------------------
+
     /**
      * The string property "saffron.class.dir" is the path of the directory
      * to compile classes to.
      */
-    public final StringProperty classDir = new StringProperty(this,
-            "saffron.class.dir", null);
+    public final StringProperty classDir =
+        new StringProperty(this, "saffron.class.dir", null);
 
     /**
      * The boolean property "saffron.Statement.printBeforeCompile" controls
      * whether {@link openjava.ptree.Statement} prints the statement before
      * compiling it.
      */
-    public final BooleanProperty printBeforeCompile = new BooleanProperty(this,
-            "saffron.Statement.printBeforeCompile", false);
+    public final BooleanProperty printBeforeCompile =
+        new BooleanProperty(this, "saffron.Statement.printBeforeCompile", false);
 
     /**
      * The string property "saffron.java.compiler.class" is the name of the
@@ -90,8 +89,8 @@ public class SaffronProperties extends Properties
      * It must implement {@link openjava.ojc.JavaCompiler}.
      * The default value is "JP.ac.tsukuba.openjava.SunJavaCompiler".
      */
-    public final StringProperty javaCompilerClass = new StringProperty(this,
-            "saffron.java.compiler.class",
+    public final StringProperty javaCompilerClass =
+        new StringProperty(this, "saffron.java.compiler.class",
             "JP.ac.tsukuba.openjava.SunJavaCompiler");
 
     /**
@@ -99,20 +98,21 @@ public class SaffronProperties extends Properties
      * include temporary classes.
      * The default is "saffron.runtime".
      */
-    public final StringProperty packageName = new StringProperty(this,
-            "saffron.package.name", "saffron.runtime");
+    public final StringProperty packageName =
+        new StringProperty(this, "saffron.package.name", "saffron.runtime");
 
     /**
      * The string property "saffron.java.dir" is the directory to generate
      * temporary java files to.
      * The default is {@link #classDir the class root}.
      */
-    public final StringProperty javaDir = new StringProperty(this,
-            "saffron.java.dir", null) {
-        protected String getDefaultValue() {
-            return classDir.get();
-        }
-    };
+    public final StringProperty javaDir =
+        new StringProperty(this, "saffron.java.dir", null) {
+            protected String getDefaultValue()
+            {
+                return classDir.get();
+            }
+        };
 
     /**
      * The string property "saffron.java.compiler.args" is the argument string
@@ -120,23 +120,23 @@ public class SaffronProperties extends Properties
      * {@link openjava.ojc.JavaCompilerArgs#setString} describes how these
      * arguments are interpreted.
      */
-    public final StringProperty javaCompilerArgs = new StringProperty(this,
-        "saffron.java.compiler.args", null);
+    public final StringProperty javaCompilerArgs =
+        new StringProperty(this, "saffron.java.compiler.args", null);
 
     /**
      * The boolean property "saffron.stupid" determines whether to optimize
      * variable assignments. If it is true, records are assigned to a variable
      * even if they are never used. Default is false.
      */
-    public final BooleanProperty stupid = new BooleanProperty(this,
-            "saffron.stupid", false);
+    public final BooleanProperty stupid =
+        new BooleanProperty(this, "saffron.stupid", false);
 
     /**
      * The integer property "saffron.debug.level" determines how much debugging
      * information is printed. The default, 0, means no debugging.
      */
-    public final IntegerProperty debugLevel = new IntegerProperty(this,
-        "saffron.debug.level", 0);
+    public final IntegerProperty debugLevel =
+        new IntegerProperty(this, "saffron.debug.level", 0);
 
     /**
      * The string property "saffron.debug.out" is the name of the file to send
@@ -144,50 +144,50 @@ public class SaffronProperties extends Properties
      * to {@link System#out}; <code>"err"</code> means send to {@link
      * System#err}.
      */
-    public final StringProperty debugOut = new StringProperty(this,
-        "saffron.debug.out", "out");
+    public final StringProperty debugOut =
+        new StringProperty(this, "saffron.debug.out", "out");
 
     /**
      * The string property "saffron.test.Name" is used by
      * {@link net.sf.saffron.test.Main#suite}.
      */
-    public final StringProperty testName = new StringProperty(this,
-        "saffron.test.Name", null);
+    public final StringProperty testName =
+        new StringProperty(this, "saffron.test.Name", null);
 
     /**
      * The string property "saffron.test.Class" is used by
      * {@link net.sf.saffron.test.Main#suite}.
      */
-    public final StringProperty testClass = new StringProperty(this,
-        "saffron.test.Class", null);
+    public final StringProperty testClass =
+        new StringProperty(this, "saffron.test.Class", null);
 
     /**
      * The string property "saffron.test.Suite" is used by
      * {@link net.sf.saffron.test.Main#suite}.
      */
-    public final StringProperty testSuite = new StringProperty(this,
-        "saffron.test.Suite", null);
+    public final StringProperty testSuite =
+        new StringProperty(this, "saffron.test.Suite", null);
 
     /**
      * The string property "saffron.test.everything" is used by
      * {@link net.sf.saffron.test.Main#suite}.
      */
-    public final BooleanProperty testEverything = new BooleanProperty(this,
-        "saffron.test.everything", false);
+    public final BooleanProperty testEverything =
+        new BooleanProperty(this, "saffron.test.everything", false);
 
     /**
      * The string property "saffron.test.jdbc.url" is the URL of the JDBC
      * database which contains the EMP and DEPT tables used for testing.
      */
-    public final StringProperty testJdbcUrl = new StringProperty(this,
-        "saffron.test.jdbc.url", null);
+    public final StringProperty testJdbcUrl =
+        new StringProperty(this, "saffron.test.jdbc.url", null);
 
     /**
      * The string property "saffron.test.jdbc.drivers" is a comma-separated
      * list of class names to be used as JDBC drivers.
      */
-    public final StringProperty testJdbcDrivers = new StringProperty(this,
-        "saffron.test.jdbc.drivers", null);
+    public final StringProperty testJdbcDrivers =
+        new StringProperty(this, "saffron.test.jdbc.drivers", null);
 
     /**
      * The boolean property "saffron.opt.allowInfiniteCostConverters"
@@ -196,8 +196,8 @@ public class SaffronProperties extends Properties
      * calling convention to another. The default value is <code>true</code>.
      */
     public final BooleanProperty allowInfiniteCostConverters =
-            new BooleanProperty(this,
-                    "saffron.opt.allowInfiniteCostConverters", true);
+        new BooleanProperty(this, "saffron.opt.allowInfiniteCostConverters",
+            true);
 
     /**
      * The string property "saffron.default.charset" is the name of the
@@ -205,8 +205,8 @@ public class SaffronProperties extends Properties
      * The default is "ISO-8859-1".
      * It is used in {@link org.eigenbase.sql.SqlValidator}.
      */
-    public final StringProperty defaultCharset = new StringProperty(this,
-            "saffron.default.charset", "ISO-8859-1");
+    public final StringProperty defaultCharset =
+        new StringProperty(this, "saffron.default.charset", "ISO-8859-1");
 
     /**
      * The string property "saffron.default.nationalcharset" is the name of the
@@ -215,8 +215,9 @@ public class SaffronProperties extends Properties
      * The default is "ISO-8859-1".
      * It is used in {@link org.eigenbase.sql.SqlLiteral#SqlLiteral}
      */
-    public final StringProperty defaultNationalCharset = new StringProperty(this,
-            "saffron.default.nationalcharset", "ISO-8859-1");
+    public final StringProperty defaultNationalCharset =
+        new StringProperty(this, "saffron.default.nationalcharset",
+            "ISO-8859-1");
 
     /**
      * The string property "saffron.default.collation.name" is the name of the
@@ -225,8 +226,9 @@ public class SaffronProperties extends Properties
      * Used in {@link org.eigenbase.sql.SqlCollation}
      * and {@link org.eigenbase.sql.SqlLiteral#SqlLiteral}
      */
-    public final StringProperty defaultCollation = new StringProperty(
-            this, "saffron.default.collation.name", "ISO-8859-1$en_US");
+    public final StringProperty defaultCollation =
+        new StringProperty(this, "saffron.default.collation.name",
+            "ISO-8859-1$en_US");
 
     /**
      * The string property "saffron.default.collation.strength" is the
@@ -236,8 +238,8 @@ public class SaffronProperties extends Properties
      * and {@link org.eigenbase.sql.SqlLiteral#SqlLiteral}
      */
     public final StringProperty defaultCollationStrength =
-            new StringProperty(this, "saffron.default.collation.strength",
-                    "primary");
+        new StringProperty(this, "saffron.default.collation.strength",
+            "primary");
 
     /**
      * The boolean property "saffron.calc.comments.generate" determines if to
@@ -247,7 +249,7 @@ public class SaffronProperties extends Properties
      * and {@link org.eigenbase.sql.SqlLiteral#SqlLiteral}
      */
     public final BooleanProperty generateCalcProgramComments =
-            new BooleanProperty(this,"saffron.calc.comments.generate", true);
+        new BooleanProperty(this, "saffron.calc.comments.generate", true);
 
     //~ Constructors ----------------------------------------------------------
 
@@ -276,7 +278,7 @@ public class SaffronProperties extends Properties
                     try {
                         properties.load(new FileInputStream(file));
                     } catch (IOException e) {
-                        throw Util.newInternal(e,"while reading from " + file);
+                        throw Util.newInternal(e, "while reading from " + file);
                     }
                 }
             } catch (AccessControlException e) {
@@ -289,28 +291,23 @@ public class SaffronProperties extends Properties
         return properties;
     }
 
-
-
-
     /**
      * Adds all saffron-related properties found in the source list.
      * This means all properties whose names start with "saffron." or "net.sf.saffron."
      * The added properties can replace existing properties.
      * @param source a Properties list
      */
-    public void loadSaffronProperties (Properties source)
+    public void loadSaffronProperties(Properties source)
     {
-        for (Enumeration keys = source.keys();
-             keys.hasMoreElements();) {
+        for (Enumeration keys = source.keys(); keys.hasMoreElements();) {
             String key = (String) keys.nextElement();
             String value = source.getProperty(key);
-            if (key.startsWith("saffron.") ||
-                key.startsWith("net.sf.saffron.")) {
-                properties.setProperty(key,value);
+            if (key.startsWith("saffron.")
+                    || key.startsWith("net.sf.saffron.")) {
+                properties.setProperty(key, value);
             }
         }
     }
-
 
     /**
      * Retrieves a boolean property. Returns <code>true</code> if the property
@@ -319,7 +316,7 @@ public class SaffronProperties extends Properties
      */
     public boolean getBooleanProperty(String key)
     {
-        return getBooleanProperty(key,false);
+        return getBooleanProperty(key, false);
     }
 
     /**
@@ -329,7 +326,9 @@ public class SaffronProperties extends Properties
      * <code>yes</code>; the default value if it does not exist;
      * <code>false</code> otherwise.
      */
-    public boolean getBooleanProperty(String key, boolean defaultValue)
+    public boolean getBooleanProperty(
+        String key,
+        boolean defaultValue)
     {
         String value = getProperty(key);
         if (value == null) {
@@ -375,10 +374,10 @@ public class SaffronProperties extends Properties
                 try {
                     File file = new File(debugOut);
                     PrintStream ps =
-                        new PrintStream(new FileOutputStream(file),true);
+                        new PrintStream(new FileOutputStream(file), true);
                     DebugOut.setDebugOut(ps);
                 } catch (FileNotFoundException e) {
-                    throw Util.newInternal(e,"while setting debug output");
+                    throw Util.newInternal(e, "while setting debug output");
                 }
             }
         }

@@ -1,35 +1,34 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.rel;
 
+import org.eigenbase.oj.rel.JavaRel;
+import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanWriter;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.oj.rel.JavaRelImplementor;
-import org.eigenbase.oj.rel.JavaRel;
-import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.rex.RexNode;
 
 
@@ -68,17 +67,18 @@ public abstract class ProjectRelBase extends SingleRel
         String [] fieldNames,
         int flags)
     {
-        super(cluster,child);
+        super(cluster, child);
         this.exps = exps;
         if (fieldNames == null) {
             fieldNames = new String[exps.length];
         }
-        assert(exps.length == fieldNames.length);
+        assert (exps.length == fieldNames.length);
         this.fieldNames = fieldNames;
         this.flags = flags;
+
         //assert isBoxed();
         if (!isBoxed()) {
-            assert(exps.length == 1);
+            assert (exps.length == 1);
         }
     }
 
@@ -109,7 +109,7 @@ public abstract class ProjectRelBase extends SingleRel
         double dRows = child.getRows();
         double dCpu = child.getRows() * exps.length;
         double dIo = 0;
-        return planner.makeCost(dRows,dCpu,dIo);
+        return planner.makeCost(dRows, dCpu, dIo);
     }
 
     protected void defineTerms(String [] terms)
@@ -129,9 +129,9 @@ public abstract class ProjectRelBase extends SingleRel
     {
         String [] terms = new String[1 + exps.length];
         defineTerms(terms);
-        pw.explain(this,terms);
+        pw.explain(this, terms);
     }
-    
+
     /**
      * Burrows into a synthetic record and returns the underlying relation
      * which provides the field called <code>fieldName</code>.
@@ -141,12 +141,11 @@ public abstract class ProjectRelBase extends SingleRel
         String fieldName)
     {
         if (!isBoxed()) {
-            return implementor.implementFieldAccess((JavaRel) child,
-                    fieldName);
+            return implementor.implementFieldAccess((JavaRel) child, fieldName);
         }
         RelDataType type = getRowType();
         int field = type.getFieldOrdinal(fieldName);
-        return implementor.findRel((JavaRel) this,exps[field]);
+        return implementor.findRel((JavaRel) this, exps[field]);
     }
 
     protected RelDataType deriveRowType()
@@ -158,7 +157,7 @@ public abstract class ProjectRelBase extends SingleRel
         for (int i = 0; i < exps.length; ++i) {
             types[i] = exps[i].getType();
         }
-        if ((flags & Flags.AnonFields) == Flags.AnonFields && false) {
+        if (((flags & Flags.AnonFields) == Flags.AnonFields) && false) {
             return cluster.typeFactory.createJoinType(types);
         } else {
             return cluster.typeFactory.createProjectType(

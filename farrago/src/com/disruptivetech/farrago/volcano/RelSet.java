@@ -1,37 +1,35 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Farrago is a relational database management system.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package com.disruptivetech.farrago.volcano;
-
-import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.trace.EigenbaseTrace;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.util.Util;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Logger;
+
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.trace.EigenbaseTrace;
+import org.eigenbase.util.Util;
+
 
 /**
  * A <code>RelSet</code> is an equivalence-set of expressions; that is, a set
@@ -50,6 +48,10 @@ import java.util.logging.Logger;
  */
 class RelSet
 {
+    //~ Static fields/initializers --------------------------------------------
+
+    private static final Logger tracer = EigenbaseTrace.getPlannerTracer();
+
     //~ Instance fields -------------------------------------------------------
 
     final ArrayList rels = new ArrayList();
@@ -80,7 +82,6 @@ class RelSet
      */
     Set variablesUsed;
     int id;
-    private static final Logger tracer = EigenbaseTrace.getPlannerTracer();
 
     //~ Constructors ----------------------------------------------------------
 
@@ -125,7 +126,9 @@ class RelSet
     {
         assert (equivalentSet == null) : "adding to a dead set";
         RelSubset subset =
-            getOrCreateSubset(rel.getCluster(),rel.getConvention());
+            getOrCreateSubset(
+                rel.getCluster(),
+                rel.getConvention());
         subset.add(rel);
         return subset;
     }
@@ -136,7 +139,7 @@ class RelSet
     {
         RelSubset subset = getSubset(convention);
         if (subset == null) {
-            subset = new RelSubset(cluster,this,convention);
+            subset = new RelSubset(cluster, this, convention);
             subsets.add(subset);
         }
         return subset;
@@ -155,7 +158,7 @@ class RelSet
         if (this.rel == null) {
             this.rel = rel;
         } else {
-            assert(rel.getCorrelVariable() == null);
+            assert (rel.getCorrelVariable() == null);
             String correl = this.rel.getCorrelVariable();
             if (correl != null) {
                 rel.setCorrelVariable(correl);
@@ -173,11 +176,13 @@ class RelSet
      * called this method, <code>otherSet</code> is obsolete, this otherSet
      * is still alive.
      */
-    void mergeWith(VolcanoPlanner planner,RelSet otherSet)
+    void mergeWith(
+        VolcanoPlanner planner,
+        RelSet otherSet)
     {
-        assert(this != otherSet);
-        assert(this.equivalentSet == null);
-        assert(otherSet.equivalentSet == null);
+        assert (this != otherSet);
+        assert (this.equivalentSet == null);
+        assert (otherSet.equivalentSet == null);
         tracer.finer("Merge set#" + otherSet.id + " into set#" + id);
         otherSet.equivalentSet = this;
 
@@ -197,16 +202,17 @@ class RelSet
                 subset.best = otherSubset.best;
             }
             for (int j = 0; j < otherSubset.rels.size(); j++) {
-                planner.reregister(this,(RelNode) otherSubset.rels.get(j));
+                planner.reregister(this, (RelNode) otherSubset.rels.get(j));
             }
         }
+
         // Update all rels which have a child in the other set, to reflect the
         // fact that the child has been renamed.
-        for (
-            Iterator parentRels = otherSet.getParentRels().iterator();
+        for (Iterator parentRels = otherSet.getParentRels().iterator();
                 parentRels.hasNext();) {
             planner.rename((RelNode) parentRels.next());
         }
+
         // Each of the relations in the old set now has new parents, so
         // potentially new rules can fire. Check for rule matches, just as if
         // it were newly registered.  (This may cause rules which have fired

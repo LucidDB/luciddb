@@ -1,26 +1,28 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2004-2004 Disruptive Tech
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.test.SqlTester;
+
 
 /**
  * A generalization of a binary operator to involve several (two or more)
@@ -33,31 +35,43 @@ import org.eigenbase.sql.test.SqlTester;
  * @since Aug 8, 2004
  * @version $Id$
  **/
-public class SqlInfixOperator extends SqlSpecialOperator {
-    private final String[] names;
+public class SqlInfixOperator extends SqlSpecialOperator
+{
+    //~ Instance fields -------------------------------------------------------
+
+    private final String [] names;
+
+    //~ Constructors ----------------------------------------------------------
 
     // @pre paramTypes != null
     SqlInfixOperator(
-            String[] names, SqlKind kind, int precedence,
-            SqlOperator.TypeInference typeInference,
-            SqlOperator.ParamTypeInference paramTypeInference,
-            SqlOperator.AllowedArgInference argTypeInference) {
+        String [] names,
+        SqlKind kind,
+        int precedence,
+        SqlOperator.TypeInference typeInference,
+        SqlOperator.ParamTypeInference paramTypeInference,
+        SqlOperator.AllowedArgInference argTypeInference)
+    {
         super(names[0], kind, precedence, true, typeInference,
-                paramTypeInference, argTypeInference);
+            paramTypeInference, argTypeInference);
         assert names.length > 1;
         this.names = names;
     }
 
-    public SqlSyntax getSyntax() {
+    //~ Methods ---------------------------------------------------------------
+
+    public SqlSyntax getSyntax()
+    {
         return SqlSyntax.Special;
     }
 
     public void unparse(
-            SqlWriter writer,
-            SqlNode[] operands,
-            int leftPrec,
-            int rightPrec) {
-        assert operands.length == names.length + 1;
+        SqlWriter writer,
+        SqlNode [] operands,
+        int leftPrec,
+        int rightPrec)
+    {
+        assert operands.length == (names.length + 1);
         for (int i = 0; i < operands.length; i++) {
             if (i > 0) {
                 if (needsSpace()) {
@@ -72,12 +86,15 @@ public class SqlInfixOperator extends SqlSpecialOperator {
         }
     }
 
-    boolean needsSpace() {
+    boolean needsSpace()
+    {
         return true;
     }
 
-    public void test(SqlTester tester) {
+    public void test(SqlTester tester)
+    {
     }
 }
+
 
 // End SqlInfixOperator.java

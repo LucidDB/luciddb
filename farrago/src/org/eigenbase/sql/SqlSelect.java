@@ -1,28 +1,28 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.parser.ParserPosition;
+
 
 /**
  * A <code>SqlSelect</code> is a node of a parse tree which represents a
@@ -45,9 +45,12 @@ public class SqlSelect extends SqlCall
 
     //~ Constructors ----------------------------------------------------------
 
-    SqlSelect(SqlSelectOperator operator,SqlNode [] operands, ParserPosition parserPosition)
+    SqlSelect(
+        SqlSelectOperator operator,
+        SqlNode [] operands,
+        ParserPosition parserPosition)
     {
-        super(operator,operands, parserPosition);
+        super(operator, operands, parserPosition);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -93,8 +96,8 @@ public class SqlSelect extends SqlCall
         if (fromClause == null) {
             fromClause = tableId;
         } else {
-            fromClause = SqlOperatorTable.std().joinOperator.createCall(
-                    fromClause,
+            fromClause =
+                SqlOperatorTable.std().joinOperator.createCall(fromClause,
                     tableId, null);
         }
         operands[FROM_OPERAND] = fromClause;
@@ -102,16 +105,18 @@ public class SqlSelect extends SqlCall
 
     public void addWhere(SqlNode condition)
     {
-        assert (operands[SELECT_OPERAND] == null) :
-            "cannot add a filter if there is already a select list";
+        assert (operands[SELECT_OPERAND] == null) : "cannot add a filter if there is already a select list";
         operands[WHERE_OPERAND] =
-            SqlUtil.andExpressions(operands[WHERE_OPERAND],condition);
+            SqlUtil.andExpressions(operands[WHERE_OPERAND], condition);
     }
 
-    public void unparse(SqlWriter writer,int leftPrec,int rightPrec)
+    public void unparse(
+        SqlWriter writer,
+        int leftPrec,
+        int rightPrec)
     {
         writer.pushQuery(this);
-        super.unparse(writer,leftPrec,rightPrec);
+        super.unparse(writer, leftPrec, rightPrec);
         writer.popQuery(this);
     }
 }

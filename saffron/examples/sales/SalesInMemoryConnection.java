@@ -1,31 +1,31 @@
 /*
-// $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// You must accept the terms in LICENSE.html to use this software.
+// Saffron preprocessor and data engine.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package sales;
 
-import org.eigenbase.relopt.RelOptConnection;
-import org.eigenbase.relopt.RelOptSchema;
 import net.sf.saffron.ext.ClassSchema;
+
 import openjava.ptree.Expression;
 import openjava.ptree.FieldAccess;
+
+import org.eigenbase.relopt.RelOptConnection;
+import org.eigenbase.relopt.RelOptSchema;
 
 
 /**
@@ -36,21 +36,12 @@ import openjava.ptree.FieldAccess;
  */
 public class SalesInMemoryConnection implements RelOptConnection
 {
-    //~ Static fields/initializers --------------------------------------------
-
     private static final SalesSchema schema = createSchema();
-
-    //~ Instance fields -------------------------------------------------------
-
     public final SalesInMemory sales = new SalesInMemory();
-
-    //~ Constructors ----------------------------------------------------------
 
     public SalesInMemoryConnection()
     {
     }
-
-    //~ Methods ---------------------------------------------------------------
 
     /**
      * As required by the {@link RelOptConnection} contract.
@@ -65,7 +56,9 @@ public class SalesInMemoryConnection implements RelOptConnection
         return schema;
     }
 
-    public Object contentsAsArray(String qualifier,String tableName)
+    public Object contentsAsArray(
+        String qualifier,
+        String tableName)
     {
         throw new UnsupportedOperationException(
             "contentsAsArray() should have been replaced");
@@ -76,17 +69,16 @@ public class SalesInMemoryConnection implements RelOptConnection
         return new SalesSchema();
     }
 
-    //~ Inner Classes ---------------------------------------------------------
-
     public static class SalesSchema extends ClassSchema
     {
         public SalesSchema()
         {
-            super(SalesInMemory.class,false);
+            super(SalesInMemory.class, false);
         }
+
         protected Expression getTarget(Expression connectionExp)
         {
-            return new FieldAccess(connectionExp,"sales");
+            return new FieldAccess(connectionExp, "sales");
         }
     }
 }

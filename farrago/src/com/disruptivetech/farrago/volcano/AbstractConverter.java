@@ -1,30 +1,27 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Farrago is a relational database management system.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package com.disruptivetech.farrago.volcano;
 
-import org.eigenbase.relopt.*;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.convert.ConverterRel;
+import org.eigenbase.relopt.*;
 
 
 /**
@@ -57,7 +54,7 @@ public class AbstractConverter extends ConverterRel
         RelNode rel,
         CallingConvention outConvention)
     {
-        super(cluster,rel);
+        super(cluster, rel);
         this.outConvention = outConvention;
     }
 
@@ -70,7 +67,7 @@ public class AbstractConverter extends ConverterRel
 
     public Object clone()
     {
-        return new AbstractConverter(cluster,child,outConvention);
+        return new AbstractConverter(cluster, child, outConvention);
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
@@ -82,7 +79,7 @@ public class AbstractConverter extends ConverterRel
     {
         pw.explain(
             this,
-            new String [] { "child","convention" },
+            new String [] { "child", "convention" },
             new Object [] { outConvention });
     }
 
@@ -115,12 +112,11 @@ public class AbstractConverter extends ConverterRel
     {
         public ExpandConversionRule()
         {
-            super(
-                new RelOptRuleOperand(
+            super(new RelOptRuleOperand(
                     AbstractConverter.class,
-                    new RelOptRuleOperand [] { new RelOptRuleOperand(
-                            RelNode.class,
-                            null) }));
+                    new RelOptRuleOperand [] {
+                        new RelOptRuleOperand(RelNode.class, null)
+                    }));
         }
 
         public void onMatch(RelOptRuleCall call)
@@ -133,8 +129,7 @@ public class AbstractConverter extends ConverterRel
             }
             final RelNode child = converter.child;
             RelNode converted =
-                planner.changeConventionUsingConverters(
-                    child,
+                planner.changeConventionUsingConverters(child,
                     converter.outConvention);
             if (converted != null) {
                 call.transformTo(converted);
@@ -150,8 +145,7 @@ public class AbstractConverter extends ConverterRel
             final RelSet set = planner.getSet(child);
             for (int i = 0; i < set.subsets.size(); i++) {
                 RelSubset subset = (RelSubset) set.subsets.get(i);
-                if (
-                    (subset.getConvention() == child.getConvention())
+                if ((subset.getConvention() == child.getConvention())
                         || (subset.getConvention() == converter.outConvention)) {
                     continue;
                 }

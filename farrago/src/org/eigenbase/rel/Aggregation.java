@@ -1,49 +1,49 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.rel;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
+import openjava.ptree.Expression;
+
 import org.eigenbase.oj.rel.JavaRel;
 import org.eigenbase.oj.rel.JavaRelImplementor;
-import openjava.ptree.Expression;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
 
 
 /**
  * An <code>Aggregation</code> aggregates a set of values into one value.
- * 
+ *
  * <p>
  * It is used, via a {@link org.eigenbase.rel.AggregateRel.Call}, in an {@link
  * AggregateRel} relational operator.
  * </p>
- * 
+ *
  * <p> To help you understand the terminology, here are some analogies: an
  * {@link Aggregation} is analogous to a {@link openjava.mop.OJMethod}, whereas
  * a {@link org.eigenbase.rel.AggregateRel.Call} is analogous to a {@link
  * openjava.ptree.MethodCall}. {@link org.eigenbase.relopt.AggregationExtender}
  * has no direct analog in Java: it is more like a function object in JScript.
  * </p>
- * 
+ *
  * <p> For user-defined aggregates, use you should generally use {@link
  * org.eigenbase.relopt.AggregationExtender}; writing a new
  * <code>Aggregation</code> is a complicated task, akin to writing a new
@@ -77,7 +77,7 @@ public interface Aggregation
      * merge two accumulators. For <code>sum(x)</code>, this looks like
      * <code>((saffron.runtime.Holder.int_Holder) accumulator).value +=
      * ((saffron.runtime.Holder.int_Holder) other).value</code>.
-     * 
+     *
      * <p>
      * The method is only called if {@link #canMerge} returns
      * <code>true</code>.

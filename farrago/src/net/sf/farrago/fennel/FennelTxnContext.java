@@ -16,12 +16,11 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.fennel;
 
 import net.sf.farrago.*;
-import net.sf.farrago.util.*;
 import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.util.*;
 
 
 /**
@@ -36,9 +35,7 @@ public class FennelTxnContext
     //~ Instance fields -------------------------------------------------------
 
     private final FarragoMetadataFactory metadataFactory;
-    
     private final FennelDbHandle fennelDbHandle;
-
     private long hTxn;
 
     //~ Constructors ----------------------------------------------------------
@@ -69,7 +66,7 @@ public class FennelTxnContext
     {
         return fennelDbHandle;
     }
-    
+
     /**
      * Get the handle to the current txn.  If no txn is in progress, start one
      * and return the new handle.
@@ -93,12 +90,11 @@ public class FennelTxnContext
             fennelDbHandle.getTransientTxnContext().endTransientTxn();
         }
     }
-    
+
     private FemTxnHandle getTxnHandle()
     {
         getTxnHandleLong();
-        FemTxnHandle newHandle =
-            metadataFactory.newFemTxnHandle();
+        FemTxnHandle newHandle = metadataFactory.newFemTxnHandle();
         newHandle.setLongHandle(hTxn);
         return newHandle;
     }
@@ -121,7 +117,7 @@ public class FennelTxnContext
         if (!isTxnInProgress()) {
             return;
         }
-        
+
         fennelDbHandle.getTransientTxnContext().beginTransientTxn();
         try {
             FemCmdCommit cmd = metadataFactory.newFemCmdCommit();
@@ -143,7 +139,7 @@ public class FennelTxnContext
         if (!isTxnInProgress()) {
             return;
         }
-        
+
         fennelDbHandle.getTransientTxnContext().beginTransientTxn();
         try {
             FemCmdRollback cmd = metadataFactory.newFemCmdRollback();
@@ -184,8 +180,8 @@ public class FennelTxnContext
      */
     public void rollbackToSavepoint(FennelSvptHandle fennelSvptHandle)
     {
-        assert(isTxnInProgress());
-        
+        assert (isTxnInProgress());
+
         fennelDbHandle.getTransientTxnContext().beginTransientTxn();
         try {
             FemCmdRollback cmd = metadataFactory.newFemCmdRollback();
@@ -199,8 +195,7 @@ public class FennelTxnContext
 
     private FemSvptHandle getFemSvptHandle(FennelSvptHandle fennelSvptHandle)
     {
-        FemSvptHandle newHandle =
-            metadataFactory.newFemSvptHandle();
+        FemSvptHandle newHandle = metadataFactory.newFemSvptHandle();
         newHandle.setLongHandle(fennelSvptHandle.getLongHandle());
         return newHandle;
     }
@@ -215,8 +210,7 @@ public class FennelTxnContext
      *
      * @return opened FennelStreamGraph
      */
-    public FennelStreamGraph newStreamGraph(
-        FarragoAllocationOwner owner)
+    public FennelStreamGraph newStreamGraph(FarragoAllocationOwner owner)
     {
         fennelDbHandle.getTransientTxnContext().beginTransientTxn();
         try {
@@ -224,8 +218,9 @@ public class FennelTxnContext
                 metadataFactory.newFemCmdCreateExecutionStreamGraph();
             cmdCreate.setTxnHandle(getTxnHandle());
             fennelDbHandle.executeCmd(cmdCreate);
-            FennelStreamGraph streamGraph = new FennelStreamGraph(
-                fennelDbHandle,cmdCreate.getResultHandle());
+            FennelStreamGraph streamGraph =
+                new FennelStreamGraph(fennelDbHandle,
+                    cmdCreate.getResultHandle());
             owner.addAllocation(streamGraph);
             return streamGraph;
         } finally {

@@ -16,31 +16,31 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.jdbc;
 
+import java.io.*;
+import java.util.*;
+
+import net.sf.farrago.query.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.query.*;
-
-import org.eigenbase.runtime.*;
-import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*; 
-import org.eigenbase.oj.util.*;
-import org.eigenbase.oj.rel.JavaRelImplementor;
-import org.eigenbase.oj.rel.ResultSetRel;
-import org.eigenbase.oj.rel.JavaRel;
-import org.eigenbase.rel.*;
-import org.eigenbase.rel.convert.*;
-import org.eigenbase.rex.*;
-import org.eigenbase.util.*;
 
 import openjava.mop.*;
 import openjava.ptree.*;
 
-import java.io.*;
-import java.util.*;
+import org.eigenbase.oj.rel.JavaRel;
+import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.oj.rel.ResultSetRel;
+import org.eigenbase.oj.util.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.convert.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.runtime.*;
+import org.eigenbase.util.*;
+
 
 /**
  * ResultSetToFarragoIteratorConverter is a ConverterRel from the RESULT_SET
@@ -52,8 +52,10 @@ import java.util.*;
  * @version $Id$
  */
 class ResultSetToFarragoIteratorConverter extends ConverterRel
-        implements JavaRel
+    implements JavaRel
 {
+    //~ Constructors ----------------------------------------------------------
+
     /**
      * Creates a new ResultSetToFarragoIteratorConverter object.
      *
@@ -62,10 +64,13 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
      * representation
      */
     public ResultSetToFarragoIteratorConverter(
-        RelOptCluster cluster,RelNode child)
+        RelOptCluster cluster,
+        RelNode child)
     {
-        super(cluster,child);
+        super(cluster, child);
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     // implement RelNode
     public CallingConvention getConvention()
@@ -76,7 +81,7 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
     // implement RelNode
     public Object clone()
     {
-        return new ResultSetToFarragoIteratorConverter(cluster,child);
+        return new ResultSetToFarragoIteratorConverter(cluster, child);
     }
 
     // implement RelNode
@@ -85,8 +90,8 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
         FarragoRelImplementor farragoImplementor =
             (FarragoRelImplementor) implementor;
 
-        Expression childObj = implementor.visitJavaChild(this,
-                0, (ResultSetRel) child);
+        Expression childObj =
+            implementor.visitJavaChild(this, 0, (ResultSetRel) child);
 
         StatementList methodBody = new StatementList();
 
@@ -99,8 +104,10 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
         // This is a little silly.  Have to put in a dummy cast
         // so that type inference will stop early (otherwise it
         // fails to find variable reference).
-        Expression castResultSet = new CastExpression(
-            TypeName.forOJClass(Util.clazzResultSet),varResultSet);
+        Expression castResultSet =
+            new CastExpression(
+                TypeName.forOJClass(Util.clazzResultSet),
+                varResultSet);
 
         RelDataType rowType = getRowType();
         OJClass rowClass = OJUtil.typeToOJClass(rowType);
@@ -114,39 +121,38 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
         for (int i = 0; i < fields.length; ++i) {
             RelDataTypeField field = fields[i];
             FarragoAtomicType type = (FarragoAtomicType) field.getType();
-            ExpressionList colPosExpList = new ExpressionList(
-                Literal.makeLiteral(i + 1));
+            ExpressionList colPosExpList =
+                new ExpressionList(Literal.makeLiteral(i + 1));
             Expression rhsExp;
             if ((type instanceof FarragoPrimitiveType) && !type.isNullable()) {
                 FarragoPrimitiveType primType = (FarragoPrimitiveType) type;
+
                 // TODO:  make this official:  java.sql and java.nio
                 // use the same accessor names, happily
-                String methodName = ReflectUtil.getByteBufferReadMethod(
-                    primType.getClassForPrimitive()).getName();
-                rhsExp = new MethodCall(
-                    castResultSet,
-                    methodName,
-                    colPosExpList);
+                String methodName =
+                    ReflectUtil.getByteBufferReadMethod(
+                        primType.getClassForPrimitive()).getName();
+                rhsExp =
+                    new MethodCall(castResultSet, methodName, colPosExpList);
             } else if (type.isCharType()) {
-                rhsExp = new MethodCall(
-                    castResultSet,
-                    "getString",
-                    colPosExpList);
+                rhsExp =
+                    new MethodCall(castResultSet, "getString", colPosExpList);
             } else {
-                rhsExp = new MethodCall(
-                    castResultSet,
-                    "getObject",
-                    colPosExpList);
+                rhsExp =
+                    new MethodCall(castResultSet, "getObject", colPosExpList);
             }
-            RexNode rhs = javaRexBuilder.makeJava(
-                getCluster().env,rhsExp);
+            RexNode rhs = javaRexBuilder.makeJava(getCluster().env, rhsExp);
             rhs = javaRexBuilder.makeAbstractCast(
-                field.getType(),
-                rhs);
+                    field.getType(),
+                    rhs);
             farragoImplementor.translateAssignment(
                 this,
                 field.getType(),
-                new FieldAccess(varTuple, Util.toJavaId(field.getName(), i)),
+                new FieldAccess(
+                    varTuple,
+                    Util.toJavaId(
+                        field.getName(),
+                        i)),
                 rhs,
                 methodBody,
                 memberList);
@@ -171,9 +177,7 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
                 TypeName.forOJClass(Util.clazzObject),
                 "makeRow",
                 new ParameterList(),
-                new TypeName [] {
-                    TypeName.forOJClass(Util.clazzSQLException)
-                },
+                new TypeName [] { TypeName.forOJClass(Util.clazzSQLException) },
                 methodBody));
 
         return new AllocationExpression(
@@ -181,9 +185,10 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
             new ExpressionList(
                 new CastExpression(
                     TypeName.forOJClass(Util.clazzResultSet),
-                        childObj)),
+                    childObj)),
             memberList);
     }
 }
+
 
 // End ResultSetToFarragoIteratorConverter.java

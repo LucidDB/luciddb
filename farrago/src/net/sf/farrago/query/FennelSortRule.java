@@ -16,18 +16,17 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.query;
+
+import java.util.*;
 
 import net.sf.farrago.util.*;
 
-import org.eigenbase.relopt.*;
-import org.eigenbase.rel.*;
-import org.eigenbase.util.*;
-
 import openjava.ptree.*;
 
-import java.util.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -46,10 +45,11 @@ class FennelSortRule extends RelOptRule
      */
     public FennelSortRule()
     {
-        super(
-            new RelOptRuleOperand(
+        super(new RelOptRuleOperand(
                 SortRel.class,
-                new RelOptRuleOperand [] { new RelOptRuleOperand(RelNode.class,null) }));
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(RelNode.class, null)
+                }));
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -66,15 +66,14 @@ class FennelSortRule extends RelOptRule
         SortRel sortRel = (SortRel) call.rels[0];
         RelNode relInput = call.rels[1];
         RelNode fennelInput =
-            convert(relInput,FennelPullRel.FENNEL_PULL_CONVENTION);
+            convert(relInput, FennelPullRel.FENNEL_PULL_CONVENTION);
         if (fennelInput == null) {
             return;
         }
 
         Integer [] keyProjection = new Integer[sortRel.getCollations().length];
         for (int i = 0; i < keyProjection.length; ++i) {
-            keyProjection[i] = new Integer(
-                sortRel.getCollations()[i].iField);
+            keyProjection[i] = new Integer(sortRel.getCollations()[i].iField);
         }
 
         boolean discardDuplicates = false;

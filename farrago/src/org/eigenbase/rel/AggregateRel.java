@@ -1,38 +1,38 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.oj.rel.JavaRel;
-import org.eigenbase.oj.rel.JavaRelImplementor;
-import org.eigenbase.relopt.RelOptUtil;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptCluster;
+import java.util.Arrays;
+
 import openjava.ptree.Expression;
 
-import java.util.Arrays;
+import org.eigenbase.oj.rel.JavaRel;
+import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelOptCost;
+import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
 
 
 /**
@@ -59,7 +59,7 @@ public class AggregateRel extends SingleRel
         int groupCount,
         Call [] aggCalls)
     {
-        super(cluster,child);
+        super(cluster, child);
         this.groupCount = groupCount;
         this.aggCalls = aggCalls;
     }
@@ -124,8 +124,7 @@ public class AggregateRel extends SingleRel
                         return childType.getFields()[index].getType();
                     } else {
                         final Call aggCall = aggCalls[index - groupCount];
-                        return aggCall.aggregation.getReturnType(
-                            cluster.typeFactory);
+                        return aggCall.aggregation.getReturnType(cluster.typeFactory);
                     }
                 }
             });
@@ -138,7 +137,9 @@ public class AggregateRel extends SingleRel
         Aggregation aggregation;
         int [] args;
 
-        public Call(Aggregation aggregation,int [] args)
+        public Call(
+            Aggregation aggregation,
+            int [] args)
         {
             this.aggregation = aggregation;
             this.args = args;
@@ -162,7 +163,7 @@ public class AggregateRel extends SingleRel
             }
             Call other = (Call) o;
             return aggregation.equals(other.aggregation)
-                && Arrays.equals(args,other.args);
+                && Arrays.equals(args, other.args);
         }
 
         public void implementNext(
@@ -170,7 +171,7 @@ public class AggregateRel extends SingleRel
             JavaRel rel,
             Expression accumulator)
         {
-            aggregation.implementNext(implementor,rel,accumulator,args);
+            aggregation.implementNext(implementor, rel, accumulator, args);
         }
 
         /**
@@ -186,14 +187,14 @@ public class AggregateRel extends SingleRel
             JavaRelImplementor implementor,
             JavaRel rel)
         {
-            return aggregation.implementStart(implementor,rel,args);
+            return aggregation.implementStart(implementor, rel, args);
         }
 
         public Expression implementStartAndNext(
             JavaRelImplementor implementor,
             JavaRel rel)
         {
-            return aggregation.implementStartAndNext(implementor,rel,args);
+            return aggregation.implementStartAndNext(implementor, rel, args);
         }
     }
 }

@@ -1,35 +1,35 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// Copyright (C) 2002-2004 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
-// 
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-// 
-// You should have received a copy of the GNU Lesser General Public License
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.test;
 
-import org.eigenbase.util.*;
-
-import junit.framework.*;
-
 import java.io.*;
 import java.util.*;
 
+import junit.framework.*;
+
 import net.sf.farrago.util.FarragoProperties;
+
+import org.eigenbase.util.*;
+
 
 /**
  * DiffTestCase is an abstract base for JUnit tests which produce multi-line
@@ -40,6 +40,8 @@ import net.sf.farrago.util.FarragoProperties;
  */
 public abstract class DiffTestCase extends TestCase
 {
+    //~ Instance fields -------------------------------------------------------
+
     /** Name of current .log file. */
     private File logFile;
 
@@ -52,27 +54,34 @@ public abstract class DiffTestCase extends TestCase
     /** Diff masks defined so far */
     private List diffMasks;
 
+    //~ Constructors ----------------------------------------------------------
+
     /**
      * Initialize a new DiffTestCase.
      *
      * @param testCaseName JUnit test case name
      */
-    protected DiffTestCase(String testCaseName) throws Exception
+    protected DiffTestCase(String testCaseName)
+        throws Exception
     {
         super(testCaseName);
 
         diffMasks = new ArrayList();
     }
-    
+
+    //~ Methods ---------------------------------------------------------------
+
     // implement TestCase
-    protected void setUp() throws Exception
+    protected void setUp()
+        throws Exception
     {
         super.setUp();
         diffMasks.clear();
     }
-    
+
     // implement TestCase
-    protected void tearDown() throws Exception
+    protected void tearDown()
+        throws Exception
     {
         try {
             if (logOutputStream != null) {
@@ -96,7 +105,8 @@ public abstract class DiffTestCase extends TestCase
      * @return Writer for log file, which caller should use as a destination
      *         for test output to be diffed
      */
-    protected Writer openTestLog() throws Exception
+    protected Writer openTestLog()
+        throws Exception
     {
         File testLogDir = getTestlogRoot();
 
@@ -107,18 +117,22 @@ public abstract class DiffTestCase extends TestCase
             if (iDot == -1) {
                 break;
             }
-            testLogDir = new File(testLogDir,className.substring(0,iDot));
-            assert(testLogDir.exists());
-            className = className.substring(iDot+1);
+            testLogDir = new File(
+                    testLogDir,
+                    className.substring(0, iDot));
+            assert (testLogDir.exists());
+            className = className.substring(iDot + 1);
         }
 
         File testLogFile;
         if (shouldIncludeClassInLogFileName()) {
-            testLogFile = new File(testLogDir,className + "." + getName());
+            testLogFile = new File(testLogDir, className + "." + getName());
         } else {
-            testLogFile = new File(testLogDir,getName());
+            testLogFile = new File(
+                    testLogDir,
+                    getName());
         }
-        
+
         return new OutputStreamWriter(openTestLogOutputStream(testLogFile));
     }
 
@@ -128,15 +142,19 @@ public abstract class DiffTestCase extends TestCase
      *
      * @return src root as File
      */
-    protected File getSourceRoot() throws Exception
+    protected File getSourceRoot()
+        throws Exception
     {
-        return new File(FarragoProperties.instance().homeDir.get(),"src");
+        return new File(
+            FarragoProperties.instance().homeDir.get(),
+            "src");
     }
 
     /**
      * @return the root under which testlogs should be written
      */
-    protected File getTestlogRoot() throws Exception
+    protected File getTestlogRoot()
+        throws Exception
     {
         return getSourceRoot();
     }
@@ -163,8 +181,8 @@ public abstract class DiffTestCase extends TestCase
      * @param testFileSansExt full path to log filename, without .log/.ref
      * extension
      */
-    protected OutputStream openTestLogOutputStream(
-        File testFileSansExt) throws IOException
+    protected OutputStream openTestLogOutputStream(File testFileSansExt)
+        throws IOException
     {
         assert (logOutputStream == null);
 
@@ -176,20 +194,21 @@ public abstract class DiffTestCase extends TestCase
         logOutputStream = new FileOutputStream(logFile);
         return logOutputStream;
     }
-    
+
     /**
      * Finish a diff-based test.  Output that was written to the Writer
      * returned by openTestLog is diffed against a .ref file, and if any
      * differences are detected, the test case fails.  Note that the diff
      * used is just a boolean test, and does not create any .dif ouput.
-     * 
+     *
      * <p>
      * NOTE: if you wrap the Writer returned by openTestLog() (e.g. with a
      * PrintWriter), be sure to flush the wrapping Writer before calling this
      * method.
      * </p>
      */
-    protected void diffTestLog() throws IOException
+    protected void diffTestLog()
+        throws IOException
     {
         assert (logOutputStream != null);
         logOutputStream.close();
@@ -212,17 +231,17 @@ public abstract class DiffTestCase extends TestCase
                 String refLine = refLineReader.readLine();
                 if ((logLine == null) || (refLine == null)) {
                     if (logLine != null) {
-                        diffFail(logFile,logLineReader);
+                        diffFail(logFile, logLineReader);
                     }
                     if (refLine != null) {
-                        diffFail(logFile,refLineReader);
+                        diffFail(logFile, refLineReader);
                     }
                     break;
                 }
                 logLine = applyDiffMask(logLine);
                 refLine = applyDiffMask(refLine);
                 if (!logLine.equals(refLine)) {
-                    diffFail(logFile,logLineReader);
+                    diffFail(logFile, logLineReader);
                 }
             }
         } finally {
@@ -255,17 +274,19 @@ public abstract class DiffTestCase extends TestCase
         // TODO:  reuse a single java.util.regex.Matcher
         for (int i = 0; i < diffMasks.size(); ++i) {
             String mask = (String) diffMasks.get(i);
-            s = s.replaceAll(mask,"XYZZY");
+            s = s.replaceAll(mask, "XYZZY");
         }
         return s;
     }
 
-    private void diffFail(File logFile,LineNumberReader lineReader)
+    private void diffFail(
+        File logFile,
+        LineNumberReader lineReader)
     {
-        Assert.fail(
-            "diff detected at line " + lineReader.getLineNumber() + " in "
-            + logFile);
+        Assert.fail("diff detected at line " + lineReader.getLineNumber()
+            + " in " + logFile);
     }
 }
+
 
 // End DiffTestCase.java

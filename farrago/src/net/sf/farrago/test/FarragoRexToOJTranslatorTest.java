@@ -6,45 +6,46 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.test;
 
-import net.sf.farrago.session.*;
-import net.sf.farrago.query.*;
-import net.sf.farrago.ojrex.*;
+
+// FIXME jvs 29-Aug-2004
+import com.disruptivetech.farrago.volcano.AbstractConverter;
+
+import java.io.*;
+
+import junit.framework.*;
+
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.jdbc.engine.*;
+import net.sf.farrago.ojrex.*;
+import net.sf.farrago.query.*;
+import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.catalog.*;
 
+import openjava.ptree.*;
+
+import org.eigenbase.oj.*;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.oj.stmt.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql2rel.*;
 import org.eigenbase.sql.parser.*;
-import org.eigenbase.oj.*;
-import org.eigenbase.oj.rel.*;
-import org.eigenbase.oj.stmt.*;
+import org.eigenbase.sql2rel.*;
 
-import openjava.ptree.*;
-
-import junit.framework.*;
-
-import java.io.*;
-
-// FIXME jvs 29-Aug-2004
-import com.disruptivetech.farrago.volcano.AbstractConverter;
 
 /**
  * FarragoRexToOJTranslatorTest contains unit tests for the translation code in
@@ -58,6 +59,8 @@ import com.disruptivetech.farrago.volcano.AbstractConverter;
  */
 public class FarragoRexToOJTranslatorTest extends FarragoTestCase
 {
+    //~ Constructors ----------------------------------------------------------
+
     /**
      * Creates a new FarragoRexToOJTranslatorTest object.
      *
@@ -65,10 +68,13 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
      *
      * @throws Exception .
      */
-    public FarragoRexToOJTranslatorTest(String testName) throws Exception
+    public FarragoRexToOJTranslatorTest(String testName)
+        throws Exception
     {
         super(testName);
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     // implement TestCase
     public static Test suite()
@@ -102,34 +108,34 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
         String explainQuery =
             "EXPLAIN PLAN FOR SELECT " + rowExpression + " FROM "
             + tableExpression;
-        
+
         // hijack necessary internals
-        FarragoJdbcEngineConnection farragoConnection = 
+        FarragoJdbcEngineConnection farragoConnection =
             (FarragoJdbcEngineConnection) connection;
-        FarragoDbSession session = (FarragoDbSession)
-            farragoConnection.getSession();
+        FarragoDbSession session =
+            (FarragoDbSession) farragoConnection.getSession();
 
         // guarantee release of any resources we allocate on the way
-        FarragoCompoundAllocation allocations = new FarragoCompoundAllocation();
+        FarragoCompoundAllocation allocations =
+            new FarragoCompoundAllocation();
         FarragoReposTxnContext reposTxn = new FarragoReposTxnContext(repos);
         try {
             reposTxn.beginReadTxn();
-            
+
             // create a private code cache: don't pollute the real
             // database code cache
-            FarragoObjectCache objCache = new FarragoObjectCache(allocations,0);
+            FarragoObjectCache objCache =
+                new FarragoObjectCache(allocations, 0);
 
             // FarragoPreparingStmt does most of the work for us
             FarragoSessionStmtValidator stmtValidator =
-                new FarragoStmtValidator(
-                    repos,
-                    session.getDatabase().getFennelDbHandle(),
-                    session,
-                    objCache,
-                    objCache,
+                new FarragoStmtValidator(repos,
+                    session.getDatabase().getFennelDbHandle(), session,
+                    objCache, objCache,
                     session.getSessionIndexMap());
             allocations.addAllocation(stmtValidator);
-            FarragoPreparingStmt stmt = new FarragoPreparingStmt(stmtValidator);
+            FarragoPreparingStmt stmt =
+                new FarragoPreparingStmt(stmtValidator);
 
             initPlanner(stmt);
 
@@ -138,8 +144,8 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
             SqlNode sqlNode = sqlParser.parseStmt();
 
             // prepare it
-            PreparedExplanation explanation = (PreparedExplanation)
-                stmt.prepareSql(
+            PreparedExplanation explanation =
+                (PreparedExplanation) stmt.prepareSql(
                     sqlNode,
                     session.getRuntimeContextClass(),
                     stmt.getSqlValidator(),
@@ -148,7 +154,7 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
             // dig out the top-level relational expression, which
             // we just KNOW will be an IterCalcRel
             RelNode topRel = explanation.getRel();
-            assert(topRel instanceof IterCalcRel) : topRel.getClass().getName();
+            assert (topRel instanceof IterCalcRel) : topRel.getClass().getName();
             IterCalcRel calcRel = (IterCalcRel) topRel;
 
             // grab the RexNode corresponding to our select item
@@ -156,18 +162,16 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
 
             // create objects needed for codegen
             SqlToRelConverter sqlToRelConverter = stmt.getSqlToRelConverter();
-            FarragoRelImplementor relImplementor = new FarragoRelImplementor(
-                stmt,
-                sqlToRelConverter.getRexBuilder());
+            FarragoRelImplementor relImplementor =
+                new FarragoRelImplementor(stmt,
+                    sqlToRelConverter.getRexBuilder());
 
             // perform the codegen
             StatementList stmtList = new StatementList();
             MemberDeclarationList memberList = new MemberDeclarationList();
-            Expression translatedExp = relImplementor.translateViaStatements(
-                calcRel,
-                rexNode,
-                stmtList,
-                memberList);
+            Expression translatedExp =
+                relImplementor.translateViaStatements(calcRel, rexNode,
+                    stmtList, memberList);
 
             // dump the generated code
             Writer writer = openTestLog();
@@ -218,7 +222,7 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
     private void testTranslation(String rowExpression)
         throws Exception
     {
-        testTranslation(rowExpression,"SALES.EMPS");
+        testTranslation(rowExpression, "SALES.EMPS");
     }
 
     public void testPrimitiveEquals()
@@ -315,10 +319,9 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
     public void testRowConstructorWithLiterals()
         throws Exception
     {
-        testTranslation(
-            "row(5,'a las cinco de la tarde',x'58797A',"
-            + "date '2004-10-05',time '17:00:00'," +
-            "timestamp '2004-10-05 17:00:00')");
+        testTranslation("row(5,'a las cinco de la tarde',x'58797A',"
+            + "date '2004-10-05',time '17:00:00',"
+            + "timestamp '2004-10-05 17:00:00')");
     }
 
     public void testNullableIsTrue()
@@ -350,19 +353,19 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
     {
         testTranslation("age is null");
     }
-        
+
     public void testNullableIsNotNull()
         throws Exception
     {
         testTranslation("age is not null");
     }
-        
+
     public void testNotNullIsNull()
         throws Exception
     {
         testTranslation("empno is null");
     }
-        
+
     public void testNotNullIsNotNull()
         throws Exception
     {
@@ -370,6 +373,7 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
     }
 
     // FIXME
+
     /*
     public void testDynamicParam()
         throws Exception
@@ -377,7 +381,6 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
         testTranslation("empno + ?");
     }
     */
-
     public void testUser()
         throws Exception
     {
@@ -415,6 +418,7 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
     }
 
     // FIXME
+
     /*
     public void testCastNullToPrimitive()
         throws Exception
@@ -425,6 +429,7 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
     */
 
     // FIXME
+
     /*
     public void testCastNullToVarchar()
         throws Exception
@@ -432,7 +437,6 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
         testTranslation("cast(null as varchar(10))");
     }
     */
-
     public void testCastToVarcharImplicitTruncate()
         throws Exception
     {
@@ -443,11 +447,11 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
     public void testCastToVarchar()
         throws Exception
     {
-        testTranslation(
-            "cast('boo' as varchar(10))");
+        testTranslation("cast('boo' as varchar(10))");
     }
 
     // TODO (depends on dtbug 79)
+
     /*
     public void testCastToCharImplicitPad()
         throws Exception
@@ -458,6 +462,7 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
     */
 
     // TODO (depends on dtbug 79)
+
     /*
     public void testCastToCharExact()
         throws Exception
@@ -468,6 +473,7 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
     */
 
     // TODO (depends on dtbug 79)
+
     /*
     public void testCastToBinaryImplicitPad()
         throws Exception
@@ -476,16 +482,15 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
             "cast(x'58797A' as binary(10))");
     }
     */
-
     public void testCastToVarbinaryImplicitTruncate()
         throws Exception
     {
-        testTranslation(
-            "cast(x'00112233445566778899AABB' as varbinary(10))");
+        testTranslation("cast(x'00112233445566778899AABB' as varbinary(10))");
     }
-    
+
     // TODO jvs 22-June-2004:  figure out a way to test codegen for
     // assignment of nullable value to NOT NULL field
 }
+
 
 // End FarragoRexToOJTranslatorTest.java

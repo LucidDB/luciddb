@@ -16,27 +16,26 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.cwm.relational;
 
+import java.nio.charset.*;
+import java.sql.*;
+
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.ddl.*;
-import net.sf.farrago.fem.med.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
+import net.sf.farrago.ddl.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.resource.*;
-import net.sf.farrago.type.*;
 import net.sf.farrago.session.*;
+import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
-
-import org.netbeans.mdr.handlers.*;
-import org.netbeans.mdr.storagemodel.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.*;
+import org.netbeans.mdr.handlers.*;
+import org.netbeans.mdr.storagemodel.*;
 
-import java.sql.*;
-import java.nio.charset.*;
 
 /**
  * CwmColumnImpl is a custom implementation for CWM CwmColumn.
@@ -63,7 +62,9 @@ public abstract class CwmColumnImpl extends InstanceHandler
     //~ Methods ---------------------------------------------------------------
 
     // implement DdlValidatedElement
-    public void validateDefinition(DdlValidator validator,boolean creation)
+    public void validateDefinition(
+        DdlValidator validator,
+        boolean creation)
     {
         // let the containing table handle this by calling our
         // validateDefinitionImpl, since sometimes it has extra work to do
@@ -72,19 +73,18 @@ public abstract class CwmColumnImpl extends InstanceHandler
 
     public void validateDefinitionImpl(DdlValidator validator)
     {
-        validateCommon(validator,this);
+        validateCommon(validator, this);
 
         String defaultExpression = getInitialValue().getBody();
         if (!defaultExpression.equalsIgnoreCase("NULL")) {
             FarragoSession session = validator.newReentrantSession();
             try {
-                validateDefaultClause(validator,session,defaultExpression);
+                validateDefaultClause(validator, session, defaultExpression);
             } catch (Throwable ex) {
                 throw validator.res.newValidatorBadDefaultClause(
                     getName(),
                     validator.getParserPosString(this),
                     ex);
-                
             } finally {
                 validator.releaseReentrantSession(session);
             }
@@ -92,7 +92,9 @@ public abstract class CwmColumnImpl extends InstanceHandler
     }
 
     // implement DdlValidatedElement
-    public void validateDeletion(DdlValidator validator,boolean truncation)
+    public void validateDeletion(
+        DdlValidator validator,
+        boolean truncation)
     {
         assert (!truncation);
 
@@ -106,9 +108,9 @@ public abstract class CwmColumnImpl extends InstanceHandler
     {
         String sql = "VALUES(" + defaultExpression + ")";
         FarragoSessionStmtContext stmtContext = session.newStmtContext();
-        stmtContext.prepare(sql,false);
+        stmtContext.prepare(sql, false);
         RelDataType rowType = stmtContext.getPreparedRowType();
-        assert(rowType.getFieldCount() == 1);
+        assert (rowType.getFieldCount() == 1);
 
         if (stmtContext.getPreparedParamType().getFieldCount() > 0) {
             throw validator.res.newValidatorBadDefaultParam(
@@ -117,16 +119,15 @@ public abstract class CwmColumnImpl extends InstanceHandler
         }
 
         // SQL standard is very picky about what can go in a DEFAULT clause
-
-        FarragoAtomicType sourceType = (FarragoAtomicType)
-            rowType.getFields()[0].getType();
+        FarragoAtomicType sourceType =
+            (FarragoAtomicType) rowType.getFields()[0].getType();
         FarragoTypeFamily sourceTypeFamily = sourceType.getFamily();
-        
+
         FarragoType targetType =
-            validator.getTypeFactory().createColumnType(this,true);
+            validator.getTypeFactory().createColumnType(this, true);
         FarragoAtomicType atomicType = (FarragoAtomicType) targetType;
         FarragoTypeFamily targetTypeFamily = atomicType.getFamily();
-        
+
         if (sourceTypeFamily != targetTypeFamily) {
             throw validator.res.newValidatorBadDefaultType(
                 getName(),
@@ -149,7 +150,7 @@ public abstract class CwmColumnImpl extends InstanceHandler
             // Need to reorg all this column stuff.
             FemAbstractColumn femColumn = (FemAbstractColumn) column;
             int ordinal = column.getOwner().getFeature().indexOf(column);
-            assert(ordinal != -1);
+            assert (ordinal != -1);
             femColumn.setOrdinal(ordinal);
         }
 
@@ -166,10 +167,10 @@ public abstract class CwmColumnImpl extends InstanceHandler
             column.setIsNullable(NullableTypeEnum.COLUMN_NULLABLE);
         }
 
-        FarragoAtomicType type = (FarragoAtomicType)
-            validator.getTypeFactory().createColumnType(
-                column,false);
-            
+        FarragoAtomicType type =
+            (FarragoAtomicType) validator.getTypeFactory().createColumnType(column,
+                false);
+
         // NOTE: parser only generates precision, but CWM discriminates
         // precision from length, so we take care of it below
         Integer precision = column.getPrecision();
@@ -185,15 +186,15 @@ public abstract class CwmColumnImpl extends InstanceHandler
             }
             if (precision == null) {
                 throw validator.res.newValidatorPrecRequired(
-                    getLocalizedTypeName(validator,column),
-                    getLocalizedName(validator,column),
+                    getLocalizedTypeName(validator, column),
+                    getLocalizedName(validator, column),
                     validator.getParserPosString(column));
             }
         } else {
             if (precision != null) {
                 throw validator.res.newValidatorPrecUnexpected(
-                    getLocalizedTypeName(validator,column),
-                    getLocalizedName(validator,column),
+                    getLocalizedTypeName(validator, column),
+                    getLocalizedName(validator, column),
                     validator.getParserPosString(column));
             }
         }
@@ -202,8 +203,8 @@ public abstract class CwmColumnImpl extends InstanceHandler
         } else {
             if (column.getScale() != null) {
                 throw validator.res.newValidatorScaleUnexpected(
-                    getLocalizedTypeName(validator,column),
-                    getLocalizedName(validator,column),
+                    getLocalizedTypeName(validator, column),
+                    getLocalizedName(validator, column),
                     validator.getParserPosString(column));
             }
         }
@@ -217,7 +218,6 @@ public abstract class CwmColumnImpl extends InstanceHandler
         if (type.getFamily() == FarragoTypeFamily.CHARACTER) {
             // TODO jvs 18-April-2004:  Should be inheriting these defaults
             // from schema/catalog.
-            
             if (JmiUtil.isBlank(column.getCharacterSetName())) {
                 // NOTE: don't leave character set name implicit, since if the
                 // default ever changed, that would invalidate existing data
@@ -227,7 +227,7 @@ public abstract class CwmColumnImpl extends InstanceHandler
                 if (!Charset.isSupported(column.getCharacterSetName())) {
                     throw validator.res.newValidatorCharsetUnsupported(
                         column.getCharacterSetName(),
-                        getLocalizedName(validator,column),
+                        getLocalizedName(validator, column),
                         validator.getParserPosString(column));
                 }
             }
@@ -239,8 +239,8 @@ public abstract class CwmColumnImpl extends InstanceHandler
         } else {
             if (!JmiUtil.isBlank(column.getCharacterSetName())) {
                 throw validator.res.newValidatorCharsetUnexpected(
-                    getLocalizedTypeName(validator,column),
-                    getLocalizedName(validator,column),
+                    getLocalizedTypeName(validator, column),
+                    getLocalizedName(validator, column),
                     validator.getParserPosString(column));
             }
         }
@@ -254,7 +254,7 @@ public abstract class CwmColumnImpl extends InstanceHandler
                 throw validator.res.newValidatorLengthExceeded(
                     column.getLength(),
                     maximum,
-                    getLocalizedName(validator,column),
+                    getLocalizedName(validator, column),
                     validator.getParserPosString(column));
             }
         }
@@ -268,7 +268,7 @@ public abstract class CwmColumnImpl extends InstanceHandler
                 throw validator.res.newValidatorPrecisionExceeded(
                     column.getPrecision(),
                     maximum,
-                    getLocalizedName(validator,column),
+                    getLocalizedName(validator, column),
                     validator.getParserPosString(column));
             }
         }
@@ -279,7 +279,7 @@ public abstract class CwmColumnImpl extends InstanceHandler
                 throw validator.res.newValidatorScaleExceeded(
                     column.getScale(),
                     maximum,
-                    getLocalizedName(validator,column),
+                    getLocalizedName(validator, column),
                     validator.getParserPosString(column));
             }
         }
@@ -287,19 +287,18 @@ public abstract class CwmColumnImpl extends InstanceHandler
         // REVIEW jvs 18-April-2004: I had to put these in because CWM declares
         // them as mandatory.  This is stupid, since CWM also says these fields
         // are inapplicable for non-character columns.
-        
         if (column.getCollationName() == null) {
             column.setCollationName("");
         }
-        
+
         if (column.getCharacterSetName() == null) {
             column.setCharacterSetName("");
         }
-        
     }
 
     private static String getLocalizedName(
-        DdlValidator validator,CwmColumn column)
+        DdlValidator validator,
+        CwmColumn column)
     {
         return validator.getRepos().getLocalizedObjectName(
             null,
@@ -308,12 +307,14 @@ public abstract class CwmColumnImpl extends InstanceHandler
     }
 
     private static String getLocalizedTypeName(
-        DdlValidator validator,CwmColumn column)
+        DdlValidator validator,
+        CwmColumn column)
     {
         return validator.getRepos().getLocalizedObjectName(
             column.getType(),
             column.getType().refClass());
     }
 }
+
 
 // End CwmColumnImpl.java

@@ -1,27 +1,29 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2003-2003 Disruptive Technologies, Inc.
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 package org.eigenbase.rex;
 
-import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeField;
+
 
 /**
  * Access to a field of a row-expression.
@@ -50,57 +52,77 @@ import org.eigenbase.reltype.RelDataType;
  * @since Nov 24, 2003
  * @version $Id$
  **/
-public class RexFieldAccess extends RexNode {
+public class RexFieldAccess extends RexNode
+{
+    //~ Instance fields -------------------------------------------------------
+
     public RexNode expr;
     private final RelDataTypeField field;
 
-    RexFieldAccess(RexNode expr,RelDataTypeField field) {
+    //~ Constructors ----------------------------------------------------------
+
+    RexFieldAccess(
+        RexNode expr,
+        RelDataTypeField field)
+    {
         this.expr = expr;
         this.field = field;
         computeDigest();
     }
 
-    public RelDataTypeField getField() {
+    //~ Methods ---------------------------------------------------------------
+
+    public RelDataTypeField getField()
+    {
         return field;
     }
-    
-    public RelDataType getType() {
+
+    public RelDataType getType()
+    {
         return field.getType();
     }
 
-    public Object clone() {
+    public Object clone()
+    {
         return new RexFieldAccess(expr, field);
     }
 
-    public RexKind getKind() {
+    public RexKind getKind()
+    {
         return RexKind.FieldAccess;
     }
 
-    public void accept(RexVisitor visitor) {
+    public void accept(RexVisitor visitor)
+    {
         visitor.visitFieldAccess(this);
     }
 
     /**
      * Returns the expression whose field is being accessed.
-     */ 
-    public RexNode getReferenceExpr() {
+     */
+    public RexNode getReferenceExpr()
+    {
         return expr;
     }
 
     /**
      * Returns the name of the field.
      */
-    public String getName() {
+    public String getName()
+    {
         return field.getName();
     }
 
-    public String toString() {
+    public String toString()
+    {
         return computeDigest();
     }
 
-    private String computeDigest() {
+    private String computeDigest()
+    {
         return (this.digest = expr + "." + field.getName());
     }
 }
+
 
 // End RexFieldAccess.java

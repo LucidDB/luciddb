@@ -1,35 +1,32 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Farrago is a relational database management system.
+// Copyright (C) 2002-2004 Disruptive Tech
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package com.disruptivetech.farrago.volcano;
 
-import org.eigenbase.trace.EigenbaseTrace;
-import org.eigenbase.relopt.*;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.util.Util;
-
 import java.util.ArrayList;
-import java.util.logging.Logger;
 import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.relopt.*;
+import org.eigenbase.trace.EigenbaseTrace;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -38,20 +35,26 @@ import java.util.logging.Level;
  */
 public class VolcanoRuleCall extends RelOptRuleCall
 {
+    //~ Instance fields -------------------------------------------------------
+
     protected final VolcanoPlanner volcanoPlanner;
-    
+
     //~ Constructors ----------------------------------------------------------
 
-    protected VolcanoRuleCall(VolcanoPlanner volcanoPlanner, RelOptRuleOperand operand,
-            RelNode [] rels)
+    protected VolcanoRuleCall(
+        VolcanoPlanner volcanoPlanner,
+        RelOptRuleOperand operand,
+        RelNode [] rels)
     {
-        super(volcanoPlanner,operand,rels);
+        super(volcanoPlanner, operand, rels);
         this.volcanoPlanner = volcanoPlanner;
     }
 
-    VolcanoRuleCall(VolcanoPlanner planner, RelOptRuleOperand operand)
+    VolcanoRuleCall(
+        VolcanoPlanner planner,
+        RelOptRuleOperand operand)
     {
-        this(planner, operand,new RelNode[operand.rule.operands.length]);
+        this(planner, operand, new RelNode[operand.rule.operands.length]);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -67,13 +70,11 @@ public class VolcanoRuleCall extends RelOptRuleCall
             if (rel instanceof RelSubset || planner.isRegistered(rel)) {
                 return;
             }
-            tracer.fine(
-                "Rule " + rule + " arguments " + RelOptUtil.toString(rels)
-                + " created " + rel);
-            Util.discard(planner.register(rel,rels[0]));
+            tracer.fine("Rule " + rule + " arguments "
+                + RelOptUtil.toString(rels) + " created " + rel);
+            Util.discard(planner.register(rel, rels[0]));
         } catch (Throwable e) {
-            throw Util.newInternal(
-                e,
+            throw Util.newInternal(e,
                 "Error occurred while applying rule " + rule);
         }
     }
@@ -85,12 +86,12 @@ public class VolcanoRuleCall extends RelOptRuleCall
     {
         try {
             if (tracer.isLoggable(Level.FINE)) {
-                tracer.fine("Apply rule [" + rule + "] to [" +
-                        RelOptUtil.toString(rels) + "]");
+                tracer.fine("Apply rule [" + rule + "] to ["
+                    + RelOptUtil.toString(rels) + "]");
             }
             rule.onMatch(this);
         } catch (Throwable e) {
-            throw Util.newInternal(e,"Error while applying rule " + rule);
+            throw Util.newInternal(e, "Error while applying rule " + rule);
         }
     }
 
@@ -106,7 +107,7 @@ public class VolcanoRuleCall extends RelOptRuleCall
      */
     void match(RelNode rel)
     {
-        assert(operand0.matches(rel));
+        assert (operand0.matches(rel));
         final int solve = 0;
         int operandOrdinal = operand0.solveOrder[solve];
         this.rels[operandOrdinal] = rel;
@@ -131,7 +132,7 @@ public class VolcanoRuleCall extends RelOptRuleCall
 
             ArrayList successors;
             if (ascending) {
-                assert(previousOperand.parent == operand);
+                assert (previousOperand.parent == operand);
                 final RelNode childRel = rels[previousOperandOrdinal];
                 RelSet set = volcanoPlanner.getSet(childRel);
                 successors = set.getParentRels();
@@ -143,7 +144,7 @@ public class VolcanoRuleCall extends RelOptRuleCall
                 successors = subset.rels;
             }
 
-            for (int i = 0,n = successors.size(); i < n; i++) {
+            for (int i = 0, n = successors.size(); i < n; i++) {
                 RelNode rel = (RelNode) successors.get(i);
                 if (!operand.matches(rel)) {
                     continue;
@@ -153,8 +154,7 @@ public class VolcanoRuleCall extends RelOptRuleCall
                     // its parent, but now check that it is the *correct*
                     // child
                     final RelSubset input =
-                        (RelSubset) rel.getInput(
-                            previousOperand.ordinalInParent);
+                        (RelSubset) rel.getInput(previousOperand.ordinalInParent);
                     if (!input.rels.contains(rels[previousOperandOrdinal])) {
                         continue;
                     }

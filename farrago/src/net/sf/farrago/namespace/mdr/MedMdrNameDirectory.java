@@ -6,34 +6,34 @@
 // modify it under the terms of the GNU Lesser General Public License
 // as published by the Free Software Foundation; either version 2.1
 // of the License, or (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-
 package net.sf.farrago.namespace.mdr;
-
-import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
-import org.eigenbase.util.*;
-
-import net.sf.farrago.namespace.*;
-import net.sf.farrago.namespace.impl.*;
-import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
-import net.sf.farrago.FarragoMetadataFactory;
 
 import java.sql.*;
 import java.util.*;
 
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
+
+import net.sf.farrago.FarragoMetadataFactory;
+import net.sf.farrago.namespace.*;
+import net.sf.farrago.namespace.impl.*;
+import net.sf.farrago.type.*;
+import net.sf.farrago.util.*;
+
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
+
 
 /**
  * MedMdrNameDirectory implements the FarragoMedNameDirectory
@@ -44,9 +44,12 @@ import javax.jmi.reflect.*;
  */
 class MedMdrNameDirectory extends MedAbstractNameDirectory
 {
+    //~ Instance fields -------------------------------------------------------
+
     final MedMdrDataServer server;
-    
     final RefPackage rootPackage;
+
+    //~ Constructors ----------------------------------------------------------
 
     /**
      * Instantiate a MedMdrNameDirectory.
@@ -67,17 +70,20 @@ class MedMdrNameDirectory extends MedAbstractNameDirectory
         this.rootPackage = rootPackage;
     }
 
+    //~ Methods ---------------------------------------------------------------
+
     RefPackage lookupRefPackage(
-        String [] names,int prefix)
+        String [] names,
+        int prefix)
     {
         if (server.schemaName != null) {
             if (prefix > 0) {
-                assert(prefix == 1);
-                assert(names[0].equals(server.schemaName));
+                assert (prefix == 1);
+                assert (names[0].equals(server.schemaName));
             }
             return rootPackage;
         }
-        return JmiUtil.getSubPackage(rootPackage,names,prefix);
+        return JmiUtil.getSubPackage(rootPackage, names, prefix);
     }
 
     /**
@@ -89,7 +95,7 @@ class MedMdrNameDirectory extends MedAbstractNameDirectory
     RefClass lookupRefClass(String [] foreignName)
     {
         int prefix = foreignName.length - 1;
-        RefPackage refPackage = lookupRefPackage(foreignName,prefix);
+        RefPackage refPackage = lookupRefPackage(foreignName, prefix);
         if (refPackage == null) {
             return null;
         }
@@ -103,26 +109,26 @@ class MedMdrNameDirectory extends MedAbstractNameDirectory
     RefBaseObject lookupRefBaseObject(String [] foreignName)
     {
         int prefix = foreignName.length - 2;
-        RefPackage refPackage = lookupRefPackage(foreignName,prefix);
+        RefPackage refPackage = lookupRefPackage(foreignName, prefix);
         if (refPackage == null) {
             return null;
         }
         try {
             String name = foreignName[prefix];
-            String type = foreignName[prefix+1];
+            String type = foreignName[prefix + 1];
             if (type.equals("Class")) {
                 return refPackage.refClass(name);
             } else if (type.equals("Association")) {
                 return refPackage.refAssociation(name);
             } else {
-                assert(type.equals("Package"));
+                assert (type.equals("Package"));
                 return refPackage.refPackage(name);
             }
         } catch (InvalidNameException ex) {
             return null;
         }
     }
-    
+
     // implement FarragoMedNameDirectory
     public FarragoMedColumnSet lookupColumnSet(
         FarragoTypeFactory typeFactory,
@@ -130,10 +136,10 @@ class MedMdrNameDirectory extends MedAbstractNameDirectory
         String [] localName)
         throws SQLException
     {
-        return lookupColumnSetAndImposeType(
-            typeFactory,foreignName,localName,null);
+        return lookupColumnSetAndImposeType(typeFactory, foreignName,
+            localName, null);
     }
-    
+
     FarragoMedColumnSet lookupColumnSetAndImposeType(
         FarragoTypeFactory typeFactory,
         String [] foreignName,
@@ -147,24 +153,19 @@ class MedMdrNameDirectory extends MedAbstractNameDirectory
         }
 
         if (rowType == null) {
-            rowType = computeRowType(typeFactory,refClass);
+            rowType = computeRowType(typeFactory, refClass);
         }
-        
-        return new MedMdrClassExtent(
-            this,
-            typeFactory,
-            refClass,
-            foreignName,
-            localName,
-            rowType);
+
+        return new MedMdrClassExtent(this, typeFactory, refClass, foreignName,
+            localName, rowType);
     }
 
     private RelDataType computeRowType(
         FarragoTypeFactory typeFactory,
         RefClass refClass)
     {
-        List features = JmiUtil.getFeatures(
-            refClass,StructuralFeature.class,false);
+        List features =
+            JmiUtil.getFeatures(refClass, StructuralFeature.class, false);
         int n = features.size();
         RelDataType [] types = new RelDataType[n + 2];
         String [] fieldNames = new String[n + 2];
@@ -175,8 +176,8 @@ class MedMdrNameDirectory extends MedAbstractNameDirectory
             if (server.foreignRepository) {
                 // for foreign repositories, we don't have generated
                 // classes, so need to treat everything as nullable
-                types[i] = typeFactory.createTypeWithNullability(
-                    types[i],true);
+                types[i] =
+                    typeFactory.createTypeWithNullability(types[i], true);
             }
         }
 
@@ -191,28 +192,27 @@ class MedMdrNameDirectory extends MedAbstractNameDirectory
         // serialization.  This would also allow us to return direct repository
         // references to embedded JDBC clients (and remote JDBC clients with
         // access to a repository shared with Farrago).
-        
         fieldNames[n] = "mofId";
         types[n] = typeFactory.createMofType(null);
-        fieldNames[n+1] = "mofClassName";
-        types[n+1] = typeFactory.createMofType(null);
-        return typeFactory.createProjectType(types,fieldNames);
+        fieldNames[n + 1] = "mofClassName";
+        types[n + 1] = typeFactory.createMofType(null);
+        return typeFactory.createProjectType(types, fieldNames);
     }
 
     // implement FarragoMedNameDirectory
     public FarragoMedNameDirectory lookupSubdirectory(String [] foreignName)
         throws SQLException
     {
-        RefPackage subPackage = lookupRefPackage(
-            foreignName,foreignName.length);
+        RefPackage subPackage =
+            lookupRefPackage(foreignName, foreignName.length);
         if (subPackage == null) {
             return null;
         }
-        return new MedMdrNameDirectory(
-            server,subPackage);
+        return new MedMdrNameDirectory(server, subPackage);
     }
 
     // TODO:  getContentsAsCwm
 }
+
 
 // End MedMdrNameDirectory.java

@@ -1,37 +1,36 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.rel;
 
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.relopt.RelOptRuleOperand;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.rex.*;
-import org.eigenbase.util.Util;
-
 import java.util.Collections;
 import java.util.HashSet;
+
+import org.eigenbase.relopt.RelOptRule;
+import org.eigenbase.relopt.RelOptRuleCall;
+import org.eigenbase.relopt.RelOptRuleOperand;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeField;
+import org.eigenbase.rex.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -48,12 +47,11 @@ public class SwapJoinRule extends RelOptRule
 
     public SwapJoinRule()
     {
-        super(
-            new RelOptRuleOperand(
+        super(new RelOptRuleOperand(
                 JoinRel.class,
                 new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(RelNode.class,null),
-                    new RelOptRuleOperand(RelNode.class,null)
+                    new RelOptRuleOperand(RelNode.class, null),
+                    new RelOptRuleOperand(RelNode.class, null)
                 }));
     }
 
@@ -75,8 +73,8 @@ public class SwapJoinRule extends RelOptRule
         final RexBuilder rexBuilder = join.cluster.rexBuilder;
         final RelDataType leftRowType = join.getLeft().getRowType();
         final RelDataType rightRowType = join.getRight().getRowType();
-        final VariableReplacer variableReplacer = new VariableReplacer(
-                rexBuilder, leftRowType, rightRowType);
+        final VariableReplacer variableReplacer =
+            new VariableReplacer(rexBuilder, leftRowType, rightRowType);
         final RexNode oldCondition = RexUtil.clone(join.getCondition());
         RexNode condition = variableReplacer.go(oldCondition);
         JoinRel newJoin =
@@ -91,81 +89,33 @@ public class SwapJoinRule extends RelOptRule
             newJoin.setVariablesStopped(
                 new HashSet(join.getVariablesStopped()));
         }
-        final RelDataTypeField [] newJoinFields = newJoin.getRowType().getFields();
-        final RexNode[] exps = new RexNode [newJoinFields.length];
+        final RelDataTypeField [] newJoinFields =
+            newJoin.getRowType().getFields();
+        final RexNode [] exps = new RexNode[newJoinFields.length];
         for (int i = 0; i < exps.length; i++) {
             int source = (i + rightRowType.getFieldCount()) % exps.length;
-            exps[i] = rexBuilder.makeInputRef(newJoinFields[source].getType(),
+            exps[i] =
+                rexBuilder.makeInputRef(
+                    newJoinFields[source].getType(),
                     source);
         }
-        final String[] fieldNames = getFieldNames(join.getRowType());
+        final String [] fieldNames = getFieldNames(join.getRowType());
         return new ProjectRel(
             join.getCluster(),
             newJoin,
             exps,
-                fieldNames,
+            fieldNames,
             ProjectRel.Flags.Boxed);
     }
 
-    private static String[] getFieldNames(RelDataType rowType) {
+    private static String [] getFieldNames(RelDataType rowType)
+    {
         final RelDataTypeField [] fields = rowType.getFields();
-        final String[] fieldNames = new String[fields.length];
+        final String [] fieldNames = new String[fields.length];
         for (int i = 0; i < fields.length; i++) {
             fieldNames[i] = fields[i].getName();
         }
         return fieldNames;
-    }
-
-    /**
-     * Walks over an expression, replacing references to fields of the left and
-     * right inputs.
-     *
-     * <p>If the field index is less than leftFieldCount, it must
-     * be from the left, and so has rightFieldCount added to it; if the field
-     * index is greater than leftFieldCount, it must be from the right, so
-     * we subtract leftFieldCount from it.</p>
-     */
-    private static class VariableReplacer {
-        private final RexBuilder rexBuilder;
-        private final RelDataTypeField[] leftFields;
-        private final RelDataTypeField[] rightFields;
-
-        VariableReplacer(RexBuilder rexBuilder, RelDataType leftType,
-                RelDataType rightType) {
-            this.rexBuilder = rexBuilder;
-            this.leftFields = leftType.getFields();
-            this.rightFields = rightType.getFields();
-        }
-        public RexNode go(RexNode rex) {
-            if (rex instanceof RexCall) {
-                RexNode[] operands = ((RexCall) rex).operands;
-                for (int i = 0; i < operands.length; i++) {
-                    RexNode operand = operands[i];
-                    operands[i] = go(operand);
-                }
-                return rex;
-            } else if (rex instanceof RexInputRef) {
-                RexInputRef var = (RexInputRef) rex;
-                int index = var.index;
-                if (index < leftFields.length) {
-                    // Field came from left side of join. Move it to the right.
-                    return rexBuilder.makeInputRef(
-                            leftFields[index].getType(),
-                            rightFields.length + index);
-                }
-                index -= leftFields.length;
-                if (index < rightFields.length) {
-                    // Field came from right side of join. Move it to the left.
-                    return rexBuilder.makeInputRef(
-                            rightFields[index].getType(), index);
-                }
-                throw Util.newInternal("Bad field offset: index=" + var.index +
-                        ", leftFieldCount=" + leftFields.length +
-                        ", rightFieldCount=" + rightFields.length);
-            } else {
-                return rex;
-            }
-        }
     }
 
     public void onMatch(final RelOptRuleCall call)
@@ -185,14 +135,18 @@ public class SwapJoinRule extends RelOptRule
             // join, ad infinitum.
             final RexBuilder rexBuilder = swapped.cluster.rexBuilder;
             final RelDataType newJoinRowType = newJoin.getRowType();
-            final RelDataTypeField [] newJoinFields = newJoinRowType.getFields();
-            final RexNode[] exps = new RexNode [newJoinFields.length];
+            final RelDataTypeField [] newJoinFields =
+                newJoinRowType.getFields();
+            final RexNode [] exps = new RexNode[newJoinFields.length];
             final String [] fieldNames = new String[newJoinFields.length];
             for (int i = 0; i < exps.length; i++) {
-                int source = (i + join.getLeft().getRowType().getFieldCount()) %
-                        exps.length;
+                int source =
+                    (i + join.getLeft().getRowType().getFieldCount()) % exps.length;
                 final RelDataTypeField newJoinField = newJoinFields[i];
-                exps[i] = rexBuilder.makeInputRef(newJoinField.getType(),source);
+                exps[i] =
+                    rexBuilder.makeInputRef(
+                        newJoinField.getType(),
+                        source);
                 fieldNames[i] = newJoinField.getName();
             }
             ProjectRel project =
@@ -202,8 +156,69 @@ public class SwapJoinRule extends RelOptRule
                     exps,
                     fieldNames,
                     ProjectRel.Flags.Boxed);
-            RelNode rel = call.planner.register(project,newJoin);
+            RelNode rel = call.planner.register(project, newJoin);
             Util.discard(rel);
+        }
+    }
+
+    //~ Inner Classes ---------------------------------------------------------
+
+    /**
+     * Walks over an expression, replacing references to fields of the left and
+     * right inputs.
+     *
+     * <p>If the field index is less than leftFieldCount, it must
+     * be from the left, and so has rightFieldCount added to it; if the field
+     * index is greater than leftFieldCount, it must be from the right, so
+     * we subtract leftFieldCount from it.</p>
+     */
+    private static class VariableReplacer
+    {
+        private final RexBuilder rexBuilder;
+        private final RelDataTypeField [] leftFields;
+        private final RelDataTypeField [] rightFields;
+
+        VariableReplacer(
+            RexBuilder rexBuilder,
+            RelDataType leftType,
+            RelDataType rightType)
+        {
+            this.rexBuilder = rexBuilder;
+            this.leftFields = leftType.getFields();
+            this.rightFields = rightType.getFields();
+        }
+
+        public RexNode go(RexNode rex)
+        {
+            if (rex instanceof RexCall) {
+                RexNode [] operands = ((RexCall) rex).operands;
+                for (int i = 0; i < operands.length; i++) {
+                    RexNode operand = operands[i];
+                    operands[i] = go(operand);
+                }
+                return rex;
+            } else if (rex instanceof RexInputRef) {
+                RexInputRef var = (RexInputRef) rex;
+                int index = var.index;
+                if (index < leftFields.length) {
+                    // Field came from left side of join. Move it to the right.
+                    return rexBuilder.makeInputRef(
+                        leftFields[index].getType(),
+                        rightFields.length + index);
+                }
+                index -= leftFields.length;
+                if (index < rightFields.length) {
+                    // Field came from right side of join. Move it to the left.
+                    return rexBuilder.makeInputRef(
+                        rightFields[index].getType(),
+                        index);
+                }
+                throw Util.newInternal("Bad field offset: index=" + var.index
+                    + ", leftFieldCount=" + leftFields.length
+                    + ", rightFieldCount=" + rightFields.length);
+            } else {
+                return rex;
+            }
         }
     }
 }

@@ -1,42 +1,43 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2002-2003 Disruptive Technologies, Inc.
-// (C) Copyright 2003-2004 John V. Sichi
-// You must accept the terms in LICENSE.html to use this software.
+// Package org.eigenbase is a class library of database components.
+// Copyright (C) 2002-2004 Disruptive Tech
+// Copyright (C) 2003-2004 John V. Sichi
 //
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 package org.eigenbase.oj.rel;
 
-import org.eigenbase.relopt.RelOptPlanWriter;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.reltype.RelDataType;
+import openjava.mop.OJClass;
+import openjava.ptree.*;
+
 import org.eigenbase.oj.util.OJUtil;
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.relopt.RelOptUtil;
-import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.rel.*;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelOptPlanWriter;
+import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexUtil;
 import org.eigenbase.runtime.CalcIterator;
 import org.eigenbase.sql.SqlOperatorTable;
 import org.eigenbase.util.Util;
-import openjava.mop.OJClass;
-import openjava.ptree.*;
+
 
 /**
  * <code>IterCalcRel</code> is an iterator implementation of a combination of
@@ -53,8 +54,9 @@ import openjava.ptree.*;
  */
 public class IterCalcRel extends ProjectRelBase implements JavaRel
 {
-    public final RexNode condition;
+    //~ Instance fields -------------------------------------------------------
 
+    public final RexNode condition;
     private RexNode [] childExps;
 
     //~ Constructors ----------------------------------------------------------
@@ -67,14 +69,14 @@ public class IterCalcRel extends ProjectRelBase implements JavaRel
         String [] fieldNames,
         int flags)
     {
-        super(cluster,child,exps,fieldNames,flags);
-        assert(child.getConvention() == CallingConvention.ITERATOR);
+        super(cluster, child, exps, fieldNames, flags);
+        assert (child.getConvention() == CallingConvention.ITERATOR);
         this.condition = condition;
         if (condition == null) {
             childExps = exps;
         } else {
             childExps = new RexNode[exps.length + 1];
-            System.arraycopy(exps,0,childExps,0,exps.length);
+            System.arraycopy(exps, 0, childExps, 0, exps.length);
             childExps[exps.length] = condition;
         }
     }
@@ -88,7 +90,6 @@ public class IterCalcRel extends ProjectRelBase implements JavaRel
 
     // TODO jvs 10-May-2004: need a computeSelfCost which takes condition into
     // account; maybe inherit from a new CalcRelBase?
-
     public void explain(RelOptPlanWriter pw)
     {
         if (condition == null) {
@@ -98,7 +99,7 @@ public class IterCalcRel extends ProjectRelBase implements JavaRel
         String [] terms = new String[1 + childExps.length];
         defineTerms(terms);
         terms[exps.length + 1] = "condition";
-        pw.explain(this,terms);
+        pw.explain(this, terms);
     }
 
     public CallingConvention getConvention()
@@ -132,13 +133,13 @@ public class IterCalcRel extends ProjectRelBase implements JavaRel
 
         Variable varOutputRow = implementor.newVariable();
 
-        FieldDeclaration rowVarDecl = new FieldDeclaration(
-            new ModifierList(ModifierList.PRIVATE),
-            TypeName.forOJClass(outputRowClass),
-            varOutputRow.toString(),
-            new AllocationExpression(
-                outputRowClass,
-                new ExpressionList()));
+        FieldDeclaration rowVarDecl =
+            new FieldDeclaration(new ModifierList(ModifierList.PRIVATE),
+                TypeName.forOJClass(outputRowClass),
+                varOutputRow.toString(),
+                new AllocationExpression(
+                    outputRowClass,
+                    new ExpressionList()));
 
         StatementList whileBody = new StatementList();
 
@@ -158,26 +159,26 @@ public class IterCalcRel extends ProjectRelBase implements JavaRel
         StatementList condBody;
         if (condition != null) {
             condBody = new StatementList();
-            RexNode rexIsTrue = rel.getCluster().rexBuilder.makeCall(
-                SqlOperatorTable.std().isTrueOperator,
-                new RexNode[]{condition});
-            Expression conditionExp = implementor.translateViaStatements(
-                rel,rexIsTrue,whileBody,memberList);
-            whileBody.add(
-                new IfStatement(
-                    conditionExp,
-                    condBody));
+            RexNode rexIsTrue =
+                rel.getCluster().rexBuilder.makeCall(
+                    SqlOperatorTable.std().isTrueOperator,
+                    new RexNode [] { condition });
+            Expression conditionExp =
+                implementor.translateViaStatements(rel, rexIsTrue, whileBody,
+                    memberList);
+            whileBody.add(new IfStatement(conditionExp, condBody));
         } else {
             condBody = whileBody;
         }
 
         // TODO:  if projection is identity, just return the underlying row
         // instead
-
         RelDataTypeField [] fields = outputRowType.getFields();
         for (int i = 0; i < exps.length; i++) {
-            String javaFieldName = Util.toJavaId(fields[i].getName(),i);
-            Expression lhs = new FieldAccess(varOutputRow,javaFieldName);
+            String javaFieldName = Util.toJavaId(
+                    fields[i].getName(),
+                    i);
+            Expression lhs = new FieldAccess(varOutputRow, javaFieldName);
             RexNode rhs = exps[i];
             implementor.translateAssignment(
                 rel,
@@ -188,36 +189,31 @@ public class IterCalcRel extends ProjectRelBase implements JavaRel
                 memberList);
         }
 
-        condBody.add(
-            new ReturnStatement(varOutputRow));
+        condBody.add(new ReturnStatement(varOutputRow));
 
-        WhileStatement whileStmt = new WhileStatement(
-            new MethodCall(
-                new FieldAccess("inputIterator"),
-                "hasNext",
-                new ExpressionList()),
-            whileBody);
+        WhileStatement whileStmt =
+            new WhileStatement(new MethodCall(
+                    new FieldAccess("inputIterator"),
+                    "hasNext",
+                    new ExpressionList()),
+                whileBody);
 
         StatementList nextMethodBody = new StatementList();
         nextMethodBody.add(whileStmt);
-        nextMethodBody.add(
-            new ReturnStatement(Literal.constantNull()));
+        nextMethodBody.add(new ReturnStatement(Literal.constantNull()));
 
         MemberDeclaration nextMethodDecl =
-            new MethodDeclaration(
-                new ModifierList(ModifierList.PROTECTED),
-                TypeName.forClass(Object.class),
-                "calcNext",
-                new ParameterList(),
-                null,
-                nextMethodBody);
+            new MethodDeclaration(new ModifierList(ModifierList.PROTECTED),
+                TypeName.forClass(Object.class), "calcNext",
+                new ParameterList(), null, nextMethodBody);
 
         memberList.add(rowVarDecl);
         memberList.add(nextMethodDecl);
-        Expression newIteratorExp = new AllocationExpression(
-            TypeName.forClass(CalcIterator.class),
-            new ExpressionList(childExp),
-            memberList);
+        Expression newIteratorExp =
+            new AllocationExpression(
+                TypeName.forClass(CalcIterator.class),
+                new ExpressionList(childExp),
+                memberList);
 
         return newIteratorExp;
     }
@@ -225,23 +221,17 @@ public class IterCalcRel extends ProjectRelBase implements JavaRel
     public ParseTree implement(JavaRelImplementor implementor)
     {
         Expression childExp =
-                implementor.visitJavaChild(this, 0, (JavaRel) child);
+            implementor.visitJavaChild(this, 0, (JavaRel) child);
         RelDataType outputRowType = getRowType();
         RelDataType inputRowType = child.getRowType();
 
         Variable varInputRow = implementor.newVariable();
-        implementor.bind(child,varInputRow);
+        implementor.bind(child, varInputRow);
 
-        return implementAbstract(
-            implementor,
-            this,
-            childExp,
-            varInputRow,
-            inputRowType,
-            outputRowType,
-            condition,
-            exps);
+        return implementAbstract(implementor, this, childExp, varInputRow,
+            inputRowType, outputRowType, condition, exps);
     }
 }
+
 
 // End IterCalcRel.java
