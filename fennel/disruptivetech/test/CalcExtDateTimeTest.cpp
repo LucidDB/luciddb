@@ -123,7 +123,7 @@ CalcExtDateTimeTest::testCalcExtLocalTime()
     pg << "C bo, bo;" << endl;
     pg << "V 1, 0;" << endl;
     pg << "T;" << endl;
-    pg << "CALL 'LocalTime(L0) /* 0: LOCALTIME() */;" << endl;
+    pg << "CALL 'LocalTime1(L0) /* 0: LOCALTIME() */;" << endl;
     pg << "REF O0, L0 /* 1: */;" << endl;
     //    pg << "RETURN /* 2: */;|" << endl;
     
