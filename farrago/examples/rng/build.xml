@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- $Id$ -->
+<!-- Farrago examples ant build script -->
+
+<project name="farragoExampleRNG" basedir="." default="all">
+
+  <!-- Definitions for Farrago build properties and macros -->
+  <import file="../../buildMacros.xml"/>
+
+  <property name="xmi.dir" location="catalog/xmi"/>
+
+  <target name="all" depends="clean">
+    <farrago.extractPoseidonModel 
+      zumlFile="${xmi.dir}/RandomNumberGeneratorModel.zuml"
+      umlBasename="RandomNumberGeneratorModel"
+      mofBasename="RandomNumberGeneratorMof"
+      xmiDir="${xmi.dir}"/>
+    <farrago.transformExtensionModel
+      mofBasename="RandomNumberGeneratorMof"
+      modelPrefix="Rng"
+      xmiDir="${xmi.dir}"/>
+    <farrago.synthesizeMetamodel
+      extMofBasename="RandomNumberGeneratorMof"
+      xmiDir="${xmi.dir}"/>
+  </target>
+
+  <target name="clean">
+    <delete quiet="true">
+      <fileset dir="${xmi.dir}" includes="*.xmi"/>
+    </delete>
+  </target>
+
+</project>

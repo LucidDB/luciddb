@@ -2,6 +2,10 @@
 <!-- $Id$ -->
 <!-- Farrago build macro definitions -->
 
+<!-- NOTE:  names defined in this file are visible to
+     dependent projects, so they should always be qualified with a
+     "farrago." prefix -->
+
 <!-- These XML ENTITY "macros" help avoid redundancy in property -->
 <!-- settings. They can be used with <jvmarg> or <arg> as the line -->
 <!-- attribute. -->
@@ -17,6 +21,176 @@
 
 <project name="farragoBuildMacros" default="unspecified">
 
+  <!-- Project locations and properties -->
+
+  <!-- determine Farrago home based on location of this buildfile -->
+  <dirname property="farrago.dir" file="${ant.file.farragoBuildMacros}"/>
+
+  <!-- Alias for farrago.dir to match runtime properties convention -->
+  <property name="FARRAGO_HOME" location="${farrago.dir}"/>
+
+  <!-- assume common parent of farrago and fennel  -->
+  <property name="open.dir" location="${farrago.dir}/.."/>
+
+  <!-- Override these locations in customBuild.properties -->
+  <property name="thirdparty.dir" value="${open.dir}/thirdparty"/>
+
+  <!-- import environment variables as properties -->
+  <property environment="env"/>
+
+  <!-- runtime assertion control -->
+  <property name="assertions.jvmarg" value="-ea -esa"/>
+
+  <!-- Java installation root -->
+  <property name="javahome.dir" location="${env.JAVA_HOME}"/>
+
+  <!-- import thirdparty library settings -->
+  <property file="${thirdparty.dir}/build.properties"/>
+
+  <!-- verify that required dependencies are defined -->
+  <fail unless="javacc.dir"/>
+  <fail unless="junit.dir"/>
+  <fail unless="macker.dir"/>
+  <fail unless="jalopy.dir"/>
+  <fail unless="janino.dir"/>
+  <fail unless="isql.dir"/>
+  <fail unless="jswat.dir"/>
+  <fail unless="sqlline.dir"/>
+  <fail unless="sqlline.lib.dir"/>
+  <fail unless="mdrlibs.dir"/>
+  <fail unless="rmijdbc.dir"/>
+
+
+  <!-- Directories -->
+
+  <!-- project directory for Fennel -->
+  <property name="fennel.dir" location="${open.dir}/fennel"/>
+
+  <!-- directory for non-generated Java source code -->
+  <property name="farrago.src.dir" location="${farrago.dir}/src"/>
+
+  <!-- directory for Farrago compiled class files (other than plugins) -->
+  <property name="farrago.classes.dir" location="${farrago.dir}/classes"/>
+
+  <!-- directory for Farrago compiled plugin .jars -->
+  <property name="farrago.plugin.dir" location="${farrago.dir}/plugin"/>
+
+  <!-- directory in which catalog data is stored -->
+  <property name="farrago.catalog.dir" location="${farrago.dir}/catalog"/>
+
+  <!-- Alias for farrago.catalog.dir to match runtime properties convention -->
+  <property name="FARRAGO_CATALOG_DIR" location="${farrago.catalog.dir}"/>
+
+  <!-- directory in which SQL parser source code is stored -->
+  <property name="farrago.parser.sql.dir"
+    location="${farrago.src.dir}/org/eigenbase/sql/parser"/>
+
+  <!-- directory in which DDL parser source code is stored -->
+  <property name="farrago.parser.ddl.dir"
+    location="${farrago.src.dir}/net/sf/farrago/parser"/>
+
+  <!-- directory in which Eigenbase resources are stored -->
+  <property name="eigenbase.resource.dir"
+    location="${farrago.src.dir}/org/eigenbase/resource"/>
+
+  <!-- directory in which Farrago resources are stored -->
+  <property name="farrago.resource.dir"
+    location="${farrago.src.dir}/net/sf/farrago/resource"/>
+
+  <!-- directory in which catalog data is backed up -->
+  <property name="farrago.catalog.backup.dir" 
+    location="${farrago.catalog.dir}/backup"/>
+
+  <!-- directory in which catalog-related XMI files are stored -->
+  <property name="farrago.xmi.dir" location="${farrago.catalog.dir}/xmi"/>
+
+
+  <!-- Files -->
+
+  <!-- file controlling repository storage -->
+  <property name="farrago.ReposStorage.propfile" 
+    location="${farrago.catalog.dir}/ReposStorage.properties"/>
+
+  <!-- NOTE:  it would be nice if we could combine parser filesets below, -->
+  <!-- and use filelist instead; however, filesets/filelists have to share -->
+  <!-- a common root, and the uptodate task doesn't like filelists -->
+
+  <!-- a fileset of the common SQL parser -->
+  <fileset id="farrago.parser.common.sql" dir="${farrago.parser.sql.dir}"
+    includes="CommonParser.jj"/>
+
+  <!-- a fileset of the Farrago-specific DDL parser -->
+  <fileset id="farrago.parser.ddl" dir="${farrago.parser.ddl.dir}"
+    includes="DdlParser.jj"/>
+
+  <!-- a fileset of the Farrago common DDL parser -->
+  <fileset id="farrago.parser.common.ddl" dir="${farrago.parser.ddl.dir}" 
+    includes="CommonDdlParser.jj"/>
+
+  <!-- XMI file containing CWM defintion  -->
+  <property name="farrago.cwm.xmi" location="${farrago.xmi.dir}/cwm-1.1.xml"/>
+
+  <!-- XMI file containing Farrago final metamodel  -->
+  <property name="FarragoMetamodel.xmi"
+    location="${farrago.xmi.dir}/FarragoMetamodel.xmi"/>
+
+  <!-- Farrago metamodel XMI file before CWM references are resolved -->
+  <property name="FarragoMetamodelUnresolved.xmi"
+    location="${farrago.xmi.dir}/FarragoMetamodelUnresolved.xmi"/>
+
+  <!-- XMI file containing Farrago metamodel -->
+  <property name="FarragoExtMetamodel.xmi"
+    location="${farrago.xmi.dir}/FarragoExtMetamodel.xmi"/>
+
+  <!-- XMI file containing renumbered Farrago metamodel -->
+  <property name="FarragoExtMetamodelTransformed.xmi"
+    location="${farrago.xmi.dir}/FarragoExtMetamodelTransformed.xmi"/>
+
+  <!-- XMI file containing UML representation of Farrago metamodel -->
+  <property name="FarragoExtMetamodelUML.xmi"
+    location="${farrago.xmi.dir}/FarragoExtMetamodelUML.xmi"/>
+
+  <!-- Same as FarragoExtMetamodelUML, but with diagrams deleted -->
+  <property name="FarragoExtMetamodelUMLSansDiagrams.xmi"
+    location="${farrago.xmi.dir}/FarragoExtMetamodelUMLSansDiagrams.xmi"/>
+
+  <!-- Zipfile containing Poseidon UML XMI representation of -->
+  <!-- Farrago metamodel -->
+  <property name="FarragoExtMetamodelUML.zuml"
+    location="${farrago.xmi.dir}/FarragoExtMetamodelUML.zuml"/>
+
+
+  <!-- Classpaths -->
+
+  <!-- Set a default for this classpath in case it's not set in a
+       properties file.  The properties file will take precedence. -->
+  <property name="farrago.custom.classpath" value=""/>
+
+  <!-- third-party libraries -->
+  <path id="farrago.3p.classpath">
+    <pathelement location="${mdrlibs.dir}/mdrant.jar"/>
+    <pathelement location="${mdrlibs.dir}/nbmdr.jar"/>
+    <pathelement location="${mdrlibs.dir}/mdrapi.jar"/>
+    <pathelement location="${mdrlibs.dir}/jmiutils.jar"/>
+    <pathelement location="${mdrlibs.dir}/mof.jar"/>
+    <pathelement location="${mdrlibs.dir}/jmi.jar"/>
+    <pathelement location="${mdrlibs.dir}/openide-util.jar"/>
+    <pathelement location="${thirdparty.dir}/mondrian-resource.jar"/>
+    <pathelement location="${thirdparty.dir}/mondrian-xom.jar"/>
+    <pathelement location="${mdrlibs.dir}/mdrjdbc.jar"/>
+    <pathelement location="${junit.dir}/junit.jar"/>
+    <pathelement location="${ant.home}/lib/xml-apis.jar"/>
+    <pathelement location="${ant.home}/lib/xercesImpl.jar"/>
+    <pathelement location="${javahome.dir}/lib/tools.jar"/>
+    <pathelement location="${rmijdbc.dir}/dist/lib/RmiJdbc.jar"/>
+    <pathelement location="${csvjdbc.dir}/csvjdbc.jar"/>
+    <pathelement location="${janino.dir}/lib/janino.jar"/>
+    <pathelement location="${openjava.dir}/openjava.jar"/>
+    <pathelement location="${hsqldb.dir}/lib/hsqldb.jar"/>
+    <pathelement path="${farrago.custom.classpath}"/>
+  </path>
+  <property name="farrago.3p.classpath" refid="farrago.3p.classpath"/>
+
   <!-- classpath for running from iSQL -->
   <path id="isql.classpath">
     <pathelement location="${isql.dir}/isql-core.jar"/>
@@ -27,11 +201,22 @@
   </path>
   <property name="isql.classpath" refid="isql.classpath"/>
 
-  <!-- NOTE: there used to be an ant bug preventing the use of mixed case names
-  for macro elements -->
+  <!-- classpath for reentrantly invoking ant -->
+  <path id="ant.classpath">
+    <pathelement location="${ant.home}/lib/ant.jar"/>
+    <pathelement location="${ant.home}/lib/ant-launcher.jar"/>
+    <pathelement location="${ant.home}/lib/junit.jar"/>
+    <pathelement location="${ant.home}/lib/xercesImpl.jar"/>
+    <pathelement location="${ant.home}/lib/xml-apis.jar"/>
+    <pathelement location="${ant.home}/lib/ant-junit.jar"/>
+  </path>
+  <property name="ant.classpath" refid="ant.classpath"/>
+
+
+  <!-- Macros -->
 
   <!-- Macro for forking ant -->
-  <macrodef name="antFork">
+  <macrodef name="farrago.antFork">
     <attribute name="target" default="unspecifiedTarget"/>
     <attribute name="classpathref" default="ant.classpath"/>
     <element name="jvmargs" optional="yes"/>
@@ -45,11 +230,12 @@
   </macrodef>
 
   <!-- Macro for forking ant to run an MDR task -->
-  <macrodef name="mdrFork">
+  <!-- NOTE:  Logger setting squelches unwanted INFORMATIONAL messages -->
+  <macrodef name="farrago.mdrFork">
     <attribute name="target" default="unspecifiedTarget"/>
     <sequential>
-      <loadproperties srcFile="${ReposStorage.properties}"/>
-      <antFork target="@{target}">
+      <loadproperties srcFile="${farrago.ReposStorage.propfile}"/>
+      <farrago.antFork target="@{target}">
         <jvmargs>
           <sysproperty key="org.netbeans.mdr.Logger" value="256"/>
           <syspropertyset>
@@ -57,17 +243,17 @@
             <propertyref prefix="MDRStorageProperty"/>
           </syspropertyset>
         </jvmargs>
-      </antFork>
+      </farrago.antFork>
     </sequential>
   </macrodef>
 
   <!-- Customization for javac task -->
-  <presetdef name="javaCompile">
+  <presetdef name="farrago.javaCompile">
     <javac debug="on" deprecation="on" source="1.4"/>
   </presetdef>
 
   <!-- Customization for java task -->
-  <presetdef name="javaExec">
+  <presetdef name="farrago.javaExec">
     <java fork="yes" failonerror="true">
       <jvmarg line="${assertions.jvmarg}"/>
       <jvmarg line="&FarragoProps;"/>
@@ -75,7 +261,7 @@
   </presetdef>
 
   <!-- Macro for running JSwat -->
-  <macrodef name="jswatDebug">
+  <macrodef name="farrago.jswatDebug">
     <attribute name="classpath" default="unspecified"/>
     <attribute name="sourcepath" default="unspecified"/>
     <attribute name="classname" default="unspecified"/>
@@ -105,25 +291,13 @@
     </sequential>
   </macrodef>
  
-  <!-- Macro for tranforming model -->
-  <macrodef name="transformModel">
-    <attribute name="inputfilename" default="unspecified"/>
-    <attribute name="outputfilename" default="unspecified"/>
-    <sequential>
-	   <xslt style="${xmi.dir}/transformFEM.xsl"
-		  in="@{inputfilename}"
-		  out="@{outputfilename}" />
-	   <replace file="@{outputfilename}"
-		  token="org.omg.xmi.namespace.Model" value="omg.org/mof.Model/1.3" />
-    </sequential>
-  </macrodef>
-
-  <macrodef name="uml2mof">
+  <!-- Macro for converting metamodel from UML to MOF -->
+  <macrodef name="farrago.uml2mof">
     <attribute name="umlmodelname" default="unspecified" />
     <attribute name="outputfilename" default="unspecified" />
-	<attribute name="umlsansdiagrams" default="unspecified" />
+    <attribute name="umlsansdiagrams" default="unspecified" />
     <sequential>
-      <xslt style="${xmi.dir}/deleteUmlDiagrams.xsl"
+      <xslt style="${farrago.xmi.dir}/deleteUmlDiagrams.xsl"
         in="@{umlmodelname}"
         out="@{umlsansdiagrams}">
       </xslt>
@@ -132,8 +306,6 @@
         <sysproperty key="org.netbeans.mdr.Logger" value="256"/>
         <classpath>
           <pathelement location="${mdrlibs.dir}/openide-util.jar"/>
-          <!-- TODO jvs 12-Feb-2004:  get rid of openide-lookup.jar -->
-          <pathelement location="${mdrlibs.dir}/openide-lookup.jar"/>
           <pathelement location="${mdrlibs.dir}/uml-1.4.jar"/>
           <pathelement location="${mdrlibs.dir}/uml2mof.jar"/>
         </classpath>
@@ -146,19 +318,75 @@
     </sequential>
   </macrodef>
 
-  <macrodef name="iSQL">
-    <attribute name="classpath" default="unspecified"/>
-    <attribute name="propertieshome" default="unspecified"/>
+  <!-- Macro for extracting a UML model from Poseidon .zuml format,
+  and converting it to MOF -->
+  <macrodef name="farrago.extractPoseidonModel">
+    <attribute name="zumlFile" default="unspecified" />
+    <attribute name="umlBasename" default="unspecified" />
+    <attribute name="mofBasename" default="unspecified" />
+    <attribute name="xmiDir" default="unspecified" />
     <sequential>
-      <javaExec
-        classname="org.isqlviewer.core.Launcher"
-        classpathref="@{classpath}">
-        <sysproperty key="isql.home" value="@{propertieshome}" />
-      </javaExec>
+      <unzip src="@{zumlFile}" dest="@{xmiDir}">
+        <patternset>
+          <include name="@{umlBasename}.xmi"/>
+        </patternset>
+      </unzip>
+      <farrago.uml2mof umlmodelname="@{xmiDir}/@{umlBasename}.xmi"
+        outputfilename="@{xmiDir}/@{mofBasename}.xmi"
+        umlsansdiagrams="@{xmiDir}/@{umlBasename}SansDiagrams.xmi"/>
     </sequential>
   </macrodef>
 
-  <macrodef name="generateParser">
+  <!-- Macro for performing cleansing transformations on an extension model -->
+  <macrodef name="farrago.transformExtensionModel">
+    <attribute name="mofBasename" default="unspecified" />
+    <attribute name="xmiDir" default="unspecified" />
+    <attribute name="modelPrefix" default="unspecified" />
+    <sequential>
+      <xslt style="${farrago.xmi.dir}/transformFEME.xsl"
+        in="@{xmiDir}/@{mofBasename}.xmi"
+        out="@{xmiDir}/@{mofBasename}Transformed.xmi">
+        <param name="modelPrefix"
+          expression="@{modelPrefix}"/>
+      </xslt>
+      <replace file="@{xmiDir}/@{mofBasename}Transformed.xmi"
+        token="org.omg.xmi.namespace.Model" value="omg.org/mof.Model/1.3" />
+    </sequential>
+  </macrodef>
+
+  <!-- Macro for combining CWM, FEM, and a single ExtModel -->
+  <macrodef name="farrago.synthesizeMetamodel">
+    <attribute name="extMofBasename" default="unspecified" />
+    <attribute name="xmiDir" default="unspecified" />
+    <sequential>
+      <xslt style="${farrago.xmi.dir}/transformCWM.xsl"
+        in="${farrago.cwm.xmi}"
+        out="@{xmiDir}/FarragoMetamodelUnresolved.xmi">
+        <param name="femXmiFilename"
+          expression="${FarragoExtMetamodelTransformed.xmi}"/>
+        <param name="extXmiFilename"
+          expression="@{xmiDir}/@{extMofBasename}Transformed.xmi"/>
+      </xslt>
+      <xslt style="${farrago.xmi.dir}/resolveCwmRefs.xsl"
+        in="@{xmiDir}/FarragoMetamodelUnresolved.xmi"
+        out="@{xmiDir}/FarragoMetamodel.xmi"/>
+    </sequential>
+  </macrodef>
+
+  <!-- Macro for running iSQL -->
+  <macrodef name="farrago.iSQL">
+    <attribute name="classpath" default="unspecified"/>
+    <attribute name="propertieshome" default="unspecified"/>
+    <sequential>
+      <farrago.javaExec
+        classname="org.isqlviewer.core.Launcher"
+        classpathref="@{classpath}">
+        <sysproperty key="isql.home" value="@{propertieshome}" />
+      </farrago.javaExec>
+    </sequential>
+  </macrodef>
+
+  <macrodef name="farrago.generateParser">
     <attribute name="combined" default="unspecified"/>
     <element name="components"/>
     <sequential>
@@ -173,10 +401,11 @@
   </macrodef>
 
   <!-- Macro for running JUnit and sqlline tests -->
-  <macrodef name="runTests">
+  <macrodef name="farrago.runTests">
     <element name="testfileset" optional="no"/>
     <element name="junitargs" optional="no"/>
     <sequential>
+      <fail unless="testlog.dir"/>
       <mkdir dir="${testlog.dir}"/>
       <junit printsummary="yes" fork="no" failureproperty="junit.failure"
         tempdir="${testlog.dir}" reloading="false">
