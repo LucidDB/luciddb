@@ -729,11 +729,10 @@ public class SqlStdOperatorTable extends SqlOperatorTable
     public final SqlMultisetOperator multisetOperator =
         new SqlMultisetOperator();
 
-    public final SqlFunction unnestOperator =
-        new SqlFunction ("UNNEST", SqlKind.Other,
-            null, null,
-            OperandsTypeChecking.typeNullableMultiset,
-            SqlFunction.SqlFuncTypeName.System) {
+    public final SqlSpecialOperator unnestOperator =
+        new SqlSpecialOperator ("UNNEST", SqlKind.Unnest,
+            100, true, null, null,
+            OperandsTypeChecking.typeNullableMultiset) {
 
             public RelDataType getType(
                 RelDataTypeFactory typeFactory,
@@ -750,6 +749,17 @@ public class SqlStdOperatorTable extends SqlOperatorTable
                 return getType(validator.typeFactory,
                                SqlTypeUtil.collectTypes(
                                         validator, scope, call.operands));
+            }
+
+            public void unparse(
+                SqlWriter writer,
+                SqlNode[] operands,
+                int leftPrec,
+                int rightPrec) {
+                writer.print(name);
+                writer.print("(");
+                operands[0].unparse(writer,leftPrec,rightPrec);
+                writer.print(")");
             }
         };
 

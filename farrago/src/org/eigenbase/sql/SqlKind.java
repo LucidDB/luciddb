@@ -291,6 +291,10 @@ public class SqlKind extends EnumeratedValues.BasicValue
     public static final int MultisetORDINAL = 164;
     public static final SqlKind Multiset = new SqlKind("MULTISET", MultisetORDINAL);
 
+    /** Unnest */
+    public static final int UnnestORDINAL = 165;
+    public static final SqlKind Unnest = new SqlKind("UNNEST", UnnestORDINAL);
+
 
     // internal operators (evaluated in validator) 200-299
 

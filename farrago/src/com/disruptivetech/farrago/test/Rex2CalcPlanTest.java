@@ -60,7 +60,7 @@ import org.eigenbase.util.Util;
 
 
 /**
- * Validates that rex expressions gets correctly translated to a correct
+ * Validates that rex expressions get correctly translated to a correct
  * calculator program
  *
  * @author Wael Chatila
@@ -165,13 +165,13 @@ public class Rex2CalcPlanTest extends FarragoTestCase
 
         // dump the generated code
         try {
-        Writer writer = openTestLog();
-        PrintWriter printWriter = new PrintWriter(writer);
-        printWriter.println(actual);
-        printWriter.close();
+            Writer writer = openTestLog();
+            PrintWriter printWriter = new PrintWriter(writer);
+            printWriter.println(actual);
+            printWriter.close();
 
-        // and diff it against what we expect
-        diffTestLog();
+            // and diff it against what we expect
+            diffTestLog();
         } catch (Exception e) {
             e.printStackTrace();
             fail(e.getMessage());

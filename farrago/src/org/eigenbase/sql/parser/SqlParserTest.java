@@ -1650,7 +1650,15 @@ public class SqlParserTest extends TestCase
     }
 
     public void testUnnest() {
-        checkExp("unnest(x)","UNNEST(`X`)");
+        check("select*from unnest(x)",
+              "SELECT *" + NL +
+              "FROM (UNNEST(`X`))");
+        check("select*from unnest(x) AS T",
+              "SELECT *" + NL +
+              "FROM (UNNEST(`X`)) AS `T`");
+
+        checkFails("unnest(x)","(?s).*");
+
     }
 
 }

@@ -504,7 +504,7 @@ public class SqlValidator
     {
         assert values.getOperands().length >= 1;
         final SqlNode operand = values.getOperands()[0];
-        assert operand.isA(SqlKind.Row);
+        assert(operand.isA(SqlKind.Row));
         SqlCall rowConstructor = (SqlCall) operand;
 
         // REVIEW jvs 10-Sept-2003: This assumes we can get everything we need
@@ -1172,6 +1172,7 @@ public class SqlValidator
         case SqlKind.IntersectORDINAL:
         case SqlKind.ExceptORDINAL:
         case SqlKind.ValuesORDINAL:
+        case SqlKind.UnnestORDINAL:
             newNode = node;
             if (alias == null) {
                 // give this anonymous construct a name since later
@@ -1302,7 +1303,7 @@ public class SqlValidator
             call = (SqlCall) node;
             SqlNode [] operands = call.getOperands();
             for (int i = 0; i < operands.length; ++i) {
-                assert (operands[i].isA(SqlKind.Row));
+                assert(operands[i].isA(SqlKind.Row));
 
                 // FIXME jvs 9-Feb-2004:  Correlation should
                 // be illegal in these subqueries.  Same goes for
@@ -1337,6 +1338,15 @@ public class SqlValidator
                 parentScope,
                 usingScope, updateCall.getSourceSelect(),
                 null);
+            break;
+        case SqlKind.UnnestORDINAL:
+            SqlCall unnestCall = (SqlCall) node;
+            final UnnestNamespace unnestNamespace =
+                new UnnestNamespace(node, parentScope);
+            registerNamespace(usingScope, alias, unnestNamespace);
+            if (unnestCall.operands[0].isA(SqlKind.Select)) {
+                registerSubqueries(parentScope, unnestCall.operands[0]);
+            }
             break;
         default:
             throw node.getKind().unexpected();
@@ -2972,6 +2982,33 @@ public class SqlValidator
         public SqlNode getNode()
         {
             return values;
+        }
+    }
+
+    /**
+     * Namespace for UNNEST
+     */
+    class UnnestNamespace extends AbstractNamespace
+    {
+        private final SqlNode child;
+        private final Scope scope;
+
+        UnnestNamespace(SqlNode child, Scope scope)
+        {
+            this.child = child;
+            this.scope = scope;
+        }
+
+        protected RelDataType validateImpl()
+        {
+            RelDataType type = scope.getValidator().deriveType(scope, child);
+            return typeFactory.createStructType(
+                new RelDataType[]{type}, new String[]{deriveAlias(child, 0)});
+        }
+
+        public SqlNode getNode()
+        {
+            return child;
         }
     }
 

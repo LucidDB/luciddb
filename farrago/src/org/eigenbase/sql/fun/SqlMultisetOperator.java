@@ -104,9 +104,6 @@ public class SqlMultisetOperator extends SqlSpecialOperator
         int leftPrec,
         int rightPrec) {
 
-        // REVIEW jvs 2-Dec-2004:  this should be round parens, not
-        // square brackets, right?  Square brackets are for arrays.
-        // Same thing in parser!
         writer.print("MULTISET[");
         for (int i = 0; i < operands.length; i++) {
             if (i>0) {
