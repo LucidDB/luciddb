@@ -86,13 +86,14 @@
 
 	<!-- helper targets -->
 
-
+  <!-- TODO jvs 21-Sept-2004: remove once Fennel unit tests work on Windows -->
 	<target name="os.check">
 	    <condition property="os.windows">
                 <os family="windows"/>
 	    </condition>
+	    <mkdir dir="${build.home}/fennel/test/.testlog" />
 	</target>
-  <!-- TODO jvs 21-Sept-2004: remove once Fennel unit tests work on Windows -->
+
 	<target name="do-test" depends="os.check" unless="os.windows">
 		<property name="build.home" location="${default.build.home}"/>
 		<exec dir="${build.home}/fennel" executable="make" failonerror="true">

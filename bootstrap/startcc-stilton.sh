@@ -1,5 +1,11 @@
 #!/bin/sh
 
+if [ "$USERNAME" != "cruise" ] ; then
+    echo "CruiseControl can only run as user 'cruise'"
+    echo "Please ssh cruise@localhost and try again"
+    exit -1
+fi
+
 export configSuffix=-win32
 ./initcc-open.sh
 

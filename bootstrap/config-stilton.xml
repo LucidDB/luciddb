@@ -14,13 +14,13 @@
 
 <!ENTITY buildresultsbase "http://jhyde.dyndns.org:8888/aspen/buildresults">
 <!ENTITY mailhost         "mail.speakeasy.net">
-<!ENTITY reportsuccess    "always">
+<!ENTITY reportsuccess    "fixes">
 <!ENTITY returnname       "Build Monkey">
 <!ENTITY returnaddress    "buildmonkey@fishtaco.org">
-<!ENTITY skipusers        "true">
+<!ENTITY skipusers        "false">
 <!ENTITY spamwhilebroken  "true">
 <!ENTITY subjectprefix    "Continuous Integration: ">
-<!ENTITY failureaddress   "jsichi@gmail.com">
+<!ENTITY failureaddress   "the.team@disruptivetech.com">
 <!ENTITY reportwhenfixed  "true">
 
 <!ENTITY scp_user         "aspen">
