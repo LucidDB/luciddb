@@ -72,21 +72,20 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
         RelOptCluster cluster,
         RelNode child)
     {
-        super(cluster, child);
+        super(
+            cluster, CallingConventionTraitDef.instance,
+            new RelTraitSet(CallingConvention.ITERATOR), child);
     }
 
     //~ Methods ---------------------------------------------------------------
 
     // implement RelNode
-    public CallingConvention getConvention()
-    {
-        return CallingConvention.ITERATOR;
-    }
-
-    // implement RelNode
     public Object clone()
     {
-        return new FennelToIteratorConverter(cluster, child);
+        FennelToIteratorConverter clone =
+            new FennelToIteratorConverter(cluster, child);
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     // implement RelNode

@@ -32,6 +32,7 @@ import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.util.Util;
 
 
@@ -97,18 +98,18 @@ public class JavaAggregateRel extends AggregateRel implements JavaLoopRel
         int groupCount,
         Call [] aggCalls)
     {
-        super(cluster, child, groupCount, aggCalls);
-    }
-
-    public CallingConvention getConvention()
-    {
-        return CallingConvention.JAVA;
+        super(
+            cluster, new RelTraitSet(CallingConvention.JAVA), child,
+            groupCount, aggCalls);
     }
 
     // implement RelNode
     public Object clone()
     {
-        return new JavaAggregateRel(cluster, child, groupCount, aggCalls);
+        JavaAggregateRel clone =
+            new JavaAggregateRel(cluster, child, groupCount, aggCalls);
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)

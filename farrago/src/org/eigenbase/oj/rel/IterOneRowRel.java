@@ -33,6 +33,7 @@ import org.eigenbase.oj.util.OJUtil;
 import org.eigenbase.rel.OneRowRel;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.runtime.*;
@@ -48,16 +49,10 @@ public class IterOneRowRel extends OneRowRel implements JavaRel
 
     public IterOneRowRel(RelOptCluster cluster)
     {
-        super(cluster);
+        super(cluster, new RelTraitSet(CallingConvention.ITERATOR));
     }
 
     //~ Methods ---------------------------------------------------------------
-
-    // implement RelNode
-    public CallingConvention getConvention()
-    {
-        return CallingConvention.ITERATOR;
-    }
 
     public Object clone()
     {

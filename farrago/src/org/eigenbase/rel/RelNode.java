@@ -32,6 +32,7 @@ import org.eigenbase.relopt.RelOptPlanWriter;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelOptQuery;
 import org.eigenbase.relopt.RelOptTable;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.RexNode;
 
@@ -99,6 +100,11 @@ public interface RelNode
      * Returns a value from {@link CallingConvention}.
      */
     CallingConvention getConvention();
+
+    /**
+     * Returns a set of RelTraits representing the traits of this RelNode
+     */
+    RelTraitSet getTraits();
 
     void setCorrelVariable(String correlVariable);
 

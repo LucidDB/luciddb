@@ -29,6 +29,7 @@ import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.util.Util;
 
 
@@ -42,19 +43,16 @@ public class JavaExistsRel extends DistinctRel implements JavaLoopRel
         RelOptCluster cluster,
         RelNode child)
     {
-        super(cluster, child);
+        super(cluster, new RelTraitSet(CallingConvention.JAVA), child);
         assert child.getRowType().getFieldList().size() == 0;
-    }
-
-    public CallingConvention getConvention()
-    {
-        return CallingConvention.JAVA;
     }
 
     // implement RelNode
     public Object clone()
     {
-        return new JavaExistsRel(cluster, child);
+        JavaExistsRel clone = new JavaExistsRel(cluster, child);
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)

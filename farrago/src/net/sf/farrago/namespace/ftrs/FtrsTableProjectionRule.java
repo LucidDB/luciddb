@@ -142,12 +142,19 @@ class FtrsTableProjectionRule extends RelOptRule
                     origScan.isOrderPreserving);
 
             if (needRename) {
+                // Replace calling convention with FENNEL_PULL_CONVENTION
+                RelTraitSet traits =
+                    (RelTraitSet)origProject.getTraits().clone();
+                traits.setTrait(
+                    CallingConventionTraitDef.instance,
+                    FennelPullRel.FENNEL_PULL_CONVENTION);
+
                 projectedScan =
                     new FennelRenameRel(
                         origProject.getCluster(),
                         projectedScan,
                         fieldNames,
-                        FennelPullRel.FENNEL_PULL_CONVENTION);
+                        traits);
             }
 
             call.transformTo(projectedScan);

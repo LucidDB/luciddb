@@ -26,6 +26,7 @@ package org.eigenbase.rel;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelOptRuleOperand;
+import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.rex.*;
 
 
@@ -90,8 +91,9 @@ public class MergeProjectOntoCalcRule extends RelOptRule
             projectExprs[i] = shuttle.visit(projectExprs[i]);
         }
         final CalcRel newCalc =
-            new CalcRel(calc.cluster, calc.child,
-                project.getRowType(), projectExprs, calc.conditionExpr);
+            new CalcRel(calc.cluster, RelOptUtil.clone(calc.traits),
+                calc.child, project.getRowType(), projectExprs,
+                calc.conditionExpr);
         call.transformTo(newCalc);
     }
 }

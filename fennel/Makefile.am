@@ -2,8 +2,8 @@ include $(top_srcdir)/am_include.mk
 
 AUTOMAKE_OPTIONS=foreign
 SUBDIRS=common synch device cache segment txn tuple exec btree \
-db xo ftrs libfennel test @farrago_subdir@ disruptivetech redsquare
-EXTRA_DIST=am_include.mk moodss web build test/verboseTest INSTALL.mingw
+db xo ftrs libfennel test @farrago_subdir@ disruptivetech redsquare build
+EXTRA_DIST=am_include.mk moodss web test/verboseTest INSTALL.mingw
 
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status --recheck
@@ -15,3 +15,7 @@ dist-hook:
 	mkdir $(top_distdir)/fennel
 	mv $(distdir)/* $(top_distdir)/fennel
 	mv $(top_distdir)/fennel $(distdir)
+
+# Verify that all source files have the required headers
+checkPreambles:
+	build/checkPreambleFennel.sh

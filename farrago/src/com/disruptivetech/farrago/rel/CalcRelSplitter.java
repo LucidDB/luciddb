@@ -487,6 +487,7 @@ public abstract class CalcRelSplitter
                 resultCalcRel =
                     new CalcRel(
                         calc.getCluster(),
+                        calc.getTraits(),
                         resultCalcRel,
                         rowType,
                         nodes,
@@ -511,6 +512,7 @@ public abstract class CalcRelSplitter
                 resultCalcRel =
                     new CalcRel(
                         calc.getCluster(),
+                        calc.getTraits(),
                         resultCalcRel,
                         calc.rowType,
                         nodes,

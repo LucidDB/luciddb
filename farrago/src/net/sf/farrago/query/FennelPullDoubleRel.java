@@ -50,15 +50,7 @@ public abstract class FennelPullDoubleRel extends FennelDoubleRel
         RelNode left,
         RelNode right)
     {
-        super(cluster, left, right);
-    }
-
-    //~ Methods ---------------------------------------------------------------
-
-    // implement RelNode
-    public CallingConvention getConvention()
-    {
-        return FennelPullRel.FENNEL_PULL_CONVENTION;
+        super(cluster, new RelTraitSet(FENNEL_PULL_CONVENTION), left, right);
     }
 }
 

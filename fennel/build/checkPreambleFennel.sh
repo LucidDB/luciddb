@@ -2,6 +2,8 @@
 # $Id$
 # Check the preamble of fennel files.
 
+set -e
+
 fennelDir=$(dirname $0)/..
 
 # Check preambles of Eigenbase ('green zone') files.

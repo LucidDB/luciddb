@@ -26,6 +26,7 @@ import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.OneRowRel;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.util.Util;
 
 
@@ -37,18 +38,15 @@ public class JavaOneRowRel extends OneRowRel implements JavaLoopRel,
 {
     public JavaOneRowRel(RelOptCluster cluster)
     {
-        super(cluster);
-    }
-
-    public CallingConvention getConvention()
-    {
-        return CallingConvention.JAVA;
+        super(cluster, new RelTraitSet(CallingConvention.JAVA));
     }
 
     // implement RelNode
     public Object clone()
     {
-        return new JavaOneRowRel(cluster);
+        JavaOneRowRel clone = new JavaOneRowRel(cluster);
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     public ParseTree implement(JavaRelImplementor implementor)

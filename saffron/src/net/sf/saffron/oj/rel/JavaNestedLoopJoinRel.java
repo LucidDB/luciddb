@@ -32,6 +32,7 @@ import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.RexNode;
@@ -54,23 +55,22 @@ public class JavaNestedLoopJoinRel extends JoinRel implements JavaLoopRel,
         int joinType,
         Set variablesStopped)
     {
-        super(cluster, left, right, condition, joinType, variablesStopped);
-    }
-
-    public CallingConvention getConvention()
-    {
-        return CallingConvention.JAVA;
+        super(
+            cluster, new RelTraitSet(CallingConvention.JAVA), left, right,
+            condition, joinType, variablesStopped);
     }
 
     public Object clone()
     {
-        return new JavaNestedLoopJoinRel(
+        JavaNestedLoopJoinRel clone = new JavaNestedLoopJoinRel(
             cluster,
             RelOptUtil.clone(left),
             RelOptUtil.clone(right),
             RexUtil.clone(condition),
             joinType,
             variablesStopped);
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)

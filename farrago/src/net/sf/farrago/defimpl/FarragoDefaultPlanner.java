@@ -76,14 +76,10 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
     {
         boolean fennelEnabled = stmt.getRepos().isFennelEnabled();
 
-        // Only register calling conventions we're interested in.  Eventually
-        // we probably want to expand this set once the various converters are
-        // accurately costed.  For now, this guarantees determinism in unit
-        // tests.
-        addCallingConvention(CallingConvention.NONE);
-        addCallingConvention(CallingConvention.ITERATOR);
-        addCallingConvention(CallingConvention.RESULT_SET);
-        addCallingConvention(FennelPullRel.FENNEL_PULL_CONVENTION);
+        // Create a new CallingConvention trait definition that will store
+        // the graph of possible conversions and handle the creation of
+        // converters.
+        addRelTraitDef(CallingConventionTraitDef.instance);
 
         // NOTE: don't call IterConverterRel.init and friends; their presence
         // just confuses the optimizer, and we explicitly supply all the

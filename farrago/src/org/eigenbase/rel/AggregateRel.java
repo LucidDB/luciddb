@@ -67,7 +67,31 @@ public class AggregateRel extends SingleRel
         int groupCount,
         Call [] aggCalls)
     {
-        super(cluster, child);
+        this(
+            cluster, new RelTraitSet(CallingConvention.NONE), child,
+            groupCount, aggCalls);
+    }
+
+    /**
+     * Creates an AggregateRel with a specific set of traits.
+     *
+     * @param cluster {@link RelOptCluster} this relational expression
+     *        belongs to
+     * @param traits the traits of this rel
+     * @param child input relational expression
+     * @param groupCount Number of columns to group on
+     * @param aggCalls Array of aggregates to compute
+     *
+     * @pre aggCalls != null
+     */
+    public AggregateRel(
+        RelOptCluster cluster,
+        RelTraitSet traits,
+        RelNode child,
+        int groupCount,
+        Call [] aggCalls)
+    {
+        super(cluster, traits, child);
         Util.pre(aggCalls != null, "aggCalls != null");
         this.groupCount = groupCount;
         this.aggCalls = aggCalls;
@@ -89,6 +113,7 @@ public class AggregateRel extends SingleRel
     {
         return new AggregateRel(
             cluster,
+            cloneTraits(),
             RelOptUtil.clone(child),
             groupCount,
             aggCalls);

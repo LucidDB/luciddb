@@ -24,6 +24,8 @@ package org.eigenbase.rel;
 
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.reltype.RelDataType;
 
 /**
@@ -36,13 +38,18 @@ import org.eigenbase.reltype.RelDataType;
  */
 public class UncollectRel extends SingleRel {
 
-    public UncollectRel(RelOptCluster cluster, RelNode child) {
-        super(cluster, child);
+    public UncollectRel(
+        RelOptCluster cluster, RelNode child)
+    {
+        super(cluster, new RelTraitSet(CallingConvention.NONE), child);
     }
 
     // override Object (public, does not throw CloneNotSupportedException)
     public Object clone() {
-        return new UncollectRel(cluster, RelOptUtil.clone(child));
+        UncollectRel clone =
+            new UncollectRel(cluster, RelOptUtil.clone(child));
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     protected RelDataType deriveRowType()

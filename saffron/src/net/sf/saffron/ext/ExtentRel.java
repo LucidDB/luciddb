@@ -23,6 +23,8 @@ import org.eigenbase.rel.AbstractRelNode;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptPlanWriter;
 import org.eigenbase.relopt.RelOptTable;
+import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
 
 
@@ -66,7 +68,7 @@ public class ExtentRel extends AbstractRelNode
         RelDataType rowType,
         RelOptTable table)
     {
-        super(cluster);
+        super(cluster, new RelTraitSet(CallingConvention.NONE));
         assert (rowType != null);
         assert (table != null);
         this.rowType = rowType;

@@ -27,6 +27,8 @@ import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.relopt.CallingConventionTraitDef;
 import org.eigenbase.util.Util;
 
 
@@ -47,19 +49,18 @@ public class NoneConverterRel extends ConverterRel
         RelOptCluster cluster,
         RelNode child)
     {
-        super(cluster, child);
+        super(
+            cluster, CallingConventionTraitDef.instance,
+            new RelTraitSet(CallingConvention.NONE), child);
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    public CallingConvention getConvention()
-    {
-        return CallingConvention.NONE;
-    }
-
     public Object clone()
     {
-        return new NoneConverterRel(this.cluster, child);
+        NoneConverterRel clone = new NoneConverterRel(this.cluster, child);
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     public static void init(RelOptPlanner planner)

@@ -38,7 +38,7 @@ import org.eigenbase.util.Util;
  * planner, along with the desired conversion rules.  Extended ordinals must be
  * greater than CallingConvention.enumeration.getMax().
  */
-public class CallingConvention extends EnumeratedValues.BasicValue
+public class CallingConvention implements RelTrait
 {
     //~ Static fields/initializers --------------------------------------------
 
@@ -156,10 +156,18 @@ public class CallingConvention extends EnumeratedValues.BasicValue
             NONE, JAVA, ITERATOR, ARRAY, COLLECTION, VECTOR, ENUMERATION, MAP,
             HASHTABLE, ITERABLE, EXISTS, RESULT_SET,
         };
-    public static final EnumeratedValues enumeration =
-        new EnumeratedValues(values);
 
     //~ Instance fields -------------------------------------------------------
+
+    /**
+     * Enumerated value's name.
+     */
+    public final String name;
+
+    /**
+     * Enumerated value's ordinal.
+     */
+    public final int ordinal;
 
     /**
      * Interface that a relational expression of this calling convention
@@ -174,7 +182,10 @@ public class CallingConvention extends EnumeratedValues.BasicValue
         int ordinal,
         Class interfaze)
     {
-        super(name, ordinal, null);
+        Util.pre(name != null, "name != null");
+
+        this.name = name;
+        this.ordinal = ordinal;
         this.interfaze = interfaze;
         Util.pre(
             RelNode.class.isAssignableFrom(interfaze),
@@ -187,6 +198,55 @@ public class CallingConvention extends EnumeratedValues.BasicValue
     public static int generateOrdinal()
     {
         return maxOrdinal + 1;
+    }
+
+    public String getName()
+    {
+        return name;
+    }
+
+    public int getOrdinal()
+    {
+        return ordinal;
+    }
+
+    // Implement RelTrait
+    public RelTraitDef getTraitDef()
+    {
+        return CallingConventionTraitDef.instance;
+    }
+
+    /**
+     * Returns the ordinal as the CallingConvention's hash code.
+     *
+     * @return ordinal
+     */
+    public int hashCode()
+    {
+        return ordinal;
+    }
+
+    /**
+     * Compare this CallingConvention to another for equality by ordinal.
+
+     * @param o the other CallingConvention
+     * @return true if they are equal, false otherwise
+     */
+    public boolean equals(Object o)
+    {
+        if (o == null) {
+            return false;
+        }
+        
+        return ordinal == ((CallingConvention)o).ordinal;
+    }
+
+    /**
+     * Returns the value's name.
+     */
+    public String toString()
+    {
+        return name;
     }
 }
 

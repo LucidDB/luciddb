@@ -30,6 +30,7 @@ import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.util.Util;
 
 
@@ -43,18 +44,15 @@ public class JavaUnionAllRel extends UnionRel implements JavaLoopRel
         RelOptCluster cluster,
         RelNode [] inputs)
     {
-        super(cluster, inputs, true);
-    }
-
-    public CallingConvention getConvention()
-    {
-        return CallingConvention.JAVA;
+        super(cluster, new RelTraitSet(CallingConvention.JAVA), inputs, true);
     }
 
     // implement RelNode
     public Object clone()
     {
-        return new JavaUnionAllRel(cluster, inputs);
+        JavaUnionAllRel clone = new JavaUnionAllRel(cluster, inputs);
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)

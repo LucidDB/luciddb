@@ -26,6 +26,7 @@ package org.eigenbase.rel;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelOptRuleOperand;
+import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexUtil;
@@ -77,7 +78,9 @@ public class ProjectToCalcRule extends RelOptRule
         final RelDataType rowType = project.getRowType();
         final RexNode [] projectExprs = RexUtil.clone(project.exps);
         final CalcRel calc =
-            new CalcRel(project.cluster, child, rowType, projectExprs, null);
+            new CalcRel(
+                project.cluster, RelOptUtil.clone(project.traits), child,
+                rowType, projectExprs, null);
         call.transformTo(calc);
     }
 }

@@ -27,6 +27,8 @@ import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.relopt.CallingConvention;
 
 
 // REVIEW jvs 15-Nov-2003:  Is there a good reason for this to exist?  It's
@@ -49,7 +51,15 @@ public class DistinctRel extends SingleRel
         RelOptCluster cluster,
         RelNode child)
     {
-        super(cluster, child);
+        this(cluster, new RelTraitSet(CallingConvention.NONE), child);
+    }
+
+    protected DistinctRel(
+        RelOptCluster cluster,
+        RelTraitSet traits,
+        RelNode child)
+    {
+        super(cluster, traits, child);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -63,6 +73,7 @@ public class DistinctRel extends SingleRel
     {
         return new DistinctRel(
             cluster,
+            cloneTraits(),
             RelOptUtil.clone(child));
     }
 

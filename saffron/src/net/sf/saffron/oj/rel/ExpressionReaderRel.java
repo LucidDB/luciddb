@@ -34,6 +34,7 @@ import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanWriter;
 import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexUtil;
@@ -107,7 +108,6 @@ import org.eigenbase.util.Util;
  */
 public class ExpressionReaderRel extends AbstractRelNode implements JavaRel
 {
-    protected CallingConvention convention;
     protected RexNode exp;
 
     /** Whether the rows are distinct; set by {@link #deriveRowType}. */
@@ -133,25 +133,19 @@ public class ExpressionReaderRel extends AbstractRelNode implements JavaRel
         RexNode exp,
         RelDataType rowType)
     {
-        super(cluster);
+        super(cluster, new RelTraitSet(chooseConvention(cluster, exp)));
         if (rowType != null) {
             exp = cluster.rexBuilder.makeCast(
                     cluster.getTypeFactory().createArrayType(rowType, -1),
                     exp);
         }
         this.exp = exp;
-        this.convention = chooseConvention(exp);
         Util.discard(getRowType()); // force derivation of row-type
     }
 
     public RexNode [] getChildExps()
     {
         return new RexNode [] { exp };
-    }
-
-    public CallingConvention getConvention()
-    {
-        return convention;
     }
 
     public boolean isDistinct()
@@ -252,12 +246,13 @@ public class ExpressionReaderRel extends AbstractRelNode implements JavaRel
         return true;
     }
 
-    private CallingConvention chooseConvention(RexNode exp)
+    private static CallingConvention chooseConvention(
+        RelOptCluster cluster, RexNode exp)
     {
         final RelDataType saffronType = exp.getType();
         OJClass clazz = OJUtil.typeToOJClass(
             saffronType,
-            getCluster().getTypeFactory());
+            cluster.getTypeFactory());
         if (clazz.getComponentType() != null) {
             return CallingConvention.ARRAY;
         } else if (Util.clazzCollection.isAssignableFrom(clazz)) {

@@ -32,6 +32,7 @@ import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptPlanWriter;
 import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexUtil;
@@ -70,7 +71,9 @@ public class IterCalcRel extends ProjectRelBase implements JavaRel
         String [] fieldNames,
         int flags)
     {
-        super(cluster, child, exps, fieldNames, flags);
+        super(
+            cluster, new RelTraitSet(CallingConvention.ITERATOR), child, exps,
+            fieldNames, flags);
         assert (child.getConvention() == CallingConvention.ITERATOR);
         this.condition = condition;
         if (condition == null) {
@@ -103,20 +106,17 @@ public class IterCalcRel extends ProjectRelBase implements JavaRel
         pw.explain(this, terms);
     }
 
-    public CallingConvention getConvention()
-    {
-        return CallingConvention.ITERATOR;
-    }
-
     public Object clone()
     {
-        return new IterCalcRel(
+        IterCalcRel clone = new IterCalcRel(
             cluster,
             RelOptUtil.clone(child),
             RexUtil.clone(exps),
             (condition == null) ? null : RexUtil.clone(condition),
             Util.clone(fieldNames),
             getFlags());
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     public static Expression implementAbstract(

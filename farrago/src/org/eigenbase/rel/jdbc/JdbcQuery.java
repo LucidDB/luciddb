@@ -36,6 +36,7 @@ import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptConnection;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
@@ -99,7 +100,7 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
         SqlSelect sql,
         DataSource dataSource)
     {
-        super(cluster);
+        super(cluster, new RelTraitSet(CallingConvention.RESULT_SET));
         Util.pre(connection != null, "connection != null");
         Util.pre(dataSource != null, "dataSource != null");
         this.rowType = rowType;
@@ -125,11 +126,6 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
         return connection;
     }
 
-    public CallingConvention getConvention()
-    {
-        return CallingConvention.RESULT_SET;
-    }
-
     public String getQualifier()
     {
         if (queryString == null) {
@@ -140,8 +136,10 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
 
     public Object clone()
     {
-        return new JdbcQuery(cluster, rowType, connection, dialect,
+        JdbcQuery clone = new JdbcQuery(cluster, rowType, connection, dialect,
             (SqlSelect) sql.clone(), dataSource);
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)

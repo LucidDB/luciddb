@@ -2,6 +2,8 @@
 # $Id$
 # Check the preamble of farrago files.
 
+set -e
+
 fennelDir=$(dirname $0)/..
 farragoDir=$(dirname $0)/../../farrago
 

@@ -26,6 +26,8 @@ package org.eigenbase.rel;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptPlanWriter;
 import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.reltype.RelDataType;
 
 
@@ -55,7 +57,16 @@ public class UnionRel extends AbstractRelNode
         RelNode [] inputs,
         boolean all)
     {
-        super(cluster);
+        this(cluster, new RelTraitSet(CallingConvention.NONE), inputs, all);
+    }
+
+    protected UnionRel(
+        RelOptCluster cluster,
+        RelTraitSet traits,
+        RelNode [] inputs,
+        boolean all)
+    {
+        super(cluster, traits);
         this.inputs = inputs;
         this.all = all;
     }
@@ -89,6 +100,7 @@ public class UnionRel extends AbstractRelNode
     {
         return new UnionRel(
             cluster,
+            cloneTraits(),
             RelOptUtil.clone(inputs),
             all);
     }

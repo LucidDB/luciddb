@@ -62,7 +62,7 @@ public class RelOptRuleOperand implements Walkable
     public int [] solveOrder;
     public int ordinalInParent;
     public int ordinalInRule;
-    private final CallingConvention convention;
+    private final RelTraitSet traits;
     private final Class clazz;
     private final RelOptRuleOperand [] children;
 
@@ -77,7 +77,7 @@ public class RelOptRuleOperand implements Walkable
         Class clazz,
         RelOptRuleOperand [] children)
     {
-        this(clazz, null, children);
+        this(clazz, (RelTraitSet)null, children);
     }
 
     /**
@@ -90,9 +90,17 @@ public class RelOptRuleOperand implements Walkable
         CallingConvention convention,
         RelOptRuleOperand [] children)
     {
+        this(clazz, new RelTraitSet(convention), children);
+    }
+
+    public RelOptRuleOperand(
+        Class clazz,
+        RelTraitSet traits,
+        RelOptRuleOperand [] children)
+    {
         assert (clazz != null);
         this.clazz = clazz;
-        this.convention = convention;
+        this.traits = traits;
         this.children = children;
         if (children != null) {
             for (int i = 0; i < this.children.length; i++) {
@@ -108,7 +116,7 @@ public class RelOptRuleOperand implements Walkable
         int h = clazz.hashCode();
         h = Util.hash(
                 h,
-                convention.getOrdinal());
+                traits.hashCode());
         h = Util.hashArray(h, children);
         return h;
     }
@@ -119,8 +127,14 @@ public class RelOptRuleOperand implements Walkable
             return false;
         }
         RelOptRuleOperand that = (RelOptRuleOperand) obj;
+
+        boolean equalTraits =
+            this.traits != null
+            ? this.traits.equals(that.traits)
+            : that.traits == null;
+
         return (this.clazz == that.clazz)
-            && (this.convention == that.convention)
+            && equalTraits
             && Arrays.equals(this.children, that.children);
     }
 
@@ -139,7 +153,7 @@ public class RelOptRuleOperand implements Walkable
         if (!clazz.isInstance(rel)) {
             return false;
         }
-        if ((convention != null) && (rel.getConvention() != convention)) {
+        if ((traits != null) && !rel.getTraits().matches(traits)) {
             return false;
         }
         return true;

@@ -62,17 +62,13 @@ class MedMockFennelRel extends TableAccessRel implements FennelPullRel
         RelOptCluster cluster,
         RelOptConnection connection)
     {
-        super(cluster, columnSet, connection);
+        super(
+            cluster, new RelTraitSet(FENNEL_PULL_CONVENTION), columnSet,
+            connection);
         this.columnSet = columnSet;
     }
 
     //~ Methods ---------------------------------------------------------------
-
-    // implement RelNode
-    public CallingConvention getConvention()
-    {
-        return FennelPullRel.FENNEL_PULL_CONVENTION;
-    }
 
     // implement FennelRel
     public Object implementFennelChild(FennelRelImplementor implementor)
@@ -95,6 +91,15 @@ class MedMockFennelRel extends TableAccessRel implements FennelPullRel
     {
         // trivially sorted
         return new RelFieldCollation [] { new RelFieldCollation(0) };
+    }
+
+    // implement RelNode
+    public Object clone()
+    {
+        MedMockFennelRel clone =
+            new MedMockFennelRel(columnSet, cluster, connection);
+        clone.traits = cloneTraits();
+        return clone;
     }
 }
 

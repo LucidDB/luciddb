@@ -57,10 +57,11 @@ abstract class FennelDoubleRel extends AbstractRelNode implements FennelRel
      */
     protected FennelDoubleRel(
         RelOptCluster cluster,
+        RelTraitSet traits,
         RelNode left,
         RelNode right)
     {
-        super(cluster);
+        super(cluster, traits);
         this.left = left;
         this.right = right;
     }

@@ -254,6 +254,7 @@ redsquare/sorter/Makefile \
 redsquare/libfennel_rs/Makefile \
 redsquare/test/Makefile \
 redsquare/farrago/Makefile \
+build/Makefile \
 ])
 
 AC_OUTPUT

@@ -31,6 +31,7 @@ import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexUtil;
 import org.eigenbase.util.Util;
@@ -50,24 +51,22 @@ public class JavaProjectRel extends ProjectRel implements JavaLoopRel,
         String [] fieldNames,
         int flags)
     {
-        super(cluster, child, exps, fieldNames, flags);
+        super(
+            cluster, new RelTraitSet(CallingConvention.JAVA), child, exps,
+            fieldNames, flags);
         assert (child.getConvention() == CallingConvention.JAVA);
-    }
-
-    // implement RelNode
-    public CallingConvention getConvention()
-    {
-        return CallingConvention.JAVA;
     }
 
     public Object clone()
     {
-        return new JavaProjectRel(
+        JavaProjectRel clone = new JavaProjectRel(
             cluster,
             RelOptUtil.clone(child),
             RexUtil.clone(exps),
             Util.clone(fieldNames),
             getFlags());
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     // implement RelNode

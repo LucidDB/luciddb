@@ -24,6 +24,8 @@ package org.eigenbase.rel;
 
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.type.SqlTypeUtil;
 
@@ -38,14 +40,19 @@ public class CollectRel extends SingleRel {
 
     public final String name;
 
-    public CollectRel(RelOptCluster cluster, RelNode child, String name) {
-        super(cluster, child);
+    public CollectRel(
+        RelOptCluster cluster, RelNode child, String name)
+    {
+        super(cluster, new RelTraitSet(CallingConvention.NONE), child);
         this.name = name;
     }
 
     // override Object (public, does not throw CloneNotSupportedException)
     public Object clone() {
-        return new CollectRel(cluster, RelOptUtil.clone(child), name);
+        CollectRel clone =
+            new CollectRel(cluster, RelOptUtil.clone(child), name);
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     protected RelDataType deriveRowType()

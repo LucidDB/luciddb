@@ -28,6 +28,7 @@ import org.eigenbase.rel.TableAccessRel;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptConnection;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.util.Util;
 
 
@@ -41,12 +42,7 @@ public class JavaTableAccessRel extends TableAccessRel implements JavaLoopRel
         ImplementableTable table,
         RelOptConnection connection)
     {
-        super(cluster, table, connection);
-    }
-
-    public CallingConvention getConvention()
-    {
-        return CallingConvention.JAVA;
+        super(cluster, new RelTraitSet(CallingConvention.JAVA), table, connection);
     }
 
     public Object clone()

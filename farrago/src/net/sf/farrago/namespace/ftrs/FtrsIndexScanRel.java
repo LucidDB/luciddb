@@ -90,7 +90,9 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
         Integer [] projectedColumns,
         boolean isOrderPreserving)
     {
-        super(cluster, ftrsTable, connection);
+        super(
+            cluster, new RelTraitSet(FENNEL_PULL_CONVENTION), ftrsTable,
+            connection);
         this.ftrsTable = ftrsTable;
         this.index = index;
         this.projectedColumns = projectedColumns;
@@ -118,9 +120,14 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
     }
 
     // implement RelNode
-    public CallingConvention getConvention()
+    public Object clone()
     {
-        return FennelPullRel.FENNEL_PULL_CONVENTION;
+        FtrsIndexScanRel clone =
+            new FtrsIndexScanRel(
+                cluster, ftrsTable, index, connection, projectedColumns,
+                isOrderPreserving);
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     // implement RelNode

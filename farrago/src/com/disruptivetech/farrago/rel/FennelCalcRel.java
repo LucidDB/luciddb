@@ -33,6 +33,7 @@ import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanWriter;
 import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.util.Util;
@@ -64,6 +65,7 @@ public abstract class FennelCalcRel extends FennelSingleRel
      * Creates a new FennelCalcRel object.
      *
      * @param cluster RelOptCluster for this rel
+     * @param traits the RelTraitSet for this rel
      * @param child rel producing rows to be Calced
      * @param rowType Row type
      * @param projectExprs Expressions returned by the calculator
@@ -71,12 +73,13 @@ public abstract class FennelCalcRel extends FennelSingleRel
      */
     protected FennelCalcRel(
         RelOptCluster cluster,
+        RelTraitSet traits,
         RelNode child,
         RelDataType rowType,
         RexNode [] projectExprs,
         RexNode conditionExpr)
     {
-        super(cluster, child);
+        super(cluster, traits, child);
         Util.pre(rowType != null, "rowType != null");
         Util.pre(projectExprs != null, "projectExprs != null");
         this.projectExprs = projectExprs;

@@ -71,7 +71,9 @@ class MedMdrJoinRel extends JoinRel implements JavaRel
         int leftOrdinal,
         Reference rightReference)
     {
-        super(cluster, left, right, condition, joinType, Collections.EMPTY_SET);
+        super(
+            cluster, new RelTraitSet(CallingConvention.ITERATOR), left, right,
+            condition, joinType, Collections.EMPTY_SET);
         assert ((joinType == JoinType.INNER) || (joinType == JoinType.LEFT));
 
         this.leftOrdinal = leftOrdinal;
@@ -92,7 +94,7 @@ class MedMdrJoinRel extends JoinRel implements JavaRel
 
     public Object clone()
     {
-        return new MedMdrJoinRel(
+        MedMdrJoinRel clone = new MedMdrJoinRel(
             cluster,
             RelOptUtil.clone(left),
             RelOptUtil.clone(right),
@@ -100,12 +102,8 @@ class MedMdrJoinRel extends JoinRel implements JavaRel
             joinType,
             leftOrdinal,
             rightReference);
-    }
-
-    // implement RelNode
-    public CallingConvention getConvention()
-    {
-        return CallingConvention.ITERATOR;
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     // implement RelNode

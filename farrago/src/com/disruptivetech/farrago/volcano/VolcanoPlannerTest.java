@@ -50,7 +50,7 @@ public class VolcanoPlannerTest extends TestCase
      */
     private static final CallingConvention PHYS_CALLING_CONVENTION =
         new CallingConvention("PHYS",
-            CallingConvention.enumeration.getMax() + 1, RelNode.class);
+            CallingConvention.generateOrdinal(), RelNode.class);
 
     //~ Constructors ----------------------------------------------------------
 
@@ -61,7 +61,7 @@ public class VolcanoPlannerTest extends TestCase
 
     //~ Methods ---------------------------------------------------------------
 
-    private RelOptCluster newCluster(VolcanoPlanner planner)
+    static RelOptCluster newCluster(VolcanoPlanner planner)
     {
         RelOptQuery query = new RelOptQuery(planner);
         RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl();
@@ -78,8 +78,7 @@ public class VolcanoPlannerTest extends TestCase
     {
         VolcanoPlanner planner = new VolcanoPlanner();
 
-        planner.addCallingConvention(CallingConvention.NONE);
-        planner.addCallingConvention(PHYS_CALLING_CONVENTION);
+        planner.addRelTraitDef(CallingConventionTraitDef.instance);
 
         planner.addRule(new PhysLeafRule());
 
@@ -99,8 +98,7 @@ public class VolcanoPlannerTest extends TestCase
     public void testTransformSingleGood()
     {
         VolcanoPlanner planner = new VolcanoPlanner();
-        planner.addCallingConvention(CallingConvention.NONE);
-        planner.addCallingConvention(PHYS_CALLING_CONVENTION);
+        planner.addRelTraitDef(CallingConventionTraitDef.instance);
 
         planner.addRule(new PhysLeafRule());
         planner.addRule(new GoodSingleRule());
@@ -126,8 +124,7 @@ public class VolcanoPlannerTest extends TestCase
     public void _testTransformSingleBad()
     {
         VolcanoPlanner planner = new VolcanoPlanner();
-        planner.addCallingConvention(CallingConvention.NONE);
-        planner.addCallingConvention(PHYS_CALLING_CONVENTION);
+        planner.addRelTraitDef(CallingConventionTraitDef.instance);
 
         planner.addRule(new PhysLeafRule());
         planner.addRule(new BadSingleRule());
@@ -149,9 +146,7 @@ public class VolcanoPlannerTest extends TestCase
     private void removeTrivialProject(boolean useRule)
     {
         VolcanoPlanner planner = new VolcanoPlanner();
-        planner.addCallingConvention(CallingConvention.NONE);
-        planner.addCallingConvention(CallingConvention.ITERATOR);
-        planner.addCallingConvention(PHYS_CALLING_CONVENTION);
+        planner.addRelTraitDef(CallingConventionTraitDef.instance);
 
         if (useRule) {
             planner.addRule(new RemoveTrivialProjectRule());
@@ -219,8 +214,7 @@ public class VolcanoPlannerTest extends TestCase
         VolcanoPlanner planner = new VolcanoPlanner();
         planner.addListener(listener);
 
-        planner.addCallingConvention(CallingConvention.NONE);
-        planner.addCallingConvention(PHYS_CALLING_CONVENTION);
+        planner.addRelTraitDef(CallingConventionTraitDef.instance);
 
         planner.addRule(new PhysLeafRule());
 
@@ -345,9 +339,10 @@ public class VolcanoPlannerTest extends TestCase
 
         protected TestLeafRel(
             RelOptCluster cluster,
+            RelTraitSet traits,
             String label)
         {
-            super(cluster);
+            super(cluster, traits);
             this.label = label;
         }
 
@@ -391,9 +386,10 @@ public class VolcanoPlannerTest extends TestCase
     {
         protected TestSingleRel(
             RelOptCluster cluster,
+            RelTraitSet traits,
             RelNode child)
         {
-            super(cluster, child);
+            super(cluster, traits, child);
         }
 
         // implement RelNode
@@ -415,13 +411,15 @@ public class VolcanoPlannerTest extends TestCase
             RelOptCluster cluster,
             RelNode child)
         {
-            super(cluster, child);
+            super(cluster, new RelTraitSet(CallingConvention.NONE), child);
         }
 
         // implement RelNode
         public Object clone()
         {
-            return new NoneSingleRel(cluster, child);
+            NoneSingleRel clone = new NoneSingleRel(cluster, child);
+            clone.traits = cloneTraits();
+            return clone;
         }
     }
 
@@ -431,7 +429,7 @@ public class VolcanoPlannerTest extends TestCase
             RelOptCluster cluster,
             String label)
         {
-            super(cluster, label);
+            super(cluster, new RelTraitSet(CallingConvention.NONE), label);
         }
     }
 
@@ -441,19 +439,13 @@ public class VolcanoPlannerTest extends TestCase
             RelOptCluster cluster,
             String label)
         {
-            super(cluster, label);
+            super(cluster, new RelTraitSet(PHYS_CALLING_CONVENTION), label);
         }
 
         // implement RelNode
         public RelOptCost computeSelfCost(RelOptPlanner planner)
         {
             return planner.makeTinyCost();
-        }
-
-        // implement RelNode
-        public CallingConvention getConvention()
-        {
-            return PHYS_CALLING_CONVENTION;
         }
     }
 
@@ -463,7 +455,7 @@ public class VolcanoPlannerTest extends TestCase
             RelOptCluster cluster,
             RelNode child)
         {
-            super(cluster, child);
+            super(cluster, new RelTraitSet(PHYS_CALLING_CONVENTION), child);
         }
 
         // implement RelNode
@@ -473,15 +465,11 @@ public class VolcanoPlannerTest extends TestCase
         }
 
         // implement RelNode
-        public CallingConvention getConvention()
-        {
-            return PHYS_CALLING_CONVENTION;
-        }
-
-        // implement RelNode
         public Object clone()
         {
-            return new PhysSingleRel(cluster, child);
+            PhysSingleRel clone = new PhysSingleRel(cluster, child);
+            clone.traits = cloneTraits();
+            return clone;
         }
     }
 
@@ -491,19 +479,18 @@ public class VolcanoPlannerTest extends TestCase
             RelOptCluster cluster,
             RelNode child)
         {
-            super(cluster, child);
-        }
-
-        // implement RelNode
-        public CallingConvention getConvention()
-        {
-            return CallingConvention.ITERATOR;
+            super(
+                cluster, CallingConventionTraitDef.instance,
+                new RelTraitSet(CallingConvention.ITERATOR), child);
         }
 
         // implement RelNode
         public Object clone()
         {
-            return new PhysToIteratorConverter(cluster, child);
+            PhysToIteratorConverter clone =
+                new PhysToIteratorConverter(cluster, child);
+            clone.traits = cloneTraits();
+            return clone;
         }
     }
 

@@ -31,8 +31,10 @@ import net.sf.farrago.query.FennelRel;
 import net.sf.farrago.query.FennelRelImplementor;
 import net.sf.farrago.query.FennelRelUtil;
 import net.sf.farrago.query.FennelSingleRel;
+import net.sf.farrago.query.FennelPullRel;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.*;
@@ -67,7 +69,9 @@ public class FennelWindowRel extends FennelSingleRel
             RexNode[] projectExprs,
             RexNode conditionExpr)
     {
-        super(cluster, child);
+        super(
+            cluster, new RelTraitSet(FennelPullRel.FENNEL_PULL_CONVENTION),
+            child);
         assert rowType != null : "precondition: rowType != null";
         assert projectExprs != null : "precondition: projectExprs != null";
         this.rowType = rowType;
@@ -77,8 +81,10 @@ public class FennelWindowRel extends FennelSingleRel
 
     // override Object (public, does not throw CloneNotSupportedException)
     public Object clone() {
-        return new FennelWindowRel(
+        FennelWindowRel clone = new FennelWindowRel(
             cluster, child, rowType, projectExprs, conditionExpr);
+        clone.traits = cloneTraits();
+        return clone;
     }
 
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)

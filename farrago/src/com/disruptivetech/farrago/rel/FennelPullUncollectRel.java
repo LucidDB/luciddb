@@ -49,11 +49,7 @@ public class FennelPullUncollectRel extends FennelSingleRel
                                   implements FennelPullRel {
 
     public FennelPullUncollectRel(RelOptCluster cluster, RelNode child) {
-        super(cluster, child);
-    }
-
-    public CallingConvention getConvention() {
-        return FENNEL_PULL_CONVENTION;
+        super(cluster, new RelTraitSet(FENNEL_PULL_CONVENTION), child);
     }
 
     protected RelDataType deriveRowType()
@@ -78,6 +74,10 @@ public class FennelPullUncollectRel extends FennelSingleRel
 
     // override Object (public, does not throw CloneNotSupportedException)
     public Object clone() {
-        return new FennelPullUncollectRel(cluster, RelOptUtil.clone(child));
+        FennelPullUncollectRel clone =
+            new FennelPullUncollectRel(cluster, RelOptUtil.clone(child));
+        clone.traits = cloneTraits();
+        return clone;
     }
 }
+
