@@ -340,7 +340,7 @@ inline ExecStreamBufAccessor::ExecStreamBufAccessor()
 {
     clear();
     provision = BUFPROV_NONE;
-    // state = EXECBUF_EOS;
+    state = EXECBUF_EOS; // ??
     tupleFormat = TUPLE_FORMAT_STANDARD;
     cbBuffer = 0;
 }
@@ -423,7 +423,7 @@ inline void ExecStreamBufAccessor::provideBufferForConsumption(
 
 inline void ExecStreamBufAccessor::requestProduction()
 {
-    assert(state == EXECBUF_EMPTY);
+    assert(state == EXECBUF_EMPTY);     // ??laxer?
     state = EXECBUF_UNDERFLOW;
     pProducer = pBufStart;
     pConsumer = pBufStart;
@@ -431,7 +431,7 @@ inline void ExecStreamBufAccessor::requestProduction()
 
 inline void ExecStreamBufAccessor::requestConsumption()
 {
-    assert(state == EXECBUF_NONEMPTY);
+    assert(state == EXECBUF_NONEMPTY);  // laxer??
     state = EXECBUF_OVERFLOW;
     pBufEnd = pProducer;
 }
