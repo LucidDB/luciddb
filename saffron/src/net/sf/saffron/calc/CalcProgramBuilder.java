@@ -20,15 +20,17 @@
 */
 package net.sf.saffron.calc;
 
+import net.sf.saffron.resource.SaffronResource;
 import net.sf.saffron.util.EnumeratedValues;
 import net.sf.saffron.util.Util;
-import net.sf.saffron.resource.SaffronResource;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.HashMap;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 
 /**
  * Constructs a calculator assembly language program based upon a series
@@ -37,7 +39,7 @@ import java.io.StringWriter;
  * <p>If you want multi-line programs, call
  * <code>setSeparator(System.getProperty("line.separator")</code>.</p>
 
- * @testcase {@link CalcProgramBuilder}
+ * @testcase {@link CalcProgramBuilderTest}
  * @author jhyde
  * @since Jan 11, 2004
  * @version $Id$
@@ -63,7 +65,7 @@ public class CalcProgramBuilder {
 
     // -- operators -------------------------------------------------------
     static final String moveOperator = "MOVE";
-    static final String extendedOperator = "EXT";
+    static final String extendedOperator = "CALL";
     static final String jumpOperator = "JMP";
     static final String jumpTrueOperator = "JMPT";
     static final String jumpFalseOperator = "JMPF";
@@ -76,7 +78,7 @@ public class CalcProgramBuilder {
     static final String notEqualOperator = "NE";
     static final String greaterThanOperator = "GT";
     static final String greaterOrEqualOperator = "GE";
-    static final String lessThenOperator = "LT";
+    static final String lessThanOperator = "LT";
     static final String lessOrEqualOperator = "LE";
     static final String notOperator = "NOT";
     static final String isNullOperator = "ISNULL";
@@ -109,7 +111,7 @@ public class CalcProgramBuilder {
 
 
     /**
-     * Holds and represents the parameters for the {@link #callOperator} operator
+     * Holds and represents the parameters for a call to an operator
      */
     public class FunctionCall implements Operand
     {
@@ -119,43 +121,35 @@ public class CalcProgramBuilder {
 
         /**
          * @param functionName e.g. <code>SUBSTR</code>
-         * @param registers parameters for the e.g. <code>SUBSTR</code> function
+         * @param registers arguments for the function, must not be null
          */
         FunctionCall(Register result, String functionName, Register[] registers)
         {
+            assert registers != null;
             m_result = result;
             m_functionName=functionName;
             m_registers=registers;
         }
 
         /**
-         * Outputs itself in the following format:<br>
-         * <code>result, 'function name<paramType1, paramType2, ...>', param1, param2, ...</code>
+         * Outputs itself in the following format:
+         *
+         * <blockquote>
+         * <code>CALL 'function(result, arg1, arg2, ...)</code>
+         * </blockquote>
          * @param writer
          */
         public void print(PrintWriter writer)
         {
-            printOperands(writer, new Operand[]{m_result});
-            writer.print(", '");
+            writer.print("'");
             writer.print(m_functionName);
-            writer.print('<');
-            if (null!=m_registers)
-            {
-                for(int i=0;i<m_registers.length;i++)
-                {
-                    writer.print(m_registers[i].getOpType().getName());
-                    if (i+1<m_registers.length)
-                    {
-                        writer.print(", ");
-                    }
-                }
-            }
-            writer.print(">'");
-            if (null!=m_registers && m_registers.length>0)
-            {
+            writer.print('(');
+            m_result.print(writer);
+            for (int i = 0; i < m_registers.length; i++) {
                 writer.print(", ");
-                printOperands(writer, m_registers);
+                m_registers[i].print(writer);
             }
+            writer.print(')');
         }
     }
 
@@ -183,11 +177,19 @@ public class CalcProgramBuilder {
          */
         void printValue(PrintWriter writer)
         {
-            if (m_value instanceof String)
+            if (null == m_value) {
+                // do nothing
+            }
+            else if (m_value instanceof String)
             {
-                writer.print("'");
-                writer.print(m_value);
-                writer.print("'");
+                // Convert the string to an array of bytes assuming (TODO:
+                // don's assume!) latin1 encoding, then hex-encode.
+                final String s = (String) m_value;
+                final Charset charset = Charset.forName("ISO-8859-1");
+                assert charset != null;
+                final ByteBuffer buf = charset.encode(s);
+                writer.print("0x");
+                writer.print(Util.toStringFromByteArray(buf.array(), 16));
             }
             else if (m_value instanceof byte[])
             {
@@ -195,7 +197,11 @@ public class CalcProgramBuilder {
                 writer.print(Util.toStringFromByteArray((byte[]) m_value,16));
                 writer.print("'");
             }
-            else if (null!=m_value)
+            else if (m_value instanceof Boolean)
+            {
+                writer.print(((Boolean) m_value).booleanValue() ? "1" : "0");
+            }
+            else
             {
                 writer.print(m_value.toString());
             }
@@ -210,13 +216,13 @@ public class CalcProgramBuilder {
         }
 
         /**
-         * Serializes the identity of the register. It does not attempt to serialize its value
-         * see {@link #printValue} for that
+         * Serializes the identity of the register. It does not attempt to
+         * serialize its value; see {@link #printValue} for that.
          * @param writer
          */
         final public void print(PrintWriter writer)
         {
-            writer.print(m_registerType.getPrefix());
+            writer.print(m_registerType.m_prefix);
             //writer.print(m_type.getTypeCode());
             writer.print(m_index);
         }
@@ -258,6 +264,7 @@ public class CalcProgramBuilder {
 
         final public void print(PrintWriter writer)
         {
+            writer.print("@");
             writer.print(m_line.intValue());
         }
     }
@@ -272,7 +279,7 @@ public class CalcProgramBuilder {
         }
 
         private static final int BooleanORDINAL = 0;
-        public static final OpType Boolean = new OpType("u1", BooleanORDINAL);
+        public static final OpType Boolean = new OpType("bo", BooleanORDINAL);
 
         public static final int IntORDINAL = 1;
         public static final OpType Int = new OpType("s4", IntORDINAL);
@@ -339,17 +346,13 @@ public class CalcProgramBuilder {
 
 
     /**
-     *  An inner class describing the different registers
+     *  Enumeration of register types
      */
     public static class RegisterSetType extends EnumeratedValues.BasicValue {
-        private char m_prefix;
+        final char m_prefix;
         private RegisterSetType(String name, int ordinal, char prefix) {
             super(name, ordinal, null);
-            m_prefix=prefix;
-        }
-
-         final public char getPrefix() {
-            return m_prefix;
+            m_prefix = prefix;
         }
 
         public static final int OutputORDINAL = 0;
@@ -359,16 +362,20 @@ public class CalcProgramBuilder {
         public static final RegisterSetType Input = new RegisterSetType("input", InputORDINAL,'I');
 
         public static final int LiteralORDINAL = 2;
-        public static final RegisterSetType Literal = new RegisterSetType("literal", LiteralORDINAL,'L');
+        public static final RegisterSetType Literal = new RegisterSetType("literal", LiteralORDINAL,'C');
 
         public static final int LocalORDINAL = 3;
-        public static final RegisterSetType Local = new RegisterSetType("local", LocalORDINAL,'T');
+        public static final RegisterSetType Local = new RegisterSetType("local", LocalORDINAL,'L');
 
         public static final int StatusORDINAL = 4;
         public static final RegisterSetType Status = new RegisterSetType("status", StatusORDINAL,'S');
 
         public static final EnumeratedValues enumeration =
                 new EnumeratedValues(new RegisterSetType[] {Output, Input, Literal, Local, Status});
+
+        public static RegisterSetType get(int ordinal) {
+            return (RegisterSetType) enumeration.getValue(ordinal);
+        }
     }
 
     /**
@@ -460,7 +467,8 @@ public class CalcProgramBuilder {
         writer.print("T");
         writer.print(m_separator);
         getInstructions(writer);
-        return sw.toString().trim();
+        final String program = sw.toString().trim();
+        return program;
     }
 
     /**
@@ -500,50 +508,79 @@ public class CalcProgramBuilder {
         return m_instructions.size()-1;
     }
     /**
-     * Output of the register set will be in the following <i>order</i> and <i>format</i>:
-     * <code>
-     * output:  TBD
-     * input:
-     * local:
-     * literal:
-     * status:
-     * </code>
+     * Outputs register declarations. The results look like this:
+     *
+     * <blockquote><pre>
+     * O: vc,30;
+     * I: vc,30;
+     * C u1, u1, vc,30, vc,30, vc,30, s4;
+     * V 1, 0, 'ISO-8859-1', 'WILMA', 'ISO-8859-1$en', 0;
+     * L vc,30, u1, s4;
+     * S u1;</pre></blockquote>
+     *
      * @param writer
      */
     protected void getRegisterSetsLayout(PrintWriter writer)
     {
-        ArrayList list;
-        Register reg;
-        //iterate over register sets
-        for(int i=0;i<RegisterSetType.enumeration.getSize();i++)
-        {
-            list=m_registerSets.getSet(i);
-            if (null!=list) {
-                writer.print(RegisterSetType.enumeration.getName(i));
-                writer.print(": ");
-                //iterate over every register in the current set
-                for (int j=0;j<list.size();j++) {
-                    reg = (Register) list.get(j);
-                    writer.print(reg.getOpType().getName());
-                    writer.print('[');
-                    writer.print(((Register) list.get(j)).getIndex());
-                    writer.print(']');
-                    if (reg.getValue()!=null) {
-                        compilationAssert (reg.getRegisterType().getOrdinal()==
-                                RegisterSetType.LiteralORDINAL,"Only literals can have values");
-                        writer.print('=');
-                        reg.printValue(writer);
-                    }
+        generateRegDeclarations(writer, RegisterSetType.Output);
+        generateRegDeclarations(writer, RegisterSetType.Input);
+        generateRegDeclarations(writer, RegisterSetType.Local);
+        generateRegDeclarations(writer, RegisterSetType.Status);
+        generateRegDeclarations(writer, RegisterSetType.Literal);
+        generateRegValues(writer);
+    }
 
-                    if (j+1<list.size()) {
-                        writer.print(',');
-                    }
-                    else {
-                        writer.print(m_separator);
-                    }
-                }
+    private void generateRegDeclarations(PrintWriter writer,
+            RegisterSetType registerSetType) {
+        ArrayList list = m_registerSets.getSet(registerSetType.ordinal_);
+        if (null == list) {
+            return;
+        }
+        writer.print(registerSetType.m_prefix);
+        writer.print(" ");
+        //iterate over every register in the current set
+        for (int j=0;j<list.size();j++) {
+            if (j > 0) {
+                writer.print(", ");
+            }
+            Register reg = (Register) list.get(j);
+            assert reg.getRegisterType() == registerSetType;
+            writer.print(reg.getOpType().getName());
+            if (reg.getOpType() == OpType.VarCharPointer ||
+                    reg.getOpType() == OpType.VoidPointer) {
+                writer.print(",30"); // TODO: get real value
+            }
+            if (false) {
+                // Assembler doesn't support this.
+                writer.print('[');
+                writer.print(((Register) list.get(j)).getIndex());
+                writer.print(']');
+            }
+
+            if (reg.getValue() != null) {
+                compilationAssert(registerSetType == RegisterSetType.Literal,
+                        "Only literals have values");
             }
         }
+        writer.print(m_separator);
+    }
+
+    private void generateRegValues(PrintWriter writer) {
+        ArrayList list = m_registerSets.getSet(RegisterSetType.LiteralORDINAL);
+        if (null == list) {
+            return;
+        }
+        writer.print("V ");
+        for (int j = 0; j < list.size(); j++) {
+            if (j > 0) {
+                writer.print(", ");
+            }
+            Register reg = (Register) list.get(j);
+            //final Object value = reg.getValue();
+            //assert value != null;
+            reg.printValue(writer);
+        }
+        writer.print(m_separator);
     }
 
     /**
@@ -803,10 +840,13 @@ public class CalcProgramBuilder {
      * Asserts that the register is declared as {@link OpType#Boolean}
      * @param reg
      */
+
+
     protected void assertRegisterBool(Register reg)
     {
         compilationAssert( reg.getOpType().getOrdinal()==
-                OpType.BooleanORDINAL,"Expected a register of Boolean type");
+                OpType.BooleanORDINAL,"Expected a register of Boolean type. " +
+                                      "Found "+reg.getOpType().name_);
     }
 
     /**
@@ -1002,7 +1042,7 @@ public class CalcProgramBuilder {
 
     public void addBoolLessThan(Register result, Register op1, Register op2)
     {
-        addBoolInstruction(lessThenOperator, result, op1, op2);
+        addBoolInstruction(lessThanOperator, result, op1, op2);
     }
 
     public void addBoolNot(Register result, Register op1)
@@ -1204,7 +1244,7 @@ public class CalcProgramBuilder {
 
     public void addBoolNativeLessThan(Register result, Register op1, Register op2)
     {
-        addIBoolNativeInstruction(lessThenOperator,result,op1,op2);
+        addIBoolNativeInstruction(lessThanOperator,result,op1,op2);
     }
 
     public void addBoolNativeLessOrEqual(Register result, Register op1, Register op2)
@@ -1289,7 +1329,7 @@ public class CalcProgramBuilder {
 
     public void addPointerLessTham(Register result, Register op1, Register op2)
     {
-        addPointerBoolInstruction(lessThenOperator,result,op1,op2);
+        addPointerBoolInstruction(lessThanOperator,result,op1,op2);
     }
 
     public void addPointerLessOrEqual(Register result, Register op1, Register op2)

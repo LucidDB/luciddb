@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Fennel is a relational database kernel.
-// Copyright (C) 2004-2004 Disruptive Technologies, Inc.
+// Copyright (C) 2004-2004 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -91,6 +91,36 @@ strCmpA(RegisterRef<int32_t>* result,
         }
     }
 }
+
+void
+strCpyA(RegisterRef<char*>* result,
+        RegisterRef<char*>* str)
+{
+    assert(str->type() == STANDARD_TYPE_CHAR || str->type() == STANDARD_TYPE_VARCHAR);
+
+    if (str->isNull()) {
+        result->toNull();
+        result->length(0);
+    } else {
+        // TODO: Enable this when switching over to templated string library
+#if 0
+        if (str->type() == STANDARD_TYPE_CHAR) {
+            result->length(SqlStrCpy_Fix(result->pointer(),
+                                         result->storage(),
+                                         str->pointer(),
+                                         str->stringLength()));
+        } else {
+            result->length(SqlStrCpy_Var(result->pointer(),
+                                         result->storage(),
+                                         str->pointer(),
+                                         str->stringLength()));
+        }
+#else
+        assert(0);
+#endif
+    }
+}
+
 
 void
 strLenBitA(RegisterRef<int32_t>* result,

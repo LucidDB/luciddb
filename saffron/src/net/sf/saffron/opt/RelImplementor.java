@@ -2,6 +2,7 @@
 // $Id$
 // Saffron preprocessor and data engine
 // (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// (C) Copyright 2003-2004 John V. Sichi
 // You must accept the terms in LICENSE.html to use this software.
 //
 // This program is free software; you can redistribute it and/or
@@ -32,10 +33,7 @@ import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.rex.*;
 import net.sf.saffron.util.SaffronProperties;
 import net.sf.saffron.util.Util;
-import net.sf.saffron.sql.SqlOperator;
-import net.sf.saffron.sql.SqlBinaryOperator;
-import net.sf.saffron.sql.SqlFunction;
-import net.sf.saffron.sql.SqlLiteral;
+import net.sf.saffron.sql.*;
 import openjava.mop.*;
 import openjava.ptree.*;
 import openjava.tools.DebugOut;
@@ -384,6 +382,30 @@ public class RelImplementor
     }
 
     /**
+     * Determines whether it is possible to implement a set of expressions
+     * in Java.
+     *
+     * @param condition Condition, may be null
+     * @param exps Expression list
+     * @return whether all expressions can be implemented
+     */
+    public boolean canTranslate(SaffronRel rel, RexNode condition, 
+            RexNode[] exps) {
+        Translator translator = newTranslator(this, rel);
+        TranslationTester tester = new TranslationTester(translator);
+        if (condition != null && !tester.canTranslate(condition)) {
+            return false;
+        }
+        for (int i = 0; i < exps.length; i++) {
+            RexNode exp = exps[i];
+            if (!tester.canTranslate(exp)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * Generates code for an expression, possibly using multiple statements,
      * scratch variables, and helper functions.
      *
@@ -412,9 +434,9 @@ public class RelImplementor
      *
      * @param rel the relational expression which is the context for the lhs
      * and rhs expressions
-     * 
+     *
      * @param lhsType type of the target expression
-     * 
+     *
      * @param lhs the target expression (as OpenJava)
      *
      * @param rhs the source expression (as RexNode)
@@ -535,9 +557,7 @@ public class RelImplementor
         }
         Frame frame = (Frame) mapRel2Frame.get(rel);
         frame.bind = bind;
-        boolean stupid =
-            SaffronProperties.instance().getBooleanProperty(
-                SaffronProperties.PROPERTY_saffron_stupid);
+        boolean stupid = SaffronProperties.instance().stupid.get();
         if (stupid) {
             // trigger the declaration of the variable, even though it
             // may not be used
@@ -955,9 +975,11 @@ public class RelImplementor
             final int fieldIndex;
         }
 
+        /**
+         * Converts a rex expression to a Java expression.
+         */
         protected Expression convertCall(RexCall call, Expression[] operands) {
-            SqlOperator op;
-            op = call.op;
+            SqlOperator op = call.op;
             if (op instanceof SqlBinaryOperator) {
                 Integer binaryExpNum = (Integer)
                         implementor.mapRexBinaryToOpenJava.get(call.op);
@@ -969,13 +991,46 @@ public class RelImplementor
                 }
             } else if (op instanceof SqlFunction) {
                 if (call.op.equals(implementor.rexBuilder.funcTab.cast)) {
-                    OJClass type = ((OJTypeFactory) implementor.rexBuilder.getTypeFactory()).toOJClass(null, call.getType());
+                    OJClass type = ((OJTypeFactory)
+                            implementor.rexBuilder.getTypeFactory())
+                            .toOJClass(null, call.getType());
                     return new CastExpression(type, operands[0]);
                 }
             }
+            switch (op.kind.ordinal_) {
+            case SqlKind.IsTrueORDINAL:
+                return operands[0];
+            default:
+            }
             // TODO: Get rid of this if-else-if... logic: use a table to do
-            // the mapping of rex calls to oj expressions.
+            // the mapping of rex calls to oj expressions. canConvertCall
+            // should use the same table.
             throw Util.needToImplement("Row-expression " + call);
+        }
+
+        /**
+         * Similar to {@link #convertCall}, but doesn't convert, just returns
+         * whether the call can be converted to Java.
+         */
+        protected boolean canConvertCall(RexCall call) {
+            SqlOperator op = call.op;
+            if (op instanceof SqlBinaryOperator) {
+                Integer binaryExpNum = (Integer)
+                        implementor.mapRexBinaryToOpenJava.get(call.op);
+                if (binaryExpNum != null) {
+                    return true;
+                }
+            } else if (op instanceof SqlFunction) {
+                if (call.op.equals(implementor.rexBuilder.funcTab.cast)) {
+                    return true;
+                }
+            }
+            switch (op.kind.ordinal_) {
+            case SqlKind.IsTrueORDINAL:
+                return true;
+            default:
+            }
+            return false;
         }
 
         private OJClass toOJClass(final SaffronType saffronType) {
@@ -991,6 +1046,59 @@ public class RelImplementor
             RexContextVariable contextVariable)
         {
             throw Util.needToImplement("Row-expression RexContextVariable");
+        }
+    }
+
+    /**
+     * Similar to {@link Translator}, but instead of translating, merely tests
+     * whether an expression can be translated.
+     */
+    public static class TranslationTester {
+        private final Translator translator;
+
+        public TranslationTester(Translator translator) {
+            this.translator = translator;
+        }
+        /**
+         * Thrown when we encounter an expression which cannot be translated.
+         * It is always handled by {@link #canTranslate}, and is not really an
+         * error.
+         */
+        private static class CannotTranslate extends Exception {
+            public CannotTranslate() {
+            }
+        };
+
+        /**
+         * Returns whether an expression can be translated.
+         */
+        public boolean canTranslate(RexNode rex) {
+            try {
+                go(rex);
+                return true;
+            } catch (CannotTranslate cannotTranslate) {
+                return false;
+            }
+        }
+        /**
+         * Walks over an expression, and throws {@link CannotTranslate} if
+         * expression cannot be translated.
+         *
+         * @param rex Expression
+         * @throws CannotTranslate if expression or a sub-expression cannot be
+         *   translated
+         */
+        protected void go(RexNode rex) throws CannotTranslate {
+            if (rex instanceof RexCall) {
+                final RexCall call = (RexCall) rex;
+                if (!translator.canConvertCall(call)) {
+                    throw new CannotTranslate();
+                }
+                RexNode[] operands = call.operands;
+                for (int i = 0; i < operands.length; i++) {
+                    go(operands[i]);
+                }
+            }
         }
     }
 }

@@ -2,6 +2,7 @@
 // $Id$
 // Saffron preprocessor and data engine
 // (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// (C) Copyright 2003-2004 John V. Sichi
 // You must accept the terms in LICENSE.html to use this software.
 //
 // This program is free software; you can redistribute it and/or
@@ -25,7 +26,6 @@ import net.sf.saffron.util.MultiMap;
 import net.sf.saffron.util.Util;
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
-import net.sf.saffron.core.SaffronTypeFactoryImpl;
 import net.sf.saffron.sql.type.SqlTypeName;
 import net.sf.saffron.resource.SaffronResource;
 
@@ -930,8 +930,6 @@ public class SqlOperatorTable
     private final MultiMap operators = new MultiMap();
     private final HashMap mapNameToOp = new HashMap();
 
-    private final SqlFunctionTable funcTable = SqlFunctionTable.instance();
-
 
     //~ Constructors ----------------------------------------------------------
 
@@ -1115,8 +1113,8 @@ public class SqlOperatorTable
                     ++i;
                 }
                 else if ((current instanceof SqlSpecialOperator) &&
-                         (current.isA(SqlKind.Between) || current.isA(SqlKind.NotBetween)))
-                {
+                        (current.kind.isA(SqlKind.Between) ||
+                        current.kind.isA(SqlKind.NotBetween))) {
                     // Since this is a special operator, we dont look at the pred for now
                     SqlNode firstAnd=null;
                     SqlNode secondAnd=null;
@@ -1125,7 +1123,8 @@ public class SqlOperatorTable
                     int ii=i+1;
                     for ( /* empty */; ii < list.size(); ii++) {
                         Object o = list.get(ii);
-                        if ((o instanceof SqlOperator) && ((SqlOperator)o).isA(SqlKind.And)) {
+                        if ((o instanceof SqlOperator) &&
+                                ((SqlOperator)o).kind.isA(SqlKind.And)) {
                             ArrayList suicideList = new ArrayList(i);
                             suicideList.addAll(list.subList(i+1,ii));
                             firstAnd = toTree(suicideList); // 1st BETWEEN AND's operand
@@ -1139,7 +1138,7 @@ public class SqlOperatorTable
                     for ( /* empty */ ; jj < list.size(); jj++) {
                         Object o = list.get(jj);
                         if ((o instanceof SqlOperator) &&
-                            (current.rightPrec>=((SqlOperator) o).leftPrec))     //TODO hack for now
+                                (current.rightPrec>=((SqlOperator) o).leftPrec))     //TODO hack for now
                         {
                             break;
                         }
@@ -1151,7 +1150,7 @@ public class SqlOperatorTable
 
                     SqlNode leftExp = (SqlNode) list.get(i - 1);
                     SqlCall newExp = betweenOperator.createCall(leftExp, firstAnd, secondAnd);
-                    if (current.isA(SqlKind.NotBetween))
+                    if (current.kind.isA(SqlKind.NotBetween))
                     {
                         newExp = notOperator.createCall(newExp);
                     }

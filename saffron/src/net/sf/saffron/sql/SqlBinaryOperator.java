@@ -2,6 +2,7 @@
 // $Id$
 // Saffron preprocessor and data engine
 // (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// (C) Copyright 2003-2004 John V. Sichi
 // You must accept the terms in LICENSE.html to use this software.
 //
 // This program is free software; you can redistribute it and/or
@@ -21,13 +22,30 @@
 
 package net.sf.saffron.sql;
 
-import net.sf.saffron.sql.type.SqlTypeName;
+import net.sf.saffron.opt.CalcRelImplementor;
+import net.sf.saffron.rex.RexCall;
+import net.sf.saffron.rex.RexNode;
 
 /**
  * <code>SqlBinaryOperator</code> is a binary operator.
  */
 public class SqlBinaryOperator extends SqlOperator
 {
+    /**
+     * Implementation of {@link SqlOperator.CalcRexImplementor}, shared by all
+     * {@link SqlBinaryOperator} objects that want to use it, which delegates
+     * to the {@link CalcRelImplementor.Rex2CalcTranslator#translateBinary}
+     * method.
+     */
+    private static final SqlOperator.CalcRexImplementor calcRexImplementor =
+            new SqlOperator.CalcRexImplementor() {
+                public void translateToCalc(RexNode rex,
+                        CalcRelImplementor.Rex2CalcTranslator translator) {
+                    RexCall call = (RexCall) rex;
+                    translator.translateBinary(null, call);
+                }
+            };
+    
     //~ Constructors ----------------------------------------------------------
 
     SqlBinaryOperator(
@@ -79,6 +97,10 @@ public class SqlBinaryOperator extends SqlOperator
             writer.print(name);
         }
         operands[1].unparse(writer,this.rightPrec,rightPrec);
+    }
+
+    public SqlOperator.CalcRexImplementor getCalcImplementor() {
+        return calcRexImplementor;
     }
 }
 

@@ -2,6 +2,7 @@
 // $Id$
 // Saffron preprocessor and data engine
 // (C) Copyright 2002-2004 Disruptive Technologies, Inc.
+// (C) Copyright 2003-2004 John V. Sichi
 // You must accept the terms in LICENSE.html to use this software.
 //
 // This program is free software; you can redistribute it and/or
@@ -30,15 +31,19 @@ import java.security.AccessControlException;
 import java.util.Enumeration;
 import java.util.Properties;
 
+import net.sf.saffron.util.property.StringProperty;
+import net.sf.saffron.util.property.BooleanProperty;
+import net.sf.saffron.util.property.IntegerProperty;
+
 
 /**
  * Provides an environment for debugging
  * information, et cetera, used by saffron.
- * 
+ *
  * <p>{@link #getIntProperty} and {@link #getBooleanProperty} are convenience
  * methods.
  * </p>
- * 
+ *
  * <p>
  * It is a singleton, accessed via the {@link #instance} method. It is
  * populated from System properties if saffron is invoked via a
@@ -47,13 +52,14 @@ import java.util.Properties;
  * <code>"saffron.properties"</code> in the current directory, it is read
  * too.
  * </p>
- * 
+ *
  * <p>
- * For each property <code>"saffron.foo.bar"</code> used in saffron code,
- * there should be a String constant called
- * <code>PROPERTY_saffron_foo_bar</code> in this class. The javadoc comment
- * should link to the piece of code which uses that property. (Developers,
- * please make sure that this remains so!)
+ * Every property used in saffron code must have a member in this class.
+ * The member must be public and final, and be of type
+ * {@link net.sf.saffron.util.property.Property} or some subtype.
+ * The javadoc comment must describe the name of the property (for example,
+ * "net.sf.saffron.connection.PoolSize") and the default value, if any.
+ * <em>Developers, please make sure that this remains so!</em>
  * </p>
  */
 public class SaffronProperties extends Properties
@@ -63,191 +69,172 @@ public class SaffronProperties extends Properties
     /** The singleton properties object. */
     private static SaffronProperties properties;
 
-    /** The "{@value}" property is where to compile classes to. */
-    public static final String PROPERTY_saffron_class_dir =
-        "saffron.class.dir";
-
     /**
-     * If the boolean property "{@value}" is true, {@link
-     * openjava.ptree.Statement} prints the statement to {@link System#out}
-     * before compiling it.
+     * The string property "saffron.class.dir" is the path of the directory
+     * to compile classes to.
      */
-    public static final String PROPERTY_saffron_Statement_printBeforeCompile =
-        "saffron.Statement.printBeforeCompile";
+    public final StringProperty classDir = new StringProperty(this,
+            "saffron.class.dir", null);
 
     /**
-     * The property "{@value}" is the name of the Java compiler to use. It
-     * must implement {@link openjava.ojc.JavaCompiler}. The default value is
-     * "{@link #PROPERTY_saffron_java_compiler_class_DEFAULT}".
+     * The boolean property "saffron.Statement.printBeforeCompile" controls
+     * whether {@link openjava.ptree.Statement} prints the statement before
+     * compiling it.
      */
-    public static final String PROPERTY_saffron_java_compiler_class =
-        "saffron.java.compiler.class";
+    public final BooleanProperty printBeforeCompile = new BooleanProperty(this,
+            "saffron.Statement.printBeforeCompile", false);
 
     /**
-     * Default value for {@link #PROPERTY_saffron_java_compiler_class}
-     * ("{@value}").
+     * The string property "saffron.java.compiler.class" is the name of the
+     * Java compiler to use.
+     * It must implement {@link openjava.ojc.JavaCompiler}.
+     * The default value is "JP.ac.tsukuba.openjava.SunJavaCompiler".
      */
-    public static final String PROPERTY_saffron_java_compiler_class_DEFAULT =
-        "JP.ac.tsukuba.openjava.SunJavaCompiler";
+    public final StringProperty javaCompilerClass = new StringProperty(this,
+            "saffron.java.compiler.class",
+            "JP.ac.tsukuba.openjava.SunJavaCompiler");
 
     /**
-     * The string property "{@value}" is the package in which to include
-     * temporary classes. The default is {@link
-     * #PROPERTY_saffron_package_name_DEFAULT}.
+     * The string property "saffron.package.name" is the package in which to
+     * include temporary classes.
+     * The default is "saffron.runtime".
      */
-    public static final String PROPERTY_saffron_package_name =
-        "saffron.package.name";
+    public final StringProperty packageName = new StringProperty(this,
+            "saffron.package.name", "saffron.runtime");
 
     /**
-     * Default value for {@link #PROPERTY_saffron_package_name} ("{@value}").
+     * The string property "saffron.java.dir" is the directory to generate
+     * temporary java files to.
+     * The default is {@link #classDir the class root}.
      */
-    public static final String PROPERTY_saffron_package_name_DEFAULT =
-        "saffron.runtime";
+    public final StringProperty javaDir = new StringProperty(this,
+            "saffron.java.dir", null) {
+        protected String getDefaultValue() {
+            return classDir.get();
+        }
+    };
 
     /**
-     * The string propery "{@value}" is the directory to generate temporary
-     * java files to. The default is {@link #PROPERTY_saffron_class_dir the
-     * class root}.
+     * The string property "saffron.java.compiler.args" is the argument string
+     * for the {@link #javaCompilerClass java compiler}.
+     * {@link openjava.ojc.JavaCompilerArgs#setString} describes how these
+     * arguments are interpreted.
      */
-    public static final String PROPERTY_saffron_java_dir = "saffron.java.dir";
+    public final StringProperty javaCompilerArgs = new StringProperty(this,
+        "saffron.java.compiler.args", null);
 
     /**
-     * The string property "{@value}" is the argument string for the {@link
-     * #PROPERTY_saffron_java_compiler_class java compiler}. {@link
-     * openjava.ojc.JavaCompilerArgs#setString} describes how these arguments
-     * are interpreted.
+     * The boolean property "saffron.stupid" determines whether to optimize
+     * variable assignments. If it is true, records are assigned to a variable
+     * even if they are never used. Default is false.
      */
-    public static final String PROPERTY_saffron_java_compiler_args =
-        "saffron.java.compiler.args";
+    public final BooleanProperty stupid = new BooleanProperty(this,
+            "saffron.stupid", false);
 
     /**
-     * The boolean property "{@value}" determines whether to optimize variable
-     * assignments. If it is true, records are assigned to a variable even if
-     * they are never used. Default is false.
-     */
-    public static final String PROPERTY_saffron_stupid = "saffron.stupid";
-
-    /**
-     * The integer property "{@value}" determines how much debugging
+     * The integer property "saffron.debug.level" determines how much debugging
      * information is printed. The default, 0, means no debugging.
      */
-    public static final String PROPERTY_saffron_debug_level =
-        "saffron.debug.level";
+    public final IntegerProperty debugLevel = new IntegerProperty(this,
+        "saffron.debug.level", 0);
 
     /**
-     * The string property "{@value}" is the name of the file to send
+     * The string property "saffron.debug.out" is the name of the file to send
      * debugging information to. <code>"out"</code> (the default), means send
      * to {@link System#out}; <code>"err"</code> means send to {@link
      * System#err}.
      */
-    public static final String PROPERTY_saffron_debug_out =
-        "saffron.debug.out";
+    public final StringProperty debugOut = new StringProperty(this,
+        "saffron.debug.out", "out");
 
     /**
-     * The string property "{@value}" is used by {@link
-     * net.sf.saffron.test.Main#suite}.
-     */
-    public static final String PROPERTY_saffron_test_Name =
-        "saffron.test.Name";
-
-    /**
-     * The string property "{@value}" is used by {@link
-     * net.sf.saffron.test.Main#suite}.
-     */
-    public static final String PROPERTY_saffron_test_Class =
-        "saffron.test.Class";
-
-    /**
-     * The string property "{@value}" is used by {@link
-     * net.sf.saffron.test.Main#suite}.
-     */
-    public static final String PROPERTY_saffron_test_Suite =
-        "saffron.test.Suite";
-
-    /**
-     * The string property "{@value}" is used by
+     * The string property "saffron.test.Name" is used by
      * {@link net.sf.saffron.test.Main#suite}.
      */
-    public static final String PROPERTY_saffron_test_everything =
-        "saffron.test.everything";
+    public final StringProperty testName = new StringProperty(this,
+        "saffron.test.Name", null);
 
     /**
-     * The string property "{@value}" is the URL of the JDBC database which
-     * contains the EMP and DEPT tables used for testing.
+     * The string property "saffron.test.Class" is used by
+     * {@link net.sf.saffron.test.Main#suite}.
      */
-    public static final String PROPERTY_saffron_test_jdbc_url =
-        "saffron.test.jdbc.url";
+    public final StringProperty testClass = new StringProperty(this,
+        "saffron.test.Class", null);
 
     /**
-     * The string property "{@value}" is a comma-separated list of class names
-     * to be used as JDBC drivers.
+     * The string property "saffron.test.Suite" is used by
+     * {@link net.sf.saffron.test.Main#suite}.
      */
-    public static final String PROPERTY_saffron_test_jdbc_drivers =
-        "saffron.test.jdbc.drivers";
+    public final StringProperty testSuite = new StringProperty(this,
+        "saffron.test.Suite", null);
 
     /**
-     * The boolean property "{@value}" determines whether the optimizer will
-     * consider adding converters of infinite cost in order to convert a
-     * relational expression from one calling convention to another. The default
-     * value is <code>true</code>.
+     * The string property "saffron.test.everything" is used by
+     * {@link net.sf.saffron.test.Main#suite}.
      */
-    public static final String PROPERTY_saffron_opt_allowInfiniteCostConverters =
-        "saffron.opt.allowInfiniteCostConverters";
+    public final BooleanProperty testEverything = new BooleanProperty(this,
+        "saffron.test.everything", false);
 
     /**
-     * The default charset.
-     * Used in
-     * {@link net.sf.saffron.sql.SqlLiteral#SqlLiteral}
-     * {@link net.sf.saffron.sql.SqlValidator}
-     * <br> The default value is
-     * "{@link #PROPERTY_saffron_java_compiler_class_DEFAULT}".
+     * The string property "saffron.test.jdbc.url" is the URL of the JDBC
+     * database which contains the EMP and DEPT tables used for testing.
      */
-    public static final String PROPERTY_saffron_default_charset =
-            "saffron.default.charset";
+    public final StringProperty testJdbcUrl = new StringProperty(this,
+        "saffron.test.jdbc.url", null);
 
     /**
-     * Default value for {@link #PROPERTY_saffron_default_charset} ("{@value}").
+     * The string property "saffron.test.jdbc.drivers" is a comma-separated
+     * list of class names to be used as JDBC drivers.
      */
-    public static final String PROPERTY_saffron_default_charset_DEFAULT =
-            "ISO-8859-1";
-
+    public final StringProperty testJdbcDrivers = new StringProperty(this,
+        "saffron.test.jdbc.drivers", null);
 
     /**
-     * The default collation.
-     * Used in
-     * {@link net.sf.saffron.sql.SqlCollation}
+     * The boolean property "saffron.opt.allowInfiniteCostConverters"
+     * determines whether the optimizer will consider adding converters of
+     * infinite cost in order to convert a relational expression from one
+     * calling convention to another. The default value is <code>true</code>.
+     */
+    public final BooleanProperty allowInfiniteCostConverters =
+            new BooleanProperty(this,
+                    "saffron.opt.allowInfiniteCostConverters", true);
+
+    /**
+     * The string property "saffron.default.charset" is the name of the
+     * default character set.
+     * The default is "ISO-8859-1".
+     * It is used in {@link net.sf.saffron.sql.SqlLiteral#SqlLiteral}
+     * and {@link net.sf.saffron.sql.SqlValidator}.
+     */
+    public final StringProperty defaultCharset = new StringProperty(this,
+            "saffron.default.charset", "ISO-8859-1");
+
+    /**
+     * The string property "saffron.default.collation.name" is the name of the
+     * default collation.
+     * The default is "ISO-8859-1$en_US".
+     * Used in {@link net.sf.saffron.sql.SqlCollation}
      * and {@link net.sf.saffron.sql.SqlLiteral#SqlLiteral}
      */
-    public static final String PROPERTY_saffron_default_collation_name =
-            "saffron.default.collation.name";
+    public final StringProperty defaultCollation = new StringProperty(
+            this, "saffron.default.collation.name", "ISO-8859-1$en_US");
 
     /**
-     * Default value for
-     * {@link #PROPERTY_saffron_default_collation_name} ("{@value}").
-     */
-    public static final String PROPERTY_saffron_default_collation_name_DEFAULT =
-            "ISO-8859-1$en_US";
-
-    /**
-     * The default collation.
-     * Used in
-     * {@link net.sf.saffron.sql.SqlCollation}
+     * The string property "saffron.default.collation.strength" is the
+     * strength of the default collation.
+     * The default is "primary".
+     * Used in {@link net.sf.saffron.sql.SqlCollation}
      * and {@link net.sf.saffron.sql.SqlLiteral#SqlLiteral}
      */
-    public static final String PROPERTY_saffron_default_collation_strength =
-            "saffron.default.collation.strength";
-
-    /**
-     * Default value for
-     * {@link #PROPERTY_saffron_default_collation_strength} ("{@value}").
-     */
-    public static final String PROPERTY_saffron_default_collation_strength_DEFAULT =
-                "primary";
+    public final StringProperty defaultCollationStrength =
+            new StringProperty(this, "saffron.default.collation.strength",
+                    "primary");
 
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Please use {@link #instance} to create a {@link SaffronProperties}.
+     * This constructor is private; please use {@link #instance} to create a
+     * {@link SaffronProperties}.
      */
     private SaffronProperties()
     {
@@ -278,12 +265,12 @@ public class SaffronProperties extends Properties
             }
 
             // copy in all system properties which start with "saffron."
-            for (
-                Enumeration keys = System.getProperties().keys();
+            for (Enumeration keys = System.getProperties().keys();
                     keys.hasMoreElements();) {
                 String key = (String) keys.nextElement();
                 String value = System.getProperty(key);
-                if (key.startsWith("saffron.")) {
+                if (key.startsWith("saffron.") ||
+                        key.startsWith("net.sf.saffron.")) {
                     properties.setProperty(key,value);
                 }
             }
@@ -337,8 +324,8 @@ public class SaffronProperties extends Properties
      */
     public void apply()
     {
-        int debugLevel = getIntProperty(PROPERTY_saffron_debug_level);
-        String debugOut = getProperty(PROPERTY_saffron_debug_out);
+        int debugLevel = this.debugLevel.get();
+        String debugOut = this.debugOut.get();
         if (debugLevel >= 0) {
             DebugOut.setDebugLevel(debugLevel);
             if ((debugOut == null) || debugOut.equals("")) {

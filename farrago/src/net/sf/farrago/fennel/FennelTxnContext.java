@@ -82,11 +82,16 @@ public class FennelTxnContext
             return hTxn;
         }
 
-        FemCmdBeginTxn cmd = metadataFactory.newFemCmdBeginTxn();
-        cmd.setDbHandle(fennelDbHandle.getFemDbHandle(metadataFactory));
-        fennelDbHandle.executeCmd(cmd);
-        hTxn = cmd.getResultHandle();
-        return hTxn;
+        fennelDbHandle.getTransientTxnContext().beginTransientTxn();
+        try {
+            FemCmdBeginTxn cmd = metadataFactory.newFemCmdBeginTxn();
+            cmd.setDbHandle(fennelDbHandle.getFemDbHandle(metadataFactory));
+            fennelDbHandle.executeCmd(cmd);
+            hTxn = cmd.getResultHandle();
+            return hTxn;
+        } finally {
+            fennelDbHandle.getTransientTxnContext().endTransientTxn();
+        }
     }
 
     /**
@@ -107,9 +112,15 @@ public class FennelTxnContext
         if (!isTxnInProgress()) {
             return;
         }
-        FemCmdCommit cmd = metadataFactory.newFemCmdCommit();
-        cmd.setTxnHandle(hTxn);
-        fennelDbHandle.executeCmd(cmd);
+        
+        fennelDbHandle.getTransientTxnContext().beginTransientTxn();
+        try {
+            FemCmdCommit cmd = metadataFactory.newFemCmdCommit();
+            cmd.setTxnHandle(hTxn);
+            fennelDbHandle.executeCmd(cmd);
+        } finally {
+            fennelDbHandle.getTransientTxnContext().endTransientTxn();
+        }
 
         // TODO:  determine whether txn is still in progress if excn is thrown
         hTxn = null;
@@ -123,9 +134,15 @@ public class FennelTxnContext
         if (!isTxnInProgress()) {
             return;
         }
-        FemCmdRollback cmd = metadataFactory.newFemCmdRollback();
-        cmd.setTxnHandle(hTxn);
-        fennelDbHandle.executeCmd(cmd);
+        
+        fennelDbHandle.getTransientTxnContext().beginTransientTxn();
+        try {
+            FemCmdRollback cmd = metadataFactory.newFemCmdRollback();
+            cmd.setTxnHandle(hTxn);
+            fennelDbHandle.executeCmd(cmd);
+        } finally {
+            fennelDbHandle.getTransientTxnContext().endTransientTxn();
+        }
 
         // TODO:  determine whether txn is still in progress if excn is thrown
         hTxn = null;
@@ -140,10 +157,15 @@ public class FennelTxnContext
      */
     public FemSvptHandle newSavepoint()
     {
-        FemCmdSavepoint cmd = metadataFactory.newFemCmdSavepoint();
-        cmd.setTxnHandle(getTxnHandle());
-        fennelDbHandle.executeCmd(cmd);
-        return cmd.getResultHandle();
+        fennelDbHandle.getTransientTxnContext().beginTransientTxn();
+        try {
+            FemCmdSavepoint cmd = metadataFactory.newFemCmdSavepoint();
+            cmd.setTxnHandle(getTxnHandle());
+            fennelDbHandle.executeCmd(cmd);
+            return cmd.getResultHandle();
+        } finally {
+            fennelDbHandle.getTransientTxnContext().endTransientTxn();
+        }
     }
 
     /**
@@ -155,10 +177,15 @@ public class FennelTxnContext
     {
         assert(isTxnInProgress());
         
-        FemCmdRollback cmd = metadataFactory.newFemCmdRollback();
-        cmd.setTxnHandle(hTxn);
-        cmd.setSvptHandle(femSvptHandle);
-        fennelDbHandle.executeCmd(cmd);
+        fennelDbHandle.getTransientTxnContext().beginTransientTxn();
+        try {
+            FemCmdRollback cmd = metadataFactory.newFemCmdRollback();
+            cmd.setTxnHandle(hTxn);
+            cmd.setSvptHandle(femSvptHandle);
+            fennelDbHandle.executeCmd(cmd);
+        } finally {
+            fennelDbHandle.getTransientTxnContext().endTransientTxn();
+        }
     }
 
     /**
@@ -174,14 +201,19 @@ public class FennelTxnContext
     public FennelStreamGraph newStreamGraph(
         FarragoAllocationOwner owner)
     {
-        FemCmdCreateExecutionStreamGraph cmdCreate =
-            metadataFactory.newFemCmdCreateExecutionStreamGraph();
-        cmdCreate.setTxnHandle(getTxnHandle());
-        fennelDbHandle.executeCmd(cmdCreate);
-        FennelStreamGraph streamGraph =
-            new FennelStreamGraph(fennelDbHandle,cmdCreate.getResultHandle());
-        owner.addAllocation(streamGraph);
-        return streamGraph;
+        fennelDbHandle.getTransientTxnContext().beginTransientTxn();
+        try {
+            FemCmdCreateExecutionStreamGraph cmdCreate =
+                metadataFactory.newFemCmdCreateExecutionStreamGraph();
+            cmdCreate.setTxnHandle(getTxnHandle());
+            fennelDbHandle.executeCmd(cmdCreate);
+            FennelStreamGraph streamGraph = new FennelStreamGraph(
+                fennelDbHandle,cmdCreate.getResultHandle());
+            owner.addAllocation(streamGraph);
+            return streamGraph;
+        } finally {
+            fennelDbHandle.getTransientTxnContext().endTransientTxn();
+        }
     }
 }
 

@@ -209,10 +209,29 @@ public abstract class JmiUtil
     public static Class getJavaInterfaceForRefClass(RefClass refClass)
         throws ClassNotFoundException
     {
-        // TODO:  Use the proper JMI metadata access.  This hack is dependent
-        // on the way MDR names the implementation of the metaclass.
-        String className = refClass.getClass().getName();
-        String classSuffix = "Class$Impl";
+        return getJavaInterfaceForProxy(refClass.getClass(),"Class$Impl");
+    }
+
+    /**
+     * Finds the Java interface corresponding to a JMI package.
+     *
+     * @param refPackage the JMI package
+     *
+     * @return corresponding Java interface
+     */
+    public static Class getJavaInterfaceForRefPackage(RefPackage refPackage)
+        throws ClassNotFoundException
+    {
+        return getJavaInterfaceForProxy(refPackage.getClass(),"$Impl");
+    }
+
+    private static Class getJavaInterfaceForProxy(
+        Class proxyClass,String classSuffix)
+        throws ClassNotFoundException
+    {
+        // REVIEW: This hack is dependent on the way MDR names
+        // implementation classes.
+        String className = proxyClass.getName();
         assert (className.endsWith(classSuffix));
         className = className.substring(
             0,className.length() - classSuffix.length());

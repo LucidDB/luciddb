@@ -2,6 +2,7 @@
 // $Id$
 // Saffron preprocessor and data engine
 // (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// (C) Copyright 2003-2004 John V. Sichi
 // You must accept the terms in LICENSE.html to use this software.
 //
 // This program is free software; you can redistribute it and/or
@@ -20,16 +21,14 @@
 */
 package net.sf.saffron.sql;
 
-import net.sf.saffron.util.EnumeratedValues;
-import net.sf.saffron.util.Util;
-import net.sf.saffron.util.SaffronProperties;
-import net.sf.saffron.core.SaffronType;
-import net.sf.saffron.sql.parser.ParserUtil;
 import net.sf.saffron.resource.SaffronResource;
+import net.sf.saffron.sql.parser.ParserUtil;
+import net.sf.saffron.util.EnumeratedValues;
+import net.sf.saffron.util.SaffronProperties;
+import net.sf.saffron.util.Util;
 
 import java.nio.charset.Charset;
 import java.util.Locale;
-import java.util.StringTokenizer;
 
 /**
  * A <code>SqlCollation</code> is an object representing a Collate statement
@@ -107,10 +106,8 @@ public class SqlCollation
      * @param coercibility
      */
     public SqlCollation(Coercibility coercibility) {
-        this(SaffronProperties.instance().getProperty(
-                SaffronProperties.PROPERTY_saffron_default_collation_name,
-                SaffronProperties.PROPERTY_saffron_default_collation_name_DEFAULT)
-             , coercibility);
+        this(SaffronProperties.instance().defaultCollation.get(),
+                coercibility);
     }
 
     //~ member functions -------------------------------------------------------------

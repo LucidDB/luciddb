@@ -57,7 +57,7 @@ public class CalcProgramBuilderTest extends TestCase {
     /** Tests that the empty program works. */
     public void testEmpty() {
         final String program = builder.getProgram();
-        assertEquals(program, "T;");
+        assertEquals("T;", program);
     }
 
     /** */
@@ -66,10 +66,13 @@ public class CalcProgramBuilderTest extends TestCase {
         CalcProgramBuilder.Register outReg = builder.newOutput(CalcProgramBuilder.OpType.Int);
         builder.addMove(outReg, litReg);
         final String program = builder.getProgram();
-        assertEquals(program, "output: s4[0];"+
-                              "literal: s4[0]=100;"+
-                              "T;"+
-                              "MOVE O0, L0;");
+        final String expected =
+                "O s4;" +
+                "C s4;" +
+                "V 100;" +
+                "T;" +
+                "MOVE O0, C0;";
+        assertEquals(expected, program);
     }
 
     public void testUseSameConstantTwice() {
@@ -82,10 +85,12 @@ public class CalcProgramBuilderTest extends TestCase {
         CalcProgramBuilder.Register outReg = builder.newOutput(CalcProgramBuilder.OpType.Int);
         builder.addMove(outReg, longConst1);
         final String program = builder.getProgram();
-        assertEquals(program, "output: s4[0];" +
-                              "literal: s4[0]=100,vc[1]='Hello world',vc[2]='Hello worlds';"+
-                              "T;" +
-                              "MOVE O0, L0;");
+        final String expected = "O s4;" +
+                "C s4, vc,30, vc,30;" +
+                "V 100, 0x48656C6C6F20776F726C64, 0x48656C6C6F20776F726C6473;" +
+                "T;" +
+                "MOVE O0, C0;";
+        assertEquals(expected, program);
     }
 
     public void testInconstentTypes() {
@@ -100,10 +105,12 @@ public class CalcProgramBuilderTest extends TestCase {
         CalcProgramBuilder.Register const2 = builder.newLongLiteral(5);
         builder.addExtendedInstructionCall(out0, "SUBSTR", new CalcProgramBuilder.Register[] {const0, const1, const2});
         final String program = builder.getProgram();
-        assertEquals(program, "output: vc[0];" +
-                              "literal: vc[0]='Hello world',s4[1]=3,s4[2]=5;" +
-                              "T;" +
-                              "EXT O0, 'SUBSTR<vc, s4, s4>', L0, L1, L2;");
+        final String expected = "O vc,30;" +
+                "C vc,30, s4, s4;" +
+                "V 0x48656C6C6F20776F726C64, 3, 5;" +
+                "T;" +
+                "CALL 'SUBSTR(O0, C0, C1, C2);";
+        assertEquals(expected, program);
     }
 
     public void testJmpToNoWhere() {
@@ -151,18 +158,18 @@ public class CalcProgramBuilderTest extends TestCase {
         builder.addBoolAnd(out0,const0,const1);
 
         final String program = builder.getProgram();
-        assertEquals(program,
-                     "output: u1[0];"+
-                     "literal: u1[0]=true,u1[1]=false;"+
-                     "T;"+
-                     "AND O0, L0, L1;"+
-                     "JMP 4;"+
-                     "JMPT 4, O0;"+
-                     "JMPF 6, O0;"+
-                     "JMPN 6, O0;"+
-                     "JMPNN 6, O0;"+
-                     "AND O0, L0, L1;"
-                    );
+        String expected = "O bo;" +
+                "C bo, bo;" +
+                "V 1, 0;" +
+                "T;" +
+                "AND O0, C0, C1;" +
+                "JMP @4;" +
+                "JMPT @4, O0;" +
+                "JMPF @6, O0;" +
+                "JMPN @6, O0;" +
+                "JMPNN @6, O0;" +
+                "AND O0, C0, C1;";
+        assertEquals(expected, program);
     }
 
     public void testLabelJumpFails() {

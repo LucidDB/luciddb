@@ -7,6 +7,7 @@ CALC_LIB = calc
 libcalc_la_SOURCES=  \
 BoolInstruction.cpp  \
 Calculator.cpp       \
+ExtDateTime.cpp \
 ExtendedInstruction.cpp \
 ExtendedInstructionTable.cpp \
 JumpInstruction.cpp  \

@@ -66,6 +66,17 @@ from
 (select name,age - 20 as age from emps) e
 left outer join depts on e.age = depts.deptno;
 
+-- index join which requires swapped join inputs
+select 
+    depts.name as dname,e.name as ename
+from 
+    depts 
+inner join 
+    (select name,age - 20 as age from emps) e
+on 
+    e.age=depts.deptno
+order by 1,2;
+
 -- csv format is nicest for query plans
 !set outputformat csv
 
@@ -142,6 +153,17 @@ select e.name as ename,e.age,depts.name as dname
 from
 (select name,age - 20 as age from emps) e
 left outer join depts on e.age = depts.deptno;
+
+explain plan for
+select 
+    depts.name as dname,e.name as ename
+from 
+    depts 
+inner join 
+    (select name,age - 20 as age from emps) e
+on 
+    e.age=depts.deptno
+order by 1,2;
 
 -- can only explain plan for dynamic parameter search
 explain plan for

@@ -1,0 +1,35 @@
+0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/optimizer/calc.sql#1 $
+0: jdbc:farrago:> -- Test queries which instantiate the calculator (filter and/or project)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set schema sales;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- enable fennel calculator
+0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- filter which returns one row
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select name from emps where lower(name) = 'wilma';
++-------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                     column0                                                                     |
++-------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                       |
+|   FennelCalcRel(NAME=[$1], condition=[=(LOWER($1), _ISO-8859-1'wilma' COLLATE ISO-8859-1$en_US$primary)])                                       |
+|     FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
++-------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- project
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select lower(name), empid + 1, empid / 1, empid - 1, empid from sales.emps;
++-------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                     column0                                                                     |
++-------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                       |
+|   FennelCalcRel(EXPR$0=[LOWER($1)], EXPR$1=[+($5, 1)], EXPR$2=[/($5, 1)], EXPR$3=[-($5, 1)], EMPID=[$5])                                        |
+|     FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
++-------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- revert to system default calculator
+0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

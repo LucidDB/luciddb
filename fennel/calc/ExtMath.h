@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Fennel is a relational database kernel.
-// Copyright (C) 2004-2004 Disruptive Technologies, Inc.
+// Copyright (C) 2004-2004 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -29,42 +29,37 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-//! Strcat. Ascii. dest = dest || str.
-//!
-//! Sets cbData to length for char as well as varchar. 
-//!
-//! If calling with fixed: Must call StrCatA3() first to have
-//! length set correctly. Only then subsequent calls to strCatA2() are
-//! possible.  If concatenating multiple strings, strCatA2 will honor
-//! the intermediate length. 
-//! After final call to strCatA2(), length should equal
-//! width, to maintain fixed width string length == width. 
-//! Behavior may be undefined if, after Calculator exits, length != width.
+//! mathLn. Calculates the natural logarithm
 void
-calcLn(RegisterRef<double> *result,
+mathLn(RegisterRef<double> *result,
        RegisterRef<double> *x);
 
 void
-calcLog10(RegisterRef<double> *result,
+mathLn(RegisterRef<double> *result,
+       RegisterRef<long long> *x);
+
+//! mathLog10. Calculates the base-ten logarithm
+void
+mathLog10(RegisterRef<double> *result,
 	  RegisterRef<double> *x);
 
+//! mathAbs. Returns the absolute value.
 void
-calcAbs(RegisterRef<double>* result,
+mathAbs(RegisterRef<double>* result,
 	RegisterRef<double>* x);
 
+//! mathAbs. Returns the absolute value.
 void
-calcAbs(RegisterRef<long long>* result,
+mathAbs(RegisterRef<long long>* result,
 	RegisterRef<long long>* x);
 
+//! mathPow. Calculates x^y. 
+//!
+//! Throws an error and sets the result to null if x<0 and y is not an integer value
 void
-calcPow(RegisterRef<double>* result,
+mathPow(RegisterRef<double>* result,
 	RegisterRef<double>* x,
 	RegisterRef<double>* y);
-
-void
-calcMod(RegisterRef<long long>* result,
-	RegisterRef<long long>* x,
-	RegisterRef<long long>* y);
 
 
 class ExtendedInstructionTable;

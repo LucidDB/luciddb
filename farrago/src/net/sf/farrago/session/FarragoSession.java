@@ -21,8 +21,10 @@ package net.sf.farrago.session;
 
 import net.sf.farrago.util.*;
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.runtime.*;
 
 import java.sql.*;
+import java.util.*;
 
 /**
  * FarragoSession represents an internal API to the Farrago database.  It is
@@ -155,6 +157,25 @@ public interface FarragoSession extends FarragoAllocation
      * @return FarragoSessionViewInfo derived from the query
      */
     public FarragoSessionViewInfo analyzeViewQuery(String sql);
+
+    /**
+     * Determines the class to use for runtime context.
+     *
+     * @return runtime context class, which must be a subclass of
+     * {@link FarragoRuntimeContext}
+     */
+    public Class getRuntimeContextClass();
+
+    /**
+     * Creates a new runtime context.  The object returned must be
+     * assignable to the result of getRuntimeContextClass().
+     *
+     * @param params context initialization parameters
+     *
+     * @return new context
+     */
+    public FarragoRuntimeContext newRuntimeContext(
+        FarragoRuntimeContextParams params);
 }
 
 // End FarragoSession.java

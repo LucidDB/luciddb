@@ -2,6 +2,7 @@
 // $Id$
 // Fennel is a relational database kernel.
 // Copyright (C) 1999-2004 John V. Sichi.
+// Copyright (C) 2003-2004 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -41,7 +42,12 @@ void CalcExecutionStream::prepare(
         pFilterDatum = NULL;
     }
     
-    assert(pCalc->getInputRegisterDescriptor() == inputDesc);
+    if (false) {
+        // This assert is not currently valid. For example, in "select deptno +
+        // 1 from emps", the XO inputs will be all the columns of "emps", while
+        // the calculator inputs will be just "emps.deptno".
+        assert(pCalc->getInputRegisterDescriptor() == inputDesc);
+    }
 
     inputAccessor.compute(inputDesc);
     inputData.compute(inputDesc);

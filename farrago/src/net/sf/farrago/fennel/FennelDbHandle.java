@@ -58,6 +58,8 @@ public class FennelDbHandle implements FarragoAllocation
 
     private final FarragoMetadataFactory metadataFactory;
 
+    private final FarragoTransientTxnContext transientTxnContext;
+
     private final FennelCmdExecutor cmdExecutor;
     
     private Map handleAssociationsMap;
@@ -69,6 +71,8 @@ public class FennelDbHandle implements FarragoAllocation
      *
      * @param metadataFactory FarragoMetadataFactory for creating Fem instances
      *
+     * @param txnContext context for transient metadata transactions
+     *
      * @param owner the object which will be made responsible for this
      * database's allocation
      *
@@ -79,11 +83,13 @@ public class FennelDbHandle implements FarragoAllocation
      */
     public FennelDbHandle(
         FarragoMetadataFactory metadataFactory,
+        FarragoTransientTxnContext transientTxnContext,
         FarragoAllocationOwner owner,
         FennelCmdExecutor cmdExecutor,
         FemCmdOpenDatabase cmd)
     {
         this.metadataFactory = metadataFactory;
+        this.transientTxnContext = transientTxnContext;
         this.cmdExecutor = cmdExecutor;
 
         handleAssociationsMap = new HashMap();
@@ -91,6 +97,11 @@ public class FennelDbHandle implements FarragoAllocation
         executeCmd(cmd);
         dbHandle = cmd.getResultHandle();
         owner.addAllocation(this);
+    }
+
+    FarragoTransientTxnContext getTransientTxnContext()
+    {
+        return transientTxnContext;
     }
 
     private synchronized Collection getHandleAssociations(
@@ -289,10 +300,15 @@ public class FennelDbHandle implements FarragoAllocation
         if (dbHandle == null) {
             return;
         }
-        FemCmdCloseDatabase cmd = metadataFactory.newFemCmdCloseDatabase();
-        cmd.setDbHandle(dbHandle);
-        dbHandle = null;
-        executeCmd(cmd);
+        transientTxnContext.beginTransientTxn();
+        try {
+            FemCmdCloseDatabase cmd = metadataFactory.newFemCmdCloseDatabase();
+            cmd.setDbHandle(dbHandle);
+            dbHandle = null;
+            executeCmd(cmd);
+        } finally {
+            transientTxnContext.endTransientTxn();
+        }
     }
     
     public FarragoException handleNativeException(SQLException ex)

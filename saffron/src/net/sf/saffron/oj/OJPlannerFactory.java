@@ -2,6 +2,7 @@
 // $Id$
 // Saffron preprocessor and data engine
 // (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// (C) Copyright 2003-2004 John V. Sichi
 // You must accept the terms in LICENSE.html to use this software.
 //
 // This program is free software; you can redistribute it and/or
@@ -32,8 +33,6 @@ import net.sf.saffron.rel.convert.NoneConverterRel;
 import net.sf.saffron.rel.jdbc.JdbcQuery;
 import net.sf.saffron.rex.RexNode;
 import net.sf.saffron.rex.RexUtil;
-import net.sf.saffron.util.Util;
-
 
 /**
  * OJPlannerFactory implements VolcanoPlannerFactory by constructing planners
@@ -113,16 +112,6 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
     {
         planner.addRule(new UnionToIteratorRule());
         planner.addRule(new OneRowToIteratorRule());
-
-        // TODO:  only turn this on once option to always return new objects is
-        // implemented
-        /*
-          planner.addRule(new ProjectToIteratorRule());
-          planner.addRule(new ProjectedFilterToIteratorRule());
-        */
-
-        // TODO:  FilterToIteratorRule which handles the case where there's no
-        // Project on top
     }
 
     //~ Inner Classes ---------------------------------------------------------
@@ -344,18 +333,21 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
         }
     }
 
-    // TODO:  deal with boxing
+    /**
+     * Rule to convert a {@link ProjectRel} to an {@link IterCalcRel}.
+     */
     public static class ProjectToIteratorRule extends ConverterRule
     {
-        public ProjectToIteratorRule()
-        {
+        private ProjectToIteratorRule() {
             super(
-                ProjectRel.class,
-                CallingConvention.NONE,
-                CallingConvention.ITERATOR,
-                "ProjectToIteratorRule");
+                    ProjectRel.class,
+                    CallingConvention.NONE,
+                    CallingConvention.ITERATOR,
+                    "ProjectToIteratorRule");
         }
-        
+        public static ProjectToIteratorRule instance =
+                new ProjectToIteratorRule();
+
         public SaffronRel convert(SaffronRel rel)
         {
             final ProjectRel project = (ProjectRel) rel;
@@ -365,19 +357,35 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
             if (iterChild == null) {
                 return null;
             }
+            final RexNode [] exps = project.getChildExps();
+            final RexNode condition = null;
+            // FIXME jvs 11-May-2004: This should be calling something
+            // (cluster?) to get an existing RelImplementor, not making one up
+            // out of thin air, since query processing may be using a custom
+            // implementation.
+            final RelImplementor relImplementor =
+                    new RelImplementor(project.getCluster().rexBuilder);
+            if (!relImplementor.canTranslate(project, condition, exps)) {
+                // some of the expressions cannot be translated into Java
+                return null;
+            }
             return new IterCalcRel(
                 project.getCluster(),
                 iterChild,
-                project.getChildExps(),
-                null,
+                exps,
+                condition,
                 project.getFieldNames(),
                 project.getFlags());
         }
     }
 
+    /**
+     * Rule to convert a {@link ProjectRel} on top of a {@link FilterRel} to an
+     * {@link IterCalcRel}.
+     */
     public static class ProjectedFilterToIteratorRule extends VolcanoRule
     {
-        public ProjectedFilterToIteratorRule()
+        private ProjectedFilterToIteratorRule()
         {
             super(
                 new RuleOperand(
@@ -385,7 +393,9 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
                     new RuleOperand [] { new RuleOperand(FilterRel.class,null) }
                     ));
         }
-        
+        public static final ProjectedFilterToIteratorRule instance =
+                new ProjectedFilterToIteratorRule();
+
         // implement VolcanoRule
         public CallingConvention getOutConvention()
         {
@@ -407,15 +417,49 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
                 return;
             }
             
+            final RexNode[] exps = project.getChildExps();
+            final RelImplementor relImplementor =
+                    new RelImplementor(project.getCluster().rexBuilder);
+            if (!relImplementor.canTranslate(project, condition, exps)) {
+                // some of the expressions cannot be translated into Java
+                return;
+            }
             IterCalcRel calcRel = new IterCalcRel(
                 project.getCluster(),
                 iterChild,
-                project.getChildExps(),
+                exps,
                 condition,
                 project.getFieldNames(),
                 project.getFlags());
 
             call.transformTo(calcRel);
+        }
+    }
+    
+    /**
+     * Rule to convert a {@link CalcRel} to an {@link IterCalcRel}.
+     */
+    public static class IterCalcRule extends ConverterRule
+    {
+        private IterCalcRule() {
+            super(CalcRel.class, CallingConvention.NONE,
+                    CallingConvention.ITERATOR, "IterCalcRule");
+        }
+        public static final IterCalcRule instance = new IterCalcRule();
+
+        public SaffronRel convert(SaffronRel rel) {
+            // TODO jvs 11-May-2004:  add canTranslate test
+            final CalcRel calc = (CalcRel) rel;
+            final SaffronRel convertedChild = convert(planner, calc.child,
+                    CallingConvention.ITERATOR);
+            if (convertedChild == null) {
+                // We can't convert the child, so we can't convert rel.
+                return null;
+            }
+            return new IterCalcRel(rel.getCluster(), convertedChild,
+                    calc._projectExprs, calc._conditionExpr,
+                    OptUtil.getFieldNames(calc.getRowType()),
+                    IterCalcRel.Flags.Boxed);
         }
     }
 
@@ -479,7 +523,6 @@ public class OJPlannerFactory extends VolcanoPlannerFactory
             SaffronRel [] newInputs = new SaffronRel[union.getInputs().length];
             for (int i = 0; i < newInputs.length; i++) {
                 // Stubborn, because inputs don't appear as operands.
-                boolean stubborn = true;
                 newInputs[i] =
                     convert(
                         planner,

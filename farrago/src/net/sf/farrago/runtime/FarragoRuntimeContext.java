@@ -1,6 +1,7 @@
 /*
 // Farrago is a relational database management system.
 // Copyright (C) 2003-2004 John V. Sichi.
+// Copyright (C) 2003-2004 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -73,48 +74,24 @@ public class FarragoRuntimeContext
     /**
      * Create a new FarragoRuntimeContext.
      *
-     * @param catalog catalog storing object definitions
-     *
-     * @param codeCache cache for Fennel tuple streams
-     *
-     * @param txnCodeCache txn-private cache for Fennel tuple streams,
-     * or null if streams don't need to be pinned by txn
-     *
-     * @param fennelTxnContext Fennel context for transactions
-     *
-     * @param indexMap map of indexes which might be accessed
-     *
-     * @param dynamicParamValues array of values bound to dynamic
-     * parameters by position
-     *
-     * @param connectionDefaults context-dependent settings
-     *
-     * @param sharedDataWrapperCache FarragoObjectCache to use for
-     * caching FarragoMedDataWrapper instances
+     * @param params constructor params
      */
     public FarragoRuntimeContext(
-        FarragoCatalog catalog,
-        FarragoObjectCache codeCache,
-        Map txnCodeCache,
-        FennelTxnContext fennelTxnContext,
-        FarragoIndexMap indexMap,
-        Object [] dynamicParamValues,
-        FarragoConnectionDefaults connectionDefaults,
-        FarragoObjectCache sharedDataWrapperCache)
+        FarragoRuntimeContextParams params)
     {
-        this.catalog = catalog;
-        this.codeCache = codeCache;
-        this.txnCodeCache = txnCodeCache;
-        this.fennelTxnContext = fennelTxnContext;
-        this.indexMap = indexMap;
-        this.dynamicParamValues = dynamicParamValues;
-        this.connectionDefaults = connectionDefaults;
+        this.catalog = params.catalog;
+        this.codeCache = params.codeCache;
+        this.txnCodeCache = params.txnCodeCache;
+        this.fennelTxnContext = params.fennelTxnContext;
+        this.indexMap = params.indexMap;
+        this.dynamicParamValues = params.dynamicParamValues;
+        this.connectionDefaults = params.connectionDefaults;
 
         dataWrapperCache = new FarragoDataWrapperCache(
             this,
-            sharedDataWrapperCache,
-            catalog,
-            fennelTxnContext.getFennelDbHandle());
+            params.sharedDataWrapperCache,
+            params.catalog,
+            params.fennelTxnContext.getFennelDbHandle());
 
         streamOwner = new StreamOwner();
     }
@@ -364,8 +341,7 @@ public class FarragoRuntimeContext
         assert (dummies == null);
         assert(streamGraph != null);
 
-        FemStreamHandle streamHandle = streamGraph.findStream(
-            catalog,streamName);
+        FemStreamHandle streamHandle = getStreamHandle(streamName);
         
         return new FennelIterator(
             tupleReader,
@@ -374,10 +350,20 @@ public class FarragoRuntimeContext
             catalog.getCurrentConfig().getFennelConfig().getCachePageSize());
     }
 
+    protected FemStreamHandle getStreamHandle(
+        String globalStreamName)
+    {
+        catalog.getRepository().beginTrans(true);
+        try {
+            return streamGraph.findStream(catalog,globalStreamName);
+        } finally {
+            catalog.getRepository().endTrans(false);
+        }
+    }
+
     private FennelStreamGraph prepareStreamGraph(String xmiFennelPlan)
     {
-        // need a repository txn for import
-        catalog.getRepository().beginTrans(true);
+        catalog.beginTransientTxn();
         try {
             Collection collection = JmiUtil.importFromXmiString(
                 catalog.farragoPackage,xmiFennelPlan);
@@ -399,7 +385,7 @@ public class FarragoRuntimeContext
             fennelTxnContext.getFennelDbHandle().executeCmd(cmd);
             return newStreamGraph;
         } finally {
-            catalog.getRepository().endTrans();
+            catalog.endTransientTxn();
         }
     }
 

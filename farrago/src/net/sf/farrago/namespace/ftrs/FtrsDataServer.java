@@ -100,13 +100,18 @@ class FtrsDataServer extends MedAbstractLocalDataServer
     public long createIndex(
         CwmSqlindex index)
     {
-        FemCmdCreateIndex cmd = catalog.newFemCmdCreateIndex();
-        if (!catalog.isFennelEnabled()) {
-            return 0;
-        }
+        catalog.beginTransientTxn();
+        try {
+            FemCmdCreateIndex cmd = catalog.newFemCmdCreateIndex();
+            if (!catalog.isFennelEnabled()) {
+                return 0;
+            }
         
-        initIndexCmd(cmd,index);
-        return getFennelDbHandle().executeCmd(cmd);
+            initIndexCmd(cmd,index);
+            return getFennelDbHandle().executeCmd(cmd);
+        } finally {
+            catalog.endTransientTxn();
+        }
     }
 
     // implement FarragoMedLocalDataServer
@@ -115,18 +120,23 @@ class FtrsDataServer extends MedAbstractLocalDataServer
         long rootPageId,
         boolean truncate)
     {
-        FemCmdDropIndex cmd;
-        if (truncate) {
-            cmd = catalog.newFemCmdTruncateIndex();
-        } else {
-            cmd = catalog.newFemCmdDropIndex();
+        catalog.beginTransientTxn();
+        try {
+            FemCmdDropIndex cmd;
+            if (truncate) {
+                cmd = catalog.newFemCmdTruncateIndex();
+            } else {
+                cmd = catalog.newFemCmdDropIndex();
+            }
+            if (!catalog.isFennelEnabled()) {
+                return;
+            }
+            initIndexCmd(cmd,index);
+            cmd.setRootPageId(rootPageId);
+            getFennelDbHandle().executeCmd(cmd);
+        } finally {
+            catalog.endTransientTxn();
         }
-        if (!catalog.isFennelEnabled()) {
-            return;
-        }
-        initIndexCmd(cmd,index);
-        cmd.setRootPageId(rootPageId);
-        getFennelDbHandle().executeCmd(cmd);
     }
     
     private void initIndexCmd(

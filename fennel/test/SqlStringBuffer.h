@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Fennel is a relational database kernel.
-// Copyright (C) 2004-2004 Disruptive Technologies, Inc.
+// Copyright (C) 2004-2004 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -21,7 +21,6 @@
 #ifndef Fennel_SqlStringBuffer_Included
 #define Fennel_SqlStringBuffer_included
 
-#include "fennel/common/CommonPreamble.h"
 #include "fennel/common/TraceSource.h"
 
 #include <boost/scoped_array.hpp>
@@ -42,38 +41,15 @@ public:
     static const int mBumperLen;
 
     explicit
-    SqlStringBuffer(int storage,         // maximum size of string in characters
-                    int size,            // size of text, in characters, excluding padding
-                    int leftpad = 0,     // pad left with this many characters
-                    int rightpad = 0,    // pad right with this many chararacters
-                    uint text = 'x',     // fill text w/this
-                    uint pad = ' ',      // pad w/this
+    SqlStringBuffer(int storage,      // maximum size of string in characters
+                    int size,         // size of text, in characters, excluding padding
+                    int leftpad = 0,  // pad left with this many characters
+                    int rightpad = 0, // pad right with this many chararacters
+                    uint text = 'x',  // fill text w/this
+                    uint pad = ' ',   // pad w/this
                     // Try to use something unaligned below:
                     int leftBumper = mBumperLen,  // In characters
-                    int rightBumper = mBumperLen) : 
-        mStorage(storage),
-        mSize(size),
-        mLeftPad(leftpad),
-        mRightPad(rightpad),
-        mLeftBump(leftBumper),
-        mRightBump(rightBumper),
-        mTotal(storage + leftBumper + rightBumper),
-        mS(mTotal, mBumperChar)
-    {
-        assert(leftBumper > 0);
-        assert(rightBumper > 0);
-        assert(storage == size + leftpad + rightpad);
-
-        mLeftP = const_cast<char *>(mS.c_str()); // Too abusive of string()?
-        mStr = mLeftP + mLeftBump;
-        mRightP = mStr + mStorage;
-
-        string padS(mStorage, pad);
-        string textS(size, text);
-
-        mS.replace(mLeftBump, mStorage, padS, 0, mStorage); // pad all first
-        mS.replace(mLeftBump + mLeftPad, mSize, textS, 0, mSize);
-    }
+                    int rightBumper = mBumperLen);
 
     bool verify();
     void randomize(uint start = 'A',
@@ -107,48 +83,12 @@ public:
     static const int mBumperLen;
 
     explicit
-    SqlStringBufferUCS2(int storage,         // maximum size of string in characters
-                        int size,            // size of text, in characters, excluding padding
-                        int leftpad = 0,     // pad left with this many characters
-                        int rightpad = 0,    // pad right with this many chararacters
-                        uint text = 'x',     // fill text w/this
-                        uint pad = ' ',      // pad w/this
-                        // Try to use something unaligned below:
-                        int leftBumper = mBumperLen,  // In characters
-                        int rightBumper = mBumperLen) : 
-        mStorage(storage*2),
-        mSize(size*2),
-        mLeftPad(leftpad*2),
-        mRightPad(rightpad*2),
-        mLeftBump(leftBumper),
-        mRightBump(rightBumper),
-        mTotal(storage*2 + leftBumper + rightBumper),
-        mS(mTotal, mBumperChar)
-    {
-        init();
-
-        // pad all first
-        char byte1 = (pad >> 8) & 0xff;
-        char byte2 = pad & 0xff;
-        int i = 0;
-        while (i < mStorage) {
-            mStr[i++] = byte1;
-            mStr[i++] = byte2;
-        }
-
-        // fill text
-        byte1 = (text >> 8) & 0xff;
-        byte2 = text & 0xff;
-        i = 0;
-        while (i < mSize) {
-            mStr[mLeftPad + i++] = byte1;
-            mStr[mLeftPad + i++] = byte2;
-            
-        }
-    }
+    SqlStringBufferUCS2(SqlStringBuffer const &src);
 
     explicit
-    SqlStringBufferUCS2(SqlStringBuffer const &src);
+    SqlStringBufferUCS2(SqlStringBuffer const &src,
+                        int leftBumper,
+                        int rightBumper);
 
     void init();
     bool verify();

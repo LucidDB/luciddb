@@ -51,7 +51,7 @@ further.
 
 Currently, the only way to build Farrago is to get the source from
 Perforce.  (If you just want to take a look-see through the codebase,
-you can use <a href="http://apoptosis.dyndns.org:8080/open/dev/farrago/">
+you can use <a href="http://perforce.eigenbase.org:8080/open/dev/farrago/">
 p4web</a>.)  If you're new to Perforce, you might want to read the
 official <a
 href="http://www.perforce.com/perforce/doc.022/manuals/boilerplates/quickstart.html">
@@ -68,7 +68,7 @@ variables or a .p4env file).  The essential information you need to
 provide is:
 
 <ul>
-<li>P4PORT=apoptosis.dyndns.org:1666
+<li>P4PORT=perforce.eigenbase.org:1666
 <li>P4USER=your-sourceforge-user-name
 <li>P4CLIENT=your-user-name.your-hostname
 </ul>
@@ -103,12 +103,9 @@ and other developer docs).
 <p>
 
 Finally, run <code>p4 sync</code> to get all the source files and
-thirdparty distributions into your client workspace.  This will take
-quite a while because some of the thirdparty distributions are large,
-and apoptosis.dyndns.org is limited by DSL upload speed (regardless of
-the girth of your pipe).
-
-You should also make sure you have <a
+thirdparty distributions into your client workspace.  This may take a
+while because some of the thirdparty distributions are large.  You
+should also make sure you have <a
 href="http://java.sun.com/j2se/1.4">JDK 1.4</a> or higher installed,
 with JAVA_HOME set to the JDK installation root.
 
@@ -287,17 +284,15 @@ executed (use FINER to see dynamic parameter values as well)</li>
 <li>add <code>net.sf.farrago.saffron.level=FINE</code> to turn on all
 Saffron tracing (no further discrimination is available)
 
-<li>add <code>net.sf.farrago.fennel.level=FINE</code>. to turn on all
-Fennel tracing (probably more than you want!)
+<li>add <code>net.sf.fennel.level=FINE</code>. to turn on all
+low-level Fennel tracing (probably more than you want!)
 
-<li>add <code>net.sf.farrago.fennel.FennelDbHandle.level=FINE</code>
+<li>add <code>net.sf.farrago.fennel.level=FINE</code>
 to trace just the commands sent to the Fennel API (not their
 implementation)
 
-<li>add <code>net.sf.farrago.fennel.xo.level=FINE</code> to trace
-tuples processed by TupleStreams (you can also select individual
-stream types by name,
-e.g. <code>net.sf.farrago.fennel.xo.FennelSortingStreamDef.level=FINE</code>)
+<li>add <code>net.sf.fennel.xo.level=FINE</code> to trace
+tuples processed by TupleStreams
 
 <li>some Fennel classes provide further tracing discrimination (TBD)
 

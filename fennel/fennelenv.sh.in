@@ -11,3 +11,8 @@ export @lib_path_var@=$FENNEL_HOME/test/.libs:$@lib_path_var@
 export @lib_path_var@=$FENNEL_HOME/farrago/.libs:$@lib_path_var@
 export @lib_path_var@=@BOOST_THREADLIB_DIR@:$@lib_path_var@
 export @lib_path_var@=@stlport_location@/lib:$@lib_path_var@
+
+if [ -d "@icu_location@/lib" ]
+then
+	export @lib_path_var@=@icu_location@/lib:$@lib_path_var@
+fi

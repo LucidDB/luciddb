@@ -34,15 +34,20 @@ the exception and look at the tail of file
 
 <h2>How do I get a Fennel C++ stack trace?  How do I debug Fennel?</h2> 
 
-At the moment, there's no nice automated stack trace like in Java (besides
-a standard core dump).  However, it is possible to use gdb to debug
-Fennel.  Before starting the Java virtual machine, set environment
-variable <code>FENNEL_JNI_DEBUG=1</code> in the shell from which you are
-going to run Java.  When the Fennel JNI layer is loaded, you should see
-a message like "Waiting for debugger; pid=18454".  Start gdb and tell it
-to attach to the process with the given pid.  The process should be
-sleeping in method <code>JNI_OnLoad</code>; set whatever breakpoints
-you want and then issue the gdb continue command.
+At the moment, there's no nice automated stack trace like in Java
+(besides a standard core dump).  However, it is possible to use gdb to
+debug Fennel.  Before starting the Java virtual machine, set
+environment variable <code>FENNEL_JNI_DEBUG=1</code> in the shell from
+which you are going to run Java.  When the Fennel JNI layer is loaded,
+you should see a message like "Waiting for debugger; pid=18454".
+Start gdb and tell it to attach to the process with the given pid.
+The process should be sleeping in method <code>JNI_OnLoad</code>; set
+whatever breakpoints you want and then issue the gdb continue command.
+Unfortunately, gdb receives many spurious signals when attached to the
+Java Virtual Machine (at least on Linux, even SIGSEGV!)  The only
+choices are to tell gdb to ignore them (e.g. with the command
+<code>handle SIGSEGV ignore</code>), or to manually continue past them
+each time (like if you want to track down a <b>real</b> segfault).
 
 <hr>
 

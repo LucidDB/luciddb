@@ -1,6 +1,7 @@
 /*
 // Farrago is a relational database management system.
 // Copyright (C) 2003-2004 John V. Sichi.
+// Copyright (C) 2003-2004 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -30,6 +31,7 @@ import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.session.*;
+import net.sf.farrago.runtime.*;
 
 import net.sf.saffron.sql.*;
 import net.sf.saffron.util.*;
@@ -124,8 +126,7 @@ public class FarragoDbSession
         this.sessionFactory = sessionFactory;
         
         // TODO:  excn handling
-        database = FarragoDatabase.pinReference(
-            sessionFactory.newFennelCmdExecutor());
+        database = FarragoDatabase.pinReference(sessionFactory);
 
         FarragoDatabase.addSession(database,this);
         
@@ -205,8 +206,6 @@ public class FarragoDbSession
             this,
             getCatalog(),
             getDatabase().getFennelDbHandle(),
-            newParser(),
-            getConnectionDefaults(),
             getSessionIndexMap(),
             getDatabase().getDataWrapperCache());
     }
@@ -397,6 +396,32 @@ public class FarragoDbSession
             int iSavepoint = validateSavepoint(savepoint);
             rollbackToSavepoint(iSavepoint);
         }
+    }
+
+    // implement FarragoSession
+    public Class getRuntimeContextClass()
+    {
+        return FarragoRuntimeContext.class;
+    }
+
+    // implement FarragoSession
+    public FarragoRuntimeContext newRuntimeContext(
+        FarragoRuntimeContextParams params)
+    {
+        return new FarragoRuntimeContext(params);
+    }
+
+    protected FarragoRuntimeContextParams newRuntimeContextParams()
+    {
+        FarragoRuntimeContextParams params = new FarragoRuntimeContextParams();
+        params.catalog = getCatalog();
+        params.codeCache = getDatabase().getCodeCache();
+        params.txnCodeCache = getTxnCodeCache();
+        params.fennelTxnContext = getFennelTxnContext();
+        params.indexMap = getSessionIndexMap();
+        params.connectionDefaults = getConnectionDefaults().cloneDefaults();
+        params.sharedDataWrapperCache = getDatabase().getDataWrapperCache();
+        return params;
     }
 
     private FarragoSessionSavepoint newSavepointImpl(String name)

@@ -73,8 +73,36 @@ AC_CHECK_FILE([$stlport_location/stlport/stl/_config.h],
         AC_MSG_ERROR([invalid STLport location specified]))
 AC_SUBST(stlport_location)
 
+dnl Check if ICU support is desired
+AC_ARG_WITH([icu],
+   AC_HELP_STRING([--with-icu],[location of unzipped ICU directory]),
+   [ icu_location=$withval ],
+   [ icu_location="" ])
+if test "$icu_location" != ""
+then
+   AC_CHECK_FILE([$icu_location/source/runConfigureICU],
+      ,
+      AC_MSG_ERROR([invalid ICU location specified]))
+   ICU_LIB_DATA=icudata
+   ICU_LIB_COMMON=icuuc
+   ICU_LIB_DIR=$icu_location/lib
+   ICU_LD_FLAGS="-L$ICU_LIB_DIR -l$ICU_LIB_DATA -L$ICU_LIB_DIR -l$ICU_LIB_COMMON";
+   icu_include="-I$icu_location/include";
+   CXXFLAGS="$CXXFLAGS -DHAVE_ICU"
+   AC_SUBST(icu_location)
+else
+   ICU_LD_FLAGS=
+   icu_include=
+fi
+AC_SUBST(ICU_LD_FLAGS)
+AC_SUBST(icu_include)
 
-dnl Check whether Farrago support is desired
+dnl See ICU readme.html#HowToPackage for details on the various libraries
+AC_SUBST(ICU_LIB_DATA)
+AC_SUBST(ICU_LIB_COMMON)
+AC_SUBST(ICU_LIB_DIR)
+
+dnl Check if Farrago support is desired
 AC_ARG_WITH([farrago],
     AC_HELP_STRING([--with-farrago],[whether to include Farrago support]),
     [ with_farrago=$withval ],
@@ -92,6 +120,14 @@ else
     farrago_subdir=""
 fi
 AC_SUBST(farrago_subdir)
+
+dnl Endian bigendian littleendian
+dnl note that BIG_ENDIAN and LITTLE_ENDIAN already defined for gcc
+AC_C_BIGENDIAN(
+    [endianness=-DBIGENDIAN],
+    [endianness=-DLITTLEENDIAN],
+    AC_MSG_ERROR([Endian not defined for this platform]))
+CXXFLAGS="$CXXFLAGS $endianness"
 
 dnl Linuxy defaults
 BOOST_LINKAGE=runtime-link-dynamic/shared-linkable-true

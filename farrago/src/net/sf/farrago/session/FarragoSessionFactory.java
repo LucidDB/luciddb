@@ -22,6 +22,7 @@ package net.sf.farrago.session;
 import net.sf.farrago.parser.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fennel.*;
+import net.sf.farrago.util.*;
 
 import java.util.*;
 
@@ -53,6 +54,19 @@ public interface FarragoSessionFactory
      * @return new interpeter
      */
     public FennelCmdExecutor newFennelCmdExecutor();
+
+    /**
+     * Opens a new catalog instance.
+     *
+     * @param owner the object which should own the new catalog
+     *
+     * @param userCatalog true for user catalog; false for system catalog
+     *
+     * @return new catalog instance
+     */
+    public FarragoCatalog newCatalog(
+        FarragoAllocationOwner owner,
+        boolean userCatalog);
 
     /**
      * Creates a new Fennel transaction context.

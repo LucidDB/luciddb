@@ -286,8 +286,7 @@
     </access-rule>
 
     <pattern name="session.deps">
-      <include pattern="fennel.deps" />
-      <include pattern="namespace.util.deps" />
+      <include pattern="runtime.deps" />
       <include pattern="session" />
     </pattern>
 

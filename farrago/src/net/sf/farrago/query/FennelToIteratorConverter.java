@@ -1,6 +1,7 @@
 /*
 // Farrago is a relational database management system.
 // Copyright (C) 2003-2004 John V. Sichi.
+// Copyright (C) 2003-2004 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -47,8 +48,9 @@ import java.util.*;
 
 
 /**
- * FennelToIteratorConverter is a Converter from the FENNEL_PULL
- * CallingConvention to the ITERATOR CallingConvention.
+ * FennelToIteratorConverter is a Converter from the
+ * {@link FennelPullRel#FENNEL_PULL_CONVENTION fennel-pull calling convention}
+ * to the {@link CallingConvention#ITERATOR iterator calling convention}.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -62,7 +64,7 @@ public class FennelToIteratorConverter extends ConverterRel
      *
      * @param cluster VolcanoCluster for this rel
      * @param child input rel producing rows in Fennel TupleStream
-     * representation 
+     * representation
      */
     public FennelToIteratorConverter(VolcanoCluster cluster,SaffronRel child)
     {
@@ -101,7 +103,7 @@ public class FennelToIteratorConverter extends ConverterRel
 
         final SaffronType rowType = getRowType();
         OJClass rowClass = OJUtil.typeToOJClass(rowType);
-        
+
         if (!catalog.isFennelEnabled()) {
             // use dummies to insert a reference to our row class, just so
             // that it will get generated
@@ -143,7 +145,7 @@ public class FennelToIteratorConverter extends ConverterRel
         // class TupleAccessor.  (TODO:  link).  Also see Java class
         // ReflectTupleReader, which accomplishes the desired affect
         // generically, though more slowly.
-        
+
         // variable for synthetic object instance
         Variable varTuple = implementor.newVariable();
 
@@ -377,6 +379,26 @@ public class FennelToIteratorConverter extends ConverterRel
             fennelRel.getPreparingStmt().getConnectionVariable(),
             "newFennelIterator",
             argList);
+    }
+
+    /**
+     * Registers this relational expression and rule(s) with the planner, as
+     * per {@link SaffronRel#register}.
+     * @param planner Planner
+     */
+    public static void register(FarragoPlanner planner) {
+        planner.addRule(
+            new ConverterRule(
+                SaffronRel.class,
+                FennelPullRel.FENNEL_PULL_CONVENTION,
+                CallingConvention.ITERATOR,
+                "FennelToIteratorRule")
+            {
+                public SaffronRel convert(SaffronRel rel)
+                {
+                    return new FennelToIteratorConverter(rel.getCluster(),rel);
+                }
+            });
     }
 }
 

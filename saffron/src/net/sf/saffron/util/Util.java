@@ -2,6 +2,7 @@
 // $Id$
 // Saffron preprocessor and data engine
 // (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// (C) Copyright 2003-2004 John V. Sichi
 // You must accept the terms in LICENSE.html to use this software.
 //
 // This program is free software; you can redistribute it and/or
@@ -515,8 +516,7 @@ public class Util extends Toolbox
     public static String getSalesConnectString()
     {
         loadDrivers();
-        return SaffronProperties.instance().getProperty(
-            SaffronProperties.PROPERTY_saffron_test_jdbc_url);
+        return SaffronProperties.instance().testJdbcUrl.get();
     }
 
     private static synchronized void loadDrivers()
@@ -525,8 +525,7 @@ public class Util extends Toolbox
             return;
         }
         String jdbcDrivers =
-            SaffronProperties.instance().getProperty(
-                SaffronProperties.PROPERTY_saffron_test_jdbc_drivers);
+                SaffronProperties.instance().testJdbcDrivers.get();
         StringTokenizer tok = new StringTokenizer(jdbcDrivers,",");
         while (tok.hasMoreTokens()) {
             String jdbcDriver = tok.nextToken();

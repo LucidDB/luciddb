@@ -170,19 +170,13 @@ class FarragoDbStmtContext
         boolean isDml = executableStmt.isDml();
         boolean success = false;
         try {
-            Map txnCodeCache = null;
-            if (isDml) {
-                txnCodeCache = session.getTxnCodeCache();
+            FarragoRuntimeContextParams params =
+                session.newRuntimeContextParams();
+            if (!isDml) {
+                params.txnCodeCache = null;
             }
-            FarragoRuntimeContext context = new FarragoRuntimeContext(
-                session.getCatalog(),
-                session.getDatabase().getCodeCache(),
-                txnCodeCache,
-                session.getFennelTxnContext(),
-                session.getSessionIndexMap(),
-                dynamicParamValues,
-                session.getConnectionDefaults().cloneDefaults(),
-                session.getDatabase().getDataWrapperCache());
+            params.dynamicParamValues = dynamicParamValues;
+            FarragoRuntimeContext context = session.newRuntimeContext(params);
             if (allocations != null) {
                 context.addAllocation(allocations);
                 allocations = null;

@@ -43,22 +43,6 @@
     </xsl:copy>
   </xsl:template>
 
-  <!-- Mark everything in the Fennel package as transient -->
-  <xsl:template
-    match="Model:Package[@name='FEM']/Model:Namespace.contents">
-    <xsl:copy>
-      <xsl:apply-templates select="@* | node()" />
-      <xsl:for-each select=
-        "Model:Package[@name='Fennel']/Model:Namespace.contents/Model:Class">
-        <Model:Tag tagId='org.netbeans.mdr.transient' values='true'>
-          <xsl:attribute name="elements">
-            <xsl:value-of select="concat('fem',@xmi.id)"/>
-          </xsl:attribute>
-        </Model:Tag>
-      </xsl:for-each>
-    </xsl:copy>
-  </xsl:template>
-
   <!-- Pass everything else through unchanged -->
   <xsl:template match="/ | @* | node()">
     <xsl:copy>

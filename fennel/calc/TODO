@@ -93,6 +93,16 @@ would be what, exactly?
 SqlString throws exceptions, but ExtString.cpp doesn't set the result to NULL.
 ExtString must catch the exceptions and do the right thing.
 
+String instruction area needs some thought on how padding character will
+be defined or defaulted.
+
+Endian issues are handled crudely, at best, in SqlSTring.* and the ICU 
+interface in general. There may be issues when we start importing strings
+over the network that have different endianness. No attempts are made to
+deal with byte-order marks at this point.
+
+Need to finish unit test for UCS2 string trim.
+
 ====================================================
 Extended Instructions & Conversions Major Todo Items
 ====================================================

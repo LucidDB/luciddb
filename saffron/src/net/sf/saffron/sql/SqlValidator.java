@@ -2,6 +2,7 @@
 // $Id$
 // Saffron preprocessor and data engine
 // (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// (C) Copyright 2003-2004 John V. Sichi
 // You must accept the terms in LICENSE.html to use this software.
 //
 // This program is free software; you can redistribute it and/or
@@ -63,7 +64,8 @@ public class SqlValidator
     public static final String[] emptyStrings = new String[0];
 
     final SaffronType unknownType;
-    // We may need this to report the exact poistion in the sql for function valiation error
+    // We may need this to report the exact position in the sql for function
+    // validation error.
     private SqlNode errorTypeNode;
 
     /**
@@ -590,9 +592,7 @@ public class SqlValidator
         if (type.isCharType() && (null==type.getCharset())) {
             if (null==charset){
                 charset = Charset.forName(
-                    SaffronProperties.instance().getProperty(
-                        SaffronProperties.PROPERTY_saffron_default_charset,
-                        SaffronProperties.PROPERTY_saffron_default_charset_DEFAULT));
+                    SaffronProperties.instance().defaultCharset.get());
             }
             type.setCharset(charset);
         }

@@ -1,6 +1,7 @@
 /*
 // Farrago is a relational database management system.
 // Copyright (C) 2003-2004 John V. Sichi.
+// Copyright (C) 2003-2004 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -57,11 +58,13 @@ public abstract class FarragoAtomicType extends FarragoType
      *
      * @param simpleType catalog definition for SQL type
      * @param isNullable false if NOT NULL
+     * @pre simpleType != null
      */
     protected FarragoAtomicType(
         CwmSqlsimpleType simpleType,
         boolean isNullable)
     {
+        Util.pre(simpleType != null, "simpleType != null");
         this.simpleType = simpleType;
         this.isNullable = isNullable;
         fields[0] = new FarragoTypeFactoryImpl.ExposedFieldImpl(

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/expressions/values.sql#4 $
+0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/expressions/values.sql#5 $
 0: jdbc:farrago:> -- Test queries with VALUES
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- single-row
@@ -77,12 +77,11 @@ Error: Unknown identifier 'X' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test SYSTEM_USER (but don't actually execute since it's context-dependent)
 0: jdbc:farrago:> explain plan for values (system_user);
-+-------------------------------------------+
-|                  column0                  |
-+-------------------------------------------+
-| IterCalcRel(SYSTEM_USER=[$0])             |
-|   IterCalcRel(SYSTEM_USER=[SYSTEM_USER])  |
-|     IterOneRowRel                         |
-+-------------------------------------------+
++-----------------------------------------+
+|                 column0                 |
++-----------------------------------------+
+| IterCalcRel(SYSTEM_USER=[SYSTEM_USER])  |
+|   IterOneRowRel                         |
++-----------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

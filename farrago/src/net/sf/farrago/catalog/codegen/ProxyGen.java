@@ -201,13 +201,8 @@ public class ProxyGen
         pw.println("class " + getCppClassName(clazz));
         pw.print(": virtual public JniProxy");
         for (int i = 0; i < bases.length; ++i) {
-            if (baseInterfaces.contains(bases[i])) {
-                pw.print(", virtual public ");
-                pw.print(getCppBaseClassName(bases[i]));
-            } else if (genInterfaces.contains(bases[i])) {
-                pw.print(", virtual public ");
-                pw.print(getCppClassName(bases[i]));
-            }
+            pw.print(", virtual public ");
+            pw.print(getCppClassName(bases[i]));
         }
         pw.println();
         pw.println("{");
@@ -535,22 +530,16 @@ public class ProxyGen
      */
     private String getCppClassName(Class clazz)
     {
-        return ReflectUtil.getUnqualifiedClassName(clazz).replaceFirst(
-            genPrefix,
-            "Proxy");
-    }
+        String prefix;
 
-    /**
-     * Get the name of the C++ type for a base proxy instance.
-     *
-     * @param clazz the source Java interface
-     *
-     * @return corresponding C++ type name
-     */
-    private String getCppBaseClassName(Class clazz)
-    {
+        if (baseInterfaces.contains(clazz)) {
+            prefix = basePrefix;
+        } else {
+            prefix = genPrefix;
+        }
+        
         return ReflectUtil.getUnqualifiedClassName(clazz).replaceFirst(
-            basePrefix,
+            prefix,
             "Proxy");
     }
 

@@ -1,6 +1,7 @@
 /*
 // Farrago is a relational database management system.
 // Copyright (C) 2003-2004 John V. Sichi.
+// Copyright (C) 2003-2004 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -36,6 +37,7 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.util.*;
 
 import org.netbeans.api.mdr.*;
+import org.netbeans.mdr.*;
 
 import java.io.*;
 
@@ -54,7 +56,8 @@ import javax.jmi.reflect.*;
  * @version $Id$
  */
 public class FarragoCatalog
-    extends FarragoMetadataFactory implements FarragoAllocation
+    extends FarragoMetadataFactory
+    implements FarragoAllocation, FarragoTransientTxnContext
 {
     //~ Static fields/initializers --------------------------------------------
 
@@ -91,10 +94,13 @@ public class FarragoCatalog
     /** Root package in repository. */
     public final FarragoPackage farragoPackage;
 
+    /** Root package in transient repository. */
+    public final FarragoPackage transientFarragoPackage;
+
     /** FEM package in repository. */
     public final FemPackage femPackage;
 
-    /** Farrago config package in repository. */
+    /** Fennel package in repository. */
     public final FennelPackage fennelPackage;
 
     /**
@@ -163,9 +169,31 @@ public class FarragoCatalog
         datatypesPackage = cwmPackage.getDataTypes();
         femPackage = farragoPackage.getFem();
         configPackage = femPackage.getConfig();
-        fennelPackage = femPackage.getFennel();
         medPackage = femPackage.getMed();
 
+        // Create special in-memory storage for transient objects
+        try {
+            NBMDRepositoryImpl nbRepos = (NBMDRepositoryImpl) mdrRepository;
+            Map props = new HashMap();
+            String memStorageId = nbRepos.mountStorage(
+                FarragoTransientStorageFactory.class.getName(),
+                props);
+            nbRepos.beginTrans(true);
+            RefPackage memExtent = nbRepos.createExtent(
+                "TransientCatalog",
+                farragoPackage.refMetaObject(),
+                null,
+                memStorageId);
+            nbRepos.endTrans(false);
+            FarragoTransientStorage.ignoreCommit = true;
+            transientFarragoPackage = (FarragoPackage) memExtent;
+            fennelPackage = transientFarragoPackage.getFem().getFennel();
+        } catch (Throwable ex) {
+            throw FarragoResource.instance().newCatalogInitTransientFailed(ex);
+        }
+
+        // TODO jvs 5-May-2004:  do the above for model extensions also
+        
         Collection configs =
             configPackage.getFemFarragoConfig().refAllOfClass();
 
@@ -190,6 +218,19 @@ public class FarragoCatalog
     public MDRepository getRepository()
     {
         return mdrRepository;
+    }
+
+    protected FarragoPackage getTransientFarragoPackage()
+    {
+        return transientFarragoPackage;
+    }
+
+    // override FarragoMetadataFactory
+    public FennelPackage getFennelPackage()
+    {
+        // NOTE jvs 5-May-2004:  return the package corresponding to
+        // in-memory storage
+        return fennelPackage;
     }
 
     /**
@@ -743,6 +784,18 @@ public class FarragoCatalog
             mdrRepository.endTrans(rollback);
         }
         tracer.info("Creation of system-owned catalog objects committed");
+    }
+
+    // implement FarragoTransientTxnContext
+    public void beginTransientTxn()
+    {
+        mdrRepository.beginTrans(true);
+    }
+
+    // implement FarragoTransientTxnContext
+    public void endTransientTxn()
+    {
+        mdrRepository.endTrans(false);
     }
 
     private void initCatalog()

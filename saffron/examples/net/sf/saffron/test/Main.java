@@ -150,23 +150,22 @@ public class Main extends TestCase
      * 
      * <ul>
      * <li>
-     * {@link SaffronProperties#PROPERTY_saffron_test_Name} is a
-     * comma-separated list of tests (method names) to run within {@link
-     * SaffronProperties#PROPERTY_saffron_test_Class}. If not specified or
-     * empty, run all tests.
+     * {@link SaffronProperties#testName} is a comma-separated list of tests
+     * (method names) to run within {@link SaffronProperties#testClass}.
+     * If not specified or empty, run all tests.
      * </li>
      * <li>
-     * {@link SaffronProperties#PROPERTY_saffron_test_Class} is the name of a
+     * {@link SaffronProperties#testClass} is the name of a
      * test class. It must implement {@link junit.framework.Test}.
      * </li>
      * <li>
-     * {@link SaffronProperties#PROPERTY_saffron_test_Suite} is the name of a
+     * {@link SaffronProperties#testSuite} is the name of a
      * class which has a method <code>public static {@link Test}
      * suite()</code>. The harness executes that method, and runs the
      * resulting suite.
      * </li>
      * <li>
-     * If {@link SaffronProperties#PROPERTY_saffron_test_everything} is true,
+     * If {@link SaffronProperties#testEverything} is true,
      * all of the previous parameters are ignored, and the harness runs the
      * whole suite.
      * </li>
@@ -175,17 +174,10 @@ public class Main extends TestCase
     public static Test suite() throws Exception
     {
         SaffronProperties properties = SaffronProperties.instance();
-        String testName =
-            properties.getProperty(
-                SaffronProperties.PROPERTY_saffron_test_Name);
-        String testClass =
-            properties.getProperty(
-                SaffronProperties.PROPERTY_saffron_test_Class);
-        String testSuite =
-            properties.getProperty(
-                SaffronProperties.PROPERTY_saffron_test_Suite);
-        boolean testEverything = properties.getBooleanProperty(
-                SaffronProperties.PROPERTY_saffron_test_everything, false);
+        String testName = properties.testName.get();
+        String testClass = properties.testClass.get();
+        String testSuite = properties.testSuite.get();
+        boolean testEverything = properties.testEverything.get();
         TestSuite suite = new TestSuite();
         if (testEverything) {
             addAllTests(suite);

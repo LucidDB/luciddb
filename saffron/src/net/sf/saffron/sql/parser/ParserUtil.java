@@ -20,18 +20,17 @@
 */
 package net.sf.saffron.sql.parser;
 
-import net.sf.saffron.sql.SqlNode;
-import net.sf.saffron.util.Util;
-import net.sf.saffron.util.SaffronProperties;
 import net.sf.saffron.resource.SaffronResource;
+import net.sf.saffron.sql.SqlNode;
+import net.sf.saffron.util.SaffronProperties;
 
-import java.util.List;
-import java.util.Collections;
-import java.util.StringTokenizer;
-import java.util.Locale;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.StringTokenizer;
 
 
 /**
@@ -119,8 +118,8 @@ public final class ParserUtil {
 
     /**
      * Trims a string for given characters from left and right. E.g.
-     * <code>trimLeft("aBaac123AabC","abBcC")</code> returns
-     * </code>"123AaBc"</code>
+     * <code>trim("aBaac123AabC","abBcC")</code> returns
+     * </code>"123A"</code>
      */
     public static String trim(String s, String chars) {
         if (s.length()==0) {
@@ -165,12 +164,11 @@ public final class ParserUtil {
         StringTokenizer st = new StringTokenizer(in, "$");
         String charsetStr = st.nextToken();
         String localeStr = st.nextToken();
-        if (st.countTokens()>0) {
-            ret[2]=st.nextToken();
-        }else {
-            ret[2]=SaffronProperties.instance().getProperty(
-              SaffronProperties.PROPERTY_saffron_default_collation_strength,
-              SaffronProperties.PROPERTY_saffron_default_collation_strength_DEFAULT);
+        if (st.countTokens() > 0) {
+            ret[2] = st.nextToken();
+        } else {
+            ret[2] = SaffronProperties.instance().defaultCollationStrength
+                    .get();
         }
 
         ret[0] = Charset.forName(charsetStr);

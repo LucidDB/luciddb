@@ -1,6 +1,7 @@
 /*
 // Farrago is a relational database management system.
 // Copyright (C) 2003-2004 John V. Sichi.
+// Copyright (C) 2003-2004 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -86,6 +87,34 @@ public class FarragoRelImplementor extends RelImplementor
             // already registered
             return;
         }
+
+        String streamName = getStreamGlobalName(streamDef,rel);
+        streamDef.setName(streamName);
+        streamDefSet.add(streamDef);
+
+        // recursively ensure all inputs have also been registered
+        Iterator iter = streamDef.getInput().iterator();
+        while (iter.hasNext()) {
+            registerStreamDef(
+                (FemExecutionStreamDef) iter.next(),
+                null);
+        }
+    }
+
+    /**
+     * Construct a globally unique name for an execution stream.  This name is
+     * used to label and find C++ ExecutionStreams.
+     *
+     * @param streamDef stream definition
+     *
+     * @param rel rel which generated stream definition, or null if none
+     *
+     * @return global name for stream
+     */
+    public String getStreamGlobalName(
+        FemExecutionStreamDef streamDef,
+        SaffronRel rel)
+    {
         String streamName;
         if (rel != null) {
             // correlate stream name with rel which produced it
@@ -98,16 +127,7 @@ public class FarragoRelImplementor extends RelImplementor
         }
         // make sure stream names are globally unique
         streamName = streamName + ":" + JmiUtil.getObjectId(streamDef);
-        streamDef.setName(streamName);
-        streamDefSet.add(streamDef);
-
-        // recursively ensure all inputs have also been registered
-        Iterator iter = streamDef.getInput().iterator();
-        while (iter.hasNext()) {
-            registerStreamDef(
-                (FemExecutionStreamDef) iter.next(),
-                null);
-        }
+        return streamName;
     }
 
     // override RelImplementor

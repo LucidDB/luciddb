@@ -2,6 +2,7 @@
 // $Id$
 // Fennel is a relational database kernel.
 // Copyright (C) 1999-2004 John V. Sichi.
+// Copyright (C) 2003-2004 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -34,6 +35,7 @@
 #include "fennel/txn/LogicalRecoveryLog.h"
 #include "fennel/common/StatsTarget.h"
 #include "fennel/common/FennelResource.h"
+#include "fennel/calc/CalcInit.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -125,6 +127,9 @@ Database::Database(
     }
 
     openSegments();
+
+    // Force instantiation of the calculator's instruction tables.
+    (void) CalcInit::instance();
 }
 
 void Database::prepareForRecovery()

@@ -73,8 +73,7 @@ public class FarragoServer
         FarragoSessionFactory sessionFactory = jdbcDriver.newSessionFactory();
         
         // Load the database instance
-        FarragoDatabase db = FarragoDatabase.pinReference(
-            sessionFactory.newFennelCmdExecutor());
+        FarragoDatabase db = FarragoDatabase.pinReference(sessionFactory);
 
         FemFarragoConfig config = db.getSystemCatalog().getCurrentConfig();
 

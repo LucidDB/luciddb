@@ -22,6 +22,10 @@
     <text>Failed to lock catalog file {0}</text>
 </exception>
 
+<exception id="400030" name="CatalogInitTransientFailed">
+    <text>Failed to initialize transient portion of catalog</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- JDBC resources 410,000 - 420,000 -->
 <!-- ====================================================================== -->

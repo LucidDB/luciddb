@@ -1,10 +1,24 @@
 #!/bin/bash
 # $Id$
 
+usagemsg="Usage:  initBuild.sh [--with-farrago|--without-farrago]
+                     {--with-icu|--without-icu}";
+
 if [ "$1" == "--with-farrago" -o "$1" == "--without-farrago" ] ; then
     FARRAGO_FLAG=$1
 else
-    echo "Usage:  initBuild.sh [--with-farrago|--without-farrago]"
+    echo $usagemsg;
+    exit -1;
+fi
+
+if [ "$2" == "--with-icu" -o "$2" == "--without-icu" ] ; then
+    # override default
+    ICU_FLAG=$2
+elif [ "$2" == "" ] ; then
+    # use default
+    ICU_FLAG=
+else
+    echo $usagemsg;
     exit -1;
 fi
 
@@ -29,6 +43,22 @@ if $cygwin ; then
     export CC="gcc -mno-cygwin"
     export CXX="gcc -mno-cygwin"
     MINGW32_TARGET="--target=mingw32"
+    if [ "$ICU_FLAG" == "--with-icu" ] ; then
+        # an explicit call for ICU
+    	echo "Error: ICU library not supported on Cygwin / Mingw"
+	exit -1;
+    fi
+    #default to no ICU for Cygwin/Mingw
+    ICU_FLAG="--without-icu";
+fi
+
+# the default for non-Cygwin/Mingw is to enable ICU
+if [ "$ICU_FLAG" == "" ] ; then
+   ICU_FLAG="--with-icu";
+fi
+
+if [ "$ICU_FLAG" == "--with-icu" ] ; then
+    ICU_CONF="--with-icu=`pwd`/../thirdparty/icu"
 fi
 
 # Configure Fennel
@@ -36,7 +66,7 @@ cd "$SAVE_PWD"
 autoreconf --force --install
 ./configure --with-boost=`pwd`/../thirdparty/boost \
     --with-stlport=`pwd`/../thirdparty/stlport \
-    $FARRAGO_FLAG $MINGW32_TARGET
+    $FARRAGO_FLAG $ICU_CONF $MINGW32_TARGET
 
 if $cygwin ; then
     unset CC
@@ -47,6 +77,9 @@ fi
 cd build
 ./buildStlportLibs.sh
 ./buildBoostLibs.sh
+if [ $ICU_FLAG == "--with-icu" ] ; then
+    ./buildICULibs.sh
+fi
 
 # Build Fennel itself
 cd ..

@@ -2,6 +2,7 @@
 // $Id$
 // Saffron preprocessor and data engine
 // (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// (C) Copyright 2003-2004 John V. Sichi
 // You must accept the terms in LICENSE.html to use this software.
 //
 // This program is free software; you can redistribute it and/or
@@ -51,7 +52,7 @@ public class SqlCall extends SqlNode
 
     public boolean isA(SqlKind kind)
     {
-        return operator.isA(kind);
+        return operator.kind.isA(kind);
     }
 
     public SqlKind getKind()

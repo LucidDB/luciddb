@@ -2,6 +2,7 @@
 // $Id$
 // Saffron preprocessor and data engine
 // (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// (C) Copyright 2003-2004 John V. Sichi
 // You must accept the terms in LICENSE.html to use this software.
 //
 // This program is free software; you can redistribute it and/or
@@ -124,6 +125,26 @@ public abstract class SqlNode
 
     /**
      * Writes a SQL representation of this node to a writer.
+     *
+     * <p>The <code>leftPrec</code> and <code>rightPrec</code> parameters
+     * give us enough context to decide whether we need to enclose the
+     * expression in parentheses. For example, we need parentheses around
+     * "2 + 3" if preceded by "5 *". This is because the precedence of the "*"
+     * operator is greater than the precedence of the "+" operator.
+     *
+     * <p>The algorithm handles left- and right-associative operators by giving
+     * them slightly different left- and right-precedence.
+     *
+     * <p>If {@link SqlWriter#alwaysUseParentheses} is true, we use parentheses
+     * even when they are not required by the precedence rules.
+     *
+     * <p>For the details of this algorithm, see {@link SqlCall#unparse}.
+     *
+     * @param writer Target writer
+     * @param leftPrec The precedence of the {@link SqlNode} immediately
+     *   preceding this node in a depth-first scan of the parse tree
+     * @param rightPrec The precedence of the {@link SqlNode} immediately
+     *   following this node in a depth-first scan of the parse tree
      */
     public abstract void unparse(SqlWriter writer,int leftPrec,int rightPrec);
 

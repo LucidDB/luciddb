@@ -24,6 +24,7 @@ import net.sf.farrago.parser.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.ddl.*;
 import net.sf.farrago.fennel.*;
+import net.sf.farrago.util.*;
 
 import java.util.*;
 
@@ -46,6 +47,14 @@ public class FarragoDbSessionFactory implements FarragoSessionFactory
     public FennelCmdExecutor newFennelCmdExecutor()
     {
         return new FennelCmdExecutorImpl();
+    }
+    
+    // implement FarragoSessionFactory
+    public FarragoCatalog newCatalog(
+        FarragoAllocationOwner owner,
+        boolean userCatalog)
+    {
+        return new FarragoCatalog(owner,userCatalog);
     }
     
     // implement FarragoSessionFactory

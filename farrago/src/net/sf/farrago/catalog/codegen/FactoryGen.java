@@ -1,6 +1,7 @@
 /*
 // Farrago is a relational database management system.
 // Copyright (C) 2003-2004 John V. Sichi.
+// Copyright (C) 2003-2004 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -116,6 +117,22 @@ public class FactoryGen
         throws ClassNotFoundException
     {
         TagProvider tagProvider = new TagProvider();
+        
+        // first generate accessor for package
+        Class pkgInterface = JmiUtil.getJavaInterfaceForRefPackage(refPackage);
+        pw.print("    public ");
+        pw.print(pkgInterface.getName());
+        pw.print(" get");
+        pw.print(ReflectUtil.getUnqualifiedClassName(pkgInterface));
+        pw.println("()");
+        pw.println("    {");
+        pw.print("        return ");
+        pw.print(packageAccessor);
+        pw.println(";");
+        pw.println("    }");
+        pw.println();
+
+        // then generate factory methods for all classes in package
         Iterator iter = refPackage.refAllClasses().iterator();
         while (iter.hasNext()) {
             RefClass refClass = (RefClass) iter.next();
@@ -123,21 +140,22 @@ public class FactoryGen
             if (mofClass.isAbstract()) {
                 continue;
             }
-            Class clazz = JmiUtil.getJavaInterfaceForRefClass(refClass);
-            String unqualifiedClassName =
-                ReflectUtil.getUnqualifiedClassName(clazz);
+            Class classInterface =
+                JmiUtil.getJavaInterfaceForRefClass(refClass);
+            String unqualifiedInterfaceName =
+                ReflectUtil.getUnqualifiedClassName(classInterface);
             pw.print("    public ");
-            pw.print(clazz.getName());
+            pw.print(classInterface.getName());
             pw.print(" new");
-            pw.print(unqualifiedClassName);
+            pw.print(unqualifiedInterfaceName);
             pw.println("()");
             pw.println("    {");
-            pw.print("        return ");
-            pw.print(packageAccessor);
-            pw.print(".get");
-            pw.print(unqualifiedClassName);
+            pw.print("        return get");
+            pw.print(ReflectUtil.getUnqualifiedClassName(pkgInterface));
+            pw.print("().get");
+            pw.print(unqualifiedInterfaceName);
             pw.print("().create");
-            pw.print(unqualifiedClassName);
+            pw.print(unqualifiedInterfaceName);
             pw.println("();");
             pw.println("    }");
             pw.println();

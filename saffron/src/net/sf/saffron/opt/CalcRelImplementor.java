@@ -2,6 +2,7 @@
 // $Id$
 // Saffron preprocessor and data engine
 // (C) Copyright 2004-2004 Disruptive Technologies, Inc.
+// (C) Copyright 2003-2004 John V. Sichi
 // You must accept the terms in LICENSE.html to use this software.
 //
 // This program is free software; you can redistribute it and/or
@@ -20,44 +21,49 @@
 */
 package net.sf.saffron.opt;
 
-import net.sf.saffron.rex.*;
-import net.sf.saffron.rel.SaffronRel;
 import net.sf.saffron.calc.CalcProgramBuilder;
+import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
 import net.sf.saffron.core.SaffronTypeFactoryImpl;
-import net.sf.saffron.core.SaffronType;
+import net.sf.saffron.core.SaffronField;
 import net.sf.saffron.resource.SaffronResource;
+import net.sf.saffron.rex.*;
 import net.sf.saffron.sql.*;
 import net.sf.saffron.sql.type.SqlTypeName;
 import net.sf.saffron.util.Util;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
-import java.lang.reflect.Method;
 
 /**
  * ...
+ *
+ * TODO: Obsolete CalcRelImplementor (it doesn't add any value) and make
+ * Rex2CalcTranslator a top-level class. (I already disinherited
+ * RelImplementor.)
  *
  * @author wael
  * @since Feb 5, 2004
  * @version $Id$
  **/
-public class CalcRelImplementor extends RelImplementor {
+public class CalcRelImplementor {
+    private final RexBuilder m_rexBuilder;
 
-    public CalcRelImplementor (RexBuilder rexBuilder)
+    public CalcRelImplementor(RexBuilder rexBuilder)
     {
-        super(rexBuilder);
+        this.m_rexBuilder = rexBuilder;
     }
 
     public Rex2CalcTranslator newTranslator(RexNode[] projectExps, RexNode conditionExp)
     {
-        return new Rex2CalcTranslator(this.rexBuilder, projectExps, conditionExp);
+        return new Rex2CalcTranslator(this.m_rexBuilder, projectExps, conditionExp);
     }
 
-
-    /** Inner class Translator */
-    public class Rex2CalcTranslator
+    /** Inner class Translator
+     *
+     * TODO: Description
+     */
+    public static class Rex2CalcTranslator
     {
         protected RexNode[] m_projectExps;
         protected RexNode m_conditionExp;
@@ -109,8 +115,8 @@ public class CalcRelImplementor extends RelImplementor {
             m_knownTypes.put(fac.createJavaType(Double.class), CalcProgramBuilder.OpType.Double);
             m_knownTypes.put(fac.createJavaType(double.class), CalcProgramBuilder.OpType.Double);
             m_knownTypes.put(fac.createJavaType(String.class), CalcProgramBuilder.OpType.VarCharPointer);
-            m_knownTypes.put(fac.createJavaType(Boolean.class), CalcProgramBuilder.OpType.VarCharPointer);
-            m_knownTypes.put(fac.createJavaType(boolean.class), CalcProgramBuilder.OpType.VarCharPointer);
+            m_knownTypes.put(fac.createJavaType(Boolean.class), CalcProgramBuilder.OpType.Boolean);
+            m_knownTypes.put(fac.createJavaType(boolean.class), CalcProgramBuilder.OpType.Boolean);
         }
 
         private CalcProgramBuilder.OpType getCalcType(RexNode node)
@@ -127,7 +133,7 @@ public class CalcRelImplementor extends RelImplementor {
                     SqlTypeName typeName =
                             SaffronTypeFactoryImpl.JavaToSqlTypeConversionRules.instance().lookup(unknownType);
                     SaffronType lookupThis =
-                            SaffronTypeFactoryImpl.createSqlTypeIgnorePrecOrScale(rexBuilder.getTypeFactory(),typeName);
+                            SaffronTypeFactoryImpl.createSqlTypeIgnorePrecOrScale(m_rexBuilder.getTypeFactory(),typeName);
                     if (lookupThis.isSameTypeFamily(knownType)) {
                         return (CalcProgramBuilder.OpType) m_knownTypes.get(knownType);
                     }
@@ -170,34 +176,57 @@ public class CalcRelImplementor extends RelImplementor {
         }
 
         /**
-         * Translate a the RexNode contined in a FilterRel into a {@link CalcProgramBuilder} calculator program
-         * using a dept-fist recursive algorithm.
-         * @return
+         * Translates a the RexNode contained in a FilterRel into a
+         * {@link CalcProgramBuilder} calculator program
+         * using a depth-first recursive algorithm.
+         *
+         * @param inputRowType The type of the input row to the calculator.
+         *   If <code>inputRowType</code> is not null, the program contains
+         *   an input register for every field in the input row type; otherwise
+         *   it contains inputs for only those fields used.
          */
-        public String getProgram()
+        public String getProgram(SaffronType inputRowType)
         {
+            // Step 0. Create input fields.
+            // Create an calculator input for each field in the input relation,
+            // regardless of whether the calcualtor program uses them.
+            if (inputRowType != null) {
+                final SaffronField[] fields = inputRowType.getFields();
+                for (int i = 0; i < fields.length; i++) {
+                    RexInputRef rexInputRef =
+                            new RexInputRef(i, fields[i].getType());
+                    implementNode(rexInputRef);
+                }
+            }
 
             //step 1: implement all the filtering logic
-            implementNode(m_conditionExp);
-            CalcProgramBuilder.Register filterResult = getResult(m_conditionExp);
-            assert (CalcProgramBuilder.OpType.Boolean.getOrdinal() == filterResult.getOpType().getOrdinal());
-            //step 2: report the status of the filtering
-            CalcProgramBuilder.Register statusReg = m_builder.newStatus(CalcProgramBuilder.OpType.Boolean);
+            if (m_conditionExp != null) {
+                implementNode(m_conditionExp);
+                CalcProgramBuilder.Register filterResult = getResult(m_conditionExp);
+                assert CalcProgramBuilder.OpType.Boolean ==
+                        filterResult.getOpType() :
+                        "Condition must be boolean: " + m_conditionExp;
+                //step 2: report the status of the filtering
+                CalcProgramBuilder.Register statusReg =
+                        m_builder.newStatus(CalcProgramBuilder.OpType.Boolean);
 
-            //step 2-1: figure out the status
-            String prepareOutput = newLabel();
-            m_builder.addLabelJumpTrue(prepareOutput,filterResult);
-            // row didnt match
-            m_builder.addMove(statusReg, m_trueReg);
-            m_builder.addReturn();
-            m_builder.addLabel(prepareOutput);
+                //step 2-1: figure out the status
+                String prepareOutput = newLabel();
+                m_builder.addLabelJumpTrue(prepareOutput,filterResult);
+                // row didnt match
+                m_builder.addMove(statusReg, m_trueReg);
+                m_builder.addReturn();
+                m_builder.addMove(statusReg, m_falseReg);
+                m_builder.addLabel(prepareOutput);
+            }
 
             // row matched. Now calculate all the outputs
             for (int i = 0; i < m_projectExps.length; i++)
             {
                 RexNode node = m_projectExps[i];
-                //This could probably be optimized by writing to the outputs directly instead of temp registers
-                //but harder to (java) implement
+                // This could probably be optimized by writing to the outputs
+                // directly instead of temp registers but harder to (java)
+                // implement.
                 implementNode(node);
             }
             // outputs calculated, now assign results to outputs.
@@ -208,9 +237,7 @@ public class CalcRelImplementor extends RelImplementor {
                 m_builder.addMove(outReg, getResult(node));
             }
 
-            m_builder.addMove(statusReg, m_falseReg);
             m_builder.addReturn();
-
             return m_builder.getProgram();
         }
 
@@ -220,15 +247,16 @@ public class CalcRelImplementor extends RelImplementor {
                 return; //avoid reimplmenting node
             }
 
+            // REVIEW (jhyde): Could use a RexShuttle to do this dispatch.
+
             //Try to have the most frequently implemented types first
             if (node instanceof RexInputRef) {
                 implementNode((RexInputRef) node);
-            }else if (node instanceof RexLiteral) {
+            } else if (node instanceof RexLiteral) {
                 implementNode((RexLiteral) node);
-            }else if (node instanceof RexCall) {
+            } else if (node instanceof RexCall) {
                 implementNode((RexCall) node);
-            }
-            else {
+            } else {
                 //nodes of type RexCorrelVariable, RexDynamicVariable, RexRangeRef should never feed to us
                 throw SaffronResource.instance().newProgramImplementationError(
                         "Don't know how to implement rex node="+node);
@@ -286,7 +314,6 @@ public class CalcRelImplementor extends RelImplementor {
             }
         }
 
-
         private void implementNode(RexCall call)
         {
             if (containsResult(call)) {
@@ -320,13 +347,17 @@ public class CalcRelImplementor extends RelImplementor {
                 CalcProgramBuilder.Register reg2=getResult(call.operands[1]);
 
                 if (isStrCmp(call)) {
-                    assert(resultOfCall.getOpType().getOrdinal()==CalcProgramBuilder.OpType.Boolean.getOrdinal());
+                    assert resultOfCall.getOpType() ==
+                            CalcProgramBuilder.OpType.Boolean;
                     CalcProgramBuilder.Register temp = m_builder.newLocal(CalcProgramBuilder.OpType.Int);
                     String collationToUse =
-                            SqlCollation.getCoercibilityDyadicComparison(call.operands[0].getType().getCollation(),
-                                                                         call.operands[1].getType().getCollation());
-                    CalcProgramBuilder.Register colReg = m_builder.newLiteral(CalcProgramBuilder.OpType.VarCharPointer, collationToUse);
-                    m_builder.addExtendedInstructionCall(temp,"NLSCompare",new CalcProgramBuilder.Register[]{reg1,reg2,colReg});
+                            SqlCollation.getCoercibilityDyadicComparison(
+                                    call.operands[0].getType().getCollation(),
+                                    call.operands[1].getType().getCollation());
+                    CalcProgramBuilder.Register colReg = m_builder.newLiteral(
+                            CalcProgramBuilder.OpType.VarCharPointer, collationToUse);
+                    m_builder.addExtendedInstructionCall(temp,"strCmpA",
+                            new CalcProgramBuilder.Register[]{reg1,reg2,colReg});
                     CalcProgramBuilder.Register zero = m_builder.newLongLiteral(0);
                     if (op.kind.isA(SqlKind.Equals)) {
                         m_builder.addBoolNativeEqual(resultOfCall, temp, zero);
@@ -340,42 +371,11 @@ public class CalcRelImplementor extends RelImplementor {
                         m_builder.addBoolNativeGreaterOrEqual(resultOfCall, temp, zero);
                     } else if (op.kind.isA(SqlKind.LessThanOrEqual)) {
                         m_builder.addBoolNativeLessOrEqual(resultOfCall, temp, zero);
+                    } else {
+                        throw Util.newInternal("Unknown op " + op);
                     }
-                }
-                else if (op.kind.isA(SqlKind.Plus)) {
-                    m_builder.addNativeAdd(resultOfCall, reg1, reg2);
-                }else if (op.kind.isA(SqlKind.Minus)) {
-                    m_builder.addNativeSub(resultOfCall, reg1, reg2);
-                }else if (op.kind.isA(SqlKind.Times)) {
-                    m_builder.addNativeMul(resultOfCall, reg1, reg2);
-                }else if (op.kind.isA(SqlKind.Divide)) {
-                    m_builder.addNativeDiv(resultOfCall, reg1, reg2);
-                }else if (op.kind.isA(SqlKind.Equals)) {
-                    m_builder.addBoolNativeEqual(resultOfCall, reg1, reg2);
-                }else if (op.kind.isA(SqlKind.NotEquals)) {
-                    m_builder.addBoolNativeNotEqual(resultOfCall, reg1, reg2);
-                }else if (op.kind.isA(SqlKind.GreaterThan)) {
-                    m_builder.addBoolNativeGreaterThan(resultOfCall, reg1, reg2);
-                }else if (op.kind.isA(SqlKind.GreaterThanOrEqual)) {
-                    m_builder.addBoolNativeGreaterOrEqual(resultOfCall, reg1, reg2);
-                }else if (op.kind.isA(SqlKind.LessThan)) {
-                    m_builder.addBoolNativeLessThan(resultOfCall, reg1, reg2);
-                }else if (op.kind.isA(SqlKind.LessThanOrEqual)) {
-                    m_builder.addBoolNativeLessOrEqual(resultOfCall, reg1, reg2);
-                }else if (op.kind.isA(SqlKind.And)) {
-                        m_builder.addBoolAnd(resultOfCall, reg1, reg2);
-                }else if (op.kind.isA(SqlKind.Or)) {
-                    m_builder.addBoolOr(resultOfCall, reg1, reg2);
-                }else if (op.equals(m_opTab.concatOperator)) {
-                    //todo need to pump in charset as well
-                    m_builder.addExtendedInstructionCall(resultOfCall, "CONCAT",
-                               new CalcProgramBuilder.Register[]{ reg1, reg2 });
-                }
-
-                else {
-                    throw SaffronResource.instance().
-                            newProgramImplementationError(
-                                    "Binary operator"+op+" unknown");
+                } else {
+                    translateBinary(resultOfCall, call);
                 }
             }
             //-- Postfix Operators------------------------------------------
@@ -390,16 +390,18 @@ public class CalcRelImplementor extends RelImplementor {
                 {
                     boolean boolValue = op.kind.isA(SqlKind.IsTrue);
                     RexNode operand =call.operands[0];
-                    RexNode node;
                     SaffronType t = operand.getType();
+                    // REVIEW (jhyde): Assuming that the RexTransformer
+                    //   is being used to optimize handling of NULL semantics,
+                    //   this code can be simplified.
                     if (t.isNullable()) {
-                        RexNode notNullCall = rexBuilder.makeCall(m_opTab.isNotNullOperator,operand);
-                        RexNode eqCall = rexBuilder.makeCall(m_opTab.equalsOperator,operand, rexBuilder.makeLiteral(boolValue));
-                        RexNode andCall = rexBuilder.makeCall(m_opTab.andOperator, notNullCall, eqCall);
+                        RexNode notNullCall = m_rexBuilder.makeCall(m_opTab.isNotNullOperator,operand);
+                        RexNode eqCall = m_rexBuilder.makeCall(m_opTab.equalsOperator,operand, m_rexBuilder.makeLiteral(boolValue));
+                        RexNode andCall = m_rexBuilder.makeCall(m_opTab.andOperator, notNullCall, eqCall);
                         implementNode(andCall);
                         resultOfCall = getResult(andCall);
                     } else {
-                        RexNode eqCall = rexBuilder.makeCall(m_opTab.equalsOperator,operand, rexBuilder.makeLiteral(boolValue));
+                        RexNode eqCall = m_rexBuilder.makeCall(m_opTab.equalsOperator,operand, m_rexBuilder.makeLiteral(boolValue));
                         implementNode(eqCall);
                         resultOfCall = getResult(eqCall);
                     }
@@ -429,7 +431,7 @@ public class CalcRelImplementor extends RelImplementor {
                     //optimization. If using not in front of IS NULL, create a call to the calc instruction ISNOTNULL
                     if (call.operands[0].isA(RexKind.IsNull)){
                         RexCall isNullCall = (RexCall) call.operands[0];
-                        RexNode notNullCall = rexBuilder.makeCall(m_opTab.isNotNullOperator,isNullCall.operands[0]);
+                        RexNode notNullCall = m_rexBuilder.makeCall(m_opTab.isNotNullOperator,isNullCall.operands[0]);
                         implementNode(notNullCall);
                         resultOfCall = getResult(notNullCall);
                     }
@@ -479,36 +481,38 @@ public class CalcRelImplementor extends RelImplementor {
                 CalcProgramBuilder.Register charSetName =
                         m_builder.newStringLiteral(call.operands[0].getType().getCharset().name());
                 CalcProgramBuilder.Register[] operands =
-                        new CalcProgramBuilder.Register[]{getResult(call.operands[0]), charSetName};
-                m_builder.addExtendedInstructionCall(resultOfCall,((SqlFunction) op).name,operands);
+                        new CalcProgramBuilder.Register[]{getResult(call.operands[0]) /*TODO: , charSetName*/};
+                String instrName = op.equals(m_funTab.upperFunc) ?
+                        "strToUpperA" : "strToLowerA";
+                m_builder.addExtendedInstructionCall(resultOfCall,instrName,operands);
             }
             else if (op.equals(m_funTab.trimFunc)) {
                 implementNode(call.operands[1]);
                 implementNode(call.operands[2]);
                 resultOfCall = m_builder.newLocal(resultType);
-                assert(call.operands[0] instanceof RexLiteral);
-                assert(((RexLiteral)call.operands[0]).getValue() instanceof SqlFunctionTable.FunctionFlagType);
+                assert call.operands[0] instanceof RexLiteral;
+                final RexLiteral literal = (RexLiteral)call.operands[0];
+                assert literal.getValue()
+                        instanceof SqlFunctionTable.FunctionFlagType : literal;
                 SqlFunctionTable.FunctionFlagType flag =
-                        (SqlFunctionTable.FunctionFlagType) ((RexLiteral)call.operands[0]).getValue();
-                Util.pre(flag.equals(SqlFunctionTable.FunctionFlagType.Both) ||
-                         flag.equals(SqlFunctionTable.FunctionFlagType.Trailing) ||
-                         flag.equals(SqlFunctionTable.FunctionFlagType.Leading),"unknown flag");
+                        (SqlFunctionTable.FunctionFlagType) literal.getValue();
                 CalcProgramBuilder.Register leftPad;
                 CalcProgramBuilder.Register rightPad;
-                if (flag.equals(SqlFunctionTable.flagBoth))
-                {
+                switch (flag.ordinal_) {
+                case SqlFunctionTable.FunctionFlagType.BothORDINAL:
                     leftPad = m_builder.newLongLiteral(1);
                     rightPad = m_builder.newLongLiteral(1);
-                }
-                else if (flag.equals(SqlFunctionTable.flagLeading))
-                {
+                    break;
+                case SqlFunctionTable.FunctionFlagType.LeadingORDINAL:
                     leftPad = m_builder.newLongLiteral(1);
                     rightPad = m_builder.newLongLiteral(0);
-                }
-                else //if (flag.equals(SqlFunctionTable.flagTrailing))
-                {
+                    break;
+                case SqlFunctionTable.FunctionFlagType.TrailingORDINAL:
                     leftPad = m_builder.newLongLiteral(0);
                     rightPad = m_builder.newLongLiteral(1);
+                    break;
+                default:
+                    throw flag.unexpected();
                 }
 
                 CalcProgramBuilder.Register[] operands =
@@ -539,7 +543,7 @@ public class CalcRelImplementor extends RelImplementor {
                 //sanity checking that function exists, probably already done in the validator
                 SqlFunction fun = (SqlFunction) op;
                 Util.pre(fun.getNumOfOperands(call.operands.length) == call.operands.length,"nbr of operands mismatch");
-                if (null==m_funTab.lookup(fun.name)) {
+                if (m_funTab.lookup(fun.name).isEmpty()) {
                     throw SaffronResource.instance().newProgramImplementationError("Function "+fun+" unknown");
                 }
 
@@ -593,6 +597,62 @@ public class CalcRelImplementor extends RelImplementor {
 
             assert null!=resultOfCall;
             setResult(call, resultOfCall);
+        }
+
+        public void translateBinary(CalcProgramBuilder.Register resultOfCall,
+                RexCall call) {
+            CalcProgramBuilder.Register reg1 = getResult(call.operands[0]);
+            CalcProgramBuilder.Register reg2 = getResult(call.operands[1]);
+
+            final SqlKind kind = call.op.kind;
+            switch (kind.ordinal_) {
+            case SqlKind.PlusORDINAL:
+                m_builder.addNativeAdd(resultOfCall, reg1, reg2);
+                break;
+            case SqlKind.MinusORDINAL:
+                m_builder.addNativeSub(resultOfCall, reg1, reg2);
+                break;
+            case SqlKind.TimesORDINAL:
+                m_builder.addNativeMul(resultOfCall, reg1, reg2);
+                break;
+            case SqlKind.DivideORDINAL:
+                m_builder.addNativeDiv(resultOfCall, reg1, reg2);
+                break;
+            case SqlKind.EqualsORDINAL:
+                m_builder.addBoolNativeEqual(resultOfCall, reg1, reg2);
+                break;
+            case SqlKind.NotEqualsORDINAL:
+                m_builder.addBoolNativeNotEqual(resultOfCall, reg1, reg2);
+                break;
+            case SqlKind.GreaterThanORDINAL:
+                m_builder.addBoolNativeGreaterThan(resultOfCall, reg1, reg2);
+                break;
+            case SqlKind.GreaterThanOrEqualORDINAL:
+                m_builder.addBoolNativeGreaterOrEqual(resultOfCall, reg1, reg2);
+                break;
+            case SqlKind.LessThanORDINAL:
+                m_builder.addBoolNativeLessThan(resultOfCall, reg1, reg2);
+                break;
+            case SqlKind.LessThanOrEqualORDINAL:
+                m_builder.addBoolNativeLessOrEqual(resultOfCall, reg1, reg2);
+                break;
+            case SqlKind.AndORDINAL:
+                m_builder.addBoolAnd(resultOfCall, reg1, reg2);
+                break;
+            case SqlKind.OrORDINAL:
+                m_builder.addBoolOr(resultOfCall, reg1, reg2);
+                break;
+            default:
+                if (call.op.equals(m_opTab.concatOperator)) {
+                    //todo need to pump in charset as well
+                    m_builder.addExtendedInstructionCall(resultOfCall, "CONCAT",
+                            new CalcProgramBuilder.Register[]{reg1, reg2});
+                } else {
+                    throw SaffronResource.instance().
+                            newProgramImplementationError(
+                                    "Binary operator" + call.op + " unknown");
+                }
+            }
         }
 
         private boolean isStrCmp(RexCall call) {

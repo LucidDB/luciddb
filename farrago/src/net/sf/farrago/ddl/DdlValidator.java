@@ -1,6 +1,7 @@
 /*
 // Farrago is a relational database management system.
 // Copyright (C) 2003-2004 John V. Sichi.
+// Copyright (C) 2003-2004 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -172,7 +173,6 @@ public class DdlValidator extends FarragoCompoundAllocation
      * @param fennelDbHandle the FennelDbHandle for the database storing
      * objects being validated
      * @param parser the parser parsing the DDL
-     * @param connectionDefaults default qualifiers used for unqualified objects
      * @param indexMap FarragoIndexMap to use for index access
      * @param sharedDataWrapperCache shared cache for loading
      * FarragoMedDataWrappers
@@ -181,19 +181,17 @@ public class DdlValidator extends FarragoCompoundAllocation
         FarragoSession invokingSession,
         FarragoCatalog catalog,
         FennelDbHandle fennelDbHandle,
-        FarragoSessionParser parser,
-        FarragoConnectionDefaults connectionDefaults,
         FarragoIndexMap indexMap,
         FarragoObjectCache sharedDataWrapperCache)
     {
         this.invokingSession = invokingSession;
         this.catalog = catalog;
         this.fennelDbHandle = fennelDbHandle;
-        this.parser = parser;
-        this.connectionDefaults = connectionDefaults;
         this.indexMap = indexMap;
         this.sharedDataWrapperCache = sharedDataWrapperCache;
 
+        connectionDefaults = invokingSession.getConnectionDefaults();
+        parser = invokingSession.newParser();
         activeThread = Thread.currentThread();
 
         typeFactory = new FarragoTypeFactoryImpl(catalog);

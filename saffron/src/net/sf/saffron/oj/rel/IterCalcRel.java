@@ -2,6 +2,7 @@
 // $Id$
 // Saffron preprocessor and data engine
 // (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// (C) Copyright 2003-2004 John V. Sichi
 // You must accept the terms in LICENSE.html to use this software.
 //
 // This program is free software; you can redistribute it and/or
@@ -33,11 +34,11 @@ import net.sf.saffron.rel.FilterRel;
 import net.sf.saffron.rel.ProjectRel;
 import net.sf.saffron.rel.ProjectRelBase;
 import net.sf.saffron.rel.SaffronRel;
-import net.sf.saffron.runtime.CalcIterator;
-import net.sf.saffron.util.Util;
 import net.sf.saffron.rex.RexNode;
 import net.sf.saffron.rex.RexUtil;
+import net.sf.saffron.runtime.CalcIterator;
 import net.sf.saffron.sql.SqlOperatorTable;
+import net.sf.saffron.util.Util;
 import openjava.mop.OJClass;
 import openjava.ptree.*;
 
@@ -48,6 +49,11 @@ import openjava.ptree.*;
  * Rows passing the filter expression are transformed via projection and
  * returned.  Note that the same object is always returned (with different
  * values), so parents must not buffer the result.
+ *
+ * <p>Rules:<ul>
+ * <li>{@link net.sf.saffron.oj.OJPlannerFactory.IterCalcRule} creates an
+ *     IterCalcRel from a {@link net.sf.saffron.rel.CalcRel}</li>
+ * </ul>
  */
 public class IterCalcRel extends ProjectRelBase
 {
@@ -83,6 +89,9 @@ public class IterCalcRel extends ProjectRelBase
     {
         return childExps;
     }
+
+    // TODO jvs 10-May-2004: need a computeSelfCost which takes condition into
+    // account; maybe inherit from a new CalcRelBase?
 
     public void explain(PlanWriter pw)
     {

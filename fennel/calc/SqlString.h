@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Fennel is a relational database kernel.
-// Copyright (C) 2004-2004 Disruptive Technologies, Inc.
+// Copyright (C) 2004-2004 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -24,7 +24,112 @@
 #ifndef Fennel_SqlString_Included
 #define Fennel_SqlString_Included
 
+#ifdef HAVE_ICU
+#include <unicode/ustring.h>
+#include <boost/scoped_array.hpp>
+#endif
+
 FENNEL_BEGIN_NAMESPACE
+
+#if !(defined LITTLEENDIAN || defined BIGENDIAN)
+#error "endian not defined"
+#endif
+
+
+#ifdef HAVE_ICU
+// TODO: XXXXXXXXXXXXXXXXXXXXXX MOVE THESE ELSEWHERE
+// TODO: XXXXXXXXXXXXXXXXXXXXXX MOVE THESE ELSEWHERE
+// TODO: XXXXXXXXXXXXXXXXXXXXXX MOVE THESE ELSEWHERE
+void
+SqlStringUnalignedToUCharArray(boost::scoped_array<UChar>& dest,
+                               char const * const src,
+                               int srcLenUChar)
+{
+    int i;
+    char const * ptrC = src;
+ 
+    for (i = 0; i < srcLenUChar; i++, ptrC+=2) {
+#ifdef LITTLEENDIAN
+        dest[i] = *ptrC | (*(ptrC+1) << 8);
+#else
+        dest[i] = (*ptrC << 8) | *(ptrC+1);
+#endif
+    }
+}
+
+// TODO: XXXXXXXXXXXXXXXXXXXXXX MOVE THESE ELSEWHERE
+// TODO: XXXXXXXXXXXXXXXXXXXXXX MOVE THESE ELSEWHERE
+// TODO: XXXXXXXXXXXXXXXXXXXXXX MOVE THESE ELSEWHERE
+// TODO: XXXXXXXXXXXXXXXXXXXXXX MOVE THESE ELSEWHERE
+void
+SqlStringUCharArrayToUnaligned(char* dest,
+                               const boost::scoped_array<UChar>& src,
+                               int srcLenUChar)
+{
+    int i;
+    char* ptr = dest;
+
+    for (i = 0; i < srcLenUChar; i++) {
+#ifdef LITTLEENDIAN
+        *ptr++ = (src[i]) & 0xff;
+        *ptr++ = (src[i] >> 8) & 0xff;
+#else
+        *ptr++ = (src[i] >> 8) & 0xff;
+        *ptr++ = (src[i]) & 0xff;
+#endif                    
+    }
+}
+// TODO: XXXXXXXXXXXXXXXXXXXXXX MOVE THESE ELSEWHERE
+// TODO: XXXXXXXXXXXXXXXXXXXXXX MOVE THESE ELSEWHERE
+// TODO: XXXXXXXXXXXXXXXXXXXXXX MOVE THESE ELSEWHERE
+// TODO: XXXXXXXXXXXXXXXXXXXXXX MOVE THESE ELSEWHERE
+
+#endif
+
+
+/** \file SqlString.h 
+ *
+ * SqlString is a library of string fuctions that perform according to
+ * the SQL99 standard.
+ *
+ * These functions are called by ExtendedInstructions in ExtString.h
+ * 
+ * This library supports 8-bit characters, labeled somewhat
+ * misleadingly as Ascii, and fixed width 2-byte UCS2 characters. No
+ * assumptions are made about alignment -- UCS2 characters are not
+ * treated as shorts, but rather a sequence of two bytes.
+ *
+ * Some functions work for either Ascii or UCS2 encodings. Other
+ * functions are templated in order to work for either type. The
+ * templating system as defined may be sufficent to also support
+ * UTF-8, UTF-16 and UTF-32 encodings.
+ *
+ * The template is:
+ * 
+ * <code> template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>. </code>
+ *
+ * A <b>code unit</b> is the atomic unit that represents part or all
+ * of a <b>code point</b>.  A code point represents a character. The
+ * <b>character encoding form</b> (e.g. ASCII, UCS2, UTF8) determines
+ * how each <b>code point</b> is represented by one or more <b>code
+ * units</b>.
+ *
+ * <code>
+ * <ul>
+ * <li> ASCII: CodeUnitBytes = 1, MaxCodeUnitsPerCodePoint =
+ * 1</li><li> UCS2: CodeUnitBytes = 2, MaxCodeUnitsPerCodePoint =
+ * 1</li><li> UTF8: CodeUnitBytes = 1, MaxCodeUnitsPerCodePoint =
+ * 4</li><li> UTF16: CodeUnitBytes = 2, MaxCodeUnitsPerCodePoint =
+ * 2</li><li> UTF32: CodeUnitBytes = 4, MaxCodeUnitsPerCodePoint =
+ * 1</li>
+ * </ul></code>
+ *
+ * Currently this templating form does not take endian issues into
+ * account, but this information may be encoded in the strings, and
+ * may not have to be explicit.
+ *
+ */
+
 
 //! Strcat. SQL VARCHAR & CHAR. dest = dest || str. Returns new length in bytes.
 //!
@@ -127,7 +232,7 @@ SqlStrCmp_Fix(char const * const str1,
             // TODO: Add UCS2 here
             throw std::logic_error("no UCS2");
         } else {
-            throw std::logic_error("no UCS4");
+            throw std::logic_error("no such encoding");
         }
     } else {
         throw std::logic_error("no UTF8/16/32");
@@ -160,7 +265,7 @@ SqlStrCmp_Fix(char const * const str1,
             // TODO: Add UCS2 here
             throw std::logic_error("no UCS2");
         } else {
-            throw std::logic_error("no UCS4");
+            throw std::logic_error("no such encoding");
         }
     } else {
         throw std::logic_error("no UTF8/16/32");
@@ -206,7 +311,7 @@ SqlStrCmp_Var(char const * const str1,
             // TODO: Add UCS2 here
             throw std::logic_error("no UCS2");
         } else {
-            throw std::logic_error("no UCS4");
+            throw std::logic_error("no such encoding");
         }
     } else {
         throw std::logic_error("no UTF8/16/32");
@@ -236,16 +341,25 @@ SqlStrCpy_Fix(char* dest,
     }
     memcpy(dest, str, strLenBytes);
 
-    if (CodeUnitBytes == MaxCodeUnitsPerCodePoint) {
+    // pad rest of dest storage
+    if (MaxCodeUnitsPerCodePoint == 1) {
         if (CodeUnitBytes == 1) {
+            // ASCII
             memset(dest + strLenBytes, padchar, destStorageBytes - strLenBytes);
         } else if (CodeUnitBytes == 2) {
+            // UCS2
             assert(!(destStorageBytes & 1));
             assert(!(strLenBytes & 1));
             char *ptr = dest + strLenBytes;
             char *end = dest + destStorageBytes;
-            char byte1 = (padchar >> 8) & 0xff;
-            char byte2 = padchar & 0xff;
+            char byte1, byte2;
+#ifdef LITTLEENDIAN
+            byte2 = (padchar >> 8) & 0xff;
+            byte1 = padchar & 0xff;
+#else
+            byte1 = (padchar >> 8) & 0xff;
+            byte2 = padchar & 0xff;
+#endif
             assert(!((end - ptr) & 1));
             while (ptr < end) {
                 *ptr = byte1;
@@ -289,8 +403,13 @@ int
 SqlStrLenChar(char const * const str,
               int strLenBytes)
 {
-    if (CodeUnitBytes == MaxCodeUnitsPerCodePoint) {
-        return strLenBytes >> (CodeUnitBytes - 1);
+    if (CodeUnitBytes == 1 && MaxCodeUnitsPerCodePoint == 1) {
+        // ASCII
+        return strLenBytes;
+    } else if (CodeUnitBytes == 2 & MaxCodeUnitsPerCodePoint == 1) {
+        // UCS2
+        assert(!(strLenBytes & 1));
+        return strLenBytes >> 1;
     } else {
         throw std::logic_error("no UTF8/16/32");
     }
@@ -366,7 +485,7 @@ SqlStrOverlay(char* dest,
             // TODO: Add UCS2 here
             throw std::logic_error("no UCS2");
         } else {
-            throw std::logic_error("no UCS4");        }
+            throw std::logic_error("no such encoding");        }
     } else {
         throw std::logic_error("no UTF8/16/32");
     }
@@ -415,7 +534,7 @@ SqlStrPos(char const * const str,
             // TODO: Add UCS2 here
             throw std::logic_error("no UCS2");
         } else {
-            throw std::logic_error("no UCS4");
+            throw std::logic_error("no such encoding");
         }
     } else {
         throw std::logic_error("no UTF8/16/32");
@@ -490,7 +609,7 @@ SqlStrSubStr(char const ** dest,
             // TODO: Add UCS2 here
             throw std::logic_error("no UCS2");
         } else {
-            throw std::logic_error("no UCS4");
+            throw std::logic_error("no such encoding");
         }
     } else {
         throw std::logic_error("no UTF8/16/32");
@@ -499,72 +618,177 @@ SqlStrSubStr(char const ** dest,
     return 0; // TODO: Fix this
 }
 
-//! toLower. CHAR/VARCHAR. Returns length.
-template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
+//! Template argument for SqlStrAlterCase
+enum SqlStrAlterCaseAction {
+    AlterCaseUpper,
+    AlterCaseLower
+};
+
+//! toLower and toUpper. CHAR/VARCHAR. Returns new length.
+//!
+//! AlterCase contains an example of how ICU integration might
+//! be made more efficient in the face of unaligned strings. 
+template <int CodeUnitBytes,
+          int MaxCodeUnitsPerCodePoint,
+          SqlStrAlterCaseAction Action>
 int
-SqlStrToLower(char* dest,
-              int destStorageBytes,
-              char const * const src,
-              int srcLenBytes)
+SqlStrAlterCase(char* dest,
+                int destStorageBytes,
+                char const * const src,
+                int srcLenBytes,
+                char const * const locale = 0)
 {
-    register char const * s = src;
-    register char* d = dest;
-    char* e = dest + srcLenBytes;
+    int retVal;
 
     if (srcLenBytes > destStorageBytes) {
         // SQL99 22.1 22-001 "String Data Right truncation"
         throw "22001";
     }
 
-    if (CodeUnitBytes == MaxCodeUnitsPerCodePoint) {
+    if (MaxCodeUnitsPerCodePoint == 1) {
         if (CodeUnitBytes == 1) {
+            register char const * s = src;
+            register char* d = dest;
+            char* e = dest + srcLenBytes;
             while (d < e) {
-                *(d++) = tolower(*(s++));
+                switch(Action) {
+                case AlterCaseUpper:
+                    *(d++) = toupper(*(s++));
+                    break;
+                case AlterCaseLower:
+                    *(d++) = tolower(*(s++));
+                    break;
+                default:
+                    throw std::logic_error("AlterCase Action");
+                    break;
+                }
             }
-        } else if (CodeUnitBytes == 2) {
-            // TODO: Add UCS2 here
+            retVal = srcLenBytes;
+        }
+        else if (CodeUnitBytes == 2) {
+            // UCS2
+#ifdef HAVE_ICU
+            assert(!(destStorageBytes & srcLenBytes & 1));
+            assert(sizeof(UChar) == 2);
+            assert(locale);   // Don't allow locale defaulting
+
+            int32_t destStorageUChar = destStorageBytes >> 1;
+            int32_t srcLenUChar = srcLenBytes >> 1;
+            int32_t newLenUChar;
+            UErrorCode errorCode = U_ZERO_ERROR;
+
+            // See comment above about unaligned strings.
+            if (reinterpret_cast<int>(src) & 1 ||
+                reinterpret_cast<int>(dest) & 1) {
+                // One or both unaligned.
+                // Copy one or both & take performance hit.
+                UChar const * srcP;
+                UChar* destP;
+                boost::scoped_array<UChar> destCopy;
+                boost::scoped_array<UChar> srcCopy;
+                if (reinterpret_cast<int>(src) & 1) {
+                    srcCopy.reset(new UChar[srcLenUChar]);
+                    SqlStringUnalignedToUCharArray(srcCopy,
+                                                   src,
+                                                   srcLenUChar);
+                    srcP = srcCopy.get();
+                } else {
+                    srcP = reinterpret_cast<UChar const *>(src);
+                }
+                if (reinterpret_cast<int>(dest) & 1) {
+                    destCopy.reset(new UChar[destStorageUChar]);
+                    destP = destCopy.get();
+                } else {
+                    destP = reinterpret_cast<UChar*>(dest);
+                }
+                
+                switch(Action) {
+                case AlterCaseUpper:
+                    newLenUChar = u_strToUpper(destP,
+                                               destStorageUChar,
+                                               srcP,
+                                               srcLenUChar,
+                                               locale,
+                                               &errorCode);
+                    break;
+                case AlterCaseLower:
+                    newLenUChar = u_strToLower(destP,
+                                               destStorageUChar,
+                                               srcP,
+                                               srcLenUChar,
+                                               locale,
+                                               &errorCode);
+                    break;
+                default:
+                    throw std::logic_error("AlterCase Action");
+                    break;
+                }
+
+                if (newLenUChar > destStorageBytes) {
+                    // SQL99 22.1 22-001 "String Data Right truncation"
+                    throw "22001";
+                }
+
+                if (U_FAILURE(errorCode)) {
+                    // TODO: Clean up ICU error handling.
+                    // Other ICU error. Unlikely to occur?
+                    throw u_errorName(errorCode);
+                }
+
+                if (reinterpret_cast<int>(dest) & 1) {
+                    SqlStringUCharArrayToUnaligned(dest,
+                                                   destCopy,
+                                                   newLenUChar);
+                }
+                
+                retVal = newLenUChar << 1;
+            } else {
+                // Both Aligned. Work in place, no performance hit.
+                switch(Action) {
+                case AlterCaseUpper:
+                    newLenUChar = u_strToUpper(reinterpret_cast<UChar*>(dest), 
+                                               destStorageUChar,
+                                               reinterpret_cast<UChar const *>(src),
+                                               srcLenUChar,
+                                               locale,
+                                               &errorCode);
+
+                    break;
+                case AlterCaseLower:
+                    newLenUChar = u_strToLower(reinterpret_cast<UChar*>(dest), 
+                                               destStorageUChar,
+                                               reinterpret_cast<UChar const *>(src),
+                                               srcLenUChar,
+                                               locale,
+                                               &errorCode);
+                    break;
+                default:
+                    throw std::logic_error("AlterCase Action");
+                    break;
+                }
+
+                if (newLenUChar > destStorageUChar) {
+                    // SQL99 22.1 22-001 "String Data Right truncation"
+                    throw "22001";
+                }
+                if (U_FAILURE(errorCode)) {
+                    // TODO: Clean up ICU error handling.
+                    // Other ICU error. Unlikely to occur?
+                    throw u_errorName(errorCode);
+                }
+                retVal = newLenUChar << 1;
+            }
+#else
             throw std::logic_error("no UCS2");
+#endif
         } else {
-            throw std::logic_error("no UCS4");
+            throw std::logic_error("no such encoding");
         }
     } else {
+        // Note: Potentially UTF16 can be handled by UCS2 code
         throw std::logic_error("no UTF8/16/32");
     }
-    return srcLenBytes;
-}
-
-//! toUpper. CHAR/VARCHAR. Returns length.
-template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
-int
-SqlStrToUpper(char* dest,
-              int destStorageBytes,
-              char const * const src,
-              int srcLenBytes)
-{
-    register char const * s = src;
-    register char* d = dest;
-    char* e = dest + srcLenBytes;
-
-    if (srcLenBytes > destStorageBytes) {
-        // SQL99 22.1 22-001 "String Data Right truncation"
-        throw "22001";
-    }
-    if (CodeUnitBytes == MaxCodeUnitsPerCodePoint) {
-        if (CodeUnitBytes == 1) {
-            while (d < e) {
-                *(d++) = toupper(*(s++));
-            }
-        } else if (CodeUnitBytes == 2) {
-            // TODO: Add UCS2 here
-            throw std::logic_error("no UCS2");
-        } else {
-            throw std::logic_error("no UCS4");
-        }
-    } else {
-        throw std::logic_error("no UTF8/16/32");
-    }
-
-    return srcLenBytes;
+    return retVal;
 }
 
 //! Trim padding. CHAR/VARCHAR. Returns new length.
@@ -586,10 +810,12 @@ SqlStrTrim(char* dest,
 {
     char const * start = str;
     char const * end = str + strLenBytes;
+    assert(strLenBytes >= 0);
     int newLenBytes;
     
-    if (CodeUnitBytes == MaxCodeUnitsPerCodePoint) {
+    if (MaxCodeUnitsPerCodePoint == 1) {
         if (CodeUnitBytes == 1) {
+            // ASCII
             // If many pad characters are expected, consider using memrchr()
             if (trimLeft) {
                 while (start != end && *start == trimchar) start++;
@@ -601,12 +827,36 @@ SqlStrTrim(char* dest,
             }
             newLenBytes = end - start;
         } else if (CodeUnitBytes == 2) {
-            // TODO: Add UCS2 here
-            throw std::logic_error("no UCS2");
+            // UCS2
+            throw std::logic_error("no UCS2"); // TODO: Finish unit test first
+            assert(!(strLenBytes & 1));
+            char byte1, byte2;
+#ifdef LITTLEENDIAN
+            byte2 = (trimchar >> 8) & 0xff;
+            byte1 = trimchar & 0xff;
+#else
+            byte1 = (trimchar >> 8) & 0xff;
+            byte2 = trimchar & 0xff;
+#endif
+            if (trimLeft) {
+                while (start < end && *start == byte1 && *(start+1) == byte2) {
+                    start += 2;
+                }
+            }
+            if (trimRight && end != start) {
+                end -= 2;
+                while (end > start && *end == byte1 && *(end+1) == byte2) {
+                    end -=2;
+                }
+                if (end != start || *end != trimchar) end += 2;
+            }
+            newLenBytes = end - start;
+            assert(!(newLenBytes & 1));
         } else {
-            throw std::logic_error("no UCS4");
+            throw std::logic_error("no such encoding");
         }
     } else {
+        // Note: Potentially UTF16 can be handled by UCS2 code
         throw std::logic_error("no UTF8/16/32");
     }
 
@@ -640,10 +890,11 @@ SqlStrTrim(char const ** result,
 {
     char const * start = str;
     char const * end = str + strLenBytes;
-    
+    assert(strLenBytes >= 0);
 
-    if (CodeUnitBytes == MaxCodeUnitsPerCodePoint) {
+    if (MaxCodeUnitsPerCodePoint == 1) {
         if (CodeUnitBytes == 1) {
+            // ASCII
             // If many pad characters are expected, consider using memrchr()
             if (trimLeft) {
                 while (start != end && *start == trimchar) start++;
@@ -654,12 +905,35 @@ SqlStrTrim(char const ** result,
                 if (end != start || *end != trimchar) end++;
             }
         } else if (CodeUnitBytes == 2) {
-            // TODO: Add UCS2 here
-            throw std::logic_error("no UCS2");
+            // UCS2
+            throw std::logic_error("no UCS2"); // TODO: Finish unit testing first
+            assert(!(strLenBytes & 1));
+            char byte1, byte2;
+#ifdef LITTLEENDIAN
+            byte2 = (trimchar >> 8) & 0xff;
+            byte1 = trimchar & 0xff;
+#else
+            byte1 = (trimchar >> 8) & 0xff;
+            byte2 = trimchar & 0xff;
+#endif
+            if (trimLeft) {
+                while (start < end && *start == byte1 && *(start+1) == byte2) {
+                    start += 2;
+                }
+            }
+            if (trimRight && end != start) {
+                end -= 2;
+                while (end > start && *end == byte1 && *(end+1) == byte2) {
+                    end -=2;
+                }
+                if (end != start || *end != trimchar) end += 2;
+            }
+            assert(!((end - start) & 1));
         } else {
-            throw std::logic_error("no UCS4");
+            throw std::logic_error("no such encoding");
         }
     } else {
+        // Note: Potentially UTF16 can be handled by UCS2 code
         throw std::logic_error("no UTF8/16/32");
     }
     

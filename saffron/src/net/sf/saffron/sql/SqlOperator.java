@@ -2,6 +2,7 @@
 // $Id$
 // Saffron preprocessor and data engine
 // (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// (C) Copyright 2003-2004 John V. Sichi
 // You must accept the terms in LICENSE.html to use this software.
 //
 // This program is free software; you can redistribute it and/or
@@ -30,6 +31,7 @@ import net.sf.saffron.sql.type.SqlTypeName;
 import net.sf.saffron.resource.SaffronResource;
 import net.sf.saffron.rex.RexNode;
 import net.sf.saffron.calc.CalcProgramBuilder;
+import net.sf.saffron.opt.CalcRelImplementor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -224,61 +226,6 @@ public abstract class SqlOperator
         SqlNode [] operands,
         int leftPrec,
         int rightPrec);
-
-    /**
-     * Returns whether this is a particular operator.
-     */
-    boolean isA(SqlKind kind)
-    {
-        // REVIEW jvs 6-Feb-2004:  why is this logic duplicated with
-        // SqlKind.isA?
-        switch (kind.getOrdinal()) {
-        case SqlKind.SetQueryORDINAL:
-            switch (this.kind.getOrdinal()) {
-            case SqlKind.UnionORDINAL:
-            case SqlKind.IntersectORDINAL:
-            case SqlKind.ExceptORDINAL:
-                return true;
-            default:
-                return false;
-            }
-        case SqlKind.ExpressionORDINAL:
-            switch (this.kind.getOrdinal()) {
-            case SqlKind.AsORDINAL:
-            case SqlKind.DescendingORDINAL:
-            case SqlKind.SelectORDINAL:
-            case SqlKind.JoinORDINAL:
-            case SqlKind.FunctionORDINAL:
-                return false;
-            default:
-                return true;
-            }
-        case SqlKind.DmlORDINAL:
-            switch (this.kind.getOrdinal()) {
-            case SqlKind.InsertORDINAL:
-            case SqlKind.DeleteORDINAL:
-            case SqlKind.UpdateORDINAL:
-                return true;
-            default:
-                return false;
-            }
-        case SqlKind.QueryORDINAL:
-            switch (this.kind.getOrdinal()) {
-            case SqlKind.ExceptORDINAL:
-            case SqlKind.IntersectORDINAL:
-            case SqlKind.SelectORDINAL:
-            case SqlKind.UnionORDINAL:
-            case SqlKind.OrderByORDINAL:
-            case SqlKind.ValuesORDINAL:
-            case SqlKind.ExplicitTableORDINAL:
-                return true;
-            default:
-                return false;
-            }
-        default:
-            return kind == this.kind;
-        }
-    }
 
     // override Object
     public boolean equals(Object obj)
@@ -865,7 +812,8 @@ public abstract class SqlOperator
      * Translates an expression to a calculator program.
      */
     interface CalcRexImplementor {
-        void translateToCalc(RexNode rex, CalcProgramBuilder builder);
+        void translateToCalc(RexNode rex,
+                CalcRelImplementor.Rex2CalcTranslator translator);
     }
 }
 

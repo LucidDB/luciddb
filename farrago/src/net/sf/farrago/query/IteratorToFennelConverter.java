@@ -1,6 +1,7 @@
 /*
 // Farrago is a relational database management system.
 // Copyright (C) 2003-2004 John V. Sichi.
+// Copyright (C) 2003-2004 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -42,8 +43,9 @@ import java.lang.reflect.*;
 
 
 /**
- * IteratorToFennelConverter is a Converter from the ITERATOR
- * CallingConvention to the FENNEL_PULL CallingConvention.
+ * IteratorToFennelConverter is a Converter from the
+ * {@link CallingConvention#ITERATOR iterator calling convention} to the
+ * {@link FennelPullRel#FENNEL_PULL_CONVENTION fennel calling convention}.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -77,12 +79,6 @@ public class IteratorToFennelConverter
 
     //~ Methods ---------------------------------------------------------------
 
-    // implement FennelRel
-    public SaffronConnection getConnection()
-    {
-        return stmt;
-    }
-
     // implement SaffronRel
     public CallingConvention getConvention()
     {
@@ -101,26 +97,13 @@ public class IteratorToFennelConverter
         return new IteratorToFennelConverter(stmt,cluster,child);
     }
 
-    // implement SaffronRel
-    public Object implement(RelImplementor implementor,int ordinal)
+    public static Expression generateTupleWriter(
+        FarragoPreparingStmt stmt,
+        RelImplementor implementor,
+        SaffronType rowType)
     {
-        assert (ordinal == -1);
-        if (inConvention.ordinal_ != CallingConvention.ITERATOR_ORDINAL) {
-            return super.implement(implementor,ordinal);
-        }
-
-        if (!getPreparingStmt().getCatalog().isFennelEnabled()) {
-            return Literal.constantNull();
-        }
-
-        SaffronType rowType = child.getRowType();
         OJClass ojClass = OJUtil.typeToOJClass(rowType);
 
-        // Generate code for children, producing the iterator expression
-        // whose results are to be converted.
-        Expression childExp = (Expression)
-            implementor.implementChild(this,0,child);
-        
         FemTupleDescriptor tupleDesc =
             FennelRelUtil.createTupleDescriptorFromRowType(
                 stmt.getCatalog(),
@@ -160,7 +143,6 @@ public class IteratorToFennelConverter
         // for each field in synthetic object, generate the type-appropriate
         // code with help from the tuple accessor
         SaffronField [] fields = rowType.getFields();
-        Variable varPrevEndOffset = null;
         assert (fields.length == tupleAccessor.getAttrAccessor().size());
         Iterator attrIter = tupleAccessor.getAttrAccessor().iterator();
         boolean variableWidth = false;
@@ -265,7 +247,7 @@ public class IteratorToFennelConverter
                             Literal.makeLiteral(
                                 tupleAccessor.getMinByteLength())))));
         }
-        
+
         // method parameter list matches FennelTupleWriter.marshalTupleOrThrow
         ParameterList paramList = new ParameterList();
         paramList.add(
@@ -288,13 +270,37 @@ public class IteratorToFennelConverter
                 paramList,
                 null,
                 methodBody);
-        
+
         // generate code to allocate instance of anonymous class defined above
-        Expression newTupleWriterExp =
-            new AllocationExpression(
-                TypeName.forClass(FennelTupleWriter.class),
-                new ExpressionList(),
-                new MemberDeclarationList(methodDecl));
+        return new AllocationExpression(
+            TypeName.forClass(FennelTupleWriter.class),
+            new ExpressionList(),
+            new MemberDeclarationList(methodDecl));
+    }
+
+    // implement SaffronRel
+    public Object implement(RelImplementor implementor,int ordinal)
+    {
+        assert (ordinal == -1);
+        if (inConvention.ordinal_ != CallingConvention.ITERATOR_ORDINAL) {
+            return super.implement(implementor,ordinal);
+        }
+
+        if (!getPreparingStmt().getCatalog().isFennelEnabled()) {
+            return Literal.constantNull();
+        }
+
+        SaffronType rowType = child.getRowType();
+        
+        // Generate code for children, producing the iterator expression
+        // whose results are to be converted.
+        Expression childExp = (Expression)
+            implementor.implementChild(this,0,child);
+
+        Expression newTupleWriterExp = generateTupleWriter(
+            stmt,
+            implementor,
+            rowType);
 
         // and pass this to FarragoRuntimeContext.newJavaTupleStream to produce
         // a JavaTupleStream, which will invoke our generated FennelTupleWriter
@@ -333,6 +339,32 @@ public class IteratorToFennelConverter
     {
         // TODO:  propagate this information through Java XO's?
         return RelFieldCollation.emptyCollationArray;
+    }
+
+    /**
+     * Registers this relational expression and rule(s) with the planner, as
+     * per {@link SaffronRel#register}.
+     *
+     * @param planner Planner
+     * @param farragoPreparingStmt Context for the preparation process
+     */
+    public static void register(FarragoPlanner planner,
+            final FarragoPreparingStmt farragoPreparingStmt) {
+        planner.addRule(
+            new ConverterRule(
+                SaffronRel.class,
+                CallingConvention.ITERATOR,
+                FennelPullRel.FENNEL_PULL_CONVENTION,
+                "IteratorToFennelPullRule")
+            {
+                public SaffronRel convert(SaffronRel rel)
+                {
+                    return new IteratorToFennelConverter(
+                        farragoPreparingStmt,
+                        rel.getCluster(),
+                        rel);
+                }
+            });
     }
 }
 

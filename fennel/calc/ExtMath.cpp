@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Fennel is a relational database kernel.
-// Copyright (C) 2004-2004 Disruptive Technologies, Inc.
+// Copyright (C) 2004-2004 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -31,33 +31,79 @@ FENNEL_BEGIN_NAMESPACE
 
 
 void
-calcLn(RegisterRef<double>* result,
-         RegisterRef<double>* x)
+mathLn(RegisterRef<double>* result,
+       RegisterRef<double>* x)
 {
-    assert(x->type() == STANDARD_TYPE_DOUBLE || x->type() == STANDARD_TYPE_REAL);
-
     if (x->isNull()) {
         result->toNull();        
-    } else {
+    } else if (x->value() <= 0.0) {
+        result->toNull();
+	// SQL99 22.1 SQLState dataexception class 22, invalid parameter value subclass 023
+        throw "22023";
+    }else {
         result->value(log(x->value())); //using the c math library log
     }
 }
 
 void
-calcLog10(RegisterRef<double>* result,
-         RegisterRef<double>* x)
+mathLn(RegisterRef<double>* result,
+       RegisterRef<long long>* x)
+{
+    assert(x->type() == STANDARD_TYPE_INT_8 ||
+	   x->type() == STANDARD_TYPE_INT_16 || 
+	   x->type() == STANDARD_TYPE_INT_32 || 
+	   x->type() == STANDARD_TYPE_INT_64);
+
+    if (x->isNull()) {
+        result->toNull();        
+    } else if (x->value() <= 0) {
+        result->toNull();
+	// SQL99 22.1 SQLState dataexception class 22, invalid parameter value subclass 023
+        throw "22023";
+    }else {
+        result->value(log(x->value())); //using the c math library log
+    }
+}
+
+void
+mathLog10(RegisterRef<double>* result,
+	  RegisterRef<double>* x)
 {
     assert(x->type() == STANDARD_TYPE_DOUBLE || x->type() == STANDARD_TYPE_REAL);
 
     if (x->isNull()) {
         result->toNull();        
+    } else if (x->value() <= 0.0) {
+        result->toNull();
+	// SQL99 22.1 SQLState dataexception class 22, invalid parameter value subclass 023
+        throw "22023";
     } else {
         result->value(log10(x->value()));
     }
 }
 
 void
-calcAbs(RegisterRef<double>* result,
+mathLog10(RegisterRef<double>* result,
+	  RegisterRef<long long>* x)
+{
+    assert(x->type() == STANDARD_TYPE_INT_8 ||
+	   x->type() == STANDARD_TYPE_INT_16 || 
+	   x->type() == STANDARD_TYPE_INT_32 || 
+	   x->type() == STANDARD_TYPE_INT_64);
+
+    if (x->isNull()) {
+        result->toNull();        
+    } else if (x->value() <= 0) {
+        result->toNull();
+	// SQL99 22.1 SQLState dataexception class 22, invalid parameter value subclass 023
+        throw "22023";
+    } else {
+        result->value(log10(x->value()));
+    }
+}
+
+void
+mathAbs(RegisterRef<double>* result,
 	RegisterRef<double>* x)
 {
     assert(x->type() == STANDARD_TYPE_DOUBLE || x->type() == STANDARD_TYPE_REAL);
@@ -70,7 +116,7 @@ calcAbs(RegisterRef<double>* result,
 }
 
 void
-calcAbs(RegisterRef<long long>* result,
+mathAbs(RegisterRef<long long>* result,
 	RegisterRef<long long>* x)
 {
     assert(x->type() == STANDARD_TYPE_INT_64);
@@ -83,9 +129,9 @@ calcAbs(RegisterRef<long long>* result,
 }
 
 void
-calcPow(RegisterRef<double>* result,
-         RegisterRef<double>* x,
-         RegisterRef<double>* y)
+mathPow(RegisterRef<double>* result,
+	RegisterRef<double>* x,
+	RegisterRef<double>* y)
 {
     assert(x->type() == STANDARD_TYPE_DOUBLE || x->type() == STANDARD_TYPE_REAL);
     assert(y->type() == STANDARD_TYPE_DOUBLE || y->type() == STANDARD_TYPE_REAL);
@@ -93,26 +139,23 @@ calcPow(RegisterRef<double>* result,
     if (x->isNull() || y->isNull()) {
         result->toNull();        
     } else {
-        result->value(pow(x->value(), y->value()));
+        double r = pow(x->value(), y->value());
+	if ( (x->value() == 0.0 && y->value() < 0.0) || 
+	     (x->value() <  0.0 && isnan(r))
+           ) {
+	    //we should get here when x^y have 
+	    //x=0 AND y < 0 OR
+	    //x<0 AND y is an non integer. If this is the case then the result is NaN
+	    
+	    result->toNull();
+	    // SQL99 22.1 SQLState dataexception class 22, invalid parameter value subclass 023
+	    throw "22023";
+
+	} else {
+            result->value(r);
+	}
     }
 }
-
-void
-calcMod(RegisterRef<long long>* result,
-	RegisterRef<long long>* x,
-	RegisterRef<long long>* y)
-{
-  assert(x->type() == STANDARD_TYPE_INT_64);
-  assert(y->type() == STANDARD_TYPE_INT_64);
-
-    if (x->isNull() || y->isNull()) {
-        result->toNull();        
-    } else {
-        //REVIEW wael: need to check for divide by zero here
-        result->value(x->value() % y->value());
-    }
-}
-
 
 void
 ExtMathRegister(ExtendedInstructionTable* eit)
@@ -122,6 +165,26 @@ ExtMathRegister(ExtendedInstructionTable* eit)
     vector<StandardTypeDescriptorOrdinal> params_2D;
     params_2D.push_back(STANDARD_TYPE_DOUBLE);
     params_2D.push_back(STANDARD_TYPE_DOUBLE);
+
+    vector<StandardTypeDescriptorOrdinal> params_DI;
+    params_DI.push_back(STANDARD_TYPE_DOUBLE);
+    params_DI.push_back(STANDARD_TYPE_INT_64);
+
+    vector<StandardTypeDescriptorOrdinal> params_DII;
+    params_DII.push_back(STANDARD_TYPE_DOUBLE);
+    params_DII.push_back(STANDARD_TYPE_INT_64);
+    params_DII.push_back(STANDARD_TYPE_INT_64);
+
+    vector<StandardTypeDescriptorOrdinal> params_DID;
+    params_DID.push_back(STANDARD_TYPE_DOUBLE);
+    params_DID.push_back(STANDARD_TYPE_INT_64);
+    params_DID.push_back(STANDARD_TYPE_DOUBLE);
+    
+    vector<StandardTypeDescriptorOrdinal> params_DDI;
+    params_DDI.push_back(STANDARD_TYPE_DOUBLE);
+    params_DDI.push_back(STANDARD_TYPE_DOUBLE);
+    params_DDI.push_back(STANDARD_TYPE_INT_64);
+
 
     vector<StandardTypeDescriptorOrdinal> params_3D(params_2D);
     params_3D.push_back(STANDARD_TYPE_DOUBLE);
@@ -135,27 +198,31 @@ ExtMathRegister(ExtendedInstructionTable* eit)
 
     eit->add("LN", params_2D,
              (ExtendedInstruction2<double, double>*) NULL,
-             &calcLn);
+             &mathLn);
+
+    eit->add("LN", params_DI,
+             (ExtendedInstruction2<double, long long>*) NULL,
+             &mathLn);
 
     eit->add("LOG10", params_2D,
              (ExtendedInstruction2<double, double>*) NULL,
-             &calcLog10);
+             &mathLog10);
+
+    eit->add("LOG10", params_DI,
+             (ExtendedInstruction2<double, long long>*) NULL,
+             &mathLog10);
     
     eit->add("ABS", params_2D,
              (ExtendedInstruction2<double, double>*) NULL,
-             &calcAbs);
+             &mathAbs);
     
     eit->add("ABS", params_2I,
              (ExtendedInstruction2<long long, long long>*) NULL,
-             &calcAbs);
+             &mathAbs);
 
     eit->add("POW", params_3D,
              (ExtendedInstruction3<double, double, double>*) NULL,
-             &calcPow);
-
-    eit->add("MOD", params_3I,
-             (ExtendedInstruction3<long long, long long, long long>*) NULL,
-             &calcMod);
+             &mathPow);
 
 }
 

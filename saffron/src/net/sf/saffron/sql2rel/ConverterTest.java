@@ -2,6 +2,7 @@
 // $Id$
 // Saffron preprocessor and data engine
 // (C) Copyright 2003-2003 Disruptive Technologies, Inc.
+// (C) Copyright 2003-2004 John V. Sichi
 // You must accept the terms in LICENSE.html to use this software.
 //
 // This program is free software; you can redistribute it and/or
@@ -469,15 +470,7 @@ public class ConverterTest extends TestCase
 
         protected static String getClassRoot()
         {
-            String classRoot =
-                SaffronProperties.instance().getProperty(
-                    SaffronProperties.PROPERTY_saffron_class_dir);
-            if (classRoot == null) {
-                throw Util.newInternal(
-                    "Property " + SaffronProperties.PROPERTY_saffron_class_dir
-                    + " must be set");
-            }
-            return classRoot;
+            return SaffronProperties.instance().classDir.get(true);
         }
 
         protected String getTempClassName()
@@ -488,16 +481,12 @@ public class ConverterTest extends TestCase
 
         protected static String getJavaRoot()
         {
-            return SaffronProperties.instance().getProperty(
-                SaffronProperties.PROPERTY_saffron_java_dir,
-                getClassRoot());
+            return SaffronProperties.instance().javaDir.get();
         }
 
         protected String getTempPackageName()
         {
-            return SaffronProperties.instance().getProperty(
-                SaffronProperties.PROPERTY_saffron_package_name,
-                SaffronProperties.PROPERTY_saffron_package_name_DEFAULT);
+            return SaffronProperties.instance().packageName.get();
         }
 
     }

@@ -21,16 +21,16 @@
 
 package net.sf.saffron.sql;
 
-import net.sf.saffron.sql.type.SqlTypeName;
-import net.sf.saffron.util.Util;
-import net.sf.saffron.util.EnumeratedValues;
 import net.sf.saffron.core.SaffronType;
 import net.sf.saffron.core.SaffronTypeFactory;
 import net.sf.saffron.resource.SaffronResource;
+import net.sf.saffron.sql.type.SqlTypeName;
+import net.sf.saffron.util.EnumeratedValues;
+import net.sf.saffron.util.Util;
+import net.sf.saffron.util.MultiMap;
 
 import java.lang.reflect.Field;
 import java.util.*;
-import java.math.BigInteger;
 
 /**
  * A <code>SqlFunctionTable</code> is a singleton which contains an instance of
@@ -58,17 +58,20 @@ public class SqlFunctionTable {
             super(name, ordinal, null);
         }
 
+        public static final int BothORDINAL = 0;
         public static final FunctionFlagType Both =
-                                        new FunctionFlagType("Both", 0);
+                new FunctionFlagType("Both", BothORDINAL);
+        public static final int LeadingORDINAL = 1;
         public static final FunctionFlagType Leading =
-                                        new FunctionFlagType("Leading", 1);
+                new FunctionFlagType("Leading", LeadingORDINAL);
+        public static final int TrailingORDINAL = 2;
         public static final FunctionFlagType Trailing =
-                                        new FunctionFlagType("Trailing", 2);
+                new FunctionFlagType("Trailing", TrailingORDINAL);
 
         public static final EnumeratedValues enumeration = new EnumeratedValues(
                 new FunctionFlagType [] { Both,Leading,Trailing });
-
     }
+    
     //~ Static fields/initializers --------------------------------------------
 
     public static final SqlLiteral flagBoth     =
@@ -740,11 +743,7 @@ public class SqlFunctionTable {
     /**
      * Multi-map from function name to a list of functions with that name.
      */
-    // todo: when we support function overloading, we will use MultiMap
-    // REVIEW (jhyde): Regardless of what the above comment says, we need to
-    //   switch to net.sf.saffron.util.MultiMap now. We're already storing
-    //   lists in this thing!
-    private final HashMap mapNameToFunc = new HashMap();
+    private final MultiMap mapNameToFunc = new MultiMap();
 
     //~ Constructors ----------------------------------------------------------
 
@@ -774,7 +773,7 @@ public class SqlFunctionTable {
     //~ Methods ---------------------------------------------------------------
     public static SqlCall createCall(String funName, SqlNode[] operands) {
         List funs = instance().lookup(funName);
-        if ((null!=funs)&&(funs.size()>0)){
+        if (!funs.isEmpty()){
             return ((SqlFunction) funs.get(0)).createCall(operands);
         }
 
@@ -798,7 +797,7 @@ public class SqlFunctionTable {
      *         else retrieves a list of overloading function by a given name.
      */
     public List lookup(String funcName) {
-        return (List) mapNameToFunc.get(funcName);
+        return mapNameToFunc.getMulti(funcName);
     }
 
     /**
@@ -807,38 +806,29 @@ public class SqlFunctionTable {
      */
     public void register(SqlFunction function) {
 
-        List functionList;
-
-        if (mapNameToFunc.get(function.name) != null) {
-            functionList = (List) mapNameToFunc.get(function.name);
-        } else {
-            functionList = new LinkedList();
-            mapNameToFunc.put(function.name, functionList);
-            SqlFunction.SqlFuncTypeName funcType = function.getFunctionType();
-            assert (funcType != null) :
-                    "Function type for "+function.name+" not set";
-            switch (funcType.getOrdinal()) {
-            case SqlFunction.String_ordinal:
-                stringFuncNames.add(function.name);
-                break;
-            case SqlFunction.Numeric_ordinal:
-                numericFuncNames.add(function.name);
-                break;
-            case SqlFunction.TimeDate_ordinal:
-                timeDateFuncNames.add(function.name);
-                break;
-            case SqlFunction.System_ordinal:
-                systemFuncNames.add(function.name);
-                break;
-            }
-
+        mapNameToFunc.putMulti(function.name, function);
+        SqlFunction.SqlFuncTypeName funcType = function.getFunctionType();
+        assert (funcType != null) :
+                "Function type for "+function.name+" not set";
+        switch (funcType.getOrdinal()) {
+        case SqlFunction.String_ordinal:
+            stringFuncNames.add(function.name);
+            break;
+        case SqlFunction.Numeric_ordinal:
+            numericFuncNames.add(function.name);
+            break;
+        case SqlFunction.TimeDate_ordinal:
+            timeDateFuncNames.add(function.name);
+            break;
+        case SqlFunction.System_ordinal:
+            systemFuncNames.add(function.name);
+            break;
         }
-        functionList.add(function);
     }
 
     private SqlFunction[] lookup(String name, int numberOfParams) {
-        List funcList = (List) mapNameToFunc.get(name);
-        if (null == funcList) {
+        List funcList = mapNameToFunc.getMulti(name);
+        if (funcList.isEmpty()) {
             return null;
         }
 

@@ -1023,13 +1023,12 @@ require version '${required.ant.version}'."/>
   <!-- Beautify Farrago source code.  This forks a separate ant process using
        the server JVM to work around a problem documented at
        http://jalopy.sourceforge.net/javadoc.html. -->
-  <target name="jalopy" depends="compile"
-    description="Runs jalopy on all source code.">
-      <antFork value="forked_jalopy">
-        <jvmargs>
-          <jvmarg value="-server"/>
-        </jvmargs>
-      </antFork>
+  <target name="jalopy" depends="compile">
+    <antFork value="forked_jalopy">
+      <jvmargs>
+        <jvmarg value="-server"/>
+      </jvmargs>
+    </antFork>
   </target>
 
   <target name="forked_jalopy">

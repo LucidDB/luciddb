@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Fennel is a relational database kernel.
-// Copyright (C) 2004-2004 Disruptive Technologies, Inc.
+// Copyright (C) 2004-2004 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -18,13 +18,51 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+#include "fennel/common/CommonPreamble.h"
 #include "fennel/test/SqlStringBuffer.h"
 
 using namespace fennel;
 using namespace std;
 
+#if !(defined LITTLEENDIAN || defined BIGENDIAN)
+#error "endian not defined"
+#endif
+
 const uint SqlStringBuffer::mBumperChar = '@';
 const int SqlStringBuffer::mBumperLen = 3;
+
+SqlStringBuffer::
+SqlStringBuffer(int storage,    // maximum size of string in characters
+                int size,       // size of text, in characters, excluding padding
+                int leftpad,    // pad left with this many characters
+                int rightpad,   // pad right with this many chararacters
+                uint text,      // fill text w/this
+                uint pad,       // pad w/this
+                int leftBumper, // In characters
+                int rightBumper) : 
+    mStorage(storage),
+    mSize(size),
+    mLeftPad(leftpad),
+    mRightPad(rightpad),
+    mLeftBump(leftBumper),
+    mRightBump(rightBumper),
+    mTotal(storage + leftBumper + rightBumper),
+    mS(mTotal, mBumperChar)
+{
+    assert(leftBumper > 0);
+    assert(rightBumper > 0);
+    assert(storage == size + leftpad + rightpad);
+
+    mLeftP = const_cast<char *>(mS.c_str()); // Too abusive of string()?
+    mStr = mLeftP + mLeftBump;
+    mRightP = mStr + mStorage;
+
+    string padS(mStorage, pad);
+    string textS(size, text);
+
+    mS.replace(mLeftBump, mStorage, padS, 0, mStorage); // pad all first
+    mS.replace(mLeftBump + mLeftPad, mSize, textS, 0, mSize);
+}
 
 
 bool
@@ -91,8 +129,43 @@ SqlStringBufferUCS2::SqlStringBufferUCS2(SqlStringBuffer const &src) :
     char *dstP = mStr;
     int i = src.mStorage;
     while (i > 0) {
+#ifdef LITTLEENDIAN
+        *(dstP++) = *(srcP++);
+        *(dstP++) = 0x00;
+#else
         *(dstP++) = 0x00;
         *(dstP++) = *(srcP++);
+#endif
+        i--;
+    }
+}
+
+SqlStringBufferUCS2::SqlStringBufferUCS2(SqlStringBuffer const &src,
+                                         int leftBumper,
+                                         int rightBumper) :
+    mStorage(src.mStorage *2),
+    mSize(src.mSize * 2),
+    mLeftPad(src.mLeftPad * 2),
+    mRightPad(src.mRightPad * 2),
+    mLeftBump(leftBumper),
+    mRightBump(rightBumper),
+    mTotal(src.mStorage * 2 + leftBumper + rightBumper)
+{
+    mS.assign(mTotal, mBumperChar);
+
+    init();
+
+    char *srcP = src.mStr;
+    char *dstP = mStr;
+    int i = src.mStorage;
+    while (i > 0) {
+#ifdef LITTLEENDIAN
+        *(dstP++) = *(srcP++);
+        *(dstP++) = 0x00;
+#else
+        *(dstP++) = 0x00;
+        *(dstP++) = *(srcP++);
+#endif
         i--;
     }
 }
@@ -137,7 +210,11 @@ SqlStringBufferUCS2::randomize(uint start,
     uint16_t tmp;
     int i = 0;
     while (i < mSize) {
+#ifdef LITTLEENDIAN
+        tmp = mStrPostPad[i+1] << 8 | mStrPostPad[i];
+#else
         tmp = mStrPostPad[i] << 8 | mStrPostPad[i+1];
+#endif
         r.push_back(tmp);
         i+=2;
     }
@@ -148,8 +225,13 @@ SqlStringBufferUCS2::randomize(uint start,
     vector<uint16_t>::iterator iter = r.begin();
     while (i < mSize) {
         tmp = *(iter++);
+#ifdef LITTLEENDIAN
+        mStrPostPad[i++] = tmp & 0xff;
+        mStrPostPad[i++] = (tmp >> 8) & 0xff;
+#else
         mStrPostPad[i++] = (tmp >> 8) & 0xff;
         mStrPostPad[i++] = tmp & 0xff;
+#endif
     }
 }
 
@@ -162,8 +244,13 @@ SqlStringBufferUCS2::patternfill(uint start,
     int i = 0;
 
     while(i < mSize) {
+#ifdef LITTLEENDIAN
+        mStrPostPad[i++] = c & 0xff;
+        mStrPostPad[i++] = (c >> 8) & 0xff;
+#else
         mStrPostPad[i++] = (c >> 8) & 0xff;
         mStrPostPad[i++] = c & 0xff;
+#endif
         if (++c > upper) c = lower; 
     }
 }

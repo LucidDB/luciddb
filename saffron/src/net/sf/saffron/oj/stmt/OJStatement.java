@@ -2,6 +2,7 @@
 // $Id$
 // Saffron preprocessor and data engine
 // (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// (C) Copyright 2003-2004 John V. Sichi
 // You must accept the terms in LICENSE.html to use this software.
 //
 // This program is free software; you can redistribute it and/or
@@ -193,7 +194,9 @@ public class OJStatement
     public Object execute(String queryString,Argument [] arguments)
     {
         // (re)load trace level etc. from saffron.properties
-        SaffronProperties.instance().apply();
+        if (shouldReloadTrace()) {
+            SaffronProperties.instance().apply();
+        }
         ClassDeclaration decl = init(arguments);
         ParseTree parseTree = parse(queryString);
         OJQueryExpander queryExpander = new OJQueryExpander(env, connection);
@@ -342,7 +345,9 @@ public class OJStatement
             boolean needValidation)
     {
         // (re)load trace level etc. from saffron.properties
-        SaffronProperties.instance().apply();
+        if (shouldReloadTrace()) {
+            SaffronProperties.instance().apply();
+        }
 
         if (runtimeContextClass == null) {
             runtimeContextClass = connection.getClass();
@@ -466,36 +471,22 @@ public class OJStatement
 
     protected String getClassRoot()
     {
-        String classRoot =
-            SaffronProperties.instance().getProperty(
-                SaffronProperties.PROPERTY_saffron_class_dir);
-        if (classRoot == null) {
-            throw Util.newInternal(
-                "Property " + SaffronProperties.PROPERTY_saffron_class_dir
-                + " must be set");
-        }
-        return classRoot;
+        return SaffronProperties.instance().classDir.get(true);
     }
 
     protected String getCompilerClassName()
     {
-        return SaffronProperties.instance().getProperty(
-            SaffronProperties.PROPERTY_saffron_java_compiler_class,
-            SaffronProperties.PROPERTY_saffron_java_compiler_class_DEFAULT);
+        return SaffronProperties.instance().javaCompilerClass.get();
     }
 
     protected String getJavaRoot()
     {
-        return SaffronProperties.instance().getProperty(
-            SaffronProperties.PROPERTY_saffron_java_dir,
-            getClassRoot());
+        return SaffronProperties.instance().javaDir.get(true);
     }
 
     protected String getTempPackageName()
     {
-        return SaffronProperties.instance().getProperty(
-            SaffronProperties.PROPERTY_saffron_package_name,
-            SaffronProperties.PROPERTY_saffron_package_name_DEFAULT);
+        return SaffronProperties.instance().packageName.get();
     }
 
     protected String getTempMethodName()
@@ -517,6 +508,11 @@ public class OJStatement
     protected boolean shouldSetConnectionInfo()
     {
         return false;
+    }
+
+    protected boolean shouldReloadTrace()
+    {
+        return true;
     }
 
     private JavaCompiler createCompiler()
@@ -601,8 +597,7 @@ public class OJStatement
         Argument [] arguments)
     {
         final boolean print =
-            SaffronProperties.instance().getBooleanProperty(
-                SaffronProperties.PROPERTY_saffron_Statement_printBeforeCompile);
+            SaffronProperties.instance().printBeforeCompile.get();
         if (print) {
             PrintStream ps = DebugOut.getStream();
             ps.print("Before compile [");
@@ -710,8 +705,7 @@ public class OJStatement
         JavaCompilerArgs args = javaCompiler.getArgs();
         args.clear();
         String initialArgs =
-            SaffronProperties.instance().getProperty(
-                SaffronProperties.PROPERTY_saffron_java_compiler_args);
+                SaffronProperties.instance().javaCompilerArgs.get();
         if (initialArgs != null) {
             args.setString(initialArgs);
         }
@@ -746,8 +740,7 @@ public class OJStatement
             try {
                 javaFile.getParentFile().mkdirs(); // make any necessary parent directories
                 final boolean print =
-                    SaffronProperties.instance().getBooleanProperty(
-                        SaffronProperties.PROPERTY_saffron_Statement_printBeforeCompile);
+                    SaffronProperties.instance().printBeforeCompile.get();
                 if (print) {
                     System.out.println(
                         "Compiling " + javaFile + ", class " + fullClassName);

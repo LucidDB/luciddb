@@ -2,6 +2,7 @@
 // $Id$
 // Saffron preprocessor and data engine
 // (C) Copyright 2002-2003 Disruptive Technologies, Inc.
+// (C) Copyright 2003-2004 John V. Sichi
 // You must accept the terms in LICENSE.html to use this software.
 //
 // This program is free software; you can redistribute it and/or
@@ -69,8 +70,14 @@ public class VolcanoPlanner implements SaffronPlanner
     /**
      * Map each registered expression ({@link SaffronRel}) to its equivalence
      * set ({@link RelSubset}).
+     *
+     * <p>We use an {@link IdentityHashMap} to simplify the process of
+     * merging {@link RelSet} objects. Most {@link SaffronRel} objects are
+     * identified by their digest, which involves the set that their child
+     * relational expressions belong to. If those children belong to the same
+     * set, we have to be careful, otherwise it gets incestuous.</p>
      */
-    HashMap mapRel2Subset = new HashMap();
+    IdentityHashMap mapRel2Subset = new IdentityHashMap();
 
     /** List of all schemas which have been registered. */
     HashSet registeredSchemas = new HashSet();
@@ -326,7 +333,50 @@ public class VolcanoPlanner implements SaffronPlanner
 
     public SaffronRel register(SaffronRel rel,SaffronRel equivRel)
     {
-        return registerImpl(rel,getSet(equivRel));
+        final RelSet set = getSet(equivRel);
+        final RelSubset subset = registerImpl(rel,set);
+        if (true) {
+            validate();
+        }
+        return subset;
+    }
+
+    /**
+     * Checks internal consistency.
+     */
+    private void validate() {
+        for (Iterator sets = allSets.iterator(); sets.hasNext();) {
+            RelSet set = (RelSet) sets.next();
+            if (set.equivalentSet != null) {
+                throw new AssertionError("set [" + set +
+                        "] has been merged: it should not be in the list");
+            }
+            for (Iterator subsets = set.subsets.iterator(); subsets.hasNext();) {
+                RelSubset subset = (RelSubset) subsets.next();
+                if (subset.set != set) {
+                    throw new AssertionError("subset [" + subset +
+                            "] is in wrong set [" + set + "]");
+                }
+                for (Iterator rels = subset.rels.iterator(); rels.hasNext();) {
+                    SaffronRel rel = (SaffronRel) rels.next();
+                    final RelSubset subset2 = getSubset(rel);
+                    if (subset2 != subset && false) {
+                        throw new AssertionError("rel [" + rel +
+                                "] is in wrong subset [" + subset2 + "]");
+                    }
+                    final SaffronRel [] inputRels = rel.getInputs();
+                    for (int i = 0; i < inputRels.length; i++) {
+                        SaffronRel inputRel = inputRels[i];
+                        final RelSubset inputSubset = getSubset(inputRel);
+                        if (!inputSubset.parents.contains(rel)) {
+                            throw new AssertionError("rel [" + rel +
+                                    "] is a parent of [" + inputRel +
+                                    "] but is not registered as such");
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public void registerAbstractRelationalRules()
@@ -337,9 +387,7 @@ public class VolcanoPlanner implements SaffronPlanner
         addRule(new RemoveDistinctRule());
         addRule(new UnionToDistinctRule());
         addRule(new RemoveTrivialProjectRule());
-
         // todo: rule which makes Project({OrdinalRef}) disappear
-        // todo: rule which folds Projects & Filters
     }
 
     public void registerAbstractRels()
@@ -352,6 +400,11 @@ public class VolcanoPlanner implements SaffronPlanner
         ProjectRel.register(this);
         TableAccessRel.register(this);
         UnionRel.register(this);
+        CalcRel.register(this);
+        addRule(FilterToCalcRule.instance);
+        addRule(ProjectToCalcRule.instance);
+        addRule(MergeFilterOntoCalcRule.instance);
+        addRule(MergeProjectOntoCalcRule.instance);
     }
 
     public void registerSchema(SaffronSchema schema)
@@ -422,9 +475,7 @@ public class VolcanoPlanner implements SaffronPlanner
         Iterator conversionPaths =
             conversionGraph.getPaths(fromConvention,toConvention);
         boolean allowInfiniteCostConverters =
-                SaffronProperties.instance().getBooleanProperty(
-                        SaffronProperties.PROPERTY_saffron_opt_allowInfiniteCostConverters,
-                        true);
+                SaffronProperties.instance().allowInfiniteCostConverters.get();
         loop: while (conversionPaths.hasNext()) {
             Graph.Arc [] arcs = (Graph.Arc []) conversionPaths.next();
             assert(arcs[0].from == fromConvention);
@@ -541,17 +592,36 @@ public class VolcanoPlanner implements SaffronPlanner
             final SaffronRel equivRel =
                 (SaffronRel) mapDigestToRel.put(newDigest,rel);
             if (equivRel != null) {
+                assert equivRel != rel;
                 // There's already an equivalent with the same name, and we
                 // just knocked it out. Put it back, and forget about 'rel'.
+                DebugOut.println(
+                        "After renaming #" + rel.getId() +
+                        ", it is now equivalent to rel #" + equivRel.getId());
                 mapDigestToRel.put(equivRel.toString(),equivRel);
                 if (ruleQueue.remove(rel) && !ruleQueue.contains(equivRel)) {
                     ruleQueue.add(equivRel);
                 }
-                assert((RelSubset) mapRel2Subset.remove(rel) != null);
-                final SaffronRel [] inputs = rel.getInputs();
+                // Remove backlinks from children.
+                final SaffronRel[] inputs = rel.getInputs();
                 for (int i = 0; i < inputs.length; i++) {
                     RelSubset input = (RelSubset) inputs[i];
                     input.parents.remove(rel);
+                }
+                // Remove rel from its subset. (This may leave the subset
+                // empty, but if so, that will be dealt with when the sets
+                // get merged.)
+                final RelSubset subset = (RelSubset) mapRel2Subset.remove(rel);
+                assert subset != null;
+                boolean existed = subset.rels.remove(rel);
+                assert existed;
+                final RelSubset equivSubset = getSubset(equivRel);
+                if (equivSubset != subset) {
+                    // The equivalent relational expression is in a different
+                    // subset, therefore the sets are equivalent.
+                    assert equivSubset.convention == subset.convention;
+                    assert equivSubset.set != subset.set;
+                    merge(equivSubset.set, subset.set);
                 }
             }
         }
@@ -742,6 +812,8 @@ public class VolcanoPlanner implements SaffronPlanner
             return;
         }
         if (set.id > set2.id) {
+            // Swap the sets, so we're always merging the newer set into the
+            // older.
             RelSet t = set;
             set = set2;
             set2 = t;
@@ -848,6 +920,8 @@ loop:
                     && (equivExp.getClass() == rel.getClass()));
             RelSet equivSet = getSet(equivExp);
             if (equivSet != null) {
+                DebugOut.println("Register: rel #" + rel.getId() +
+                        " is equivalent to rel #" + equivExp);
                 return registerSubset(set,getSubset(equivExp));
             }
         }

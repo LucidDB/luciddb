@@ -1,6 +1,7 @@
 /*
 // Farrago is a relational database management system.
 // Copyright (C) 2003-2004 John V. Sichi.
+// Copyright (C) 2003-2004 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -93,13 +94,12 @@ public class FarragoDatabase
      * database will be loaded first; otherwise, the existing database is
      * reused with an increased reference count.
      *
-     * @param cmdExecutor {@link FennelCmdExecutor} implementation to use for
-     * executing all Fennel commands
+     * @param sessionFactory factory for various database-level objects
      *
      * @return loaded database
      */
     public static synchronized FarragoDatabase pinReference(
-        FennelCmdExecutor cmdExecutor)
+        FarragoSessionFactory sessionFactory)
     {
         tracer.info("connect");
         
@@ -109,7 +109,8 @@ public class FarragoDatabase
             assert(instance == null);
             boolean success = false;
             try {
-                FarragoDatabase newDb = new FarragoDatabase(cmdExecutor,false);
+                FarragoDatabase newDb = new FarragoDatabase(
+                    sessionFactory,false);
                 assert(newDb == instance);
                 success = true;
             } finally {
@@ -202,17 +203,28 @@ public class FarragoDatabase
         return dataWrapperCache;
     }
 
-    private FarragoDatabase(FennelCmdExecutor cmdExecutor,boolean init)
+    /**
+     * Creates a <code>FarragoDatabase</code>.
+     *
+     * @param sessionFactory factory for various database-level objects
+     * @param init whether to initialize the system catalog (the first time
+     *     the database is started)
+     */
+    private FarragoDatabase(FarragoSessionFactory sessionFactory,boolean init)
     {
         instance = this;
         try {
-            traceConfigFile = new File(
-                System.getProperties().getProperty(
-                    "java.util.logging.config.file"));
+            final String prop = "java.util.logging.config.file";
+            String loggingConfigFile =
+                    System.getProperties().getProperty(prop);
+            if (loggingConfigFile == null) {
+                throw FarragoResource.instance().newMissingHomeProperty(prop);
+            }
+            traceConfigFile = new File(loggingConfigFile);
 
             dumpTraceConfig();
             
-            systemCatalog = new FarragoCatalog(this,false);
+            systemCatalog = sessionFactory.newCatalog(this,false);
             userCatalog = systemCatalog;
             if (init) {
                 systemCatalog.createSystemObjects();
@@ -230,7 +242,12 @@ public class FarragoDatabase
                 + System.getProperty("java.library.path"));
 
             if (systemCatalog.isFennelEnabled()) {
-                loadFennel(cmdExecutor,init);
+                systemCatalog.getRepository().beginTrans(true);
+                try {
+                    loadFennel(sessionFactory.newFennelCmdExecutor(),init);
+                } finally {
+                    systemCatalog.getRepository().endTrans(false);
+                }
             } else {
                 tracer.config("Fennel support disabled");
             }
@@ -372,13 +389,13 @@ public class FarragoDatabase
         cmd.setCreateDatabase(init);
 
         NativeTrace nativeTrace =
-            new NativeTrace("net.sf.farrago.fennel.");
+            new NativeTrace("net.sf.fennel.");
 
         FennelJavaHandle hNativeTrace =
             FennelDbHandle.allocateNewObjectHandle(this,nativeTrace);
         cmd.setJavaTraceHandle(hNativeTrace.getLongHandle());
         fennelDbHandle = new FennelDbHandle(
-            systemCatalog,this,cmdExecutor,cmd);
+            systemCatalog,systemCatalog,this,cmdExecutor,cmd);
         tracer.config("Fennel successfully loaded");
     }
     
@@ -442,10 +459,10 @@ public class FarragoDatabase
         FarragoIndexMap indexMap,
         FarragoSessionViewInfo viewInfo)
     {
-        FarragoPreparingStmt stmt = new FarragoPreparingStmt(
+        final FarragoPreparingStmt stmt = new FarragoPreparingStmt(
             catalog,
             fennelDbHandle,
-            connectionDefaults,
+            session,
             codeCache,
             dataWrapperCache,
             indexMap);
@@ -540,11 +557,16 @@ public class FarragoDatabase
             return;
         }
 
-        FemCmdCheckpoint cmd = systemCatalog.newFemCmdCheckpoint();
-        cmd.setDbHandle(fennelDbHandle.getFemDbHandle(systemCatalog));
-        cmd.setFuzzy(fuzzy);
-        cmd.setAsync(async);
-        fennelDbHandle.executeCmd(cmd);
+        systemCatalog.beginTransientTxn();
+        try {
+            FemCmdCheckpoint cmd = systemCatalog.newFemCmdCheckpoint();
+            cmd.setDbHandle(fennelDbHandle.getFemDbHandle(systemCatalog));
+            cmd.setFuzzy(fuzzy);
+            cmd.setAsync(async);
+            fennelDbHandle.executeCmd(cmd);
+        } finally {
+            systemCatalog.endTransientTxn();
+        }
     }
 
     /**
@@ -555,7 +577,7 @@ public class FarragoDatabase
     public static void main(String [] args)
     {
         FarragoDatabase database = new FarragoDatabase(
-            new FennelCmdExecutorImpl(),
+            new FarragoDbSessionFactory(),
             true);
         database.close(false);
     }

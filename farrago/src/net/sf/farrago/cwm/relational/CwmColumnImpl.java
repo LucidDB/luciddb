@@ -104,8 +104,7 @@ public abstract class CwmColumnImpl extends InstanceHandler
         FarragoSession session,
         String defaultExpression)
     {
-        String sql = "SELECT " + defaultExpression
-            + " AS DEFAULT_VALUE FROM VALUES(0)";
+        String sql = "VALUES(" + defaultExpression + ")";
         FarragoSessionStmtContext stmtContext = session.newStmtContext();
         stmtContext.prepare(sql,false);
         SaffronType rowType = stmtContext.getPreparedRowType();

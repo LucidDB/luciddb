@@ -1,6 +1,7 @@
 /*
 // Farrago is a relational database management system.
 // Copyright (C) 2003-2004 John V. Sichi.
+// Copyright (C) 2003-2004 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -92,16 +93,14 @@ public class FarragoPreparingStmt extends OJStatement
 
     //~ Instance fields -------------------------------------------------------
 
-    /** Default qualifiers to use for looking up unqualified table names. */
+    private FarragoSession session;
+
     private FarragoConnectionDefaults connectionDefaults;
 
-    /** Singleton catalog instance. */
     private FarragoCatalog catalog;
     
-    /** Type factory for this statement. */
     private FarragoTypeFactory farragoTypeFactory;
 
-    /** Handle to Fennel database affected by this statement */
     private FennelDbHandle fennelDbHandle;
 
     private FarragoObjectCache codeCache;
@@ -158,8 +157,7 @@ public class FarragoPreparingStmt extends OJStatement
      *
      * @param catalog catalog to use for object definitions
      * @param fennelDbHandle handle to Fennel database to access 
-     * @param connectionDefaults default qualifiers for unqualified object
-     * references
+     * @param session invoking session
      * @param codeCache FarragoObjectCache to use for caching code snippets
      * needed during preparation
      * @param dataWrapperCache FarragoObjectCache to use for caching
@@ -169,7 +167,7 @@ public class FarragoPreparingStmt extends OJStatement
     public FarragoPreparingStmt(
         FarragoCatalog catalog,
         FennelDbHandle fennelDbHandle,
-        FarragoConnectionDefaults connectionDefaults,
+        FarragoSession session,
         FarragoObjectCache codeCache,
         FarragoObjectCache dataWrapperCache,
         FarragoIndexMap indexMap)
@@ -177,9 +175,11 @@ public class FarragoPreparingStmt extends OJStatement
         super(null);
         this.catalog = catalog;
         this.fennelDbHandle = fennelDbHandle;
-        this.connectionDefaults = connectionDefaults;
         this.codeCache = codeCache;
         this.indexMap = indexMap;
+
+        this.session = session;
+        connectionDefaults = session.getConnectionDefaults();
 
         allocations = new FarragoCompoundAllocation();
         farragoTypeFactory = new FarragoTypeFactoryImpl(catalog);
@@ -278,7 +278,7 @@ public class FarragoPreparingStmt extends OJStatement
         
         PreparedResult preparedResult = super.prepareSql(
             sqlNode,
-            FarragoRuntimeContext.class,
+            session.getRuntimeContextClass(),
             validator,
             needValidation);
         FarragoExecutableStmt executableStmt;
@@ -722,6 +722,12 @@ public class FarragoPreparingStmt extends OJStatement
         }
     }
     
+    // override OJStatement
+    protected boolean shouldReloadTrace()
+    {
+        return false;
+    }
+
     // override OJStatement
     protected String getClassRoot()
     {

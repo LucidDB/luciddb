@@ -1,6 +1,7 @@
 /*
 // Farrago is a relational database management system.
 // Copyright (C) 2003-2004 John V. Sichi.
+// Copyright (C) 2003-2004 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -19,17 +20,18 @@
 
 package net.sf.farrago.query;
 
+import net.sf.saffron.util.*;
 import net.sf.saffron.oj.*;
 import net.sf.saffron.oj.rel.*;
 import net.sf.saffron.oj.convert.*;
 import net.sf.saffron.opt.*;
 import net.sf.saffron.rel.*;
 import net.sf.saffron.rel.convert.*;
-
-import openjava.ptree.*;
+import net.sf.farrago.fem.config.CalcVirtualMachine;
+import net.sf.farrago.fem.config.CalcVirtualMachineEnum;
 
 /**
- * FarragoPlanner extends VolcanoPlanner to request Farrago-specific
+ * FarragoPlanner extends {@link VolcanoPlanner} to request Farrago-specific
  * optimizations.
  *
  * @author John V. Sichi
@@ -78,20 +80,15 @@ public class FarragoPlanner extends VolcanoPlanner
 
         registerAbstractRels();
 
-        // TODO:  put SwapJoinRule back once fixed
         addRule(new AbstractConverter.ExpandConversionRule());
         addRule(new RemoveDistinctRule());
         addRule(new UnionToDistinctRule());
         addRule(new CoerceInputsRule(UnionRel.class));
         addRule(new CoerceInputsRule(TableModificationRel.class));
+        addRule(new SwapJoinRule());
 
-        // TODO:  re-enable once fixed
-        // addRule(new RemoveTrivialProjectRule());
-        
         addRule(new OJPlannerFactory.HomogeneousUnionToIteratorRule());
         addRule(new OJPlannerFactory.OneRowToIteratorRule());
-        addRule(new OJPlannerFactory.ProjectToIteratorRule());
-        addRule(new OJPlannerFactory.ProjectedFilterToIteratorRule());
 
         addRule(new FennelSortRule());
         addRule(new FennelDistinctSortRule());
@@ -101,34 +98,37 @@ public class FarragoPlanner extends VolcanoPlanner
                 "FennelPullRenameRule"));
         addRule(new FennelCartesianJoinRule());
 
-        addRule(
-            new ConverterRule(
-                SaffronRel.class,
-                FennelPullRel.FENNEL_PULL_CONVENTION,
-                CallingConvention.ITERATOR,
-                "FennelPullToIteratorRule")
-            {
-                public SaffronRel convert(SaffronRel rel)
-                {
-                    return new FennelToIteratorConverter(rel.getCluster(),rel);
-                }
-            });
+        // Add the rule to introduce FennelCalcRel's only if the fennel
+        // calculator is enabled.
+        final CalcVirtualMachine calcVM =
+                stmt.getCatalog().getCurrentConfig().getCalcVirtualMachine();
+        if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_FENNEL)) {
+            // use only Fennel for calculating expressions
+            addRule(FennelCalcRule.instance);
+        } else if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_JAVA)) {
+            // use only Java code generation for calculating expressions
+            addRule(OJPlannerFactory.IterCalcRule.instance);
+            
+            // TODO jvs 6-May-2004:  these should be redundant now, but when
+            // I remove them, some queries fail.  Find out why.
+            addRule(OJPlannerFactory.ProjectToIteratorRule.instance);
+            addRule(OJPlannerFactory.ProjectedFilterToIteratorRule.instance);
+        } else {
+            assert(calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO));
+            throw Util.needToImplement(calcVM);
+        }
 
-        addRule(
-            new ConverterRule(
-                SaffronRel.class,
-                CallingConvention.ITERATOR,
-                FennelPullRel.FENNEL_PULL_CONVENTION,
-                "IteratorToFennelPullRule")
-            {
-                public SaffronRel convert(SaffronRel rel)
-                {
-                    return new IteratorToFennelConverter(
-                        stmt,
-                        rel.getCluster(),
-                        rel);
-                }
-            });
+        FennelToIteratorConverter.register(this);
+        IteratorToFennelConverter.register(this, this.stmt);
+    }
+
+    /**
+     * @return the FarragoPreparingStmt on whose behalf planning
+     * is being performed
+     */
+    public FarragoPreparingStmt getPreparingStmt()
+    {
+        return stmt;
     }
 }
 

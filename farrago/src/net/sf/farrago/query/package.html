@@ -139,7 +139,7 @@ This yields:
 <pre>
 <code>
 ProjectRel(DEPTNO=[$0], NAME=[$1], THE_ANSWER=[42])
-  FilterRel(condition=[=($0,10):BOOLEAN])
+  FilterRel(condition=[=($0,10)])
     FtrsIndexScanRel(table=[SALES.DEPTS], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY],preserveOrder=[false])
 </code>
 </pre>
@@ -187,15 +187,14 @@ Farrago constrains the optimizer to the following calling conventions:
 
 <ul>
 
-<li>FENNEL:  data processing implemented by Fennel TupleStreams (TODO:
+<li>FENNEL_PULL:  data processing implemented by Fennel TupleStreams (TODO:
 link)
 
 <li>ITERATOR:  data processing implemented in Java by classes which
 implement the Iterator streaming interface
 
-<li>RESULT_SET:  data returned via JDBC result sets, either as the
-output of a Farrago query, or as leaf-level input from foreign
-databases (NOTE:  this isn't implemented yet)
+<li>RESULT_SET: data returned via JDBC result sets from foreign
+databases
 
 </ul>
 
@@ -220,7 +219,7 @@ IterCalcRel(DEPTNO=[$0], NAME=[$1], THE_ANSWER=[42])
   FennelToIteratorConverter
     FtrsIndexSearchRel(table=[SALES.DEPTS], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false],outer=[false],inputKeyProj=[*],inputJoinProj=[[]])
       IteratorToFennelConverter
-        IterCalcRel(field#0=[CAST(10):INTEGER])
+        IterCalcRel($f0=[CAST(10)])
           IterOneRowRel
 </code>
 </pre>
@@ -241,9 +240,9 @@ The lowest level ({@link net.sf.saffron.oj.rel.IterOneRowRel})
 produces a single row with no columns; the next level up ({@link
 net.sf.saffron.oj.rel.IterCalcRel}) produces the constant DEPTNO value
 (10) which we're searching for.  (This can remain anonymous as
-<code>field#0</code> since Fennel accesses data by tuple position, not
-value.)  Now, the optimizer wants to feed this into the Fennel search
-as the input key, but the search has FENNEL calling convention, while
+<code>$f0</code> since Fennel accesses data by tuple position, not
+name.)  Now, the optimizer wants to feed this into the Fennel search
+as the input key, but the search has FENNEL_PULL calling convention, while
 IterCalcRel has ITERATOR calling convention.  So, a {@link
 net.sf.saffron.rel.convert.ConverterRel} is required; in this case,
 {@link net.sf.farrago.query.IteratorToFennelConverter}.
@@ -251,7 +250,7 @@ net.sf.saffron.rel.convert.ConverterRel} is required; in this case,
 <p>
 
 But wait, there's more!  The FtrsIndexSearchRel is going to produce
-matching rows in FENNEL representation, but in order to compute the
+matching rows in FENNEL_PULL representation, but in order to compute the
 select list and return results via JDBC, we need another converter:
 {@link net.sf.farrago.query.FennelToIteratorConverter}.  The top-level
 IterCalcRel then implements the original abstract ProjectRel.
@@ -269,11 +268,32 @@ classfile.  Here's the Java class generated for our example:
 
 <pre>
 <code>
-package net.sf.farrago.dynamic.stmt14db0e3;
+package net.sf.farrago.dynamic.stmt39449;
 
 public class ExecutableStmt
 {
-    public static class VARCHAR_128_ISO_8859_1 extends net.sf.farrago.runtime.EncodedCharPointer
+    public static class Ojp_0 extends net.sf.farrago.runtime.FarragoSyntheticObject
+    {
+        public Ojp_0()
+        {
+        }
+    }
+
+    public static class Ojp_1 extends net.sf.farrago.runtime.FarragoSyntheticObject
+    {
+        public int $f0;
+
+        public Ojp_1()
+        {
+        }
+
+        public Ojp_1( int $f0 )
+        {
+            this.$f0 = $f0;
+        }
+    }
+
+    public static class Oj_VARCHAR_128_ISO_8859_1 extends net.sf.farrago.type.runtime.EncodedCharPointer
     {
         protected java.lang.String getCharsetName()
         {
@@ -284,14 +304,14 @@ public class ExecutableStmt
     public static class Ojp_2 extends net.sf.farrago.runtime.FarragoSyntheticObject
     {
         public int DEPTNO;
-
-        public net.sf.saffron.runtime.Dummy_1e22c75.VARCHAR_128_ISO_8859_1 NAME;
+        
+        public net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Oj_VARCHAR_128_ISO_8859_1 NAME;
 
         public Ojp_2()
         {
         }
 
-        public Ojp_2( int DEPTNO, net.sf.saffron.runtime.Dummy_1e22c75.VARCHAR_128_ISO_8859_1 NAME )
+        public Ojp_2( int DEPTNO, net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Oj_VARCHAR_128_ISO_8859_1 NAME )
         {
             this.DEPTNO = DEPTNO;
             this.NAME = NAME;
@@ -301,105 +321,95 @@ public class ExecutableStmt
     public static class Ojp_3 extends net.sf.farrago.runtime.FarragoSyntheticObject
     {
         public int DEPTNO;
-        
-        public net.sf.saffron.runtime.Dummy_1e22c75.VARCHAR_128_ISO_8859_1 NAME;
-        
-        public int THE_ANSWER;
+
+        public net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Oj_VARCHAR_128_ISO_8859_1 NAME;
+
+        public long THE_ANSWER;
 
         public Ojp_3()
         {
         }
 
-        public Ojp_3( int DEPTNO, net.sf.saffron.runtime.Dummy_1e22c75.VARCHAR_128_ISO_8859_1 NAME, int THE_ANSWER )
+        public Ojp_3( int DEPTNO, net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Oj_VARCHAR_128_ISO_8859_1 NAME, long THE_ANSWER )
         {
             this.DEPTNO = DEPTNO;
             this.NAME = NAME;
             this.THE_ANSWER = THE_ANSWER;
         }
-    }
-    
-    public static class Ojp_4 extends net.sf.farrago.runtime.FarragoSyntheticObject
-    {
-        public int $f0;
 
-        public Ojp_4()
-        {
-        }
-
-        public Ojp_4( int $f0 )
-        {
-            this.$f0 = $f0;
-        }
     }
 
-    public static class Ojp_5 extends net.sf.farrago.runtime.FarragoSyntheticObject
-    {
-        public Ojp_5()
-        {
-        }
-    }
-
-    public static java.lang.Object execute( final net.sf.farrago.runtime.FarragoRuntimeContext connection )
+    public static java.lang.Object execute( net.sf.farrago.runtime.FarragoRuntimeContext connection_p )
         throws java.sql.SQLException
     {
+        final net.sf.farrago.runtime.FarragoRuntimeContext connection = connection_p;
         return new net.sf.saffron.runtime.CalcIterator( connection.newFennelIterator( new net.sf.farrago.runtime.FennelTupleReader(){
+            
+            private net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_2 oj_var3 = new net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_2();
+
             
             public java.lang.Object unmarshalTuple( java.nio.ByteBuffer byteBuffer, byte[] byteArray, java.nio.ByteBuffer sliceBuffer )
             {
-                net.sf.saffron.runtime.Dummy_1e22c75.Ojp_2 oj_var2 = new net.sf.saffron.runtime.Dummy_1e22c75.Ojp_2();
-                int oj_var3 = byteBuffer.position();
-                oj_var2.DEPTNO = sliceBuffer.getInt( 0 );
-                int oj_var4 = oj_var3 + sliceBuffer.getShort( 4 );
-                oj_var2.NAME.setPointer( byteArray, 6 + oj_var3, oj_var4 );
-                sliceBuffer.position( oj_var4 - oj_var3 );
-                return oj_var2;
+                int oj_var4 = byteBuffer.position();
+                oj_var3.DEPTNO = sliceBuffer.getInt( 0 );
+                int oj_var5 = oj_var4 + sliceBuffer.getShort( 4 );
+                oj_var3.NAME.setPointer( byteArray, 6 + oj_var4, oj_var5 );
+                sliceBuffer.position( oj_var5 - oj_var4 );
+                return oj_var3;
             }
-        }, "&lt;BIG-FAT-XML-STRING/&gt;", new net.sf.saffron.runtime.CalcIterator( java.util.Collections.singletonList( new net.sf.saffron.runtime.Dummy_1e22c75.Ojp_5() ).iterator() ){
+        }, "FtrsIndexSearchRel#74:315", connection.newJavaTupleStream( 96, new net.sf.farrago.runtime.FennelTupleWriter(){
             
-            private net.sf.saffron.runtime.Dummy_1e22c75.Ojp_4 oj_var1 = new net.sf.saffron.runtime.Dummy_1e22c75.Ojp_4();
+            protected void marshalTupleOrThrow( java.nio.ByteBuffer sliceBuffer, java.lang.Object object )
+            {
+                net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_1 oj_var2 = (net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_1) object;
+                sliceBuffer.putInt( 0, oj_var2.$f0 );
+                sliceBuffer.position( 4 );
+            }
+        }, new net.sf.saffron.runtime.CalcIterator( java.util.Collections.singletonList( new net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_0() ).iterator() ){
+            
+            private net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_1 oj_var1 = new net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_1();
+
             
             protected java.lang.Object calcNext()
             {
                 while (inputIterator.hasNext()) {
-                    net.sf.saffron.runtime.Dummy_1e22c75.Ojp_5 oj_var0 = (net.sf.saffron.runtime.Dummy_1e22c75.Ojp_5) inputIterator.next();
-                    oj_var1.$f0 = (int) 10;
+                    net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_0 oj_var0 = (net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_0) inputIterator.next();
+                    oj_var1.$f0 = (int) (int) 10;
                     return oj_var1;
                 }
                 return null;
             }
         } ) ) ){
             
-            private net.sf.saffron.runtime.Dummy_1e22c75.Ojp_3 oj_var6 = new net.sf.saffron.runtime.Dummy_1e22c75.Ojp_3();
+            private net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_3 oj_var7 = new net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_3();
 
             
             protected java.lang.Object calcNext()
             {
                 while (inputIterator.hasNext()) {
-                    net.sf.saffron.runtime.Dummy_1e22c75.Ojp_2 oj_var5 = (net.sf.saffron.runtime.Dummy_1e22c75.Ojp_2) inputIterator.next();
-                    oj_var6.DEPTNO = oj_var5.DEPTNO;
-                    oj_var6.NAME = oj_var5.NAME;
-                    oj_var6.THE_ANSWER = 42;
-                    return oj_var6;
+                    net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_2 oj_var6 = (net.sf.farrago.dynamic.stmt39449.ExecutableStmt$Ojp_2) inputIterator.next();
+                    oj_var7.DEPTNO = (int) oj_var6.DEPTNO;
+                    oj_var7.NAME.assignFrom( oj_var6.NAME );
+                    oj_var7.THE_ANSWER = (long) 42;
+                    return oj_var7;
                 }
                 return null;
             }
         };
     }
-
 }
 </code>
 </pre>
 
-Yeesh, that's ugly!  And that's after I replaced a
-huge XML string in the middle with BIG-FAT-XML-STRING.  How can we
-interpret this in the context of the implementation plan?
+Yeesh, that's ugly!  How can we interpret this jumble in the context
+of the implementation plan?
 
 <ul>
 
 <li>The static inner classes represent the runtime types of the output
 rows and columns for each relational expression.  For example, Ojp_2
 has fields DEPTNO and NAME, and represents the results of searching
-the table.  VARCHAR_128_ISO_8859_1 is the non-primitive type for the
+the table.  Oj_VARCHAR_128_ISO_8859_1 is the non-primitive type for the
 NAME column, embodying additional type information such as its
 precision and character set.
 
@@ -423,10 +433,16 @@ THE_ANSWER (42).
 <li>The unmarshalTuple() method contains code generated to read data from
 the Fennel TupleStream using java.nio.
 
-<li>The Fennel portion of the plan is represented by
-BIG-FAT-XML-STRING.  On execution, this will be compiled into a graph
-of Fennel TupleStreams which do work such as BTree access.  More on
-this below.
+<li>The Fennel portion of the plan is referenced via the string
+<code>FtrsIndexSearchRel#74:315</code>.  This is the generated name of a stream
+within the Fennel plan.  On execution, this stream name will be used
+to obtain a handle to a C++ execution object from the graph of Fennel
+TupleStreams.  More on this below.
+
+<li>In the other direction, the <code>newJavaTupleStream</code> call
+creates a Java execution object which will be called directly from C++
+code.  The generated identifier argument <code>96</code> is referenced
+from the Fennel plan.
 
 </ul>
 
@@ -440,17 +456,15 @@ sub-traversal of the connected subtree of nodes implementing the
 generating Java code, these nodes generate (via the
 FennelRel.toTupleStreamDef method) a tree of {@link
 net.sf.farrago.fem.fennel.FemTupleStreamDef} instances specifying the
-Fennel portion of the plan.  FennelRelToIteratorConverter exports this
-tree as an XMI string which is then "burned into" the generated Java
-code.
-
+Fennel portion of the plan.  This tree is later saved as an
+XMI string from which the plan can be reconstructed at any time.
 Here's the XML for our example:
 
 <pre>
 <code>
 &lt;XMI xmi.version = '1.2' xmlns:CWM = 'org.omg.xmi.namespace.CWM' xmlns:FEM = 'org.omg.xmi.namespace.FEM'
   xmlns:CWMRDB = 'org.omg.xmi.namespace.CWMRDB' xmlns:FEMFennel = 'org.omg.xmi.namespace.FEMFennel'
-  xmlns:FEMConfig = 'org.omg.xmi.namespace.FEMConfig' timestamp = 'Sun Oct 05 18:10:35 PDT 2003'&gt;
+  xmlns:FEMConfig = 'org.omg.xmi.namespace.FEMConfig' timestamp = 'Tue May 11 11:01:22 PDT 2004'&gt;
   &lt;XMI.header&gt;
     &lt;XMI.documentation&gt;
       &lt;XMI.exporter&gt;Netbeans XMI Writer&lt;/XMI.exporter&gt;
@@ -458,10 +472,11 @@ Here's the XML for our example:
     &lt;/XMI.documentation&gt;
   &lt;/XMI.header&gt;
   &lt;XMI.content&gt;
-    &lt;FEMFennel:CmdOpenTupleStream xmi.id = 'a1'&gt;
-      &lt;FEMFennel:CmdOpenTupleStream.tupleStreamDef&gt;
-        &lt;FEMFennel:IndexSearchDef xmi.id = 'a2' cachePageQuota = '2' cachePageMin = '2'
-          cachePageMax = '2' rootPageId = '3' uniqueKey = 'true'&gt;
+    &lt;FEMFennel:CmdPrepareExecutionStreamGraph xmi.id = 'a1'&gt;
+      &lt;FEMFennel:CmdPrepareExecutionStreamGraph.streamDefs&gt;
+        &lt;FEMFennel:IndexSearchDef xmi.id = 'a2' name = 'FtrsIndexSearchRel#74:315'
+          cachePageQuota = '2' cachePageMin = '2' cachePageMax = '2' rootPageId = '3'
+          segmentId = '1' indexId = '2709' uniqueKey = 'true' outerJoin = 'false'&gt;
           &lt;FEMFennel:KeyAccessorDef.keyProj&gt;
             &lt;FEMFennel:TupleProjection xmi.id = 'a3'&gt;
               &lt;FEMFennel:TupleProjection.AttrProjection&gt;
@@ -474,7 +489,7 @@ Here's the XML for our example:
               &lt;FEMFennel:TupleDescriptor.AttrDescriptor&gt;
                 &lt;FEMFennel:TupleAttrDescriptor xmi.id = 'a6' typeOrdinal = '5' isNullable = 'false'
                   byteLength = '0'/&gt;
-                &lt;FEMFennel:TupleAttrDescriptor xmi.id = 'a7' typeOrdinal = '12' isNullable = 'false'
+                &lt;FEMFennel:TupleAttrDescriptor xmi.id = 'a7' typeOrdinal = '13' isNullable = 'false'
                   byteLength = '128'/&gt;
               &lt;/FEMFennel:TupleDescriptor.AttrDescriptor&gt;
             &lt;/FEMFennel:TupleDescriptor&gt;
@@ -487,46 +502,50 @@ Here's the XML for our example:
               &lt;/FEMFennel:TupleProjection.AttrProjection&gt;
             &lt;/FEMFennel:TupleProjection&gt;
           &lt;/FEMFennel:IndexScanDef.outputProj&gt;
-          &lt;FEMFennel:TupleStreamDef.Input&gt;
-            &lt;FEMFennel:JavaTupleStreamDef xmi.id = 'a11' cachePageQuota = '1' cachePageMin = '1'
-              cachePageMax = '1' javaObjHandle = '138595040'&gt;
-              &lt;FEMFennel:JavaTupleStreamDef.tupleDesc&gt;
-                &lt;FEMFennel:TupleDescriptor xmi.id = 'a12'&gt;
-                  &lt;FEMFennel:TupleDescriptor.AttrDescriptor&gt;
-                    &lt;FEMFennel:TupleAttrDescriptor xmi.id = 'a13' typeOrdinal = '5' isNullable = 'false'
-                      byteLength = '0'/&gt;
-                  &lt;/FEMFennel:TupleDescriptor.AttrDescriptor&gt;
-                &lt;/FEMFennel:TupleDescriptor&gt;
-              &lt;/FEMFennel:JavaTupleStreamDef.tupleDesc&gt;
-            &lt;/FEMFennel:JavaTupleStreamDef&gt;
-          &lt;/FEMFennel:TupleStreamDef.Input&gt;
+          &lt;FEMFennel:ExecutionStreamDef.Input&gt;
+            &lt;FEMFennel:JavaTupleStreamDef xmi.idref = 'a11'/&gt;
+          &lt;/FEMFennel:ExecutionStreamDef.Input&gt;
         &lt;/FEMFennel:IndexSearchDef&gt;
-      &lt;/FEMFennel:CmdOpenTupleStream.tupleStreamDef&gt;
-      &lt;FEMFennel:TxnCmd.TxnHandle&gt;
-        &lt;FEMFennel:TxnHandle xmi.idref = 'a14'/&gt;
-      &lt;/FEMFennel:TxnCmd.TxnHandle&gt;
-    &lt;/FEMFennel:CmdOpenTupleStream&gt;
-    &lt;FEMFennel:TxnHandle xmi.id = 'a14' longHandle = '138233024'/&gt;
+        &lt;FEMFennel:JavaTupleStreamDef xmi.id = 'a11' name = 'IteratorToFennelConverter#96:324'
+          cachePageQuota = '1' cachePageMin = '1' cachePageMax = '1' streamId = '96'&gt;
+          &lt;FEMFennel:JavaTupleStreamDef.tupleDesc&gt;
+            &lt;FEMFennel:TupleDescriptor xmi.id = 'a12'&gt;
+              &lt;FEMFennel:TupleDescriptor.AttrDescriptor&gt;
+                &lt;FEMFennel:TupleAttrDescriptor xmi.id = 'a13' typeOrdinal = '5' isNullable = 'false'
+                  byteLength = '0'/&gt;
+              &lt;/FEMFennel:TupleDescriptor.AttrDescriptor&gt;
+            &lt;/FEMFennel:TupleDescriptor&gt;
+          &lt;/FEMFennel:JavaTupleStreamDef.tupleDesc&gt;
+          &lt;FEMFennel:ExecutionStreamDef.Consumer&gt;
+            &lt;FEMFennel:IndexSearchDef xmi.idref = 'a2'/&gt;
+          &lt;/FEMFennel:ExecutionStreamDef.Consumer&gt;
+        &lt;/FEMFennel:JavaTupleStreamDef&gt;
+      &lt;/FEMFennel:CmdPrepareExecutionStreamGraph.streamDefs&gt;
+      &lt;FEMFennel:TupleStreamGraphCmd.StreamGraphHandle&gt;
+        &lt;FEMFennel:StreamGraphHandle xmi.idref = 'a14'/&gt;
+      &lt;/FEMFennel:TupleStreamGraphCmd.StreamGraphHandle&gt;
+    &lt;/FEMFennel:CmdPrepareExecutionStreamGraph&gt;
+    &lt;FEMFennel:StreamGraphHandle xmi.id = 'a14' longHandle = '137731624'/&gt;
   &lt;/XMI.content&gt;
 &lt;/XMI&gt;
 </code>
 </pre>
 
 (The easiest way to obtain this XML is to set
-net.sf.farrago.fennel.FennelStorage.level=FINE in
-FarragoTrace.properties and then dig through FarragoTrace.log after
-executing an SQL statement.  Search for "CmdOpenTupleStream".  For
-more information on the Java representation of Fennel TupleStreams,
-see the <a href="../../../../../design/jni.html">JNI design
-doc</a>.)
+net.sf.farrago.fennel.level=FINE in FarragoTrace.properties and then
+dig through FarragoTrace.log after executing an SQL statement.  Search
+for "CmdPrepareExecutionStreamGraph".  For more information on the
+Java representation of Fennel TupleStreams, see the <a
+href="../../../../../design/jni.html">JNI design doc</a>.)
 
 <p>
 
 The root of the TupleStream tree above is the FEMFennel:IndexSearchDef
-node.  The leaf is the FEMFennel:JavaTupleStreamDef node, which tells
-Fennel how to get the search key from the lower-level Java iterators.
-(TBD: more about this and {@link
-net.sf.farrago.query.IteratorToFennelConverter}).
+node (whose name attribute corresponds to the stream name referenced
+in the generated Java code above).  The leaf is the
+FEMFennel:JavaTupleStreamDef node, which tells Fennel how to get the
+search key from the lower-level Java iterators.  (TBD: more about this
+and {@link net.sf.farrago.query.IteratorToFennelConverter}).
 
 <h3>Execution</h3>
 
@@ -540,32 +559,26 @@ cleanup when the result set is closed.
 <h4>Try This at Home</h4>
 
 You can see the Fennel portion of the data processing by setting
-net.sf.farrago.fennel.xo.level=FINE in FarragoTrace.properties,
+net.sf.fennel.xo.level=FINE in FarragoTrace.properties,
 executing an SQL statement, and then perusing FarragoTrace.log.
 <em>Warning:</em> The output can be huge for non-trivial queries.
 Here's the output for our example:
 
 <pre>
 <code>
-Oct 5, 2003 6:32:11 PM net.sf.farrago.catalog.FarragoCatalog <init>
-CONFIG: Fennel parameter databaseDir=/home/jvs/open/farrago/catalog
-Oct 5, 2003 6:32:11 PM net.sf.farrago.catalog.FarragoCatalog <init>
-CONFIG: Fennel parameter databaseInitSize=1000
-Oct 5, 2003 6:32:12 PM net.sf.farrago.catalog.FarragoCatalog <init>
-CONFIG: Fennel successfully loaded
-Oct 5, 2003 6:32:12 PM net.sf.farrago.catalog.FarragoCatalog <init>
-INFO: Catalog successfully loaded
-Oct 5, 2003 6:32:12 PM net.sf.farrago.jdbc.FarragoJdbcStatement execute
+May 11, 2004 11:08:27 AM net.sf.farrago.db.FarragoDbSession prepare
 INFO: select *,42 as the_answer from sales.depts d where deptno=10
-Oct 5, 2003 6:32:33 PM net.sf.farrago.fennel.xo.FemJavaTupleStreamDef <native>
+May 11, 2004 11:08:32 AM net.sf.farrago.db.FarragoDbStmtContext traceExecute
+FINE: select *,42 as the_answer from sales.depts d where deptno=10
+May 11, 2004 11:08:33 AM net.sf.fennel.xo.IteratorToFennelConverter#96:324 <native>
 FINE: [ 10 ]
-Oct 5, 2003 6:32:33 PM net.sf.farrago.fennel.xo.FemIndexSearchDef <native>
+May 11, 2004 11:08:33 AM net.sf.fennel.xo.FtrsIndexSearchRel#74:315 <native>
 FINE: [ 10, 'Sales' ]
 </code>
 </pre>
 
-The entry for FemJavaTupleStreamDef is the search key read from Java,
-and the entry for FemIndexSearchDef is the result of the search which
+The entry for IteratorToFennelConverter is the search key read from Java,
+and the entry for FtrsIndexSearchRel is the result of the search which
 is returned to Java.
 
 <h3>Palliatives</h3>
@@ -584,8 +597,8 @@ we won't bother compiling the generated Java code.  Instead, we'll
 interpret it using DynamicJava.  (For now, we always use DynamicJava.)
 
 <li>
-The generated Java code is going to look very different once the code
-generator has been overhauled for full SQL expression evaluation.  The
+Efficiency of generated Java code will continue improving as the code
+generator is overhauled for full SQL expression evaluation.  The
 current implementation is just "proof of concept" quality.
 
 <li>

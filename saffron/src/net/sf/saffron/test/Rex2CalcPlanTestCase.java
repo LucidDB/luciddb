@@ -65,7 +65,6 @@ import openjava.ptree.*;
 public class Rex2CalcPlanTestCase extends TestCase
 {
     private static final String NL = System.getProperty("line.separator");
-    private static final String T = ";"+NL;
     private static TestContext testContext;
 
 
@@ -121,7 +120,7 @@ public class Rex2CalcPlanTestCase extends TestCase
                         project.getChildExps(),
                       condition);
         translator.setGenerateShortCircuit(shortCircuit);
-        String actual = translator.getProgram().trim();
+        String actual = translator.getProgram(null).trim();
         String expected = expectedProgram.trim();
         if (!expected.equals(actual)) {
             String message = "expected:<" + expected + ">" + NL + "but was:<"
@@ -220,15 +219,7 @@ public class Rex2CalcPlanTestCase extends TestCase
 
         protected static String getClassRoot()
         {
-            String classRoot =
-                SaffronProperties.instance().getProperty(
-                    SaffronProperties.PROPERTY_saffron_class_dir);
-            if (classRoot == null) {
-                throw Util.newInternal(
-                    "Property " + SaffronProperties.PROPERTY_saffron_class_dir
-                    + " must be set");
-            }
-            return classRoot;
+            return SaffronProperties.instance().classDir.get(true);
         }
 
         protected String getTempClassName()
@@ -239,16 +230,13 @@ public class Rex2CalcPlanTestCase extends TestCase
 
         protected static String getJavaRoot()
         {
-            return SaffronProperties.instance().getProperty(
-                SaffronProperties.PROPERTY_saffron_java_dir,
+            return SaffronProperties.instance().javaDir.get(
                 getClassRoot());
         }
 
         protected String getTempPackageName()
         {
-            return SaffronProperties.instance().getProperty(
-                SaffronProperties.PROPERTY_saffron_package_name,
-                SaffronProperties.PROPERTY_saffron_package_name_DEFAULT);
+            return SaffronProperties.instance().packageName.get();
         }
 
     }
@@ -256,101 +244,101 @@ public class Rex2CalcPlanTestCase extends TestCase
     public void testSimplyEqualsFilter()
     {
         String sql="select \"empno\" from \"emps\" where \"empno\"=123";
-        String prg=
-                "output: s4[0]"+T+
-                "input: s4[0]"+T+
-                "literal: u1[0]=true,u1[1]=false,s8[2]=123"+T+
-                "local: u1[0],u1[1],u1[2]"+T+
-                "status: u1[0]"+T+
-                //"values: 1,0,123"+T+
-                "T"+T+
-                "ISNOTNULL T0, I0"+T+
-                "EQ T1, I0, L2"+T+
-                "AND T2, T0, T1"+T+
-                "JMPT 6, T2"+T+
-                "MOVE S0, L0"+T+
-                "RETURN"+T+
-                "MOVE O0, I0"+T+
-                "MOVE S0, L1"+T+
-                "RETURN"+T;
-
+        String prg =
+                "O s4;" + NL +
+                "I s4;" + NL +
+                "L bo, bo, bo;" + NL +
+                "S bo;" + NL +
+                "C bo, bo, s8;" + NL +
+                "V 1, 0, 123;" + NL +
+                "T;" + NL +
+                "ISNOTNULL L0, I0;" + NL +
+                "EQ L1, I0, C2;" + NL +
+                "AND L2, L0, L1;" + NL +
+                "JMPT @7, L2;" + NL +
+                "MOVE S0, C0;" + NL +
+                "RETURN;" + NL +
+                "MOVE S0, C1;" + NL +
+                "MOVE O0, I0;" + NL +
+                "RETURN;" + NL;
         check(sql, prg,true,false);
     }
 
     public void testSimplyEqualsFilterShortCircuit()
     {
         String sql="select \"empno\" from \"emps\" where \"empno\"=123";
-        String prg=
-                "output: s4[0]"+T+
-                "input: s4[0]"+T+
-                "literal: u1[0]=true,u1[1]=false,s8[2]=123"+T+
-                "local: u1[0],u1[1],u1[2]"+T+
-                "status: u1[0]"+T+
-                "T"+T+
-                "ISNOTNULL T0, I0"+T+
-                "JMPF 5, T0"+T+
-                "EQ T1, I0, L2"+T+
-                "MOVE T2, T1"+T+
-                "JMP 6"+T+
-                "MOVE T2, L1"+T+
-                "JMPT 9, T2"+T+
-                "MOVE S0, L0"+T+
-                "RETURN"+T+
-                "MOVE O0, I0"+T+
-                "MOVE S0, L1"+T+
-                "RETURN"+T;
-
+        String prg =
+                "O s4;" + NL +
+                "I s4;" + NL +
+                "L bo, bo, bo;" + NL +
+                "S bo;" + NL +
+                "C bo, bo, s8;" + NL +
+                "V 1, 0, 123;" + NL +
+                "T;" + NL +
+                "ISNOTNULL L0, I0;" + NL +
+                "JMPF @5, L0;" + NL +
+                "EQ L1, I0, C2;" + NL +
+                "MOVE L2, L1;" + NL +
+                "JMP @6;" + NL +
+                "MOVE L2, C1;" + NL +
+                "JMPT @10, L2;" + NL +
+                "MOVE S0, C0;" + NL +
+                "RETURN;" + NL +
+                "MOVE S0, C1;" + NL +
+                "MOVE O0, I0;" + NL +
+                "RETURN;" + NL;
         check(sql, prg,true,true);
     }
 
     public void testBooleanExpressions() {
         //AND has higher precedence than OR
         String sql="SELECT \"empno\" FROM \"emps\" WHERE true and not true or false and (not true and true)";
-        String prg=
-                "output: s4[0]"+T+
-                "input: s4[0]"+T+
-                "literal: u1[0]=true,u1[1]=false"+T+
-                "local: u1[0],u1[1],u1[2],u1[3],u1[4]"+T+
-                "status: u1[0]"+T+
-                //"values: 1, 0
-                "T"+T+
-                "NOT T0, L0"+T+
-                "AND T1, L0, T0"+T+
-                "AND T2, T0, L0"+T+
-                "AND T3, L1, T2"+T+
-                "OR T4, T1, T3"+T+
-                "JMPT 8, T4"+T+
-                "MOVE S0, L0"+T+
-                "RETURN"+T+
-                "MOVE O0, I0"+T+
-                "MOVE S0, L1"+T+
-                "RETURN"+T;
+        String prg =
+                "O s4;" + NL +
+                "I s4;" + NL +
+                "L bo, bo, bo, bo, bo;" + NL +
+                "S bo;" + NL +
+                "C bo, bo;" + NL +
+                "V 1, 0;" + NL +
+                "T;" + NL +
+                "NOT L0, C0;" + NL +
+                "AND L1, C0, L0;" + NL +
+                "AND L2, L0, C0;" + NL +
+                "AND L3, C1, L2;" + NL +
+                "OR L4, L1, L3;" + NL +
+                "JMPT @9, L4;" + NL +
+                "MOVE S0, C0;" + NL +
+                "RETURN;" + NL +
+                "MOVE S0, C1;" + NL +
+                "MOVE O0, I0;" + NL +
+                "RETURN;" + NL;
         check(sql, prg,false,false);
     }
 
     public void testScalarExpression() {
         String sql="SELECT 2-2*2+2/2-2  FROM \"emps\" WHERE \"empno\" > 10";
-        String prg=
-                "output: s8[0]"+T+
-                "input: s4[0]"+T+
-                "literal: u1[0]=true,u1[1]=false,s8[2]=10,s8[3]=2"+T+
-                "local: u1[0],u1[1],u1[2],s8[3],s8[4],s8[5],s8[6],s8[7]"+T+
-                "status: u1[0]"+T+
-                "T"+T+
-                "ISNOTNULL T0, I0"+T+
-                "GT T1, I0, L2"+T+
-                "AND T2, T0, T1"+T+
-                "JMPT 6, T2"+T+
-                "MOVE S0, L0"+T+
-                "RETURN"+T+
-                "MUL T3, L3, L3"+T+
-                "SUB T4, L3, T3"+T+
-                "DIV T5, L3, L3"+T+
-                "ADD T6, T4, T5"+T+
-                "SUB T7, T6, L3"+T+
-                "MOVE O0, T7"+T+
-                "MOVE S0, L1"+T+
-                "RETURN"+T;
+        String prg =
+                "O s8;" + NL +
+                "I s4;" + NL +
+                "L bo, bo, bo, s8, s8, s8, s8, s8;" + NL +
+                "S bo;" + NL +
+                "C bo, bo, s8, s8;" + NL +
+                "V 1, 0, 10, 2;" + NL +
+                "T;" + NL +
+                "ISNOTNULL L0, I0;" + NL +
+                "GT L1, I0, C2;" + NL +
+                "AND L2, L0, L1;" + NL +
+                "JMPT @7, L2;" + NL +
+                "MOVE S0, C0;" + NL +
+                "RETURN;" + NL +
+                "MOVE S0, C1;" + NL +
+                "MUL L3, C3, C3;" + NL +
+                "SUB L4, C3, L3;" + NL +
+                "DIV L5, C3, C3;" + NL +
+                "ADD L6, L4, L5;" + NL +
+                "SUB L7, L6, C3;" + NL +
+                "MOVE O0, L7;" + NL +
+                "RETURN;" + NL;
         check(sql, prg,true,false);
     }
 
@@ -358,304 +346,327 @@ public class Rex2CalcPlanTestCase extends TestCase
 
     public void testMixedExpression() {
         String sql="SELECT \"name\", 2*2  FROM \"emps\" WHERE \"name\" = 'Fred' AND  \"empno\" > 10";
-        String prg=
-                "output: vc[0],s8[1]"+T+
-                "input: vc[0],s4[1]"+T+
-                "literal: u1[0]=true,u1[1]=false,vc[2]='Fred',vc[3]='ISO-8859-1$en_US$primary',s4[4]=0,s8[5]=10,s8[6]=2"+T+
-                "local: u1[0],u1[1],s4[2],u1[3],u1[4],u1[5],u1[6],u1[7],s8[8]"+T+
-                "status: u1[0]"+T+
-                "T"+T+
-                "ISNOTNULL T0, I0"+T+
-                "EXT T2, 'NLSCompare<vc, vc, vc>', I0, L2, L3"+T+
-                "EQ T1, T2, L4"+T+
-                "AND T3, T0, T1"+T+
-                "ISNOTNULL T4, I1"+T+
-                "GT T5, I1, L5"+T+
-                "AND T6, T4, T5"+T+
-                "AND T7, T3, T6"+T+
-                "JMPT 11, T7"+T+
-                "MOVE S0, L0"+T+
-                "RETURN"+T+
-                "MUL T8, L6, L6"+T+
-                "MOVE O0, I0"+T+
-                "MOVE O1, T8"+T+
-                "MOVE S0, L1"+T+
-                "RETURN"+T;
+        String prg =
+                "O vc,30, s8;" + NL +
+                "I vc,30, s4;" + NL +
+                "L bo, bo, s4, bo, bo, bo, bo, bo, s8;" + NL +
+                "S bo;" + NL +
+                "C bo, bo, vc,30, vc,30, s4, s8, s8;" + NL +
+                "V 1, 0, 0x46726564, 0x49534F2D383835392D3124656E5F5553247072696D617279, 0, 10, 2;" + NL +
+                "T;" + NL +
+                "ISNOTNULL L0, I0;" + NL +
+                "CALL 'strCmpA(L2, I0, C2, C3);" + NL +
+                "EQ L1, L2, C4;" + NL +
+                "AND L3, L0, L1;" + NL +
+                "ISNOTNULL L4, I1;" + NL +
+                "GT L5, I1, C5;" + NL +
+                "AND L6, L4, L5;" + NL +
+                "AND L7, L3, L6;" + NL +
+                "JMPT @12, L7;" + NL +
+                "MOVE S0, C0;" + NL +
+                "RETURN;" + NL +
+                "MOVE S0, C1;" + NL +
+                "MUL L8, C6, C6;" + NL +
+                "MOVE O0, I0;" + NL +
+                "MOVE O1, L8;" + NL +
+                "RETURN;" + NL;
         check(sql, prg,true,false);
     }
 
      public void testNumbers() {
         String sql="SELECT -(1+-2.*-3.e-1/-.4)>=+5 FROM \"emps\" WHERE \"empno\" > 10";
-        String prg=
-                "output: u1[0]"+T+
-                "input: s4[0]"+T+
-                "literal: u1[0]=true,u1[1]=false,s8[2]=10,s8[3]=1,s8[4]=2,d[5]=0.3,d[6]=0.4,s8[7]=5"+T+
-                "local: u1[0],s8[1],d[2],d[3],d[4],d[5],d[6],d[7],u1[8]"+T+
-                "status: u1[0]"+T+
-                "T"+T+
-                "GT T0, I0, L2"+T+      //empno > 10
-                "JMPT 4, T0"+T+
-                "MOVE S0, L0"+T+
-                "RETURN"+T+
-                "NEG T1, L4"+T+         //-2
-                "NEG T2, L5"+T+         //-0.3
-                "MUL T3, T1, T2"+T+     //-2 * -0.3
-                "NEG T4, L6"+T+         //-0.4
-                "DIV T5, T3, T4"+T+     //(-2 * -0.3) / -0.4
-                "ADD T6, L3, T5"+T+     //1+ ((-2 * -0.3) / -0.4)
-                "NEG T7, T6"+T+
-                "GE T8, T7, L7"+T+      // x >= 5
-                "MOVE O0, T8"+T+
-                "MOVE S0, L1"+T+
-                "RETURN"+T;
+         String prg =
+                 "O bo;" + NL +
+                 "I s4;" + NL +
+                 "L bo, s8, d, d, d, d, d, d, bo;" + NL +
+                 "S bo;" + NL +
+                 "C bo, bo, s8, s8, s8, d, d, s8;" + NL +
+                 "V 1, 0, 10, 1, 2, 0.3, 0.4, 5;" + NL +
+                 "T;" + NL +
+                 "GT L0, I0, C2;" + NL +         // empno > 10
+                 "JMPT @5, L0;" + NL +
+                 "MOVE S0, C0;" + NL +
+                 "RETURN;" + NL +
+                 "MOVE S0, C1;" + NL +
+                 "NEG L1, C4;" + NL +            // -2
+                 "NEG L2, C5;" + NL +            // -0.3
+                 "MUL L3, L1, L2;" + NL +        // -2 * -0.3
+                 "NEG L4, C6;" + NL +            // -0.4
+                 "DIV L5, L3, L4;" + NL +        // (-2 * 0.3) / 0.4
+                 "ADD L6, C3, L5;" + NL +        // 1 + ((-2 * -0.3) / -0.4)
+                 "NEG L7, L6;" + NL +
+                 "GE L8, L7, C7;" + NL +         // x >= 5
+                 "MOVE O0, L8;" + NL +
+                 "RETURN;" + NL;
         check(sql, prg,false,false);
     }
 
     public void testHexBitBinaryString() {
-        String sql="SELECT x'abc'=x'', b''=B'00111', X'0001'=x'FFeeDD' FROM \"emps\" WHERE \"empno\" > 10";
-        String prg=
-                "output: u1[0],u1[1],u1[2]"+T+
-                "input: s4[0]"+T+
-                "literal: u1[0]=true,u1[1]=false,s8[2]=10,vb[3]='0ABC',vb[4]='',vb[5]='',vb[6]='07',"+
-                         "vb[7]='0001',vb[8]='FFEEDD'"+T+
-                "local: u1[0],u1[1],u1[2],u1[3]"+T+
-                "status: u1[0]"+T+
-                "T"+T+
-                "GT T0, I0, L2"+T+      //empno > 10
-                "JMPT 4, T0"+T+
-                "MOVE S0, L0"+T+
-                "RETURN"+T+
-                "EQ T1, L3, L4"+T+         //x'abc'=x''
-                "EQ T2, L5, L6"+T+         //b''=B'00111'
-                "EQ T3, L7, L8"+T+         //x'0001'=x'ffeedd'
-                "MOVE O0, T1"+T+
-                "MOVE O1, T2"+T+
-                "MOVE O2, T3"+T+
-                "MOVE S0, L1"+T+
-                "RETURN"+T;
+        String sql = "SELECT x'abc'=x'', b''=B'00111', X'0001'=x'FFeeDD' FROM \"emps\" WHERE \"empno\" > 10";
+        String prg =
+                "O bo, bo, bo;" + NL +
+                "I s4;" + NL +
+                "L bo, bo, bo, bo;" + NL +
+                "S bo;" + NL +
+                "C bo, bo, s8, vb,30, vb,30, vb,30, vb,30, vb,30, vb,30;" + NL +
+                "V 1, 0, 10, '0ABC', '', '', '07', '0001', 'FFEEDD';" + NL +
+                "T;" + NL +
+                "GT L0, I0, C2;" + NL +         // empno > 10
+                "JMPT @5, L0;" + NL +
+                "MOVE S0, C0;" + NL +
+                "RETURN;" + NL +
+                "MOVE S0, C1;" + NL +
+                "EQ L1, C3, C4;" + NL +         // x'abc' = x''
+                "EQ L2, C5, C6;" + NL +         // b'' = B'00111'
+                "EQ L3, C7, C8;" + NL +         // x'0001' = x'ffeedd'
+                "MOVE O0, L1;" + NL +
+                "MOVE O1, L2;" + NL +
+                "MOVE O2, L3;" + NL +
+                "RETURN;" + NL;
         check(sql, prg,false,false);
     }
 
     public void testStringLiterals() {
         String sql="SELECT n'aBc',_iso_8859-1'', 'abc' FROM \"emps\" WHERE \"empno\" > 10";
-        String prg=
-                "output: vc[0],vc[1],vc[2]"+T+
-                "input: s4[0]"+T+
-                "literal: u1[0]=true,u1[1]=false,s8[2]=10,vc[3]='aBc',vc[4]='',vc[5]='abc'"+T+
-                "local: u1[0]"+T+
-                "status: u1[0]"+T+
-                "T"+T+
-                "GT T0, I0, L2"+T+      //empno > 10
-                "JMPT 4, T0"+T+
-                "MOVE S0, L0"+T+
-                "RETURN"+T+
-                "MOVE O0, L3"+T+
-                "MOVE O1, L4"+T+
-                "MOVE O2, L5"+T+
-                "MOVE S0, L1"+T+
-                "RETURN"+T;
+        String prg =
+                "O vc,30, vc,30, vc,30;" + NL +
+                "I s4;" + NL +
+                "L bo;" + NL +
+                "S bo;" + NL +
+                "C bo, bo, s8, vc,30, vc,30, vc,30;" + NL +
+                "V 1, 0, 10, 0x614263, 0x, 0x616263;" + NL +
+                "T;" + NL +
+                "GT L0, I0, C2;" + NL +         // empno > 10
+                "JMPT @5, L0;" + NL +
+                "MOVE S0, C0;" + NL +
+                "RETURN;" + NL +
+                "MOVE S0, C1;" + NL +
+                "MOVE O0, C3;" + NL +
+                "MOVE O1, C4;" + NL +
+                "MOVE O2, C5;" + NL +
+                "RETURN;" + NL;
         check(sql, prg,false,false);
     }
 
     public void testSimpleCompare() {
-        String sql="SELECT "+
-                    "1<>2" +
-                    ",1=2 is true is false is null is unknown"+
-                    ",true is not true "+
-                    ",true is not false"+
-                    ",true is not null "+
-                    ",true is not unknown"+
-                   " FROM \"emps\" WHERE \"empno\" > 10";
-        String prg=
-                "output: u1[0],u1[1],u1[2],u1[3],u1[4],u1[5]"+T+
-                "input: s4[0]"+T+
-                "literal: u1[0]=true,u1[1]=false,s8[2]=10,s8[3]=1,s8[4]=2"+T+
-                "local: u1[0],u1[1],u1[2],u1[3],u1[4],u1[5],u1[6],u1[7],u1[8],u1[9],u1[10]," +
-                       "u1[11],u1[12],u1[13],u1[14],u1[15],u1[16],u1[17]"+T+
-                "status: u1[0]"+T+
-                "T"+T+
-                "GT T0, I0, L2"+T+      //empno > 10
-                "JMPT 4, T0"+T+
-                "MOVE S0, L0"+T+
-                "RETURN"+T+
-                "NE T1, L3, L4"+T+      //1<>2
-                "EQ T2, L3, L4"+T+      //1=2
-
-                "ISNOTNULL T3, T2"+T+   //X IS TRUE
-                "EQ T4, T2, L0"+T+
-                "AND T5, T3, T4"+T+
-
-                "ISNOTNULL T6, T5"+T+   //X IS FALSE
-                "EQ T7, T5, L1"+T+
-                "AND T8, T6, T7"+T+
-
-                "ISNULL T9, T8"+T+      //X IS NULL
-                "ISNULL T10, T9"+T+     //X IS UNKNOWN
-
-                "ISNOTNULL T11, L0"+T+   //TRUE IS NOT TRUE
-                "EQ T12, L0, L0"+T+         //TODO optimize expressions like this
-                "AND T13, T11, T12"+T+
-                "NOT T14, T13"+T+
-
-                "EQ T15, L0, L1"+T+         //TODO optimize expressions like this
-                "AND T16, T11, T15"+T+
-                "NOT T17, T16"+T+
-
-                "MOVE O0, T1"+T+
-                "MOVE O1, T10"+T+
-                "MOVE O2, T14"+T+
-                "MOVE O3, T17"+T+
-                "MOVE O4, T11"+T+
-                "MOVE O5, T11"+T+
-                "MOVE S0, L1"+T+
-                "RETURN"+T;
+        String sql = "SELECT "+
+                "1<>2" +
+                ",1=2 is true is false is null is unknown"+
+                ",true is not true "+
+                ",true is not false"+
+                ",true is not null "+
+                ",true is not unknown"+
+                " FROM \"emps\" WHERE \"empno\" > 10";
+        String prg =
+                "O bo, bo, bo, bo, bo, bo;" + NL +
+                "I s4;" + NL +
+                "L bo, bo, bo, bo, bo, bo, bo, bo, bo, bo, bo, bo, bo, bo, bo, bo, bo, bo;" + NL +
+                "S bo;" + NL +
+                "C bo, bo, s8, s8, s8;" + NL +
+                "V 1, 0, 10, 1, 2;" + NL +
+                "T;" + NL +
+                "GT L0, I0, C2;" + NL +      // empno > 10
+                "JMPT @5, L0;" + NL +
+                "MOVE S0, C0;" + NL +
+                "RETURN;" + NL +
+                "MOVE S0, C1;" + NL +
+                "NE L1, C3, C4;" + NL +      // 1 != 2
+                "EQ L2, C3, C4;" + NL +          // 1 = 2
+                "ISNOTNULL L3, L2;" + NL +       // X IS TRUE
+                "EQ L4, L2, C0;" + NL +
+                "AND L5, L3, L4;" + NL +
+                "ISNOTNULL L6, L5;" + NL +       // X IS FALSE
+                "EQ L7, L5, C1;" + NL +
+                "AND L8, L6, L7;" + NL +
+                "ISNULL L9, L8;" + NL +          // X IS NULL
+                "ISNULL L10, L9;" + NL +         // X IS UNKNOWN
+                "ISNOTNULL L11, C0;" + NL +      // TRUE IS NOT TRUE
+                "EQ L12, C0, C0;" + NL +         // TODO optimize expressions like this
+                "AND L13, L11, L12;" + NL +
+                "NOT L14, L13;" + NL +
+                "EQ L15, C0, C1;" + NL +         // TODO optimize expressions like this
+                "AND L16, L11, L15;" + NL +
+                "NOT L17, L16;" + NL +
+                "MOVE O0, L1;" + NL +
+                "MOVE O1, L10;" + NL +
+                "MOVE O2, L14;" + NL +
+                "MOVE O3, L17;" + NL +
+                "MOVE O4, L11;" + NL +
+                "MOVE O5, L11;" + NL +
+                "RETURN;" + NL;
         check(sql, prg,false,false);
     }
 
-    public void testArthimeticOperators() {
-        String sql="SELECT POW(1,1), MOD(1,1), ABS(1), ABS(1.1), LN(1), LOG(1) FROM \"emps\" WHERE \"empno\" > 10";
-        String prg=
-                "output: s8[0],s8[1],s8[2],d[3],d[4],d[5]"+T+
-                "input: s4[0]"+T+
-                "literal: u1[0]=true,u1[1]=false,s8[2]=10,s8[3]=1,d[4]=1.1"+T+
-                "local: u1[0],s8[1],s8[2],s8[3],d[4],d[5],d[6]"+T+
-                "status: u1[0]"+T+
-                "T"+T+
-                "GT T0, I0, L2"+T+      //empno > 10
-                "JMPT 4, T0"+T+
-                "MOVE S0, L0"+T+
-                "RETURN"+T+
-                "EXT T1, 'POW<s8, s8>', L3, L3"+T+
-                "EXT T2, 'MOD<s8, s8>', L3, L3"+T+
-                "EXT T3, 'ABS<s8>', L3"+T+
-                "EXT T4, 'ABS<d>', L4"+T+
-                "EXT T5, 'LN<s8>', L3"+T+
-                "EXT T6, 'LOG<s8>', L3"+T+
-                "MOVE O0, T1"+T+
-                "MOVE O1, T2"+T+
-                "MOVE O2, T3"+T+
-                "MOVE O3, T4"+T+
-                "MOVE O4, T5"+T+
-                "MOVE O5, T6"+T+
-                "MOVE S0, L1"+T+
-                "RETURN"+T;
+    public void testArithmeticOperators() {
+        String sql = "SELECT POW(1,1), MOD(1,1), ABS(1), ABS(1.1), LN(1), LOG(1) FROM \"emps\" WHERE \"empno\" > 10";
+        String prg =
+                "O s8, s8, s8, d, d, d;" + NL +
+                "I s4;" + NL +
+                "L bo, s8, s8, s8, d, d, d;" + NL +
+                "S bo;" + NL +
+                "C bo, bo, s8, s8, d;" + NL +
+                "V 1, 0, 10, 1, 1.1;" + NL +
+                "T;" + NL +
+                "GT L0, I0, C2;" + NL +
+                "JMPT @5, L0;" + NL +
+                "MOVE S0, C0;" + NL +
+                "RETURN;" + NL +
+                "MOVE S0, C1;" + NL +
+                "CALL 'POW(L1, C3, C3);" + NL +
+                "CALL 'MOD(L2, C3, C3);" + NL +
+                "CALL 'ABS(L3, C3);" + NL +
+                "CALL 'ABS(L4, C4);" + NL +
+                "CALL 'LN(L5, C3);" + NL +
+                "CALL 'LOG(L6, C3);" + NL +
+                "MOVE O0, L1;" + NL +
+                "MOVE O1, L2;" + NL +
+                "MOVE O2, L3;" + NL +
+                "MOVE O3, L4;" + NL +
+                "MOVE O4, L5;" + NL +
+                "MOVE O5, L6;" + NL +
+                "RETURN;" + NL;
         check(sql, prg,false,false);
     }
 
     public void testFunctionInFunction() {
-        String sql="SELECT POW(3, ABS(2)+1) FROM \"emps\" WHERE \"empno\" > 10";
-        String prg=
-                "output: s8[0]"+T+
-                "input: s4[0]"+T+
-                "literal: u1[0]=true,u1[1]=false,s8[2]=10,s8[3]=3,s8[4]=2,s8[5]=1"+T+
-                "local: u1[0],s8[1],s8[2],s8[3]"+T+
-                "status: u1[0]"+T+
-                "T"+T+
-                "GT T0, I0, L2"+T+      //empno > 10
-                "JMPT 4, T0"+T+
-                "MOVE S0, L0"+T+
-                "RETURN"+T+
-                "EXT T1, 'ABS<s8>', L4"+T+
-                "ADD T2, T1, L5"+T+
-                "EXT T3, 'POW<s8, s8>', L3, T2"+T+
-                "MOVE O0, T3"+T+
-                "MOVE S0, L1"+T+
-                "RETURN"+T;
+        String sql = "SELECT POW(3, ABS(2)+1) FROM \"emps\" WHERE \"empno\" > 10";
+        String prg =
+                "O s8;" + NL +
+                "I s4;" + NL +
+                "L bo, s8, s8, s8;" + NL +
+                "S bo;" + NL +
+                "C bo, bo, s8, s8, s8, s8;" + NL +
+                "V 1, 0, 10, 3, 2, 1;" + NL +
+                "T;" + NL +
+                "GT L0, I0, C2;" + NL +
+                "JMPT @5, L0;" + NL +
+                "MOVE S0, C0;" + NL +
+                "RETURN;" + NL +
+                "MOVE S0, C1;" + NL +
+                "CALL 'ABS(L1, C4);" + NL +
+                "ADD L2, L1, C5;" + NL +
+                "CALL 'POW(L3, C3, L2);" + NL +
+                "MOVE O0, L3;" + NL +
+                "RETURN;" + NL;
         check(sql, prg,false,false);
     }
 
     public void testCaseExpressions() {
-        String sql="SELECT case 1+1 when 1 then 'wael' when 2 then 'waels clone' end" +
+        String sql = "SELECT case 1+1 when 1 then 'wael' when 2 then 'waels clone' end" +
                          ",case when 1=1 then 1+1+2 else 2+10 end" +
                 " FROM \"emps\" WHERE \"empno\" > 10";
-        String prg=
-                "output: vc[0],s8[1]"+T+
-                "input: s4[0]"+T+
-                "literal: u1[0]=true,u1[1]=false,s8[2]=10,s8[3]=1,vc[4]='wael',s8[5]=2,vc[6]='waels clone',vc[7]"+T+
-                "local: u1[0],vc[1],s8[2],u1[3],u1[4],s8[5],u1[6],s8[7],s8[8]"+T+
-                "status: u1[0]"+T+
-                "T"+T+
-                "GT T0, I0, L2"+T+      //empno > 10
-                "JMPT 4, T0"+T+
-                "MOVE S0, L0"+T+
-                "RETURN"+T+
-                "ADD T2, L3, L3"+T+    //1+1
-                "EQ T3, T2, L3"+T+     //when 1+1=1
-                "JMPF 9, T3"+T+
-                "MOVE T1, L4"+T+       //then
-                "JMP 14"+T+
-                "EQ T4, T2, L5"+T+     //when 1+1=2
-                "JMPF 13, T4"+T+
-                "MOVE T1, L6"+T+       //then
-                "JMP 14"+T+
-                "MOVE T1, L7"+T+
-                "EQ T6, L3, L3"+T+     //SECOND CASE 1=1
-                "JMPF 19, T6"+T+
-                "ADD T7, T2, L5"+T+    //1+1+2
-                "MOVE T5, T7"+T+
-                "JMP 21"+T+
-                "ADD T8, L5, L2"+T+   //else 2+10
-                "MOVE T5, T8"+T+
-                "MOVE O0, T1"+T+
-                "MOVE O1, T5"+T+
-                "MOVE S0, L1"+T+
-                "RETURN"+T;
+        String prg =
+                "O vc,30, s8;" + NL +
+                "I s4;" + NL +
+                "L bo, vc,30, s8, bo, bo, s8, bo, s8, s8;" + NL +
+                "S bo;" + NL +
+                "C bo, bo, s8, s8, vc,30, s8, vc,30, vc,30;" + NL +
+                "V 1, 0, 10, 1, 0x7761656C, 2, 0x7761656C7320636C6F6E65, ;" + NL +
+                "T;" + NL +
+                "GT L0, I0, C2;" + NL +         // empno > 10
+                "JMPT @5, L0;" + NL +
+                "MOVE S0, C0;" + NL +
+                "RETURN;" + NL +
+                "MOVE S0, C1;" + NL +
+                "ADD L2, C3, C3;" + NL +        // 1 + 1
+                "EQ L3, L2, C3;" + NL +         // WHEN 1 + 1 = 1
+                "JMPF @10, L3;" + NL +
+                "MOVE L1, C4;" + NL +           // THEN
+                "JMP @15;" + NL +
+                "EQ L4, L2, C5;" + NL +         // WHEN 1 + 1 = 2
+                "JMPF @14, L4;" + NL +
+                "MOVE L1, C6;" + NL +           // THEN
+                "JMP @15;" + NL +
+                "MOVE L1, C7;" + NL +           // ELSE NULL
+                "EQ L6, C3, C3;" + NL +         // SECOND CASE 1 = 1
+                "JMPF @20, L6;" + NL +
+                "ADD L7, L2, C5;" + NL +        // 1 + 1 + 2
+                "MOVE L5, L7;" + NL +
+                "JMP @22;" + NL +
+                "ADD L8, C5, C2;" + NL +        // ELSE 2 + 10
+                "MOVE L5, L8;" + NL +
+                "MOVE O0, L1;" + NL +
+                "MOVE O1, L5;" + NL +
+                "RETURN;" + NL;
         check(sql, prg,false,false);
     }
 
     public void testCoalesce() {
-        String sql="SELECT coalesce(1,2,3) FROM \"emps\" WHERE \"empno\" > 10";
+        String sql = "SELECT coalesce(1,2,3) FROM \"emps\" WHERE \"empno\" > 10";
         //CASE WHEN 1 IS NOT NULL THEN 1 ELSE (CASE WHEN 2 IS NOT NULL THEN 2 ELSE 3) END
-        String prg=
-                "output: s8[0]"+T+
-                "input: s4[0]"+T+
-                "literal: u1[0]=true,u1[1]=false,s8[2]=10,s8[3]=1,s8[4]=2,s8[5]=3"+T+
-                "local: u1[0],s8[1],u1[2],s8[3],u1[4]"+T+
-                "status: u1[0]"+T+
-                "T"+T+
-                "GT T0, I0, L2"+T+
-                "JMPT 4, T0"+T+
-                "MOVE S0, L0"+T+
-                "RETURN"+T+
-                "ISNOTNULL T2, L3"+T+
-                "JMPF 8, T2"+T+
-                "MOVE T1, L3"+T+
-                "JMP 14"+T+
-                "ISNOTNULL T4, L4"+T+
-                "JMPF 12, T4"+T+
-                "MOVE T3, L4"+T+
-                "JMP 13"+T+
-                "MOVE T3, L5"+T+
-                "MOVE T1, T3"+T+
-                "MOVE O0, T1"+T+
-                "MOVE S0, L1"+T+
-                "RETURN"+T;
+        String prg =
+                "O s8;" + NL +
+                "I s4;" + NL +
+                "L bo, s8, bo, s8, bo;" + NL +
+                "S bo;" + NL +
+                "C bo, bo, s8, s8, s8, s8;" + NL +
+                "V 1, 0, 10, 1, 2, 3;" + NL +
+                "T;" + NL +
+                "GT L0, I0, C2;" + NL +
+                "JMPT @5, L0;" + NL +
+                "MOVE S0, C0;" + NL +
+                "RETURN;" + NL +
+                "MOVE S0, C1;" + NL +
+                "ISNOTNULL L2, C3;" + NL +
+                "JMPF @9, L2;" + NL +
+                "MOVE L1, C3;" + NL +
+                "JMP @15;" + NL +
+                "ISNOTNULL L4, C4;" + NL +
+                "JMPF @13, L4;" + NL +
+                "MOVE L3, C4;" + NL +
+                "JMP @14;" + NL +
+                "MOVE L3, C5;" + NL +
+                "MOVE L1, L3;" + NL +
+                "MOVE O0, L1;" + NL +
+                "RETURN;" + NL;
         check(sql, prg,false,false);
     }
 
-    public void testStringCompare() {
-        String[] ops =      {"=" ,"<>",">" ,"<" ,">=","<="};
-        String[] opsInstr = {"EQ","NE","GT","LT","GE","LE"};
-        for (int i=0;i<ops.length;i++){
-            String sql="SELECT 'a' "+ops[i]+"'b' collate latin1$sv$1 FROM \"emps\" WHERE \"empno\" > 10";
-            String prg=
-                    "output: u1[0]"+T+
-                    "input: s4[0]"+T+
-                    "literal: u1[0]=true,u1[1]=false,s8[2]=10,vc[3]='a',vc[4]='b',vc[5]='ISO-8859-1$sv$1',s4[6]=0"+T+
-                    "local: u1[0],u1[1],s4[2]"+T+
-                    "status: u1[0]"+T+
-                    "T"+T+
-                    "GT T0, I0, L2"+T+
-                    "JMPT 4, T0"+T+
-                    "MOVE S0, L0"+T+
-                    "RETURN"+T+
-                    "EXT T2, 'NLSCompare<vc, vc, vc>', L3, L4, L5"+T+
-                    opsInstr[i]+" T1, T2, L6"+T+
-                    "MOVE O0, T1"+T+
-                    "MOVE S0, L1"+T+
-                    "RETURN"+T;
-            check(sql, prg,false,false);
-        }
+    public void testStringEq() {
+        checkStringOp("=", "EQ");
+    }
+
+    public void testStringNe() {
+        checkStringOp("<>", "NE");
+    }
+
+    public void testStringGt() {
+        checkStringOp(">", "GT");
+    }
+
+    public void testStringLt() {
+        checkStringOp("<", "LT");
+    }
+
+    public void testStringGe() {
+        checkStringOp(">=", "GE");
+    }
+
+    public void testStringLe() {
+        checkStringOp("<=", "LE");
+    }
+
+    private void checkStringOp(final String op, final String instr) {
+        String sql = "SELECT 'a' " + op +
+                "'b' collate latin1$sv$1 FROM \"emps\" WHERE \"empno\" > 10";
+        String prg =
+                "O bo;" + NL +
+                "I s4;" + NL +
+                "L bo, bo, s4;" + NL +
+                "S bo;" + NL +
+                "C bo, bo, s8, vc,30, vc,30, vc,30, s4;" + NL +
+                "V 1, 0, 10, 0x61, 0x62, 0x49534F2D383835392D312473762431, 0;" + NL +
+                "T;" + NL +
+                "GT L0, I0, C2;" + NL +
+                "JMPT @5, L0;" + NL +
+                "MOVE S0, C0;" + NL +
+                "RETURN;" + NL +
+                "MOVE S0, C1;" + NL +
+                "CALL 'strCmpA(L2, C3, C4, C5);" + NL +
+                instr + " L1, L2, C6;" + NL +
+                "MOVE O0, L1;" + NL +
+                "RETURN;" + NL;
+        check(sql, prg,false,false);
     }
 
     public void testStringFunctions() {
@@ -665,39 +676,40 @@ public class Rex2CalcPlanTestCase extends TestCase
                    "substring('a' from 1 for 10),substring('a' from 'a' for '\\' )" +
                    ", 'a'||'a'" +
                    " FROM \"emps\" WHERE \"empno\" > 10";
-        String prg=
-                "output: s4[0],vc[1],vc[2],s4[3],vc[4],vc[5],vc[6],vc[7],vc[8],vc[9]"+T+
-                "input: s4[0]"+T+
-                "literal: u1[0]=true,u1[1]=false,s8[2]=10,vc[3]='a',vc[4]='ISO-8859-1',s4[5]=0,s4[6]=1,s8[7]=1,vc[8]='\\'"+T+
-                "local: u1[0],s4[1],vc[2],vc[3],s4[4],vc[5],vc[6],vc[7],vc[8],vc[9],vc[10]"+T+
-                "status: u1[0]"+T+
-                "T"+T+
-                "GT T0, I0, L2"+T+
-                "JMPT 4, T0"+T+
-                "MOVE S0, L0"+T+
-                "RETURN"+T+
-                "EXT T1, 'CHAR_LENGTH<vc, vc>', L3, L4"+T+
-                "EXT T2, 'UPPER<vc, vc>', L3, L4"+T+
-                "EXT T3, 'LOWER<vc, vc>', L3, L4"+T+
-                "EXT T4, 'POSITION<vc, vc>', L3, L3"+T+
-                "EXT T5, 'TRIM<vc, vc, s4, s4>', L3, L3, L5, L6"+T+
-                "EXT T6, 'OVERLAY<vc, vc, s8>', L3, L3, L7"+T+
-                "EXT T7, 'SUBSTRING<vc, s8>', L3, L7"+T+
-                "EXT T8, 'SUBSTRING<vc, s8, s8>', L3, L7, L2"+T+
-                "EXT T9, 'SUBSTRING<vc, vc, vc>', L3, L3, L8"+T+
-                "EXT T10, 'CONCAT<vc, vc>', L3, L3"+T+
-                "MOVE O0, T1"+T+
-                "MOVE O1, T2"+T+
-                "MOVE O2, T3"+T+
-                "MOVE O3, T4"+T+
-                "MOVE O4, T5"+T+
-                "MOVE O5, T6"+T+
-                "MOVE O6, T7"+T+
-                "MOVE O7, T8"+T+
-                "MOVE O8, T9"+T+
-                "MOVE O9, T10"+T+
-                "MOVE S0, L1"+T+
-                "RETURN"+T;
+        String prg =
+                "O s4, vc,30, vc,30, s4, vc,30, vc,30, vc,30, vc,30, vc,30, vc,30;" + NL +
+                "I s4;" + NL +
+                "L bo, s4, vc,30, vc,30, s4, vc,30, vc,30, vc,30, vc,30, vc,30, vc,30;" + NL +
+                "S bo;" + NL +
+                "C bo, bo, s8, vc,30, vc,30, s4, s8, vc,30;" + NL +
+                "V 1, 0, 10, 0x61, 0x49534F2D383835392D31, 1, 1, 0x5C;" + NL +
+                "T;" + NL +
+                "GT L0, I0, C2;" + NL +
+                "JMPT @5, L0;" + NL +
+                "MOVE S0, C0;" + NL +
+                "RETURN;" + NL +
+                "MOVE S0, C1;" + NL +
+                "CALL 'CHAR_LENGTH(L1, C3, C4);" + NL +
+                "CALL 'strToUpperA(L2, C3);" + NL +
+                "CALL 'strToLowerA(L3, C3);" + NL +
+                "CALL 'POSITION(L4, C3, C3);" + NL +
+                "CALL 'TRIM(L5, C3, C3, C5, C5);" + NL +
+                "CALL 'OVERLAY(L6, C3, C3, C6);" + NL +
+                "CALL 'SUBSTRING(L7, C3, C6);" + NL +
+                "CALL 'SUBSTRING(L8, C3, C6, C2);" + NL +
+                "CALL 'SUBSTRING(L9, C3, C3, C7);" + NL +
+                "CALL 'CONCAT(L10, C3, C3);" + NL +
+                "MOVE O0, L1;" + NL +
+                "MOVE O1, L2;" + NL +
+                "MOVE O2, L3;" + NL +
+                "MOVE O3, L4;" + NL +
+                "MOVE O4, L5;" + NL +
+                "MOVE O5, L6;" + NL +
+                "MOVE O6, L7;" + NL +
+                "MOVE O7, L8;" + NL +
+                "MOVE O8, L9;" + NL +
+                "MOVE O9, L10;" + NL +
+                "RETURN;" + NL;
         check(sql, prg,false,false);
     }
 }

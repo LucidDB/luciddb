@@ -38,7 +38,7 @@ public interface AssignableValue
      *
      * @param obj value to assign, or null to set null
      */
-    public void assignFrom(Object number);
+    public void assignFrom(Object obj);
 }
 
 // End AssignableValue.java

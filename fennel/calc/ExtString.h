@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Fennel is a relational database kernel.
-// Copyright (C) 2004-2004 Disruptive Technologies, Inc.
+// Copyright (C) 2004-2004 Disruptive Tech
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public License
@@ -33,6 +33,8 @@ FENNEL_BEGIN_NAMESPACE
 //!
 //! Sets cbData to length for char as well as varchar. 
 //!
+//! May throw "22001"
+//!
 //! If calling with fixed: Must call StrCatA3() first to have
 //! length set correctly. Only then subsequent calls to strCatA2() are
 //! possible.  If concatenating multiple strings, strCatA2 will honor
@@ -41,11 +43,13 @@ FENNEL_BEGIN_NAMESPACE
 //! width, to maintain fixed width string length == width. 
 //! Behavior may be undefined if, after Calculator exits, length != width.
 void
-strCatA2(RegisterRef<char*> *result,
-         RegisterRef<char*> *str1);
+strCatA2(RegisterRef<char*>* result,
+         RegisterRef<char*>* str1);
 
 //! Strcat. Ascii. dest = str1 || str2.
 //!
+//! May throw "22001"
+//
 //! Sets cbData to length for char as well as varchar.
 //! After final call to strCatA3(), length should equal
 //! width, to maintain fixed width string length == width. 
@@ -53,45 +57,56 @@ strCatA2(RegisterRef<char*> *result,
 //! If concatenating multiple strings, strCatA2 will honor
 //! the intermediate length set by strCatAF3()
 void
-strCatAF3(RegisterRef<char*> *result,
-          RegisterRef<char*> *str1,
-          RegisterRef<char*> *str2);
+strCatAF3(RegisterRef<char*>* result,
+          RegisterRef<char*>* str1,
+          RegisterRef<char*>* str2);
 
 //! StrCmp. Ascii.
 void
-strCmpA(RegisterRef<int32_t> *result,   
-        RegisterRef<char*> *str1,
-        RegisterRef<char*> *str2);
+strCmpA(RegisterRef<int32_t>* result,   
+        RegisterRef<char*>* str1,
+        RegisterRef<char*>* str2);
+
+//! StrCpy. Ascii.
+//!
+//! May throw "22001"
+//!
+void
+strCpyA(RegisterRef<char*>* result,
+        RegisterRef<char*>* str);
 
 //! StrLen in Bits. Ascii.
 void
-strLenBitA(RegisterRef<int32_t> *result,   
-           RegisterRef<char*> *str);
+strLenBitA(RegisterRef<int32_t>* result,   
+           RegisterRef<char*>* str);
 
 //! StrLen in Characters. Ascii.
 void
-strLenCharA(RegisterRef<int32_t> *result,   
-            RegisterRef<char*> *str);
+strLenCharA(RegisterRef<int32_t>* result,   
+            RegisterRef<char*>* str);
 
 //! StrLen in Octets. Ascii.
 void
-strLenOctA(RegisterRef<int32_t> *result,   
-           RegisterRef<char*> *str);
+strLenOctA(RegisterRef<int32_t>* result,   
+           RegisterRef<char*>* str);
 
 //! Overlay. Length unspecified -- to end. Ascii.
+//!
+//! May throw "22001" or "22011"
+//!
 void
-strOverlayA4(RegisterRef<char*> *result,
-             RegisterRef<char*> *str,
-             RegisterRef<char*> *overlay,
-             RegisterRef<int32_t> *start);  
+strOverlayA4(RegisterRef<char*>* result,
+             RegisterRef<char*>* str,
+             RegisterRef<char*>* overlay,
+             RegisterRef<int32_t>* start);  
 
 //! Overlay. Length specified. Ascii.
 void
-strOverlayA5(RegisterRef<char*> *result,
-             RegisterRef<char*> *str,
-             RegisterRef<char*> *overlay,
-             RegisterRef<int32_t> *start,   
-             RegisterRef<int32_t> *len);    
+strOverlayA5(RegisterRef<char*>* result,
+             RegisterRef<char*>* str,
+             RegisterRef<char*>* overlay,
+             RegisterRef<int32_t>* start,   
+             RegisterRef<int32_t>* len);    
 
 
 //! Position of find string in str string. Ascii.
@@ -101,6 +116,9 @@ strPosA(RegisterRef<int32_t>* result,
         RegisterRef<char*>* find);
 
 //! SubString. By reference. Length not specified -- to end. Ascii.
+//!
+//! May throw "22001" or "22011"
+//!
 void
 strSubStringA3(RegisterRef<char*>* result,
                RegisterRef<char*>* str,
@@ -114,18 +132,27 @@ strSubStringA4(RegisterRef<char*>* result,
                RegisterRef<int32_t>* len);
 
 //! ToLower. Ascii.
+//!
+//! May throw "22001".
+//!
 void
 strToLowerA(RegisterRef<char*>* result,
             RegisterRef<char*>* str);
 
 
 //! ToUpper. Ascii.
+//!
+//! May throw "22001".
+//!
 void
 strToUpperA(RegisterRef<char*>* result,
             RegisterRef<char*>* str);
 
 
 //! Trim. By Reference. Ascii.
+//!
+//! May throw "22001".
+//!
 void
 strTrimA(RegisterRef<char*>* result,
          RegisterRef<char*>* str,

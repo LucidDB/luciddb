@@ -44,7 +44,6 @@ public class FennelIterator implements Iterator
     private FennelStreamGraph streamGraph;
     private FemStreamHandle streamHandle;
     private FennelTupleReader tupleReader;
-    private Object target;
     private byte [] bufferAsArray;
 
     //~ Constructors ----------------------------------------------------------

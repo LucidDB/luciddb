@@ -2,6 +2,7 @@
 // $Id$
 // Saffron preprocessor and data engine
 // (C) Copyright 2003-2003 Disruptive Technologies, Inc.
+// (C) Copyright 2003-2004 John V. Sichi
 // You must accept the terms in LICENSE.html to use this software.
 //
 // This program is free software; you can redistribute it and/or
@@ -267,6 +268,9 @@ public class SqlKind extends EnumeratedValues.BasicValue
             return this == Union || this == Intersect || this == Except;
         case DmlORDINAL:
             return this == Insert || this == Delete || this == Update;
+        case ExpressionORDINAL:
+            return !(this == As || this == Descending || this == Select
+                    || this == Join || this == Function);
         case FunctionORDINAL:
             return this == Function || this == Row;
         default:

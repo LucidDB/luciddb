@@ -159,6 +159,22 @@
 | John   |      |           |
 +--------+------+-----------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- index join which requires swapped join inputs
+0: jdbc:farrago:> select 
+. . . . . . . . >     depts.name as dname,e.name as ename
+. . . . . . . . > from 
+. . . . . . . . >     depts 
+. . . . . . . . > inner join 
+. . . . . . . . >     (select name,age - 20 as age from emps) e
+. . . . . . . . > on 
+. . . . . . . . >     e.age=depts.deptno
+. . . . . . . . > order by 1,2;
++-----------+--------+
+|   DNAME   | ENAME  |
++-----------+--------+
+| Accounts  | Wilma  |
++-----------+--------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- csv format is nicest for query plans
 0: jdbc:farrago:> !set outputformat csv
 0: jdbc:farrago:> 
@@ -174,9 +190,8 @@
 '  FennelToIteratorConverter'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]])'
 '      IteratorToFennelConverter'
-'        IterCalcRel($f0=[CAST($0)])'
-'          IterCalcRel(field#0=[20])'
-'            IterOneRowRel'
+'        IterCalcRel($f0=[CAST(20)])'
+'          IterOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from emps where deptno=20 order by 1;
@@ -188,9 +203,8 @@
 '        FennelToIteratorConverter'
 '          FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]])'
 '            IteratorToFennelConverter'
-'              IterCalcRel($f0=[CAST($0)])'
-'                IterCalcRel(field#0=[20])'
-'                  IterOneRowRel'
+'              IterCalcRel($f0=[CAST(20)])'
+'                IterOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from emps where deptno=20 and gender='M';
@@ -199,9 +213,8 @@
 '  FennelToIteratorConverter'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]])'
 '      IteratorToFennelConverter'
-'        IterCalcRel($f0=[CAST($0)])'
-'          IterCalcRel(field#0=[20])'
-'            IterOneRowRel'
+'        IterCalcRel($f0=[CAST(20)])'
+'          IterOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from emps where empid=3;
@@ -211,9 +224,8 @@
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]])'
 '      FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]])'
 '        IteratorToFennelConverter'
-'          IterCalcRel($f0=[CAST($0)])'
-'            IterCalcRel(field#0=[3])'
-'              IterOneRowRel'
+'          IterCalcRel($f0=[CAST(3)])'
+'            IterOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select gender from emps;
@@ -328,10 +340,9 @@
 '  FennelToIteratorConverter'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2]], inputJoinProj=[[0, 1]])'
 '      IteratorToFennelConverter'
-'        IterCalcRel(NAME=[$0], AGE=[$1], field#2=[CAST($1)], condition=[IS NOT NULL($1)])'
-'          IterCalcRel(NAME=[$1], AGE=[-($6, 20)])'
-'            FennelToIteratorConverter'
-'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'        IterCalcRel(NAME=[$1], AGE=[-($6, 20)], $f2=[CAST(-($6, 20))], condition=[IS NOT NULL(-($6, 20))])'
+'          FennelToIteratorConverter'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select e.name as ename,e.age,depts.name as dname
@@ -343,10 +354,31 @@
 '  FennelToIteratorConverter'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[2]], inputJoinProj=[[0, 1]])'
 '      IteratorToFennelConverter'
-'        IterCalcRel(NAME=[$0], AGE=[$1], field#2=[CAST($1)])'
-'          IterCalcRel(NAME=[$1], AGE=[-($6, 20)])'
-'            FennelToIteratorConverter'
-'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'        IterCalcRel(NAME=[$1], AGE=[-($6, 20)], $f2=[CAST(-($6, 20))])'
+'          FennelToIteratorConverter'
+'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select 
+. . . . . . . . >     depts.name as dname,e.name as ename
+. . . . . . . . > from 
+. . . . . . . . >     depts 
+. . . . . . . . > inner join 
+. . . . . . . . >     (select name,age - 20 as age from emps) e
+. . . . . . . . > on 
+. . . . . . . . >     e.age=depts.deptno
+. . . . . . . . > order by 1,2;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(DNAME=[$3], ENAME=[$0])'
+'        FennelToIteratorConverter'
+'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2]], inputJoinProj=[[0, 1]])'
+'            IteratorToFennelConverter'
+'              IterCalcRel(NAME=[$1], AGE=[-($6, 20)], $f2=[CAST(-($6, 20))], condition=[IS NOT NULL(-($6, 20))])'
+'                FennelToIteratorConverter'
+'                  FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- can only explain plan for dynamic parameter search
 0: jdbc:farrago:> explain plan for
@@ -356,9 +388,8 @@
 '  FennelToIteratorConverter'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]])'
 '      IteratorToFennelConverter'
-'        IterCalcRel($f0=[CAST($0)], condition=[IS NOT NULL($0)])'
-'          IterCalcRel(field#0=[?0])'
-'            IterOneRowRel'
+'        IterCalcRel($f0=[CAST(?0)], condition=[IS NOT NULL(?0)])'
+'          IterOneRowRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit
