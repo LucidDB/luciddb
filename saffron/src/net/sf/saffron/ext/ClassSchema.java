@@ -28,7 +28,7 @@ import openjava.ptree.Expression;
 import openjava.ptree.FieldAccess;
 
 import org.eigenbase.oj.*;
-import org.eigenbase.oj.util.JavaRexBuilder;
+import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.ProjectRel;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.*;
