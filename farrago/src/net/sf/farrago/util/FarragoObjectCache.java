@@ -144,7 +144,7 @@ public class FarragoObjectCache implements FarragoAllocation
             }
         }
 
-        // TODO jvs 15-July-2005:  break up this oversized method
+        // TODO jvs 15-July-2004:  break up this oversized method
         // release map lock since construction work below may be time-consuming
         boolean unpinEntry = false;
         try {
@@ -426,7 +426,7 @@ public class FarragoObjectCache implements FarragoAllocation
 
     private class EntryImpl implements Entry, UninitializedEntry
     {
-        // NOTE jvs 15-July-2005: entry attribute synchronization is
+        // NOTE jvs 15-July-2004: entry attribute synchronization is
         // fine-grained; pinCount is protected by mapKeyToEntry's
         // monitor, while the others are protected by the entry's monitor.
         Object key;

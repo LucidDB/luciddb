@@ -74,7 +74,7 @@ private:
 // _BC_ITER must be _BC::iterator
 
 // TODO: SZ: why can't I just use  _BC::iterator in the function?
-// REVIEW jvs 18-Feb-2005:  try typedef typename _BC::iterator _BC_ITER;
+// REVIEW jvs 18-Feb-2004:  try typedef typename _BC::iterator _BC_ITER;
 
 // TODO: make thread safe
 

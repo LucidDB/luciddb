@@ -118,12 +118,12 @@ public class DdlMedHandler extends DdlHandler
                 ex);
         }
 
-        // REVIEW jvs 18-April-2005:  This uses default charset/collation
+        // REVIEW jvs 18-April-2004:  This uses default charset/collation
         // info from local catalog, but should really allow foreign
         // servers to override.
         repos.initializeCatalog(femServer);
 
-        // REVIEW jvs 18-April-2005:  Query the plugin for these?
+        // REVIEW jvs 18-April-2004:  Query the plugin for these?
         if (femServer.getType() == null) {
             femServer.setType("UNKNOWN");
         }

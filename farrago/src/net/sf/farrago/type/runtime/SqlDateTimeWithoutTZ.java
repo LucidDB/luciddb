@@ -168,7 +168,7 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
             this.isNull = sqlDate.isNull;
             return;
         } else {
-            // REVIEW jvs 27-Aug-2005:  this is dangerous; should probably
+            // REVIEW jvs 27-Aug-2004:  this is dangerous; should probably
             // require a specific interface instead
             String s = date.toString();
             assignFrom(s);
@@ -208,7 +208,7 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
         timeZoneOffset = cal.getTimeZone().getOffset(value);
     }
 
-    // TODO jvs 26-July-2005:  In order to support fractional seconds,
+    // TODO jvs 26-July-2004:  In order to support fractional seconds,
     // need to remember precision and use it in formatting.  Unfortunately,
     // SimpleDateFormat doesn't handle this, so we'll need to use
     // DecimalFormat for the fractional part.

@@ -59,7 +59,7 @@ public class OJClassMap
      */
     private Class syntheticSuperClass;
 
-    // NOTE jvs 29-Sept-2005:  I made the id generator non-static because
+    // NOTE jvs 29-Sept-2004:  I made the id generator non-static because
     // for inner classes there's no need to worry about conflicts between
     // multiple threads.  Previously, this variable was static, but without
     // proper synchronization.

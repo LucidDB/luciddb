@@ -488,7 +488,7 @@ public final class SqlParserUtil
             locale =
                 new Locale(localeParts[0], localeParts[1], localeParts[2]);
         } else {
-            // FIXME jvs 28-Aug-2005:  i18n
+            // FIXME jvs 28-Aug-2004:  i18n
             throw EigenbaseResource.instance().newParserError("Locale '"
                 + localeStr + "' in an illegal format");
         }

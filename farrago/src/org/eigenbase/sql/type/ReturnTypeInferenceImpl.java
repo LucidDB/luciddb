@@ -611,7 +611,7 @@ public class ReturnTypeInferenceImpl
                 RelDataTypeFactory typeFactory,
                 CallOperands callOperands)
             {
-                // REVIEW jvs 1-Mar-2005: I changed this to
+                // REVIEW jvs 1-Mar-2004: I changed this to
                 // leastRestrictive since that's its purpose (and at least
                 // for Farrago, works better than the old getBiggest code).
                 // But this type inference rule isn't general enough for

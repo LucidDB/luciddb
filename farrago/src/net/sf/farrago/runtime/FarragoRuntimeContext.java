@@ -247,7 +247,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
      */
     public String getContextVariable_CURRENT_ROLE()
     {
-        // TODO jvs 25-Sept-2005:  once supported
+        // TODO jvs 25-Sept-2004:  once supported
         return "";
     }
 
@@ -279,7 +279,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
 
     protected long getCurrentTime()
     {
-        // NOTE jvs 25-Sept-2005:  per SQL standard, the same time
+        // NOTE jvs 25-Sept-2004:  per SQL standard, the same time
         // is used for all references within the same statement.
         if (currentTime == 0) {
             currentTime = System.currentTimeMillis();
@@ -405,7 +405,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
                 (FarragoObjectCache.Entry) txnCodeCache.get(xmiFennelPlan);
         }
         if (cacheEntry == null) {
-            // NOTE jvs 15-July-2005:  to avoid deadlock, grab the catalog
+            // NOTE jvs 15-July-2004:  to avoid deadlock, grab the catalog
             // lock BEFORE we pin the cache entry (this matches the
             // order used by statement preparation)
             repos.beginTransientTxn();

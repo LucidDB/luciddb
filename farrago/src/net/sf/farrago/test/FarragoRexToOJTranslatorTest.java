@@ -23,7 +23,7 @@
 package net.sf.farrago.test;
 
 
-// FIXME jvs 29-Aug-2005
+// FIXME jvs 29-Aug-2004
 import com.disruptivetech.farrago.volcano.AbstractConverter;
 
 import java.io.*;
@@ -199,7 +199,7 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
 
     private void initPlanner(FarragoPreparingStmt stmt)
     {
-        // NOTE jvs 22-June-2005:  We use a very stripped-down planner
+        // NOTE jvs 22-June-2004:  We use a very stripped-down planner
         // so that the optimizer doesn't decide to rewrite our
         // carefully constructed expressions.  This also guarantees
         // that the Java calculator is used without having to
@@ -535,7 +535,7 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
         testTranslation("cast(x'00112233445566778899AABB' as varbinary(10))");
     }
 
-    // TODO jvs 22-June-2005:  figure out a way to test codegen for
+    // TODO jvs 22-June-2004:  figure out a way to test codegen for
     // assignment of nullable value to NOT NULL field
 }
 

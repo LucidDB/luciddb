@@ -33,7 +33,7 @@ import java.util.*;
  *
  *<p>
  *
- * REVIEW jvs 20-Mar-2005:  I have parameterized this to handle inner and
+ * REVIEW jvs 20-Mar-2004:  I have parameterized this to handle inner and
  * left outer joins, as well as one-to-many and many-to-one variants.  This
  * comes at the price of some efficiency.  It would probably be better to
  * write specialized bases for each purpose.

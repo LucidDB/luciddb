@@ -60,7 +60,7 @@ ExecStreamResult CartesianJoinExecStream::execute(
 {
     // TODO:  lots of small optimizations possible here
     
-    // TODO jvs 6-Nov-2005: one big optimization would be to perform
+    // TODO jvs 6-Nov-2004: one big optimization would be to perform
     // buffer-to-buffer joins instead of row-to-buffer joins.  This would
     // reduce the number of times the right input needs to be iterated by the
     // average number of rows in a buffer from the left input.  However,  the

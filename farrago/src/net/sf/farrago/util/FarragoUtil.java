@@ -127,7 +127,7 @@ public abstract class FarragoUtil
 
         // convert to SQLException-style chaining
         if (cause != null) {
-            // NOTE jvs 18-June-2005:  reverse the order so that
+            // NOTE jvs 18-June-2004:  reverse the order so that
             // the underlying cause comes out on top
             SQLException sqlCause = newSqlException(cause, tracer);
             sqlCause.setNextException(sqlExcn);

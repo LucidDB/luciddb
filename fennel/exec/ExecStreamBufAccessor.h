@@ -537,7 +537,7 @@ inline void ExecStreamBufAccessor::consumeData(PConstBuffer pEnd)
         else
             state = EXECBUF_EMPTY;
     } else {
-        // NOTE jvs 9-Nov-2005:  this is misleading until circular buffering
+        // NOTE jvs 9-Nov-2004:  this is misleading until circular buffering
         // gets implemented, but it isn't incorrect either
         state = EXECBUF_NONEMPTY;
     }

@@ -281,7 +281,7 @@ public abstract class ReflectUtil
         Class visiteeClass,
         String visitMethodName)
     {
-        // TODO jvs 28-Nov-2005:  cache results in a dispatch map
+        // TODO jvs 28-Nov-2004:  cache results in a dispatch map
     
         try {
             return visitorClass.getMethod(

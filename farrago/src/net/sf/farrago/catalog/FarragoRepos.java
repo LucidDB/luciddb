@@ -263,7 +263,7 @@ public class FarragoRepos extends FarragoMetadataFactory
     // override FarragoMetadataFactory
     public FennelPackage getFennelPackage()
     {
-        // NOTE jvs 5-May-2005:  return the package corresponding to
+        // NOTE jvs 5-May-2004:  return the package corresponding to
         // in-memory storage
         return fennelPackage;
     }
@@ -712,7 +712,7 @@ public class FarragoRepos extends FarragoMetadataFactory
         simpleType.setTypeNumber(new Integer(Types.DATE));
         simpleType.setDateTimePrecision(new Integer(0));
 
-        // TODO jvs 26-July-2005: Support fractional precision for TIME and
+        // TODO jvs 26-July-2004: Support fractional precision for TIME and
         // TIMESTAMP.  Currently, most of the support is there for up to
         // milliseconds, but JDBC getString conversion is missing (see comments
         // in SqlDateTimeWithoutTZ).  SQL99 says default precision for

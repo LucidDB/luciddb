@@ -67,7 +67,7 @@ public abstract class FarragoOJRexImplementor implements OJRexImplementor
     // implement OJRexImplementor
     public boolean canImplement(RexCall call)
     {
-        // NOTE jvs 17-June-2005:  In general, we assume that if
+        // NOTE jvs 17-June-2004:  In general, we assume that if
         // an implementor is registered, it is capable of the
         // requested implementation independent of operands.
         // Implementors which need to check their operands

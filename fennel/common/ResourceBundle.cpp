@@ -228,7 +228,7 @@ static string convertPropertyToBoost(string &message)
     return ss.str();
 }
 
-// NOTE jvs 18-Feb-2005:  The conversion from Java resource format
+// NOTE jvs 18-Feb-2004:  The conversion from Java resource format
 // to Boost format could be done just once as part of the build, instead
 // of each time on startup.  However, keeping everything in Java format
 // simplifies the packaging/translation/distribution process.  And the
@@ -266,7 +266,7 @@ void ResourceBundle::loadMessages()
     if (tryGlobalLocation) {
         bool tryEnvVar = true;
 
-        // TODO jvs 18-Feb-2005: once Fennel starts using Boost's
+        // TODO jvs 18-Feb-2004: once Fennel starts using Boost's
         // platform-independent filesystem library, use it here too.
         if (!globalResourceLocation.empty()) {
             string path = globalResourceLocation + "/" + fileName;

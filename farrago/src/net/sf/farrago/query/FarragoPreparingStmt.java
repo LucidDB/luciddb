@@ -85,7 +85,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 {
     //~ Static fields/initializers --------------------------------------------
 
-    // NOTE jvs 8-June-2005: this tracer is special in that it controls
+    // NOTE jvs 8-June-2004: this tracer is special in that it controls
     // preservation of dynamically generated Java code
     private static final Logger dynamicTracer =
         FarragoTrace.getDynamicTracer();

@@ -1377,7 +1377,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
                 return;
             }
             if (value.equals("%")) {
-                // TODO jvs 5-April-2005:  replace with IS NOT NULL once
+                // TODO jvs 5-April-2004:  replace with IS NOT NULL once
                 // that is working
                 addConjunction();
                 sql.append(colName);
@@ -1386,14 +1386,14 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
                 return;
             }
             if (value.indexOf('%') == -1) {
-                // NOTE jvs 5-April-2005:  technically, '_' is a wildcard
+                // NOTE jvs 5-April-2004:  technically, '_' is a wildcard
                 // symbol also, but it can wait for LIKE support since
                 // its non-wildcard usage is so common
                 addExact(colName, value);
                 return;
             }
             if (false) {
-                // TODO jvs 5-April-2005:  turn this on once LIKE is working
+                // TODO jvs 5-April-2004:  turn this on once LIKE is working
                 addConjunction();
                 sql.append(colName);
                 sql.append(" like ? escape '\\'");

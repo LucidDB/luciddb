@@ -87,7 +87,7 @@ public abstract class FennelTupleWriter
         } catch (IndexOutOfBoundsException ex) {
             return false;
         } catch (IllegalArgumentException ex) {
-            // NOTE jvs 31-Aug-2005:  The position() call throws this instead
+            // NOTE jvs 31-Aug-2004:  The position() call throws this instead
             // of BufferOverflowException.
             return false;
         }

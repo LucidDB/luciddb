@@ -44,7 +44,7 @@ public class ResultSetIterator implements Iterator
 
     public ResultSetIterator(ResultSet resultSet)
     {
-        // NOTE jvs 4-Mar-2005:  I changed this to not call makeRow() from
+        // NOTE jvs 4-Mar-2004:  I changed this to not call makeRow() from
         // this constructor, since subclasses aren't initialized yet.  Now
         // it follows the same pattern as CalcIterator.
         this.resultSet = resultSet;

@@ -43,7 +43,7 @@ struct CalcExecutionStreamParams
     bool isFilter;
 };
 
-// REVIEW jvs 25-Mar-2005: CalcExecutionStream should inherit from
+// REVIEW jvs 25-Mar-2004: CalcExecutionStream should inherit from
 // ExecutionStream.  However, this requires virtual inheritance, which we can't
 // use without dynamic_cast.  We should really find a fix for the
 // JNI/dynamic_cast conflict.

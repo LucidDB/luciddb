@@ -753,7 +753,7 @@ public class SqlValidatorImpl implements SqlValidator
         SqlValidatorScope scope,
         SqlNode operand)
     {
-        // REVIEW jvs 2-Dec-2005:  this method has outgrown its pants
+        // REVIEW jvs 2-Dec-2004:  this method has outgrown its pants
 
         RelDataType type;
         if (operand instanceof SqlIdentifier) {

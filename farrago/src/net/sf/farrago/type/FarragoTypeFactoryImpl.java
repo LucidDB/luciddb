@@ -291,7 +291,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                             == SqlTypeFamily.Character)
                         {
                             if ((precision == 0) || (precision > 65535)) {
-                                // REVIEW jvs 4-Mar-2005: Need a good way to
+                                // REVIEW jvs 4-Mar-2004: Need a good way to
                                 // handle drivers like hsqldb which return 0 or
                                 // large numbers to indicate unlimited
                                 // precision.

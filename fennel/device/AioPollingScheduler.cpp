@@ -97,7 +97,7 @@ void AioPollingScheduler::run()
         newRequests.clear();
         guard.unlock();
         do {
-            // REVIEW jvs 4-Aug-2005:  Using &front like this is not portable.
+            // REVIEW jvs 4-Aug-2004:  Using &front like this is not portable.
             rc = aio_suspend(
                 &(currentRequests.front()),
                 currentRequests.size(),

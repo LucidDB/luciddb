@@ -245,7 +245,7 @@ public abstract class DdlHandler
             }
         }
         if (typeFamily == SqlTypeFamily.Character) {
-            // TODO jvs 18-April-2005:  Should be inheriting these defaults
+            // TODO jvs 18-April-2004:  Should be inheriting these defaults
             // from schema/catalog.
             if (JmiUtil.isBlank(element.getCharacterSetName())) {
                 // NOTE: don't leave character set name implicit, since if the
@@ -332,7 +332,7 @@ public abstract class DdlHandler
             throw Util.needToImplement(type);
         }
 
-        // REVIEW jvs 18-April-2005: I had to put these in because CWM
+        // REVIEW jvs 18-April-2004: I had to put these in because CWM
         // declares them as mandatory.  This is stupid, since CWM also says
         // these fields are inapplicable for non-character types.
         if (element.getCollationName() == null) {

@@ -48,7 +48,7 @@ void ExecStream::closeImpl()
 {
     isOpen = false;
 
-    // REVIEW jvs 19-July-2005:  It would be nice to be able to do this, making
+    // REVIEW jvs 19-July-2004:  It would be nice to be able to do this, making
     // sure no cache access is attempted while stream is closed.  However,
     // it currently causes trouble with TableWriters, which need
     // cache access for txn replay.

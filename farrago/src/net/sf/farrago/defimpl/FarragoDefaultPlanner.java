@@ -126,7 +126,7 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
             // use Java code generation for calculating expressions
             addRule(IterRules.IterCalcRule.instance);
 
-            // TODO jvs 6-May-2005:  these should be redundant now, but when
+            // TODO jvs 6-May-2004:  these should be redundant now, but when
             // I remove them, some queries fail.  Find out why.
             addRule(IterRules.ProjectToIteratorRule.instance);
             addRule(IterRules.ProjectedFilterToIteratorRule.instance);

@@ -324,7 +324,7 @@ public abstract class SqlTypeUtil
      */
     public static boolean isLob(RelDataType type)
     {
-        // TODO jvs 9-Dec-2005:  once we support LOB types
+        // TODO jvs 9-Dec-2004:  once we support LOB types
         return false;
     }
 
@@ -542,7 +542,7 @@ public abstract class SqlTypeUtil
      *
      *<p>
      *
-     * REVIEW jvs 17-Dec-2005:  the coerce param below shouldn't really be
+     * REVIEW jvs 17-Dec-2004:  the coerce param below shouldn't really be
      * necessary.  We're using it as a hack because
      * {@link SqlTypeFactoryImpl#leastRestrictiveSqlType} isn't complete enough
      * yet.  Once it is, this param (and the non-coerce rules of
@@ -774,7 +774,7 @@ public abstract class SqlTypeUtil
     {
         SqlTypeName typeName = type.getSqlTypeName();
 
-        // TODO jvs 28-Dec-2005:  support row types, user-defined types,
+        // TODO jvs 28-Dec-2004:  support row types, user-defined types,
         // interval types, multiset types, etc
         assert(typeName != null);
         SqlIdentifier typeIdentifier = new SqlIdentifier(
@@ -784,10 +784,10 @@ public abstract class SqlTypeUtil
 
         if (inCharFamily(type)) {
             charSetName = type.getCharset().name();
-            // TODO jvs 28-Dec-2005:  collation
+            // TODO jvs 28-Dec-2004:  collation
         }
 
-        // REVIEW jvs 28-Dec-2005:  discriminate between precision/scale
+        // REVIEW jvs 28-Dec-2004:  discriminate between precision/scale
         // zero and unspecified?
 
         if (typeName.allowsScale()) {

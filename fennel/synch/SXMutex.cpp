@@ -155,7 +155,7 @@ bool SXMutex::tryUpgrade()
 
 int SXMutex::getCurrentThreadId()
 {
-    // NOTE jvs 24-Nov-2005:  it would be nice if boost threads would
+    // NOTE jvs 24-Nov-2004:  it would be nice if boost threads would
     // abstract out the notion of thread ID!
 #ifdef __MINGW32__
     return static_cast<int>(GetCurrentThreadId());

@@ -185,7 +185,7 @@ class MedMdrNameDirectory extends MedAbstractNameDirectory
             }
         }
 
-        // TODO jvs 15-Mar-2005: We currently generate a VARCHAR type for the
+        // TODO jvs 15-Mar-2004: We currently generate a VARCHAR type for the
         // mofId.  This means that if we want to reference the object again
         // later, we have to look it up via MDRepository.getByMofId.  This will
         // always be required in cases where the object has to leave and

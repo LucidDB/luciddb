@@ -65,7 +65,7 @@ public abstract class SqlOperator
      *
      *<p>
      *
-     * REVIEW jvs 2-Dec-2005:  what about user-defined types with quoted
+     * REVIEW jvs 2-Dec-2004:  what about user-defined types with quoted
      * names?  They could be all-lowercase.  Do we really have to use such
      * a hokey mechanism?
      */

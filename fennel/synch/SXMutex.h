@@ -29,7 +29,7 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-// NOTE jvs 24-Nov-2005:  It would be nice to replace SXMutex with
+// NOTE jvs 24-Nov-2004:  It would be nice to replace SXMutex with
 // boost::read_write_mutex.  However, it is a lot of work to
 // get this right, because the boost design is intended for short-duration
 // locks, whereas Fennel uses long-duration locks for cache pages.

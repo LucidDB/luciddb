@@ -24,7 +24,7 @@ package org.eigenbase.reltype;
 
 import org.eigenbase.oj.util.*;
 
-// REVIEW jvs 17-Dec-2005:  does this still need to exist?  Is it supposed
+// REVIEW jvs 17-Dec-2004:  does this still need to exist?  Is it supposed
 // to have fields?
 
 /**

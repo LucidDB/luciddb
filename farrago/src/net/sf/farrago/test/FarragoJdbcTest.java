@@ -277,7 +277,7 @@ public class FarragoJdbcTest extends FarragoTestCase
         Assert.fail("Expected failure due to cancel request");
     }
 
-    // NOTE jvs 26-July-2005:  some of the tests in this class modify fixture
+    // NOTE jvs 26-July-2004:  some of the tests in this class modify fixture
     // tables such as SALES.EMPS, but that's OK, because transactions are
     // implicitly rolled back by FarragoTestCase.tearDown.
     public void testPreparedStmtDataTypes()

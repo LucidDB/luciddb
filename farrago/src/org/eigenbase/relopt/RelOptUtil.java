@@ -24,7 +24,7 @@
 package org.eigenbase.relopt;
 
 
-// TODO jvs 29-Aug-2005:  factor out references
+// TODO jvs 29-Aug-2004:  factor out references
 import com.disruptivetech.farrago.volcano.RelSubset;
 
 import java.util.ArrayList;

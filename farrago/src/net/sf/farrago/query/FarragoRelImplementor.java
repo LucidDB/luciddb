@@ -158,7 +158,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
         streamDef.setName(streamName);
         streamDefSet.add(streamDef);
 
-        // REVIEW jvs 15-Nov-2005:  This is dangerous because rowType
+        // REVIEW jvs 15-Nov-2004:  This is dangerous because rowType
         // may not be correct all the way down.
         if (streamDef.getOutputDesc() == null) {
             streamDef.setOutputDesc(
@@ -214,7 +214,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
     // override JavaRelImplementor
     protected RexToOJTranslator newTranslator(RelNode rel)
     {
-        // NOTE jvs 14-June-2005:  since we aren't given stmtList/memberList,
+        // NOTE jvs 14-June-2004:  since we aren't given stmtList/memberList,
         // this translator is not usable for actual code generation, but
         // it's sufficient for use in TranslationTester, which is
         // currently the only caller

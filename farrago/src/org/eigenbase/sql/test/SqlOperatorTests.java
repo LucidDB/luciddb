@@ -98,7 +98,7 @@ public class SqlOperatorTests
     {
         tester.checkScalarExact("case when 'a'='a' then 1 end", "1");
 
-        // FIXME jvs 26-Jan-2005:  disabled because of calculator
+        // FIXME jvs 26-Jan-2004:  disabled because of calculator
         // assertion after I changed the type of string literals from
         // VARCHAR to CHAR (see dtbug 278)
         if (false) {

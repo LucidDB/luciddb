@@ -177,7 +177,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         this.stmtValidator = stmtValidator;
         stmtValidator.addAllocation(this);
 
-        // NOTE jvs 25-Jan-2005:  Use LinkedHashXXX, since order
+        // NOTE jvs 25-Jan-2004:  Use LinkedHashXXX, since order
         // matters for these.
         schedulingMap = new LinkedHashMap();
         validatedMap = new LinkedHashMap();

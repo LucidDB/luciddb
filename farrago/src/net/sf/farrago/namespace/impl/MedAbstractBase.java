@@ -33,7 +33,7 @@ import net.sf.farrago.plugin.*;
  */
 public class MedAbstractBase extends FarragoAbstractPluginBase
 {
-    // NOTE jvs 17-May-2005: At the moment there's nothing MED-specific here,
+    // NOTE jvs 17-May-2004: At the moment there's nothing MED-specific here,
     // but it's staying around as a placeholder in case there is something in
     // the future.  Put any generic plugin stuff in FarragoAbstractPluginBase.
 }

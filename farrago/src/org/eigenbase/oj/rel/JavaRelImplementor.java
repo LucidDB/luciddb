@@ -55,7 +55,7 @@ import org.eigenbase.util.Util;
  * </p>
  *
  * <p>
- * TODO jvs 14-June-2005:  some of JavaRelImplementor is specific to
+ * TODO jvs 14-June-2004:  some of JavaRelImplementor is specific to
  * the JAVA calling convention; those portions should probably be
  * factored out into a subclass.
  * </p>

@@ -361,12 +361,12 @@ public class DdlRoutineHandler extends DdlHandler
                 analyzedSql.canonicalString));
 
         if (analyzedSql.hasDynamicParams) {
-            // TODO jvs 29-Dec-2005:  add a test for this; currently
+            // TODO jvs 29-Dec-2004:  add a test for this; currently
             // hits an earlier assertion in SqlValidator
             throw validator.res.newValidatorInvalidRoutineDynamicParam();
         }
 
-        // TODO jvs 28-Dec-2005:  CAST FROM
+        // TODO jvs 28-Dec-2004:  CAST FROM
 
         RelDataType declaredReturnType =
             typeFactory.createCwmElementType(returnParam);

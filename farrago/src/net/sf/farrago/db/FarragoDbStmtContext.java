@@ -276,7 +276,7 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
                 boolean found = resultSet.next();
                 assert (found);
                 updateCount = resultSet.getInt(1);
-                // REVIEW jvs 13-Sept-2005:  johnp, is this still needed?
+                // REVIEW jvs 13-Sept-2004:  johnp, is this still needed?
                 while (resultSet.next()) {
                 }
                 if (tracer.isLoggable(Level.FINE)) {
@@ -460,7 +460,7 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
         }
     }
 
-    // TODO jvs 7-Oct-2005: according to Appendix B of the JDBC spec (Data Type
+    // TODO jvs 7-Oct-2004: according to Appendix B of the JDBC spec (Data Type
     // Conversion Tables), it's possible to pass String objects as the values
     // for date/time/timestamp/binary parameters.  Need to implement the
     // appropriate conversions here.  Also, need a NumericParamDef impl.
@@ -609,7 +609,7 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
             if (x instanceof String) {
                 return x;
             }
-            // REVIEW jvs 7-Oct-2005: the default toString() implementation for
+            // REVIEW jvs 7-Oct-2004: the default toString() implementation for
             // Float/Double/Date/Time/Timestamp/byte[] may not be correct here.
             final String s = x.toString();
             if (s.length() > maxCharCount) {

@@ -72,7 +72,7 @@ ExternalSortRunLoader::~ExternalSortRunLoader()
 
 inline PBuffer &ExternalSortRunLoader::getPointerArrayEntry(uint iTuple)
 {
-    // REVIEW jvs 12-June-2005:  This is the price we pay for not using a big
+    // REVIEW jvs 12-June-2004:  This is the price we pay for not using a big
     // linear array.  Is it too expensive?
     uint iPage = iTuple >> indexToPageShift;
     uint iSubKey = iTuple & indexPageMask;
@@ -125,7 +125,7 @@ PBuffer ExternalSortRunLoader::allocateBuffer()
     bufferLock.allocatePage();
     pBuffer = bufferLock.getPage().getWritableData();
     
-    // REVIEW jvs 12-June-2005:  we rely on the fact that the underlying
+    // REVIEW jvs 12-June-2004:  we rely on the fact that the underlying
     // ScratchSegment keeps the page pinned for us; need to make this
     // official.
     bufferLock.unlock();
@@ -164,7 +164,7 @@ void ExternalSortRunLoader::releaseResources()
     dataBuffers.clear();
     nMemPagesMax = 0;
 
-    // REVIEW jvs 12-June-2005:  see corresponding comment above in
+    // REVIEW jvs 12-June-2004:  see corresponding comment above in
     // allocateBuffer()
     
     sortInfo.memSegmentAccessor.pSegment->deallocatePageRange(

@@ -83,7 +83,7 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
         if (server.schemaName != null) {
             assert (foreignName.length == 2);
 
-            // TODO jvs 11-June-2005: this should be a real error, not an
+            // TODO jvs 11-June-2004: this should be a real error, not an
             // assert
             assert (foreignName[0].equals(server.schemaName));
             foreignName = new String [] { foreignName[1] };

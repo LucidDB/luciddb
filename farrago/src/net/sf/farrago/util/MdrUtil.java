@@ -50,7 +50,7 @@ public abstract class MdrUtil
 {
     //~ Static fields/initializers --------------------------------------------
 
-    // NOTE jvs 23-Dec-2005: This tracer cannot be statically initialized,
+    // NOTE jvs 23-Dec-2004: This tracer cannot be statically initialized,
     // because MdrUtil is not allowed to depend on FarragoTrace.  Instead, this
     // tracer must be initialized via the integrateTracing() method.  Don't use
     // it outside of TracingErrorManager.

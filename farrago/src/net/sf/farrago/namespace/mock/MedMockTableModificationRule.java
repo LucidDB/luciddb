@@ -67,7 +67,7 @@ class MedMockTableModificationRule extends RelOptRule
         TableModificationRel tableModification =
             (TableModificationRel) call.rels[0];
 
-        // TODO jvs 13-Sept-2005:  disallow updates to mock foreign tables
+        // TODO jvs 13-Sept-2004:  disallow updates to mock foreign tables
         if (!(tableModification.getTable() instanceof MedMockColumnSet)) {
             return;
         }

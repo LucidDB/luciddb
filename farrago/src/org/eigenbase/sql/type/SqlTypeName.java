@@ -448,7 +448,7 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
         case Time_ordinal:
             return 0;
         case Timestamp_ordinal:
-            // TODO jvs 26-July-2005:  should be 6 for microseconds,
+            // TODO jvs 26-July-2004:  should be 6 for microseconds,
             // but we can't support that yet
             return 0;
         default:

@@ -37,8 +37,8 @@ import org.eigenbase.rex.RexNode;
 import org.eigenbase.util.Util;
 
 
-// TODO jvs 10-May-2005:  inherit from a new CalcRelBase
-// REVIEW jvs 16-June-2005:  also, consider renaming this
+// TODO jvs 10-May-2004:  inherit from a new CalcRelBase
+// REVIEW jvs 16-June-2004:  also, consider renaming this
 // to ComputeRel, to avoid confusion with the Fennel calculator?
 
 /**

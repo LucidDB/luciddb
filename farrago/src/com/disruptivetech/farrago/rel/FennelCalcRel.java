@@ -125,7 +125,7 @@ public abstract class FennelCalcRel extends FennelSingleRel
         // TODO:  the real thing
         double rowCount = getRows();
 
-        // NOTE jvs 26-July-2005: factor of 2 is to make sure cost always comes
+        // NOTE jvs 26-July-2004: factor of 2 is to make sure cost always comes
         // out higher than IterCalcRel (making it at least deterministic until
         // we have proper costing, and giving preference to Java since it's
         // currently more reliable)

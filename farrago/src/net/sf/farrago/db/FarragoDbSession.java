@@ -610,7 +610,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     {
         tracer.info(sql);
 
-        // TODO jvs 11-Aug-2005:  Get rid of this big mutex.  It needs to stay
+        // TODO jvs 11-Aug-2004:  Get rid of this big mutex.  It needs to stay
         // until we have proper object-level DDL-locking.  For now the
         // contention is the same as that due to the TODO below since the
         // MDR write lock is exclusive.
@@ -618,7 +618,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             FarragoReposTxnContext reposTxnContext =
                 new FarragoReposTxnContext(repos);
 
-            // TODO jvs 21-June-2005: It would be preferable to start with a
+            // TODO jvs 21-June-2004: It would be preferable to start with a
             // read lock and only upgrade to write once we know we're dealing
             // with DDL.  However, at the moment that doesn't work because a
             // write txn is required for creating transient objects.  And MDR
