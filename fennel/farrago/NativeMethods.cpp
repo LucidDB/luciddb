@@ -33,7 +33,6 @@
 #include <sstream>
 
 #ifdef __MINGW32__
-#include <process.h>
 #include <windows.h>
 #endif
 

@@ -23,6 +23,10 @@
 #include "fennel/farrago/JavaExcn.h"
 #include "fennel/common/FennelResource.h"
 
+#ifdef __MINGW32__
+#include <process.h>
+#endif
+
 #ifndef __MINGW32__
 #include <signal.h>
 #endif
