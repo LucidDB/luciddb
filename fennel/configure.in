@@ -134,7 +134,7 @@ BOOST_LINKAGE=runtime-link-dynamic/shared-linkable-true
 BOOST_TOOLSET=gcc-stlport
 DLLEXT=so
 STLPORT_LIB_BASE=stlport_gcc
-EXTRA_LDFLAGS="-lpthread -lstdc++ -lgcc_s -lrt"
+EXTRA_LDFLAGS="-lpthread -lstdc++ -lgcc_s -lrt -release $(VERSION)"
 boost_jam_platform=linuxx86
 lib_path_var=LD_LIBRARY_PATH
 jdk_platform=linux
@@ -169,7 +169,9 @@ dnl TODO:  combine common mingw/cygwin stuff under host rather than target.
 
 dnl NOTE:  The postdeps line below took a while to figure out.
 dnl It allows the latest libtool to make a special exception for
-dnl linking the static -stdc++ into fennel dynamic libs.
+dnl linking the static -stdc++ into fennel dynamic libs.  Also,
+dnl for Windows we currently do not use -release because the
+dnl lack of symlinks makes it hard to load the correct JNI DLL.
 
 dnl Mingw tweaks
 if test "$target_os" = "mingw32"

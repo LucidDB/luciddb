@@ -20,7 +20,6 @@ $(ICU_LD_FLAGS) \
 -Wl,-l$(BOOST_DATETIMELIB) \
 -Wl,-l$(STLPORT_LIB) \
 -Wl,-E \
--release $(VERSION) \
 $(EXTRA_LDFLAGS)
 
 AM_ETAGSFLAGS = --c++ --members
