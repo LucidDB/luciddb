@@ -120,6 +120,7 @@ public class FarragoQueryTest extends FarragoTestCase
         sql = "select \"name\" from \"Relational\".\"Schema\"";
         resultSet = stmt.executeQuery(sql);
         Set refSet = new HashSet();
+        refSet.add("SQLJ");
         refSet.add("SALES");
         refSet.add("JDBC_METADATA");
         compareResultSet(refSet);

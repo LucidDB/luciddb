@@ -566,6 +566,9 @@ public abstract class FarragoTestCase extends DiffTestCase
                 if (schema.getName().equals("SALES")) {
                     continue;
                 }
+                if (schema.getName().equals("SQLJ")) {
+                    continue;
+                }
                 list.add(schema.getName());
             }
             Iterator iter = list.iterator();

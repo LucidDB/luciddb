@@ -157,16 +157,40 @@ public abstract class FarragoPluginCache extends FarragoCompoundAllocation
                 Manifest manifest = jar.getManifest();
                 String className =
                     manifest.getMainAttributes().getValue(jarAttributeName);
-                URLClassLoader classLoader =
-                    new URLClassLoader(new URL [] {
-                            new URL("file:" + libraryName)
-                        },
-                        FarragoPluginCache.class.getClassLoader());
-                return classLoader.loadClass(className);
+                return loadJarClass(
+                    "file:" + libraryName,
+                    className);
             }
         } catch (Throwable ex) {
             throw FarragoResource.instance().newPluginJarLoadFailed(
                 libraryName,
+                ex);
+        }
+    }
+
+    /**
+     * Loads a Java class from a jar URL.
+     *
+     * @param jarUrl URL for jar containing class implementation
+     *
+     * @param className name of class to load
+     *
+     * @return loaded class
+     */
+    public static Class loadJarClass(
+        String jarUrl,
+        String className)
+    {
+        try {
+            URL url = new URL(jarUrl);
+            URLClassLoader classLoader =
+                new URLClassLoader(new URL [] { url },
+                    FarragoPluginCache.class.getClassLoader());
+            return classLoader.loadClass(className);
+        } catch (Throwable ex) {
+            throw FarragoResource.instance().newPluginJarClassLoadFailed(
+                className,
+                jarUrl,
                 ex);
         }
     }

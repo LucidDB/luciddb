@@ -331,29 +331,6 @@ public class SqlLiteral extends SqlNode
         return new SqlLiteral(null, SqlTypeName.Boolean, pos);
     }
 
-    public static SqlLiteral create(
-        int i,
-        ParserPosition pos)
-    {
-        switch (i) {
-        case 0:
-            return new SqlLiteral(
-                new BigDecimal(0),
-                SqlTypeName.Decimal,
-                pos);
-        case 1:
-            return new SqlLiteral(
-                new BigDecimal(1),
-                SqlTypeName.Decimal,
-                pos);
-        default:
-            return new SqlLiteral(
-                new BigDecimal(i),
-                SqlTypeName.Decimal,
-                pos);
-        }
-    }
-
     /**
      * Creates a literal which represents a parser symbol, for example the
      * TRAILING keyword in the call Trim(TRAILING 'x' FROM 'Hello world!').

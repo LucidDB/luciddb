@@ -329,6 +329,8 @@ SqlNode SqlStmtEof() :
         stmt = SqlDelete()
     |
         stmt = SqlUpdate()
+    |
+        stmt = SqlProcedureCall()
     )
     (<EOF>)
     { return stmt; }
@@ -432,6 +434,38 @@ boolean WithImplementation() :
         return false;
     }
     )
+}
+
+/**
+ * Parses a CALL statement.
+ */
+SqlNode SqlProcedureCall() :
+{
+    SqlIdentifier name;
+    List args;
+    ParserPosition callPos;
+    ParserPosition funcPos;
+}
+{
+    <CALL>
+        {
+            callPos = getPos();
+        }
+    name = CompoundIdentifier()
+        {
+            funcPos = getPos();
+        }
+    (
+        LOOKAHEAD(2) <LPAREN> <RPAREN> { args = ParserUtil.emptyList; }
+        | args = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_SUBQUERY)
+    )
+        {
+        }
+    {
+        SqlNode function = createCall(
+            name, ParserUtil.toNodeArray(args), funcPos);
+        return opTab.procedureCallOperator.createCall(function, callPos);
+    }
 }
 
 /**
@@ -1463,7 +1497,15 @@ SqlNode AtomicRowExpression() :
 |
     e = DynamicParam() { return e; }
 |
-    LOOKAHEAD(3) e = FunctionCall() { return e; }
+        // NOTE jvs 18-Jan-2005:  use syntactic lookahead to discriminate
+        // compound identifiers from function calls in which the function
+        // name is a compound identifier
+    LOOKAHEAD(CompoundIdentifier() <LPAREN>)
+    e = NamedFunctionCall() { return e; }
+|
+    e = BuiltinFunctionCall() { return e; }
+|
+    e = JdbcFunctionCall() { return e; }
 |
     e = MultisetConstructor() { return e; }
 |
@@ -2001,21 +2043,17 @@ SqlIdentifier TypeName() :
 
 
 /**
- * Parses a function call expression.
+ * Parses a call to a builtin function with special syntax.
  */
-SqlNode FunctionCall() :
+SqlNode BuiltinFunctionCall() :
 {
     String name;
     List args;
-    SqlIdentifier id = null;
     SqlNode e = null;
     ParserPosition pos;
     ParserPosition starPos;
     ParserPosition namePos;
-    ParserPosition overPos = null;
     SqlDataTypeSpec dt;
-    boolean over = false;
-    SqlCall function = null;
 }
 {
     //~ FUNCTIONS WITH SPECIAL SYNTAX ---------------------------------------
@@ -2146,17 +2184,17 @@ SqlNode FunctionCall() :
                    [    LOOKAHEAD(2)
                         [   <BOTH> {
                                 pos = getPos();
-                                flag = org.eigenbase.sql.fun.SqlTrimFunction.Flag.createBoth(pos);
+                                flag = SqlTrimFunction.Flag.createBoth(pos);
                             }
                         |
                             <TRAILING> {
                                 pos = getPos();
-                                flag = org.eigenbase.sql.fun.SqlTrimFunction.Flag.createTrailing(pos);
+                                flag = SqlTrimFunction.Flag.createTrailing(pos);
                             }
                         |
                             <LEADING> {
                                 pos = getPos();
-                                flag = org.eigenbase.sql.fun.SqlTrimFunction.Flag.createLeading(pos);
+                                flag = SqlTrimFunction.Flag.createLeading(pos);
                             }
                         ]
                         [ trimChars = AtomicRowExpression() ]
@@ -2180,10 +2218,27 @@ SqlNode FunctionCall() :
                             ParserUtil.toNodeArray(args), pos);
                    }
     )
-|
-    //~ "NORMAL" FUNCTIONS WITHOUT SPECIAL SYNTAX -----------------------------
+}
+
+/**
+ * Parses a call to a named function (could be a builtin with regular
+ * syntax, or else a UDF).
+ */
+SqlNode NamedFunctionCall() :
+{
+    SqlIdentifier qualifiedName;
+    SqlIdentifier id = null;
+    List args;
+    ParserPosition pos;
+    ParserPosition starPos;
+    ParserPosition overPos = null;
+    boolean over = false;
+    SqlCall function = null;
+    SqlNode e = null;
+}
+{
     (
-        name = Identifier()
+        qualifiedName = CompoundIdentifier()
         {
             pos = getPos();
         }
@@ -2218,7 +2273,8 @@ SqlNode FunctionCall() :
         )
 
         {
-            function = createCall(name, ParserUtil.toNodeArray(args), pos);
+            function = createCall(
+                qualifiedName, ParserUtil.toNodeArray(args), pos);
             if (over) {
                 if (id != null) {
                     return opTab.overOperator.createCall(
@@ -2233,8 +2289,19 @@ SqlNode FunctionCall() :
 
         }
     )
-|
-    //~ JDBC FUNCTION SYNTAX
+}
+
+/**
+ * Parses a function call expression with JDBC syntax.
+ */
+SqlNode JdbcFunctionCall() :
+{
+    String name;
+    List args;
+    ParserPosition pos;
+    ParserPosition starPos;
+}
+{
     (
         <LBRACE_FN>
     {
@@ -2255,7 +2322,7 @@ SqlNode FunctionCall() :
         )
         <RBRACE>
         {
-            return new org.eigenbase.sql.SqlJdbcFunctionCall(name).createCall(
+            return new SqlJdbcFunctionCall(name).createCall(
                     ParserUtil.toNodeArray(args), pos);
         }
     )
@@ -2407,6 +2474,7 @@ TOKEN :
 | < BOOLEAN: "boolean" >
 | < BOTH: "both" >
 | < BY: "by" >
+| < CALL: "call" >
 | < CASE: "case" >
 | < CHAR: "char" >
 | < CHARACTER: "character" >

@@ -111,6 +111,8 @@ DdlStmt DdlStmtEof() :
               |
               modelElement = RoutineDrop()
               |
+              modelElement = JarDrop()
+              |
               LOOKAHEAD(2)
               modelElement = DataWrapperDrop()
               |
@@ -880,6 +882,31 @@ CwmModelElement RoutineDrop() :
         }
 }
 
+CwmModelElement JarDrop() :
+{
+    SqlIdentifier qualifiedJarName;
+    SqlLiteral deploymentState;
+}
+{
+    <JAR> qualifiedJarName = CompoundIdentifier2()
+        {
+        }
+    <OPTIONS>
+         <LPAREN> deploymentState = NumericLiteral(ParserPosition.ZERO) <RPAREN>
+        {
+        }
+    CascadeOption()
+        {
+        }
+    {
+        FemJar jar = (FemJar) farragoParser.getStmtValidator().findSchemaObject(
+            qualifiedJarName,
+            getRepos().getSql2003Package().getFemJar());
+        jar.setDeploymentState(deploymentState.intValue());
+        return jar;
+    }
+}
+
 CwmModelElement IndexDrop() :
 {
     SqlIdentifier qualifiedIndexName;
@@ -1165,6 +1192,42 @@ FemRoutine FunctionDefinition() :
     }
 }
 
+FemRoutine ProcedureDefinition() :
+{
+    FemRoutine procedure;
+    SqlIdentifier qualifiedName;
+}
+{
+    <PROCEDURE> 
+        {
+            procedure = getRepos().newFemRoutine();
+            procedure.setType(ProcedureTypeEnum.PROCEDURE);
+            procedure.setCalledOnNullInput(true);
+        }
+    qualifiedName = CompoundIdentifier2()
+        {
+            // REVIEW jvs 18-Jan-2005:  see corresponding comment
+            // in FunctionDefinition().
+            farragoParser.getDdlValidator().setSchemaObjectName(
+                procedure,qualifiedName);
+            procedure.setInvocationName(procedure.getName());
+        }
+    <LPAREN> [ RoutineParamList(procedure) ] <RPAREN>
+        {
+        }
+    RoutineCharacteristics(procedure)
+        {
+            // TODO jvs 18-Jan-2005:  disallow characteristics which
+            // don't apply to procedures
+        }
+    (
+        ExternalRoutineBody(procedure)
+    )
+    {
+        return procedure;
+    }
+}
+
 void SqlRoutineBody(FemRoutine routine) :
 {
     SqlNode expr;
@@ -1383,6 +1446,37 @@ FemRoutineParameter RoutineParam(FemRoutine routine) :
     }
 }
 
+FemJar JarDefinition() :
+{
+    FemJar jar;
+    SqlIdentifier qualifiedName;
+    String url;
+    SqlLiteral deploymentState;
+}
+{
+    <JAR> 
+        {
+            jar = getRepos().newFemJar();
+        }
+    qualifiedName = CompoundIdentifier2()
+        {
+            farragoParser.getDdlValidator().setSchemaObjectName(
+                jar,qualifiedName);
+        }
+    <LIBRARY> url = QuotedString()
+        {
+            jar.setUrl(url);
+        }
+    <OPTIONS> <LPAREN> 
+         deploymentState = NumericLiteral(ParserPosition.ZERO) <RPAREN>
+        {
+            jar.setDeploymentState(deploymentState.intValue());
+        }
+    {
+        return jar;
+    }
+}
+
 FemDataServer DataServerReference() :
 {
     SqlIdentifier name;
@@ -1565,6 +1659,7 @@ TOKEN :
 | < INOUT: "inout" >
 | < INPUT: "input" >
 | < INVOKER: "invoker" >
+| < JAR: "jar" >
 | < JAVA: "java" >
 | < MAX: "max" >
 | < MIN: "min" >
@@ -1631,6 +1726,7 @@ String DdlNonReservedKeyWord() :
         | <INDEX>
         | <INPUT>
         | <INVOKER>
+        | <JAR>
         | <JAVA>
         | <KEY>
         | <LIBRARY>

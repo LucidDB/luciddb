@@ -111,8 +111,13 @@ public class FarragoParser implements FarragoSessionParser
     public FarragoException newPositionalError(
         SqlValidatorException ex)
     {
-        String msg = getCurrentPosition().toString();
-        return FarragoResource.instance().newValidatorPositionContext(msg, ex);
+        if (doneParsing) {
+            return FarragoResource.instance().newValidatorNoPositionContext(ex);
+        } else {
+            String msg = getCurrentPosition().toString();
+            return FarragoResource.instance().newValidatorPositionContext(
+                msg, ex);
+        }
     }
     
     // implement FarragoSessionParser

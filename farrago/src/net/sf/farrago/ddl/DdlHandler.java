@@ -44,6 +44,7 @@ import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 
 import java.io.*;
+import java.net.*;
 import java.nio.charset.*;
 import java.sql.*;
 import java.util.*;
@@ -751,11 +752,13 @@ public class DdlHandler
             if (param.getKind() == ParameterDirectionKindEnum.PDK_RETURN) {
                 returnParam = param;
             } else {
-                if (param.getKind() != ParameterDirectionKindEnum.PDK_IN) {
-                    throw validator.newPositionalError(
-                        param,
-                        validator.res.newValidatorFunctionOutputParam(
-                            repos.getLocalizedObjectName(routine)));
+                if (routine.getType().equals(ProcedureTypeEnum.FUNCTION)) {
+                    if (param.getKind() != ParameterDirectionKindEnum.PDK_IN) {
+                        throw validator.newPositionalError(
+                            param,
+                            validator.res.newValidatorFunctionOutputParam(
+                                repos.getLocalizedObjectName(routine)));
+                    }
                 }
                 param.setOrdinal(iOrdinal);
                 ++iOrdinal;
@@ -846,9 +849,7 @@ public class DdlHandler
         if (routine.getParameterStyle() == null) {
             routine.setParameterStyle(RoutineParameterStyleEnum.RPS_JAVA);
         }
-        if (routine.getParameterStyle() !=
-            RoutineParameterStyleEnum.RPS_JAVA)
-        {
+        if (routine.getParameterStyle() != RoutineParameterStyleEnum.RPS_JAVA) {
             throw validator.newPositionalError(
                 routine,
                 validator.res.newValidatorRoutineJavaParamStyleOnly(
@@ -856,19 +857,25 @@ public class DdlHandler
         }
 
         FarragoUserDefinedRoutineLookup lookup =
-            new FarragoUserDefinedRoutineLookup(validator.getStmtValidator());
-        FarragoUserDefinedRoutine sqlRoutine =
-            lookup.convertFunction(routine);
+            new FarragoUserDefinedRoutineLookup(
+                validator.getStmtValidator(), null);
+        FarragoUserDefinedRoutine sqlRoutine = lookup.convertRoutine(routine);
         try {
             sqlRoutine.getJavaMethod();
         } catch (SqlValidatorException ex) {
             throw validator.newPositionalError(routine,ex);
         }
+        if (sqlRoutine.getJar() != null) {
+            validator.createDependency(
+                routine,
+                Collections.singleton(sqlRoutine.getJar()),
+                "RoutineUsesJar");
+        }
     }
 
     protected void validateRoutineBody(
         FarragoSession session, 
-        FemRoutine routine,
+        final FemRoutine routine,
         FemRoutineParameter returnParam)
         throws SQLException
     {
@@ -880,8 +887,7 @@ public class DdlHandler
             {
                 public int getFieldCount()
                 {
-                    // minus one to leave out return type
-                    return params.size() - 1;
+                    return FarragoCatalogUtil.getRoutineParamCount(routine);
                 }
                 
                 public String getFieldName(int index)
@@ -1078,6 +1084,21 @@ public class DdlHandler
             column.setIsNullable(NullableTypeEnum.COLUMN_NULLABLE);
         } else {
             column.setIsNullable(NullableTypeEnum.COLUMN_NO_NULLS);
+        }
+    }
+    
+    public void validateDefinition(FemJar jar)
+    {
+        // TODO jvs 19-Jan-2005: implement deployment descriptors, and
+        // (optionally?) copy jar to an area managed by Farrago
+        URL url;
+        try {
+            url = new URL(jar.getUrl());
+        } catch (MalformedURLException ex) {
+            throw validator.res.newPluginMalformedJarUrl(
+                repos.getLocalizedObjectName(jar.getUrl()),
+                repos.getLocalizedObjectName(jar),
+                ex);
         }
     }
 }

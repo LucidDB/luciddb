@@ -74,6 +74,10 @@
 <text>DDL validation error near {0}</text>
 </exception>
 
+<exception id="420008" name="ValidatorNoPositionContext">
+<text>DDL validation error</text>
+</exception>
+
 <exception id="420010" name="ValidatorNameInUse"
     className="org.eigenbase.sql.SqlValidatorException">
 <text>Target {1} already contains {0} with same name</text>
@@ -344,6 +348,15 @@ column type family is {1} but default value type family is {2}</text>
 <text>Type of {0} in {1} is {2} but external Java method {3} takes type {4} for corresponding parameter</text>
 </exception>
 
+<exception id="420650" name="ValidatorRoutineJavaProcReturnVoid"
+    className="org.eigenbase.sql.SqlValidatorException">
+<text>No return value is produced by {0} but external Java method {1} has non-void return type {2}</text>
+</exception>
+
+<exception id="420660" name="ValidatorRoutineInvalidJarName">
+<text>Invalid jar name {0} in definition of {1}</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Fennel resources 440,000 - 450,000 -->
 <!-- Actual resources are defined separately in Fennel -->
@@ -372,6 +385,14 @@ column type family is {1} but default value type family is {2}</text>
 
 <exception id="450020" name="ParameterValueIncompatible">
 <text>Cannot assign a value of Java class {0} to parameter of type {1}</text>
+</exception>
+
+<exception id="450030" name="NoDefaultConnection">
+<text>Default connection not available</text>
+</exception>
+
+<exception id="450040" name="RoutineInvocationException">
+<text>Invocation of user-defined external Java method {0} failed</text>
 </exception>
 
 <!-- ====================================================================== -->
@@ -496,6 +517,14 @@ column type family is {1} but default value type family is {2}</text>
 
 <exception id="490030" name="PluginMethodMismatch">
 <text>Failed to resolve Java method</text>
+</exception>
+
+<exception id="490040" name="PluginMalformedJarUrl">
+<text>Malformed URL {0} in definition of {1}</text>
+</exception>
+
+<exception id="490050" name="PluginJarClassLoadFailed">
+<text>Failed to load class {0} from plugin jar ''{1}''</text>
 </exception>
 
 <!-- ====================================================================== -->
@@ -687,6 +716,10 @@ column type family is {1} but default value type family is {2}</text>
 
 <message id="510042" name="UmlSQLTypeAttribute">
 <text>structured type attribute</text>
+</message>
+
+<message id="510043" name="UmlJar">
+<text>jar</text>
 </message>
 
 <!-- End of last error section ============================================ -->

@@ -43,8 +43,11 @@ public class JavaCompilerArgs
     ArrayList argsList = new ArrayList();
     ArrayList fileNameList = new ArrayList();
 
+    ClassLoader classLoader;
+
     public JavaCompilerArgs()
     {
+        classLoader = getClass().getClassLoader();
     }
     
     public void clear()
@@ -170,6 +173,16 @@ public class JavaCompilerArgs
         // NOTE jvs 28-June-2004: I added this in order to support Janino's
         // JavaSourceClassLoader, which needs it.  Non-Farrago users
         // don't need to call this method.
+    }
+
+    public void setClassLoader(ClassLoader classLoader)
+    {
+        this.classLoader = classLoader;
+    }
+
+    public ClassLoader getClassLoader()
+    {
+        return classLoader;
     }
 }
 

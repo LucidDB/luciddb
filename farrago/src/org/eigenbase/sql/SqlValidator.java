@@ -471,7 +471,7 @@ public class SqlValidator
                     // not, we'll handle it later during overload
                     // resolution.
                     List overloads = opTab.lookupOperatorOverloads(
-                        function.name,
+                        function.getNameAsId(),
                         SqlSyntax.Function);
                     if (overloads.size() == 1) {
                         call.operator = (SqlOperator) overloads.get(0);
@@ -834,7 +834,11 @@ public class SqlValidator
                 }
 
                 if (!(call.operator instanceof SqlJdbcFunctionCall)
-                        && call.operator instanceof SqlFunction) {
+                        && call.operator instanceof SqlFunction)
+                {
+                    SqlFunction unresolvedFunction =
+                        (SqlFunction) call.operator;
+                    
                     SqlFunction function;
                     if (operands.length == 0 &&
                         syntax == SqlSyntax.FunctionId) {
@@ -845,14 +849,13 @@ public class SqlValidator
                     } else {
                         function = SqlUtil.lookupFunction(
                             opTab,
-                            call.operator.name,
+                            unresolvedFunction.getNameAsId(),
                             argTypes);
                     }
                     if (function == null) {
-                        // todo: localize "Function"
                         List overloads =
                             opTab.lookupOperatorOverloads(
-                                call.operator.name,
+                                unresolvedFunction.getNameAsId(),
                                 SqlSyntax.Function);
                         if (overloads.isEmpty()) {
                             throw newValidationError(call,
@@ -968,8 +971,7 @@ public class SqlValidator
      */
     public SqlCall makeCall(SqlIdentifier id) {
         if (id.names.length == 1) {
-            String name = id.names[0];
-            List list = opTab.lookupOperatorOverloads(name, SqlSyntax.Function);
+            List list = opTab.lookupOperatorOverloads(id, SqlSyntax.Function);
             for (int i = 0; i < list.size(); i++) {
                 SqlOperator operator = (SqlOperator) list.get(i);
                 if (operator.getSyntax() == SqlSyntax.FunctionId) {

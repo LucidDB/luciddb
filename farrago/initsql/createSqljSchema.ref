@@ -1,0 +1,38 @@
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/initsql/createStorageWrappers.sql#4 $
+0: jdbc:farrago:> -- This script creates the SQLJ support schema
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !set verbose true
+0: jdbc:farrago:> !autocommit off
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create schema sqlj;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set schema 'sqlj';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create procedure install_jar(
+. . . . . . . . >     in url varchar(2000),
+. . . . . . . . >     in jar varchar(2000),
+. . . . . . . . >     in deploy integer)
+. . . . . . . . > modifies sql data
+. . . . . . . . > external name 'class net.sf.farrago.ddl.DdlSqlj.install_jar';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create procedure replace_jar(
+. . . . . . . . >     in url varchar(2000),
+. . . . . . . . >     in jar varchar(2000))
+. . . . . . . . > modifies sql data
+. . . . . . . . > external name 'class net.sf.farrago.ddl.DdlSqlj.replace_jar';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create procedure remove_jar(
+. . . . . . . . >     in jar varchar(2000),
+. . . . . . . . >     in undeploy integer)
+. . . . . . . . > modifies sql data
+. . . . . . . . > external name 'class net.sf.farrago.ddl.DdlSqlj.remove_jar';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create procedure alter_java_path(
+. . . . . . . . >     in jar varchar(2000),
+. . . . . . . . >     in path varchar(2000))
+. . . . . . . . > modifies sql data
+. . . . . . . . > external name 'class net.sf.farrago.ddl.DdlSqlj.alter_java_path';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> commit;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

@@ -1661,6 +1661,12 @@ public class SqlParserTest extends TestCase
 
     }
 
+    public void testProcedureCall() 
+    {
+        check("call blubber(5)", "(CALL `BLUBBER`(5))");
+        check("call \"blubber\"(5)", "(CALL `blubber`(5))");
+        check("call whale.blubber(5)", "(CALL `WHALE`.`BLUBBER`(5))");
+    }
 }
 
 

@@ -27,6 +27,9 @@ import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
+
 import javax.jmi.reflect.*;
 import java.util.*;
 
@@ -360,6 +363,27 @@ public abstract class FarragoCatalogUtil
             }
         }
         return true;
+    }
+
+    /**
+     * Constructs a fully qualified name for an object.
+     *
+     * @param element model element
+     *
+     * @return qualified identifier
+     */
+    public static SqlIdentifier getQualifiedName(CwmModelElement element)
+    {
+        List names = new ArrayList(3);
+        names.add(element.getName());
+        for (CwmNamespace ns = element.getNamespace(); ns != null;
+             ns = ns.getNamespace())
+        {
+            names.add(ns.getName());
+        }
+        Collections.reverse(names);
+        String [] nameArray = (String []) names.toArray(Util.emptyStringArray);
+        return new SqlIdentifier(nameArray, null);
     }
 }
 

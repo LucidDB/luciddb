@@ -37,6 +37,7 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
 
 
 /**
@@ -348,15 +349,29 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
 
     // implement FarragoSessionStmtValidator
     public List findRoutineOverloads(
-        FemLocalSchema schema,
-        String invocationName,
+        SqlIdentifier invocationName,
         ProcedureType routineType)
     {
         FarragoSessionVariables sessionVariables = getSessionVariables();
         Collection routines;
-        if (schema != null) {
+        String simpleName;
+        if (invocationName.names.length > 1) {
+            // TODO jvs 19-Jan-2005: make this a utility method for extracting
+            // schema name
+            int nQualifiers = invocationName.names.length - 1;
+            String [] schemaNames = new String[nQualifiers];
+            System.arraycopy(
+                invocationName.names,
+                0,
+                schemaNames,
+                0,
+                nQualifiers);
+            simpleName = invocationName.names[nQualifiers];
+            SqlIdentifier schemaId = new SqlIdentifier(schemaNames, null);
+            FemLocalSchema schema = findSchema(schemaId);
             routines = schema.getOwnedElement();
         } else {
+            simpleName = invocationName.getSimple();
             // filter to only schemas on SQL-path
             routines = new ArrayList();
             Iterator iter = sessionVariables.schemaSearchPath.iterator();
@@ -383,7 +398,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
             if ((routineType != null) && (routine.getType() != routineType)) {
                 continue;
             }
-            if (!routine.getInvocationName().equals(invocationName)) {
+            if (!routine.getInvocationName().equals(simpleName)) {
                 continue;
             }
             overloads.add(routine);

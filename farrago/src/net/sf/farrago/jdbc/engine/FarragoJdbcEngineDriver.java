@@ -48,6 +48,7 @@ public class FarragoJdbcEngineDriver extends FarragoAbstractJdbcDriver
 
     static {
         new FarragoJdbcEngineDriver().register();
+        new FarragoJdbcRoutineDriver().register();
     }
 
     //~ Constructors ----------------------------------------------------------
@@ -61,10 +62,7 @@ public class FarragoJdbcEngineDriver extends FarragoAbstractJdbcDriver
 
     //~ Methods ---------------------------------------------------------------
 
-    /**
-     * @return the prefix for JDBC URL's understood by this driver;
-     * subclassing drivers can override this to customize the URL scheme
-     */
+    // implement FarragoAbstractJdbcDriver
     public String getUrlPrefix()
     {
         return getBaseUrl();

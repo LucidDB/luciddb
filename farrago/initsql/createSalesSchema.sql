@@ -51,6 +51,16 @@ select depts.name as dname,emps.name as ename
 from emps inner join depts
 on emps.deptno=depts.deptno;
 
+create function decrypt_public_key(in k varbinary(50))
+returns varchar(25)
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.decryptPublicKey';
+
+create function maybe_female(in gender char(1))
+returns boolean
+contains sql
+return not((gender = 'F') is false);
+
 insert into depts values
     (10,'Sales'),
     (20,'Marketing'),
@@ -70,7 +80,5 @@ options(
     url 'jdbc:hsqldb:testcases/hsqldb/scott',
     user_name 'SA',
     schema_name 'SALES');
-
-
 
 commit;

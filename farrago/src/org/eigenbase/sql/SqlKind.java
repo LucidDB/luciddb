@@ -244,6 +244,11 @@ public class SqlKind extends EnumeratedValues.BasicValue
     public static final SqlKind ExplicitTable =
         new SqlKind("ExplicitTable", ExplicitTableORDINAL);
 
+    /** ProcedureCall */
+    public static final int ProcedureCallORDINAL = 146;
+    public static final SqlKind ProcedureCall =
+        new SqlKind("ProcedureCall", ProcedureCallORDINAL);
+
     // postfix operators
 
     /** Descending */

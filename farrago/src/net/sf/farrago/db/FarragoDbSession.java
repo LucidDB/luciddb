@@ -101,6 +101,11 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     private FarragoDbSessionIndexMap sessionIndexMap;
 
     /**
+     * The connection source for this session.
+     */
+    private FarragoSessionConnectionSource connectionSource;
+
+    /**
      * Private cache of executable code pinned by the current txn.
      */
     private Map txnCodeCache;
@@ -174,11 +179,23 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     }
 
     // implement FarragoSession
+    public void setConnectionSource(FarragoSessionConnectionSource source)
+    {
+        this.connectionSource = source;
+    }
+    
+    // implement FarragoSession
     public DatabaseMetaData getDatabaseMetaData()
     {
         return dbMetaData;
     }
 
+    // implement FarragoSession
+    public FarragoSessionConnectionSource getConnectionSource()
+    {
+        return connectionSource;
+    }
+    
     // implement FarragoSession
     public String getDefaultLocalDataServerName()
     {

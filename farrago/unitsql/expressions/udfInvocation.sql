@@ -91,6 +91,35 @@ returns int
 no sql
 external name 'class net.sf.farrago.test.FarragoTestUDR.atoiWithNullForErr';
 
+create function get_java_property(in name varchar(128))
+returns varchar(128)
+no sql
+external name 'class java.lang.System.getProperty';
+
+create procedure set_java_property(in name varchar(128),in val varchar(128))
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.setSystemProperty';
+
+create function access_sql_illegal()
+returns int
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.accessSql';
+
+create function access_sql_legal()
+returns int
+contains sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.accessSql';
+
+create function throw_sql_exception()
+returns int
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.throwSQLException';
+
+create function throw_npe()
+returns int
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.throwNPE';
+
 -- test a function that uses another function
 create function celsius_to_rankine(in c double)
 returns double
@@ -197,6 +226,20 @@ values atoi_with_null_for_err(cast(null as varchar(128)));
 -- this should return null
 values atoi_with_null_for_err('Violet');
 
+call set_java_property('net.sf.farrago.test.grue', 'lurker');
+
+values get_java_property('net.sf.farrago.test.grue');
+
+values access_sql_illegal();
+
+values access_sql_legal();
+
+-- should fail
+values throw_sql_exception();
+
+-- should fail
+values throw_npe();
+
 set path 'crypto2';
 
 values alice(12);
@@ -220,20 +263,15 @@ return 17;
 set path 'v1';
 values important_constant();
 
--- TODO:  remove once specific name expansion is implemented correctly
-alter system set "codeCacheMaxBytes" = min;
+values v2.important_constant();
 
 set path 'v2';
 values important_constant();
 
-alter system set "codeCacheMaxBytes" = min;
+values v1.important_constant();
 
 -- TODO:  test with set path 'v1,v2';
-
-alter system set "codeCacheMaxBytes" = min;
 
 set path 'udftest';
 -- should fail
 values important_constant();
-
-alter system set "codeCacheMaxBytes" = max;

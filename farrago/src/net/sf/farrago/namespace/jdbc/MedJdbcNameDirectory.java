@@ -96,7 +96,7 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
                 null,
                 null,
                 null,
-                    ParserPosition.ZERO);
+                ParserPosition.ZERO);
 
         if (rowType == null) {
             String sql = select.toSqlString(dialect);

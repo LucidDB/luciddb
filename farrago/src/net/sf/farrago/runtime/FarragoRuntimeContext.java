@@ -56,20 +56,22 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
         RelOptConnection,
         FennelJavaStreamMap
 {
+    private static final ThreadLocal threadInvocationStack = new ThreadLocal();
+    
     //~ Instance fields -------------------------------------------------------
 
-    private FarragoSession session;
-    private FarragoRepos repos;
-    private FarragoObjectCache codeCache;
-    private Map txnCodeCache;
-    private FennelTxnContext fennelTxnContext;
-    private Map streamIdToHandleMap = new HashMap();
-    private Object [] dynamicParamValues;
-    private FarragoCompoundAllocation streamOwner;
-    private FarragoSessionIndexMap indexMap;
-    private FarragoSessionVariables sessionVariables;
-    private FarragoDataWrapperCache dataWrapperCache;
-    private FarragoStreamFactoryProvider streamFactoryProvider;
+    private final FarragoSession session;
+    private final FarragoRepos repos;
+    private final FarragoObjectCache codeCache;
+    private final Map txnCodeCache;
+    private final FennelTxnContext fennelTxnContext;
+    private final Map streamIdToHandleMap;
+    private final Object [] dynamicParamValues;
+    private final FarragoCompoundAllocation streamOwner;
+    private final FarragoSessionIndexMap indexMap;
+    private final FarragoSessionVariables sessionVariables;
+    private final FarragoDataWrapperCache dataWrapperCache;
+    private final FarragoStreamFactoryProvider streamFactoryProvider;
     private FennelStreamGraph streamGraph;
     private long currentTime;
 
@@ -91,6 +93,8 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
         this.dynamicParamValues = params.dynamicParamValues;
         this.sessionVariables = params.sessionVariables;
         this.streamFactoryProvider = params.streamFactoryProvider;
+
+        streamIdToHandleMap = new HashMap();
 
         dataWrapperCache =
             new FarragoDataWrapperCache(
@@ -540,6 +544,97 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
         }
     }
 
+    // implement FarragoSessionRuntimeContext
+    public void pushRoutineInvocation(boolean allowSql)
+    {
+        // TODO jvs 19-Jan-2005: set system properties sqlj.defaultconnection
+        // and sqlj.runtime per SQL:2003 13:12.1.2.  Also other
+        // context stuff.
+
+        RoutineInvocationFrame frame = new RoutineInvocationFrame();
+        frame.context = this;
+        frame.allowSql = allowSql;
+        
+        List stack = getInvocationStack();
+        stack.add(frame);
+    }
+
+    // implement FarragoSessionRuntimeContext
+    public void popRoutineInvocation()
+    {
+        // TODO jvs 19-Jan-2005:  see corresponding comment in
+        // pushRoutineInvocation.
+
+        List stack = getInvocationStack();
+        assert(!stack.isEmpty());
+        RoutineInvocationFrame frame = (RoutineInvocationFrame)
+            stack.remove(stack.size() - 1);
+        assert(frame.context == this);
+        if (frame.connection != null) {
+            try {
+                frame.connection.close();
+            } catch (SQLException ex) {
+                // TODO jvs 19-Jan-2005:  standard mechanism for tracing
+                // swallowed exceptions
+            }
+        }
+    }
+
+    // implement FarragoSessionRuntimeContext
+    public RuntimeException handleRoutineInvocationException(
+        Throwable ex, String methodName)
+    {
+        // TODO jvs 19-Jan-2005:  special SQLSTATE handling defined
+        // in SQL:2003-13-15.1
+        return FarragoResource.instance().newRoutineInvocationException(
+            methodName, ex);
+    }
+
+    private static List getInvocationStack()
+    {
+        List stack = (List) threadInvocationStack.get();
+        if (stack == null) {
+            stack = new ArrayList();
+            threadInvocationStack.set(stack);
+        }
+        return stack;
+    }
+    
+    /**
+     * Creates a new default connection to the session of the current thread.
+     */
+    public static Connection newConnection()
+    {
+        List stack = getInvocationStack();
+        if (stack.isEmpty()) {
+            throw FarragoResource.instance().newNoDefaultConnection();
+        }
+
+        RoutineInvocationFrame frame =
+            (RoutineInvocationFrame) stack.get(stack.size() - 1);
+        
+        if (!frame.allowSql) {
+            throw FarragoResource.instance().newNoDefaultConnection();
+        }
+
+        if (frame.connection == null) {
+            FarragoSessionConnectionSource connectionSource =
+                frame.context.session.getConnectionSource();
+            frame.connection = connectionSource.newConnection();
+            // TODO jvs 19-Jan-2005:  we're also supposed to make
+            // sure the new connection has autocommit turned off.  Need
+            // to do that without disturbing the session.  And could
+            // enforce READS/MODIFIES SQL DATA access.
+        }
+
+        // NOTE jvs 19-Jan-2005:  We automatically close the
+        // connection in popRoutineInvocation, which is guaranteed
+        // to be called because we generate it in a finally block.  So
+        // there's no need to track the connection as an allocation.
+            
+        return frame.connection;
+    }
+
     //~ Inner Classes ---------------------------------------------------------
 
     /**
@@ -559,6 +654,18 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
             }
             allocations.clear();
         }
+    }
+
+    /**
+     * Inner class for entries on the routine invocation stack.
+     */
+    private static class RoutineInvocationFrame
+    {
+        FarragoRuntimeContext context;
+        
+        boolean allowSql;
+
+        Connection connection;
     }
 }
 

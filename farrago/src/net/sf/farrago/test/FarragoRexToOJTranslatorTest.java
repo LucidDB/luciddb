@@ -457,6 +457,18 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
         testTranslation("current_path");
     }
 
+    public void testJavaUdfInvocation()
+        throws Exception
+    {
+        testTranslation("sales.decrypt_public_key(public_key)");
+    }
+
+    public void testSqlUdfInvocation()
+        throws Exception
+    {
+        testTranslation("sales.maybe_female(gender)");
+    }
+
     // FIXME
 
     /*

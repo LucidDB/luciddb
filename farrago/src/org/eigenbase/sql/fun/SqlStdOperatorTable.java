@@ -894,6 +894,9 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlSpecialOperator("EXPLAIN", SqlKind.Explain);
     public final SqlOrderByOperator orderByOperator = new SqlOrderByOperator();
 
+    public final SqlOperator procedureCallOperator =
+        new SqlProcedureCallOperator();
+
     /**
      * The WINDOW clause of a SELECT statment.
      *
@@ -1533,7 +1536,6 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
                 SqlOperatorTests.testCardinalityFunc(tester);
             }
         };
-
 }
 
 

@@ -1,0 +1,24 @@
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+
+ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
+
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var2 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var3 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+oj_var0.assignFrom( ID$3$GENDER );
+oj_var1.assignFrom( "F" );
+if (oj_var0.isNull()) {
+    oj_var2.setNull( true );
+} else {
+    oj_var2.setNull( false );
+    oj_var2.value = net.sf.farrago.type.runtime.CharStringComparator.compareCharStrings( oj_var0, oj_var1 ) == 0;
+}
+oj_var3.isNull = false;
+oj_var3.value = (boolean) (!(!oj_var2.isNull() && !oj_var2.value));
+
+return oj_var3;

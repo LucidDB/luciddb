@@ -29,6 +29,7 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.BitString;
@@ -236,7 +237,7 @@ public class RexBuilder
         SqlFunction function =
             SqlUtil.lookupFunction(
                 opTab,
-                kind.getName(),
+                new SqlIdentifier(kind.getName(), null),
                 getTypes(args));
         if (function == null) {
             throw Util.newInternal("No operator for " + kind);

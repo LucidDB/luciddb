@@ -96,6 +96,11 @@ public interface FarragoSession
     public DatabaseMetaData getDatabaseMetaData();
 
     /**
+     * @return connection source
+     */
+    public FarragoSessionConnectionSource getConnectionSource();
+
+    /**
      * @return name of local data server to use for tables when none
      * is specified by CREATE TABLE
      */
@@ -107,6 +112,13 @@ public interface FarragoSession
      * @param dbMetaData metadata to set
      */
     public void setDatabaseMetaData(DatabaseMetaData dbMetaData);
+
+    /**
+     * Initializes the connection source associated with this session.
+     *
+     * @param source connection source to set
+     */
+    public void setConnectionSource(FarragoSessionConnectionSource source);
 
     /**
      * Creates a new statement context within this session.

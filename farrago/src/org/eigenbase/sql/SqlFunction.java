@@ -27,6 +27,7 @@ import org.eigenbase.util.Util;
 import org.eigenbase.sql.type.UnknownParamInference;
 import org.eigenbase.sql.type.ReturnTypeInference;
 import org.eigenbase.sql.type.OperandsTypeChecking;
+import org.eigenbase.sql.parser.*;
 
 
 /**
@@ -47,8 +48,25 @@ public class SqlFunction extends SqlOperator
 
     private final SqlFuncTypeName functionType;
 
+    private final SqlIdentifier sqlIdentifier;
+
     //~ Constructors ----------------------------------------------------------
 
+    /**
+     * Creates a new SqlFunction for a call to a builtin function.
+     *
+     * @param name of builtin function
+     *
+     * @param kind kind of operator implemented by function
+     *
+     * @param typeInference strategy to use for return type inference
+     *
+     * @param paramTypeInference strategy to use for parameter type inference
+     *
+     * @param paramTypes strategy to use for parameter type checking
+     *
+     * @param funcType categorization for function
+     */
     public SqlFunction(
         String name,
         SqlKind kind,
@@ -60,6 +78,41 @@ public class SqlFunction extends SqlOperator
         super(name, kind, 100, 100, typeInference, paramTypeInference,
             paramTypes);
         this.functionType = funcType;
+
+        // NOTE jvs 18-Jan-2005:  we leave sqlIdentifier as null to indicate
+        // that this is a builtin.
+        this.sqlIdentifier = null;
+    }
+
+    /**
+     * Creates a new SqlFunction for a call to a function with
+     * a possibly qualified name.  This name must be resolved
+     * into either a builtin function or a user-defined function.
+     *
+     * @param sqlIdentifier possibly qualified identifier for function
+     *
+     * @param typeInference strategy to use for return type inference
+     *
+     * @param paramTypeInference strategy to use for parameter type inference
+     *
+     * @param paramTypes strategy to use for parameter type checking
+     */
+    public SqlFunction(
+        SqlIdentifier sqlIdentifier, 
+        ReturnTypeInference typeInference,
+        UnknownParamInference paramTypeInference,
+        OperandsTypeChecking paramTypes)
+    {
+        super(
+            sqlIdentifier.names[sqlIdentifier.names.length - 1],
+            SqlKind.Function,
+            100,
+            100, 
+            typeInference,
+            paramTypeInference,
+            paramTypes);
+        this.sqlIdentifier = sqlIdentifier;
+        this.functionType = SqlFunction.SqlFuncTypeName.User;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -67,6 +120,26 @@ public class SqlFunction extends SqlOperator
     public SqlSyntax getSyntax()
     {
         return SqlSyntax.Function;
+    }
+
+    /**
+     * @return fully qualified name of function, or null for a builtin
+     * function
+     */
+    public SqlIdentifier getSqlIdentifier()
+    {
+        return sqlIdentifier;
+    }
+
+    /**
+     * @return fully qualified name of function
+     */
+    public SqlIdentifier getNameAsId()
+    {
+        if (sqlIdentifier != null) {
+            return sqlIdentifier;
+        }
+        return new SqlIdentifier(name, null);
     }
 
     public void unparse(

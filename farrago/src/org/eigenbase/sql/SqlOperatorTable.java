@@ -40,14 +40,14 @@ public interface SqlOperatorTable
      * example, by passing SqlSyntax.Function, the returned list is
      * narrowed only matching SqlFunction objects.
      *
-     * @param name of operator
+     * @param opName name of operator
      *
      * @param syntax syntax type of operator
      *
      * @return list of SqlOperator objects (empty if no matches)
      */
     public List lookupOperatorOverloads(
-        String opName,
+        SqlIdentifier opName,
         SqlSyntax syntax);
 
     /**

@@ -346,15 +346,31 @@ public abstract class CommonParserBase
     }
 
     protected SqlCall createCall(
-        String funName,
+        SqlIdentifier funName,
         SqlNode [] operands,
         ParserPosition pos)
     {
-        // NOTE jvs 1-Jan-2004:  Here we just create a placeholder function.
-        // Later, during validation, it will be resolved into a real function
-        // reference.
-        SqlFunction fun = new SqlFunction(
-            funName, SqlKind.Function, null, null, null, null);
+        SqlOperator fun = null;
+
+        // First, try a half-hearted resolution as a builtin function.
+        // If we find one, use it; this will guarantee that we
+        // preserve the correct syntax (i.e. don't quote builtin function
+        /// name when regenerating SQL).
+        if (funName.isSimple()) {
+            List list = opTab.lookupOperatorOverloads(
+                funName,
+                SqlSyntax.Function);
+            if (list.size() == 1) {
+                fun = (SqlOperator) list.get(0);
+            }
+        }
+
+        // Otherwise, just create a placeholder function.  Later, during
+        // validation, it will be resolved into a real function reference.
+        if (fun == null) {
+            fun = new SqlFunction(funName, null, null, null);
+        }
+        
         return fun.createCall(operands, pos);
     }
 

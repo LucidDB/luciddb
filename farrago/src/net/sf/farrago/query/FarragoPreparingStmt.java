@@ -21,6 +21,7 @@ package net.sf.farrago.query;
 
 
 import java.io.*;
+import java.net.*;
 import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
@@ -95,6 +96,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     private FarragoSqlValidator sqlValidator;
     private Set directDependencies;
     private Set allDependencies;
+    private Set jarUrlSet;
     private SqlOperatorTable sqlOperatorTable;
 
     /**
@@ -140,6 +142,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
         directDependencies = new HashSet();
         allDependencies = new HashSet();
+        jarUrlSet = new LinkedHashSet();
         processingDirectDependencies = true;
 
         classesRoot = new File(FarragoProperties.instance().homeDir.get(true));
@@ -179,7 +182,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         
         SqlOperatorTable systemOperators = getSession().getSqlOperatorTable();
         SqlOperatorTable userOperators =
-            new FarragoUserDefinedRoutineLookup(stmtValidator);
+            new FarragoUserDefinedRoutineLookup(stmtValidator, this);
         
         // REVIEW jvs 1-Jan-2004:  precedence of UDF's vs. builtins?
         ChainedSqlOperatorTable table = new ChainedSqlOperatorTable();
@@ -242,6 +245,37 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             super.prepareSql(rootRel, sqlKind, logical, implementingClassDecl,
                 implementingArgs);
         return implement(preparedResult);
+    }
+
+    void addJarUrl(String jarUrl)
+    {
+        try {
+            jarUrlSet.add(new URL(jarUrl));
+        } catch (MalformedURLException ex) {
+            // this shouldn't happen, because the caller is already
+            // supposed to have verified the URL
+            throw Util.newInternal();
+        }
+    }
+
+    void prepareForCompilation()
+    {
+        // REVIEW jvs 20-Jan-2005: The idea here is to gather up all jars
+        // referenced by external user-defined routines and provide them to the
+        // classloader.  However, this loses the associations between jars and
+        // routines, meaning if two classes in different jars have the same
+        // name, there will be trouble.  The alternative is to always use
+        // reflection, which would be bad for UDF performance.  What to do?
+        // Also, need to implement jar paths.
+        if (jarUrlSet.isEmpty()) {
+            // don't need to load any jars
+            return;
+        }
+        List jarUrlList = new ArrayList(jarUrlSet);
+        URL [] urls = (URL []) jarUrlList.toArray(new URL[0]);
+        URLClassLoader urlClassLoader = URLClassLoader.newInstance(
+            urls, javaCompiler.getArgs().getClassLoader());
+        javaCompiler.getArgs().setClassLoader(urlClassLoader);
     }
 
     private void definePackageName()
@@ -759,7 +793,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             rowType);
     }
 
-    private void addDependency(Object supplier)
+    void addDependency(Object supplier)
     {
         if (processingDirectDependencies) {
             directDependencies.add(supplier);

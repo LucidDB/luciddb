@@ -218,7 +218,17 @@ public abstract class SqlUtil
         SqlNode [] operands,
         boolean emptyParens)
     {
-        writer.print(operator.name);
+        if (operator instanceof SqlFunction) {
+            SqlFunction function = (SqlFunction) operator;
+            SqlIdentifier id = function.getSqlIdentifier();
+            if (id == null) {
+                writer.print(operator.name);
+            } else {
+                id.unparse(writer, 0, 0);
+            }
+        } else {
+            writer.print(operator.name);
+        }
         if (operands.length == 0 && !emptyParens) {
             // For example, the "LOCALTIME" function appears as "LOCALTIME"
             // when it has 0 args, not "LOCALTIME()".
@@ -300,7 +310,7 @@ public abstract class SqlUtil
      */
     public static SqlFunction lookupFunction(
         SqlOperatorTable opTab, 
-        String funcName,
+        SqlIdentifier funcName,
         RelDataType [] argTypes)
     {
         // The number of defined parameters need to match the invocation
@@ -350,7 +360,7 @@ public abstract class SqlUtil
 
     private static SqlFunction [] lookupFunctionOverloadsByArgCount(
         SqlOperatorTable opTab, 
-        String name,
+        SqlIdentifier name,
         int numberOfParams)
     {
         List funcList = opTab.lookupOperatorOverloads(name, SqlSyntax.Function);

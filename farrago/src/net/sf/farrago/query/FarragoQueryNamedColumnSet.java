@@ -20,7 +20,10 @@ package net.sf.farrago.query;
 
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.namespace.*;
+import net.sf.farrago.catalog.*;
 
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
@@ -67,10 +70,8 @@ public abstract class FarragoQueryNamedColumnSet extends RelOptAbstractTable
     // override RelOptAbstractTable
     public String [] getQualifiedName()
     {
-        return new String [] {
-            cwmColumnSet.getNamespace().getNamespace().getName(),
-            cwmColumnSet.getNamespace().getName(), cwmColumnSet.getName()
-        };
+        SqlIdentifier id = FarragoCatalogUtil.getQualifiedName(cwmColumnSet);
+        return id.names;
     }
 
     // implement FarragoQueryColumnSet

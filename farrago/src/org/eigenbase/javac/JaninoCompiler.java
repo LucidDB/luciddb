@@ -65,7 +65,7 @@ public class JaninoCompiler implements JavaCompiler
         // of from a file.  (It's possible to do that with the SimpleCompiler
         // class, but then we don't avoid the bytecode storage.)
         classLoader = new JavaSourceClassLoader(
-            getClass().getClassLoader(),
+            args.getClassLoader(), 
             new File[] { new File(args.destdir) },
             null,
             DebuggingInformation.NONE);

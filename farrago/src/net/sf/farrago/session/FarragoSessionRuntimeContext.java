@@ -52,6 +52,31 @@ public interface FarragoSessionRuntimeContext extends FarragoAllocationOwner
      * @return FennelStreamGraph pinned by loadFennelPlan
      */
     public FennelStreamGraph getFennelStreamGraph();
+
+    /**
+     * Pushes a routine invocation onto the context stack.
+     *
+     * @param allowSql whether SQL execution should be allowed in
+     * this routine
+     */
+    public void pushRoutineInvocation(boolean allowSql);
+
+    /**
+     * Pops a routine invocation from the context stack.
+     */
+    public void popRoutineInvocation();
+
+    /**
+     * Handles an exception caught by invocation of a routine.
+     *
+     * @param ex exception
+     *
+     * @param methodName name of external Java method
+     *
+     * @return exception to be re-thrown
+     */
+    public RuntimeException handleRoutineInvocationException(
+        Throwable ex, String methodName);
 }
 
 

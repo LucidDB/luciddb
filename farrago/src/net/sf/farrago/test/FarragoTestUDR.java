@@ -19,6 +19,8 @@
 */
 package net.sf.farrago.test;
 
+import java.sql.*;
+
 /**
  * FarragoTestUDR contains definitions for user-defined routines used
  * by tests.
@@ -64,6 +66,46 @@ public abstract class FarragoTestUDR
         } catch (NumberFormatException ex) {
             return null;
         }
+    }
+
+    public static void setSystemProperty(String name, String value)
+    {
+        System.setProperty(name, value);
+    }
+
+    public static int accessSql()
+    {
+        try {
+            Connection conn = DriverManager.getConnection(
+                "jdbc:default:connection");
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("values 777");
+            rs.next();
+            
+            // NOTE jvs 19-Jan-2005:  no need for cleanup; default connection
+            // is cleaned up automatically.
+            return rs.getInt(1);
+        } catch (SQLException ex) {
+            return 0;
+        }
+    }
+
+    public static String decryptPublicKey(byte [] keyBytes)
+    {
+        if (keyBytes == null) {
+            return null;
+        }
+        return new String(keyBytes);
+    }
+
+    public static int throwSQLException() throws SQLException
+    {
+        throw new SQLException("nothing but a failure");
+    }
+    
+    public static int throwNPE()
+    {
+        throw new NullPointerException();
     }
 }
 

@@ -69,6 +69,8 @@ class FarragoRexBuilder extends JavaRexBuilder
         FarragoUserDefinedRoutine routine = (FarragoUserDefinedRoutine) op;
         FemRoutine femRoutine = routine.getFemRoutine();
 
+        preparingStmt.addDependency(femRoutine);
+
         Map paramNameToArgMap = new HashMap();
         Map paramNameToTypeMap = new HashMap();
         RelDataType [] paramTypes = routine.getParamTypes();
@@ -104,7 +106,7 @@ class FarragoRexBuilder extends JavaRexBuilder
         if (!femRoutine.isCalledOnNullInput()
             && (paramTypes.length > 0))
         {
-            // build up
+            // To honor RETURNS NULL ON NULL INPUT,  we build up
             // CASE WHEN arg1 IS NULL THEN NULL
             // WHEN arg2 IS NULL THEN NULL
             // ...

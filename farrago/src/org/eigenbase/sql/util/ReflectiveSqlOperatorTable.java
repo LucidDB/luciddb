@@ -86,11 +86,15 @@ public abstract class ReflectiveSqlOperatorTable implements SqlOperatorTable
 
     // implement SqlOperatorTable
     public List lookupOperatorOverloads(
-        String opName,
+        SqlIdentifier opName,
         SqlSyntax syntax)
     {
         List overloads = new ArrayList();
-        final List list = operators.getMulti(opName);
+        if (!opName.isSimple()) {
+            return overloads;
+        }
+        String simpleName = opName.getSimple();
+        final List list = operators.getMulti(simpleName);
         for (int i = 0, n = list.size(); i < n; i++) {
             SqlOperator op = (SqlOperator) list.get(i);
             if (op.getSyntax() == syntax) {
@@ -109,11 +113,11 @@ public abstract class ReflectiveSqlOperatorTable implements SqlOperatorTable
         Object extra = null;
         switch (syntax.ordinal) {
         case SqlSyntax.Binary_ordinal:
-            extra = mapNameToOp.get(opName + ":BINARY");
+            extra = mapNameToOp.get(simpleName + ":BINARY");
         case SqlSyntax.Prefix_ordinal:
-            extra = mapNameToOp.get(opName + ":PREFIX");
+            extra = mapNameToOp.get(simpleName + ":PREFIX");
         case SqlSyntax.Postfix_ordinal:
-            extra = mapNameToOp.get(opName + ":POSTFIX");
+            extra = mapNameToOp.get(simpleName + ":POSTFIX");
         default:
             break;
         }

@@ -55,7 +55,7 @@ public class ChainedSqlOperatorTable implements SqlOperatorTable
     }
 
     // implement SqlOperatorTable
-    public List lookupOperatorOverloads(String opName, SqlSyntax syntax)
+    public List lookupOperatorOverloads(SqlIdentifier opName, SqlSyntax syntax)
     {
         List list = new ArrayList();
         for (int i = 0; i < tableList.size(); ++i) {

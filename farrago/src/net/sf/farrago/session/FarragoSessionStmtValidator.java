@@ -188,8 +188,6 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
     /**
      * Looks up all matching routine overloads by invocation name.
      *
-     * @param schema containing schema or null if none
-     *
      * @param invocationName invocation name of routine to look up
      *
      * @param routineType type of routine to look up, or null
@@ -198,8 +196,7 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      * @return list of matching FemRoutine objects (empty if no matches)
      */
     public List findRoutineOverloads(
-        FemLocalSchema schema,
-        String invocationName,
+        SqlIdentifier invocationName,
         ProcedureType routineType);
 
     /**

@@ -55,7 +55,7 @@ import org.eigenbase.sql.type.ReturnTypeInferenceImpl;
  * 5: groupClause ({@link SqlNode})
  * </li>
  * <li>
- * 6: widnowClause ({@link SqlNodeList})
+ * 6: windowClause ({@link SqlNodeList})
  * </li>
  * <li>
  * 7: orderClause ({@link SqlNode})

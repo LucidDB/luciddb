@@ -42,7 +42,8 @@ import org.eigenbase.sql.SqlIdentifier;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoJdbcEngineConnection implements FarragoConnection
+public class FarragoJdbcEngineConnection
+    implements FarragoConnection, FarragoSessionConnectionSource
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -67,9 +68,17 @@ public class FarragoJdbcEngineConnection implements FarragoConnection
         FarragoSessionFactory sessionFactory)
         throws SQLException
     {
+        this(sessionFactory.newSession(url, info));
         this.sessionFactory = sessionFactory;
-        session = sessionFactory.newSession(url, info);
-        session.setDatabaseMetaData(getMetaData());
+    }
+
+    private FarragoJdbcEngineConnection(
+        FarragoSession session)
+    {
+        this.session = session;
+        session.setDatabaseMetaData(
+            new FarragoJdbcEngineDatabaseMetaData(this));
+        session.setConnectionSource(this);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -86,6 +95,13 @@ public class FarragoJdbcEngineConnection implements FarragoConnection
         return (session == null);
     }
 
+    // implement FarragoSessionConnectionSource
+    public Connection newConnection()
+    {
+        return new FarragoJdbcEngineConnection(
+            session.cloneSession(null));
+    }
+    
     // implement Connection
     public void setAutoCommit(boolean autoCommit)
         throws SQLException
@@ -252,7 +268,7 @@ public class FarragoJdbcEngineConnection implements FarragoConnection
     public DatabaseMetaData getMetaData()
         throws SQLException
     {
-        return new FarragoJdbcEngineDatabaseMetaData(this);
+        return session.getDatabaseMetaData();
     }
 
     // implement Connection

@@ -250,6 +250,14 @@ public class FarragoRelImplementor extends JavaRelImplementor
             lhsExp,
             rhsExp);
     }
+    
+    // override JavaRelImplementor
+    public Expression implementRoot(JavaRel rel)
+    {
+        Expression exp = super.implementRoot(rel);
+        preparingStmt.prepareForCompilation();
+        return exp;
+    }
 }
 
 

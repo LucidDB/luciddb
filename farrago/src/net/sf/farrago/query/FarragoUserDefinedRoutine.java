@@ -20,6 +20,8 @@
 package net.sf.farrago.query;
 
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.cwm.relational.enumerations.*;
+
 import net.sf.farrago.session.*;
 import net.sf.farrago.plugin.*;
 import net.sf.farrago.catalog.*;
@@ -28,6 +30,7 @@ import net.sf.farrago.util.*;
 import net.sf.farrago.ojrex.*;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
@@ -61,25 +64,29 @@ public class FarragoUserDefinedRoutine
 
     private final FarragoSessionStmtValidator stmtValidator;
 
+    private final FarragoPreparingStmt preparingStmt;
+    
+    private FemJar femJar;
+
     public FarragoUserDefinedRoutine(
         FarragoSessionStmtValidator stmtValidator,
+        FarragoPreparingStmt preparingStmt, 
         FemRoutine routine,
         RelDataType returnType,
         RelDataType [] paramTypes)
     {
         super(
-            routine.getName(),
-            SqlKind.Function,
+            FarragoCatalogUtil.getQualifiedName(routine),
             new ReturnTypeInferenceImpl.FixedReturnTypeInference(returnType),
             new ExplicitParamInference(paramTypes),
-            new AssignableOperandsTypeChecking(paramTypes),
-            SqlFunction.SqlFuncTypeName.User);
+            new AssignableOperandsTypeChecking(paramTypes));
         this.stmtValidator = stmtValidator;
+        this.preparingStmt = preparingStmt;
         this.routine = routine;
         this.returnType = returnType;
         this.paramTypes = paramTypes;
     }
-    
+
     public FemRoutine getFemRoutine()
     {
         return routine;
@@ -95,6 +102,11 @@ public class FarragoUserDefinedRoutine
         return paramTypes;
     }
 
+    public FemJar getJar()
+    {
+        return femJar;
+    }
+
     /**
      * Uses an external Java routine definition plus reflection to find a
      * corresponding Java method.
@@ -108,14 +120,23 @@ public class FarragoUserDefinedRoutine
         throws SqlValidatorException
     {
         FarragoRepos repos = stmtValidator.getRepos();
+
+        // TODO jvs 18-Jan-2005:  support OUT and INOUT parameters
         
         String externalName = routine.getExternalName();
         // TODO jvs 11-Jan-2005:  JAR support, and move some of this
         // code to FarragoPluginCache
+        String jarName = null;
         String fullMethodName;
         if (!externalName.startsWith(FarragoPluginCache.LIBRARY_CLASS_PREFIX)) {
-            // force error below
-            fullMethodName = "";
+            int iColon = externalName.indexOf(':');
+            if (iColon == -1) {
+                // force error below
+                fullMethodName = "";
+            } else {
+                fullMethodName = externalName.substring(iColon + 1);
+                jarName = externalName.substring(0, iColon);
+            }
         } else {
             fullMethodName = externalName.substring(
                 FarragoPluginCache.LIBRARY_CLASS_PREFIX.length());
@@ -189,11 +210,38 @@ public class FarragoUserDefinedRoutine
         }
         
         Class javaClass;
-        try {
-            javaClass = Class.forName(javaClassName);
-        } catch (Exception ex) {
-            throw FarragoResource.instance().newPluginInitFailed(
-                javaClassName, ex);
+        if (jarName == null) {
+            try {
+                javaClass = Class.forName(javaClassName);
+            } catch (Exception ex) {
+                throw FarragoResource.instance().newPluginInitFailed(
+                    javaClassName, ex);
+            }
+        } else {
+            // TODO jvs 19-Jan-2005: support "thisjar" in deployment
+            // descriptors
+            if (femJar == null) {
+                SqlIdentifier qualifiedJarName;
+                try {
+                    SqlParser sqlParser = new SqlParser(jarName);
+                    SqlNode sqlNode = sqlParser.parseExpression();
+                    qualifiedJarName = (SqlIdentifier) sqlNode;
+                } catch (Throwable ex) {
+                    throw FarragoResource.instance().
+                        newValidatorRoutineInvalidJarName(
+                            repos.getLocalizedObjectName(jarName),
+                            repos.getLocalizedObjectName(routine));
+                }
+                femJar = (FemJar) stmtValidator.findSchemaObject(
+                    qualifiedJarName,
+                    stmtValidator.getRepos().getSql2003Package().getFemJar());
+            }
+            javaClass = FarragoPluginCache.loadJarClass(
+                femJar.getUrl(),
+                javaClassName);
+            if (preparingStmt != null) {
+                preparingStmt.addJarUrl(femJar.getUrl());
+            }
         }
         
         String javaUnmangledMethodName = ReflectUtil.getUnmangledMethodName(
@@ -228,15 +276,25 @@ public class FarragoUserDefinedRoutine
             JavaToSqlTypeConversionRules.instance();
 
         Class javaReturnClass = javaMethod.getReturnType();
-        SqlTypeName actualReturnSqlType = rules.lookup(javaReturnClass);
-        SqlTypeName declReturnSqlType = returnType.getSqlTypeName();
-        if (!checkCompatibility(actualReturnSqlType, declReturnSqlType)) {
-            throw FarragoResource.instance().
-                newValidatorRoutineJavaReturnMismatch(
-                    repos.getLocalizedObjectName(routine),
-                    returnType.toString(),
-                    repos.getLocalizedObjectName(javaUnmangledMethodName),
-                    javaReturnClass.toString());
+        if (routine.getType() == ProcedureTypeEnum.FUNCTION) {
+            SqlTypeName actualReturnSqlType = rules.lookup(javaReturnClass);
+            SqlTypeName declReturnSqlType = returnType.getSqlTypeName();
+            if (!checkCompatibility(actualReturnSqlType, declReturnSqlType)) {
+                throw FarragoResource.instance().
+                    newValidatorRoutineJavaReturnMismatch(
+                        repos.getLocalizedObjectName(routine),
+                        returnType.toString(),
+                        repos.getLocalizedObjectName(javaUnmangledMethodName),
+                        javaReturnClass.toString());
+            }
+        } else {
+            if (!javaReturnClass.equals(void.class)) {
+                throw FarragoResource.instance().
+                    newValidatorRoutineJavaProcReturnVoid(
+                        repos.getLocalizedObjectName(routine),
+                        repos.getLocalizedObjectName(javaUnmangledMethodName),
+                        javaReturnClass.toString());
+            }
         }
 
         for (int i = 0; i < nParams; ++i) {
@@ -293,10 +351,87 @@ public class FarragoUserDefinedRoutine
                 paramTypes[i]);
             exprList.add(expr);
         }
+
         Expression callExpr = new MethodCall(
             OJClass.forClass(method.getDeclaringClass()), 
             method.getName(),
             exprList);
+
+        farragoTranslator.addStatement(
+            new ExpressionStatement(
+                new MethodCall(
+                    farragoTranslator.getRelImplementor().
+                    getConnectionVariable(),
+                    "pushRoutineInvocation",
+                    new ExpressionList(
+                        Literal.makeLiteral(
+                            routine.getDataAccess()
+                            != RoutineDataAccessEnum.RDA_NO_SQL)))));
+
+        TryStatement tryStmt = new TryStatement(null, null, null);
+
+        Variable varException =
+            farragoTranslator.getRelImplementor().newVariable();
+        tryStmt.setCatchList(
+            new CatchList(
+                new CatchBlock(
+                    new Parameter(
+                        TypeName.forOJClass(OJClass.forClass(Throwable.class)),
+                        varException.toString()),
+                    new StatementList(
+                        new ThrowStatement(
+                            new MethodCall(
+                                farragoTranslator.getRelImplementor().
+                                getConnectionVariable(),
+                                "handleRoutineInvocationException",
+                                new ExpressionList(
+                                    varException,
+                                    Literal.makeLiteral(
+                                        method.getName()))))))));
+        
+        
+        tryStmt.setFinallyBody(
+            new StatementList(
+                new ExpressionStatement(
+                    new MethodCall(
+                        farragoTranslator.getRelImplementor().
+                        getConnectionVariable(),
+                        "popRoutineInvocation",
+                        new ExpressionList()))));
+
+        if (routine.getType() == ProcedureTypeEnum.PROCEDURE) {
+            // for a procedure call, the method return is void,
+            // so we make up a null value instead
+            tryStmt.setBody(
+                new StatementList(
+                    new ExpressionStatement(callExpr)));
+            farragoTranslator.addStatement(tryStmt);
+            Expression nullVar = farragoTranslator.createScratchVariable(
+                returnType);
+            farragoTranslator.addStatement(
+                farragoTranslator.createSetNullStatement(nullVar, true));
+            return nullVar;
+        }
+        
+        Variable varResult =
+            farragoTranslator.getRelImplementor().newVariable();
+        farragoTranslator.addStatement(
+            new VariableDeclaration(
+                TypeName.forOJClass(
+                    OJClass.forClass(method.getReturnType())),
+                new VariableDeclarator(
+                    varResult.toString(),
+                    null)));
+
+        tryStmt.setBody(
+            new StatementList(
+                new ExpressionStatement(
+                    new AssignmentExpression(
+                        varResult,
+                        AssignmentExpression.EQUALS,
+                        callExpr))));
+        farragoTranslator.addStatement(tryStmt);
+        
         RelDataType actualReturnType;
         if (method.getReturnType().isPrimitive()) {
             actualReturnType = 
@@ -312,7 +447,7 @@ public class FarragoUserDefinedRoutine
             returnType,
             actualReturnType,
             null,
-            callExpr);
+            varResult);
     }
     
     // implement OJRexImplementor

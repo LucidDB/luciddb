@@ -71,12 +71,14 @@ public abstract class FarragoAbstractJdbcDriver implements Driver
     // implement Driver
     public int getMajorVersion()
     {
+        // TODO
         return 0;
     }
 
     // implement Driver
     public int getMinorVersion()
     {
+        // TODO
         return 0;
     }
 
@@ -97,7 +99,7 @@ public abstract class FarragoAbstractJdbcDriver implements Driver
         return url.startsWith(getUrlPrefix());
     }
 
-    protected void register()
+    public void register()
     {
         try {
             DriverManager.registerDriver(this);
