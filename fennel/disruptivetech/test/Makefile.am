@@ -93,3 +93,9 @@ check-local:
 		mkdir .testlog; \
 	fi && \
 	cp *.log .testlog/
+
+DISABLED_TESTS= \
+SqlStringTestAscii.cpp
+
+TAGS_DEPENDENCIES=$(DISABLED_TESTS)
+ETAGS_ARGS=$(DISABLED_TESTS)

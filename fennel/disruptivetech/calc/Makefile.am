@@ -45,10 +45,16 @@ ExtDynamicVariable.cpp
 #		-lfennel_common     \
 #	$(EXTRA_LDFLAGS)
 
+DISABLED_TESTS= \
+testCalc.cpp \
+testCalcExtString.cpp \
+testCalcExtended.cpp \
+tuple.cpp
+
 DESIGN_DOC=ExtendedInstructionHowTo.cpp
 EXTRA_DIST=$(DESIGN_DOC)
-TAGS_DEPENDENCIES=$(DESIGN_DOC)
-ETAGS_ARGS=$(DESIGN_DOC)
+TAGS_DEPENDENCIES=$(DESIGN_DOC) $(DISABLED_TESTS)
+ETAGS_ARGS=$(DESIGN_DOC) $(DISABLED_TESTS)
 
 # Flex workaround:
 # Explictly define how to generate a .cpp file from a flex .lpp file
