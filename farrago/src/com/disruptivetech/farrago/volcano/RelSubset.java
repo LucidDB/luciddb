@@ -190,7 +190,7 @@ public class RelSubset extends AbstractRelNode
     /**
      * Recursively build a tree consisting of the cheapest plan at each node.
      */
-    RelNode buildCheapestPlan(RelOptPlanner planner)
+    RelNode buildCheapestPlan(VolcanoPlanner planner)
     {
         CheapestPlanReplacer replacer = new CheapestPlanReplacer(planner);
         RelNode cheapest = RelOptUtil.go(replacer, this);
@@ -232,9 +232,9 @@ public class RelSubset extends AbstractRelNode
      */
     class CheapestPlanReplacer extends RelVisitor
     {
-        RelOptPlanner planner;
+        VolcanoPlanner planner;
 
-        CheapestPlanReplacer(RelOptPlanner planner)
+        CheapestPlanReplacer(VolcanoPlanner planner)
         {
             super();
             this.planner = planner;
@@ -257,7 +257,7 @@ public class RelSubset extends AbstractRelNode
                         final PrintWriter pw = new PrintWriter(sw);
                         pw.println("Node [" + expr
                             + "] could not be implemented; planner state:");
-                        ((VolcanoPlanner) planner).dump(pw);
+                        planner.dump(pw);
                         pw.flush();
                         tracer.fine(sw.toString());
                     }

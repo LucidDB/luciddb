@@ -52,7 +52,7 @@ public class RelOptCluster
     public final Environment env;
     public final RelDataTypeFactory typeFactory;
     public final RelOptQuery query;
-    public final RelOptPlanner planner;
+    public RelOptPlanner planner;
     public RexNode originalExpression;
     public final RexBuilder rexBuilder;
     public RexToSqlTranslator rexToSqlTranslator;

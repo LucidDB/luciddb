@@ -43,6 +43,7 @@ import org.eigenbase.util.*;
  * @version $Id$
  */
 public class FarragoDefaultPlanner extends VolcanoPlanner
+    implements FarragoPlanner
 {
     //~ Instance fields -------------------------------------------------------
 
