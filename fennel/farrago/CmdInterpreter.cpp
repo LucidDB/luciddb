@@ -22,6 +22,7 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/farrago/CmdInterpreter.h"
 #include "fennel/farrago/JavaTraceTarget.h"
+#include "fennel/exec/ExecStreamGraphEmbryo.h"
 #include "fennel/farrago/ExecStreamBuilder.h"
 #include "fennel/cache/CacheParams.h"
 #include "fennel/common/ConfigMap.h"
@@ -407,14 +408,18 @@ void CmdInterpreter::visit(ProxyCmdPrepareExecutionStreamGraph &cmd)
             new DfsTreeExecStreamScheduler(
                 &(pTxnHandle->pDb->getTraceTarget()),
                 "xo.scheduler"));
-        ExecStreamBuilder streamBuilder(
-            pTxnHandle->pDb,
+        ExecStreamGraphEmbryo graphEmbryo(
+            pStreamGraphHandle->pExecStreamGraph,
             pScheduler,
-            *(pStreamGraphHandle->pExecStreamFactory),
-            pStreamGraphHandle->pExecStreamGraph);
+            pTxnHandle->pDb->getCache(),
+            pTxnHandle->pDb->getSegmentFactory(), 
+            pStreamGraphHandle->pExecStreamFactory->shouldEnforceCacheQuotas());
+        pStreamGraphHandle->pExecStreamFactory->setGraphEmbryo(graphEmbryo);
+        ExecStreamBuilder streamBuilder(
+            graphEmbryo, 
+            *(pStreamGraphHandle->pExecStreamFactory));
         streamBuilder.buildStreamGraph(cmd);
         pStreamGraphHandle->pExecStreamFactory.reset();
-        pScheduler->addGraph(pStreamGraphHandle->pExecStreamGraph);
         pScheduler->start();
         pStreamGraphHandle->pScheduler = pScheduler;
     }

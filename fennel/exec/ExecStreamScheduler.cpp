@@ -22,6 +22,9 @@
 #include "fennel/exec/ExecStreamScheduler.h"
 #include "fennel/exec/ExecStreamGraphImpl.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
+#include "fennel/exec/CopyExecStream.h"
+#include "fennel/exec/ScratchBufferExecStream.h"
+#include "fennel/exec/ExecStreamEmbryo.h"
 #include "fennel/tuple/TupleData.h"
 #include "fennel/tuple/TuplePrinter.h"
 
@@ -39,11 +42,6 @@ ExecStreamScheduler::~ExecStreamScheduler()
 {
 }
 
-SharedExecStreamBufAccessor ExecStreamScheduler::newBufAccessor()
-{
-    return SharedExecStreamBufAccessor(new ExecStreamBufAccessor());
-}
-
 void ExecStreamScheduler::addGraph(SharedExecStreamGraph pGraph)
 {
     assert(!pGraph->pScheduler);
@@ -58,6 +56,29 @@ void ExecStreamScheduler::addGraph(SharedExecStreamGraph pGraph)
             return;
         }
     }
+}
+
+SharedExecStreamBufAccessor ExecStreamScheduler::newBufAccessor()
+{
+    return SharedExecStreamBufAccessor(new ExecStreamBufAccessor());
+}
+
+void ExecStreamScheduler::createBufferProvisionAdapter(
+    ExecStreamEmbryo &embryo)
+{
+    ScratchBufferExecStreamParams adapterParams;
+    embryo.init(
+        new ScratchBufferExecStream(),
+        adapterParams);
+}
+
+void ExecStreamScheduler::createCopyProvisionAdapter(
+    ExecStreamEmbryo &embryo)
+{
+    CopyExecStreamParams adapterParams;
+    embryo.init(
+        new CopyExecStream(),
+        adapterParams);
 }
 
 void ExecStreamScheduler::removeGraph(SharedExecStreamGraph pGraph)

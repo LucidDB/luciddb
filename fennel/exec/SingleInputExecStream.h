@@ -18,44 +18,32 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-#ifndef Fennel_ConduitExecStream_Included
-#define Fennel_ConduitExecStream_Included
+#ifndef Fennel_SingleInputExecStream_Included
+#define Fennel_SingleInputExecStream_Included
 
-#include "fennel/exec/SingleOutputExecStream.h"
-#include "fennel/exec/SingleInputExecStream.h"
+#include "fennel/exec/ExecStream.h"
 
 FENNEL_BEGIN_NAMESPACE
 
 /**
- * ConduitExecStreamParams defines parameters for ConduitExecStream.
+ * SingleInputExecStreamParams defines parameters for SingleInputExecStream.
  */
-struct ConduitExecStreamParams
-    : virtual public SingleInputExecStreamParams, 
-        virtual public SingleOutputExecStreamParams
+struct SingleInputExecStreamParams : virtual public ExecStreamParams
 {
 };
     
 /**
- * ConduitExecStream is an abstract base for any ExecStream with exactly
- * one input and one output.
+ * SingleInputExecStream is an abstract base for all implementations
+ * of ExecStream which have exactly one input.  By default
+ * no outputs are produced, but derived classes may override.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class ConduitExecStream
-    : virtual public SingleInputExecStream, 
-        virtual public SingleOutputExecStream
+class SingleInputExecStream : virtual public ExecStream
 {
 protected:
-    /**
-     * Checks the state of the input and output buffers.  If input empty,
-     * requests production.  If input EOS, propagates that to output buffer.
-     * If output full, returns EXECRC_OVERFLOW.
-     *
-     * @return result of precheck; anything but EXECRC_YIELD indicates
-     * that execution should terminate immediately with returned code
-     */
-    ExecStreamResult precheckConduitBuffers();
+    SharedExecStreamBufAccessor pInAccessor;
     
 public:
     // implement ExecStream
@@ -63,12 +51,13 @@ public:
         std::vector<SharedExecStreamBufAccessor> const &inAccessors);
     virtual void setInputBufAccessors(
         std::vector<SharedExecStreamBufAccessor> const &outAccessors);
-    virtual void prepare(ConduitExecStreamParams const &params);
+    virtual void prepare(SingleInputExecStreamParams const &params);
     virtual void open(bool restart);
+    virtual ExecStreamBufProvision getInputBufProvision() const;
 };
 
 FENNEL_END_NAMESPACE
 
 #endif
 
-// End ConduitExecStream.h
+// End SingleInputExecStream.h

@@ -176,6 +176,30 @@ public:
     virtual SharedExecStreamBufAccessor newBufAccessor();
 
     /**
+     * Creates a new adapter stream capable of buffering the output
+     * of a stream with BUFPROV_CONSUMER for use as input to a stream
+     * with BUFPROV_PRODUCER.  Default implementation is
+     * ScratchBufferExecStream.  Caller is responsible for filling
+     * in generic ExecStreamParams after return.
+     *
+     * @param embryo receives new adapter stream
+     */
+    virtual void createBufferProvisionAdapter(
+        ExecStreamEmbryo &embryo);
+    
+    /**
+     * Creates a new adapter stream capable of copying the output
+     * of a stream with BUFPROV_PRODUCER into the input of a stream
+     * with BUFPROV_CONSUMER.  Default implementation
+     * is CopyExecStream.  Caller is responsible for filling in
+     * generic ExecStreamParams after return.
+     *
+     * @param embryo receives new adapter stream
+     */
+    virtual void createCopyProvisionAdapter(
+        ExecStreamEmbryo &embryo);
+
+    /**
      * Reads data from a stream, first performing any scheduling necessary
      * to make output available.
      *

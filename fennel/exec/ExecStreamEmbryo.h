@@ -77,11 +77,11 @@ public:
     template<class S, class P>
     inline void init(S *pStreamInit, P const &paramsInit)
     {
-        pStream.reset(pStreamInit);
+        pStream.reset(pStreamInit, ClosableObjectDestructor());
         P *pParamCopy = new P(paramsInit);
         pParams.reset(pParamCopy);
         prepareFunction = boost::bind(
-            &S::prepare, pStreamInit, *pParamCopy);
+            &S::prepare, pStreamInit, boost::cref(*pParamCopy));
     }
 
     inline SharedExecStream &getStream()

@@ -224,7 +224,6 @@ void CalcExecStreamTest::testConstant(
     MockProducerExecStreamParams mockParams;
     mockParams.outputTupleDesc = inputDesc;
     mockParams.nRows = nRowsInput;
-    mockParams.enforceQuotas = false;
 
     CalcExecStreamParams calcParams;
     calcParams.outputTupleDesc = outputDesc;
@@ -232,15 +231,15 @@ void CalcExecStreamTest::testConstant(
     calcParams.isFilter = false;
 
     ExecStreamEmbryo mockStreamEmbryo;
-    mockStreamEmbryo.init(new MockProducerExecStream(),mockParams);
+    mockStreamEmbryo.init(new MockProducerExecStream(), mockParams);
     mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
 
     ExecStreamEmbryo calcStreamEmbryo;
-    calcStreamEmbryo.init(new CalcExecStream(),calcParams);
+    calcStreamEmbryo.init(new CalcExecStream(), calcParams);
     calcStreamEmbryo.getStream()->setName("CalcExecStream");
 
-    SharedExecStream pOutputStream = prepareGraphTwoBufferedStreams(
-        mockStreamEmbryo,calcStreamEmbryo);
+    SharedExecStream pOutputStream = prepareTransformGraph(
+        mockStreamEmbryo, calcStreamEmbryo);
 
     verifyConstantOutput(
         *pOutputStream,

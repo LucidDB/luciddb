@@ -39,7 +39,8 @@ struct SingleOutputExecStreamParams : virtual public ExecStreamParams
     
 /**
  * SingleOutputExecStream is an abstract base for all implementations
- * of ExecStream which have exactly one output.
+ * of ExecStream which have exactly one output.  By default no
+ * inputs are consumed, but derived classes may override.
  *
  * @author John V. Sichi
  * @version $Id$

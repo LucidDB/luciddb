@@ -68,7 +68,7 @@ A number of other Fennel components depend on the tuple library:
 <li> calc:  for accessing inputs and outputs and manipulating intermediate
 results
 
-<li> xo:  for representing streams of relational data
+<li> exec:  for representing streams of relational data
 
 </ul>
 
@@ -508,6 +508,7 @@ corresponding TupleDatum.  That's why the last line of getMachineName uses
 projData[0], not projData[1]; after
 the projection, the name is the first and only value.
 
+</ul>
 
 <h3>Tuple Comparison</h3>
 

@@ -21,6 +21,7 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/test/ExecStreamTestBase.h"
 #include "fennel/exec/ExecStreamGraph.h"
+#include "fennel/exec/ExecStreamGraphEmbryo.h"
 #include "fennel/exec/ExecStream.h"
 #include "fennel/exec/ScratchBufferExecStream.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
@@ -32,68 +33,56 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-void ExecStreamTestBase::prepareGraphTwoStreams(
-    SharedExecStream pSourceStream,
-    SharedExecStream pOutputStream)
-{
-    pGraph->addStream(pSourceStream);
-    pGraph->addStream(pOutputStream);
-    pGraph->addDataflow(
-        pSourceStream->getStreamId(),
-        pOutputStream->getStreamId());
-    pGraph->addOutputDataflow(
-        pOutputStream->getStreamId());
-    pGraph->prepare(*pScheduler);
-    decorateGraph();
-}
-
-SharedExecStream ExecStreamTestBase::prepareGraphTwoBufferedStreams(
+SharedExecStream ExecStreamTestBase::prepareTransformGraph(
     ExecStreamEmbryo &sourceStreamEmbryo,
     ExecStreamEmbryo &transformStreamEmbryo)
 {
-    SharedExecStream pSourceStream = sourceStreamEmbryo.getStream();
-    SharedExecStream pTransformStream = transformStreamEmbryo.getStream();
+    pGraphEmbryo->saveStreamEmbryo(sourceStreamEmbryo);
+    pGraphEmbryo->saveStreamEmbryo(transformStreamEmbryo);
     
-    ScratchBufferExecStream *pBufStreamImpl1 = new ScratchBufferExecStream();
-    SharedExecStream pBufStream1(pBufStreamImpl1);
-    pBufStream1->setName("ScratchBufferExecStream1");
+    pGraphEmbryo->addDataflow(
+        sourceStreamEmbryo.getStream()->getName(),
+        transformStreamEmbryo.getStream()->getName());
 
-    ScratchBufferExecStream *pBufStreamImpl2 = new ScratchBufferExecStream();
-    SharedExecStream pBufStream2(pBufStreamImpl2);
-    pBufStream2->setName("ScratchBufferExecStream2");
-    
-    ScratchBufferExecStreamParams paramsScratch;
-    paramsScratch.scratchAccessor =
-        pSegmentFactory->newScratchSegment(pCache,2);
-    paramsScratch.enforceQuotas = false;
-    
-    pGraph->addStream(pSourceStream);
-    pGraph->addStream(pBufStream1);
-    pGraph->addStream(pTransformStream);
-    pGraph->addStream(pBufStream2);
-
-    pGraph->addDataflow(
-        pSourceStream->getStreamId(),
-        pBufStream1->getStreamId());
-    pGraph->addDataflow(
-        pBufStream1->getStreamId(),
-        pTransformStream->getStreamId());
-    pGraph->addDataflow(
-        pTransformStream->getStreamId(),
-        pBufStream2->getStreamId());
+    SharedExecStream pAdaptedStream =
+        pGraphEmbryo->addAdapterFor(
+            transformStreamEmbryo.getStream()->getName(),
+            BUFPROV_PRODUCER);
     pGraph->addOutputDataflow(
-        pBufStream2->getStreamId());
-    pGraph->prepare(*pScheduler);
-    decorateGraph();
+        pAdaptedStream->getStreamId());
 
-    sourceStreamEmbryo.prepareStream();
-    pBufStreamImpl1->prepare(paramsScratch);
-    transformStreamEmbryo.prepareStream();
-    pBufStreamImpl2->prepare(paramsScratch);
+    pGraphEmbryo->prepareGraph(this, "");
+
+    return pAdaptedStream;
+}
+
+SharedExecStream ExecStreamTestBase::prepareConfluenceGraph(
+    ExecStreamEmbryo &sourceStreamEmbryo1,
+    ExecStreamEmbryo &sourceStreamEmbryo2,
+    ExecStreamEmbryo &confluenceStreamEmbryo)
+{
+    pGraphEmbryo->saveStreamEmbryo(sourceStreamEmbryo1);
+    pGraphEmbryo->saveStreamEmbryo(sourceStreamEmbryo2);
+    pGraphEmbryo->saveStreamEmbryo(confluenceStreamEmbryo);
     
-    pGraph->setScratchSegment(paramsScratch.scratchAccessor.pSegment);
+    pGraphEmbryo->addDataflow(
+        sourceStreamEmbryo1.getStream()->getName(),
+        confluenceStreamEmbryo.getStream()->getName());
 
-    return pBufStream2;
+    pGraphEmbryo->addDataflow(
+        sourceStreamEmbryo2.getStream()->getName(),
+        confluenceStreamEmbryo.getStream()->getName());
+
+    SharedExecStream pAdaptedStream =
+        pGraphEmbryo->addAdapterFor(
+            confluenceStreamEmbryo.getStream()->getName(),
+            BUFPROV_PRODUCER);
+    pGraph->addOutputDataflow(
+        pAdaptedStream->getStreamId());
+
+    pGraphEmbryo->prepareGraph(this, "");
+
+    return pAdaptedStream;
 }
 
 void ExecStreamTestBase::testCaseSetUp()
@@ -105,6 +94,13 @@ void ExecStreamTestBase::testCaseSetUp()
         new DfsTreeExecStreamScheduler(
             this,
             "DfsTreeExecStreamScheduler"));
+    pGraphEmbryo.reset(
+        new ExecStreamGraphEmbryo(
+            pGraph,
+            pScheduler,
+            pCache,
+            pSegmentFactory,
+            true));
 }
 
 void ExecStreamTestBase::testCaseTearDown()
@@ -114,16 +110,8 @@ void ExecStreamTestBase::testCaseTearDown()
     }
     pGraph.reset();
     pScheduler.reset();
+    pGraphEmbryo.reset();
     SegStorageTestBase::testCaseTearDown();
-}
-
-void ExecStreamTestBase::decorateGraph()
-{
-    std::vector<SharedExecStream> streams = pGraph->getSortedStreams();
-    for (uint i = 0; i < streams.size(); ++i) {
-        streams[i]->initTraceSource(this, streams[i]->getName());
-    }
-    pScheduler->addGraph(pGraph);
 }
 
 void ExecStreamTestBase::verifyConstantOutput(

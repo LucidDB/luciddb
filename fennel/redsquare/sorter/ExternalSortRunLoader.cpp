@@ -165,13 +165,9 @@ void ExternalSortRunLoader::releaseResources()
 
     // REVIEW jvs 12-June-2004:  see corresponding comment above in
     // allocateBuffer()
-
-    // FIXME jvs 13-June-2004:  need to do this, but it frees
-    // provision adapter buffer too!
-#if 0
+    
     sortInfo.memSegmentAccessor.pSegment->deallocatePageRange(
         NULL_PAGE_ID,NULL_PAGE_ID);
-#endif
 }
 
 ExternalSortRC ExternalSortRunLoader::loadRun(TupleStream &tupleStream)

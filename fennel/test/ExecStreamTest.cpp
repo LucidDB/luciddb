@@ -79,39 +79,34 @@ void ExecStreamTest::verifyZeroedOutput(
 
 void ExecStreamTest::testScratchBufferExecStream()
 {
-    MockProducerExecStream *pStreamImpl1 = new MockProducerExecStream();
-    SharedExecStream pStream1(pStreamImpl1);
-    pStream1->setName("MockProducerExecStream");
-    
-    ScratchBufferExecStream *pStreamImpl2 = new ScratchBufferExecStream();
-    SharedExecStream pStream2(pStreamImpl2);
-    pStream2->setName("ScratchBufferExecStream");
-
-    prepareGraphTwoStreams(pStream1,pStream2);
-    
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
 
-    MockProducerExecStreamParams params1;
-    params1.outputTupleDesc.push_back(attrDesc);
-    params1.nRows = 5000;     // at least two buffers
-    params1.pGenerator.reset(new RampExecStreamGenerator());
-    params1.enforceQuotas = false;
-    pStreamImpl1->prepare(params1);
+    MockProducerExecStreamParams mockParams;
+    mockParams.outputTupleDesc.push_back(attrDesc);
+    mockParams.nRows = 5000;     // at least two buffers
+    mockParams.pGenerator.reset(new RampExecStreamGenerator());
     
-    ScratchBufferExecStreamParams params2;
-    params2.scratchAccessor =
+    ExecStreamEmbryo mockStreamEmbryo;
+    mockStreamEmbryo.init(new MockProducerExecStream(),mockParams);
+    mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
+    
+    ScratchBufferExecStreamParams bufParams;
+    bufParams.scratchAccessor =
         pSegmentFactory->newScratchSegment(pCache,1);
-    params2.enforceQuotas = false;
-    pStreamImpl2->prepare(params2);
 
-    pGraph->setScratchSegment(params2.scratchAccessor.pSegment);
+    ExecStreamEmbryo bufStreamEmbryo;
+    bufStreamEmbryo.init(new ScratchBufferExecStream(),bufParams);
+    bufStreamEmbryo.getStream()->setName("ScratchBufferExecStream");
+
+    SharedExecStream pOutputStream = prepareTransformGraph(
+        mockStreamEmbryo, bufStreamEmbryo);
 
     verifyOutput(
-        *pStream2,
-        params1.nRows,
-        *(params1.pGenerator));
+        *pOutputStream,
+        mockParams.nRows,
+        *(mockParams.pGenerator));
 }
 
 void ExecStreamTest::testCopyExecStream()
@@ -123,7 +118,6 @@ void ExecStreamTest::testCopyExecStream()
     MockProducerExecStreamParams mockParams;
     mockParams.outputTupleDesc.push_back(attrDesc);
     mockParams.nRows = 10000;   // at least two buffers
-    mockParams.enforceQuotas = false;
 
     ExecStreamEmbryo mockStreamEmbryo;
     mockStreamEmbryo.init(new MockProducerExecStream(),mockParams);
@@ -131,13 +125,12 @@ void ExecStreamTest::testCopyExecStream()
 
     CopyExecStreamParams copyParams;
     copyParams.outputTupleDesc.push_back(attrDesc);
-    copyParams.enforceQuotas = false;
     
     ExecStreamEmbryo copyStreamEmbryo;
     copyStreamEmbryo.init(new CopyExecStream(),copyParams);
     copyStreamEmbryo.getStream()->setName("CopyExecStream");
     
-    SharedExecStream pOutputStream = prepareGraphTwoBufferedStreams(
+    SharedExecStream pOutputStream = prepareTransformGraph(
         mockStreamEmbryo,copyStreamEmbryo);
 
     verifyZeroedOutput(
@@ -147,120 +140,70 @@ void ExecStreamTest::testCopyExecStream()
 
 void ExecStreamTest::testSegBufferExecStream()
 {
-    MockProducerExecStream *pStreamImpl1 = new MockProducerExecStream();
-    SharedExecStream pStream1(pStreamImpl1);
-    pStream1->setName("MockProducerExecStream");
-    
-    SegBufferExecStream *pStreamImpl2 = new SegBufferExecStream();
-    SharedExecStream pStream2(pStreamImpl2);
-    pStream2->setName("SegBufferExecStream");
-
-    prepareGraphTwoStreams(pStream1,pStream2);
-    
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_32));
     
-    MockProducerExecStreamParams params1;
-    params1.outputTupleDesc.push_back(attrDesc);
-    params1.nRows = 10000;     // at least two buffers
-    params1.enforceQuotas = false;
-    pStreamImpl1->prepare(params1);
+    MockProducerExecStreamParams mockParams;
+    mockParams.outputTupleDesc.push_back(attrDesc);
+    mockParams.nRows = 10000;     // at least two buffers
     
-    SegBufferExecStreamParams params2;
-    params2.scratchAccessor.pSegment = pLinearSegment;
-    params2.scratchAccessor.pCacheAccessor = pCache;
-    params2.enforceQuotas = false;
-    params2.multipass = false;
-    pStreamImpl2->prepare(params2);
+    ExecStreamEmbryo mockStreamEmbryo;
+    mockStreamEmbryo.init(new MockProducerExecStream(),mockParams);
+    mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
+    
+    SegBufferExecStreamParams bufParams;
+    bufParams.scratchAccessor.pSegment = pLinearSegment;
+    bufParams.scratchAccessor.pCacheAccessor = pCache;
+    bufParams.multipass = false;
+
+    ExecStreamEmbryo bufStreamEmbryo;
+    bufStreamEmbryo.init(new SegBufferExecStream(),bufParams);
+    bufStreamEmbryo.getStream()->setName("SegBufferExecStream");
+
+    SharedExecStream pOutputStream = prepareTransformGraph(
+        mockStreamEmbryo, bufStreamEmbryo);
 
     verifyZeroedOutput(
-        *pStream2,
-        params1.nRows*sizeof(int32_t));
+        *pOutputStream,
+        mockParams.nRows*sizeof(int32_t));
 }
 
 void ExecStreamTest::testCartesianJoinExecStream(
     uint nRowsOuter,uint nRowsInner)
 {
-    MockProducerExecStream *pStreamImpl1 = new MockProducerExecStream();
-    SharedExecStream pStream1(pStreamImpl1);
-    pStream1->setName("MockProducerExecStream1");
-    
-    MockProducerExecStream *pStreamImpl2 = new MockProducerExecStream();
-    SharedExecStream pStream2(pStreamImpl2);
-    pStream2->setName("MockProducerExecStream2");
-    
-    ScratchBufferExecStream *pStreamImpl3 = new ScratchBufferExecStream();
-    SharedExecStream pStream3(pStreamImpl3);
-    pStream3->setName("ScratchBufferExecStream3");
-
-    ScratchBufferExecStream *pStreamImpl4 = new ScratchBufferExecStream();
-    SharedExecStream pStream4(pStreamImpl4);
-    pStream4->setName("ScratchBufferExecStream4");
-
-    CartesianJoinExecStream *pStreamImpl5 = new CartesianJoinExecStream();
-    SharedExecStream pStream5(pStreamImpl5);
-    pStream5->setName("CartesianJoinExecStream5");
-
-    ScratchBufferExecStream *pStreamImpl6 = new ScratchBufferExecStream();
-    SharedExecStream pStream6(pStreamImpl6);
-    pStream6->setName("ScratchBufferExecStream6");
-
-    pGraph->addStream(pStream1);
-    pGraph->addStream(pStream2);
-    pGraph->addStream(pStream3);
-    pGraph->addStream(pStream4);
-    pGraph->addStream(pStream5);
-    pGraph->addStream(pStream6);
-    pGraph->addDataflow(
-        pStream1->getStreamId(),
-        pStream3->getStreamId());
-    pGraph->addDataflow(
-        pStream2->getStreamId(),
-        pStream4->getStreamId());
-    pGraph->addDataflow(
-        pStream3->getStreamId(),
-        pStream5->getStreamId());
-    pGraph->addDataflow(
-        pStream4->getStreamId(),
-        pStream5->getStreamId());
-    pGraph->addDataflow(
-        pStream5->getStreamId(),
-        pStream6->getStreamId());
-    pGraph->addOutputDataflow(
-        pStream6->getStreamId());
-    pGraph->prepare(*pScheduler);
-    decorateGraph();
-    
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_32));
     
-    MockProducerExecStreamParams paramsMock;
-    paramsMock.outputTupleDesc.push_back(attrDesc);
-    paramsMock.nRows = nRowsOuter;
-    paramsMock.enforceQuotas = false;
-    pStreamImpl1->prepare(paramsMock);
+    MockProducerExecStreamParams paramsMockOuter;
+    paramsMockOuter.outputTupleDesc.push_back(attrDesc);
+    paramsMockOuter.nRows = nRowsOuter;
     
-    paramsMock.nRows = nRowsInner;
-    pStreamImpl2->prepare(paramsMock);
+    ExecStreamEmbryo outerStreamEmbryo;
+    outerStreamEmbryo.init(new MockProducerExecStream(),paramsMockOuter);
+    outerStreamEmbryo.getStream()->setName("OuterProducerExecStream");
+
+    MockProducerExecStreamParams paramsMockInner(paramsMockOuter);
+    paramsMockInner.nRows = nRowsInner;
     
-    ScratchBufferExecStreamParams paramsScratch;
-    paramsScratch.scratchAccessor =
-        pSegmentFactory->newScratchSegment(pCache,3);
-    paramsScratch.enforceQuotas = false;
-    pStreamImpl3->prepare(paramsScratch);
-    pStreamImpl4->prepare(paramsScratch);
+    ExecStreamEmbryo innerStreamEmbryo;
+    innerStreamEmbryo.init(new MockProducerExecStream(),paramsMockInner);
+    innerStreamEmbryo.getStream()->setName("InnerProducerExecStream");
 
     CartesianJoinExecStreamParams paramsJoin;
-    paramsJoin.enforceQuotas = false;
-    pStreamImpl5->prepare(paramsJoin);
-    pStreamImpl6->prepare(paramsScratch);
-
-    pGraph->setScratchSegment(paramsScratch.scratchAccessor.pSegment);
     
+    ExecStreamEmbryo joinStreamEmbryo;
+    joinStreamEmbryo.init(new CartesianJoinExecStream(),paramsJoin);
+    joinStreamEmbryo.getStream()->setName("CartesianJoinExecStream");
+    
+    SharedExecStream pOutputStream = prepareConfluenceGraph(
+        outerStreamEmbryo,
+        innerStreamEmbryo,
+        joinStreamEmbryo);
+
     verifyZeroedOutput(
-        *pStream6,
+        *pOutputStream,
         nRowsOuter*nRowsInner*2*sizeof(int32_t));
 }
 

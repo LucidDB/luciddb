@@ -136,6 +136,9 @@ typedef boost::shared_ptr<ExecStreamParams> SharedExecStreamParams;
 class ExecStreamGraph;
 typedef boost::shared_ptr<ExecStreamGraph> SharedExecStreamGraph;
 
+class ExecStreamGraphEmbryo;
+typedef boost::shared_ptr<ExecStreamGraphEmbryo> SharedExecStreamGraphEmbryo;
+
 class ExecStreamFactory;
 typedef boost::shared_ptr<ExecStreamFactory> SharedExecStreamFactory;
 

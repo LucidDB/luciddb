@@ -38,41 +38,40 @@ class ExecStreamTestBase : virtual public SegStorageTestBase
 protected:
     SharedExecStreamScheduler pScheduler;
     SharedExecStreamGraph pGraph;
-
-    /**
-     * Defines and prepares a graph consisting of two streams without
-     * any intermediate buffering.
-     *
-     * @param pSourceStream source stream which produces tuples
-     *
-     * @param pOutputStream output stream which processes tuples produced
-     * by pSourceStream
-     */
-    void prepareGraphTwoStreams(
-        SharedExecStream pSourceStream,
-        SharedExecStream pOutputStream);
+    SharedExecStreamGraphEmbryo pGraphEmbryo;
 
     /**
      * Defines and prepares a graph consisting of one source stream
-     * and one transform stream, introducing the required buffer streams.
+     * and one transform stream.
      *
      * @param sourceStreamEmbryo embryonic source stream which produces tuples
      *
      * @param transformStreamEmbryo embryonic transform stream which processes
-     * tuples produced by pSourceStream
+     * tuples produced by sourceStreamEmbryo
      *
      * @return output buffer stream
      */
-    SharedExecStream prepareGraphTwoBufferedStreams(
+    SharedExecStream prepareTransformGraph(
         ExecStreamEmbryo &sourceStreamEmbryo,
         ExecStreamEmbryo &transformStreamEmbryo);
 
     /**
-     * Decorates stream graph with additions such as tracing and
-     * provision adapters.  Should be called once all streams and dataflows
-     * have been added to graph but before any streams have been prepared.
+     * Defines and prepares a graph consisting of two source streams
+     * and one confluence stream.
+     *
+     * @param sourceStreamEmbryo1 embryonic source stream which produces tuples
+     *
+     * @param sourceStreamEmbryo2 embryonic source stream which produces tuples
+     *
+     * @param confluenceStreamEmbryo embryonic confluence stream which processes
+     * tuples produced by the sourceStreamEmbryos
+     *
+     * @return output buffer stream
      */
-    void decorateGraph();
+    SharedExecStream prepareConfluenceGraph(
+        ExecStreamEmbryo &sourceStreamEmbryo1,
+        ExecStreamEmbryo &sourceStreamEmbryo2,
+        ExecStreamEmbryo &confluenceStreamEmbryo);
 
     /**
      * Executes the prepared stream graph and verifies that its output

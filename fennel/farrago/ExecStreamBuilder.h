@@ -26,6 +26,7 @@
 #include "fennel/farrago/ExecStreamFactory.h"
 #include "fennel/farrago/Fem.h"
 #include "fennel/exec/ExecStream.h"
+#include "fennel/exec/ExecStreamGraphEmbryo.h"
 
 #include <boost/utility.hpp>
 
@@ -68,33 +69,15 @@ FENNEL_BEGIN_NAMESPACE
 class ExecStreamBuilder : public boost::noncopyable
 {
     /**
-     * Database to be accessed by streams.
+     * Embryo for graph being built up.
      */
-    SharedDatabase pDatabase;
-
-    /**
-     * Scheduler which will execute streams.
-     */
-    SharedExecStreamScheduler pScheduler;
-
+    ExecStreamGraphEmbryo &graphEmbryo;
+    
     /**
      * Factory for creating ExecStream objects.
      */
     ExecStreamFactory &streamFactory;
     
-    /**
-     * Graph of stream nodes being built up.
-     */
-    SharedExecStreamGraph pGraph;
-
-    typedef std::map<std::string,ExecStreamEmbryo> StreamMap;
-    typedef StreamMap::const_iterator StreamMapConstIter;
-
-    /**
-     * Streams to be linked and prepared, mapped by name
-     */
-    StreamMap allStreamEmbryos;
-
     /**
      * Allocates a stream based on stream definition, adds the stream to a 
      * graph and records how to prepare the stream.
@@ -111,86 +94,17 @@ class ExecStreamBuilder : public boost::noncopyable
     void buildStreamInputs(
         ProxyExecutionStreamDef &streamDef);
 
-    /**
-     * Gets the name of the trace source to use based on a stream name.
-     *
-     * @param streamName name of stream being traced
-     *
-     * @return corresponding trace source name
-     */
-    std::string getTraceName(
-        const std::string &streamName);
-
-    /**
-     * Ensures that a producer is capable of the specified buffer 
-     * provisioning requirements. If producer is not capable, an adapter
-     * stream is appended to supply the required buffer provisioning. 
-     *
-     * <p>The "producer" may be a single stream or may be a chain of 
-     * streams. In either case, the adapter is appended to the end of the 
-     * group under the name of the original stream. It is named according
-     * to the last stream: <code><i>lastName</i>.provisioner</code>
-     *
-     * @param name name of original stream
-     *
-     * @param requiredDataFlow buffer provisioning requirement
-     *
-     * @return adapted stream
-     */
-    SharedExecStream addAdapterFor(
-        const std::string &name,
-        ExecStreamBufProvision requiredDataFlow);
-
-    /**
-     * Registers a newly created, unprepared stream with the builder and 
-     * adds it to the graph.
-     */
-    void saveStreamEmbryo(
-        ExecStreamEmbryo &);
-    
-    /**
-     * Looks up a registered stream. The stream *must* already be registered.
-     */
-    ExecStreamEmbryo getStreamEmbryo(
-        const std::string &name);
-    
-    /**
-     * Appends an add-on stream, such as a tracing stream or adapter stream,
-     * which postprocesses the output of the original stream.
-     */
-    void interposeStream(
-        const std::string &name,
-        ExecStreamId interposedId);
-
-    /**
-     * Adds dataflow to graph, from one stream's output, after add-ons, to
-     * another stream.
-     *
-     * @param source name of source stream
-     *
-     * @param target name of target stream
-     */
-    void addDataflow(
-        const std::string &source,
-        const std::string &target);
-    
 public:
     /**
      * Creates a new ExecStreamBuilder.
      *
-     * @param pDatabase database to be accessed by streams
-     *
-     * @param pScheduler scheduler which will execute streams
+     * @param graphEmbryo embryo for graph to be built
      *
      * @param streamFactory factory for creating streams
-     *
-     * @param pGraph graph to be built up with stream implementations
      */
     explicit ExecStreamBuilder(
-        SharedDatabase pDatabase,
-        SharedExecStreamScheduler pScheduler, 
-        ExecStreamFactory &streamFactory,
-        SharedExecStreamGraph pGraph);
+        ExecStreamGraphEmbryo &graphEmbryo, 
+        ExecStreamFactory &streamFactory);
 
     virtual ~ExecStreamBuilder();
 

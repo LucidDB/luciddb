@@ -126,8 +126,6 @@ struct ExecStreamResourceQuantity
  */
 struct ExecStreamParams 
 {
-    virtual ~ExecStreamParams();
-    
     /**
      * CacheAccessor to use for any data access.  This will be singular if the
      * stream should not perform data access.
@@ -144,6 +142,10 @@ struct ExecStreamParams
      * Whether ExecStream should enforce resource quotas.
      */
     bool enforceQuotas;
+
+    explicit ExecStreamParams();
+
+    virtual ~ExecStreamParams();
 };
 
 FENNEL_END_NAMESPACE

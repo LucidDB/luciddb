@@ -48,6 +48,8 @@ implementations in a novel fashion to achieve the desired effect
 If you have already ruled out all of those alternatives, then read on.
 As background, you may also want to read the SchedulerDesign.
 
+<hr>
+
 <h3>Choosing a Base Class</h3>
 
 The first step is to decide where your new ExecStream fits into the
@@ -99,7 +101,7 @@ So, given an input data stream like
 <tr><td>USA</td><td>Georgia</td></tr>
 <tr><td>USSR</td><td>Georgia</td></tr>
 <tr><td>USSR</td><td>Georgia</td></tr>
-</table">
+</table>
 
 UniqExecStream should produce an output data stream like
 
@@ -109,13 +111,15 @@ UniqExecStream should produce an output data stream like
 <tr><td>EU</td><td>Germany</td></tr>
 <tr><td>USA</td><td>Georgia</td></tr>
 <tr><td>USSR</td><td>Georgia</td></tr>
-</table">
+</table>
+
+<hr>
 
 <h3>Parameters</h3>
 
 To get maximum mileage out of the effort required to implement an ExecStream,
 it is a good idea to parameterize the stream so that it can be used in a variety
-of contexts.  In UniqExecStream, we might want to support an option which
+of contexts.  For UniqExecStream, we might want to support an option which
 causes duplicate detection to result in an error.  With this option disabled,
 UniqExecStream can be used to implement SELECT DISTINCT; with this option
 enabled, UniqExecStream can be used to prevent duplicate values
@@ -130,7 +134,7 @@ rationale for this rule will be explained later when we cover how streams are
 instantiated.  For now, here is a parameter class for our running example:
 
 <pre><code>
-class UniqExecStreamParams : public ConduitExecStreamParams
+struct UniqExecStreamParams : public ConduitExecStreamParams
 {
     bool failOnDuplicate;
 
@@ -143,6 +147,8 @@ class UniqExecStreamParams : public ConduitExecStreamParams
 
 It is polite (though not strictly required) to define a default constructor for
 your parameters class which assigns sensible values to all parameters.
+
+<hr>
 
 <h3>Algorithm</h3>
 
@@ -172,8 +178,10 @@ while (!input.EOS()) {
 One difficult aspect of ExecStream implementation is transforming active
 code (as above) into a passive state machine.  In the real implementation,
 execution must yield whenever <code>input.readTuple()</code> exhausts an input
-buffer or <code>output.writeTuple</code> overflows an output buffer, 
+buffer or <code>output.writeTuple</code> overflows an output buffer;
 and input and output streams are never invoked directly.
+
+<hr>
 
 <h3>Class Definition</h3>
 
@@ -224,10 +232,11 @@ public:
 };
 </code></pre>
     
-Note that the open and execute methods override base ExecStream methods, while
-the prepare method overloads instead since its parameter signature is different.
-So even though prepare is declared as virtual, it probably will not be invoked
-via virtual dispatch.
+Note that the open, execute and closeImpl methods override base
+ExecStream methods, while the prepare method overloads instead since
+its parameter signature is different.  So even though prepare is
+declared as virtual, it probably will not be invoked via virtual
+dispatch.
 
 <p>
 
@@ -245,6 +254,8 @@ such as boost::scoped_array need not worry about this.
 Likewise, a destructor is unnecessary unless the implementation allocates
 resources without proper holder objects and does not release them inside of
 closeImpl.
+
+<hr>
 
 <h3>Preparation</h3>
 
@@ -306,6 +317,8 @@ allocate it now.  However, it could be very large (depending on the maximum
 tuple size) and does not require significant computation to allocate.  So, we
 defer its allocation until open is called, thus avoiding memory bloat.
 
+<hr>
+
 <h3>Opening for Business</h3>
 
 Once prepared, an ExecStream can be used over and over to process multiple
@@ -334,6 +347,8 @@ execution (e.g. as part of a nested loop join).  In the restart case,
 UniqExecStream can skip reallocating its private buffer.
 
 </code></pre>
+
+<hr>
 
 <h3>Execution</h3>
 
@@ -552,7 +567,10 @@ image from the consumption buffer to the production buffer.
 We do not need to copy to the pLastTupleSaved buffer for every new tuple;
 this is really only required immediately before returning from execute,
 which is when any references to the consumption buffer become invalid.
+
 </ul>
+
+<hr>
 
 <h3>Closing Up Shop</h3>
 
@@ -577,9 +595,90 @@ void UniqExecStream::closeImpl()
 }
 </code></pre>
 
+<hr>
+
 <h3>Unit Testing</h3>
 
-TODO
+Fennel provides a test harness for ExecStream implementations in
+ExecStreamTestBase.  Class ExecStreamTest contains a number of
+stream test cases which you can use as examples.  One of the challenges
+of stream testing is generating test data.  For UniqExecStream,
+we want to generate data containing duplicates; for this, we can
+adapt RampExecStreamGenerator.  So, here is the procedure for one possible test
+case:
+
+<ol>
+
+<li>Set up the duplicate generator to drive a MockProducerExecStream,
+producing a sequence like { 0, 0, 1, 1, 2, 2, ... }
+
+<li>Transform this mock output via UniqExecStream.
+
+<li>Use a normal RampExecStreamGenerator to verify that the UniqExecStream
+sequence is { 0, 1, 2, ... } with the number of output tuples expected to
+be half the number of input tuples.
+
+</ol>
+
+The code for this is shown below.
+
+<pre><code>
+class RampDuplicateExecStreamGenerator : public MockProducerExecStreamGenerator
+{
+public:
+    virtual int64_t generateValue(uint iRow)
+    {
+        return iRow/2;
+    }
+};
+
+void UniqExecStreamTest::testWithDuplicates()
+{
+    StandardTypeDescriptorFactory stdTypeFactory;
+    TupleAttributeDescriptor attrDesc(
+        stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
+
+    MockProducerExecStreamParams mockParams;
+    mockParams.outputTupleDesc.push_back(attrDesc);
+    mockParams.nRows = 5000;     // at least two buffers
+    mockParams.pGenerator.reset(new RampDuplicateExecStreamGenerator());
+    
+    ExecStreamEmbryo mockStreamEmbryo;
+    mockStreamEmbryo.init(new MockProducerExecStream(),mockParams);
+    mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
+    
+    UniqExecStreamParams uniqParams;
+    uniqParams.failOnDuplicate = false;
+
+    ExecStreamEmbryo uniqStreamEmbryo;
+    uniqStreamEmbryo.init(new UniqExecStream(),bufParams);
+    uniqStreamEmbryo.getStream()->setName("UniqExecStream");
+
+    SharedExecStream pOutputStream = prepareTransformGraph(
+        mockStreamEmbryo, uniqStreamEmbryo);
+
+    RampExecStreamGenerator expectedGen;
+
+    verifyOutput(
+        *pOutputStream,
+        mockParams.nRows/2,
+        expectedGen);
+}
+</code></pre>
+
+Other test cases for UniqExecStream would
+
+<ul>
+
+<li>Verify that a stream containing unique sorted values is passed
+through unchanged.
+
+<li>Verify that a stream containing duplicates causes an exception
+when the failOnDuplicate parameter is set to true.
+
+</ul>
+    
+<hr>
 
 <h3>Models and Factories</h3>
 
@@ -624,13 +723,16 @@ Follow the example of other visit methods nearby.
 
 </ol>
 
+<hr>
+
 <h3>Optimizer Rules</h3>
 
-Of course, just because Farrago now knows how to instantiate your stream, 
-you are not done yet, because Farrago does not know anything about
+Of course, even though Farrago now knows how to instantiate your stream, 
+you are not done yet, because Farrago does not yet know anything about
 the semantics of your stream.  So the next step is to write an
 optimizer rule.  Such a big topic is out of scope for this document
-(TODO:  link to a yet-to-be-written HOWTO).
+(TODO:  link to a yet-to-be-written HOWTO), but the next paragraph
+provides an outline.
 
 <p>
 
@@ -646,6 +748,8 @@ translated automatically into an instance of C++ class ProxyUniqStreamDef,
 which is the input to the factory method discussed in the previous section.
 The final step is to get down on your knees and beseech
 the optimizer to do what you mean, not what you say.
+
+<hr>
 
 <h3>Advanced Resource Allocation</h3>
 
@@ -747,6 +851,8 @@ void UniqExecStream::closeImpl()
 
 TODO:  scheduler interface for centralized thread pooling
 
+<hr>
+
 <h3>Exception Handling</h3>
 
 ExecStream::execute may throw an exception at any time.  It is up to scheduler
@@ -756,6 +862,8 @@ reason, streams which throw exceptions may want to update state before
 throwing (as in the UniqExecStream example) to allow for meaningful
 resumption of execution (either skipping an offending tuple, or re-attempting
 a failed request to an underlying service).
+
+<hr>
 
 <h3>More To Explore</h3>
 

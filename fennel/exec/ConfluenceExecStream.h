@@ -33,7 +33,7 @@ struct ConfluenceExecStreamParams : virtual public SingleOutputExecStreamParams
 };
     
 /**
- * ConfluenceExecStream is an abstract base for an ExecStream with
+ * ConfluenceExecStream is an abstract base for any ExecStream with
  * multiple inputs and exactly one output.
  *
  * @author John V. Sichi

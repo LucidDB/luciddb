@@ -24,19 +24,22 @@
 #include "fennel/exec/ExecStreamGraph.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
-
 void ConduitExecStream::setInputBufAccessors(
     std::vector<SharedExecStreamBufAccessor> const &inAccessors)
 {
-    assert(inAccessors.size() == 1);
-    pInAccessor = inAccessors[0];
+    SingleInputExecStream::setInputBufAccessors(inAccessors);
+}
+
+void ConduitExecStream::setOutputBufAccessors(
+    std::vector<SharedExecStreamBufAccessor> const &outAccessors)
+{
+    SingleOutputExecStream::setOutputBufAccessors(outAccessors);
 }
 
 void ConduitExecStream::prepare(ConduitExecStreamParams const &params)
 {
-    assert(pInAccessor);
-    assert(pInAccessor->getProvision() == getInputBufProvision());
-
+    SingleInputExecStream::prepare(params);
+    
     if (params.outputTupleDesc.empty()) {
         pOutAccessor->setTupleShape(
             pInAccessor->getTupleDesc(),
@@ -49,16 +52,7 @@ void ConduitExecStream::prepare(ConduitExecStreamParams const &params)
 void ConduitExecStream::open(bool restart)
 {
     SingleOutputExecStream::open(restart);
-    if (restart) {
-        // restart input
-        pInAccessor->clear();
-        pGraph->getStreamInput(getStreamId(),0)->open(true);
-    }
-}
-
-ExecStreamBufProvision ConduitExecStream::getInputBufProvision() const
-{
-    return BUFPROV_PRODUCER;
+    SingleInputExecStream::open(restart);
 }
 
 ExecStreamResult ConduitExecStream::precheckConduitBuffers()

@@ -88,6 +88,8 @@ class ExecStreamSubFactory_rs
         
             ExternalSortExecStreamParams params;
 
+            // REVIEW jvs 18-Nov-2004:  what about quota accessor?
+
             // ExternalSortStream requires a private ScratchSegment
             params.scratchAccessor =
                 pDatabase->getSegmentFactory()->newScratchSegment(

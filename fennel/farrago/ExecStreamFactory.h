@@ -80,6 +80,11 @@ protected:
     ExecStreamEmbryo embryo;
 
     /**
+     * Embryo for graph being built.
+     */
+    ExecStreamGraphEmbryo *pGraphEmbryo;
+    
+    /**
      * Subfactories for extending factory behavior.
      */
     std::vector<SharedExecStreamSubFactory> subFactories;
@@ -122,9 +127,20 @@ protected:
         FtrsTableWriterExecStreamParams &,
         ProxyTableWriterDef &);
 
-    void copyAdapterParams(
-        ExecStreamParams &adapterParams,
-        ExecStreamParams const &params);
+public:
+    explicit ExecStreamFactory(
+        SharedDatabase pDatabase,
+        SharedFtrsTableWriterFactory pTableWriterFactory,
+        CmdInterpreter::StreamGraphHandle *pStreamGraphHandle);
+
+    void setGraphEmbryo(
+        ExecStreamGraphEmbryo &graphEmbryo);
+
+    void setScratchAccessor(SegmentAccessor &scratchAccessor);
+
+    void addSubFactory(SharedExecStreamSubFactory pSubFactory);
+
+    SharedDatabase getDatabase();
 
     /**
      * Decides whether cache quotas should actually be enforced.  By default
@@ -133,18 +149,6 @@ protected:
      */
     bool shouldEnforceCacheQuotas();
     
-public:
-    explicit ExecStreamFactory(
-        SharedDatabase pDatabase,
-        SharedFtrsTableWriterFactory pTableWriterFactory,
-        CmdInterpreter::StreamGraphHandle *pStreamGraphHandle);
-
-    void setScratchAccessor(SegmentAccessor &scratchAccessor);
-
-    void addSubFactory(SharedExecStreamSubFactory pSubFactory);
-
-    SharedDatabase getDatabase();
-
     // override JniProxyVisitor
     virtual void *getLeafPtr();
     const char *getLeafTypeName();
@@ -154,14 +158,6 @@ public:
      */
     virtual ExecStreamEmbryo const &visitStream(
         ProxyExecutionStreamDef &);
-
-    const ExecStreamEmbryo &newConsumerToProducerProvisionAdapter(
-        std::string &name,
-        ExecStreamParams const &params);
-    
-    const ExecStreamEmbryo &newProducerToConsumerProvisionAdapter(
-        std::string &name,
-        ExecStreamParams const &params);
 
     // helpers for subfactories
     

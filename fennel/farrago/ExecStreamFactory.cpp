@@ -30,8 +30,7 @@
 #include "fennel/ftrs/FtrsTableWriterExecStream.h"
 #include "fennel/ftrs/BTreeSortExecStream.h"
 #include "fennel/exec/SegBufferExecStream.h"
-#include "fennel/exec/CopyExecStream.h"
-#include "fennel/exec/ScratchBufferExecStream.h"
+#include "fennel/exec/ExecStreamGraphEmbryo.h"
 #include "fennel/ftrs/FtrsTableWriterFactory.h"
 #include "fennel/exec/CartesianJoinExecStream.h"
 #include "fennel/exec/MockProducerExecStream.h"
@@ -53,6 +52,7 @@ ExecStreamFactory::ExecStreamFactory(
     pDatabase = pDatabaseInit;
     pTableWriterFactory = pTableWriterFactoryInit;
     pStreamGraphHandle = pStreamGraphHandleInit;
+    pGraphEmbryo = NULL;
 }
 
 void *ExecStreamFactory::getLeafPtr() 
@@ -68,6 +68,12 @@ const char *ExecStreamFactory::getLeafTypeName()
 SharedDatabase ExecStreamFactory::getDatabase()
 {
     return pDatabase;
+}
+
+void ExecStreamFactory::setGraphEmbryo(
+    ExecStreamGraphEmbryo &graphEmbryo)
+{
+    pGraphEmbryo = &graphEmbryo;
 }
 
 void ExecStreamFactory::setScratchAccessor(
@@ -114,45 +120,6 @@ void ExecStreamFactory::invokeVisit(
     ProxyExecutionStreamDef &streamDef)
 {
     FemVisitor::visitTbl.accept(*this,streamDef);
-}
-
-const ExecStreamEmbryo &
-ExecStreamFactory::newConsumerToProducerProvisionAdapter(
-    std::string &name,
-    ExecStreamParams const &params)
-{
-    ScratchBufferExecStreamParams adapterParams;
-    copyAdapterParams(adapterParams, params);
-    createQuotaAccessors(adapterParams);
-    embryo.init(
-        new ScratchBufferExecStream(),
-        adapterParams);
-    embryo.getStream()->setName(name);
-    return embryo;
-}
-
-const ExecStreamEmbryo &
-ExecStreamFactory::newProducerToConsumerProvisionAdapter(
-    std::string &name,
-    ExecStreamParams const &params)
-{
-    CopyExecStreamParams adapterParams;
-    copyAdapterParams(adapterParams, params);
-    createQuotaAccessors(adapterParams);
-    embryo.init(
-        new CopyExecStream(),
-        adapterParams);
-    embryo.getStream()->setName(name);
-    return embryo;
-}
-
-void ExecStreamFactory::copyAdapterParams(
-    ExecStreamParams &adapterParams,
-    ExecStreamParams const &params)
-{
-    adapterParams.pCacheAccessor = params.pCacheAccessor;
-    adapterParams.scratchAccessor = params.scratchAccessor;
-    adapterParams.enforceQuotas = params.enforceQuotas;
 }
 
 // NOTE:  if you are adding a new stream implementation, be careful to follow
@@ -310,30 +277,8 @@ void ExecStreamFactory::readTupleStreamParams(
 void ExecStreamFactory::createQuotaAccessors(
     ExecStreamParams &params)
 {
-    params.pCacheAccessor = pDatabase->getCache();
-    params.scratchAccessor = scratchAccessor;
-    if (shouldEnforceCacheQuotas()) {
-        params.enforceQuotas = true;
-        // All cache access should be wrapped by quota checks.  Actual
-        // quotas will be set per-execution.
-        uint quota = 0;
-        SharedQuotaCacheAccessor pQuotaAccessor(
-            new QuotaCacheAccessor(
-                SharedQuotaCacheAccessor(),
-                params.pCacheAccessor,
-                quota));
-        params.pCacheAccessor = pQuotaAccessor;
-
-        // scratch access has to go through a separate CacheAccessor, but
-        // delegates quota checking to pQuotaAccessor
-        params.scratchAccessor.pCacheAccessor.reset(
-            new QuotaCacheAccessor(
-                pQuotaAccessor,
-                params.scratchAccessor.pCacheAccessor,
-                quota));
-    } else {
-        params.enforceQuotas = false;
-    }
+    assert(pGraphEmbryo);
+    pGraphEmbryo->initStreamParams(params);
 }
 
 void ExecStreamFactory::readTableWriterStreamParams(

@@ -115,7 +115,6 @@ void ExternalSortExecStreamTest::testImpl(
     MockProducerExecStreamParams mockParams;
     mockParams.outputTupleDesc.push_back(attrDesc);
     mockParams.nRows = nRows;
-    mockParams.enforceQuotas = false;
     mockParams.pGenerator = pGenerator;
 
     ExecStreamEmbryo mockStreamEmbryo;
@@ -130,21 +129,18 @@ void ExternalSortExecStreamTest::testImpl(
     pLinearSegment.reset();
     sortParams.pTempSegment = pRandomSegment;
     sortParams.pCacheAccessor = pCache;
-    // TODO jvs 10-Nov-2004:  unify this with scratch segment allocated
-    // inside of prepareGraphTwoBufferedStreams below
     sortParams.scratchAccessor =
         pSegmentFactory->newScratchSegment(pCache, 10);
     sortParams.keyProj.push_back(0);
     sortParams.storeFinalRun = false;
-    sortParams.enforceQuotas = false;
     
     ExecStreamEmbryo sortStreamEmbryo;
     sortStreamEmbryo.init(
         ExternalSortExecStream::newExternalSortExecStream(),sortParams);
     sortStreamEmbryo.getStream()->setName("ExternalSortExecStream");
     
-    SharedExecStream pOutputStream = prepareGraphTwoBufferedStreams(
-        mockStreamEmbryo,sortStreamEmbryo);
+    SharedExecStream pOutputStream = prepareTransformGraph(
+        mockStreamEmbryo, sortStreamEmbryo);
 
     verifyOutput(
         *pOutputStream,

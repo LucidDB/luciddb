@@ -22,21 +22,17 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/farrago/ExecStreamBuilder.h"
 #include "fennel/exec/ExecStreamGraph.h"
+#include "fennel/exec/ExecStream.h"
 #include "fennel/db/Database.h"
-#include "fennel/segment/SegmentFactory.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 ExecStreamBuilder::ExecStreamBuilder(
-    SharedDatabase pDatabaseInit,
-    SharedExecStreamScheduler pSchedulerInit,
-    ExecStreamFactory &streamFactoryInit,
-    SharedExecStreamGraph pGraphInit)
-    : streamFactory(streamFactoryInit)
+    ExecStreamGraphEmbryo &graphEmbryoInit,
+    ExecStreamFactory &streamFactoryInit)
+    : graphEmbryo(graphEmbryoInit), 
+      streamFactory(streamFactoryInit)
 {
-    pDatabase = pDatabaseInit;
-    pScheduler = pSchedulerInit;
-    pGraph = pGraphInit;
 }
 
 ExecStreamBuilder::~ExecStreamBuilder()
@@ -46,12 +42,7 @@ ExecStreamBuilder::~ExecStreamBuilder()
 void ExecStreamBuilder::buildStreamGraph(
     ProxyCmdPrepareExecutionStreamGraph &cmd)
 {
-    // Allocate scratch segment for use by graph and streams
-    SegmentAccessor scratchAccessor =
-        pDatabase->getSegmentFactory()->newScratchSegment(
-            pDatabase->getCache());
-    streamFactory.setScratchAccessor(scratchAccessor);
-    pGraph->setScratchSegment(scratchAccessor.pSegment);
+    streamFactory.setScratchAccessor(graphEmbryo.getScratchAccessor());
 
     // PASS 1: add streams to graph
     SharedProxyExecutionStreamDef pNext = cmd.getStreamDefs();
@@ -63,137 +54,43 @@ void ExecStreamBuilder::buildStreamGraph(
     pNext = cmd.getStreamDefs();
     for (; pNext; ++pNext) {
         buildStreamInputs(*pNext);
+        
+        // REVIEW jvs 18-Nov-2004: convention below is incorrect for plans with
+        // true sinks (e.g. network socket)
+        
         // Streams with no consumer are read directly by clients.  They 
         // are expected to support producer provisioned results.
         if (! pNext->getConsumer()) {
             std::string name = pNext->getName();
             SharedExecStream pAdaptedStream =
-                addAdapterFor(name, BUFPROV_PRODUCER);
-            pGraph->addOutputDataflow(pAdaptedStream->getStreamId());
+                graphEmbryo.addAdapterFor(name, BUFPROV_PRODUCER);
+            graphEmbryo.getGraph().addOutputDataflow(
+                pAdaptedStream->getStreamId());
         }
     }
 
     // PASS 3: sort and prepare streams
-    pGraph->prepare(*pScheduler);
-    std::vector<SharedExecStream> sortedStreams = 
-        pGraph->getSortedStreams();
-    std::vector<SharedExecStream>::iterator pos;
-    for (pos = sortedStreams.begin(); pos != sortedStreams.end(); pos++) {
-        std::string name = (*pos)->getName();
-        ExecStreamEmbryo embryo = getStreamEmbryo(name);
-        std::string traceName = getTraceName(name);
-        embryo.getStream()->initTraceSource(
-            &(pDatabase->getTraceTarget()),
-            traceName);
-        embryo.prepareStream();
-    }
-}
-
-std::string ExecStreamBuilder::getTraceName(
-    const std::string &streamName)
-{
-    // Give streams a source name with an XO prefix so that users can 
-    // choose to trace XOs as a group
-    return "xo." + streamName;
+    graphEmbryo.prepareGraph(
+        &(streamFactory.getDatabase()->getTraceTarget()),
+        "xo.");
 }
 
 void ExecStreamBuilder::buildStream(
     ProxyExecutionStreamDef &streamDef)
 {
     ExecStreamEmbryo embryo = streamFactory.visitStream(streamDef);
-    saveStreamEmbryo(embryo);
+    graphEmbryo.saveStreamEmbryo(embryo);
 }
 
 void ExecStreamBuilder::buildStreamInputs(
     ProxyExecutionStreamDef &streamDef)
 {
     std::string name = streamDef.getName();
-    SharedExecStream pStream = pGraph->findStream(name);
-    ExecStreamBufProvision requiredDataflow =
-        pStream->getInputBufProvision();
     SharedProxyExecutionStreamDef pInput = streamDef.getInput();
     for (; pInput; ++pInput) {
         std::string inputName = pInput->getName();
-        addAdapterFor(inputName, requiredDataflow);
-        addDataflow(inputName, name);
+        graphEmbryo.addDataflow(inputName, name);
     }
-}
-
-SharedExecStream ExecStreamBuilder::addAdapterFor(
-    const std::string &name,
-    ExecStreamBufProvision requiredDataflow)
-{
-    // Get available dataflow from last stream of group
-    SharedExecStream pLastStream = pGraph->findLastStream(name);
-    ExecStreamBufProvision availableDataflow =
-        pLastStream->getOutputBufProvision();
-    assert(availableDataflow != BUFPROV_NONE);
-
-    // If necessary, create an adapter based on the last stream
-    std::string adapterName = pLastStream->getName() + ".provisioner";
-    switch (requiredDataflow) {
-    case BUFPROV_CONSUMER:
-        if (availableDataflow == BUFPROV_PRODUCER) {
-            ExecStreamEmbryo embryo =
-                streamFactory.newProducerToConsumerProvisionAdapter(
-                    adapterName,
-                    *(getStreamEmbryo(pLastStream->getName()).getParams()));
-            saveStreamEmbryo(embryo);
-            interposeStream(name, embryo.getStream()->getStreamId());
-            return embryo.getStream();
-        }
-        break;
-    case BUFPROV_PRODUCER:
-        if (availableDataflow == BUFPROV_CONSUMER) {
-            ExecStreamEmbryo embryo =
-                streamFactory.newConsumerToProducerProvisionAdapter(
-                    adapterName,
-                    *(getStreamEmbryo(pLastStream->getName()).getParams()));
-            saveStreamEmbryo(embryo);
-            interposeStream(name, embryo.getStream()->getStreamId());
-            return embryo.getStream();
-        }
-        break;
-    default:
-        permAssert(false);
-    }
-    return pLastStream;
-}
-
-void ExecStreamBuilder::saveStreamEmbryo(ExecStreamEmbryo &embryo)
-{
-    allStreamEmbryos[embryo.getStream()->getName()] = embryo;
-    pGraph->addStream(embryo.getStream());
-}
-
-ExecStreamEmbryo ExecStreamBuilder::getStreamEmbryo(
-    std::string const &name)
-{
-    StreamMapConstIter pPair = allStreamEmbryos.find(name);
-    assert(pPair != allStreamEmbryos.end());
-    return pPair->second;
-}
-
-void ExecStreamBuilder::addDataflow(
-    const std::string &source,
-    const std::string &target)
-{
-    SharedExecStream pInput = 
-        pGraph->findLastStream(source);
-    SharedExecStream pStream = 
-        pGraph->findStream(target);
-    pGraph->addDataflow(
-        pInput->getStreamId(),
-        pStream->getStreamId());
-}
-    
-void ExecStreamBuilder::interposeStream(
-    const std::string &name,
-    ExecStreamId interposedId)
-{
-    pGraph->interposeStream(
-        name,
-        interposedId);
 }
 
 FENNEL_END_CPPFILE("$Id$");

@@ -24,10 +24,15 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+ExecStreamParams::ExecStreamParams()
+{
+    enforceQuotas = true;
+}
+
 ExecStreamParams::~ExecStreamParams()
 {
 }
-    
+
 ExecStream::ExecStream()
 {
     pGraph = NULL;
