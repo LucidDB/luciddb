@@ -731,17 +731,23 @@ SqlNode TableRef() :
 {
     (
         tableRef = CompoundIdentifier()
+        over = TableOverOpt() {
+            if (over != null) {
+                pos = getPos();
+                tableRef = opTab.overOperator.createCall(tableRef, over, pos);
+            }
+        }
     |
         tableRef = ParenthesizedExpression(EXPR_ACCEPT_QUERY)
+        over = TableOverOpt() {
+            if (over != null) {
+                pos = getPos();
+                tableRef = opTab.overOperator.createCall(tableRef, over, pos);
+            }
+        }
     |
         tableRef = TableConstructor()
     )
-    over = TableOverOpt() {
-        if (over != null) {
-            pos = getPos();
-            tableRef = opTab.overOperator.createCall(tableRef, over, pos);
-        }
-    }
     (
         (<AS>)? alias = Identifier() {
             pos = getPos();
