@@ -1,6 +1,6 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/string.sql#3 $ 
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/string.sql#5 $ 
 0: jdbc:farrago:> 
-0: jdbc:farrago:> SELECT 'unknown' from values('TRUE');
+0: jdbc:farrago:> values 'unknown';
 +----------+
 |  EXPR$0  |
 +----------+

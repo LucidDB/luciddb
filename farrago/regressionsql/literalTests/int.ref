@@ -1,94 +1,94 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/int.sql#2 $ 
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/int.sql#4 $ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test int literal
 0: jdbc:farrago:> 
-0: jdbc:farrago:>  select 0 as t1 from values ('true');
-+-----+
-| T1  |
-+-----+
-| 0   |
-+-----+
-0: jdbc:farrago:>  select 1234 as t1 from values ('true');
-+-------+
-|  T1   |
-+-------+
-| 1234  |
-+-------+
-0: jdbc:farrago:>  select -1234 as t1 from values ('true');
-+--------+
-|   T1   |
-+--------+
-| -1234  |
-+--------+
-0: jdbc:farrago:>  select 34.5 as t1 from values ('true');
-+-------+
-|  T1   |
-+-------+
-| 34.5  |
-+-------+
-0: jdbc:farrago:>  select 32767 as t1 from values ('true');
-+--------+
-|   T1   |
-+--------+
-| 32767  |
-+--------+
-0: jdbc:farrago:>  select -32767 as t1 from values ('true');
+0: jdbc:farrago:> values 0;
 +---------+
-|   T1    |
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:farrago:> values 1234;
++---------+
+| EXPR$0  |
++---------+
+| 1234    |
++---------+
+0: jdbc:farrago:> values -1234;
++---------+
+| EXPR$0  |
++---------+
+| -1234   |
++---------+
+0: jdbc:farrago:> values 34.5;
++---------+
+| EXPR$0  |
++---------+
+| 34.5    |
++---------+
+0: jdbc:farrago:> values 32767;
++---------+
+| EXPR$0  |
++---------+
+| 32767   |
++---------+
+0: jdbc:farrago:> values -32767;
++---------+
+| EXPR$0  |
 +---------+
 | -32767  |
 +---------+
-0: jdbc:farrago:>  select 100000 as t1 from values ('true');
+0: jdbc:farrago:> values 100000;
 +---------+
-|   T1    |
+| EXPR$0  |
 +---------+
 | 100000  |
 +---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
-0: jdbc:farrago:>  select 123456 as t1 from values ('true');
+0: jdbc:farrago:> values 123456;
 +---------+
-|   T1    |
+| EXPR$0  |
 +---------+
 | 123456  |
 +---------+
-0: jdbc:farrago:>  select -123456 as t1 from values ('true');
+0: jdbc:farrago:> values -123456;
 +----------+
-|    T1    |
+|  EXPR$0  |
 +----------+
 | -123456  |
 +----------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:>  select 2147483647 as t1 from values ('true');
+0: jdbc:farrago:> values 2147483647;
 +-------------+
-|     T1      |
+|   EXPR$0    |
 +-------------+
 | 2147483647  |
 +-------------+
-0: jdbc:farrago:>  select -2147483647 as t1 from values ('true');
+0: jdbc:farrago:> values -2147483647;
 +--------------+
-|      T1      |
+|    EXPR$0    |
 +--------------+
 | -2147483647  |
 +--------------+
-0: jdbc:farrago:>  select 1000000000000 as t1 from values ('true');
+0: jdbc:farrago:> values 1000000000000;
 +----------------+
-|       T1       |
+|     EXPR$0     |
 +----------------+
 | 1000000000000  |
 +----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select 4567890123456789 as t1 from values ('true');
+0: jdbc:farrago:> values 4567890123456789;
 +-------------------+
-|        T1         |
+|      EXPR$0       |
 +-------------------+
 | 4567890123456789  |
 +-------------------+
-0: jdbc:farrago:> select -4567890123456789 as t1 from values ('true');
+0: jdbc:farrago:> values -4567890123456789;
 +--------------------+
-|         T1         |
+|       EXPR$0       |
 +--------------------+
 | -4567890123456789  |
 +--------------------+

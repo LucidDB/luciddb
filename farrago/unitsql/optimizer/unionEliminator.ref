@@ -3,7 +3,7 @@
 0: jdbc:farrago:> -- when a UNION call only has one input
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should not contain any calls to any union xo
-0: jdbc:farrago:> explain plan for select multiset[622] from values(true);
+0: jdbc:farrago:> explain plan for select multiset[622] from (values(true));
 +------------------------------------------------------+
 |                       column0                        |
 +------------------------------------------------------+

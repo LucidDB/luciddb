@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/selectAdvanced.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/selectAdvanced.sql#4 $
 0: jdbc:farrago:> -- Full vertical system testing of advanced select statements
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -97,14 +97,14 @@
 +--------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- function in function
-0: jdbc:farrago:> select pow(pow(2.0+1.0,pow(2.0,2.0)-1.0)+3.0,2.0) from values(1);
+0: jdbc:farrago:> values pow(pow(2.0+1.0,pow(2.0,2.0)-1.0)+3.0,2.0);
 +---------+
 | EXPR$0  |
 +---------+
 | 900.0   |
 +---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select -(1+2) from values(1);
+0: jdbc:farrago:> values -(1+2);
 +---------+
 | EXPR$0  |
 +---------+
@@ -117,7 +117,7 @@
 . . . . . . . . > -
 . . . . . . . . > -
 . . . . . . . . > 3
-. . . . . . . . > from values(1);
+. . . . . . . . > from (values(1));
 +---------+---------+---------+
 | EXPR$0  | EXPR$1  | EXPR$2  |
 +---------+---------+---------+
@@ -129,10 +129,10 @@
 0: jdbc:farrago:> ---
 0: jdbc:farrago:> ---
 0: jdbc:farrago:> --3
-0: jdbc:farrago:> --from values(1);
+0: jdbc:farrago:> --from (values(1));
 0: jdbc:farrago:> ------------------------------------------------
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select cast(null as boolean), cast(null as integer) from values(1);
+0: jdbc:farrago:> values (cast(null as boolean), cast(null as integer));
 +---------+---------+
 | EXPR$0  | EXPR$1  |
 +---------+---------+
@@ -140,7 +140,7 @@
 +---------+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- fails
-0: jdbc:farrago:> select cast(null as boolean) + cast(null as integer) from values(1);
+0: jdbc:farrago:> values cast(null as boolean) + cast(null as integer);
 Error: At line 1, column 52: Cannot apply '+' to arguments of type '<BOOLEAN> + <INTEGER>'. Supported form(s): '<TINYINT> + <TINYINT>'
 '<TINYINT> + <SMALLINT>'
 '<TINYINT> + <INTEGER>'
@@ -211,47 +211,47 @@ Error: At line 1, column 52: Cannot apply '+' to arguments of type '<BOOLEAN> + 
 '<INTERVALYEARMONTH> + <INTERVALYEARMONTH>'
 '<ANY> + <ANY>' (state=,code=0)
 0: jdbc:farrago:> -- fails
-0: jdbc:farrago:> select cast(null as boolean) and 1 from values(1);
+0: jdbc:farrago:> values cast(null as boolean) and 1;
 Error: At line 1, column 34: Cannot apply 'AND' to arguments of type '<BOOLEAN> AND <INTEGER>'. Supported form(s): '<BOOLEAN> AND <BOOLEAN>' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- OK - some of these test fail due to cast issues but shouldnt
-0: jdbc:farrago:> --select cast(null as tinyint)+1 from values(1);
-0: jdbc:farrago:> --select cast(null as smallint)=1 from values(1);
-0: jdbc:farrago:> --select cast(null as bigint)<>1 from values(1);
-0: jdbc:farrago:> select cast(null as float)>1.0 from values(1);
+0: jdbc:farrago:> --values cast(null as tinyint)+1;
+0: jdbc:farrago:> --values cast(null as smallint)=1;
+0: jdbc:farrago:> --values cast(null as bigint)<>1;
+0: jdbc:farrago:> values cast(null as float)>1.0;
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> --select cast(null as float)>1 from values(1);
-0: jdbc:farrago:> select cast(null as integer)<=1 from values(1);
+0: jdbc:farrago:> --values cast(null as float)>1;
+0: jdbc:farrago:> values cast(null as integer)<=1;
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> --select cast(null as real)>=1 from values(1);
-0: jdbc:farrago:> --select cast(null as double)/1 from values(1);
-0: jdbc:farrago:> --select cast(null as tinyint)*1 from values(1);
-0: jdbc:farrago:> --select cast(null as tinyint)-1 from values(1);
-0: jdbc:farrago:> --select cast(null as char)='yo wasup?' from values(1);
+0: jdbc:farrago:> --values cast(null as real)>=1;
+0: jdbc:farrago:> --values cast(null as double)/1;
+0: jdbc:farrago:> --values cast(null as tinyint)*1;
+0: jdbc:farrago:> --values cast(null as tinyint)-1;
+0: jdbc:farrago:> --values cast(null as char)='yo wasup?';
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select 3*+-2 from values(1);
+0: jdbc:farrago:> values 3*+-2;
 +---------+
 | EXPR$0  |
 +---------+
 | -6      |
 +---------+
-0: jdbc:farrago:> select cast(1 as varbinary(1))+x'ff' from values(1);
+0: jdbc:farrago:> values cast(1 as varbinary(1))+x'ff';
 Error: Cast function cannot convert value of type INTEGER to type VARBINARY(1) (state=,code=0)
-0: jdbc:farrago:> select x'ff'=x'ff' from values(1);
+0: jdbc:farrago:> values x'ff'=x'ff';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> --select x'ff'=cast(255 as varbinary(1)) from values(1);
+0: jdbc:farrago:> --values x'ff'=cast(255 as varbinary(1));
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --select * from sales.emps group by empno order by 1;

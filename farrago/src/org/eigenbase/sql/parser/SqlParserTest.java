@@ -1063,14 +1063,14 @@ public class SqlParserTest extends TestCase
 
     public void testFromValues()
     {
-        check("select * from values(1,'two'), 3, (4, 'five')",
+        check("select * from (values(1,'two'), 3, (4, 'five'))",
             "SELECT *" + NL
             + "FROM (VALUES (ROW(1, 'two')), (ROW(3)), (ROW(4, 'five')))");
     }
 
     public void testEmptyValues()
     {
-        checkFails("select * from values()",
+        checkFails("select * from (values())",
             "(?s).*Encountered \"\\)\" at line .*");
     }
 
@@ -1162,7 +1162,7 @@ public class SqlParserTest extends TestCase
     public void testBitStringNotImplemented()
     {
         // Bit-string is longer part of the SQL standard. We do not support it.
-        checkFails("select B'1011' || 'foobar' from values (true)",
+        checkFails("select B'1011' || 'foobar' from (values (true))",
             "(?s).*Encountered \"\\\\'1011\\\\'\" at line 1, column 9.*");
     }
 
@@ -1215,7 +1215,7 @@ public class SqlParserTest extends TestCase
             "(?s).*Encountered .*space.* at line 1, column ...*");
         checkFails("select _latin1 \n'newline'",
             "(?s).*Encountered.*newline.* at line 2, column ...*");
-        checkFails("select _unknown-charset'' from values(true)",
+        checkFails("select _unknown-charset'' from (values(true))",
             "(?s).*UNKNOWN-CHARSET.*");
 
         // checkFails("select N'1' '2' from t", "?"); a validator error

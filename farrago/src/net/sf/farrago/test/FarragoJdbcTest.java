@@ -1397,8 +1397,8 @@ public class FarragoJdbcTest extends FarragoTestCase
         throws Exception
     {
         String dateSql =
-            "select DATE '2004-12-21', TIME '12:22:33'," + ""
-            + " TIMESTAMP '2004-12-21 12:22:33' from values('true')";
+            "values (DATE '2004-12-21', TIME '12:22:33'," + ""
+            + " TIMESTAMP '2004-12-21 12:22:33')";
         preparedStmt = connection.prepareStatement(dateSql);
         resultSet = preparedStmt.executeQuery();
 

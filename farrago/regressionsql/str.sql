@@ -5,14 +5,14 @@
 -- and another time to use java. The caller of this script is setting the flag so no need
 -- to do it directly unless you need to do acrobatics.
 
-select 'w'='w' from values(1);
-select 'w'>'w' from values(1);
-select 'W'>'w' from values(1);
-select 'w'>'W' from values(1);
-select 'w'>='w' from values(1);
-select 'a'<'b' from values(1);
-select 'a'<>'b' from values(1);
-select 'a'<='b' from values(1);
+values 'w'='w';
+values 'w'>'w';
+values 'W'>'w';
+values 'w'>'W';
+values 'w'>='w';
+values 'a'<'b';
+values 'a'<>'b';
+values 'a'<='b';
 
 select substring(name from 1 for 2) from sales.emps order by 1;
 select substring(name from 2) from sales.emps order by 1;

@@ -12,8 +12,8 @@
 -- =============================================
 
 -- empty escape string forbidden
-select 'x' LIKE 'x' escape '' from values(1);
-select 'x' similar to 'x' escape '' from values(1);
+values 'x' LIKE 'x' escape '';
+values 'x' similar to 'x' escape '';
 -- escape string with char length > 1 forbidden
 values 'x' like 'x' escape 'ab';
 values 'x' similar to 'x' escape 'ab';
@@ -73,7 +73,7 @@ values x'' between x'' and 1;
 values x'' not between '' and 3;
 values '' between '' and 1.0;
 --all then's and else return null forbidden in SQL99
-select CASE 1 WHEN 1 THEN NULL WHEN 2 THEN NULL END from values(1);
+values CASE 1 WHEN 1 THEN NULL WHEN 2 THEN NULL END;
 
 --according to the standard any trim character value that is not of length 1 should return a runtime error
 values trim('ab' from 'ab');
@@ -91,9 +91,8 @@ values initcap(1);
 
 values abs('');
 
-select nullif('',1) from values(1);
 values nullif('',1);
-select coalesce('a','b',1) from values(1);
+values coalesce('a','b',1);
 
 values localtime();
 values localtime(1,2);

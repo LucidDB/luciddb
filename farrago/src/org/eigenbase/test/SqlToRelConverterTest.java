@@ -278,7 +278,7 @@ public class SqlToRelConverterTest extends TestCase
     }
 
     public void testMultiset() {
-        check("select multiset(select deptno from dept) from values(true)",
+        check("select multiset(select deptno from dept) from (values(true))",
             "ProjectRel(EXPR$0=[$1])" + NL +
             "  JoinRel(condition=[true], joinType=[left])" + NL +
             "    ProjectRel(EXPR$0=[$0])" + NL +

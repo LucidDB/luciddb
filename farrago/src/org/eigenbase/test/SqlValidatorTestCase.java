@@ -123,7 +123,7 @@ public class SqlValidatorTestCase extends TestCase
 
     public void checkExp(String sql)
     {
-        sql = "select " + sql + " from values(true)";
+        sql = "select " + sql + " from (values(true))";
         tester.assertExceptionIsThrown(sql, null, -1, -1);
     }
 
@@ -164,7 +164,7 @@ public class SqlValidatorTestCase extends TestCase
         int line,
         int column)
     {
-        sql = "select " + sql + " from values(true)";
+        sql = "select " + sql + " from (values(true))";
         tester.assertExceptionIsThrown(sql, expected, line, column);
     }
 
@@ -172,7 +172,7 @@ public class SqlValidatorTestCase extends TestCase
         String sql,
         String expected)
     {
-        sql = "select " + sql + " from values(true)";
+        sql = "select " + sql + " from (values(true))";
         checkType(sql, expected);
     }
 
@@ -372,7 +372,7 @@ public class SqlValidatorTestCase extends TestCase
             String expectedCollationName,
             SqlCollation.Coercibility expectedCoercibility)
         {
-            sql = "select " + sql + " from values(true)";
+            sql = "select " + sql + " from (values(true))";
             RelDataType actualType = getResultType(sql);
             SqlCollation collation = actualType.getCollation();
 
@@ -387,7 +387,7 @@ public class SqlValidatorTestCase extends TestCase
             String sql,
             Charset expectedCharset)
         {
-            sql = "select " + sql + " from values(true)";
+            sql = "select " + sql + " from (values(true))";
             RelDataType actualType = tester.getResultType(sql);
             Charset actualCharset = actualType.getCharset();
 

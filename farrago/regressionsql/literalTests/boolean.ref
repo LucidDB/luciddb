@@ -1,25 +1,25 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/boolean.sql#2 $ 
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/boolean.sql#4 $ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test boolean literal
-0: jdbc:farrago:> select true from values('true');
+0: jdbc:farrago:> values true;
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> select TRUE from values('true');
+0: jdbc:farrago:> values TRUE;
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> select false from values('true');
+0: jdbc:farrago:> values false;
 +---------+
 | EXPR$0  |
 +---------+
 | false   |
 +---------+
-0: jdbc:farrago:> select FALSE from values('true');
+0: jdbc:farrago:> values FALSE;
 +---------+
 | EXPR$0  |
 +---------+

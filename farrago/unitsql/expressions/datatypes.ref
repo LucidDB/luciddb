@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/expressions/datatypes.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/expressions/datatypes.sql#4 $
 0: jdbc:farrago:> -- Test expressions with different datatypes
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- VARCHAR comparison
@@ -35,28 +35,28 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Date/time/timestamp literals
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select DATE '2004-12-01' as D1 from values('TRUE');
+0: jdbc:farrago:> values DATE '2004-12-01';
 +-------------+
-|     D1      |
+|   EXPR$0    |
 +-------------+
 | 2004-12-01  |
 +-------------+
-0: jdbc:farrago:> select TIME '12:01:01' as T1 from values('TRUE');
+0: jdbc:farrago:> values TIME '12:01:01';
 +-----------+
-|    T1     |
+|  EXPR$0   |
 +-----------+
 | 12:01:01  |
 +-----------+
-0: jdbc:farrago:> select TIMESTAMP '2004-12-01 12:01:01' as TS1 from values('TRUE');
+0: jdbc:farrago:> values TIMESTAMP '2004-12-01 12:01:01';
 +------------------------+
-|          TS1           |
+|         EXPR$0         |
 +------------------------+
 | 2004-12-01 12:01:01.0  |
 +------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Exponent literals
 0: jdbc:farrago:> -- dtbug 271
-0: jdbc:farrago:> select 0e0 from values (0);
+0: jdbc:farrago:> select 0e0 from (values (0));
 +---------+
 | EXPR$0  |
 +---------+

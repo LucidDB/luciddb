@@ -80,8 +80,7 @@ create view tables_view as
 
 -- TODO:  upper-case strings, and add 'GLOBAL TEMPORARY' and 'SYSTEM TABLE'
 create view table_types_view(table_type) as
-    select * 
-    from values 
+    values 
         ('ForeignTable'),
         ('LocalTable'),
         ('View')

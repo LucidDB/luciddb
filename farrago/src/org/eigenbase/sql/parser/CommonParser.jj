@@ -196,7 +196,7 @@ SqlNode OrderedQueryOrExpr(ExprContext exprContext) :
 }
 
 /**
- * Parses a leaf in a query expression (SELECT or VALUES).
+ * Parses a leaf in a query expression (SELECT, VALUES or TABLE).
  */
 SqlNode LeafQuery(ExprContext exprContext) :
 {
@@ -302,8 +302,8 @@ List ParenthesizedQueryOrCommaList(
 }
 
 /**
- * Parses a query (SELECT, UNION, INTERSECT, EXCEPT, VALUES) followed by the
- * end-of-file symbol.
+ * Parses a query (SELECT, UNION, INTERSECT, EXCEPT, VALUES, TABLE) followed by
+ * the end-of-file symbol.
  */
 SqlNode SqlQueryEof() :
 {
@@ -818,8 +818,6 @@ SqlNode TableRef() :
                 tableRef = opTab.lateralOperator.createCall(tableRef, getPos());
             }
         }
-    |
-        tableRef = TableConstructor()
     |
         <UNNEST>
         args = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_SUBQUERY)

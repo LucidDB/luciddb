@@ -30,7 +30,7 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- dtbug#32
 0: jdbc:farrago:> explain plan for
-. . . . . . . . > select 1 + 2 from values (3);
+. . . . . . . . > select 1 + 2 from (values (3));
 +----------------------------------------+
 |                column0                 |
 +----------------------------------------+
@@ -39,7 +39,7 @@
 |     FennelPullOneRowRel                |
 +----------------------------------------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select 1 + 2 from values (3);
+0: jdbc:farrago:> select 1 + 2 from (values (3));
 +---------+
 | EXPR$0  |
 +---------+

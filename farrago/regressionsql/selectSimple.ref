@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/selectSimple.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/selectSimple.sql#5 $
 0: jdbc:farrago:> -- Full vertical system testing of non advanced select statements
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -250,8 +250,8 @@ Was expecting one of:
     <QUOTED_IDENTIFIER> ... (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --OK 
-0: jdbc:farrago:> --select 0.5e-3*1e3 from values(1);
-0: jdbc:farrago:> --select 0.5e-3*1.1e3 from values(1);
+0: jdbc:farrago:> --values 0.5e-3*1e3;
+0: jdbc:farrago:> --values 0.5e-3*1.1e3;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values true>=true;
 +---------+
@@ -362,49 +362,49 @@ Was expecting one of:
 |         |
 +---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select x'ff'=x'ff' from values(1);
+0: jdbc:farrago:> values x'ff'=x'ff';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> select X'f2'<>x'ff' from values(1);
+0: jdbc:farrago:> values X'f2'<>x'ff';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> select x'11'>x'01' from values(1);
+0: jdbc:farrago:> values x'11'>x'01';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> select x'11'<x'aa' from values(1);
+0: jdbc:farrago:> values x'11'<x'aa';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> select x'0a'<=x'0a' from values(1);
+0: jdbc:farrago:> values x'0a'<=x'0a';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> select x'0a'<=x'10' from values(1);
+0: jdbc:farrago:> values x'0a'<=x'10';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> select x'20'<=x'10' from values(1);
+0: jdbc:farrago:> values x'20'<=x'10';
 +---------+
 | EXPR$0  |
 +---------+
 | false   |
 +---------+
-0: jdbc:farrago:> select x'0001'>=x'100000' from values(1);
+0: jdbc:farrago:> values x'0001'>=x'100000';
 +---------+
 | EXPR$0  |
 +---------+

@@ -60,7 +60,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testMultipleDifferentAs() {
-        check("select 1 as c1,2 as c2 from values(true)");
+        check("select 1 as c1,2 as c2 from (values(true))");
     }
 
     public void testTypeOfAs() {
@@ -95,111 +95,111 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testBooleans() {
-        check("select TRUE OR unknowN from values(true)");
-        check("select false AND unknown from values(true)");
-        check("select not UNKNOWn from values(true)");
-        check("select not true from values(true)");
-        check("select not false from values(true)");
+        check("select TRUE OR unknowN from (values(true))");
+        check("select false AND unknown from (values(true))");
+        check("select not UNKNOWn from (values(true))");
+        check("select not true from (values(true))");
+        check("select not false from (values(true))");
     }
 
     public void testAndOrIllegalTypesFails() {
         //TODO need col+line number
-        assertExceptionIsThrown("select 'abc' AND FaLsE from values(true)",
+        assertExceptionIsThrown("select 'abc' AND FaLsE from (values(true))",
             "(?s).*'<CHAR.3.> AND <BOOLEAN>'.*");
 
-        assertExceptionIsThrown("select TRUE OR 1 from values(true)", "(?s).*");
+        assertExceptionIsThrown("select TRUE OR 1 from (values(true))", "(?s).*");
 
-        assertExceptionIsThrown("select unknown OR 1.0 from values(true)",
+        assertExceptionIsThrown("select unknown OR 1.0 from (values(true))",
             "(?s).*");
 
-        assertExceptionIsThrown("select true OR 1.0e4 from values(true)",
+        assertExceptionIsThrown("select true OR 1.0e4 from (values(true))",
             "(?s).*");
 
         if (todo) {
-            assertExceptionIsThrown("select TRUE OR (TIME '12:00' AT LOCAL) from values(true)",
+            assertExceptionIsThrown("select TRUE OR (TIME '12:00' AT LOCAL) from (values(true))",
                 "some error msg with line + col");
         }
     }
 
     public void testNotIlleagalTypeFails() {
         //TODO need col+line number
-        assertExceptionIsThrown("select NOT 3.141 from values(true)",
+        assertExceptionIsThrown("select NOT 3.141 from (values(true))",
             "(?s).*'NOT<DECIMAL.4, 3.>'.*");
 
-        assertExceptionIsThrown("select NOT 'abc' from values(true)", "(?s).*");
+        assertExceptionIsThrown("select NOT 'abc' from (values(true))", "(?s).*");
 
-        assertExceptionIsThrown("select NOT 1 from values(true)", "(?s).*");
+        assertExceptionIsThrown("select NOT 1 from (values(true))", "(?s).*");
     }
 
     public void testIs() {
-        check("select TRUE IS FALSE FROM values(true)");
-        check("select false IS NULL FROM values(true)");
-        check("select UNKNOWN IS NULL FROM values(true)");
-        check("select FALSE IS UNKNOWN FROM values(true)");
+        check("select TRUE IS FALSE FROM (values(true))");
+        check("select false IS NULL FROM (values(true))");
+        check("select UNKNOWN IS NULL FROM (values(true))");
+        check("select FALSE IS UNKNOWN FROM (values(true))");
 
-        check("select TRUE IS NOT FALSE FROM values(true)");
-        check("select TRUE IS NOT NULL FROM values(true)");
-        check("select false IS NOT NULL FROM values(true)");
-        check("select UNKNOWN IS NOT NULL FROM values(true)");
-        check("select FALSE IS NOT UNKNOWN FROM values(true)");
+        check("select TRUE IS NOT FALSE FROM (values(true))");
+        check("select TRUE IS NOT NULL FROM (values(true))");
+        check("select false IS NOT NULL FROM (values(true))");
+        check("select UNKNOWN IS NOT NULL FROM (values(true))");
+        check("select FALSE IS NOT UNKNOWN FROM (values(true))");
 
-        check("select 1 IS NULL FROM values(true)");
-        check("select 1.2 IS NULL FROM values(true)");
+        check("select 1 IS NULL FROM (values(true))");
+        check("select 1.2 IS NULL FROM (values(true))");
         checkExpFails("'abc' IS NOT UNKNOWN", "(?s).*Cannot apply.*");
     }
 
     public void testIsFails() {
-        assertExceptionIsThrown("select 1 IS TRUE FROM values(true)",
+        assertExceptionIsThrown("select 1 IS TRUE FROM (values(true))",
             "(?s).*'<INTEGER> IS TRUE'.*");
 
-        assertExceptionIsThrown("select 1.1 IS NOT FALSE FROM values(true)",
+        assertExceptionIsThrown("select 1.1 IS NOT FALSE FROM (values(true))",
             "(?s).*");
 
-        assertExceptionIsThrown("select 1.1e1 IS NOT FALSE FROM values(true)",
+        assertExceptionIsThrown("select 1.1e1 IS NOT FALSE FROM (values(true))",
             "(?s).*Cannot apply 'IS NOT FALSE' to arguments of type '<DOUBLE> IS NOT FALSE'.*");
 
-        assertExceptionIsThrown("select 'abc' IS NOT TRUE FROM values(true)",
+        assertExceptionIsThrown("select 'abc' IS NOT TRUE FROM (values(true))",
             "(?s).*");
     }
 
     public void testScalars() {
-        check("select 1  + 1 from values(true)");
-        check("select 1  + 2.3 from values(true)");
-        check("select 1.2+3 from values(true)");
-        check("select 1.2+3.4 from values(true)");
+        check("select 1  + 1 from (values(true))");
+        check("select 1  + 2.3 from (values(true))");
+        check("select 1.2+3 from (values(true))");
+        check("select 1.2+3.4 from (values(true))");
 
-        check("select 1  - 1 from values(true)");
-        check("select 1  - 2.3 from values(true)");
-        check("select 1.2-3 from values(true)");
-        check("select 1.2-3.4 from values(true)");
+        check("select 1  - 1 from (values(true))");
+        check("select 1  - 2.3 from (values(true))");
+        check("select 1.2-3 from (values(true))");
+        check("select 1.2-3.4 from (values(true))");
 
-        check("select 1  * 2 from values(true)");
-        check("select 1.2* 3 from values(true)");
-        check("select 1  * 2.3 from values(true)");
-        check("select 1.2* 3.4 from values(true)");
+        check("select 1  * 2 from (values(true))");
+        check("select 1.2* 3 from (values(true))");
+        check("select 1  * 2.3 from (values(true))");
+        check("select 1.2* 3.4 from (values(true))");
 
-        check("select 1  / 2 from values(true)");
-        check("select 1  / 2.3 from values(true)");
-        check("select 1.2/ 3 from values(true)");
-        check("select 1.2/3.4 from values(true)");
+        check("select 1  / 2 from (values(true))");
+        check("select 1  / 2.3 from (values(true))");
+        check("select 1.2/ 3 from (values(true))");
+        check("select 1.2/3.4 from (values(true))");
     }
 
     public void testScalarsFails() {
         //TODO need col+line number
-        assertExceptionIsThrown("select 1+TRUE from values(true)",
+        assertExceptionIsThrown("select 1+TRUE from (values(true))",
             "(?s).*Cannot apply '\\+' to arguments of type '<INTEGER> \\+ <BOOLEAN>'\\. Supported form\\(s\\):.*");
     }
 
     public void testNumbers() {
-        check("select 1+-2.*-3.e-1/-4>+5 AND true from values(true)");
+        check("select 1+-2.*-3.e-1/-4>+5 AND true from (values(true))");
     }
 
     public void testPrefix() {
         checkExpType("+interval '1' second","INTERVAL SECOND");
         checkExpType("-interval '1' month","INTERVAL MONTH");
-        checkFails("SELECT -'abc' from values(true)",
+        checkFails("SELECT -'abc' from (values(true))",
             "(?s).*Cannot apply '-' to arguments of type '-<CHAR.3.>'.*");
-        checkFails("SELECT +'abc' from values(true)",
+        checkFails("SELECT +'abc' from (values(true))",
             "(?s).*Cannot apply '\\+' to arguments of type '\\+<CHAR.3.>'.*");
     }
 
@@ -273,29 +273,29 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testBinaryString() {
-        check("select x'face'=X'' from values(true)");
-        check("select x'ff'=X'' from values(true)");
+        check("select x'face'=X'' from (values(true))");
+        check("select x'ff'=X'' from (values(true))");
     }
 
     public void testBinaryStringFails() {
-        assertExceptionIsThrown("select x'ffee'='abc' from values(true)",
+        assertExceptionIsThrown("select x'ffee'='abc' from (values(true))",
             "(?s).*Cannot apply '=' to arguments of type '<BINARY.2.> = <CHAR.3.>'.*");
-        assertExceptionIsThrown("select x'ff'=88 from values(true)",
+        assertExceptionIsThrown("select x'ff'=88 from (values(true))",
             "(?s).*Cannot apply '=' to arguments of type '<BINARY.1.> = <INTEGER>'.*");
-        assertExceptionIsThrown("select x''<>1.1e-1 from values(true)",
+        assertExceptionIsThrown("select x''<>1.1e-1 from (values(true))",
             "(?s).*Cannot apply '<>' to arguments of type '<BINARY.0.> <> <DOUBLE>'.*");
-        assertExceptionIsThrown("select x''<>1.1 from values(true)",
+        assertExceptionIsThrown("select x''<>1.1 from (values(true))",
             "(?s).*Cannot apply '<>' to arguments of type '<BINARY.0.> <> <DECIMAL.2, 1.>'.*");
     }
 
     public void testStringLiteral() {
-        check("select n''=_iso_8859-1'abc' from values(true)");
-        check("select N'f'<>'''' from values(true)");
+        check("select n''=_iso_8859-1'abc' from (values(true))");
+        check("select N'f'<>'''' from (values(true))");
     }
 
     public void testStringLiteralBroken() {
-        check("select 'foo'" + NL + "'bar' from values (true)");
-        checkFails("select 'foo' 'bar' from values (true)",
+        check("select 'foo'" + NL + "'bar' from (values(true))");
+        checkFails("select 'foo' 'bar' from (values(true))",
             "String literal continued on same line", 1, 14);
     }
 
@@ -1198,8 +1198,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testNameResolutionInValuesClause() {
-        final String emps = "(select 1 as empno, 'x' as name, 10 as deptno, 'M' as gender, 'San Francisco' as city, 30 as empid, 25 as age from values (1))";
-        final String depts = "(select 10 as deptno, 'Sales' as name from values (1))";
+        final String emps = "(select 1 as empno, 'x' as name, 10 as deptno, 'M' as gender, 'San Francisco' as city, 30 as empid, 25 as age from (values (1)))";
+        final String depts = "(select 10 as deptno, 'Sales' as name from (values (1)))";
 
         checkFails("select * from " + emps + " join " + depts + NL +
             " on emps.deptno = deptno",
@@ -1233,23 +1233,23 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "Column 'DEPTNO' is ambiguous", 3, 4);
         // fail: lateral reference
         checkFails("select * from " + emps + " as e," + NL +
-            " (select 1, e.deptno from values (true)) as d",
+            " (select 1, e.deptno from (values(true))) as d",
             "Unknown identifier 'E'", 2, 13);
     }
 
     public void testNestedFrom() {
         checkType("values (true)", "BOOLEAN");
-        checkType("select * from values (true)", "BOOLEAN");
-        checkType("select * from (select * from values (true))", "BOOLEAN");
-        checkType("select * from (select * from (select * from values (true)))", "BOOLEAN");
+        checkType("select * from (values(true))", "BOOLEAN");
+        checkType("select * from (select * from (values(true)))", "BOOLEAN");
+        checkType("select * from (select * from (select * from (values(true))))", "BOOLEAN");
         checkType(
             "select * from (" +
             "  select * from (" +
-            "    select * from values (true)" +
+            "    select * from (values(true))" +
             "    union" +
-            "    select * from values (false))" +
+            "    select * from (values (false)))" +
             "  except" +
-            "  select * from values (true))", "BOOLEAN");
+            "  select * from (values(true)))", "BOOLEAN");
     }
 
     public void testAmbiguousColumn() {
@@ -1288,7 +1288,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "Column 'DEPTNO' is ambiguous", 3, 4);
         // fail: lateral reference
         checkFails("select * from emp as e," + NL +
-            " (select 1, e.deptno from values (true)) as d",
+            " (select 1, e.deptno from (values(true))) as d",
             "Unknown identifier 'E'", 2, 13);
     }
 
@@ -1311,11 +1311,11 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         // ok: cyclic reference
         check("select * from emp as e" + NL +
             "where e.deptno in (" + NL +
-            "  select 1 from values (true) where e.empno > 10)");
+            "  select 1 from (values(true)) where e.empno > 10)");
         // ok: cyclic reference
         check("select * from emp as e" + NL +
             "where e.deptno in (" + NL +
-            "  select e.deptno from values (true))");
+            "  select e.deptno from (values(true)))");
     }
 
     public void testDoubleNoAlias() {
@@ -1608,18 +1608,18 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         check("select deptno " + NL +
             "from emp " + NL +
             "group by deptno " + NL +
-            "having exists (select sum(emp.sal) > 10 from values (true))");
+            "having exists (select sum(emp.sal) > 10 from (values(true)))");
 
         // if you reference a column from a subquery, it must be a group col
         check("select deptno " +
             "from emp " +
             "group by deptno " +
-            "having exists (select 1 from values (true) where emp.deptno = 10)");
+            "having exists (select 1 from (values(true)) where emp.deptno = 10)");
         if (todo) {
             checkFails("select deptno " +
                 "from emp " +
                 "group by deptno " +
-                "having exists (select 1 from values (true) where emp.empno = 10)",
+                "having exists (select 1 from (values(true)) where emp.empno = 10)",
                 "xx", 1, 1);
         }
         // constant expressions

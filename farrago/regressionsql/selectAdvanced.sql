@@ -25,9 +25,9 @@ select name from sales.emps order by 1;
 (select name from sales.emps) union all (select name from sales.emps) order by 1;
 
 -- function in function
-select pow(pow(2.0+1.0,pow(2.0,2.0)-1.0)+3.0,2.0) from values(1);
+values pow(pow(2.0+1.0,pow(2.0,2.0)-1.0)+3.0,2.0);
 
-select -(1+2) from values(1);
+values -(1+2);
 
 -- multiple line spanning using the neg operator
 ------------------------------------------------
@@ -35,40 +35,40 @@ select - -1,-      -2,
 -
 -
 3
-from values(1);
+from (values(1));
 -- This one is failing but shouldnt. Its basically the same query as above but with a comment in the middle
 --select - -1,-      -2,
 ---- this is a comment in the middle of a statement
 ---
 ---
 --3
---from values(1);
+--from (values(1));
 ------------------------------------------------
 
-select cast(null as boolean), cast(null as integer) from values(1);
+values (cast(null as boolean), cast(null as integer));
 
 -- fails
-select cast(null as boolean) + cast(null as integer) from values(1);
+values cast(null as boolean) + cast(null as integer);
 -- fails
-select cast(null as boolean) and 1 from values(1);
+values cast(null as boolean) and 1;
 
 -- OK - some of these test fail due to cast issues but shouldnt
---select cast(null as tinyint)+1 from values(1);
---select cast(null as smallint)=1 from values(1);
---select cast(null as bigint)<>1 from values(1);
-select cast(null as float)>1.0 from values(1);
---select cast(null as float)>1 from values(1);
-select cast(null as integer)<=1 from values(1);
---select cast(null as real)>=1 from values(1);
---select cast(null as double)/1 from values(1);
---select cast(null as tinyint)*1 from values(1);
---select cast(null as tinyint)-1 from values(1);
---select cast(null as char)='yo wasup?' from values(1);
+--values cast(null as tinyint)+1;
+--values cast(null as smallint)=1;
+--values cast(null as bigint)<>1;
+values cast(null as float)>1.0;
+--values cast(null as float)>1;
+values cast(null as integer)<=1;
+--values cast(null as real)>=1;
+--values cast(null as double)/1;
+--values cast(null as tinyint)*1;
+--values cast(null as tinyint)-1;
+--values cast(null as char)='yo wasup?';
 
-select 3*+-2 from values(1);
-select cast(1 as varbinary(1))+x'ff' from values(1);
-select x'ff'=x'ff' from values(1);
---select x'ff'=cast(255 as varbinary(1)) from values(1);
+values 3*+-2;
+values cast(1 as varbinary(1))+x'ff';
+values x'ff'=x'ff';
+--values x'ff'=cast(255 as varbinary(1));
 
 
 --select * from sales.emps group by empno order by 1;

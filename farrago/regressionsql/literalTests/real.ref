@@ -1,131 +1,131 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/real.sql#2 $ 
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/real.sql#4 $ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test real literal
-0: jdbc:farrago:>  select 0.0 as t1 from values ('true');
-+------+
-|  T1  |
-+------+
-| 0.0  |
-+------+
-0: jdbc:farrago:>  select 1. as t1 from values ('true');
-+-----+
-| T1  |
-+-----+
-| 1   |
-+-----+
-0: jdbc:farrago:>  select .1 as t1 from values ('true');
-+------+
-|  T1  |
-+------+
-| 0.1  |
-+------+
-0: jdbc:farrago:>  select 1004.30 as t1 from values ('true');
+0: jdbc:farrago:> values 0.0;
 +---------+
-|   T1    |
+| EXPR$0  |
++---------+
+| 0.0     |
++---------+
+0: jdbc:farrago:> values 1.;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:farrago:> values .1;
++---------+
+| EXPR$0  |
++---------+
+| 0.1     |
++---------+
+0: jdbc:farrago:> values 1004.30;
++---------+
+| EXPR$0  |
 +---------+
 | 1004.3  |
 +---------+
-0: jdbc:farrago:>  select -34.84 as t1 from values ('true');
+0: jdbc:farrago:> values -34.84;
 +---------+
-|   T1    |
+| EXPR$0  |
 +---------+
 | -34.84  |
 +---------+
-0: jdbc:farrago:>  select 1.2345678901234e+20 as t1 from values ('true');
+0: jdbc:farrago:> values 1.2345678901234e+20;
 +---------------------+
-|         T1          |
+|       EXPR$0        |
 +---------------------+
 | 1.2345678901234E20  |
 +---------------------+
-0: jdbc:farrago:>  select 1.2345678901234e-20 as t1 from values ('true');
+0: jdbc:farrago:> values 1.2345678901234e-20;
 +----------------------+
-|          T1          |
+|        EXPR$0        |
 +----------------------+
 | 1.2345678901234E-20  |
 +----------------------+
-0: jdbc:farrago:>  select 10e40 as t1 from values ('true');
+0: jdbc:farrago:> values 10e40;
 +---------+
-|   T1    |
+| EXPR$0  |
 +---------+
 | 1.0E41  |
 +---------+
-0: jdbc:farrago:>  select -10e40 as t1 from values ('true');
+0: jdbc:farrago:> values -10e40;
 +----------+
-|    T1    |
+|  EXPR$0  |
 +----------+
 | -1.0E41  |
 +----------+
-0: jdbc:farrago:>  select 10e-40 as t1 from values ('true');
+0: jdbc:farrago:> values 10e-40;
 +----------+
-|    T1    |
+|  EXPR$0  |
 +----------+
 | 1.0E-39  |
 +----------+
-0: jdbc:farrago:>  select -10e-40 as t1 from values ('true');
+0: jdbc:farrago:> values -10e-40;
 +-----------+
-|    T1     |
+|  EXPR$0   |
 +-----------+
 | -1.0E-39  |
 +-----------+
-0: jdbc:farrago:>  select 0.0 as t1 from values ('true');
-+------+
-|  T1  |
-+------+
-| 0.0  |
-+------+
-0: jdbc:farrago:>  select 1004.30 as t1 from values ('true');
+0: jdbc:farrago:> values 0.0;
 +---------+
-|   T1    |
+| EXPR$0  |
++---------+
+| 0.0     |
++---------+
+0: jdbc:farrago:> values 1004.30;
++---------+
+| EXPR$0  |
 +---------+
 | 1004.3  |
 +---------+
-0: jdbc:farrago:>  select -34.84 as t1 from values ('true');
+0: jdbc:farrago:> values -34.84;
 +---------+
-|   T1    |
+| EXPR$0  |
 +---------+
 | -34.84  |
 +---------+
-0: jdbc:farrago:>  select 1.2345678901234e+200 as t1 from values ('true');
+0: jdbc:farrago:> values 1.2345678901234e+200;
 +----------------------+
-|          T1          |
+|        EXPR$0        |
 +----------------------+
 | 1.2345678901234E200  |
 +----------------------+
-0: jdbc:farrago:>  select 1.2345678901234e-200 as t1 from values ('true');
+0: jdbc:farrago:> values 1.2345678901234e-200;
 +-----------------------+
-|          T1           |
+|        EXPR$0         |
 +-----------------------+
 | 1.2345678901234E-200  |
 +-----------------------+
-0: jdbc:farrago:>  select 1e400 as t1 from values ('true');
+0: jdbc:farrago:> values 1e400;
 Error: At line 1, column 1: Numeric literal '1E400' out of range (state=,code=0)
-0: jdbc:farrago:>  select -1e400 as t1 from values ('true');
+0: jdbc:farrago:> values -1e400;
 Error: At line 1, column 8: Numeric literal '1E400' out of range (state=,code=0)
-0: jdbc:farrago:>  select 1e-400 as t1 from values ('true');
+0: jdbc:farrago:> values 1e-400;
 Error: Numerical result out of range (at line:col 5:9 to 5:14, characters 44 to 49) (state=,code=0)
-0: jdbc:farrago:>  select -1e-400 as t1 from values ('true');
+0: jdbc:farrago:> values -1e-400;
 Error: Numerical result out of range (at line:col 5:9 to 5:14, characters 47 to 52) (state=,code=0)
-0: jdbc:farrago:>  select -34.84 as t1 from values ('true');
+0: jdbc:farrago:> values -34.84;
 +---------+
-|   T1    |
+| EXPR$0  |
 +---------+
 | -34.84  |
 +---------+
-0: jdbc:farrago:>  select -1004.30 as t1 from values ('true');
+0: jdbc:farrago:> values -1004.30;
 +----------+
-|    T1    |
+|  EXPR$0  |
 +----------+
 | -1004.3  |
 +----------+
-0: jdbc:farrago:>  select -1.2345678901234e+200 as t1 from values ('true');
+0: jdbc:farrago:> values -1.2345678901234e+200;
 +-----------------------+
-|          T1           |
+|        EXPR$0         |
 +-----------------------+
 | -1.2345678901234E200  |
 +-----------------------+
-0: jdbc:farrago:>  select -1.2345678901234e-200 as t1 from values ('true');
+0: jdbc:farrago:> values -1.2345678901234e-200;
 +------------------------+
-|           T1           |
+|         EXPR$0         |
 +------------------------+
 | -1.2345678901234E-200  |
 +------------------------+

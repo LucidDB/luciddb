@@ -8,98 +8,98 @@
 0: jdbc:farrago:> -- If a test fails it should have a sql comment preceding it saying it should fail. Oterwise it should pass.
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should pass but doesnt
-0: jdbc:farrago:> -- select true AND 'x' LIKE 'x' from values(1);
+0: jdbc:farrago:> -- values true AND 'x' LIKE 'x';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- OK
-0: jdbc:farrago:> select ('x' LIKE 'x') or false from values(1);
+0: jdbc:farrago:> values (('x' LIKE 'x') or false);
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> select false AND true OR NOT false AND true from values(1);
+0: jdbc:farrago:> values (false AND true OR NOT false AND true);
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> select not not false from values(1);
+0: jdbc:farrago:> values (not not false);
 +---------+
 | EXPR$0  |
 +---------+
 | false   |
 +---------+
-0: jdbc:farrago:> select 1+2*3*10/2-3*2 from values(1);
+0: jdbc:farrago:> values (1+2*3*10/2-3*2);
 +---------+
 | EXPR$0  |
 +---------+
 | 25      |
 +---------+
-0: jdbc:farrago:> select (1+2)*3 from values(1);
+0: jdbc:farrago:> values ((1+2)*3);
 +---------+
 | EXPR$0  |
 +---------+
 | 9       |
 +---------+
-0: jdbc:farrago:> select 2.0*pow(2.0, 2.0)+3.0*pow(2.0, 2.0) from values(1);
+0: jdbc:farrago:> values (2.0*pow(2.0, 2.0)+3.0*pow(2.0, 2.0));
 +---------+
 | EXPR$0  |
 +---------+
 | 20.0    |
 +---------+
-0: jdbc:farrago:> select 2.0*{fn pow(2.0, 2.0)}+3.0*{fn pow(2.0, 2.0)} from values(1);
-Error: At line 1, column 12: Function '{fn POW}' is not defined (state=,code=0)
+0: jdbc:farrago:> values (2.0*{fn pow(2.0, 2.0)}+3.0*{fn pow(2.0, 2.0)});
+Error: At line 1, column 13: Function '{fn POW}' is not defined (state=,code=0)
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select true is unknown is not unknown from values(1);
+0: jdbc:farrago:> values (true is unknown is not unknown);
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> select not true is unknown is not unknown from values(1);
+0: jdbc:farrago:> values (not true is unknown is not unknown);
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> select true and 3=3 from values(1);
+0: jdbc:farrago:> values (true and 3=3);
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> select true and 3<>3 from values(1);
+0: jdbc:farrago:> values (true and 3<>3);
 +---------+
 | EXPR$0  |
 +---------+
 | false   |
 +---------+
-0: jdbc:farrago:> select true and 3>=3 from values(1);
+0: jdbc:farrago:> values (true and 3>=3);
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> select true and 3<=3 from values(1);
+0: jdbc:farrago:> values (true and 3<=3);
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> select true and 3>3 from values(1);
+0: jdbc:farrago:> values (true and 3>3);
 +---------+
 | EXPR$0  |
 +---------+
 | false   |
 +---------+
-0: jdbc:farrago:> select true and 3<3 from values(1);
+0: jdbc:farrago:> values (true and 3<3);
 +---------+
 | EXPR$0  |
 +---------+
 | false   |
 +---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select true and 1 between 2 and 3 from values(1);
+0: jdbc:farrago:> values (true and 1 between 2 and 3);
 +---------+
 | EXPR$0  |
 +---------+

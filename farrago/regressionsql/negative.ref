@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/negative.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/negative.sql#4 $
 0: jdbc:farrago:> -- Full vertical negative system testing
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -12,12 +12,12 @@
 0: jdbc:farrago:> -- =============================================
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- empty escape string forbidden
-0: jdbc:farrago:> select 'x' LIKE 'x' escape '' from values(1);
+0: jdbc:farrago:> values 'x' LIKE 'x' escape '';
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
 [0]:PC=0 Code=22019 (state=,code=0)
-0: jdbc:farrago:> select 'x' similar to 'x' escape '' from values(1);
+0: jdbc:farrago:> values 'x' similar to 'x' escape '';
 Error: could not calculate results for the following row:
 [ 0 ]
 Messages:
@@ -2850,7 +2850,7 @@ Error: At line 1, column 11: Cannot apply 'BETWEEN' to arguments of type '<CHAR(
 '<VARCHAR> BETWEEN <VARCHAR> AND <CHAR>'
 '<VARCHAR> BETWEEN <VARCHAR> AND <VARCHAR>' (state=,code=0)
 0: jdbc:farrago:> --all then's and else return null forbidden in SQL99
-0: jdbc:farrago:> select CASE 1 WHEN 1 THEN NULL WHEN 2 THEN NULL END from values(1);
+0: jdbc:farrago:> values CASE 1 WHEN 1 THEN NULL WHEN 2 THEN NULL END;
 Error: ELSE clause or at least one THEN clause must be non-NULL (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --according to the standard any trim character value that is not of length 1 should return a runtime error
@@ -2913,85 +2913,6 @@ Error: At line 1, column 8: Cannot apply 'ABS' to arguments of type 'ABS(<CHAR(0
 'ABS(<INTERVALDAYTIME>)'
 'ABS(<INTERVALYEARMONTH>)' (state=,code=0)
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select nullif('',1) from values(1);
-Error: At line 1, column 8: Cannot apply '=' to arguments of type '<CHAR(0)> = <INTEGER>'. Supported form(s): '<ANY> = <ANY>'
-'<TINYINT> = <TINYINT>'
-'<TINYINT> = <SMALLINT>'
-'<TINYINT> = <INTEGER>'
-'<TINYINT> = <BIGINT>'
-'<TINYINT> = <DECIMAL>'
-'<TINYINT> = <FLOAT>'
-'<TINYINT> = <REAL>'
-'<TINYINT> = <DOUBLE>'
-'<SMALLINT> = <TINYINT>'
-'<SMALLINT> = <SMALLINT>'
-'<SMALLINT> = <INTEGER>'
-'<SMALLINT> = <BIGINT>'
-'<SMALLINT> = <DECIMAL>'
-'<SMALLINT> = <FLOAT>'
-'<SMALLINT> = <REAL>'
-'<SMALLINT> = <DOUBLE>'
-'<INTEGER> = <TINYINT>'
-'<INTEGER> = <SMALLINT>'
-'<INTEGER> = <INTEGER>'
-'<INTEGER> = <BIGINT>'
-'<INTEGER> = <DECIMAL>'
-'<INTEGER> = <FLOAT>'
-'<INTEGER> = <REAL>'
-'<INTEGER> = <DOUBLE>'
-'<BIGINT> = <TINYINT>'
-'<BIGINT> = <SMALLINT>'
-'<BIGINT> = <INTEGER>'
-'<BIGINT> = <BIGINT>'
-'<BIGINT> = <DECIMAL>'
-'<BIGINT> = <FLOAT>'
-'<BIGINT> = <REAL>'
-'<BIGINT> = <DOUBLE>'
-'<DECIMAL> = <TINYINT>'
-'<DECIMAL> = <SMALLINT>'
-'<DECIMAL> = <INTEGER>'
-'<DECIMAL> = <BIGINT>'
-'<DECIMAL> = <DECIMAL>'
-'<DECIMAL> = <FLOAT>'
-'<DECIMAL> = <REAL>'
-'<DECIMAL> = <DOUBLE>'
-'<FLOAT> = <TINYINT>'
-'<FLOAT> = <SMALLINT>'
-'<FLOAT> = <INTEGER>'
-'<FLOAT> = <BIGINT>'
-'<FLOAT> = <DECIMAL>'
-'<FLOAT> = <FLOAT>'
-'<FLOAT> = <REAL>'
-'<FLOAT> = <DOUBLE>'
-'<REAL> = <TINYINT>'
-'<REAL> = <SMALLINT>'
-'<REAL> = <INTEGER>'
-'<REAL> = <BIGINT>'
-'<REAL> = <DECIMAL>'
-'<REAL> = <FLOAT>'
-'<REAL> = <REAL>'
-'<REAL> = <DOUBLE>'
-'<DOUBLE> = <TINYINT>'
-'<DOUBLE> = <SMALLINT>'
-'<DOUBLE> = <INTEGER>'
-'<DOUBLE> = <BIGINT>'
-'<DOUBLE> = <DECIMAL>'
-'<DOUBLE> = <FLOAT>'
-'<DOUBLE> = <REAL>'
-'<DOUBLE> = <DOUBLE>'
-'<BINARY> = <BINARY>'
-'<BINARY> = <VARBINARY>'
-'<VARBINARY> = <BINARY>'
-'<VARBINARY> = <VARBINARY>'
-'<CHAR> = <CHAR>'
-'<CHAR> = <VARCHAR>'
-'<VARCHAR> = <CHAR>'
-'<VARCHAR> = <VARCHAR>'
-'<INTERVALDAYTIME> = <INTERVALDAYTIME>'
-'<INTERVALDAYTIME> = <INTERVALYEARMONTH>'
-'<INTERVALYEARMONTH> = <INTERVALDAYTIME>'
-'<INTERVALYEARMONTH> = <INTERVALYEARMONTH>'
-'<ANY> = <ANY>' (state=,code=0)
 0: jdbc:farrago:> values nullif('',1);
 Error: At line 1, column 8: Cannot apply '=' to arguments of type '<CHAR(0)> = <INTEGER>'. Supported form(s): '<ANY> = <ANY>'
 '<TINYINT> = <TINYINT>'
@@ -3071,7 +2992,7 @@ Error: At line 1, column 8: Cannot apply '=' to arguments of type '<CHAR(0)> = <
 '<INTERVALYEARMONTH> = <INTERVALDAYTIME>'
 '<INTERVALYEARMONTH> = <INTERVALYEARMONTH>'
 '<ANY> = <ANY>' (state=,code=0)
-0: jdbc:farrago:> select coalesce('a','b',1) from values(1);
+0: jdbc:farrago:> values coalesce('a','b',1);
 Error: At line 1, column 8: Illegal mixing of types in CASE or COALESCE statement (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values localtime();

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/initsql/createJdbcViews.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/initsql/createJdbcViews.sql#4 $
 0: jdbc:farrago:> -- This script creates a view schema used by JDBC metadata calls
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set verbose true
@@ -80,8 +80,7 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- TODO:  upper-case strings, and add 'GLOBAL TEMPORARY' and 'SYSTEM TABLE'
 0: jdbc:farrago:> create view table_types_view(table_type) as
-. . . . . . . . >     select * 
-. . . . . . . . >     from values 
+. . . . . . . . >     values 
 . . . . . . . . >         ('ForeignTable'),
 . . . . . . . . >         ('LocalTable'),
 . . . . . . . . >         ('View')

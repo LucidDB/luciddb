@@ -1,6 +1,6 @@
 0: jdbc:farragotest:> -- $Id: //open/dt/dev/farrago/testcases/autoCalcRule.sql#1 $
 0: jdbc:farragotest:> 
-0: jdbc:farragotest:> explain plan for select jplus(1, 1) from values(true);
+0: jdbc:farragotest:> explain plan for select jplus(1, 1) from (values(true));
 +------------------------------------+
 |              column0               |
 +------------------------------------+
@@ -8,7 +8,7 @@
 |   IterOneRowRel                    |
 +------------------------------------+
 0: jdbc:farragotest:> 
-0: jdbc:farragotest:> explain plan for select cplus(1, 1) from values(true);
+0: jdbc:farragotest:> explain plan for select cplus(1, 1) from (values(true));
 +--------------------------------------------+
 |                  column0                   |
 +--------------------------------------------+
@@ -17,7 +17,7 @@
 |     FennelPullOneRowRel                    |
 +--------------------------------------------+
 0: jdbc:farragotest:> 
-0: jdbc:farragotest:> explain plan for select cplus(1, 1), jplus(2, 2) from values(true);
+0: jdbc:farragotest:> explain plan for select cplus(1, 1), jplus(2, 2) from (values(true));
 +---------------------------------------------------------+
 |                         column0                         |
 +---------------------------------------------------------+
@@ -28,7 +28,7 @@
 |         IterOneRowRel                                   |
 +---------------------------------------------------------+
 0: jdbc:farragotest:> 
-0: jdbc:farragotest:> explain plan for select jplus(2, 2), cplus(1, 1) from values(true);
+0: jdbc:farragotest:> explain plan for select jplus(2, 2), cplus(1, 1) from (values(true));
 +-------------------------------------------------+
 |                     column0                     |
 +-------------------------------------------------+
@@ -38,7 +38,7 @@
 |       FennelPullOneRowRel                       |
 +-------------------------------------------------+
 0: jdbc:farragotest:> 
-0: jdbc:farragotest:> explain plan for select cplus(jplus(1, 1), 2) from values(true);
+0: jdbc:farragotest:> explain plan for select cplus(jplus(1, 1), 2) from (values(true));
 +---------------------------------------------+
 |                   column0                   |
 +---------------------------------------------+
@@ -49,7 +49,7 @@
 |         IterOneRowRel                       |
 +---------------------------------------------+
 0: jdbc:farragotest:> 
-0: jdbc:farragotest:> explain plan for select jplus(cplus(1, 1), 2) from values(true);
+0: jdbc:farragotest:> explain plan for select jplus(cplus(1, 1), 2) from (values(true));
 +------------------------------------------+
 |                 column0                  |
 +------------------------------------------+

@@ -181,15 +181,15 @@ from stored_coord_list scl;
 
 -- test default constructor (null default value)
 select t.p.x
-from (select new rectilinear_coord() as p from values(0)) as t;
+from (select new rectilinear_coord() as p from (values(0))) as t;
 
 -- test default constructor (non-null default value)
 select t.p.x
-from (select new rectilinear_coord0() as p from values(0)) as t;
+from (select new rectilinear_coord0() as p from (values(0))) as t;
 
 -- FIXME:  test nested constructors
 -- select t.c.radius, t.c.center.y
--- from (select new circle() as c from values(0)) as t;
+-- from (select new circle() as c from (values(0))) as t;
 
 -- test storage
 

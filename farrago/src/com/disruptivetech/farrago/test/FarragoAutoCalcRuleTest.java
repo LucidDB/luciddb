@@ -208,7 +208,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
         throws SQLException
     {
         PreparedStatement stmt = connection.prepareStatement(
-            "select cplus(1, jplus(100, cplus(50, ?))) from values(true)");
+            "values cplus(1, jplus(100, cplus(50, ?)))");
         try {
             stmt.setInt(1, 13);
              

@@ -1,16 +1,16 @@
 -- $Id$
 
-explain plan for select jplus(1, 1) from values(true);
+explain plan for select jplus(1, 1) from (values(true));
 
-explain plan for select cplus(1, 1) from values(true);
+explain plan for select cplus(1, 1) from (values(true));
 
-explain plan for select cplus(1, 1), jplus(2, 2) from values(true);
+explain plan for select cplus(1, 1), jplus(2, 2) from (values(true));
 
-explain plan for select jplus(2, 2), cplus(1, 1) from values(true);
+explain plan for select jplus(2, 2), cplus(1, 1) from (values(true));
 
-explain plan for select cplus(jplus(1, 1), 2) from values(true);
+explain plan for select cplus(jplus(1, 1), 2) from (values(true));
 
-explain plan for select jplus(cplus(1, 1), 2) from values(true);
+explain plan for select jplus(cplus(1, 1), 2) from (values(true));
 
 explain plan for select empno, cplus(jplus(deptno, empid), age), jplus(cplus(deptno, empid), age), age from sales.emps;
 

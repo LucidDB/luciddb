@@ -1,6 +1,6 @@
 -- $Id$ 
 
-SELECT 'unknown' from values('TRUE');
+values 'unknown';
 
 -- test datatype
 create schema test;

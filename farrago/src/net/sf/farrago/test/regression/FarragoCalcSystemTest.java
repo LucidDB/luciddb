@@ -258,7 +258,7 @@ public class FarragoCalcSystemTest extends FarragoTestCase
             }
             SqlCall call = op.createCall(operands, null);
 
-            String sql = "SELECT " + call.toString() + " FROM VALUES(1)";
+            String sql = "SELECT " + call.toString() + " FROM (VALUES(1))";
             String testName = "NULL-TEST-" + op.name + "-";
             suite.addTest(
                 new FarragoCalcSystemTest(vm, sql, testName + vm.name));

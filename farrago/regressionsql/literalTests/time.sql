@@ -1,29 +1,29 @@
 -- $Id$ 
 
 -- test time literal
- select TIME '12:01:01' as T1 from values('TRUE');
- select TIME '00:00' as t1 from values ('true');
- select TIME '01:00' as t1 from values ('true');
- select TIME '02:03 PST' as t1 from values ('true');
- select TIME '11:59 EDT' as t1 from values ('true');
- select TIME '12:00' as t1 from values ('true');
- select TIME '12:01' as t1 from values ('true');
- select TIME '23:59' as t1 from values ('true');
- select TIME '11:59:59.99 PM' as t1 from values ('true');
+values TIME '12:01:01';
+values TIME '00:00';
+values TIME '01:00';
+values TIME '02:03 PST';
+values TIME '11:59 EDT';
+values TIME '12:00';
+values TIME '12:01';
+values TIME '23:59';
+values TIME '11:59:59.99 PM';
 
 -- more ISO format tests that should work
-select time '3:4:5' from values ('true');
-select time '0003:0005:0002' from values ('true');
+values time '3:4:5';
+values time '0003:0005:0002';
 -- with precision
-select time '10:00:00.5' from values ('true');
-select time '10:00:00.35' from values ('true');
-select time '10:00:00.3523' from values ('true');
+values time '10:00:00.5';
+values time '10:00:00.35';
+values time '10:00:00.3523';
 
 -- these should fail
-select time '1003:1005:1002' from values ('true');
-select time '23.54.43..' from values ('true');
-select time '23.54.43.' from values ('true');
-select time '23.54.43.1,000' from values ('true');
+values time '1003:1005:1002';
+values time '23.54.43..';
+values time '23.54.43.';
+values time '23.54.43.1,000';
 
 -- test datatype
 create schema test;

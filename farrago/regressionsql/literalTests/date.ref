@@ -1,369 +1,369 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/date.sql#3 $ 
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/date.sql#4 $ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test date literal
 0: jdbc:farrago:> 
-0: jdbc:farrago:> SELECT date 'January 8, 1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date 'January 8, 1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal 'January 8, 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '1999-01-08' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999-01-08';
 +-------------+
-|     D1      |
+|   EXPR$0    |
 +-------------+
 | 1999-01-08  |
 +-------------+
-0: jdbc:farrago:> SELECT date '1999-01-18' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999-01-18';
 +-------------+
-|     D1      |
+|   EXPR$0    |
 +-------------+
 | 1999-01-18  |
 +-------------+
-0: jdbc:farrago:> SELECT date '1/8/1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1/8/1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '1/8/1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '1/18/1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1/18/1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '1/18/1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '18/1/1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '18/1/1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '18/1/1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '01/02/03' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '01/02/03';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '01/02/03' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '19990108' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '19990108';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '19990108' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '990108' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '990108';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '990108' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '1999.008' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999.008';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '1999.008' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date 'J2451187' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date 'J2451187';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal 'J2451187' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date 'January 8, 99 BC' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date 'January 8, 99 BC';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal 'January 8, 99 BC' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '99-Jan-08' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '99-Jan-08';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '99-Jan-08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '1999-Jan-08' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999-Jan-08';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '1999-Jan-08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '08-Jan-99' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '08-Jan-99';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '08-Jan-99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '08-Jan-1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '08-Jan-1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '08-Jan-1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date 'Jan-08-99' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date 'Jan-08-99';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal 'Jan-08-99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date 'Jan-08-1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date 'Jan-08-1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal 'Jan-08-1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '99-08-Jan' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '99-08-Jan';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '99-08-Jan' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '1999-08-Jan' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999-08-Jan';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '1999-08-Jan' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '99 Jan 08' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '99 Jan 08';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '99 Jan 08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '1999 Jan 08' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999 Jan 08';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '1999 Jan 08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '08 Jan 99' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '08 Jan 99';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '08 Jan 99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '08 Jan 1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '08 Jan 1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '08 Jan 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date 'Jan 08 99' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date 'Jan 08 99';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal 'Jan 08 99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date 'Jan 08 1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date 'Jan 08 1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal 'Jan 08 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '99 08 Jan' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '99 08 Jan';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '99 08 Jan' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '1999 08 Jan' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999 08 Jan';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '1999 08 Jan' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '99-01-08' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '99-01-08';
 +-------------+
-|     D1      |
+|   EXPR$0    |
 +-------------+
 | 0099-01-08  |
 +-------------+
-0: jdbc:farrago:> SELECT date '1999-01-08' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999-01-08';
 +-------------+
-|     D1      |
+|   EXPR$0    |
 +-------------+
 | 1999-01-08  |
 +-------------+
-0: jdbc:farrago:> SELECT date '08-01-99' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '08-01-99';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '08-01-99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '08-01-1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '08-01-1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '08-01-1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '01-08-99' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '01-08-99';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '01-08-99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '01-08-1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '01-08-1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '01-08-1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '99-08-01' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '99-08-01';
 +-------------+
-|     D1      |
+|   EXPR$0    |
 +-------------+
 | 0099-08-01  |
 +-------------+
-0: jdbc:farrago:> SELECT date '1999-08-01' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999-08-01';
 +-------------+
-|     D1      |
+|   EXPR$0    |
 +-------------+
 | 1999-08-01  |
 +-------------+
-0: jdbc:farrago:> SELECT date '99 01 08' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '99 01 08';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '99 01 08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '1999 01 08' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999 01 08';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '1999 01 08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '08 01 99' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '08 01 99';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '08 01 99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '08 01 1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '08 01 1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '08 01 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '01 08 99' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '01 08 99';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '01 08 99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '01 08 1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '01 08 1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '01 08 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '99 08 01' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '99 08 01';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '99 08 01' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '1999 08 01' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999 08 01';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '1999 08 01' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date 'January 8, 1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date 'January 8, 1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal 'January 8, 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '1999-01-08' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999-01-08';
 +-------------+
-|     D1      |
+|   EXPR$0    |
 +-------------+
 | 1999-01-08  |
 +-------------+
-0: jdbc:farrago:> SELECT date '1999-01-18' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999-01-18';
 +-------------+
-|     D1      |
+|   EXPR$0    |
 +-------------+
 | 1999-01-18  |
 +-------------+
-0: jdbc:farrago:> SELECT date '1/8/1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1/8/1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '1/8/1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '1/18/1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1/18/1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '1/18/1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '18/1/1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '18/1/1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '18/1/1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '01/02/03' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '01/02/03';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '01/02/03' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '19990108' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '19990108';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '19990108' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '990108' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '990108';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '990108' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '1999.008' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999.008';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '1999.008' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date 'J2451187' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date 'J2451187';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal 'J2451187' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date 'January 8, 99 BC' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date 'January 8, 99 BC';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal 'January 8, 99 BC' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '99-Jan-08' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '99-Jan-08';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '99-Jan-08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '1999-Jan-08' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999-Jan-08';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '1999-Jan-08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '08-Jan-99' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '08-Jan-99';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '08-Jan-99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '08-Jan-1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '08-Jan-1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '08-Jan-1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date 'Jan-08-99' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date 'Jan-08-99';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal 'Jan-08-99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date 'Jan-08-1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date 'Jan-08-1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal 'Jan-08-1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '99-08-Jan' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '99-08-Jan';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '99-08-Jan' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '1999-08-Jan' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999-08-Jan';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '1999-08-Jan' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '99 Jan 08' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '99 Jan 08';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '99 Jan 08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '1999 Jan 08' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999 Jan 08';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '1999 Jan 08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '08 Jan 99' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '08 Jan 99';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '08 Jan 99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '08 Jan 1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '08 Jan 1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '08 Jan 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date 'Jan 08 99' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date 'Jan 08 99';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal 'Jan 08 99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date 'Jan 08 1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date 'Jan 08 1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal 'Jan 08 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '99 08 Jan' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '99 08 Jan';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '99 08 Jan' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '1999 08 Jan' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999 08 Jan';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '1999 08 Jan' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '99-01-08' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '99-01-08';
 +-------------+
-|     D1      |
+|   EXPR$0    |
 +-------------+
 | 0099-01-08  |
 +-------------+
-0: jdbc:farrago:> SELECT date '1999-01-08' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999-01-08';
 +-------------+
-|     D1      |
+|   EXPR$0    |
 +-------------+
 | 1999-01-08  |
 +-------------+
-0: jdbc:farrago:> SELECT date '08-01-99' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '08-01-99';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '08-01-99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '08-01-1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '08-01-1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '08-01-1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '01-08-99' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '01-08-99';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '01-08-99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '01-08-1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '01-08-1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '01-08-1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '99-08-01' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '99-08-01';
 +-------------+
-|     D1      |
+|   EXPR$0    |
 +-------------+
 | 0099-08-01  |
 +-------------+
-0: jdbc:farrago:> SELECT date '1999-08-01' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999-08-01';
 +-------------+
-|     D1      |
+|   EXPR$0    |
 +-------------+
 | 1999-08-01  |
 +-------------+
-0: jdbc:farrago:> SELECT date '99 01 08' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '99 01 08';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '99 01 08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '1999 01 08' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999 01 08';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '1999 01 08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '08 01 99' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '08 01 99';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '08 01 99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '08 01 1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '08 01 1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '08 01 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '01 08 99' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '01 08 99';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '01 08 99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '01 08 1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '01 08 1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '01 08 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '99 08 01' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '99 08 01';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '99 08 01' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '1999 08 01' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999 08 01';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '1999 08 01' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date 'January 8, 1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date 'January 8, 1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal 'January 8, 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '1999-01-08' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999-01-08';
 +-------------+
-|     D1      |
+|   EXPR$0    |
 +-------------+
 | 1999-01-08  |
 +-------------+
-0: jdbc:farrago:> SELECT date '1999-01-18' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999-01-18';
 +-------------+
-|     D1      |
+|   EXPR$0    |
 +-------------+
 | 1999-01-18  |
 +-------------+
-0: jdbc:farrago:> SELECT date '1/8/1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1/8/1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '1/8/1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '1/18/1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1/18/1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '1/18/1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '18/1/1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '18/1/1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '18/1/1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '01/02/03' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '01/02/03';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '01/02/03' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '19990108' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '19990108';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '19990108' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '990108' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '990108';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '990108' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '1999.008' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999.008';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '1999.008' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date 'J2451187' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date 'J2451187';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal 'J2451187' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date 'January 8, 99 BC' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date 'January 8, 99 BC';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal 'January 8, 99 BC' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '99-Jan-08' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '99-Jan-08';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '99-Jan-08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '1999-Jan-08' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999-Jan-08';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '1999-Jan-08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '08-Jan-99' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '08-Jan-99';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '08-Jan-99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '08-Jan-1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '08-Jan-1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '08-Jan-1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date 'Jan-08-99' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date 'Jan-08-99';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal 'Jan-08-99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date 'Jan-08-1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date 'Jan-08-1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal 'Jan-08-1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '99-08-Jan' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '99-08-Jan';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '99-08-Jan' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '1999-08-Jan' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999-08-Jan';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '1999-08-Jan' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '99 Jan 08' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '99 Jan 08';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '99 Jan 08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '1999 Jan 08' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999 Jan 08';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '1999 Jan 08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '08 Jan 99' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '08 Jan 99';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '08 Jan 99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '08 Jan 1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '08 Jan 1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '08 Jan 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date 'Jan 08 99' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date 'Jan 08 99';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal 'Jan 08 99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date 'Jan 08 1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date 'Jan 08 1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal 'Jan 08 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '99 08 Jan' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '99 08 Jan';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '99 08 Jan' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '1999 08 Jan' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999 08 Jan';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '1999 08 Jan' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '99-01-08' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '99-01-08';
 +-------------+
-|     D1      |
+|   EXPR$0    |
 +-------------+
 | 0099-01-08  |
 +-------------+
-0: jdbc:farrago:> SELECT date '1999-01-08' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999-01-08';
 +-------------+
-|     D1      |
+|   EXPR$0    |
 +-------------+
 | 1999-01-08  |
 +-------------+
-0: jdbc:farrago:> SELECT date '08-01-99' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '08-01-99';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '08-01-99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '08-01-1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '08-01-1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '08-01-1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '01-08-99' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '01-08-99';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '01-08-99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '01-08-1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '01-08-1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '01-08-1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '99-08-01' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '99-08-01';
 +-------------+
-|     D1      |
+|   EXPR$0    |
 +-------------+
 | 0099-08-01  |
 +-------------+
-0: jdbc:farrago:> SELECT date '1999-08-01' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999-08-01';
 +-------------+
-|     D1      |
+|   EXPR$0    |
 +-------------+
 | 1999-08-01  |
 +-------------+
-0: jdbc:farrago:> SELECT date '99 01 08' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '99 01 08';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '99 01 08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '1999 01 08' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999 01 08';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '1999 01 08' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '08 01 99' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '08 01 99';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '08 01 99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '08 01 1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '08 01 1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '08 01 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '01 08 99' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '01 08 99';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '01 08 99' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '01 08 1999' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '01 08 1999';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '01 08 1999' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '99 08 01' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '99 08 01';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '99 08 01' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> SELECT date '1999 08 01' as D1 from values ('true');
+0: jdbc:farrago:> VALUES date '1999 08 01';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '1999 08 01' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- more ISO format tests that should work
-0: jdbc:farrago:> select date '1969-0004-0026' from values ('true');
+0: jdbc:farrago:> values date '1969-0004-0026';
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 1969-04-26  |
 +-------------+
-0: jdbc:farrago:> select date '2005-4-3' from values ('true');
+0: jdbc:farrago:> values date '2005-4-3';
 +-------------+
 |   EXPR$0    |
 +-------------+
 | 2005-04-03  |
 +-------------+
-0: jdbc:farrago:> select date '2004-2-30' from values ('true');
+0: jdbc:farrago:> values date '2004-2-30';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '2004-2-30' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> select date '20005-4-3' from values ('true');
+0: jdbc:farrago:> values date '20005-4-3';
 +-------------+
 |   EXPR$0    |
 +-------------+
 |  005-04-03  |
 +-------------+
 0: jdbc:farrago:> -- these should fail (bad month or date)
-0: jdbc:farrago:> select date '2003-10-32' from values ('true');
+0: jdbc:farrago:> values date '2003-10-32';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '2003-10-32' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
-0: jdbc:farrago:> select date '2003-13-10' from values ('true');
+0: jdbc:farrago:> values date '2003-13-10';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal DATE literal '2003-13-10' at line 1, column 13: not in format 'yyyy-MM-dd' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test datatype

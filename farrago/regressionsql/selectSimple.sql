@@ -45,8 +45,8 @@ select age from (select emps.* from sales.emps) order by 1;
 SELECT 0.5e1.1 from sales.emps;
 
 --OK 
---select 0.5e-3*1e3 from values(1);
---select 0.5e-3*1.1e3 from values(1);
+--values 0.5e-3*1e3;
+--values 0.5e-3*1.1e3;
 
 values true>=true;
 values true>=false;
@@ -67,13 +67,13 @@ values unknown<=true;
 values unknown<=false;
 values unknown<=unknown;
 
-select x'ff'=x'ff' from values(1);
-select X'f2'<>x'ff' from values(1);
-select x'11'>x'01' from values(1);
-select x'11'<x'aa' from values(1);
-select x'0a'<=x'0a' from values(1);
-select x'0a'<=x'10' from values(1);
-select x'20'<=x'10' from values(1);
-select x'0001'>=x'100000' from values(1);
+values x'ff'=x'ff';
+values X'f2'<>x'ff';
+values x'11'>x'01';
+values x'11'<x'aa';
+values x'0a'<=x'0a';
+values x'0a'<=x'10';
+values x'20'<=x'10';
+values x'0001'>=x'100000';
 
 -- end selectSimple.sql

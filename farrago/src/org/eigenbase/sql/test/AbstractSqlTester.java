@@ -39,12 +39,12 @@ public abstract class AbstractSqlTester implements SqlTester
     /**
      * Converts a scalar expression into a SQL query.
      *
-     * <p>By default, "expr" becomes "SELECT expr FROM VALUES(1)". Derived
+     * <p>By default, "expr" becomes "VALUES (expr)". Derived
      * classes may override.
      */
     protected String buildQuery(String expression)
     {
-        return "SELECT " + expression + " FROM VALUES(1)";
+        return "values (" + expression + ")";
     }
 
     public void checkScalarExact(

@@ -1,53 +1,53 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/str.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/str.sql#2 $
 0: jdbc:farrago:> -- Full vertical system testing of non function statements
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
 0: jdbc:farrago:> -- and another time to use java. The caller of this script is setting the flag so no need
 0: jdbc:farrago:> -- to do it directly unless you need to do acrobatics.
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select 'w'='w' from values(1);
+0: jdbc:farrago:> values 'w'='w';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> select 'w'>'w' from values(1);
+0: jdbc:farrago:> values 'w'>'w';
 +---------+
 | EXPR$0  |
 +---------+
 | false   |
 +---------+
-0: jdbc:farrago:> select 'W'>'w' from values(1);
+0: jdbc:farrago:> values 'W'>'w';
 +---------+
 | EXPR$0  |
 +---------+
 | false   |
 +---------+
-0: jdbc:farrago:> select 'w'>'W' from values(1);
+0: jdbc:farrago:> values 'w'>'W';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> select 'w'>='w' from values(1);
+0: jdbc:farrago:> values 'w'>='w';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> select 'a'<'b' from values(1);
+0: jdbc:farrago:> values 'a'<'b';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> select 'a'<>'b' from values(1);
+0: jdbc:farrago:> values 'a'<>'b';
 +---------+
 | EXPR$0  |
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> select 'a'<='b' from values(1);
+0: jdbc:farrago:> values 'a'<='b';
 +---------+
 | EXPR$0  |
 +---------+

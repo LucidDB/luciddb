@@ -1,8 +1,8 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/expressions/values.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/expressions/values.sql#2 $
 0: jdbc:farrago:> -- Test queries with VALUES
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- single-row
-0: jdbc:farrago:> select * from values ('hi',2,'bye');
+0: jdbc:farrago:> select * from (values ('hi',2,'bye'));
 +---------+---------+---------+
 | EXPR$0  | EXPR$1  | EXPR$2  |
 +---------+---------+---------+
@@ -18,7 +18,7 @@
 +---------+---------+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- multi-row
-0: jdbc:farrago:> select * from values ('hi',2,'bye'), ('foo',3,'bar') order by 1;
+0: jdbc:farrago:> select * from (values ('hi',2,'bye'), ('foo',3,'bar')) order by 1;
 +---------+---------+---------+
 | EXPR$0  | EXPR$1  | EXPR$2  |
 +---------+---------+---------+

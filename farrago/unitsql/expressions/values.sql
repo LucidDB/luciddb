@@ -2,13 +2,13 @@
 -- Test queries with VALUES
 
 -- single-row
-select * from values ('hi',2,'bye');
+select * from (values ('hi',2,'bye'));
 
 -- top-level
 values ('hi',2,'bye');
 
 -- multi-row
-select * from values ('hi',2,'bye'), ('foo',3,'bar') order by 1;
+select * from (values ('hi',2,'bye'), ('foo',3,'bar')) order by 1;
 
 -- top-level ordered
 values ('hi',2,'bye'), ('foo',3,'bar') order by 1;

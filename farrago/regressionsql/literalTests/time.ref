@@ -1,56 +1,56 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/time.sql#3 $ 
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/time.sql#4 $ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test time literal
-0: jdbc:farrago:>  select TIME '12:01:01' as T1 from values('TRUE');
+0: jdbc:farrago:> values TIME '12:01:01';
 +-----------+
-|    T1     |
+|  EXPR$0   |
 +-----------+
 | 12:01:01  |
 +-----------+
-0: jdbc:farrago:>  select TIME '00:00' as t1 from values ('true');
+0: jdbc:farrago:> values TIME '00:00';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal TIME literal '00:00' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
-0: jdbc:farrago:>  select TIME '01:00' as t1 from values ('true');
+0: jdbc:farrago:> values TIME '01:00';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal TIME literal '01:00' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
-0: jdbc:farrago:>  select TIME '02:03 PST' as t1 from values ('true');
+0: jdbc:farrago:> values TIME '02:03 PST';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal TIME literal '02:03 PST' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
-0: jdbc:farrago:>  select TIME '11:59 EDT' as t1 from values ('true');
+0: jdbc:farrago:> values TIME '11:59 EDT';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal TIME literal '11:59 EDT' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
-0: jdbc:farrago:>  select TIME '12:00' as t1 from values ('true');
+0: jdbc:farrago:> values TIME '12:00';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal TIME literal '12:00' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
-0: jdbc:farrago:>  select TIME '12:01' as t1 from values ('true');
+0: jdbc:farrago:> values TIME '12:01';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal TIME literal '12:01' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
-0: jdbc:farrago:>  select TIME '23:59' as t1 from values ('true');
+0: jdbc:farrago:> values TIME '23:59';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal TIME literal '23:59' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
-0: jdbc:farrago:>  select TIME '11:59:59.99 PM' as t1 from values ('true');
+0: jdbc:farrago:> values TIME '11:59:59.99 PM';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal TIME literal '11:59:59.99 PM' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- more ISO format tests that should work
-0: jdbc:farrago:> select time '3:4:5' from values ('true');
+0: jdbc:farrago:> values time '3:4:5';
 +-----------+
 |  EXPR$0   |
 +-----------+
 | 03:04:05  |
 +-----------+
-0: jdbc:farrago:> select time '0003:0005:0002' from values ('true');
+0: jdbc:farrago:> values time '0003:0005:0002';
 +-----------+
 |  EXPR$0   |
 +-----------+
 | 03:05:02  |
 +-----------+
 0: jdbc:farrago:> -- with precision
-0: jdbc:farrago:> select time '10:00:00.5' from values ('true');
+0: jdbc:farrago:> values time '10:00:00.5';
 +-----------+
 |  EXPR$0   |
 +-----------+
 | 10:00:00  |
 +-----------+
-0: jdbc:farrago:> select time '10:00:00.35' from values ('true');
+0: jdbc:farrago:> values time '10:00:00.35';
 +-----------+
 |  EXPR$0   |
 +-----------+
 | 10:00:00  |
 +-----------+
-0: jdbc:farrago:> select time '10:00:00.3523' from values ('true');
+0: jdbc:farrago:> values time '10:00:00.3523';
 +-----------+
 |  EXPR$0   |
 +-----------+
@@ -58,13 +58,13 @@ Error: net.sf.farrago.parser.impl.ParseException: Illegal TIME literal '11:59:59
 +-----------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- these should fail
-0: jdbc:farrago:> select time '1003:1005:1002' from values ('true');
+0: jdbc:farrago:> values time '1003:1005:1002';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal TIME literal '1003:1005:1002' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
-0: jdbc:farrago:> select time '23.54.43..' from values ('true');
+0: jdbc:farrago:> values time '23.54.43..';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal TIME literal '23.54.43..' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
-0: jdbc:farrago:> select time '23.54.43.' from values ('true');
+0: jdbc:farrago:> values time '23.54.43.';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal TIME literal '23.54.43.' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
-0: jdbc:farrago:> select time '23.54.43.1,000' from values ('true');
+0: jdbc:farrago:> values time '23.54.43.1,000';
 Error: net.sf.farrago.parser.impl.ParseException: Illegal TIME literal '23.54.43.1,000' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test datatype
