@@ -160,7 +160,8 @@ public abstract class FarragoPluginCache extends FarragoCompoundAllocation
                 URLClassLoader classLoader =
                     new URLClassLoader(new URL [] {
                             new URL("file:" + libraryName)
-                        });
+                        },
+                        FarragoPluginCache.class.getClassLoader());
                 return classLoader.loadClass(className);
             }
         } catch (Throwable ex) {
@@ -190,7 +191,9 @@ public abstract class FarragoPluginCache extends FarragoCompoundAllocation
 
         FarragoPlugin plugin;
         try {
-            plugin = (FarragoPlugin) pluginClass.newInstance();
+            Object obj = pluginClass.newInstance();
+            assert(obj instanceof FarragoPlugin) : obj.getClass();
+            plugin = (FarragoPlugin) obj;
             plugin.initialize(repos, options);
         } catch (Throwable ex) {
             throw FarragoResource.instance().newPluginInitFailed(libraryName,

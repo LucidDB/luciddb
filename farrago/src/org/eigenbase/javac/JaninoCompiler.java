@@ -49,6 +49,12 @@ public class JaninoCompiler implements JavaCompiler
     // implement JavaCompiler
     public void compile()
     {
+        // REVIEW jvs 29-Sept-2004: we used to delegate to
+        // ClassLoader.getSystemClassLoader(), but for some reason that didn't
+        // work when run from ant's junit task without forking.  Should
+        // probably take it as a parameter, but how should we decide what to
+        // use?
+        
         assert(args.destdir != null);
         assert(args.fullClassName != null);
         // TODO jvs 28-June-2004: with some glue code, we could probably get
@@ -56,7 +62,7 @@ public class JaninoCompiler implements JavaCompiler
         // of from a file.  (It's possible to do that with the SimpleCompiler
         // class, but then we don't avoid the bytecode storage.)
         classLoader = new JavaSourceClassLoader(
-            ClassLoader.getSystemClassLoader(),
+            getClass().getClassLoader(),
             new File[] { new File(args.destdir) },
             null,
             0);

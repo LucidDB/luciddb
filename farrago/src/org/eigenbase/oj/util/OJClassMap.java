@@ -59,10 +59,15 @@ public class OJClassMap
      */
     private Class syntheticSuperClass;
 
-    // REVIEW jvs 21-Jun-2003:  I think this needs to remain static to prevent
-    // conflicts between concurrent threads, right?  Then access to it needs to
-    // be synchronized.
-    private static int id = 0;
+    // NOTE jvs 29-Sept-2004:  I made the id generator non-static because
+    // for inner classes there's no need to worry about conflicts between
+    // multiple threads.  Previously, this variable was static, but without
+    // proper synchronization.
+    
+    /**
+     * Sequence generator for generated class names.
+     */
+    private int id;
 
     public OJClassMap(Class syntheticSuperClass)
     {

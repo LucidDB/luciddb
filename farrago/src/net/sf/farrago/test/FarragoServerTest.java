@@ -56,6 +56,13 @@ public class FarragoServerTest extends TestCase
 
     //~ Methods ---------------------------------------------------------------
 
+    protected void setUp()
+        throws Exception
+    {
+        super.setUp();
+        FarragoTestCase.forceShutdown();
+    }
+    
     public void testServer()
         throws Exception
     {

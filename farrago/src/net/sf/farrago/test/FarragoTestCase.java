@@ -78,6 +78,8 @@ public abstract class FarragoTestCase extends DiffTestCase
      */
     private static SortedMap savedFennelConfig;
 
+    private static Thread shutdownHook;
+
     //~ Instance fields -------------------------------------------------------
 
     /** ResultSet for processing queries. */
@@ -133,14 +135,19 @@ public abstract class FarragoTestCase extends DiffTestCase
     public static void staticSetUp()
         throws Exception
     {
-        FarragoJdbcEngineDriver driver = newJdbcEngineDriver();
-        connection = DriverManager.getConnection(driver.getUrlPrefix());
-        FarragoJdbcEngineConnection farragoConnection =
-            (FarragoJdbcEngineConnection) connection;
-        repos = farragoConnection.getSession().getRepos();
-        connection.setAutoCommit(false);
-
-        saveParameters();
+        if (shutdownHook == null) {
+            shutdownHook = new ShutdownThread();
+            Runtime.getRuntime().addShutdownHook(shutdownHook);
+        }
+        if (connection == null) {
+            FarragoJdbcEngineDriver driver = newJdbcEngineDriver();
+            connection = DriverManager.getConnection(driver.getUrlPrefix());
+            FarragoJdbcEngineConnection farragoConnection =
+                (FarragoJdbcEngineConnection) connection;
+            repos = farragoConnection.getSession().getRepos();
+            connection.setAutoCommit(false);
+            saveParameters();
+        }
 
         runCleanup();
     }
@@ -169,11 +176,30 @@ public abstract class FarragoTestCase extends DiffTestCase
         if (repos != null) {
             restoreParameters();
         }
+        if (connection != null) {
+            connection.rollback();
+        }
+    }
+
+    public static void forceShutdown() throws Exception
+    {
         repos = null;
         if (connection != null) {
             connection.rollback();
             connection.close();
             connection = null;
+        }
+    }
+
+    private static class ShutdownThread extends Thread
+    {
+        public void run()
+        {
+            try {
+                forceShutdown();
+            } catch (Exception ex) {
+                // TODO:  trace
+            }
         }
     }
 

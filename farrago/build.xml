@@ -388,8 +388,16 @@ require version '${required.ant.version}'."/>
     <pathelement location="${ant.dir}/lib/junit.jar"/>
     <pathelement location="${ant.dir}/lib/xercesImpl.jar"/>
     <pathelement location="${ant.dir}/lib/xml-apis.jar"/>
+    <pathelement location="${ant.dir}/lib/ant-junit.jar"/>
   </path>
   <property name="ant.classpath" refid="ant.classpath"/>
+
+  <!-- classpath for running tests via ant -->
+  <path id="test.classpath">
+    <pathelement path="${sqlline.classpath}"/>
+    <pathelement path="${ant.classpath}"/>
+  </path>
+  <property name="test.classpath" refid="test.classpath"/>
 
   <!-- classpath for reentrantly invoking ant from createUserRepository -->
   <path id="createUserRepository.classpath">
@@ -991,28 +999,30 @@ require version '${required.ant.version}'."/>
   <!-- run all JUnit test cases (or a single test case chosen with -->
   <!-- property junit.class, normally from script junitSingle) -->
   <target name="junit" depends="all,cleanTestLogs">
-    <mkdir dir="${testlog.dir}"/>
-    <junit printsummary="yes" fork="yes" failureproperty="junit.failure"
-      tempdir="${testlog.dir}">
-      <classpath refid="sqlline.classpath"/>
-      <jvmarg line="${assertions.jvmarg}"/>
-      <jvmarg line="&FarragoProps;"/>
-      <sysproperty key="java.ext.dirs" value="${sqlline.dir}"/>
-      <sysproperty key="net.sf.farrago.fileset.unitsql"
-        value="${fileset.unitsql}"/>
-      <formatter type="plain"/>
-      <formatter type="xml"/> <!-- for integration builds -->
-      <batchtest todir="${testlog.dir}" unless="junit.class">
+    <antFork target="forked_junit" classpathref="test.classpath">
+      <jvmargs>
+        <jvmarg line="${assertions.jvmarg}"/>
+        <jvmarg line="&FarragoProps;"/>
+        <syspropertyset>
+          <propertyref builtin="commandline"/>
+        </syspropertyset>
+      </jvmargs>
+    </antFork>
+  </target>
+
+  <target name="forked_junit" depends="all,cleanTestLogs">
+    <runTests>
+      <testfileset>
         <fileset dir="${classes.dir}">
           <exclude name="**/test/regression/*Test.class"/>
           <include name="**/*Test.class"/>
         </fileset>
-      </batchtest>
-      <test todir="${testlog.dir}" if="junit.class"
-        name="${junit.class}" />
-    </junit>
-    <delete file="${FarragoTrace.log}.lck"/>
-    <fail message="Test failure(s)" if="junit.failure"/>
+      </testfileset>
+      <junitargs>
+        <sysproperty key="net.sf.farrago.fileset.unitsql"
+          value="${fileset.unitsql}"/>
+      </junitargs>
+    </runTests>
   </target>
 
   <target name="test">
@@ -1030,27 +1040,30 @@ require version '${required.ant.version}'."/>
   <!-- run all regression test cases; -->
   <!-- for use only as a subtarget to avoid destroying test logs from junit -->
   <target name="regressionWithoutBuild">
-    <mkdir dir="${testlog.dir}"/>
-    <junit printsummary="yes" fork="yes" failureproperty="junit.failure"
-      tempdir="${testlog.dir}">
-      <classpath refid="sqlline.classpath"/>
-      <jvmarg line="${assertions.jvmarg}"/>
-      <jvmarg line="&FarragoProps;"/>
-      <sysproperty key="java.ext.dirs" value="${sqlline.dir}"/>
-      <sysproperty key="net.sf.farrago.fileset.regressionsql"
-        value="${fileset.regressionsql}"/>
-      <formatter type="plain"/>
-      <formatter type="xml"/> <!-- for integration builds -->
-      <batchtest todir="${testlog.dir}" unless="junit.class">
+    <antFork target="forked_regressionWithoutBuild" 
+      classpathref="test.classpath">
+      <jvmargs>
+        <jvmarg line="${assertions.jvmarg}"/>
+        <jvmarg line="&FarragoProps;"/>
+        <syspropertyset>
+          <propertyref builtin="commandline"/>
+        </syspropertyset>
+      </jvmargs>
+    </antFork>
+  </target>
+
+  <target name="forked_regressionWithoutBuild">
+    <runTests>
+      <testfileset>
         <fileset dir="${classes.dir}">
           <include name="**/regression/*Test.class"/>
         </fileset>
-      </batchtest>
-      <test todir="${testlog.dir}" if="junit.class"
-        name="${junit.class}" />
-    </junit>
-    <delete file="${FarragoTrace.log}.lck"/>
-    <fail message="Test failure(s)" if="junit.failure"/>
+      </testfileset>
+      <junitargs>
+        <sysproperty key="net.sf.farrago.fileset.regressionsql"
+          value="${fileset.regressionsql}"/>
+      </junitargs>
+    </runTests>
   </target>
 
   <!-- create the mdrlibs distribution; -->

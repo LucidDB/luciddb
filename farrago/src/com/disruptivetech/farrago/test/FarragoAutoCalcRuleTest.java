@@ -73,6 +73,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
 {
     //~ Static fields/initializers --------------------------------------------
 
+    private static SqlStdOperatorTable opTab;
     private static TestOJRexImplementorTable testOjRexImplementor;
 
     //~ Constructors ----------------------------------------------------------
@@ -120,7 +121,8 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
     public static String staticAutoCalcSetUp()
         throws Exception
     {
-        SqlStdOperatorTable opTab = SqlOperatorTable.std();
+        opTab = new SqlStdOperatorTable();
+        opTab.init();
         testOjRexImplementor = new TestOJRexImplementorTable(opTab);
 
         String originalDriverClass = 
@@ -385,6 +387,11 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
             this.ojRexImplementor = ojRexImplementor;
         }
 
+        public SqlOperatorTable getSqlOperatorTable()
+        {
+            return opTab;
+        }
+        
         public OJRexImplementorTable getOJRexImplementorTable()
         {
             return ojRexImplementor;
