@@ -27,7 +27,7 @@ TUPLE_DEPS = libfennel_common.la
 
 CALC_DEPS = libfennel_tuple.la $(TUPLE_DEPS)
 
-BTREE_DEPS = libfennel_txn.la $(CALC_DEPS) $(TXN_DEPS)
+BTREE_DEPS = libfennel_txn.la $(TXN_DEPS) libfennel_calc.la $(CALC_DEPS)
 
 DB_DEPS = libfennel_btree.la $(BTREE_DEPS)
 

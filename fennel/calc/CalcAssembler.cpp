@@ -128,8 +128,16 @@ void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
     switch (type) 
     {
     case STANDARD_TYPE_REAL:
+
         *(reinterpret_cast<float *>(const_cast<PBuffer>(tupleDatum.pData))) = 
             numeric_cast<float>(value);
+
+        // Check for underflow where the value becomes 0
+        // NOTE: Underflows that causes precision loss but does not become 0
+        //       are ignored for now.
+        if ((value != 0) && 
+            (*(reinterpret_cast<float *>(const_cast<PBuffer>(tupleDatum.pData))) == 0))
+            throw InvalidValueException<double>("bad numeric cast: underflow", type, value);
         break;
     case STANDARD_TYPE_DOUBLE:
         *(reinterpret_cast<double *>(const_cast<PBuffer>(tupleDatum.pData))) = 
@@ -173,6 +181,10 @@ void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
             numeric_cast<uint32_t>(value);
         break;
     case STANDARD_TYPE_INT_64:
+        // Explicitly check for overflow of int64_t because the boost numeric_cast
+        // does not throw an exception in this case
+        if (value > std::numeric_limits<int64_t>::max())
+            throw InvalidValueException<uint64_t>("bad numeric cast: overflow", type, value);
         *(reinterpret_cast<int64_t *>(const_cast<PBuffer>(tupleDatum.pData))) =
             numeric_cast<int64_t>(value);
         break;
@@ -190,10 +202,7 @@ void CalcAssembler::setTupleDatum(StandardTypeDescriptorOrdinal type,
         }
         else {
             // Invalid boolean value
-            ostringstream errorStr("");
-            errorStr << "Invalid value " << value << " for type "
-                     << StandardTypeDescriptor::toString(type);
-            throw FennelExcn(errorStr.str());
+            throw InvalidValueException<uint64_t>("Boolean value should be 0 or 1", type, value);
         }
         break;
     default:

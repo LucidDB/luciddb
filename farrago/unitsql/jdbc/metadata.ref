@@ -101,7 +101,7 @@ getNumericFunctions
 getProcedureTerm                                  
 getSchemaTerm                                     schema
 getSearchStringEscape                             null
-getSQLKeywords                                    
+getSQLKeywords                                    cascade,catalog,data,index,java,key,library,options,preserve,restrict,schema,server,temporary,version,view,wrapper,asc,ascending,implementation,plan
 getStringFunctions                                
 getSystemFunctions                                
 getTimeDateFunctions                              

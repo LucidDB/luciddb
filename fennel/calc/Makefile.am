@@ -14,17 +14,18 @@ RegisterReference.cpp \
 CalcGrammar.ypp \
 CalcLexer.lpp \
 CalcAssembler.cpp \
-SqlString.cpp \
+SqlStringAscii.cpp \
 ExtString.cpp
 
 # noinst_PROGRAMS =    \
-# testCalc tuple testCalcAssembler
+# testCalc tuple testCalcAssembler testCalcExtString
 
 # TESTS = $(noinst_PROGRAMS)
 
 # testCalc_SOURCES=testCalc.cpp 
 # tuple_SOURCES= tuple.cpp
 # testCalcAssembler_SOURCES=testCalcAssembler.cpp
+# testCalcExtString_SOURCES=testCalcExtString.cpp
 
 LDADD = -L$(top_builddir)/calc      \
 		-l$(CALC_LIB)       \
@@ -32,3 +33,18 @@ LDADD = -L$(top_builddir)/calc      \
 		-lfennel_tuple      \
 		-lfennel_common     \
 	$(EXTRA_LDFLAGS)
+
+# Cygwin Fix:
+# Explictly define how to generate a .cpp file from a flex .lpp file
+# This is exactly what automake will do normally, 
+# except we insert the line
+# #include "fennel/common/CommonPreamble.h"
+# at the beginning of the generated .cpp file.
+# This makes sure that the headers are included in the correct
+# order and compile flags such as _REENTRANT are not redefined
+.lpp.cpp:
+	$(LEXCOMPILE) `test -f $< || echo '$(srcdir)/'`$<
+	echo "#include \"fennel/common/CommonPreamble.h\"" > $@
+	sed '/^#/ s|$(LEX_OUTPUT_ROOT)\.c|$@|' $(LEX_OUTPUT_ROOT).c >> $@
+	rm -f $(LEX_OUTPUT_ROOT).c
+

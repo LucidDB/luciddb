@@ -20,6 +20,7 @@
 package net.sf.farrago.jdbc.engine;
 
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.parser.NonReservedKeyword;
 
 import java.sql.*;
 
@@ -204,8 +205,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
     // implement DatabaseMetaData
     public String getSQLKeywords() throws SQLException
     {
-        // TODO:  get these from JavaCC
-        return "";
+       return NonReservedKeyword.nonRservedKeywords;
     }
 
     // implement DatabaseMetaData

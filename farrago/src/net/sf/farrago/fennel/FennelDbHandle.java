@@ -320,7 +320,7 @@ public class FennelDbHandle implements FarragoAllocation
         executeCmd(cmd);
     }
     
-    FarragoException handleNativeException(SQLException ex)
+    public FarragoException handleNativeException(SQLException ex)
     {
         return
             FarragoResource.instance().newFennelUntranslated(ex.getMessage());

@@ -24,7 +24,6 @@ ResourceTest \
 LocalConditionTest \
 TupleTest \
 StandardTypeTest \
-SqlStringTest \
 DatabaseTest \
 LogicalTxnTest \
 SegStreamTest \
@@ -35,7 +34,8 @@ LinearDeviceSegmentTest \
 LinearViewSegmentTest \
 VersionedSegmentTest \
 BTreeTxnTest \
-BTreeTest
+BTreeTest \
+SqlStringAsciiTest
 
 TESTS = $(noinst_PROGRAMS)
 
@@ -67,7 +67,7 @@ TupleTest_SOURCES=TupleTest.cpp
 
 StandardTypeTest_SOURCES=StandardTypeTest.cpp
 
-SqlStringTest_SOURCES=SqlStringTest.cpp
+SqlStringAsciiTest_SOURCES=SqlStringBuffer.cpp SqlStringAsciiTest.cpp 
 
 DatabaseTest_SOURCES=DatabaseTest.cpp
 

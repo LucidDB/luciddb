@@ -418,7 +418,7 @@ public:
 
     bool test(CalcChecker* pChecker = NULL)
     {
-        assert(mAssembled && !mFailed);
+        assert(mAssembled);
         bool res = true;
 
         TupleDescriptor inputTupleDesc = mCalc.getInputRegisterDescriptor();
@@ -652,6 +652,11 @@ public:
             ostr << hex << setw(2) << setfill('0') << (uint) ch;
         }
         return ostr.str();
+    }
+
+    bool failed()
+    {
+        return mFailed;
     }
 
 protected:
@@ -1518,7 +1523,6 @@ void CalcAssemblerTest::testStandardTypes()
     max[STANDARD_TYPE_UINT_64] = "18446744073709551615";
 
     underflow[STANDARD_TYPE_INT_64] = "-9223372036854775809";
-    // TODO: Check why the this overflow is not caught by boost's numeric cast
     overflow[STANDARD_TYPE_INT_64] = "9223372036854775808";
     underflow[STANDARD_TYPE_UINT_64] = "-1";
     overflow[STANDARD_TYPE_UINT_64] = "18446744073709551616";
@@ -1530,7 +1534,7 @@ void CalcAssemblerTest::testStandardTypes()
 
     // TODO: What to do for underflow of floats/doubles? 
     // Looks like they are just turned into 0s.
-    underflow[STANDARD_TYPE_REAL] = "1.17549e-309";
+    underflow[STANDARD_TYPE_REAL] = "1.17549e-46";
     overflow[STANDARD_TYPE_REAL] = "3.40282e+39";
     underflow[STANDARD_TYPE_DOUBLE] = "2.22507e-324";
     overflow[STANDARD_TYPE_DOUBLE] = "1.79769e+309";
@@ -1619,6 +1623,7 @@ void CalcAssemblerTest::testStandardTypes()
             else if (underflow[type] == "-1")
                 testCase3.expectAssemblerError("Invalid value");
             else testCase3.expectAssemblerError("bad numeric cast");
+
             testCase3.assemble();
 
             // For overflow and underflow
@@ -1638,6 +1643,7 @@ void CalcAssemblerTest::testStandardTypes()
             else if (type == STANDARD_TYPE_BOOL)
                 testCase4.expectAssemblerError("Invalid value");
             else testCase4.expectAssemblerError("bad numeric cast");
+
             testCase4.assemble();
         }
 

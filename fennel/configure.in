@@ -147,6 +147,10 @@ then
     jdk_platform=win32
     lib_path_var=PATH
     BOOST_TOOLSET=gcc-nocygwin
+    AC_CONFIG_COMMANDS(
+        [calc/FlexLexer.h],
+        [(cd calc && rm -f FlexLexer.h && \
+             ln -s /usr/include/FlexLexer.h FlexLexer.h)])
 fi
 
 BOOST_OPTIONS_SUFFIX=stlport-opts/threading-multi
@@ -199,9 +203,5 @@ synch/Makefile device/Makefile cache/Makefile segment/Makefile \
 txn/Makefile tuple/Makefile btree/Makefile \
 db/Makefile xo/Makefile libfennel/Makefile test/Makefile farrago/Makefile \
 calc/Makefile])
-
-dnl Get rid of this in a little while.  It's here to clean up some
-dnl old scripts that are no longer generated.
-AC_CONFIG_COMMANDS([default],[[rm -f build/buildBoost.sh build/buildSTLport.sh build/buildMingwDist.sh]],[[]])
 
 AC_OUTPUT

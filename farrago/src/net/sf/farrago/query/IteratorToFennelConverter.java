@@ -263,7 +263,7 @@ class IteratorToFennelConverter extends ConverterRel implements FennelRel
                                 tupleAccessor.getMinByteLength())))));
         }
         
-        // method parameter list matches FennelTupleWriter.marshalTuple
+        // method parameter list matches FennelTupleWriter.marshalTupleOrThrow
         ParameterList paramList = new ParameterList();
         paramList.add(
             new Parameter(
@@ -279,9 +279,9 @@ class IteratorToFennelConverter extends ConverterRel implements FennelRel
         // put it all together
         MemberDeclaration methodDecl =
             new MethodDeclaration(
-                new ModifierList(ModifierList.PUBLIC),
+                new ModifierList(ModifierList.PROTECTED),
                 TypeName.forOJClass(OJSystem.VOID),
-                "marshalTuple",
+                "marshalTupleOrThrow",
                 paramList,
                 null,
                 methodBody);

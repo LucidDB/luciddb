@@ -22,7 +22,7 @@
 */
 
 #include "fennel/calc/ExtString.h"
-#include "fennel/calc/SqlString.h"
+#include "fennel/calc/SqlStringAscii.h"
 #include "fennel/calc/ExtendedInstructionTable.h"
 
 FENNEL_BEGIN_NAMESPACE
@@ -39,11 +39,11 @@ strCatA2(Calculator *pCalc,
         result->toNull();
         result->length(0);
     } else {
-        result->length(SqlStrAsciiCat(result->pointer(),
-                                      result->storage(),
-                                      result->length(),
-                                      str1->pointer(),
-                                      str1->stringLength()));
+        result->length(SqlStrCat_Ascii(result->pointer(),
+                                       result->storage(),
+                                       result->length(),
+                                       str1->pointer(),
+                                       str1->stringLength()));
     }
 }
 
@@ -59,12 +59,12 @@ strCatA3(Calculator *pCalc,
         result->toNull();
         result->length(0);
     } else {
-        result->length(SqlStrAsciiCat(result->pointer(),
-                                      result->storage(),
-                                      str1->pointer(),
-                                      str1->stringLength(),
-                                      str2->pointer(),
-                                      str2->stringLength()));
+        result->length(SqlStrCat_Ascii(result->pointer(),
+                                       result->storage(),
+                                       str1->pointer(),
+                                       str1->stringLength(),
+                                       str2->pointer(),
+                                       str2->stringLength()));
     }
 }
 
@@ -81,16 +81,16 @@ strCmpA(Calculator *pCalc,
         result->toNull();
     } else {
         if (str1->type() == STANDARD_TYPE_CHAR) {
-            result->value(SqlStrAsciiCmpF(str1->pointer(),
-                                          str1->storage(),
-                                          str2->pointer(),
-                                          str2->storage()));
+            result->value(SqlStrCmp_Ascii_Fix(str1->pointer(),
+                                              str1->storage(),
+                                              str2->pointer(),
+                                              str2->storage()));
         } else {
             assert(str1->type()== STANDARD_TYPE_VARCHAR);
-            result->value(SqlStrAsciiCmpV(str1->pointer(),
-                                          str1->length(),
-                                          str2->pointer(),
-                                          str2->length()));
+            result->value(SqlStrCmp_Ascii_Var(str1->pointer(),
+                                              str1->length(),
+                                              str2->pointer(),
+                                              str2->length()));
         }
     }
 }
@@ -105,8 +105,8 @@ strLenBitA(Calculator *pCalc,
     if (str->isNull()) {
         result->toNull();
     } else {
-        result->value(SqlStrAsciiLenBit(str->pointer(),
-                                        str->stringLength()));
+        result->value(SqlStrLenBit_Ascii(str->pointer(),
+                                         str->stringLength()));
     }
 }
     
@@ -120,8 +120,8 @@ strLenCharA(Calculator *pCalc,
     if (str->isNull()) {
         result->toNull();
     } else {
-        result->value(SqlStrAsciiLenChar(str->pointer(),
-                                         str->stringLength()));
+        result->value(SqlStrLenChar_Ascii(str->pointer(),
+                                          str->stringLength()));
     }
 }
 
@@ -135,8 +135,8 @@ strLenOctA(Calculator *pCalc,
     if (str->isNull()) {
         result->toNull();
     } else {
-        result->value(SqlStrAsciiLenOct(str->pointer(),
-                                        str->stringLength()));
+        result->value(SqlStrLenOct_Ascii(str->pointer(),
+                                         str->stringLength()));
     }
 }
 
@@ -155,15 +155,15 @@ strOverlayA4(Calculator *pCalc,
         result->toNull();
         result->length(0);
     } else {
-        result->length(SqlStrAsciiOverlay(result->pointer(),
-                                          result->storage(),
-                                          str->pointer(),
-                                          str->stringLength(),
-                                          overlay->pointer(),
-                                          overlay->stringLength(),
-                                          start->value(),
-                                          0,
-                                          false));
+        result->length(SqlStrOverlay_Ascii(result->pointer(),
+                                           result->storage(),
+                                           str->pointer(),
+                                           str->stringLength(),
+                                           overlay->pointer(),
+                                           overlay->stringLength(),
+                                           start->value(),
+                                           0,
+                                           false));
     }
 }
 
@@ -183,15 +183,15 @@ strOverlayA5(Calculator *pCalc,
         result->toNull();
         result->length(0);
     } else {
-        result->length(SqlStrAsciiOverlay(result->pointer(),
-                                          result->storage(),
-                                          str->pointer(),
-                                          str->stringLength(),
-                                          overlay->pointer(),
-                                          overlay->stringLength(),
-                                          start->value(),
-                                          len->value(),
-                                          true));
+        result->length(SqlStrOverlay_Ascii(result->pointer(),
+                                           result->storage(),
+                                           str->pointer(),
+                                           str->stringLength(),
+                                           overlay->pointer(),
+                                           overlay->stringLength(),
+                                           start->value(),
+                                           len->value(),
+                                           true));
     }
 }
 
@@ -207,10 +207,10 @@ strPosA(Calculator *pCalc,
     if (str->isNull() || find->isNull()) {
         result->toNull();
     } else {
-        result->value(SqlStrAsciiPos(str->pointer(),
-                                     str->stringLength(),
-                                     find->pointer(),
-                                     find->stringLength()));
+        result->value(SqlStrPos_Ascii(str->pointer(),
+                                      str->stringLength(),
+                                      find->pointer(),
+                                      find->stringLength()));
     }
 }
 
@@ -230,13 +230,13 @@ strSubStringA3(Calculator* pCalc,
         // Don't try anything fancy with RegisterRef accessors. KISS.
         char * ptr = result->pointer(); // preserve old value if possible
         // TODO: Not sure why cast from char* to char const * is required below.
-        int32_t newLen = SqlStrAsciiSubStr(const_cast<char const **>(&ptr),
-                                           result->storage(),
-                                           str->pointer(),
-                                           str->stringLength(),
-                                           start->value(),
-                                           0,
-                                           false);
+        int32_t newLen = SqlStrSubStr_Ascii(const_cast<char const **>(&ptr),
+                                            result->storage(),
+                                            str->pointer(),
+                                            str->stringLength(),
+                                            start->value(),
+                                            0,
+                                            false);
         result->pointer(ptr, newLen);
     }
 }
@@ -258,13 +258,13 @@ strSubStringA4(Calculator* pCalc,
         // Don't try anything fancy with RegisterRef accessors. KISS.
         char * ptr = result->pointer(); // preserve old value if possible
         // TODO: Not sure why cast from char* to char const * is required below.
-        int32_t newLen = SqlStrAsciiSubStr(const_cast<char const **>(&ptr),
-                                           result->storage(),
-                                           str->pointer(),
-                                           str->stringLength(),
-                                           start->value(),
-                                           len->value(),
-                                           true);
+        int32_t newLen = SqlStrSubStr_Ascii(const_cast<char const **>(&ptr),
+                                            result->storage(),
+                                            str->pointer(),
+                                            str->stringLength(),
+                                            start->value(),
+                                            len->value(),
+                                            true);
         result->pointer(ptr, newLen);
     }
 }
@@ -283,10 +283,10 @@ strToLowerA(Calculator *pCalc,
         result->length(0);
     } else {
         // fixed width case: length should be harmlessly reset to same value
-        result->length(SqlStrAsciiToLower(result->pointer(),
-                                          result->storage(),
-                                          str->pointer(),
-                                          str->stringLength()));
+        result->length(SqlStrToLower_Ascii(result->pointer(),
+                                           result->storage(),
+                                           str->pointer(),
+                                           str->stringLength()));
     }
 }
 
@@ -304,10 +304,10 @@ strToUpperA(Calculator *pCalc,
         result->length(0);
     } else {
         // fixed width case: length should be harmlessly reset to same value
-        result->length(SqlStrAsciiToUpper(result->pointer(),
-                                          result->storage(),
-                                          str->pointer(),
-                                          str->stringLength()));
+        result->length(SqlStrToUpper_Ascii(result->pointer(),
+                                           result->storage(),
+                                           str->pointer(),
+                                           str->stringLength()));
     }
 }
 
@@ -329,11 +329,11 @@ strTrimA(Calculator *pCalc,
         // Don't try anything fancy with RegisterRef accessors. KISS.
         char * ptr = result->pointer(); // preserve old value if possible
         // TODO: Not sure why cast from char* to char const * is required below.
-        int32_t newLen = SqlStrAsciiTrim(const_cast<char const **>(&ptr),
-                                         str->pointer(),
-                                         str->stringLength(),
-                                         trimLeft->value(),
-                                         trimRight->value());
+        int32_t newLen = SqlStrTrim_Ascii(const_cast<char const **>(&ptr),
+                                          str->pointer(),
+                                          str->stringLength(),
+                                          trimLeft->value(),
+                                          trimRight->value());
         result->pointer(ptr, newLen);
     }
 }

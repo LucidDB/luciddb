@@ -30,7 +30,7 @@ import java.nio.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FennelTupleWriter
+public abstract class FennelTupleWriter
 {
     //~ Methods ---------------------------------------------------------------
 
@@ -47,7 +47,44 @@ public interface FennelTupleWriter
      * @exception BufferOverflowException see above
      * @exception IndexOutOfBoundException see above
      */
-    void marshalTuple(ByteBuffer sliceBuffer,Object object);
+    protected abstract void marshalTupleOrThrow(
+        ByteBuffer sliceBuffer,Object object);
+
+    /**
+     * Marshal one tuple if it can fit.
+     *
+     * @param byteBuffer buffer to be filled with marshalled tuple data,
+     * starting at current buffer position; on return, the buffer position
+     * should be the unaligned end of the tuple
+     *
+     * @param object subclass-specific object to be marshalled
+     *
+     * @return whether the marshalled tuple fit in the available
+     * buffer space
+     */
+    public boolean marshalTuple(
+        ByteBuffer byteBuffer,Object object)
+    {
+        try {
+            // REVIEW:  is slice allocation worth it?
+            ByteBuffer sliceBuffer = byteBuffer.slice();
+            sliceBuffer.order(byteBuffer.order());
+            marshalTupleOrThrow(sliceBuffer,object);
+            int newPosition =
+                byteBuffer.position() + sliceBuffer.position();
+
+            // add final alignment padding
+            while ((newPosition & 3) != 0) {
+                ++newPosition;
+            }
+            byteBuffer.position(newPosition);
+        } catch (BufferOverflowException ex) {
+            return false;
+        } catch (IndexOutOfBoundsException ex) {
+            return false;
+        }
+        return true;
+    }
 }
 
 

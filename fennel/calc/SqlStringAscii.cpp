@@ -22,85 +22,85 @@
 // An ascii string library that adheres to the SQL99 standard definitions
 */
 
-#include "fennel/calc/SqlString.h"
+#include "fennel/calc/SqlStringAscii.h"
 
 FENNEL_BEGIN_NAMESPACE
 
 int
-SqlStrAsciiCat(char* dest,
-               int destStorage,
-               int destLen,
-               char const * const str,
-               int strLen)
+SqlStrCat_Ascii(char* dest,
+                int destStorageBytes,
+                int destLenBytes,
+                char const * const str,
+                int strLenBytes)
 {
-    if (destLen + strLen > destStorage) {
+    if (destLenBytes + strLenBytes > destStorageBytes) {
         // SQL99 22.1 22-001 "String Data Right truncation"
         throw "22001";
     }
 
-    memcpy(dest + destLen, str, strLen);
-    return destLen + strLen;
+    memcpy(dest + destLenBytes, str, strLenBytes);
+    return destLenBytes + strLenBytes;
 }
 
 
 int
-SqlStrAsciiCat(char* dest,
-               int destStorage,
-               char const * const str1,
-               int str1Len,
-               char const * const str2,
-               int str2Len)
-{
-    if (str1Len + str2Len > destStorage) {
-        // SQL99 22.1 22-001 "String Data Right truncation"
-        throw "22001";
-    }
-
-    memcpy(dest, str1, str1Len);
-    memcpy(dest+str1Len, str2, str2Len);
-    return str1Len + str2Len;
-}
-
-int
-SqlStrAsciiCmpF(char const * const str1,
-                int str1Len,
+SqlStrCat_Ascii(char* dest,
+                int destStorageBytes,
+                char const * const str1,
+                int str1LenBytes,
                 char const * const str2,
-                int str2Len,
-                char trimchar)
+                int str2LenBytes)
+{
+    if (str1LenBytes + str2LenBytes > destStorageBytes) {
+        // SQL99 22.1 22-001 "String Data Right truncation"
+        throw "22001";
+    }
+
+    memcpy(dest, str1, str1LenBytes);
+    memcpy(dest+str1LenBytes, str2, str2LenBytes);
+    return str1LenBytes + str2LenBytes;
+}
+
+int
+SqlStrCmp_Ascii_Fix(char const * const str1,
+                    int str1LenBytes,
+                    char const * const str2,
+                    int str2LenBytes,
+                    char trimchar)
 {
 
     char const * start = str1;
-    char const * end = str1 + str1Len;
+    char const * end = str1 + str1LenBytes;
     
     if (end != start) {
         end--;
         while (end != start && *end == trimchar) end--;
         if (end != start || *end != trimchar) end++;
     }
-    int str1TrimLen = end - start;
+    int str1TrimLenBytes = end - start;
     
     start = str2;
-    end = str2 + str2Len;
+    end = str2 + str2LenBytes;
 
     if (end != start) {
         end--;
         while (end != start && *end == trimchar) end--;
         if (end != start || *end != trimchar) end++;
     }
-    int str2TrimLen = end - start;
+    int str2TrimLenBytes = end - start;
     
-    if (str1TrimLen > str2TrimLen) {
+    if (str1TrimLenBytes > str2TrimLenBytes) {
         return 1;
-    } else if (str1TrimLen < str2TrimLen) {
+    } else if (str1TrimLenBytes < str2TrimLenBytes) {
         return -1;
     }
 
-    assert(str1TrimLen == str2TrimLen);
+    assert(str1TrimLenBytes == str2TrimLenBytes);
     
     // comparison must be unsigned to work for > 128
     unsigned char const *s1 = reinterpret_cast<unsigned char const *>(str1);
     unsigned char const *s2 = reinterpret_cast<unsigned char const *>(str2);
-    int len = str1TrimLen;
+    int len = str1TrimLenBytes;
 
     while (len-- > 0) {
         if (*s1 != *s2) {
@@ -113,24 +113,24 @@ SqlStrAsciiCmpF(char const * const str1,
 }
 
 int
-SqlStrAsciiCmpV(char const * const str1,
-                int str1Len,
-                char const * const str2,
-                int str2Len)
+SqlStrCmp_Ascii_Var(char const * const str1,
+                    int str1LenBytes,
+                    char const * const str2,
+                    int str2LenBytes)
 {
     // consider strcoll for I18N
-    if (str1Len > str2Len) {
+    if (str1LenBytes > str2LenBytes) {
         return 1;
-    } else if (str1Len < str2Len) {
+    } else if (str1LenBytes < str2LenBytes) {
         return -1;
     }
 
-    assert(str1Len == str2Len);
+    assert(str1LenBytes == str2LenBytes);
     
     // comparison must be unsigned to work for > 128
     unsigned char const *s1 = reinterpret_cast<unsigned char const *>(str1);
     unsigned char const *s2 = reinterpret_cast<unsigned char const *>(str2);
-    int len = str1Len;
+    int len = str1LenBytes;
 
     while (len-- > 0) {
         if (*s1 != *s2) {
@@ -144,41 +144,41 @@ SqlStrAsciiCmpV(char const * const str1,
 
 
 int
-SqlStrAsciiLenBit(char const * const str,
-                  int strLen)
+SqlStrLenBit_Ascii(char const * const str,
+                   int strLenBytes)
 {
-    return 8 * strLen;
+    return 8 * strLenBytes;
 }
 
 int
-SqlStrAsciiLenChar(char const * const str,
-                   int strLen)
+SqlStrLenChar_Ascii(char const * const str,
+                    int strLenBytes)
 {
-    return strLen;
+    return strLenBytes;
 }
 
 int
-SqlStrAsciiLenOct(char const * const str,
-                  int strLen)
+SqlStrLenOct_Ascii(char const * const str,
+                   int strLenBytes)
 {
-    return strLen;
+    return strLenBytes;
 }
 
 
 int
-SqlStrAsciiOverlay(char* dest,
-                   int destStorage,
-                   char const * const str,
-                   int strLen,
-                   char const * const over,
-                   int overLen,
-                   int start,
-                   int len,
-                   bool lenSpecified)
+SqlStrOverlay_Ascii(char* dest,
+                    int destStorageBytes,
+                    char const * const str,
+                    int strLenBytes,
+                    char const * const over,
+                    int overLenBytes,
+                    int startChar,
+                    int lengthChar,
+                    int lenSpecified)
 {
-    if (!lenSpecified) len = overLen;
+    if (!lenSpecified) lengthChar = overLenBytes;
 
-    if (len < 0 || start < 1) {
+    if (lengthChar < 0 || startChar < 1) {
         // Overlay is defined in terms of substring. These conditions
         // would, I believe, generate a substring error. Also
         // another "reference" sql database gets angry under these 
@@ -188,49 +188,49 @@ SqlStrAsciiOverlay(char* dest,
         throw "22011";
     }
     
-    int leftLen = start - 1;         // 1-index to 0-index
-    if (leftLen > strLen) leftLen = strLen;
+    int leftLenBytes = startChar - 1;         // 1-index to 0-index
+    if (leftLenBytes > strLenBytes) leftLenBytes = strLenBytes;
 
-    char const *rightP = str + leftLen + len;
-    int rightLen = strLen - (leftLen + len);
-    if (rightLen < 0) rightLen = 0;
+    char const *rightP = str + leftLenBytes + lengthChar;
+    int rightLenBytes = strLenBytes - (leftLenBytes + lengthChar);
+    if (rightLenBytes < 0) rightLenBytes = 0;
 
-    assert(leftLen >= 0);
-    assert(rightLen >= 0);
+    assert(leftLenBytes >= 0);
+    assert(rightLenBytes >= 0);
     assert(rightP >= str);
     
-    if (leftLen + rightLen + overLen > destStorage) {
+    if (leftLenBytes + rightLenBytes + overLenBytes > destStorageBytes) {
         // SQL99 22.1 22-001 "String Data Right truncation"
         throw "22001";
     }
 
     char *dp = dest;
 
-    memcpy(dp, str, leftLen);
-    dp += leftLen;
-    memcpy(dp, over, overLen);
-    dp += overLen;
-    memcpy(dp, rightP, rightLen);
-    dp += rightLen;
+    memcpy(dp, str, leftLenBytes);
+    dp += leftLenBytes;
+    memcpy(dp, over, overLenBytes);
+    dp += overLenBytes;
+    memcpy(dp, rightP, rightLenBytes);
+    dp += rightLenBytes;
     
     return dp - dest;
 }
 
 int
-SqlStrAsciiPos(char const * const str,
-               int strLen,
-               char const * const find,
-               int findLen)
+SqlStrPos_Ascii(char const * const str,
+                int strLenBytes,
+                char const * const find,
+                int findLenBytes)
 {
-    if (!findLen) return 1;             // SQL99 6.17 General Rule 2 case A.
-    if (findLen > strLen) return 0;   // Case C.
+    if (!findLenBytes) return 1;             // SQL99 6.17 General Rule 2 case A.
+    if (findLenBytes > strLenBytes) return 0;   // Case C.
 
-    assert(findLen > 0);
-    assert(strLen > 0);
-    assert(strLen - findLen >= 0);
+    assert(findLenBytes > 0);
+    assert(strLenBytes > 0);
+    assert(strLenBytes - findLenBytes >= 0);
 
     register char const * s = str;
-    char const * end = 1 + s + (strLen - findLen);
+    char const * end = 1 + s + (strLenBytes - findLenBytes);
 
     while(s < end) {
         // search for first char of find
@@ -238,7 +238,7 @@ SqlStrAsciiPos(char const * const str,
         if (!s) {
             return 0;                // Case C.
         }
-        if (!memcmp(s, find, findLen)) {
+        if (!memcmp(s, find, findLenBytes)) {
             // add 1 to make result 1-indexed.
             return (s - str) + 1;   // Case B.
         } else {
@@ -250,42 +250,42 @@ SqlStrAsciiPos(char const * const str,
 
 
 int
-SqlStrAsciiSubStr(char const ** dest,
-                  int destStorage,
-                  char const * const str,
-                  int strLen,
-                  int subStart,
-                  int subLen,
-                  bool subLenSpecified)
+SqlStrSubStr_Ascii(char const ** dest,
+                   int destStorageBytes,
+                   char const * const str,
+                   int strLenBytes,
+                   int subStartChar,
+                   int subLengthChar,
+                   int subLenSpecified)
 {
     int e;
     if (subLenSpecified) {
-        e = subStart + subLen;
+        e = subStartChar + subLengthChar;
     } else {
-        e = strLen + 1;
-        if (subStart > e) e = subStart;
+        e = strLenBytes + 1;
+        if (subStartChar > e) e = subStartChar;
     }
 
-    if (e < subStart) {
+    if (e < subStartChar) {
         // Per SQL99 6.18, General Rule #3, D, generate a
         // "data exception substring error". SQL99 22.1 22-011
         throw "22011";
     }
 
-    if (subStart > strLen || e < 1) {
+    if (subStartChar > strLenBytes || e < 1) {
         return 0;
     } 
 
     int s1 = 1;
-    if (subStart > s1) s1 = subStart;
+    if (subStartChar > s1) s1 = subStartChar;
         
-    int e1 = strLen + 1;
+    int e1 = strLenBytes + 1;
     if (e < e1) e1 = e;
 
     int l1 = e1 - s1;
 
 
-    if (l1 > destStorage) {
+    if (l1 > destStorageBytes) {
         // SQL99 22.1 22-001 "String Data Right truncation"
         throw "22001";
     }
@@ -301,16 +301,16 @@ SqlStrAsciiSubStr(char const ** dest,
 }
 
 int
-SqlStrAsciiToLower(char* dest,
-                   int destStorage,
-                   char const * src,
-                   int srcLen)
+SqlStrToLower_Ascii(char* dest,
+                    int destStorageBytes,
+                    char const * src,
+                    int srcLenBytes)
 {
     register char const * s = src;
     register char* d = dest;
-    char* e = dest + srcLen;
+    char* e = dest + srcLenBytes;
 
-    if (srcLen > destStorage) {
+    if (srcLenBytes > destStorageBytes) {
         // SQL99 22.1 22-001 "String Data Right truncation"
         throw "22001";
     }
@@ -318,20 +318,20 @@ SqlStrAsciiToLower(char* dest,
     while (d < e) {
         *(d++) = tolower(*(s++));
     }
-    return srcLen;
+    return srcLenBytes;
 }
 
 int
-SqlStrAsciiToUpper(char* dest,
-                   int destStorage,
-                   char const * src,
-                   int srcLen)
+SqlStrToUpper_Ascii(char* dest,
+                    int destStorageBytes,
+                    char const * src,
+                    int srcLenBytes)
 {
     register char const * s = src;
     register char* d = dest;
-    char* e = dest + srcLen;
+    char* e = dest + srcLenBytes;
 
-    if (srcLen > destStorage) {
+    if (srcLenBytes > destStorageBytes) {
         // SQL99 22.1 22-001 "String Data Right truncation"
         throw "22001";
     }
@@ -339,21 +339,21 @@ SqlStrAsciiToUpper(char* dest,
     while (d < e) {
         *(d++) = toupper(*(s++));
     }
-    return srcLen;
+    return srcLenBytes;
 }
 
 int 
-SqlStrAsciiTrim(char* dest, 
-                int destStorage,
-                char const * const str,
-                int strLen,
-                bool trimLeft,
-                bool trimRight,
-                char trimchar)
+SqlStrTrim_Ascii(char* dest, 
+                 int destStorageBytes,
+                 char const * const str,
+                 int strLenBytes,
+                 int trimLeft,
+                 int trimRight,
+                 char trimchar)
 {
     char const * start = str;
-    char const * end = str + strLen;
-    int newLen;
+    char const * end = str + strLenBytes;
+    int newLenBytes;
     
     // If many pad characters are expected, consider using memrchr()
     if (trimLeft) {
@@ -364,26 +364,26 @@ SqlStrAsciiTrim(char* dest,
         while (end != start && *end == trimchar) end--;
         if (end != start || *end != trimchar) end++;
     }
-    newLen = end - start;
+    newLenBytes = end - start;
 
-    if (newLen > destStorage) {
+    if (newLenBytes > destStorageBytes) {
         // SQL99 22.1 22-001 "String Data Right truncation"
         throw "22001";
     }
-    memcpy(dest, start, newLen);
-    return newLen;
+    memcpy(dest, start, newLenBytes);
+    return newLenBytes;
 }
 
 int 
-SqlStrAsciiTrim(char const ** result,
-                char const * const str,
-                int strLen,
-                int trimLeft,
-                int trimRight,
-                char trimchar)
+SqlStrTrim_Ascii(char const ** result,
+                 char const * const str,
+                 int strLenBytes,
+                 int trimLeft,
+                 int trimRight,
+                 char trimchar)
 {
     char const * start = str;
-    char const * end = str + strLen;
+    char const * end = str + strLenBytes;
     
     // If many pad characters are expected, consider using memrchr()
     if (trimLeft) {

@@ -60,12 +60,17 @@ public class FarragoFileLockAllocation implements FarragoAllocation
             }
             channel = new RandomAccessFile(file,"rw").getChannel();
             if (tryLock) {
-                lock = channel.tryLock();
+                // NOTE:  we lock a bogus byte way beyond any real data
+                // to make sure the lock doesn't interfere with I/O
+                // on operating systems with non-advisory lock semantics
+                // such as Windows.  Don't use Long.MAX_VALUE because
+                // that breaks on any OS without large file support.
+                lock = channel.tryLock(Integer.MAX_VALUE-1,1,false);
                 if (lock == null) {
                     throw new IOException();
                 }
             } else {
-                lock = channel.lock();
+                lock = channel.lock(Integer.MAX_VALUE-1,1,false);
             }
         } catch (IOException ex) {
             closeAllocation();

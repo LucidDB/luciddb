@@ -90,6 +90,7 @@ output. Or, for those like, perhaps, ToUpper, document the exceptions
 
 Rename PointerPutSize to PointerPutLength
 
+Add SqlString "identity" functions: create a zero length string and string copy.
 
 ====================================================
 Extended Instructions & Conversions Major Todo Items

@@ -76,22 +76,7 @@ public class JavaTupleStream
         byteBuffer.order(ByteOrder.nativeOrder());
         byteBuffer.clear();
         for (;;) {
-            try {
-                // REVIEW:  is slice allocation worth it?
-                ByteBuffer sliceBuffer = byteBuffer.slice();
-                sliceBuffer.order(byteBuffer.order());
-                tupleWriter.marshalTuple(sliceBuffer,next);
-                int newPosition =
-                    byteBuffer.position() + sliceBuffer.position();
-
-                // add final alignment padding
-                while ((newPosition & 3) != 0) {
-                    ++newPosition;
-                }
-                byteBuffer.position(newPosition);
-            } catch (BufferOverflowException ex) {
-                break;
-            } catch (IndexOutOfBoundsException ex) {
+            if (!tupleWriter.marshalTuple(byteBuffer,next)) {
                 break;
             }
             if (!iter.hasNext()) {

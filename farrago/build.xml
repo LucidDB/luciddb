@@ -424,7 +424,7 @@ require version '${required.ant.version}'."/>
   <!-- default target:  assumes catalog has already been created -->
   <target name="all" depends="compile, buildJdbcPlugin, buildMdrPlugin"/>
 
-  <target name="compile" depends="generateResources,ddlParser">
+  <target name="compile" depends="generateResources,ddlParser,generateNonResKeywords">
     <javaCompile
       srcdir="${src.dir}"
       destdir="${classes.dir}"
@@ -1005,6 +1005,42 @@ require version '${required.ant.version}'."/>
       <arg value="net.sf.farrago.FarragoPackage"/>
       <arg value="FarragoTempCatalog"/>
     </javaExec>
+  </target>
+
+  <target name="checkKeywordUptodate">
+    <uptodate property="keyword.uptodate" 
+      targetfile="${parser.dir}/NonReservedKeyword.java">
+      <srcfiles dir="${parser.dir}" includes="DdlParser.jj"/>
+      <srcfiles dir="${saffron.dir}" 
+        includes="src/net/sf/saffron/sql/parser/CommonParser.jj"/>
+	  <srcfiles dir="${parser.dir}"
+	    includes="NonReservedKeywordGen"/>
+    </uptodate>
+  </target>
+
+  <!-- Generate JDBC non-reserved keywords -->
+  <target name="generateNonResKeywords" depends="checkKeywordUptodate"
+    unless="keyword.uptodate">
+    <delete file="${parser.dir}/NonReservedKeyword.java"/>
+    <!-- NonReservedKeywordGen needed for code generation -->
+    <javaCompile
+	  srcdir="${src.dir}"
+	  destdir="${classes.dir}"
+	  classpathref="farrago.build.classpath">
+      <include name="**/NonReservedKeywordGen.java" />
+    </javaCompile>
+    <javaExec
+      classname="net.sf.farrago.parser.NonReservedKeywordGen"
+      classpathref="farrago.run.classpath">
+      <arg 
+        value="${parser.dir}/NonReservedKeyword.java"/>
+    </javaExec>
+    <javaCompile
+	  srcdir="${src.dir}"
+	  destdir="${classes.dir}"
+	  classpathref="farrago.build.classpath">
+      <include name="**/NonReservedKeyword.java" />
+    </javaCompile>
   </target>
 
   <!-- Debugging target for listing repository extents -->
