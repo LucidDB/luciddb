@@ -43,8 +43,7 @@ import openjava.mop.Toolbox;
 import openjava.ptree.Expression;
 import openjava.ptree.StatementList;
 
-import org.eigenbase.runtime.ThreadIterator;
-import org.eigenbase.runtime.TimeoutIteratorTest;
+import org.eigenbase.runtime.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.util.SqlBasicVisitor;
 
@@ -942,6 +941,15 @@ public class Util extends Toolbox
             System.loadLibrary("cyg" + libName + "-0");
         } else {
             System.loadLibrary(libName);
+        }
+    }
+
+    public static void restartIterator(Iterator iterator) 
+    {
+        if (iterator instanceof RestartableIterator) {
+            ((RestartableIterator) iterator).restart();
+        } else {
+            throw new UnsupportedOperationException("restart");
         }
     }
 

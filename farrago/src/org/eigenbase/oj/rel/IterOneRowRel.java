@@ -33,6 +33,7 @@ import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.runtime.*;
 
 
 /**
@@ -73,12 +74,13 @@ public class IterOneRowRel extends OneRowRel implements JavaRel
                 new ExpressionList());
 
         Expression iterExp =
-            new MethodCall(new MethodCall(
-                    OJUtil.typeNameForClass(Collections.class),
-                    "singletonList",
-                    new ExpressionList(newRowExp)),
-                "iterator",
-                new ExpressionList());
+            new AllocationExpression(
+                OJUtil.typeNameForClass(RestartableCollectionIterator.class),
+                new ExpressionList(
+                    new MethodCall(
+                        OJUtil.typeNameForClass(Collections.class),
+                        "singletonList",
+                        new ExpressionList(newRowExp))));
 
         return iterExp;
     }

@@ -161,6 +161,11 @@ public:
     static jmethodID methFillBuffer;
 
     /**
+     * Java method JavaTupleStream.restart.
+     */
+    static jmethodID methRestart;
+
+    /**
      * Java method FennelJavaStreamMap.getJavaStreamHandle.
      */
     static jmethodID methGetJavaStreamHandle;

@@ -58,7 +58,7 @@ public class FennelStreamGraph implements FarragoAllocation
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Find a particular stream within the graph.
+     * Finds a particular stream within the graph.
      *
      * @param metadataFactory factory for creating Fem instances
      *
@@ -116,7 +116,7 @@ public class FennelStreamGraph implements FarragoAllocation
     }
 
     /**
-     * Open a prepared stream graph.
+     * Opens a prepared stream graph.
      *
      * @param fennelTxnContext transaction context in which stream graph
      * should participate
@@ -139,7 +139,7 @@ public class FennelStreamGraph implements FarragoAllocation
     }
 
     /**
-     * Fetch buffer of rows from a tuple stream.  If unpositioned, this
+     * Fetches a buffer of rows from a stream.  If unpositioned, this
      * fetches the first rows.
      *
      * @param streamHandle handle to stream from which to fetch
@@ -167,7 +167,7 @@ public class FennelStreamGraph implements FarragoAllocation
     // abort can be asynchronous
 
     /**
-     * Close the tuple stream graph (but do not deallocate it).
+     * Closes the stream graph (but does not deallocate it).
      */
     public synchronized void close()
     {
@@ -185,7 +185,7 @@ public class FennelStreamGraph implements FarragoAllocation
     }
 
     /**
-     * Abort the current execution (but do not close).
+     * Aborts the current execution (but does not close the graph).
      */
     public synchronized void abort()
     {
@@ -217,6 +217,21 @@ public class FennelStreamGraph implements FarragoAllocation
             throw fennelDbHandle.handleNativeException(ex);
         } finally {
             streamGraphHandle = 0;
+        }
+    }
+
+    /**
+     * Restarts a particular stream in this graph.
+     *
+     * @param streamHandle handle to stream to restart
+     */
+    public void restart(FennelStreamHandle streamHandle)
+    {
+        try {
+            FennelStorage.tupleStreamRestart(
+                streamHandle.getLongHandle());
+        } catch (SQLException ex) {
+            throw fennelDbHandle.handleNativeException(ex);
         }
     }
 }

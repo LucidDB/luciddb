@@ -40,6 +40,7 @@ jmethodID JniUtil::methHasNext = 0;
 jmethodID JniUtil::methNext = 0;
 jmethodID JniUtil::methIterator = 0;
 jmethodID JniUtil::methFillBuffer = 0;
+jmethodID JniUtil::methRestart = 0;
 jmethodID JniUtil::methGetJavaStreamHandle = 0;
 jmethodID JniUtil::methGetIndexRoot = 0;
 jmethodID JniUtil::methToString = 0;
@@ -129,6 +130,8 @@ jint JniUtil::init(JavaVM *pVmInit)
         classIterator,"next","()Ljava/lang/Object;");
     methFillBuffer = pEnv->GetMethodID(
         classJavaTupleStream,"fillBuffer","(Ljava/nio/ByteBuffer;)I");
+    methRestart = pEnv->GetMethodID(
+        classJavaTupleStream,"restart","()V");
     methGetJavaStreamHandle = pEnv->GetMethodID(
         classFennelJavaStreamMap,"getJavaStreamHandle",
         "(I)J");

@@ -3,8 +3,8 @@
 
 set schema 'sales';
 
--- force usage of Fennel calculator
-alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+-- force usage of Java calculator
+alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
 
 -- simple cross product
 select emps.name as ename,depts.name as dname 

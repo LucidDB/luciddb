@@ -116,37 +116,7 @@ class FennelCartesianProductRel extends FennelPullDoubleRel
         streamDef.getInput().add(leftInput);
         FemExecutionStreamDef rightInput =
             implementor.visitFennelChild((FennelRel) right);
-
-        // TODO: For now we always buffer the right-hand input.  In most
-        // cases, this is good for performance; in some cases it is required
-        // for correctness.  The performance part is obvious: we only need to
-        // compute the right-hand side once, and since we store only what we
-        // need, we may save I/O.  However, there are counterexamples; if the
-        // right-hand side is a table scan with no filtering or projection,
-        // there's no point buffering it.  So we should produce plan variants
-        // with and without buffering and use cost to decide.  However, before
-        // we can do that, we have to fix the correctness part.  Namely,
-        // any Java implementation in the right-hand side is not restartable
-        // since JavaTupleStream doesn't support that yet.
-        boolean needBuffer = true;
-
-        if (needBuffer) {
-            FemBufferingTupleStreamDef buffer =
-                repos.newFemBufferingTupleStreamDef();
-            buffer.setInMemory(false);
-            buffer.setMultipass(true);
-            buffer.setOutputDesc(
-                FennelRelUtil.createTupleDescriptorFromRowType(
-                    repos,
-                    right.getRowType()));
-
-            buffer.getInput().add(rightInput);
-
-            streamDef.getInput().add(buffer);
-        } else {
-            streamDef.getInput().add(rightInput);
-        }
-
+        streamDef.getInput().add(rightInput);
         streamDef.setLeftOuter(isLeftOuter());
         return streamDef;
     }

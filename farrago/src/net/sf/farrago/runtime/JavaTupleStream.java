@@ -21,6 +21,7 @@ package net.sf.farrago.runtime;
 import java.nio.*;
 import java.util.*;
 
+import org.eigenbase.util.*;
 
 /**
  * JavaTupleStream implements the contract expected by the Fennel C++
@@ -87,6 +88,15 @@ public class JavaTupleStream
         }
         byteBuffer.flip();
         return byteBuffer.limit();
+    }
+
+    /**
+     * Called from native code to restart this stream.
+     */
+    public void restart()
+    {
+        Util.restartIterator(iter);
+        next = null;
     }
 }
 

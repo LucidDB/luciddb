@@ -24,11 +24,12 @@ package org.eigenbase.runtime;
 import java.util.Collections;
 import java.util.Iterator;
 
+import org.eigenbase.util.*;
 
 /**
  * <code>CompoundIterator</code> creates an iterator out of several.
  */
-public class CompoundIterator implements Iterator
+public class CompoundIterator implements RestartableIterator
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -77,6 +78,16 @@ public class CompoundIterator implements Iterator
             }
         }
         iterator = Collections.EMPTY_LIST.iterator();
+    }
+
+    // implement RestartableIterator
+    public void restart()
+    {
+        for (int j = 0; j < i; ++j) {
+            Util.restartIterator(iterators[j]);
+        }
+        i = 0;
+        iterator = null;
     }
 }
 

@@ -59,15 +59,19 @@ void JavaTupleStream::getResourceRequirements(
 
 void JavaTupleStream::open(bool restart)
 {
-    // TODO: pass restart request on to Java!  Requires support up in Farrago
-    // which is currently missing.  For now we use buffering to ensure that we
-    // never get here.
-    assert(!restart);
-
     TupleStream::open(restart);
 
-    bufferLock.allocatePage();
     JniEnvAutoRef pEnv;
+    
+    if (restart) {
+        if (javaTupleStream) {
+            pEnv->CallVoidMethod(
+                javaTupleStream,JniUtil::methRestart);
+        }
+        return;
+    }
+    
+    bufferLock.allocatePage();
     jlong hJavaTupleStream = pEnv->CallLongMethod(
         pStreamGraphHandle->javaRuntimeContext,JniUtil::methGetJavaStreamHandle,
         javaTupleStreamId);

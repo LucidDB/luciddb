@@ -49,7 +49,7 @@ public class FennelStorage
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Create a native handle for a Java object for reference by XML commands.
+     * Creates a native handle for a Java object for reference by XML commands.
      * After this, the Java object cannot be garbage collected until
      * its owner explicitly calls closeAllocation.
      *
@@ -61,7 +61,7 @@ public class FennelStorage
     static native long newObjectHandle(Object obj);
 
     /**
-     * Release a handle obtained via newObjectHandle.  This should only be
+     * Releases a handle obtained via newObjectHandle.  This should only be
      * called from FennelJavaHandle.
      *
      * @param handle the handle to delete
@@ -69,7 +69,7 @@ public class FennelStorage
     static native void deleteObjectHandle(long handle);
 
     /**
-     * Change the object referenced by a handle.
+     * Changes the object referenced by a handle.
      *
      * @param handle the handle to change
      * @param obj new object
@@ -79,16 +79,13 @@ public class FennelStorage
         Object obj);
 
     /**
-     * .
-     *
-     *
      * @return count of handles returned by Fennel which have not
      * yet been deleted
      */
     public static native int getHandleCount();
 
     /**
-     * Construct a FemTupleAccessor for a FemTupleDescriptor.
+     * Constructs a FemTupleAccessor for a FemTupleDescriptor.
      *
      * @param tupleDesc source FemTupleDescriptor
      *
@@ -98,7 +95,7 @@ public class FennelStorage
         FemTupleDescriptor tupleDesc);
 
     /**
-     * Execute a command represented as a Java object.
+     * Executes a command represented as a Java object.
      *
      * @param cmd Java representation of object
      *
@@ -108,10 +105,10 @@ public class FennelStorage
         throws SQLException;
 
     /**
-     * Open a tuple stream graph.
+     * Opens a stream graph.
      *
-     * @param hStream handle to tuple stream
-     * @param hTxn handle to txn in which stream is being reopened
+     * @param hStream handle to stream
+     * @param hTxn handle to txn in which stream is being opened
      * @param javaStreamMap optional FennelJavaStreamMap
      */
     static native void tupleStreamGraphOpen(
@@ -121,10 +118,10 @@ public class FennelStorage
         throws SQLException;
 
     /**
-     * Fetch buffer of rows from a tuple stream.  If unpositioned, this
+     * Fetches a buffer of rows from a stream.  If unpositioned, this
      * fetches the first rows.
      *
-     * @param hStream handle to tuple stream
+     * @param hStream handle to stream
      * @param byteArray output buffer receives complete tuples
      *
      * @return number of bytes fetched (at least one tuple should always be
@@ -136,9 +133,18 @@ public class FennelStorage
         throws SQLException;
 
     /**
-     * Close a tuple stream graph.
+     * Restarts a stream.
      *
-     * @param hStream handle to tuple stream
+     * @param hStream handle to stream to restart
+     */
+    static native void tupleStreamRestart(
+        long hStream)
+        throws SQLException;
+
+    /**
+     * Closes a stream graph.
+     *
+     * @param hStream handle to stream graph
      * @param action CLOSE_XXX
      */
     static native void tupleStreamGraphClose(

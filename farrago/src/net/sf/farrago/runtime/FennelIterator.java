@@ -25,6 +25,9 @@ import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.util.*;
+import org.eigenbase.runtime.*;
+
 
 /**
  * FennelIterator implements the Iterator interface by reading tuples from a
@@ -34,7 +37,7 @@ import net.sf.farrago.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FennelIterator implements Iterator
+public class FennelIterator implements RestartableIterator
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -76,7 +79,7 @@ public class FennelIterator implements Iterator
     // implement Iterator
     public boolean hasNext()
     {
-        if (byteBuffer == null) {
+        if (bufferAsArray == null) {
             return false;
         }
         if (byteBuffer.hasRemaining()) {
@@ -85,7 +88,6 @@ public class FennelIterator implements Iterator
         byteBuffer.clear();
         int cb = streamGraph.fetch(streamHandle, bufferAsArray);
         if (cb == 0) {
-            byteBuffer = null;
             bufferAsArray = null;
             return false;
         }
@@ -119,6 +121,15 @@ public class FennelIterator implements Iterator
     public void remove()
     {
         throw new UnsupportedOperationException();
+    }
+    
+    // implement RestartableIterator
+    public void restart()
+    {
+        bufferAsArray = byteBuffer.array();
+        byteBuffer.clear();
+        byteBuffer.limit(0);
+        streamGraph.restart(streamHandle);
     }
 }
 
