@@ -29,11 +29,6 @@ import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 
-import org.objectweb.rmijdbc.*;
-
-import sun.misc.*;
-
-
 /**
  * FarragoServer is a wrapper for an RmiJdbc server.
  *
@@ -103,7 +98,7 @@ public class FarragoServer
             argList.add(Integer.toString(singleListenerPort));
         }
 
-        RJJdbcServer.main((String []) argList.toArray(new String[0]));
+        FarragoRJJdbcServer.main((String []) argList.toArray(new String[0]));
 
         if (rmiRegistry == null) {
             // This is the first server instance in this JVM, so
@@ -204,6 +199,7 @@ public class FarragoServer
         }
         System.exit(0);
     }
+
 }
 
 
