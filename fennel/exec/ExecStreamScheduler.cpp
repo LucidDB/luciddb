@@ -88,8 +88,8 @@ void ExecStreamScheduler::removeGraph(SharedExecStreamGraph pGraph)
 }
 
 // Summary of per-stream trace levels:
-// TRACE_FINE: output after execution
-// TRACE_FINER: input before, output after
+// TRACE_FINE: result of execution
+// TRACE_FINER: buffer states before and after, output after execution.
 // TRACE_FINEST: both input and output before and after each execution
 
 void ExecStreamScheduler::tracePreExecution(
@@ -117,7 +117,7 @@ void ExecStreamScheduler::tracePostExecution(
         "executed " << stream.getStreamId() << ' ' << stream.getName()
         << " with result " << ExecStreamResult_names[rc]);
 
-    traceStreamBuffers(stream, TRACE_FINEST, TRACE_FINE);
+    traceStreamBuffers(stream, TRACE_FINEST, TRACE_FINER);
 }
     
 void ExecStreamScheduler::traceStreamBuffers(
