@@ -18,7 +18,7 @@
 // along with this program; if not, write to the Free Software
 //
 */
-package org.eigenbase.sql.validation;
+package org.eigenbase.sql.type;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
@@ -38,7 +38,7 @@ import org.eigenbase.resource.EigenbaseResource;
  * @since Sep 3, 2004
  * @version $Id$
  */
-public class ValidationUtil
+public class TypeUtil
 {
 
     /**
