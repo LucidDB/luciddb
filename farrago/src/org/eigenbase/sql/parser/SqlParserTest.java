@@ -1620,6 +1620,22 @@ public class SqlParserTest extends TestCase
         checkExp("interval '1' hour >= interval '1' second", "((INTERVAL '1' HOUR) >= (INTERVAL '1' SECOND))");
     }
 
+    public void testCastToInterval() {
+        checkExp("cast(x as interval year)", "CAST(`X` AS YEAR)");
+        checkExp("cast(x as interval month)", "CAST(`X` AS MONTH)");
+        checkExp("cast(x as interval year to month)", "CAST(`X` AS YEAR TO MONTH)");
+        checkExp("cast(x as interval day)", "CAST(`X` AS DAY)");
+        checkExp("cast(x as interval hour)", "CAST(`X` AS HOUR)");
+        checkExp("cast(x as interval minute)", "CAST(`X` AS MINUTE)");
+        checkExp("cast(x as interval second)", "CAST(`X` AS SECOND)");
+        checkExp("cast(x as interval day to hour)", "CAST(`X` AS DAY TO HOUR)");
+        checkExp("cast(x as interval day to minute)", "CAST(`X` AS DAY TO MINUTE)");
+        checkExp("cast(x as interval day to second)", "CAST(`X` AS DAY TO SECOND)");
+        checkExp("cast(x as interval hour to minute)", "CAST(`X` AS HOUR TO MINUTE)");
+        checkExp("cast(x as interval hour to second)", "CAST(`X` AS HOUR TO SECOND)");
+        checkExp("cast(x as interval minute to second)", "CAST(`X` AS MINUTE TO SECOND)");
+    }
+
 }
 
 

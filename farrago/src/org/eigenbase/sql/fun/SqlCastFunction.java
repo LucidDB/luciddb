@@ -84,7 +84,7 @@ public class SqlCastFunction extends SqlFunction
 
     public OperandsCountDescriptor getOperandsCountDescriptor()
     {
-        return new OperandsCountDescriptor(2);
+        return OperandsCountDescriptor.Two;
     }
 
     protected void checkNumberOfArg(SqlCall call)
@@ -111,7 +111,7 @@ public class SqlCastFunction extends SqlFunction
         }
         RelDataType validatedNodeType =
             validator.getValidatedNodeType(call.operands[0]);
-        RelDataType returnType = ((SqlDataType) call.operands[1]).getType();
+        RelDataType returnType = validator.deriveType(scope, call.operands[1]);
         if (!returnType.isAssignableFrom(validatedNodeType, true)) {
             if (throwOnFailure) {
                 throw EigenbaseResource.instance().newCannotCastValue(
@@ -133,7 +133,7 @@ public class SqlCastFunction extends SqlFunction
         SqlValidator.Scope scope,
         SqlCall call)
     {
-        RelDataType ret = ((SqlDataType) call.getOperands()[1]).getType();
+        RelDataType ret = validator.deriveType(scope, call.operands[1]);
         boolean isNullable;
         if (SqlUtil.isNullLiteral(call.operands[0], false)) {
             isNullable = true;

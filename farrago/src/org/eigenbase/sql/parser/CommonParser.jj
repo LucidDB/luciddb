@@ -1354,7 +1354,7 @@ SqlNode Expression3(ExprContext exprContext) :
     <MINUS>
     e =  Expression3(EXPR_ACCEPT_SUBQUERY) { list.add(e); }
     <RPAREN> <INTERVAL>
-    e = IntervalQualifer() { list.add(e); }
+    e = IntervalQualifier() { list.add(e); }
     {
         return opTab.minusDateOperator.createCall(
                                     ParserUtil.toNodeArray(list), getPos());
@@ -1731,12 +1731,12 @@ SqlLiteral IntervalLiteral() :
     <INTERVAL>
     [<MINUS> { sign = -1; } ]
     <QUOTED_STRING> { p = token.image; }
-    intervalQualifier = IntervalQualifer() {
+    intervalQualifier = IntervalQualifier() {
         return parseIntervalLiteral(sign, p, intervalQualifier);
     }
 }
 
-SqlIntervalQualifier IntervalQualifer() :
+SqlIntervalQualifier IntervalQualifier() :
 {
     SqlIntervalQualifier.TimeUnit start;
     SqlIntervalQualifier.TimeUnit end = null;
@@ -1987,7 +1987,11 @@ SqlNode FunctionCall() :
     (   ("CAST" | "\"CAST\"")
 
     <LPAREN> e = Expression(EXPR_ACCEPT_SUBQUERY) { args = startList(e); }
-               <AS> dt = DataType() { args.add(dt); }
+               <AS>
+               (
+                     dt = DataType() { args.add(dt); }
+                  |  <INTERVAL> e = IntervalQualifier() { args.add(e); }
+               )
                <RPAREN>  {
                     return opTab.castFunc.createCall(
                         ParserUtil.toNodeArray(args), getPos());
