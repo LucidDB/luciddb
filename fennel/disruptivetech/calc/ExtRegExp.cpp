@@ -52,7 +52,7 @@ strLikeEscapeA(boost::scoped_ptr<ExtendedInstructionContext>& context,
     assert(StandardTypeDescriptor::isTextArray(matchValue->type()));
     assert(StandardTypeDescriptor::isTextArray(pattern->type()));
 
-    // SQL99 8.5 General Rule 3a, case i & ii
+    // SQL99 Part 2 Section 8.5 General Rule 3.a, cases i & ii
     if (matchValue->isNull() ||
         pattern->isNull() ||
         (escape ? escape->isNull() : false)) {
@@ -76,7 +76,7 @@ strLikeEscapeA(boost::scoped_ptr<ExtendedInstructionContext>& context,
                 context.reset(new ExtRegExpContext(regex, pat));
             }
             catch (boost::bad_expression badexp) {
-                // SQL99 8.5 General Rule 3b Case i2 *seems* like 
+                // SQL99 Part 2 Section 8.5 General Rule 3.b.i2 *seems* like 
                 // best fit here.
                 // Data Exception - Invalid Escape Sequence
                 throw "22025";
@@ -115,7 +115,7 @@ strSimilarEscapeA(boost::scoped_ptr<ExtendedInstructionContext>& context,
     assert(StandardTypeDescriptor::isTextArray(matchValue->type()));
     assert(StandardTypeDescriptor::isTextArray(pattern->type()));
 
-    // SQL2003 8.5 General Rule 4, case a & b
+    // SQL2003 Part 2 Section 8.5 General Rule 4.a,b
     if (matchValue->isNull() ||
         pattern->isNull() ||
         (escape ? escape->isNull() : false)) {
@@ -139,7 +139,7 @@ strSimilarEscapeA(boost::scoped_ptr<ExtendedInstructionContext>& context,
                 context.reset(new ExtRegExpContext(regex, pat));
             }
             catch (boost::bad_expression badexp) {
-                // SQL2003 8.6 General Rule 2
+                // SQL2003 Part 2 Section 8.6 General Rule 2
                 // Data Exception - Invalid Regular Expression
                 throw "2201B";
             }

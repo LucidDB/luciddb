@@ -95,8 +95,11 @@ public class SqlCollation
     }
 
     /**
-     * Returns the collating sequence (the collation name) and the coercibility the resulting value shall have per
-     * SQL:99 ISO/IEC 9075-2:1999, section 4.2.3, table 2
+     * Returns the collating sequence (the collation name) and the coercibility
+     * for the resulting value of a dyadic operator.
+     *
+     * @sql.99 Part 2 Section 4.2.3 Table 2
+     *
      * @param col1 first operand for the dyadic operation
      * @param col2 second operand for the dyadic operation
      * @return the resulting collation sequence. The "no collating sequence" result is returned as null.
@@ -109,8 +112,11 @@ public class SqlCollation
     }
 
     /**
-     * Returns the collating sequence (the collation name) and the coercibility the resulting value shall have per
-     * SQL:99 ISO/IEC 9075-2:1999, section 4.2.3, table 2
+     * Returns the collating sequence (the collation name) and the coercibility
+     * for the resulting value of a dyadic operator.
+     *
+     * @sql.99 Part 2 Section 4.2.3 Table 2
+     *
      * @param col1 first operand for the dyadic operation
      * @param col2 second operand for the dyadic operation
      * @return the resulting collation sequence. If no collating sequence could
@@ -130,8 +136,11 @@ public class SqlCollation
     }
 
     /**
-     * Returns the collating sequence (the collation name) to use for a comparison per
-     * SQL:99 ISO/IEC 9075-2:1999, section 4.2.3, table 3
+     * Returns the collating sequence (the collation name) to use for
+     * the resulting value of a comparison.
+     *
+     * @sql.99 Part 2 Section 4.2.3 Table 3
+     *
      * @param col1 first operand for the dyadic operation
      * @param col2 second operand for the dyadic operation
      * @return the resulting collation sequence. If no collating sequence could
@@ -257,7 +266,6 @@ public class SqlCollation
     //~ Inner Classes ---------------------------------------------------------
 
     /**
-     * From SQL:99 ISO/IEC 9075-2:1999, section 4.2.3
      * <blockquote>
      * A &lt;character value expression&gt; consisting of a column reference has the coercibility characteristic
      * Implicit, with collating sequence as defined when the column was created. A &lt;character value
@@ -266,6 +274,8 @@ public class SqlCollation
      * value expression&gt; simply containing a &lt;collate clause&gt; has the coercibility characteristic
      * Explicit, with the collating sequence specified in the &lt;collate clause&gt;.
      * </blockquote>
+     *
+     * @sql.99 Part 2 Section 4.2.3
      */
     public static class Coercibility extends EnumeratedValues.BasicValue
     {

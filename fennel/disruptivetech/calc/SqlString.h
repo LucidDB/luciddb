@@ -84,7 +84,7 @@ FENNEL_BEGIN_NAMESPACE
 //! dest = dest || str. Returns new length in bytes.
 //!
 //! If either string is variable width, the result is variable
-//! width: per SQL99 6.27 Syntax Rule 3, Case A, item i.
+//! width: per SQL99 Part 2 Section 6.27 Syntax Rule 3.a.i.
 //! If both strings are fixed width, the result is fixed width, 
 //! per item ii.
 //!
@@ -118,7 +118,7 @@ SqlStrCat(char* dest,
 //! Subsequent concatenations may occur with other form.
 //!
 //! If either string is variable width, the result is variable
-//! width: per SQL99 6.27 Syntax Rule 3, Case A, item i.
+//! width: per SQL99 Part 2 Section 6.27 Syntax Rule 3.a.i.
 //! If both strings are fixed width, the result is fixed width, 
 //! item ii.
 //!
@@ -373,7 +373,7 @@ SqlStrLenOct(int strLenBytes);
 
 //! Overlay. CHAR/VARCHAR. Returns new length in bytes. Ascii. No UCS2 yet.
 //!
-//! See SQL99 6.18 Syntax Rule 10. Overlay is defined in terms of
+//! See SQL99 Part 2 Section 6.18 Syntax Rule 10. Overlay is defined in terms of
 //! Substring an concatenation. If start is < 1 or length < 0, a substring error
 //! may be thrown.
 //! Result is VARCHAR, as the result of substring is always VARCHAR,
@@ -400,7 +400,7 @@ SqlStrOverlay(char* dest,
                 // would, I believe, generate a substring error. Also
                 // another "reference" sql database gets angry under these 
                 // conditions. Therefore:
-                // Per SQL99 6.18, General Rule #3, D, generate a
+                // Per SQL99 Part 2 Section 6.18 General Rule 3.d, generate a
                 // "data exception substring error". SQL99 22.1 22-011
                 throw "22011";
             }
@@ -445,8 +445,8 @@ SqlStrOverlay(char* dest,
 
 //! Position. CHAR/VARHCAR. Returns 1-index string position. Ascii. No UCS2.
 //!
-//! Returns 0 if not found. Returns 1 if find is zero length. See SQL99 6.17
-//! General Rule 2.
+//! Returns 0 if not found. Returns 1 if find is zero length.
+//! See SQL99 Part 2 Section 6.17 General Rule 2.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 int
 SqlStrPos(char const * const str,
@@ -456,8 +456,10 @@ SqlStrPos(char const * const str,
 {
     if (CodeUnitBytes == MaxCodeUnitsPerCodePoint) {
         if (CodeUnitBytes == 1) {
-            if (!findLenBytes) return 1;             // SQL99 6.17 General Rule 2 case A.
-            if (findLenBytes > strLenBytes) return 0;   // Case C.
+            // SQL99 Part 2 Section 6.17 General Rule 2.a.
+            if (!findLenBytes) return 1;             
+            // SQL99 Part 2 Section 6.17 General Rule 2.c.
+            if (findLenBytes > strLenBytes) return 0;
 
             assert(findLenBytes > 0);
             assert(strLenBytes > 0);
@@ -502,7 +504,7 @@ SqlStrPos(char const * const str,
 //! could be negative. Some combinations of subStart and subLenBytes may throw an
 //! exception.
 //! Results in a VARCHAR.
-//! See SQL99 6.18, General Rule 3.
+//! See SQL99 Part 2 Section 6.18 General Rule 3.
 //! subStartChar is 1-indexed.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 int
@@ -525,7 +527,7 @@ SqlStrSubStr(char const ** dest,
             }
 
             if (e < subStartChar) {
-                // Per SQL99 6.18, General Rule #3, D, generate a
+                // Per SQL99 Part 2 Section 6.18 General Rule 3.d, generate a
                 // "data exception substring error". SQL99 22.1 22-011
                 throw "22011";
             }
@@ -677,7 +679,7 @@ SqlStrAlterCase(char* dest,
 
 //! Trim padding. CHAR/VARCHAR. Returns new length.
 //!
-//! See SQL99 6.18 General Rule 8.
+//! See SQL99 Part 2 Section 6.18 General Rule 8.
 //! Results in a VARCHAR.
 //!
 //! Trim character code points that require more than one code unit are
@@ -753,7 +755,7 @@ SqlStrTrim(char* dest,
 
 //! Trim padding by reference. CHAR/VARCHAR. Returns new length.
 //!
-//! See SQL99 6.18 General Rule 8.
+//! See SQL99 Part 2 Section 6.18 General Rule 8.
 //! Results in a VARCHAR.
 //! Note: Does not check that result has enough capacity to contain
 //! substring as this is irrelevant. If a program depends on the size
@@ -866,7 +868,7 @@ SqlStrCastToExact(char const * const str,
                     break;
                 } else {
                     // unexpected character found
-                    // SQL99 6.22 General Rule 6, case b), case i) data
+                    // SQL99 Part 2 Section 6.22 General Rule 6.b.i data
                     // exception -- invalid character value for cast
                     throw "22018";
                 }
@@ -874,7 +876,7 @@ SqlStrCastToExact(char const * const str,
 
             if (ptr >= end) {
                 // no number found
-                // SQL99 6.22 General Rule 6, case b), case i) data
+                // SQL99 Part 2 Section 6.22 General Rule 6.b.i data
                 // exception -- invalid character value for cast
                 throw "22018";
             }
@@ -906,7 +908,7 @@ SqlStrCastToExact(char const * const str,
                 }
             }
             if (!parsed) {
-                // SQL99 6.22 General Rule 6, case b), case i) data
+                // SQL99 Part 2 Section 6.22 General Rule 6.b.i data
                 // exception -- invalid character value for cast
                 throw "22018";
             }
@@ -932,7 +934,7 @@ SqlStrCastToExact(char const * const str,
 //!
 //! Cast a string to an approximate (e.g. floating point) numeric.
 //!
-//! See SQL99 5.3 Format <approximate numeric literal> for
+//! See SQL99 Part 2 Section 5.3 Format <approximate numeric literal> for
 //! details on the format of an approximate numeric.
 //! Basically nnn.mmm[Exxx].
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
@@ -964,7 +966,7 @@ SqlStrCastToApprox(char const * const str,
             rv = strtod(tmp, &endptr);
 
             if (endptr == tmp) {
-                // SQL99 6.22 General Rule 7, case b), case i) "22018"
+                // SQL99 Part 2 Section 6.22 General Rule 7.b.i "22018"
                 // data exception -- invalid character value for cast
                 throw "22018";
             }
@@ -973,7 +975,7 @@ SqlStrCastToApprox(char const * const str,
             ptr += endptr - tmp; // advance past parsed digits
             while (ptr < end) {
                 if (*ptr != padChar) {
-                    // SQL99 6.22 General Rule 7, case b), case i) "22018"
+                    // SQL99 Part 2 Section 6.22 General Rule 7.b.i "22018"
                     // data exception -- invalid character value for cast
                     throw "22018";
                 }
@@ -1039,12 +1041,13 @@ SqlStrCastFromExact(char* dest,
             if (rv <= destStorageBytes) {
                 memcpy(dest, buf, rv);
             } else {
-                // SQL99 6.22 General Rule 8 (fixed length), case a),
-                // case iv) "22001" data exception -- string data,
-                // right truncation
-                // SQL99 6.22 General Rule 9 (variable length), case
-                // a), case iii) "22001" data exception -- string
-                // data, right truncation
+                // SQL99 Part 2 Section 6.22 General Rule 8.a.iv (fixed
+                // length), "22001" data exception -- string data, right
+                // truncation
+
+                // SQL99 Part 2 Section 6.22 General Rule 9.a.iii (variable
+                // length) "22001" data exception -- string data, right
+                // truncation
                 throw "22001";
             }
             
@@ -1067,12 +1070,13 @@ SqlStrCastFromExact(char* dest,
                 assert(rv == destStorageBytes);
                 memcpy(dest, buf, destStorageBytes);
             } else if (rv > destStorageBytes) {
-                // SQL99 6.22 General Rule 8 (fixed length), case a),
-                // case iv) "22001" data exception -- string data,
-                // right truncation
-                // SQL99 6.22 General Rule 9 (variable length), case
-                // a), case iii) "22001" data exception -- string
-                // data, right truncation
+                // SQL99 Part 2 Section 6.22 General Rule 8.a.iv (fixed
+                // length), "22001" data exception -- string data, right
+                // truncation
+
+                // SQL99 Part 2 Section 6.22 General Rule 9.a.iii (variable
+                // length) "22001" data exception -- string data, right
+                // truncation
                 throw "22001";
             }
 #endif
@@ -1090,12 +1094,13 @@ SqlStrCastFromExact(char* dest,
                 if (rv > destStorageBytes) {
                     // Just in case 22 byte assumption isn't valid
 
-                    // SQL99 6.22 General Rule 8 (fixed length), case
-                    // a), case iv) "22001" data exception -- string
-                    // data, right truncation
-                    // SQL99 6.22 General Rule 9 (variable length),
-                    // case a), case iii) "22001" data exception --
-                    // string data, right truncation
+                    // SQL99 Part 2 Section 6.22 General Rule 8.a.iv (fixed
+                    // length) "22001" data exception -- string data, right
+                    // truncation
+
+                    // SQL99 Part 2 Section 6.22 General Rule 9.a.iii (variable
+                    // length), "22001" data exception -- string data, right
+                    // truncation
                     throw "22001";
                 }
             } else {
@@ -1107,12 +1112,13 @@ SqlStrCastFromExact(char* dest,
                 char buf[24];
                 rv = snprintf(buf, destStorageBytes, "%lld", src);
                 if (rv > destStorageBytes) {
-                    // SQL99 6.22 General Rule 8 (fixed length), case
-                    // a), case iv) "22001" data exception -- string
-                    // data, right truncation
-                    // SQL99 6.22 General Rule 9 (variable length),
-                    // case a), case iii) "22001" data exception --
-                    // string data, right truncation
+                    // SQL99 Part 2 Section 6.22 General Rule 8.a.iv (fixed
+                    // length) "22001" data exception -- string data, right
+                    // truncation
+
+                    // SQL99 Part 2 Section 6.22 General Rule 9.a.iii (variable
+                    // length) "22001" data exception -- string data, right
+                    // truncation
                     throw "22001";
                 }
                 memcpy(dest, buf, rv);
@@ -1149,7 +1155,7 @@ SqlStrCastFromExact(char* dest,
 //! Pad character code points that require more than one code unit are
 //! currently unsupported.
 //!
-//! See SQL99 5.3 Format <approximate numeric literal> for
+//! See SQL99 Part 2 Section 5.3 Format <approximate numeric literal> for
 //! details on the format of an approximate numeric.
 //! Basically nnn.mmmExxx.
 //!
@@ -1177,12 +1183,12 @@ SqlStrCastFromApprox(char* dest,
                     memcpy(dest, "0E0", 3);
                     rv = 3;
                 } else {
-                    // SQL99 6.22 General Rule 8 (fixed length), case b),
-                    // case iii) case 4) "22001" data exception - string
+                    // SQL99 Part 2 Section 6.22 General Rule 8.b.iii.4 (fixed
+                    // length) "22001" data exception - string
                     
-                    // SQL99 6.22 General Rule 9 (variable length), case
-                    // b), case iii) case 3) "22001" data exception --
-                    // string data, right truncation
+                    // SQL99 Part 2 Section 6.22 General Rule 9.b.iii.3
+                    // (variable length) "22001" data exception -- string data,
+                    // right truncation
                     throw "22001";
                 }
             } else {
@@ -1203,12 +1209,12 @@ SqlStrCastFromApprox(char* dest,
                 if (rv <= destStorageBytes) {
                     memcpy(dest, buf, rv);
                 } else {
-                    // SQL99 6.22 General Rule 8 (fixed length), case b),
-                    // case iii) case 4) "22001" data exception - string
+                    // SQL99 Part 2 Section 6.22 General Rule 8.b.iii.4 (fixed
+                    // length) "22001" data exception - string
                 
-                    // SQL99 6.22 General Rule 9 (variable length), case
-                    // b), case iii) case 3) "22001" data exception --
-                    // string data, right truncation
+                    // SQL99 Part 2 Section 6.22 General Rule 9.b.iii.3
+                    // (variable length) "22001" data exception -- string data,
+                    // right truncation
                     throw "22001";
                 }
             }
@@ -1237,7 +1243,7 @@ SqlStrCastFromApprox(char* dest,
 //! currently unsupported.  Assumes that non-NULL rightTruncWarning
 //! points to an int initialized to zero (0).
 //!
-//! See SQL99 6.22 General Rule 8 c for rules on this cast.
+//! See SQL99 Part 2 Section 6.22 General Rule 8.c for rules on this cast.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 int
 SqlStrCastToVarChar(char *dest,
@@ -1272,8 +1278,8 @@ SqlStrCastToVarChar(char *dest,
                     trunc != end;
                     trunc++) {
                     if (*trunc != padchar) {
-                        // Spec says this is just a warning (see SQL99
-                        // 6.22 General Rule 8 c ii.  Let the caller
+                        // Spec says this is just a warning (see SQL99 Part 2
+                        // Section 6.22 General Rule 8.c.ii).  Let the caller
                         // handle it.
                         if (rightTruncWarning != NULL) {
                             *rightTruncWarning = 1;
@@ -1301,7 +1307,7 @@ SqlStrCastToVarChar(char *dest,
 //! currently unsupported.  Assumes that non-NULL rightTruncWarning
 //! points to an int initialized to zero (0).
 //!
-//! See SQL99 6.22 General Rule 9 c for rules on this cast.
+//! See SQL99 Part 2 Section 6.22 General Rule 9.c for rules on this cast.
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 int
 SqlStrCastToChar(char *dest,
@@ -1335,8 +1341,8 @@ SqlStrCastToChar(char *dest,
                     trunc != end;
                     trunc++) {
                     if (*trunc != padchar) {
-                        // Spec says this is just a warning (see SQL99
-                        // 6.22 General Rule 9 c ii.  Let the caller
+                        // Spec says this is just a warning (see SQL99 Part 2
+                        // Section 6.22 General Rule 9.c.ii).  Let the caller
                         // handle it.
                         if (rightTruncWarning != NULL) {
                             *rightTruncWarning = 1;

@@ -53,7 +53,7 @@ FENNEL_BEGIN_NAMESPACE
 //! StrLikePrep. Prepares a pattern string to feed to regex
 //! and perhaps also ICU's regex.
 //!
-//! See SQL99 8.5
+//! See SQL99 Part 2 Section 8.5
 //!
 //! Set escape and escapeLenBytes to 0 if escape character is not defined.
 //!
@@ -72,7 +72,7 @@ SqlLikePrep(char const * const pattern,
             // ASCII
 
             if (patternLenBytes == 0) {
-                // SQL99 8.5 General Rule 3d, Case i.
+                // SQL99 Part 2 Section 8.5 General Rule 3.d.i.
                 // LIKE always matches if matchValueLenBytes == 0
                 // if != 0, then I believe this cannot match anything
                 // Must still assign a valid regex here.
@@ -101,7 +101,7 @@ SqlLikePrep(char const * const pattern,
                     // Default to no escape character
                     escapeChar = 0; // should not match anything
                 } else {
-                    // SQL99 8.5 General Rule 3b, case i1
+                    // SQL99 Part 2 Section 8.5 General Rule 3.b.i1
                     // Invalid Escape Character
                     throw "22019";
                 }
@@ -122,7 +122,7 @@ SqlLikePrep(char const * const pattern,
                     if (pos + 1 >= expPat.size() ||
                         (expPat[pos+1] != '_' && expPat[pos+1] != '%' &&
                          expPat[pos+1] != escapeChar)) {
-                        // SQL99 8.5 General Rule 3d, Case ii, I think.
+                        // SQL99 Part 2 Section 8.5 General Rule 3.d.ii, I think.
                         // Invalid Escape Sequence
                         throw "22025";
                     }
@@ -194,14 +194,11 @@ SqlSimilarPrepEscapeProcessing(char const * const escape,
             escapeChar = *escape;
             sqlSpecial.append(1, escapeChar);
         
-            // SQL2003 General Rule 3b
-            //
-            // Define special characters for SQL2003 8.6 General Rule
-            // 3b. (See also Syntax Rule 6.)  Added <right brace> to
-            // these list as it appears at first glance to be an
-            // omission from the rules.  Could easily be wrong
-            // though. There could be a subtle reason why '}' is
-            // omitted from these rules
+            // Define special characters for SQL2003 Part 2 Section 8.6 General
+            // Rule 3.b. (See also Syntax Rule 6.)  Added <right brace> to these
+            // list as it appears at first glance to be an omission from the
+            // rules.  Could easily be wrong though. There could be a subtle
+            // reason why '}' is omitted from these rules
             char const * const SqlSimilarPrepGeneralRule3b = "[]()|^-+*_%?{}";
 
             if (strchr(SqlSimilarPrepGeneralRule3b, escapeChar)) {
@@ -214,7 +211,7 @@ SqlSimilarPrepEscapeProcessing(char const * const escape,
                     if (pos + 1 >= expPat.size() ||
                         !strchr(SqlSimilarPrepGeneralRule3b,
                                 expPat[pos + 1])) {
-                        // SQL2003 8.6 General Rule 3b
+                        // SQL2003 Part 2 Section 8.6 General Rule 3.b
                         // Data Exception - Invalid Use of Escape Character
                         throw "2200C";
                     }
@@ -224,7 +221,7 @@ SqlSimilarPrepEscapeProcessing(char const * const escape,
             if (escapeChar == ':' &&
                 ((expPat.find("[:") != std::string::npos ||
                   expPat.find(":]") != std::string::npos))) {
-                // SQL2003 8.6 General Rule 3c
+                // SQL2003 Part 2 Section 8.6 General Rule 3.c
                 // Data Exception -- Escape Character Conflict
                 throw "2200B";
             }
@@ -233,7 +230,7 @@ SqlSimilarPrepEscapeProcessing(char const * const escape,
                 // Default to no escape character
                 escapeChar = 0; // should not match anything
             } else {
-                // SQL2003 8.6 General Rule 3,
+                // SQL2003 Part 2 Section 8.6 General Rule 3,
                 // Invalid Escape Character
                 throw "22019";
             }
@@ -271,7 +268,7 @@ SqlSimilarPrepRewriteCharEnumeration(std::string& expPat,
             // The <character enumeration> does not contain a 
             // <regular character set identifier>.
             //
-            // SQL2003 8.6 Syntax Rule 5 and Syntax Rule 6.  Only
+            // SQL2003 Part 2 Section 8.6 Syntax Rule 5 and Syntax Rule 6.  Only
             // <escaped character> and <non-escaped character> are
             // legal between [ and ]. i.e. Unescaped special
             // characters not allowed in <character enumeration>.
@@ -294,7 +291,7 @@ SqlSimilarPrepRewriteCharEnumeration(std::string& expPat,
                     // A special char (as defined by Syntax Rule 6) found
                     // unescaped inside character enumeration 
                     //
-                    // SQL2003 8.6 General Rule 2
+                    // SQL2003 Part 2 Section 8.6 General Rule 2
                     // Data Exception - Invalid Regular Expression
                     throw "2201B";
                 }
@@ -306,13 +303,13 @@ SqlSimilarPrepRewriteCharEnumeration(std::string& expPat,
         // Continue with <regular character set identifier> processing
         //
 
-        // SQL2003 8.6 Syntax Rule 3
+        // SQL2003 Part 2 Section 8.6 Syntax Rule 3
         // and 8.6 BNF <character enumeration>
         // Must make a few substitutions as regex doesn't match
         // SIMILAR. Also, regex doesn't use [:ALPHA:], only [:alpha:].
-        // See General Rule 7m - 7s
+        // See General Rule 7.m - 7.s
         //
-        // SQL2003 General Rule 7r, Note 189 refers to
+        // SQL2003 Part 2 Section 8.6 General Rule 7.r, Note 189 refers to
         // SQL2003 3.1.6.42: Whitespace is defined as:
         // U+0009, Horizontal Tabulation
         // U+000A, Line Feed
@@ -356,7 +353,7 @@ SqlSimilarPrepRewriteCharEnumeration(std::string& expPat,
                 return;
             }
         }
-        // SQL2003 8.6 General Rule 2
+        // SQL2003 Part 2 Section 8.6 General Rule 2
         // Data Exception - Invalid Regular Expression
         throw "2201B";
     }
@@ -375,8 +372,8 @@ SqlSimilarPrepReWrite(char escapeChar,
         CodeUnitBytes == 1) {
         // ASCII
 
-        // Define special characters for SQL2003 8.6 Syntax Rule 6
-        // (similar to 8.6 General Rule 3b).
+        // Define special characters for SQL2003 Part 2 Section 8.6 Syntax Rule
+        // 6 (similar to Section 8.6 General Rule 3.b).
         //
         // Added <right brace> to these list as it appears at first glance to
         // be an omission from the rules.  Could easily be wrong though. There
@@ -399,13 +396,14 @@ SqlSimilarPrepReWrite(char escapeChar,
             if (expPat[pos] == escapeChar) {
                 if (pos + 1 >= expPat.size()) {
                     // Escape char at end of string. See large note above
-                    // SQL2003 8.6 General Rule 2
+                    // SQL2003 Part 2 Section 8.6 General Rule 2
                     // Data Exception - Invalid Regular Expression
                     throw "2201B";
                 }
                 if (strchr(SqlSimilarPrepSyntaxRule6, expPat[pos + 1])) {
-                    // Valid <escaped char>, per SQL2003 8.6 Syntax Rule 6.
-                    // Replace user defined escape char with regex escape char.
+                    // Valid <escaped char>, per SQL2003 Part 2 Section 8.6
+                    // Syntax Rule 6.  Replace user defined escape char with
+                    // regex escape char.
                     expPat.replace(pos, 1, BoostRegExEscapeChar);
                     // Move past subsequent special character.
                     pos += 2;
@@ -418,7 +416,7 @@ SqlSimilarPrepReWrite(char escapeChar,
                     pos++; 
                 } else {
                     // Malformed <escaped char>. Attempt to escape a
-                    // non special character.  SQL2003 8.6 Syntax
+                    // non special character.  SQL2003 Part 2 Section 8.6 Syntax
                     // Rules 5 & 6, combined with General Rule 2 imply
                     // that if an escape character is not followed by
                     // a special character, then the result does not
@@ -426,7 +424,7 @@ SqlSimilarPrepReWrite(char escapeChar,
                     // the character is neither an <non-escaped
                     // character> nor an <escaped character>.
                     //
-                    // SQL2003 8.6 General Rule 2
+                    // SQL2003 Part 2 Section 8.6 General Rule 2
                     // Data Exception - Invalid Regular Expression
                     throw "2201B";
                 }
@@ -446,7 +444,7 @@ SqlSimilarPrepReWrite(char escapeChar,
                 case ']':
                     if (!characterEnumeration) {
                         // Closing ']'  w/o opening ']'
-                        // SQL2003 8.6 General Rule 2
+                        // SQL2003 Part 2 Section 8.6 General Rule 2
                         // Data Exception - Invalid Regular Expression
                         throw "2201B";
                     }
@@ -497,7 +495,7 @@ SqlSimilarPrepReWrite(char escapeChar,
 
         if (characterEnumeration) {
             // Opening '[' w/o closing ']'
-            // SQL2003 8.6 General Rule 2
+            // SQL2003 Part 2 Section 8.6 General Rule 2
             // Data Exception - Invalid Regular Expression
             throw "2201B";
         }
@@ -511,16 +509,16 @@ SqlSimilarPrepReWrite(char escapeChar,
 //!
 //! May throw "2200B" "22019", "2201B", or "2200C"
 //!
-//! See SQL99 8.6 and SQL2003 8.6. This routine adheres to SQL2003
+//! See SQL99 Part 2 Section 8.6 and SQL2003 Part 2 Section 8.6. This routine adheres to SQL2003
 //! as published in the working draft, except as noted below:
 //! 
-//! Does not support for SQL2003 8.6 General Rule 7L which
+//! Does not support  General Rule 7L which
 //! allows the definition of both included and excluded characters
 //! from sets at the same time. e.g.: [abc^def]. Seems to be of low value.
-//! TODO: Add support for SQL2003 8.6 General Rule 7L?
-//! TODO: Add support For SQL2003 8.6 Note 190: Handling of blanks
+//! TODO: Add support for General Rule 7L?
+//! TODO: Add support For Note 190: Handling of blanks
 //! at the end of the pattern.
-//! TODO: Understand and implement SQL2003 8.6 General Rule 7t. (Confused.)
+//! TODO: Understand and implement General Rule 7.t. (Confused.)
 //!
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
 void
@@ -535,10 +533,10 @@ SqlSimilarPrep(char const * const pattern,
         // ASCII
 
         if (patternLenBytes == 0) {
-            // SQL99 and SQL2003 8.6 General Rule 2 may
+            // SQL99 and SQL2003 Part 2 Section 8.6 General Rule 2 may
             // come into play here if boost::regex doesn't
             // handle this case properly. Also see
-            // SQL2003 8.6 General Rule 7u.
+            // SQL2003 Part 2 Section 8.6 General Rule 7.u.
             expPat.assign("UNUSED");
             return;
         }
@@ -581,10 +579,10 @@ SqlSimilarPrep(char const * const pattern,
 
 //! SqlRegExp. Execs LIKE and SIMILAR. SQL VARCHAR & CHAR. Ascii. No UCS2 yet.
 //!
-//! See SQL99 8.5 & SQL2003 8.6
+//! See SQL99 Part 2 Section 8.5 & SQL2003 Part 2 Section 8.6
 //!
 //! patternLenBytes must be passed in to support
-//! SQL99 8.5 General Rule 3d, Case i, patLen = matchLen = 0.
+//! SQL99 Part 2 Section 8.5 General Rule 3.d.i, patLen = matchLen = 0.
 //!
 //! TODO: Function signature will change when unicode is supported
 //! TODO: to allow either/or regex and ICU regex to be passed in.
@@ -601,9 +599,9 @@ SqlRegExp(char const * const matchValue,
 
             if (patternLenBytes == 0) {
                 if (matchValueLenBytes == 0) {
-                    // SQL99 8.5 General Rule 3d, Case i.
-                    // Not explicitly defined in SQL2003 8.6 for SIMILAR
-                    // but let this pass as seems reasonable.
+                    // SQL99 Part 2 Section 8.5 General Rule 3.d.i.  Not
+                    // explicitly defined in SQL2003 Part 2 Section 8.6 for
+                    // SIMILAR but let this pass as seems reasonable.
                     return true;
                 } else {
                     // Believe that this cannot match anything.

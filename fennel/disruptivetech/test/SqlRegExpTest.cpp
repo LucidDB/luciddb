@@ -508,7 +508,7 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         // pattern, matchValue, result
 
         // {2} 
-        // SQL2003 8.6 General Rule 6a & 7d
+        // SQL2003 Part 2 Section 8.6 General Rule 6.a & 7.d
         { "a{2}",      "aa",     "t" },
         { "a{2}b",     "aab",    "t" },
         { "(bc){2}",   "bcbc",   "t" },
@@ -542,7 +542,7 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         { "[bc]{2}",   "bbc",    "f" },
 
         // {2,3} 
-        // SQL2003 8.6 General Rule 6b & 7d
+        // SQL2003 Part 2 Section 8.6 General Rule 6.b & 7.d
         // <upper limit> w/ <high value>
         { "a{2,3}",    "aa",     "t" },
         { "a{2,3}",    "aaa",    "t" },
@@ -575,7 +575,7 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         { "[bc]{2,3}", "bbcc",   "f" },
 
         // {2,}
-        // SQL2003 8.6 General Rule 6c & 7d
+        // SQL2003 Part 2 Section 8.6 General Rule 6.c & 7.d
         // <upper limit> w/o <high value>
         // 98.6% sure that I'm interpreting this correctly. -JK 2004/6
         { "a{2,}",    "aa",     "t" },
@@ -607,7 +607,7 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         { "[bc]{2,}", "bcd",    "f" },
 
         // |
-        // SQL2003 8.6 General Rule 7a
+        // SQL2003 Part 2 Section 8.6 General Rule 7.a
         { "a|b",      "a",      "t" },
         { "a|b",      "b",      "t" },
         { "a|bc",     "a",      "t" },
@@ -622,7 +622,7 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         { "(a|b)c",   "dc",     "f" },
 
         // *
-        // SQL2003 8.6 General Rule 7b
+        // SQL2003 Part 2 Section 8.6 General Rule 7.b
         { "a*b",      "b",      "t" },
         { "a*b",      "ab",     "t" },
         { "a*b",      "aab",    "t" },
@@ -657,7 +657,7 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         { "a[bc]*",   "acd",    "f" },
 
         // +
-        // SQL2003 8.6 General Rule 7c
+        // SQL2003 Part 2 Section 8.6 General Rule 7.c
         { "a+b",      "ab",     "t" },
         { "a+b",      "aab",    "t" },
         { "ab+",      "ab",     "t" },
@@ -690,14 +690,14 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         { "a[bc]+",   "abd",    "f" },
         { "a[bc]+",   "acd",    "f" },
 
-        // General Rule 7d is above with GR6
+        // General Rule 7.d is above with GR6
 
-        // SQL2003 8.6 General Rule 7e
+        // SQL2003 Part 2 Section 8.6 General Rule 7.e
         { "a",         "a",     "t" },
         { "a",         "",      "f" },
 
         // %
-        // SQL2003 8.6 General Rule 7f
+        // SQL2003 Part 2 Section 8.6 General Rule 7.f
         { "%",        "",       "t" },
         { "%",        "a",      "t" },
         { "%",        "abc",    "t" },
@@ -727,7 +727,7 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         { "abc%",     "bc",     "f" },
 
         // ?
-        // SQL2003 8.6 General Rule 7g
+        // SQL2003 Part 2 Section 8.6 General Rule 7.g
         { "a?b",      "b",      "t" },
         { "a?b",      "ab",     "t" },
         { "ab?",      "a",      "t" },
@@ -761,7 +761,7 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         { "a[bc]?",   "abbb",   "f" },
         { "a[bc]?",   "accc",   "f" },
 
-        // SQL2003 8.6 General Rule 7h
+        // SQL2003 Part 2 Section 8.6 General Rule 7.h
         // also mixed with other tests
         { "(a)",      "a",      "t" },
         { "(ab)",     "ab",     "t" },
@@ -781,7 +781,7 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         { "(a(b))",   "abc",    "f" },
 
         // _
-        // SQL2003 8.6 General Rule 7i
+        // SQL2003 Part 2 Section 8.6 General Rule 7.i
         { "_",        "a",      "t" },
         { "a",        "a",      "t" },
         { "abc",      "abc",    "t" },
@@ -810,8 +810,8 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         { "__c",      "abC",    "f" },
 
         // [a], [ab], [a-c]
-        // SQL2003 8.6 General Rule 7j
-        // SQL2003 8.6 General Rule 5a & 5b
+        // SQL2003 Part 2 Section 8.6 General Rule 7.j
+        // SQL2003 Part 2 Section 8.6 General Rule 5.a & 5.b
         // (General Rule 5b is tested throughout below)
         { "[a]",       "a",     "t" },
         { "[ab]",      "a",     "t" },
@@ -831,8 +831,8 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         { "[a-c]",     "d",     "f" },
 
         // [^a], [^ab], [^a-c]
-        // SQL2003 8.6 General Rule 7k
-        // SQL2003 8.6 General Rule 5a & 5b
+        // SQL2003 Part 2 Section 8.6 General Rule 7.k
+        // SQL2003 Part 2 Section 8.6 General Rule 5.a & 5.b
         { "[^a]",      "b",     "t" },
         { "[^ab]",     "c",     "t" },
         { "[^a-c]",    "d",     "t" },
@@ -851,8 +851,8 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         { "[^a-c]",    "ab",    "f" },
 
         // [a^b], [a-c^d-f]
-        // SQL2003 8.6 General Rule 7l (7L)
-        // boost regex does not support SQL2003 8.6 General Rule 7l
+        // SQL2003 Part 2 Section 8.6 General Rule 7.l (7L)
+        // boost regex does not support this
         // SqlSimilarPrep does not currently have a workaround.
         // TODO: Add a workaround in SqlSimilarPrep to allow this to work
 #if 0
@@ -877,7 +877,7 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         { "[a-c^d-f]", "aaa",   "f" },
 #endif
 
-        // SQL2003 8.6 General Rule 7m
+        // SQL2003 Part 2 Section 8.6 General Rule 7.m
         { "[[:alpha:]]",  "a",  "t" },
         { "[[:ALPHA:]]",  "a",  "t" },
         { "[[:ALPHA:]]",  "A",  "t" },
@@ -895,7 +895,7 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         { "[^[:ALPHA:]]", "a",  "f" },
         { "[^[:ALPHA:]]", "A",  "f" },
 
-        // SQL2003 8.6 General Rule 7n
+        // SQL2003 Part 2 Section 8.6 General Rule 7.n
         { "[[:upper:]]",  "A",  "t" },
         { "[[:UPPER:]]",  "A",  "t" },
         { "[^[:upper:]]", "1",  "t" },
@@ -912,7 +912,7 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         { "[[:UPPER:]]",  "AA", "f" },
         { "[^[:UPPER:]]", "A",  "f" },
 
-        // SQL2003 8.6 General Rule 7o
+        // SQL2003 Part 2 Section 8.6 General Rule 7.o
         { "[[:lower:]]",  "a",  "t" },
         { "[[:LOWER:]]",  "a",  "t" },
         { "[^[:lower:]]", "1",  "t" },
@@ -929,7 +929,7 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         { "[[:LOWER:]]",  "aa", "f" },
         { "[^[:LOWER:]]", "a",  "f" },
 
-        // SQL2003 8.6 General Rule 7p
+        // SQL2003 Part 2 Section 8.6 General Rule 7.p
         { "[[:digit:]]",  "1",  "t" },
         { "[[:DIGIT:]]",  "1",  "t" },
         { "[^[:digit:]]", "a",  "t" },
@@ -943,7 +943,7 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         { "[[:DIGIT:]]",  "a",  "f" },
         { "[[:DIGIT:]]",  "@",  "f" },
 
-        // SQL2003 8.6 General Rule 7q
+        // SQL2003 Part 2 Section 8.6 General Rule 7.q
         { "[[:space:]]",  " ",  "t" },
         { "[[:SPACE:]]",  " ",  "t" },
         { "[^[:space:]]", "a",  "t" },
@@ -960,7 +960,7 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         { "[[:SPACE:]]",  "@",  "f" },
 
 
-        // SQL2003 8.6 General Rule 7r
+        // SQL2003 Part 2 Section 8.6 General Rule 7.r
         { "[[:whitespace:]]",  " ",  "t" },
         { "[[:WHITESPACE:]]",  " ",  "t" },
         { "[[:WHITESPACE:]]",  "\t",  "t" },
@@ -987,7 +987,7 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         { "[[:WHITESPACE:]]",  "a",  "f" },
         { "[[:WHITESPACE:]]",  "@",  "f" },
 
-        // SQL2003 8.6 General Rule 7s
+        // SQL2003 Part 2 Section 8.6 General Rule 7.s
         { "[[:alnum:]]",  "a",  "t" },
         { "[[:ALNUM:]]",  "a",  "t" },
         { "[[:ALNUM:]]",  "1",  "t" },
@@ -1007,14 +1007,14 @@ SqlRegExpTest::testSqlRegExpSimilarAscii()
         { "[^[:ALNUM:]]", "A",  "f" },
         { "[[:ALNUM:]]",  "aa", "f" },
 
-        // SQL2003 8.6 General Rule 7t
-        // TODO: Understand and implement 7t. (Confused.)
+        // SQL2003 Part 2 Section 8.6 General Rule 7.t
+        // TODO: Understand and implement 7.t. (Confused.)
 #if 0
         { "||",       "a",      "t" },
         { "||",       "aa",     "f" },
 #endif
 
-        // SQL2003 8.6 General Rule 7u
+        // SQL2003 Part 2 Section 8.6 General Rule 7.u
         { "",         "",       "t" },
         { "",         "a",      "f" },
 

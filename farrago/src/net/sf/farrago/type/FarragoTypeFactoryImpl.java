@@ -584,7 +584,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             return null;
         }
 
-        // NOTE jvs 11-Jan-2005:  per SQL2003-13 section 4.5,
+        // NOTE jvs 11-Jan-2005:  per
+        // SQL:2003 Part 13 Section 4.5,
         // these mappings are based on Appendix B of the JDBC 3.0
         // spec
         switch(typeName.getOrdinal()) {

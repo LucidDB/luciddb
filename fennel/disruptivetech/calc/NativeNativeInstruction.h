@@ -80,7 +80,7 @@ public:
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
         if (mOp1->isNull() || mOp2->isNull()) {
-            // SQL99 6.26 General Rule 1
+            // SQL99 Part 2 Section 6.26 General Rule 1
             mResult->toNull();
         } else {
             mResult->value(mOp1->value() + mOp2->value());
@@ -129,7 +129,7 @@ public:
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
         if (mOp1->isNull() || mOp2->isNull()) {
-            // SQL99 6.26 General Rule 1
+            // SQL99 Part 2 Section 6.26 General Rule 1
             mResult->toNull();
         } else {
             mResult->value(mOp1->value() - mOp2->value());
@@ -178,7 +178,7 @@ public:
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
         if (mOp1->isNull() || mOp2->isNull()) {
-            // SQL99 6.26 General Rule 1
+            // SQL99 Part 2 Section 6.26 General Rule 1
             mResult->toNull();
         } else {
             mResult->value(mOp1->value() * mOp2->value());
@@ -228,14 +228,14 @@ public:
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
         if (mOp1->isNull() || mOp2->isNull()) {
-            // SQL99 6.26 General Rule 1
+            // SQL99 Part 2 Section 6.26 General Rule 1
             mResult->toNull();
         } else {
             TMPLT o2 = mOp2->value(); // encourage into register
             if (o2 == 0) {
-                // SQL99 6.26 General Rule 4
+                // SQL99 Part 2 Section 6.26 General Rule 4
                 mResult->toNull();
-                // SQL99 22.1 SQLState dataexception class 22,
+                // SQL99 Part 2 Section 22.1 SQLState dataexception class 22,
                 // division by zero subclass 012
                 throw CalcMessage("22012", pc - 1); 
             }
@@ -269,7 +269,7 @@ public:
 };
 
 // NativeNeg implements monadic arithmetic operator '-' (unary minus)
-// See SQL99 6.26, General Rule 3.
+// See SQL99 Part 2 Section 6.26 General Rule 3.
 template <typename TMPLT>
 class NativeNeg : public NativeNativeInstruction<TMPLT>
 {
@@ -286,7 +286,7 @@ public:
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
         if (mOp1->isNull()) {
-            // SQL99 6.26 General Rule 1
+            // SQL99 Part 2 Section 6.26 General Rule 1
             mResult->toNull();
         } else {
             mResult->value(mOp1->value() * -1);
@@ -343,7 +343,7 @@ public:
     }
 };
 
-// See SQL99 4.5 Numbers, paragraph 4, for a discussion on
+// See SQL99 Part 2 Section 4.5 Numbers, paragraph 4, for a discussion on
 // rounding away from zero.
 // NativeRound does a round "away from zero" (e.g. -0.5 -> -1.0)
 template <typename TMPLT>

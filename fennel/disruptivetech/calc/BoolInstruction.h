@@ -91,7 +91,7 @@ public:
     void describe(string& out, bool values) const;
 
     virtual void exec(TProgramCounter& pc) const { 
-        // SQL99, 6.30, Table 14
+        // SQL99 Part 2 Section 6.30 Table 14
         pc++;
         
         if (mOp1->isNull()) {
@@ -154,7 +154,7 @@ public:
     void describe(string& out, bool values) const;
 
     virtual void exec(TProgramCounter& pc) const {
-        // SQL99, 6.30, Table 13
+        // SQL99 Part 2 Section 6.30 Table 13
         pc++;
         if (mOp1->isNull()) {
             if (mOp2->isNull() || mOp2->value() == true) {
@@ -213,7 +213,7 @@ public:
     void describe(string& out, bool values) const;
 
     virtual void exec(TProgramCounter& pc) const {
-        // SQL99, 6.30, General Rule #2
+        // SQL99 Part 2 Section 6.30 General Rule 2
         pc++;
         if (mOp1->isNull()) {
             mResult->toNull();
@@ -339,7 +339,7 @@ public:
     void describe(string& out, bool values) const;
 
     virtual void exec(TProgramCounter& pc) const {
-        // SQL99, 6.30, Table 15
+        // SQL99 Part 2 Section 6.30 Table 15
         pc++;
         if (mOp1->isNull()) {
             if (mOp2->isNull()) {
@@ -393,7 +393,7 @@ public:
     void describe(string& out, bool values) const;
 
     virtual void exec(TProgramCounter& pc) const {
-        // SQL99, 6.30, Table 15
+        // SQL99 Part 2 Section 6.30 Table 15
         pc++;
         if (mOp1->isNull()) {
             if (mOp2->isNull()) {
@@ -449,7 +449,7 @@ public:
     void describe(string& out, bool values) const;
 
     virtual void exec(TProgramCounter& pc) const {
-        // SQL99, 4.6.1 Comparison and Assignment of Booleans
+        // SQL99 Part 2 Section 4.6.1 Comparison and Assignment of Booleans
         pc++;
         if (mOp1->isNull() || mOp2->isNull()) {
             mResult->toNull();
@@ -499,7 +499,7 @@ public:
     void describe(string& out, bool values) const;
 
     virtual void exec(TProgramCounter& pc) const {
-        // SQL99, 4.6.1 Comparison and Assignment of Booleans
+        // SQL99 Part 2 Section 4.6.1 Comparison and Assignment of Booleans
         pc++;
         if (mOp1->isNull() || mOp2->isNull()) {
             mResult->toNull();
@@ -549,7 +549,7 @@ public:
     void describe(string& out, bool values) const;
 
     virtual void exec(TProgramCounter& pc) const {
-        // SQL99, 4.6.1 Comparison and Assignment of Booleans
+        // SQL99 Part 2 Section 4.6.1 Comparison and Assignment of Booleans
         pc++;
         if (mOp1->isNull() || mOp2->isNull()) {
             mResult->toNull();
@@ -599,7 +599,7 @@ public:
     void describe(string& out, bool values) const;
 
     virtual void exec(TProgramCounter& pc) const {
-        // SQL99, 4.6.1 Comparison and Assignment of Booleans
+        // SQL99 Part 2 Section 4.6.1 Comparison and Assignment of Booleans
         pc++;
         if (mOp1->isNull() || mOp2->isNull()) {
             mResult->toNull();
@@ -652,7 +652,7 @@ public:
     void describe(string& out, bool values) const;
 
     virtual void exec(TProgramCounter& pc) const {
-        // SQL99, 4.6.1 Comparison and Assignment of Booleans
+        // SQL99 Part 2 Section 4.6.1 Comparison and Assignment of Booleans
         pc++;
         if (mOp1->isNull() || mOp2->isNull()) {
             mResult->toNull();
@@ -702,7 +702,7 @@ public:
     void describe(string& out, bool values) const;
 
     virtual void exec(TProgramCounter& pc) const {
-        // SQL99, 4.6.1 Comparison and Assignment of Booleans
+        // SQL99 Part 2 Section 4.6.1 Comparison and Assignment of Booleans
         pc++;
         if (mOp1->isNull() || mOp2->isNull()) {
             mResult->toNull();
@@ -796,7 +796,7 @@ public:
     void describe(string& out, bool values) const;
 
     virtual void exec(TProgramCounter& pc) const {
-        // SQL99, 4.6.1 Comparison and Assignment of Booleans
+        // SQL99 Part 2 Section 4.6.1 Comparison and Assignment of Booleans
         pc++;
         if (mOp1->isNull()) {
             mResult->value(false);
@@ -838,7 +838,7 @@ public:
     void describe(string& out, bool values) const;
 
     virtual void exec(TProgramCounter& pc) const {
-        // SQL99, 4.6.1 Comparison and Assignment of Booleans
+        // SQL99 Part 2 Section 4.6.1 Comparison and Assignment of Booleans
         pc++;
         mResult->toNull();
     }

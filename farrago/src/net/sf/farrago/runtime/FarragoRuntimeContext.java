@@ -243,12 +243,13 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
     /**
      * Called from generated code.
      *
+     * @sql.99 Part 2 Section 6.3 General Rule 10
+     *
      * @return the value of context variable CURRENT_PATH.
      */
     public String getContextVariable_CURRENT_PATH()
     {
         // The SQL standard is very precise about the formatting
-        // (see SQL99 2:6.3 General Rule 10)
         SqlDialect dialect = new SqlDialect(session.getDatabaseMetaData());
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);

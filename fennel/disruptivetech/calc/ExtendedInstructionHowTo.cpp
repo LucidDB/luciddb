@@ -201,8 +201,8 @@ responsibility for sorting this out should be in the domain of the
 program writer.)
 </p>
 <p>
-Nearly all error cases will already be labeled by the SQL99 spec,
-Chapter 22.1. For example, String Data Right Truncation is 22-001, or
+Nearly all error cases will already be labeled by SQL99 Part 2
+Section 22.1. For example, String Data Right Truncation is 22-001, or
 22001. Libraries should simply throw a Calculator independent string,
 for example "22001".
 </p>

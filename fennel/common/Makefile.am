@@ -46,3 +46,8 @@ RawIntrusiveList.cpp \
 SysCallExcn.cpp \
 TraceSource.cpp \
 TraceTarget.cpp
+
+DESIGN_DOCS=CommonTerms.cpp
+EXTRA_DIST=$(DESIGN_DOCS)
+TAGS_DEPENDENCIES=$(DESIGN_DOCS)
+ETAGS_ARGS=$(DESIGN_DOCS)

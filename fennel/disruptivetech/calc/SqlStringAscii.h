@@ -29,7 +29,7 @@ FENNEL_BEGIN_NAMESPACE
 //! Strcat. Ascii. SQL VARCHAR & CHAR. dest = dest || str. Returns new length in bytes.
 //!
 //! If either string is variable width, the result is variable
-//! width: per SQL99 6.27 Syntax Rule 3, Case A, item i.
+//! width: per SQL99 Part 2 Section 6.27 Syntax Rule 3.a.i.
 //! If both strings are fixed width, the result is fixed width, 
 //! per item ii.
 //!
@@ -65,7 +65,7 @@ SqlStrCat_Ascii(char* dest,
 //! Subsequent concatenations may occur with other form.
 //!
 //! If either string is variable width, the result is variable
-//! width: per SQL99 6.27 Syntax Rule 3, Case A, item i.
+//! width: per SQL99 Part 2 Section 6.27 Syntax Rule 3.a.i.
 //! If both strings are fixed width, the result is fixed width, 
 //! item ii.
 //!
@@ -126,7 +126,7 @@ SqlStrLenOct_Ascii(char const * const str,
 
 //! Overlay. Ascii. CHAR/VARCHAR. Returns new length in bytes
 //!
-//! See SQL99 6.18 Syntax Rule 10. Overlay is defined in terms of
+//! See SQL99 Part 2 Section 6.18 Syntax Rule 10. Overlay is defined in terms of
 //! Substring an concatenation. If start is < 1 or length < 0, a substring error
 //! may be thrown.
 //! Result is VARCHAR, as the result of substring is always VARCHAR,
@@ -145,8 +145,8 @@ SqlStrOverlay_Ascii(char* dest,
 
 //! Position. Ascii. CHAR/VARHCAR. Returns 1-index string position.
 //!
-//! Returns 0 if not found. Returns 1 if find is zero length. See SQL99 6.17
-//! General Rule 2.
+//! Returns 0 if not found. Returns 1 if find is zero length. See
+//! SQL99 Part 2 Section 6.17 General Rule 2.
 int
 SqlStrPos_Ascii(char const * const str,
                 int strLenBytes,
@@ -161,7 +161,7 @@ SqlStrPos_Ascii(char const * const str,
 //! could be negative. Some combinations of subStart and subLenBytes may throw an
 //! exception.
 //! Results in a VARCHAR.
-//! See SQL99 6.18, General Rule 3.
+//! See SQL99 Part 2 Section 6.18 General Rule 3.
 //! subStartChar is 1-indexed.
 int
 SqlStrSubStr_Ascii(char const ** dest,
@@ -188,7 +188,7 @@ SqlStrToUpper_Ascii(char* dest,
 
 //! Trim padding. Ascii. CHAR/VARCHAR. Returns new length.
 //!
-//! See SQL99 6.18 General Rule 8.
+//! See SQL99 Part 2 Section 6.18 General Rule 8.
 //! Results in a VARCHAR.
 int 
 SqlStrTrim_Ascii(char* dest,
@@ -201,7 +201,7 @@ SqlStrTrim_Ascii(char* dest,
 
 //! Trim padding by reference. Ascii. CHAR/VARCHAR. Returns new length.
 //!
-//! See SQL99 6.18 General Rule 8.
+//! See SQL99 Part 2 Section 6.18 General Rule 8.
 //! Results in a VARCHAR.
 //! Note: Does not check that result has enough capacity to contain
 //! substring as this is irrelevant. If a program depends on the size

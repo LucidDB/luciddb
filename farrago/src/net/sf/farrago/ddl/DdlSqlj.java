@@ -33,7 +33,7 @@ import java.sql.*;
 public abstract class DdlSqlj
 {
     /**
-     * See SQL:2003 13:11.1.
+     * @sql.2003 Part 13 Section 11.1
      */
     public static void install_jar(
         String url,
@@ -53,7 +53,7 @@ public abstract class DdlSqlj
     }
     
     /**
-     * See SQL:2003 13:11.2.
+     * @sql.2003 Part 13 Section 11.2
      */
     public static void replace_jar(
         String url,
@@ -67,7 +67,7 @@ public abstract class DdlSqlj
     }
     
     /**
-     * See SQL:2003 13:11.3.
+     * @sql.2003 Part 13 Section 11.3
      */
     public static void remove_jar(
         String jar,
@@ -85,7 +85,7 @@ public abstract class DdlSqlj
     }
     
     /**
-     * See SQL:2003 13:11.4.
+     * @sql.2003 Part 13 Section 11.4
      */
     public static void alter_java_path(
         String jar,

@@ -184,8 +184,8 @@ SqlStrOverlay_Ascii(char* dest,
         // would, I believe, generate a substring error. Also
         // another "reference" sql database gets angry under these 
         // conditions. Therefore:
-        // Per SQL99 6.18, General Rule #3, D, generate a
-        // "data exception substring error". SQL99 22.1 22-011
+        // Per SQL99 Part 2 Section 6.18 General Rule 3.d generate a
+        // "data exception substring error". SQL99 Part 2 Section 22.1 22-011
         throw "22011";
     }
     
@@ -223,8 +223,10 @@ SqlStrPos_Ascii(char const * const str,
                 char const * const find,
                 int findLenBytes)
 {
-    if (!findLenBytes) return 1;             // SQL99 6.17 General Rule 2 case A.
-    if (findLenBytes > strLenBytes) return 0;   // Case C.
+    // SQL99 Part 2 Section 6.17 General Rule 2.a.
+    if (!findLenBytes) return 1;             
+    // SQL99 Part 2 Section 6.17 General Rule 2.c.
+    if (findLenBytes > strLenBytes) return 0;
 
     assert(findLenBytes > 0);
     assert(strLenBytes > 0);
@@ -268,8 +270,8 @@ SqlStrSubStr_Ascii(char const ** dest,
     }
 
     if (e < subStartChar) {
-        // Per SQL99 6.18, General Rule #3, D, generate a
-        // "data exception substring error". SQL99 22.1 22-011
+        // Per SQL99 Part 2 Section 6.18 General Rule 3.d, generate a
+        // "data exception substring error". SQL99 Part 2 Section 22.1 22-011
         throw "22011";
     }
 

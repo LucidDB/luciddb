@@ -83,7 +83,7 @@ SqlDateToStr(char *dest,
             case SQLDATE:
                 len = DateToIsoString(buf, t);
                 if (len > destStorageBytes) {
-                    // SQL99 6.22, general rule 9 case a.iii => 
+                    // SQL99 Part 2 Section 6.22 General Rule 9.a.iii => 
                     // exception SQL99 22.1 22-001 "String Data Right truncation"
                     throw "22001"; 
                 }
@@ -92,7 +92,7 @@ SqlDateToStr(char *dest,
             case SQLTIME:
                 len = TimeToIsoString(buf, t);
                 if (len > destStorageBytes) {
-                    // SQL99 6.22, general rule 9 case a.iii => 
+                    // SQL99 Part 2 Section 6.22 General Rule 9.a.iii => 
                     // exception SQL99 22.1 22-001 "String Data Right truncation"
                     throw "22001"; 
                 }
@@ -101,7 +101,7 @@ SqlDateToStr(char *dest,
             case SQLTIMESTAMP:
                 len = TimestampToIsoString(buf, t);
                 if (len > destStorageBytes) {
-                    // SQL99 6.22, general rule 9 case a.iii => 
+                    // SQL99 Part 2 Section 6.22 General Rule 9.a.iii => 
                     // exception SQL99 22.1 22-001 "String Data Right truncation"
                     throw "22001"; 
                 }

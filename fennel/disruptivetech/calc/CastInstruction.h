@@ -67,10 +67,10 @@ public:
     ~CastCast() { }
 
     virtual void exec(TProgramCounter& pc) const {
-        // See SQL99 6.22 for specification of CAST() operator
+        // See SQL99 Part 2 Section 6.22 for specification of CAST() operator
         pc++;
         if (mOp1->isNull()) {
-            // SQL99 6.22 General Rule 2c.
+            // SQL99 Part 2 Section 6.22 General Rule 2.c.
             mResult->toNull();
         } else {
             // TODO: Update Boost library to fix the following
@@ -123,7 +123,7 @@ public:
             }
             catch (boost::bad_numeric_cast) {
                 // class contains no useful information about what went wrong
-                // SQL99 6.2 General Rule 6-a-ii, 7-a-ii
+                // SQL99 Part 2 Section 6.2 General Rule 6.a.ii, 7.a.ii
                 // 22003 - Data Exception -- Numeric Value Out of Range
                 throw CalcMessage("22003", pc - 1);
             }

@@ -389,7 +389,7 @@ strTrimA(RegisterRef<char*>* result,
         char * ptr = result->pointer(); // preserve old value if possible
 
         if (trimchar->stringLength() != 1) {
-            // SQL99 6.18 General Rule 8d) Data Exception - Trim Error
+            // SQL99 Part 2 Section 6.18 General Rule 8.d) Data Exception - Trim Error
             throw "22027";
         }
         // Note: This routine is for ASCII only, so the following is OK.

@@ -102,7 +102,7 @@ public:
 
     virtual void exec(TProgramCounter& pc) const {
         pc++;
-        // SQL99 6.17 General Rule #10
+        // SQL99 Part 2 Section 6.17 General Rule 10
         if (mOp1->isNull() || mOp2->isNull()) {
             mResult->toNull();
         } else {

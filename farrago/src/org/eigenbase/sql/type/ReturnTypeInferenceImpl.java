@@ -576,9 +576,11 @@ public class ReturnTypeInferenceImpl
 
     /**
      * Type-inference strategy whereby the result type of a call is using its
-     * operands biggest type, using the rules described in ISO/IEC 9075-2:1999
-     * section 9.3 "Data types of results of aggregations".
-     * These rules are used in union, except, intercect, case and other places.
+     * operands biggest type, using the SQL:1999 rules described in 
+     * "Data types of results of aggregations".
+     * These rules are used in union, except, intercept, case and other places.
+     *
+     * @sql.99 Part 2 Section 9.3
      *
      * <p>For example, the expression <code>(500000000000 + 3.0e-3)</code> has
      * the operands INTEGER and DOUBLE. Its biggest type is double.

@@ -35,7 +35,7 @@ class CalcMessage
 {
 public:
     /**
-     * strA is a 5 character long string, per SQL99 22.1.
+     * strA is a 5 character long string, per SQL99 Part 2 Section 22.1.
      * strA can be either null terminated or simply 5 characters long.
      */
     explicit
