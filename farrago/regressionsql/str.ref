@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/str.sql#11 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/str.sql#1 $
 0: jdbc:farrago:> -- Full vertical system testing of non function statements
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -319,13 +319,13 @@
 +---------+
 | abc     |
 +---------+
-0: jdbc:farrago:> values 'a'||cast(null as varchar);
+0: jdbc:farrago:> values 'a'||cast(null as varchar(1));
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> values cast(null as varchar)||'b';
+0: jdbc:farrago:> values cast(null as varchar(1))||'b';
 +---------+
 | EXPR$0  |
 +---------+

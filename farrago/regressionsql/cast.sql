@@ -13,13 +13,13 @@ select cast(null as real) from values(1);
 select cast(null as double) from values(1);
 --select cast(null as bit) from values(1);
 select cast(null as boolean) from values(1);
-select cast(null as char) from values(1);
-select cast(null as varchar) from values(1);
-select cast(null as binary) from values(1);
+select cast(null as char(1)) from values(1);
+select cast(null as varchar(1)) from values(1);
+select cast(null as binary(1)) from values(1);
 select cast(null as date) from values(1);
 select cast(null as time) from values(1);
 select cast(null as timestamp) from values(1);
-select cast(null as varbinary) from values(1);
+select cast(null as varbinary(1)) from values(1);
 select cast(null as float) from values(1);
 --select cast(null as decimal) from values(1);
 

@@ -243,8 +243,8 @@ Error: At line 1, column 34: Cannot apply 'AND' to arguments of type '<BOOLEAN> 
 +---------+
 | -6      |
 +---------+
-0: jdbc:farrago:> select cast(1 as varbinary)+x'ff' from values(1);
-Error: Cast function cannot convert value of type INTEGER to type VARBINARY(0) (state=,code=0)
+0: jdbc:farrago:> select cast(1 as varbinary(1))+x'ff' from values(1);
+Error: Cast function cannot convert value of type INTEGER to type VARBINARY(1) (state=,code=0)
 0: jdbc:farrago:> select x'ff'=x'ff' from values(1);
 +---------+
 | EXPR$0  |
@@ -257,7 +257,7 @@ Error: Cast function cannot convert value of type INTEGER to type VARBINARY(0) (
 +---------+
 | true    |
 +---------+
-0: jdbc:farrago:> --select x'ff'=cast(255 as varbinary) from values(1);
+0: jdbc:farrago:> --select x'ff'=cast(255 as varbinary(1)) from values(1);
 0: jdbc:farrago:> select b'1010'=X'A' from values(1);
 +---------+
 | EXPR$0  |

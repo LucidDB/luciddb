@@ -66,10 +66,10 @@ select cast(null as integer)<=1 from values(1);
 --select cast(null as char)='yo wasup?' from values(1);
 
 select 3*+-2 from values(1);
-select cast(1 as varbinary)+x'ff' from values(1);
+select cast(1 as varbinary(1))+x'ff' from values(1);
 select x'ff'=x'ff' from values(1);
 select x'f'=x'f' from values(1);
---select x'ff'=cast(255 as varbinary) from values(1);
+--select x'ff'=cast(255 as varbinary(1)) from values(1);
 select b'1010'=X'A' from values(1);
 -- not equal
 --select b'01010'<>b'1010' from values(1);

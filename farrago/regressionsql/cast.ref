@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/regressionsql/cast.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/cast.sql#1 $
 0: jdbc:farrago:> -- Full vertical system testing of the cast function
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -48,19 +48,19 @@
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> select cast(null as char) from values(1);
+0: jdbc:farrago:> select cast(null as char(1)) from values(1);
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> select cast(null as varchar) from values(1);
+0: jdbc:farrago:> select cast(null as varchar(1)) from values(1);
 +---------+
 | EXPR$0  |
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> select cast(null as binary) from values(1);
+0: jdbc:farrago:> select cast(null as binary(1)) from values(1);
 +---------+
 | EXPR$0  |
 +---------+
@@ -84,7 +84,7 @@
 +---------+
 |         |
 +---------+
-0: jdbc:farrago:> select cast(null as varbinary) from values(1);
+0: jdbc:farrago:> select cast(null as varbinary(1)) from values(1);
 +---------+
 | EXPR$0  |
 +---------+
