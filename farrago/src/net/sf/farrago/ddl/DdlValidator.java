@@ -763,7 +763,7 @@ public class DdlValidator extends FarragoCompoundAllocation
      * @param refAssoc the association to embellish
      * @param dropRule the rule to use for this association
      */
-    private void addDropRule(
+    protected void addDropRule(
         RefAssociation refAssoc,
         DropRule dropRule)
     {
@@ -952,7 +952,7 @@ public class DdlValidator extends FarragoCompoundAllocation
      * DropRule specifies what to do when an association link deletion event
      * is heard.
      */
-    private static class DropRule
+    protected static class DropRule
     {
         /**
          * A filter on the instance of the end to which the rule applies.  If
@@ -976,7 +976,7 @@ public class DdlValidator extends FarragoCompoundAllocation
          * @param superInterface .
          * @param action .
          */
-        DropRule(
+        public DropRule(
             String endName,
             Class superInterface,
             ReferentialRuleTypeEnum action)
