@@ -1,20 +1,24 @@
 /*
-// Farrago is a relational database management system.
-// Copyright (C) 2003-2004 John V. Sichi.
+// $Id$
+// Farrago is an extensible data management system.
+// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2005-2005 Disruptive Tech
+// Copyright (C) 2005-2005 Red Square, Inc.
+// Portions Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later Eigenbase-approved version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
 */
 package net.sf.farrago.util;
 
@@ -140,7 +144,7 @@ public class FarragoObjectCache implements FarragoAllocation
             }
         }
 
-        // TODO jvs 15-July-2004:  break up this oversized method
+        // TODO jvs 15-July-2005:  break up this oversized method
         // release map lock since construction work below may be time-consuming
         boolean unpinEntry = false;
         try {
@@ -422,7 +426,7 @@ public class FarragoObjectCache implements FarragoAllocation
 
     private class EntryImpl implements Entry, UninitializedEntry
     {
-        // NOTE jvs 15-July-2004: entry attribute synchronization is
+        // NOTE jvs 15-July-2005: entry attribute synchronization is
         // fine-grained; pinCount is protected by mapKeyToEntry's
         // monitor, while the others are protected by the entry's monitor.
         Object key;

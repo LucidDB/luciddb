@@ -1,13 +1,15 @@
 /*
 // $Id$
-// Package org.eigenbase is a class library of database components.
+// Package org.eigenbase is a class library of data management components.
+// Copyright (C) 2005-2005 The Eigenbase Project
 // Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2005 Red Square, Inc.
+// Portions Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
+// (at your option) any later Eigenbase-approved version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -828,7 +830,7 @@ public class SqlValidator
         Scope scope,
         SqlNode operand)
     {
-        // REVIEW jvs 2-Dec-2004:  this method has outgrown its pants
+        // REVIEW jvs 2-Dec-2005:  this method has outgrown its pants
 
         RelDataType type;
         if (operand instanceof SqlIdentifier) {
@@ -1631,7 +1633,7 @@ public class SqlValidator
             for (int i = 0; i < operands.length; ++i) {
                 assert(operands[i].isA(SqlKind.Row));
 
-                // FIXME jvs 9-Feb-2004:  Correlation should
+                // FIXME jvs 9-Feb-2005:  Correlation should
                 // be illegal in these subqueries.  Same goes for
                 // any non-lateral SELECT in the FROM list.
                 registerSubqueries(parentScope, operands[i]);
@@ -3716,7 +3718,7 @@ public class SqlValidator
                 }
 
             default:
-                // NOTE jvs 26-May-2004:  lengths greater than 2 are possible
+                // NOTE jvs 26-May-2005:  lengths greater than 2 are possible
                 // for row and structured types
                 assert identifier.names.length > 0;
                 return identifier;

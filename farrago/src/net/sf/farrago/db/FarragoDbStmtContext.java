@@ -1,20 +1,24 @@
 /*
-// Farrago is a relational database management system.
-// Copyright (C) 2003-2004 John V. Sichi.
+// $Id$
+// Farrago is an extensible data management system.
+// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2005-2005 Disruptive Tech
+// Copyright (C) 2005-2005 Red Square, Inc.
+// Portions Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later Eigenbase-approved version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
 */
 package net.sf.farrago.db;
 
@@ -272,7 +276,7 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
                 boolean found = resultSet.next();
                 assert (found);
                 updateCount = resultSet.getInt(1);
-                // REVIEW jvs 13-Sept-2004:  johnp, is this still needed?
+                // REVIEW jvs 13-Sept-2005:  johnp, is this still needed?
                 while (resultSet.next()) {
                 }
                 if (tracer.isLoggable(Level.FINE)) {
@@ -456,7 +460,7 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
         }
     }
 
-    // TODO jvs 7-Oct-2004: according to Appendix B of the JDBC spec (Data Type
+    // TODO jvs 7-Oct-2005: according to Appendix B of the JDBC spec (Data Type
     // Conversion Tables), it's possible to pass String objects as the values
     // for date/time/timestamp/binary parameters.  Need to implement the
     // appropriate conversions here.  Also, need a NumericParamDef impl.
@@ -605,7 +609,7 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
             if (x instanceof String) {
                 return x;
             }
-            // REVIEW jvs 7-Oct-2004: the default toString() implementation for
+            // REVIEW jvs 7-Oct-2005: the default toString() implementation for
             // Float/Double/Date/Time/Timestamp/byte[] may not be correct here.
             final String s = x.toString();
             if (s.length() > maxCharCount) {

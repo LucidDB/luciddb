@@ -1,20 +1,24 @@
 /*
-// Farrago is a relational database management system.
-// Copyright (C) 2003-2004 John V. Sichi.
+// $Id$
+// Farrago is an extensible data management system.
+// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2005-2005 Disruptive Tech
+// Copyright (C) 2005-2005 Red Square, Inc.
+// Portions Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later Eigenbase-approved version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
 */
 package net.sf.farrago.namespace.mdr;
 
@@ -181,7 +185,7 @@ class MedMdrNameDirectory extends MedAbstractNameDirectory
             }
         }
 
-        // TODO jvs 15-Mar-2004: We currently generate a VARCHAR type for the
+        // TODO jvs 15-Mar-2005: We currently generate a VARCHAR type for the
         // mofId.  This means that if we want to reference the object again
         // later, we have to look it up via MDRepository.getByMofId.  This will
         // always be required in cases where the object has to leave and

@@ -1,13 +1,15 @@
 /*
 // $Id$
-// Package org.eigenbase is a class library of database components.
-// Copyright (C) 2002-2004 Disruptive Tech
-// Copyright (C) 2003-2004 John V. Sichi
+// Package org.eigenbase is a class library of data management components.
+// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2002-2005 Disruptive Tech
+// Copyright (C) 2005-2005 Red Square, Inc.
+// Portions Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
+// (at your option) any later Eigenbase-approved version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -137,7 +139,7 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
         RelDataType [] outputTypes = new RelDataType[nFields];
         String [] fieldNames = new String[nFields];
         for (int j = 0; j < nFields; ++j) {
-            // REVIEW jvs 22-Jan-2004:  Always use the field name from the
+            // REVIEW jvs 22-Jan-2005:  Always use the field name from the
             // first type?
             fieldNames[j] = type0.getFields()[j].getName();
             for (int i = 0; i < types.length; ++i) {
@@ -345,7 +347,7 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
     
     //~ Inner Classes ---------------------------------------------------------
 
-    // TODO jvs 13-Dec-2004:  move to OJTypeFactoryImpl?
+    // TODO jvs 13-Dec-2005:  move to OJTypeFactoryImpl?
     /**
      * Type which is based upon a Java class.
      */

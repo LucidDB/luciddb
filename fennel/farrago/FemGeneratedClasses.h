@@ -99,6 +99,9 @@ typedef JniProxyIter<ProxyIndexStreamDef> SharedProxyIndexStreamDef;
 class ProxyIndexWriterDef;
 typedef JniProxyIter<ProxyIndexWriterDef> SharedProxyIndexWriterDef;
 
+class ProxyJavaSinkStreamDef;
+typedef JniProxyIter<ProxyJavaSinkStreamDef> SharedProxyJavaSinkStreamDef;
+
 class ProxyJavaTupleStreamDef;
 typedef JniProxyIter<ProxyJavaTupleStreamDef> SharedProxyJavaTupleStreamDef;
 
@@ -501,6 +504,14 @@ SharedProxyTableWriterDef getTableWriter();
 static jmethodID meth_getTableWriter;
 };
 
+class ProxyJavaSinkStreamDef
+: virtual public JniProxy, virtual public ProxyTupleStreamDef
+{
+public:
+int32_t getStreamId();
+static jmethodID meth_getStreamId;
+};
+
 class ProxyJavaTupleStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
@@ -663,10 +674,10 @@ bool isPhysical();
 static jmethodID meth_isPhysical;
 std::string getRange();
 static jmethodID meth_getRange;
-SharedProxyWindowPartitionDef getPartition();
-static jmethodID meth_getPartition;
 SharedProxyWindowStreamDef getWindowStream();
 static jmethodID meth_getWindowStream;
+SharedProxyWindowPartitionDef getPartition();
+static jmethodID meth_getPartition;
 };
 
 class ProxyWindowPartitionDef
@@ -770,6 +781,8 @@ virtual void visit(ProxyIndexSearchDef &)
 virtual void visit(ProxyIndexStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyIndexWriterDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyJavaSinkStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyJavaTupleStreamDef &)
 { unhandledVisit(); }

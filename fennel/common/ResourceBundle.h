@@ -1,21 +1,23 @@
 /*
 // $Id$
-// Fennel is a relational database kernel.
-// Copyright (C) 2004-2004 Disruptive Tech
+// Fennel is a library of data storage and processing components.
+// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2004-2005 Disruptive Tech
+// Copyright (C) 2005-2005 Red Square, Inc.
 //
 // This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later Eigenbase-approved version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
 */
 
 #ifndef Fennel_ResourceBundle_Included
@@ -72,7 +74,7 @@ private:
 // _BC_ITER must be _BC::iterator
 
 // TODO: SZ: why can't I just use  _BC::iterator in the function?
-// REVIEW jvs 18-Feb-2004:  try typedef typename _BC::iterator _BC_ITER;
+// REVIEW jvs 18-Feb-2005:  try typedef typename _BC::iterator _BC_ITER;
 
 // TODO: make thread safe
 

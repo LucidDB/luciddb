@@ -14,6 +14,7 @@ ExecStreamBuilder.cpp \
 ExecStreamFactory.cpp \
 Fem.cpp \
 JavaExcn.cpp \
+JavaSinkExecStream.cpp \
 JavaSourceExecStream.cpp \
 JavaTraceTarget.cpp \
 JavaTupleStream.cpp \

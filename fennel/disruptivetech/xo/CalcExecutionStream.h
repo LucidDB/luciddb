@@ -1,13 +1,14 @@
 /*
 // $Id$
-// Fennel is a relational database kernel.
-// Copyright (C) 2003-2004 Disruptive Tech
-// Copyright (C) 1999-2004 John V. Sichi.
+// Fennel is a library of data storage and processing components.
+// Copyright (C) 2003-2005 Disruptive Tech
+// Copyright (C) 2005-2005 The Eigenbase Project
+// Portions Copyright (C) 1999-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
+// (at your option) any later Eigenbase-approved version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -42,7 +43,7 @@ struct CalcExecutionStreamParams
     bool isFilter;
 };
 
-// REVIEW jvs 25-Mar-2004: CalcExecutionStream should inherit from
+// REVIEW jvs 25-Mar-2005: CalcExecutionStream should inherit from
 // ExecutionStream.  However, this requires virtual inheritance, which we can't
 // use without dynamic_cast.  We should really find a fix for the
 // JNI/dynamic_cast conflict.

@@ -3,9 +3,10 @@ Fennel
 ----------------------------------------------------------------------
 OVERVIEW
 
-The Fennel project is a database kernel in C++; it is intended for
-embedding in higher-level RDBMS projects, in particular the companion
-Farrago project (http://farrago.sourceforge.net).
+The Fennel project is a library of data storage and processing
+components in C++; it is intended for embedding in higher-level data
+management projects, in particular the companion Farrago project
+(http://farrago.sourceforge.net).
 
 Contact perfecthash@users.sf.net if you're interested in contributing,
 and I'll send you instructions for accessing the Perforce server used
@@ -54,8 +55,7 @@ redsquare:  components contributed by Red Square
 
 LICENSE
 
-See file COPYING in this directory and also under subdirectories
-disruptivetech and redsquare.
+See file COPYING in this directory.
 
 ------------------------------------------------------------
 ACKNOWLEDGEMENTS

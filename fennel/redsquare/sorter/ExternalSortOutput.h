@@ -1,13 +1,14 @@
 /*
 // $Id$
-// Fennel is a relational database kernel.
-// Copyright (C) 2004 Red Square
-// Copyright (C) 2004 John V. Sichi
+// Fennel is a library of data storage and processing components.
+// Copyright (C) 2004-2005 Red Square, Inc.
+// Copyright (C) 2005-2005 The Eigenbase Project
+// Portions Copyright (C) 2004-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
+// (at your option) any later Eigenbase-approved version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -70,7 +71,7 @@ public:
      */
     void setSubStream(ExternalSortSubStream &subStream);
 
-    // TODO jvs 10-Nov-2004:  eliminate this overload
+    // TODO jvs 10-Nov-2005:  eliminate this overload
     /**
      * Fetches tuples and writes them to a result stream.
      *

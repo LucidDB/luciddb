@@ -1,13 +1,15 @@
 /*
 // $Id$
-// Package org.eigenbase is a class library of database components.
-// Copyright (C) 2002-2004 Disruptive Tech
-// Copyright (C) 2003-2004 John V. Sichi
+// Package org.eigenbase is a class library of data management components.
+// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2002-2005 Disruptive Tech
+// Copyright (C) 2005-2005 Red Square, Inc.
+// Portions Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
+// (at your option) any later Eigenbase-approved version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -30,7 +32,7 @@ import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.util.Util;
 
 
-// REVIEW jvs 23-April-2004:  This should really be an interface
+// REVIEW jvs 23-April-2005:  This should really be an interface
 // (with a companion abstract class), providing more flexibility in
 // multiple inheritance situations.
 

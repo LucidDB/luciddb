@@ -1,12 +1,13 @@
 /*
 // $Id$
-// Farrago is a relational database management system.
-// Copyright (C) 2002-2004 Disruptive Tech
+// Farrago is an extensible data management system.
+// Copyright (C) 2002-2005 Disruptive Tech
+// Copyright (C) 2005-2005 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
+// (at your option) any later Eigenbase-approved version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -147,7 +148,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             new InstrDefImplementor(instrDef));
     }
 
-    // NOTE jvs 16-June-2004:  There's a reason I use the convention
+    // NOTE jvs 16-June-2005:  There's a reason I use the convention
     // implements CalcRexImplementorTable
     // which is that it keeps jalopy from supplying the missing
     // method comment, while not preventing javadoc from inheriting

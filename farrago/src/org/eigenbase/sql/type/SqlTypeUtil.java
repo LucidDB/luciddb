@@ -1,13 +1,15 @@
 /*
 // $Id$
-// Package org.eigenbase is a class library of database components.
+// Package org.eigenbase is a class library of data management components.
+// Copyright (C) 2005-2005 The Eigenbase Project
 // Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2005 Red Square, Inc.
+// Portions Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
-// (at your option) any later version.
+// (at your option) any later Eigenbase-approved version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -319,7 +321,7 @@ public abstract class SqlTypeUtil
      */
     public static boolean isLob(RelDataType type)
     {
-        // TODO jvs 9-Dec-2004:  once we support LOB types
+        // TODO jvs 9-Dec-2005:  once we support LOB types
         return false;
     }
 
@@ -537,7 +539,7 @@ public abstract class SqlTypeUtil
      *
      *<p>
      *
-     * REVIEW jvs 17-Dec-2004:  the coerce param below shouldn't really be
+     * REVIEW jvs 17-Dec-2005:  the coerce param below shouldn't really be
      * necessary.  We're using it as a hack because
      * SqlTypeFactoryImpl.leastRestrictiveSqlType isn't complete enough
      * yet.  Once it is, this param (and the non-coerce rules of
@@ -716,7 +718,7 @@ public abstract class SqlTypeUtil
     {
         SqlTypeName typeName = type.getSqlTypeName();
 
-        // TODO jvs 28-Dec-2004:  support row types, user-defined types,
+        // TODO jvs 28-Dec-2005:  support row types, user-defined types,
         // interval types, multiset types, etc
         assert(typeName != null);
         SqlIdentifier typeIdentifier = new SqlIdentifier(
@@ -726,10 +728,10 @@ public abstract class SqlTypeUtil
 
         if (inCharFamily(type)) {
             charSetName = type.getCharset().name();
-            // TODO jvs 28-Dec-2004:  collation
+            // TODO jvs 28-Dec-2005:  collation
         }
 
-        // REVIEW jvs 28-Dec-2004:  discriminate between precision/scale
+        // REVIEW jvs 28-Dec-2005:  discriminate between precision/scale
         // zero and unspecified?
 
         if (typeName.allowsScale()) {

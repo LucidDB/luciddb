@@ -1,21 +1,24 @@
 /*
 // $Id$
-// Fennel is a relational database kernel.
-// Copyright (C) 1999-2004 John V. Sichi.
+// Fennel is a library of data storage and processing components.
+// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2005-2005 Disruptive Tech
+// Copyright (C) 2005-2005 Red Square, Inc.
+// Portions Copyright (C) 1999-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later Eigenbase-approved version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include "fennel/common/CommonPreamble.h"
@@ -94,7 +97,7 @@ void AioPollingScheduler::run()
         newRequests.clear();
         guard.unlock();
         do {
-            // REVIEW jvs 4-Aug-2004:  Using &front like this is not portable.
+            // REVIEW jvs 4-Aug-2005:  Using &front like this is not portable.
             rc = aio_suspend(
                 &(currentRequests.front()),
                 currentRequests.size(),

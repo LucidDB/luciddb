@@ -1,22 +1,24 @@
 /*
 // $Id$
-// Saffron preprocessor and data engine
-// (C) Copyright 2003-2003 Disruptive Tech
-// You must accept the terms in LICENSE.html to use this software.
+// Farrago is an extensible data management system.
+// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2003-2003 Disruptive Tech
+// Copyright (C) 2005-2005 Red Square, Inc.
+// 
 //
 // This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public License
-// as published by the Free Software Foundation; either version 2.1
-// of the License, or (at your option) any later version.
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later Eigenbase-approved version.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
+// GNU General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public License
+// You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
 */
 package net.sf.farrago.type.runtime;
 
@@ -167,7 +169,7 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
             this.isNull = sqlDate.isNull;
             return;
         } else {
-            // REVIEW jvs 27-Aug-2004:  this is dangerous; should probably
+            // REVIEW jvs 27-Aug-2005:  this is dangerous; should probably
             // require a specific interface instead
             String s = date.toString();
             assignFrom(s);
@@ -207,7 +209,7 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
         timeZoneOffset = cal.getTimeZone().getOffset(value);
     }
 
-    // TODO jvs 26-July-2004:  In order to support fractional seconds,
+    // TODO jvs 26-July-2005:  In order to support fractional seconds,
     // need to remember precision and use it in formatting.  Unfortunately,
     // SimpleDateFormat doesn't handle this, so we'll need to use
     // DecimalFormat for the fractional part.
