@@ -139,16 +139,6 @@ public class SqlTrimFunction extends SqlFunction
             call, type);
     }
 
-    public void test(SqlTester tester)
-    {
-        tester.checkString("trim('a' from 'aAa')", "A");
-        tester.checkString("trim(both 'a' from 'aAa')", "A");
-        tester.checkString("trim(leading 'a' from 'aAa')", "Aa");
-        tester.checkString("trim(trailing 'a' from 'aAa')", "aA");
-        tester.checkNull("trim(cast(null as varchar) from 'a')");
-        tester.checkNull("trim('a' from cast(null as varchar))");
-    }
-
     //~ Inner Classes ---------------------------------------------------------
 
     /**

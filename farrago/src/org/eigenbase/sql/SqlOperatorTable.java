@@ -37,7 +37,7 @@ import java.util.*;
  * contain all defined operators and functions.
  */
 public class SqlOperatorTable
-{    
+{
     //~ Instance fields -------------------------------------------------------
 
     private final MultiMap operators = new MultiMap();
@@ -165,11 +165,7 @@ public class SqlOperatorTable
             // REVIEW/TODO wael: why is this call neccessary? I tried removing
             // it and tests failed.
             fun = new SqlFunction(funName, SqlKind.Function, null, null, null,
-                    null) {
-                public void test(SqlTester tester) {
-                    /* empty implementation */
-                }
-            };
+                    null);
         }
         return fun.createCall(operands, pos);
     }

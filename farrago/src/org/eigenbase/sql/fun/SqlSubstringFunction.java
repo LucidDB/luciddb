@@ -142,14 +142,4 @@ public class SqlSubstringFunction extends SqlFunction {
 
         writer.print(")");
     }
-
-    public void test(SqlTester tester)
-    {
-        tester.checkString("substring('abc' from 1 for 2)", "ab");
-        tester.checkString("substring('abc' from 2)", "bc");
-
-        //substring reg exp not yet supported
-        //                    tester.checkString("substring('foobar' from '%#\"o_b#\"%' for '#')", "oob");
-        tester.checkNull("substring(cast(null as varchar),1,2)");
-    }
 }

@@ -204,7 +204,7 @@ public abstract class SqlOperator
      * </code></pre></blockqoute>
      * @param tester The tester to use.
      */
-    public abstract void test(SqlTester tester);
+//    public abstract void test(SqlTester tester);
 
     /**
      * Creates a call to this operand with an array of operands.

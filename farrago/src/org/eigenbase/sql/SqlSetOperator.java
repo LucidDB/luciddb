@@ -50,13 +50,6 @@ public class SqlSetOperator extends SqlBinaryOperator
         super(name, kind, prec, true, null, null, null);
         this.all = all;
     }
-
-    //~ Methods ---------------------------------------------------------------
-
-    public void test(SqlTester tester)
-    {
-        /* empty implementation */
-    }
 }
 
 

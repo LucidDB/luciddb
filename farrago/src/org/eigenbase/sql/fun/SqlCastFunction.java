@@ -166,28 +166,6 @@ public class SqlCastFunction extends SqlFunction
         }
         writer.print(')');
     }
-
-    /**
-     * An abstract method where its implementations call the
-     * {@link SqlTester}'s
-     * different <code>checkXXX</code> methods.
-     * An example test function for the sin operator
-     * <blockqoute><pre><code>
-     * void test(SqlTester tester) {<br>
-     *     tester.checkScalar("sin(0)", "0");<br>
-     *     tester.checkScalar("sin(1.5707)", "1");<br>
-     * }<br>
-     * </code></pre></blockqoute>
-     * @param tester The tester to use.
-     */
-    public void test(SqlTester tester)
-    {
-        tester.checkScalarExact("cast(1.0 as integer)", "1");
-        tester.checkScalarApprox("cast(1 as double)", "1.0");
-        tester.checkScalarApprox("cast(1.0 as double)", "1.0");
-        tester.checkNull("cast(null as double)");
-        tester.checkNull("cast(null as date)");
-    }
 }
 
 

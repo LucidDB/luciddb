@@ -33,7 +33,7 @@ import org.eigenbase.sql.type.OperandsTypeChecking;
  * A <code>SqlFunction</code> is a type of operator which has conventional
  * function-call syntax.
  */
-public abstract class SqlFunction extends SqlOperator
+public class SqlFunction extends SqlOperator
 {
     //~ Static fields/initializers --------------------------------------------
 

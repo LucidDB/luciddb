@@ -158,18 +158,4 @@ public class SqlLiteralChainOperator extends SqlInternalOperator {
             writer.print(collation.toString());
         }
     }
-
-    // test evaluated literals
-    public void test(SqlTester tester)
-    {
-        tester.checkString("'buttered'\n' toast'", "buttered toast");
-        tester.checkString("'corned'\n' beef'\n' on'\n' rye'",
-            "corned beef on rye");
-        tester.checkString("_latin1'Spaghetti'\n' all''Amatriciana'",
-            "Spaghetti all'Amatriciana");
-        tester.checkBoolean("B'0101'\n'0011' = B'01010011'",
-            Boolean.TRUE);
-        tester.checkBoolean("x'1234'\n'abcd' = x'1234abcd'",
-            Boolean.TRUE);
-    }
 }

@@ -53,7 +53,7 @@ import org.eigenbase.util.Util;
  * @since Jan 21, 2004
  * @version $Id$
  **/
-public abstract class SqlLikeOperator extends SqlSpecialOperator
+public class SqlLikeOperator extends SqlSpecialOperator
 {
     //~ Instance fields -------------------------------------------------------
 

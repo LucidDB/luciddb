@@ -30,7 +30,7 @@ import org.eigenbase.sql.type.OperandsTypeChecking;
 /**
  * A unary operator.
  */
-public abstract class SqlPrefixOperator extends SqlOperator
+public class SqlPrefixOperator extends SqlOperator
 {
     //~ Constructors ----------------------------------------------------------
 

@@ -30,7 +30,7 @@ import org.eigenbase.sql.type.OperandsTypeChecking;
 /**
  * A postfix unary operator.
  */
-public abstract class SqlPostfixOperator extends SqlOperator
+public class SqlPostfixOperator extends SqlOperator
 {
     //~ Constructors ----------------------------------------------------------
 

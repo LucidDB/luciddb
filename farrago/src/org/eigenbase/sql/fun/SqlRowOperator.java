@@ -112,11 +112,6 @@ public class SqlRowOperator extends SqlSpecialOperator
         // any number of arguments is fine
     }
 
-    public void test(SqlTester tester)
-    {
-        /* empty implementation */
-    }
-
     public void unparse(
         SqlWriter writer,
         SqlNode [] operands,

@@ -284,11 +284,6 @@ public class SqlJdbcFunctionCall extends SqlFunction
         return super.createCall(operands, pos);
     }
 
-    public void test(SqlTester tester)
-    {
-        /* empty implementation */
-    }
-
     public SqlCall getLookupCall()
     {
         if (null == lookupCall) {

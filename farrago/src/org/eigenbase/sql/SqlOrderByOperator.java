@@ -69,11 +69,6 @@ public class SqlOrderByOperator extends SqlSpecialOperator
         writer.print(' ');
         operands[ORDER_OPERAND].unparse(writer, 0, 0);
     }
-
-    public void test(SqlTester tester)
-    {
-        /* empty implementation */
-    }
 }
 
 

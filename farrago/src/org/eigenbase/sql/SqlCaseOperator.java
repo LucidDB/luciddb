@@ -112,7 +112,7 @@ import java.util.List;
  * @since Mar 14, 2004
  * @version $Id$
  **/
-public abstract class SqlCaseOperator extends SqlOperator
+public class SqlCaseOperator extends SqlOperator
 {
     //~ Constructors ----------------------------------------------------------
 

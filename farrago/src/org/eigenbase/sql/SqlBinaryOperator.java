@@ -30,7 +30,7 @@ import org.eigenbase.sql.type.OperandsTypeChecking;
 /**
  * <code>SqlBinaryOperator</code> is a binary operator.
  */
-public abstract class SqlBinaryOperator extends SqlOperator
+public class SqlBinaryOperator extends SqlOperator
 {
     //~ Constructors ----------------------------------------------------------
 

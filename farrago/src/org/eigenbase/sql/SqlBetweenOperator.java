@@ -245,32 +245,6 @@ public class SqlBetweenOperator extends SqlInfixOperator
         return opOrdinal - 1;
     }
 
-    public void test(SqlTester tester)
-    {
-        if (negated) {
-            // not between
-            tester.checkBoolean("2 not between 1 and 3", Boolean.FALSE);
-            tester.checkBoolean("3 not between 1 and 3", Boolean.FALSE);
-            tester.checkBoolean("4 not between 1 and 3", Boolean.TRUE);
-        } else {
-            tester.checkBoolean("2 between 1 and 3", Boolean.TRUE);
-            tester.checkBoolean("2 between 3 and 2", Boolean.FALSE);
-            tester.checkBoolean("2 between symmetric 3 and 2", Boolean.TRUE);
-            tester.checkBoolean("3 between 1 and 3", Boolean.TRUE);
-            tester.checkBoolean("4 between 1 and 3", Boolean.FALSE);
-            tester.checkBoolean("1 between 4 and -3", Boolean.FALSE);
-            tester.checkBoolean("1 between -1 and -3", Boolean.FALSE);
-            tester.checkBoolean("1 between -1 and 3", Boolean.TRUE);
-            tester.checkBoolean("1 between 1 and 1", Boolean.TRUE);
-            tester.checkBoolean("x'' between x'' and x''", Boolean.TRUE);
-            tester.checkNull("cast(null as integer) between -1 and 2");
-            tester.checkNull("1 between -1 and cast(null as integer)");
-            tester.checkNull(
-                "1 between cast(null as integer) and cast(null as integer)");
-            tester.checkNull("1 between cast(null as integer) and 1");
-        }
-    }
-
     //~ Inner Classes ---------------------------------------------------------
 
     /**

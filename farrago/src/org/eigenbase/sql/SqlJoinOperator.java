@@ -93,11 +93,6 @@ public class SqlJoinOperator extends SqlOperator
         return new SqlJoin(this, operands, pos);
     }
 
-    public void test(SqlTester tester)
-    {
-        /* empty implementaion */
-    }
-
     public SqlCall createCall(
         SqlNode left,
         SqlLiteral isNatural,

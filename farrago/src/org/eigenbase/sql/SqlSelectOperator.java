@@ -153,11 +153,6 @@ public class SqlSelectOperator extends SqlOperator
             orderClause.unparse(writer, 0, 0);
         }
     }
-
-    public void test(SqlTester tester)
-    {
-        tester.check("select * from values(1)", "1", SqlTypeName.Integer);
-    }
 }
 
 

@@ -32,7 +32,7 @@ import org.eigenbase.sql.type.OperandsTypeChecking;
 /**
  * Generic operator for nodes with special syntax.
  */
-public abstract class SqlSpecialOperator extends SqlOperator
+public class SqlSpecialOperator extends SqlOperator
 {
     //~ Constructors ----------------------------------------------------------
 

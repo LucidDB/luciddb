@@ -300,11 +300,11 @@ public class FarragoCalcSystemTest extends FarragoTestCase
 
         public boolean canImplement(SqlOperator op)
         {
-            if ((name.equals("JAVA") || name.equals("AUTO")) &&
+            if ((name.equals(Java.name) || name.equals(Auto.name)) &&
                 javaTab.get(op) != null) {
                     return true;
             }
-            if ((name.equals("FENNEL") || name.equals("AUTO")) &&
+            if ((name.equals(Fennel.name) || name.equals(Auto.name)) &&
                 fennelTab.get(op) != null) {
                 return true;
             }
