@@ -26,6 +26,7 @@
 <!ENTITY scp_user         "aspen">
 <!ENTITY scp_host         "jhyde.dyndns.org">
 <!ENTITY scp_filesep      "/">
+<!ENTITY scp_options      "-P 8022">
 <!ENTITY rsync_cmd        "rsync -az -e &quot;ssh -p 8022&quot; --delete-after">
 <!ENTITY rsync_dest       "aspen@jhyde.dyndns.org:web/artifacts">
 

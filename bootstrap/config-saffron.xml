@@ -44,14 +44,16 @@
 			     targetuser="&scp_user;"
 			     targethost="&scp_host;"
 			     targetseparator="&scp_filesep;"
-			     targetdir="web/logs/saffron&configSuffix;"/>
+			     targetdir="web/logs/saffron&configSuffix;"
+                             options="&scp_options;"/>
 			
 			<scp sourcedir="logs/saffron"
 			     file="currentbuildstatus.txt"
 			     targetuser="&scp_user;"
 			     targethost="&scp_host;"
 			     targetseparator="&scp_filesep;"
-			     targetdir="web/logs/saffron&configSuffix;"/>
+			     targetdir="web/logs/saffron&configSuffix;"
+                             options="&scp_options;"/>
 			
 			<email buildresultsurl="&buildresultsbase;/saffron&configSuffix;"
 			       mailhost="&mailhost;"
