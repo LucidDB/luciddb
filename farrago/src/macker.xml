@@ -48,6 +48,7 @@
     <pattern name="jdbc" class="net.sf.farrago.jdbc.*" />
     <pattern name="jdbc.engine" class="net.sf.farrago.jdbc.engine.*" />
     <pattern name="jdbc.client" class="net.sf.farrago.jdbc.client.*" />
+    <pattern name="jdbc.rmi" class="net.sf.farrago.jdbc.rmi.*" />
     <pattern name="server" class="net.sf.farrago.server.*" />
     <pattern name="namespace.impl" class="net.sf.farrago.namespace.impl.*" />
     <pattern name="namespace.mdr" class="net.sf.farrago.namespace.mdr.*" />
@@ -95,6 +96,7 @@
       <include pattern="jdbc"/>
       <include pattern="jdbc.engine"/>
       <include pattern="jdbc.client"/>
+      <include pattern="jdbc.rmi"/>
       <include pattern="server"/>
       <include pattern="namespace.impl"/>
       <include pattern="namespace.mdr"/>
@@ -275,6 +277,7 @@
       <include pattern="type.deps" />
       <include pattern="fennel.deps" />
       <include pattern="plugin.deps" />
+      <include pattern="jdbc" />
       <include pattern="namespace" />
     </pattern>
 
@@ -470,6 +473,7 @@
 
     <pattern name="jdbc.client.deps">
       <include pattern="jdbc.deps" />
+      <include pattern="jdbc.rmi" />
       <include pattern="jdbc.client" />
     </pattern>
 
@@ -484,8 +488,25 @@
       </deny>
     </access-rule>
 
+    <pattern name="jdbc.rmi.deps">
+      <include pattern="jdbc.deps" />
+      <include pattern="jdbc.rmi" />
+    </pattern>
+
+    <access-rule>
+      <message>jdbc.rmi dependency violation</message>
+      <deny>
+        <from pattern="jdbc.rmi" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="jdbc.rmi.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
     <pattern name="server.deps">
       <include pattern="jdbc.engine.deps" />
+      <include pattern="jdbc.rmi" />
       <include pattern="server" />
     </pattern>
 

@@ -18,11 +18,10 @@
 */
 package net.sf.farrago.jdbc.client;
 
-import net.sf.farrago.namespace.FarragoMedDataWrapper;
-import net.sf.farrago.jdbc.client.FarragoRJMedDataWrapper;
+import net.sf.farrago.jdbc.FarragoConnection;
+import net.sf.farrago.jdbc.FarragoMedDataWrapperInfo;
 import net.sf.farrago.jdbc.rmi.FarragoRJConnectionInterface;
 import net.sf.farrago.jdbc.rmi.FarragoRJMedDataWrapperInterface;
-import net.sf.farrago.jdbc.FarragoConnection;
 import org.objectweb.rmijdbc.RJConnection;
 import org.objectweb.rmijdbc.RJConnectionInterface;
 import org.objectweb.rmijdbc.RJDriverInterface;
@@ -78,7 +77,7 @@ class FarragoRJConnection extends RJConnection
         }
     }
 
-    public FarragoMedDataWrapper getWrapper(
+    public FarragoMedDataWrapperInfo getWrapper(
         String mofId,
         String libraryName,
         Properties options)

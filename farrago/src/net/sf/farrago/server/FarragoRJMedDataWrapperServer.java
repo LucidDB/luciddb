@@ -18,10 +18,9 @@
 */
 package net.sf.farrago.server;
 
-import net.sf.farrago.catalog.FarragoRepos;
-import net.sf.farrago.jdbc.rmi.FarragoRJMedDataWrapperInterface;
 import net.sf.farrago.jdbc.FarragoConnection;
-import net.sf.farrago.namespace.FarragoMedDataServer;
+import net.sf.farrago.jdbc.FarragoMedDataWrapperInfo;
+import net.sf.farrago.jdbc.rmi.FarragoRJMedDataWrapperInterface;
 import net.sf.farrago.namespace.FarragoMedDataWrapper;
 
 import java.rmi.RemoteException;
@@ -79,14 +78,9 @@ class FarragoRJMedDataWrapperServer
         Properties serverProps)
         throws RemoteException
     {
-        final FarragoMedDataWrapper dataWrapper = createWrapper();
-        try {
-            return dataWrapper.getServerPropertyInfo(locale, wrapperProps,
-                serverProps);
-        } finally {
-            dataWrapper.closeAllocation();
-        }
-    } 
+        return getWrapper().getServerPropertyInfo(locale, wrapperProps,
+            serverProps);
+    }
 
     public DriverPropertyInfo [] getColumnSetPropertyInfo(
         Locale locale,
@@ -95,13 +89,8 @@ class FarragoRJMedDataWrapperServer
         Properties tableProps)
         throws RemoteException
     {
-        final FarragoMedDataWrapper dataWrapper = createWrapper();
-        try {
-            return dataWrapper.getColumnSetPropertyInfo(locale, wrapperProps,
-                serverProps, tableProps);
-        } finally {
-            dataWrapper.closeAllocation();
-        }
+        return getWrapper().getColumnSetPropertyInfo(locale, wrapperProps,
+            serverProps, tableProps);
     }
 
     public DriverPropertyInfo [] getColumnPropertyInfo(
@@ -112,95 +101,27 @@ class FarragoRJMedDataWrapperServer
         Properties columnProps)
         throws RemoteException
     {
-        final FarragoMedDataWrapper dataWrapper = createWrapper();
-        try {
-            return dataWrapper.getColumnPropertyInfo(locale, wrapperProps,
-                serverProps, tableProps, columnProps);
-        } finally {
-            dataWrapper.closeAllocation();
-        }
-    }
-
-    public FarragoMedDataServer newServer(
-        String serverMofId,
-        Properties props)
-        throws RemoteException, SQLException
-    {
-        final FarragoMedDataWrapper dataWrapper = createWrapper();
-        try {
-            return dataWrapper.newServer(serverMofId, props);
-        } finally {
-            dataWrapper.closeAllocation();
-        }
+        return getWrapper().getColumnPropertyInfo(locale, wrapperProps,
+            serverProps, tableProps, columnProps);
     }
 
     public boolean isForeign() throws RemoteException
     {
-        final FarragoMedDataWrapper dataWrapper = createWrapper();
-        try {
-            return dataWrapper.isForeign();
-        } finally {
-            dataWrapper.closeAllocation();
-        }
+        return getWrapper().isForeign();
     }
 
-    public void initialize(FarragoRepos repos, Properties props)
-        throws RemoteException, SQLException
-    {
-        final FarragoMedDataWrapper dataWrapper = createWrapper();
-        try {
-            dataWrapper.initialize(repos, props);
-        } finally {
-            dataWrapper.closeAllocation();
-        }
-    }
-
-    public String getDescription(Locale locale)
-        throws RemoteException
-    {
-        final FarragoMedDataWrapper dataWrapper = createWrapper();
-        try {
-            return dataWrapper.getDescription(locale);
-        } finally {
-            dataWrapper.closeAllocation();
-        }
-    }
-
-    public String getSuggestedName()
-        throws RemoteException
-    {
-        final FarragoMedDataWrapper dataWrapper = createWrapper();
-        try {
-            return dataWrapper.getSuggestedName();
-        } finally {
-            dataWrapper.closeAllocation();
-        }
-    }
-
-    public DriverPropertyInfo[] getPluginPropertyInfo(
-        Locale locale,
-        Properties props)
-        throws RemoteException
-    {
-        final FarragoMedDataWrapper dataWrapper = createWrapper();
-        try {
-            return dataWrapper.getPluginPropertyInfo(locale, props);
-        } finally {
-            dataWrapper.closeAllocation();
-        }
-    }
-
-    private FarragoMedDataWrapper createWrapper() throws RemoteException {
+    /**
+     * Gets wrapper information from the server.
+     *
+     * <p>This {@link FarragoMedDataWrapperInfo} is leak-proof -- unlike
+     * a {@link FarragoMedDataWrapper}, we don't have to worry about freeing
+     * it.
+     */
+    private FarragoMedDataWrapperInfo getWrapper() throws RemoteException {
         try {
             return farragoConnection.getWrapper(mofId, libraryName, options);
         } catch (SQLException e) {
             throw new RemoteException("", e);
         }
-    }
-
-    public void closeAllocation()
-        throws RemoteException
-    {
-        // nothing to do -- because we release the dataWrapper after every call
     }
 }

@@ -18,8 +18,6 @@
 */
 package net.sf.farrago.jdbc;
 
-import net.sf.farrago.namespace.FarragoMedDataWrapper;
-
 import java.sql.SQLException;
 import java.util.Properties;
 
@@ -40,7 +38,7 @@ public interface FarragoConnection extends java.sql.Connection
     String findMofId(String wrapperName)
         throws SQLException;
 
-    FarragoMedDataWrapper getWrapper(
+    FarragoMedDataWrapperInfo getWrapper(
         String mofId,
         String libraryName,
         Properties options)

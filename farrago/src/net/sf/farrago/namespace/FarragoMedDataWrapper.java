@@ -21,13 +21,8 @@ package net.sf.farrago.namespace;
 import java.sql.*;
 import java.util.*;
 
-import net.sf.farrago.catalog.*;
 import net.sf.farrago.plugin.*;
-import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
-
-import org.eigenbase.relopt.*;
-
+import net.sf.farrago.jdbc.FarragoMedDataWrapperInfo;
 
 /**
  * FarragoMedDataWrapper defines an interface for accessing foreign or local
@@ -45,81 +40,10 @@ import org.eigenbase.relopt.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FarragoMedDataWrapper extends FarragoPlugin
+public interface FarragoMedDataWrapper
+    extends FarragoPlugin, FarragoMedDataWrapperInfo
 {
     //~ Methods ---------------------------------------------------------------
-
-    /**
-     * Obtains information about the properties applicable to server
-     * initialization (the props parameter to the newServer method).
-     *
-     * @param locale Locale for formatting property info
-     *
-     * @param wrapperProps proposed list of property name/value
-     * pairs which will be sent to FarragoMedDataWrapper.initialize()
-     *
-     * @param serverProps proposed list of property name/value
-     * pairs which will be sent to FarragoMedDataWrapper.newServer()
-     *
-     * @return 0 or more property info descriptors
-     */
-    public DriverPropertyInfo [] getServerPropertyInfo(
-        Locale locale,
-        Properties wrapperProps,
-        Properties serverProps);
-
-    /**
-     * Obtains information about the properties applicable to column set
-     * initialization (the tableProps parameter to the newColumnSet method).
-     *
-     * @param locale Locale for formatting property info
-     *
-     * @param wrapperProps proposed list of property name/value
-     * pairs which will be sent to FarragoMedDataWrapper.initialize()
-     *
-     * @param serverProps proposed list of property name/value
-     * pairs which will be sent to FarragoMedDataWrapper.newServer()
-     *
-     * @param tableProps proposed list of property name/value pairs which will
-     * be sent to the tableProps parameter of
-     * FarragoMedDataServer.newColumnSet()
-     *
-     * @return 0 or more property info descriptors
-     */
-    public DriverPropertyInfo [] getColumnSetPropertyInfo(
-        Locale locale,
-        Properties wrapperProps,
-        Properties serverProps,
-        Properties tableProps);
-
-    /**
-     * Obtains information about the properties applicable to individual column
-     * initialization (the columnPropMap parameter to the newColumnSet method).
-     *
-     * @param locale Locale for formatting property info
-     *
-     * @param wrapperProps proposed list of property name/value
-     * pairs which will be sent to FarragoMedDataWrapper.initialize()
-     *
-     * @param serverProps proposed list of property name/value
-     * pairs which will be sent to FarragoMedDataWrapper.newServer()
-     *
-     * @param tableProps proposed list of property name/value
-     * pairs which will be sent as the tableProps parameter of
-     * FarragoMedDataServer.newColumnSet()
-     *
-     * @param columnProps proposed list of property name/value pairs which will
-     * be sent as an entry in the columnPropMap parameter of
-     * FarragoMedDataServer.newColumnSet()
-     *
-     * @return 0 or more property info descriptors
-     */
-    public DriverPropertyInfo [] getColumnPropertyInfo(
-        Locale locale,
-        Properties wrapperProps,
-        Properties serverProps,
-        Properties tableProps,
-        Properties columnProps);
 
     /**
      * Creates an instance of this wrapper for a particular server.
@@ -150,13 +74,6 @@ public interface FarragoMedDataWrapper extends FarragoPlugin
         Properties props)
         throws SQLException;
 
-    /**
-     * Determines whether this data wrapper accesses foreign data, or
-     * manages local data.
-     *
-     * @return true for foreign data; false for local data
-     */
-    public boolean isForeign();
 }
 
 

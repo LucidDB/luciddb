@@ -18,32 +18,29 @@
 */
 package net.sf.farrago.jdbc.client;
 
-import java.util.Locale;
-import java.util.Properties;
-import java.rmi.RemoteException;
-import java.sql.SQLException;
-import java.sql.DriverPropertyInfo;
-import net.sf.farrago.namespace.FarragoMedDataWrapper;
-import net.sf.farrago.namespace.FarragoMedDataServer;
-import net.sf.farrago.catalog.FarragoRepos;
+import net.sf.farrago.jdbc.FarragoMedDataWrapperInfo;
 import net.sf.farrago.jdbc.rmi.FarragoRJMedDataWrapperInterface;
 
+import java.rmi.RemoteException;
+import java.sql.DriverPropertyInfo;
+import java.util.Locale;
+import java.util.Properties;
+
 /**
- * Client-side JDBC implementation of {@link FarragoMedDataWrapper}.
+ * Client-side JDBC implementation of
+ * {@link net.sf.farrago.namespace.FarragoMedDataWrapper}.
  *
- * <p>It is paired with a
- * {@link net.sf.farrago.server.FarragoRJMedDataWrapperServer} via RMI.
+ * <p>It is paired with a <code>FarragoRJMedDataWrapperServer</code> via RMI.
  *
  * @author Tim Leung
  * @version $Id$
  */ 
 class FarragoRJMedDataWrapper
-    implements FarragoMedDataWrapper, java.io.Serializable
+    implements FarragoMedDataWrapperInfo, java.io.Serializable
 {
+    protected final FarragoRJMedDataWrapperInterface rmiDataWrapper_;
 
-    net.sf.farrago.jdbc.rmi.FarragoRJMedDataWrapperInterface rmiDataWrapper_;
-
-    public FarragoRJMedDataWrapper(net.sf.farrago.jdbc.rmi.FarragoRJMedDataWrapperInterface wrapper) {
+    public FarragoRJMedDataWrapper(FarragoRJMedDataWrapperInterface wrapper) {
         rmiDataWrapper_ = wrapper;
     }
 
@@ -92,66 +89,12 @@ class FarragoRJMedDataWrapper
         }
     }
 
-    public FarragoMedDataServer newServer(
-        String serverMofId,
-        Properties props) throws SQLException
-    {
-        // TODO: Remove this method from the interface.
-        throw new UnsupportedOperationException();
-    }
-
     public boolean isForeign() {
         try {
             return rmiDataWrapper_.isForeign();
         } catch (RemoteException e) {
             throw new RuntimeException(e.getMessage());
             // TODO: add 'throws SQLException' to interface, and throw new SQLException(e.getMessage());
-        }
-    }
-
-    public void initialize(FarragoRepos repos, Properties props)
-        throws SQLException
-    {
-        // TODO: Remove this method from the interface.
-        throw new UnsupportedOperationException();
-    }
-
-    public String getDescription(Locale locale) {
-        try {
-            return rmiDataWrapper_.getDescription(locale);
-        } catch (RemoteException e) {
-            throw new RuntimeException(e.getMessage());
-            // TODO: add 'throws SQLException' to interface, and throw new SQLException(e.getMessage());
-        }
-    }
-
-    public String getSuggestedName() {
-        try {
-            return rmiDataWrapper_.getSuggestedName();
-        } catch (RemoteException e) {
-            throw new RuntimeException(e.getMessage());
-            // TODO: add 'throws SQLException' to interface, and throw new SQLException(e.getMessage());
-        }
-    }
-
-    public DriverPropertyInfo[] getPluginPropertyInfo(
-        Locale locale,
-        Properties props)
-    {
-        try {
-            return rmiDataWrapper_.getPluginPropertyInfo(locale, props);
-        } catch (RemoteException e) {
-            throw new RuntimeException(e.getMessage());
-            // TODO: add 'throws SQLException' to interface, and throw new SQLException(e.getMessage());
-        }
-    }
-
-    public void closeAllocation() {
-        // REVIEW: Remove this method from the interface.
-        try {
-            rmiDataWrapper_.closeAllocation();
-        } catch (RemoteException e) {
-            System.out.println(e.getMessage());
         }
     }
 }

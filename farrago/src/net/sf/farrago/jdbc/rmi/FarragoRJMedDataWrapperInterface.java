@@ -18,25 +18,22 @@
 */
 package net.sf.farrago.jdbc.rmi;
 
-import net.sf.farrago.catalog.FarragoRepos;
-import net.sf.farrago.namespace.FarragoMedDataServer;
-
 import java.rmi.RemoteException;
+import java.rmi.Remote;
 import java.sql.DriverPropertyInfo;
-import java.sql.SQLException;
 import java.util.Locale;
 import java.util.Properties;
 
 /**
  * RMI server interface corresponding to
- * {@link net.sf.farrago.namespace.FarragoMedDataWrapper}.
+ * {@link net.sf.farrago.jdbc.FarragoMedDataWrapperInfo}.
  *
  * @author Tim Leung
  * @version $Id$
  */
-public interface FarragoRJMedDataWrapperInterface extends java.rmi.Remote {
+public interface FarragoRJMedDataWrapperInterface extends Remote {
     /**
-     * @see net.sf.farrago.namespace.FarragoMedDataWrapper#getServerPropertyInfo
+     * @see net.sf.farrago.jdbc.FarragoMedDataWrapperInfo#getServerPropertyInfo
      */
     DriverPropertyInfo [] getServerPropertyInfo(
         Locale locale,
@@ -45,7 +42,7 @@ public interface FarragoRJMedDataWrapperInterface extends java.rmi.Remote {
         throws RemoteException;
 
     /**
-     * @see net.sf.farrago.namespace.FarragoMedDataWrapper#getColumnSetPropertyInfo
+     * @see net.sf.farrago.jdbc.FarragoMedDataWrapperInfo#getColumnSetPropertyInfo
      */
     DriverPropertyInfo [] getColumnSetPropertyInfo(
         Locale locale,
@@ -55,7 +52,7 @@ public interface FarragoRJMedDataWrapperInterface extends java.rmi.Remote {
         throws RemoteException;
 
     /**
-     * @see net.sf.farrago.namespace.FarragoMedDataWrapper#getColumnPropertyInfo
+     * @see net.sf.farrago.jdbc.FarragoMedDataWrapperInfo#getColumnPropertyInfo
      */
     DriverPropertyInfo [] getColumnPropertyInfo(
         Locale locale,
@@ -66,46 +63,7 @@ public interface FarragoRJMedDataWrapperInterface extends java.rmi.Remote {
         throws RemoteException;
 
     /**
-     * @see net.sf.farrago.namespace.FarragoMedDataWrapper#newServer
+     * @see net.sf.farrago.jdbc.FarragoMedDataWrapperInfo#isForeign
      */
-    FarragoMedDataServer newServer(
-        String serverMofId,
-        Properties props)
-        throws RemoteException, SQLException;
-
-    /**
-     * @see net.sf.farrago.namespace.FarragoMedDataWrapper#isForeign
-     */
-    boolean isForeign()
-        throws RemoteException;
-
-    /**
-     * @see net.sf.farrago.namespace.FarragoMedDataWrapper#initialize
-     */
-    void initialize(
-        FarragoRepos repos,
-        Properties props)
-        throws RemoteException, SQLException;
-
-    /**
-     * @see net.sf.farrago.namespace.FarragoMedDataWrapper#getDescription
-     */
-    String getDescription(Locale locale) throws RemoteException;
-
-    /**
-     * @see net.sf.farrago.namespace.FarragoMedDataWrapper#getSuggestedName
-     */
-    String getSuggestedName() throws RemoteException;
-
-    /**
-     * @see net.sf.farrago.namespace.FarragoMedDataWrapper#getPluginPropertyInfo
-     */
-    DriverPropertyInfo[] getPluginPropertyInfo(
-        Locale locale,
-        Properties props) throws RemoteException;
-
-    /**
-     * @see net.sf.farrago.namespace.FarragoMedDataWrapper#closeAllocation
-     */
-    void closeAllocation() throws RemoteException;
+    boolean isForeign() throws RemoteException;
 }
