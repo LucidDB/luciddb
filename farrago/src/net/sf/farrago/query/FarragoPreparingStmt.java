@@ -85,7 +85,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 {
     //~ Static fields/initializers --------------------------------------------
 
-    // NOTE jvs 8-June-2005: this tracer is special in that it controls
+    // NOTE jvs 8-June-2004: this tracer is special in that it controls
     // preservation of dynamically generated Java code
     private static final Logger dynamicTracer =
         FarragoTrace.getDynamicTracer();
@@ -106,7 +106,9 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     private Set allDependencies;
     private Set jarUrlSet;
     private SqlOperatorTable sqlOperatorTable;
+    private final FarragoUserDefinedRoutineLookup routineLookup;
     private int expansionDepth;
+    private RelDataType originalRowType;
 
     /**
      * Name of Java package containing code generated for this statement.
@@ -126,7 +128,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     // attributes of the openjava code generated to implement the statement:
     private ClassDeclaration implementingClassDecl;
     private Argument [] implementingArgs;
-    private boolean processingDirectDependencies;
     private Set loadedServerClassNameSet;
     private FarragoSessionPlanner planner;
     private FarragoRelImplementor relImplementor;
@@ -152,7 +153,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         directDependencies = new HashSet();
         allDependencies = new HashSet();
         jarUrlSet = new LinkedHashSet();
-        processingDirectDependencies = true;
 
         classesRoot = new File(FarragoProperties.instance().homeDir.get(true));
         classesRoot = new File(classesRoot, "classes");
@@ -180,6 +180,9 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                 throw Util.newInternal(ex);
             }
         }
+
+        routineLookup = new FarragoUserDefinedRoutineLookup(
+            stmtValidator, this, null);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -208,11 +211,9 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         }
 
         SqlOperatorTable systemOperators = getSession().getSqlOperatorTable();
-        SqlOperatorTable userOperators =
-            new FarragoUserDefinedRoutineLookup(stmtValidator, this, null);
 
         ChainedSqlOperatorTable table = new ChainedSqlOperatorTable();
-        table.add(userOperators);
+        table.add(routineLookup);
         table.add(systemOperators);
 
         sqlOperatorTable = table;
@@ -271,6 +272,14 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             super.prepareSql(rootRel, sqlKind, logical, implementingClassDecl,
                 implementingArgs);
         return implement(preparedResult);
+    }
+
+    /**
+     * @return lookup table for user-defined routines
+     */
+    public FarragoUserDefinedRoutineLookup getRoutineLookup()
+    {
+        return routineLookup;
     }
 
     void addJarUrl(String jarUrl)
@@ -378,7 +387,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                 new FarragoExecutableJavaStmt(
                     packageDir,
                     rowClass,
-                    rowType,
+                    (originalRowType == null) ? rowType : originalRowType,
                     dynamicParamRowType,
                     preparedExecution.getMethod(),
                     xmiFennelPlan,
@@ -485,7 +494,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                     "Plan before flattening", 
                     rootRel));
         }
-        rootRel = flattenTypes(rootRel);
+        originalRowType = rootRel.getRowType();
+        rootRel = flattenTypes(rootRel, true);
         if (dumpPlan) {
             planDumpTracer.fine(
                 RelOptUtil.dumpPlan(
@@ -502,12 +512,12 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         return rootRel;
     }
 
-    RelNode flattenTypes(RelNode rootRel)
+    RelNode flattenTypes(RelNode rootRel, boolean restructure)
     {
         RelStructuredTypeFlattener typeFlattener =
             new RelStructuredTypeFlattener(
                 sqlToRelConverter.getRexBuilder());
-        rootRel = typeFlattener.rewrite(rootRel);
+        rootRel = typeFlattener.rewrite(rootRel, restructure);
         return rootRel;
     }
 
@@ -553,7 +563,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     RelNode expandView(String queryString)
     {
         expansionDepth++;
-        stopCollectingDirectDependencies();
 
         SqlParser parser = new SqlParser(queryString);
         final SqlNode sqlQuery;
@@ -573,7 +582,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         FarragoRoutineInvocation invocation)
     {
         expansionDepth++;
-        stopCollectingDirectDependencies();
 
         // NOTE jvs 2-Jan-2005: We already validated the expression during DDL,
         // but we stored the original pre-validation expression, and validation
@@ -599,13 +607,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     public boolean isExpandingDefinition()
     {
         return expansionDepth > 0;
-    }
-
-    private void stopCollectingDirectDependencies()
-    {
-        // once we start expanding views and functions, all objects we
-        // encounter should be treated as indirect dependencies
-        processingDirectDependencies = false;
     }
 
     protected SqlToRelConverter getSqlToRelConverter(
@@ -871,6 +872,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             // user-defined structured type is allowed here
             return null;
         }
+        addDependency(cwmType);
         return getFarragoTypeFactory().createCwmType(cwmType);
     }
 
@@ -882,7 +884,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
     void addDependency(Object supplier)
     {
-        if (processingDirectDependencies) {
+        if (!isExpandingDefinition()) {
             directDependencies.add(supplier);
         }
         allDependencies.add(supplier);
@@ -967,13 +969,19 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             this.rowType = rowType;
         }
 
-        // implement SqlValidator.Table
+        // implement SqlValidatorTable
         public String [] getQualifiedName()
         {
             return qualifiedName;
         }
 
-        // implement SqlValidator.Table
+        // implement SqlValidatorTable
+        public boolean isMonotonic(String columnName)
+        {
+            return false;
+        }
+
+        // implement SqlValidatorTable
         public RelDataType getRowType()
         {
             return rowType;
@@ -1038,16 +1046,9 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             SqlNodeList nodeList = (SqlNodeList)
                 constructorToSqlMap.get(constructor.getFemRoutine());
             if (nodeList == null) {
-                String body = constructor.getFemRoutine().getBody().getBody();
-                // TODO jvs 26-Feb-2005:  need a utility method for detecting
-                // this, and need to catch it earlier (during validation) and
-                // report it properly
-                if (body.equals(";")) {
-                    throw Util.newInternal(
-                        "call to constructor which has been declared "
-                        + "but not yet defined");
-                }
+                assert (constructor.hasDefinition());
                 FarragoSessionParser parser = getSession().newParser();
+                String body = constructor.getFemRoutine().getBody().getBody();
                 nodeList = (SqlNodeList) parser.parseSqlText(
                     null,
                     body,

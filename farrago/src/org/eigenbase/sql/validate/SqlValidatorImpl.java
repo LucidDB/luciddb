@@ -23,7 +23,6 @@
 
 package org.eigenbase.sql.validate;
 
-import net.sf.farrago.util.FarragoException;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
@@ -34,9 +33,7 @@ import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.trace.EigenbaseTrace;
-import org.eigenbase.util.BitString;
-import org.eigenbase.util.EnumeratedValues;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
 import java.nio.charset.Charset;
 import java.util.*;
@@ -753,7 +750,7 @@ public class SqlValidatorImpl implements SqlValidator
         SqlValidatorScope scope,
         SqlNode operand)
     {
-        // REVIEW jvs 2-Dec-2005:  this method has outgrown its pants
+        // REVIEW jvs 2-Dec-2004:  this method has outgrown its pants
 
         RelDataType type;
         if (operand instanceof SqlIdentifier) {
@@ -918,6 +915,7 @@ public class SqlValidatorImpl implements SqlValidator
                             SqlFunction.SqlFuncTypeName.UserDefinedConstructor)
                         {
                             return deriveConstructorType(
+                                scope, 
                                 call,
                                 unresolvedFunction,
                                 function,
@@ -1021,6 +1019,7 @@ public class SqlValidatorImpl implements SqlValidator
     }
 
     private RelDataType deriveConstructorType(
+        SqlValidatorScope scope,
         SqlCall call,
         SqlFunction unresolvedConstructor,
         SqlFunction resolvedConstructor,
@@ -1043,6 +1042,15 @@ public class SqlValidatorImpl implements SqlValidator
                 // no user-defined constructor could be found
                 handleUnresolvedFunction(call, unresolvedConstructor, argTypes);
             }
+        } else {
+            SqlCall testCall = resolvedConstructor.createCall(
+                call.getOperands(),
+                call.getParserPosition());
+            RelDataType returnType = resolvedConstructor.getType(
+                this,
+                scope,
+                testCall);
+            assert(type == returnType);
         }
 
         if (shouldExpandIdentifiers()) {
@@ -1578,6 +1586,13 @@ public class SqlValidatorImpl implements SqlValidator
         return select.getGroup() != null ||
             select.getHaving() != null ||
             aggFinder.findAgg(select.getSelectList()) != null;
+    }
+
+    public boolean isConstant(SqlNode expr)
+    {
+        return expr instanceof SqlLiteral ||
+                expr instanceof SqlDynamicParam ||
+                expr instanceof SqlDataTypeSpec;
     }
 
     private void registerSubqueries(
@@ -2175,13 +2190,13 @@ public class SqlValidatorImpl implements SqlValidator
     {
     }
 
-    public FarragoException newValidationError(
+    public EigenbaseException newValidationError(
         SqlNode node,
         SqlValidatorException e)
     {
         Util.pre(node != null, "node != null");
         final SqlParserPos pos = node.getParserPosition();
-        FarragoException contextExcn =
+        EigenbaseException contextExcn =
             EigenbaseResource.instance().newValidatorContext(
                 new Integer(pos.getLineNum()),
                 new Integer(pos.getColumnNum()),
@@ -2302,6 +2317,11 @@ public class SqlValidatorImpl implements SqlValidator
             public SqlNodeList getMonotonicExprs()
             {
                 return null;
+            }
+
+            public boolean isMonotonic(String columnName)
+            {
+                return false;
             }
         };
     }

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/negative.sql#4 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/negative.sql#5 $
 0: jdbc:farrago:> -- Full vertical negative system testing
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -169,6 +169,7 @@ Error: At line 1, column 10: Cannot apply '=' to arguments of type '<INTEGER> = 
 '<INTERVALDAYTIME> = <INTERVALYEARMONTH>'
 '<INTERVALYEARMONTH> = <INTERVALDAYTIME>'
 '<INTERVALYEARMONTH> = <INTERVALYEARMONTH>'
+'<ANY> = <ANY>'
 '<ANY> = <ANY>' (state=,code=0)
 0: jdbc:farrago:> values false='';
 Error: At line 1, column 14: Cannot apply '=' to arguments of type '<BOOLEAN> = <CHAR(0)>'. Supported form(s): '<ANY> = <ANY>'
@@ -248,6 +249,7 @@ Error: At line 1, column 14: Cannot apply '=' to arguments of type '<BOOLEAN> = 
 '<INTERVALDAYTIME> = <INTERVALYEARMONTH>'
 '<INTERVALYEARMONTH> = <INTERVALDAYTIME>'
 '<INTERVALYEARMONTH> = <INTERVALYEARMONTH>'
+'<ANY> = <ANY>'
 '<ANY> = <ANY>' (state=,code=0)
 0: jdbc:farrago:> values x'101f'=0.001;
 Error: At line 1, column 16: Cannot apply '=' to arguments of type '<BINARY(2)> = <DECIMAL(4, 3)>'. Supported form(s): '<ANY> = <ANY>'
@@ -327,6 +329,7 @@ Error: At line 1, column 16: Cannot apply '=' to arguments of type '<BINARY(2)> 
 '<INTERVALDAYTIME> = <INTERVALYEARMONTH>'
 '<INTERVALYEARMONTH> = <INTERVALDAYTIME>'
 '<INTERVALYEARMONTH> = <INTERVALYEARMONTH>'
+'<ANY> = <ANY>'
 '<ANY> = <ANY>' (state=,code=0)
 0: jdbc:farrago:> values 1<>'';
 Error: At line 1, column 11: Cannot apply '<>' to arguments of type '<INTEGER> <> <CHAR(0)>'. Supported form(s): '<ANY> <> <ANY>'
@@ -406,6 +409,7 @@ Error: At line 1, column 11: Cannot apply '<>' to arguments of type '<INTEGER> <
 '<INTERVALDAYTIME> <> <INTERVALYEARMONTH>'
 '<INTERVALYEARMONTH> <> <INTERVALDAYTIME>'
 '<INTERVALYEARMONTH> <> <INTERVALYEARMONTH>'
+'<ANY> <> <ANY>'
 '<ANY> <> <ANY>' (state=,code=0)
 0: jdbc:farrago:> values false<>'';
 Error: At line 1, column 15: Cannot apply '<>' to arguments of type '<BOOLEAN> <> <CHAR(0)>'. Supported form(s): '<ANY> <> <ANY>'
@@ -485,6 +489,7 @@ Error: At line 1, column 15: Cannot apply '<>' to arguments of type '<BOOLEAN> <
 '<INTERVALDAYTIME> <> <INTERVALYEARMONTH>'
 '<INTERVALYEARMONTH> <> <INTERVALDAYTIME>'
 '<INTERVALYEARMONTH> <> <INTERVALYEARMONTH>'
+'<ANY> <> <ANY>'
 '<ANY> <> <ANY>' (state=,code=0)
 0: jdbc:farrago:> values x''<>0.2;
 Error: At line 1, column 13: Cannot apply '<>' to arguments of type '<BINARY(0)> <> <DECIMAL(2, 1)>'. Supported form(s): '<ANY> <> <ANY>'
@@ -564,6 +569,7 @@ Error: At line 1, column 13: Cannot apply '<>' to arguments of type '<BINARY(0)>
 '<INTERVALDAYTIME> <> <INTERVALYEARMONTH>'
 '<INTERVALYEARMONTH> <> <INTERVALDAYTIME>'
 '<INTERVALYEARMONTH> <> <INTERVALYEARMONTH>'
+'<ANY> <> <ANY>'
 '<ANY> <> <ANY>' (state=,code=0)
 0: jdbc:farrago:> values 1>true;
 Error: At line 1, column 10: Cannot apply '>' to arguments of type '<INTEGER> > <BOOLEAN>'. Supported form(s): '<ANY> > <ANY>'
@@ -643,6 +649,7 @@ Error: At line 1, column 10: Cannot apply '>' to arguments of type '<INTEGER> > 
 '<INTERVALDAYTIME> > <INTERVALYEARMONTH>'
 '<INTERVALYEARMONTH> > <INTERVALDAYTIME>'
 '<INTERVALYEARMONTH> > <INTERVALYEARMONTH>'
+'<ANY> > <ANY>'
 '<ANY> > <ANY>' (state=,code=0)
 0: jdbc:farrago:> values x''>'';
 Error: At line 1, column 12: Cannot apply '>' to arguments of type '<BINARY(0)> > <CHAR(0)>'. Supported form(s): '<ANY> > <ANY>'
@@ -722,6 +729,7 @@ Error: At line 1, column 12: Cannot apply '>' to arguments of type '<BINARY(0)> 
 '<INTERVALDAYTIME> > <INTERVALYEARMONTH>'
 '<INTERVALYEARMONTH> > <INTERVALDAYTIME>'
 '<INTERVALYEARMONTH> > <INTERVALYEARMONTH>'
+'<ANY> > <ANY>'
 '<ANY> > <ANY>' (state=,code=0)
 0: jdbc:farrago:> values 1<false;
 Error: At line 1, column 10: Cannot apply '<' to arguments of type '<INTEGER> < <BOOLEAN>'. Supported form(s): '<ANY> < <ANY>'
@@ -801,6 +809,7 @@ Error: At line 1, column 10: Cannot apply '<' to arguments of type '<INTEGER> < 
 '<INTERVALDAYTIME> < <INTERVALYEARMONTH>'
 '<INTERVALYEARMONTH> < <INTERVALDAYTIME>'
 '<INTERVALYEARMONTH> < <INTERVALYEARMONTH>'
+'<ANY> < <ANY>'
 '<ANY> < <ANY>' (state=,code=0)
 0: jdbc:farrago:> values ''<0.1;
 Error: At line 1, column 11: Cannot apply '<' to arguments of type '<CHAR(0)> < <DECIMAL(2, 1)>'. Supported form(s): '<ANY> < <ANY>'
@@ -880,6 +889,7 @@ Error: At line 1, column 11: Cannot apply '<' to arguments of type '<CHAR(0)> < 
 '<INTERVALDAYTIME> < <INTERVALYEARMONTH>'
 '<INTERVALYEARMONTH> < <INTERVALDAYTIME>'
 '<INTERVALYEARMONTH> < <INTERVALYEARMONTH>'
+'<ANY> < <ANY>'
 '<ANY> < <ANY>' (state=,code=0)
 0: jdbc:farrago:> values 1>=true;
 Error: At line 1, column 11: Cannot apply '>=' to arguments of type '<INTEGER> >= <BOOLEAN>'. Supported form(s): '<ANY> >= <ANY>'
@@ -959,6 +969,7 @@ Error: At line 1, column 11: Cannot apply '>=' to arguments of type '<INTEGER> >
 '<INTERVALDAYTIME> >= <INTERVALYEARMONTH>'
 '<INTERVALYEARMONTH> >= <INTERVALDAYTIME>'
 '<INTERVALYEARMONTH> >= <INTERVALYEARMONTH>'
+'<ANY> >= <ANY>'
 '<ANY> >= <ANY>' (state=,code=0)
 0: jdbc:farrago:> select x''>=name from sales.emps;
 Error: At line 1, column 13: Cannot apply '>=' to arguments of type '<BINARY(0)> >= <VARCHAR(128)>'. Supported form(s): '<ANY> >= <ANY>'
@@ -1038,6 +1049,7 @@ Error: At line 1, column 13: Cannot apply '>=' to arguments of type '<BINARY(0)>
 '<INTERVALDAYTIME> >= <INTERVALYEARMONTH>'
 '<INTERVALYEARMONTH> >= <INTERVALDAYTIME>'
 '<INTERVALYEARMONTH> >= <INTERVALYEARMONTH>'
+'<ANY> >= <ANY>'
 '<ANY> >= <ANY>' (state=,code=0)
 0: jdbc:farrago:> values 1<=true;
 Error: At line 1, column 11: Cannot apply '<=' to arguments of type '<INTEGER> <= <BOOLEAN>'. Supported form(s): '<ANY> <= <ANY>'
@@ -1117,6 +1129,7 @@ Error: At line 1, column 11: Cannot apply '<=' to arguments of type '<INTEGER> <
 '<INTERVALDAYTIME> <= <INTERVALYEARMONTH>'
 '<INTERVALYEARMONTH> <= <INTERVALDAYTIME>'
 '<INTERVALYEARMONTH> <= <INTERVALYEARMONTH>'
+'<ANY> <= <ANY>'
 '<ANY> <= <ANY>' (state=,code=0)
 0: jdbc:farrago:> values ''<=0.0;
 Error: At line 1, column 12: Cannot apply '<=' to arguments of type '<CHAR(0)> <= <DECIMAL(2, 1)>'. Supported form(s): '<ANY> <= <ANY>'
@@ -1196,6 +1209,7 @@ Error: At line 1, column 12: Cannot apply '<=' to arguments of type '<CHAR(0)> <
 '<INTERVALDAYTIME> <= <INTERVALYEARMONTH>'
 '<INTERVALYEARMONTH> <= <INTERVALDAYTIME>'
 '<INTERVALYEARMONTH> <= <INTERVALYEARMONTH>'
+'<ANY> <= <ANY>'
 '<ANY> <= <ANY>' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --should throw overflow error?
@@ -2991,6 +3005,7 @@ Error: At line 1, column 8: Cannot apply '=' to arguments of type '<CHAR(0)> = <
 '<INTERVALDAYTIME> = <INTERVALYEARMONTH>'
 '<INTERVALYEARMONTH> = <INTERVALDAYTIME>'
 '<INTERVALYEARMONTH> = <INTERVALYEARMONTH>'
+'<ANY> = <ANY>'
 '<ANY> = <ANY>' (state=,code=0)
 0: jdbc:farrago:> values coalesce('a','b',1);
 Error: At line 1, column 8: Illegal mixing of types in CASE or COALESCE statement (state=,code=0)

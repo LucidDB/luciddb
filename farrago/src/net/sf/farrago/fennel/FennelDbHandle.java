@@ -35,6 +35,8 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.util.*;
+
 
 /**
  * FennelDbHandle is a public wrapper for FennelStorage, and represents
@@ -314,7 +316,7 @@ public class FennelDbHandle implements FarragoAllocation
         }
     }
 
-    public FarragoException handleNativeException(SQLException ex)
+    public EigenbaseException handleNativeException(SQLException ex)
     {
         return FarragoResource.instance().newFennelUntranslated(
             ex.getMessage());

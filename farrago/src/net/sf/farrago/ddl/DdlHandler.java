@@ -134,7 +134,7 @@ public abstract class DdlHandler
             attribute.setIsNullable(NullableTypeEnum.COLUMN_NULLABLE);
         }
         
-        validateTypedElement(attribute);
+        validateTypedElement(attribute, attribute.getOwner());
 
         String defaultExpression = attribute.getInitialValue().getBody();
         if (!defaultExpression.equalsIgnoreCase("NULL")) {
@@ -173,7 +173,9 @@ public abstract class DdlHandler
         }
     }
     
-    public void validateTypedElement(FemAbstractTypedElement abstractElement)
+    public void validateTypedElement(
+        FemAbstractTypedElement abstractElement,
+        CwmNamespace cwmNamespace)
     {
         FemSqltypedElement element = FarragoCatalogUtil.toFemSqltypedElement(
             abstractElement);
@@ -187,6 +189,33 @@ public abstract class DdlHandler
         
         CwmSqldataType type = (CwmSqldataType) element.getType();
         SqlTypeName typeName = SqlTypeName.get(type.getName());
+
+        // REVIEW jvs 23-Mar-2005:  For now, we attach the dependency to
+        // a containing namespace.  For example, if a column is declared
+        // with a UDT for its type, the containing table depends on the
+        // type.  This isn't SQL-kosher; the dependency is supposed to
+        // be at the column granularity.  To fix this, we need two things:
+        // (1) the ability to declare dependencies from non-namespaces, and
+        // (2) the ability to correctly cascade the DROP at the column level.
+        if (type instanceof FemUserDefinedType) {
+            boolean method = false;
+            if (cwmNamespace instanceof FemRoutine) {
+                FemRoutine routine = (FemRoutine) cwmNamespace;
+                if (routine.getSpecification() != null) {
+                    if (routine.getSpecification().getOwner() == type) {
+                        // This is a method of the type in question.  In this
+                        // case, we don't create a dependency, because the
+                        // circularity would foul up DROP.
+                        method = true;
+                    }
+                }
+            }
+            if (!method) {
+                validator.createDependency(
+                    cwmNamespace,
+                    Collections.singleton(type));
+            }
+        }
 
         // NOTE: parser only generates precision, but CWM discriminates
         // precision from length, so we take care of it below
@@ -245,7 +274,7 @@ public abstract class DdlHandler
             }
         }
         if (typeFamily == SqlTypeFamily.Character) {
-            // TODO jvs 18-April-2005:  Should be inheriting these defaults
+            // TODO jvs 18-April-2004:  Should be inheriting these defaults
             // from schema/catalog.
             if (JmiUtil.isBlank(element.getCharacterSetName())) {
                 // NOTE: don't leave character set name implicit, since if the
@@ -332,7 +361,7 @@ public abstract class DdlHandler
             throw Util.needToImplement(type);
         }
 
-        // REVIEW jvs 18-April-2005: I had to put these in because CWM
+        // REVIEW jvs 18-April-2004: I had to put these in because CWM
         // declares them as mandatory.  This is stupid, since CWM also says
         // these fields are inapplicable for non-character types.
         if (element.getCollationName() == null) {
@@ -388,8 +417,8 @@ public abstract class DdlHandler
         CwmModelElement modelElement,
         Throwable ex)
     {
-        if (ex instanceof FarragoException) {
-            FarragoException contextExcn = (FarragoException) ex;
+        if (ex instanceof EigenbaseException) {
+            EigenbaseException contextExcn = (EigenbaseException) ex;
             if (contextExcn.getPosLine() != 0) {
                 // We have context information for the query, and
                 // need to adjust the position to match the original

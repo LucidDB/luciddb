@@ -41,7 +41,20 @@ drop table metadata_test_schema.new_table;
 !tables
 !columns NEW_TABLE
 
-drop schema metadata_test_schema;
+create type metadata_test_schema.dollar_currency as double;
+
+create type metadata_test_schema.rectilinear_coord as (
+    x double,
+    y double
+) final;
+
+!metadata getProcedures LOCALDB SALES %
+!metadata getProcedureColumns LOCALDB SALES MAYBE_FEMALE %
+!metadata getUDTs LOCALDB METADATA_TEST_SCHEMA % %
+!metadata getAttributes LOCALDB METADATA_TEST_SCHEMA % %
+!procedures
+
+drop schema metadata_test_schema cascade;
 !metadata getSchemas
 
 -- test misc calls
@@ -76,8 +89,6 @@ select * from sys_fem."Security"."AuthorizationIdentifier";
 -- !metadata hashCode
 
 -- Not supported
--- !metadata getProcedures
--- !metadata getProcedureColumns
 -- !metadata getPrimaryKeys
 -- !metadata getImportKeys
 -- !metadata getExportKeys
@@ -88,13 +99,9 @@ select * from sys_fem."Security"."AuthorizationIdentifier";
 -- !metadata getCrossReference
 -- !metadata getTypeInfo
 -- !metadata getIndexInfo
--- !metadata getUDTs
 -- !metadata getSuperTypes
 -- !metadata getSuperTables
--- !metadata getAttributes
 -- !indexes
 -- !importedkeys
 -- !exportedkeys
 -- !primarykeys
--- !procedures
-

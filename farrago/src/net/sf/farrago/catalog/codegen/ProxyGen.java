@@ -418,7 +418,7 @@ public class ProxyGen
             pw.print(method.getName());
             pw.println("));");
         } else if (RefEnum.class.isAssignableFrom(returnType)) {
-            // TODO jvs 29-April-2005:  Need to find a way to filter out
+            // TODO jvs 29-April-2004:  Need to find a way to filter out
             // enumerations from base packages, otherwise we'll generate
             // duplicates.
             genEnums.add(returnType);

@@ -178,6 +178,11 @@ public class SqlKind extends EnumeratedValues.BasicValue
     public static final SqlKind NotEquals =
         new SqlKind("NotEquals", NotEqualsORDINAL);
 
+    /** Comparison */
+    public static final int ComparisonORDINAL = 119;
+    public static final SqlKind Comparison =
+        new SqlKind("Comparison", ComparisonORDINAL);
+
     /** Or */
 
     // boolean infix 120-129
@@ -437,6 +442,10 @@ public class SqlKind extends EnumeratedValues.BasicValue
         case FunctionORDINAL:
             return (this == Function) || (this == Row) || (this == Trim)
                 || (this == Cast) || (this == JdbcFn);
+        case ComparisonORDINAL:
+            return (this == In) || (this == LessThan) || (this == GreaterThan)
+                || (this == LessThanOrEqual) || (this == GreaterThanOrEqual)
+                || (this == Equals) || (this == NotEquals);
         default:
             return this == kind;
         }

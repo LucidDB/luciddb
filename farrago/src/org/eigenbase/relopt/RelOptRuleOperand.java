@@ -57,7 +57,7 @@ public class RelOptRuleOperand implements Walkable
     public RelOptRuleOperand parent;
     public RelOptRule rule;
 
-    // REVIEW jvs 29-Aug-2005:  these are Volcano-specific and should
+    // REVIEW jvs 29-Aug-2004:  these are Volcano-specific and should
     // be factored out
     public int [] solveOrder;
     public int ordinalInParent;

@@ -57,7 +57,7 @@ public interface RelDataType
      */
     public boolean isStruct();
 
-    // NOTE jvs 17-Dec-2005:  once we move to Java generics, getFieldList()
+    // NOTE jvs 17-Dec-2004:  once we move to Java generics, getFieldList()
     // will be declared to return a read-only List<RelDataTypeField>,
     // and getFields() will be eliminated.  Currently,
     // anyone can mutate a type by poking into the array returned
@@ -79,7 +79,7 @@ public interface RelDataType
      *
      *<p>
      *
-     * NOTE jvs 17-Dec-2005:  this method will become deprecated
+     * NOTE jvs 17-Dec-2004:  this method will become deprecated
      * once we move to Java generics, and eventually eliminated
      *
      * @return array of fields
@@ -213,6 +213,12 @@ public interface RelDataType
      * @return precedence list for this type
      */
     public RelDataTypePrecedenceList getPrecedenceList();
+
+    /**
+     * @return the category of comparison operators which make sense
+     * when applied to values of this type
+     */
+    public RelDataTypeComparability getComparability();
 }
 
 

@@ -57,7 +57,7 @@ public class FarragoOJRexImplementorTable extends OJRexImplementorTableImpl
         // use org.eigenbase.oj.rex implementation as a base
         super.initStandard(opTab);
 
-        // NOTE jvs 22-June-2005: when you add implementations for new
+        // NOTE jvs 22-June-2004: when you add implementations for new
         // operators here, please add a corresponding test case in
         // FarragoRexToOJTranslatorTest
         // refine with Farrago specifics
@@ -83,6 +83,14 @@ public class FarragoOJRexImplementorTable extends OJRexImplementorTableImpl
 
         registerOperator(
             opTab.rowConstructor,
+            new FarragoOJRexRowImplementor());
+
+        registerOperator(
+            opTab.rowConstructor,
+            new FarragoOJRexRowImplementor());
+
+        registerOperator(
+            opTab.newOperator,
             new FarragoOJRexRowImplementor());
 
         registerContextOp(opTab.userFunc);

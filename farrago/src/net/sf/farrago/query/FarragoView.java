@@ -72,7 +72,7 @@ class FarragoView extends FarragoQueryNamedColumnSet
         rel = RelOptUtil.createRenameRel(
             getRowType(),
             rel);
-        rel = getPreparingStmt().flattenTypes(rel);
+        rel = getPreparingStmt().flattenTypes(rel, false);
         return rel;
     }
 }

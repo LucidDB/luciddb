@@ -25,6 +25,7 @@ package net.sf.farrago.runtime;
 import java.lang.reflect.*;
 import java.nio.*;
 import java.util.*;
+import java.sql.*;
 
 import net.sf.farrago.type.runtime.*;
 
@@ -39,7 +40,9 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class FarragoSyntheticObject extends SyntheticObject
+public abstract class FarragoSyntheticObject
+    extends SyntheticObject
+    implements Struct
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -192,6 +195,45 @@ public abstract class FarragoSyntheticObject extends SyntheticObject
         } catch (Exception ex) {
             throw Util.newInternal(ex);
         }
+    }
+
+    // implement Struct
+    public Object [] getAttributes()
+    {
+        int n = getFields().length;
+        Object [] objs = new Object[n];
+        for (int i = 0; i < n; ++i) {
+            Object obj = getFieldValue(i);
+            if (obj instanceof DataValue) {
+                obj = ((DataValue) obj).getNullableData();
+            }
+            objs[i] = obj;
+        }
+        return objs;
+    }
+    
+    // implement Struct
+    public Object [] getAttributes(Map map)
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    // implement Struct
+    public String getSQLTypeName()
+        throws SQLException
+    {
+        // TODO jvs 24-Mar-2005:  Need to burn this into generated subclass
+        // for UDT's.
+        return "ROW";
+    }
+
+    // implement Object
+    public String toString()
+    {
+        // TODO jvs 24-Mar-2005:  check standard for rules on casting
+        // struct to string
+        Object [] objs = getAttributes();
+        return Arrays.asList(objs).toString();
     }
 
     //~ Inner Classes ---------------------------------------------------------

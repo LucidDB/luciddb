@@ -139,7 +139,7 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
         RelDataType [] outputTypes = new RelDataType[nFields];
         String [] fieldNames = new String[nFields];
         for (int j = 0; j < nFields; ++j) {
-            // REVIEW jvs 22-Jan-2005:  Always use the field name from the
+            // REVIEW jvs 22-Jan-2004:  Always use the field name from the
             // first type?
             fieldNames[j] = type0.getFields()[j].getName();
             for (int i = 0; i < types.length; ++i) {
@@ -347,7 +347,7 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
     
     //~ Inner Classes ---------------------------------------------------------
 
-    // TODO jvs 13-Dec-2005:  move to OJTypeFactoryImpl?
+    // TODO jvs 13-Dec-2004:  move to OJTypeFactoryImpl?
     /**
      * Type which is based upon a Java class.
      */

@@ -87,7 +87,7 @@ public interface RelNode
      * Returns whether this relational expression is an access to
      * <code>table</code>.
      */
-    boolean isAccessTo(RelOptTable table);
+    public boolean isAccessTo(RelOptTable table);
 
     /**
      * Returns an array of this relational expression's child expressions
@@ -95,9 +95,9 @@ public interface RelNode
      * are no child expressions, returns an empty array, not
      * <code>null</code>.
      */
-    RexNode [] getChildExps();
+    public RexNode [] getChildExps();
 
-    RelOptCluster getCluster();
+    public RelOptCluster getCluster();
 
     /**
      * Return the CallingConvention trait from this RelNode's 
@@ -105,7 +105,7 @@ public interface RelNode
      *
      * @return this RelNode's CallingConvention
      */
-    CallingConvention getConvention();
+    public CallingConvention getConvention();
 
     /**
      * Retrieves this RelNode's traits.  Note that although the
@@ -118,38 +118,38 @@ public interface RelNode
      *
      * @return this RelNode's trait set
      */
-    RelTraitSet getTraits();
+    public RelTraitSet getTraits();
 
-    void setCorrelVariable(String correlVariable);
+    public void setCorrelVariable(String correlVariable);
 
-    String getCorrelVariable();
+    public String getCorrelVariable();
 
     /**
      * Returns whether the same value will not come out twice. Default value
      * is <code>false</code>, derived classes should override.
      */
-    boolean isDistinct();
+    public boolean isDistinct();
 
-    int getId();
+    public int getId();
 
     /**
      * Get the <code>i</code><sup>th</sup> input.
      */
-    RelNode getInput(int i);
+    public RelNode getInput(int i);
 
     /**
      * Returns a variable with which to reference the current row of this
      * relational expression as a correlating variable. Creates a variable if
      * none exists.
      */
-    String getOrCreateCorrelVariable();
+    public String getOrCreateCorrelVariable();
 
-    RelOptQuery getQuery();
+    public RelOptQuery getQuery();
 
     /**
      * Returns the type of the rows returned by this relational expression.
      */
-    RelDataType getRowType();
+    public RelDataType getRowType();
 
     /**
      * Returns the type of the rows expected for an input.  Defaults to
@@ -160,19 +160,19 @@ public interface RelNode
      *
      * @return expected row type
      */
-    RelDataType getExpectedInputRowType(int ordinalInParent);
+    public RelDataType getExpectedInputRowType(int ordinalInParent);
 
     /**
      * Returns an array of this relational expression's inputs.  If there
      * are no inputs, returns an empty array, not <code>null</code>.
      */
-    RelNode [] getInputs();
+    public RelNode [] getInputs();
 
     /**
      * Returns an estimate of the number of rows this relational expression
      * will return.
      */
-    double getRows();
+    public double getRows();
 
     /**
      * Returns the names of variables which are set in this relational
@@ -184,47 +184,66 @@ public interface RelNode
      * method.
      * </p>
      */
-    Set getVariablesStopped();
+    public Set getVariablesStopped();
+
+    /**
+     * Collects variables known to be used by this expression or its
+     * descendants.  By default, no such information is available and
+     * must be derived by analyzing sub-expressions, but some optimizer
+     * implementations may insert special expressions which remember
+     * such information.
+     *
+     * @param variableSet receives variables used
+     */
+    public void collectVariablesUsed(Set variableSet);
+
+    /**
+     * Collects variables set by this expression.
+     *
+     * @param variableSet receives variables known to be set by
+     * this expression or its descendants.
+     */
+    public void collectVariablesSet(Set variableSet);
 
     /**
      * Interacts with the {@link RelVisitor} in a
      * {@link org.eigenbase.util.Glossary#VisitorPattern visitor pattern} to
      * traverse the tree of relational expressions.
      */
-    void childrenAccept(RelVisitor visitor);
+    public void childrenAccept(RelVisitor visitor);
 
     /**
      * Returns the cost of this plan (not including children). The base
      * implementation throws an error; derived classes should override.
      */
-    RelOptCost computeSelfCost(RelOptPlanner planner);
+    public RelOptCost computeSelfCost(RelOptPlanner planner);
 
-    void explain(RelOptPlanWriter pw);
+    public void explain(RelOptPlanWriter pw);
 
     /**
      * This method is called just before the expression is registered.  The
      * implementation of this method must at least register all child
      * expressions.
      */
-    void onRegister(RelOptPlanner planner);
+    public void onRegister(RelOptPlanner planner);
 
     /**
      * Computes the digest, assigns it, and returns it. For internal use only.
      */
-    String recomputeDigest();
+    public String recomputeDigest();
 
     /**
      * Registers a correlation variable.
      *
      * @see #getVariablesStopped
      */
-    void registerCorrelVariable(String correlVariable);
+    public void registerCorrelVariable(String correlVariable);
 
     /**
      * Replaces the <code>ordinalInParent</code><sup>th</sup> input.  You must
      * override this method if you override {@link #getInputs}.
      */
-    void replaceInput(
+    public void replaceInput(
         int ordinalInParent,
         RelNode p);
 
@@ -232,7 +251,7 @@ public interface RelNode
      * If this relational expression represents an access to a table, returns
      * that table, otherwise returns null.
      */
-    RelOptTable getTable();
+    public RelOptTable getTable();
 
     /**
      * Returns the name of this relational expression's class, sans package
@@ -240,7 +259,7 @@ public interface RelNode
      * <code>org.eigenbase.rel.ArrayRel.ArrayReader</code>, this method
      * returns "ArrayReader".
      */
-    String getRelTypeName();
+    public String getRelTypeName();
 }
 
 

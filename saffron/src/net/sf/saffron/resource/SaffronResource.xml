@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <?xml-stylesheet type="text/xsl"
- href="http://perforce.eigenbase.org:8080/open/mondrian/resource/Resource.xsl" ?>
+ href="http://eigenbase.sourceforge.net/resgen/Resource.xsl" ?>
 <!-- 
  !DOCTYPE resourceBundle SYSTEM "Resource.dtd"
   -->

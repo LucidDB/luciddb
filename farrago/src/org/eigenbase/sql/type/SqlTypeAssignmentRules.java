@@ -235,7 +235,7 @@ public class SqlTypeAssignmentRules
         rule.add(SqlTypeName.Char);
         rule.add(SqlTypeName.Varchar);
 
-        // REVIEW jvs 13-Dec-2005:  getting the milliseconds?
+        // REVIEW jvs 13-Dec-2004:  getting the milliseconds?
         // That sounds like a physical operation, and has nothing to do
         // with enforcing the logical rules.
 

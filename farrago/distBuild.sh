@@ -84,9 +84,9 @@ mkdir $BIN_DIR
 cd $THIRDPARTY_DIR
 cp janino/lib/janino.jar $LIB_DIR
 cp janino/src/org/codehaus/janino/doc-files/new_bsd_license.txt $LIB_DIR/janino.license.txt
-cp mondrian-resource.jar $LIB_DIR
-cp mondrian-xom.jar $LIB_DIR
-cp LICENSE.mondrian $LIB_DIR/mondrian.license.txt
+cp resgen/lib/eigenbase-resgen.jar $LIB_DIR
+cp resgen/lib/eigenbase-xom.jar $LIB_DIR
+cp resgen/COPYING $LIB_DIR/resgen.license.txt
 cp mdrlibs/* $LIB_DIR/mdrlibs
 cp OpenJava/openjava.jar $LIB_DIR
 cp OpenJava/COPYRIGHT $LIB_DIR/openjava.license.txt

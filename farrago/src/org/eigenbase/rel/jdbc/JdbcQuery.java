@@ -175,7 +175,7 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
 
     public static void register(RelOptPlanner planner)
     {
-        // FIXME jvs 29-Aug-2005
+        // FIXME jvs 29-Aug-2004
 
         /*
         planner.addRule(new TableAccessToQueryRule());

@@ -178,7 +178,7 @@ abstract class DelegatingScope implements SqlValidatorScope
             }
 
         default:
-            // NOTE jvs 26-May-2005:  lengths greater than 2 are possible
+            // NOTE jvs 26-May-2004:  lengths greater than 2 are possible
             // for row and structured types
             assert identifier.names.length > 0;
             return identifier;

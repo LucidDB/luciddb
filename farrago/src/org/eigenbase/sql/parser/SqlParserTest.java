@@ -108,7 +108,7 @@ public class SqlParserTest extends TestCase
         String actual)
     {
         if (!expected.equals(actual)) {
-            // REVIEW jvs 2-Feb-2005:  I put this here because assertEquals
+            // REVIEW jvs 2-Feb-2004:  I put this here because assertEquals
             // uses ellipses in its expected/actual reports, which makes
             // it very hard to find the problem with something like
             // a newline instead of a space.  Use diff-based testing instead;

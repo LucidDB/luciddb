@@ -281,7 +281,7 @@ public class FarragoSorterTest extends FarragoTestCase
             new RampDistributionGenerator(IN_MEM_COUNT, 0, -1.0 / DUP_FACTOR));
     }
 
-    // TODO jvs 12-June-2005: add external sort tests once we have a real
+    // TODO jvs 12-June-2004: add external sort tests once we have a real
     // sorter
 
     /**

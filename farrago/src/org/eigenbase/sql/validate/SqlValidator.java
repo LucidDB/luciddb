@@ -21,10 +21,10 @@
 */
 package org.eigenbase.sql.validate;
 
-import net.sf.farrago.util.FarragoException;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
 
 import java.util.Map;
 
@@ -192,7 +192,7 @@ public interface SqlValidator
      * @pre node != null
      * @post return != null
      */
-    FarragoException newValidationError(
+    EigenbaseException newValidationError(
         SqlNode node,
         SqlValidatorException e);
 
@@ -358,6 +358,12 @@ public interface SqlValidator
      * BY clause may be used.
      */
     SqlValidatorScope getOrderScope(SqlSelect select);
+
+    /**
+     * Returns the boolean result of testing the node to
+     * see if it's a constant
+     */
+    boolean isConstant(SqlNode expr);
 }
 
 // End SqlValidator.java

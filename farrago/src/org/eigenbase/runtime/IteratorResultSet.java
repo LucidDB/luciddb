@@ -51,7 +51,6 @@ public class IteratorResultSet implements ResultSet
     private final ColumnGetter columnGetter;
     private final Iterator iterator;
     private Object current;
-    private final String [] columnNames;
     private int row; // 0-based
     private TimeoutQueueIterator timeoutIter;
     protected boolean wasNull;
@@ -72,13 +71,21 @@ public class IteratorResultSet implements ResultSet
         Util.pre(iterator != null, "iterator != null");
         this.iterator = iterator;
         String [] columnNames = columnGetter.getColumnNames();
-        this.columnNames =
-            (columnNames == null) ? Util.emptyStringArray : columnNames;
         this.columnGetter = columnGetter;
     }
 
     //~ Methods ---------------------------------------------------------------
 
+    private String [] getColumnNames()
+    {
+        String [] columnNames = columnGetter.getColumnNames();
+        if (columnNames == null) {
+            return Util.emptyStringArray;
+        } else {
+            return columnNames;
+        }
+    }
+    
     /**
      * Sets the timeout that this IteratorResultSet will wait for a row from
      * the underlying iterator.
@@ -595,9 +602,11 @@ public class IteratorResultSet implements ResultSet
     public int findColumn(String columnName)
         throws SQLException
     {
-        for (int i = 0; i < columnNames.length; i++) {
-            if (columnName.equals(columnNames[i])) {
-                return i + 1;
+        ResultSetMetaData metaData = getMetaData();
+        int n = metaData.getColumnCount();
+        for (int i = 1; i <= n; i++) {
+            if (columnName.equals(metaData.getColumnName(i))) {
+                return i;
             }
         }
         throw new SQLException("column '" + columnName + "' not found");
@@ -1423,7 +1432,7 @@ public class IteratorResultSet implements ResultSet
         public int getColumnCount()
             throws SQLException
         {
-            return columnNames.length;
+            return getColumnNames().length;
         }
 
         public int getColumnDisplaySize(int column)
@@ -1441,7 +1450,7 @@ public class IteratorResultSet implements ResultSet
         public String getColumnName(int column)
             throws SQLException
         {
-            return columnNames[column - 1];
+            return getColumnNames()[column - 1];
         }
 
         public int getColumnType(int column)

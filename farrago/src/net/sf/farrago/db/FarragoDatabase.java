@@ -66,7 +66,7 @@ public class FarragoDatabase extends FarragoCompoundAllocation
 {
     //~ Static fields/initializers --------------------------------------------
 
-    // TODO jvs 11-Aug-2005:  Get rid of this once corresponding TODO in
+    // TODO jvs 11-Aug-2004:  Get rid of this once corresponding TODO in
     // FarragoDbSession.prepare is resolved.
     public static final Object DDL_LOCK = new Integer(1994);
     private static final Logger tracer = FarragoTrace.getDatabaseTracer();
@@ -644,7 +644,7 @@ public class FarragoDatabase extends FarragoCompoundAllocation
             if (isStale(
                         stmt.getRepos(),
                         executableStmt)) {
-                // TODO jvs 17-July-2005: Need DDL-vs-query concurrency control
+                // TODO jvs 17-July-2004: Need DDL-vs-query concurrency control
                 // here.  FarragoRuntimeContext needs to acquire DDL-locks on
                 // referenced objects so that they cannot be modified/dropped
                 // for the duration of execution.
@@ -667,7 +667,7 @@ public class FarragoDatabase extends FarragoCompoundAllocation
             String mofid = (String) idIter.next();
             RefBaseObject obj = repos.getMdrRepos().getByMofId(mofid);
             if (obj == null) {
-                // TODO jvs 17-July-2005:  Once we support ALTER TABLE, this
+                // TODO jvs 17-July-2004:  Once we support ALTER TABLE, this
                 // won't be good enough.  In addition to checking that the
                 // object still exists, we'll need to verify that its version
                 // number is the same as it was at the time stmt was prepared.

@@ -73,7 +73,8 @@ public class MockCatalogReader implements SqlValidatorCatalogReader
                 new RelDataTypeFieldImpl("CITY", 1, varchar20Type),
                 new RelDataTypeFieldImpl("ZIP", 1, intType),
                 new RelDataTypeFieldImpl("STATE", 1, varchar20Type)
-            });
+            },
+            RelDataTypeComparability.None);
 
         // Register "SALES" schema.
         MockSchema salesSchema = new MockSchema("SALES");
@@ -235,7 +236,8 @@ public class MockCatalogReader implements SqlValidatorCatalogReader
             schema.addTable(name);
         }
 
-        public RelDataType getRowType() {
+        public RelDataType getRowType()
+        {
             return rowType;
         }
 
@@ -245,11 +247,18 @@ public class MockCatalogReader implements SqlValidatorCatalogReader
                 (String []) columnNames.toArray(new String[0]));
         }
 
-        public String[] getQualifiedName() {
+        public String[] getQualifiedName()
+        {
             return names;
         }
 
-        public void addColumn(String name, RelDataType type) {
+        public boolean isMonotonic(String columnName)
+        {
+            return false;
+        }
+
+        public void addColumn(String name, RelDataType type)
+        {
             columnNames.add(name);
             columnTypes.add(type);
         }

@@ -872,7 +872,7 @@ public class SqlToRelConverter
             convertExpression(
                 bb,
                 call.getElseOperand());
-        return rexBuilder.makeCall(call.operator, whenThenElseRex); //REVIEW 16-March-2005 wael: is there a better way?
+        return rexBuilder.makeCall(call.operator, whenThenElseRex); //REVIEW 16-March-2004 wael: is there a better way?
     }
 
     private RexNode [] convertExpressionList(
@@ -1665,7 +1665,7 @@ public class SqlToRelConverter
         }
         leaves.add(bb.root);
 
-        // REVIEW jvs 22-Jan-2005:  should I add
+        // REVIEW jvs 22-Jan-2004:  should I add
         // mapScopeToRel.put(validator.getScope(values),bb.root);
         // ?
     }
@@ -1712,16 +1712,21 @@ public class SqlToRelConverter
                     new String [] { maybeUpper(names[0]) });
             if (table != null) {
                 return new SqlValidatorTable() {
-                        public RelDataType getRowType()
-                        {
-                            return table.getRowType();
-                        }
+                    public RelDataType getRowType()
+                    {
+                        return table.getRowType();
+                    }
 
-                        public String [] getQualifiedName()
-                        {
-                            return null;
-                        }
-                    };
+                    public String [] getQualifiedName()
+                    {
+                        return null;
+                    }
+
+                    public boolean isMonotonic(String columnName)
+                    {
+                        return false;
+                    }
+                };
             }
             return null;
         }

@@ -37,7 +37,7 @@ import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.util.Util;
 
 
-// REVIEW jvs 23-April-2005:  This should really be an interface
+// REVIEW jvs 23-April-2004:  This should really be an interface
 // (with a companion abstract class), providing more flexibility in
 // multiple inheritance situations.
 

@@ -30,7 +30,7 @@ package net.sf.farrago.type.runtime;
  * @author John V. Sichi
  * @version $Id$
  */
-public interface AssignableValue
+public interface AssignableValue extends DataValue
 {
     //~ Static fields/initializers --------------------------------------------
 

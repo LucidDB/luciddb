@@ -98,7 +98,7 @@ public class CallingConventionTraitDef extends RelTraitDef
 
     // implement RelTraitDef
     public RelNode convert(
-        RelOptPlanner planner, RelNode rel, RelTrait toTrait, int fromIndex,
+        RelOptPlanner planner, RelNode rel, RelTrait toTrait,
         boolean allowInfiniteCostConverters)
     {
         final ConversionData conversionData = getConversionData(planner);

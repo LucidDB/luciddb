@@ -37,6 +37,7 @@ import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.util.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.SqlValidatorException;
 import org.eigenbase.sql.parser.*;
@@ -246,12 +247,11 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
      *
      * @param suppliers collection of elements on which client depends
      *
-     * @param kind name for dependency type
+     * @return new dependency
      */
     public CwmDependency createDependency(
         CwmNamespace client,
-        Collection suppliers,
-        String kind);
+        Collection suppliers);
 
     /**
      * Discards a data wrapper or server from the shared cache
@@ -289,7 +289,7 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
      *
      * @return wrapping exception
      */
-    public FarragoException newPositionalError(
+    public EigenbaseException newPositionalError(
         RefObject refObj,
         SqlValidatorException ex);
 }

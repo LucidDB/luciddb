@@ -47,7 +47,7 @@ import org.eigenbase.util.*;
  *
  *<p>
  *
- * NOTE jvs 22-June-2005: If you're scratching your head trying to understand
+ * NOTE jvs 22-June-2004: If you're scratching your head trying to understand
  * the code generation methods in this package, it might help to look at
  * examples of the generated code.  One way to do this is by turning on {@link
  * net.sf.farrago.trace.FarragoTrace#getDynamicTracer} and then examining the
@@ -156,7 +156,7 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
             return;
         }
         
-        // TODO jvs 22-May-2005:  Initialize once and only once.
+        // TODO jvs 22-May-2004:  Initialize once and only once.
         setTranslation(
             castImplementor.convertCastToAssignableValue(
                 this,

@@ -30,7 +30,7 @@ import java.util.logging.Logger;
 /**
  * Exception thrown while validating a SQL statement.
  *
- * <p>Unlike {@link net.sf.farrago.util.FarragoException}, this is a checked
+ * <p>Unlike {@link org.eigenbase.util.EigenbaseException}, this is a checked
  * exception, which reminds code authors to wrap it in another exception
  * containing the line/column context.
  *
@@ -42,12 +42,12 @@ public class SqlValidatorException extends Exception {
     //~ Static fields/initializers --------------------------------------------
 
     private static Logger tracer =
-        Logger.getLogger("net.sf.farrago.util.FarragoException");
+        Logger.getLogger("org.eigenbase.util.EigenbaseException");
 
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a new FarragoException object.
+     * Creates a new SqlValidatorException object.
      *
      * @param message error message
      * @param cause underlying cause

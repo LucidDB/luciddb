@@ -22,7 +22,7 @@
 */
 package net.sf.farrago.session;
 
-import net.sf.farrago.util.FarragoException;
+import org.eigenbase.util.*;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.validate.SqlValidatorException;
 
@@ -87,7 +87,7 @@ public interface FarragoSessionParser
      *
      * @return wrapping exception
      */
-    public FarragoException newPositionalError(
+    public EigenbaseException newPositionalError(
         SqlValidatorException ex);
 
     /**

@@ -28,6 +28,7 @@ import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelOptRuleOperand;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.rex.*;
+import org.eigenbase.sql.fun.*;
 
 
 /**
@@ -89,8 +90,9 @@ public class MergeFilterOntoCalcRule extends RelOptRule
             };
         RexNode newCondition = shuttle.visit(filter.condition);
         if (calc.conditionExpr != null) {
+            SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
             newCondition =
-                calc.cluster.rexBuilder.makeCall(RexKind.And,
+                calc.cluster.rexBuilder.makeCall(opTab.andOperator, 
                     calc.conditionExpr, newCondition);
         }
         final CalcRel newCalc =

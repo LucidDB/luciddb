@@ -162,7 +162,7 @@ ExecutionStreamFactory::newProducerToConsumerProvisionAdapter(
 // (3) read stream-specific parameters
 // (4) set parts
 // TODO: do we have a possible memory leak here?
-// REVIEW jvs 3-April-2005:  Yes, there's a leak in case of exception.
+// REVIEW jvs 3-April-2004:  Yes, there's a leak in case of exception.
 // Need to fix that in some uniform fashion.
 
 void ExecutionStreamFactory::visit(ProxyIndexScanDef &streamDef)

@@ -126,18 +126,10 @@ public class FarragoIteratorResultSet extends IteratorResultSet
     protected Object getRaw(int columnIndex)
     {
         Object obj = super.getRaw(columnIndex);
-        if (obj instanceof NullableValue) {
-            NullableValue nullableValue = (NullableValue) obj;
+        if (obj instanceof DataValue) {
+            DataValue nullableValue = (DataValue) obj;
             obj = nullableValue.getNullableData();
             wasNull = (obj == null);
-        } else if (obj instanceof BytePointer) {
-            BytePointer bytePointer = (BytePointer) obj;
-            obj = bytePointer.getNullableData();
-            wasNull = false;
-        } else if (obj instanceof SqlDateTimeWithoutTZ) {
-            SqlDateTimeWithoutTZ datetime = (SqlDateTimeWithoutTZ) obj;
-            obj = datetime.getNullableData();
-            wasNull = false;
         } else {
             wasNull = false;
         }

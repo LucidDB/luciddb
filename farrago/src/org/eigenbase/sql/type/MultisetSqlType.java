@@ -68,7 +68,7 @@ public class MultisetSqlType extends AbstractSqlType
     // implement RelDataType
     public RelDataTypeFamily getFamily()
     {
-        // TODO jvs 2-Dec-2005:  This gives each multiset type its
+        // TODO jvs 2-Dec-2004:  This gives each multiset type its
         // own family.  But that's not quite correct; the family should
         // be based on the element type for proper comparability
         // semantics (per 4.10.4 of SQL/2003).  So either this should

@@ -65,17 +65,7 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
 
         // Yon Cassius has a lean and hungry look.
         ambitious = true;
-    }
-
-    //~ Methods ---------------------------------------------------------------
-
-    /**
-     * Initializes Farrago-specific rules for this planner.
-     */
-    public void init()
-    {
-        boolean fennelEnabled = stmt.getRepos().isFennelEnabled();
-
+        
         // Create a new CallingConvention trait definition that will store
         // the graph of possible conversions and handle the creation of
         // converters.
@@ -87,6 +77,17 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
         RelOptUtil.registerAbstractRels(this);
 
         addRule(new AbstractConverter.ExpandConversionRule());
+    }
+
+    //~ Methods ---------------------------------------------------------------
+
+    /**
+     * Initializes Farrago-specific rules for this planner.
+     */
+    public void init()
+    {
+        boolean fennelEnabled = stmt.getRepos().isFennelEnabled();
+
         addRule(new RemoveDistinctRule());
         addRule(new UnionToDistinctRule());
         addRule(new UnionEliminatorRule());
@@ -126,7 +127,7 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
             // use Java code generation for calculating expressions
             addRule(IterRules.IterCalcRule.instance);
 
-            // TODO jvs 6-May-2005:  these should be redundant now, but when
+            // TODO jvs 6-May-2004:  these should be redundant now, but when
             // I remove them, some queries fail.  Find out why.
             addRule(IterRules.ProjectToIteratorRule.instance);
             addRule(IterRules.ProjectedFilterToIteratorRule.instance);

@@ -30,7 +30,7 @@ import org.eigenbase.rex.*;
 
 /**
  * FarragoOJRexRowImplementor implements Farrago specifics of {@link
- * OJRexImplementor} for ROW constructors.
+ * OJRexImplementor} for ROW and UDT constructors.
  *
  * @author John V. Sichi
  * @version $Id$

@@ -137,7 +137,7 @@ class ExternalSortExecStreamImpl : public ExternalSortExecStream
 // private methods
 // ----------------------------------------------------------------------
 
-    // TODO jvs 10-Nov-2005:  rework comments
+    // TODO jvs 10-Nov-2004:  rework comments
     /**
      * Performs enough sorting to be able to start returning results
      * (non-parallel version).

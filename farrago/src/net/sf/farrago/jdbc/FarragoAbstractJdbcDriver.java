@@ -68,7 +68,7 @@ public abstract class FarragoAbstractJdbcDriver implements Driver
      */
     public String getClientUrl()
     {
-        // NOTE jvs 27-March-2005:  At the moment, the driver interprets
+        // NOTE jvs 27-March-2004:  At the moment, the driver interprets
         // embedded and client URL's as the same.  However, we distinguish
         // the actual URL's since in the future we may want to
         // react to them differently.

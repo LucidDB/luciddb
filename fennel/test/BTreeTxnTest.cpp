@@ -290,7 +290,7 @@ void BTreeTxnTest::testTxns()
     treeDescriptor.segmentAccessor.pSegment = pDatabase->getDataSegment();
     RecordNum nEntriesRecovered = verifyTree();
 
-    // FIXME jvs 8-Mar-2005:  Turn this back on once NOTE above is taken
+    // FIXME jvs 8-Mar-2004:  Turn this back on once NOTE above is taken
     // care of.  Tautological checks are just to shut warnings up.
     
     // BOOST_CHECK_EQUAL(nEntries,nEntriesRecovered);

@@ -271,7 +271,7 @@ public:
     static bool isUsingOldScheduler();
 };
 
-// NOTE jvs 16-Oct-2005:  This crazy kludge is for problems arising on Linux
+// NOTE jvs 16-Oct-2004:  This crazy kludge is for problems arising on Linux
 // when using multiple JNI libs.  This has to be included in each
 // JNI_OnLoad as a workaround (and it must be a macro, not a function).
 // Code was taken from _Stl_loc_assign_ids() in stlport/src/locale_impl.cpp.

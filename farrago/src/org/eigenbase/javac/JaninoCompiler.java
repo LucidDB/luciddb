@@ -40,7 +40,7 @@ public class JaninoCompiler implements JavaCompiler
 {
     private JaninoCompilerArgs args = new JaninoCompilerArgs();
 
-    // REVIEW jvs 28-June-2005:  pool this instance?  Is it thread-safe?
+    // REVIEW jvs 28-June-2004:  pool this instance?  Is it thread-safe?
     private JavaSourceClassLoader classLoader;
 
     public JaninoCompiler()
@@ -51,18 +51,18 @@ public class JaninoCompiler implements JavaCompiler
     // implement JavaCompiler
     public void compile()
     {
-        // REVIEW jvs 29-Sept-2005: we used to delegate to
+        // REVIEW jvs 29-Sept-2004: we used to delegate to
         // ClassLoader.getSystemClassLoader(), but for some reason that didn't
         // work when run from ant's junit task without forking.  Should
         // probably take it as a parameter, but how should we decide what to
         // use?
 
-        // TODO jvs 10-Nov-2005: provide a means to request
+        // TODO jvs 10-Nov-2004: provide a means to request
         // DebuggingInformation.ALL
         
         assert(args.destdir != null);
         assert(args.fullClassName != null);
-        // TODO jvs 28-June-2005: with some glue code, we could probably get
+        // TODO jvs 28-June-2004: with some glue code, we could probably get
         // Janino to compile directly from the generated string source instead
         // of from a file.  (It's possible to do that with the SimpleCompiler
         // class, but then we don't avoid the bytecode storage.)
@@ -105,7 +105,7 @@ public class JaninoCompiler implements JavaCompiler
             this.destdir = destdir;
         }
 
-        // NOTE jvs 28-June-2005:  these go along with TODO above
+        // NOTE jvs 28-June-2004:  these go along with TODO above
         /*
         String source;
         public void setSource(String source, String fileName)

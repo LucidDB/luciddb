@@ -63,7 +63,7 @@ public abstract class FarragoAbstractParser implements FarragoSessionParser
     }
 
     // implement FarragoSessionParser
-    public FarragoException newPositionalError(
+    public EigenbaseException newPositionalError(
         SqlValidatorException ex)
     {
         if (sourceString == null) {

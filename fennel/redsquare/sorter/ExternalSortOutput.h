@@ -71,7 +71,7 @@ public:
      */
     void setSubStream(ExternalSortSubStream &subStream);
 
-    // TODO jvs 10-Nov-2005:  eliminate this overload
+    // TODO jvs 10-Nov-2004:  eliminate this overload
     /**
      * Fetches tuples and writes them to a result stream.
      *

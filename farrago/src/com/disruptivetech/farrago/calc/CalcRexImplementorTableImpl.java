@@ -148,7 +148,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             new InstrDefImplementor(instrDef));
     }
 
-    // NOTE jvs 16-June-2005:  There's a reason I use the convention
+    // NOTE jvs 16-June-2004:  There's a reason I use the convention
     // implements CalcRexImplementorTable
     // which is that it keeps jalopy from supplying the missing
     // method comment, while not preventing javadoc from inheriting

@@ -306,7 +306,7 @@ public class DdlRelationalHandler extends DdlHandler
         view.getQueryExpression().setBody(analyzedSql.canonicalString);
 
         validator.createDependency(
-            view, analyzedSql.dependencies, "ViewUsage");
+            view, analyzedSql.dependencies);
     }
 
     public FemLocalIndex createUniqueConstraintIndex(

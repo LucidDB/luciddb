@@ -30,7 +30,7 @@ package net.sf.farrago.type.runtime;
  * @author John V. Sichi
  * @version $Id$
  */
-public interface NullableValue
+public interface NullableValue extends DataValue
 {
     //~ Static fields/initializers --------------------------------------------
 
@@ -57,19 +57,9 @@ public interface NullableValue
     void setNull(boolean isNull);
 
     /**
-     * .
-     *
      * @return whether the value has been set to null
      */
     boolean isNull();
-
-    /**
-     * .
-     *
-     * @return an Object representation of this value's data, or null if this
-     *         value is null
-     */
-    Object getNullableData();
 }
 
 

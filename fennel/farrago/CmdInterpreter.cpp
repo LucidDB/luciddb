@@ -189,7 +189,7 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
                 scratchAccessor);
             pDb->recover(recoveryFactory);
         } else {
-            // NOTE jvs 10-Aug-2005 -- this message is intentionally NOT
+            // NOTE jvs 10-Aug-2004 -- this message is intentionally NOT
             // internationalized because it's supposed to be temporary.
             throw FennelExcn(
                 "Database crash detected.  "

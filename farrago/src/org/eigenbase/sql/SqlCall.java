@@ -207,6 +207,12 @@ public class SqlCall extends SqlNode
                 getCallSignature(validator, scope),
                 operator.getAllowedSignatures()));
     }
+
+    public boolean isMonotonic(SqlValidatorScope scope)
+    {
+        // Delegate to operator.
+        return operator.isMonotonic(this, scope);
+    }
 }
 
 

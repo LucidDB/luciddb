@@ -45,7 +45,7 @@ ResourceDefinition::~ResourceDefinition()
 {
 }
 
-// REVIEW jvs 18-Feb-2005:  Why the special case for no-args?
+// REVIEW jvs 18-Feb-2004:  Why the special case for no-args?
 string ResourceDefinition::format() const
 {
     if (_bundle->hasMessage(_key)) {

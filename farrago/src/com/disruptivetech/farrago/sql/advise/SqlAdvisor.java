@@ -1,10 +1,8 @@
 /*
 // $Id$
-// Package org.eigenbase is a class library of data management components.
-// Copyright (C) 2005-2005 The Eigenbase Project
+// Farrago is an extensible data management system.
 // Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 Red Square, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Copyright (C) 2005-2005 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,7 +19,7 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-package org.eigenbase.sql.advise;
+package com.disruptivetech.farrago.sql.advise;
 
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.validate.SqlValidator;

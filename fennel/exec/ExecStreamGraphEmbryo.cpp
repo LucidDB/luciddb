@@ -67,7 +67,7 @@ SharedExecStream ExecStreamGraphEmbryo::addAdapterFor(
     uint iOutput,
     ExecStreamBufProvision requiredDataflow)
 {
-    // REVIEW jvs 18-Nov-2005:  in the case of multiple outputs from one
+    // REVIEW jvs 18-Nov-2004:  in the case of multiple outputs from one
     // stream, with consumers having different provisioning, this
     // could result in chains of adapters, which would be less than optimal
     

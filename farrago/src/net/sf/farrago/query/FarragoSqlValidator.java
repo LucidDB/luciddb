@@ -72,7 +72,7 @@ class FarragoSqlValidator extends SqlValidatorImpl
     {
         super.validateLiteral(literal);
 
-        // REVIEW jvs 4-Aug-2005:  This should probably be calling over to the
+        // REVIEW jvs 4-Aug-2004:  This should probably be calling over to the
         // available calculator implementations to see what they support.  For
         // now use ESP instead.
         switch (literal.getTypeName().getOrdinal()) {
@@ -91,7 +91,7 @@ class FarragoSqlValidator extends SqlValidatorImpl
                 // fall through for scaled case
             }
 
-            // TODO jvs 4-Aug-2005:  support exact numerics,
+            // TODO jvs 4-Aug-2004:  support exact numerics,
             // which may also be able to handle overflow case above
             // if our maximum precision is bigger than that of a long
             validateLiteralAsDouble(literal);
@@ -118,7 +118,7 @@ class FarragoSqlValidator extends SqlValidatorImpl
             );
         }
 
-        // REVIEW jvs 4-Aug-2005:  what about underflow?
+        // REVIEW jvs 4-Aug-2004:  what about underflow?
     }
 }
 

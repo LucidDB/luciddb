@@ -89,7 +89,7 @@ public class OJTypeFactoryImpl extends SqlTypeFactoryImpl
     
     protected OJClass createOJClassForRecordType(
         OJClass declarer,
-        RelRecordType recordType)
+        RelDataType recordType)
     {
         // convert to synthetic project type
         final RelDataTypeField [] fields = recordType.getFields();
@@ -205,7 +205,7 @@ public class OJTypeFactoryImpl extends SqlTypeFactoryImpl
             assert (ojClass != null);
             assert (!OJSyntheticClass.isJoinClass(ojClass));
 
-            // REVIEW jvs 23-Sept-2005:  find out who commented this out and
+            // REVIEW jvs 23-Sept-2004:  find out who commented this out and
             // why
             
             //assert(!OJSyntheticClass.isProjectClass(ojClass));

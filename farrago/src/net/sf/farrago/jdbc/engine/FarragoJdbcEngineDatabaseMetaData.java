@@ -142,6 +142,36 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
     }
 
     // implement DatabaseMetaData
+    public int getDatabaseMajorVersion()
+        throws SQLException
+    {
+        FarragoReleaseProperties props = FarragoReleaseProperties.instance();
+        return props.productVersionMajor.get();
+    }
+
+    // implement DatabaseMetaData
+    public int getDatabaseMinorVersion()
+        throws SQLException
+    {
+        FarragoReleaseProperties props = FarragoReleaseProperties.instance();
+        return props.productVersionMinor.get();
+    }
+
+    // implement DatabaseMetaData
+    public int getJDBCMajorVersion()
+        throws SQLException
+    {
+        return 3;
+    }
+
+    // implement DatabaseMetaData
+    public int getJDBCMinorVersion()
+        throws SQLException
+    {
+        return 0;
+    }
+
+    // implement DatabaseMetaData
     public String getDriverName()
         throws SQLException
     {
@@ -508,7 +538,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
     public String getProcedureTerm()
         throws SQLException
     {
-        return "";
+        return "routine";
     }
 
     // implement DatabaseMetaData
@@ -578,7 +608,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
     public boolean supportsCatalogsInProcedureCalls()
         throws SQLException
     {
-        return false;
+        return true;
     }
 
     // implement DatabaseMetaData
@@ -627,6 +657,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
     public boolean supportsStoredProcedures()
         throws SQLException
     {
+        // TODO jvs 23-Mar-2005:  need to support JDBC escape syntax
         return false;
     }
 
@@ -912,7 +943,14 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         String procedureNamePattern)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        QueryBuilder queryBuilder =
+            new QueryBuilder(
+                "select * from sys_boot.jdbc_metadata.procedures_view");
+        queryBuilder.addExact("procedure_cat", catalog);
+        queryBuilder.addPattern("procedure_schem", schemaPattern);
+        queryBuilder.addPattern("procedure_name", procedureNamePattern);
+        queryBuilder.addOrderBy("procedure_schem,procedure_name,procedure_cat");
+        return queryBuilder.execute();
     }
 
     // implement DatabaseMetaData
@@ -923,7 +961,16 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         String columnNamePattern)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        QueryBuilder queryBuilder =
+            new QueryBuilder(
+                "select * from sys_boot.jdbc_metadata.procedure_columns_view");
+        queryBuilder.addExact("procedure_cat", catalog);
+        queryBuilder.addPattern("procedure_schem", schemaPattern);
+        queryBuilder.addPattern("procedure_name", procedureNamePattern);
+        queryBuilder.addPattern("column_name", columnNamePattern);
+        queryBuilder.addOrderBy(
+            "procedure_schem,procedure_name,column_ordinal,procedure_cat");
+        return queryBuilder.execute();
     }
 
     // implement DatabaseMetaData
@@ -942,7 +989,6 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         queryBuilder.addPattern("table_name", tableNamePattern);
 
         // TODO:  re-enable once IN is working
-
         /*
         queryBuilder.addInList("table_type",types);
         */
@@ -1007,7 +1053,8 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         queryBuilder.addPattern("table_schem", schemaPattern);
         queryBuilder.addPattern("table_name", tableNamePattern);
         queryBuilder.addPattern("column_name", columnNamePattern);
-        queryBuilder.addOrderBy("table_schem,table_name,ordinal_position");
+        queryBuilder.addOrderBy(
+            "table_schem,table_name,ordinal_position,table_cat");
         return queryBuilder.execute();
     }
 
@@ -1211,7 +1258,23 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         int [] types)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        QueryBuilder queryBuilder =
+            new QueryBuilder(
+                "select * from sys_boot.jdbc_metadata.udts_view");
+        queryBuilder.addExact("type_cat", catalog);
+        queryBuilder.addPattern("type_schem", schemaPattern);
+        queryBuilder.addPattern("type_name", typeNamePattern);
+        queryBuilder.addOrderBy("data_type,type_schem,type_name,type_cat");
+        
+        // TODO:  re-enable once IN is working
+        /*
+        queryBuilder.addInList("data_type",types);
+        */
+        if ((types != null) && (types.length == 1)) {
+            queryBuilder.addExact("data_type", new Integer(types[0]));
+        }
+        
+        return queryBuilder.execute();
     }
 
     // implement DatabaseMetaData
@@ -1277,7 +1340,16 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         String attributeNamePattern)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        QueryBuilder queryBuilder =
+            new QueryBuilder(
+                "select * from sys_boot.jdbc_metadata.attributes_view");
+        queryBuilder.addExact("type_cat", catalog);
+        queryBuilder.addPattern("type_schem", schemaPattern);
+        queryBuilder.addPattern("type_name", typeNamePattern);
+        queryBuilder.addPattern("attr_name", attributeNamePattern);
+        queryBuilder.addOrderBy(
+            "type_schem,type_name,ordinal_position,type_cat");
+        return queryBuilder.execute();
     }
 
     // implement DatabaseMetaData
@@ -1292,34 +1364,6 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         throws SQLException
     {
         return ResultSet.CLOSE_CURSORS_AT_COMMIT;
-    }
-
-    // implement DatabaseMetaData
-    public int getDatabaseMajorVersion()
-        throws SQLException
-    {
-        return 0;
-    }
-
-    // implement DatabaseMetaData
-    public int getDatabaseMinorVersion()
-        throws SQLException
-    {
-        return 1;
-    }
-
-    // implement DatabaseMetaData
-    public int getJDBCMajorVersion()
-        throws SQLException
-    {
-        return 3;
-    }
-
-    // implement DatabaseMetaData
-    public int getJDBCMinorVersion()
-        throws SQLException
-    {
-        return 0;
     }
 
     // implement DatabaseMetaData
@@ -1377,7 +1421,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
                 return;
             }
             if (value.equals("%")) {
-                // TODO jvs 5-April-2005:  replace with IS NOT NULL once
+                // TODO jvs 5-April-2004:  replace with IS NOT NULL once
                 // that is working
                 addConjunction();
                 sql.append(colName);
@@ -1386,14 +1430,14 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
                 return;
             }
             if (value.indexOf('%') == -1) {
-                // NOTE jvs 5-April-2005:  technically, '_' is a wildcard
+                // NOTE jvs 5-April-2004:  technically, '_' is a wildcard
                 // symbol also, but it can wait for LIKE support since
                 // its non-wildcard usage is so common
                 addExact(colName, value);
                 return;
             }
             if (false) {
-                // TODO jvs 5-April-2005:  turn this on once LIKE is working
+                // TODO jvs 5-April-2004:  turn this on once LIKE is working
                 addConjunction();
                 sql.append(colName);
                 sql.append(" like ? escape '\\'");
@@ -1403,7 +1447,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
 
         void addExact(
             String colName,
-            String value)
+            Object value)
         {
             addConjunction();
             sql.append(colName);

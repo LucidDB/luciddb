@@ -280,7 +280,7 @@ void ExternalSortStreamImpl::mergeFirstResult()
         while (iFirstRun > 0) {
             uint nRunsToMerge;
 
-            // REVIEW jvs 13-June-2005:  I had to change this to account for
+            // REVIEW jvs 13-June-2004:  I had to change this to account for
             // the output buffer needed during merge.  Not sure why it worked
             // in BB?
             uint nMergePages = sortInfo.nSortMemPages - 1;
@@ -360,7 +360,7 @@ void ExternalSortStreamImpl::deleteStoredRunInfo(uint iFirstRun,uint nRuns)
 
 ExternalSortRC ExternalSortStreamImpl::computeFirstResultParallel()
 {
-    // FIXME jvs 19-June-2005:  ThreadPool needs to propagate excns!
+    // FIXME jvs 19-June-2004:  ThreadPool needs to propagate excns!
 
     assert(nParallel > 1);
 
@@ -383,7 +383,7 @@ ExternalSortRC ExternalSortStreamImpl::computeFirstResultParallel()
             threadPool.submitTask(task);
         }
     } catch (...) {
-        // REVEW jvs 19-June-2005:  signal a request to expedite cleanup?
+        // REVEW jvs 19-June-2004:  signal a request to expedite cleanup?
         
         // wait for all tasks to clean up
         threadPool.stop();

@@ -31,27 +31,27 @@ public interface RelOptCost
 {
     //~ Methods ---------------------------------------------------------------
 
-    abstract double getCpu();
+    public double getCpu();
 
-    abstract boolean isInfinite();
+    public boolean isInfinite();
 
-    abstract double getIo();
+    public double getIo();
 
-    abstract boolean isLe(RelOptCost cost);
+    public boolean isLe(RelOptCost cost);
 
-    abstract boolean isLt(RelOptCost cost);
+    public boolean isLt(RelOptCost cost);
 
-    abstract double getRows();
+    public double getRows();
 
-    abstract boolean equals(RelOptCost cost);
+    public boolean equals(RelOptCost cost);
 
-    abstract RelOptCost minus(RelOptCost cost);
+    public RelOptCost minus(RelOptCost cost);
 
-    abstract RelOptCost multiplyBy(double factor);
+    public RelOptCost multiplyBy(double factor);
 
-    abstract RelOptCost plus(RelOptCost cost);
+    public RelOptCost plus(RelOptCost cost);
 
-    abstract String toString();
+    public String toString();
 }
 
 

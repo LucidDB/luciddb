@@ -43,8 +43,7 @@ import net.sf.farrago.util.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.SqlValidatorException;
 import org.eigenbase.sql.parser.*;
-import org.eigenbase.util.Util;
-
+import org.eigenbase.util.*;
 
 /**
  * FarragoStmtValidator is a default implementation of the
@@ -602,7 +601,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         this.parserPos = pos;
     }
 
-    private FarragoException newPositionalError(
+    private EigenbaseException newPositionalError(
         SqlValidatorException ex)
     {
         if (parserPos == null) {

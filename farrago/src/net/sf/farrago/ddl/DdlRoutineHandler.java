@@ -49,7 +49,7 @@ import java.sql.*;
 import java.util.*;
 
 /**
- * DdlRelationalHandler defines DDL handler methods for user-defined
+ * DdlRoutineHandler defines DDL handler methods for user-defined
  * routines and related objects such as types and jars.  TODO:
  * rename this class to DdlUserDefHandler
  *
@@ -105,11 +105,13 @@ public class DdlRoutineHandler extends DdlHandler
                     repos.getLocalizedObjectName(routine)));
         }
 
-        // TODO jvs 11-Jan-2005:  enum for supported languages
         if (routine.getLanguage() == null) {
-            routine.setLanguage("SQL");
+            routine.setLanguage(
+                ExtensionLanguageEnum.SQL.toString());
         }
-        if (routine.getLanguage().equals("SQL")) {
+        if (routine.getLanguage().equals(
+                ExtensionLanguageEnum.SQL.toString()))
+        {
             validateSqlRoutine(routine, returnParam);
         } else {
             validateJavaRoutine(routine, returnParam);
@@ -151,7 +153,9 @@ public class DdlRoutineHandler extends DdlHandler
                         repos.getLocalizedObjectName(routine),
                         repos.getLocalizedObjectName(classifier)));
             }
-            if (!routine.getLanguage().equals("SQL")) {
+            if (!routine.getLanguage().equals(
+                    ExtensionLanguageEnum.SQL.toString()))
+            {
                 throw Util.needToImplement(
                     "constructor methods with language "
                     + routine.getLanguage());
@@ -182,19 +186,10 @@ public class DdlRoutineHandler extends DdlHandler
                     repos.getLocalizedObjectName(routine)));
         }
         if (routine.getParameterStyle() != null) {
-            // FIXME jvs 26-Feb-2005:  remove this if and else below; should
-            // never set parameter style in this case, but need to
-            // edit model to make it optional
-            if (routine.getParameterStyle()
-                != RoutineParameterStyleEnum.RPS_SQL)
-            {
-                throw validator.newPositionalError(
-                    routine,
-                    validator.res.newValidatorRoutineNoParamStyle(
-                        repos.getLocalizedObjectName(routine)));
-            }
-        } else {
-            routine.setParameterStyle(RoutineParameterStyleEnum.RPS_SQL);
+            throw validator.newPositionalError(
+                routine,
+                validator.res.newValidatorRoutineNoParamStyle(
+                    repos.getLocalizedObjectName(routine)));
         }
         if (routine.getBody() == null) {
             if (routine.getExternalName() == null) {
@@ -202,7 +197,8 @@ public class DdlRoutineHandler extends DdlHandler
                 // the definition yet
                 CwmProcedureExpression dummyBody =
                     repos.newCwmProcedureExpression();
-                dummyBody.setLanguage("SQL");
+                dummyBody.setLanguage(
+                    ExtensionLanguageEnum.SQL.toString());
                 dummyBody.setBody(";");
                 routine.setBody(dummyBody);
                 return;
@@ -234,7 +230,8 @@ public class DdlRoutineHandler extends DdlHandler
     {
         if (routine.getBody() != null) {
             if ((routine.getBody().getLanguage() != null)
-                && !routine.getBody().getLanguage().equals("JAVA"))
+                && !routine.getBody().getLanguage().equals(
+                    ExtensionLanguageEnum.JAVA.toString()))
             {
                 throw validator.newPositionalError(
                     routine,
@@ -245,20 +242,24 @@ public class DdlRoutineHandler extends DdlHandler
 
         CwmProcedureExpression dummyBody =
             repos.newCwmProcedureExpression();
-        dummyBody.setLanguage("JAVA");
+        dummyBody.setLanguage(ExtensionLanguageEnum.JAVA.toString());
         dummyBody.setBody(";");
         routine.setBody(dummyBody);
 
-        if (!routine.getLanguage().equals("JAVA")) {
+        if (!routine.getLanguage().equals(
+                ExtensionLanguageEnum.JAVA.toString()))
+        {
             throw validator.newPositionalError(
                 routine,
                 validator.res.newValidatorRoutineExternalJavaOnly(
                     repos.getLocalizedObjectName(routine)));
         }
         if (routine.getParameterStyle() == null) {
-            routine.setParameterStyle(RoutineParameterStyleEnum.RPS_JAVA);
+            routine.setParameterStyle(
+                RoutineParameterStyleEnum.RPS_JAVA.toString());
         }
-        if (routine.getParameterStyle() != RoutineParameterStyleEnum.RPS_JAVA) {
+        if (!(routine.getParameterStyle().equals(
+                  RoutineParameterStyleEnum.RPS_JAVA.toString()))) {
             throw validator.newPositionalError(
                 routine,
                 validator.res.newValidatorRoutineJavaParamStyleOnly(
@@ -283,8 +284,7 @@ public class DdlRoutineHandler extends DdlHandler
         if (sqlRoutine.getJar() != null) {
             validator.createDependency(
                 routine,
-                Collections.singleton(sqlRoutine.getJar()),
-                "RoutineUsesJar");
+                Collections.singleton(sqlRoutine.getJar()));
         }
     }
 
@@ -354,19 +354,19 @@ public class DdlRoutineHandler extends DdlHandler
         }
 
         validator.createDependency(
-            routine, analyzedSql.dependencies, "RoutineUsage");
+            routine, analyzedSql.dependencies);
 
         routine.getBody().setBody(
             FarragoUserDefinedRoutine.addReturnPrefix(
                 analyzedSql.canonicalString));
 
         if (analyzedSql.hasDynamicParams) {
-            // TODO jvs 29-Dec-2005:  add a test for this; currently
+            // TODO jvs 29-Dec-2004:  add a test for this; currently
             // hits an earlier assertion in SqlValidator
             throw validator.res.newValidatorInvalidRoutineDynamicParam();
         }
 
-        // TODO jvs 28-Dec-2005:  CAST FROM
+        // TODO jvs 28-Dec-2004:  CAST FROM
 
         RelDataType declaredReturnType =
             typeFactory.createCwmElementType(returnParam);
@@ -438,12 +438,12 @@ public class DdlRoutineHandler extends DdlHandler
         newBody.append("RETURN SELF; END");
         routine.getBody().setBody(newBody.toString());
         validator.createDependency(
-            routine, dependencies, "RoutineUsage");
+            routine, dependencies);
     }
 
     public void validateRoutineParam(FemRoutineParameter param)
     {
-        validateTypedElement(param);
+        validateTypedElement(param, (FemRoutine) param.getBehavioralFeature());
     }
 
     // implement FarragoSessionDdlHandler
@@ -465,6 +465,7 @@ public class DdlRoutineHandler extends DdlHandler
     // implement FarragoSessionDdlHandler
     public void validateDefinition(FemSqlobjectType typeDef)
     {
+        typeDef.setTypeNumber(new Integer(Types.STRUCT));
         validateAttributeSet(typeDef);
         validateUserDefinedType(typeDef);
     }
@@ -472,8 +473,9 @@ public class DdlRoutineHandler extends DdlHandler
     // implement FarragoSessionDdlHandler
     public void validateDefinition(FemSqldistinguishedType typeDef)
     {
+        typeDef.setTypeNumber(new Integer(Types.DISTINCT));
         validateUserDefinedType(typeDef);
-        validateTypedElement(typeDef);
+        validateTypedElement(typeDef, typeDef);
         if (!(typeDef.getType() instanceof CwmSqlsimpleType)) {
             throw validator.newPositionalError(
                 typeDef,
@@ -484,6 +486,100 @@ public class DdlRoutineHandler extends DdlHandler
         typeDef.setSqlSimpleType(predefinedType);
     }
 
+    // implement FarragoSessionDdlHandler
+    public void validateDefinition(FemUserDefinedOrdering orderingDef)
+    {
+        if (orderingDef.getName() == null) {
+            orderingDef.setName(orderingDef.getType().getName());
+        }
+        if (orderingDef.getType().getOrdering().size() > 1) {
+            throw validator.newPositionalError(
+                orderingDef,
+                validator.res.newValidatorMultipleOrderings(
+                    repos.getLocalizedObjectName(orderingDef.getType())));
+        }
+        FemRoutine routine = FarragoCatalogUtil.getRoutineForOrdering(
+            orderingDef);
+        CwmClassifier returnType = null;
+        if (routine != null) {
+            if (routine.getType() != ProcedureTypeEnum.FUNCTION) {
+                throw validator.newPositionalError(
+                    orderingDef,
+                    validator.res.newValidatorOrderingFunction(
+                        repos.getLocalizedObjectName(routine),
+                        repos.getLocalizedObjectName(orderingDef.getType())));
+            }
+            if (!routine.isDeterministic()) {
+                throw validator.newPositionalError(
+                    orderingDef,
+                    validator.res.newValidatorOrderingDeterministic(
+                        repos.getLocalizedObjectName(routine),
+                        repos.getLocalizedObjectName(orderingDef.getType())));
+            }
+            if (routine.getDataAccess() ==
+                RoutineDataAccessEnum.RDA_MODIFIES_SQL_DATA)
+            {
+                throw validator.newPositionalError(
+                    orderingDef,
+                    validator.res.newValidatorOrderingReadOnly(
+                        repos.getLocalizedObjectName(routine),
+                        repos.getLocalizedObjectName(orderingDef.getType())));
+            }
+            Iterator iter = routine.getParameter().iterator();
+            while (iter.hasNext()) {
+                FemRoutineParameter param = (FemRoutineParameter) iter.next();
+                if (param.getKind() == ParameterDirectionKindEnum.PDK_RETURN) {
+                    returnType = param.getType();
+                } else {
+                    if (param.getType() != orderingDef.getType()) {
+                        throw validator.newPositionalError(
+                            orderingDef,
+                            validator.res.newValidatorOrderingParamType(
+                                repos.getLocalizedObjectName(routine),
+                                repos.getLocalizedObjectName(
+                                    orderingDef.getType())));
+                    }
+                }
+            }
+        }
+        if (orderingDef.getCategory() ==
+            UserDefinedOrderingCategoryEnum.UDOC_RELATIVE)
+        {
+            if (FarragoCatalogUtil.getRoutineParamCount(routine) != 2) {
+                throw validator.newPositionalError(
+                    orderingDef,
+                    validator.res.newValidatorRelativeOrderingDyadic(
+                        repos.getLocalizedObjectName(routine),
+                        repos.getLocalizedObjectName(orderingDef.getType())));
+            }
+            // TODO jvs 22-Mar-2005:  better INTEGER identity check
+            if (!returnType.getName().equals("INTEGER")) {
+                throw validator.newPositionalError(
+                    orderingDef,
+                    validator.res.newValidatorRelativeOrderingResult(
+                        repos.getLocalizedObjectName(routine),
+                        repos.getLocalizedObjectName(orderingDef.getType())));
+            }
+        } else if (orderingDef.getCategory() ==
+            UserDefinedOrderingCategoryEnum.UDOC_MAP)
+        {
+            if (FarragoCatalogUtil.getRoutineParamCount(routine) != 1) {
+                throw validator.newPositionalError(
+                    orderingDef,
+                    validator.res.newValidatorMapOrderingMonadic(
+                        repos.getLocalizedObjectName(routine),
+                        repos.getLocalizedObjectName(orderingDef.getType())));
+            }
+            if (!(returnType instanceof CwmSqlsimpleType)) {
+                throw validator.newPositionalError(
+                    orderingDef,
+                    validator.res.newValidatorMapOrderingResult(
+                        repos.getLocalizedObjectName(routine),
+                        repos.getLocalizedObjectName(orderingDef.getType())));
+            }
+        }
+    }
+    
     private void validateUserDefinedType(FemUserDefinedType typeDef)
     {
         if (typeDef.isFinal() && typeDef.isAbstract()) {

@@ -65,7 +65,7 @@ public abstract class SqlOperator
      *
      *<p>
      *
-     * REVIEW jvs 2-Dec-2005:  what about user-defined types with quoted
+     * REVIEW jvs 2-Dec-2004:  what about user-defined types with quoted
      * names?  They could be all-lowercase.  Do we really have to use such
      * a hokey mechanism?
      */
@@ -584,6 +584,14 @@ public abstract class SqlOperator
             }
             visitor.visitChild(call, i, operand);
         }
+    }
+
+    /**
+     * Method to check if call to this function is monotonic.  Default
+     * implementation is to return false.
+     */
+    public boolean isMonotonic(SqlCall call, SqlValidatorScope scope) {
+        return false; 
     }
 
     //~ Inner Classes ---------------------------------------------------------

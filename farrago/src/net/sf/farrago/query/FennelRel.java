@@ -40,7 +40,7 @@ public interface FennelRel extends RelNode
 {
     //~ Methods ---------------------------------------------------------------
 
-    // TODO jvs 8-May-2005:  get rid of method getPreparingStmt();
+    // TODO jvs 8-May-2004:  get rid of method getPreparingStmt();
     // instead, add a utility method for getting it from the cluster
 
     /**

@@ -41,7 +41,7 @@ class FarragoTransientStorage extends StorageImpl
 {
     //~ Static fields/initializers --------------------------------------------
 
-    // NOTE jvs 6-May-2005: Another hack.  This is what actually implements the
+    // NOTE jvs 6-May-2004: Another hack.  This is what actually implements the
     // desired transient effect: when true, commits are converted into
     // rollbacks.  This isn't set until after all storage initialization
     // is completed, so system-defined data stays around permanently.  Need
@@ -50,7 +50,7 @@ class FarragoTransientStorage extends StorageImpl
 
     //~ Instance fields -------------------------------------------------------
 
-    // NOTE jvs 6-May-2005:  I had extend StorageImpl to avoid having to
+    // NOTE jvs 6-May-2004:  I had to extend StorageImpl to avoid having to
     // copy the entire index classes.  Watch out for the fact that
     // the data members here shadow the unused ones in the superclass!
     private final HashMap maps = new HashMap();

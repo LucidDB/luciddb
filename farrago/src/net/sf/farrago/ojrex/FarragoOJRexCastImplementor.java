@@ -299,7 +299,7 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
         } else if (lhsType.isStruct()) {
             assert (rhsType.isStruct());
 
-            // TODO jvs 27-May-2005:  relax this assert and deal with
+            // TODO jvs 27-May-2004:  relax this assert and deal with
             // conversions, null checks, etc.
             assert (lhsType.equals(rhsType));
 
@@ -330,7 +330,7 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
             return false;
         }
 
-        // TODO jvs 11-Aug-2005:  think through other cases
+        // TODO jvs 11-Aug-2004:  think through other cases
         return true;
     }
 }

@@ -23,6 +23,7 @@
 package org.eigenbase.sql2rel;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.relopt.*;
@@ -77,11 +78,17 @@ import java.util.*;
  */
 public class RelStructuredTypeFlattener
 {
+    private static final SqlStdOperatorTable opTab =
+        SqlStdOperatorTable.instance();
+    
     private final RexBuilder rexBuilder;
     private final RewriteRelVisitor visitor;
     
     private Map oldToNewRelMap;
     private RelNode currentRel;
+    private int iRestructureInput;
+    private RelDataType flattenedRootType;
+    boolean restructured;
 
     public RelStructuredTypeFlattener(RexBuilder rexBuilder)
     {
@@ -89,11 +96,102 @@ public class RelStructuredTypeFlattener
         visitor = new RewriteRelVisitor();
     }
     
-    public RelNode rewrite(RelNode root)
+    public RelNode rewrite(RelNode root, boolean restructure)
     {
+        // Perform flattening.
         oldToNewRelMap = new HashMap();
         visitor.visit(root, 0, null);
-        return getNewForOldRel(root);
+        RelNode flattened = getNewForOldRel(root);
+        flattenedRootType = flattened.getRowType();
+        
+        // If requested, add an additional projection which puts
+        // everything back into structured form for return to the
+        // client.
+        restructured = false;
+        RexNode [] structuringExps = null;
+        if (restructure) {
+            iRestructureInput = 0;
+            structuringExps = restructureFields(root.getRowType());
+        }
+        if (restructured) {
+            // REVIEW jvs 23-Mar-2005:  How do we make sure that this
+            // implementation stays in Java?  Fennel can't handle
+            // structured types.
+            return new ProjectRel(
+                root.getCluster(),
+                flattened,
+                structuringExps,
+                RelOptUtil.getFieldNames(root.getRowType()),
+                ProjectRel.Flags.Boxed);
+        } else {
+            return flattened;
+        }
+    }
+
+    private RexNode [] restructureFields(
+        RelDataType structuredType)
+    {
+        List fields = structuredType.getFieldList();
+        RexNode [] structuringExps = new RexNode[fields.size()];
+        int iOutput = 0;
+        Iterator iter = fields.iterator();
+        while (iter.hasNext()) {
+            RelDataTypeField field = (RelDataTypeField) iter.next();
+            // TODO:  row
+            if (field.getType().getSqlTypeName() == SqlTypeName.Structured) {
+                restructured = true;
+                structuringExps[iOutput] = restructure(field.getType());
+                ++iOutput;
+            } else {
+                structuringExps[iOutput] =
+                    new RexInputRef(iRestructureInput, field.getType());
+                ++iOutput;
+                ++iRestructureInput;
+            }
+        }
+        return structuringExps;
+    }
+
+    private RexNode restructure(
+        RelDataType structuredType)
+    {
+        // Access null indicator for entire structure.
+        RexInputRef nullIndicator = new RexInputRef(
+            iRestructureInput,
+            flattenedRootType.getFields()[iRestructureInput].getType());
+        ++iRestructureInput;
+
+        // Use NEW to put flattened data back together into a structure.
+        RexNode [] inputExprs = restructureFields(structuredType);
+        RexNode newInvocation = rexBuilder.makeNewInvocation(
+            structuredType,
+            inputExprs);
+
+        if (!structuredType.isNullable()) {
+            // Optimize away the null test.
+            return newInvocation;
+        }
+        
+        // Construct a CASE expression to handle the structure-level null
+        // indicator.
+        RexNode [] caseOperands = new RexNode[3];
+        
+        // WHEN StructuredType.Indicator IS NULL
+        caseOperands[0] = rexBuilder.makeCall(
+            opTab.isNullOperator,
+            nullIndicator);
+
+        // THEN CAST(NULL AS StructuredType)
+        caseOperands[1] = rexBuilder.makeCast(
+            structuredType,
+            rexBuilder.constantNull());
+
+        // ELSE NEW StructuredType(inputs...) END
+        caseOperands[2] = newInvocation;
+        
+        return rexBuilder.makeCall(
+            opTab.caseOperator,
+            caseOperands);
     }
 
     private void setNewForOldRel(RelNode oldRel, RelNode newRel)
@@ -567,33 +665,57 @@ public class RelStructuredTypeFlattener
                 // first, we don't have to do any special translation.
                 return super.visit(rexCall);
             }
+            // NOTE jvs 22-Mar-2005:  Likewise, the null indicator takes
+            // care of comparison null semantics without any special casing.
+            return flattenComparison(
+                rexBuilder,
+                rexCall.getOperator(),
+                rexCall.getOperands());
+        }
+
+        private RexNode flattenComparison(
+            RexBuilder rexBuilder,
+            SqlOperator op,
+            RexNode [] exprs)
+        {
             List flattenedExps = new ArrayList();
             flattenProjections(
-                rexCall.getOperands(),
+                exprs,
                 null,
                 flattenedExps,
                 new ArrayList());
             int n = flattenedExps.size() / 2;
-            if ((n > 1) && !rexCall.isA(RexKind.Equals)) {
+            boolean negate = false;
+            if (op.kind.isA(SqlKind.NotEquals)) {
+                negate = true;
+                op = opTab.equalsOperator;
+            }
+            if ((n > 1) && !op.kind.isA(SqlKind.Equals)) {
                 throw Util.needToImplement(
                     "inequality comparison for row types");
             }
             RexNode conjunction = null;
             for (int i = 0; i < n; ++i) {
                 RexNode comparison = rexBuilder.makeCall(
-                    rexCall.getOperator(),
+                    op,
                     (RexNode) flattenedExps.get(i), 
                     (RexNode) flattenedExps.get(i + n));
                 if (conjunction == null) {
                     conjunction = comparison;
                 } else {
                     conjunction = rexBuilder.makeCall(
-                        RexKind.And,
+                        opTab.andOperator,
                         conjunction,
                         comparison);
                 }
             }
-            return conjunction;
+            if (negate) {
+                return rexBuilder.makeCall(
+                    opTab.notOperator,
+                    conjunction);
+            } else {
+                return conjunction;
+            }
         }
     }
 }

@@ -11,9 +11,9 @@ FFennelResource.h FennelResource.cpp: FennelResource.xml
 echo; \
 echo "FennelResource.h or FennelResource.cpp is out of date with respect to"; \
 echo "FennelResource.xml. In order to regenerate them, Apache Ant must be"; \
-echo "installed, the ANT_HOME environment variable set, and the Mondrian"; \
-echo "Resource Generator (MonRG) JAR files (mondrian-resource.jar and"; \
-echo "mondrian-xom.jar) must be in your CLASSPATH environment variable. If"; \
+echo "installed, the ANT_HOME environment variable set, and the Eigenbase"; \
+echo "Resource Generator (ResGen) JAR files (eigenbase-resgen.jar and"; \
+echo "eigenbase-xom.jar) must be in your CLASSPATH environment variable. If"; \
 echo "you wish to build Fennel without updating these files set"; \
 echo "SKIP_RESOURCE_GEN=1 and re-run make (note: your build may still fail"; \
 echo "if checked-in code uses resources that don't exist in your build due"; \

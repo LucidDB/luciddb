@@ -23,8 +23,11 @@
 package net.sf.farrago.query;
 
 import net.sf.farrago.type.*;
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.cwm.behavioral.*;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.cwm.core.*;
 
 import org.eigenbase.util.*;
 import org.eigenbase.oj.util.*;
@@ -35,6 +38,7 @@ import org.eigenbase.sql.type.*;
 import org.eigenbase.reltype.*;
 
 import java.util.*;
+import java.math.*;
 
 /**
  * FarragoRexBuilder refines JavaRexBuilder with Farrago-specific details.
@@ -68,10 +72,19 @@ class FarragoRexBuilder extends JavaRexBuilder
         SqlOperator op,
         RexNode [] exprs)
     {
-        if (!(op instanceof FarragoUserDefinedRoutine)) {
+        if (op.kind.isA(SqlKind.Comparison)) {
+            return makeComparison(op, exprs);
+        } else if (op instanceof FarragoUserDefinedRoutine) {
+            return makeUdfInvocation(op, exprs);
+        } else {
             return super.makeCall(op, exprs);
         }
+    }
 
+    private RexNode makeUdfInvocation(
+        SqlOperator op,
+        RexNode [] exprs)
+    {
         FarragoUserDefinedRoutine routine = (FarragoUserDefinedRoutine) op;
         FemRoutine femRoutine = routine.getFemRoutine();
         FarragoRoutineInvocation invocation = new FarragoRoutineInvocation(
@@ -137,6 +150,79 @@ class FarragoRexBuilder extends JavaRexBuilder
 
         RexNode returnCast = makeCast(routine.getReturnType(), returnNode);
         return returnCast;
+    }
+
+    private RexNode makeComparison(
+        SqlOperator op,
+        RexNode [] exprs)
+    {
+        RelDataType type = exprs[0].getType();
+        if (!type.isStruct()) {
+            return super.makeCall(op, exprs);
+        }
+        SqlIdentifier typeName = type.getSqlIdentifier();
+        CwmSqldataType cwmType = 
+            preparingStmt.getStmtValidator().findSqldataType(typeName);
+        if (cwmType instanceof FemUserDefinedType) {
+            FemUserDefinedType udt = (FemUserDefinedType) cwmType;
+            assert(udt.getOrdering().size() == 1);
+            FemUserDefinedOrdering udo = (FemUserDefinedOrdering)
+                udt.getOrdering().iterator().next();
+            preparingStmt.addDependency(udo);
+            UserDefinedOrderingCategory udoc = udo.getCategory();
+            if (udoc == UserDefinedOrderingCategoryEnum.UDOC_RELATIVE) {
+                return makeRelativeComparison(udt, udo, op, exprs);
+            } else if (udoc == UserDefinedOrderingCategoryEnum.UDOC_MAP) {
+                return makeMapComparison(udt, udo, op, exprs);
+            } else {
+                assert(udoc == UserDefinedOrderingCategoryEnum.UDOC_STATE);
+            }
+        }
+        // leave this for RelStructuredTypeFlattener to handle
+        // like a ROW
+        return super.makeCall(op, exprs);
+    }
+
+    private RexNode makeRelativeComparison(
+        FemUserDefinedType udt,
+        FemUserDefinedOrdering udo,
+        SqlOperator op,
+        RexNode [] exprs)
+    {
+        FarragoUserDefinedRoutine routine = getRoutine(udo);
+        RexNode routineInvocation = makeUdfInvocation(routine, exprs);
+        return super.makeCall(
+            op,
+            new RexNode [] {
+                routineInvocation,
+                makeExactLiteral(
+                    new BigDecimal(BigInteger.ZERO))
+            });
+    }
+        
+    private RexNode makeMapComparison(
+        FemUserDefinedType udt,
+        FemUserDefinedOrdering udo,
+        SqlOperator op,
+        RexNode [] exprs)
+    {
+        FarragoUserDefinedRoutine routine = getRoutine(udo);
+        RexNode [] mappedExprs = new RexNode[exprs.length];
+        for (int i = 0; i < exprs.length; ++i) {
+            mappedExprs[i] = makeUdfInvocation(
+                routine,
+                new RexNode [] {
+                    exprs[i]
+                });
+        }
+        return super.makeCall(op, mappedExprs);
+    }
+
+    private FarragoUserDefinedRoutine getRoutine(FemUserDefinedOrdering udo)
+    {
+        FemRoutine routine = FarragoCatalogUtil.getRoutineForOrdering(udo);
+        assert(routine != null);
+        return preparingStmt.getRoutineLookup().convertRoutine(routine);
     }
 }
 

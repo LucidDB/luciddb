@@ -22,8 +22,7 @@
 */
 package org.eigenbase.sql.type;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeField;
+import org.eigenbase.reltype.*;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.SqlValidatorScope;
@@ -718,6 +717,84 @@ public abstract class OperandsTypeChecking
         };
 
     /**
+     * Type checking strategy which verifies that types have the required
+     * attributes to be used as arguments to comparison operators.
+     */
+    public static class ComparableOrderedTypeChecking
+        extends SimpleOperandsTypeChecking
+    {
+        private final RelDataTypeComparability requiredComparability;
+        
+        public ComparableOrderedTypeChecking(
+            RelDataTypeComparability requiredComparability)
+        {
+            super(
+                new SqlTypeName [][] {
+                    { SqlTypeName.Any },
+                    { SqlTypeName.Any }
+                });
+            this.requiredComparability = requiredComparability;
+        }
+
+        public boolean check(
+            SqlValidator validator,
+            SqlValidatorScope scope,
+            SqlCall call, boolean throwOnFailure)
+        {
+            assert (call.operands.length == 2);
+            RelDataType type1 =
+                validator.deriveType(scope, call.operands[0]);
+            RelDataType type2 =
+                validator.deriveType(scope, call.operands[1]);
+            boolean b = true;
+            if (!checkType(validator, scope, call, throwOnFailure, type1)) {
+                b = false;
+            }
+            if (!checkType(validator, scope, call, throwOnFailure, type2)) {
+                b = false;
+            }
+            return b;
+        }
+
+        private boolean checkType(
+            SqlValidator validator,
+            SqlValidatorScope scope,
+            SqlCall call,
+            boolean throwOnFailure,
+            RelDataType type)
+        {
+            if (type.getComparability().getOrdinal() <
+                requiredComparability.getOrdinal())
+            {
+                if (throwOnFailure) {
+                    throw call.newValidationSignatureError(
+                        validator, scope);
+                } else {
+                    return false;
+                }
+            } else {
+                return true;
+            }
+        }
+    };
+    
+    /**
+     * Parameter type-checking strategy where types must allow
+     * ordered comparisons.
+     */
+    public static final OperandsTypeChecking typeComparableOrdered =
+        new ComparableOrderedTypeChecking(
+            RelDataTypeComparability.All);
+
+    /**
+     * Parameter type-checking strategy where types must allow
+     * ordered comparisons.
+     */
+    public static final OperandsTypeChecking typeComparableUnordered =
+        new ComparableOrderedTypeChecking(
+            RelDataTypeComparability.Unordered);
+
+    /**
      * Parameter type-checking strategy
      * type must be nullable numeric, nullable numeric.
      */
@@ -1276,10 +1353,8 @@ public abstract class OperandsTypeChecking
             });
 
     /**
-     * Parameter type-checking strategy
-     * types can be
-     * nullable aType, nullable aType
-     * and must be comparable to eachother
+     * Parameter type-checking strategy where types can be nullable and must be
+     * comparable to each other.
      */
     public static final OperandsTypeChecking typeNullableComparable =
         new CompositeOrOperandsTypeChecking(new OperandsTypeChecking [] {
@@ -1288,6 +1363,24 @@ public abstract class OperandsTypeChecking
             typeNullableIntervalInterval
         });
 
+    /**
+     * Parameter type-checking strategy where types can be nullable and must be
+     * comparable to each other with unordered comparisons allowed.
+     */
+    public static final OperandsTypeChecking typeNullableComparableUnordered =
+        new CompositeAndOperandsTypeChecking(new OperandsTypeChecking [] {
+            typeNullableComparable, typeComparableUnordered
+        });
+    
+    /**
+     * Parameter type-checking strategy where types can be nullable and must be
+     * comparable to each other with ordered comparisons allowed.
+     */
+    public static final OperandsTypeChecking typeNullableComparableOrdered =
+        new CompositeAndOperandsTypeChecking(new OperandsTypeChecking [] {
+            typeNullableComparable, typeComparableOrdered
+        });
+    
     /**
      * Parameter type-checking strategy
      * type must a nullable multiset

@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <?xml-stylesheet type="text/xsl"
- href="http://p4web.eigenbase.org/open/mondrian/resource/Resource.xsl" ?>
+ href="http://eigenbase.sourceforge.net/resgen/Resource.xsl" ?>
 <!-- 
   $Id$
   Farrago is an extensible data management system.
@@ -27,7 +27,7 @@
 <resourceBundle
   static="false"
   locale="en_US"
-  exceptionClassName="net.sf.farrago.util.FarragoException">
+  exceptionClassName="org.eigenbase.util.EigenbaseException">
 
 <!-- ====================================================================== -->
  General Notes:
@@ -428,6 +428,59 @@ column type family is {1} but default value type family is {2}</text>
 <text>Unknown target field {0} in constructor assignment</text>
 </exception>
 
+<exception id="420750" name="ValidatorConstructorUndefined">
+<text>Method {0} has been declared but not yet defined</text>
+</exception>
+
+<exception id="420760" name="ValidatorMultipleOrderings"
+    className="org.eigenbase.sql.validate.SqlValidatorException">
+<text>User-defined ordering already declared for {0}</text>
+</exception>
+
+<exception id="420770" name="ValidatorNoOrdering">
+<text>No user-defined ordering declared for {0}</text>
+</exception>
+
+<exception id="420780" name="ValidatorOrderingDeterministic"
+    className="org.eigenbase.sql.validate.SqlValidatorException">
+<text>DETERMINISTIC must be specified for {0} used as ordering for {1}</text>
+</exception>
+
+<exception id="420790" name="ValidatorOrderingReadOnly"
+    className="org.eigenbase.sql.validate.SqlValidatorException">
+<text>MODIFIES SQL DATA may not be specified for {0} used as ordering for {1}</text>
+</exception>
+
+<exception id="420800" name="ValidatorRelativeOrderingDyadic"
+    className="org.eigenbase.sql.validate.SqlValidatorException">
+<text>Exactly two parameters required for {0} used as RELATIVE ordering for {1}</text>
+</exception>
+
+<exception id="420810" name="ValidatorOrderingParamType"
+    className="org.eigenbase.sql.validate.SqlValidatorException">
+<text>Parameter type {1} required for {0} used as ordering on that type</text>
+</exception>
+
+<exception id="420820" name="ValidatorRelativeOrderingResult"
+    className="org.eigenbase.sql.validate.SqlValidatorException">
+<text>INTEGER required for result of {0} used as RELATIVE ordering for {1}</text>
+</exception>
+
+<exception id="420830" name="ValidatorMapOrderingMonadic"
+    className="org.eigenbase.sql.validate.SqlValidatorException">
+<text>Exactly one parameter required for {0} used as RELATIVE ordering for {1}</text>
+</exception>
+
+<exception id="420840" name="ValidatorMapOrderingResult"
+    className="org.eigenbase.sql.validate.SqlValidatorException">
+<text>Predefined type required for result of {0} used as MAP ordering for {1}</text>
+</exception>
+
+<exception id="420850" name="ValidatorOrderingFunction"
+    className="org.eigenbase.sql.validate.SqlValidatorException">
+<text>Cannot use {0} as ordering for {1} because it is not a function</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Fennel resources 440,000 - 450,000 -->
 <!-- Actual resources are defined separately in Fennel -->
@@ -803,6 +856,14 @@ column type family is {1} but default value type family is {2}</text>
 
 <message id="510046" name="UmlOperation">
 <text>method</text>
+</message>
+
+<message id="510047" name="UmlUserDefinedOrdering">
+<text>user-defined ordering</text>
+</message>
+
+<message id="510047" name="UmlDependency">
+<text>dependency</text>
 </message>
 
 <!-- End of last error section ============================================ -->

@@ -102,6 +102,11 @@ public interface SqlValidatorNamespace
      * {@link org.eigenbase.sql.SqlIdentifier} called "TIMESTAMP".
      */
     SqlNodeList getMonotonicExprs();
+
+    /**
+     * Returns whether a given column is sorted.
+     */
+    boolean isMonotonic(String columnName);
 }
 
 // End SqlValidatorNamespace.java

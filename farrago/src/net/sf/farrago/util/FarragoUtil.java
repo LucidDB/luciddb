@@ -26,6 +26,7 @@ import java.io.*;
 import java.sql.*;
 import java.util.logging.*;
 
+import org.eigenbase.util.*;
 import org.eigenbase.sql.validate.SqlValidatorException;
 
 
@@ -97,7 +98,7 @@ public abstract class FarragoUtil
 
         Throwable cause = ex.getCause();
         SQLException sqlExcn;
-        if (ex instanceof FarragoException) {
+        if (ex instanceof EigenbaseException) {
             // TODO:  map for SQLState
             if (cause instanceof SqlValidatorException) {
                 // We're looking at
@@ -127,7 +128,7 @@ public abstract class FarragoUtil
 
         // convert to SQLException-style chaining
         if (cause != null) {
-            // NOTE jvs 18-June-2005:  reverse the order so that
+            // NOTE jvs 18-June-2004:  reverse the order so that
             // the underlying cause comes out on top
             SQLException sqlCause = newSqlException(cause, tracer);
             sqlCause.setNextException(sqlExcn);

@@ -203,7 +203,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             return canonize(
                 new ObjectSqlType(
                     SqlTypeName.Distinct, id, false,
-                    new RelDataTypeField [] {field}));
+                    new RelDataTypeField [] {field},
+                    getUserDefinedComparability(type)));
         } else if (classifier instanceof FemSqlobjectType) {
             FemSqlobjectType objectType =
                 (FemSqlobjectType) classifier;
@@ -214,9 +215,26 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             SqlIdentifier id = FarragoCatalogUtil.getQualifiedName(objectType);
             return canonize(
                 new ObjectSqlType(
-                    SqlTypeName.Structured, id, false, structType.getFields()));
+                    SqlTypeName.Structured, id, false, structType.getFields(),
+                    getUserDefinedComparability(objectType)));
         } else {
             throw Util.needToImplement(classifier);
+        }
+    }
+
+    private RelDataTypeComparability getUserDefinedComparability(
+        FemUserDefinedType type)
+    {
+        if (type.getOrdering().isEmpty()) {
+            return RelDataTypeComparability.None;
+        }
+        assert(type.getOrdering().size() == 1);
+        FemUserDefinedOrdering udo =
+            (FemUserDefinedOrdering) type.getOrdering().iterator().next();
+        if (udo.isFull()) {
+            return RelDataTypeComparability.All;
+        } else {
+            return RelDataTypeComparability.Unordered;
         }
     }
     
@@ -291,7 +309,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                             == SqlTypeFamily.Character)
                         {
                             if ((precision == 0) || (precision > 65535)) {
-                                // REVIEW jvs 4-Mar-2005: Need a good way to
+                                // REVIEW jvs 4-Mar-2004: Need a good way to
                                 // handle drivers like hsqldb which return 0 or
                                 // large numbers to indicate unlimited
                                 // precision.
@@ -326,7 +344,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             });
     }
 
-    private FarragoException newSqlTypeException(SQLException ex)
+    private EigenbaseException newSqlTypeException(SQLException ex)
     {
         return FarragoResource.instance().newJdbcDriverTypeInfoFailed(ex);
     }
@@ -468,6 +486,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         case SqlTypeName.Multiset_ordinal:
             return newStringOJClass(
                 declarer, type);
+        case SqlTypeName.Structured_ordinal:
+            return createOJClassForRecordType(declarer, type);
         default:
             throw new AssertionError();
         }

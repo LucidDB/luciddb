@@ -92,7 +92,7 @@ public class IterCalcRel extends ProjectRelBase implements JavaRel
         return childExps;
     }
 
-    // TODO jvs 10-May-2005: need a computeSelfCost which takes condition into
+    // TODO jvs 10-May-2004: need a computeSelfCost which takes condition into
     // account; maybe inherit from a new CalcRelBase?
     public void explain(RelOptPlanWriter pw)
     {

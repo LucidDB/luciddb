@@ -97,7 +97,7 @@ void ExternalSortExecStreamImpl::setResourceAllocation(
     sortInfo.nSortMemPages = quantity.nCachePages;
     nParallel = quantity.nThreads + 1;
 
-    // NOTE jvs 10-Nov-2005:  parallel sort is currently disabled
+    // NOTE jvs 10-Nov-2004:  parallel sort is currently disabled
     // as an effect of the scheduler-revamp.  We may resurrect it, or
     // we may decide to handle parallelism up at the scheduler level.
     assert(nParallel == 1);
@@ -240,7 +240,7 @@ void ExternalSortExecStreamImpl::mergeFirstResult()
         while (iFirstRun > 0) {
             uint nRunsToMerge;
 
-            // REVIEW jvs 13-June-2005:  I had to change this to account for
+            // REVIEW jvs 13-June-2004:  I had to change this to account for
             // the output buffer needed during merge.  Not sure why it worked
             // in BB?
             uint nMergePages = sortInfo.nSortMemPages - 1;
@@ -320,7 +320,7 @@ void ExternalSortExecStreamImpl::deleteStoredRunInfo(uint iFirstRun,uint nRuns)
 
 void ExternalSortExecStreamImpl::computeFirstResultParallel()
 {
-    // FIXME jvs 19-June-2005:  ThreadPool needs to propagate excns!
+    // FIXME jvs 19-June-2004:  ThreadPool needs to propagate excns!
 
     assert(nParallel > 1);
 
@@ -351,7 +351,7 @@ void ExternalSortExecStreamImpl::computeFirstResultParallel()
 #endif
         }
     } catch (...) {
-        // REVEW jvs 19-June-2005:  signal a request to expedite cleanup?
+        // REVEW jvs 19-June-2004:  signal a request to expedite cleanup?
         
         // wait for all tasks to clean up
         threadPool.stop();

@@ -157,7 +157,7 @@ void ExecutionStreamGraphImpl::open()
 
 void ExecutionStreamGraphImpl::openStream(SharedExecutionStream pStream)
 {
-    // TODO jvs 19-July-2005:  move resource allocation to scheduler,
+    // TODO jvs 19-July-2004:  move resource allocation to scheduler,
     // and set quotas based on current cache state; for now just set to
     // minimum for testing
     ExecutionStreamResourceQuantity minQuantity,optQuantity;

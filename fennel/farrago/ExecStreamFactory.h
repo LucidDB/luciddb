@@ -160,6 +160,9 @@ public:
 
     // helpers for subfactories
     
+    /** makes a TupleDescriptor from its proxy definition */
+    void readTupleDescriptor(TupleDescriptor& desc, const SharedProxyTupleDescriptor def);
+
     void createQuotaAccessors(ExecStreamParams &params);
     
     void readExecStreamParams(

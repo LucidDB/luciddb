@@ -203,7 +203,7 @@ public class SqlDataTypeSpec extends SqlNode
         SqlTypeName sqlTypeName = SqlTypeName.get(name);
         RelDataTypeFactory typeFactory = validator.getTypeFactory();
 
-        // TODO jvs 13-Dec-2005:  these assertions should be real
+        // TODO jvs 13-Dec-2004:  these assertions should be real
         // validation errors instead; need to share code with DDL
         if ((precision > 0) && (scale > 0)) {
             assert(sqlTypeName.allowsPrecScale(true, true));

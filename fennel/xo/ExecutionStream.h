@@ -54,7 +54,7 @@ struct ExecutionStreamParams
      */
     SegmentAccessor scratchAccessor;
 
-    // TODO jvs 27-May-2005:  use this for sanity checking in all relevant XO's
+    // TODO jvs 27-May-2004:  use this for sanity checking in all relevant XO's
     /**
      * Descriptor for tuples in this stream's output.
      */

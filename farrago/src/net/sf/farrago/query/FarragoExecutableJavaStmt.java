@@ -60,7 +60,7 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
 
     private final File packageDir;
 
-    // TODO jvs 4-June-2005:  don't pin a Class object; instead, remember
+    // TODO jvs 4-June-2004:  don't pin a Class object; instead, remember
     // just the class name, and dynamically load it per-execution.  This
     // will keep cache memory usage down.
     private final Class rowClass;
@@ -114,7 +114,7 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
                 runtimeContext.loadFennelPlan(xmiFennelPlan);
             }
 
-            // NOTE jvs 1-May-2005: This sequence is subtle.  We can't open all
+            // NOTE jvs 1-May-2004: This sequence is subtle.  We can't open all
             // Fennel tuple streams yet, since some may take Java streams as
             // input, and the Java streams are created by method.invoke below
             // (which calls the generated execute method to obtain an

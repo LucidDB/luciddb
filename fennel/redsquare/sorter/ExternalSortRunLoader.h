@@ -202,7 +202,7 @@ public:
      */
     bool isStarted();
 
-    // TODO jvs 10-Nov-2005:  eliminate this overload
+    // TODO jvs 10-Nov-2004:  eliminate this overload
     /**
      * Loads one run.
      *

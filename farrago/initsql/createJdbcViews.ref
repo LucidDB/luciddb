@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/initsql/createJdbcViews.sql#4 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/initsql/createJdbcViews.sql#5 $
 0: jdbc:farrago:> -- This script creates a view schema used by JDBC metadata calls
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set verbose true
@@ -7,13 +7,58 @@
 0: jdbc:farrago:> -- create views in system-owned schema sys_boot.jdbc_metadata
 0: jdbc:farrago:> create schema sys_boot.jdbc_metadata;
 0: jdbc:farrago:> set schema 'sys_boot.jdbc_metadata';
+0: jdbc:farrago:> set path 'sys_boot.jdbc_metadata';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function null_identifier()
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > contains sql
+. . . . . . . . > deterministic
+. . . . . . . . > return cast(null as varchar(128));
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function null_remarks()
+. . . . . . . . > returns varchar(1024)
+. . . . . . . . > contains sql
+. . . . . . . . > deterministic
+. . . . . . . . > return cast(null as varchar(1024));
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function convert_cwm_nullable_to_int(cwm_nullability varchar(20))
+. . . . . . . . > returns integer
+. . . . . . . . > contains sql
+. . . . . . . . > deterministic
+. . . . . . . . > return case
+. . . . . . . . > when cwm_nullability='columnNoNulls' then 0
+. . . . . . . . > when cwm_nullability='columnNullable' then 1
+. . . . . . . . > else 2
+. . . . . . . . > end;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function convert_cwm_nullable_to_string(cwm_nullability varchar(20))
+. . . . . . . . > returns varchar(3)
+. . . . . . . . > contains sql
+. . . . . . . . > deterministic
+. . . . . . . . > return case
+. . . . . . . . > when cwm_nullability='columnNoNulls' then 'NO'
+. . . . . . . . > when cwm_nullability='columnNullable' then 'YES'
+. . . . . . . . > else ''
+. . . . . . . . > end;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create function convert_cwm_param_kind_to_int(cwm_param_kind varchar(10))
+. . . . . . . . > returns smallint
+. . . . . . . . > contains sql
+. . . . . . . . > deterministic
+. . . . . . . . > return case
+. . . . . . . . > when cwm_param_kind='pdk_in' then 1
+. . . . . . . . > when cwm_param_kind='pdk_inout' then 2
+. . . . . . . . > when cwm_param_kind='pdk_out' then 4
+. . . . . . . . > when cwm_param_kind='pdk_return' then 5
+. . . . . . . . > else 0
+. . . . . . . . > end;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE:  don't include ORDER BY in the view definitions
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create view schemas_view_internal as
 . . . . . . . . >     select 
-. . . . . . . . >         c."name" as table_catalog,
-. . . . . . . . >         s."name" as table_schem,
+. . . . . . . . >         c."name" as object_catalog,
+. . . . . . . . >         s."name" as object_schema,
 . . . . . . . . >         s."mofId"
 . . . . . . . . >     from 
 . . . . . . . . >         sys_cwm."Relational"."Catalog" c
@@ -23,22 +68,22 @@
 . . . . . . . . >         c."mofId" = s."namespace"
 . . . . . . . . > ;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- TODO:  replace t."type" with cast(null as varchar(128))
-0: jdbc:farrago:> -- FIXME:  need UPPER(t."mofClassName")
+0: jdbc:farrago:> -- FIXME:  need UPPER(t."mofClassName"), but first need support for UPPER
+0: jdbc:farrago:> -- in Java calc
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create view tables_view_internal as
 . . . . . . . . >     select 
-. . . . . . . . >         s.table_catalog as table_cat,
-. . . . . . . . >         s.table_schem,
+. . . . . . . . >         s.object_catalog as table_cat,
+. . . . . . . . >         s.object_schema as table_schem,
 . . . . . . . . >         t."name" as table_name,
-. . . . . . . . >         t."mofClassName" as table_type,
-. . . . . . . . >         t."type" as remarks,
-. . . . . . . . >         t."type" as type_cat,
-. . . . . . . . >         t."type" as type_schem,
-. . . . . . . . >         t."type" as type_name,
-. . . . . . . . >         t."type" as self_referencing_col_name,
-. . . . . . . . >         t."type" as ref_generation,
-. . . . . . . . >         t."mofId"
+. . . . . . . . >         null_remarks() as remarks,
+. . . . . . . . >         null_identifier() as type_cat,
+. . . . . . . . >         null_identifier() as type_schem,
+. . . . . . . . >         null_identifier() as type_name,
+. . . . . . . . >         null_identifier() as self_referencing_col_name,
+. . . . . . . . >         null_identifier() as ref_generation,
+. . . . . . . . >         t."mofId",
+. . . . . . . . >         t."mofClassName"
 . . . . . . . . >     from
 . . . . . . . . >         schemas_view_internal s
 . . . . . . . . >     inner join
@@ -56,10 +101,18 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create view schemas_view as
 . . . . . . . . >     select 
-. . . . . . . . >         table_schem,
-. . . . . . . . >         table_catalog
+. . . . . . . . >         object_schema as table_schem,
+. . . . . . . . >         object_catalog as table_catalog
 . . . . . . . . >     from 
 . . . . . . . . >         schemas_view_internal
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- TODO:  add 'GLOBAL TEMPORARY' and 'SYSTEM TABLE'
+0: jdbc:farrago:> create view table_types_view_internal(table_type,uml_class_name) as
+. . . . . . . . >     values 
+. . . . . . . . >         ('FOREIGN TABLE','ForeignTable'),
+. . . . . . . . >         ('TABLE','LocalTable'),
+. . . . . . . . >         ('VIEW','View')
 . . . . . . . . > ;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create view tables_view as
@@ -67,7 +120,7 @@
 . . . . . . . . >         table_cat,
 . . . . . . . . >         table_schem,
 . . . . . . . . >         table_name,
-. . . . . . . . >         table_type,
+. . . . . . . . >         tt.table_type,
 . . . . . . . . >         remarks,
 . . . . . . . . >         type_cat,
 . . . . . . . . >         type_schem,
@@ -75,23 +128,24 @@
 . . . . . . . . >         self_referencing_col_name,
 . . . . . . . . >         ref_generation
 . . . . . . . . >     from
-. . . . . . . . >         tables_view_internal
+. . . . . . . . >         tables_view_internal t,
+. . . . . . . . >         table_types_view_internal tt
+. . . . . . . . >     where
+. . . . . . . . >         t."mofClassName"=tt.uml_class_name
 . . . . . . . . > ;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- TODO:  upper-case strings, and add 'GLOBAL TEMPORARY' and 'SYSTEM TABLE'
-0: jdbc:farrago:> create view table_types_view(table_type) as
-. . . . . . . . >     values 
-. . . . . . . . >         ('ForeignTable'),
-. . . . . . . . >         ('LocalTable'),
-. . . . . . . . >         ('View')
+0: jdbc:farrago:> create view table_types_view as
+. . . . . . . . >     select distinct
+. . . . . . . . >         table_type
+. . . . . . . . >     from
+. . . . . . . . >         table_types_view_internal
 . . . . . . . . > ;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> --FIXME: c."length" can't be just column_size.
-0: jdbc:farrago:> -- num_prec_radix is supposed to be 2/10 depending on binary/decimal
-0: jdbc:farrago:> -- For char or date types this is the maximum number of characters,
-0: jdbc:farrago:> -- for numeric or decimal types this is precision.
-0: jdbc:farrago:> -- Both nullable and is_nullable require transformation.
-0: jdbc:farrago:> -- Have to get column_def by left-outer-join to get default value.
+0: jdbc:farrago:> -- TODO: get column_def by left-outer-join to get default value
+0: jdbc:farrago:> -- TODO: get source_data_type for distinct types
+0: jdbc:farrago:> -- TODO: get predefined numericPrecision and numericPrecisionRadix
+0: jdbc:farrago:> -- REVIEW: length/precision/scale/radix
+0: jdbc:farrago:> -- also all of above for attributes and procedure_columns
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create view tables_columns_view_internal as
 . . . . . . . . >     select 
@@ -100,19 +154,13 @@
 . . . . . . . . >         t.table_name,
 . . . . . . . . >         c."name" as column_name,
 . . . . . . . . >         c."type",
-. . . . . . . . >         c."length" as column_size,
-. . . . . . . . >         c."namespace" as buffer_len,
+. . . . . . . . >         coalesce(c."length",c."precision") as column_size,
+. . . . . . . . >         0 as buffer_len,
 . . . . . . . . >         c."scale" as dec_digits,
-. . . . . . . . >         c."scale" as num_prec_radix,
-. . . . . . . . >         c."isNullable" as nullable,
-. . . . . . . . >         c."namespace" as remarks,
+. . . . . . . . >         convert_cwm_nullable_to_int(c."isNullable") as nullable,
 . . . . . . . . >         c."length" as char_octet_length,
 . . . . . . . . >         c."ordinal" + 1 as ordinal_position,
-. . . . . . . . >         c."isNullable" as is_nullable,
-. . . . . . . . >         c."namespace" as scope_catalog,
-. . . . . . . . >         c."namespace" as scope_schema,
-. . . . . . . . >         c."namespace" as scope_table,
-. . . . . . . . >         c."namespace" as source_data_type,
+. . . . . . . . >         convert_cwm_nullable_to_string(c."isNullable") as is_nullable,
 . . . . . . . . >         c."mofId"
 . . . . . . . . >     from 
 . . . . . . . . >         tables_view_internal t 
@@ -132,25 +180,189 @@
 . . . . . . . . >         c.column_size,
 . . . . . . . . >         c.buffer_len,
 . . . . . . . . >         c.dec_digits,
-. . . . . . . . >         c.num_prec_radix,
+. . . . . . . . >         cast(null as integer) as num_prec_radix,
 . . . . . . . . >         c.nullable,
-. . . . . . . . >         c.remarks,
-. . . . . . . . >         t."name" as column_def,
+. . . . . . . . >         null_remarks() as remarks,
+. . . . . . . . >         null_remarks() as column_def,
 . . . . . . . . >         0 as sql_data_type,
 . . . . . . . . >         0 as sql_datetime_sub,
 . . . . . . . . >         c.char_octet_length,
 . . . . . . . . >         c.ordinal_position,
 . . . . . . . . >         c.is_nullable,
-. . . . . . . . >         c.scope_catalog,
-. . . . . . . . >         c.scope_schema,
-. . . . . . . . >         c.scope_table,
-. . . . . . . . >         c.source_data_type
+. . . . . . . . >         null_identifier() as scope_catalog,
+. . . . . . . . >         null_identifier() as scope_schema,
+. . . . . . . . >         null_identifier() as scope_table,
+. . . . . . . . >         null_identifier() as source_data_type
 . . . . . . . . >     from 
 . . . . . . . . >         tables_columns_view_internal c 
 . . . . . . . . >     inner join 
 . . . . . . . . >         sys_cwm."Relational"."SQLDataType" t 
 . . . . . . . . >     on 
 . . . . . . . . >         c."type" = t."mofId";
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view udts_view_internal as
+. . . . . . . . >     select
+. . . . . . . . >         s.object_catalog as type_cat,
+. . . . . . . . >         s.object_schema as type_schem,
+. . . . . . . . >         u."name" as type_name,
+. . . . . . . . >         u."typeNumber" as data_type,
+. . . . . . . . >         u."mofId"
+. . . . . . . . >     from
+. . . . . . . . >         schemas_view_internal s
+. . . . . . . . >     inner join
+. . . . . . . . >         sys_fem."SQL2003"."UserDefinedType" u
+. . . . . . . . >     on
+. . . . . . . . >         s."mofId" = u."namespace"
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- TODO:  base_type for distinct types
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view udts_view as
+. . . . . . . . >     select
+. . . . . . . . >         u.type_cat,
+. . . . . . . . >         u.type_schem,
+. . . . . . . . >         u.type_name,
+. . . . . . . . >         null_identifier() as class_name,
+. . . . . . . . >         u.data_type,
+. . . . . . . . >         null_remarks() as remarks,
+. . . . . . . . >         cast (null as smallint) as base_type
+. . . . . . . . >     from
+. . . . . . . . >         udts_view_internal u
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view attributes_view_internal as
+. . . . . . . . >     select
+. . . . . . . . >         u.type_cat,
+. . . . . . . . >         u.type_schem,
+. . . . . . . . >         u.type_name,
+. . . . . . . . >         a."name" as attr_name,
+. . . . . . . . >         coalesce(a."length",a."precision") as attr_size,
+. . . . . . . . >         a."scale" as decimal_digits,
+. . . . . . . . >         convert_cwm_nullable_to_int(a."isNullable") as nullable,
+. . . . . . . . >         a."length" as char_octet_length,
+. . . . . . . . >         a."ordinal" + 1 as ordinal_position,
+. . . . . . . . >         convert_cwm_nullable_to_string(a."isNullable") as is_nullable,
+. . . . . . . . >         a."type",
+. . . . . . . . >         a."mofId"
+. . . . . . . . >     from
+. . . . . . . . >         udts_view_internal u
+. . . . . . . . >     inner join
+. . . . . . . . >         sys_fem."SQL2003"."SQLTypeAttribute" a
+. . . . . . . . >     on
+. . . . . . . . >         u."mofId" = a."owner"
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view attributes_view as
+. . . . . . . . >     select
+. . . . . . . . >         a.type_cat,
+. . . . . . . . >         a.type_schem,
+. . . . . . . . >         a.type_name,
+. . . . . . . . >         a.attr_name,
+. . . . . . . . >         t."typeNumber" as data_type,
+. . . . . . . . >         t."name" as attr_type_name,
+. . . . . . . . >         a.attr_size,
+. . . . . . . . >         a.decimal_digits,
+. . . . . . . . >         cast(null as integer) as num_prec_radix,
+. . . . . . . . >         a.nullable,
+. . . . . . . . >         null_remarks() as remarks,
+. . . . . . . . >         null_remarks() as attr_def,
+. . . . . . . . >         0 as sql_data_type,
+. . . . . . . . >         0 as sql_datetime_sub,
+. . . . . . . . >         a.char_octet_length,
+. . . . . . . . >         a.ordinal_position,
+. . . . . . . . >         a.is_nullable,
+. . . . . . . . >         null_identifier() as scope_catalog,
+. . . . . . . . >         null_identifier() as scope_schema,
+. . . . . . . . >         null_identifier() as scope_table,
+. . . . . . . . >         null_identifier() as source_data_type
+. . . . . . . . >     from
+. . . . . . . . >         attributes_view_internal a
+. . . . . . . . >     inner join
+. . . . . . . . >         sys_cwm."Relational"."SQLDataType" t 
+. . . . . . . . >     on
+. . . . . . . . >         a."type" = t."mofId"
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- TODO:  find out why replacing BehavioralFeature below with Method or
+0: jdbc:farrago:> -- Routine doesn't work (causes assignment of null to NOT NULL).  Must be
+0: jdbc:farrago:> -- a bug in Farrago's MDR namespace support.
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view procedures_view_internal as
+. . . . . . . . >     select
+. . . . . . . . >         s.object_catalog as procedure_cat,
+. . . . . . . . >         s.object_schema as procedure_schem,
+. . . . . . . . >         r."name" as procedure_name,
+. . . . . . . . >         r."mofId"
+. . . . . . . . >     from
+. . . . . . . . >         schemas_view_internal s
+. . . . . . . . >     inner join
+. . . . . . . . >         sys_cwm."Behavioral"."BehavioralFeature" r
+. . . . . . . . >     on
+. . . . . . . . >         s."mofId" = r."namespace"
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- TODO:  other values for procedure_type once we support procedures
+0: jdbc:farrago:> -- that return result sets
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view procedures_view as
+. . . . . . . . >     select
+. . . . . . . . >         p.procedure_cat,
+. . . . . . . . >         p.procedure_schem,
+. . . . . . . . >         p.procedure_name,
+. . . . . . . . >         null_identifier() as reserved1,
+. . . . . . . . >         null_identifier() as reserved2,
+. . . . . . . . >         null_identifier() as reserved3,
+. . . . . . . . >         null_remarks() as remarks,
+. . . . . . . . >         cast(1 as smallint) as procedure_type
+. . . . . . . . >     from
+. . . . . . . . >         procedures_view_internal p
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view procedure_columns_view_internal as
+. . . . . . . . >     select
+. . . . . . . . >         p.procedure_cat,
+. . . . . . . . >         p.procedure_schem,
+. . . . . . . . >         p.procedure_name,
+. . . . . . . . >         rp."name" as column_name,
+. . . . . . . . >         convert_cwm_param_kind_to_int(rp."kind") as column_type,
+. . . . . . . . >         rp."precision" as "PRECISION",
+. . . . . . . . >         rp."length" as length,
+. . . . . . . . >         rp."scale" as scale,
+. . . . . . . . >         case when rp."kind"='pdk_return' then 0
+. . . . . . . . >              else rp."ordinal" + 1 end as column_ordinal,
+. . . . . . . . >         rp."type",
+. . . . . . . . >         rp."mofId"
+. . . . . . . . >     from
+. . . . . . . . >         procedures_view_internal p
+. . . . . . . . >     inner join
+. . . . . . . . >         sys_fem."SQL2003"."RoutineParameter" rp
+. . . . . . . . >     on
+. . . . . . . . >         p."mofId" = rp."behavioralFeature"
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view procedure_columns_view as
+. . . . . . . . >     select
+. . . . . . . . >         pc.procedure_cat,
+. . . . . . . . >         pc.procedure_schem,
+. . . . . . . . >         pc.procedure_name,
+. . . . . . . . >         pc.column_name,
+. . . . . . . . >         pc.column_type,
+. . . . . . . . >         t."typeNumber" as data_type,
+. . . . . . . . >         t."name" as type_name,
+. . . . . . . . >         pc."PRECISION",
+. . . . . . . . >         pc.length,
+. . . . . . . . >         pc.scale,
+. . . . . . . . >         cast(null as integer) as radix,
+. . . . . . . . >         cast(1 as smallint) as nullable,
+. . . . . . . . >         null_remarks() as remarks,
+. . . . . . . . >         pc.column_ordinal
+. . . . . . . . >     from
+. . . . . . . . >         procedure_columns_view_internal pc
+. . . . . . . . >     inner join
+. . . . . . . . >         sys_cwm."Relational"."SQLDataType" t 
+. . . . . . . . >     on 
+. . . . . . . . >         pc."type" = t."mofId"
+. . . . . . . . > ;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- TODO:  all the rest
 0: jdbc:farrago:> 

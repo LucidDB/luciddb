@@ -29,7 +29,7 @@ import java.util.*;
 import net.sf.farrago.util.*;
 
 
-// TODO jvs 28-April-2005: move this to a repos-independent codegen utility
+// TODO jvs 28-April-2004: move this to a repos-independent codegen utility
 // package and add a main method so it can be used from ant; this is just a
 // temporary parking space
 
@@ -115,7 +115,7 @@ public class CppEnumGen
         pw.println("};");
         pw.println();
 
-        // TODO jvs 28-April-2005:  declare as extern rather than static
+        // TODO jvs 28-April-2004:  declare as extern rather than static
         pw.print("static std::string ");
         pw.print(enumName);
         pw.print("_names[] = {");
