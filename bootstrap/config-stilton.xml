@@ -13,7 +13,7 @@
 <!ENTITY aspen_p4user    "guest">
 
 <!ENTITY buildresultsbase "http://jhyde.dyndns.org:8888/aspen/buildresults">
-<!ENTITY mailhost         "smtp.rcn.com">
+<!ENTITY mailhost         "mail.speakeasy.net">
 <!ENTITY reportsuccess    "always">
 <!ENTITY returnname       "Build Monkey">
 <!ENTITY returnaddress    "buildmonkey@fishtaco.org">
