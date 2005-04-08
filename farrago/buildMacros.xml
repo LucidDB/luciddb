@@ -224,14 +224,11 @@
   </path>
   <property name="farrago.3p.classpath" refid="farrago.3p.classpath"/>
 
-  <!-- classpath for execution.  The reason
-       farrago.src.dir is here is so that resource .xml files can be found at
-       runtime without copying.  -->
+  <!-- classpath for execution. -->
   <path id="farrago.run.classpath">
     <pathelement path="${farrago.3p.classpath}"/>
     <pathelement location="${farrago.classes.dir}"/>
     <pathelement location="${farrago.catalog.src.dir}"/>
-    <pathelement location="${farrago.src.dir}"/>
   </path>
   <property name="farrago.run.classpath" refid="farrago.run.classpath"/>
 

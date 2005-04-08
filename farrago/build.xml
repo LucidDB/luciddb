@@ -380,7 +380,7 @@ require version '${required.ant.version}'."/>
   <!-- cleans for non-catalog-generated code -->
   <target name="clean" depends="cleanTestLogs">
     <delete includeEmptyDirs="true" quiet="true">
-      <fileset dir="${farrago.classes.dir}" includes="**/*.class"/>
+      <fileset dir="${farrago.classes.dir}" includes="**/*.class,**/*.properties"/>
       <fileset dir="${plugin.classes.dir}" includes="**/*.class"/>
       <fileset dir="${farrago.plugin.dir}" includes="**/*.jar"/>
       <fileset dir="${farrago.classes.dir}"
@@ -389,11 +389,13 @@ require version '${required.ant.version}'."/>
       <fileset dir="${farrago.dir}" includes="hs_err_pid*.log"/>
       <fileset dir="${farrago.src.dir}/net/sf/farrago/resource">
         <include name="*.java"/>
+        <!-- TODO jhyde 06-Apr-2005:  delete these after a while -->
         <include name="FarragoResource_en_US.properties"/>
         <include name="FarragoResource.properties"/>
       </fileset>
       <fileset dir="${farrago.src.dir}/org/eigenbase/resource">
         <include name="*.java"/>
+        <!-- TODO jhyde 06-Apr-2005:  delete these after a while -->
         <include name="EigenbaseResource_en_US.properties"/>
         <include name="EigenbaseResource.properties"/>
       </fileset>
@@ -434,13 +436,6 @@ require version '${required.ant.version}'."/>
       <fileset dir="${regressionsql.dir}" includes="**/*.log"/>
     </delete>
     <delete quiet="true" file="${FarragoTrace.log}"/>
-    <!-- Some IDEs create duplicate copies of Resource.properties files under
-         classes/. These override the uptodate properties files under src/
-         and cause test exceptions.  Remove the duplicates. -->
-    <delete quiet="true">
-      <fileset dir="${farrago.classes.dir}"
-          includes="**/*Resource*.properties"/>
-    </delete>
   </target>
 
   <!-- creates catalog and populates with initial metadata -->
@@ -728,10 +723,18 @@ require version '${required.ant.version}'."/>
     <taskdef name="resgen" classname="org.eigenbase.resgen.ResourceGenTask">
       <classpath refid="farrago.run.classpath"/>
     </taskdef>
-    <resgen srcdir="${farrago.src.dir}" locales="en_US">
+    <resgen
+      srcdir="${farrago.src.dir}"
+      destdir="${farrago.src.dir}"
+      resdir="${farrago.classes.dir}"
+      locales="en_US">
       <include name="net/sf/farrago/resource/FarragoResource.xml"/>
     </resgen>
-    <resgen srcdir="${farrago.src.dir}" locales="en_US">
+    <resgen
+      srcdir="${farrago.src.dir}"
+      destdir="${farrago.src.dir}"
+      resdir="${farrago.classes.dir}"
+      locales="en_US">
       <include name="org/eigenbase/resource/EigenbaseResource.xml"/>
     </resgen>
   </target>
