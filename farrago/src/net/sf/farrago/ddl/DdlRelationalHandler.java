@@ -103,7 +103,7 @@ public class DdlRelationalHandler extends DdlHandler
             if (!validator.isCreatedObject(table)) {
                 // REVIEW: support this?  What to do about instances of the
                 // same temporary table in other sessions?
-                throw validator.res.newValidatorIndexOnExistingTempTable(
+                throw res.newValidatorIndexOnExistingTempTable(
                     repos.getLocalizedObjectName(index),
                     repos.getLocalizedObjectName(table));
             }
@@ -155,7 +155,7 @@ public class DdlRelationalHandler extends DdlHandler
         FemDataServer dataServer = table.getServer();
         FemDataWrapper dataWrapper = dataServer.getWrapper();
         if (dataWrapper.isForeign()) {
-            throw validator.res.newValidatorLocalTableButForeignWrapper(
+            throw res.newValidatorLocalTableButForeignWrapper(
                 repos.getLocalizedObjectName(table),
                 repos.getLocalizedObjectName(dataWrapper));
         }
@@ -176,7 +176,7 @@ public class DdlRelationalHandler extends DdlHandler
             }
         }
         if (nClustered > 1) {
-            throw validator.res.newValidatorDuplicateClusteredIndex(
+            throw res.newValidatorDuplicateClusteredIndex(
                 repos.getLocalizedObjectName(table));
         }
 
@@ -191,7 +191,7 @@ public class DdlRelationalHandler extends DdlHandler
                 (FemAbstractUniqueConstraint) obj;
             if (constraint instanceof FemPrimaryKeyConstraint) {
                 if (primaryKey != null) {
-                    throw validator.res.newValidatorMultiplePrimaryKeys(
+                    throw res.newValidatorMultiplePrimaryKeys(
                         repos.getLocalizedObjectName(table));
                 }
                 primaryKey = (FemPrimaryKeyConstraint) constraint;
@@ -213,7 +213,7 @@ public class DdlRelationalHandler extends DdlHandler
         if (primaryKey == null) {
             // TODO:  This is not SQL-standard.  Fixing it requires the
             // introduction of a system-managed surrogate key.
-            throw validator.res.newValidatorNoPrimaryKey(
+            throw res.newValidatorNoPrimaryKey(
                 repos.getLocalizedObjectName(table));
         }
 
@@ -240,7 +240,7 @@ public class DdlRelationalHandler extends DdlHandler
             // pass this one through
             throw ex;
         } catch (Throwable ex) {
-            throw validator.res.newValidatorInvalidObjectDefinition(
+            throw res.newValidatorInvalidObjectDefinition(
                 repos.getLocalizedObjectName(view), 
                 ex);
         } finally {
@@ -274,16 +274,16 @@ public class DdlRelationalHandler extends DdlHandler
             // number of explicitly specified columns needs to match the number
             // of columns produced by the query
             if (rowType.getFieldList().size() != columnList.size()) {
-                throw validator.res.newValidatorViewColumnCountMismatch();
+                throw res.newValidatorViewColumnCountMismatch();
             }
         }
 
         if (analyzedSql.hasDynamicParams) {
-            throw validator.res.newValidatorInvalidViewDynamicParam();
+            throw res.newValidatorInvalidViewDynamicParam();
         }
 
         if (analyzedSql.hasTopLevelOrderBy) {
-            throw validator.res.newValidatorInvalidViewOrderBy();
+            throw res.newValidatorInvalidViewOrderBy();
         }
 
         // Derive column information from result set metadata
@@ -370,14 +370,14 @@ public class DdlRelationalHandler extends DdlHandler
         if (index.isClustered()) {
             throw validator.newPositionalError(
                 index, 
-                validator.res.newValidatorDropClusteredIndex(
+                res.newValidatorDropClusteredIndex(
                     repos.getLocalizedObjectName(index)));
         }
 
         if (table.isTemporary()) {
             // REVIEW: support this?  What to do about instances of the
             // same temporary table in other sessions?
-            throw validator.res.newValidatorIndexOnExistingTempTable(
+            throw res.newValidatorIndexOnExistingTempTable(
                 repos.getLocalizedObjectName(index),
                 repos.getLocalizedObjectName(table));
         }

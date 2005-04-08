@@ -148,7 +148,7 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
             PreparedExplanation explanation =
                 (PreparedExplanation) stmt.prepareSql(
                     sqlNode,
-                    session.getRuntimeContextClass(),
+                    session.getPersonality().getRuntimeContextClass(stmt),
                     stmt.getSqlValidator(),
                     true);
 
@@ -202,7 +202,7 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
         // that the Java calculator is used without having to
         // mess with system parameters.
         FarragoSessionPlanner planner =
-            stmt.getSession().newPlanner(stmt,false);
+            stmt.getSession().getPersonality().newPlanner(stmt,false);
         planner.addRule(IterRules.IterCalcRule.instance);
         FennelToIteratorConverter.register(planner);
         stmt.setPlanner(planner);

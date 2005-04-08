@@ -178,7 +178,17 @@ DdlStmt DdlStmtEof() :
         |
         ( <ALTER>
           (
-              <SYSTEM> <SET> ddlStmt = SystemParamAssignment()
+              <SYSTEM>
+              (
+                  <SET> ddlStmt = SystemParamAssignment()
+                  |
+                  <ADD> ddlStmt = CatalogExtension()
+              )
+              |
+              <SESSION>
+              (
+                  <IMPLEMENTATION> ddlStmt = SessionImplementation()
+              )
               |
               ddlStmt = ExtensionModelAlter()
           )
@@ -1112,6 +1122,32 @@ DdlStmt SystemParamAssignment() :
     {
         return new DdlSetSystemParamStmt(
             paramName.getSimple(),paramValue);
+    }
+}
+
+DdlStmt CatalogExtension() :
+{
+    SqlIdentifier jarName;
+}
+{
+    <CATALOG> <JAR> jarName = CompoundIdentifier2()
+        {
+        }
+    {
+        return new DdlExtendCatalogStmt(jarName);
+    }
+}
+
+DdlStmt SessionImplementation() :
+{
+    SqlIdentifier jarName;
+}
+{
+    <SET> <JAR> jarName = CompoundIdentifier2()
+        {
+        }
+    {
+        return new DdlSetSessionImplementationStmt(jarName);
     }
 }
 

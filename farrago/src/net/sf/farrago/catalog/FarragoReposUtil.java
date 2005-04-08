@@ -23,6 +23,7 @@ package net.sf.farrago.catalog;
 
 import java.io.*;
 import java.util.*;
+import java.net.*;
 import org.eigenbase.util.*;
 import org.netbeans.api.xmi.*;
 import org.netbeans.api.mdr.*;
@@ -79,7 +80,7 @@ public abstract class FarragoReposUtil
 
     public static void importSubModel(
         MDRepository mdrRepos,
-        File inputFile)
+        URL inputUrl)
         throws Exception
     {
         XMIReader xmiReader = XMIReaderFactory.getDefault().createXMIReader();
@@ -91,7 +92,7 @@ public abstract class FarragoReposUtil
             mdrRepos.beginTrans(true);
             rollback = true;
             xmiReader.read(
-                inputFile.toURL().toString(),
+                inputUrl.toString(),
                 mdrRepos.getExtent("FarragoMetamodel"));
             rollback = false;
             mdrRepos.endTrans();
@@ -180,8 +181,12 @@ public abstract class FarragoReposUtil
                     for (int i = 1; i < names.length - 1; ++i) {
                         ns = (Namespace) ns.lookupElement(names[i]);
                     }
-                    ModelElement element =
-                        ns.lookupElement(names[names.length - 1]);
+                    ModelElement element;
+                    if (names.length == 1) {
+                        element = (ModelElement) ns;
+                    } else {
+                        element = ns.lookupElement(names[names.length - 1]);
+                    }
                     client.resolvedReference(href, element);
                 } catch (NameNotFoundException ex) {
                     throw Util.newInternal(ex);
@@ -218,7 +223,7 @@ public abstract class FarragoReposUtil
             modelLoader.loadModel("FarragoCatalog", false);
             importSubModel(
                 modelLoader.getMdrRepos(),
-                file);
+                file.toURL());
         } finally {
             modelLoader.close();
         }

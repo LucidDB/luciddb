@@ -24,7 +24,6 @@ package net.sf.farrago.plugin;
 
 import java.net.*;
 import java.util.*;
-import java.util.jar.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.resource.*;
@@ -47,19 +46,12 @@ import net.sf.farrago.util.*;
  */
 public abstract class FarragoPluginCache extends FarragoCompoundAllocation
 {
-    //~ Static fields/initializers --------------------------------------------
-
-    /**
-     * Prefix used to indicate that a wrapper library is loaded directly from
-     * a class rather than a JAR.
-     */
-    public static final String LIBRARY_CLASS_PREFIX = "class ";
-
     //~ Instance fields -------------------------------------------------------
 
-    private Map mapMofIdToPlugin;
-    private FarragoObjectCache sharedCache;
-    private FarragoRepos repos;
+    private final Map mapMofIdToPlugin;
+    private final FarragoObjectCache sharedCache;
+    private final FarragoRepos repos;
+    private final FarragoPluginClassLoader classLoader;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -76,11 +68,13 @@ public abstract class FarragoPluginCache extends FarragoCompoundAllocation
     public FarragoPluginCache(
         FarragoAllocationOwner owner,
         FarragoObjectCache sharedCache,
+        FarragoPluginClassLoader classLoader,
         FarragoRepos repos)
     {
         owner.addAllocation(this);
         this.sharedCache = sharedCache;
         this.repos = repos;
+        this.classLoader = classLoader;
         mapMofIdToPlugin = new HashMap();
     }
 
@@ -135,76 +129,11 @@ public abstract class FarragoPluginCache extends FarragoCompoundAllocation
     }
 
     /**
-     * Loads the Java class implementing a plugin.
-     *
-     * @param libraryName name of library containing plugin implementation
-     *
-     * @param jarAttributeName name of JAR attribute to use to determine
-     * class name
-     *
-     * @return loaded class
-     */
-    public static Class loadPluginClass(
-        String libraryName,
-        String jarAttributeName)
-    {
-        try {
-            libraryName =
-                FarragoProperties.instance().expandProperties(libraryName);
-
-            if (libraryName.startsWith(LIBRARY_CLASS_PREFIX)) {
-                String className =
-                    libraryName.substring(LIBRARY_CLASS_PREFIX.length());
-                return Class.forName(className);
-            } else {
-                JarFile jar = new JarFile(libraryName);
-                Manifest manifest = jar.getManifest();
-                String className =
-                    manifest.getMainAttributes().getValue(jarAttributeName);
-                return loadJarClass(
-                    "file:" + libraryName,
-                    className);
-            }
-        } catch (Throwable ex) {
-            throw FarragoResource.instance().newPluginJarLoadFailed(
-                libraryName,
-                ex);
-        }
-    }
-
-    /**
-     * Loads a Java class from a jar URL.
-     *
-     * @param jarUrl URL for jar containing class implementation
-     *
-     * @param className name of class to load
-     *
-     * @return loaded class
-     */
-    public static Class loadJarClass(
-        String jarUrl,
-        String className)
-    {
-        try {
-            URL url = new URL(jarUrl);
-            URLClassLoader classLoader =
-                new URLClassLoader(new URL [] { url },
-                    FarragoPluginCache.class.getClassLoader());
-            return classLoader.loadClass(className);
-        } catch (Throwable ex) {
-            throw FarragoResource.instance().newPluginJarClassLoadFailed(
-                className,
-                jarUrl,
-                ex);
-        }
-    }
-
-    /**
      * Initializes a plugin instance.
      *
-     * @param libraryName name of library containing plugin implementation
+     * @param libraryName filename of jar containing plugin implementation
      *
-     * @param jarAttributeName name of JAR attribute to use to determine
+     * @param jarAttributeName name of jar attribute to use to determine
      * class name
      *
      * @param options options with which to initialize plugin
@@ -216,7 +145,8 @@ public abstract class FarragoPluginCache extends FarragoCompoundAllocation
         String jarAttributeName,
         Properties options)
     {
-        Class pluginClass = loadPluginClass(libraryName, jarAttributeName);
+        Class pluginClass = classLoader.loadClassFromLibraryManifest(
+            libraryName, jarAttributeName);
 
         FarragoPlugin plugin;
         try {

@@ -62,17 +62,25 @@ public abstract class DdlHandler
 {
     protected static final Logger tracer = FarragoTrace.getDdlValidatorTracer();
     
-    protected final DdlValidator validator;
+    protected final FarragoSessionDdlValidator validator;
 
     protected final FarragoRepos repos;
+
+    /**
+     * An instance of FarragoResource for use in throwing vallidation
+     * errors.  The name is intentionally short to keep line length under
+     * control.
+     */
+    protected final FarragoResource res;
     
-    public DdlHandler(DdlValidator validator)
+    public DdlHandler(FarragoSessionDdlValidator validator)
     {
         this.validator = validator;
         repos = validator.getRepos();
+        res = FarragoResource.instance();
     }
 
-    public DdlValidator getValidator()
+    public FarragoSessionDdlValidator getValidator()
     {
         return validator;
     }
@@ -108,7 +116,7 @@ public abstract class DdlHandler
             if (!(obj instanceof FemAbstractKeyConstraint)) {
                 continue;
             }
-            throw validator.res.newValidatorNoConstraintAllowed(
+            throw res.newValidatorNoConstraintAllowed(
                 repos.getLocalizedObjectName(columnSet));
         }
     }
@@ -144,7 +152,7 @@ public abstract class DdlHandler
             } catch (Throwable ex) {
                 throw validator.newPositionalError(
                     attribute,
-                    validator.res.newValidatorBadDefaultClause(
+                    res.newValidatorBadDefaultClause(
                         repos.getLocalizedObjectName(attribute), 
                         ex));
             } finally {
@@ -236,7 +244,7 @@ public abstract class DdlHandler
             if ((precision == null) && !typeName.allowsNoPrecNoScale()) {
                 throw validator.newPositionalError(
                     abstractElement,
-                    validator.res.newValidatorPrecRequired(
+                    res.newValidatorPrecRequired(
                         repos.getLocalizedObjectName(type),
                         repos.getLocalizedObjectName(abstractElement)));
             }
@@ -244,7 +252,7 @@ public abstract class DdlHandler
             if (precision != null) {
                 throw validator.newPositionalError(
                     abstractElement,
-                    validator.res.newValidatorPrecUnexpected(
+                    res.newValidatorPrecUnexpected(
                         repos.getLocalizedObjectName(type),
                         repos.getLocalizedObjectName(abstractElement)));
             }
@@ -255,7 +263,7 @@ public abstract class DdlHandler
             if (element.getScale() != null) {
                 throw validator.newPositionalError(
                     abstractElement,
-                    validator.res.newValidatorScaleUnexpected(
+                    res.newValidatorScaleUnexpected(
                         repos.getLocalizedObjectName(type),
                         repos.getLocalizedObjectName(abstractElement)));
             }
@@ -285,7 +293,7 @@ public abstract class DdlHandler
                 if (!Charset.isSupported(element.getCharacterSetName())) {
                     throw validator.newPositionalError(
                         abstractElement,
-                        validator.res.newValidatorCharsetUnsupported(
+                        res.newValidatorCharsetUnsupported(
                             element.getCharacterSetName(),
                             repos.getLocalizedObjectName(abstractElement)));
                 }
@@ -299,7 +307,7 @@ public abstract class DdlHandler
             if (!JmiUtil.isBlank(element.getCharacterSetName())) {
                 throw validator.newPositionalError(
                     abstractElement,
-                    validator.res.newValidatorCharsetUnexpected(
+                    res.newValidatorCharsetUnexpected(
                         repos.getLocalizedObjectName(type),
                         repos.getLocalizedObjectName(abstractElement)));
             }
@@ -315,7 +323,7 @@ public abstract class DdlHandler
                 if (element.getLength().intValue() > maximum.intValue()) {
                     throw validator.newPositionalError(
                         abstractElement,
-                        validator.res.newValidatorLengthExceeded(
+                        res.newValidatorLengthExceeded(
                             element.getLength(),
                             maximum,
                             repos.getLocalizedObjectName(abstractElement)));
@@ -330,7 +338,7 @@ public abstract class DdlHandler
                 if (element.getPrecision().intValue() > maximum.intValue()) {
                     throw validator.newPositionalError(
                         abstractElement,
-                        validator.res.newValidatorPrecisionExceeded(
+                        res.newValidatorPrecisionExceeded(
                             element.getPrecision(),
                             maximum,
                             repos.getLocalizedObjectName(abstractElement)));
@@ -342,7 +350,7 @@ public abstract class DdlHandler
                 if (element.getScale().intValue() > maximum.intValue()) {
                     throw validator.newPositionalError(
                         abstractElement,
-                        validator.res.newValidatorScaleExceeded(
+                        res.newValidatorScaleExceeded(
                             element.getScale(),
                             maximum,
                             repos.getLocalizedObjectName(abstractElement)));
@@ -454,7 +462,7 @@ public abstract class DdlHandler
         if (stmtContext.getPreparedParamType().getFieldList().size() > 0) {
             throw validator.newPositionalError(
                 attribute,
-                validator.res.newValidatorBadDefaultParam(
+                res.newValidatorBadDefaultParam(
                     repos.getLocalizedObjectName(attribute)));
         }
 
@@ -469,7 +477,7 @@ public abstract class DdlHandler
         if (sourceTypeFamily != targetTypeFamily) {
             throw validator.newPositionalError(
                 attribute,
-                validator.res.newValidatorBadDefaultType(
+                res.newValidatorBadDefaultType(
                     repos.getLocalizedObjectName(attribute),
                     targetTypeFamily.toString(),
                     sourceTypeFamily.toString()));

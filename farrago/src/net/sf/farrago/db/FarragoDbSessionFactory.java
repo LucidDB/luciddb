@@ -33,7 +33,7 @@ import net.sf.farrago.util.*;
 
 
 /**
- * FarragoDbSessionFactory is a default implementation for the
+ * FarragoDbSessionFactory is a basic implementation for the
  * {@link net.sf.farrago.session.FarragoSessionFactory} interface.
  *
  * @author John V. Sichi
@@ -49,6 +49,19 @@ public class FarragoDbSessionFactory implements FarragoSessionFactory
         Properties info)
     {
         return new FarragoDbSession(url, info, this);
+    }
+
+    // implement FarragoSessionPersonalityFactory
+    public FarragoSessionPersonality newSessionPersonality(
+        FarragoSession session,
+        FarragoSessionPersonality defaultPersonality)
+    {
+        if (defaultPersonality == null) {
+            throw new UnsupportedOperationException(
+                "no default session personality defined");
+        } else {
+            return defaultPersonality;
+        }
     }
 
     // implement FarragoSessionFactory

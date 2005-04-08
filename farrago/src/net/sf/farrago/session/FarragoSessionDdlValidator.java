@@ -262,16 +262,6 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
     public void discardDataWrapper(CwmModelElement wrapper);
 
     /**
-     * Defines the handlers to be used to validate and execute DDL actions
-     * for various object types.  See {@link FarragoSessionDdlHandler}
-     * for an explanation of how to define the handler objects in this
-     * list.
-     *
-     * @return list of handler objects
-     */
-    public List defineHandlers();
-
-    /**
      * Sets the context for a compound CREATE SCHEMA statement to be used
      * by all object definitions in the new schema.
      *
@@ -292,6 +282,17 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
     public EigenbaseException newPositionalError(
         RefObject refObj,
         SqlValidatorException ex);
+
+    /**
+     * Adds a {@link FarragoSessionDdlDropRule}.
+     *
+     * @param refAssoc model association to which the rule relates
+     *
+     * @param dropRule rule to add
+     */
+    public void defineDropRule(
+        RefAssociation refAssoc,
+        FarragoSessionDdlDropRule dropRule);
 }
 
 

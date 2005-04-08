@@ -81,7 +81,8 @@ public class FarragoRelImplementor extends JavaRelImplementor
         ojRexImplementorTable = new OJRexImplementorTable() 
             {
                 private final OJRexImplementorTable delegate =
-                    preparingStmt.getSession().getOJRexImplementorTable();
+                    preparingStmt.getSession().getPersonality()
+                    .getOJRexImplementorTable(preparingStmt);
                 
                 public OJRexImplementor get(SqlOperator op)
                 {

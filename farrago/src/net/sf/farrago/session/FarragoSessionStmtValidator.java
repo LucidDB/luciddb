@@ -214,6 +214,17 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
     public CwmSqldataType findSqldataType(SqlIdentifier typeName);
 
     /**
+     * Looks up a jar from a string literal representing its name
+     * (typically from a LIBRARY clause),  throwing an exception if
+     * not found.
+     *
+     * @param jarName string literal representing name of jar
+     *
+     * @return jar found
+     */
+    public FemJar findJarFromLiteralName(String jarName);
+
+    /**
      * Resolve a (possibly qualified) name of a schema object.
      *
      * @param names array of 1 or more name components, from

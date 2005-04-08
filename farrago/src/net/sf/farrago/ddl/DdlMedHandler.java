@@ -57,7 +57,7 @@ import java.util.*;
  */
 public class DdlMedHandler extends DdlHandler
 {
-    public DdlMedHandler(DdlValidator validator)
+    public DdlMedHandler(FarragoSessionDdlValidator validator)
     {
         super(validator);
     }
@@ -75,7 +75,7 @@ public class DdlMedHandler extends DdlHandler
         FemDataWrapper dataWrapper = dataServer.getWrapper();
 
         if (!dataWrapper.isForeign()) {
-            throw validator.res.newValidatorForeignTableButLocalWrapper(
+            throw res.newValidatorForeignTableButLocalWrapper(
                 repos.getLocalizedObjectName(columnSet),
                 repos.getLocalizedObjectName(dataWrapper));
         }
@@ -113,7 +113,7 @@ public class DdlMedHandler extends DdlHandler
             // validate that we can successfully initialize the server
             validator.getDataWrapperCache().loadServerFromCatalog(femServer);
         } catch (Throwable ex) {
-            throw validator.res.newValidatorDefinitionInvalid(
+            throw res.newValidatorDefinitionInvalid(
                 repos.getLocalizedObjectName(femServer),
                 ex);
         }
@@ -142,7 +142,7 @@ public class DdlMedHandler extends DdlHandler
         FarragoMedDataWrapper wrapper;
         try {
             if (!femWrapper.getLibraryFile().startsWith(
-                    FarragoDataWrapperCache.LIBRARY_CLASS_PREFIX))
+                    FarragoPluginClassLoader.LIBRARY_CLASS_PREFIX))
             {
                 // convert library filename to absolute path, if necessary
                 String libraryFile = femWrapper.getLibraryFile();
@@ -178,19 +178,19 @@ public class DdlMedHandler extends DdlHandler
             wrapper = validator.getDataWrapperCache().loadWrapperFromCatalog(
                 femWrapper);
         } catch (Throwable ex) {
-            throw validator.res.newValidatorDefinitionInvalid(
+            throw res.newValidatorDefinitionInvalid(
                 repos.getLocalizedObjectName(femWrapper),
                 ex);
         }
 
         if (femWrapper.isForeign()) {
             if (!wrapper.isForeign()) {
-                throw validator.res.newValidatorForeignWrapperHasLocalImpl(
+                throw res.newValidatorForeignWrapperHasLocalImpl(
                     repos.getLocalizedObjectName(femWrapper));
             }
         } else {
             if (wrapper.isForeign()) {
-                throw validator.res.newValidatorLocalWrapperHasForeignImpl(
+                throw res.newValidatorLocalWrapperHasForeignImpl(
                     repos.getLocalizedObjectName(femWrapper));
             }
         }
@@ -220,7 +220,7 @@ public class DdlMedHandler extends DdlHandler
                     femColumnSet,
                     validator.getTypeFactory());
         } catch (Throwable ex) {
-            throw validator.res.newValidatorDataServerTableInvalid(
+            throw res.newValidatorDataServerTableInvalid(
                 repos.getLocalizedObjectName(femColumnSet),
                 ex);
         }

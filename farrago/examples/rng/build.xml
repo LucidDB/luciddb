@@ -23,7 +23,7 @@
 
 <!-- Farrago RNG example ant build script -->
 
-<project name="farragoExampleRNG" basedir="." default="all">
+<project name="farragoExampleRNG" basedir="." default="compile">
 
   <!-- Definitions for Farrago build properties and macros -->
   <import file="../../buildMacros.xml"/>
@@ -36,6 +36,8 @@
   <property name="classes.dir" location="classes"/>
   <property name="parserimpl.dir" 
     location="${src.dir}/net/sf/farrago/rng/parserimpl"/>
+  <property name="plugin.jar.file" 
+    location="${farrago.plugin.dir}/FarragoRngPlugin.jar"/>
 
   <fileset id="parser.jj" dir="${src.dir}/net/sf/farrago/rng"
     includes="RngParser.jj"/>
@@ -46,7 +48,7 @@
   </path>
   <property name="rng.classpath" refid="rng.classpath"/>
 
-  <target name="all" depends="clean,mdr_taskdef">
+  <target name="createCatalog" depends="clean,mdr_taskdef">
     <mkdir dir="${catalog.src.dir}"/>
     <mkdir dir="${classes.dir}"/>
     <copy file="${farrago.catalog.dir}/templates/BTreeRepos.properties" 
@@ -81,6 +83,9 @@
       classpathref="rng.classpath">
       <include name="**/*.java"/>
     </farrago.javaCompile>
+  </target>
+
+  <target name="compile">
     <farrago.generateParser 
       combined="${parserimpl.dir}/CombinedParser.jj">
       <components>
@@ -106,9 +111,12 @@
         key="net.sf.farrago.catalog" 
         value="${catalog.dir}"/>
       <arg value="exportSubModel"/>
-      <arg value="${xmi.dir}/PluginModel.xmi"/>
+      <arg value="${xmi.dir}/RngPluginModelExport.xmi"/>
       <arg value="RNGModel"/>
     </farrago.javaExec>
+    <xslt style="${farrago.xmi.dir}/movePluginPackage.xsl"
+      in="${xmi.dir}/RngPluginModelExport.xmi"
+      out="${xmi.dir}/RngPluginModel.xmi" />
   </target>
 
   <target name="importPluginModel">
@@ -116,8 +124,31 @@
       classname="net.sf.farrago.catalog.FarragoReposUtil"
       classpathref="farrago.run.classpath">
       <arg value="importSubModel"/>
-      <arg value="${xmi.dir}/PluginModel.xmi"/>
+      <arg value="${xmi.dir}/RngPluginModel.xmi"/>
     </farrago.javaExec>
+  </target>
+
+  <target name="jar">
+    <delete quiet="true" file="${plugin.jar.file}"/>
+    <jar destfile="${plugin.jar.file}" compress="true">
+      <fileset dir="${classes.dir}">
+        <include name="**/*.class"/>
+      </fileset>
+      <fileset dir="${catalog.src.dir}">
+        <include name="**/*.class"/>
+      </fileset>
+      <fileset dir="${xmi.dir}">
+        <include name="RngPluginModel.xmi"/>
+      </fileset>
+      <manifest>
+        <attribute
+          name="PluginModel"
+          value="RngPluginModel.xmi"/>
+        <attribute
+          name="PluginFactoryClassName"
+          value="net.sf.farrago.rng.FarragoRngPluginFactory"/>
+      </manifest>
+    </jar>
   </target>
 
   <target name="clean">

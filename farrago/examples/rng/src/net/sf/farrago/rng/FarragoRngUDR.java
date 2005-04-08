@@ -24,6 +24,25 @@ package net.sf.farrago.rng;
 
 import java.sql.*;
 
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.rngmodel.*;
+import net.sf.farrago.rngmodel.rngschema.*;
+
+import net.sf.farrago.jdbc.engine.*;
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.util.*;
+import net.sf.farrago.trace.*;
+import net.sf.farrago.session.*;
+
+import java.io.*;
+import java.util.*;
+import java.util.logging.*;
+
+import javax.jmi.reflect.*;
+
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
+
 /**
  * FarragoRngUDR contains implementations for the user-defined routine
  * portion of the RNG plugin example.
@@ -33,6 +52,9 @@ import java.sql.*;
  */
 public abstract class FarragoRngUDR
 {
+    private static final Logger tracer =
+        FarragoTrace.getClassTracer(FarragoRngUDR.class);
+    
     /**
      * Generates the next pseudo-random integer from a particular RNG.
      *
@@ -42,16 +64,99 @@ public abstract class FarragoRngUDR
      *
      * @param rngName name of the RNG
      *
-     * @return psuedo-random integer
+     * @param n upper limit on generated integer
+     *
+     * @return psuedo-random integer in the range [0, n)
      */
     public static int rng_next_int(
         String rngCatalogName,
         String rngSchemaName,
-        String rngName)
+        String rngName,
+        int n)
         throws SQLException
     {
-        // TODO
-        return 0;
+        Connection conn = DriverManager.getConnection(
+            "jdbc:default:connection");
+
+        FarragoSession session =
+            FarragoJdbcRoutineDriver.getSessionForConnection(conn);
+
+        FarragoSessionStmtValidator stmtValidator = 
+            session.newStmtValidator();
+
+        try {
+            RngmodelPackage rngPkg =
+                getRngModelPackage(session.getRepos());
+            RefClass refRngClass =
+                rngPkg.getRngschema().getRngRandomNumberGenerator();
+            RngRandomNumberGenerator rng = (RngRandomNumberGenerator)
+                stmtValidator.findSchemaObject(
+                    new SqlIdentifier(
+                        new String [] {
+                            rngCatalogName,
+                            rngSchemaName,
+                            rngName
+                        },
+                        null),
+                    refRngClass);
+            Random random = readSerialized(rng);
+            int value = random.nextInt(n);
+            writeSerialized(rng, random);
+            return value;
+        } catch (Throwable ex) {
+            throw FarragoUtil.newSqlException(ex, tracer);
+        }
+
+        // NOTE jvs 7-Apr-2005:  no need for cleanup; default connection
+        // is cleaned up automatically.
+    }
+
+    // TODO:  share with parser
+    private static RngmodelPackage getRngModelPackage(FarragoRepos repos)
+    {
+        return (RngmodelPackage)
+            repos.getFarragoPackage().refPackage("RNGModel");
+    }
+
+    // TODO:  file lock
+    
+    public static void writeSerialized(
+        RngRandomNumberGenerator rng,
+        Random random)
+        throws IOException
+    {
+        File file = new File(rng.getSerializedFile());
+        FileOutputStream fos = null;
+        ObjectOutputStream oos = null;
+        try {
+            fos = new FileOutputStream(file);
+            oos = new ObjectOutputStream(fos);
+            oos.writeObject(random);
+            oos.close();
+            oos = null;
+            fos.close();
+            fos = null;
+        } finally {
+            Util.squelchStream(oos);
+            Util.squelchStream(fos);
+        }
+    }
+
+    public static Random readSerialized(
+        RngRandomNumberGenerator rng)
+        throws Exception
+    {
+        File file = new File(rng.getSerializedFile());
+        FileInputStream fis = null;
+        ObjectInputStream ois = null;
+        try {
+            fis = new FileInputStream(file);
+            ois = new ObjectInputStream(fis);
+            return (Random) ois.readObject();
+        } finally {
+            Util.squelchStream(ois);
+            Util.squelchStream(fis);
+        }
     }
 }
 

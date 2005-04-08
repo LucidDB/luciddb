@@ -25,12 +25,14 @@ package net.sf.farrago.db;
 import java.io.*;
 import java.sql.*;
 import java.util.*;
+import java.net.*;
 import java.util.logging.*;
 
 import javax.jmi.reflect.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.ddl.*;
 import net.sf.farrago.fem.config.*;
 import net.sf.farrago.fem.fennel.*;
@@ -41,6 +43,7 @@ import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
+import net.sf.farrago.plugin.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.oj.rex.*;
@@ -51,6 +54,7 @@ import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.util.*;
 
+import org.netbeans.mdr.handlers.*;
 
 /**
  * FarragoDatabase is a top-level singleton representing an instance of a
@@ -94,6 +98,8 @@ public class FarragoDatabase extends FarragoCompoundAllocation
     private FennelDbHandle fennelDbHandle;
     private OJRexImplementorTable ojRexImplementorTable;
     protected FarragoSessionFactory sessionFactory;
+    private FarragoPluginClassLoader pluginClassLoader;
+    private List modelExtensions;
 
     /**
      * Cache of all sorts of stuff.
@@ -137,11 +143,33 @@ public class FarragoDatabase extends FarragoCompoundAllocation
 
             this.sessionFactory = sessionFactory;
 
+            // Tell MDR about our plugin ClassLoader so that it can find
+            // extension model JMI interfaces in plugin jars.
+            pluginClassLoader = new FarragoPluginClassLoader();
+            BaseObjectHandler.setClassLoaderProvider(
+                new ClassLoaderProvider() 
+                {
+                    public ClassLoader getClassLoader()
+                    {
+                        return pluginClassLoader;
+                    }
+
+                    public Class defineClass(
+                        String className, byte [] classfile)
+                    {
+                        return null;
+                    }
+                });
+
             systemRepos = sessionFactory.newRepos(this, false);
             userRepos = systemRepos;
             if (init) {
                 systemRepos.createSystemObjects();
             }
+
+            // Load all model plugins early so that MDR won't try to
+            // generate its own bytecode for JMI interfaces.
+            loadModelPlugins();
 
             // REVIEW:  system/user configuration
             FemFarragoConfig currentConfig = systemRepos.getCurrentConfig();
@@ -340,8 +368,6 @@ public class FarragoDatabase extends FarragoCompoundAllocation
     }
 
     /**
-     * .
-     *
      * @return the shared code cache for this database
      */
     public FarragoObjectCache getCodeCache()
@@ -350,13 +376,58 @@ public class FarragoDatabase extends FarragoCompoundAllocation
     }
 
     /**
-     * .
-     *
      * @return the shared data wrapper cache for this database
      */
     public FarragoObjectCache getDataWrapperCache()
     {
         return dataWrapperCache;
+    }
+
+    /**
+     * @return ClassLoader for loading plugins
+     */
+    public FarragoPluginClassLoader getPluginClassLoader()
+    {
+        return pluginClassLoader;
+    }
+
+    /**
+     * @return list of installed {@link FarragoSessionModelExtension}
+     * instances
+     */
+    public List getModelExtensions()
+    {
+        return modelExtensions;
+    }
+
+    private void loadModelPlugins()
+    {
+        modelExtensions = new ArrayList();
+        Iterator jarIter = systemRepos.getSql2003Package().getFemJar()
+            .refAllOfClass().iterator();
+        while (jarIter.hasNext()) {
+            FemJar jar = (FemJar) jarIter.next();
+            if (jar.isModelExtension()) {
+                try {
+                    String attr =
+                        FarragoPluginClassLoader.PLUGIN_FACTORY_CLASS_ATTRIBUTE;
+                    Class factoryClass =
+                        pluginClassLoader.loadClassFromJarUrlManifest(
+                            jar.getUrl(),
+                            attr);
+                    FarragoSessionModelExtensionFactory factory =
+                        (FarragoSessionModelExtensionFactory)
+                        factoryClass.newInstance();
+                    // TODO:  trace info about extension
+                    FarragoSessionModelExtension modelExtension =
+                        factory.newModelExtension();
+                    modelExtensions.add(modelExtension);
+                } catch (Throwable ex) {
+                    throw FarragoResource.instance().newPluginInitFailed(
+                        jar.getUrl(), ex);
+                }
+            }
+        }
     }
 
     private void close(boolean suppressExcns)

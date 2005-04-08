@@ -26,11 +26,11 @@ import java.sql.DatabaseMetaData;
 
 import net.sf.farrago.catalog.FarragoRepos;
 import net.sf.farrago.util.FarragoAllocation;
+import net.sf.farrago.plugin.*;
 
-import org.eigenbase.oj.rex.OJRexImplementorTable;
-import org.eigenbase.sql.SqlOperatorTable;
 import org.eigenbase.reltype.*;
 
+import java.util.*;
 
 /**
  * FarragoSession represents an internal API to the Farrago database.  It is
@@ -40,22 +40,28 @@ import org.eigenbase.reltype.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FarragoSession
-    extends FarragoAllocation, FarragoStreamFactoryProvider
+public interface FarragoSession extends FarragoAllocation
 {
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * @return table of builtin SQL operators and functions to use for
-     * validation; user-defined functions are not included here
+     * @return the current personality for this session
      */
-    public SqlOperatorTable getSqlOperatorTable();
+    public FarragoSessionPersonality getPersonality();
 
     /**
-     * @return table of implementations corresponding to result
-     * of {@link #getSqlOperatorTable}
+     * Creates a new statement context within this session.
+     *
+     * @return new statement context
      */
-    public OJRexImplementorTable getOJRexImplementorTable();
+    public FarragoSessionStmtContext newStmtContext();
+
+    /**
+     * Creates a new SQL statement validator.
+     *
+     * @return new validator
+     */
+    public FarragoSessionStmtValidator newStmtValidator();
 
     /**
      * @return JDBC URL used to establish this session
@@ -67,6 +73,17 @@ public interface FarragoSession
      */
     public FarragoRepos getRepos();
 
+    /**
+     * @return ClassLoader for loading plugins
+     */
+    public FarragoPluginClassLoader getPluginClassLoader();
+
+    /**
+     * @return list of installed {@link FarragoSessionModelExtension}
+     * instances
+     */
+    public List getModelExtensions();
+    
     /**
      * @return whether this session is an internal session cloned
      * from another session
@@ -104,12 +121,6 @@ public interface FarragoSession
     public FarragoSessionConnectionSource getConnectionSource();
 
     /**
-     * @return name of local data server to use for tables when none
-     * is specified by CREATE TABLE
-     */
-    public String getDefaultLocalDataServerName();
-
-    /**
      * Initializes the database metadata associated with this session.
      *
      * @param dbMetaData metadata to set
@@ -122,61 +133,6 @@ public interface FarragoSession
      * @param source connection source to set
      */
     public void setConnectionSource(FarragoSessionConnectionSource source);
-
-    /**
-     * Creates a new statement context within this session.
-     *
-     * @return new statement context
-     */
-    public FarragoSessionStmtContext newStmtContext();
-
-    /**
-     * Creates a new SQL parser.
-     *
-     * @return new parser
-     */
-    public FarragoSessionParser newParser();
-
-    /**
-     * Creates a new preparing statement tied to this session and its underlying
-     * database.  Used to construct and implement an internal query plan.
-     *
-     * @param stmtValidator generic stmt validator
-     *
-     * @return a new {@link FarragoSessionPreparingStmt}.
-     */
-    public FarragoSessionPreparingStmt newPreparingStmt(
-        FarragoSessionStmtValidator stmtValidator);
-
-    /**
-     * Creates a new SQL statement validator.
-     *
-     * @return new validator
-     */
-    public FarragoSessionStmtValidator newStmtValidator();
-
-    /**
-     * Creates a new validator for DDL commands.
-     *
-     * @param stmtValidator generic stmt validator
-     *
-     * @return new validator
-     */
-    public FarragoSessionDdlValidator newDdlValidator(
-        FarragoSessionStmtValidator stmtValidator);
-
-    /**
-     * Creates a new planner.
-     *
-     * @param stmt stmt on whose behalf planner will operate
-     *
-     * @param init whether to initialize default rules in new planner
-     *
-     * @return new planner
-     */
-    public FarragoSessionPlanner newPlanner(
-        FarragoSessionPreparingStmt stmt,
-        boolean init);
 
     /**
      * Clones this session.  TODO:  document what this entails.
@@ -247,25 +203,6 @@ public interface FarragoSession
         String sql,
         RelDataTypeFactory typeFactory,
         RelDataType paramRowType);
-
-    /**
-     * Determines the class to use for runtime context.
-     *
-     * @return runtime context class, which must implement
-     * {@link FarragoSessionRuntimeContext}
-     */
-    public Class getRuntimeContextClass();
-
-    /**
-     * Creates a new runtime context.  The object returned must be
-     * assignable to the result of getRuntimeContextClass().
-     *
-     * @param params context initialization parameters
-     *
-     * @return new context
-     */
-    public FarragoSessionRuntimeContext newRuntimeContext(
-        FarragoSessionRuntimeParams params);
 }
 
 

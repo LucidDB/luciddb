@@ -37,7 +37,7 @@ import net.sf.farrago.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FarragoSessionFactory
+public interface FarragoSessionFactory extends FarragoSessionPersonalityFactory
 {
     //~ Methods ---------------------------------------------------------------
 

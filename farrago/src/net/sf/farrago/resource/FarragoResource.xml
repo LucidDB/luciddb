@@ -72,6 +72,14 @@
 <text>Failed to access repository storage properties file {0}</text>
 </exception>
 
+<exception id="400070" name="CatalogModelImportFailed">
+<text>Failed to import model from {0}</text>
+</exception>
+
+<exception id="400080" name="CatalogModelAlreadyImported">
+<text>Model already imported from {0}</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- JDBC resources 410,000 - 420,000 -->
 <!-- ====================================================================== -->
@@ -386,7 +394,7 @@ column type family is {1} but default value type family is {2}</text>
 </exception>
 
 <exception id="420660" name="ValidatorRoutineInvalidJarName">
-<text>Invalid jar name {0} in definition of {1}</text>
+<text>Invalid jar name {0}</text>
 </exception>
 
 <exception id="420670" name="ValidatorRoutineConflict"
@@ -479,6 +487,10 @@ column type family is {1} but default value type family is {2}</text>
 <exception id="420850" name="ValidatorOrderingFunction"
     className="org.eigenbase.sql.validate.SqlValidatorException">
 <text>Cannot use {0} as ordering for {1} because it is not a function</text>
+</exception>
+
+<exception id="420860" name="ValidatorJarExtensionModelDrop">
+<text>Cannot drop {0} because it is a catalog model extension</text>
 </exception>
 
 <!-- ====================================================================== -->

@@ -525,7 +525,8 @@ public class FarragoJdbcEngineConnection
             final FarragoObjectCache sharedCache = db.getDataWrapperCache();
 
             dataWrapperCache = 
-                new FarragoDataWrapperCache(session, sharedCache, 
+                new FarragoDataWrapperCache(session, sharedCache,
+                    db.getPluginClassLoader(),
                     session.getRepos(), db.getFennelDbHandle());
 
             final FarragoMedDataWrapper dataWrapper =

@@ -34,7 +34,6 @@ import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.plugin.*;
 
-
 /**
  * FarragoJdbcEngineDriver implements the Farrago engine/server side of
  * the {@link java.sql.Driver} interface.
@@ -102,7 +101,9 @@ public class FarragoJdbcEngineDriver extends FarragoAbstractJdbcDriver
         String libraryName = 
             FarragoProperties.instance().defaultSessionFactoryLibraryName.get();
         try {
-            Class c = FarragoPluginCache.loadPluginClass(
+            FarragoPluginClassLoader classLoader =
+                new FarragoPluginClassLoader();
+            Class c = classLoader.loadClassFromLibraryManifest(
                 libraryName,"SessionFactoryClassName");
             return (FarragoSessionFactory) c.newInstance();
         } catch (Throwable ex) {

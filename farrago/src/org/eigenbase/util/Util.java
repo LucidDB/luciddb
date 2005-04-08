@@ -23,8 +23,7 @@
 
 package org.eigenbase.util;
 
-import java.io.File;
-import java.io.PrintWriter;
+import java.io.*;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -961,6 +960,44 @@ public class Util extends Toolbox
             }
         }
         return false;
+    }
+
+    /**
+     * Closes an InputStream, ignoring any I/O exception.  This should only
+     * be used in finally blocks when it's necessary to avoid throwing
+     * an exception which might mask a real exception.
+     *
+     * @param stream stream to close
+     */
+    public static void squelchStream(InputStream stream)
+    {
+        try {
+            if (stream != null) {
+                stream.close();
+            }
+        } catch (IOException ex) {
+            // intentionally suppressed
+        }
+    }
+
+    /**
+     * Closes an OutputStream, ignoring any I/O exception.  This should only
+     * be used in finally blocks when it's necessary to avoid throwing
+     * an exception which might mask a real exception.  If you want
+     * to make sure that data has been successfully flushed, do NOT use
+     * this anywhere else; use stream.close() instead.
+     *
+     * @param stream stream to close
+     */
+    public static void squelchStream(OutputStream stream)
+    {
+        try {
+            if (stream != null) {
+                stream.close();
+            }
+        } catch (IOException ex) {
+            // intentionally suppressed
+        }
     }
 }
 

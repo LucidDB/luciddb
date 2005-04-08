@@ -104,13 +104,16 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         this.session = session;
         this.sharedDataWrapperCache = sharedDataWrapperCache;
 
-        parser = session.newParser();
+        parser = session.getPersonality().newParser(session);
         // clone session variables so that any context changes we make during
         // validation are transient
         sessionVariables = session.getSessionVariables().cloneVariables();
         typeFactory = new FarragoTypeFactoryImpl(repos);
         dataWrapperCache =
-            new FarragoDataWrapperCache(this, sharedDataWrapperCache, repos,
+            new FarragoDataWrapperCache(
+                this, sharedDataWrapperCache,
+                session.getPluginClassLoader(),
+                repos,
                 fennelDbHandle);
     }
 
@@ -376,7 +379,9 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
     // implement FarragoSessionStmtValidator
     public FemDataServer getDefaultLocalDataServer()
     {
-        String dataServerName = session.getDefaultLocalDataServerName();
+        String dataServerName =
+            session.getPersonality().getDefaultLocalDataServerName(
+                this);
         return findDataServer(new SqlIdentifier(dataServerName, null));
     }
 
@@ -524,6 +529,26 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
                     null,
                     simpleName,
                     getRepos().getRelationalPackage().getCwmSqldataType())));
+    }
+
+    // implement FarragoSessionStmtValidator
+    public FemJar findJarFromLiteralName(String jarName)
+    {
+        // TODO jvs 19-Jan-2005: support "thisjar" in deployment
+        // descriptors
+        SqlIdentifier qualifiedJarName;
+        try {
+            SqlParser sqlParser = new SqlParser(jarName);
+            SqlNode sqlNode = sqlParser.parseExpression();
+            qualifiedJarName = (SqlIdentifier) sqlNode;
+        } catch (Throwable ex) {
+            throw FarragoResource.instance().
+                newValidatorRoutineInvalidJarName(
+                    repos.getLocalizedObjectName(jarName));
+        }
+        return (FemJar) findSchemaObject(
+            qualifiedJarName,
+            getRepos().getSql2003Package().getFemJar());
     }
 
     private void checkValidated(CwmModelElement element)

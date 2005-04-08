@@ -287,7 +287,9 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         throws SQLException
     {
         if (jdbcKeywords == null) {
-            FarragoSessionParser parser = connection.getSession().newParser();
+            FarragoSessionParser parser =
+                connection.getSession().getPersonality().newParser(
+                    connection.getSession());
             jdbcKeywords = parser.getJdbcKeywords();
         }
         return jdbcKeywords;
