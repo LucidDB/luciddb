@@ -161,25 +161,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         needRestore = true;
         savedDeclarer = OJUtil.threadDeclarers.get();
 
-        planner = getSession().getPersonality().newPlanner(this,true);
-
-        // TODO jvs 20-Feb-2005:  make plannerviz a real plugin and
-        // get rid of this
-        Logger plannervizTracer = FarragoTrace.getPlannerVizTracer();
-        Level plannervizLevel = plannervizTracer.getLevel();
-        if (plannervizLevel == null) {
-            plannervizLevel = Level.OFF;
-        }
-        if (plannervizLevel.intValue() <= Level.FINE.intValue()) {
-            try {
-                Class c = Class.forName(
-                    "net.sf.farrago.plannerviz.FarragoPlanVisualizer");
-                RelOptListener listener = (RelOptListener) c.newInstance();
-                planner.addListener(listener);
-            } catch (Exception ex) {
-                throw Util.newInternal(ex);
-            }
-        }
+        planner = getSession().getPersonality().newPlanner(this, true);
+        getSession().getPersonality().definePlannerListeners(planner);
 
         routineLookup = new FarragoUserDefinedRoutineLookup(
             stmtValidator, this, null);

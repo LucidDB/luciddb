@@ -33,12 +33,12 @@ public interface FarragoSessionPersonalityFactory
     /**
      * Creates a new session personality.
      *
+     * @param session session for which personality is being created;
+     * note that the personality may be used for other sessions as well,
+     * so no reference to this session should be retained
+     *
      * @param defaultPersonality a default personality to which the
      * new personality may delegate, or null if no default is available
-     *
-     * @param session session for which personality is being created;
-     * note that the personality may be used for other session as well,
-     * so no reference to this session should be retained
      *
      * @return personality
      */

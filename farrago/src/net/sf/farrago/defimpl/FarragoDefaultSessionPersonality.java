@@ -75,6 +75,11 @@ public class FarragoDefaultSessionPersonality
         return planner;
     }
 
+    // implement FarragoSessionPersonality
+    public void definePlannerListeners(FarragoSessionPlanner planner)
+    {
+    }
+
     // implement FarragoStreamFactoryProvider
     public void registerStreamFactories(long hStreamGraph)
     {

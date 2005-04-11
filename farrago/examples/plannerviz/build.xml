@@ -25,28 +25,65 @@
 
 <project name="farragoPlannerviz" basedir="." default="all">
 
-
   <!-- Definitions for Farrago build properties and macros -->
   <import file="../../buildMacros.xml"/>
 
-  <property name="src.dir" location="src"/>
+  <property name="plannerviz.dir" location="."/>
+  <property name="src.dir" location="${plannerviz.dir}/src"/>
+  <property name="plugin.dir" location="${plannerviz.dir}/plugin"/>
+  <property name="classes.dir" location="${plannerviz.dir}/classes"/>
+
+  <property name="plugin.jar.file" 
+    location="${plugin.dir}/FarragoPlannerviz.jar"/>
   
   <path id="plannerviz.classpath">
+    <pathelement location="${jgraphaddons.dir}/lib/jgraphaddons.jar"/>
+    <pathelement location="${jgraph.dir}/lib/jgraph.jar"/>
     <pathelement path="${farrago.run.classpath}"/>
   </path>
   <property name="plannerviz.classpath" refid="plannerviz.classpath"/>
 
-  <target name="all" depends="compile">
+  <target name="all" depends="jar">
   </target>
 
   <target name="compile">
+    <mkdir dir="${classes.dir}"/>
     <farrago.javaCompile
       deprecation="off"
       srcdir="${src.dir}"
-      destdir="${farrago.classes.dir}"
+      destdir="${classes.dir}"
       classpathref="plannerviz.classpath">
       <include name="**/*.java" />
     </farrago.javaCompile>
+  </target>
+
+  <target name="jar" depends="compile">
+    <mkdir dir="${plugin.dir}"/>
+    <delete quiet="true" file="${plugin.jar.file}"/>
+    <unjar src="${jgraphaddons.dir}/lib/jgraphaddons.jar" 
+      dest="${classes.dir}"/>
+    <unjar src="${jgraph.dir}/lib/jgraph.jar" 
+      dest="${classes.dir}"/>
+    <jar destfile="${plugin.jar.file}" compress="true">
+      <fileset dir="${classes.dir}">
+        <include name="**/*.class"/>
+      </fileset>
+      <fileset dir="${classes.dir}">
+        <include name="**/*.class"/>
+      </fileset>
+      <manifest>
+        <attribute
+          name="PluginFactoryClassName"
+          value="net.sf.farrago.plannerviz.FarragoPlannervizPluginFactory"/>
+      </manifest>
+    </jar>
+  </target>
+
+  <target name="clean">
+    <delete includeEmptyDirs="true" quiet="true">
+      <fileset dir="${classes.dir}" includes="**/*"/>
+      <fileset dir="${plugin.dir}" includes="**/*"/>
+    </delete>
   </target>
 
 </project>

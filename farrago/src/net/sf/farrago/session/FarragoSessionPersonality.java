@@ -128,6 +128,13 @@ public interface FarragoSessionPersonality extends FarragoStreamFactoryProvider
         boolean init);
 
     /**
+     * Defines listeners for events which occur during planning.
+     *
+     * @param planner planner to which listeners should be added
+     */
+    public void definePlannerListeners(FarragoSessionPlanner planner);
+
+    /**
      * Determines the class to use for runtime context.
      *
      * @param stmt stmt on whose behalf planner will operate

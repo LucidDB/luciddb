@@ -72,6 +72,15 @@
         <include name="COPYING"/>
       </fileset>
     </jar>
+    <copy 
+      file="${farrago.dir}/examples/plannerviz/plugin/FarragoPlannerviz.jar" 
+      todir="${dist.plugin.dir}"/>
+    <jar destfile="${dist.plugin.dir}/FarragoPlannerviz.jar" update="true">
+      <fileset dir="${farrago.dir}">
+        <include name="README"/>
+        <include name="COPYING"/>
+      </fileset>
+    </jar>
   </target>
 
 </project>

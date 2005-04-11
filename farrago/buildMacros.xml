@@ -216,9 +216,6 @@
     <pathelement location="${janino.dir}/lib/janino.jar"/>
     <pathelement location="${openjava.dir}/openjava.jar"/>
     <pathelement location="${hsqldb.dir}/lib/hsqldb.jar"/>
-    <!-- REVIEW jvs 20-Feb-2005:  move jgraph to plannerviz?  -->
-    <pathelement location="${jgraphaddons.dir}/lib/jgraphaddons.jar"/>
-    <pathelement location="${jgraph.dir}/lib/jgraph.jar"/>
     <pathelement location="${jgrapht.dir}/jgrapht-0.5.3.jar"/>
     <pathelement path="${farrago.custom.classpath}"/>
   </path>
