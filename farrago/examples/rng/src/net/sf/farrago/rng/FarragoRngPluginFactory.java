@@ -22,6 +22,7 @@
 package net.sf.farrago.rng;
 
 import net.sf.farrago.session.*;
+import net.sf.farrago.rng.resource.*;
 
 import org.eigenbase.util.*;
 
@@ -40,6 +41,21 @@ public class FarragoRngPluginFactory
     implements FarragoSessionPersonalityFactory,
         FarragoSessionModelExtensionFactory
 {
+    public static final FarragoRngResource res;
+
+    static 
+    {
+        // REVIEW jvs 12-Apr-2005:  FarragoRngResource.instance() has
+        // problems loading the bundle from the jar.  Find out why;
+        // I think it has to do with ResourceBundle.getBundle not
+        // knowing what to do when called from a static method.
+        try {
+            res = new FarragoRngResource();
+        } catch (Throwable ex) {
+            throw Util.newInternal(ex);
+        }
+    }
+    
     // implement FarragoSessionPersonalityFactory
     public FarragoSessionPersonality newSessionPersonality(
         FarragoSession session,
@@ -95,7 +111,15 @@ public class FarragoRngPluginFactory
             FarragoSessionDdlValidator ddlValidator,
             List handlerList)
         {
-            handlerList.add(new FarragoRngDdlHandler(ddlValidator));
+            handlerList.add(
+                new FarragoRngDdlHandler(ddlValidator));
+        }
+
+        // implement FarragoSessionModelExtension
+        public void defineResourceBundles(
+            List bundleList)
+        {
+            bundleList.add(res);
         }
     }
 }

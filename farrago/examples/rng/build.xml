@@ -21,147 +21,89 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
 -->
 
-<!-- Farrago RNG example ant build script -->
+<!-- Farrago plugin RNG example ant build script -->
 
 <project name="farragoExampleRNG" basedir="." default="compile">
 
   <!-- Definitions for Farrago build properties and macros -->
   <import file="../../buildMacros.xml"/>
 
-  <property name="catalog.dir" location="catalog"/>
-  <property name="xmi.dir" location="${catalog.dir}/xmi"/>
-  <property name="catalog.src.dir" location="${catalog.dir}/java"/>
-  <property name="catalog.basename" location="${catalog.dir}/FarragoCatalog"/>
-  <property name="src.dir" location="src"/>
-  <property name="classes.dir" location="classes"/>
-  <property name="parserimpl.dir" 
-    location="${src.dir}/net/sf/farrago/rng/parserimpl"/>
-  <property name="plugin.jar.file" 
-    location="${farrago.plugin.dir}/FarragoRngPlugin.jar"/>
+  <!-- Specialization definitions required by buildPlugin.xml -->
 
-  <fileset id="parser.jj" dir="${src.dir}/net/sf/farrago/rng"
-    includes="RngParser.jj"/>
+  <!-- Plugin build root -->
+  <property name="plugin.dir" location="."/>
 
-  <path id="rng.classpath">
-    <pathelement path="${farrago.run.classpath}"/>
-    <pathelement location="${catalog.src.dir}"/>
+  <!-- Filename for generated jar (no path, no extension) -->
+  <property name="plugin.jar.basename" 
+    value="FarragoRng"/>
+
+  <!-- UML model name for plugin model extension -->
+  <property name="plugin.model.name"
+    value="RNGModel"/>
+
+  <!-- Base filename for UML definition of plugin model extension -->
+  <property name="plugin.model.basename"
+    value="RandomNumberGenerator"/>
+
+  <!-- Prefix to use for model-generated Java classes -->
+  <property name="plugin.model.prefix" 
+    value="Rng"/>
+
+  <!-- Java package location for model-generated classes -->
+  <property name="plugin.model.package" 
+    value="net/sf/farrago/rngmodel"/>
+
+  <!-- Java package location for resource definitions -->
+  <property name="plugin.resource.package" 
+    value="net/sf/farrago/rng/resource"/>
+
+  <!-- Base filename for resource definition -->
+  <property name="plugin.resource.basename" 
+    value="FarragoRngResource"/>
+
+  <!-- Java class implementing plugin factory -->
+  <property name="plugin.factory.class" 
+    value="net.sf.farrago.rng.FarragoRngPluginFactory"/>
+
+  <!-- Java package for generated parser -->
+  <property name="plugin.parser.impl.package" 
+    value="net/sf/farrago/rng/parserimpl"/>
+
+  <!-- JavaCC source for parser -->
+  <property name="plugin.parser.jj" value="net/sf/farrago/rng/RngParser.jj"/>
+
+  <!-- Classpath for plugin dependencies (none in this case) -->
+  <path id="plugin.3p.classpath">
   </path>
-  <property name="rng.classpath" refid="rng.classpath"/>
+  <property name="plugin.3p.classpath" refid="plugin.3p.classpath"/>
 
-  <target name="createCatalog" depends="clean,mdr_taskdef">
-    <mkdir dir="${catalog.src.dir}"/>
-    <mkdir dir="${classes.dir}"/>
-    <copy file="${farrago.catalog.dir}/templates/BTreeRepos.properties" 
-      tofile="${catalog.dir}/ReposStorage.properties"/>
-    <farrago.extractPoseidonModel 
-      zumlFile="${xmi.dir}/RandomNumberGeneratorModel.zuml"
-      umlBasename="RandomNumberGeneratorModel"
-      mofBasename="RandomNumberGeneratorMof"
-      xmiDir="${xmi.dir}"/>
-    <farrago.transformExtensionModel
-      mofBasename="RandomNumberGeneratorMof"
-      modelPrefix="Rng"
-      xmiDir="${xmi.dir}"/>
-    <farrago.synthesizeMetamodel
-      extMofBasename="RandomNumberGeneratorMof"
-      xmiDir="${xmi.dir}"/>
-    <mdr storageFile="${catalog.basename}">
-      <instantiate name="FarragoMetamodel"/>
-      <readXMI
-        file="${xmi.dir}/FarragoMetamodel.xmi"
-        extent="FarragoMetamodel"/>
-      <mapJava
-        dir="${catalog.src.dir}"
-        extent="FarragoMetamodel"/>
-    </mdr>
-    <delete includeEmptyDirs="true" quiet="true">
-      <fileset dir="${catalog.src.dir}" excludes="net/sf/farrago/rngmodel/**"/>
-    </delete>
-    <farrago.javaCompile
-      srcdir="${catalog.src.dir}"
-      destdir="${catalog.src.dir}"
-      classpathref="rng.classpath">
-      <include name="**/*.java"/>
-    </farrago.javaCompile>
-  </target>
 
-  <target name="compile">
-    <farrago.generateParser 
-      combined="${parserimpl.dir}/CombinedParser.jj">
-      <components>
-        <fileset refid="parser.jj"/>
-        <fileset refid="farrago.parser.common.ddl"/>
-        <fileset refid="farrago.parser.common.sql"/>
-      </components>
-    </farrago.generateParser>
+  <!-- Standard definitions for Farrago plugin build -->
+  <import file="../../plugin/buildPlugin.xml"/>
+
+  <!-- Source location for resource definitions -->
+  <property name="plugin.resource.dir" 
+    location="${plugin.src.dir}/net/sf/farrago/rng/resource"/>
+
+  <target name="compile" depends="plugin.buildResources,plugin.buildParser">
     <farrago.javaCompile
       deprecation="off"
-      srcdir="${src.dir}"
-      destdir="${classes.dir}"
-      classpathref="rng.classpath">
+      srcdir="${plugin.src.dir}"
+      destdir="${plugin.classes.dir}"
+      classpathref="plugin.classpath">
       <include name="**/*.java" />
     </farrago.javaCompile>
   </target>
 
-  <target name="exportPluginModel">
-    <farrago.javaExec
-      classname="net.sf.farrago.catalog.FarragoReposUtil"
-      classpathref="farrago.run.classpath">
-      <sysproperty 
-        key="net.sf.farrago.catalog" 
-        value="${catalog.dir}"/>
-      <arg value="exportSubModel"/>
-      <arg value="${xmi.dir}/RngPluginModelExport.xmi"/>
-      <arg value="RNGModel"/>
-    </farrago.javaExec>
-    <xslt style="${farrago.xmi.dir}/movePluginPackage.xsl"
-      in="${xmi.dir}/RngPluginModelExport.xmi"
-      out="${xmi.dir}/RngPluginModel.xmi" />
+  <target name="jar" depends="compile, plugin.buildJar">
   </target>
 
-  <target name="importPluginModel">
-    <farrago.javaExec
-      classname="net.sf.farrago.catalog.FarragoReposUtil"
-      classpathref="farrago.run.classpath">
-      <arg value="importSubModel"/>
-      <arg value="${xmi.dir}/RngPluginModel.xmi"/>
-    </farrago.javaExec>
+  <target name="createPlugin">
+    <antcall target="clean"/>
+    <antcall target="plugin.buildModel"/>
+    <antcall target="jar"/>
   </target>
 
-  <target name="jar">
-    <delete quiet="true" file="${plugin.jar.file}"/>
-    <jar destfile="${plugin.jar.file}" compress="true">
-      <fileset dir="${classes.dir}">
-        <include name="**/*.class"/>
-      </fileset>
-      <fileset dir="${catalog.src.dir}">
-        <include name="**/*.class"/>
-      </fileset>
-      <fileset dir="${xmi.dir}">
-        <include name="RngPluginModel.xmi"/>
-      </fileset>
-      <manifest>
-        <attribute
-          name="PluginModel"
-          value="RngPluginModel.xmi"/>
-        <attribute
-          name="PluginFactoryClassName"
-          value="net.sf.farrago.rng.FarragoRngPluginFactory"/>
-      </manifest>
-    </jar>
+  <target name="clean" depends="plugin.clean">
   </target>
-
-  <target name="clean">
-    <delete quiet="true">
-      <fileset dir="${xmi.dir}" includes="*.xmi"/>
-      <fileset dir="${catalog.dir}" includes="FarragoCatalog.*"/>
-      <fileset dir="${parserimpl.dir}" includes="*.java,*.jj"/>
-    </delete>
-  </target>
-
-  <target name="mdr_taskdef">
-    <taskdef name="mdr" classname="org.netbeans.mdrant.MdrTask"
-      classpathref="farrago.3p.classpath"/>
-  </target>
-
 </project>

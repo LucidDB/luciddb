@@ -41,6 +41,7 @@ import java.util.logging.*;
 import javax.jmi.reflect.*;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
 import org.eigenbase.util.*;
 
 /**
@@ -58,20 +59,14 @@ public abstract class FarragoRngUDR
     /**
      * Generates the next pseudo-random integer from a particular RNG.
      *
-     * @param rngCatalogName name of catalog containing the RNG
-     *
-     * @param rngSchemaName name of schema containing the RNG
-     *
-     * @param rngName name of the RNG
+     * @param rngName name of the RNG (possibly qualified)
      *
      * @param n upper limit on generated integer
      *
      * @return psuedo-random integer in the range [0, n)
      */
     public static int rng_next_int(
-        String rngCatalogName,
-        String rngSchemaName,
-        String rngName,
+        String rngName, 
         int n)
         throws SQLException
     {
@@ -85,19 +80,16 @@ public abstract class FarragoRngUDR
             session.newStmtValidator();
 
         try {
+            SqlParser sqlParser = new SqlParser(rngName);
+            SqlIdentifier rngId = (SqlIdentifier) sqlParser.parseExpression();
+            
             RngmodelPackage rngPkg =
                 getRngModelPackage(session.getRepos());
             RefClass refRngClass =
                 rngPkg.getRngschema().getRngRandomNumberGenerator();
             RngRandomNumberGenerator rng = (RngRandomNumberGenerator)
                 stmtValidator.findSchemaObject(
-                    new SqlIdentifier(
-                        new String [] {
-                            rngCatalogName,
-                            rngSchemaName,
-                            rngName
-                        },
-                        null),
+                    rngId,
                     refRngClass);
             Random random = readSerialized(rng);
             int value = random.nextInt(n);
@@ -125,7 +117,7 @@ public abstract class FarragoRngUDR
         Random random)
         throws IOException
     {
-        File file = new File(rng.getSerializedFile());
+        File file = getFile(rng);
         FileOutputStream fos = null;
         ObjectOutputStream oos = null;
         try {
@@ -146,7 +138,7 @@ public abstract class FarragoRngUDR
         RngRandomNumberGenerator rng)
         throws Exception
     {
-        File file = new File(rng.getSerializedFile());
+        File file = getFile(rng);
         FileInputStream fis = null;
         ObjectInputStream ois = null;
         try {
@@ -157,6 +149,13 @@ public abstract class FarragoRngUDR
             Util.squelchStream(ois);
             Util.squelchStream(fis);
         }
+    }
+
+    private static File getFile(RngRandomNumberGenerator rng)
+    {
+        return new File(
+            FarragoProperties.instance().expandProperties(
+                rng.getSerializedFile()));
     }
 }
 

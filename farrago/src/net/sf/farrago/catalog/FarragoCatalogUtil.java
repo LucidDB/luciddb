@@ -30,6 +30,8 @@ import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 
+import net.sf.farrago.util.*;
+
 import org.eigenbase.sql.*;
 import org.eigenbase.util.*;
 
@@ -475,6 +477,18 @@ public abstract class FarragoCatalogUtil
             }
         }
         return structuralFeatures;
+    }
+
+    /**
+     * Returns the URL for a jar with all properties expanded.
+     *
+     * @param femJar jar to access
+     *
+     * @return expanded URL as a string
+     */
+    public static String getJarUrl(FemJar femJar)
+    {
+        return FarragoProperties.instance().expandProperties(femJar.getUrl());
     }
 }
 

@@ -80,6 +80,22 @@
 <text>Model already imported from {0}</text>
 </exception>
 
+<exception id="400090" name="CatalogDumpFailed">
+<text>Failed to dump catalog</text>
+</exception>
+
+<exception id="400100" name="CatalogReloadFailed">
+<text>Failed to reload catalog</text>
+</exception>
+
+<exception id="400110" name="CatalogBootUrlReadFailed">
+<text>Failed reading boot URL list</text>
+</exception>
+
+<exception id="400110" name="CatalogBootUrlUpdateFailed">
+<text>Failed to modify boot URL list</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- JDBC resources 410,000 - 420,000 -->
 <!-- ====================================================================== -->
@@ -491,6 +507,10 @@ column type family is {1} but default value type family is {2}</text>
 
 <exception id="420860" name="ValidatorJarExtensionModelDrop">
 <text>Cannot drop {0} because it is a catalog model extension</text>
+</exception>
+
+<exception id="420870" name="ValidatorInvalidJarUrl">
+<text>Failed to access URL {0} for {1}</text>
 </exception>
 
 <!-- ====================================================================== -->

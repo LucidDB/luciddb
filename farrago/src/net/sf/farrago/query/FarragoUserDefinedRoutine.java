@@ -245,12 +245,11 @@ public class FarragoUserDefinedRoutine
             if (femJar == null) {
                 femJar = stmtValidator.findJarFromLiteralName(jarName);
             }
+            String url = FarragoCatalogUtil.getJarUrl(femJar);
             javaClass = stmtValidator.getSession().getPluginClassLoader()
-                .loadClassFromJarUrl(
-                    femJar.getUrl(),
-                    javaClassName);
+                .loadClassFromJarUrl(url, javaClassName);
             if (preparingStmt != null) {
-                preparingStmt.addJarUrl(femJar.getUrl());
+                preparingStmt.addJarUrl(url);
             }
         }
 

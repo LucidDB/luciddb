@@ -161,15 +161,15 @@ public class FarragoDatabase extends FarragoCompoundAllocation
                     }
                 });
 
+            // Load all model plugin URL's early so that MDR won't try to
+            // generate its own bytecode for JMI interfaces.
+            loadBootUrls();
+
             systemRepos = sessionFactory.newRepos(this, false);
             userRepos = systemRepos;
             if (init) {
                 systemRepos.createSystemObjects();
             }
-
-            // Load all model plugins early so that MDR won't try to
-            // generate its own bytecode for JMI interfaces.
-            loadModelPlugins();
 
             // REVIEW:  system/user configuration
             FemFarragoConfig currentConfig = systemRepos.getCurrentConfig();
@@ -201,6 +201,10 @@ public class FarragoDatabase extends FarragoCompoundAllocation
 
             ojRexImplementorTable = new FarragoOJRexImplementorTable(
                 SqlStdOperatorTable.instance());
+
+            // Create instances of plugin model extensions for shared use
+            // by all sessions.
+            loadModelPlugins();
 
             // REVIEW:  sequencing from this point on
             if (currentConfig.isUserCatalogEnabled()) {
@@ -400,34 +404,76 @@ public class FarragoDatabase extends FarragoCompoundAllocation
         return modelExtensions;
     }
 
+    private File getBootUrlFile()
+    {
+        return new File(
+            FarragoProperties.instance().getCatalogDir(),
+            "FarragoBootUrls.lst");
+    }
+
+    private void loadBootUrls()
+    {
+        FileReader fileReader;
+        try {
+            fileReader = new FileReader(getBootUrlFile());
+        } catch (FileNotFoundException ex) {
+            // if file doesn't exist, it's safe to assume that there
+            // are no model plugins yet
+            return;
+        }
+        LineNumberReader lineReader = new LineNumberReader(fileReader);
+        try {
+            for (;;) {
+                String line = lineReader.readLine();
+                if (line == null) {
+                    break;
+                }
+                URL url = new URL(line);
+                pluginClassLoader.addPluginUrl(url);
+            }
+        } catch (Throwable ex) {
+            throw FarragoResource.instance().newCatalogBootUrlReadFailed(ex);
+        }
+    }
+
+    void saveBootUrl(URL url)
+    {
+        // append
+        FileWriter fileWriter = null;
+        try {
+            fileWriter = new FileWriter(getBootUrlFile(), true);
+            PrintWriter pw = new PrintWriter(fileWriter);
+            pw.println(url);
+            pw.close();
+            fileWriter.close();
+        } catch (Throwable ex) {
+            throw FarragoResource.instance().newCatalogBootUrlUpdateFailed(ex);
+        } finally {
+            Util.squelchWriter(fileWriter);
+        }
+    }
+
     private void loadModelPlugins()
     {
+        List resourceBundles = new ArrayList();
+        sessionFactory.defineResourceBundles(resourceBundles);
+        
         modelExtensions = new ArrayList();
         Iterator jarIter = systemRepos.getSql2003Package().getFemJar()
             .refAllOfClass().iterator();
         while (jarIter.hasNext()) {
             FemJar jar = (FemJar) jarIter.next();
             if (jar.isModelExtension()) {
-                try {
-                    String attr =
-                        FarragoPluginClassLoader.PLUGIN_FACTORY_CLASS_ATTRIBUTE;
-                    Class factoryClass =
-                        pluginClassLoader.loadClassFromJarUrlManifest(
-                            jar.getUrl(),
-                            attr);
-                    FarragoSessionModelExtensionFactory factory =
-                        (FarragoSessionModelExtensionFactory)
-                        factoryClass.newInstance();
-                    // TODO:  trace info about extension
-                    FarragoSessionModelExtension modelExtension =
-                        factory.newModelExtension();
-                    modelExtensions.add(modelExtension);
-                } catch (Throwable ex) {
-                    throw FarragoResource.instance().newPluginInitFailed(
-                        jar.getUrl(), ex);
-                }
+                FarragoSessionModelExtension modelExtension =
+                    sessionFactory.newModelExtension(
+                        pluginClassLoader, jar);
+                modelExtensions.add(modelExtension);
+                modelExtension.defineResourceBundles(resourceBundles);
             }
         }
+
+        // add repository localization for model extensions
+        systemRepos.addResourceBundles(resourceBundles);
     }
 
     private void close(boolean suppressExcns)

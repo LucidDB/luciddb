@@ -23,8 +23,11 @@ package net.sf.farrago.rng;
 
 import net.sf.farrago.ddl.*;
 import net.sf.farrago.session.*;
+import net.sf.farrago.util.*;
 import net.sf.farrago.rngmodel.rngschema.*;
+import net.sf.farrago.rng.resource.*;
 
+import java.net.*;
 import java.io.*;
 import java.util.*;
 
@@ -38,24 +41,39 @@ import org.eigenbase.util.*;
  */
 public class FarragoRngDdlHandler extends DdlHandler
 {
-    FarragoRngDdlHandler(FarragoSessionDdlValidator validator)
+    FarragoRngDdlHandler(
+        FarragoSessionDdlValidator validator)
     {
         super(validator);
     }
 
     public void validateDefinition(RngRandomNumberGenerator rng)
     {
-        File file = new File(rng.getSerializedFile());
-        rng.setSerializedFile(file.getAbsolutePath());
+        String path = rng.getSerializedFile();
+        String expandedPath =
+            FarragoProperties.instance().expandProperties(path);
+        if (path.equals(expandedPath)) {
+            rng.setSerializedFile(new File(path).getAbsolutePath());
+        }
     }
 
     public void executeCreation(RngRandomNumberGenerator rng)
     {
+        Random random;
+        Long seed = rng.getInitialSeed();
+        if (seed == null) {
+            random = new Random();
+        } else {
+            random = new Random(seed.longValue());
+        }
         try {
-            FarragoRngUDR.writeSerialized(rng, new Random());
+            FarragoRngUDR.writeSerialized(rng, random);
         } catch (Throwable ex) {
-            // TODO:  resource example
-            throw Util.newInternal(ex);
+            throw FarragoRngPluginFactory.res.newRngFileCreationFailed(
+                validator.getRepos().getLocalizedObjectName(
+                    rng.getSerializedFile()),
+                validator.getRepos().getLocalizedObjectName(rng),
+                ex);
         }
     }
 

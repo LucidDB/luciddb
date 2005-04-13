@@ -92,6 +92,8 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     /** Was this session produced by cloning? */
     private boolean isClone;
     private boolean isAutoCommit;
+    private boolean shutDownRequested;
+    private boolean catalogDumpRequested;
 
     /**
      * List of savepoints established within current transaction which have
@@ -184,6 +186,12 @@ public class FarragoDbSession extends FarragoCompoundAllocation
 
     //~ Methods ---------------------------------------------------------------
 
+    // implement FarragoSession
+    public FarragoSessionFactory getSessionFactory()
+    {
+        return sessionFactory;
+    }
+    
     // implement FarragoSession
     public FarragoSessionPersonality getPersonality()
     {
@@ -331,7 +339,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     public void closeAllocation()
     {
         super.closeAllocation();
-        if (isClone) {
+        if (isClone || isClosed()) {
             return;
         }
         endTransactionIfAuto(true);
@@ -678,17 +686,33 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         tracer.fine("updating storage");
         ddlValidator.executeStorage();
 
-        // TODO: Some statements aren't real DDL, and should be traced
-        // differently.
-        // handle some special cases here
-        ddlStmt.preExecute();
-        if (ddlStmt instanceof DdlStmt) {
-            ((DdlStmt) ddlStmt).visit(new DdlExecutionVisitor());
-        }
-        ddlStmt.postExecute();
+        try {
+            ddlStmt.preExecute();
+            if (ddlStmt instanceof DdlStmt) {
+                ((DdlStmt) ddlStmt).visit(new DdlExecutionVisitor());
+            }
+            ddlStmt.postExecute();
 
-        tracer.fine("committing DDL");
-        reposTxnContext.commit();
+            tracer.fine("committing DDL");
+            reposTxnContext.commit();
+
+            if (shutDownRequested) {
+                closeAllocation();
+                database.shutdown();
+                if (catalogDumpRequested) {
+                    try {
+                        FarragoReposUtil.dumpRepository();
+                    } catch (Exception ex) {
+                        throw FarragoResource.instance().newCatalogDumpFailed(
+                            ex);
+                    }
+                }
+            }
+            
+        } finally {
+            shutDownRequested = false;
+            catalogDumpRequested = false;
+        }
     }
 
     //~ Inner Classes ---------------------------------------------------------
@@ -775,6 +799,16 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             personality = stmt.newPersonality(
                 FarragoDbSession.this,
                 defaultPersonality);
+        }
+
+        // implement DdlVisitor
+        public void visit(DdlExtendCatalogStmt stmt)
+        {
+            // record the model extension plugin jar URL outside of the catalog
+            // so that when we reboot it will be available to MDR
+            database.saveBootUrl(stmt.getJarUrl());
+            shutDownRequested = true;
+            catalogDumpRequested = true;
         }
     }
 }

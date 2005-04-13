@@ -999,6 +999,44 @@ public class Util extends Toolbox
             // intentionally suppressed
         }
     }
+
+    /**
+     * Closes a Reader, ignoring any I/O exception.  This should only
+     * be used in finally blocks when it's necessary to avoid throwing
+     * an exception which might mask a real exception.
+     *
+     * @param reader reader to close
+     */
+    public static void squelchReader(Reader reader)
+    {
+        try {
+            if (reader != null) {
+                reader.close();
+            }
+        } catch (IOException ex) {
+            // intentionally suppressed
+        }
+    }
+
+    /**
+     * Closes a Writer, ignoring any I/O exception.  This should only
+     * be used in finally blocks when it's necessary to avoid throwing
+     * an exception which might mask a real exception.  If you want
+     * to make sure that data has been successfully flushed, do NOT use
+     * this anywhere else; use writer.close() instead.
+     *
+     * @param writer writer to close
+     */
+    public static void squelchWriter(Writer writer)
+    {
+        try {
+            if (writer != null) {
+                writer.close();
+            }
+        } catch (IOException ex) {
+            // intentionally suppressed
+        }
+    }
 }
 
 

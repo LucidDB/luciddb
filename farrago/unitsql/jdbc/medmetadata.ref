@@ -65,6 +65,7 @@
 | JDBC_METADATA       | SYS_BOOT       |
 | SALES               | LOCALDB        |
 | SQLJ                | LOCALDB        |
+| SYS_BOOT            | SYS_BOOT       |
 +---------------------+----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create foreign table csv_schema.example(
@@ -142,6 +143,7 @@ Error: DDL validation error near line 1, column 31: Reference to unknown foreign
 | JDBC_METADATA       | SYS_BOOT       |
 | SALES               | LOCALDB        |
 | SQLJ                | LOCALDB        |
+| SYS_BOOT            | SYS_BOOT       |
 +---------------------+----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop foreign data wrapper test_jdbc;

@@ -250,6 +250,14 @@
   </path>
   <property name="ant.classpath" refid="ant.classpath"/>
 
+  <!-- classpath for running from sqlline -->
+  <path id="farrago.sqlline.classpath">
+    <pathelement location="${sqlline.lib.dir}/sqlline.jar"/>
+    <pathelement location="${sqlline.lib.dir}/jline.jar"/>
+    <pathelement path="${farrago.run.classpath}"/>
+  </path>
+  <property name="farrago.sqlline.classpath" refid="farrago.sqlline.classpath"/>
+
 
   <!-- Macros -->
 
@@ -461,5 +469,30 @@
       <fail message="Test failure(s)" if="junit.failure"/>
     </sequential>
   </macrodef>
+
+  <!-- Macro for running a single forked sqlline test -->
+  <macrodef name="farrago.runSqlTest">
+    <attribute name="file" default="unspecified"/>
+    <sequential>
+      <junit printsummary="yes" fork="yes" haltonerror="yes" haltonfailure="yes"
+        tempdir="${testlog.dir}" forkmode="perBatch">
+        <classpath refid="farrago.sqlline.classpath"/>
+        <jvmarg line="${assertions.jvmarg}"/>
+        <jvmarg line="&FarragoProps;"/>
+        <sysproperty key="java.ext.dirs" value="${sqlline.dir}"/>
+        <sysproperty key="net.sf.farrago.fileset.unitsql"
+          file="@{file}"/>
+        <formatter type="plain"/>
+        <formatter type="xml"/> <!-- for integration builds -->
+        <test todir="${testlog.dir}" 
+          name="net.sf.farrago.test.FarragoSqlTest" />
+      </junit>
+    </sequential>
+  </macrodef>
+
+  <target name="farrago.mdr_taskdef">
+    <taskdef name="mdr" classname="org.netbeans.mdrant.MdrTask"
+      classpathref="farrago.3p.classpath"/>
+  </target>
 
 </project>

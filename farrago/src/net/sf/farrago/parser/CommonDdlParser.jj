@@ -1140,10 +1140,18 @@ DdlStmt CatalogExtension() :
 
 DdlStmt SessionImplementation() :
 {
-    SqlIdentifier jarName;
+    SqlIdentifier jarName = null;
 }
 {
-    <SET> <JAR> jarName = CompoundIdentifier2()
+    <SET>
+         (
+             <JAR> jarName = CompoundIdentifier2()
+             {
+             }
+             | <DEFAULT_KW>
+             {
+             }
+         )
         {
         }
     {

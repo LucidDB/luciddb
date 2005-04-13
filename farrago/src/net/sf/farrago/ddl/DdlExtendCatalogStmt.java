@@ -31,6 +31,7 @@ import java.net.*;
 import java.io.*;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
 
 /**
  * DdlExtendCatalogStmt represents an ALTER SYSTEM ADD CATALOG LIBRARY
@@ -43,7 +44,9 @@ public class DdlExtendCatalogStmt extends DdlStmt
 {
     private final SqlIdentifier jarName;
     private FarragoRepos repos;
+    private FarragoSessionFactory sessionFactory;
     private FemJar femJar;
+    private URL jarUrl;
     
     public DdlExtendCatalogStmt(SqlIdentifier jarName)
     {
@@ -61,6 +64,8 @@ public class DdlExtendCatalogStmt extends DdlStmt
     public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
         repos = ddlValidator.getRepos();
+        sessionFactory =
+            ddlValidator.getStmtValidator().getSession().getSessionFactory();
         femJar = (FemJar) ddlValidator.getStmtValidator().findSchemaObject(
             jarName,
             repos.getSql2003Package().getFemJar());
@@ -72,7 +77,7 @@ public class DdlExtendCatalogStmt extends DdlStmt
     }
 
     // implement FarragoSessionDdlStmt
-    public void postExecute()
+    public void preExecute()
     {
         // We do the real work here since there's nothing session-specific
         // involved.  We don't bother updating transient information
@@ -80,13 +85,22 @@ public class DdlExtendCatalogStmt extends DdlStmt
         // because we're going to require a restart anyway.
 
         // TODO jvs 6-Apr-2005: verify that model name does not conflict with
-        // any existing one.  Also, force catalog rebuild followed by
-        // restart.
+        // any existing one.  Also, verify that we are in single-session
+        // mode.
+
+        // Before modifying the catalog, verify that we can actually
+        // load the plugin; otherwise, we'll be in bad shape after
+        // reboot.
+        FarragoSessionModelExtension modelExtension =
+            sessionFactory.newModelExtension(
+                new FarragoPluginClassLoader(),
+                femJar);
+        // TODO:  trace information about modelExtension
 
         JarInputStream jarInputStream = null;
 
         try {
-            URL jarUrl = new URL(femJar.getUrl());
+            jarUrl = new URL(FarragoCatalogUtil.getJarUrl(femJar));
             jarInputStream = new JarInputStream(jarUrl.openStream());
             Manifest manifest = jarInputStream.getManifest();
             String xmiResourceName =
@@ -101,14 +115,13 @@ public class DdlExtendCatalogStmt extends DdlStmt
             throw FarragoResource.instance().newCatalogModelImportFailed(
                 repos.getLocalizedObjectName(femJar), ex);
         } finally {
-            if (jarInputStream != null) {
-                try {
-                    jarInputStream.close();
-                } catch (IOException ex) {
-                    // TODO:  trace
-                }
-            }
+            Util.squelchStream(jarInputStream);
         }
+    }
+
+    public URL getJarUrl()
+    {
+        return jarUrl;
     }
 }
 

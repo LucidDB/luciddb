@@ -452,14 +452,26 @@ public class DdlRoutineHandler extends DdlHandler
     // implement FarragoSessionDdlHandler
     public void validateDefinition(FemJar jar)
     {
-        // TODO jvs 19-Jan-2005: implement deployment descriptors, and
-        // (optionally?) copy jar to an area managed by Farrago
+        // TODO jvs 19-Jan-2005: implement deployment descriptors
+        String urlString = FarragoCatalogUtil.getJarUrl(jar);
         URL url;
         try {
-            url = new URL(jar.getUrl());
+            url = new URL(urlString);
+            // verify that we can actually access the jar
+            InputStream stream = null;
+            try {
+                stream = url.openStream();
+            } catch (Throwable ex) {
+                throw res.newValidatorInvalidJarUrl(
+                    repos.getLocalizedObjectName(urlString),
+                    repos.getLocalizedObjectName(jar),
+                    ex);
+            } finally {
+                Util.squelchStream(stream);
+            }
         } catch (MalformedURLException ex) {
             throw res.newPluginMalformedJarUrl(
-                repos.getLocalizedObjectName(jar.getUrl()),
+                repos.getLocalizedObjectName(urlString),
                 repos.getLocalizedObjectName(jar),
                 ex);
         }

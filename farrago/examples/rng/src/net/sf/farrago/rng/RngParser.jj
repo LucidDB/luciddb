@@ -135,7 +135,7 @@ String RngNonReservedKeyWord() :
 }
 {
     (
-          <RNG>
+          <RNG> | <SEED>
     )
         {
             return getToken(0).image.toUpperCase();
@@ -147,6 +147,7 @@ CwmModelElement ExtensionModelSchemaObjDefinition() :
     RngRandomNumberGenerator rng;
     SqlIdentifier qualifiedName;
     String externalLocation;
+    long seed;
 }
 {
     <RNG>
@@ -163,9 +164,25 @@ CwmModelElement ExtensionModelSchemaObjDefinition() :
         {
             rng.setSerializedFile(externalLocation);
         }
+    [ <SEED> seed = SeedValue() { rng.setInitialSeed(new Long(seed)); } ]
     {
         return rng;
     }
+}
+
+long SeedValue() :
+{
+    Token t;
+}
+{
+    t = <UNSIGNED_INTEGER_LITERAL>
+        {
+            try {
+                return Long.parseLong(t.image);
+            } catch (NumberFormatException ex) {
+                 throw generateParseException();
+            }
+        }
 }
 
 CwmModelElement ExtensionModelDefinition() :
@@ -213,7 +230,8 @@ DdlStmt ExtensionModelAlter() :
 
 TOKEN :
 {
-    < RNG: "RNG" >
+  < RNG: "RNG" >
+| < SEED: "SEED" >
 }
 
 // End RngParser.jj

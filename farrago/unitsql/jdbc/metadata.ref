@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/jdbc/metadata.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/jdbc/metadata.sql#4 $
 0: jdbc:farrago:> -- Test JDBC metadata calls
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test getCatalogs
@@ -25,6 +25,7 @@
 | JDBC_METADATA       | SYS_BOOT       |
 | SALES               | LOCALDB        |
 | SQLJ                | LOCALDB        |
+| SYS_BOOT            | SYS_BOOT       |
 +---------------------+----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test getTableTypes
@@ -122,6 +123,7 @@
 | METADATA_TEST_SCHEMA  | LOCALDB        |
 | SALES                 | LOCALDB        |
 | SQLJ                  | LOCALDB        |
+| SYS_BOOT              | SYS_BOOT       |
 +-----------------------+----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create table metadata_test_schema.new_table (
@@ -234,6 +236,7 @@
 | JDBC_METADATA       | SYS_BOOT       |
 | SALES               | LOCALDB        |
 | SQLJ                | LOCALDB        |
+| SYS_BOOT            | SYS_BOOT       |
 +---------------------+----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test misc calls

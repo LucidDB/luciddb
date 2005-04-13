@@ -1,7 +1,214 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- $Id$ -->
-<!-- Farrago ant build script for plugin creation -->
+<!-- 
+// $Id$
+// Farrago is an extensible data management system.
+// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2005-2005 Disruptive Tech
+// Copyright (C) 2005-2005 Red Square, Inc.
+// Portions Copyright (C) 2004-2005 John V. Sichi
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later Eigenbase-approved version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//  
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
+-->
+<!-- Farrago ant build targets for plugin creation -->
 
-<project name="farragoPlugin" basedir=".." default="all">
+<project name="farragoPlugin" default="unspecified">
+
+  <fail unless="plugin.dir"/>
+  <fail unless="plugin.jar.basename"/>
+  <fail unless="plugin.3p.classpath"/>
+
+  <property name="plugin.classes.dir" 
+    location="${plugin.dir}/classes"/>
+
+  <property name="plugin.catalog.dir" 
+    location="${plugin.dir}/catalog"/>
+
+  <property name="plugin.xmi.dir" 
+    location="${plugin.catalog.dir}/xmi"/>
+
+  <property name="plugin.catalog.src.dir" 
+    location="${plugin.catalog.dir}/java"/>
+
+  <property name="plugin.src.dir" 
+    location="${plugin.dir}/src"/>
+
+  <property name="plugin.jar.dir" 
+    location="${plugin.dir}/plugin"/>
+
+  <property name="plugin.jar.file" 
+    location="${plugin.jar.dir}/${plugin.jar.basename}.jar"/>
+
+  <property name="plugin.resource.dir" 
+    location="${plugin.src.dir}/${plugin.resource.package}"/>
+
+  <property name="plugin.parser.impl.dir" 
+    location="${plugin.src.dir}/${plugin.parser.impl.package}"/>
+
+  <path id="plugin.classpath">
+    <pathelement path="${farrago.run.classpath}"/>
+    <pathelement path="${plugin.3p.classpath}"/>
+    <pathelement location="${plugin.catalog.src.dir}"/>
+  </path>
+  <property name="plugin.classpath" refid="plugin.classpath"/>
+
+  <target name="plugin.buildModel" depends="plugin.cleanModel">
+    <fail unless="plugin.model.name"/>
+    <fail unless="plugin.model.basename"/>
+    <fail unless="plugin.model.prefix"/>
+    <fail unless="plugin.model.package"/>
+    <fail unless="plugin.factory.class"/>
+    <mkdir dir="${plugin.catalog.src.dir}"/>
+    <mkdir dir="${plugin.classes.dir}"/>
+    <copy file="${farrago.catalog.dir}/templates/BTreeRepos.properties" 
+      tofile="${plugin.catalog.dir}/ReposStorage.properties"/>
+    <farrago.extractPoseidonModel 
+      zumlFile="${plugin.xmi.dir}/${plugin.model.basename}Model.zuml"
+      umlBasename="${plugin.model.basename}Model"
+      mofBasename="${plugin.model.basename}Mof"
+      xmiDir="${plugin.xmi.dir}"/>
+    <farrago.transformExtensionModel
+      mofBasename="${plugin.model.basename}Mof"
+      modelPrefix="${plugin.model.prefix}"
+      xmiDir="${plugin.xmi.dir}"/>
+    <farrago.synthesizeMetamodel
+      extMofBasename="${plugin.model.basename}Mof"
+      xmiDir="${plugin.xmi.dir}"/>
+    <farrago.antFork target="plugin.forked_importMetamodel"/>
+    <delete includeEmptyDirs="true" quiet="true">
+      <fileset dir="${plugin.catalog.src.dir}" 
+        excludes="${plugin.model.package}/**"/>
+    </delete>
+    <farrago.javaCompile
+      srcdir="${plugin.catalog.src.dir}"
+      destdir="${plugin.catalog.src.dir}"
+      classpathref="plugin.classpath">
+      <include name="**/*.java"/>
+    </farrago.javaCompile>
+    <farrago.javaExec
+      classname="net.sf.farrago.catalog.FarragoReposUtil"
+      classpathref="farrago.run.classpath">
+      <sysproperty 
+        key="net.sf.farrago.catalog" 
+        value="${plugin.catalog.dir}"/>
+      <arg value="exportSubModel"/>
+      <arg 
+        value="${plugin.xmi.dir}/${plugin.model.prefix}PluginModelExport.xmi"/>
+      <arg value="${plugin.model.name}"/>
+    </farrago.javaExec>
+    <xslt style="${farrago.xmi.dir}/movePluginPackage.xsl"
+      in="${plugin.xmi.dir}/${plugin.model.prefix}PluginModelExport.xmi"
+      out="${plugin.xmi.dir}/${plugin.model.prefix}PluginModel.xmi" />
+  </target>
+
+  <target name="plugin.forked_importMetamodel" depends="farrago.mdr_taskdef">
+    <mdr storageFile="${plugin.catalog.dir}/FarragoCatalog">
+      <instantiate name="FarragoMetamodel"/>
+      <readXMI
+        file="${plugin.xmi.dir}/FarragoMetamodel.xmi"
+        extent="FarragoMetamodel"/>
+      <mapJava
+        dir="${plugin.catalog.src.dir}"
+        extent="FarragoMetamodel"/>
+    </mdr>
+  </target>
+
+  <target name="plugin.buildResources" depends="plugin.checkResourceUptodate"
+    unless="plugin.resource.uptodate">
+    <taskdef name="resgen" classname="org.eigenbase.resgen.ResourceGenTask">
+      <classpath refid="farrago.run.classpath"/>
+    </taskdef>
+    <resgen
+      srcdir="${plugin.src.dir}"
+      destdir="${plugin.src.dir}"
+      resdir="${plugin.classes.dir}"
+      locales="en_US">
+      <include 
+        name="${plugin.resource.package}/${plugin.resource.basename}.xml"/>
+    </resgen>
+  </target>
+
+  <target name="plugin.checkResourceUptodate">
+    <fail unless="plugin.resource.package"/>
+    <fail unless="plugin.resource.basename"/>
+    <uptodate property="plugin.resource.uptodate"
+      srcfile="${plugin.resource.dir}/${plugin.resource.basename}.xml"
+      targetfile="${plugin.resource.dir}/${plugin.resource.basename}.java"/>
+  </target>
+
+  <target name="plugin.buildParser" depends="plugin.checkParserUptodate"
+    unless="plugin.parser.uptodate">
+    <farrago.generateParser 
+      combined="${plugin.parser.impl.dir}/CombinedParser.jj">
+      <components>
+        <fileset dir="${plugin.src.dir}" includes="${plugin.parser.jj}"/>
+        <fileset refid="farrago.parser.common.ddl"/>
+        <fileset refid="farrago.parser.common.sql"/>
+      </components>
+    </farrago.generateParser>
+  </target>
+
+  <target name="plugin.checkParserUptodate">
+    <fail unless="plugin.parser.impl.package"/>
+    <fail unless="plugin.parser.jj"/>
+    <uptodate property="plugin.parser.uptodate"
+      targetfile="${plugin.parser.impl.dir}/CombinedParser.jj">
+      <srcfiles dir="${plugin.src.dir}" includes="${plugin.parser.jj}"/>
+      <srcfiles refid="farrago.parser.common.ddl"/>
+      <srcfiles refid="farrago.parser.common.sql"/>
+    </uptodate>
+  </target>
+
+  <target name="plugin.buildJar">
+    <mkdir dir="${plugin.jar.dir}"/>
+    <delete quiet="true" file="${plugin.jar.file}"/>
+    <jar destfile="${plugin.jar.file}" compress="true">
+      <fileset dir="${plugin.classes.dir}">
+        <include name="**/*.class"/>
+        <include name="**/*.properties"/>
+      </fileset>
+      <fileset dir="${plugin.catalog.src.dir}">
+        <include name="**/*.class"/>
+      </fileset>
+      <fileset dir="${plugin.xmi.dir}">
+        <include name="${plugin.model.prefix}PluginModel.xmi"/>
+      </fileset>
+      <manifest>
+        <attribute
+          name="PluginModel"
+          value="${plugin.model.prefix}PluginModel.xmi"/>
+        <attribute
+          name="PluginFactoryClassName"
+          value="${plugin.factory.class}"/>
+      </manifest>
+    </jar>
+  </target>
+
+  <target name="plugin.clean">
+    <delete quiet="true">
+      <fileset dir="${plugin.resource.dir}" 
+        includes="${plugin.resource.basename}*.java"/>
+      <fileset dir="${plugin.classes.dir}" includes="**/*"/>
+      <fileset dir="${plugin.parser.impl.dir}" includes="*.java,*.jj"/>
+    </delete>
+  </target>
+
+  <target name="plugin.cleanModel" depends="plugin.clean">
+    <delete quiet="true">
+      <fileset dir="${plugin.xmi.dir}" includes="*.xmi"/>
+      <fileset dir="${plugin.catalog.dir}" includes="FarragoCatalog.*"/>
+    </delete>
+  </target>
 
 </project>

@@ -30,6 +30,7 @@ import org.netbeans.api.mdr.*;
 import org.netbeans.mdr.*;
 import org.netbeans.mdr.persistence.*;
 import org.netbeans.mdr.storagemodel.*;
+import net.sf.farrago.*;
 import net.sf.farrago.util.*;
 import javax.jmi.reflect.*;
 import javax.jmi.model.*;
@@ -103,6 +104,161 @@ public abstract class FarragoReposUtil
         }
     }
 
+    public static void dumpRepository()
+        throws Exception
+    {
+        File catalogDir = FarragoProperties.instance().getCatalogDir();
+        File metamodelDump = 
+            new File(catalogDir, "FarragoMetamodelDump.xmi");
+        File catalogDump = 
+            new File(catalogDir, "FarragoCatalogDump.xmi");
+
+        FarragoModelLoader modelLoader = new FarragoModelLoader();
+        boolean success = false;
+        try {
+            FarragoPackage farragoPackage =
+                modelLoader.loadModel("FarragoCatalog", false);
+            exportExtent(
+                modelLoader.getMdrRepos(),
+                metamodelDump,
+                "FarragoMetamodel");
+            exportExtent(
+                modelLoader.getMdrRepos(),
+                catalogDump,
+                "FarragoCatalog");
+            deleteStorage(modelLoader, farragoPackage);
+            success = true;
+        } finally {
+            modelLoader.close();
+            if (!success) {
+                metamodelDump.delete();
+                catalogDump.delete();
+            }
+        }
+    }
+
+    public static boolean isReloadNeeded()
+    {
+        File catalogDir = FarragoProperties.instance().getCatalogDir();
+        return new File(catalogDir, "FarragoMetamodelDump.xmi").exists();
+    }
+
+    public static void reloadRepository()
+        throws Exception
+    {
+        File catalogDir = FarragoProperties.instance().getCatalogDir();
+        File metamodelDump = 
+            new File(catalogDir, "FarragoMetamodelDump.xmi");
+        File catalogDump = 
+            new File(catalogDir, "FarragoCatalogDump.xmi");
+            
+        FarragoModelLoader modelLoader = new FarragoModelLoader();
+        modelLoader = new FarragoModelLoader();
+        try {
+            modelLoader.initStorage(false);
+
+            // import metamodel
+            importExtent(
+                modelLoader.getMdrRepos(),
+                metamodelDump, 
+                "FarragoMetamodel",
+                null,
+                null);
+            
+            // import catalog
+            importExtent(
+                modelLoader.getMdrRepos(),
+                catalogDump, 
+                "FarragoCatalog",
+                "FarragoMetamodel",
+                "Farrago");
+
+            metamodelDump.delete();
+            catalogDump.delete();
+            
+        } finally {
+            modelLoader.close();
+        }
+    }
+
+    private static void exportExtent(
+        MDRepository mdrRepos,
+        File file,
+        String extentName)
+        throws Exception
+    {
+        RefPackage refPackage = mdrRepos.getExtent(extentName);
+        XmiWriter xmiWriter = XMIWriterFactory.getDefault().createXMIWriter();
+        FileOutputStream outStream = new FileOutputStream(file);
+        try {
+            xmiWriter.write(outStream, refPackage, "1.2");
+        } finally {
+            outStream.close();
+        }
+    }
+
+    private static void deleteStorage(
+        FarragoModelLoader modelLoader,
+        FarragoPackage farragoPackage)
+        throws Exception
+    {
+        try {
+            // grotty internals for dropping physical repos storage
+            String mofIdString = farragoPackage.refMofId();
+            MOFID mofId = MOFID.fromString(mofIdString);
+        
+            NBMDRepositoryImpl reposImpl = (NBMDRepositoryImpl)
+                modelLoader.getMdrRepos();
+            Storage storage =
+                reposImpl.getMdrStorage().getStorageByMofId(mofId);
+            storage.close();
+            storage.delete();
+        } finally {
+            modelLoader.close();
+        }
+    }
+    
+    private static void importExtent(
+        MDRepository mdrRepos,
+        File file,
+        String extentName,
+        String metaPackageExtentName,
+        String metaPackageName)
+        throws Exception
+    {
+        RefPackage extent;
+        if (metaPackageExtentName != null) {
+            ModelPackage modelPackage = (ModelPackage)
+                mdrRepos.getExtent(metaPackageExtentName);
+            MofPackage metaPackage = null;
+            Iterator iter =
+                modelPackage.getMofPackage().refAllOfClass().iterator();
+            while (iter.hasNext()) {
+                MofPackage result = (MofPackage) iter.next();
+                if (result.getName().equals(metaPackageName)) {
+                    metaPackage = result;
+                    break;
+                }
+            }
+            extent = mdrRepos.createExtent(extentName, metaPackage);
+        } else {
+            extent = mdrRepos.createExtent(extentName);
+        }
+        XmiReader xmiReader = XMIReaderFactory.getDefault().createXMIReader();
+        boolean rollback = false;
+        try {
+            mdrRepos.beginTrans(true);
+            rollback = true;
+            xmiReader.read(file.toURL().toString(), extent);
+            rollback = false;
+            mdrRepos.endTrans();
+        } finally {
+            if (rollback) {
+                mdrRepos.endTrans(true);
+            }
+        }
+    }
+    
     private static class ExportRefProvider implements XMIReferenceProvider 
     {
         private final String subPackageName;

@@ -4,6 +4,9 @@
 !set verbose true
 !autocommit off
 
+-- create system-owned schema to hold objects like model extension plugin jars
+create schema sys_boot.sys_boot;
+
 -- create wrapper for access to MDR repositories
 create foreign data wrapper sys_mdr
 library 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'

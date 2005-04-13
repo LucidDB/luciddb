@@ -48,6 +48,16 @@ public interface FarragoSessionModelExtension
     public void defineDdlHandlers(
         FarragoSessionDdlValidator ddlValidator,
         List handlerList);
+
+    /**
+     * Defines resource bundles to be used for localizing model object names.
+     * Any resource having a name of the form "UmlXXX" will be interpreted
+     * as the localized name for UML class XXX.
+     *
+     * @param bundleList receives instances of ResourceBundle
+     */
+    public void defineResourceBundles(
+        List bundleList);
 }
 
 // End FarragoSessionModelExtension.java

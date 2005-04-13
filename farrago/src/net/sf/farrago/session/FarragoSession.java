@@ -44,6 +44,11 @@ public interface FarragoSession extends FarragoAllocation
 {
     //~ Methods ---------------------------------------------------------------
 
+    /***
+     * @return the factory which created this session
+     */
+    public FarragoSessionFactory getSessionFactory();
+    
     /**
      * @return the current personality for this session
      */

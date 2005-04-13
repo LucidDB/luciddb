@@ -147,6 +147,11 @@ public class FarragoJdbcEngineConnection
         }
         try {
             try {
+                if (session.isClosed()) {
+                    // Already closed internally by something like
+                    // a database shutdown; pop out now to avoid assertions.
+                    return;
+                }
                 session.closeAllocation();
                 if (session.isClone()) {
                     return;

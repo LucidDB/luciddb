@@ -230,17 +230,9 @@ require version '${required.ant.version}'."/>
   </path>
   <property name="farrago.sourcepath" refid="farrago.sourcepath"/>
 
-  <!-- classpath for running from sqlline -->
-  <path id="sqlline.classpath">
-    <pathelement location="${sqlline.lib.dir}/sqlline.jar"/>
-    <pathelement location="${sqlline.lib.dir}/jline.jar"/>
-    <pathelement path="${farrago.run.classpath}"/>
-  </path>
-  <property name="sqlline.classpath" refid="sqlline.classpath"/>
-
   <!-- classpath for running tests via ant -->
   <path id="test.classpath">
-    <pathelement path="${sqlline.classpath}"/>
+    <pathelement path="${farrago.sqlline.classpath}"/>
     <pathelement path="${ant.classpath}"/>
   </path>
   <property name="test.classpath" refid="test.classpath"/>
@@ -277,11 +269,6 @@ require version '${required.ant.version}'."/>
   reports.
 
   -->
-
-  <target name="mdr_taskdef">
-    <taskdef name="mdr" classname="org.netbeans.mdrant.MdrTask"
-      classpathref="farrago.run.classpath"/>
-  </target>
 
   <!-- default target:  assumes catalog has already been created -->
   <target name="all"
@@ -502,7 +489,7 @@ require version '${required.ant.version}'."/>
     <farrago.mdrFork target="forked_importMetamodel"/>
   </target>
 
-  <target name="forked_importMetamodel" depends="mdr_taskdef">
+  <target name="forked_importMetamodel" depends="farrago.mdr_taskdef">
     <mdr>
       <instantiate name="FarragoMetamodel"/>
       <readXMI
@@ -514,7 +501,7 @@ require version '${required.ant.version}'."/>
     </mdr>
   </target>
 
-  <target name="forked_createCatalogRepository" depends="mdr_taskdef">
+  <target name="forked_createCatalogRepository" depends="farrago.mdr_taskdef">
     <mdr>
       <instantiate
         name="FarragoCatalog"
@@ -560,7 +547,7 @@ require version '${required.ant.version}'."/>
     </propertyfile>
   </target>
 
-  <target name="forked_importConfig" depends="mdr_taskdef">
+  <target name="forked_importConfig" depends="farrago.mdr_taskdef">
     <mdr>
       <readXMI
         file="${FarragoConf.xmi}"
@@ -588,7 +575,7 @@ require version '${required.ant.version}'."/>
   <target name="populateTestSchema" depends="determineInitSql">
     <junit printsummary="yes" fork="yes" haltonerror="yes" haltonfailure="yes"
       tempdir="${testlog.dir}">
-      <classpath refid="sqlline.classpath"/>
+      <classpath refid="farrago.sqlline.classpath"/>
       <jvmarg line="${assertions.jvmarg}"/>
       <jvmarg line="&FarragoProps;"/>
       <sysproperty key="java.ext.dirs" value="${sqlline.dir}"/>
@@ -642,6 +629,8 @@ require version '${required.ant.version}'."/>
     <delete>
       <fileset dir="${farrago.catalog.dir}" includes="*.dat"/>
       <fileset dir="${farrago.catalog.dir}" includes="FarragoCatalog.*"/>
+      <fileset dir="${farrago.catalog.dir}" includes="*Dump.xmi"/>
+      <fileset dir="${farrago.catalog.dir}" includes="FarragoBootUrls.lst"/>
     </delete>
   </target>
 
@@ -649,7 +638,7 @@ require version '${required.ant.version}'."/>
     <farrago.mdrFork target="forked_exportCatalog"/>
   </target>
 
-  <target name="forked_exportCatalog" depends="mdr_taskdef">
+  <target name="forked_exportCatalog" depends="farrago.mdr_taskdef">
     <mdr>
       <writeXMI
         file="${farrago.xmi.dir}/FarragoCatalogExport.xmi"
@@ -658,11 +647,11 @@ require version '${required.ant.version}'."/>
     </mdr>
   </target>
 
-  <target name="exportMetamodel" depends="mdr_taskdef">
+  <target name="exportMetamodel">
     <farrago.mdrFork target="forked_exportMetamodel"/>
   </target>
 
-  <target name="forked_exportMetamodel" depends="mdr_taskdef">
+  <target name="forked_exportMetamodel" depends="farrago.mdr_taskdef">
     <mdr>
       <writeXMI
         file="${farrago.xmi.dir}/FarragoMetamodelExport.xmi"
@@ -831,6 +820,7 @@ require version '${required.ant.version}'."/>
     <antcall target="buildExamples"/>
     <antcall target="junit"/>
     <antcall target="regressionWithoutBuild"/>
+    <antcall target="testRngPlugin"/>
     <antcall target="macker"/>
     <antcall target="checkSourceFilePreambles"/>
   </target>
@@ -873,6 +863,14 @@ require version '${required.ant.version}'."/>
     </farrago.runTests>
   </target>
 
+  <!-- NOTE:  these have to run forked in specific order -->
+  <target name="testRngPlugin">
+    <farrago.runSqlTest
+      file="${farrago.dir}/examples/rng/unitsql/installPlugin.sql"/>
+    <farrago.runSqlTest
+      file="${farrago.dir}/examples/rng/unitsql/testPlugin.sql"/>
+  </target>
+
   <target name="generateTestSql" depends="compile">
     <farrago.javaExec classpathref="farrago.run.classpath"
       classname="org.eigenbase.test.SqlTestGen"/>
@@ -882,7 +880,7 @@ require version '${required.ant.version}'."/>
   <target name="jswat.junit" depends="all">
     <fail message="property junit.class not defined" unless="junit.class"/>
     <farrago.jswatDebug
-      classpath="${sqlline.classpath}"
+      classpath="${farrago.sqlline.classpath}"
       sourcepath="${farrago.sourcepath}"
       classname="junit.textui.TestRunner">
       <jvmargs>
@@ -944,7 +942,7 @@ require version '${required.ant.version}'."/>
 
 
   <!-- Debugging target for listing repository extents -->
-  <target name="printRepositoryExtents" depends="mdr_taskdef">
+  <target name="printRepositoryExtents" depends="farrago.mdr_taskdef">
     <mdr>
       <printExtentNames/>
     </mdr>
@@ -1097,7 +1095,7 @@ require version '${required.ant.version}'."/>
   <!-- run JSwat on sqlline in interactive mode -->
   <target name="jswat.sqlline" depends="all">
     <farrago.jswatDebug
-      classpath="${sqlline.classpath}"
+      classpath="${farrago.sqlline.classpath}"
       sourcepath="${farrago.sourcepath}"
       classname="sqlline.SqlLine">
       <jvmargs>
@@ -1115,13 +1113,13 @@ require version '${required.ant.version}'."/>
     <delete file="${file.classpath}" quiet="true"/>
     <concat destfile="${file.classpath}">cccp</concat>
     <replace file="${file.classpath}" token="cccp"
-      value="${sqlline.classpath}"/>
+      value="${farrago.sqlline.classpath}"/>
   </target>
   <property name="file.classpath"
     location="${farrago.dir}/classpath.gen"/>
 
   <!-- Create an MDR repository for use by SQL/MED tests -->
-  <target name="createMdrTestData" depends="mdr_taskdef">
+  <target name="createMdrTestData" depends="farrago.mdr_taskdef">
     <delete quiet="true">
       <fileset dir="unitsql/ddl" includes="mdr.bt?"/>
     </delete>
@@ -1182,6 +1180,8 @@ require version '${required.ant.version}'."/>
 
   <target name="buildExamples" depends="compile">
     <ant antfile="examples/plannerviz/build.xml" inheritAll="false"/>
+    <ant antfile="examples/rng/build.xml" target="createPlugin" 
+      inheritAll="false"/>
   </target>
 
   <!-- Below is all experimental stuff for the user repository -->
@@ -1237,7 +1237,7 @@ require version '${required.ant.version}'."/>
     </farrago.jswatDebug>
   </target>
 
-  <target name="forked_createUserRepository" depends="mdr_taskdef">
+  <target name="forked_createUserRepository" depends="farrago.mdr_taskdef">
     <mdr>
       <instantiate name="FarragoMetamodel"/>
       <printExtentNames/>

@@ -29,8 +29,11 @@ import net.sf.farrago.ddl.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.parser.*;
 import net.sf.farrago.session.*;
+import net.sf.farrago.resource.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.plugin.*;
 
+import net.sf.farrago.fem.sql2003.*;
 
 /**
  * FarragoDbSessionFactory is a basic implementation for the
@@ -64,6 +67,29 @@ public class FarragoDbSessionFactory implements FarragoSessionFactory
         }
     }
 
+    // implement FarragoSessionFactory
+    public FarragoSessionModelExtension newModelExtension(
+        FarragoPluginClassLoader pluginClassLoader, 
+        FemJar femJar)
+    {
+        String url = FarragoCatalogUtil.getJarUrl(femJar);
+        try {
+            String attr =
+                FarragoPluginClassLoader.PLUGIN_FACTORY_CLASS_ATTRIBUTE;
+            Class factoryClass =
+                pluginClassLoader.loadClassFromJarUrlManifest(url, attr);
+            FarragoSessionModelExtensionFactory factory =
+                (FarragoSessionModelExtensionFactory)
+                factoryClass.newInstance();
+            // TODO:  trace info about extension
+            FarragoSessionModelExtension modelExtension =
+                factory.newModelExtension();
+            return modelExtension;
+        } catch (Throwable ex) {
+            throw FarragoResource.instance().newPluginInitFailed(url, ex);
+        }
+    }
+    
     // implement FarragoSessionFactory
     public FennelCmdExecutor newFennelCmdExecutor()
     {
@@ -100,6 +126,13 @@ public class FarragoDbSessionFactory implements FarragoSessionFactory
     public void cleanupSessions()
     {
         FarragoDatabase.shutdownConditional(0);
+    }
+    
+    // implement FarragoSessionFactory
+    public void defineResourceBundles(
+        List bundleList)
+    {
+        bundleList.add(FarragoResource.instance());
     }
 }
 

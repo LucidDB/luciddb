@@ -25,6 +25,7 @@ import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.plugin.*;
 import net.sf.farrago.resource.*;
+import net.sf.farrago.catalog.*;
 
 import org.eigenbase.sql.*;
 
@@ -55,6 +56,9 @@ public class DdlSetSessionImplementationStmt extends DdlStmt
     // implement FarragoSessionDdlStmt
     public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
+        if (jarName == null) {
+            return;
+        }
         femJar = (FemJar) ddlValidator.getStmtValidator().findSchemaObject(
             jarName,
             ddlValidator.getRepos().getSql2003Package().getFemJar());
@@ -64,9 +68,13 @@ public class DdlSetSessionImplementationStmt extends DdlStmt
         FarragoSession session,
         FarragoSessionPersonality defaultPersonality)
     {
+        if (femJar == null) {
+            return defaultPersonality;
+        }
+        String url = FarragoCatalogUtil.getJarUrl(femJar);
         Class factoryClass =
             session.getPluginClassLoader().loadClassFromJarUrlManifest(
-                femJar.getUrl(),
+                url,
                 FarragoPluginClassLoader.PLUGIN_FACTORY_CLASS_ATTRIBUTE);
         try {
             FarragoSessionPersonalityFactory factory =
@@ -75,8 +83,7 @@ public class DdlSetSessionImplementationStmt extends DdlStmt
                 session,
                 defaultPersonality);
         } catch (Throwable ex) {
-            throw FarragoResource.instance().newPluginInitFailed(
-                femJar.getUrl(), ex);
+            throw FarragoResource.instance().newPluginInitFailed(url, ex);
         }
     }
 }

@@ -182,6 +182,10 @@ public abstract class FarragoTestCase extends DiffTestCase
     public static void staticTearDown()
         throws Exception
     {
+        if (!FarragoDatabase.isReferenced()) {
+            // some kind of forced shutdown already happened; pop out
+            return;
+        }
         if (repos != null) {
             restoreParameters();
         }
