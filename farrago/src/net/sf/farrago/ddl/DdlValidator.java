@@ -371,23 +371,30 @@ public class DdlValidator extends FarragoCompoundAllocation
         CwmModelElement schemaElement,
         SqlIdentifier qualifiedName)
     {
-        String schemaName = null;
+        SqlIdentifier schemaName = null;
         assert (qualifiedName.names.length > 0);
-        assert (qualifiedName.names.length < 3);
+        assert (qualifiedName.names.length < 4);
 
-        // TODO:  support catalog names
-        if (qualifiedName.names.length == 2) {
+        if (qualifiedName.names.length == 3) {
+            schemaElement.setName(qualifiedName.names[2]);
+            schemaName = new SqlIdentifier(
+                new String[] {
+                    qualifiedName.names[0],
+                    qualifiedName.names[1]
+                },
+                null);
+        } else if (qualifiedName.names.length == 2) {
             schemaElement.setName(qualifiedName.names[1]);
-            schemaName = qualifiedName.names[0];
+            schemaName = new SqlIdentifier(qualifiedName.names[0], null);
         } else {
             schemaElement.setName(qualifiedName.names[0]);
             if (stmtValidator.getSessionVariables().schemaName == null) {
                 throw FarragoResource.instance().newValidatorNoDefaultSchema();
             }
-            schemaName = stmtValidator.getSessionVariables().schemaName;
+            schemaName = new SqlIdentifier(
+                stmtValidator.getSessionVariables().schemaName, null);
         }
-        CwmSchema schema =
-            stmtValidator.findSchema(new SqlIdentifier(schemaName, null));
+        CwmSchema schema = stmtValidator.findSchema(schemaName);
         schema.getOwnedElement().add(schemaElement);
     }
 

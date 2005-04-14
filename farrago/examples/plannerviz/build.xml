@@ -23,66 +23,96 @@
 
 <!-- Farrago plannerviz ant build script -->
 
-<project name="farragoPlannerviz" basedir="." default="all">
+<project name="farragoPlannerviz" basedir="." default="compile">
 
   <!-- Definitions for Farrago build properties and macros -->
   <import file="../../buildMacros.xml"/>
 
-  <property name="plannerviz.dir" location="."/>
-  <property name="src.dir" location="${plannerviz.dir}/src"/>
-  <property name="plugin.dir" location="${plannerviz.dir}/plugin"/>
-  <property name="classes.dir" location="${plannerviz.dir}/classes"/>
+  <!-- Specialization definitions required by buildPlugin.xml -->
 
-  <property name="plugin.jar.file" 
-    location="${plugin.dir}/FarragoPlannerviz.jar"/>
-  
-  <path id="plannerviz.classpath">
+  <property name="plugin.dir" location="."/>
+  <property name="plugin.jar.basename" value="FarragoPlannerviz"/>
+  <property name="plugin.factory.class" 
+    value="net.sf.farrago.plannerviz.FarragoPlannervizPluginFactory"/>
+
+  <path id="plugin.3p.classpath">
     <pathelement location="${jgraphaddons.dir}/lib/jgraphaddons.jar"/>
     <pathelement location="${jgraph.dir}/lib/jgraph.jar"/>
-    <pathelement path="${farrago.run.classpath}"/>
+    <pathelement location="${jgrapht.dir}/jgrapht-0.5.3.jar"/>
   </path>
-  <property name="plannerviz.classpath" refid="plannerviz.classpath"/>
+  <property name="plugin.3p.classpath" refid="plugin.3p.classpath"/>
+
+  <!-- Standard definitions for Farrago plugin build -->
+  <import file="../../plugin/buildPlugin.xml"/>
+
+  <property name="jgraph.classes.dir" 
+    location="${plugin.dir}/jgraph"/>
+  <property name="jgraphaddons.classes.dir" 
+    location="${plugin.dir}/jgraphaddons"/>
+  <property name="jgrapht.classes.dir" 
+    location="${plugin.dir}/jgrapht"/>
 
   <target name="all" depends="jar">
   </target>
 
   <target name="compile">
-    <mkdir dir="${classes.dir}"/>
+    <mkdir dir="${plugin.classes.dir}"/>
     <farrago.javaCompile
       deprecation="off"
-      srcdir="${src.dir}"
-      destdir="${classes.dir}"
-      classpathref="plannerviz.classpath">
+      srcdir="${plugin.src.dir}"
+      destdir="${plugin.classes.dir}"
+      classpathref="plugin.classpath">
       <include name="**/*.java" />
     </farrago.javaCompile>
   </target>
 
+  <!-- JGraph/JGraphT dependencies are brittle, hence these shenanigans -->
   <target name="jar" depends="compile">
-    <mkdir dir="${plugin.dir}"/>
-    <delete quiet="true" file="${plugin.jar.file}"/>
-    <unjar src="${jgraphaddons.dir}/lib/jgraphaddons.jar" 
-      dest="${classes.dir}"/>
+    <antcall target="plugin.buildJar"/>
+    <mkdir dir="${jgraph.classes.dir}"/>
     <unjar src="${jgraph.dir}/lib/jgraph.jar" 
-      dest="${classes.dir}"/>
-    <jar destfile="${plugin.jar.file}" compress="true">
-      <fileset dir="${classes.dir}">
+      dest="${jgraph.classes.dir}"/>
+    <mkdir dir="${jgraphaddons.classes.dir}"/>
+    <unjar src="${jgraphaddons.dir}/lib/jgraphaddons.jar" 
+      dest="${jgraphaddons.classes.dir}"/>
+    <unjar src="${jgrapht.dir}/jgrapht-0.5.3.jar" 
+      dest="${jgrapht.classes.dir}"/>
+    <jar destfile="${plugin.jar.file}" compress="true" update="true"
+      duplicate="fail">
+      <fileset dir="${jgrapht.classes.dir}">
         <include name="**/*.class"/>
       </fileset>
-      <fileset dir="${classes.dir}">
+    </jar>
+    <jar destfile="${plugin.jar.file}" compress="true" update="true"
+      duplicate="fail">
+      <fileset dir="${jgraph.classes.dir}">
         <include name="**/*.class"/>
       </fileset>
-      <manifest>
-        <attribute
-          name="PluginFactoryClassName"
-          value="net.sf.farrago.plannerviz.FarragoPlannervizPluginFactory"/>
-      </manifest>
+    </jar>
+    <jar destfile="${plugin.jar.file}" compress="true" update="true"
+      duplicate="fail">
+      <fileset dir="${jgraphaddons.classes.dir}">
+        <include name="**/*.class"/>
+      </fileset>
     </jar>
   </target>
 
-  <target name="clean">
+  <target name="createPlugin">
+    <antcall target="clean"/>
+    <antcall target="jar"/>
+  </target>
+
+  <target name="clean" depends="plugin.clean">
     <delete includeEmptyDirs="true" quiet="true">
-      <fileset dir="${classes.dir}" includes="**/*"/>
-      <fileset dir="${plugin.dir}" includes="**/*"/>
+      <fileset dir="${jgraph.classes.dir}">
+        <include name="**/*"/>
+      </fileset>
+      <fileset dir="${jgraphaddons.classes.dir}">
+        <include name="**/*"/>
+      </fileset>
+      <fileset dir="${jgrapht.classes.dir}">
+        <include name="**/*"/>
+      </fileset>
     </delete>
   </target>
 

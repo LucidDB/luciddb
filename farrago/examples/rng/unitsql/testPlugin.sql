@@ -5,18 +5,15 @@
 
 create schema rngtest;
 set schema 'rngtest';
+set path 'rngtest';
 
 -- should fail
 create rng rng1 external '${FARRAGO_HOME}/testgen/rng1.dat' seed 999;
 
 
 -- now, enable plugin personality for this session
-set schema 'sys_boot.sys_boot';
-alter session implementation set jar rngplugin;
+alter session implementation set jar sys_boot.sys_boot.rngplugin;
 
-set catalog 'localdb';
-set schema 'rngtest';
-set path 'rngtest';
 
 -- create some random number generators; use seeds to guarantee determinism
 

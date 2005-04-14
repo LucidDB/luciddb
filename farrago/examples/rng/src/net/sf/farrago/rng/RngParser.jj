@@ -155,7 +155,7 @@ CwmModelElement ExtensionModelSchemaObjDefinition() :
             rng = getRngModelPackage().getRngschema()
                 .getRngRandomNumberGenerator().createRngRandomNumberGenerator();
         }
-    qualifiedName = CompoundIdentifier2()
+    qualifiedName = CompoundIdentifier3()
         {
             farragoParser.getDdlValidator().setSchemaObjectName(
                 rng, qualifiedName);
@@ -203,7 +203,7 @@ CwmModelElement ExtensionModelDrop() :
     RngRandomNumberGenerator rng;
 }
 {
-    <RNG> qualifiedName = CompoundIdentifier2()
+    <RNG> qualifiedName = CompoundIdentifier3()
         {
             rng = (RngRandomNumberGenerator)
             farragoParser.getStmtValidator().findSchemaObject(

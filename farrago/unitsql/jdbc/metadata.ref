@@ -307,10 +307,10 @@ supportsANSI92FullSQL                             false
 supportsANSI92IntermediateSQL                     false
 supportsBatchUpdates                              false
 supportsCatalogsInDataManipulation                true
-supportsCatalogsInIndexDefinitions                false
-supportsCatalogsInPrivilegeDefinitions            false
+supportsCatalogsInIndexDefinitions                true
+supportsCatalogsInPrivilegeDefinitions            true
 supportsCatalogsInProcedureCalls                  true
-supportsCatalogsInTableDefinitions                false
+supportsCatalogsInTableDefinitions                true
 supportsColumnAliasing                            true
 supportsConvert                                   false
 supportsCoreSQLGrammar                            false

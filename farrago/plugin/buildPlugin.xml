@@ -57,8 +57,8 @@
     location="${plugin.src.dir}/${plugin.parser.impl.package}"/>
 
   <path id="plugin.classpath">
-    <pathelement path="${farrago.run.classpath}"/>
     <pathelement path="${plugin.3p.classpath}"/>
+    <pathelement path="${farrago.run.classpath}"/>
     <pathelement location="${plugin.catalog.src.dir}"/>
   </path>
   <property name="plugin.classpath" refid="plugin.classpath"/>
@@ -171,43 +171,72 @@
   </target>
 
   <target name="plugin.buildJar">
+    <fail unless="plugin.factory.class"/>
     <mkdir dir="${plugin.jar.dir}"/>
     <delete quiet="true" file="${plugin.jar.file}"/>
-    <jar destfile="${plugin.jar.file}" compress="true">
+    <mkdir dir="${plugin.classes.dir}/META-INF"/>
+    <manifest file="${plugin.classes.dir}/META-INF/MANIFEST.MF">
+      <attribute
+        name="PluginFactoryClassName"
+        value="${plugin.factory.class}"/>
+    </manifest>
+    <jar destfile="${plugin.jar.file}" compress="true" 
+      manifest="${plugin.classes.dir}/META-INF/MANIFEST.MF">
       <fileset dir="${plugin.classes.dir}">
         <include name="**/*.class"/>
         <include name="**/*.properties"/>
       </fileset>
+    </jar>
+    <antcall target="plugin.buildCatalogJar"/>
+  </target>
+
+  <target name="plugin.buildCatalogJar" if="plugin.model.prefix">
+    <manifest file="${plugin.classes.dir}/META-INF/MANIFEST.MF" mode="update">
+      <attribute
+        name="PluginModel"
+        value="${plugin.model.prefix}PluginModel.xmi"/>
+    </manifest>
+    <jar destfile="${plugin.jar.file}" compress="true" update="true"
+      duplicate="fail"
+      manifest="${plugin.classes.dir}/META-INF/MANIFEST.MF">
       <fileset dir="${plugin.catalog.src.dir}">
         <include name="**/*.class"/>
       </fileset>
       <fileset dir="${plugin.xmi.dir}">
         <include name="${plugin.model.prefix}PluginModel.xmi"/>
       </fileset>
-      <manifest>
-        <attribute
-          name="PluginModel"
-          value="${plugin.model.prefix}PluginModel.xmi"/>
-        <attribute
-          name="PluginFactoryClassName"
-          value="${plugin.factory.class}"/>
-      </manifest>
     </jar>
   </target>
 
   <target name="plugin.clean">
-    <delete quiet="true">
-      <fileset dir="${plugin.resource.dir}" 
-        includes="${plugin.resource.basename}*.java"/>
+    <delete includeEmptyDirs="true" quiet="true">
       <fileset dir="${plugin.classes.dir}" includes="**/*"/>
-      <fileset dir="${plugin.parser.impl.dir}" includes="*.java,*.jj"/>
+      <fileset dir="${plugin.jar.dir}" includes="**/*"/>
     </delete>
+    <antcall target="plugin.cleanParser"/>
+    <antcall target="plugin.cleanResource"/>
   </target>
 
   <target name="plugin.cleanModel" depends="plugin.clean">
-    <delete quiet="true">
+    <delete includeEmptyDirs="true" quiet="true">
       <fileset dir="${plugin.xmi.dir}" includes="*.xmi"/>
       <fileset dir="${plugin.catalog.dir}" includes="FarragoCatalog.*"/>
+    </delete>
+  </target>
+
+  <target name="plugin.cleanParser" if="plugin.parser.jj">
+    <delete includeEmptyDirs="true" quiet="true">
+      <fileset dir="${plugin.parser.impl.dir}">
+        <include name="*.java,*.jj"/>
+      </fileset>
+    </delete>
+  </target>
+
+  <target name="plugin.cleanResource" if="plugin.resource.package">
+    <delete includeEmptyDirs="true" quiet="true">
+      <fileset dir="${plugin.resource.dir}">
+        <include name="${plugin.resource.basename}*.java"/>
+      </fileset>
     </delete>
   </target>
 

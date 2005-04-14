@@ -617,21 +617,21 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
     public boolean supportsCatalogsInTableDefinitions()
         throws SQLException
     {
-        return false;
+        return true;
     }
 
     // implement DatabaseMetaData
     public boolean supportsCatalogsInIndexDefinitions()
         throws SQLException
     {
-        return false;
+        return true;
     }
 
     // implement DatabaseMetaData
     public boolean supportsCatalogsInPrivilegeDefinitions()
         throws SQLException
     {
-        return false;
+        return true;
     }
 
     // implement DatabaseMetaData

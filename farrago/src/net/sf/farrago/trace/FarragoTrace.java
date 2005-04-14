@@ -198,21 +198,26 @@ public abstract class FarragoTrace
      *
      *<pre><code>
      *
-     * create schema plannerviz
-     * create jar plannerviz_plugin
+     * create jar sys_boot.sys_boot.plannerviz_plugin
      * library 'file:examples/plannerviz/plugin/FarragoPlannerviz.jar'
      * options(0);
      *
-     * alter session implementation set jar plannerviz.plannerviz_plugin;
+     * alter session implementation set jar sys_boot.sys_boot.plannerviz_plugin;
      *
      *</code></pre>
      *
-     * The first two commands install the plugin (change the schema name and
-     * library path as appropriate).  The last command puts the plugin into
-     * effect for the current session; this should not be done unless Farrago
-     * is running from a single-session interactive console, because a new GUI
-     * window will pop up on the display where the server is running each time
-     * a query is executed.
+     * The CREATE command installs the plugin (change the jar library path as
+     * appropriate) into the SYS_BOOT schema.  The ALTER command puts the plugin
+     * into effect for the current session; this should not be done unless
+     * Farrago is running from a single-session interactive console, because a
+     * new GUI window will pop up on the display where the server is running
+     * each time a query is executed.  The plugin can be disabled with:
+     *
+     *<pre><code>
+     *
+     * alter session implementation set default;
+     *
+     *</code></pre>
      *
      *<p>
      *
