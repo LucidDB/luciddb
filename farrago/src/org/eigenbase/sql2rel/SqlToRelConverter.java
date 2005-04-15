@@ -38,9 +38,7 @@ import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.fun.SqlMultisetOperator;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.util.BitString;
-import org.eigenbase.util.NlsString;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -360,10 +358,10 @@ public class SqlToRelConverter
         String extraName)
     {
         assert (extraExpr == null) || (extraName != null) : "precondition: extraExpr == null || extraName != null";
-        RelNode converted = convertQueryOrInList(bb, seek);
+        RelNode seekRel = convertQueryOrInList(bb, seek);
+        List conditions = new ArrayList();
         if (condition != null) {
             // We are translating an IN clause, so add a condition.
-            RexNode conditionExp = null;
             final RexNode ref =
                 rexBuilder.makeRangeReference(
                     bb.root.getRowType(),
@@ -374,49 +372,29 @@ public class SqlToRelConverter
                 SqlNodeList conditionList = (SqlNodeList) condition;
                 for (int i = 0; i < conditionList.size(); i++) {
                     SqlNode conditionNode = conditionList.get(i);
-                    RexNode e =
+                    conditions.add(
                         rexBuilder.makeCall(
                             rexBuilder.opTab.equalsOperator,
                             convertExpression(bb, conditionNode),
-                            rexBuilder.makeFieldAccess(ref, i));
-                    if (i == 0) {
-                        conditionExp = e;
-                    } else {
-                        conditionExp =
-                            rexBuilder.makeCall(opTab.andOperator,
-                                conditionExp, e);
-                    }
+                            rexBuilder.makeFieldAccess(ref, i)));
                 }
             } else {
                 // If "seek" is "emp", generate the condition "emp = Q.c1". The
                 // query must have precisely one column.
-                assert converted.getRowType().getFieldList().size() == 1;
-                conditionExp =
+                assert seekRel.getRowType().getFieldList().size() == 1;
+                conditions.add(
                     rexBuilder.makeCall(
                         rexBuilder.opTab.equalsOperator,
                         convertExpression(bb, condition),
-                        rexBuilder.makeFieldAccess(ref, 0));
+                        rexBuilder.makeFieldAccess(ref, 0)));
             }
-            converted = new FilterRel(cluster, converted, conditionExp);
         }
-        if (extraExpr != null) {
-            final RelDataType rowType = converted.getRowType();
-            final RelDataTypeField [] fields = rowType.getFields();
-            final RexNode [] expressions = new RexNode[fields.length + 1];
-            String [] fieldNames = new String[fields.length + 1];
-            final RexNode ref = rexBuilder.makeRangeReference(rowType, 0);
-            for (int j = 0; j < fields.length; j++) {
-                expressions[j] = rexBuilder.makeFieldAccess(ref, j);
-                fieldNames[j] = fields[j].getName();
-            }
-            expressions[fields.length] = extraExpr;
-            fieldNames[fields.length] =
-                uniqueFieldName(fieldNames, fields.length, extraName);
-            converted =
-                new ProjectRel(cluster, converted, expressions, fieldNames,
-                    ProjectRelBase.Flags.Boxed);
-        }
-        return converted;
+        return RelOptUtil.createExistsPlan(
+            cluster,
+            seekRel,
+            (RexNode[]) conditions.toArray(RexUtil.emptyExpressionArray),
+            extraExpr,
+            extraName);
     }
 
     private RelNode convertQueryOrInList(
@@ -461,49 +439,6 @@ public class SqlToRelConverter
         }
         SqlCall call = (SqlCall) node;
         return call.operator.name.equalsIgnoreCase("row");
-    }
-
-    /**
-     * Generates a unique name
-     *
-     * @param names  Array of existing names
-     * @param length Number of existing names
-     * @param s Suggested name
-     * @return Name which does not match any of the names in the first
-     *   <code>length</code> positions of the <code>names</code> array.
-     */
-    private static String uniqueFieldName(
-        String [] names,
-        int length,
-        String s)
-    {
-        if (!contains(names, length, s)) {
-            return s;
-        }
-        int n = length;
-        while (true) {
-            s = "EXPR_" + n;
-            if (!contains(names, length, s)) {
-                return s;
-            }
-
-            // FIXME jvs 15-Nov-2003:  If we ever get here, it's an infinite
-            // loop; should be ++n?
-            assert(false);
-        }
-    }
-
-    private static boolean contains(
-        String [] names,
-        int length,
-        String s)
-    {
-        for (int i = 0; i < length; i++) {
-            if (names[i].equals(s)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
@@ -683,7 +618,7 @@ public class SqlToRelConverter
                 if ((call.operator instanceof SqlFunction)) {
                     SqlFunction function = (SqlFunction) call.operator;
                     if (function.getFunctionType() ==
-                        SqlFunction.SqlFuncTypeName.UserDefinedConstructor)
+                        SqlFunctionCategory.UserDefinedConstructor)
                     {
                         return makeConstructorCall(function, exprs);
                     }
@@ -780,8 +715,7 @@ public class SqlToRelConverter
         final SqlNode value = call.operands[SqlBetweenOperator.VALUE_OPERAND];
         RexNode x = convertExpression(bb, value);
         final SqlBetweenOperator.Flag symmetric = (SqlBetweenOperator.Flag)
-            call.operands[SqlBetweenOperator.SYMFLAG_OPERAND];
-        boolean isAsymmetric = symmetric.isAsymmetric;
+            SqlLiteral.symbolValue(call.operands[SqlBetweenOperator.SYMFLAG_OPERAND]);
         final SqlNode lower = call.operands[SqlBetweenOperator.LOWER_OPERAND];
         RexNode y = convertExpression(bb, lower);
         final SqlNode upper = call.operands[SqlBetweenOperator.UPPER_OPERAND];
@@ -794,15 +728,20 @@ public class SqlToRelConverter
         RexNode le1 = rexBuilder.makeCall(opTab.lessThanOrEqualOperator, x, z);
         RexNode and1 = rexBuilder.makeCall(opTab.andOperator, ge1, le1);
 
-        if (isAsymmetric) {
+        switch (symmetric.ordinal) {
+        case SqlBetweenOperator.Flag.Asymmetric_ordinal:
             res = and1;
-        } else {
+            break;
+        case SqlBetweenOperator.Flag.Symmetric_ordinal:
             RexNode ge2 =
                 rexBuilder.makeCall(opTab.greaterThanOrEqualOperator, x, z);
             RexNode le2 =
                 rexBuilder.makeCall(opTab.lessThanOrEqualOperator, x, y);
             RexNode and2 = rexBuilder.makeCall(opTab.andOperator, ge2, le2);
             res = rexBuilder.makeCall(opTab.orOperator, and1, and2);
+            break;
+        default:
+            throw symmetric.unexpected();
         }
         final SqlBetweenOperator betweenOp =
             (SqlBetweenOperator) call.operator;
@@ -848,9 +787,21 @@ public class SqlToRelConverter
             return convertExpression(bb, call.operands[0]);
         }
         RexNode arg = convertExpression(bb, call.operands[0]);
-        return rexBuilder.makeCast(
-            dataType.getType(),
-            arg);
+        RelDataType type = dataType.getType();
+        if (null != dataType.getCollectionsTypeName()) {
+            if (arg.getType().getComponentType().isStruct() &&
+                !type.getComponentType().isStruct()) {
+                RelDataType tt;
+                tt = typeFactory.createStructType(
+                    new RelDataType[]{type.getComponentType()},
+                    new String[]{arg.getType().getComponentType().getFields()[0].getName()});
+                tt = typeFactory.createTypeWithNullability(tt, type.getComponentType().isNullable());
+                boolean isn = type.isNullable();
+                type = typeFactory.createMultisetType(tt, -1);
+                type = typeFactory.createTypeWithNullability(type, isn);
+            }
+        }
+        return rexBuilder.makeCast(type,arg);
     }
 
     private RexNode convertCase(
@@ -977,17 +928,14 @@ public class SqlToRelConverter
             return;
         case SqlKind.UnnestORDINAL:
             SqlCall call = (SqlCall) ((SqlCall) from).operands[0];
-            final RelNode childRel;
-            if (call.isA(SqlKind.MultisetValueConstructor)) {
-                final SqlNodeList list = SqlUtil.toNodeList(call.operands);
-                childRel =
-                    new CollectRel(cluster, convertQueryOrInList(bb,list),"multiset");
-            } else if (call.isA(SqlKind.MultisetQueryConstructor)) {
-                childRel = new CollectRel(
-                    cluster, convertValidatedQuery(call.operands[0]),"multiset");
-            } else {
-                childRel = convertValidatedQuery(call);
-            }
+            replaceSubqueries(bb, call);
+            RexNode[] exprs = new RexNode[]{convertExpression(bb,call)};
+            final RelNode childRel = new ProjectRel(
+                cluster,
+                null != bb.root  ? bb.root : new OneRowRel(cluster),
+                exprs,
+                new String[]{validator.deriveAlias(call, 0)},
+                ProjectRel.Flags.Boxed);
 
             UncollectRel uncollectRel = new UncollectRel(cluster, childRel);
             bb.setRoot(uncollectRel);
@@ -1232,9 +1180,6 @@ public class SqlToRelConverter
      */
     private RexLiteral convertNonNullLiteral(final SqlLiteral literal)
     {
-        if (literal instanceof SqlSymbol) {
-            return rexBuilder.makeSymbolLiteral((SqlSymbol) literal);
-        }
         final Object value = literal.getValue();
         BitString bitString;
         switch (literal.typeName.ordinal) {
@@ -1261,7 +1206,7 @@ public class SqlToRelConverter
             byte [] bytes = bitString.getAsByteArray();
             return rexBuilder.makeBinaryLiteral(bytes);
         case SqlTypeName.Symbol_ordinal:
-            return rexBuilder.makeSymbolLiteral((SqlSymbol) value);
+            return rexBuilder.makeFlag((EnumeratedValues.Value) value);
         case SqlTypeName.Timestamp_ordinal:
             return rexBuilder.makeTimestampLiteral((Calendar) value,
                 ((SqlTimestampLiteral) literal).precision);
@@ -1650,8 +1595,25 @@ public class SqlToRelConverter
         ArrayList unionRels = new ArrayList();
         for (int i = 0; i < rowConstructorList.length; i++) {
             SqlCall rowConstructor = (SqlCall) rowConstructorList[i];
-            RelNode queryExpr = convertRowConstructor(bb, rowConstructor);
-            unionRels.add(queryExpr);
+
+            Blackboard tmpBb = new Blackboard(bb.scope);
+            replaceSubqueries(tmpBb, rowConstructor);
+            RexNode [] exps = new RexNode[rowConstructor.operands.length];
+            String [] fieldNames = new String[rowConstructor.operands.length];
+            for (int j = 0; j < rowConstructor.operands.length; j++) {
+                final SqlNode node = rowConstructor.operands[j];
+                exps[j] = convertExpression(tmpBb, node);
+                fieldNames[j] = validator.deriveAlias(node, j);
+            }
+            RelNode in =
+                null == tmpBb.root ? new OneRowRel(cluster) : tmpBb.root;
+            unionRels.add(
+                new ProjectRel(
+                    cluster,
+                    in,
+                    exps,
+                    fieldNames,
+                    ProjectRel.Flags.Boxed));
         }
 
         if (unionRels.size() == 0) {

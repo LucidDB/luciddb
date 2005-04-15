@@ -173,10 +173,6 @@ public abstract class SqlTypeUtil
         RelDataType type)
     {
         for (int i = 0; i < call.operands.length; ++i) {
-            if (call.operands[i] instanceof SqlSymbol) {
-                continue;
-            }
-
             RelDataType operandType =
                 validator.deriveType(scope, call.operands[i]);
 
@@ -623,6 +619,19 @@ public abstract class SqlTypeUtil
                     }
                 }
                 return true;
+            } else if (toType.getSqlTypeName() == SqlTypeName.Multiset) {
+                if (!fromType.isStruct()) {
+                    return false;
+                }
+                if (fromType.getSqlTypeName() != SqlTypeName.Multiset) {
+                    return false;
+                }
+                return canCastFrom(
+                    toType.getComponentType(),
+                    fromType.getComponentType(),
+                    coerce);
+            } else if (fromType.getSqlTypeName() == SqlTypeName.Multiset) {
+                return false;
             } else {
                 return toType.getFamily() == fromType.getFamily();
             }

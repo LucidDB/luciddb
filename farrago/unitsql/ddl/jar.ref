@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/jar.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/jar.sql#2 $
 0: jdbc:farrago:> -- Test DDL on jars
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema jartest;
@@ -65,7 +65,7 @@ Error: DDL validation error near line 1, column 8: Invalid external Java method 
 . . . . . . . . > no sql
 . . . . . . . . > external name 
 . . . . . . . . > 'jar jar binks:net.sf.farrago.namespace.jdbc.MedJdbcUDR.testConnection';
-Error: Invalid jar name "jar jar binks" in definition of routine "JARTEST"."BAD2" (state=,code=0)
+Error: Invalid jar name "jar jar binks" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  unknown jar
 0: jdbc:farrago:> create function bad3(url varchar(2000))

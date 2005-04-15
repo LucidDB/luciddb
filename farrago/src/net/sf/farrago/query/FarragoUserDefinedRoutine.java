@@ -85,10 +85,10 @@ public class FarragoUserDefinedRoutine
             new AssignableOperandsTypeChecking(paramTypes),
             paramTypes,
             routine.getType() == ProcedureTypeEnum.PROCEDURE
-            ? SqlFuncTypeName.UserDefinedProcedure
+            ? SqlFunctionCategory.UserDefinedProcedure
             : ((routine.getSpecification() == null) ?
-                SqlFuncTypeName.UserDefinedFunction
-                : SqlFuncTypeName.UserDefinedConstructor));
+                SqlFunctionCategory.UserDefinedSpecificFunction
+                : SqlFunctionCategory.UserDefinedConstructor));
         this.stmtValidator = stmtValidator;
         this.preparingStmt = preparingStmt;
         this.routine = routine;
@@ -150,7 +150,9 @@ public class FarragoUserDefinedRoutine
         // TODO jvs 11-Jan-2005:  move some of this code to FarragoPluginCache
         String jarName = null;
         String fullMethodName;
-        if (!externalName.startsWith(FarragoPluginCache.LIBRARY_CLASS_PREFIX)) {
+        if (!externalName.startsWith(
+                FarragoPluginClassLoader.LIBRARY_CLASS_PREFIX))
+        {
             int iColon = externalName.indexOf(':');
             if (iColon == -1) {
                 // force error below
@@ -161,7 +163,7 @@ public class FarragoUserDefinedRoutine
             }
         } else {
             fullMethodName = externalName.substring(
-                FarragoPluginCache.LIBRARY_CLASS_PREFIX.length());
+                FarragoPluginClassLoader.LIBRARY_CLASS_PREFIX.length());
         }
         int iLeftParen = fullMethodName.indexOf('(');
         String classPlusMethodName;
@@ -240,29 +242,14 @@ public class FarragoUserDefinedRoutine
                     javaClassName, ex);
             }
         } else {
-            // TODO jvs 19-Jan-2005: support "thisjar" in deployment
-            // descriptors
             if (femJar == null) {
-                SqlIdentifier qualifiedJarName;
-                try {
-                    SqlParser sqlParser = new SqlParser(jarName);
-                    SqlNode sqlNode = sqlParser.parseExpression();
-                    qualifiedJarName = (SqlIdentifier) sqlNode;
-                } catch (Throwable ex) {
-                    throw FarragoResource.instance().
-                        newValidatorRoutineInvalidJarName(
-                            repos.getLocalizedObjectName(jarName),
-                            repos.getLocalizedObjectName(routine));
-                }
-                femJar = (FemJar) stmtValidator.findSchemaObject(
-                    qualifiedJarName,
-                    stmtValidator.getRepos().getSql2003Package().getFemJar());
+                femJar = stmtValidator.findJarFromLiteralName(jarName);
             }
-            javaClass = FarragoPluginCache.loadJarClass(
-                femJar.getUrl(),
-                javaClassName);
+            String url = FarragoCatalogUtil.getJarUrl(femJar);
+            javaClass = stmtValidator.getSession().getPluginClassLoader()
+                .loadClassFromJarUrl(url, javaClassName);
             if (preparingStmt != null) {
-                preparingStmt.addJarUrl(femJar.getUrl());
+                preparingStmt.addJarUrl(url);
             }
         }
 

@@ -103,6 +103,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
             new FarragoDataWrapperCache(
                 this,
                 params.sharedDataWrapperCache,
+                session.getPluginClassLoader(),
                 params.repos,
                 params.fennelTxnContext.getFennelDbHandle());
 
@@ -613,7 +614,8 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
     }
 
     /**
-     * Creates a new default connection to the session of the current thread.
+     * Creates a new default connection attached to the session of the current
+     * thread.
      */
     public static Connection newConnection()
     {

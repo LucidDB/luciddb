@@ -63,6 +63,7 @@ public class SqlDataTypeSpec extends SqlNode
 {
     //~ Instance fields -------------------------------------------------------
 
+    private final SqlIdentifier collectionsTypeName;
     private final SqlIdentifier typeName;
     private final int scale;
     private final int precision;
@@ -79,6 +80,23 @@ public class SqlDataTypeSpec extends SqlNode
         SqlParserPos pos)
     {
         super(pos);
+        this.collectionsTypeName = null;
+        this.typeName = typeName;
+        this.scale = scale;
+        this.precision = precision;
+        this.charSetName = charSetName;
+    }
+
+    public SqlDataTypeSpec(
+        final SqlIdentifier collectionsTypeName,
+        final SqlIdentifier typeName,
+        int precision,
+        int scale,
+        String charSetName,
+        SqlParserPos pos)
+    {
+        super(pos);
+        this.collectionsTypeName = collectionsTypeName;
         this.typeName = typeName;
         this.scale = scale;
         this.precision = precision;
@@ -90,6 +108,11 @@ public class SqlDataTypeSpec extends SqlNode
     public RelDataType getType()
     {
         return type;
+    }
+
+    public SqlIdentifier getCollectionsTypeName()
+    {
+        return collectionsTypeName;
     }
 
     public SqlIdentifier getTypeName()
@@ -110,6 +133,19 @@ public class SqlDataTypeSpec extends SqlNode
     public String getCharSetName()
     {
         return charSetName;
+    }
+
+    /**
+     * Returns a new SqlDataTypeSpec corresponding to the component type if
+     * the type spec is a collections type spec.<br>
+     * Collection types are <code>ARRAY</code> and <code>MULTISET</code>.
+     * @pre null != getCollectionsTypeName();
+     */
+    public SqlDataTypeSpec getComponentTypeSpec() {
+        Util.pre(
+            null != getCollectionsTypeName(), "null != getCollectionsTypeName()");
+        return new SqlDataTypeSpec(
+            typeName, precision, scale, charSetName, getParserPosition());
     }
 
     /**
@@ -159,6 +195,11 @@ public class SqlDataTypeSpec extends SqlNode
                 writer.print(" CHARACTER SET ");
                 writer.printIdentifier(charSetName);
             }
+
+            if (collectionsTypeName != null) {
+                writer.print(" ");
+                writer.print(collectionsTypeName.getSimple());
+            }
         } else {
             // else we have a user defined type
             typeName.unparse(writer, leftPrec, rightPrec);
@@ -179,7 +220,17 @@ public class SqlDataTypeSpec extends SqlNode
     {
         if (node instanceof SqlDataTypeSpec) {
             SqlDataTypeSpec that = (SqlDataTypeSpec) node;
-            return this.typeName.equalsDeep(that.typeName) &&
+            final boolean collectionsTest;
+            if (null != this.collectionsTypeName) {
+                collectionsTest =
+                    this.collectionsTypeName.equalsDeep(
+                        that.collectionsTypeName);
+            } else {
+                collectionsTest =
+                    this.collectionsTypeName == that.collectionsTypeName;
+            }
+            return collectionsTest &&
+                this.typeName.equalsDeep(that.typeName) &&
                 this.precision == that.precision &&
                 this.scale == that.scale &&
                 Util.equal(this.charSetName, that.charSetName);
@@ -236,6 +287,27 @@ public class SqlDataTypeSpec extends SqlNode
                 typeFactory.createTypeWithCharsetAndCollation(type, charset,
                     collation);
         }
+
+        if (null != collectionsTypeName) {
+            final String collectionName = collectionsTypeName.getSimple();
+            if (!SqlTypeName.containsName(collectionName)) {
+                throw validator.newValidationError(this,
+                    EigenbaseResource.instance().newUnknownDatatypeName(
+                        collectionName));
+            }
+
+            SqlTypeName collectionsSqlTypeName =
+                SqlTypeName.get(collectionName);
+
+            switch (collectionsSqlTypeName.getOrdinal()) {
+            case SqlTypeName.Multiset_ordinal:
+                type = typeFactory.createMultisetType(type, -1);
+                break;
+
+            default: Util.permAssert(false, "should never come here");
+            }
+        }
+
         return type;
     }
 }

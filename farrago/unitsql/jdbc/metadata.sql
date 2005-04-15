@@ -52,6 +52,7 @@ create type metadata_test_schema.rectilinear_coord as (
 !metadata getProcedureColumns LOCALDB SALES MAYBE_FEMALE %
 !metadata getUDTs LOCALDB METADATA_TEST_SCHEMA % %
 !metadata getAttributes LOCALDB METADATA_TEST_SCHEMA % %
+!primarykeys EMPS
 !procedures
 
 drop schema metadata_test_schema cascade;
@@ -59,6 +60,7 @@ drop schema metadata_test_schema cascade;
 
 -- test misc calls
 !dbinfo
+!typeinfo
 
 -- test calls not tested by !dbinfo
 !metadata getResultSetHoldability
@@ -97,7 +99,6 @@ select * from sys_fem."Security"."AuthorizationIdentifier";
 -- !metadata getBestRowIdentifier
 -- !metadata getVersionColumns
 -- !metadata getCrossReference
--- !metadata getTypeInfo
 -- !metadata getIndexInfo
 -- !metadata getSuperTypes
 -- !metadata getSuperTables

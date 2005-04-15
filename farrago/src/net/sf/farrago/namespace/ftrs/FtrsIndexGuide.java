@@ -332,7 +332,7 @@ class FtrsIndexGuide
 
     private void appendConstraintColumns(
         List list,
-        CwmUniqueConstraint constraint)
+        FemAbstractUniqueConstraint constraint)
     {
         Iterator iter = constraint.getFeature().iterator();
         while (iter.hasNext()) {

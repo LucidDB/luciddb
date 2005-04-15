@@ -31,14 +31,13 @@ import junit.extensions.TestSetup;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
-import net.sf.farrago.defimpl.FarragoDefaultSession;
-import net.sf.farrago.db.FarragoDbSessionFactory;
+import net.sf.farrago.defimpl.FarragoDefaultSessionPersonality;
+import net.sf.farrago.db.*;
 import net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver;
 import net.sf.farrago.ojrex.FarragoOJRexImplementor;
 import net.sf.farrago.ojrex.FarragoOJRexImplementorTable;
 import net.sf.farrago.ojrex.FarragoRexToOJTranslator;
-import net.sf.farrago.session.FarragoSession;
-import net.sf.farrago.session.FarragoSessionFactory;
+import net.sf.farrago.session.*;
 import net.sf.farrago.test.FarragoTestCase;
 import net.sf.farrago.util.FarragoProperties;
 
@@ -137,7 +136,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
                 ReturnTypeInferenceImpl.useNullableBiggest,
                 UnknownParamInference.useFirstKnown,
                 OperandsTypeChecking.typeNullableNumericNumeric,
-                SqlFunction.SqlFuncTypeName.Numeric);
+                SqlFunctionCategory.Numeric);
         opTab.register(cppFunc);
 
         CalcRexImplementorTableImpl cImplTab =
@@ -251,7 +250,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
                     ReturnTypeInferenceImpl.useNullableBiggest,
                     UnknownParamInference.useFirstKnown,
                     OperandsTypeChecking.typeNullableNumericNumeric,
-                    SqlFunction.SqlFuncTypeName.Numeric);
+                    SqlFunctionCategory.Numeric);
             opTab.register(jplusFunc);
 
             registerOperator(
@@ -262,7 +261,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
                 new SqlFunction("JROW", SqlKind.Function, null,
                     UnknownParamInference.useFirstKnown,
                     OperandsTypeChecking.typeNullableNumericNumeric,
-                    SqlFunction.SqlFuncTypeName.Numeric)
+                    SqlFunctionCategory.Numeric)
                 {
                     protected RelDataType getType(
                         SqlValidator validator,
@@ -335,36 +334,45 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
             String url,
             Properties info)
         {
-            return new TestDbSession(url, info, this, ojRexImplementor);
+            return new FarragoDbSession(url, info, this);
+        }
+
+        public FarragoSessionPersonality newSessionPersonality(
+            FarragoSession session,
+            FarragoSessionPersonality defaultPersonality)
+        {
+            return new TestDbSessionPersonality(
+                (FarragoDbSession) session,
+                ojRexImplementor);
         }
     }
 
     /**
-     * TestDbSession extends FarragoDefaultSession to provide our custom
-     * OJRexImplementor table in place of Farrago's normal
+     * TestDbSession extends FarragoDefaultSessionPersonality to provide our
+     * custom OJRexImplementor table in place of Farrago's normal
      * implementation.
      */
-    private static class TestDbSession extends FarragoDefaultSession
+    private static class TestDbSessionPersonality
+        extends FarragoDefaultSessionPersonality
     {
         private OJRexImplementorTable ojRexImplementor;
 
-        public TestDbSession(
-            String url,
-            Properties info,
-            FarragoSessionFactory factory,
+        public TestDbSessionPersonality(
+            FarragoDbSession session,
             OJRexImplementorTable ojRexImplementor)
         {
-            super(url, info, factory);
-
+            super(session);
             this.ojRexImplementor = ojRexImplementor;
         }
 
-        public SqlOperatorTable getSqlOperatorTable()
+        public SqlOperatorTable getSqlOperatorTable(
+            FarragoSessionPreparingStmt preparingStmt)
         {
             return opTab;
         }
 
-        public OJRexImplementorTable getOJRexImplementorTable()
+        public OJRexImplementorTable getOJRexImplementorTable(
+            FarragoSessionPreparingStmt preparingStmt)
         {
             return ojRexImplementor;
         }

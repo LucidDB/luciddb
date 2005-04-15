@@ -31,6 +31,7 @@ import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelOptRuleOperand;
+import org.eigenbase.rex.RexMultisetUtil;
 
 
 // REVIEW jvs 11-May-2004:  shouldn't FennelCalcRule extend ConverterRule
@@ -85,6 +86,18 @@ public class FennelCalcRule extends RelOptRule
                 relInput);
         if (fennelInput == null) {
             return;
+        }
+        for (int i = 0; i < calc.projectExprs.length; i++) {
+            if (RexMultisetUtil.containsMultiset(
+                calc.projectExprs[i], true)) {
+                return; // Let FarragoMultisetSplitter work on it first.
+            }
+        }
+        if (calc.conditionExpr != null) {
+            if (RexMultisetUtil.containsMultiset(
+                calc.conditionExpr, true)) {
+                return; // Let FarragoMultisetSplitter work on it first.
+            }
         }
 
         final RexToCalcTranslator translator =

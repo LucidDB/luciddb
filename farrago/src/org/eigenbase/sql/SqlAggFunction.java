@@ -40,7 +40,7 @@ public abstract class SqlAggFunction extends SqlFunction implements Aggregation
         ReturnTypeInference typeInference,
         UnknownParamInference paramTypeInference,
         OperandsTypeChecking paramTypes,
-        SqlFunction.SqlFuncTypeName funcType)
+        SqlFunctionCategory funcType)
     {
         super(name, kind, typeInference, paramTypeInference, paramTypes,
             funcType);

@@ -45,7 +45,7 @@ public class SqlSubstringFunction extends SqlFunction {
     SqlSubstringFunction() {
         super("SUBSTRING", SqlKind.Function,
             ReturnTypeInferenceImpl.useNullableVaryingFirstArgType, null, null,
-            SqlFunction.SqlFuncTypeName.String);
+            SqlFunctionCategory.String);
     }
 
     protected String getSignatureTemplate(final int operandsCount)

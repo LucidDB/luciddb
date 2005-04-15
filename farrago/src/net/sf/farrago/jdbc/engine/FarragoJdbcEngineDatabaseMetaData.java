@@ -287,7 +287,9 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         throws SQLException
     {
         if (jdbcKeywords == null) {
-            FarragoSessionParser parser = connection.getSession().newParser();
+            FarragoSessionParser parser =
+                connection.getSession().getPersonality().newParser(
+                    connection.getSession());
             jdbcKeywords = parser.getJdbcKeywords();
         }
         return jdbcKeywords;
@@ -615,21 +617,21 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
     public boolean supportsCatalogsInTableDefinitions()
         throws SQLException
     {
-        return false;
+        return true;
     }
 
     // implement DatabaseMetaData
     public boolean supportsCatalogsInIndexDefinitions()
         throws SQLException
     {
-        return false;
+        return true;
     }
 
     // implement DatabaseMetaData
     public boolean supportsCatalogsInPrivilegeDefinitions()
         throws SQLException
     {
-        return false;
+        return true;
     }
 
     // implement DatabaseMetaData
@@ -1066,7 +1068,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         String columnNamePattern)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("getColumnPrivileges");
     }
 
     // implement DatabaseMetaData
@@ -1076,7 +1078,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         String tableNamePattern)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("getTablePrivileges");
     }
 
     // implement DatabaseMetaData
@@ -1088,7 +1090,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         boolean nullable)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("getBestRowIdentifier");
     }
 
     // implement DatabaseMetaData
@@ -1098,7 +1100,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         String table)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("getVersionColumns");
     }
 
     // implement DatabaseMetaData
@@ -1108,7 +1110,15 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         String table)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        QueryBuilder queryBuilder =
+            new QueryBuilder(
+                "select * from sys_boot.jdbc_metadata.primary_keys_view");
+        queryBuilder.addExact("table_cat", catalog);
+        queryBuilder.addExact("table_schem", schema);
+        queryBuilder.addExact("table_name", table);
+        queryBuilder.addOrderBy(
+            "column_name, table_cat, table_schem, table_name");
+        return queryBuilder.execute();
     }
 
     // implement DatabaseMetaData
@@ -1118,7 +1128,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         String table)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("getImportedKeys");
     }
 
     // implement DatabaseMetaData
@@ -1128,7 +1138,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         String table)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("getExportedKeys");
     }
 
     // implement DatabaseMetaData
@@ -1141,14 +1151,16 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         String foreignTable)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("getCrossReference");
     }
 
     // implement DatabaseMetaData
     public ResultSet getTypeInfo()
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        return newDaemonStatement().executeQuery(
+            "select * from sys_boot.jdbc_metadata.type_info_view "
+            + "order by data_type");
     }
 
     // implement DatabaseMetaData
@@ -1160,7 +1172,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         boolean approximate)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("getIndexInfo");
     }
 
     // implement DatabaseMetaData
@@ -1319,7 +1331,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         String typeNamePattern)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("getSuperTypes");
     }
 
     // implement DatabaseMetaData
@@ -1329,7 +1341,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         String tableNamePattern)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("getSuperTables");
     }
 
     // implement DatabaseMetaData
@@ -1449,6 +1461,9 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
             String colName,
             Object value)
         {
+            if (value == null) {
+                return;
+            }
             addConjunction();
             sql.append(colName);
             sql.append(" = ?");

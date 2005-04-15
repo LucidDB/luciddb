@@ -220,8 +220,6 @@
         <include name="net/sf/saffron/resource/SaffronResource_en_US.properties"/>
       </fileset>
       <fileset dir="${java.dir}">
-
-
         <!-- ParserTokenManager.java is generated too, but don't delete, cuz
              we have modified it and checked it in. -->
         <include name="openjava/tools/parser/Parser.java"/>
@@ -234,16 +232,6 @@
         <!-- files generated from SaffronResource.xml -->
         <include name="net/sf/saffron/resource/SaffronResource.java"/>
         <include name="net/sf/saffron/resource/SaffronResource_en_US.java"/>
-
-        <!-- TODO jvs 30-Aug-2004:  eliminate these in a while -->
-        <include name="net/sf/saffron/sql/parser/CombinedParser.jj"/>
-        <include name="net/sf/saffron/sql/parser/Parser.java"/>
-        <include name="net/sf/saffron/sql/parser/TokenMgrError.java"/>
-        <include name="net/sf/saffron/sql/parser/ParseException.java"/>
-        <include name="net/sf/saffron/sql/parser/JavaCharStream.java"/>
-        <include name="net/sf/saffron/sql/parser/Token.java"/>
-        <include name="net/sf/saffron/sql/parser/SqlParseImpConstants.java"/>
-        <include name="net/sf/saffron/sql/parser/ASCII_UCodeESC_CharStream.java"/>
         <!-- failed test logs -->
         <include name="net/sf/saffron/**/*.log"/>
       </fileset>
@@ -281,7 +269,7 @@
 
   <target name="compile"
       depends="generateResources,parser,
-               compile.jsp.maybe,compile.java,compile.test"/>
+               compile.jsp.maybe,compile.java,compile.test,setup.trace"/>
 
   <target name="compile.java" depends="sniff,mkClassesDir">
     <javac
@@ -372,13 +360,9 @@
     <taskdef name="resgen" classname="org.eigenbase.resgen.ResourceGenTask">
       <classpath refid="saffron.run.classpath"/>
     </taskdef>
-    <resgen srcdir="${src.dir}" locales="en_US">
+    <resgen srcdir="${src.dir}" resdir="${classes.dir}" locales="en_US">
       <include name="net/sf/saffron/resource/SaffronResource.xml"/>
     </resgen>
-    <!-- Move the generated property files into the class folder -->
-    <move todir="${classes.dir}">
-        <fileset dir="${src.dir}" includes="**/SaffronResource*.properties"/>
-    </move>
   </target>
 
   <target name="checkParsersUptodate">

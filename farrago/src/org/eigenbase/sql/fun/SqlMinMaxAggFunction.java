@@ -25,6 +25,7 @@ package org.eigenbase.sql.fun;
 import openjava.mop.OJClass;
 import org.eigenbase.sql.SqlAggFunction;
 import org.eigenbase.sql.SqlFunction;
+import org.eigenbase.sql.SqlFunctionCategory;
 import org.eigenbase.sql.SqlKind;
 import org.eigenbase.sql.type.OperandsTypeChecking;
 import org.eigenbase.sql.type.ReturnTypeInference;
@@ -82,13 +83,14 @@ public class SqlMinMaxAggFunction extends SqlAggFunction
         boolean isMin,
         int kind)
     {
+        // REVIEW jvs 25-Mar-2005:  these aren't necessarily numeric
         super(
             isMin ? "MIN" : "MAX",
             SqlKind.Function,
             ReturnTypeInferenceImpl.useFirstArgType,
             null,
             OperandsTypeChecking.typeNumeric,
-            SqlFunction.SqlFuncTypeName.Numeric);
+            SqlFunctionCategory.Numeric);
         this.argTypes = argTypes;
         this.isMin = isMin;
         this.kind = kind;

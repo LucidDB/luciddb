@@ -14,6 +14,7 @@
 | S                   | LOCALDB        |
 | SALES               | LOCALDB        |
 | SQLJ                | LOCALDB        |
+| SYS_BOOT            | SYS_BOOT       |
 +---------------------+----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail
@@ -29,6 +30,7 @@ Error: Dropping schema "LOCALDB"."S" requires CASCADE because other objects stil
 | S                   | LOCALDB        |
 | SALES               | LOCALDB        |
 | SQLJ                | LOCALDB        |
+| SYS_BOOT            | SYS_BOOT       |
 +---------------------+----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail
@@ -44,6 +46,7 @@ Error: Dropping schema "LOCALDB"."S" requires CASCADE because other objects stil
 | S                   | LOCALDB        |
 | SALES               | LOCALDB        |
 | SQLJ                | LOCALDB        |
+| SYS_BOOT            | SYS_BOOT       |
 +---------------------+----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should succeed
@@ -57,6 +60,7 @@ Error: Dropping schema "LOCALDB"."S" requires CASCADE because other objects stil
 | JDBC_METADATA       | SYS_BOOT       |
 | SALES               | LOCALDB        |
 | SQLJ                | LOCALDB        |
+| SYS_BOOT            | SYS_BOOT       |
 +---------------------+----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail with duplicate name

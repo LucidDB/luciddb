@@ -15,8 +15,8 @@ drop table multisetTable;
 
 -- insert with ints
 create table multisetTable_i(i integer primary key, ii integer multiset);
-insert into multisetTable_i values(0, multiset[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0, 1, 2]);
-insert into multisetTable_i values(1,multiset(select deptno from sales.depts));
+--insert into multisetTable_i values(0, multiset[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0, 1, 2]);
+--insert into multisetTable_i values(1,multiset(select deptno from sales.depts));
 --insert into multisetTable_i values(2, null);
 
 -- insert with chars

@@ -142,8 +142,16 @@ public class FarragoJdbcEngineConnection
     public void close()
         throws SQLException
     {
+        if (session == null) {
+            return;
+        }
         try {
             try {
+                if (session.isClosed()) {
+                    // Already closed internally by something like
+                    // a database shutdown; pop out now to avoid assertions.
+                    return;
+                }
                 session.closeAllocation();
                 if (session.isClone()) {
                     return;
@@ -522,7 +530,8 @@ public class FarragoJdbcEngineConnection
             final FarragoObjectCache sharedCache = db.getDataWrapperCache();
 
             dataWrapperCache = 
-                new FarragoDataWrapperCache(session, sharedCache, 
+                new FarragoDataWrapperCache(session, sharedCache,
+                    db.getPluginClassLoader(),
                     session.getRepos(), db.getFennelDbHandle());
 
             final FarragoMedDataWrapper dataWrapper =

@@ -53,6 +53,36 @@ when cwm_param_kind='pdk_return' then 5
 else 0
 end;
 
+create function convert_cwm_typename_to_literal_prefix(typename varchar(128))
+returns varchar(128)
+contains sql
+deterministic
+return case
+when typename='VARCHAR' then ''''
+when typename='CHAR' then ''''
+when typename='VARBINARY' then 'X'''
+when typename='BINARY' then 'X'''
+when typename='DATE' then 'DATE '''
+when typename='TIME' then 'TIME '''
+when typename='TIMESTAMP' then 'TIMESTAMP '''
+else cast(null as varchar(128))
+end;
+
+create function convert_cwm_typename_to_literal_suffix(typename varchar(128))
+returns varchar(128)
+contains sql
+deterministic
+return case
+when typename='VARCHAR' then ''''
+when typename='CHAR' then ''''
+when typename='VARBINARY' then ''''
+when typename='BINARY' then ''''
+when typename='DATE' then ''''
+when typename='TIME' then ''''
+when typename='TIMESTAMP' then ''''
+else cast(null as varchar(128))
+end;
+
 -- NOTE:  don't include ORDER BY in the view definitions
 
 create view schemas_view_internal as
@@ -147,7 +177,7 @@ create view table_types_view as
 -- REVIEW: length/precision/scale/radix
 -- also all of above for attributes and procedure_columns
 
-create view tables_columns_view_internal as
+create view columns_view_internal as
     select 
         t.table_cat,
         t.table_schem,
@@ -194,7 +224,7 @@ create view columns_view as
         null_identifier() as scope_table,
         null_identifier() as source_data_type
     from 
-        tables_columns_view_internal c 
+        columns_view_internal c 
     inner join 
         sys_cwm."Relational"."SQLDataType" t 
     on 
@@ -364,6 +394,69 @@ create view procedure_columns_view as
         pc."type" = t."mofId"
 ;
 
+-- TODO:  refine precision, case_sensitive, searchable, minimum/maximum_scale
+-- as we add LOB, NUMERIC, and UNICODE data types; unsigned should
+-- be null for non-numerics; case_sensitive should be null for
+-- non-character; support create_params
+
+create view type_info_view as
+    select
+        t."name" as type_name,
+        t."typeNumber" as data_type,
+        coalesce(
+            t."numericPrecision",
+            t."characterMaximumLength",
+            t."dateTimePrecision") as "PRECISION",
+        convert_cwm_typename_to_literal_prefix(t."name") as literal_prefix,
+        convert_cwm_typename_to_literal_suffix(t."name") as literal_suffix,
+        null_identifier() as create_params,
+        cast(1 as smallint) as nullable,
+        true as case_sensitive,
+        true as searchable,
+        false as unsigned_attribute,
+        false as fixed_prec_scale,
+        false as auto_increment,
+        null_identifier() as local_type_name,
+        cast(null as smallint) as minimum_scale,
+        cast(null as smallint) as maximum_scale,
+        cast(null as integer) as sql_data_type,
+        cast(null as integer) as sql_datetime_sub,
+        "numericPrecisionRadix" as num_prec_radix
+    from
+        sys_cwm."Relational"."SQLSimpleType" t
+;
+
+create view primary_keys_view_internal as
+    select
+        t.table_cat,
+        t.table_schem,
+        t.table_name,
+        k."name" as pk_name,
+        k."mofId"
+    from
+        tables_view_internal t
+    inner join 
+        sys_fem."SQL2003"."PrimaryKeyConstraint" k
+    on
+        t."mofId" = k."namespace"
+;
+
+create view primary_keys_view as
+    select
+        k.table_cat,
+        k.table_schem,
+        k.table_name,
+        c."name" as column_name,
+        c."ordinal" + 1 as key_seq,
+        k.pk_name
+    from
+        primary_keys_view_internal k
+    inner join
+        sys_fem."SQL2003"."KeyComponent" c
+    on
+        k."mofId" = c."KeyConstraint"
+;
+        
 -- TODO:  all the rest
 
 -- just a placeholder for now

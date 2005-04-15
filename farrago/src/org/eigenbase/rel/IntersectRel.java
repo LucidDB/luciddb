@@ -45,6 +45,15 @@ public class IntersectRel extends UnionRel
     {
         super(cluster, new RelNode [] { left, right }, false);
     }
+
+    public IntersectRel(
+        RelOptCluster cluster,
+        RelNode left,
+        RelNode right,
+        boolean all)
+    {
+        super(cluster, new RelNode [] { left, right }, all);
+    }
 }
 
 

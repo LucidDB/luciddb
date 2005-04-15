@@ -39,16 +39,10 @@ import org.eigenbase.rel.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.rex.RexBuilder;
-import org.eigenbase.rex.RexCall;
-import org.eigenbase.rex.RexCorrelVariable;
-import org.eigenbase.rex.RexInputRef;
-import org.eigenbase.rex.RexKind;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexShuttle;
-import org.eigenbase.rex.RexUtil;
+import org.eigenbase.rex.*;
 import org.eigenbase.util.Util;
 import org.eigenbase.oj.util.*;
+import org.eigenbase.sql.SqlNode;
 
 /**
  * <code>RelOptUtil</code> defines static utility methods for use in optimizing
@@ -335,6 +329,51 @@ public abstract class RelOptUtil
             }
         }
         return true;
+    }
+
+    /**
+     * Creates a plan suitable for use in <code>EXITS</code> or <code>IN</code>
+     * statements. See {@link org.eigenbase.sql2rel.SqlToRelConverter#convertExists}
+     */
+    public static RelNode createExistsPlan(RelOptCluster cluster, RelNode seekRel, RexNode[] conditions, RexLiteral extraExpr, String extraName) {
+        RelNode ret = seekRel;
+
+        RexNode conditionExp = null;
+        for (int i = 0; i < conditions.length; i++) {
+            if (i == 0) {
+                conditionExp = conditions[i];
+            } else {
+                conditionExp =
+                    cluster.rexBuilder.makeCall(
+                        cluster.rexBuilder.opTab.andOperator,
+                        conditionExp,
+                        conditions[i]);
+            }
+        }
+
+        if (null != conditionExp) {
+            ret  = new FilterRel(cluster, seekRel, conditionExp);
+        }
+
+        if (null != extraExpr) {
+            final RelDataType rowType = seekRel.getRowType();
+            final RelDataTypeField [] fields = rowType.getFields();
+            final RexNode [] expressions = new RexNode[fields.length + 1];
+            String [] fieldNames = new String[fields.length + 1];
+            final RexNode ref = cluster.rexBuilder.makeRangeReference(rowType, 0);
+            for (int j = 0; j < fields.length; j++) {
+                expressions[j] = cluster.rexBuilder.makeFieldAccess(ref, j);
+                fieldNames[j] = fields[j].getName();
+            }
+            expressions[fields.length] = extraExpr;
+            fieldNames[fields.length] =
+                Util.uniqueFieldName(fieldNames, fields.length, extraName);
+            ret =
+                new ProjectRel(cluster, ret, expressions, fieldNames,
+                    ProjectRelBase.Flags.Boxed);
+        }
+
+        return ret;
     }
 
     /**

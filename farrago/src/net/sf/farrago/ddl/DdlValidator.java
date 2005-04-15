@@ -93,20 +93,14 @@ public class DdlValidator extends FarragoCompoundAllocation
 
     //~ Instance fields -------------------------------------------------------
 
-    /**
-     * A public instance of FarragoResource for use in throwing vallidation
-     * errors.  The name is intentionally short to keep line length under
-     * control.
-     */
-    public final FarragoResource res;
     private final FarragoSessionStmtValidator stmtValidator;
 
     /** Queue of excns detected during plannedChange. */
     private DeferredException enqueuedValidationExcn;
 
     /**
-     * Map (from RefAssociation.Class to DropRule) of associations for which
-     * special handling is required during DROP.
+     * Map (from RefAssociation.Class to FarragoSessionDdlDropRule) of
+     * associations for which special handling is required during DROP.
      */
     private MultiMap dropRules;
 
@@ -187,44 +181,29 @@ public class DdlValidator extends FarragoCompoundAllocation
         parserOffsetMap = new HashMap();
         sqlMap = new HashMap();
 
+        // NOTE:  dropRules are populated implicitly as action handlers
+        // are set up below.
         dropRules = new MultiMap();
 
-        // When a table is dropped, all indexes on the table should also be
-        // implicitly dropped.
-        addDropRule(
-            getRepos().getKeysIndexesPackage().getIndexSpansClass(),
-            new DropRule("spannedClass", null,
-                ReferentialRuleTypeEnum.IMPORTED_KEY_CASCADE));
+        // Build up list of action handlers.
+        actionHandlers = new ArrayList();
 
-        // Dependencies can never be dropped without CASCADE, but with
-        // CASCADE, they go away (a special case later on takes care of
-        // cascading to the dependent object as well).
-        addDropRule(
-            getRepos().getCorePackage().getDependencySupplier(),
-            new DropRule("supplier", null,
-                ReferentialRuleTypeEnum.IMPORTED_KEY_RESTRICT));
+        // First, install action handlers for all installed model
+        // extensions.
+        Iterator extIter =
+            stmtValidator.getSession().getModelExtensions().iterator();
+        while (extIter.hasNext()) {
+            FarragoSessionModelExtension ext = (FarragoSessionModelExtension)
+                extIter.next();
+            ext.defineDdlHandlers(
+                this,
+                actionHandlers);
+        }
 
-        // When a dependency gets dropped, take its owner (the client)
-        // down with it.
-        addDropRule(
-            getRepos().getCorePackage().getElementOwnership(),
-            new DropRule("ownedElement", CwmDependency.class,
-                ReferentialRuleTypeEnum.IMPORTED_KEY_CASCADE));
-
-        // Without CASCADE, a schema can only be dropped when it is empty.
-        // This is not true for other namespaces (e.g. a table's constraints
-        // are dropped implicitly), so we specify the superInterface filter.
-        addDropRule(
-            getRepos().getCorePackage().getElementOwnership(),
-            new DropRule("namespace", CwmSchema.class,
-                ReferentialRuleTypeEnum.IMPORTED_KEY_RESTRICT));
-        
-        // When a UDT is dropped, all routines which realize methods should
-        // also be implicitly dropped.
-        addDropRule(
-            getRepos().getBehavioralPackage().getOperationMethod(),
-            new DropRule("specification", null,
-                ReferentialRuleTypeEnum.IMPORTED_KEY_CASCADE));
+        // Then, install action handlers specific to this personality.
+        stmtValidator.getSession().getPersonality().defineDdlHandlers(
+            this,
+            actionHandlers);
 
         // MDR pre-change instance creation events are useless, since they
         // don't refer to the new instance.  Instead, we rely on the
@@ -236,27 +215,9 @@ public class DdlValidator extends FarragoCompoundAllocation
             InstanceEvent.EVENT_INSTANCE_DELETE
                 | AttributeEvent.EVENTMASK_ATTRIBUTE
                 | AssociationEvent.EVENTMASK_ASSOCIATION);
-
-        res = FarragoResource.instance();
     }
 
     //~ Methods ---------------------------------------------------------------
-
-    // implement FarragoSessionDdlValidator
-    public List defineHandlers()
-    {
-        List list = new ArrayList();
-
-        // NOTE jvs 21-Jan-2005:  list order matters here.
-        // DdlRelationalHandler includes some catch-all methods for
-        // superinterfaces which we only want to invoke when one of
-        // the more specific handlers doesn't satisfied the request.
-        DdlMedHandler medHandler = new DdlMedHandler(this);
-        list.add(medHandler);
-        list.add(new DdlRoutineHandler(this));
-        list.add(new DdlRelationalHandler(medHandler));
-        return list;
-    }
 
     // implement FarragoSessionDdlValidator
     public FarragoSessionStmtValidator getStmtValidator()
@@ -410,23 +371,30 @@ public class DdlValidator extends FarragoCompoundAllocation
         CwmModelElement schemaElement,
         SqlIdentifier qualifiedName)
     {
-        String schemaName = null;
+        SqlIdentifier schemaName = null;
         assert (qualifiedName.names.length > 0);
-        assert (qualifiedName.names.length < 3);
+        assert (qualifiedName.names.length < 4);
 
-        // TODO:  support catalog names
-        if (qualifiedName.names.length == 2) {
+        if (qualifiedName.names.length == 3) {
+            schemaElement.setName(qualifiedName.names[2]);
+            schemaName = new SqlIdentifier(
+                new String[] {
+                    qualifiedName.names[0],
+                    qualifiedName.names[1]
+                },
+                null);
+        } else if (qualifiedName.names.length == 2) {
             schemaElement.setName(qualifiedName.names[1]);
-            schemaName = qualifiedName.names[0];
+            schemaName = new SqlIdentifier(qualifiedName.names[0], null);
         } else {
             schemaElement.setName(qualifiedName.names[0]);
             if (stmtValidator.getSessionVariables().schemaName == null) {
-                throw res.newValidatorNoDefaultSchema();
+                throw FarragoResource.instance().newValidatorNoDefaultSchema();
             }
-            schemaName = stmtValidator.getSessionVariables().schemaName;
+            schemaName = new SqlIdentifier(
+                stmtValidator.getSessionVariables().schemaName, null);
         }
-        CwmSchema schema =
-            stmtValidator.findSchema(new SqlIdentifier(schemaName, null));
+        CwmSchema schema = stmtValidator.findSchema(schemaName);
         schema.getOwnedElement().add(schemaElement);
     }
 
@@ -569,9 +537,10 @@ public class DdlValidator extends FarragoCompoundAllocation
                 List rules = dropRules.getMulti(refAssoc.getClass());
                 Iterator ruleIter = rules.iterator();
                 while (ruleIter.hasNext()) {
-                    DropRule rule = (DropRule) ruleIter.next();
+                    FarragoSessionDdlDropRule rule =
+                        (FarragoSessionDdlDropRule) ruleIter.next();
                     if ((rule != null)
-                            && rule.endName.equals(
+                            && rule.getEndName().equals(
                                 associationEvent.getEndName())) {
                         fireDropRule(
                             rule,
@@ -611,8 +580,6 @@ public class DdlValidator extends FarragoCompoundAllocation
         this.ddlStmt = ddlStmt;
         ddlStmt.preValidate(this);
         checkValidationExcnQueue();
-
-        actionHandlers = defineHandlers();
 
         if (ddlStmt instanceof DdlDropStmt) {
             // Process deletions until a fixpoint is reached, using MDR events
@@ -686,7 +653,7 @@ public class DdlValidator extends FarragoCompoundAllocation
                 // Every single object hit a
                 // FarragoUnvalidatedDependencyException.  This implies a
                 // cycle.  TODO:  identify the cycle in the exception.
-                throw res.newValidatorSchemaDependencyCycle();
+                throw FarragoResource.instance().newValidatorSchemaDependencyCycle();
             }
         }
 
@@ -730,7 +697,7 @@ public class DdlValidator extends FarragoCompoundAllocation
                     // definition order, which may not be guaranteed?
                     throw newPositionalError(
                         element,
-                        res.newValidatorDuplicateNames(
+                        FarragoResource.instance().newValidatorDuplicateNames(
                             getRepos().getLocalizedObjectName(
                                 null,
                                 element.getName(),
@@ -753,7 +720,7 @@ public class DdlValidator extends FarragoCompoundAllocation
                     // new object clashes with existing object
                     throw newPositionalError(
                         newElement,
-                        res.newValidatorNameInUse(
+                        FarragoResource.instance().newValidatorNameInUse(
                             getRepos().getLocalizedObjectName(
                                 null,
                                 oldElement.getName(),
@@ -865,22 +832,17 @@ public class DdlValidator extends FarragoCompoundAllocation
         assert(parserContext != null);
         String msg = parserContext.toString();
         EigenbaseException contextExcn =
-            res.newValidatorPositionContext(msg, ex);
+            FarragoResource.instance().newValidatorPositionContext(msg, ex);
         contextExcn.setPosition(
             parserContext.getLineNum(),
             parserContext.getColumnNum());
         return contextExcn;
     }
 
-    /**
-     * Add a new DropRule.
-     *
-     * @param refAssoc the association to embellish
-     * @param dropRule the rule to use for this association
-     */
-    protected void addDropRule(
+    // implement FarragoSessionDdlValidator
+    public void defineDropRule(
         RefAssociation refAssoc,
-        DropRule dropRule)
+        FarragoSessionDdlDropRule dropRule)
     {
         // NOTE:  use class object because in some circumstances MDR makes
         // up multiple instances of the same association, but doesn't implement
@@ -910,15 +872,15 @@ public class DdlValidator extends FarragoCompoundAllocation
     }
 
     private void fireDropRule(
-        DropRule rule,
+        FarragoSessionDdlDropRule rule,
         RefObject droppedEnd,
         RefObject otherEnd)
     {
-        if ((rule.superInterface != null)
-                && !(rule.superInterface.isInstance(droppedEnd))) {
+        if ((rule.getSuperInterface() != null)
+                && !(rule.getSuperInterface().isInstance(droppedEnd))) {
             return;
         }
-        ReferentialRuleTypeEnum action = rule.action;
+        ReferentialRuleTypeEnum action = rule.getAction();
         if (action == ReferentialRuleTypeEnum.IMPORTED_KEY_CASCADE) {
             deleteQueue.add(otherEnd);
             return;
@@ -937,7 +899,7 @@ public class DdlValidator extends FarragoCompoundAllocation
                 {
                     CwmModelElement droppedElement =
                         (CwmModelElement) getRepos().getMdrRepos().getByMofId(mofId);
-                    return res.newValidatorDropRestrict(
+                    return FarragoResource.instance().newValidatorDropRestrict(
                         getRepos().getLocalizedObjectName(
                             droppedElement,
                             droppedElement.refClass()));
@@ -1056,45 +1018,6 @@ public class DdlValidator extends FarragoCompoundAllocation
     }
 
     //~ Inner Classes ---------------------------------------------------------
-
-    /**
-     * DropRule specifies what to do when an association link deletion event
-     * is heard.
-     */
-    protected static class DropRule
-    {
-        /**
-         * A filter on the instance of the end to which the rule applies.  If
-         * null, the rule applies to any object.  Otherwise, the object must
-         * be an instance of this class.
-         */
-        final Class superInterface;
-
-        /** What to do when this rule fires: */
-        final ReferentialRuleTypeEnum action;
-
-        /**
-         * The end to which this rule applies.
-         */
-        final String endName;
-
-        /**
-         * Creates a new DropRule object.
-         *
-         * @param endName .
-         * @param superInterface .
-         * @param action .
-         */
-        public DropRule(
-            String endName,
-            Class superInterface,
-            ReferentialRuleTypeEnum action)
-        {
-            this.endName = endName;
-            this.superInterface = superInterface;
-            this.action = action;
-        }
-    }
 
     /**
      * DeferredException allows an exception's creation to be deferred.

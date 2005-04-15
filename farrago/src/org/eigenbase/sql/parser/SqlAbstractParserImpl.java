@@ -321,7 +321,7 @@ public abstract class SqlAbstractParserImpl
         SqlIdentifier funName,
         SqlNode [] operands,
         SqlParserPos pos,
-        SqlFunction.SqlFuncTypeName funcType)
+        SqlFunctionCategory funcType)
     {
         SqlOperator fun = null;
 
@@ -332,6 +332,7 @@ public abstract class SqlAbstractParserImpl
         if (funName.isSimple()) {
             List list = opTab.lookupOperatorOverloads(
                 funName,
+                null,
                 SqlSyntax.Function);
             if (list.size() == 1) {
                 fun = (SqlOperator) list.get(0);

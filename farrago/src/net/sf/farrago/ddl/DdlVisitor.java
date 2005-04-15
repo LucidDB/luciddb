@@ -97,6 +97,16 @@ public class DdlVisitor
     public void visit(DdlCheckpointStmt stmt)
     {
     }
+
+    // visitor dispatch
+    public void visit(DdlExtendCatalogStmt stmt)
+    {
+    }
+
+    // visitor dispatch
+    public void visit(DdlSetSessionImplementationStmt stmt)
+    {
+    }
 }
 
 

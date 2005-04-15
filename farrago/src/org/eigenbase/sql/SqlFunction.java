@@ -38,17 +38,9 @@ import org.eigenbase.sql.parser.*;
  */
 public class SqlFunction extends SqlOperator
 {
-    //~ Static fields/initializers --------------------------------------------
-
-    public static final EnumeratedValues enumeration =
-        new EnumeratedValues(new SqlFuncTypeName [] {
-                SqlFuncTypeName.String, SqlFuncTypeName.Numeric,
-                SqlFuncTypeName.TimeDate, SqlFuncTypeName.System,
-            });
-
     //~ Instance fields -------------------------------------------------------
 
-    private final SqlFuncTypeName functionType;
+    private final SqlFunctionCategory functionType;
 
     private final SqlIdentifier sqlIdentifier;
 
@@ -77,7 +69,7 @@ public class SqlFunction extends SqlOperator
         ReturnTypeInference typeInference,
         UnknownParamInference paramTypeInference,
         OperandsTypeChecking paramTypes,
-        SqlFuncTypeName funcType)
+        SqlFunctionCategory funcType)
     {
         super(name, kind, 100, 100, typeInference, paramTypeInference,
             paramTypes);
@@ -112,7 +104,7 @@ public class SqlFunction extends SqlOperator
         UnknownParamInference paramTypeInference,
         OperandsTypeChecking paramTypeChecking,
         RelDataType [] paramTypes, 
-        SqlFuncTypeName funcType)
+        SqlFunctionCategory funcType)
     {
         super(
             sqlIdentifier.names[sqlIdentifier.names.length - 1],
@@ -173,90 +165,11 @@ public class SqlFunction extends SqlOperator
 
     /**
      *
-     * @return function type {@link SqlFuncTypeName}
+     * @return function category
      */
-    public SqlFuncTypeName getFunctionType()
+    public SqlFunctionCategory getFunctionType()
     {
         return this.functionType;
-    }
-
-    /**
-     * Looks up a kind from its ordinal.
-     */
-    public static SqlFuncTypeName get(int ordinal)
-    {
-        return (SqlFuncTypeName) enumeration.getValue(ordinal);
-    }
-
-    /**
-     * Looks up a kind from its name.
-     */
-    public static SqlFuncTypeName get(String name)
-    {
-        return (SqlFuncTypeName) enumeration.getValue(name);
-    }
-
-    //~ Inner Classes ---------------------------------------------------------
-
-    /**
-     * Enumeration of the types supported functions.
-     */
-    public static class SqlFuncTypeName extends EnumeratedValues.BasicValue
-    {
-        public static final int String_ordinal = 0;
-
-        /** String function type **/
-        public static final SqlFuncTypeName String =
-            new SqlFuncTypeName("STRING", String_ordinal, "String function");
-        
-        public static final int Numeric_ordinal = 1;
-
-        /** Numeric function type **/
-        public static final SqlFuncTypeName Numeric =
-            new SqlFuncTypeName("NUMERIC", Numeric_ordinal, "Numeric function");
-        
-        public static final int TimeDate_ordinal = 2;
-
-        /** Time and date function type **/
-        public static final SqlFuncTypeName TimeDate =
-            new SqlFuncTypeName("TIMEDATE", TimeDate_ordinal,
-                "Time and date function");
-        
-        public static final int System_ordinal = 3;
-
-        /** System function type **/
-        public static final SqlFuncTypeName System =
-            new SqlFuncTypeName("SYSTEM", System_ordinal, "System function");
-
-        public static final int UserDefinedFunction_ordinal = 4;
-        
-        /** User-defined function type **/
-        public static final SqlFuncTypeName UserDefinedFunction =
-            new SqlFuncTypeName(
-                "UDF", UserDefinedFunction_ordinal, "User-defined function");
-
-        public static final int UserDefinedProcedure_ordinal = 5;
-        
-        /** User-defined procedure type **/
-        public static final SqlFuncTypeName UserDefinedProcedure =
-            new SqlFuncTypeName(
-                "UDP", UserDefinedProcedure_ordinal, "User-defined procedure");
-
-        public static final int UserDefinedConstructor_ordinal = 6;
-        
-        /** User-defined constructor type **/
-        public static final SqlFuncTypeName UserDefinedConstructor =
-            new SqlFuncTypeName(
-                "UDC", UserDefinedConstructor_ordinal,
-                "User-defined constructor");
-
-        private SqlFuncTypeName(
-            String name,
-            int ordinal,
-            String description)
-        {
-            super(name, ordinal, description);
-        }
     }
 }
 

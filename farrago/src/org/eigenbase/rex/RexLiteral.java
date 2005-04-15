@@ -29,7 +29,6 @@ import java.math.BigDecimal;
 import java.util.Calendar;
 
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.SqlSymbol;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.BitString;
 import org.eigenbase.util.EnumeratedValues;
@@ -122,10 +121,8 @@ import org.eigenbase.util.Util;
  *       It is used to hold a flag, such as the LEADING flag in a call to the
  *       function <code>TRIM([LEADING|TRAILING|BOTH] chars FROM string)</code>.
  *   </td>
- *   <td><{@link SqlSymbol} (which conveniently both extends
- *       {@link org.eigenbase.sql.SqlLiteral}
- *       and also implements {@link EnumeratedValues}), or a class derived from
- *       it.</td>
+ *   <td>A class which implements the {@link EnumeratedValues.Value}
+ *       interface</td>
  * </tr>
  * </table>
  *
@@ -215,9 +212,7 @@ public class RexLiteral extends RexNode
         case SqlTypeName.Char_ordinal:
             return value instanceof NlsString;
         case SqlTypeName.Symbol_ordinal:
-
-            // Unlike SqlLiteral, we DO allow a String value.
-            return value instanceof SqlSymbol || value instanceof String;
+            return value instanceof EnumeratedValues.Value;
         case SqlTypeName.Integer_ordinal: // not allowed -- use Decimal
         case SqlTypeName.Varchar_ordinal: // not allowed -- use Char
         case SqlTypeName.Varbinary_ordinal: // not allowed -- use Binary
@@ -300,7 +295,7 @@ public class RexLiteral extends RexNode
             pw.print("null");
             break;
         case SqlTypeName.Symbol_ordinal:
-            assert value instanceof SqlSymbol;
+            assert value instanceof EnumeratedValues.Value;
             pw.print("FLAG(");
             pw.print(value);
             pw.print(")");

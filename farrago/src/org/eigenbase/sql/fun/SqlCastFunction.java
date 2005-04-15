@@ -52,7 +52,7 @@ public class SqlCastFunction extends SqlFunction
     public SqlCastFunction()
     {
         super("CAST", SqlKind.Cast, null, UnknownParamInference.useFirstKnown,
-            null, SqlFunction.SqlFuncTypeName.System);
+            null, SqlFunctionCategory.System);
     }
 
     //~ Methods ---------------------------------------------------------------

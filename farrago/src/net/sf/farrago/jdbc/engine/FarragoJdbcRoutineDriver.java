@@ -83,6 +83,25 @@ public class FarragoJdbcRoutineDriver
             throw FarragoJdbcEngineDriver.newSqlException(ex);
         }
     }
+
+    /**
+     * Converts a connection returned via URL "jdbc:default:connection"
+     * to a FarragoSession.  This can be used by user-defined routines
+     * to gain internal access to Farrago.  Use with caution.
+     *
+     * @param conn connection
+     *
+     * @return session
+     */
+    public static FarragoSession getSessionForConnection(Connection conn)
+        throws SQLException
+    {
+        try {
+            return ((FarragoJdbcEngineConnection) conn).getSession();
+        } catch (ClassCastException ex) {
+            throw FarragoJdbcEngineDriver.newSqlException(ex);
+        }
+    }
 }
 
 // End FarragoJdbcRoutineDriver.java

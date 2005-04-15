@@ -1658,6 +1658,10 @@ public class SqlParserTest extends TestCase
         checkExp("new udt() is not null", "((NEW `UDT`()) IS NOT NULL)");
         checkExp("1 + new udt()", "(1 + (NEW `UDT`()))");
     }
+
+    public void testMultisetCast() {
+        checkExp("cast(multiset[1] as double multiset)", "CAST((MULTISET[1]) AS DOUBLE MULTISET)");
+    }
 }
 
 

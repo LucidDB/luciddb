@@ -39,6 +39,7 @@ import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.plugin.*;
 
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.oj.stmt.*;
@@ -69,6 +70,12 @@ public class FarragoDbSession extends FarragoCompoundAllocation
 
     //~ Instance fields -------------------------------------------------------
 
+    /** Default personality for this session. */
+    private FarragoSessionPersonality defaultPersonality;
+
+    /** Current personality for this session. */
+    private FarragoSessionPersonality personality;
+    
     /** Fennel transaction context for this session */
     private final FennelTxnContext fennelTxnContext;
 
@@ -85,6 +92,8 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     /** Was this session produced by cloning? */
     private boolean isClone;
     private boolean isAutoCommit;
+    private boolean shutDownRequested;
+    private boolean catalogDumpRequested;
 
     /**
      * List of savepoints established within current transaction which have
@@ -170,10 +179,25 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         savepointList = new ArrayList();
 
         sessionIndexMap = new FarragoDbSessionIndexMap(this, database, repos);
+        
+        personality = sessionFactory.newSessionPersonality(this, null);
+        defaultPersonality = personality;
     }
 
     //~ Methods ---------------------------------------------------------------
 
+    // implement FarragoSession
+    public FarragoSessionFactory getSessionFactory()
+    {
+        return sessionFactory;
+    }
+    
+    // implement FarragoSession
+    public FarragoSessionPersonality getPersonality()
+    {
+        return personality;
+    }
+    
     // implement FarragoSession
     public void setDatabaseMetaData(DatabaseMetaData dbMetaData)
     {
@@ -199,31 +223,21 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     }
     
     // implement FarragoSession
-    public String getDefaultLocalDataServerName()
-    {
-        if (repos.isFennelEnabled()) {
-            return "SYS_FTRS_DATA_SERVER";
-        } else {
-            return "SYS_MOCK_DATA_SERVER";
-        }
-    }
-
-    // implement FarragoSession
-    public SqlOperatorTable getSqlOperatorTable()
-    {
-        return SqlStdOperatorTable.instance();
-    }
-
-    // implement FarragoSession
-    public OJRexImplementorTable getOJRexImplementorTable()
-    {
-        return database.getOJRexImplementorTable();
-    }
-
-    // implement FarragoSession
     public String getUrl()
     {
         return url;
+    }
+
+    // implement FarragoSession
+    public FarragoPluginClassLoader getPluginClassLoader()
+    {
+        return database.getPluginClassLoader();
+    }
+
+    // implement FarragoSession
+    public List getModelExtensions()
+    {
+        return database.getModelExtensions();
     }
 
     // implement FarragoSession
@@ -232,12 +246,6 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         FarragoDbStmtContext stmtContext = new FarragoDbStmtContext(this);
         addAllocation(stmtContext);
         return stmtContext;
-    }
-
-    // implement FarragoSession
-    public FarragoSessionParser newParser()
-    {
-        return new FarragoParser();
     }
 
     // implement FarragoSession
@@ -250,21 +258,6 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             getDatabase().getCodeCache(),
             getDatabase().getDataWrapperCache(),
             getSessionIndexMap());
-    }
-
-    // implement FarragoSession
-    public FarragoSessionDdlValidator newDdlValidator(
-        FarragoSessionStmtValidator stmtValidator)
-    {
-        return new DdlValidator(stmtValidator);
-    }
-
-    // implement FarragoSession
-    public FarragoSessionPlanner newPlanner(
-        FarragoSessionPreparingStmt stmt,
-        boolean init)
-    {
-        throw new AssertionError("no default implementation available");
     }
 
     // implement FarragoSession
@@ -346,7 +339,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     public void closeAllocation()
     {
         super.closeAllocation();
-        if (isClone) {
+        if (isClone || isClosed()) {
             return;
         }
         endTransactionIfAuto(true);
@@ -473,19 +466,6 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         }
     }
 
-    // implement FarragoSession
-    public Class getRuntimeContextClass()
-    {
-        return FarragoRuntimeContext.class;
-    }
-
-    // implement FarragoSession
-    public FarragoSessionRuntimeContext newRuntimeContext(
-        FarragoSessionRuntimeParams params)
-    {
-        return new FarragoRuntimeContext(params);
-    }
-
     protected FarragoSessionRuntimeParams newRuntimeContextParams()
     {
         FarragoSessionRuntimeParams params = new FarragoSessionRuntimeParams();
@@ -497,7 +477,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         params.indexMap = getSessionIndexMap();
         params.sessionVariables = getSessionVariables().cloneVariables();
         params.sharedDataWrapperCache = getDatabase().getDataWrapperCache();
-        params.streamFactoryProvider = this;
+        params.streamFactoryProvider = personality;
         return params;
     }
 
@@ -589,19 +569,6 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         }
     }
 
-    // implement FarragoSession
-    public FarragoSessionPreparingStmt newPreparingStmt(
-        FarragoSessionStmtValidator stmtValidator)
-    {
-        return new FarragoPreparingStmt(stmtValidator);
-    }
-
-    // implement FarragoSession
-    public void registerStreamFactories(long hStreamGraph)
-    {
-        // default:  no extensions
-    }
-
     FarragoSessionExecutableStmt prepare(
         String sql,
         FarragoAllocationOwner owner,
@@ -628,7 +595,8 @@ public class FarragoDbSession extends FarragoCompoundAllocation
 
             boolean [] pRollback = new boolean[1];
             pRollback[0] = true;
-            FarragoSessionStmtValidator stmtValidator = newStmtValidator();
+            FarragoSessionStmtValidator stmtValidator =
+                newStmtValidator();
             FarragoSessionExecutableStmt stmt = null;
             try {
                 stmt =
@@ -663,7 +631,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         // time the statement is executed.  Also probably need to disallow
         // some types of prepared DDL.
         FarragoSessionDdlValidator ddlValidator =
-            newDdlValidator(stmtValidator);
+            personality.newDdlValidator(stmtValidator);
         FarragoSessionParser parser = stmtValidator.getParser();
 
         boolean expectStatement = true;
@@ -678,7 +646,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             pRollback[0] = false;
             ddlValidator.closeAllocation();
             ddlValidator = null;
-            validate(stmtValidator, sqlNode);
+            personality.validate(stmtValidator, sqlNode);
             FarragoSessionExecutableStmt stmt =
                 database.prepareStmt(
                     stmtValidator, sqlNode, owner, analyzedSql);
@@ -702,16 +670,6 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         return null;
     }
 
-    /**
-     * Does some custom sql validations which can't be performed by
-     * the vanilla validator.
-     */
-    public void validate(
-        FarragoSessionStmtValidator stmtValidator,
-        SqlNode sqlNode)
-    {
-    }
-
     private void executeDdl(
         FarragoSessionDdlValidator ddlValidator,
         FarragoReposTxnContext reposTxnContext,
@@ -728,17 +686,33 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         tracer.fine("updating storage");
         ddlValidator.executeStorage();
 
-        // TODO: Some statements aren't real DDL, and should be traced
-        // differently.
-        // handle some special cases here
-        ddlStmt.preExecute();
-        if (ddlStmt instanceof DdlStmt) {
-            ((DdlStmt) ddlStmt).visit(new DdlExecutionVisitor());
-        }
-        ddlStmt.postExecute();
+        try {
+            ddlStmt.preExecute();
+            if (ddlStmt instanceof DdlStmt) {
+                ((DdlStmt) ddlStmt).visit(new DdlExecutionVisitor());
+            }
+            ddlStmt.postExecute();
 
-        tracer.fine("committing DDL");
-        reposTxnContext.commit();
+            tracer.fine("committing DDL");
+            reposTxnContext.commit();
+
+            if (shutDownRequested) {
+                closeAllocation();
+                database.shutdown();
+                if (catalogDumpRequested) {
+                    try {
+                        FarragoReposUtil.dumpRepository();
+                    } catch (Exception ex) {
+                        throw FarragoResource.instance().newCatalogDumpFailed(
+                            ex);
+                    }
+                }
+            }
+            
+        } finally {
+            shutDownRequested = false;
+            catalogDumpRequested = false;
+        }
     }
 
     //~ Inner Classes ---------------------------------------------------------
@@ -817,6 +791,24 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         public void visit(DdlCheckpointStmt stmt)
         {
             database.requestCheckpoint(false, false);
+        }
+
+        // implement DdlVisitor
+        public void visit(DdlSetSessionImplementationStmt stmt)
+        {
+            personality = stmt.newPersonality(
+                FarragoDbSession.this,
+                defaultPersonality);
+        }
+
+        // implement DdlVisitor
+        public void visit(DdlExtendCatalogStmt stmt)
+        {
+            // record the model extension plugin jar URL outside of the catalog
+            // so that when we reboot it will be available to MDR
+            database.saveBootUrl(stmt.getJarUrl());
+            shutDownRequested = true;
+            catalogDumpRequested = true;
         }
     }
 }

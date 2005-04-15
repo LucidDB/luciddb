@@ -94,7 +94,20 @@ public class SqlSimpleParser
             String right = sql.substring(cursor);
             sql = left + hintToken + " " + right;
         }
+        return simplifySql(sql);
+    }
 
+    /**
+     * Turn a partially completed or syntatically incorrect sql statement into
+     * a simplified, valid one that can be validated
+     *
+     * @param sql A partial or syntatically incorrect sql statement
+     *
+     * @return a completed, valid (and possibly simplified) SQL statement
+     *
+     */
+    public String simplifySql(String sql)
+    {
         // if there are subqueries, extract them and push them into a stack
         Stack subqueries = new Stack();
         stackSubqueries(sql, subqueries);

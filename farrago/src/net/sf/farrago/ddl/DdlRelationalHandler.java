@@ -103,7 +103,7 @@ public class DdlRelationalHandler extends DdlHandler
             if (!validator.isCreatedObject(table)) {
                 // REVIEW: support this?  What to do about instances of the
                 // same temporary table in other sessions?
-                throw validator.res.newValidatorIndexOnExistingTempTable(
+                throw res.newValidatorIndexOnExistingTempTable(
                     repos.getLocalizedObjectName(index),
                     repos.getLocalizedObjectName(table));
             }
@@ -155,7 +155,7 @@ public class DdlRelationalHandler extends DdlHandler
         FemDataServer dataServer = table.getServer();
         FemDataWrapper dataWrapper = dataServer.getWrapper();
         if (dataWrapper.isForeign()) {
-            throw validator.res.newValidatorLocalTableButForeignWrapper(
+            throw res.newValidatorLocalTableButForeignWrapper(
                 repos.getLocalizedObjectName(table),
                 repos.getLocalizedObjectName(dataWrapper));
         }
@@ -176,24 +176,25 @@ public class DdlRelationalHandler extends DdlHandler
             }
         }
         if (nClustered > 1) {
-            throw validator.res.newValidatorDuplicateClusteredIndex(
+            throw res.newValidatorDuplicateClusteredIndex(
                 repos.getLocalizedObjectName(table));
         }
 
-        CwmPrimaryKey primaryKey = null;
+        FemPrimaryKeyConstraint primaryKey = null;
         Iterator constraintIter = table.getOwnedElement().iterator();
         while (constraintIter.hasNext()) {
             Object obj = constraintIter.next();
-            if (!(obj instanceof CwmUniqueConstraint)) {
+            if (!(obj instanceof FemAbstractUniqueConstraint)) {
                 continue;
             }
-            CwmUniqueConstraint constraint = (CwmUniqueConstraint) obj;
-            if (constraint instanceof CwmPrimaryKey) {
+            FemAbstractUniqueConstraint constraint =
+                (FemAbstractUniqueConstraint) obj;
+            if (constraint instanceof FemPrimaryKeyConstraint) {
                 if (primaryKey != null) {
-                    throw validator.res.newValidatorMultiplePrimaryKeys(
+                    throw res.newValidatorMultiplePrimaryKeys(
                         repos.getLocalizedObjectName(table));
                 }
-                primaryKey = (CwmPrimaryKey) constraint;
+                primaryKey = (FemPrimaryKeyConstraint) constraint;
             }
             if (creation) {
                 // Implement constraints via system-owned indexes.
@@ -204,13 +205,15 @@ public class DdlRelationalHandler extends DdlHandler
                     // key's index clustered.
                     index.setClustered(true);
                 }
+                // Create redundant metadata used by JDBC views
+                createConstraintColumnMetadata(constraint);
             }
         }
 
         if (primaryKey == null) {
             // TODO:  This is not SQL-standard.  Fixing it requires the
             // introduction of a system-managed surrogate key.
-            throw validator.res.newValidatorNoPrimaryKey(
+            throw res.newValidatorNoPrimaryKey(
                 repos.getLocalizedObjectName(table));
         }
 
@@ -237,7 +240,7 @@ public class DdlRelationalHandler extends DdlHandler
             // pass this one through
             throw ex;
         } catch (Throwable ex) {
-            throw validator.res.newValidatorInvalidObjectDefinition(
+            throw res.newValidatorInvalidObjectDefinition(
                 repos.getLocalizedObjectName(view), 
                 ex);
         } finally {
@@ -271,16 +274,16 @@ public class DdlRelationalHandler extends DdlHandler
             // number of explicitly specified columns needs to match the number
             // of columns produced by the query
             if (rowType.getFieldList().size() != columnList.size()) {
-                throw validator.res.newValidatorViewColumnCountMismatch();
+                throw res.newValidatorViewColumnCountMismatch();
             }
         }
 
         if (analyzedSql.hasDynamicParams) {
-            throw validator.res.newValidatorInvalidViewDynamicParam();
+            throw res.newValidatorInvalidViewDynamicParam();
         }
 
         if (analyzedSql.hasTopLevelOrderBy) {
-            throw validator.res.newValidatorInvalidViewOrderBy();
+            throw res.newValidatorInvalidViewOrderBy();
         }
 
         // Derive column information from result set metadata
@@ -311,7 +314,7 @@ public class DdlRelationalHandler extends DdlHandler
 
     public FemLocalIndex createUniqueConstraintIndex(
         FemLocalTable table, 
-        CwmUniqueConstraint constraint)
+        FemAbstractUniqueConstraint constraint)
     {
         // TODO:  make index SYSTEM-owned so that it can't be
         // dropped explicitly
@@ -338,6 +341,22 @@ public class DdlRelationalHandler extends DdlHandler
         return index;
     }
     
+    private void createConstraintColumnMetadata(
+        FemAbstractUniqueConstraint constraint)
+    {
+        int iOrdinal = 0;
+        Iterator columnIter = constraint.getFeature().iterator();
+        while (columnIter.hasNext()) {
+            FemAbstractAttribute column =
+                (FemAbstractAttribute) columnIter.next();
+            FemKeyComponent component = repos.newFemKeyComponent();
+            component.setName(column.getName());
+            component.setAttribute(column);
+            constraint.getComponent().add(component);
+            component.setOrdinal(iOrdinal++);
+        }        
+    }
+    
     // implement FarragoSessionDdlHandler
     public void validateDrop(FemLocalIndex index)
     {
@@ -351,14 +370,14 @@ public class DdlRelationalHandler extends DdlHandler
         if (index.isClustered()) {
             throw validator.newPositionalError(
                 index, 
-                validator.res.newValidatorDropClusteredIndex(
+                res.newValidatorDropClusteredIndex(
                     repos.getLocalizedObjectName(index)));
         }
 
         if (table.isTemporary()) {
             // REVIEW: support this?  What to do about instances of the
             // same temporary table in other sessions?
-            throw validator.res.newValidatorIndexOnExistingTempTable(
+            throw res.newValidatorIndexOnExistingTempTable(
                 repos.getLocalizedObjectName(index),
                 repos.getLocalizedObjectName(table));
         }

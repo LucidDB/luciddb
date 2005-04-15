@@ -122,14 +122,13 @@ import java.util.Calendar;
  * </tr>
  * <tr>
  *   <td>{@link SqlTypeName#Symbol}</td>
- *   <td>A symbol is a special type used to make parsing easier; it is not
- *       part of the SQL standard, and is not exposed to end-users.
- *       It is used to hold a flag, such as the LEADING flag in a call to the
+ *   <td>A symbol is a special type used to make parsing easier; it is
+ *       not part of the SQL standard, and is not exposed to end-users.
+ *       It is used to hold a symbol, such as the LEADING flag in a call to the
  *       function <code>TRIM([LEADING|TRAILING|BOTH] chars FROM string)</code>.
  *   </td>
- *   <td><{@link SqlSymbol} (which conveniently both extends {@link SqlLiteral}
- *       and also implements {@link EnumeratedValues}), or a class derived from
- *       it.</td>
+ *   <td>A class which implements the {@link EnumeratedValues.Value}
+ *       interface</td>
  * </tr>
  * <tr>
  *   <td>{@link SqlTypeName#IntervalDayTime}</td>
@@ -245,15 +244,34 @@ public class SqlLiteral extends SqlNode
      * <p>Try not to use this method! There are so many different kinds of
      * values, it's better to to let SqlLiteral do whatever it is you want to
      * do.
+     *
+     * @see #booleanValue(SqlNode)
+     * @see #symbolValue(SqlNode)
      */
     public Object getValue()
     {
         return value;
     }
 
+    /**
+     * Converts extracts the value from a boolean literal.
+     *
+     * @throws ClassCastException if the value is not a boolean literal
+     */
     public static boolean booleanValue(SqlNode node)
     {
         return ((Boolean) ((SqlLiteral) node).value).booleanValue();
+    }
+
+    /**
+     * Extracts the enumerated value from a symbol literal.
+     *
+     * @throws ClassCastException if the value is not a symbol literal
+     * @see #createSymbol(EnumeratedValues.Value, SqlParserPos)
+     */
+    public static EnumeratedValues.Value symbolValue(SqlNode node)
+    {
+        return (EnumeratedValues.Value) ((SqlLiteral) node).value;
     }
 
     /**
@@ -332,11 +350,12 @@ public class SqlLiteral extends SqlNode
 
     /**
      * Creates a literal which represents a parser symbol, for example the
-     * TRAILING keyword in the call Trim(TRAILING 'x' FROM 'Hello world!').
+     * <code>TRAILING</code> keyword in the call
+     * <code>Trim(TRAILING 'x' FROM 'Hello world!')</code>.
      *
-     * @see SqlSymbol
+     * @see #symbolValue(SqlNode)
      */
-    public static SqlLiteral createFlag(
+    public static SqlLiteral createSymbol(
         EnumeratedValues.Value o,
         SqlParserPos pos)
     {
@@ -394,6 +413,11 @@ public class SqlLiteral extends SqlNode
 
             // should be handled in subtype
             throw typeName.unexpected();
+
+        case SqlTypeName.Symbol_ordinal:
+            EnumeratedValues.Value enumVal = (EnumeratedValues.Value) value;
+            writer.print(enumVal.getName().toUpperCase());
+            break;
         default:
             writer.print(value.toString());
         }

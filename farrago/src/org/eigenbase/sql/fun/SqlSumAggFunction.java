@@ -25,6 +25,7 @@ package org.eigenbase.sql.fun;
 import openjava.mop.OJClass;
 import org.eigenbase.sql.SqlAggFunction;
 import org.eigenbase.sql.SqlFunction;
+import org.eigenbase.sql.SqlFunctionCategory;
 import org.eigenbase.sql.SqlKind;
 import org.eigenbase.sql.type.OperandsTypeChecking;
 import org.eigenbase.sql.type.ReturnTypeInference;
@@ -51,7 +52,7 @@ public class SqlSumAggFunction extends SqlAggFunction
             "SUM", SqlKind.Function,
             ReturnTypeInferenceImpl.useFirstArgType, null,
             OperandsTypeChecking.typeNumeric,
-            SqlFunction.SqlFuncTypeName.Numeric);
+            SqlFunctionCategory.Numeric);
         this.type = type;
     }
 

@@ -63,6 +63,9 @@ public class RexUtil
      */
     public static RexNode [] clone(RexNode [] exps)
     {
+        if (null == exps) {
+            return null;
+        }
         RexNode [] exps2 = new RexNode[exps.length];
         for (int i = 0; i < exps.length; i++) {
             exps2[i] = clone(exps[i]);

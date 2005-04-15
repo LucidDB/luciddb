@@ -163,12 +163,12 @@ public class FarragoPlanVisualizer
         logicalEquivMap = new UnionFind();
         highlightList = new ArrayList();
 
-        if (tracer.getLevel() == Level.FINE) {
-            detail = DETAIL_LOGICAL;
+        if (tracer.getLevel() == Level.FINEST) {
+            detail = DETAIL_PHYSIOLOGICAL;
         } else if (tracer.getLevel() == Level.FINER) {
             detail = DETAIL_PHYSICAL;
         } else {
-            detail = DETAIL_PHYSIOLOGICAL;
+            detail = DETAIL_LOGICAL;
         }
     }
 

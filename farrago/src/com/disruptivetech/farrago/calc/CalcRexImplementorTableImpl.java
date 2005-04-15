@@ -546,6 +546,8 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
 
         registerInstr(opTab.substringFunc, ExtInstructionDefTable.substring);
 
+        registerInstr(opTab.throwOperator, CalcProgramBuilder.raise);
+
         register(
             opTab.trimFunc,
             new TrimImplementor());
@@ -555,6 +557,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         registerInstr(opTab.upperFunc, ExtInstructionDefTable.upper);
 
         registerInstr(opTab.localTimeFunc, ExtInstructionDefTable.localTime);
+
         registerInstr(opTab.localTimestampFunc,
             ExtInstructionDefTable.localTimestamp);
 
@@ -888,7 +891,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                             translator.getCalcRegisterDescriptor(call.operands[0]);
                         CalcProgramBuilder.Register afterRound =
                             translator.builder.newLocal(regDesc);
-                        CalcProgramBuilder.Round.add(
+                        CalcProgramBuilder.round.add(
                             translator.builder,
                             new CalcProgramBuilder.Register [] {
                                 afterRound, beforeRound

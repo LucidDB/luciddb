@@ -25,12 +25,14 @@ package net.sf.farrago.db;
 import java.io.*;
 import java.sql.*;
 import java.util.*;
+import java.net.*;
 import java.util.logging.*;
 
 import javax.jmi.reflect.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.ddl.*;
 import net.sf.farrago.fem.config.*;
 import net.sf.farrago.fem.fennel.*;
@@ -41,6 +43,7 @@ import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
+import net.sf.farrago.plugin.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.oj.rex.*;
@@ -51,6 +54,7 @@ import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.util.*;
 
+import org.netbeans.mdr.handlers.*;
 
 /**
  * FarragoDatabase is a top-level singleton representing an instance of a
@@ -94,6 +98,8 @@ public class FarragoDatabase extends FarragoCompoundAllocation
     private FennelDbHandle fennelDbHandle;
     private OJRexImplementorTable ojRexImplementorTable;
     protected FarragoSessionFactory sessionFactory;
+    private FarragoPluginClassLoader pluginClassLoader;
+    private List modelExtensions;
 
     /**
      * Cache of all sorts of stuff.
@@ -137,6 +143,28 @@ public class FarragoDatabase extends FarragoCompoundAllocation
 
             this.sessionFactory = sessionFactory;
 
+            // Tell MDR about our plugin ClassLoader so that it can find
+            // extension model JMI interfaces in plugin jars.
+            pluginClassLoader = new FarragoPluginClassLoader();
+            BaseObjectHandler.setClassLoaderProvider(
+                new ClassLoaderProvider() 
+                {
+                    public ClassLoader getClassLoader()
+                    {
+                        return pluginClassLoader;
+                    }
+
+                    public Class defineClass(
+                        String className, byte [] classfile)
+                    {
+                        return null;
+                    }
+                });
+
+            // Load all model plugin URL's early so that MDR won't try to
+            // generate its own bytecode for JMI interfaces.
+            loadBootUrls();
+
             systemRepos = sessionFactory.newRepos(this, false);
             userRepos = systemRepos;
             if (init) {
@@ -173,6 +201,10 @@ public class FarragoDatabase extends FarragoCompoundAllocation
 
             ojRexImplementorTable = new FarragoOJRexImplementorTable(
                 SqlStdOperatorTable.instance());
+
+            // Create instances of plugin model extensions for shared use
+            // by all sessions.
+            loadModelPlugins();
 
             // REVIEW:  sequencing from this point on
             if (currentConfig.isUserCatalogEnabled()) {
@@ -340,8 +372,6 @@ public class FarragoDatabase extends FarragoCompoundAllocation
     }
 
     /**
-     * .
-     *
      * @return the shared code cache for this database
      */
     public FarragoObjectCache getCodeCache()
@@ -350,13 +380,100 @@ public class FarragoDatabase extends FarragoCompoundAllocation
     }
 
     /**
-     * .
-     *
      * @return the shared data wrapper cache for this database
      */
     public FarragoObjectCache getDataWrapperCache()
     {
         return dataWrapperCache;
+    }
+
+    /**
+     * @return ClassLoader for loading plugins
+     */
+    public FarragoPluginClassLoader getPluginClassLoader()
+    {
+        return pluginClassLoader;
+    }
+
+    /**
+     * @return list of installed {@link FarragoSessionModelExtension}
+     * instances
+     */
+    public List getModelExtensions()
+    {
+        return modelExtensions;
+    }
+
+    private File getBootUrlFile()
+    {
+        return new File(
+            FarragoProperties.instance().getCatalogDir(),
+            "FarragoBootUrls.lst");
+    }
+
+    private void loadBootUrls()
+    {
+        FileReader fileReader;
+        try {
+            fileReader = new FileReader(getBootUrlFile());
+        } catch (FileNotFoundException ex) {
+            // if file doesn't exist, it's safe to assume that there
+            // are no model plugins yet
+            return;
+        }
+        LineNumberReader lineReader = new LineNumberReader(fileReader);
+        try {
+            for (;;) {
+                String line = lineReader.readLine();
+                if (line == null) {
+                    break;
+                }
+                URL url = new URL(line);
+                pluginClassLoader.addPluginUrl(url);
+            }
+        } catch (Throwable ex) {
+            throw FarragoResource.instance().newCatalogBootUrlReadFailed(ex);
+        }
+    }
+
+    void saveBootUrl(URL url)
+    {
+        // append
+        FileWriter fileWriter = null;
+        try {
+            fileWriter = new FileWriter(getBootUrlFile(), true);
+            PrintWriter pw = new PrintWriter(fileWriter);
+            pw.println(url);
+            pw.close();
+            fileWriter.close();
+        } catch (Throwable ex) {
+            throw FarragoResource.instance().newCatalogBootUrlUpdateFailed(ex);
+        } finally {
+            Util.squelchWriter(fileWriter);
+        }
+    }
+
+    private void loadModelPlugins()
+    {
+        List resourceBundles = new ArrayList();
+        sessionFactory.defineResourceBundles(resourceBundles);
+        
+        modelExtensions = new ArrayList();
+        Iterator jarIter = systemRepos.getSql2003Package().getFemJar()
+            .refAllOfClass().iterator();
+        while (jarIter.hasNext()) {
+            FemJar jar = (FemJar) jarIter.next();
+            if (jar.isModelExtension()) {
+                FarragoSessionModelExtension modelExtension =
+                    sessionFactory.newModelExtension(
+                        pluginClassLoader, jar);
+                modelExtensions.add(modelExtension);
+                modelExtension.defineResourceBundles(resourceBundles);
+            }
+        }
+
+        // add repository localization for model extensions
+        systemRepos.addResourceBundles(resourceBundles);
     }
 
     private void close(boolean suppressExcns)

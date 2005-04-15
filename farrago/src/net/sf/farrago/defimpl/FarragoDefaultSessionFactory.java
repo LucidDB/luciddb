@@ -42,7 +42,17 @@ public class FarragoDefaultSessionFactory extends FarragoDbSessionFactory
         String url,
         Properties info)
     {
-        return new FarragoDefaultSession(url, info, this);
+        return new FarragoDbSession(
+            url, info, this);
+    }
+
+    // implement FarragoSessionPersonalityFactory
+    public FarragoSessionPersonality newSessionPersonality(
+        FarragoSession session,
+        FarragoSessionPersonality defaultPersonality)
+    {
+        return new FarragoDefaultSessionPersonality(
+            (FarragoDbSession) session);
     }
 }
 

@@ -101,7 +101,9 @@ public class FarragoRepos extends FarragoMetadataFactory
 
     private final FarragoCompoundAllocation allocations;
 
-    private final Set localizedClasses;
+    private Map localizedClassNames;
+
+    private List resourceBundles;
 
     private String memStorageId;
 
@@ -133,6 +135,14 @@ public class FarragoRepos extends FarragoMetadataFactory
             } catch (IOException ex) {
                 throw FarragoResource.instance().newCatalogFileLockFailed(
                     reposFile.toString());
+            }
+        }
+
+        if (FarragoReposUtil.isReloadNeeded()) {
+            try {
+                FarragoReposUtil.reloadRepository();
+            } catch (Exception ex) {
+                throw FarragoResource.instance().newCatalogReloadFailed(ex);
             }
         }
 
@@ -187,26 +197,13 @@ public class FarragoRepos extends FarragoMetadataFactory
         currentConfigMofId = defaultConfig.refMofId();
         isFennelEnabled = !defaultConfig.isFennelDisabled();
 
-        localizedClasses = loadLocalizedClasses(
-            FarragoResource.instance());
+        localizedClassNames = new HashMap();
+        resourceBundles = new ArrayList();
 
         tracer.info("Catalog successfully loaded");
     }
 
     //~ Methods ---------------------------------------------------------------
-
-    protected static Set loadLocalizedClasses(ResourceBundle resourceBundle)
-    {
-        Set localizedClasses = new HashSet();
-        Enumeration e = resourceBundle.getKeys();
-        while (e.hasMoreElements()) {
-            String key = (String) e.nextElement();
-            if (key.startsWith("Uml")) {
-                localizedClasses.add(key);
-            }
-        }
-        return localizedClasses;
-    }
 
     protected static String getLocalizedClassKey(RefClass refClass)
     {
@@ -410,12 +407,13 @@ public class FarragoRepos extends FarragoMetadataFactory
     public String getLocalizedClassName(RefClass refClass)
     {
         String umlKey = getLocalizedClassKey(refClass);
-        if (localizedClasses.contains(umlKey)) {
-            return FarragoResource.instance().getString(umlKey);
+        String name = (String) localizedClassNames.get(umlKey);
+        if (name != null) {
+            return name;
         } else {
             // NOTE jvs 12-Jan-2005:  we intentionally return something
             // nasty so that if it shows up in user-level error messages,
-            // someone nice will log a bug and get it fixed
+            // someone nice will maybe log a bug and get it fixed
             return "NOT_YET_LOCALIZED_" + umlKey;
         }
     }
@@ -522,6 +520,33 @@ public class FarragoRepos extends FarragoMetadataFactory
         modelLoader.close();
         modelLoader = null;
         tracer.info("Catalog successfully closed");
+    }
+
+    /**
+     * Defines localization for this repository.
+     *
+     * @param bundles list of ResourceBundle instances to add for
+     * localization.
+     */
+    public void addResourceBundles(List bundles)
+    {
+        resourceBundles.addAll(bundles);
+        Iterator iter = bundles.iterator();
+        while (iter.hasNext()) {
+            ResourceBundle resourceBundle = (ResourceBundle) iter.next();
+            Enumeration e = resourceBundle.getKeys();
+            while (e.hasMoreElements()) {
+                // NOTE jvs 12-Apr-2005:  This early binding won't
+                // work once we have sessions with different locales, but
+                // I'll leave that for someone wiser in the ways of i18n.
+                String key = (String) e.nextElement();
+                if (key.startsWith("Uml")) {
+                    localizedClassNames.put(
+                        key,
+                        resourceBundle.getString(key));
+                }
+            }
+        }
     }
 
     private void defineTypeAlias(
@@ -728,11 +753,6 @@ public class FarragoRepos extends FarragoMetadataFactory
         simpleType.setName("TIMESTAMP");
         simpleType.setTypeNumber(new Integer(Types.TIMESTAMP));
         simpleType.setDateTimePrecision(new Integer(0));
-
-        simpleType = newCwmSqlsimpleType();
-        simpleType.setName("BIT");
-        simpleType.setTypeNumber(new Integer(Types.BIT));
-        simpleType.setCharacterMaximumLength(new Integer(65535));
 
         simpleType = newCwmSqlsimpleType();
         simpleType.setName("DECIMAL");

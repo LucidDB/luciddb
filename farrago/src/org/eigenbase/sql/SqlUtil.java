@@ -217,6 +217,11 @@ public abstract class SqlUtil
     {
         if (operator instanceof SqlFunction) {
             SqlFunction function = (SqlFunction) operator;
+            if (function.getFunctionType()
+                == SqlFunctionCategory.UserDefinedSpecificFunction)
+            {
+                writer.print("SPECIFIC ");
+            }
             SqlIdentifier id = function.getSqlIdentifier();
             if (id == null) {
                 writer.print(operator.name);
@@ -316,10 +321,10 @@ public abstract class SqlUtil
         SqlOperatorTable opTab,
         SqlIdentifier funcName,
         RelDataType [] argTypes,
-        boolean isProcedure)
+        SqlFunctionCategory category)
     {
         List list = lookupSubjectRoutines(
-            opTab, funcName, argTypes, isProcedure);
+            opTab, funcName, argTypes, category);
         if (list.isEmpty()) {
             return null;
         } else {
@@ -338,8 +343,7 @@ public abstract class SqlUtil
      *
      * @param argTypes argument types
      *
-     * @param isProcedure true if a procedure is being invoked, in
-     * which case the overload rules are simpler
+     * @param category category of routine to look up
      *
      * @return list of matching routines
      *
@@ -349,11 +353,11 @@ public abstract class SqlUtil
         SqlOperatorTable opTab,
         SqlIdentifier funcName,
         RelDataType [] argTypes,
-        boolean isProcedure)
+        SqlFunctionCategory category)
     {
         // start with all routines matching by name
         List routines = opTab.lookupOperatorOverloads(
-            funcName, SqlSyntax.Function);
+            funcName, category, SqlSyntax.Function);
 
         // first pass:  eliminate routines which don't accept the given
         // number of arguments
@@ -361,7 +365,7 @@ public abstract class SqlUtil
 
         // NOTE: according to SQL99, procedures are NOT overloaded on type,
         // only on number of arguments.
-        if (isProcedure) {
+        if (category == SqlFunctionCategory.UserDefinedProcedure) {
             return routines;
         }
 
@@ -523,7 +527,8 @@ public abstract class SqlUtil
         SqlIdentifier id)
     {
         if (id.names.length == 1) {
-            List list = opTab.lookupOperatorOverloads(id, SqlSyntax.Function);
+            List list = opTab.lookupOperatorOverloads(
+                id, null, SqlSyntax.Function);
             for (int i = 0; i < list.size(); i++) {
                 SqlOperator operator = (SqlOperator) list.get(i);
                 if (operator.getSyntax() == SqlSyntax.FunctionId) {

@@ -65,10 +65,10 @@ public class SqlJoinOperator extends SqlOperator
         assert (isNatural.typeName == SqlTypeName.Boolean);
         assert operands[SqlJoin.CONDITION_TYPE_OPERAND] != null : "precondition: operands[CONDITION_TYPE_OPERAND] != null";
         assert operands[SqlJoin.CONDITION_TYPE_OPERAND] instanceof SqlLiteral
-            && ((SqlLiteral) operands[SqlJoin.CONDITION_TYPE_OPERAND]).getValue() instanceof ConditionType;
+            && SqlLiteral.symbolValue(operands[SqlJoin.CONDITION_TYPE_OPERAND]) instanceof ConditionType;
         assert operands[SqlJoin.TYPE_OPERAND] != null : "precondition: operands[TYPE_OPERAND] != null";
         assert operands[SqlJoin.TYPE_OPERAND] instanceof SqlLiteral
-            && ((SqlLiteral) operands[SqlJoin.TYPE_OPERAND]).getValue() instanceof JoinType;
+            && SqlLiteral.symbolValue(operands[SqlJoin.TYPE_OPERAND]) instanceof JoinType;
         return new SqlJoin(this, operands, pos);
     }
 
@@ -101,7 +101,7 @@ public class SqlJoinOperator extends SqlOperator
             writer.print("NATURAL ");
         }
         final SqlJoinOperator.JoinType joinType =
-            (JoinType) ((SqlLiteral) operands[SqlJoin.TYPE_OPERAND]).getValue();
+            (JoinType) SqlLiteral.symbolValue(operands[SqlJoin.TYPE_OPERAND]);
         switch (joinType.getOrdinal()) {
         case JoinType.Comma_ORDINAL:
             writer.print(", ");
@@ -128,9 +128,8 @@ public class SqlJoinOperator extends SqlOperator
         right.unparse(writer, this.rightPrec, rightPrec);
         final SqlNode condition = operands[SqlJoin.CONDITION_OPERAND];
         if (condition != null) {
-            final SqlJoinOperator.ConditionType conditionType =
-                (ConditionType) ((SqlLiteral) operands[SqlJoin.CONDITION_TYPE_OPERAND])
-                    .getValue();
+            final SqlJoinOperator.ConditionType conditionType = (ConditionType)
+                SqlLiteral.symbolValue(operands[SqlJoin.CONDITION_TYPE_OPERAND]);
             switch (conditionType.getOrdinal()) {
             case ConditionType.Using_ORDINAL:
                 writer.print(" USING (");

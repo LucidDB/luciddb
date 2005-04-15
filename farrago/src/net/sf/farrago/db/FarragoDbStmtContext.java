@@ -246,7 +246,7 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
             }
             params.dynamicParamValues = dynamicParamValues;
             FarragoSessionRuntimeContext context =
-                session.newRuntimeContext(params);
+                session.getPersonality().newRuntimeContext(params);
             if (allocations != null) {
                 context.addAllocation(allocations);
                 allocations = null;

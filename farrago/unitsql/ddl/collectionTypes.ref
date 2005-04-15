@@ -16,8 +16,8 @@ Error: DDL validation error near line 1, column 14: Target schema "LOCALDB"."COL
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- insert with ints
 0: jdbc:farrago:> create table multisetTable_i(i integer primary key, ii integer multiset);
-0: jdbc:farrago:> insert into multisetTable_i values(0, multiset[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0, 1, 2]);
-0: jdbc:farrago:> insert into multisetTable_i values(1,multiset(select deptno from sales.depts));
+0: jdbc:farrago:> --insert into multisetTable_i values(0, multiset[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0, 1, 2]);
+0: jdbc:farrago:> --insert into multisetTable_i values(1,multiset(select deptno from sales.depts));
 0: jdbc:farrago:> --insert into multisetTable_i values(2, null);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- insert with chars

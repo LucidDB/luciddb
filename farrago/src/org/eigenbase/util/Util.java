@@ -23,8 +23,7 @@
 
 package org.eigenbase.util;
 
-import java.io.File;
-import java.io.PrintWriter;
+import java.io.*;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -918,6 +917,125 @@ public class Util extends Toolbox
                 visitor.currentOffset);
         }
         return null;
+    }
+
+    /**
+     * Generates a unique name
+     *
+     * @param names  Array of existing names
+     * @param length Number of existing names
+     * @param s Suggested name
+     * @return Name which does not match any of the names in the first
+     *   <code>length</code> positions of the <code>names</code> array.
+     */
+    public static String uniqueFieldName(
+        String [] names,
+        int length,
+        String s)
+    {
+        if (!contains(names, length, s)) {
+            return s;
+        }
+        int n = length;
+        while (true) {
+            s = "EXPR_" + n;
+            if (!contains(names, length, s)) {
+                return s;
+            }
+
+            // FIXME jvs 15-Nov-2003:  If we ever get here, it's an infinite
+            // loop; should be ++n?
+            assert(false);
+        }
+    }
+
+    public static boolean contains(
+        String [] names,
+        int length,
+        String s)
+    {
+        for (int i = 0; i < length; i++) {
+            if (names[i].equals(s)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Closes an InputStream, ignoring any I/O exception.  This should only
+     * be used in finally blocks when it's necessary to avoid throwing
+     * an exception which might mask a real exception.
+     *
+     * @param stream stream to close
+     */
+    public static void squelchStream(InputStream stream)
+    {
+        try {
+            if (stream != null) {
+                stream.close();
+            }
+        } catch (IOException ex) {
+            // intentionally suppressed
+        }
+    }
+
+    /**
+     * Closes an OutputStream, ignoring any I/O exception.  This should only
+     * be used in finally blocks when it's necessary to avoid throwing
+     * an exception which might mask a real exception.  If you want
+     * to make sure that data has been successfully flushed, do NOT use
+     * this anywhere else; use stream.close() instead.
+     *
+     * @param stream stream to close
+     */
+    public static void squelchStream(OutputStream stream)
+    {
+        try {
+            if (stream != null) {
+                stream.close();
+            }
+        } catch (IOException ex) {
+            // intentionally suppressed
+        }
+    }
+
+    /**
+     * Closes a Reader, ignoring any I/O exception.  This should only
+     * be used in finally blocks when it's necessary to avoid throwing
+     * an exception which might mask a real exception.
+     *
+     * @param reader reader to close
+     */
+    public static void squelchReader(Reader reader)
+    {
+        try {
+            if (reader != null) {
+                reader.close();
+            }
+        } catch (IOException ex) {
+            // intentionally suppressed
+        }
+    }
+
+    /**
+     * Closes a Writer, ignoring any I/O exception.  This should only
+     * be used in finally blocks when it's necessary to avoid throwing
+     * an exception which might mask a real exception.  If you want
+     * to make sure that data has been successfully flushed, do NOT use
+     * this anywhere else; use writer.close() instead.
+     *
+     * @param writer writer to close
+     */
+    public static void squelchWriter(Writer writer)
+    {
+        try {
+            if (writer != null) {
+                writer.close();
+            }
+        } catch (IOException ex) {
+            // intentionally suppressed
+        }
     }
 }
 

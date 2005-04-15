@@ -359,6 +359,30 @@ values tweedledee();
 
 values tweedledum();
 
+-- test stored bindings for specific name vs invocation name
+
+create function gargantua()
+returns varchar(128)
+specific pantagruel
+contains sql
+return 'gargantua';
+
+create function pantagruel()
+returns varchar(128)
+specific gargantua
+contains sql
+return 'pantagruel';
+
+create function rabelais()
+returns varchar(128)
+contains sql
+return gargantua();
+
+values gargantua();
+
+values specific gargantua();
+
+values rabelais();
 
 -- test conflict detection
 

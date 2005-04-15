@@ -99,6 +99,7 @@ class FarragoDbSessionIndexMap extends FarragoCompoundAllocation
         privateDataWrapperCache = new FarragoDataWrapperCache(
             this,
             database.getDataWrapperCache(),
+            database.getPluginClassLoader(),
             repos,
             database.getFennelDbHandle());
     }

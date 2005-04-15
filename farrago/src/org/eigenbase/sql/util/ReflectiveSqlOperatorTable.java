@@ -88,8 +88,11 @@ public abstract class ReflectiveSqlOperatorTable implements SqlOperatorTable
     // implement SqlOperatorTable
     public List lookupOperatorOverloads(
         SqlIdentifier opName,
+        SqlFunctionCategory category,
         SqlSyntax syntax)
     {
+        // NOTE jvs 3-Mar-2005:  ignore category until someone cares
+        
         List overloads = new ArrayList();
         String simpleName;
         if (opName.names.length > 1) {
@@ -158,7 +161,7 @@ public abstract class ReflectiveSqlOperatorTable implements SqlOperatorTable
     public void register(SqlFunction function)
     {
         operators.putMulti(function.name, function);
-        SqlFunction.SqlFuncTypeName funcType = function.getFunctionType();
+        SqlFunctionCategory funcType = function.getFunctionType();
         assert (funcType != null) : "Function type for " + function.name
         + " not set";
     }

@@ -118,6 +118,32 @@ public class SqlAdvisor
     }
 
     /**
+     * Attempt to complete and validate a given partially completed 
+     * sql statement.  return whether it's valid.  
+     *
+     * @param sql A partial or syntatically incorrect sql statement to validate
+     */
+    public boolean isValid(String sql)
+    {
+        SqlSimpleParser simpleParser = new SqlSimpleParser(hintToken);
+        String simpleSql = simpleParser.simplifySql(sql);
+        SqlParser parser = new SqlParser(simpleSql);
+        SqlNode sqlNode = null;
+        try {
+            sqlNode = parser.parseQuery();
+        } catch (Exception e) {
+            // if the sql can't be parsed we wont' be able to validate it
+            return false;
+        }
+        try {
+            validator.validate(sqlNode);
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Turn a partially completed or syntatically incorrect sql statement into
      * a simplified, valid one that can be passed into getCompletionHints()
      *

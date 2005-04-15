@@ -123,6 +123,10 @@ public class SwapJoinRule extends RelOptRule
     public void onMatch(final RelOptRuleCall call)
     {
         JoinRel join = (JoinRel) call.rels[0];
+        if (join instanceof CorrelatorRel) {
+            return;
+        }
+
         final ProjectRel swapped = swap(join);
         if (swapped != null) {
             final JoinRel newJoin = (JoinRel) swapped.getInput(0);

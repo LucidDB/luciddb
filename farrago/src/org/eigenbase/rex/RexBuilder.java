@@ -31,11 +31,11 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.NlsString;
 import org.eigenbase.util.Util;
+import org.eigenbase.util.EnumeratedValues;
 
 
 /**
@@ -289,6 +289,19 @@ public class RexBuilder
         return new RexInputRef(i, type);
     }
 
+    /**
+     * Creates a literal representing a flag.
+     */
+    public RexLiteral makeFlag(
+        EnumeratedValues.Value flag)
+    {
+        assert flag != null;
+        return makeLiteral(
+            flag,
+            typeFactory.createSqlType(SqlTypeName.Symbol),
+            SqlTypeName.Symbol);
+    }
+
     protected RexLiteral makeLiteral(
         Object o,
         RelDataType type,
@@ -450,15 +463,6 @@ public class RexBuilder
         int index)
     {
         return new RexDynamicParam(type, index);
-    }
-
-    public RexLiteral makeSymbolLiteral(SqlSymbol flag)
-    {
-        Util.pre(flag != null, "flag != null");
-        return makeLiteral(
-            flag,
-            typeFactory.createSqlType(SqlTypeName.Symbol),
-            SqlTypeName.Symbol);
     }
 }
 

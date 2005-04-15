@@ -27,7 +27,6 @@ import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.ReturnTypeInference;
 import org.eigenbase.sql.type.ReturnTypeInferenceImpl;
 
 
@@ -139,8 +138,8 @@ public class SqlSelectOperator extends SqlOperator
         final SqlNodeList keywords =
             (SqlNodeList) operands[SqlSelect.KEYWORDS_OPERAND];
         for (int i = 0; i < keywords.size(); i++) {
-            SqlSymbol keyword = (SqlSymbol) keywords.get(i);
-            writer.print(keyword.getName());
+            final SqlNode keyword = keywords.get(i);
+            keyword.unparse(writer, 0, 0);
             writer.print(" ");
         }
         SqlNode selectClause = operands[SqlSelect.SELECT_OPERAND];

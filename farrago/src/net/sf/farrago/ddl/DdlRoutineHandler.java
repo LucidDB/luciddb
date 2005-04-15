@@ -58,7 +58,7 @@ import java.util.*;
  */
 public class DdlRoutineHandler extends DdlHandler
 {
-    public DdlRoutineHandler(DdlValidator validator)
+    public DdlRoutineHandler(FarragoSessionDdlValidator validator)
     {
         super(validator);
     }
@@ -79,7 +79,7 @@ public class DdlRoutineHandler extends DdlHandler
                     {
                         throw validator.newPositionalError(
                             param,
-                            validator.res.newValidatorFunctionOutputParam(
+                            res.newValidatorFunctionOutputParam(
                                 repos.getLocalizedObjectName(routine)));
                     }
                     param.setKind(ParameterDirectionKindEnum.PDK_IN);
@@ -101,7 +101,7 @@ public class DdlRoutineHandler extends DdlHandler
         if (routine.getDataAccess() == null) {
             throw validator.newPositionalError(
                 routine,
-                validator.res.newValidatorRoutineDataAccessUnspecified(
+                res.newValidatorRoutineDataAccessUnspecified(
                     repos.getLocalizedObjectName(routine)));
         }
 
@@ -131,7 +131,9 @@ public class DdlRoutineHandler extends DdlHandler
             lookup,
             invocationName,
             prototype.getParamTypes(),
-            routine.getType().equals(ProcedureTypeEnum.PROCEDURE));
+            routine.getType().equals(ProcedureTypeEnum.PROCEDURE)
+            ? SqlFunctionCategory.UserDefinedProcedure
+            : SqlFunctionCategory.UserDefinedFunction);
 
         // should find at least this routine!
         assert(!list.isEmpty());
@@ -139,7 +141,7 @@ public class DdlRoutineHandler extends DdlHandler
         if (list.size() > 1) {
             throw validator.newPositionalError(
                 routine,
-                validator.res.newValidatorRoutineConflict(
+                res.newValidatorRoutineConflict(
                     repos.getLocalizedObjectName(routine)));
         }
 
@@ -149,7 +151,7 @@ public class DdlRoutineHandler extends DdlHandler
             if (!routine.getInvocationName().equals(classifier.getName())) {
                 throw validator.newPositionalError(
                     routine,
-                    validator.res.newValidatorConstructorName(
+                    res.newValidatorConstructorName(
                         repos.getLocalizedObjectName(routine),
                         repos.getLocalizedObjectName(classifier)));
             }
@@ -163,7 +165,7 @@ public class DdlRoutineHandler extends DdlHandler
             if (returnParam.getType() != classifier) {
                 throw validator.newPositionalError(
                     routine,
-                    validator.res.newValidatorConstructorType(
+                    res.newValidatorConstructorType(
                         repos.getLocalizedObjectName(routine)));
             }
         }
@@ -182,13 +184,13 @@ public class DdlRoutineHandler extends DdlHandler
         if (routine.getDataAccess() == RoutineDataAccessEnum.RDA_NO_SQL) {
             throw validator.newPositionalError(
                 routine,
-                validator.res.newValidatorRoutineNoSql(
+                res.newValidatorRoutineNoSql(
                     repos.getLocalizedObjectName(routine)));
         }
         if (routine.getParameterStyle() != null) {
             throw validator.newPositionalError(
                 routine,
-                validator.res.newValidatorRoutineNoParamStyle(
+                res.newValidatorRoutineNoParamStyle(
                     repos.getLocalizedObjectName(routine)));
         }
         if (routine.getBody() == null) {
@@ -205,7 +207,7 @@ public class DdlRoutineHandler extends DdlHandler
             } else {
                 throw validator.newPositionalError(
                     routine,
-                    validator.res.newValidatorRoutineBodyMissing(
+                    res.newValidatorRoutineBodyMissing(
                         repos.getLocalizedObjectName(routine)));
             }
         }
@@ -216,7 +218,7 @@ public class DdlRoutineHandler extends DdlHandler
             // pass this one through
             throw ex;
         } catch (Throwable ex) {
-            throw validator.res.newValidatorInvalidObjectDefinition(
+            throw res.newValidatorInvalidObjectDefinition(
                 repos.getLocalizedObjectName(routine),
                 ex);
         } finally {
@@ -235,7 +237,7 @@ public class DdlRoutineHandler extends DdlHandler
             {
                 throw validator.newPositionalError(
                     routine,
-                    validator.res.newValidatorRoutineExternalNoBody(
+                    res.newValidatorRoutineExternalNoBody(
                         repos.getLocalizedObjectName(routine)));
             }
         }
@@ -251,7 +253,7 @@ public class DdlRoutineHandler extends DdlHandler
         {
             throw validator.newPositionalError(
                 routine,
-                validator.res.newValidatorRoutineExternalJavaOnly(
+                res.newValidatorRoutineExternalJavaOnly(
                     repos.getLocalizedObjectName(routine)));
         }
         if (routine.getParameterStyle() == null) {
@@ -262,7 +264,7 @@ public class DdlRoutineHandler extends DdlHandler
                   RoutineParameterStyleEnum.RPS_JAVA.toString()))) {
             throw validator.newPositionalError(
                 routine,
-                validator.res.newValidatorRoutineJavaParamStyleOnly(
+                res.newValidatorRoutineJavaParamStyleOnly(
                     repos.getLocalizedObjectName(routine)));
         }
 
@@ -363,7 +365,7 @@ public class DdlRoutineHandler extends DdlHandler
         if (analyzedSql.hasDynamicParams) {
             // TODO jvs 29-Dec-2004:  add a test for this; currently
             // hits an earlier assertion in SqlValidator
-            throw validator.res.newValidatorInvalidRoutineDynamicParam();
+            throw res.newValidatorInvalidRoutineDynamicParam();
         }
 
         // TODO jvs 28-Dec-2004:  CAST FROM
@@ -372,7 +374,7 @@ public class DdlRoutineHandler extends DdlHandler
             typeFactory.createCwmElementType(returnParam);
         RelDataType actualReturnType = analyzedSql.resultType;
         if (!SqlTypeUtil.canAssignFrom(declaredReturnType, actualReturnType)) {
-            throw validator.res.newValidatorFunctionReturnType(
+            throw res.newValidatorFunctionReturnType(
                 actualReturnType.toString(),
                 repos.getLocalizedObjectName(routine),
                 declaredReturnType.toString());
@@ -387,7 +389,8 @@ public class DdlRoutineHandler extends DdlHandler
     {
         FarragoTypeFactory typeFactory = validator.getTypeFactory();
         SqlDialect sqlDialect = new SqlDialect(session.getDatabaseMetaData());
-        FarragoSessionParser parser = session.newParser();
+        FarragoSessionParser parser =
+            session.getPersonality().newParser(session);
         SqlNodeList nodeList = (SqlNodeList)
             parser.parseSqlText(
                 validator,
@@ -406,7 +409,7 @@ public class DdlRoutineHandler extends DdlHandler
                     objectType.getFeature(),
                     lhs.getSimple());
             if (attribute == null) {
-                throw validator.res.newValidatorConstructorAssignmentUnknown(
+                throw res.newValidatorConstructorAssignmentUnknown(
                     repos.getLocalizedObjectName(lhs.getSimple()));
             }
             FarragoSessionAnalyzedSql analyzedSql;
@@ -417,13 +420,13 @@ public class DdlRoutineHandler extends DdlHandler
                 typeFactory,
                 paramRowType);
             if (analyzedSql.hasDynamicParams) {
-                throw validator.res.newValidatorInvalidRoutineDynamicParam();
+                throw res.newValidatorInvalidRoutineDynamicParam();
             }
             RelDataType lhsType =
                 typeFactory.createCwmElementType(attribute);
             RelDataType rhsType = analyzedSql.resultType;
             if (!SqlTypeUtil.canAssignFrom(lhsType, rhsType)) {
-                throw validator.res.newValidatorConstructorAssignmentType(
+                throw res.newValidatorConstructorAssignmentType(
                     rhsType.toString(),
                     lhsType.toString(),
                     repos.getLocalizedObjectName(attribute));
@@ -449,16 +452,37 @@ public class DdlRoutineHandler extends DdlHandler
     // implement FarragoSessionDdlHandler
     public void validateDefinition(FemJar jar)
     {
-        // TODO jvs 19-Jan-2005: implement deployment descriptors, and
-        // (optionally?) copy jar to an area managed by Farrago
+        // TODO jvs 19-Jan-2005: implement deployment descriptors
+        String urlString = FarragoCatalogUtil.getJarUrl(jar);
         URL url;
         try {
-            url = new URL(jar.getUrl());
+            url = new URL(urlString);
+            // verify that we can actually access the jar
+            InputStream stream = null;
+            try {
+                stream = url.openStream();
+            } catch (Throwable ex) {
+                throw res.newValidatorInvalidJarUrl(
+                    repos.getLocalizedObjectName(urlString),
+                    repos.getLocalizedObjectName(jar),
+                    ex);
+            } finally {
+                Util.squelchStream(stream);
+            }
         } catch (MalformedURLException ex) {
-            throw validator.res.newPluginMalformedJarUrl(
-                repos.getLocalizedObjectName(jar.getUrl()),
+            throw res.newPluginMalformedJarUrl(
+                repos.getLocalizedObjectName(urlString),
                 repos.getLocalizedObjectName(jar),
                 ex);
+        }
+    }
+
+    // implement FarragoSessionDdlHandler
+    public void validateDrop(FemJar jar)
+    {
+        if (jar.isModelExtension()) {
+            throw res.newValidatorJarExtensionModelDrop(
+                repos.getLocalizedObjectName(jar));
         }
     }
 
@@ -479,7 +503,7 @@ public class DdlRoutineHandler extends DdlHandler
         if (!(typeDef.getType() instanceof CwmSqlsimpleType)) {
             throw validator.newPositionalError(
                 typeDef,
-                validator.res.newValidatorDistinctTypePredefined(
+                res.newValidatorDistinctTypePredefined(
                     repos.getLocalizedObjectName(typeDef)));
         }
         CwmSqlsimpleType predefinedType = (CwmSqlsimpleType) typeDef.getType();
@@ -495,7 +519,7 @@ public class DdlRoutineHandler extends DdlHandler
         if (orderingDef.getType().getOrdering().size() > 1) {
             throw validator.newPositionalError(
                 orderingDef,
-                validator.res.newValidatorMultipleOrderings(
+                res.newValidatorMultipleOrderings(
                     repos.getLocalizedObjectName(orderingDef.getType())));
         }
         FemRoutine routine = FarragoCatalogUtil.getRoutineForOrdering(
@@ -505,14 +529,14 @@ public class DdlRoutineHandler extends DdlHandler
             if (routine.getType() != ProcedureTypeEnum.FUNCTION) {
                 throw validator.newPositionalError(
                     orderingDef,
-                    validator.res.newValidatorOrderingFunction(
+                    res.newValidatorOrderingFunction(
                         repos.getLocalizedObjectName(routine),
                         repos.getLocalizedObjectName(orderingDef.getType())));
             }
             if (!routine.isDeterministic()) {
                 throw validator.newPositionalError(
                     orderingDef,
-                    validator.res.newValidatorOrderingDeterministic(
+                    res.newValidatorOrderingDeterministic(
                         repos.getLocalizedObjectName(routine),
                         repos.getLocalizedObjectName(orderingDef.getType())));
             }
@@ -521,7 +545,7 @@ public class DdlRoutineHandler extends DdlHandler
             {
                 throw validator.newPositionalError(
                     orderingDef,
-                    validator.res.newValidatorOrderingReadOnly(
+                    res.newValidatorOrderingReadOnly(
                         repos.getLocalizedObjectName(routine),
                         repos.getLocalizedObjectName(orderingDef.getType())));
             }
@@ -534,7 +558,7 @@ public class DdlRoutineHandler extends DdlHandler
                     if (param.getType() != orderingDef.getType()) {
                         throw validator.newPositionalError(
                             orderingDef,
-                            validator.res.newValidatorOrderingParamType(
+                            res.newValidatorOrderingParamType(
                                 repos.getLocalizedObjectName(routine),
                                 repos.getLocalizedObjectName(
                                     orderingDef.getType())));
@@ -548,7 +572,7 @@ public class DdlRoutineHandler extends DdlHandler
             if (FarragoCatalogUtil.getRoutineParamCount(routine) != 2) {
                 throw validator.newPositionalError(
                     orderingDef,
-                    validator.res.newValidatorRelativeOrderingDyadic(
+                    res.newValidatorRelativeOrderingDyadic(
                         repos.getLocalizedObjectName(routine),
                         repos.getLocalizedObjectName(orderingDef.getType())));
             }
@@ -556,7 +580,7 @@ public class DdlRoutineHandler extends DdlHandler
             if (!returnType.getName().equals("INTEGER")) {
                 throw validator.newPositionalError(
                     orderingDef,
-                    validator.res.newValidatorRelativeOrderingResult(
+                    res.newValidatorRelativeOrderingResult(
                         repos.getLocalizedObjectName(routine),
                         repos.getLocalizedObjectName(orderingDef.getType())));
             }
@@ -566,14 +590,14 @@ public class DdlRoutineHandler extends DdlHandler
             if (FarragoCatalogUtil.getRoutineParamCount(routine) != 1) {
                 throw validator.newPositionalError(
                     orderingDef,
-                    validator.res.newValidatorMapOrderingMonadic(
+                    res.newValidatorMapOrderingMonadic(
                         repos.getLocalizedObjectName(routine),
                         repos.getLocalizedObjectName(orderingDef.getType())));
             }
             if (!(returnType instanceof CwmSqlsimpleType)) {
                 throw validator.newPositionalError(
                     orderingDef,
-                    validator.res.newValidatorMapOrderingResult(
+                    res.newValidatorMapOrderingResult(
                         repos.getLocalizedObjectName(routine),
                         repos.getLocalizedObjectName(orderingDef.getType())));
             }
@@ -585,7 +609,7 @@ public class DdlRoutineHandler extends DdlHandler
         if (typeDef.isFinal() && typeDef.isAbstract()) {
             throw validator.newPositionalError(
                 typeDef,
-                validator.res.newValidatorFinalAbstractType(
+                res.newValidatorFinalAbstractType(
                     repos.getLocalizedObjectName(typeDef)));
         }
 
@@ -595,14 +619,14 @@ public class DdlRoutineHandler extends DdlHandler
         if (!typeDef.isFinal()) {
             throw validator.newPositionalError(
                 typeDef,
-                validator.res.newValidatorNonFinalType(
+                res.newValidatorNonFinalType(
                     repos.getLocalizedObjectName(typeDef)));
         }
 
         if (typeDef.isAbstract()) {
             throw validator.newPositionalError(
                 typeDef,
-                validator.res.newValidatorNonInstantiableType(
+                res.newValidatorNonInstantiableType(
                     repos.getLocalizedObjectName(typeDef)));
         }
     }

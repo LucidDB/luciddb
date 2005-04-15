@@ -200,15 +200,15 @@ public class RelSubset extends AbstractRelNode
                     true);
             planner.listener.relEquivalenceFound(event);
         }
-        
+
         rels.add(rel);
         set.addInternal(rel);
         Set variablesSet = RelOptUtil.getVariablesSet(rel);
         Set variablesStopped = rel.getVariablesStopped();
         Set variablesPropagated = Util.minus(variablesSet, variablesStopped);
-        assert (set.variablesPropagated.containsAll(variablesPropagated));
+//        assert (set.variablesPropagated.containsAll(variablesPropagated));
         Set variablesUsed = RelOptUtil.getVariablesUsed(rel);
-        assert (set.variablesUsed.containsAll(variablesUsed));
+//        assert (set.variablesUsed.containsAll(variablesUsed));
         propagateCostImprovements((VolcanoPlanner) (rel.getCluster().planner),
             rel);
     }
@@ -220,7 +220,7 @@ public class RelSubset extends AbstractRelNode
     {
         CheapestPlanReplacer replacer = new CheapestPlanReplacer(planner);
         RelNode cheapest = RelOptUtil.go(replacer, this);
-        
+
         if (planner.listener != null) {
             RelOptListener.RelChosenEvent event =
                 new RelOptListener.RelChosenEvent(
@@ -228,7 +228,7 @@ public class RelSubset extends AbstractRelNode
                     null);
             planner.listener.relChosen(event);
         }
-        
+
         return cheapest;
     }
 
@@ -263,7 +263,7 @@ public class RelSubset extends AbstractRelNode
     {
         variableSet.addAll(getVariablesUsed());
     }
-    
+
     public void collectVariablesSet(Set variableSet)
     {
         variableSet.addAll(getVariablesSet());
@@ -318,7 +318,7 @@ public class RelSubset extends AbstractRelNode
                 parent.replaceInput(ordinal, cheapest);
                 p = cheapest;
             }
-            
+
             if (ordinal != -1) {
                 if (planner.listener != null) {
                     RelOptListener.RelChosenEvent event =
@@ -328,7 +328,7 @@ public class RelSubset extends AbstractRelNode
                     planner.listener.relChosen(event);
                 }
             }
-            
+
             p.childrenAccept(this);
         }
     }

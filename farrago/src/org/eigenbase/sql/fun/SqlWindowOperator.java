@@ -219,15 +219,15 @@ public class SqlWindowOperator extends SqlOperator {
     }
 
     public SqlNode createCurrentRow(SqlParserPos pos) {
-        return SqlLiteral.createFlag(Bound.CurrentRow, pos);
+        return SqlLiteral.createSymbol(Bound.CurrentRow, pos);
     }
 
     public SqlNode createUnboundedFollowing(SqlParserPos pos) {
-        return SqlLiteral.createFlag(Bound.UnboundedFollowing, pos);
+        return SqlLiteral.createSymbol(Bound.UnboundedFollowing, pos);
     }
 
     public SqlNode createUnboundedPreceding(SqlParserPos pos) {
-        return SqlLiteral.createFlag(Bound.UnboundedPreceding, pos);
+        return SqlLiteral.createSymbol(Bound.UnboundedPreceding, pos);
     }
 
     public SqlNode createFollowing(SqlLiteral literal, SqlParserPos pos) {

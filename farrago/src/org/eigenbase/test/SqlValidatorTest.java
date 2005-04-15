@@ -695,11 +695,15 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("cast('abc' as varchar(1))", "VARCHAR(1)");
         checkExpType("cast('abc' as char(1))", "CHAR(1)");
         checkExpType("cast(x'ff' as binary(1))", "BINARY(1)");
+        checkExpType("cast(multiset[1] as double multiset)", "DOUBLE MULTISET");
+        checkExpType("cast(multiset['abc'] as integer multiset)", "INTEGER MULTISET");
     }
 
     public void testCastFails() {
         checkExpFails("cast('foo' as bar)",
             "(?s).*Unknown datatype name 'BAR'");
+        checkExpFails("cast(multiset[1] as integer)",
+            "(?s).*Cast function cannot convert value of type INTEGER MULTISET to type INTEGER");
     }
 
     public void testDateTime() {
@@ -1839,6 +1843,22 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         check("select * from emp, LATERAL (select * from dept where emp.deptno=dept.deptno) as ldt");
         check("select * from emp, LATERAL (select * from dept where emp.deptno=dept.deptno) ldt");
 
+    }
+
+    public void testCollect() {
+        check("select collect(deptno) from emp");
+        check("select collect(multiset[3]) from emp");
+        // todo. COLLECT is an aggregate function. test that validator only
+        // can take set operators in its select list once aggregation support is
+        // complete
+    }
+
+    public void testFusion() {
+        checkFails("select fusion(deptno) from emp","(?s).*Cannot apply 'FUSION' to arguments of type 'FUSION.<INTEGER>.'.*");
+        check("select fusion(multiset[3]) from emp");
+        // todo. FUSION is an aggregate function. test that validator only
+        // can take set operators in its select list once aggregation support is
+        // complete
     }
 
     public void testNew() {

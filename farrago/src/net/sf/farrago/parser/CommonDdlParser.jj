@@ -53,6 +53,18 @@ SqlIdentifier CompoundIdentifier2() :
     {return new SqlIdentifier(SqlParserUtil.toStringArray(list),null);}
 }
 
+SqlIdentifier CompoundIdentifier3() :
+{
+    List list = new ArrayList();
+    String p;
+}
+{
+    (p = Identifier() {list.add(p);})
+        ((<DOT> p = Identifier() {list.add(p);})
+            (<DOT> p = Identifier() {list.add(p);})?)?
+    {return new SqlIdentifier(SqlParserUtil.toStringArray(list),null);}
+}
+
 String QuotedString() :
 {
     Token t;
@@ -178,7 +190,17 @@ DdlStmt DdlStmtEof() :
         |
         ( <ALTER>
           (
-              <SYSTEM> <SET> ddlStmt = SystemParamAssignment()
+              <SYSTEM>
+              (
+                  <SET> ddlStmt = SystemParamAssignment()
+                  |
+                  <ADD> ddlStmt = CatalogExtension()
+              )
+              |
+              <SESSION>
+              (
+                  <IMPLEMENTATION> ddlStmt = SessionImplementation()
+              )
               |
               ddlStmt = ExtensionModelAlter()
           )
@@ -385,7 +407,7 @@ FemLocalTable UnscopedTableDefinition() :
         {
             table = getRepos().newFemLocalTable();
         }
-    qualifiedTableName = CompoundIdentifier2()
+    qualifiedTableName = CompoundIdentifier3()
         {
             farragoParser.getDdlValidator().setSchemaObjectName(
                 table,qualifiedTableName);
@@ -450,7 +472,7 @@ CwmView ViewDefinition() :
         {
            view = getRepos().newCwmView();
         }
-    qualifiedViewName = CompoundIdentifier2()
+    qualifiedViewName = CompoundIdentifier3()
         {
             farragoParser.getDdlValidator().setSchemaObjectName(
                 view,qualifiedViewName);
@@ -476,7 +498,7 @@ CwmView ViewDefinition() :
     query = OrderedQueryOrExpr(EXPR_ACCEPT_QUERY)
         {
             defEnd = getEndPos();
-            
+
             // NOTE:  we accept ORDER BY on the view definition, even though
             // that's not standard SQL, and leave it up to the validator to
             // decide what to do with it
@@ -568,7 +590,7 @@ CwmTable TableIdentifier() :
     CwmTable table;
 }
 {
-    qualifiedTableName = CompoundIdentifier2()
+    qualifiedTableName = CompoundIdentifier3()
         {
             table = (CwmTable)
             farragoParser.getStmtValidator().findSchemaObject(
@@ -586,7 +608,7 @@ CwmView ViewReference() :
     CwmView view;
 }
 {
-    <VIEW> qualifiedViewName = CompoundIdentifier2()
+    <VIEW> qualifiedViewName = CompoundIdentifier3()
         {
             view = (CwmView) farragoParser.getStmtValidator().findSchemaObject(
                 qualifiedViewName,
@@ -650,7 +672,7 @@ FemRoutine RoutineReferenceImpl(boolean specific) :
     )
         {
         }
-    qualifiedRoutineName = CompoundIdentifier2()
+    qualifiedRoutineName = CompoundIdentifier3()
         {
             // TODO jvs 24-Dec-2004: implement lookup by invocation name
             // and signature when !specific
@@ -727,9 +749,8 @@ void TypedElement(FemAbstractTypedElement element) :
 }
 {
     dataType = DataType()
-    [
-        <MULTISET>
-        {
+    {
+        if (null != dataType.getCollectionsTypeName()) {
             FemSqlmultisetType colType = getRepos().newFemSqlmultisetType();
             colType.setName("MULTISET");
             FemSqltypeAttribute componentType =
@@ -738,14 +759,13 @@ void TypedElement(FemAbstractTypedElement element) :
             colType.getFeature().add(componentType);
             farragoParser.getDdlValidator().setSqlDefinition(
                 componentType,
-                dataType);
+                dataType.getComponentTypeSpec());
             FemSqltypedElement typedElement =
                 FarragoCatalogUtil.toFemSqltypedElement(element);
             typedElement.setType(colType);
             return;
         }
-    ]
-    {
+
         farragoParser.getDdlValidator().setSqlDefinition(
             element,
             dataType);
@@ -810,7 +830,7 @@ SqlNode DefaultClause() :
 CwmModelElement TableConstraint(CwmTable table) :
 {
     String constraintName = null;
-    CwmUniqueConstraint constraint;
+    FemAbstractUniqueConstraint constraint;
 }
 {
     [ <CONSTRAINT> constraintName = Identifier() ]
@@ -831,9 +851,9 @@ CwmModelElement TableConstraint(CwmTable table) :
     }
 }
 
-CwmUniqueConstraint TableUniqueConstraint(CwmTable table) :
+FemAbstractUniqueConstraint TableUniqueConstraint(CwmTable table) :
 {
-    CwmUniqueConstraint constraint;
+    FemAbstractUniqueConstraint constraint;
     List columnNameList;
 }
 {
@@ -858,20 +878,20 @@ CwmUniqueConstraint TableUniqueConstraint(CwmTable table) :
     }
 }
 
-CwmUniqueConstraint UniqueConstraint() :
+FemAbstractUniqueConstraint UniqueConstraint() :
 {
-    CwmUniqueConstraint constraint;
+    FemAbstractUniqueConstraint constraint;
 }
 {
     (
         <UNIQUE>
     {
-        constraint = getRepos().newCwmUniqueConstraint();
+        constraint = getRepos().newFemUniqueKeyConstraint();
     }
         |
         <PRIMARY> <KEY>
     {
-        constraint = getRepos().newCwmPrimaryKey();
+        constraint = getRepos().newFemPrimaryKeyConstraint();
     }
     )
         {
@@ -884,7 +904,7 @@ CwmUniqueConstraint UniqueConstraint() :
 
 void ColumnConstraint(CwmNamedColumnSet table,CwmColumn column) :
 {
-    CwmUniqueConstraint constraint;
+    FemAbstractUniqueConstraint constraint;
     String constraintName = null;
 }
 {
@@ -998,7 +1018,7 @@ CwmModelElement UserDefinedTypeDrop() :
     CwmModelElement typeDef;
 }
 {
-    <TYPE> typeName = CompoundIdentifier2()
+    <TYPE> typeName = CompoundIdentifier3()
         {
             typeDef = farragoParser.getStmtValidator().findSchemaObject(
                 typeName,
@@ -1018,7 +1038,7 @@ CwmModelElement UserDefinedOrderingDrop() :
     CwmModelElement orderingDef;
 }
 {
-    <ORDERING> <FOR> typeName = CompoundIdentifier2()
+    <ORDERING> <FOR> typeName = CompoundIdentifier3()
         {
             FemUserDefinedType typeDef = (FemUserDefinedType)
             farragoParser.getStmtValidator().findSchemaObject(
@@ -1046,7 +1066,7 @@ CwmModelElement JarDrop() :
     SqlLiteral deploymentState;
 }
 {
-    <JAR> qualifiedJarName = CompoundIdentifier2()
+    <JAR> qualifiedJarName = CompoundIdentifier3()
         {
         }
     <OPTIONS>
@@ -1070,7 +1090,7 @@ CwmModelElement IndexDrop() :
     SqlIdentifier qualifiedIndexName;
 }
 {
-    <INDEX> qualifiedIndexName = CompoundIdentifier2()
+    <INDEX> qualifiedIndexName = CompoundIdentifier3()
         {
             return farragoParser.getStmtValidator().findSchemaObject(
                 qualifiedIndexName,
@@ -1117,10 +1137,44 @@ DdlStmt SystemParamAssignment() :
     }
 }
 
+DdlStmt CatalogExtension() :
+{
+    SqlIdentifier jarName;
+}
+{
+    <CATALOG> <JAR> jarName = CompoundIdentifier3()
+        {
+        }
+    {
+        return new DdlExtendCatalogStmt(jarName);
+    }
+}
+
+DdlStmt SessionImplementation() :
+{
+    SqlIdentifier jarName = null;
+}
+{
+    <SET>
+         (
+             <JAR> jarName = CompoundIdentifier3()
+             {
+             }
+             | <DEFAULT_KW>
+             {
+             }
+         )
+        {
+        }
+    {
+        return new DdlSetSessionImplementationStmt(jarName);
+    }
+}
+
 SqlLiteral SystemParamValue() :
 {
     SqlLiteral paramValue;
-    SqlParserPos pos = null;  
+    SqlParserPos pos = null;
 }
 {
     (
@@ -1309,7 +1363,7 @@ FemRoutine FunctionDefinition() :
             function.setType(ProcedureTypeEnum.FUNCTION);
             function.setCalledOnNullInput(true);
         }
-    qualifiedName = CompoundIdentifier2()
+    qualifiedName = CompoundIdentifier3()
         {
             // REVIEW jvs 27-Dec-2004:  SQL standard says that
             // specific name is implementation-defined when unspecified.
@@ -1355,14 +1409,14 @@ FemRoutine ConstructorDefinition() :
     SqlParserPos defStart, defEnd;
 }
 {
-    <SPECIFIC> <METHOD> constructorName = CompoundIdentifier2()
+    <SPECIFIC> <METHOD> constructorName = CompoundIdentifier3()
         {
             method = (FemRoutine)
             farragoParser.getStmtValidator().findSchemaObject(
                 constructorName,
                 getRepos().getSql2003Package().getFemRoutine());
         }
-    <FOR> typeName = CompoundIdentifier2()
+    <FOR> typeName = CompoundIdentifier3()
         {
             // TODO jvs 26-Feb-2005:  cross-check
         }
@@ -1451,7 +1505,7 @@ FemRoutine ProcedureDefinition() :
             procedure.setType(ProcedureTypeEnum.PROCEDURE);
             procedure.setCalledOnNullInput(true);
         }
-    qualifiedName = CompoundIdentifier2()
+    qualifiedName = CompoundIdentifier3()
         {
             // REVIEW jvs 18-Jan-2005:  see corresponding comment
             // in FunctionDefinition().
@@ -1488,14 +1542,14 @@ void SqlFunctionBody(FemRoutine routine) :
         {
             defStart = getEndPos();
             farragoParser.getDdlValidator().setParserOffset(routine, defStart);
-            
+
             // TODO jvs 24-Dec-2004: eventually allow subqueries and
             // non-functional routine bodies.
         }
     expr = Expression(EXPR_ACCEPT_NONQUERY)
         {
             defEnd = getEndPos();
-        
+
             String bodyText = farragoParser.getSubstring(defStart, defEnd);
             CwmProcedureExpression procedureExpr =
             getRepos().newCwmProcedureExpression();
@@ -1729,7 +1783,7 @@ FemJar JarDefinition() :
         {
             jar = getRepos().newFemJar();
         }
-    qualifiedName = CompoundIdentifier2()
+    qualifiedName = CompoundIdentifier3()
         {
             farragoParser.getDdlValidator().setSchemaObjectName(
                 jar,qualifiedName);
@@ -1757,7 +1811,7 @@ FemUserDefinedType UserDefinedTypeDefinition() :
 {
     // TODO jvs 1-Feb-2005:  UNDER, AS-less, methods,
     // references, cast defs
-    <TYPE> qualifiedName = CompoundIdentifier2()
+    <TYPE> qualifiedName = CompoundIdentifier3()
         {
         }
     <AS> (
@@ -1786,7 +1840,7 @@ FemUserDefinedOrdering UserDefinedOrderingDefinition() :
     SqlIdentifier typeName;
 }
 {
-    <ORDERING> <FOR> typeName = CompoundIdentifier2()
+    <ORDERING> <FOR> typeName = CompoundIdentifier3()
         {
             typeDef = (FemUserDefinedType)
             farragoParser.getStmtValidator().findSchemaObject(
@@ -1829,7 +1883,7 @@ void OrderingCategory(FemUserDefinedOrdering orderingDef) :
             orderingDef.setCategory(
                 UserDefinedOrderingCategoryEnum.UDOC_MAP);
         }
-        | <STATE> [ specificName = CompoundIdentifier2() ]
+        | <STATE> [ specificName = CompoundIdentifier3() ]
         {
             // REVIEW jvs 17-Mar-2005:  do we care about the specific name?
             // The standard in this area seems very pointless.  For now,
@@ -1944,7 +1998,7 @@ FemSqlobjectType ObjectTypeDefinition() :
          AttributeDefinition(typeDef)
          (<COMMA> AttributeDefinition(typeDef))* <RPAREN>
         {
-        }    
+        }
     {
         // NOTE jvs 13-Feb-2005:  for now, this is to trigger an error
         // in case they forget to specify FINAL
@@ -2033,7 +2087,7 @@ FemForeignTable ForeignTableDefinition() :
         {
             table = getRepos().newFemForeignTable();
         }
-    qualifiedTableName = CompoundIdentifier2()
+    qualifiedTableName = CompoundIdentifier3()
         {
             farragoParser.getDdlValidator().setSchemaObjectName(
                 table,qualifiedTableName);
@@ -2059,7 +2113,7 @@ FemForeignTable ForeignTableReference() :
     FemForeignTable table;
 }
 {
-    <FOREIGN> <TABLE> qualifiedTableName = CompoundIdentifier2()
+    <FOREIGN> <TABLE> qualifiedTableName = CompoundIdentifier3()
         {
             table = (FemForeignTable)
             farragoParser.getStmtValidator().findSchemaObject(

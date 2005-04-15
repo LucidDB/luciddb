@@ -28,7 +28,9 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.parser.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.plugin.*;
 
+import net.sf.farrago.fem.sql2003.*;
 
 /**
  * FarragoSessionFactory defines an interface with factory methods used
@@ -37,7 +39,7 @@ import net.sf.farrago.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FarragoSessionFactory
+public interface FarragoSessionFactory extends FarragoSessionPersonalityFactory
 {
     //~ Methods ---------------------------------------------------------------
 
@@ -87,6 +89,18 @@ public interface FarragoSessionFactory
         FarragoRepos repos,
         FennelDbHandle fennelDbHandle);
 
+    /**
+     * Loads a model extension plugin instance.
+     *
+     * @param pluginClassLoader FarragoPluginClassLoader to use
+     * to load the plugin
+     *
+     * @param femJar catalog descriptor for jar from which
+     * plugin is loaded
+     */
+    public FarragoSessionModelExtension newModelExtension(
+        FarragoPluginClassLoader pluginClassLoader, 
+        FemJar femJar);
 
     /**
      * Allows extensions of Farrago to perform their own
@@ -108,6 +122,16 @@ public interface FarragoSessionFactory
      * Gives this factory a chance to clean up after a session has been closed.
      */
     public void cleanupSessions();
+
+    /**
+     * Defines resource bundles to be used for localizing model object names.
+     * Any resource having a name of the form "UmlXXX" will be interpreted
+     * as the localized name for UML class XXX.
+     *
+     * @param bundleList receives instances of ResourceBundle
+     */
+    public void defineResourceBundles(
+        List bundleList);
 }
 
 

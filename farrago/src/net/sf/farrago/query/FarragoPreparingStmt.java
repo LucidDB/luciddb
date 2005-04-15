@@ -161,25 +161,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         needRestore = true;
         savedDeclarer = OJUtil.threadDeclarers.get();
 
-        planner = getSession().newPlanner(this,true);
-
-        // TODO jvs 20-Feb-2005:  make plannerviz a real plugin and
-        // get rid of this
-        Logger plannervizTracer = FarragoTrace.getPlannerVizTracer();
-        Level plannervizLevel = plannervizTracer.getLevel();
-        if (plannervizLevel == null) {
-            plannervizLevel = Level.OFF;
-        }
-        if (plannervizLevel.intValue() <= Level.FINE.intValue()) {
-            try {
-                Class c = Class.forName(
-                    "net.sf.farrago.plannerviz.FarragoPlanVisualizer");
-                RelOptListener listener = (RelOptListener) c.newInstance();
-                planner.addListener(listener);
-            } catch (Exception ex) {
-                throw Util.newInternal(ex);
-            }
-        }
+        planner = getSession().getPersonality().newPlanner(this, true);
+        getSession().getPersonality().definePlannerListeners(planner);
 
         routineLookup = new FarragoUserDefinedRoutineLookup(
             stmtValidator, this, null);
@@ -210,7 +193,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             return sqlOperatorTable;
         }
 
-        SqlOperatorTable systemOperators = getSession().getSqlOperatorTable();
+        SqlOperatorTable systemOperators =
+            getSession().getPersonality().getSqlOperatorTable(this);
 
         ChainedSqlOperatorTable table = new ChainedSqlOperatorTable();
         table.add(routineLookup);
@@ -242,7 +226,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         PreparedResult preparedResult =
             super.prepareSql(
                 sqlNode,
-                getSession().getRuntimeContextClass(),
+                getSession().getPersonality().getRuntimeContextClass(
+                    this),
                 sqlValidator,
                 needValidation);
         return implement(preparedResult);
@@ -256,7 +241,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             new Argument [] {
                 new Argument(
                     connectionVariable,
-                    getSession().getRuntimeContextClass(),
+                    getSession().getPersonality().getRuntimeContextClass(
+                        this),
                     this)
             };
         implementingClassDecl = super.init(implementingArgs);
@@ -309,7 +295,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         List jarUrlList = new ArrayList(jarUrlSet);
         URL [] urls = (URL []) jarUrlList.toArray(new URL[0]);
         URLClassLoader urlClassLoader = URLClassLoader.newInstance(
-            urls, javaCompiler.getArgs().getClassLoader());
+            urls, getSession().getPluginClassLoader());
         javaCompiler.getArgs().setClassLoader(urlClassLoader);
     }
 
@@ -808,12 +794,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     }
 
     // implement RelOptSchema
-    public RelOptTable getTableForMethodCall(MethodCall call)
-    {
-        return null;
-    }
-
-    // implement RelOptSchema
     public RelDataTypeFactory getTypeFactory()
     {
         return getFarragoTypeFactory();
@@ -1047,7 +1027,9 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                 constructorToSqlMap.get(constructor.getFemRoutine());
             if (nodeList == null) {
                 assert (constructor.hasDefinition());
-                FarragoSessionParser parser = getSession().newParser();
+                FarragoSessionParser parser =
+                    getSession().getPersonality().newParser(
+                        getSession());
                 String body = constructor.getFemRoutine().getBody().getBody();
                 nodeList = (SqlNodeList) parser.parseSqlText(
                     null,

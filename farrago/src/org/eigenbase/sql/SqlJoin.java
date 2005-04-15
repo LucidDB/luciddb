@@ -78,9 +78,8 @@ public class SqlJoin extends SqlCall
      */
     public final SqlJoinOperator.ConditionType getConditionType()
     {
-        final SqlLiteral literal =
-            (SqlLiteral) operands[CONDITION_TYPE_OPERAND];
-        return (SqlJoinOperator.ConditionType) literal.getValue();
+        return (SqlJoinOperator.ConditionType)
+            SqlLiteral.symbolValue(operands[CONDITION_TYPE_OPERAND]);
     }
 
     /**
@@ -90,9 +89,8 @@ public class SqlJoin extends SqlCall
      */
     public final SqlJoinOperator.JoinType getJoinType()
     {
-        final SqlLiteral literal =
-            (SqlLiteral) operands[TYPE_OPERAND];
-        return (SqlJoinOperator.JoinType) literal.getValue();
+        return (SqlJoinOperator.JoinType)
+            SqlLiteral.symbolValue(operands[TYPE_OPERAND]);
     }
 
     public final SqlNode getLeft()
