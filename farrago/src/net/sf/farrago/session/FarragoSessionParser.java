@@ -41,8 +41,11 @@ public interface FarragoSessionParser
      * Parses an SQL expression.  If a DDL statement, implicitly
      * performs uncommitted catalog updates.
      *
+     * @param stmtValidator the statement validator to use
+     *
      * @param ddlValidator the validator to use for lookup during parsing
-     * if this turns out to be a DDL statement
+     * if this turns out to be a DDL statement; may be null if DDL
+     * is not allowed
      *
      * @param sql the SQL text to be parsed
      *
@@ -53,6 +56,7 @@ public interface FarragoSessionParser
      * SqlNode
      */
     public Object parseSqlText(
+        FarragoSessionStmtValidator stmtValidator,
         FarragoSessionDdlValidator ddlValidator,
         String sql,
         boolean expectStatement);
@@ -75,7 +79,7 @@ public interface FarragoSessionParser
     public FarragoSessionDdlValidator getDdlValidator();
 
     /**
-     * @return validator to use for validating statements as they are parse
+     * @return validator to use for validating statements as they are parsed
      */
     public FarragoSessionStmtValidator getStmtValidator();
 

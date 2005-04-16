@@ -67,7 +67,9 @@ public class FarragoRngDdlHandler extends DdlHandler
             random = new Random(seed.longValue());
         }
         try {
-            FarragoRngUDR.writeSerialized(rng, random);
+            FarragoRngUDR.writeSerialized(
+                new File(FarragoRngUDR.getFilename(rng)),
+                random);
         } catch (Throwable ex) {
             throw FarragoRngPluginFactory.res.newRngFileCreationFailed(
                 validator.getRepos().getLocalizedObjectName(

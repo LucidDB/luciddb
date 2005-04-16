@@ -23,7 +23,7 @@
 
 <!-- Farrago plugin RNG example ant build script -->
 
-<project name="farragoExampleRNG" basedir="." default="compile">
+<project name="farragoExampleRNG" basedir="." default="jar">
 
   <!-- Definitions for Farrago build properties and macros -->
   <import file="../../buildMacros.xml"/>

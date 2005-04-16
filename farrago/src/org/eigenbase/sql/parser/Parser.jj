@@ -110,6 +110,15 @@ void SqlSelectKeywords(List keywords) :
     E()
 }
 
+SqlNode ExtendedBuiltinFunctionCall() :
+{
+}
+{
+    UnusedExtension()
+        {
+            return null;
+        }
+}
 
 // End Parser.jj
 

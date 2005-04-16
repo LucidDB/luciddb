@@ -393,6 +393,7 @@ public class DdlRoutineHandler extends DdlHandler
             session.getPersonality().newParser(session);
         SqlNodeList nodeList = (SqlNodeList)
             parser.parseSqlText(
+                validator.getStmtValidator(),
                 validator,
                 routine.getBody().getBody(),
                 true);

@@ -2248,12 +2248,10 @@ SqlNode BuiltinFunctionCall() :
         }
     )
 |
+    (  <TRIM>
     {
         SqlLiteral flag = null;
         SqlNode trimChars = null;
-    }
-    (  <TRIM>
-    {
         pos = getPos();
     }
         <LPAREN>
@@ -2294,6 +2292,14 @@ SqlNode BuiltinFunctionCall() :
                  SqlParserUtil.toNodeArray(args), pos);
         }
     )
+|
+    {
+        SqlNode node;
+    }
+    node = ExtendedBuiltinFunctionCall()
+        {
+            return node;
+        }
 }
 
 /**
@@ -3596,5 +3602,21 @@ TOKEN :
        "\u1040"-"\u1049"
       ]
   >
+}
+
+/**
+ * Defines a production which can never be accepted by the parser.
+ * In effect, it tells the parser, "If you got here, you've gone too far."
+ * It is used as the default production for parser extension points;
+ * derived parsers replace it with a real production when they want to
+ * implement a particular extension point.
+ */
+void UnusedExtension() :
+{
+}
+{
+    (
+        LOOKAHEAD({false}) <ZONE>
+    )
 }
 

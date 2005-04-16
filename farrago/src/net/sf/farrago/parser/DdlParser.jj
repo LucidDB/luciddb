@@ -125,9 +125,7 @@ CwmModelElement ExtensionModelDefinition() :
 {
 }
 {
-    (
-        LOOKAHEAD({false}) <NULL>
-    )
+    UnusedExtension()
         {
             return null;
         }
@@ -137,9 +135,7 @@ CwmModelElement ExtensionModelSchemaObjDefinition() :
 {
 }
 {
-    (
-        LOOKAHEAD({false}) <NULL>
-    )
+    UnusedExtension()
         {
             return null;
         }
@@ -149,9 +145,7 @@ CwmModelElement ExtensionModelDrop() :
 {
 }
 {
-    (
-        LOOKAHEAD({false}) <NULL>
-    )
+    UnusedExtension()
         {
             return null;
         }
@@ -161,9 +155,17 @@ DdlStmt ExtensionModelAlter() :
 {
 }
 {
-    (
-        LOOKAHEAD({false}) <NULL>
-    )
+    UnusedExtension()
+        {
+            return null;
+        }
+}
+
+SqlNode ExtendedBuiltinFunctionCall() :
+{
+}
+{
+    UnusedExtension()
         {
             return null;
         }

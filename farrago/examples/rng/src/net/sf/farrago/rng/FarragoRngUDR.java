@@ -55,7 +55,7 @@ public abstract class FarragoRngUDR
 {
     private static final Logger tracer =
         FarragoTrace.getClassTracer(FarragoRngUDR.class);
-    
+
     /**
      * Generates the next pseudo-random integer from a particular RNG.
      *
@@ -63,7 +63,8 @@ public abstract class FarragoRngUDR
      *
      * @param n upper limit on generated integer
      *
-     * @return psuedo-random integer in the range [0, n)
+     * @param n upper limit on generated nonnegative integer, or -1 for
+     * unlimited (including negative)
      */
     public static int rng_next_int(
         String rngName, 
@@ -91,10 +92,7 @@ public abstract class FarragoRngUDR
                 stmtValidator.findSchemaObject(
                     rngId,
                     refRngClass);
-            Random random = readSerialized(rng);
-            int value = random.nextInt(n);
-            writeSerialized(rng, random);
-            return value;
+            return rng_next_int_internal(n, rngName, getFilename(rng));
         } catch (Throwable ex) {
             throw FarragoUtil.newSqlException(ex, tracer);
         }
@@ -103,6 +101,40 @@ public abstract class FarragoRngUDR
         // is cleaned up automatically.
     }
 
+    /**
+     * Generates the next pseudo-random integer from a particular RNG.
+     *
+     * @param n upper limit on generated nonnegative integer, or -1 for
+     * unlimited (including negative)
+     *
+     * @param rngName fully-qualified name of the RNG
+     *
+     * @param filename name of the RNG's datafile
+     *
+     * @return psuedo-random integer
+     */
+    public static int rng_next_int_internal(
+        int n,
+        String rngName, 
+        String filename)
+        throws SQLException
+    {
+        File file = new File(filename);
+        try {
+            Random random = readSerialized(file);
+            int value;
+            if (n < 0) {
+                value = random.nextInt();
+            } else {
+                value = random.nextInt(n);
+            }
+            writeSerialized(file, random);
+            return value;
+        } catch (Throwable ex) {
+            throw FarragoUtil.newSqlException(ex, tracer);
+        }
+    }
+    
     // TODO:  share with parser
     private static RngmodelPackage getRngModelPackage(FarragoRepos repos)
     {
@@ -113,11 +145,10 @@ public abstract class FarragoRngUDR
     // TODO:  file lock
     
     public static void writeSerialized(
-        RngRandomNumberGenerator rng,
+        File file, 
         Random random)
         throws IOException
     {
-        File file = getFile(rng);
         FileOutputStream fos = null;
         ObjectOutputStream oos = null;
         try {
@@ -135,10 +166,9 @@ public abstract class FarragoRngUDR
     }
 
     public static Random readSerialized(
-        RngRandomNumberGenerator rng)
+        File file)
         throws Exception
     {
-        File file = getFile(rng);
         FileInputStream fis = null;
         ObjectInputStream ois = null;
         try {
@@ -151,11 +181,10 @@ public abstract class FarragoRngUDR
         }
     }
 
-    private static File getFile(RngRandomNumberGenerator rng)
+    static String getFilename(RngRandomNumberGenerator rng)
     {
-        return new File(
-            FarragoProperties.instance().expandProperties(
-                rng.getSerializedFile()));
+        return FarragoProperties.instance().expandProperties(
+            rng.getSerializedFile());
     }
 }
 

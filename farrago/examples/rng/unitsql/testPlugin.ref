@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/examples/rng/unitsql/testPlugin.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/examples/rng/unitsql/testPlugin.sql#2 $
 0: jdbc:farrago:> -- Test usage of RNG plugin
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify that without plugin enabled, custom syntax is unrecognized
@@ -197,8 +197,51 @@ Error: DDL validation error: Reference to unknown random number generator "RNG_N
 +---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test fancy syntax
+0: jdbc:farrago:> values next_random_int(ceiling 10 from rng2);
++---------+
+| EXPR$0  |
++---------+
+| 8       |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values next_random_int(unbounded from rng2);
++------------+
+|   EXPR$0   |
++------------+
+| 512689831  |
++------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test view over rng
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view random_personality_view as
+. . . . . . . . > values next_random_int(ceiling 10 from rng2);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view random_udf_view as
+. . . . . . . . > values rng_next_int('rng2',10);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from random_personality_view;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from random_udf_view;
++---------+
+| EXPR$0  |
++---------+
+| 4       |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- now, disable plugin personality for this session
 0: jdbc:farrago:> alter session implementation set default;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- flush query cache
+0: jdbc:farrago:> alter system set "codeCacheMaxBytes" = min;
+0: jdbc:farrago:> alter system set "codeCacheMaxBytes" = max;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify that DDL personality is wiped out
 0: jdbc:farrago:> -- should fail
@@ -230,7 +273,19 @@ Was expecting one of:
 | 0       |
 +---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- and verify that DROP CASCADE works correctly even without DDL personality
+0: jdbc:farrago:> -- sorry, view based on personality will no longer work  :(
+0: jdbc:farrago:> select * from random_personality_view;
+Error: net.sf.farrago.parser.impl.FarragoParserImpl$LookaheadSuccess: null (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- but view based on UDF will
+0: jdbc:farrago:> select * from random_udf_view;
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify that DROP CASCADE works correctly even without DDL personality
 0: jdbc:farrago:> -- TODO:  use Java filesystem access to verify creation/deletion of .dat file
 0: jdbc:farrago:> drop schema rngtest cascade;
 0: jdbc:farrago:> 

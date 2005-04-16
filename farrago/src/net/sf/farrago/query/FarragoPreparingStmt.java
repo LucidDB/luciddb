@@ -288,10 +288,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         // name, there will be trouble.  The alternative is to always use
         // reflection, which would be bad for UDF performance.  What to do?
         // Also, need to implement jar paths.
-        if (jarUrlSet.isEmpty()) {
-            // don't need to load any jars
-            return;
-        }
         List jarUrlList = new ArrayList(jarUrlSet);
         URL [] urls = (URL []) jarUrlList.toArray(new URL[0]);
         URLClassLoader urlClassLoader = URLClassLoader.newInstance(
@@ -550,11 +546,13 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     {
         expansionDepth++;
 
-        SqlParser parser = new SqlParser(queryString);
+        FarragoSessionParser parser =
+            getSession().getPersonality().newParser(getSession());
         final SqlNode sqlQuery;
         try {
-            sqlQuery = parser.parseStmt();
-        } catch (SqlParseException e) {
+            sqlQuery = (SqlNode) parser.parseSqlText(
+                stmtValidator, null, queryString, true);
+        } catch (Throwable e) {
             throw Util.newInternal(e,
                 "Error while parsing view definition:  " + queryString);
         }
@@ -1032,6 +1030,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                         getSession());
                 String body = constructor.getFemRoutine().getBody().getBody();
                 nodeList = (SqlNodeList) parser.parseSqlText(
+                    stmtValidator,
                     null,
                     body,
                     true);

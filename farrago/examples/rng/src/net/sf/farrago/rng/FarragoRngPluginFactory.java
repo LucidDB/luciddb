@@ -25,6 +25,8 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.rng.resource.*;
 
 import org.eigenbase.util.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.oj.rex.*;
 
 import java.lang.reflect.*;
 import java.util.*;
@@ -99,6 +101,19 @@ public class FarragoRngPluginFactory
             return new FarragoRngParser();
         }
 
+        // implement FarragoSessionPersonality
+        public SqlOperatorTable getSqlOperatorTable(
+            FarragoSessionPreparingStmt preparingStmt)
+        {
+            return FarragoRngOperatorTable.rngInstance();
+        }
+        
+        public OJRexImplementorTable getOJRexImplementorTable(
+            FarragoSessionPreparingStmt preparingStmt)
+        {
+            return FarragoRngImplementorTable.rngInstance();
+        }
+        
         // NOTE:  we don't specify defineDdlHandlers here to avoid
         // duplication with RngModelExtension below.
     }

@@ -35,6 +35,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.ddl.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.parser.*;
+import net.sf.farrago.util.*;
 import org.eigenbase.util.*;
 import java.util.*;
 import javax.jmi.reflect.*;
@@ -59,6 +60,8 @@ import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.behavioral.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
+
+import net.sf.farrago.rng.*;
 
 /**
  * Farrago parser implementation extended with RNG syntax.
@@ -164,13 +167,13 @@ CwmModelElement ExtensionModelSchemaObjDefinition() :
         {
             rng.setSerializedFile(externalLocation);
         }
-    [ <SEED> seed = SeedValue() { rng.setInitialSeed(new Long(seed)); } ]
+    [ <SEED> seed = UnsignedValue() { rng.setInitialSeed(new Long(seed)); } ]
     {
         return rng;
     }
 }
 
-long SeedValue() :
+long UnsignedValue() :
 {
     Token t;
 }
@@ -228,9 +231,54 @@ DdlStmt ExtensionModelAlter() :
         }
 }
 
+SqlNode ExtendedBuiltinFunctionCall() :
+{
+    SqlIdentifier id;
+    long longCeiling;
+    int ceiling = -1;
+    RngRandomNumberGenerator rng;
+}
+{
+    <NEXT_RANDOM_INT>
+         <LPAREN>
+         (
+             <CEILING> longCeiling = UnsignedValue()
+             {
+                 ceiling = (int) longCeiling;
+             }
+             | <UNBOUNDED>
+         )
+         <FROM>
+         id = CompoundIdentifier3()
+         <RPAREN>
+        {
+            rng = (RngRandomNumberGenerator)
+            farragoParser.getStmtValidator().findSchemaObject(
+                id,
+                getRngModelPackage().getRngschema().
+                getRngRandomNumberGenerator());
+            return
+            FarragoRngOperatorTable.rngInstance().nextRandomInt.createCall(
+                new SqlNode [] {
+                    SqlLiteral.createExactNumeric(
+                        Integer.toString(ceiling),
+                        getPos()),
+                    SqlLiteral.createCharString(
+                        FarragoCatalogUtil.getQualifiedName(rng).toString(),
+                        getPos()),
+                    SqlLiteral.createCharString(
+                        FarragoProperties.instance().expandProperties(
+                            rng.getSerializedFile()),
+                        getPos())
+                }, 
+                getPos());
+        }
+}
+
 TOKEN :
 {
-  < RNG: "RNG" >
+  < NEXT_RANDOM_INT: "NEXT_RANDOM_INT" >
+| < RNG: "RNG" >
 | < SEED: "SEED" >
 }
 

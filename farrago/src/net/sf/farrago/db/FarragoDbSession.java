@@ -639,7 +639,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             expectStatement = false;
         }
         Object parsedObj = parser.parseSqlText(
-            ddlValidator, sql, expectStatement);
+            stmtValidator, ddlValidator, sql, expectStatement);
 
         if (parsedObj instanceof SqlNode) {
             SqlNode sqlNode = (SqlNode) parsedObj;

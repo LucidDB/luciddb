@@ -59,7 +59,7 @@ public abstract class FarragoAbstractParserImpl extends SqlAbstractParserImpl
      */
     public FarragoRepos getRepos()
     {
-        return farragoParser.getDdlValidator().getRepos();
+        return farragoParser.getStmtValidator().getRepos();
     }
     
     /**

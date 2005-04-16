@@ -23,7 +23,7 @@
 
 <!-- Farrago plannerviz ant build script -->
 
-<project name="farragoPlannerviz" basedir="." default="compile">
+<project name="farragoPlannerviz" basedir="." default="jar">
 
   <!-- Definitions for Farrago build properties and macros -->
   <import file="../../buildMacros.xml"/>
@@ -51,9 +51,6 @@
     location="${plugin.dir}/jgraphaddons"/>
   <property name="jgrapht.classes.dir" 
     location="${plugin.dir}/jgrapht"/>
-
-  <target name="all" depends="jar">
-  </target>
 
   <target name="compile">
     <mkdir dir="${plugin.classes.dir}"/>

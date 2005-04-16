@@ -343,104 +343,36 @@ public class FarragoUserDefinedRoutine
             (FarragoRexToOJTranslator) translator;
 
         assert(call.getOperator() == this);
-        ExpressionList exprList = new ExpressionList();
         Method method;
         try {
             method = getJavaMethod();
         } catch (SqlValidatorException ex) {
             throw FarragoResource.instance().newPluginMethodMismatch(ex);
         }
+
+        Expression [] args = new Expression[operands.length];
         Class [] javaParams = method.getParameterTypes();
         for (int i = 0; i < operands.length; ++i) {
-            Expression expr = translateOperand(
+            args[i] = translateOperand(
                 farragoTranslator,
                 operands[i],
                 javaParams[i],
-                call.getOperands()[i].getType(),
                 getParamTypes()[i]);
-            exprList.add(expr);
         }
-
-        Expression callExpr = new MethodCall(
-            OJClass.forClass(method.getDeclaringClass()),
-            method.getName(),
-            exprList);
-
-        farragoTranslator.addStatement(
-            new ExpressionStatement(
-                new MethodCall(
-                    farragoTranslator.getRelImplementor().
-                    getConnectionVariable(),
-                    "pushRoutineInvocation",
-                    new ExpressionList(
-                        Literal.makeLiteral(
-                            routine.getDataAccess()
-                            != RoutineDataAccessEnum.RDA_NO_SQL)))));
-
-        TryStatement tryStmt = new TryStatement(null, null, null);
-
-        Variable varException =
-            farragoTranslator.getRelImplementor().newVariable();
-        tryStmt.setCatchList(
-            new CatchList(
-                new CatchBlock(
-                    new Parameter(
-                        TypeName.forOJClass(OJClass.forClass(Throwable.class)),
-                        varException.toString()),
-                    new StatementList(
-                        new ThrowStatement(
-                            new MethodCall(
-                                farragoTranslator.getRelImplementor().
-                                getConnectionVariable(),
-                                "handleRoutineInvocationException",
-                                new ExpressionList(
-                                    varException,
-                                    Literal.makeLiteral(
-                                        method.getName()))))))));
-
-
-        tryStmt.setFinallyBody(
-            new StatementList(
-                new ExpressionStatement(
-                    new MethodCall(
-                        farragoTranslator.getRelImplementor().
-                        getConnectionVariable(),
-                        "popRoutineInvocation",
-                        new ExpressionList()))));
-
-        if (routine.getType() == ProcedureTypeEnum.PROCEDURE) {
-            // for a procedure call, the method return is void,
-            // so we make up a null value instead
-            tryStmt.setBody(
-                new StatementList(
-                    new ExpressionStatement(callExpr)));
-            farragoTranslator.addStatement(tryStmt);
-            Expression nullVar = farragoTranslator.createScratchVariable(
+        
+        FarragoOJRexStaticMethodImplementor implementor =
+            new FarragoOJRexStaticMethodImplementor(
+                method,
+                routine.getDataAccess() != RoutineDataAccessEnum.RDA_NO_SQL,
                 returnType);
-            farragoTranslator.addStatement(
-                farragoTranslator.createSetNullStatement(nullVar, true));
-            return nullVar;
+        Expression varResult = 
+            implementor.implementFarrago(farragoTranslator, call, args);
+
+        if (method.getReturnType() == Void.TYPE) {
+            // for procedures, need to skip extra conversions below
+            return varResult;
         }
-
-        Variable varResult =
-            farragoTranslator.getRelImplementor().newVariable();
-        farragoTranslator.addStatement(
-            new VariableDeclaration(
-                TypeName.forOJClass(
-                    OJClass.forClass(method.getReturnType())),
-                new VariableDeclarator(
-                    varResult.toString(),
-                    null)));
-
-        tryStmt.setBody(
-            new StatementList(
-                new ExpressionStatement(
-                    new AssignmentExpression(
-                        varResult,
-                        AssignmentExpression.EQUALS,
-                        callExpr))));
-        farragoTranslator.addStatement(tryStmt);
-
+        
         RelDataType actualReturnType;
         if (method.getReturnType().isPrimitive()) {
             actualReturnType =
@@ -469,7 +401,6 @@ public class FarragoUserDefinedRoutine
         FarragoRexToOJTranslator farragoTranslator,
         Expression argExpr,
         Class javaParamClass,
-        RelDataType argType,
         RelDataType paramType)
     {
         if (javaParamClass.isPrimitive()) {
@@ -485,12 +416,7 @@ public class FarragoUserDefinedRoutine
                 null,
                 argExpr);
         } else {
-            return new CastExpression(
-                OJClass.forClass(javaParamClass),
-                new MethodCall(
-                    argExpr,
-                    "getNullableData",
-                    new ExpressionList()));
+            return argExpr;
         }
     }
 

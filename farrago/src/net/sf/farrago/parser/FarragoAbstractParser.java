@@ -45,7 +45,8 @@ import org.eigenbase.resource.*;
  */
 public abstract class FarragoAbstractParser implements FarragoSessionParser
 {
-    /** Validator to use for validating DDL statements as they are parsed. */
+    protected FarragoSessionStmtValidator stmtValidator;
+    
     protected FarragoSessionDdlValidator ddlValidator;
 
     protected FarragoAbstractParserImpl parserImpl;
@@ -84,17 +85,19 @@ public abstract class FarragoAbstractParser implements FarragoSessionParser
     // implement FarragoSessionParser
     public FarragoSessionStmtValidator getStmtValidator()
     {
-        return ddlValidator.getStmtValidator();
+        return stmtValidator;
     }
 
     protected abstract FarragoAbstractParserImpl newParserImpl(Reader reader);
 
     // implement FarragoSessionParser
     public Object parseSqlText(
+        FarragoSessionStmtValidator stmtValidator,
         FarragoSessionDdlValidator ddlValidator,
         String sql,
         boolean expectStatement)
     {
+        this.stmtValidator = stmtValidator;
         this.ddlValidator = ddlValidator;
 
         parserImpl = newParserImpl(new StringReader(sql));

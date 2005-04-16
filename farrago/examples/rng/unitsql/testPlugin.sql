@@ -86,8 +86,31 @@ values rng_next_int('rng3',10);
 values rng_next_int('rng3',10);
 
 
+-- test fancy syntax
+values next_random_int(ceiling 10 from rng2);
+
+values next_random_int(unbounded from rng2);
+
+
+-- test view over rng
+
+create view random_personality_view as
+values next_random_int(ceiling 10 from rng2);
+
+create view random_udf_view as
+values rng_next_int('rng2',10);
+
+select * from random_personality_view;
+
+select * from random_udf_view;
+
+
 -- now, disable plugin personality for this session
 alter session implementation set default;
+
+-- flush query cache
+alter system set "codeCacheMaxBytes" = min;
+alter system set "codeCacheMaxBytes" = max;
 
 -- verify that DDL personality is wiped out
 -- should fail
@@ -96,6 +119,12 @@ create rng rng4 external '${FARRAGO_HOME}/testgen/rng4.dat' seed 777;
 -- verify that we can still access plugin functionality via UDF
 values rng_next_int('rng3',10);
 
--- and verify that DROP CASCADE works correctly even without DDL personality
+-- sorry, view based on personality will no longer work  :(
+select * from random_personality_view;
+
+-- but view based on UDF will
+select * from random_udf_view;
+
+-- verify that DROP CASCADE works correctly even without DDL personality
 -- TODO:  use Java filesystem access to verify creation/deletion of .dat file
 drop schema rngtest cascade;
