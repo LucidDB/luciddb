@@ -94,8 +94,14 @@ bool ConfigMap::getBoolParam(
     if (pPair == paramVals.end()) {
         return defaultVal;
     } else {
-        /* TODO: Support true/false? boost only likes 1/0 */
-        return boost::lexical_cast<bool>(pPair->second);
+        /* Support true/false? boost only likes 1/0 */
+        if (strcasecmp(pPair->second.c_str(), "true") == 0) {
+            return true;
+        }
+        else if (strcasecmp(pPair->second.c_str(), "false") == 0) {
+            return false;
+        }
+        else return boost::lexical_cast<bool>(pPair->second);
     }
 }
 
