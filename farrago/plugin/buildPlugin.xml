@@ -227,7 +227,8 @@
   <target name="plugin.cleanParser" if="plugin.parser.jj">
     <delete includeEmptyDirs="true" quiet="true">
       <fileset dir="${plugin.parser.impl.dir}">
-        <include name="*.java,*.jj"/>
+        <include name="*.java"/>
+        <include name="*.jj"/>
       </fileset>
     </delete>
   </target>
