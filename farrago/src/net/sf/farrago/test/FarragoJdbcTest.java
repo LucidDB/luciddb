@@ -271,7 +271,9 @@ public class FarragoJdbcTest extends FarragoTestCase
             }
         } catch (SQLException ex) {
             // expected
-            Assert.assertTrue(ex.getMessage().indexOf("abort") > -1);
+            Assert.assertTrue(
+                "Expected abort message but got '" + ex.getMessage() + "'", 
+                ex.getMessage().indexOf("abort") > -1);
             return;
         }
         Assert.fail("Expected failure due to cancel request");
