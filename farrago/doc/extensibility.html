@@ -310,7 +310,7 @@ values (next_random_int(unbounded from rng1), 'Lost and Found');
 -- the employee's day off
 select name, next_random_int(ceiling 7 from rng1) as day_off
 from emps;
-<code></pre>
+</code></pre>
 
 To accomplish this, we'll need a plugin which can serve as a catalog
 model extension (to add the definition of a random-number generator)
