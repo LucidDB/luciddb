@@ -79,8 +79,7 @@ public class RngParser extends FarragoAbstractParserImpl {
 
     RngmodelPackage getRngModelPackage()
     {
-        return (RngmodelPackage)
-            getRepos().getFarragoPackage().refPackage("RNGModel");
+        return FarragoRngUDR.getRngModelPackage(getRepos());
     }
 }
 
@@ -214,9 +213,10 @@ CwmModelElement ExtensionModelDrop() :
                 getRngModelPackage().getRngschema().
                 getRngRandomNumberGenerator());
         }
-    {
-        return rng;
-    }
+    CascadeOption()
+        {
+            return rng;
+        }
 }
 
 DdlStmt ExtensionModelAlter() :

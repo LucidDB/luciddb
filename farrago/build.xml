@@ -1047,6 +1047,15 @@ require version '${required.ant.version}'."/>
       <packageset dir="${farrago.src.dir}">
         <include name="**"/>
       </packageset>
+      <packageset dir="${farrago.dir}/examples/plannerviz/src">
+        <include name="**"/>
+      </packageset>
+      <packageset dir="${farrago.dir}/examples/rng/src">
+        <include name="**"/>
+      </packageset>
+      <packageset dir="${farrago.dir}/examples/rng/catalog/java">
+        <include name="**"/>
+      </packageset>
       <link href="http://www.netbeans.org/download/dev/javadoc/MdrAPIs"/>
       <link href="http://java.sun.com/products/jmi/jmi-1_0-fr-doc"/>
 	  <link href="http://java.sun.com/j2se/1.4.2/docs/api"/>

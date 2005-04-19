@@ -23,9 +23,14 @@ package net.sf.farrago.rng;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
+
+import net.sf.farrago.query.*;
+import net.sf.farrago.cwm.core.*;
 
 /**
  * FarragoRngNextRandomIntOperator defines the SqlOperator for the
@@ -52,6 +57,40 @@ public class FarragoRngNextRandomIntOperator extends SqlFunction
             SqlFunctionCategory.System);
     }
 
+    // override SqlOperator
+    public void validateCall(
+        SqlCall call,
+        SqlValidator validator,
+        SqlValidatorScope scope,
+        SqlValidatorScope operandScope)
+    {
+        super.validateCall(call, validator, scope, operandScope);
+
+        // TODO jvs 18-Apr-2005: make this an official part of session-level
+        // interface
+        FarragoPreparingStmt preparingStmt =
+            (FarragoPreparingStmt) validator.getCatalogReader();
+
+        // This is kind of silly...we already had the rng reference
+        // during parsing, but then we lost it.
+        SqlParser sqlParser = new SqlParser(
+            ((SqlLiteral) call.operands[1]).getStringValue());
+        SqlIdentifier id;
+        try {
+            id = (SqlIdentifier) sqlParser.parseExpression();
+        } catch (Throwable ex) {
+            throw Util.newInternal(ex);
+        }
+        CwmModelElement rng = 
+            preparingStmt.getStmtValidator().findSchemaObject(
+                id,
+                FarragoRngUDR.getRngModelPackage(
+                    preparingStmt.getRepos())
+                .getRngschema().getRngRandomNumberGenerator());
+        
+        preparingStmt.addDependency(rng);
+    }
+    
     // override SqlOperator
     public void unparse(
         SqlWriter writer,

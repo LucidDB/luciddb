@@ -11,14 +11,14 @@
 <h1>SQL Standard User Defined Types and Routines</h1>
 
 This document describes standard support for user-defined types and
-routines in SQL99.  The specifications are informal; for details, see
-the relevant portions of the standard.  None of this is implemented in
-Farrago yet.
+routines in SQL:2003.  The specifications are informal; for details,
+see the relevant portions of the standard.  Much but not all of this
+is already implemented in Farrago.
 
 
 <h2>User-Defined Types</h2>
 
-In SQL99, it's possible to extend the type system in a number of ways:
+In SQL:2003, it's possible to extend the type system in a number of ways:
 
 <ul>
 
@@ -119,7 +119,7 @@ this document.
 
 <h2>Typed Tables</h2>
 
-SQL99 allows structured types to be used in two different modes:
+SQL:2003 allows structured types to be used in two different modes:
 
 <ul>
 
@@ -437,7 +437,7 @@ routine resolution, consult the standard.
 
 <p>
 
-Besides explicit type hierarchy casting, SQL99 also provides for
+Besides explicit type hierarchy casting, SQL:2003 also provides for
 
 <ul>
 
@@ -492,7 +492,7 @@ methods must be defined in the same schema as the associated type.
 
 <p>
 
-SQL99 introduces the notion of a <em>SQL-path</em>, which is used to
+SQL:2003 introduces the notion of a <em>SQL-path</em>, which is used to
 resolve unqualified references to procedures, functions, and types
 (similar to the way the <code>PATH</code> environment variable is used
 to resolve executable names).  Each schema has a SQL-path associated
@@ -594,7 +594,7 @@ single <code>CALL</code> from SQL to deploy it.
 
 <h2>Access Control</h2>
 
-SQL99 types have no concept of access control such as the
+SQL:2003 types have no concept of access control such as the
 <code>public/private/protected</code> of Java and C++.  However, the
 standard (and more powerful) GRANT/REVOKE mechanism can be used at the
 method level instead.
@@ -623,7 +623,7 @@ SQL routines always run with INVOKER privileges.
 
 <h2>User Defined Aggregates</h2>
 
-SQL99 does not provide a mechanism for user-defined aggregates.  See
+SQL:2003 does not provide a mechanism for user-defined aggregates.  See
 the 
 <a href="http://www.cise.ufl.edu/help/database/oracle-docs/server.920/a96524/c14ordb.htm#437280">Oracle</a>,
 <a href="http://www-106.ibm.com/developerworks/db2/library/techarticle/0309stolze/0309stolze.html">DB2</a>,

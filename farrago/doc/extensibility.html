@@ -1,0 +1,847 @@
+<html>
+
+<head>
+<title>Farrago Extensibility</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" />
+
+</head>
+
+<body>
+
+<h1>Farrago Extensibility</h1>
+
+<hr>
+
+One of the innovative aspects of the Farrago architecture is its
+approach to extensibility.  Of course, features such as user-defined
+types and routines are hardly novel, and <a
+href="http://www.postgresql.org/docs/7/static/extend.htm">earlier DBMS
+projects</a> have taken extensibility quite far already by applying it
+to features such as indexing and access methods.  In this document,
+we'll explain how Farrago radically redefines what it means for a DBMS
+platform to be extensible.  By way of illustration, here's a plain,
+boring DBMS which hasn't been extended in any way:
+
+<p>
+
+<img src="noExtensibility.png">
+
+<hr>
+
+<h2>The Gist</h2>
+
+<em>Farrago provides system-level extensibility instead of just
+feature-level extensibility</em>.
+
+<p>
+
+What does this mean?  A platform with feature-level extensibility
+defines a fixed set of extensible features, and for each one defines
+service-provider interfaces and mechanisms for plugging in custom
+implementations.  Here's our friend again after his feet and one of
+his eyes have been customized independently:
+
+<p>
+
+<img src="featureExtensibility.png">
+
+<p>
+
+Examples of extensible features in existing DBMS projects include
+
+<ul>
+
+<li>routines (stored procedures, user-defined functions, user-defined
+aggregators)
+
+<li>datatypes (OODB's, user-defined types, datablades, cartridges)
+
+<li>table storage (e.g. <a
+href="http://dev.mysql.com/doc/mysql/en/storage-engines.html">MySQL
+storage engines</a>)
+
+<li>indexes, access methods and associated optimizer parameters
+(e.g. <a href="http://gist.cs.berkeley.edu">GiST</a>)
+
+</ul>
+
+But what if the platform doesn't have the feature you want in the
+first place?  For example, important capabilities like sequences,
+materialized views, triggers, XML, or federated queries may not be
+available in your favorite DBMS yet.  Or perhaps you have invented
+something new and equally powerful, and are trying to figure out how
+to bolt it on.  
+
+<p>
+
+Without system-level extensibility, your options are limited:
+
+<ol>
+
+<li>If your platform of choice is open-source, fork it and patch in
+your new feature.  Every time the platform is upgraded, you'll have to
+merge the changes and deal with conflicts if you want to keep up with
+it.  If your innovation is good, you may be able to get it accepted as
+a contribution so that other developers will share the maintenance
+burden, but impediments such as project politics or license conflicts
+may prevent you.
+
+<li>Attempt to shoehorn your feature in by abusing one or more of the
+existing extension interfaces.  This may work for simple features, but the
+result is unlikely to be very attractive to users.
+
+<li>Drop the notion of reusing a generic DBMS platform altogether and
+start building your own from scratch.  Don't laugh; it's been done too
+many times already.
+
+</ol>
+
+Farrago aims to change all of that, and its architecture has been
+planned out with this goal in mind, leading to exciting new
+possibilities for every part of the system to be involved in
+extensibility, and for entirely new features to be incorporated:
+
+<p>
+
+<img src="systemExtensibility.png">
+
+<p>
+
+How do we do it?  There are a few keys to the approach:
+
+<ul>
+
+<li>The architecture is model-driven wherever possible, and the model
+is extensible.  As a result, extensions automatically propagate
+throughout many parts of the system.  More on this later.
+
+<li>All important system components (including the catalog, session
+manager, parser, validator, optimizer, code generator, executor, and
+storage manager) have corresponding extension interfaces and communicate
+with each other primarily via these interfaces.
+
+<li>Extension interfaces are defined coherently rather than in
+isolation.  For example, you can choose to plug in a new catalog model
+extension in isolation, and you can choose to plug in a new session
+personality extension in isolation.  But you can also design your new
+session personality to manipulate your catalog model extensions.
+Likewise with optimizer rules, table storage, and access methods.
+
+<li>Object-oriented and pattern-driven design principles guide the
+placement of component boundaries.  For example, an optimizer rule is
+defined independently of the kind of optimizer (heuristic, cost-based,
+randomized) which utilizes it.  Usage of Java and C++ as the
+implementation languages means the extensibility mechanisms have
+natural representations (instead of cumbersome constructs such as
+tables of function pointers in C).
+
+</ul>
+
+<hr>
+
+<h2>Use Cases</h2>
+
+Here are just a few examples of the variety of system-level extensions
+the Farrago framework should be able to support:
+
+<ul>
+
+<li>SQL/XML
+
+<li>analytical features such as materialized views,
+efficient star schemas, and SQL/OLAP
+
+<li>"personalities" for making a server emulate a particular
+DBMS product or a particular standard conformance level
+
+<li>federated data management
+
+</ul>
+
+<hr>
+
+<h2>Reality Check</h2>
+
+The pitch above may sound like a lot of pie in the sky.  And in truth,
+there are limitations on any extensible architecture.  Some of them
+are due to blind spots; it's impossible to foresee every possible
+direction in which the system might be stretched.  Others are due to
+practical constraints; we may know that a component needs to be
+involved in extensibility, but we haven't yet gotten the time to do it
+right, or we haven't come up with enough use-cases to feel confident
+that the extensibility design will be generic enough.  Still others
+are simply out of scope; for example, you may be able to cobble
+together a distributed system out of multiple nodes running Farrago,
+and the loosely-coupled design may assist you in this, but the
+architecture does not address distributed-system issues, so the
+promise of extensibility isn't going to be very relevant.
+
+<p>
+
+So, even using Farrago as a platform, you may at times still be faced
+with some of the unpleasant choices enumerated earlier in this
+document.  However, you may be able to contribute extensibility
+enhancements to the platform and use them to satisfy your requirement,
+without the need for any ongoing patch/merge maintenance.  And because
+of the system-level extensibility design goal, others are more likely
+to assist you with such an enhancement (assuming you take a sufficiently
+generic approach instead of just slipping in a special-case hack).
+
+<p>
+
+The success of the <a href="http://www.eclipse.org">Eclipse
+project</a>, an IDE "for anything and nothing in particular," provides
+hope that it's possible to do something similar for data management
+services.
+
+<p>
+
+In case it's not clear, taking advantage of system-level extensibility
+requires skilled developers with an understanding of UML modeling and
+server-side Java.  For end-users and less-sophisticated developers,
+feature-level extensibility is more appropriate.
+
+<hr>
+
+<h2>Plugins</h2>
+
+Extended functionality is added to Farrago by installing plugins,
+which are packaged as jars (with accompanying shared libraries for
+plugins which contain C++ components).  Plugins are typically
+installed via DDL commands, and in most cases installation does not
+require restart of the JVM running Farrago (exceptions are noted
+below).  This list provides an overview of the currently supported
+plugin categories:
+
+<ul>
+
+<li>Catalog model: these plugins contain extensions to the standard
+catalog model, expressed as UML static structure models.  The standard
+catalog model contains definitions for the usual SQL objects such as
+schemas, tables, and views.  A model plugin can define novel objects;
+the example provided later on in this document explains how to add the
+definition for a stateful random-number generator (similar to a
+sequence).  Once installed, these extended objects behave exactly like
+standard objects; they can be contained by schemas, referenced from
+queries, involved in dependencies, etc.  Besides UML, catalog model
+plugins also implement extension interfaces for controlling object
+behavior, e.g.  DDL validation rules.  Catalog model plugins are
+installed via the <code>ALTER SYSTEM ADD CATALOG JAR</code> statement,
+which requires a JVM restart.  The system supports multiple active
+catalog model extensions.
+
+<li>Session manager: these plugins define shared system state
+(e.g. repository implementation) and the state associated with each
+session.  They are not installed via a DDL command; instead, a
+top-level container for Farrago selects one of these to initialize the
+system.  (Theoretically, it's possible for multiple containers in the
+same JVM to load different session managers simultaneously, but in
+practice that is likely to lead to trouble unless those session
+managers are designed to work together.)
+
+<li>Session personality: these plugins define session behavior,
+including parsing, validation, optimization, and execution.  Session
+manager plugins supply a default personality plugin for new sessions,
+but a new personality can be selected at any time with the <code>ALTER
+SESSION IMPLEMENTATION</code> statement (session personality is typically
+stateless for this reason).  There is currently no support for
+automatically combining multiple session personalities within a single
+session; however, each session can have its own personality.
+
+<li>Foreign data wrappers: these plugins define standard <a
+href="design/sqlmed.html">SQL/MED access</a> to data whose definition
+and storage are managed externally.  Foreign data wrappers are
+installed via the <code>CREATE FOREIGN DATA WRAPPER</code> statement.
+
+<li>Local data wrappers: these plugins are similar to foreign data
+wrappers, but extend additional interfaces which allow Farrago to
+manage the definition and storage of new table types locally.  Local
+data wrappers are installed via the <code>CREATE LOCAL DATA WRAPPER</code>
+statement.
+
+<li>User-defined routines and types: these plugins are 
+<a href="design/UserDefinedTypesAndRoutines.html">
+standard SQL stored procedures, user-defined functions, and
+user-defined types</a> installed via the <code>CREATE
+PROCEDURE/FUNCTION/TYPE</code> statements.
+
+<li>Catalog repository storage: these plugins control 
+<a href="howto/reposStorage.html">
+how the catalog repository is stored</a>; typically just one of these
+is installed as part of framework installation.
+
+</ul>
+
+<hr>
+
+<h2>Toy Example:  Random Number Generator</h2>
+
+The rest of this document walks through a specific example in detail
+to give a deeper sense of how system-level extensibility works.  The
+source code for this example is available under
+<code>dev/farrago/examples/rng</code>, and can be compiled and built
+to test the extensibility mechanisms involved.  (If you have a Farrago
+developer build, run <code>ant createPlugin</code> from that
+directory.)  It also serves as a good clonable starting-point for
+creating your own extension.
+
+<p>
+
+The premise is that we'd like to be able to add a random-number
+generator object to the system.  It should be a first-class object
+like a traditional sequence generator, and should have persistent
+state to guarantee that the pseudo-random sequence won't repeat for as
+long as possible.  Here's some sample SQL for how we want to be able
+to define and use a random-number generator:
+
+<pre><code>
+-- define a new random number generator;
+-- persist its state in a file named rng1.dat,
+-- and give it an explicit seed so that the sequence is deterministic
+create rng rng1 external 'rng1.dat' seed 999;
+
+-- use a generated random number as a primary key for a new department;
+-- generate the integer without any bound on the bits used to minimize
+-- chance of a key collision
+insert into depts(deptno,name)
+values (next_random_int(unbounded from rng1), 'Lost and Found');
+
+-- for each employee, generate a random number from 0 to 6 representing
+-- the employee's day off
+select name, next_random_int(ceiling 7 from rng1) as day_off
+from emps;
+<code></pre>
+
+To accomplish this, we'll need a plugin which can serve as a catalog
+model extension (to add the definition of a random-number generator)
+and a session personality (to add the DDL support for
+creating/dropping rng's, and to add the query support for referencing
+them).
+
+<p>
+
+NOTE: this example plugin is not designed for production use; it does
+not have proper concurrency control and transaction semantics, and its
+file-system persistence mechanism is neither high performance nor
+fault tolerant.  Instead, the implementation is intended to be kept
+simple for instructional purposes.
+
+<hr>
+
+<h2>Example Continued:  Extending the Catalog Model</h2>
+
+For this first step, it's necessary to use a UML modeling tool to create a
+definition of the model extension and export it as XMI.  What's more,
+we need a way to reference the standard catalog model so that we can
+specify how the extension model relates to it.  Here's how it looks
+in Poseidon:
+
+<p>
+
+<img src="rngModel.gif">
+
+<p>
+
+Our new UML class (<code>RandomNumberGenerator</code>) is a subclass
+of the generic CWM class <code>ModelElement</code>.  Having
+ModelElement as a superclass means that a RandomNumberGenerator has a
+name, can be contained by a schema, and can have dependency
+relationships with other objects.  We've defined two additional
+attributes for it: <code>serializedFile</code> is the file-system
+location where the persistent state is stored, and
+<code>initialSeed</code> is the (optional) seed defined when the RNG
+is created (if missing, the current time will be used).
+
+<p>
+
+For such a simple model extension, usage of UML may appear to be
+overkill, and one could argue that a lighter-weight modeling
+infrastructure such as XSD or POJO reflection would be more
+appropriate.  However, most real system-level extensions are expected
+to involve many classes with complex hierarchies and associations--a
+domain in which UML is the best fit.  In addition, the rest of the
+system is JMI-based, and we want model extensions to work exactly like
+the rest of the model.
+
+<p>
+
+Once the extension model has been defined in UML, it can be translated
+into JMI packages and corresponding XMI deployment descriptor.  To do
+this, the build script invokes the <code>plugin.buildModel</code>
+target inherited from the framework script
+<code>dev/farrago/plugin/buildPlugin.xml</code>.  The 
+<a href="api/net/sf/farrago/rngmodel/package-summary.html">
+JMI interfaces</a> are generated under
+<code>dev/farrago/examples/rng/catalog/java</code>.  The XMI
+deployment descriptor is generated as
+<code>dev/farrago/examples/rng/catalog/xmi/RngPluginModelExport.xmi</code>.
+
+<hr>
+
+<h2>Example Continued:  Defining Extended Model Behavior</h2>
+
+Next, we need to add custom DDL handling.  This is the job of class <a
+href="api/net/sf/farrago/rng/FarragoRngDdlHandler.html">
+net.sf.farrago.rng.FarragoRngDdlHandler</a>.  It supplies a number of handler
+routines:
+
+<ul>
+
+<li><code>validateDefinition</code>: during CREATE, expands the
+location of the persistence file to an absolute path.
+
+<li><code>executeCreation</code>: initializes a new random-number
+generator (using class <code>java.util.Random</code> and the initial
+seed, if specified) and persists its state
+
+<li><code>executeDrop</code>: deletes the persistence file
+
+</ul>
+
+To tell Farrago what to do with our model plugin when it is
+loaded, we need to implement
+<a href="api/net/sf/farrago/session/FarragoSessionModelExtensionFactory.html">
+extension interface
+net.sf.farrago.session.FarragoSessionModelExtensionFactory</a>.  This
+is done by
+<a href="api/net/sf/farrago/rng/FarragoRngPluginFactory.html">
+class net.sf.farrago.rng.FarragoRngPluginFactory</a>, which takes care
+of returning DDL handlers when requested (and also other model aspects
+such as localization, which is not covered here).
+
+<p>
+
+At this point, we have everything we need to build and install a model
+plugin jar, and the installation would create new system tables
+capable of storing metadata about RNG's.  However, doing so wouldn't
+be very useful yet, because even though we've told the system what an
+RNG is and how to react when someone wants to create one or drop one,
+we haven't yet extended the DDL parser to actually support the custom
+<code>CREATE/DROP</code> statements.  (Theoretically,
+parser-generation could be model-driven as well, but most system-level
+extensions require custom syntax.)  For that, we need a session
+personality plugin.
+
+<hr>
+
+<h2>Example Continued:  Extending The DDL Parser</h2>
+
+Like everything else in the framework, the Farrago parsers are defined
+to be extended.  JavaCC doesn't support this out of the box, but we
+have devised our own extensibility mechanisms on top of it.  In
+particular, we use textual concatenation of the .jj grammar source
+files, and we design those grammar files to be reusable.  Currently,
+only one extension parser can be active in a session at a time (unlike
+with models, we don't yet have a mechanism for combining multiple
+extension parsers.)
+
+<p>
+
+Here's a snippet of the RNG example DDL parser
+(<code>dev/farrago/examples/rng/src/net/sf/farrago/rng/RngParser.jj</code>):
+
+<pre><code>
+CwmModelElement ExtensionModelSchemaObjDefinition() :
+{
+    RngRandomNumberGenerator rng;
+    SqlIdentifier qualifiedName;
+    String externalLocation;
+    long seed;
+}
+{
+    &lt;RNG&gt;
+        {
+            rng = getRngModelPackage().getRngschema()
+                .getRngRandomNumberGenerator().createRngRandomNumberGenerator();
+        }
+    qualifiedName = CompoundIdentifier3()
+        {
+            farragoParser.getDdlValidator().setSchemaObjectName(
+                rng, qualifiedName);
+        }
+    &lt;EXTERNAL&gt; externalLocation = QuotedString()
+        {
+            rng.setSerializedFile(externalLocation);
+        }
+    [ &lt;SEED&gt; seed = UnsignedValue() { rng.setInitialSeed(new Long(seed)); } ]
+    {
+        return rng;
+    }
+}
+
+CwmModelElement ExtensionModelDrop() :
+{
+    SqlIdentifier qualifiedName;
+    RngRandomNumberGenerator rng;
+}
+{
+    &lt;RNG&gt; qualifiedName = CompoundIdentifier3()
+        {
+            rng = (RngRandomNumberGenerator)
+            farragoParser.getStmtValidator().findSchemaObject(
+                qualifiedName,
+                getRngModelPackage().getRngschema().
+                getRngRandomNumberGenerator());
+        }
+    CascadeOption()
+        {
+            return rng;
+        }
+}
+
+TOKEN :
+{
+  &lt; NEXT_RANDOM_INT: "NEXT_RANDOM_INT" &gt;
+| &lt; RNG: "RNG" &gt;
+| &lt; SEED: "SEED" &gt;
+}
+</code></pre>
+
+The <code>ExtensionModelSchemaObjDefinition</code> and
+<code>ExtensionModelDrop</code> grammar productions are defined as
+no-ops in the standard parser; here we override them to accept our
+custom RNG syntax and specify how to store the object definition in
+the catalog (for later processing by
+<code>FarragoRngDdlHandler</code>).  In addition, JavaCC allows us to
+define new tokens as needed.
+
+<p>
+
+All that's left is to make sure that
+<code>FarragoRngPluginFactory</code> implements
+<a href="api/net/sf/farrago/session/FarragoSessionPersonalityFactory.html">
+extension interface
+net.sf.farrago.session.FarragoSessionPersonalityFactory</a> and
+supplies Farrago with our customized parser instead of the default.
+
+<hr>
+
+<h2>Example Continued:  Testing the Plugin</h2>
+
+At this point, we have everything we need to be able to instantiate
+RNG's, but we still can't access them from queries.  For the impatient
+reader, let's use a quick-and-dirty approach: we'll create a
+user-defined function to do the job.  (Later, we'll explain how to
+extend the query parser so that we don't need to rely on this UDF.)
+
+<p>
+
+Class 
+<a href="api/net/sf/farrago/rng/FarragoRngUDR.html">
+class net.sf.farrago.rng.FarragoRngUDR</a> contains static method
+<code>rng_next_int</code> which can be used for this purpose.  It
+takes the name of the RNG and the desired ceiling and produces an
+integer.  It works by performing a catalog lookup to get the location
+of the serialization file for the RNG, and then accesses that file to
+instantiate the RNG, generate the next number, and then persist the
+modified state.
+
+<p>
+
+The <code>ant createPlugin</code> task takes care of building the
+plugin (<code>dev/farrago/examples/rng/plugin/FarragoRng.jar</code>).
+Installing a model plugin performs some heavy-duty surgery on the
+repository, and should only be performed from a single-user instance
+of Farrago, so we'll use <code>sqllineEngine</code> for this purpose:
+
+<pre><code>
+0: jdbc:farrago:&gt; set schema 'sys_boot.sys_boot';
+No rows affected (4.869 seconds)
+0: jdbc:farrago:&gt;
+0: jdbc:farrago:&gt; create jar rngplugin
+. . . . . . . . &gt; library 'file:${FARRAGO_HOME}/examples/rng/plugin/FarragoRng.jar'
+. . . . . . . . &gt; options(0);
+No rows affected (0.197 seconds)
+0: jdbc:farrago:&gt;
+0: jdbc:farrago:&gt; alter system add catalog jar rngplugin;
+No rows affected (7.887 seconds)
+0: jdbc:farrago:&gt; Closing: net.sf.farrago.jdbc.engine.FarragoJdbcEngineConnection
+
+</code></pre>
+
+(After the <code>ALTER SYSTEM ADD CATALOG JAR</code> statement
+completes, the system is in an unusable state and must be shut down
+immediately; the next restart will complete the installation process
+as part of catalog boot.)
+
+<p>
+
+Now, let's give our newly installed plugin a whirl:
+
+<pre><code>
+0: jdbc:farrago:&gt; create schema rngtest;
+No rows affected (0.21 seconds)
+0: jdbc:farrago:&gt; set schema 'rngtest';
+No rows affected (2.223 seconds)
+0: jdbc:farrago:&gt; set path 'rngtest';
+No rows affected (0.022 seconds)
+0: jdbc:farrago:&gt; alter session implementation set jar sys_boot.sys_boot.rngplugin;
+No rows affected (0.049 seconds)
+0: jdbc:farrago:&gt; create rng rng1 external '${FARRAGO_HOME}/testgen/rng1.dat' seed 999;
+No rows affected (0.446 seconds)
+0: jdbc:farrago:&gt; create function rng_next_int(
+. . . . . . . . &gt;     rng_name varchar(512),
+. . . . . . . . &gt;     n int)
+. . . . . . . . &gt; returns int
+. . . . . . . . &gt; language java
+. . . . . . . . &gt; reads sql data
+. . . . . . . . &gt; external name
+. . . . . . . . &gt; 'sys_boot.sys_boot.rngplugin:net.sf.farrago.rng.FarragoRngUDR.rng_next_int';
+No rows affected (0.444 seconds)
+0: jdbc:farrago:&gt; select name,rng_next_int('rng1',7) as day_off
+. . . . . . . . &gt; from sales.emps;
++--------+----------+
+|  NAME  | DAY_OFF  |
++--------+----------+
+| Fred   | 1        |
+| Eric   | 6        |
+| Wilma  | 5        |
+| John   | 1        |
++--------+----------+
+4 rows selected (0.081 seconds)
+</code></pre>
+
+Note that we had to explicitly activate the session personality via
+<code>ALTER SESSION IMPLEMENTATION SET JAR</code>.  Normally, either a
+system-level extension would include a session manager implementation
+which does this automatically, or the correct default personality
+would be associated with each user profile (this association is not
+yet implemented).
+
+<hr>
+
+<h2>Example Continued:  Extending the Query Parser</h2>
+
+The UDF above did the job, but it has a few drawbacks:
+
+<ul>
+
+<li>the syntax is cumbersome: the RNG name had to be quoted as a
+string literal, and if we wanted an unbounded number to be generated,
+we would have to pass a special value (-1 in this case) to indicate it
+
+<li>the dependency between the query and the RNG is not recorded; this
+means that if the UDF is used in a view definition, and the RNG is
+later dropped, the system won't know that it is supposed to CASCADE
+the drop to the view
+
+<li>performance suffers because the UDF has to look up the RNG in the
+catalog every time it is invoked (four times in the example query
+above because it returns four rows)
+
+</ul>
+
+We can do better, but it involves digging into the Farrago query
+processing system.  So if you've already had enough low-level
+internals for your taste, you can stop reading now.  Otherwise, let's
+take a look at the parser change for our custom query syntax:
+
+<pre><code>
+SqlNode ExtendedBuiltinFunctionCall() :
+{
+    SqlIdentifier id;
+    long longCeiling;
+    int ceiling = -1;
+    RngRandomNumberGenerator rng;
+}
+{
+    &lt;NEXT_RANDOM_INT&gt;
+         &lt;LPAREN&gt;
+         (
+             &lt;CEILING&gt; longCeiling = UnsignedValue()
+             {
+                 ceiling = (int) longCeiling;
+             }
+             | &lt;UNBOUNDED&gt;
+         )
+         &lt;FROM&gt;
+         id = CompoundIdentifier3()
+         &lt;RPAREN&gt;
+        {
+            rng = (RngRandomNumberGenerator)
+            farragoParser.getStmtValidator().findSchemaObject(
+                id,
+                getRngModelPackage().getRngschema().
+                getRngRandomNumberGenerator());
+            return
+            FarragoRngOperatorTable.rngInstance().nextRandomInt.createCall(
+                new SqlNode [] {
+                    SqlLiteral.createExactNumeric(
+                        Integer.toString(ceiling),
+                        getPos()),
+                    SqlLiteral.createCharString(
+                        FarragoCatalogUtil.getQualifiedName(rng).toString(),
+                        getPos()),
+                    SqlLiteral.createCharString(
+                        FarragoProperties.instance().expandProperties(
+                            rng.getSerializedFile()),
+                        getPos())
+                }, 
+                getPos());
+        }
+}
+</code></pre>
+
+<code>ExtendedBuiltinFunctionCall</code> is another parser extension
+point.  Our custom production and accompanying Java code constructs
+a SqlNode instance representing the <code>NEXT_RANDOM_INT</code> call.
+
+<p>
+
+But what is that reference to <code>FarragoRngOperatorTable</code>?  Our
+plugin defines an extension to the standard table of SQL operators
+provided by Farrago.  For each custom expression such as
+<code>NEXT_RANDOM_INT</code>, we define a corresponding operator
+(<code>FarragoRngNextRandomIntOperator</code> in this case) with
+custom behavior for validating instances of the expression (and other
+details, such as how to unparse expression instances back into SQL
+text).  The validation code also calls back into Farrago to record the
+dependency of the query on the RNG.
+
+<p>
+
+Besides validation, we also need to tell Farrago how to generate
+executable code to implement the expression as part of a query plan.
+This logic is encapsulated in <code>FarragoRngImplementorTable</code>,
+which generates Java code for a call to an optimized version of the
+UDF defined previously.  This optimized version
+(<code>rng_next_int_internal</code>) takes the persistence file
+location as a parameter so that it can skip the catalog lookup (which
+instead is done only once during query validation).
+
+<p>
+
+Finally, <code>FarragoRngPluginFactory</code> takes care of making
+sure that our custom validation and code generation behavior gets
+supplied to Farrago by implementing the correct session personality
+interfaces.  Putting it all together:
+
+<pre><code>
+0: jdbc:farrago:&gt; set schema 'rngtest';
+No rows affected (0.018 seconds)
+0: jdbc:farrago:&gt;
+0: jdbc:farrago:&gt; create view emp_days_off as
+. . . . . . . . &gt; select name,next_random_int(ceiling 7 from rng1) as day_off
+. . . . . . . . &gt; from sales.emps;
+No rows affected (1.28 seconds)
+0: jdbc:farrago:&gt;
+0: jdbc:farrago:&gt; select * from emp_days_off;
++--------+----------+
+|  NAME  | DAY_OFF  |
++--------+----------+
+| Fred   | 0        |
+| Eric   | 6        |
+| Wilma  | 3        |
+| John   | 2        |
++--------+----------+
+4 rows selected (3.976 seconds)
+0: jdbc:farrago:&gt;
+0: jdbc:farrago:&gt; drop rng rng1 restrict;
+Error: Dropping random number generator "RNGTEST"."RNG1" requires CASCADE because other objects still reference it (state=,code=0)
+0: jdbc:farrago:&gt;
+0: jdbc:farrago:&gt; drop view emp_days_off;
+No rows affected (0.277 seconds)
+0: jdbc:farrago:&gt;
+0: jdbc:farrago:&gt; drop rng rng1 restrict;
+No rows affected (0.052 seconds)
+</code></pre>
+
+Note that the first drop attempt failed due to the dependency of
+<code>EMP_DAYS_OFF</code> on <code>RNG1</code>.  The custom drop logic
+in <code>FarragoRngDdlHandler</code> does not do anything special to
+enforce the RESTRICT option; instead, the uncustomized DDL validator
+knows how to enforce that automatically because dependencies are a
+generic part of the catalog model, and our model extension is now part
+of the catalog model.  Likewise, the statement <code>DROP SCHEMA
+RNGTEST CASCADE</code> will know that it is supposed to drop the
+contained object <code>RNG1</code>, automatically invoking its custom
+RNG drop logic as well.
+
+<hr>
+
+<h2>Example Completed:  Extending Metadata Views</h2>
+
+Earlier, this document claimed that model-driven architecture meant
+that extension models propagate through the system automatically.
+We've already seen one example with DROP RESTRICT.  Now let's see what
+it means in the context of metadata views.  When the model was
+extended during plugin installation, internal system views were
+auto-created for each UML class in the extension model (contained by
+corresponding internal schemas for each UML package in the extension
+model).  To expose these, all that's necessary is to create a virtual
+SQL/MED catalog:
+
+<pre><code>
+0: jdbc:farrago:&gt; create server sys_rng
+. . . . . . . . &gt; foreign data wrapper sys_mdr
+. . . . . . . . &gt; options(root_package_name 'RNGModel');
+No rows affected (0.114 seconds)
+0: jdbc:farrago:&gt;
+0: jdbc:farrago:&gt; select * from sys_rng."RNGSchema"."RandomNumberGenerator";
++-------+-------------+---------------------+-----------------------------------+--------------+---------------------+------------------------+
+| name  | visibility  |      namespace      |          serializedFile           | initialSeed  |        mofId        |      mofClassName      |
++-------+-------------+---------------------+-----------------------------------+--------------+---------------------+------------------------+
+| RNG1  | vk_public   | j:0000000000001DE1  | ${FARRAGO_HOME}/testgen/rng1.dat  | 999          | j:0000000000001DE6  | RandomNumberGenerator  |
++-------+-------------+---------------------+-----------------------------------+--------------+---------------------+------------------------+
+1 row selected (0.802 seconds)
+</code></pre>
+
+To get a view with information more meaningful to an end-user, we
+can join to one of the internal views used to define standard JDBC metadata:
+
+<pre><code>
+0: jdbc:farrago:&gt; create view rng_list as
+. . . . . . . . &gt;     select
+. . . . . . . . &gt;         s.object_catalog as rng_catalog,
+. . . . . . . . &gt;         s.object_schema as rng_schema,
+. . . . . . . . &gt;         r."name" as rng_name,
+. . . . . . . . &gt;         r."serializedFile" as serialized_file,
+. . . . . . . . &gt;         r."initialSeed" as initial_seed
+. . . . . . . . &gt;     from
+. . . . . . . . &gt;         sys_boot.jdbc_metadata.schemas_view_internal s
+. . . . . . . . &gt;     inner join
+. . . . . . . . &gt;         sys_rng."RNGSchema"."RandomNumberGenerator" r
+. . . . . . . . &gt;     on
+. . . . . . . . &gt;         s."mofId" = r."namespace"
+. . . . . . . . &gt; ;
+No rows affected (0.504 seconds)
+0: jdbc:farrago:&gt;
+0: jdbc:farrago:&gt; select * from rng_list;
++--------------+-------------+-----------+-----------------------------------+---------------+
+| RNG_CATALOG  | RNG_SCHEMA  | RNG_NAME  |          SERIALIZED_FILE          | INITIAL_SEED  |
++--------------+-------------+-----------+-----------------------------------+---------------+
+| LOCALDB      | RNGTEST     | RNG1      | ${FARRAGO_HOME}/testgen/rng1.dat  | 999           |
++--------------+-------------+-----------+-----------------------------------+---------------+
+1 row selected (3.363 seconds)
+</code></pre>
+
+A real system-level extension can include a script for adding such
+cleaned views to the catalog as part of plugin installation (not yet
+implemented: SQL/J jar deployment descriptors).
+
+<hr>
+
+<h2>Conclusion</h2>
+
+If you've made it this far, you should now have a good notion of what's
+possible with Farrago's system-level extensibility; perhaps you even
+have an idea for developing your own extension.  If so, we'd love to
+hear from you at the <a
+href="http://sourceforge.net/mail/?group_id=80183">farrago-developers
+mailing list</a>.
+
+<hr>
+
+<b>
+  <table border="1" width="100%" class="clsStd">
+    <tr>
+      <td>End <i>$Id$</i></td>
+    </tr>
+  </table>
+  <p>&nbsp;</p>
+</b>
+
+</body>
+
+</html>
+

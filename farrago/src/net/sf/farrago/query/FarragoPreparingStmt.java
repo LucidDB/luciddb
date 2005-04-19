@@ -860,7 +860,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         return stmtValidator.getAllSchemaObjectNames(names);
     }
 
-    void addDependency(Object supplier)
+    public void addDependency(Object supplier)
     {
         if (!isExpandingDefinition()) {
             directDependencies.add(supplier);

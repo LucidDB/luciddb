@@ -104,6 +104,9 @@ select * from random_personality_view;
 
 select * from random_udf_view;
 
+-- should fail:  dependency
+drop rng rng2 restrict;
+
 
 -- now, disable plugin personality for this session
 alter session implementation set default;

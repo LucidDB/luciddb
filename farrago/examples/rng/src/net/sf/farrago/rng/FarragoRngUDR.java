@@ -135,8 +135,7 @@ public abstract class FarragoRngUDR
         }
     }
     
-    // TODO:  share with parser
-    private static RngmodelPackage getRngModelPackage(FarragoRepos repos)
+    public static RngmodelPackage getRngModelPackage(FarragoRepos repos)
     {
         return (RngmodelPackage)
             repos.getFarragoPackage().refPackage("RNGModel");

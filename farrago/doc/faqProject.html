@@ -26,13 +26,15 @@ can already meet the needs of many users.  Instead, Farrago provides a
 generic framework which can be specialized for a variety of DBMS
 domains such as federated query processing, data warehousing,
 multimedia, or replication.  While it is possible to adapt a project
-like PostgreSQL for novel uses, this requires permanently forking the
-codebase, because the architecture wasn't designed for it.  By
-contrast, Farrago has been designed to accept plugins for just about
-any part of the system, so the specialization process involves adding
-new components and behavior instead of replacing existing components
-with incompatible versions.  The Farrago project model is very similar
-to <a href="http://www.eclipse.org">Eclipse</a> in this respect.
+like PostgreSQL for novel uses, significant customization requires
+permanently forking the codebase, because the architecture wasn't
+designed for extensibility beyond the type system.  By contrast,
+Farrago has been designed for <a
+href="extensibility.html">system-level extensibility via plugins</a>,
+so the specialization process involves adding new components and
+behavior instead of replacing existing components with incompatible
+versions.  The Farrago project model is very similar to <a
+href="http://www.eclipse.org">Eclipse</a> in this respect.
 
 <hr>
 
@@ -123,14 +125,14 @@ with systems implemented entirely in C/C++?</h2>
 
 Careful attention has been paid to keep Java out of the most important
 data processing paths.  Where Java is used (metadata management,
-parsing, validation, and optimization, plus a targeted role in
+parsing, validation, and optimization, plus a limited role in
 executing generated code), its performance is acceptable.
 
 <hr>
 
 <h2>What version of the SQL standard does Farrago implement?</h2>
 
-We are developing towards SQL99, with some extensions from SQL2003.
+We are developing towards SQL:2003.
 
 <hr>
 
