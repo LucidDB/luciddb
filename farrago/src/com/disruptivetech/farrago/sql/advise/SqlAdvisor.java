@@ -27,6 +27,7 @@ import org.eigenbase.sql.validate.SqlValidatorImpl;
 import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.util.EigenbaseException;
 
 /**
  * An assistant which offers hints and corrections to a partially-formed SQL
@@ -141,6 +142,27 @@ public class SqlAdvisor
             return false;
         }
         return true;
+    }
+
+    /**
+     * attempt to parse and validate a SQL statement.  Throws the first
+     * exception encountered.  The error message of this exception is to be
+     * displayed on the UI
+     */
+    public void validate(String sql) throws Exception
+    {
+        SqlParser parser = new SqlParser(sql);
+        SqlNode sqlNode = null;
+        try {
+            sqlNode = parser.parseQuery();
+        } catch (SqlParseException e) {
+            throw e;
+        }
+        try {
+            validator.validate(sqlNode);
+        } catch (Exception e) {
+            throw e;
+        }
     }
 
     /**
