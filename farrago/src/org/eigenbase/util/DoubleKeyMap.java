@@ -101,7 +101,7 @@ public class DoubleKeyMap
      * Convenience method to define a set of key pairs at once. All pairs will
      * be created with the same value. For Example
      * <blockquote><pre><code>
-     * Object[] 408SantaClaraCountryCities = new Object[]{"San Jose", "Sunnyvale",...};
+     * Object[] 408SantaClaraCountyCities = new Object[]{"San Jose", "Sunnyvale",...};
      * DoubleKeyMap areaCodeMap = new DoubleKeyMap();
      * areaCodeMap.put(408SantaClaraCountyCitites, "CA", "408");
      * </code></pre></blockquote>
