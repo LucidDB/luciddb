@@ -643,8 +643,9 @@ public class FarragoDatabase extends FarragoCompoundAllocation
         FarragoAllocationOwner owner,
         FarragoSessionAnalyzedSql analyzedSql)
     {
-        final FarragoPreparingStmt stmt =
-            new FarragoPreparingStmt(stmtValidator);
+        final FarragoSessionPreparingStmt stmt =
+            stmtValidator.getSession().getPersonality().newPreparingStmt(
+                stmtValidator);
         return prepareStmtImpl(stmt, sqlNode, owner, analyzedSql);
     }
 
@@ -678,7 +679,7 @@ public class FarragoDatabase extends FarragoCompoundAllocation
     }
 
     private FarragoSessionExecutableStmt prepareStmtImpl(
-        final FarragoPreparingStmt stmt,
+        final FarragoSessionPreparingStmt stmt,
         SqlNode sqlNode,
         FarragoAllocationOwner owner,
         FarragoSessionAnalyzedSql analyzedSql)
