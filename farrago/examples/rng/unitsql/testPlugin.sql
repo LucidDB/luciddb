@@ -23,9 +23,6 @@ create rng rng2 external '${FARRAGO_HOME}/testgen/rng2.dat' seed 999;
 
 create rng rng3 external '${FARRAGO_HOME}/testgen/rng3.dat' seed 777;
 
--- should fail
-create rng rng_badpath external '/doodoo/blob.dat' seed 999;
-
 create function rng_next_int(
     rng_name varchar(512),
     n int)
