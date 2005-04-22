@@ -35,6 +35,20 @@ if [ ! -e dist/FarragoRelease.properties ]; then
     exit -1
 fi
 
+# Detect platform
+cygwin=false
+case "`uname`" in
+  CYGWIN*) cygwin=true ;;
+esac
+
+if [ $cygwin = "true" ]; then
+    SO_3P_PATTERN="lib*.dll*"
+    SO_PATTERN="cyg*.dll*"
+else
+    SO_3P_PATTERN="lib*.so*"
+    SO_PATTERN=$SO_3P_PATTERN
+fi
+
 if [ -z "$1" ]; then
     ./initBuild.sh --with-fennel
 elif [ "$1" == "--skip-init-build" ]; then
@@ -98,23 +112,23 @@ cp sqlline/LICENSE $LIB_DIR/sqlline.license
 cp jline.jar $LIB_DIR
 cp hsqldb/doc/hypersonic_lic.txt $LIB_DIR/hsqldb.license.txt
 cp hsqldb/lib/hsqldb.jar $LIB_DIR
-cp -d stlport/lib/lib*.so* $LIB_DIR/fennel
+cp -d stlport/lib/$SO_3P_PATTERN $LIB_DIR/fennel
 cp stlport/README $LIB_DIR/fennel/stlport.README.txt
-cp -d boost/lib/lib*.so* $LIB_DIR/fennel
+cp -d boost/lib/$SO_3P_PATTERN $LIB_DIR/fennel
 cp boost/LICENSE_1_0.txt $LIB_DIR/fennel/boost.license.txt
 
 # TODO jvs 12-Mar-2005
-# cp -d icu/lib/lib*.so* $LIB_DIR/fennel
+# cp -d icu/lib/$SO_3P_PATTERN $LIB_DIR/fennel
 # cp icu/license.html $LIB_DIR/fennel/icu.license.html
 
 # copy fennel libs
 cd $FENNEL_DIR
-cp -d libfennel/.libs/lib*.so* $LIB_DIR/fennel
-cp -d farrago/.libs/lib*.so* $LIB_DIR/fennel
-cp -d disruptivetech/libfennel_dt/.libs/lib*.so* $LIB_DIR/fennel
-cp -d disruptivetech/farrago/.libs/lib*.so* $LIB_DIR/fennel
-cp -d redsquare/libfennel_rs/.libs/lib*.so* $LIB_DIR/fennel
-cp -d redsquare/farrago/.libs/lib*.so* $LIB_DIR/fennel
+cp -d libfennel/.libs/$SO_PATTERN $LIB_DIR/fennel
+cp -d farrago/.libs/$SO_PATTERN $LIB_DIR/fennel
+cp -d disruptivetech/libfennel_dt/.libs/$SO_PATTERN $LIB_DIR/fennel
+cp -d disruptivetech/farrago/.libs/$SO_PATTERN $LIB_DIR/fennel
+cp -d redsquare/libfennel_rs/.libs/$SO_PATTERN $LIB_DIR/fennel
+cp -d redsquare/farrago/.libs/$SO_PATTERN $LIB_DIR/fennel
 
 # copy fennel resources
 cp common/*.properties $CATALOG_DIR/fennel
@@ -139,8 +153,12 @@ cp catalog/ReposStorage.properties $CATALOG_DIR
 cp catalog/*.dat $CATALOG_DIR
 cp dist/bin/* $BIN_DIR
 
-# tar the whole thing up
+# archive the whole thing up
 cd $TMP_DIR
-tar cv * | bzip2 -c >../farrago.tar.bz2
+if [ $cygwin = "true" ]; then
+    zip -r -y ../farrago.zip '*'
+else
+    tar cv * | bzip2 -c >../farrago.tar.bz2
+fi
 
 rm -rf $TMP_DIR
