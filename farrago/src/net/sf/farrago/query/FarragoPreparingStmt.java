@@ -619,9 +619,14 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     public JavaRelImplementor getRelImplementor(RexBuilder rexBuilder)
     {
         if (relImplementor == null) {
-            relImplementor = new FarragoRelImplementor(this, rexBuilder);
+            relImplementor = newRelImplementor(rexBuilder);
         }
         return relImplementor;
+    }
+
+    protected FarragoRelImplementor newRelImplementor(RexBuilder rexBuilder)
+    {
+        return new FarragoRelImplementor(this, rexBuilder);
     }
 
     // implement FarragoSessionPreparingStmt
