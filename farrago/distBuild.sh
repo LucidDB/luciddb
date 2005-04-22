@@ -156,7 +156,7 @@ cp dist/bin/* $BIN_DIR
 # archive the whole thing up
 cd $TMP_DIR
 if [ $cygwin = "true" ]; then
-    zip -r -y ../farrago.zip '*'
+    zip -r -y ../farrago.zip .
 else
     tar cv * | bzip2 -c >../farrago.tar.bz2
 fi
