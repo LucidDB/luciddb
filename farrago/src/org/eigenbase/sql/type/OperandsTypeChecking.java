@@ -1226,6 +1226,14 @@ public abstract class OperandsTypeChecking
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
             SqlTypeName.datetimeNullableTypes
         });
+    /**
+     *  Parameter type checking for the datetime type but
+     * not nullable.
+     */
+    public static final OperandsTypeChecking typeDatetime =
+        new SimpleOperandsTypeChecking(new SqlTypeName[][]{
+            SqlTypeName.datetimeTypes
+        });
 
     /**
      * Parameter type-checking strategy
