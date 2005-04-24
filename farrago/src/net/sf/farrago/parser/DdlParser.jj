@@ -172,48 +172,18 @@ SqlNode ExtendedBuiltinFunctionCall() :
 }
 
 /*
-* Parse extended Built-in functions with specialized syntax
+* Parse Floor/Ceil function parameters
 */
 SqlNode FloorCeilOptions( SqlParserPos pos, boolean floorFlag) :
 {
-    SqlIdentifier name;
-    SqlParserPos overPos = null;
-    SqlIdentifier id = null;
-    SqlNode e = null;
-    SqlCall function = null;
-    List args;
-    boolean over = false;
+    SqlNode node;
 }
 {
-    args = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_SUBQUERY) 
-    [ <OVER> {
-            overPos = getPos();
-            over = true;
-        }
-        (
-            id = SimpleIdentifier()
-          | e = WindowSpecification()
-        )
-    ]
-
+    node = StandardFloorCeilOptions( pos, floorFlag)
     {
-        name = new SqlIdentifier(
-            (floorFlag) ? "FLOOR" : "CEIL", pos);
-        function =  createCall(
-             name, SqlParserUtil.toNodeArray(args), pos,
-             SqlFunctionCategory.UserDefinedFunction);
-        if (over) {
-           if (id != null) {
-                return opTab.overOperator.createCall(
-                        new SqlNode[] {function, id}, overPos);
-            } else {
-                return opTab.overOperator.createCall(
-                    new SqlNode[] { function, e },overPos);
-            }
-        } else {
-            return function;
-        }
+        return node;
     }
 }
+
 
 // End DdlParser.jj

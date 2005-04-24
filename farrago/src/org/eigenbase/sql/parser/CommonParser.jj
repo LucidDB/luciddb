@@ -1841,14 +1841,14 @@ SqlIntervalQualifier IntervalQualifier() :
 {
 ( 
     <YEAR> [ <LPAREN> startPrec = IntLiteral() <RPAREN> ]
-    [ LOOKAHEAD(2) <TO> <MONTH> { end = SqlIntervalQualifier.TimeUnit.Month; } ]
+    [ <TO> <MONTH> { end = SqlIntervalQualifier.TimeUnit.Month; } ]
     { start = SqlIntervalQualifier.TimeUnit.Year; }
 |
     <MONTH> [ <LPAREN> startPrec = IntLiteral() <RPAREN> ]
     { start = SqlIntervalQualifier.TimeUnit.Month; }
 |
     <DAY> [ <LPAREN> startPrec = IntLiteral() <RPAREN> ]
-    [ LOOKAHEAD(2) <TO>
+    [ <TO>
     (
       <HOUR> { end = SqlIntervalQualifier.TimeUnit.Hour; }
     | <MINUTE> { end = SqlIntervalQualifier.TimeUnit.Minute; }
@@ -1859,7 +1859,7 @@ SqlIntervalQualifier IntervalQualifier() :
     { start = SqlIntervalQualifier.TimeUnit.Day; }
 |
     <HOUR> [ <LPAREN> startPrec = IntLiteral() <RPAREN> ]
-    [ LOOKAHEAD(2) <TO>
+    [ <TO>
     (
       <MINUTE> { end = SqlIntervalQualifier.TimeUnit.Minute; }
     | <SECOND> { end = SqlIntervalQualifier.TimeUnit.Second; }
@@ -1869,7 +1869,7 @@ SqlIntervalQualifier IntervalQualifier() :
     { start = SqlIntervalQualifier.TimeUnit.Hour; }
 |
     <MINUTE> [ <LPAREN> startPrec = IntLiteral() <RPAREN> ]
-    [ LOOKAHEAD(2) <TO>
+    [ <TO>
     (
       <SECOND> { end = SqlIntervalQualifier.TimeUnit.Second; }
       [ <LPAREN> secondFracPrec = IntLiteral() <RPAREN> ]
@@ -2407,6 +2407,52 @@ SqlNode NamedFunctionCall() :
 
         }
     )
+}
+
+
+/*
+* Parse Floor/Ceil function parameters
+*/
+SqlNode StandardFloorCeilOptions( SqlParserPos pos, boolean floorFlag) :
+{
+    SqlIdentifier name;
+    SqlParserPos overPos = null;
+    SqlIdentifier id = null;
+    SqlNode e = null;
+    SqlCall function = null;
+    List args;
+    boolean over = false;
+}
+{
+    args = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_SUBQUERY) 
+    [ <OVER> {
+            overPos = getPos();
+            over = true;
+        }
+        (
+            id = SimpleIdentifier()
+          | e = WindowSpecification()
+        )
+    ]
+
+    {
+        name = new SqlIdentifier(
+            (floorFlag) ? "FLOOR" : "CEIL", pos);
+        function =  createCall(
+             name, SqlParserUtil.toNodeArray(args), pos,
+             SqlFunctionCategory.UserDefinedFunction);
+        if (over) {
+           if (id != null) {
+                return opTab.overOperator.createCall(
+                        new SqlNode[] {function, id}, overPos);
+            } else {
+                return opTab.overOperator.createCall(
+                    new SqlNode[] { function, e },overPos);
+            }
+        } else {
+            return function;
+        }
+    }
 }
 
 /**
