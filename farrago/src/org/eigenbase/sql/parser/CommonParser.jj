@@ -1470,7 +1470,7 @@ SqlNode Expression3(ExprContext exprContext) :
         if (rowSeen) {
             // interpret as row constructor
             return opTab.rowConstructor.createCall(
-                    SqlParserUtil.toNodeArray(list), pos);
+                SqlParserUtil.toNodeArray(list), pos);
 
         }
     }
@@ -1484,17 +1484,16 @@ SqlNode Expression3(ExprContext exprContext) :
                 }
                 list.addAll(list2);
                 return opTab.overlapsOperator.createCall(
-                                        SqlParserUtil.toNodeArray(list), getPos());
+                    SqlParserUtil.toNodeArray(list), getPos());
            }
        )
        |
        (    e = IntervalQualifier()
             {
-                if ( (list.size() != 1) ||
-                     !(list.get(0) instanceof SqlCall) ||
-                     !((SqlCall) list.get(0)).isA(SqlKind.Minus) ||
-                     (((SqlCall) list.get(0)).operands.length != 2)
-                ) {
+                if ((list.size() != 1) ||
+                    !(list.get(0) instanceof SqlCall) ||
+                    !((SqlCall) list.get(0)).isA(SqlKind.Minus) ||
+                    (((SqlCall) list.get(0)).operands.length != 2)) {
                     throw new ParseException(
                         EigenbaseResource.instance().getIllegalMinusDate(
                             getPos().toString()));
@@ -1504,7 +1503,7 @@ SqlNode Expression3(ExprContext exprContext) :
                     list2.add(e);
                 }
                 return opTab.minusDateOperator.createCall(
-                                        SqlParserUtil.toNodeArray(list2), getPos());
+                    SqlParserUtil.toNodeArray(list2), getPos());
             }
        )
     ]
@@ -1841,14 +1840,14 @@ SqlIntervalQualifier IntervalQualifier() :
 {
 ( 
     <YEAR> [ <LPAREN> startPrec = IntLiteral() <RPAREN> ]
-    [ <TO> <MONTH> { end = SqlIntervalQualifier.TimeUnit.Month; } ]
+    [ LOOKAHEAD(2) <TO> <MONTH> { end = SqlIntervalQualifier.TimeUnit.Month; } ]
     { start = SqlIntervalQualifier.TimeUnit.Year; }
 |
     <MONTH> [ <LPAREN> startPrec = IntLiteral() <RPAREN> ]
     { start = SqlIntervalQualifier.TimeUnit.Month; }
 |
     <DAY> [ <LPAREN> startPrec = IntLiteral() <RPAREN> ]
-    [ <TO>
+    [ LOOKAHEAD(2) <TO>
     (
       <HOUR> { end = SqlIntervalQualifier.TimeUnit.Hour; }
     | <MINUTE> { end = SqlIntervalQualifier.TimeUnit.Minute; }
@@ -1859,7 +1858,7 @@ SqlIntervalQualifier IntervalQualifier() :
     { start = SqlIntervalQualifier.TimeUnit.Day; }
 |
     <HOUR> [ <LPAREN> startPrec = IntLiteral() <RPAREN> ]
-    [ <TO>
+    [ LOOKAHEAD(2) <TO>
     (
       <MINUTE> { end = SqlIntervalQualifier.TimeUnit.Minute; }
     | <SECOND> { end = SqlIntervalQualifier.TimeUnit.Second; }
@@ -1869,7 +1868,7 @@ SqlIntervalQualifier IntervalQualifier() :
     { start = SqlIntervalQualifier.TimeUnit.Hour; }
 |
     <MINUTE> [ <LPAREN> startPrec = IntLiteral() <RPAREN> ]
-    [ <TO>
+    [ LOOKAHEAD(2) <TO>
     (
       <SECOND> { end = SqlIntervalQualifier.TimeUnit.Second; }
       [ <LPAREN> secondFracPrec = IntLiteral() <RPAREN> ]
@@ -1891,6 +1890,17 @@ SqlIntervalQualifier IntervalQualifier() :
                                         secondFracPrec,
                                         getPos());
     }
+}
+
+SqlIntervalQualifier.TimeUnit TimeUnit() :
+{}
+{
+    <YEAR> { return SqlIntervalQualifier.TimeUnit.Year; }
+|   <MONTH> { return SqlIntervalQualifier.TimeUnit.Month; }
+|   <DAY> { return SqlIntervalQualifier.TimeUnit.Day; }
+|   <HOUR> { return SqlIntervalQualifier.TimeUnit.Hour; }
+|   <MINUTE> { return SqlIntervalQualifier.TimeUnit.Minute; }
+|   <SECOND> { return SqlIntervalQualifier.TimeUnit.Second; }
 }
 
 /**
@@ -2151,14 +2161,7 @@ SqlNode BuiltinFunctionCall() :
     (   <EXTRACT>
     { SqlIntervalQualifier.TimeUnit unit; }
     <LPAREN>
-        (
-              <YEAR>  { unit = SqlIntervalQualifier.TimeUnit.Year; }
-            | <MONTH> { unit = SqlIntervalQualifier.TimeUnit.Month; }
-            | <DAY>   { unit = SqlIntervalQualifier.TimeUnit.Day; }
-            | <HOUR>  { unit = SqlIntervalQualifier.TimeUnit.Hour; }
-            | <MINUTE>{ unit = SqlIntervalQualifier.TimeUnit.Minute; }
-            | <SECOND>{ unit = SqlIntervalQualifier.TimeUnit.Second; }
-        )
+    unit = TimeUnit()
         { args = startList(new SqlIntervalQualifier(unit,0,null,0,getPos())); }
     <FROM>
     e = Expression(EXPR_ACCEPT_SUBQUERY) { args.add(e); }

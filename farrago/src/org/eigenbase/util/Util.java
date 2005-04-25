@@ -829,7 +829,8 @@ public class Util extends Toolbox
      *   * /
      * void foo(int x) {
      *     Util.pre(x != 0, "x != 0");
-     * }
+     * }</pre>
+     *
      * @param b Result of evaluating the pre-condition.
      * @param description Description of the pre-condition.
      */
@@ -837,6 +838,30 @@ public class Util extends Toolbox
     {
         if (!b) {
             throw newInternal("pre-condition failed: " + description);
+        }
+    }
+
+    /**
+     * Checks a post-condition.
+     *
+     * <p>For example,
+     *
+     * <pre>
+     * /**
+     *   * @ post return != 0
+     *   * /
+     * void foo(int x) {
+     *     int res = bar(x);
+     *     Util.post(res != 0, "return != 0");
+     * }</pre>
+     *
+     * @param b Result of evaluating the pre-condition.
+     * @param description Description of the pre-condition.
+     */
+    public static void post(boolean b, String description)
+    {
+        if (!b) {
+            throw newInternal("post-condition failed: " + description);
         }
     }
 
@@ -887,7 +912,7 @@ public class Util extends Toolbox
         }
     }
 
-    public static void restartIterator(Iterator iterator) 
+    public static void restartIterator(Iterator iterator)
     {
         if (iterator instanceof RestartableIterator) {
             ((RestartableIterator) iterator).restart();
