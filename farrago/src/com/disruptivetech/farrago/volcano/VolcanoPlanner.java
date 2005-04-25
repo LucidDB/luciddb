@@ -421,7 +421,7 @@ public class VolcanoPlanner implements RelOptPlanner
         if (tracer.isLoggable(Level.FINE)) {
             validate();
         }
-        
+
         return subset;
     }
 
@@ -937,7 +937,7 @@ public class VolcanoPlanner implements RelOptPlanner
         RelNode rel,
         RelOptCost targetCost)
     {
-loop: 
+loop:
         while (true) {
             // First, try to do the node itself.
             RelOptCost nodeCost = rel.computeSelfCost(this);
@@ -1006,6 +1006,12 @@ loop:
     {
         if (rel instanceof RelSubset) {
             return registerSubset(set, (RelSubset) rel);
+        }
+
+        if (rel.getCluster().planner != this) {
+            throw Util.newInternal("Relational expression " + rel +
+                " belongs to a different planner than is currently being" +
+                " used.");
         }
 
         // Now is a good time to ensure that the relational expression
@@ -1170,7 +1176,7 @@ loop:
         }
         listener = newListener;
     }
-    
+
     //~ Inner Classes ---------------------------------------------------------
 
     /**
