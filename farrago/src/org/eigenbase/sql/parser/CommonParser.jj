@@ -1406,7 +1406,7 @@ List Expression2(ExprContext exprContext) :
                     }
                 ]
             |
-                LOOKAHEAD(2) op = BinaryRowOperator()
+                LOOKAHEAD(3) op = BinaryRowOperator()
                 {
                     checkNonQueryExpression(exprContext);
                 }
@@ -2663,7 +2663,8 @@ SqlBinaryOperator BinaryRowOperator() :
 | <CONCAT> { return opTab.concatOperator; }
 | <AND> { return opTab.andOperator; }
 | <OR> { return opTab.orOperator; }
-| <IS> <DISTINCT> <FROM> { return opTab.isDistinctFromOperator; }
+| LOOKAHEAD(2) <IS> <DISTINCT> <FROM> { return opTab.isDistinctFromOperator; }
+| <IS> <NOT> <DISTINCT> <FROM> { return opTab.isNotDistinctFromOperator; }
 // <IN> is handled as a special case
 | <MEMBER> <OF> { return opTab.memberOfOperator; }
 | <SUBMULTISET> <OF> { return opTab.submultisetOfOperator; }

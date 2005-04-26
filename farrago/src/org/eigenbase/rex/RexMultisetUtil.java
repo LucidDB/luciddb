@@ -54,6 +54,7 @@ public class RexMultisetUtil
             multisetOperators.add(opTab.multisetUnionOperator);
             multisetOperators.add(opTab.isASetOperator);
             multisetOperators.add(opTab.memberOfOperator);
+            multisetOperators.add(opTab.submultisetOfOperator);
         }
 
 

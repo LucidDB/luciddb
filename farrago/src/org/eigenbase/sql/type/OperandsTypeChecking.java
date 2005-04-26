@@ -788,7 +788,7 @@ public abstract class OperandsTypeChecking
 
     /**
      * Parameter type-checking strategy where types must allow
-     * ordered comparisons.
+     * unordered comparisons.
      */
     public static final OperandsTypeChecking typeComparableUnordered =
         new ComparableOrderedTypeChecking(

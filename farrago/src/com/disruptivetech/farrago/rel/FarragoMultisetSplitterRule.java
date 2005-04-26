@@ -25,13 +25,17 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.SqlStateCodes;
+import org.eigenbase.sql.SqlOperator;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.Util;
 import org.eigenbase.reltype.RelDataType;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Collections;
 import java.math.BigDecimal;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 /**
  * FarragoMultisetSplitterRule works in three ways.
@@ -148,7 +152,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         for (int i = 0; i < calc.projectExprs.length; i++) {
             if (RexMultisetUtil.containsMultiset(calc.projectExprs[i], false)) {
                 assert(calc.projectExprs[i] instanceof RexCall ||
-                       calc.projectExprs[i] instanceof RexFieldAccess);
+                    calc.projectExprs[i] instanceof RexFieldAccess);
                 insertRels(call, calc, new Integer(i));
                 call.transformTo(calc);
                 return;
@@ -157,7 +161,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         if ((calc.conditionExpr != null)
             && RexMultisetUtil.containsMultiset(calc.conditionExpr, false)) {
             assert(calc.conditionExpr instanceof RexCall ||
-                   calc.conditionExpr instanceof RexFieldAccess );
+                calc.conditionExpr instanceof RexFieldAccess );
             insertRels(call, calc, null);
             call.transformTo(calc);
             return;
@@ -285,7 +289,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         } else if (RexMultisetUtil.opTab.isASetOperator == rexCall.op) {
             // (ms IS A SET) <=>
             // UNIQUE(UNNEST(ms)) <=>
-            // NOT EXITS ((select <ms element>, count(*) as c from UNNEST(ms) GROUP BY v) WHERE c > 1)
+            // NOT EXITS ((select <ms element>, count(*) as c from UNNEST(ms) GROUP BY <ms element>) WHERE c > 1)
             //
             // A call to
             // CalcRel=[...,$in_i IS A SET,...]
@@ -307,8 +311,8 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                 new AggregateRel(
                     cluster, uncollect, 1, new AggregateRel.Call[]{});
             RexNode c = cluster.rexBuilder.makeInputRef(
-                            cluster.typeFactory.createSqlType(
-                                SqlTypeName.Integer), 0);
+                cluster.typeFactory.createSqlType(
+                    SqlTypeName.Integer), 0);
             RelNode filterRel =
                 RelOptUtil.createExistsPlan(
                     cluster,
@@ -319,32 +323,9 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                         cluster.rexBuilder.makeExactLiteral(new BigDecimal(1)))},
                     null,
                     null);
-            // TODO wael 4/5/05: need to create proper count call def.
-            AggregateRel countAggregateRel =
-                new AggregateRel(
-                    cluster, filterRel, 1, new AggregateRel.Call[]{});
-            RexNode[] whenThenElse = new RexNode[] {
-                // when
-                cluster.rexBuilder.makeCall(RexMultisetUtil.opTab.equalsOperator
-                    ,cluster.rexBuilder.makeInputRef(
-                        cluster.typeFactory.createSqlType(
-                            SqlTypeName.Integer), 0)
-                    ,cluster.rexBuilder.makeExactLiteral(new BigDecimal(0)))
-                // then
-                ,cluster.rexBuilder.makeLiteral(true)
-                // else
-                ,cluster.rexBuilder.makeLiteral(false)};
-            RexNode caseRexNode =
-                cluster.rexBuilder.makeCall(RexMultisetUtil.opTab.caseOperator, whenThenElse);
-            ProjectRel caseRel =
-                new ProjectRel(
-                    cluster,
-                    countAggregateRel,
-                    new RexNode[]{caseRexNode},
-                    new String[]{"case"},
-                    ProjectRel.Flags.Boxed);
+            RelNode notExistRel = createExistsPlanSingleRow(filterRel, true);
             convertedRel =
-                new CorrelatorRel(cluster, input, caseRel, correlations);
+                new CorrelatorRel(cluster, input, notExistRel, correlations);
         } else if (RexMultisetUtil.opTab.elementFunc == rexCall.op) {
             // A call to
             // CalcRel=[...,ELEMENT($in_i),...]
@@ -499,33 +480,95 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                             cluster.rexBuilder.makeInputRef(elementType, 0))},
                         null,
                         null);
-                // TODO wael 4/5/05: need to create proper count call def.
-                AggregateRel countAggregateRel =
-                    new AggregateRel(
-                        cluster, filterRel, 1, new AggregateRel.Call[]{});
-                RexNode[] whenThenElse = new RexNode[] {
-                    // when
-                    cluster.rexBuilder.makeCall(RexMultisetUtil.opTab.greaterThanOperator
-                        ,cluster.rexBuilder.makeInputRef(
-                            cluster.typeFactory.createSqlType(
-                                SqlTypeName.Integer), 0)
-                        ,cluster.rexBuilder.makeExactLiteral(new BigDecimal(0)))
-                    // then
-                    ,cluster.rexBuilder.makeLiteral(true)
-                    // else
-                    ,cluster.rexBuilder.makeLiteral(false)};
-                RexNode caseRexNode =
-                    cluster.rexBuilder.makeCall(RexMultisetUtil.opTab.caseOperator, whenThenElse);
-                ProjectRel caseRel =
-                    new ProjectRel(
-                        cluster,
-                        countAggregateRel,
-                        new RexNode[]{caseRexNode},
-                        new String[]{"case"},
-                        ProjectRel.Flags.Boxed);
+                RelNode existsRel = createExistsPlanSingleRow(filterRel, false);
                 convertedRel =
-                    new CorrelatorRel(cluster, input, caseRel, correlations);
+                    new CorrelatorRel(cluster, input, existsRel, correlations);
             }
+        } else if (RexMultisetUtil.opTab.submultisetOfOperator == rexCall.op) {
+            // (ms1 SUBMULTISET OF ms2 ) <=>
+            // [ u1 := SELECT*FROM UNNEST(ms1) as u1 ]
+            // [ u2 := SELECT*FROM UNNEST(ms2) as u2 ]
+            // <==>
+            // NOT EXISTS(SELECT c1, c2 FROM
+            //    (SELECT *, COUNT(*) as c1 FROM u1 GROUP BY ms1.$0)
+            //    LEFT OUTER JOIN
+            //    (SELECT *, COUNT(*) as c2 FROM u2 GROUP BY ms2.$0)
+            //    ON (u1.* IS NOT DISTINCT FROM u2.*)
+            //    WHERE (c1>c2) OR (c2 IS NULL)
+            // )
+            //
+            // A call to
+            // CalcRel=[...,$in_i SUBMULTISET $in_j,...]
+            //   CalcInput
+            //is eq. to
+            // CalcRel=[...,$in_N,...]
+            //   CorrelRel=[$cor0=$in_i, $cor1=$in_j]
+            //     CalcInput
+            //     NotExistsRel
+            //       FilterRel=[c1>c2 OR c2 IS NULL]
+            //         JoinRel=[left outer join on $0.* IS NOT DISTINCT FROM $1.*]
+            //           AggregateRel[$0, count(*) as c1 group by $0]
+            //             Uncollect
+            //               ProjectRel=[output=$cor0]
+            //                 OneRowRel
+            //           AggregateRel[$0, count(*) as c2 group by $0]
+            //             Uncollect
+            //               ProjectRel=[output=$cor1]
+            //                 OneRowRel
+            final String dyn_inIdStr2 = cluster.query.createCorrel();
+            final int dyn_inId2 = cluster.query.getCorrelOrdinal(dyn_inIdStr2);
+            assert(rexCall.operands[1] instanceof RexInputRef);
+            final RexInputRef rexInput2 = (RexInputRef) rexCall.operands[1];
+            correlations.add(
+                new CorrelatorRel.Correlation(dyn_inId2,rexInput2.index));
+            final RexNode corRef2 =
+                cluster.rexBuilder.makeCorrel(rexInput2.getType(), dyn_inIdStr2);
+            ProjectRel projectRel2 = new ProjectRel(
+                cluster,
+                new OneRowRel(cluster),
+                new RexNode[]{corRef2},
+                new String[]{"output"+corRef2.toString()},
+                ProjectRel.Flags.Boxed);
+
+            final UncollectRel u1 =
+                new UncollectRel(cluster, corProjectRel);
+            final UncollectRel u2 =
+                new UncollectRel(cluster, projectRel2);
+            // TODO wael 4/26/05: need to create proper count & group by agg call def.
+            AggregateRel aggregateGroupRel1 =
+                new AggregateRel(
+                    cluster, u1, 1, new AggregateRel.Call[]{});
+            AggregateRel aggregateGroupRel2 =
+                new AggregateRel(
+                    cluster, u2, 1, new AggregateRel.Call[]{});
+            JoinRel joinRel =
+                new JoinRel(
+                    cluster,
+                    aggregateGroupRel1,
+                    aggregateGroupRel2,
+                    RelOptUtil.isDistinctFrom(
+                        cluster.rexBuilder,
+                        cluster.rexBuilder.makeRangeReference(u1.getRowType()), //todo get the right input ref from agg
+                        cluster.rexBuilder.makeRangeReference(u2.getRowType()), //todo get the right input ref from agg
+                        true),
+                    JoinRel.JoinType.LEFT,
+                    Collections.EMPTY_SET);
+            RexNode c = cluster.rexBuilder.makeInputRef(
+                cluster.typeFactory.createSqlType(
+                    SqlTypeName.Integer), 0);
+            RelNode filterRel =
+                RelOptUtil.createExistsPlan(
+                    cluster,
+                    joinRel,
+                    new RexNode[]{ cluster.rexBuilder.makeCall(
+                        RexMultisetUtil.opTab.greaterThanOperator,
+                        c,
+                        cluster.rexBuilder.makeExactLiteral(new BigDecimal(1)))},
+                    null,
+                    null);
+            RelNode notExistsRel = createExistsPlanSingleRow(filterRel, true);
+            convertedRel =
+                new CorrelatorRel(cluster, input, notExistsRel, correlations);
         }
 
         Util.permAssert(
@@ -533,8 +576,8 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             rexCall.op.name + " is not defined to be implementable");
 
         final RexNode newRexInputRef = cluster.rexBuilder.makeInputRef(
-                        rexNode.getType(),
-                        call.rels[1].getRowType().getFields().length+1);
+            rexNode.getType(),
+            call.rels[1].getRowType().getFields().length+1);
         if (rexNode instanceof RexFieldAccess) {
             ((RexFieldAccess) rexNode).expr = newRexInputRef;
         } else if (null == offset) {
@@ -655,4 +698,40 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             return relType == REL_TYPE_NOT_MULTISET;
         }
     }
+
+    public RelNode createExistsPlanSingleRow(RelNode child, boolean neg) {
+        RelOptCluster cluster = child.getCluster();
+        // TODO wael 4/5/05: need to create proper count call def.
+        AggregateRel countAggregateRel =
+            new AggregateRel(
+                cluster, child, 1, new AggregateRel.Call[]{});
+        SqlOperator op;
+        if (neg) {
+            op = RexMultisetUtil.opTab.equalsOperator;
+        } else {
+            op = RexMultisetUtil.opTab.greaterThanOperator;
+        }
+        RexNode[] whenThenElse = new RexNode[] {
+            // when
+            cluster.rexBuilder.makeCall(op
+                ,cluster.rexBuilder.makeInputRef(
+                    cluster.typeFactory.createSqlType(
+                        SqlTypeName.Integer), 0)
+                ,cluster.rexBuilder.makeExactLiteral(new BigDecimal(0)))
+            // then
+            ,cluster.rexBuilder.makeLiteral(true)
+            // else
+            ,cluster.rexBuilder.makeLiteral(false)};
+        RexNode caseRexNode =
+            cluster.rexBuilder.makeCall(RexMultisetUtil.opTab.caseOperator, whenThenElse);
+        ProjectRel caseRel =
+            new ProjectRel(
+                cluster,
+                countAggregateRel,
+                new RexNode[]{caseRexNode},
+                new String[]{"case"},
+                ProjectRel.Flags.Boxed);
+        return caseRel;
+    }
+
 }

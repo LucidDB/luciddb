@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/selectSimple.sql#5 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/selectSimple.sql#6 $
 0: jdbc:farrago:> -- Full vertical system testing of non advanced select statements
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -405,6 +405,37 @@ Was expecting one of:
 | false   |
 +---------+
 0: jdbc:farrago:> values x'0001'>=x'100000';
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values 'a' is distinct from 'a';
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> values 'a' is distinct from 'aa';
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values 'a' is distinct from 'b';
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values 1 is distinct from cast(null as integer);
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> values cast(null as integer) is distinct from cast(null as integer);
 +---------+
 | EXPR$0  |
 +---------+

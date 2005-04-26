@@ -540,6 +540,21 @@ public class SqlToRelConverterTest extends TestCase
             "              OneRowRel" + NL);
 
     }
+
+    public void testIsDistinctFrom() {
+        check("select 1 is distinct from 2 from (values(true))",
+            "ProjectRel(EXPR$0=[CASE(IS NULL(1), IS NOT NULL(2), IS NULL(2), IS NOT NULL(1), <>(1, 2))])" + NL +
+            "  ProjectRel(EXPR$0=[$0])" + NL +
+            "    ProjectRel(EXPR$0=[true])" + NL +
+            "      OneRowRel" + NL);
+
+        check("select 1 is not distinct from 2 from (values(true))",
+            "ProjectRel(EXPR$0=[CASE(IS NULL(1), IS NULL(2), IS NULL(2), IS NULL(1), =(1, 2))])" + NL +
+            "  ProjectRel(EXPR$0=[$0])" + NL +
+            "    ProjectRel(EXPR$0=[true])" + NL +
+            "      OneRowRel" + NL);
+    }
+
 }
 
 // End ConverterTest.java

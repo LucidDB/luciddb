@@ -381,6 +381,9 @@ public class SqlParserTest extends TestCase
 
     public void testIsDistinctFrom()
     {
+        check("select x is distinct from y from t",
+            "SELECT (`X` IS DISTINCT FROM `Y`)" + NL + "FROM `T`");
+
         check("select * from t where x is distinct from y",
             "SELECT *" + NL + "FROM `T`" + NL
             + "WHERE (`X` IS DISTINCT FROM `Y`)");
@@ -396,6 +399,15 @@ public class SqlParserTest extends TestCase
         check("select * from t where true is distinct from true is true",
             "SELECT *" + NL + "FROM `T`" + NL
             + "WHERE ((TRUE IS DISTINCT FROM TRUE) IS TRUE)");
+    }
+
+    public void testIsNotDistinct() {
+        check("select x is not distinct from y from t",
+            "SELECT (`X` IS NOT DISTINCT FROM `Y`)" + NL + "FROM `T`");
+
+        check("select * from t where true is not distinct from true",
+            "SELECT *" + NL + "FROM `T`" + NL
+            + "WHERE (TRUE IS NOT DISTINCT FROM TRUE)");
     }
 
     public void testCast()
