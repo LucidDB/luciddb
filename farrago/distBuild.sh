@@ -121,6 +121,10 @@ cp boost/LICENSE_1_0.txt $LIB_DIR/fennel/boost.license.txt
 # cp -d icu/lib/$SO_3P_PATTERN $LIB_DIR/fennel
 # cp icu/license.html $LIB_DIR/fennel/icu.license.html
 
+if [ $cygwin = "true" ]; then
+    cp /usr/bin/mingwm10.dll $LIB_DIR/fennel
+fi
+
 # copy fennel libs
 cd $FENNEL_DIR
 cp -d libfennel/.libs/$SO_PATTERN $LIB_DIR/fennel

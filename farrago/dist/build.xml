@@ -53,8 +53,6 @@
       </fileset>
       <fileset dir="${farrago.classes.dir}">
         <include name="**/*.class"/>
-      </fileset>
-      <fileset dir="${farrago.src.dir}">
         <include name="**/*.properties"/>
       </fileset>
       <fileset dir="${farrago.catalog.src.dir}">
