@@ -414,9 +414,16 @@ SqlNode SqlExplain() :
     SqlNode stmt;
     boolean withImplementation = true;
     SqlParserPos pos;
+    boolean asXml;
 }
 {
-    <EXPLAIN> <PLAN> [ withImplementation = WithImplementation() ] <FOR> (
+    <EXPLAIN> <PLAN> [ withImplementation = WithImplementation() ]
+    (
+        <AS> <XML> { asXml = true; }
+    |
+        { asXml = false; }
+    ) 
+    <FOR> (
         stmt = OrderedQueryOrExpr(EXPR_ACCEPT_QUERY)
         {
         }
@@ -435,7 +442,9 @@ SqlNode SqlExplain() :
             return new SqlExplain(
                 opTab.explainOperator,
                 stmt,
-                SqlLiteral.createBoolean(withImplementation, null), pos);
+                SqlLiteral.createBoolean(withImplementation, null),
+                SqlLiteral.createBoolean(asXml, null),
+                pos);
         }
 }
 
@@ -3221,6 +3230,7 @@ TOKEN :
 | < WORK: "WORK" >
 | < WRAPPER: "WRAPPER" >
 | < WRITE: "WRITE" >
+| < XML: "XML" >
 | < YEAR: "YEAR" >
 | < ZONE: "ZONE" >
 }
@@ -3467,6 +3477,7 @@ String CommonNonReservedKeyWord() :
         | <WRAPPER>
         | <WORK>
         | <WRITE>
+        | <XML>
         | <ZONE>
     )
         {

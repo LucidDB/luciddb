@@ -555,6 +555,41 @@ public class SqlToRelConverterTest extends TestCase
             "      OneRowRel" + NL);
     }
 
+    public void testExplainAsXml() {
+        String sql = "select 1 + 2, 3 from (values (true))";
+        final RelNode rel = tester.convertSqlToRel(sql);
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        RelOptXmlPlanWriter planWriter = new RelOptXmlPlanWriter(pw);
+        rel.explain(planWriter);
+        pw.flush();
+        TestUtil.assertEqualsVerbose(
+            "<RelNode type=\"ProjectRel\" id=\"3\">" + NL +
+            "\t<Property name=\"EXPR$0\">" + NL +
+            "\t\t+(1, 2)\t</Property>" + NL +
+            "\t<Property name=\"EXPR$1\">" + NL +
+            "\t\t3\t</Property>" + NL +
+            "\t<Inputs>" + NL +
+            "\t\t<RelNode type=\"ProjectRel\" id=\"2\">" + NL +
+            "\t\t\t<Property name=\"EXPR$0\">" + NL +
+            "\t\t\t\t$0\t\t\t</Property>" + NL +
+            "\t\t\t<Inputs>" + NL +
+            "\t\t\t\t<RelNode type=\"ProjectRel\" id=\"1\">" + NL +
+            "\t\t\t\t\t<Property name=\"EXPR$0\">" + NL +
+            "\t\t\t\t\t\ttrue\t\t\t\t\t</Property>" + NL +
+            "\t\t\t\t\t<Inputs>" + NL +
+            "\t\t\t\t\t\t<RelNode type=\"OneRowRel\" id=\"0\">" + NL +
+            "\t\t\t\t\t\t\t<Inputs/>" + NL +
+            "\t\t\t\t\t\t</RelNode>" + NL +
+            "\t\t\t\t\t</Inputs>" + NL +
+            "\t\t\t\t</RelNode>" + NL +
+            "\t\t\t</Inputs>" + NL +
+            "\t\t</RelNode>" + NL +
+            "\t</Inputs>" + NL +
+            "</RelNode>" + NL,
+            sw.toString());
+    }
+
 }
 
 // End ConverterTest.java

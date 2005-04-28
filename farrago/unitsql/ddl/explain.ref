@@ -1,0 +1,34 @@
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udt.sql#12 $
+0: jdbc:farrago:> -- Test EXPLAIN command.
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set schema 'sales';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- Explain in XML format.
+0: jdbc:farrago:> explain plan as xml for select 1 from emps;
++------------------------------------------------------------------+
+|                             column0                              |
++------------------------------------------------------------------+
+| <RelNode type="IterCalcRel" id="120">                            |
+| 	<Property name="EXPR$0">                                        |
+| 		1	</Property>                                                  |
+| 	<Inputs>                                                        |
+| 		<RelNode type="FennelToIteratorConverter" id="144">            |
+| 			<Inputs>                                                      |
+| 				<RelNode type="FtrsIndexScanRel" id="99">                    |
+| 					<Property name="table">                                     |
+| 						[LOCALDB, SALES, EMPS]					</Property>                     |
+| 					<Property name="projection">                                |
+| 						*					</Property>                                          |
+| 					<Property name="index">                                     |
+| 						SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY					</Property>  |
+| 					<Property name="preserveOrder">                             |
+| 						false					</Property>                                      |
+| 					<Inputs/>                                                   |
+| 				</RelNode>                                                   |
+| 			</Inputs>                                                     |
+| 		</RelNode>                                                     |
+| 	</Inputs>                                                       |
+| </RelNode>                                                       |
++------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

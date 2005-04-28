@@ -24,7 +24,6 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.util.Util;
 
 
 /**
@@ -38,7 +37,8 @@ public class SqlExplain extends SqlCall
     // constants representing operand positions
     public static final int EXPLICANDUM_OPERAND = 0;
     public static final int WITH_IMPLEMENTATION_OPERAND = 1;
-    public static final int OPERAND_COUNT = 2;
+    private static final int AS_XML_OPERAND = 2;
+    public static final int OPERAND_COUNT = 3;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -46,11 +46,13 @@ public class SqlExplain extends SqlCall
         SqlSpecialOperator operator,
         SqlNode explicandum,
         SqlLiteral withImplementation,
+        SqlLiteral asXml,
         SqlParserPos pos)
     {
         super(operator, new SqlNode[OPERAND_COUNT], pos);
         operands[EXPLICANDUM_OPERAND] = explicandum;
         operands[WITH_IMPLEMENTATION_OPERAND] = withImplementation;
+        operands[AS_XML_OPERAND] = asXml;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -77,6 +79,14 @@ public class SqlExplain extends SqlCall
         return SqlLiteral.booleanValue(operands[WITH_IMPLEMENTATION_OPERAND]);
     }
 
+    /**
+     * Returns whether result is to be in XML format.
+     */
+    public boolean isXml()
+    {
+        return SqlLiteral.booleanValue(operands[AS_XML_OPERAND]);
+    }
+
     // implement SqlNode
     public void unparse(
         SqlWriter writer,
@@ -87,10 +97,14 @@ public class SqlExplain extends SqlCall
         if (!withImplementation()) {
             writer.print("WITHOUT IMPLEMENTATION ");
         }
+        if (isXml()) {
+            writer.print("AS XML ");
+        }
         writer.print("FOR");
         writer.println();
         getExplicandum().unparse(writer, operator.leftPrec, operator.rightPrec);
     }
+
 }
 
 

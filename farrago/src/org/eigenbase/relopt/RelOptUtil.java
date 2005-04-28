@@ -582,14 +582,28 @@ public abstract class RelOptUtil
         planner.addRule(MergeProjectOntoCalcRule.instance);
     }
 
-    public static String dumpPlan(String header, RelNode rel)
+    /**
+     * Dumps a plan as a string.
+     *
+     * @param header Header to print before the plan. Ignored if the format
+     *               is XML.
+     * @param rel    Relational expression to explain.
+     * @param asXml Whether to format as XML.
+     * @return Plan
+     */
+    public static String dumpPlan(String header, RelNode rel, boolean asXml)
     {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         if (!header.equals("")) {
             pw.println(header);
         }
-        RelOptPlanWriter planWriter = new RelOptPlanWriter(pw);
+        RelOptPlanWriter planWriter;
+        if (asXml) {
+            planWriter = new RelOptXmlPlanWriter(pw);
+        } else {
+            planWriter = new RelOptPlanWriter(pw);
+        }
         planWriter.withIdPrefix = false;
         rel.explain(planWriter);
         pw.flush();

@@ -220,6 +220,7 @@ public abstract class OJPreparingStmt
         ClassDeclaration decl = init(arguments);
 
         boolean explain = false;
+        boolean explainAsXml = false;
         boolean explainWithImplementation = false;
         if (sqlQuery.isA(SqlKind.Explain)) {
             explain = true;
@@ -228,6 +229,7 @@ public abstract class OJPreparingStmt
             SqlExplain sqlExplain = (SqlExplain) sqlQuery;
             sqlQuery = sqlExplain.getExplicandum();
             explainWithImplementation = sqlExplain.withImplementation();
+            explainAsXml = sqlExplain.isXml();
         }
 
         SqlToRelConverter sqlToRelConverter =
@@ -240,12 +242,12 @@ public abstract class OJPreparingStmt
         }
 
         if (explain && !explainWithImplementation) {
-            return new PreparedExplanation(rootRel);
+            return new PreparedExplanation(rootRel, explainAsXml);
         }
 
         rootRel = optimize(rootRel);
         if (explain) {
-            return new PreparedExplanation(rootRel);
+            return new PreparedExplanation(rootRel, explainAsXml);
         }
         return implement(
             rootRel,
