@@ -91,7 +91,7 @@ public class RelOptXmlPlanWriter extends RelOptPlanWriter
         String relType = rel.getRelTypeName() + qualifier;
         xmlOutput.beginBeginTag("RelNode");
         xmlOutput.attribute("type", relType);
-        xmlOutput.attribute("id", rel.getId() + "");
+        //xmlOutput.attribute("id", rel.getId() + "");
         xmlOutput.endBeginTag("RelNode");
 
         int j = 0;
