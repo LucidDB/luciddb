@@ -66,7 +66,7 @@ protected:
     ExecStreamGraph *pGraph;
     
     /**
-     * Identifier for this stream.
+     * Identifier for this stream; local to its containing graph.
      */
     ExecStreamId id;
 

@@ -47,9 +47,20 @@ protected:
     SharedExecStreamGraphEmbryo pGraphEmbryo;
 
     /**
+     * Creates a stream graph.
+     */
+    virtual SharedExecStreamGraph newStreamGraph();
+
+
+    /**
      * Creates a scheduler.
      */
     virtual ExecStreamScheduler *newScheduler();
+
+    /**
+     * (Re)initializes the stream graph and its embryo.
+     */
+    void initStreamGraph();
 
     /**
      * Defines and prepares a graph consisting of one source stream

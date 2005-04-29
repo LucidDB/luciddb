@@ -123,8 +123,9 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamFetch(
         } else {
             ExecStream &stream =
                 CmdInterpreter::getExecStreamFromLong(hStream);
-            ExecStreamScheduler &scheduler = stream.getGraph().getScheduler();
-            ExecStreamBufAccessor &bufAccessor = scheduler.readStream(stream);
+            ExecStreamScheduler *scheduler = stream.getGraph().getScheduler();
+            assert(scheduler);
+            ExecStreamBufAccessor &bufAccessor = scheduler->readStream(stream);
             if (bufAccessor.getState() == EXECBUF_EOS) {
                 return 0;
             }

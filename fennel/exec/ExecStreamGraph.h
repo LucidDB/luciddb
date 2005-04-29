@@ -46,14 +46,17 @@ class ExecStreamScheduler;
  * among ExecStreams.  For more information, see ExecStreamDesign.
  *
  * <p>
- *
- * When a stream is added to a graph it is assigned an ExecStreamId. The
- * identifier is later used to work with the stream.
+ * A stream is always a node is a stream graph, but over its lifetime it
+ * may be moved from one graph to another. Specifically, it may be
+ * prepared in one graph (see ExecStreamGraphEmbro), executed in another,
+ * and finally closed & deleted in a third graph. 
  *
  * <p>
- * 
- * In addition, streams are required to have unique names when they are added
- * to the graph.  These names are used later to find the streams.
+ *
+ * A stream has a permanent, unique name. These names are used later to find the streams.
+ * When a stream is added to a graph it is assigned an ExecStreamId. This
+ * identifier is later used to work with the stream. If the stream is moved to another
+ * graph, it obtains a new ExecStreamId.
  */
 class ExecStreamGraph
     : public boost::noncopyable,
@@ -63,9 +66,11 @@ class ExecStreamGraph
     
 protected:
     /**
-     * Scheduler responsible for executing streams in this graph.  Note that we
-     * don't use a weak_ptr for this because it needs to be accessed frequently
-     * during execution, and the extra locking overhead would be frivolous.
+     * A Scheduler responsible for executing streams in this graph.
+     * (Can be null if the current graph is only building streams, not executing
+     * them.) Note that we don't use a weak_ptr for this because it needs to be
+     * accessed frequently during execution, and the extra locking overhead
+     * would be frivolous.
      */
     ExecStreamScheduler *pScheduler;
 
@@ -87,9 +92,9 @@ public:
     virtual ~ExecStreamGraph();
 
     /**
-     * @return reference to executing scheduler
+     * @return pointer to executing scheduler, or null if there is none.
      */
-    inline ExecStreamScheduler &getScheduler() const;
+    inline ExecStreamScheduler *getScheduler() const;
     
     /**
      * @return reference to the DynamicParamManager
@@ -128,6 +133,14 @@ public:
         SharedExecStream pStream) = 0;
 
     /**
+     * Removes a stream from the graph: deletes the edges,
+     * and puts the vertex on a free list to be reallocated.
+     * Does not free the ExecStream or its ExecStreamBufAccessors.
+     * @return the ExecStream now detached from the graph.
+     */
+    virtual SharedExecStream removeStream(ExecStreamId) = 0;
+
+    /**
      * Defines a dataflow relationship between two streams in this graph.
      *
      * @param producerId ID of producer stream in this graph
@@ -153,6 +166,14 @@ public:
      */
     virtual void addInputDataflow(
         ExecStreamId consumerId) = 0;
+
+    /**
+     * Adds all the vertices and edges from another graph.
+     * Assumes the graphs are disjoint, and that both have been prepared.
+     * The two graphs are both open, or else both closed.
+     * @param src the other graph, which is left empty.
+     */
+    virtual void mergeFrom(ExecStreamGraph& src) = 0;
 
     /**
      * Finds a stream by name.
@@ -287,10 +308,9 @@ public:
     virtual std::vector<SharedExecStream> getSortedStreams() = 0;
 };
 
-inline ExecStreamScheduler &ExecStreamGraph::getScheduler() const
+inline ExecStreamScheduler *ExecStreamGraph::getScheduler() const
 {
-    assert(pScheduler);
-    return *pScheduler;
+    return pScheduler;
 }
 
 inline DynamicParamManager &ExecStreamGraph::getDynamicParamManager()
