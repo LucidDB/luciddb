@@ -564,21 +564,21 @@ public class SqlToRelConverterTest extends TestCase
         rel.explain(planWriter);
         pw.flush();
         TestUtil.assertEqualsVerbose(
-            "<RelNode type=\"ProjectRel\" id=\"3\">" + NL +
+            "<RelNode type=\"ProjectRel\">" + NL +
             "\t<Property name=\"EXPR$0\">" + NL +
             "\t\t+(1, 2)\t</Property>" + NL +
             "\t<Property name=\"EXPR$1\">" + NL +
             "\t\t3\t</Property>" + NL +
             "\t<Inputs>" + NL +
-            "\t\t<RelNode type=\"ProjectRel\" id=\"2\">" + NL +
+            "\t\t<RelNode type=\"ProjectRel\">" + NL +
             "\t\t\t<Property name=\"EXPR$0\">" + NL +
             "\t\t\t\t$0\t\t\t</Property>" + NL +
             "\t\t\t<Inputs>" + NL +
-            "\t\t\t\t<RelNode type=\"ProjectRel\" id=\"1\">" + NL +
+            "\t\t\t\t<RelNode type=\"ProjectRel\">" + NL +
             "\t\t\t\t\t<Property name=\"EXPR$0\">" + NL +
             "\t\t\t\t\t\ttrue\t\t\t\t\t</Property>" + NL +
             "\t\t\t\t\t<Inputs>" + NL +
-            "\t\t\t\t\t\t<RelNode type=\"OneRowRel\" id=\"0\">" + NL +
+            "\t\t\t\t\t\t<RelNode type=\"OneRowRel\">" + NL +
             "\t\t\t\t\t\t\t<Inputs/>" + NL +
             "\t\t\t\t\t\t</RelNode>" + NL +
             "\t\t\t\t\t</Inputs>" + NL +
