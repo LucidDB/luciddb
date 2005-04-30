@@ -545,6 +545,18 @@ public class FarragoJdbcEngineConnection
             dataWrapperCache = null;
         }
 
+        public DriverPropertyInfo[] getPluginPropertyInfo(
+                Locale locale,
+                Properties wrapperProps)
+            {
+                FarragoMedDataWrapper dataWrapper = getWrapper();
+                try {
+                    return dataWrapper.getPluginPropertyInfo(locale, wrapperProps);
+                } finally {
+                    closeWrapperCache();
+                }
+            }
+
         public DriverPropertyInfo[] getServerPropertyInfo(
             Locale locale,
             Properties wrapperProps,

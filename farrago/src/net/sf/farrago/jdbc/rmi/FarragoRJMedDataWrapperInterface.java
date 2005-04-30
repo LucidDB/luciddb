@@ -38,6 +38,14 @@ import java.util.Properties;
  */
 public interface FarragoRJMedDataWrapperInterface extends Remote {
     /**
+     * @see net.sf.farrago.jdbc.FarragoMedDataWrapperInfo#getPluginPropertyInfo
+     */
+    FarragoRJDriverPropertyInfo [] getPluginPropertyInfo(
+        Locale locale,
+        Properties wrapperProps)
+        throws RemoteException;
+
+    /**
      * @see net.sf.farrago.jdbc.FarragoMedDataWrapperInfo#getServerPropertyInfo
      */
     FarragoRJDriverPropertyInfo [] getServerPropertyInfo(
