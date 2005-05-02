@@ -1,0 +1,1099 @@
+Vertex:  AliasType
+allSuperclassVertices {
+AliasType
+Classifier
+DataType
+GeneralizableElement
+ModelElement
+Namespace
+TypedElement
+}
+allSubclassVertices {
+AliasType
+}
+inheritedOutgoingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+inheritedIncomingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+allOutgoingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+allIncomingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+
+Vertex:  Association
+allSuperclassVertices {
+Association
+Classifier
+GeneralizableElement
+ModelElement
+Namespace
+}
+allSubclassVertices {
+Association
+}
+inheritedOutgoingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+inheritedIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+allOutgoingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+allIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+
+Vertex:  AssociationEnd
+allSuperclassVertices {
+AssociationEnd
+ModelElement
+TypedElement
+}
+allSubclassVertices {
+AssociationEnd
+}
+inheritedOutgoingAssocEdges {
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+}
+inheritedIncomingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+Reference:referent_RefersTo_AssociationEnd:referencedEnd
+Reference:referrer_Exposes_AssociationEnd:exposedEnd
+}
+allOutgoingAssocEdges {
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+}
+allIncomingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+Reference:referent_RefersTo_AssociationEnd:referencedEnd
+Reference:referrer_Exposes_AssociationEnd:exposedEnd
+}
+
+Vertex:  Attribute
+allSuperclassVertices {
+Attribute
+Feature
+ModelElement
+StructuralFeature
+TypedElement
+}
+allSubclassVertices {
+Attribute
+}
+inheritedOutgoingAssocEdges {
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+}
+inheritedIncomingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+allOutgoingAssocEdges {
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+}
+allIncomingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+
+Vertex:  BehavioralFeature
+allSuperclassVertices {
+BehavioralFeature
+Feature
+ModelElement
+Namespace
+}
+allSubclassVertices {
+BehavioralFeature
+Exception
+Operation
+}
+inheritedOutgoingAssocEdges {
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+inheritedIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+allOutgoingAssocEdges {
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+Operation:operation_CanRaise_Exception:except
+}
+allIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+Operation:operation_CanRaise_Exception:except
+}
+
+Vertex:  Class
+allSuperclassVertices {
+Class
+Classifier
+GeneralizableElement
+ModelElement
+Namespace
+}
+allSubclassVertices {
+Class
+}
+inheritedOutgoingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+inheritedIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+allOutgoingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+allIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+
+Vertex:  Classifier
+allSuperclassVertices {
+Classifier
+GeneralizableElement
+ModelElement
+Namespace
+}
+allSubclassVertices {
+AliasType
+Association
+Class
+Classifier
+CollectionType
+DataType
+EnumerationType
+PrimitiveType
+StructureType
+}
+inheritedOutgoingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+inheritedIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+allOutgoingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+allIncomingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+
+Vertex:  CollectionType
+allSuperclassVertices {
+Classifier
+CollectionType
+DataType
+GeneralizableElement
+ModelElement
+Namespace
+TypedElement
+}
+allSubclassVertices {
+CollectionType
+}
+inheritedOutgoingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+inheritedIncomingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+allOutgoingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+allIncomingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+
+Vertex:  Constant
+allSuperclassVertices {
+Constant
+ModelElement
+TypedElement
+}
+allSubclassVertices {
+Constant
+}
+inheritedOutgoingAssocEdges {
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+}
+inheritedIncomingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+allOutgoingAssocEdges {
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+}
+allIncomingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+
+Vertex:  Constraint
+allSuperclassVertices {
+Constraint
+ModelElement
+}
+allSubclassVertices {
+Constraint
+}
+inheritedOutgoingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+}
+inheritedIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+allOutgoingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+}
+allIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+
+Vertex:  DataType
+allSuperclassVertices {
+Classifier
+DataType
+GeneralizableElement
+ModelElement
+Namespace
+}
+allSubclassVertices {
+AliasType
+CollectionType
+DataType
+EnumerationType
+PrimitiveType
+StructureType
+}
+inheritedOutgoingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+inheritedIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+allOutgoingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+allIncomingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+
+Vertex:  EnumerationType
+allSuperclassVertices {
+Classifier
+DataType
+EnumerationType
+GeneralizableElement
+ModelElement
+Namespace
+}
+allSubclassVertices {
+EnumerationType
+}
+inheritedOutgoingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+inheritedIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+allOutgoingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+allIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+
+Vertex:  Exception
+allSuperclassVertices {
+BehavioralFeature
+Exception
+Feature
+ModelElement
+Namespace
+}
+allSubclassVertices {
+Exception
+}
+inheritedOutgoingAssocEdges {
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+inheritedIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+Operation:operation_CanRaise_Exception:except
+}
+allOutgoingAssocEdges {
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+allIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+Operation:operation_CanRaise_Exception:except
+}
+
+Vertex:  Feature
+allSuperclassVertices {
+Feature
+ModelElement
+}
+allSubclassVertices {
+Attribute
+BehavioralFeature
+Exception
+Feature
+Operation
+Reference
+StructuralFeature
+}
+inheritedOutgoingAssocEdges {
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+}
+inheritedIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+allOutgoingAssocEdges {
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+Operation:operation_CanRaise_Exception:except
+Reference:referent_RefersTo_AssociationEnd:referencedEnd
+Reference:referrer_Exposes_AssociationEnd:exposedEnd
+}
+allIncomingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+Operation:operation_CanRaise_Exception:except
+}
+
+Vertex:  GeneralizableElement
+allSuperclassVertices {
+GeneralizableElement
+ModelElement
+Namespace
+}
+allSubclassVertices {
+AliasType
+Association
+Class
+Classifier
+CollectionType
+DataType
+EnumerationType
+GeneralizableElement
+Package
+PrimitiveType
+StructureType
+}
+inheritedOutgoingAssocEdges {
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+inheritedIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+allOutgoingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+allIncomingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+
+Vertex:  Import
+allSuperclassVertices {
+Import
+ModelElement
+}
+allSubclassVertices {
+Import
+}
+inheritedOutgoingAssocEdges {
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+}
+inheritedIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+allOutgoingAssocEdges {
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+}
+allIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+
+Vertex:  ModelElement
+allSuperclassVertices {
+ModelElement
+}
+allSubclassVertices {
+AliasType
+Association
+AssociationEnd
+Attribute
+BehavioralFeature
+Class
+Classifier
+CollectionType
+Constant
+Constraint
+DataType
+EnumerationType
+Exception
+Feature
+GeneralizableElement
+Import
+ModelElement
+Namespace
+Operation
+Package
+Parameter
+PrimitiveType
+Reference
+StructuralFeature
+StructureField
+StructureType
+Tag
+TypedElement
+}
+inheritedOutgoingAssocEdges {
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+}
+inheritedIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+allOutgoingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+Operation:operation_CanRaise_Exception:except
+Reference:referent_RefersTo_AssociationEnd:referencedEnd
+Reference:referrer_Exposes_AssociationEnd:exposedEnd
+}
+allIncomingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+Operation:operation_CanRaise_Exception:except
+Reference:referent_RefersTo_AssociationEnd:referencedEnd
+Reference:referrer_Exposes_AssociationEnd:exposedEnd
+}
+
+Vertex:  Namespace
+allSuperclassVertices {
+ModelElement
+Namespace
+}
+allSubclassVertices {
+AliasType
+Association
+BehavioralFeature
+Class
+Classifier
+CollectionType
+DataType
+EnumerationType
+Exception
+GeneralizableElement
+Namespace
+Operation
+Package
+PrimitiveType
+StructureType
+}
+inheritedOutgoingAssocEdges {
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+inheritedIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+allOutgoingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+Operation:operation_CanRaise_Exception:except
+}
+allIncomingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+Operation:operation_CanRaise_Exception:except
+}
+
+Vertex:  Operation
+allSuperclassVertices {
+BehavioralFeature
+Feature
+ModelElement
+Namespace
+Operation
+}
+allSubclassVertices {
+Operation
+}
+inheritedOutgoingAssocEdges {
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+Operation:operation_CanRaise_Exception:except
+}
+inheritedIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+allOutgoingAssocEdges {
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+Operation:operation_CanRaise_Exception:except
+}
+allIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+
+Vertex:  Package
+allSuperclassVertices {
+GeneralizableElement
+ModelElement
+Namespace
+Package
+}
+allSubclassVertices {
+Package
+}
+inheritedOutgoingAssocEdges {
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+inheritedIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+allOutgoingAssocEdges {
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+allIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+
+Vertex:  Parameter
+allSuperclassVertices {
+ModelElement
+Parameter
+TypedElement
+}
+allSubclassVertices {
+Parameter
+}
+inheritedOutgoingAssocEdges {
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+}
+inheritedIncomingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+allOutgoingAssocEdges {
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+}
+allIncomingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+
+Vertex:  PrimitiveType
+allSuperclassVertices {
+Classifier
+DataType
+GeneralizableElement
+ModelElement
+Namespace
+PrimitiveType
+}
+allSubclassVertices {
+PrimitiveType
+}
+inheritedOutgoingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+inheritedIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+allOutgoingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+allIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+
+Vertex:  Reference
+allSuperclassVertices {
+Feature
+ModelElement
+Reference
+StructuralFeature
+TypedElement
+}
+allSubclassVertices {
+Reference
+}
+inheritedOutgoingAssocEdges {
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Reference:referent_RefersTo_AssociationEnd:referencedEnd
+Reference:referrer_Exposes_AssociationEnd:exposedEnd
+}
+inheritedIncomingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+allOutgoingAssocEdges {
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Reference:referent_RefersTo_AssociationEnd:referencedEnd
+Reference:referrer_Exposes_AssociationEnd:exposedEnd
+}
+allIncomingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+
+Vertex:  StructuralFeature
+allSuperclassVertices {
+Feature
+ModelElement
+StructuralFeature
+TypedElement
+}
+allSubclassVertices {
+Attribute
+Reference
+StructuralFeature
+}
+inheritedOutgoingAssocEdges {
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+}
+inheritedIncomingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+allOutgoingAssocEdges {
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Reference:referent_RefersTo_AssociationEnd:referencedEnd
+Reference:referrer_Exposes_AssociationEnd:exposedEnd
+}
+allIncomingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+
+Vertex:  StructureField
+allSuperclassVertices {
+ModelElement
+StructureField
+TypedElement
+}
+allSubclassVertices {
+StructureField
+}
+inheritedOutgoingAssocEdges {
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+}
+inheritedIncomingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+allOutgoingAssocEdges {
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+}
+allIncomingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+
+Vertex:  StructureType
+allSuperclassVertices {
+Classifier
+DataType
+GeneralizableElement
+ModelElement
+Namespace
+StructureType
+}
+allSubclassVertices {
+StructureType
+}
+inheritedOutgoingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+inheritedIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+allOutgoingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+allIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+
+Vertex:  Tag
+allSuperclassVertices {
+ModelElement
+Tag
+}
+allSubclassVertices {
+Tag
+}
+inheritedOutgoingAssocEdges {
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+}
+inheritedIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+allOutgoingAssocEdges {
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+}
+allIncomingAssocEdges {
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+}
+
+Vertex:  TypedElement
+allSuperclassVertices {
+ModelElement
+TypedElement
+}
+allSubclassVertices {
+AliasType
+AssociationEnd
+Attribute
+CollectionType
+Constant
+Parameter
+Reference
+StructuralFeature
+StructureField
+TypedElement
+}
+inheritedOutgoingAssocEdges {
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+}
+inheritedIncomingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+}
+allOutgoingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+ModelElement:dependent_DependsOn_ModelElement:provider
+ModelElement:modelElement_AttachesTo_Tag:tag
+Namespace:container_Contains_ModelElement:containedElement
+Reference:referent_RefersTo_AssociationEnd:referencedEnd
+Reference:referrer_Exposes_AssociationEnd:exposedEnd
+}
+allIncomingAssocEdges {
+Classifier:type_IsOfType_TypedElement:typedElements
+Constraint:constraint_Constrains_ModelElement:constrainedElement
+GeneralizableElement:supertype_Generalizes_GeneralizableElement:subtype
+Import:importer_Aliases_Namespace:imported
+ModelElement:dependent_DependsOn_ModelElement:provider
+Namespace:container_Contains_ModelElement:containedElement
+Reference:referent_RefersTo_AssociationEnd:referencedEnd
+Reference:referrer_Exposes_AssociationEnd:exposedEnd
+}
+
