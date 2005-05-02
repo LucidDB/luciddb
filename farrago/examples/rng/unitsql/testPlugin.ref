@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/examples/rng/unitsql/testPlugin.sql#4 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/examples/rng/unitsql/testPlugin.sql#2 $
 0: jdbc:farrago:> -- Test usage of RNG plugin
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify that without plugin enabled, custom syntax is unrecognized
@@ -40,10 +40,6 @@ Was expecting one of:
 0: jdbc:farrago:> create rng rng2 external '${FARRAGO_HOME}/testgen/rng2.dat' seed 999;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create rng rng3 external '${FARRAGO_HOME}/testgen/rng3.dat' seed 777;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should fail
-0: jdbc:farrago:> create rng rng_badpath external '/doodoo/blob.dat' seed 999;
-Error: java.io.FileNotFoundException: /doodoo/blob.dat (No such file or directory) (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create function rng_next_int(
 . . . . . . . . >     rng_name varchar(512),

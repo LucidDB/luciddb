@@ -44,6 +44,18 @@ FARRAGO_RELEASE="farrago-$MAJOR.$MINOR"
 DIST_DIR=$(cd `dirname $0`; pwd)
 OPEN_DIR=$DIST_DIR/../..
 
+# Detect platform
+cygwin=false
+case "`uname`" in
+  CYGWIN*) cygwin=true ;;
+esac
+
+if [ $cygwin = "true" ]; then
+    ARCHIVE_SUFFIX=zip
+else
+    ARCHIVE_SUFFIX=tar.bz2
+fi
+
 # Generate version info
 # This will fail if requested label doesn't exist
 echo "$BINARY_RELEASE" > $DIST_DIR/VERSION
@@ -71,31 +83,35 @@ if [ ! -e farrago ]; then
     exit -1
 fi
 
+if [ $cygwin = "false" ]; then
+
 # Build full source release first before projects get polluted by builds
 cd $DIST_DIR
-rm -f $SRC_RELEASE.tar.bz2
+rm -f $SRC_RELEASE.$ARCHIVE_SUFFIX
 rm -rf $SRC_RELEASE
 mkdir $SRC_RELEASE
 cp -R $OPEN_DIR/thirdparty $SRC_RELEASE
 cp -R $OPEN_DIR/fennel $SRC_RELEASE
 cp -R $OPEN_DIR/farrago $SRC_RELEASE
 cp $DIST_DIR/VERSION $SRC_RELEASE
-tar cjvf $SRC_RELEASE.tar.bz2 $SRC_RELEASE
+tar cjvf $SRC_RELEASE.$ARCHIVE_SUFFIX $SRC_RELEASE
 rm -rf $SRC_RELEASE
 
 # Build Farrago-only source release
-rm -f $DIST_DIR/$FARRAGO_RELEASE.tar.bz2
+rm -f $DIST_DIR/$FARRAGO_RELEASE.$ARCHIVE_SUFFIX
 rm -rf $DIST_DIR/$FARRAGO_RELEASE
 rm -rf $DIST_DIR/farrago
 cp -R $OPEN_DIR/farrago $DIST_DIR
 cd $DIST_DIR
 mv farrago $FARRAGO_RELEASE
 cp $DIST_DIR/VERSION $FARRAGO_RELEASE
-tar cjvf $FARRAGO_RELEASE.tar.bz2 $FARRAGO_RELEASE
+tar cjvf $FARRAGO_RELEASE.$ARCHIVE_SUFFIX $FARRAGO_RELEASE
 rm -rf $DIST_DIR/$FARRAGO_RELEASE
 
-# Build Linux full binary release
-rm -f $DIST_DIR/$BINARY_RELEASE.tar.bz2
+fi
+
+# Build full binary release
+rm -f $DIST_DIR/$BINARY_RELEASE.$ARCHIVE_SUFFIX
 cp -f $DIST_DIR/VERSION $OPEN_DIR/farrago/dist
 cat > $OPEN_DIR/farrago/dist/FarragoRelease.properties <<EOF
 package.name=eigenbase
@@ -111,20 +127,23 @@ EOF
 cd $OPEN_DIR/farrago
 ./initBuild.sh --with-fennel --with-optimization
 ./distBuild.sh --skip-init-build
-mv dist/farrago.tar.bz2 $DIST_DIR/$BINARY_RELEASE.tar.bz2
+mv dist/farrago.$ARCHIVE_SUFFIX $DIST_DIR/$BINARY_RELEASE.$ARCHIVE_SUFFIX
+
+if [ $cygwin = "false" ]; then
 
 # Build Fennel-only source release
 # This has to happen after binary build so that Makefiles are generated.
 # Note that if someone forgot to update Fennel's version in configure.in,
 # the tar xjvf below will fail.
 rm -rf $DIST_DIR/$FENNEL_RELEASE
-rm -f $DIST_DIR/$FENNEL_RELEASE.tar.bz2
+rm -f $DIST_DIR/$FENNEL_RELEASE.$ARCHIVE_SUFFIX
 cd $OPEN_DIR/fennel
 make dist
 cd $DIST_DIR
 tar xzvf $OPEN_DIR/fennel/$FENNEL_RELEASE.tar.gz
 cp $DIST_DIR/VERSION $FENNEL_RELEASE
-tar cjvf $FENNEL_RELEASE.tar.bz2 $FENNEL_RELEASE
+tar cjvf $FENNEL_RELEASE.$ARCHIVE_SUFFIX $FENNEL_RELEASE
 rm -rf $FENNEL_RELEASE
 rm -f $OPEN_DIR/fennel/$FENNEL_RELEASE.tar.gz
 
+fi

@@ -1,5 +1,5 @@
 # $Id$
-# Define variables needed by runtime scripts such as farrago.
+# Define variables needed by runtime scripts such as farragoServer.
 # This script is meant to be sourced from other scripts, not
 # executed directly.
 
