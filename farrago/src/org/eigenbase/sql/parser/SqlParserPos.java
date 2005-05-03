@@ -48,6 +48,8 @@ public class SqlParserPos
 
     private int lineNumber;
     private int columnNumber;
+    private int endLineNumber;
+    private int endColumnNumber;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -60,13 +62,31 @@ public class SqlParserPos
     {
         this.lineNumber = lineNumber;
         this.columnNumber = columnNumber;
+        this.endLineNumber = lineNumber;
+        this.endColumnNumber = columnNumber;
     }
+    
+    /**
+    * Creates a new parser range.
+    */
+    public SqlParserPos(
+        int startLineNumber,
+        int startColumnNumber,
+        int endLineNumber,
+        int endColumnNumber)
+    {
+        this.lineNumber = startLineNumber;
+        this.columnNumber = startColumnNumber;
+        this.endLineNumber = endLineNumber;
+        this.endColumnNumber = endColumnNumber;
+    }
+
 
     //~ Methods ---------------------------------------------------------------
 
     /**
      *
-     * @return 1-based line number
+     * @return 1-based starting line number
      */
     public int getLineNum()
     {
@@ -75,11 +95,31 @@ public class SqlParserPos
 
     /**
      *
-     * @return 1-based column number
+     * @return 1-based starting column number
      */
     public int getColumnNum()
     {
         return columnNumber;
+    }
+
+    /**
+     *
+     * @return 1-based end line number (same as starting line number if the 
+     * ParserPos is a point, not a range)
+     */
+    public int getEndLineNum()
+    {
+        return endLineNumber;
+    }
+    
+    /**
+     *
+     * @return 1-based end column number (same as starting column number if the 
+     * ParserPos is a point, not a range)
+     */
+    public int getEndColumnNum()
+    {
+        return endColumnNumber;
     }
 
     // implements Object
