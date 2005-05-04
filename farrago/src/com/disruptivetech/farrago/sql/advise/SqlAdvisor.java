@@ -180,15 +180,8 @@ public class SqlAdvisor
         try {
             validator.validate(sqlNode);
         } catch (EigenbaseException e) {
-            // and assumes the error spans 5 chars before range info is
-            // populated for Validator and Parser exceptions
             ValidateErrorInfo errInfo = 
-                new ValidateErrorInfo(
-                    e.getPosLine(),
-                    e.getPosColumn(),
-                    e.getPosLine(),
-                    e.getPosColumn() + 4,
-                    e.getCause().getMessage());
+                new ValidateErrorInfo(e);
             
             // validator only returns 1 exception now
             ArrayList errorList = new ArrayList();
@@ -295,6 +288,21 @@ public class SqlAdvisor
             this.endLineNum = endLineNum;
             this.endColumnNum = endColumnNum;
             this.errorMsg = errorMsg;
+        }
+        
+        /**
+        *  Creates a new ValidateErrorInfo with an EigenbaseException
+        */
+        public ValidateErrorInfo(
+            EigenbaseException e)
+        {
+            this.startLineNum = e.getPosLine();
+            this.startColumnNum = e.getPosColumn();
+            this.endLineNum = e.getEndPosLine();
+            // and assumes the error spans 5 chars before range info is
+            // populated for Validator and Parser exceptions
+            this.endColumnNum = e.getEndPosColumn() + 4;
+            this.errorMsg = e.getCause().getMessage();
         }
         
         /**

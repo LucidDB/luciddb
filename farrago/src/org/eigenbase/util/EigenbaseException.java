@@ -46,6 +46,10 @@ public class EigenbaseException extends RuntimeException
 
     private int posColumn;
 
+    private int endPosLine;
+
+    private int endPosColumn;
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -77,7 +81,27 @@ public class EigenbaseException extends RuntimeException
     {
         this.posLine = posLine;
         this.posColumn = posColumn;
+        this.endPosLine = posLine;
+        this.endPosColumn = posColumn;
     }
+
+    /**
+     * Sets a textual range at which this exception was detected.
+     *
+     * @param 1-based start line number
+     * @param 1-based start column number
+     * @param 1-based end line number
+     * @param 1-based end column number
+     */
+    public void setPosition(int startPosLine, int startPosColumn,
+                            int endPosLine, int endPosColumn)
+    {
+        this.posLine = startPosLine;
+        this.posColumn = startPosColumn;
+        this.endPosLine = endPosLine;
+        this.endPosColumn = endPosColumn;
+    }
+
 
     /**
      * @return 1-based line number, or 0 for missing position information
@@ -93,6 +117,22 @@ public class EigenbaseException extends RuntimeException
     public int getPosColumn()
     {
         return posColumn;
+    }
+    
+    /**
+     * @return 1-based ending line number, or 0 for missing position information
+     */
+    public int getEndPosLine()
+    {
+        return endPosLine;
+    }
+
+    /**
+     * @return 1-based ending column number, or 0 for missing position information
+     */
+    public int getEndPosColumn()
+    {
+        return endPosColumn;
     }
 }
 
