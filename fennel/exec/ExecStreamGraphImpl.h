@@ -167,7 +167,7 @@ public:
     virtual void prepare(ExecStreamScheduler &);
     virtual void open();
     virtual void addStream(SharedExecStream pStream);
-    virtual SharedExecStream removeStream(ExecStreamId);
+    virtual void removeStream(ExecStreamId);
     virtual void addDataflow(
         ExecStreamId producerId,
         ExecStreamId consumerId);

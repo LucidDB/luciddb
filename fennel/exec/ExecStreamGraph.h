@@ -136,9 +136,8 @@ public:
      * Removes a stream from the graph: deletes the edges,
      * and puts the vertex on a free list to be reallocated.
      * Does not free the ExecStream or its ExecStreamBufAccessors.
-     * @return the ExecStream now detached from the graph.
      */
-    virtual SharedExecStream removeStream(ExecStreamId) = 0;
+    virtual void removeStream(ExecStreamId) = 0;
 
     /**
      * Defines a dataflow relationship between two streams in this graph.

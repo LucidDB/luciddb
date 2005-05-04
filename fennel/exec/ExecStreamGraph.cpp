@@ -110,7 +110,7 @@ void ExecStreamGraphImpl::addStream(
     (void) addVertex(pStream);
 }
 
-SharedExecStream ExecStreamGraphImpl::removeStream(ExecStreamId id)
+void ExecStreamGraphImpl::removeStream(ExecStreamId id)
 {
     Vertex v = boost::vertices(graphRep).first[id];
     SharedExecStream pStream = getStreamFromVertex(v);
@@ -132,9 +132,9 @@ SharedExecStream ExecStreamGraphImpl::removeStream(ExecStreamId id)
     }
 
     freeVertex(v);
+    // stream is now detached from any graph, and not usable.
     pStream->pGraph = 0;
     pStream->id = 0;
-    return pStream;
 }
 
 // Deletes all edges and puts all vertices on the free list;
