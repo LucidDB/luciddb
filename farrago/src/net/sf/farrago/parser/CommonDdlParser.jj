@@ -208,6 +208,8 @@ DdlStmt DdlStmtEof() :
         }
         )
         |
+        ddlStmt = GrantStmt()
+        |
         ( <CHECKPOINT> { ddlStmt = new DdlCheckpointStmt(); } )
         |
         ( <COMMIT> { ddlStmt = new DdlCommitStmt(); } )
@@ -2215,6 +2217,101 @@ CwmModelElement ForeignTableDrop() :
         }
 }
 
+SqlIdentifier PrivilegeElement() :
+{
+    
+}
+{
+    (<INSERT> | <UPDATE> | <SELECT> | <DELETE> | <EXECUTE> | <USAGE>) 
+    {
+        SqlIdentifier privId = new SqlIdentifier(token.image,  null);
+        return privId;
+    }
+}
+
+
+List PrivilegeElementList() :
+{
+    List privList = new ArrayList();
+    SqlIdentifier privId;
+}
+{
+    privId = PrivilegeElement() { privList.add(privId); }
+    (
+        <COMMA> privId = PrivilegeElement() {privList.add(privId);}
+    )*
+    {return privList;}
+}
+
+
+
+DdlStmt GrantStmt() :
+{
+    DdlGrantStmt stmt = new DdlGrantStmt();
+    CwmModelElement grantedObject;
+    List granteeList;
+    List privList;
+    SqlIdentifier grantor = null;
+}
+{
+    <GRANT> (
+        <ALL> <PRIVILEGES>
+        {
+            // TODO: externalize "ALL"
+            SqlIdentifier allPrivId = new SqlIdentifier("ALL", null);
+            privList = startList(allPrivId);
+        }
+        |
+        privList = PrivilegeElementList()
+    )
+    {
+        stmt.setPrivList(privList);
+    }
+    <ON> (
+        [<TABLE>] grantedObject = TableIdentifier()
+        |
+        grantedObject = SpecificRoutineReference()
+        // TODO: <SEQUENCE> grantedObject = SequenceIdentifier()
+    )
+    {
+        stmt.setGrantedObject(grantedObject);
+    }
+    <TO> (
+        granteeList = SimpleIdentifierCommaList()
+    )
+    {
+        stmt.setGranteeList(granteeList);
+    }
+    [
+        LOOKAHEAD (2) <WITH> <HIERARCHY> <OPTION>
+        {
+            stmt.setHierarchyOption(true);
+        }
+    ]
+    [
+        <WITH> <GRANT> <OPTION>
+        {
+            stmt.setGrantOption(true);
+        }
+    ]
+    [
+        <GRANTED> <BY> (
+            <CURRENT_ROLE> {stmt.setCurrentUserOption(true);}
+            |
+            <CURRENT_USER> {stmt.setCurrentRoleOption(true);}
+            |
+            grantor = SimpleIdentifier()
+            {
+                stmt.setGrantor(grantor);
+            }
+        )
+    ]
+    {
+        return stmt;
+    }
+}
+    
+
 /* KEYWORDS:  anything in this list is a reserved word unless it appears
    in the NonReservedKeyWord() production. */
 
@@ -2253,6 +2350,8 @@ String DdlNonReservedKeyWord() :
             return getToken(0).image.toUpperCase();
         }
 }
+
+
 
 // End CommonDdlParser.jj
 

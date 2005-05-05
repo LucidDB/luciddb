@@ -107,6 +107,12 @@ public class DdlVisitor
     public void visit(DdlSetSessionImplementationStmt stmt)
     {
     }
+
+    // visitor dispatch
+    public void visit(DdlGrantStmt stmt)
+    {
+    }
+
 }
 
 
