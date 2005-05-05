@@ -686,7 +686,7 @@ require version '${required.ant.version}'."/>
   </target>
 
   <target name="checkResourceUptodate">
-    <touch file="classes/FarragoRelease.properties"/>
+    <touch file="${farrago.classes.dir}/FarragoRelease.properties"/>
     <condition property="resource.uptodate">
       <and>
         <uptodate

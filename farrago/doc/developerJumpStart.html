@@ -86,19 +86,18 @@ machines as needed).
 
 Once you've got Perforce set up, run <code>p4 client</code>
 (or edit your default clientspec from P4WIN).  
-You need to map the following views:
+Map your view to match this example:
 
 <pre><code>
-//open/dev/thirdparty/...
-//open/dev/fennel/...
-//open/dev/farrago/...
+View:
+        //open/dev/thirdparty/... //YOURCLIENT/dev/thirdparty/...
+        //open/dev/fennel/... //YOURCLIENT/dev/fennel/...
+        //open/dev/farrago/... //YOURCLIENT/dev/farrago/...
 
 </code></pre>
 
-All of these should be mapped to a common root corresponding to
-<code>//open/dev</code> (you can call it whatever you like on your
-local filesystem, but we'll refer to it as <code>dev</code> in this
-and other developer docs).
+We'll refer to the <code>YOURCLIENT/dev</code> local filesystem directory
+as <code>dev</code> in this and other developer docs.
 
 <p>
 

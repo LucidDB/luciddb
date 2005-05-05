@@ -29,6 +29,7 @@ import junit.framework.AssertionFailedError;
 
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.util.Util;
+import org.eigenbase.util.TestUtil;
 
 
 /**
@@ -71,7 +72,7 @@ public class SqlParserTest extends TestCase
             throw new AssertionFailedError(message);
         }
         final String actual = sqlNode.toSqlString(null);
-        assertEqualsUnabridged(expected, actual);
+        TestUtil.assertEqualsVerbose(expected, actual);
     }
 
     protected SqlNode parseStmt(String sql) throws SqlParseException {
@@ -91,7 +92,7 @@ public class SqlParserTest extends TestCase
             throw new AssertionFailedError(message);
         }
         final String actual = sqlNode.toSqlString(null);
-        assertEqualsUnabridged(expected, actual);
+        TestUtil.assertEqualsVerbose(expected, actual);
     }
 
     protected SqlNode parseExpression(String sql) throws SqlParseException {
@@ -101,23 +102,6 @@ public class SqlParserTest extends TestCase
     protected void checkExpSame(String sql)
     {
         checkExp(sql, sql);
-    }
-
-    private void assertEqualsUnabridged(
-        String expected,
-        String actual)
-    {
-        if (!expected.equals(actual)) {
-            // REVIEW jvs 2-Feb-2004:  I put this here because assertEquals
-            // uses ellipses in its expected/actual reports, which makes
-            // it very hard to find the problem with something like
-            // a newline instead of a space.  Use diff-based testing instead;
-            // it would also make updating the expected value much easier.
-            String message =
-                NL + "expected:<" + expected + ">" + NL + " but was:<"
-                + actual + ">";
-            fail(message);
-        }
     }
 
     protected void checkFails(
@@ -397,6 +381,9 @@ public class SqlParserTest extends TestCase
 
     public void testIsDistinctFrom()
     {
+        check("select x is distinct from y from t",
+            "SELECT (`X` IS DISTINCT FROM `Y`)" + NL + "FROM `T`");
+
         check("select * from t where x is distinct from y",
             "SELECT *" + NL + "FROM `T`" + NL
             + "WHERE (`X` IS DISTINCT FROM `Y`)");
@@ -412,6 +399,15 @@ public class SqlParserTest extends TestCase
         check("select * from t where true is distinct from true is true",
             "SELECT *" + NL + "FROM `T`" + NL
             + "WHERE ((TRUE IS DISTINCT FROM TRUE) IS TRUE)");
+    }
+
+    public void testIsNotDistinct() {
+        check("select x is not distinct from y from t",
+            "SELECT (`X` IS NOT DISTINCT FROM `Y`)" + NL + "FROM `T`");
+
+        check("select * from t where true is not distinct from true",
+            "SELECT *" + NL + "FROM `T`" + NL
+            + "WHERE (TRUE IS NOT DISTINCT FROM TRUE)");
     }
 
     public void testCast()

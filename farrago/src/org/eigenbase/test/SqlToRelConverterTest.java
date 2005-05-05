@@ -50,49 +50,19 @@ import java.io.StringWriter;
 public class SqlToRelConverterTest extends TestCase
 {
     protected static final String NL = System.getProperty("line.separator");
+    protected final Tester tester = createTester();
+
+    protected Tester createTester()
+    {
+        return new TesterImpl();
+    }
 
     protected void check(
         String sql,
         String plan)
     {
-        final SqlNode sqlQuery;
-        try {
-            sqlQuery = parseQuery(sql);
-        } catch (Exception e) {
-            throw Util.newInternal(e); // todo: better handling
-        }
-        final RelDataTypeFactory typeFactory =
-            new SqlTypeFactoryImpl();
+        final RelNode rel = tester.convertSqlToRel(sql);
 
-        final SqlValidatorCatalogReader catalogReader =
-            createCatalogReader(typeFactory);
-        final SqlValidator validator =
-            createValidator(catalogReader, typeFactory);
-        final RelOptSchema relOptSchema =
-            new MockRelOptSchema(catalogReader, typeFactory);
-        final RelOptConnection relOptConnection = new RelOptConnection()
-        {
-            public RelOptSchema getRelOptSchema()
-            {
-                return relOptSchema;
-            }
-
-            public Object contentsAsArray(
-                String qualifier,
-                String tableName)
-            {
-                return null;
-            }
-        };
-        final SqlToRelConverter converter =
-            new SqlToRelConverter(
-                validator,
-                relOptSchema,
-                OJSystem.env,
-                new MockRelOptPlanner(),
-                relOptConnection,
-                new JavaRexBuilder(typeFactory));
-        final RelNode rel = converter.convertQuery(sqlQuery);
         assertTrue(rel != null);
         final StringWriter sw = new StringWriter();
         final RelOptPlanWriter planWriter =
@@ -104,35 +74,10 @@ public class SqlToRelConverterTest extends TestCase
         TestUtil.assertEqualsVerbose(plan, actual);
     }
 
-    protected SqlNode parseQuery(String sql) throws Exception {
-        SqlParser parser = new SqlParser(sql);
-        SqlNode sqlNode = parser.parseQuery();
-        return sqlNode;
-    }
-
     /**
-     * Factory method to create a {@link SqlValidator}.
+     * Mock implementation of {@link RelOptSchema}.
      */
-    protected SqlValidator createValidator(
-        SqlValidatorCatalogReader catalogReader,
-        RelDataTypeFactory typeFactory)
-    {
-        return SqlValidatorUtil.newValidator(
-            SqlStdOperatorTable.instance(),
-            new MockCatalogReader(typeFactory),
-            typeFactory);
-    }
-
-    /**
-     * Factory method for a {@link SqlValidatorCatalogReader}.
-     */
-    protected SqlValidatorCatalogReader createCatalogReader(
-        RelDataTypeFactory typeFactory)
-    {
-        return new MockCatalogReader(typeFactory);
-    }
-
-    private class MockRelOptSchema implements RelOptSchema {
+    private static class MockRelOptSchema implements RelOptSchema {
         private final SqlValidatorCatalogReader catalogReader;
         private final RelDataTypeFactory typeFactory;
 
@@ -192,6 +137,141 @@ public class SqlToRelConverterTest extends TestCase
             public RelNode toRel(RelOptCluster cluster, RelOptConnection connection) {
                 return new TableAccessRel(cluster, this, connection);
             }
+        }
+    }
+
+    /**
+     * Mock implementation of {@link RelOptConnection}, contains a
+     * {@link MockRelOptSchema}.
+     */
+    private static class MockRelOptConnection implements RelOptConnection
+    {
+        private final RelOptSchema relOptSchema;
+
+        public MockRelOptConnection(RelOptSchema relOptSchema)
+        {
+            this.relOptSchema = relOptSchema;
+        }
+
+        public RelOptSchema getRelOptSchema()
+        {
+            return relOptSchema;
+        }
+
+        public Object contentsAsArray(
+            String qualifier,
+            String tableName)
+        {
+            return null;
+        }
+    }
+
+    /**
+     * Helper class which contains default implementations of methods used
+     * for running sql-to-rel conversion tests.
+     */
+    public static interface Tester
+    {
+        /**
+         * Converts a SQL string to a {@link RelNode} tree.
+         *
+         * @param sql SQL statement
+         * @return Relational expression, never null
+         *
+         * @pre sql != null
+         * @post return != null
+         */
+        RelNode convertSqlToRel(String sql);
+
+        SqlNode parseQuery(String sql) throws Exception;
+
+        /**
+         * Factory method to create a {@link SqlValidator}.
+         */
+        SqlValidator createValidator(
+            SqlValidatorCatalogReader catalogReader,
+            RelDataTypeFactory typeFactory);
+
+        /**
+         * Factory method for a {@link SqlValidatorCatalogReader}.
+         */
+        SqlValidatorCatalogReader createCatalogReader(
+            RelDataTypeFactory typeFactory);
+
+        RelOptPlanner createPlanner();
+    };
+
+    /**
+     * Default implementation of {@link Tester}, using mock classes
+     * {@link MockRelOptSchema}, {@link MockRelOptConnection} and
+     * {@link MockRelOptPlanner}.
+     */
+    public static class TesterImpl implements Tester
+    {
+        protected final RelOptPlanner planner;
+
+        protected TesterImpl()
+        {
+            planner = createPlanner();
+        }
+
+        public RelNode convertSqlToRel(String sql)
+        {
+            Util.pre(sql != null, "sql != null");
+            final SqlNode sqlQuery;
+            try {
+                sqlQuery = parseQuery(sql);
+            } catch (Exception e) {
+                throw Util.newInternal(e); // todo: better handling
+            }
+            final RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl();
+
+            final SqlValidatorCatalogReader catalogReader =
+                createCatalogReader(typeFactory);
+            final SqlValidator validator =
+                createValidator(catalogReader, typeFactory);
+            final RelOptSchema relOptSchema =
+                new MockRelOptSchema(catalogReader, typeFactory);
+            final RelOptConnection relOptConnection =
+                new MockRelOptConnection(relOptSchema);
+            final SqlToRelConverter converter =
+                new SqlToRelConverter(
+                    validator,
+                    relOptSchema,
+                    OJSystem.env,
+                    planner,
+                    relOptConnection,
+                    new JavaRexBuilder(typeFactory));
+            final RelNode rel = converter.convertQuery(sqlQuery);
+            Util.post(rel != null, "return != null");
+            return rel;
+        }
+
+        public SqlNode parseQuery(String sql) throws Exception {
+            SqlParser parser = new SqlParser(sql);
+            SqlNode sqlNode = parser.parseQuery();
+            return sqlNode;
+        }
+
+        public SqlValidator createValidator(
+            SqlValidatorCatalogReader catalogReader,
+            RelDataTypeFactory typeFactory)
+        {
+            return SqlValidatorUtil.newValidator(
+                SqlStdOperatorTable.instance(),
+                new MockCatalogReader(typeFactory),
+                typeFactory);
+        }
+
+        public SqlValidatorCatalogReader createCatalogReader(
+            RelDataTypeFactory typeFactory)
+        {
+            return new MockCatalogReader(typeFactory);
+        }
+
+        public RelOptPlanner createPlanner()
+        {
+            return new MockRelOptPlanner();
         }
     }
 
@@ -460,6 +540,56 @@ public class SqlToRelConverterTest extends TestCase
             "              OneRowRel" + NL);
 
     }
+
+    public void testIsDistinctFrom() {
+        check("select 1 is distinct from 2 from (values(true))",
+            "ProjectRel(EXPR$0=[CASE(IS NULL(1), IS NOT NULL(2), IS NULL(2), IS NOT NULL(1), <>(1, 2))])" + NL +
+            "  ProjectRel(EXPR$0=[$0])" + NL +
+            "    ProjectRel(EXPR$0=[true])" + NL +
+            "      OneRowRel" + NL);
+
+        check("select 1 is not distinct from 2 from (values(true))",
+            "ProjectRel(EXPR$0=[CASE(IS NULL(1), IS NULL(2), IS NULL(2), IS NULL(1), =(1, 2))])" + NL +
+            "  ProjectRel(EXPR$0=[$0])" + NL +
+            "    ProjectRel(EXPR$0=[true])" + NL +
+            "      OneRowRel" + NL);
+    }
+
+    public void testExplainAsXml() {
+        String sql = "select 1 + 2, 3 from (values (true))";
+        final RelNode rel = tester.convertSqlToRel(sql);
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        RelOptXmlPlanWriter planWriter = new RelOptXmlPlanWriter(pw);
+        rel.explain(planWriter);
+        pw.flush();
+        TestUtil.assertEqualsVerbose(
+            "<RelNode type=\"ProjectRel\">" + NL +
+            "\t<Property name=\"EXPR$0\">" + NL +
+            "\t\t+(1, 2)\t</Property>" + NL +
+            "\t<Property name=\"EXPR$1\">" + NL +
+            "\t\t3\t</Property>" + NL +
+            "\t<Inputs>" + NL +
+            "\t\t<RelNode type=\"ProjectRel\">" + NL +
+            "\t\t\t<Property name=\"EXPR$0\">" + NL +
+            "\t\t\t\t$0\t\t\t</Property>" + NL +
+            "\t\t\t<Inputs>" + NL +
+            "\t\t\t\t<RelNode type=\"ProjectRel\">" + NL +
+            "\t\t\t\t\t<Property name=\"EXPR$0\">" + NL +
+            "\t\t\t\t\t\ttrue\t\t\t\t\t</Property>" + NL +
+            "\t\t\t\t\t<Inputs>" + NL +
+            "\t\t\t\t\t\t<RelNode type=\"OneRowRel\">" + NL +
+            "\t\t\t\t\t\t\t<Inputs/>" + NL +
+            "\t\t\t\t\t\t</RelNode>" + NL +
+            "\t\t\t\t\t</Inputs>" + NL +
+            "\t\t\t\t</RelNode>" + NL +
+            "\t\t\t</Inputs>" + NL +
+            "\t\t</RelNode>" + NL +
+            "\t</Inputs>" + NL +
+            "</RelNode>" + NL,
+            sw.toString());
+    }
+
 }
 
 // End ConverterTest.java

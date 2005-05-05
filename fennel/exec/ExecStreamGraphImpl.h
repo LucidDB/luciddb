@@ -86,6 +86,11 @@ protected:
     typedef std::map<std::pair<std::string, uint>,ExecStreamId> EdgeMap;
 
     /**
+     * List of freed vertices
+     */
+    std::vector<Vertex> freeVertices;
+
+    /**
      * Map of name to stream
      */
     StreamMap streamMap;
@@ -132,7 +137,20 @@ protected:
     virtual void sortStreams();
     virtual void openStream(SharedExecStream pStream);
     virtual void bindStreamBufAccessors(SharedExecStream pStream);
+    virtual void mergeFrom(ExecStreamGraphImpl& src);
+
+    /** frees all nodes and edges: like removeStream() on all streams, but faster */
+    virtual void clear();
+    /** adds a node */
+    virtual Vertex addVertex(SharedExecStream pStream);
     
+    // manage the free list
+    /** @return an available Vertex, first trying the free list */
+    Vertex newVertex();
+    /** releases a Vertex to the free list */
+    void freeVertex(Vertex);
+
+
 public:
     explicit ExecStreamGraphImpl();
     virtual ~ExecStreamGraphImpl() {}
@@ -148,8 +166,8 @@ public:
     virtual SharedLogicalTxn getTxn();
     virtual void prepare(ExecStreamScheduler &);
     virtual void open();
-    virtual void addStream(
-        SharedExecStream pStream);
+    virtual void addStream(SharedExecStream pStream);
+    virtual void removeStream(ExecStreamId);
     virtual void addDataflow(
         ExecStreamId producerId,
         ExecStreamId consumerId);
@@ -157,6 +175,7 @@ public:
         ExecStreamId producerId);
     virtual void addInputDataflow(
         ExecStreamId consumerId);
+    virtual void mergeFrom(ExecStreamGraph& src);
     virtual SharedExecStream findStream(
         std::string name);
     virtual SharedExecStream findLastStream(
@@ -208,7 +227,7 @@ inline ExecStreamBufAccessor &ExecStreamGraphImpl::getBufAccessorFromEdge(
 {
     return *(getSharedBufAccessorFromEdge(edge));
 }
-    
+
 FENNEL_END_NAMESPACE
 
 #endif

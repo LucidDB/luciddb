@@ -11,29 +11,20 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="farragoCatalog" />
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../thirdparty/OpenJava/openjava.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="library" name="ant" level="project" />
     <orderEntry type="library" name="janino" level="project" />
-    <orderEntry type="library" name="javamail" level="project" />
-    <orderEntry type="library" name="misc" level="project" />
-    <orderEntry type="library" name="isql" level="project" />
-    <orderEntry type="library" name="servlet" level="project" />
     <orderEntry type="library" name="rmiJdbc" level="project" />
-    <orderEntry type="library" name="mondrian-utils" level="project" />
     <orderEntry type="library" name="mdr" level="project" />
     <orderEntry type="library" name="jaxb" level="project" />
     <orderEntry type="library" name="hsqldb" level="project" />
     <orderEntry type="library" name="jakarta-oro" level="project" />
-    <orderEntry type="library" name="jfreechart" level="project" />
     <orderEntry type="library" name="junit" level="project" />
+    <orderEntry type="library" name="jfreechart" level="project" />
+    <orderEntry type="library" name="servlet" level="project" />
+    <orderEntry type="library" name="resgen" level="project" />
+    <orderEntry type="library" name="oj" level="project" />
+    <orderEntry type="library" name="jgrapht" level="project" />
+    <orderEntry type="library" name="sqlline" level="project" />
+    <orderEntry type="library" name="xml" level="project" />
     <orderEntryProperties />
   </component>
 </module>

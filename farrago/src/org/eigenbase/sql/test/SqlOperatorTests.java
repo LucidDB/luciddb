@@ -185,7 +185,24 @@ public class SqlOperatorTests
 
     public static void testIsDistinctFromOperator(SqlTester tester)
     {
-        // TODO:
+        tester.checkBoolean("1 is distinct from 1", Boolean.FALSE);
+        tester.checkBoolean("1 is distinct from 1.0", Boolean.FALSE);
+        tester.checkBoolean("1 is distinct from 2", Boolean.TRUE);
+        tester.checkBoolean("cast(null as integer) is distinct from 2", Boolean.TRUE);
+        tester.checkBoolean("cast(null as integer) is distinct from cast(null as integer)", Boolean.FALSE);
+//        tester.checkBoolean("row(1,1) is distinct from row(1,1)", Boolean.TRUE);
+//        tester.checkBoolean("row(1,1) is distinct from row(1,2)", Boolean.FALSE);
+    }
+
+    public static void testIsNotDistinctFromOperator(SqlTester tester)
+    {
+        tester.checkBoolean("1 is not distinct from 1", Boolean.TRUE);
+        tester.checkBoolean("1 is not distinct from 1.0", Boolean.TRUE);
+        tester.checkBoolean("1 is not distinct from 2", Boolean.FALSE);
+        tester.checkBoolean("cast(null as integer) is not distinct from 2", Boolean.FALSE);
+        tester.checkBoolean("cast(null as integer) is not distinct from cast(null as integer)", Boolean.TRUE);
+//        tester.checkBoolean("row(1,1) is not distinct from row(1,1)", Boolean.FALSE);
+//        tester.checkBoolean("row(1,1) is not distinct from row(1,2)", Boolean.TRUE);
     }
 
     public static void testGreaterThanOrEqualOperator(SqlTester tester)

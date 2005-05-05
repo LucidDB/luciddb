@@ -65,7 +65,7 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
 
         // Yon Cassius has a lean and hungry look.
         ambitious = true;
-        
+
         // Create a new CallingConvention trait definition that will store
         // the graph of possible conversions and handle the creation of
         // converters.
@@ -86,64 +86,78 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
      */
     public void init()
     {
-        boolean fennelEnabled = stmt.getRepos().isFennelEnabled();
+        final boolean fennelEnabled = stmt.getRepos().isFennelEnabled();
+        final CalcVirtualMachine calcVM =
+            stmt.getRepos().getCurrentConfig().getCalcVirtualMachine();
+        addStandardRules(this, fennelEnabled, calcVM);
+    }
 
-        addRule(new RemoveDistinctRule());
-        addRule(new UnionToDistinctRule());
-        addRule(new UnionEliminatorRule());
-        addRule(new CoerceInputsRule(UnionRel.class));
-        addRule(new CoerceInputsRule(TableModificationRel.class));
-        addRule(new SwapJoinRule());
-        addRule(new RemoveTrivialProjectRule());
-        addRule(new FarragoMultisetSplitterRule());
+    /**
+     * Adds a set of standard rules to a planner.
+     *
+     * @param planner Planner
+     * @param fennelEnabled Whether fennel is enabled.
+     * @param calcVM Flavor of calculator being used.
+     */ 
+    public static void addStandardRules(
+        VolcanoPlanner planner,
+        boolean fennelEnabled,
+        CalcVirtualMachine calcVM)
+    {
+        planner.addRule(new RemoveDistinctRule());
+        planner.addRule(new UnionToDistinctRule());
+        planner.addRule(new UnionEliminatorRule());
+        planner.addRule(new CoerceInputsRule(UnionRel.class));
+        planner.addRule(new CoerceInputsRule(TableModificationRel.class));
+        planner.addRule(new SwapJoinRule());
+        planner.addRule(new RemoveTrivialProjectRule());
+        planner.addRule(new FarragoMultisetSplitterRule());
 
-        addRule(new IterRules.HomogeneousUnionToIteratorRule());
-        addRule(new IterRules.OneRowToIteratorRule());
+        planner.addRule(new IterRules.HomogeneousUnionToIteratorRule());
+        planner.addRule(new IterRules.OneRowToIteratorRule());
 
         if (fennelEnabled) {
-            addRule(new FennelSortRule());
-            addRule(new FennelCollectRule());
-            addRule(new FennelUncollectRule());
-            addRule(new FennelDistinctSortRule());
-            addRule(
+            planner.addRule(new FennelSortRule());
+            planner.addRule(new FennelCollectRule());
+            planner.addRule(new FennelUncollectRule());
+            planner.addRule(new FennelDistinctSortRule());
+            planner.addRule(
                 new FennelRenameRule(FennelPullRel.FENNEL_PULL_CONVENTION,
                     "FennelPullRenameRule"));
-            addRule(new FennelCartesianJoinRule());
-            addRule(new FennelCorrelatorRule());
-            addRule(new FennelOneRowRule());
+            planner.addRule(new FennelCartesianJoinRule());
+            planner.addRule(new FennelCorrelatorRule());
+            planner.addRule(new FennelOneRowRule());
         }
 
         // Add the rule to introduce FennelCalcRel's only if the fennel
         // calculator is enabled.
-        final CalcVirtualMachine calcVM =
-            stmt.getRepos().getCurrentConfig().getCalcVirtualMachine();
         if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_FENNEL)) {
             // use Fennel for calculating expressions
-            assert (fennelEnabled);
-            addRule(FennelCalcRule.instance);
+            assert fennelEnabled;
+            planner.addRule(FennelCalcRule.instance);
         }
 
         if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_JAVA)
                 || calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO)) {
             // use Java code generation for calculating expressions
-            addRule(IterRules.IterCalcRule.instance);
+            planner.addRule(IterRules.IterCalcRule.instance);
 
             // TODO jvs 6-May-2004:  these should be redundant now, but when
             // I remove them, some queries fail.  Find out why.
-            addRule(IterRules.ProjectToIteratorRule.instance);
-            addRule(IterRules.ProjectedFilterToIteratorRule.instance);
+            planner.addRule(IterRules.ProjectToIteratorRule.instance);
+            planner.addRule(IterRules.ProjectedFilterToIteratorRule.instance);
         }
 
         if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO) && fennelEnabled) {
             // add rule for pure calculator usage plus rule for
             // decomposing rels into mixed Java/Fennel impl
-            addRule(FennelCalcRule.instance);
-            addRule(FarragoAutoCalcRule.instance);
+            planner.addRule(FennelCalcRule.instance);
+            planner.addRule(FarragoAutoCalcRule.instance);
         }
 
         if (fennelEnabled) {
-            FennelToIteratorConverter.register(this);
-            IteratorToFennelConverter.register(this);
+            FennelToIteratorConverter.register(planner);
+            IteratorToFennelConverter.register(planner);
         }
     }
 

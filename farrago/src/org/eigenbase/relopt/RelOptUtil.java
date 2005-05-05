@@ -43,6 +43,9 @@ import org.eigenbase.rex.*;
 import org.eigenbase.util.Util;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.SqlOperator;
+import org.eigenbase.sql.SqlOperatorTable;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 
 /**
  * <code>RelOptUtil</code> defines static utility methods for use in optimizing
@@ -334,8 +337,24 @@ public abstract class RelOptUtil
     /**
      * Creates a plan suitable for use in <code>EXITS</code> or <code>IN</code>
      * statements. See {@link org.eigenbase.sql2rel.SqlToRelConverter#convertExists}
+     * <p>
+     * @param cluster
+     * @param seekRel A query rel, for example the resulting rel from
+     * 'select * from emp' or 'values (1,2,3)' or '('Foo', 34)'.
+     * @param conditions May be null
+     * @param extraExpr Column expression to add. "TRUE" for EXISTS and IN
+     * @param extraName Name of expression to add.
+     * @return relational expression which outer joins a boolean condition
+     *   column
+     * @pre extraExpr == null || extraName != null
      */
-    public static RelNode createExistsPlan(RelOptCluster cluster, RelNode seekRel, RexNode[] conditions, RexLiteral extraExpr, String extraName) {
+    public static RelNode createExistsPlan(
+        RelOptCluster cluster,
+        RelNode seekRel,
+        RexNode[] conditions,
+        RexLiteral extraExpr,
+        String extraName) {
+
         RelNode ret = seekRel;
 
         RexNode conditionExp = null;
@@ -563,14 +582,28 @@ public abstract class RelOptUtil
         planner.addRule(MergeProjectOntoCalcRule.instance);
     }
 
-    public static String dumpPlan(String header, RelNode rel)
+    /**
+     * Dumps a plan as a string.
+     *
+     * @param header Header to print before the plan. Ignored if the format
+     *               is XML.
+     * @param rel    Relational expression to explain.
+     * @param asXml Whether to format as XML.
+     * @return Plan
+     */
+    public static String dumpPlan(String header, RelNode rel, boolean asXml)
     {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         if (!header.equals("")) {
             pw.println(header);
         }
-        RelOptPlanWriter planWriter = new RelOptPlanWriter(pw);
+        RelOptPlanWriter planWriter;
+        if (asXml) {
+            planWriter = new RelOptXmlPlanWriter(pw);
+        } else {
+            planWriter = new RelOptPlanWriter(pw);
+        }
         planWriter.withIdPrefix = false;
         rel.explain(planWriter);
         pw.flush();
@@ -646,6 +679,76 @@ public abstract class RelOptUtil
             variables.add(p.getName());
             return p;
         }
+    }
+
+    /**
+     * Returns a translation of the IS [NOT] DISTINCT FROM sql opertor
+     * @param neg if false then a translation of IS NOT DISTINCT FROM is returned
+     */
+    public static RexNode isDistinctFrom (
+        RexBuilder rexBuilder,
+        RexNode x,
+        RexNode y,
+        boolean neg) {
+
+        RexNode ret = null;
+        if (x.getType().isStruct()) {
+            assert(y.getType().isStruct());
+            RelDataTypeField[] xFields = x.getType().getFields();
+            RelDataTypeField[] yFields = x.getType().getFields();
+            assert(xFields.length == yFields.length);
+            for (int i = 0; i < xFields.length; i++) {
+                RelDataTypeField xField = xFields[i];
+                RelDataTypeField yField = yFields[i];
+                RexNode newX = rexBuilder.makeFieldAccess(x, xField.getIndex());
+                RexNode newY = rexBuilder.makeFieldAccess(y, yField.getIndex());
+                RexNode newCall =
+                    isDistinctFromInternal(rexBuilder, newX, newY, neg);
+                if (i > 0) {
+                    assert(null != ret);
+                    ret = rexBuilder.makeCall(
+                        SqlStdOperatorTable.instance().andOperator,
+                        ret,
+                        newCall);
+                } else {
+                    assert(null == ret);
+                    ret = newCall;
+                }
+            }
+        } else {
+            ret = isDistinctFromInternal(rexBuilder, x, y, neg);
+        }
+        return ret;
+    }
+
+    private static RexNode isDistinctFromInternal (
+        RexBuilder rexBuilder,
+        RexNode x,
+        RexNode y,
+        boolean neg) {
+
+        SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
+        SqlOperator nullOp;
+        SqlOperator eqOp;
+        if (neg) {
+            nullOp = opTab.isNullOperator;
+            eqOp   = opTab.equalsOperator;
+        } else {
+            nullOp = opTab.isNotNullOperator;
+            eqOp   = opTab.notEqualsOperator;
+        }
+        RexNode[] whenThenElse = new RexNode[] {
+                // when x is null
+                rexBuilder.makeCall(opTab.isNullOperator, x)
+                // then return y is [not] null
+                ,rexBuilder.makeCall(nullOp, y)
+                // when y is null
+                ,rexBuilder.makeCall(opTab.isNullOperator, y)
+                // then return x is [not] null
+                ,rexBuilder.makeCall(nullOp, x)
+                // else return x compared to y
+                ,rexBuilder.makeCall(eqOp, x, y)};
+        return rexBuilder.makeCall(opTab.caseOperator, whenThenElse);
     }
 }
 

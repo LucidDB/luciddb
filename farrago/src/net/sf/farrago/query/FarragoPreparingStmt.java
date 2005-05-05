@@ -474,7 +474,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             planDumpTracer.fine(
                 RelOptUtil.dumpPlan(
                     "Plan before flattening", 
-                    rootRel));
+                    rootRel,
+                    false));
         }
         originalRowType = rootRel.getRowType();
         rootRel = flattenTypes(rootRel, true);
@@ -482,14 +483,16 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             planDumpTracer.fine(
                 RelOptUtil.dumpPlan(
                     "Plan after flattening", 
-                    rootRel));
+                    rootRel,
+                    false));
         }
         rootRel = super.optimize(rootRel);
         if (dumpPlan) {
             planDumpTracer.fine(
                 RelOptUtil.dumpPlan(
                     "Plan after optimization", 
-                    rootRel));
+                    rootRel,
+                    false));
         }
         return rootRel;
     }
@@ -619,9 +622,14 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     public JavaRelImplementor getRelImplementor(RexBuilder rexBuilder)
     {
         if (relImplementor == null) {
-            relImplementor = new FarragoRelImplementor(this, rexBuilder);
+            relImplementor = newRelImplementor(rexBuilder);
         }
         return relImplementor;
+    }
+
+    protected FarragoRelImplementor newRelImplementor(RexBuilder rexBuilder)
+    {
+        return new FarragoRelImplementor(this, rexBuilder);
     }
 
     // implement FarragoSessionPreparingStmt

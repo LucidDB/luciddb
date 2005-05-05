@@ -651,6 +651,9 @@ public class SqlToRelConverter
                     new RexNode [] { exp });
             } else if (call.operator instanceof SqlCaseOperator) {
                 return convertCase(bb, (SqlCase) call);
+            } else if (call.operator.equals(opTab.isDistinctFromOperator) ||
+                       call.operator.equals(opTab.isNotDistinctFromOperator)) {
+                return convertIsDistinctFrom(bb, call);
             } else if (call.operator instanceof SqlBetweenOperator) {
                 return convertBetween(bb, call);
             } else if (call.operator.equals(
@@ -824,6 +827,19 @@ public class SqlToRelConverter
                 bb,
                 call.getElseOperand());
         return rexBuilder.makeCall(call.operator, whenThenElseRex); //REVIEW 16-March-2004 wael: is there a better way?
+    }
+
+    private RexNode convertIsDistinctFrom(
+        Blackboard bb,
+        SqlCall call)
+    {
+        RexNode op0 = convertExpression(call.operands[0]);
+        RexNode op1 = convertExpression(call.operands[1]);
+        return RelOptUtil.isDistinctFrom(
+                rexBuilder,
+                op0,
+                op1,
+                call.operator.equals(opTab.isNotDistinctFromOperator));
     }
 
     private RexNode [] convertExpressionList(

@@ -45,19 +45,21 @@ public class PreparedExplanation implements PreparedResult
     //~ Instance fields -------------------------------------------------------
 
     private final RelNode rel;
+    private final boolean asXml;
 
     //~ Constructors ----------------------------------------------------------
 
-    PreparedExplanation(RelNode rel)
+    PreparedExplanation(RelNode rel, boolean asXml)
     {
         this.rel = rel;
+        this.asXml = asXml;
     }
 
     //~ Methods ---------------------------------------------------------------
 
     public String getCode()
     {
-        return RelOptUtil.dumpPlan("", rel);
+        return RelOptUtil.dumpPlan("", rel, asXml);
     }
 
     public boolean isDml()

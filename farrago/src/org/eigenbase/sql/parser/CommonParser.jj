@@ -414,9 +414,16 @@ SqlNode SqlExplain() :
     SqlNode stmt;
     boolean withImplementation = true;
     SqlParserPos pos;
+    boolean asXml;
 }
 {
-    <EXPLAIN> <PLAN> [ withImplementation = WithImplementation() ] <FOR> (
+    <EXPLAIN> <PLAN> [ withImplementation = WithImplementation() ]
+    (
+        <AS> <XML> { asXml = true; }
+    |
+        { asXml = false; }
+    ) 
+    <FOR> (
         stmt = OrderedQueryOrExpr(EXPR_ACCEPT_QUERY)
         {
         }
@@ -435,7 +442,9 @@ SqlNode SqlExplain() :
             return new SqlExplain(
                 opTab.explainOperator,
                 stmt,
-                SqlLiteral.createBoolean(withImplementation, null), pos);
+                SqlLiteral.createBoolean(withImplementation, null),
+                SqlLiteral.createBoolean(asXml, null),
+                pos);
         }
 }
 
@@ -1406,7 +1415,7 @@ List Expression2(ExprContext exprContext) :
                     }
                 ]
             |
-                LOOKAHEAD(2) op = BinaryRowOperator()
+                LOOKAHEAD(3) op = BinaryRowOperator()
                 {
                     checkNonQueryExpression(exprContext);
                 }
@@ -1470,7 +1479,8 @@ SqlNode Expression3(ExprContext exprContext) :
         if (rowSeen) {
             // interpret as row constructor
             return opTab.rowConstructor.createCall(
-                    SqlParserUtil.toNodeArray(list), pos);
+                SqlParserUtil.toNodeArray(list), pos);
+
         }
     }
     [
@@ -1483,17 +1493,16 @@ SqlNode Expression3(ExprContext exprContext) :
                 }
                 list.addAll(list2);
                 return opTab.overlapsOperator.createCall(
-                                        SqlParserUtil.toNodeArray(list), getPos());
+                    SqlParserUtil.toNodeArray(list), getPos());
            }
        )
        |
        (    e = IntervalQualifier()
             {
-                if ( (list.size() != 1) ||
-                     !(list.get(0) instanceof SqlCall) ||
-                     !((SqlCall) list.get(0)).isA(SqlKind.Minus) ||
-                     (((SqlCall) list.get(0)).operands.length != 2)
-                ) {
+                if ((list.size() != 1) ||
+                    !(list.get(0) instanceof SqlCall) ||
+                    !((SqlCall) list.get(0)).isA(SqlKind.Minus) ||
+                    (((SqlCall) list.get(0)).operands.length != 2)) {
                     throw new ParseException(
                         EigenbaseResource.instance().getIllegalMinusDate(
                             getPos().toString()));
@@ -1503,7 +1512,7 @@ SqlNode Expression3(ExprContext exprContext) :
                     list2.add(e);
                 }
                 return opTab.minusDateOperator.createCall(
-                                        SqlParserUtil.toNodeArray(list2), getPos());
+                    SqlParserUtil.toNodeArray(list2), getPos());
             }
        )
     ]
@@ -1838,16 +1847,16 @@ SqlIntervalQualifier IntervalQualifier() :
     int secondFracPrec = 0;
 }
 {
-(
+( 
     <YEAR> [ <LPAREN> startPrec = IntLiteral() <RPAREN> ]
-    [ <TO> <MONTH> { end = SqlIntervalQualifier.TimeUnit.Month; } ]
+    [ LOOKAHEAD(2) <TO> <MONTH> { end = SqlIntervalQualifier.TimeUnit.Month; } ]
     { start = SqlIntervalQualifier.TimeUnit.Year; }
 |
     <MONTH> [ <LPAREN> startPrec = IntLiteral() <RPAREN> ]
     { start = SqlIntervalQualifier.TimeUnit.Month; }
 |
     <DAY> [ <LPAREN> startPrec = IntLiteral() <RPAREN> ]
-    [ <TO>
+    [ LOOKAHEAD(2) <TO>
     (
       <HOUR> { end = SqlIntervalQualifier.TimeUnit.Hour; }
     | <MINUTE> { end = SqlIntervalQualifier.TimeUnit.Minute; }
@@ -1858,7 +1867,7 @@ SqlIntervalQualifier IntervalQualifier() :
     { start = SqlIntervalQualifier.TimeUnit.Day; }
 |
     <HOUR> [ <LPAREN> startPrec = IntLiteral() <RPAREN> ]
-    [ <TO>
+    [ LOOKAHEAD(2) <TO>
     (
       <MINUTE> { end = SqlIntervalQualifier.TimeUnit.Minute; }
     | <SECOND> { end = SqlIntervalQualifier.TimeUnit.Second; }
@@ -1868,7 +1877,7 @@ SqlIntervalQualifier IntervalQualifier() :
     { start = SqlIntervalQualifier.TimeUnit.Hour; }
 |
     <MINUTE> [ <LPAREN> startPrec = IntLiteral() <RPAREN> ]
-    [ <TO>
+    [ LOOKAHEAD(2) <TO>
     (
       <SECOND> { end = SqlIntervalQualifier.TimeUnit.Second; }
       [ <LPAREN> secondFracPrec = IntLiteral() <RPAREN> ]
@@ -1890,6 +1899,17 @@ SqlIntervalQualifier IntervalQualifier() :
                                         secondFracPrec,
                                         getPos());
     }
+}
+
+SqlIntervalQualifier.TimeUnit TimeUnit() :
+{}
+{
+    <YEAR> { return SqlIntervalQualifier.TimeUnit.Year; }
+|   <MONTH> { return SqlIntervalQualifier.TimeUnit.Month; }
+|   <DAY> { return SqlIntervalQualifier.TimeUnit.Day; }
+|   <HOUR> { return SqlIntervalQualifier.TimeUnit.Hour; }
+|   <MINUTE> { return SqlIntervalQualifier.TimeUnit.Minute; }
+|   <SECOND> { return SqlIntervalQualifier.TimeUnit.Second; }
 }
 
 /**
@@ -2128,9 +2148,10 @@ SqlNode BuiltinFunctionCall() :
     SqlDataTypeSpec dt;
 }
 {
+
     //~ FUNCTIONS WITH SPECIAL SYNTAX ---------------------------------------
 
-    (   <CAST>
+    ( <CAST>
 
     <LPAREN> e = Expression(EXPR_ACCEPT_SUBQUERY) { args = startList(e); }
                <AS>
@@ -2149,14 +2170,7 @@ SqlNode BuiltinFunctionCall() :
     (   <EXTRACT>
     { SqlIntervalQualifier.TimeUnit unit; }
     <LPAREN>
-        (
-              <YEAR>  { unit = SqlIntervalQualifier.TimeUnit.Year; }
-            | <MONTH> { unit = SqlIntervalQualifier.TimeUnit.Month; }
-            | <DAY>   { unit = SqlIntervalQualifier.TimeUnit.Day; }
-            | <HOUR>  { unit = SqlIntervalQualifier.TimeUnit.Hour; }
-            | <MINUTE>{ unit = SqlIntervalQualifier.TimeUnit.Minute; }
-            | <SECOND>{ unit = SqlIntervalQualifier.TimeUnit.Second; }
-        )
+    unit = TimeUnit()
         { args = startList(new SqlIntervalQualifier(unit,0,null,0,getPos())); }
     <FROM>
     e = Expression(EXPR_ACCEPT_SUBQUERY) { args.add(e); }
@@ -2228,6 +2242,18 @@ SqlNode BuiltinFunctionCall() :
              return opTab.overlayFunc.createCall(
                  SqlParserUtil.toNodeArray(args),pos);
         }
+    )
+|
+    (  <FLOOR>
+
+        e = FloorCeilOptions( getPos(), true)
+        { return e ; }
+    )
+|
+    (  ( <CEIL> | <CEILING>)
+
+        e = FloorCeilOptions( getPos(), false)
+        { return e ; }
     )
 |
     (   <SUBSTRING>
@@ -2395,6 +2421,52 @@ SqlNode NamedFunctionCall() :
     )
 }
 
+
+/*
+* Parse Floor/Ceil function parameters
+*/
+SqlNode StandardFloorCeilOptions( SqlParserPos pos, boolean floorFlag) :
+{
+    SqlIdentifier name;
+    SqlParserPos overPos = null;
+    SqlIdentifier id = null;
+    SqlNode e = null;
+    SqlCall function = null;
+    List args;
+    boolean over = false;
+}
+{
+    args = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_SUBQUERY) 
+    [ <OVER> {
+            overPos = getPos();
+            over = true;
+        }
+        (
+            id = SimpleIdentifier()
+          | e = WindowSpecification()
+        )
+    ]
+
+    {
+        name = new SqlIdentifier(
+            (floorFlag) ? "FLOOR" : "CEIL", pos);
+        function =  createCall(
+             name, SqlParserUtil.toNodeArray(args), pos,
+             SqlFunctionCategory.UserDefinedFunction);
+        if (over) {
+           if (id != null) {
+                return opTab.overOperator.createCall(
+                        new SqlNode[] {function, id}, overPos);
+            } else {
+                return opTab.overOperator.createCall(
+                    new SqlNode[] { function, e },overPos);
+            }
+        } else {
+            return function;
+        }
+    }
+}
+
 /**
  * Parses the name of a function (either a compound identifier or
  * a reserved word which can be used as a function name).
@@ -2423,8 +2495,6 @@ SqlIdentifier ReservedFunctionName() :
         <ABS>
         | <AVG>
         | <CARDINALITY>
-        | <CEIL>
-        | <CEILING>
         | <CHAR_LENGTH>
         | <CHARACTER_LENGTH>
         | <COALESCE>
@@ -2435,7 +2505,6 @@ SqlIdentifier ReservedFunctionName() :
         | <CURRENT_TIMESTAMP>
         | <ELEMENT>
         | <EXP>
-        | <FLOOR>
         | <FUSION>
         | <LN>
         | <LOCALTIME>
@@ -2603,7 +2672,8 @@ SqlBinaryOperator BinaryRowOperator() :
 | <CONCAT> { return opTab.concatOperator; }
 | <AND> { return opTab.andOperator; }
 | <OR> { return opTab.orOperator; }
-| <IS> <DISTINCT> <FROM> { return opTab.isDistinctFromOperator; }
+| LOOKAHEAD(2) <IS> <DISTINCT> <FROM> { return opTab.isDistinctFromOperator; }
+| <IS> <NOT> <DISTINCT> <FROM> { return opTab.isNotDistinctFromOperator; }
 // <IN> is handled as a special case
 | <MEMBER> <OF> { return opTab.memberOfOperator; }
 | <SUBMULTISET> <OF> { return opTab.submultisetOfOperator; }
@@ -3160,6 +3230,7 @@ TOKEN :
 | < WORK: "WORK" >
 | < WRAPPER: "WRAPPER" >
 | < WRITE: "WRITE" >
+| < XML: "XML" >
 | < YEAR: "YEAR" >
 | < ZONE: "ZONE" >
 }
@@ -3406,6 +3477,7 @@ String CommonNonReservedKeyWord() :
         | <WRAPPER>
         | <WORK>
         | <WRITE>
+        | <XML>
         | <ZONE>
     )
         {

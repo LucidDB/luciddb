@@ -35,6 +35,22 @@ import java.util.Properties;
 public interface FarragoMedDataWrapperInfo
 {
     /**
+     * Obtains information about the properties applicable to plugin
+     * initialization.
+     *
+     * @param locale Locale for formatting property info
+     *
+     * @param wrapperProps proposed list of property name/value
+     * pairs which will be sent to
+     * {@link net.sf.farrago.namespace.FarragoMedDataWrapper#initialize}
+     *
+     * @return 0 or more property info descriptors
+     */
+    public DriverPropertyInfo [] getPluginPropertyInfo(
+            Locale locale,
+            Properties wrapperProps);
+
+    /**
      * Obtains information about the properties applicable to server
      * initialization (the props parameter to the newServer method).
      *

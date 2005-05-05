@@ -37,8 +37,7 @@
 
   <path id="plugin.3p.classpath">
     <pathelement location="${jgraphaddons.dir}/lib/jgraphaddons.jar"/>
-    <pathelement location="${jgraph.dir}/lib/jgraph.jar"/>
-    <pathelement location="${jgrapht.dir}/jgrapht-0.5.3.jar"/>
+    <pathelement location="${jgrapht.dir}/lib/jgraph.jar"/>
   </path>
   <property name="plugin.3p.classpath" refid="plugin.3p.classpath"/>
 
@@ -47,6 +46,8 @@
 
   <property name="jgraph.classes.dir" 
     location="${plugin.dir}/jgraph"/>
+
+  <!-- TODO jvs 20-Apr-2005:  delete these after a while -->
   <property name="jgraphaddons.classes.dir" 
     location="${plugin.dir}/jgraphaddons"/>
   <property name="jgrapht.classes.dir" 
@@ -63,32 +64,16 @@
     </farrago.javaCompile>
   </target>
 
-  <!-- JGraph/JGraphT dependencies are brittle, hence these shenanigans -->
   <target name="jar" depends="compile">
     <antcall target="plugin.buildJar"/>
     <mkdir dir="${jgraph.classes.dir}"/>
-    <unjar src="${jgraph.dir}/lib/jgraph.jar" 
+    <unjar src="${jgrapht.dir}/lib/jgraph.jar" 
       dest="${jgraph.classes.dir}"/>
-    <mkdir dir="${jgraphaddons.classes.dir}"/>
     <unjar src="${jgraphaddons.dir}/lib/jgraphaddons.jar" 
-      dest="${jgraphaddons.classes.dir}"/>
-    <unjar src="${jgrapht.dir}/jgrapht-0.5.3.jar" 
-      dest="${jgrapht.classes.dir}"/>
-    <jar destfile="${plugin.jar.file}" compress="true" update="true"
-      duplicate="fail">
-      <fileset dir="${jgrapht.classes.dir}">
-        <include name="**/*.class"/>
-      </fileset>
-    </jar>
+      dest="${jgraph.classes.dir}"/>
     <jar destfile="${plugin.jar.file}" compress="true" update="true"
       duplicate="fail">
       <fileset dir="${jgraph.classes.dir}">
-        <include name="**/*.class"/>
-      </fileset>
-    </jar>
-    <jar destfile="${plugin.jar.file}" compress="true" update="true"
-      duplicate="fail">
-      <fileset dir="${jgraphaddons.classes.dir}">
         <include name="**/*.class"/>
       </fileset>
     </jar>
@@ -104,6 +89,7 @@
       <fileset dir="${jgraph.classes.dir}">
         <include name="**/*"/>
       </fileset>
+      <!-- TODO jvs 20-Apr-2005:  delete these after a while -->
       <fileset dir="${jgraphaddons.classes.dir}">
         <include name="**/*"/>
       </fileset>

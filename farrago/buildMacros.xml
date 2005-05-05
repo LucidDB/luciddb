@@ -216,6 +216,7 @@
     <pathelement location="${janino.dir}/lib/janino.jar"/>
     <pathelement location="${openjava.dir}/openjava.jar"/>
     <pathelement location="${hsqldb.dir}/lib/hsqldb.jar"/>
+    <pathelement location="${jgrapht.dir}/jgrapht-0.5.3-local.jar"/>
     <pathelement path="${farrago.custom.classpath}"/>
   </path>
   <property name="farrago.3p.classpath" refid="farrago.3p.classpath"/>
@@ -449,7 +450,7 @@
   <!-- Macro for running JUnit and sqlline tests -->
   <macrodef name="farrago.runTests">
     <element name="testfileset" optional="no"/>
-    <element name="junitargs" optional="no"/>
+    <element name="junitargs" optional="yes"/>
     <sequential>
       <fail unless="testlog.dir"/>
       <mkdir dir="${testlog.dir}"/>

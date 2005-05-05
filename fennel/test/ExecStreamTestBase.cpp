@@ -104,12 +104,9 @@ SharedExecStream ExecStreamTestBase::prepareConfluenceGraph(
     return pAdaptedStream;
 }
 
-void ExecStreamTestBase::testCaseSetUp()
+void ExecStreamTestBase::initStreamGraph()
 {
-    SegStorageTestBase::testCaseSetUp();
-    openStorage(DeviceMode::createNew);
-    pGraph = ExecStreamGraph::newExecStreamGraph();
-    pScheduler.reset(newScheduler());
+    pGraph = newStreamGraph();
     pGraphEmbryo.reset(
         new ExecStreamGraphEmbryo(
             pGraph,
@@ -117,6 +114,19 @@ void ExecStreamTestBase::testCaseSetUp()
             pCache,
             pSegmentFactory,
             true));
+}
+
+void ExecStreamTestBase::testCaseSetUp()
+{
+    SegStorageTestBase::testCaseSetUp();
+    openStorage(DeviceMode::createNew);
+    pScheduler.reset(newScheduler());
+    initStreamGraph();
+}
+
+SharedExecStreamGraph ExecStreamTestBase::newStreamGraph()
+{
+    return ExecStreamGraph::newExecStreamGraph();
 }
 
 ExecStreamScheduler *ExecStreamTestBase::newScheduler()

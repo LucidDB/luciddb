@@ -788,7 +788,7 @@ public abstract class OperandsTypeChecking
 
     /**
      * Parameter type-checking strategy where types must allow
-     * ordered comparisons.
+     * unordered comparisons.
      */
     public static final OperandsTypeChecking typeComparableUnordered =
         new ComparableOrderedTypeChecking(
@@ -1225,6 +1225,14 @@ public abstract class OperandsTypeChecking
     public static final OperandsTypeChecking typeNullableDatetime =
         new SimpleOperandsTypeChecking(new SqlTypeName [][] {
             SqlTypeName.datetimeNullableTypes
+        });
+    /**
+     *  Parameter type checking for the datetime type but
+     * not nullable.
+     */
+    public static final OperandsTypeChecking typeDatetime =
+        new SimpleOperandsTypeChecking(new SqlTypeName[][]{
+            SqlTypeName.datetimeTypes
         });
 
     /**

@@ -27,6 +27,9 @@ import org.eigenbase.sql.validate.SqlValidatorImpl;
 import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.util.EigenbaseException;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * An assistant which offers hints and corrections to a partially-formed SQL
@@ -144,6 +147,64 @@ public class SqlAdvisor
     }
 
     /**
+     * attempt to parse and validate a SQL statement.  Throws the first
+     * exception encountered.  The error message of this exception is to be
+     * displayed on the UI
+     *
+     * @param sql A user-input sql statement to be validated
+     *
+     * @return a List of ValidateErrorInfo (null if sql is valid)
+     */
+    public List validate(String sql)
+    {
+        SqlParser parser = new SqlParser(sql);
+        SqlNode sqlNode = null;
+        try {
+            sqlNode = parser.parseQuery();
+        } catch (SqlParseException e) {
+            // parser error does not contain a range info yet.  we set 
+            // the error to entire line for now
+            ValidateErrorInfo errInfo =
+                new ValidateErrorInfo(
+                    1,
+                    1,
+                    1,
+                    sql.length(),
+                    e.getMessage());
+
+            // parser only returns 1 exception now
+            ArrayList errorList = new ArrayList();
+            errorList.add(errInfo);
+            return errorList;
+        }
+        try {
+            validator.validate(sqlNode);
+        } catch (EigenbaseException e) {
+            ValidateErrorInfo errInfo = 
+                new ValidateErrorInfo(e);
+            
+            // validator only returns 1 exception now
+            ArrayList errorList = new ArrayList();
+            errorList.add(errInfo);
+            return errorList;
+        } catch (Exception e) {
+            ValidateErrorInfo errInfo =
+                new ValidateErrorInfo(
+                    1,
+                    1,
+                    1,
+                    sql.length(),
+                    e.getMessage());
+
+            // parser only returns 1 exception now
+            ArrayList errorList = new ArrayList();
+            errorList.add(errInfo);
+            return errorList;
+        } 
+        return null;
+    }
+
+    /**
      * Turn a partially completed or syntatically incorrect sql statement into
      * a simplified, valid one that can be passed into getCompletionHints()
      *
@@ -197,6 +258,107 @@ public class SqlAdvisor
     private String prepareSqlForParser(String sql)
     {
         return sql.replaceAll("\\$suggest\\$", "dummy");
+    }
+
+    /** 
+     *  An inner class that represents error message text and position info
+     *  of a validator or parser exception
+     */
+    public class ValidateErrorInfo {
+
+        private int startLineNum;
+        private int startColumnNum;
+        private int endLineNum;
+        private int endColumnNum;
+        private String errorMsg;
+
+        /**
+        *  Creates a new ValidateErrorInfo with the position coordinates
+        *  and an error string
+        */
+        public ValidateErrorInfo(
+            int startLineNum,
+            int startColumnNum,
+            int endLineNum,
+            int endColumnNum,
+            String errorMsg)
+        {
+            this.startLineNum = startLineNum;
+            this.startColumnNum = startColumnNum;
+            this.endLineNum = endLineNum;
+            this.endColumnNum = endColumnNum;
+            this.errorMsg = errorMsg;
+        }
+        
+        /**
+        *  Creates a new ValidateErrorInfo with an EigenbaseException
+        */
+        public ValidateErrorInfo(
+            EigenbaseException e)
+        {
+            this.startLineNum = e.getPosLine();
+            this.startColumnNum = e.getPosColumn();
+            this.endLineNum = e.getEndPosLine();
+            // and assumes the error spans 5 chars before range info is
+            // populated for Validator and Parser exceptions
+            this.endColumnNum = e.getEndPosColumn() + 4;
+            this.errorMsg = e.getCause().getMessage();
+        }
+        
+        /**
+        *  Creates a new ValidateErrorInfo with a SqlParserPos
+        *  and an error string
+        */
+        public ValidateErrorInfo(
+            SqlParserPos pos,
+            String errorMsg)
+        {
+            this.startLineNum = pos.getLineNum();
+            this.startColumnNum = pos.getColumnNum();
+            this.endLineNum = pos.getEndLineNum();
+            this.endColumnNum = pos.getEndColumnNum();
+            this.errorMsg = errorMsg;
+        }
+
+        /**
+         *  @return 1-based starting line number
+         */
+        public int getStartLineNum()
+        {   
+            return startLineNum;
+        }
+        
+        /**
+         *  @return 1-based starting column number
+         */
+        public int getStartColumnNum()
+        {   
+            return startColumnNum;
+        }
+        
+        /**
+         *  @return 1-based end line number
+         */
+        public int getEndLineNum()
+        {   
+            return endLineNum;
+        }
+        
+        /**
+         *  @return 1-based end column number
+         */
+        public int getEndColumnNum()
+        {   
+            return endColumnNum;
+        }
+        
+        /**
+         *  @return error message
+         */
+        public String getMessage()
+        {   
+            return errorMsg;
+        }
     }
 }
 

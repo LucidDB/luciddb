@@ -171,4 +171,19 @@ SqlNode ExtendedBuiltinFunctionCall() :
         }
 }
 
+/*
+* Parse Floor/Ceil function parameters
+*/
+SqlNode FloorCeilOptions( SqlParserPos pos, boolean floorFlag) :
+{
+    SqlNode node;
+}
+{
+    node = StandardFloorCeilOptions( pos, floorFlag)
+    {
+        return node;
+    }
+}
+
+
 // End DdlParser.jj

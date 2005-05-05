@@ -32,6 +32,10 @@ import java.util.regex.Pattern;
  */
 public abstract class TestUtil
 {
+    private static final Pattern LineBreakPattern =
+        Pattern.compile("\r\n|\r|\n");
+    private static final Pattern TabPattern = Pattern.compile("\t");
+
     public static void assertEqualsVerbose(
         String expected,
         String actual)
@@ -52,7 +56,8 @@ public abstract class TestUtil
         //
         s = Util.replace(s, "\"", "\\\"");
         final String lineBreak = "\" + NL + " + Util.lineSeparator + "\"";
-        s = Pattern.compile("\r\n|\r|\n").matcher(s).replaceAll(lineBreak);
+        s = LineBreakPattern.matcher(s).replaceAll(lineBreak);
+        s = TabPattern.matcher(s).replaceAll("\\\\t");
         s = "\"" + s + "\"";
         final String spurious = " + " + Util.lineSeparator + "\"\"";
         if (s.endsWith(spurious)) {

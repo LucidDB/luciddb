@@ -76,4 +76,10 @@ values x'0a'<=x'10';
 values x'20'<=x'10';
 values x'0001'>=x'100000';
 
+values 'a' is distinct from 'a';
+values 'a' is distinct from 'aa';
+values 'a' is distinct from 'b';
+values 1 is distinct from cast(null as integer);
+values cast(null as integer) is distinct from cast(null as integer);
+
 -- end selectSimple.sql

@@ -72,16 +72,87 @@ SharedLogicalTxn ExecStreamGraphImpl::getTxn()
     return pTxn;
 }
 
+ExecStreamGraphImpl::Vertex ExecStreamGraphImpl::newVertex()
+{
+    if (freeVertices.size() > 0) {
+        Vertex ret = freeVertices.back();
+        freeVertices.pop_back();
+        return ret;
+    }
+    return boost::add_vertex(graphRep);
+}
+
+void ExecStreamGraphImpl::freeVertex(Vertex v)
+{
+    boost::clear_vertex(v, graphRep);
+    boost::get(boost::vertex_data, graphRep)[v].reset();
+    freeVertices.push_back(v);
+}
+
+ExecStreamGraphImpl::Vertex 
+ExecStreamGraphImpl::addVertex(SharedExecStream pStream)
+{
+    Vertex v = newVertex();
+    boost::put(boost::vertex_data, graphRep, v, pStream);
+    if (pStream) {
+        pStream->id = v;
+        pStream->pGraph = this;
+        streamMap[pStream->getName()] = pStream->getStreamId();
+    }
+    return v;
+}
+
 void ExecStreamGraphImpl::addStream(
     SharedExecStream pStream)
 {
     assert(pStream->getName().length());
     assert(findStream(pStream->getName()).get()==NULL);
-    Vertex streamVertex = boost::add_vertex(graphRep);
-    pStream->id = streamVertex;
-    pStream->pGraph = this;
-    boost::put(boost::vertex_data,graphRep,streamVertex,pStream);
-    streamMap[pStream->getName()] = pStream->getStreamId();
+    (void) addVertex(pStream);
+}
+
+void ExecStreamGraphImpl::removeStream(ExecStreamId id)
+{
+    Vertex v = boost::vertices(graphRep).first[id];
+    SharedExecStream pStream = getStreamFromVertex(v);
+    assert(pStream->pGraph == this);
+    assert(pStream->id == id);
+
+    streamMap.erase(pStream->getName());
+    sortedStreams.clear();              // invalidate list: recreated on demand
+    // erase from streamOutMap
+    int outCt = getOutputCount(id);
+    if (outCt > 0) {
+        std::string name = pStream->getName();
+        // assumes map key pairs <name, index> sort lexicographically, so <name, *> is contiguous.
+        EdgeMap::iterator startNameRange =
+            streamOutMap.find(std::make_pair(name, 0));
+        EdgeMap::iterator endNameRange =
+            streamOutMap.find(std::make_pair(name, outCt-1));
+        streamOutMap.erase(startNameRange, endNameRange);
+    }
+
+    freeVertex(v);
+    // stream is now detached from any graph, and not usable.
+    pStream->pGraph = 0;
+    pStream->id = 0;
+}
+
+// Deletes all edges and puts all vertices on the free list;
+// almost like removeStream() on all vertices,
+// but doesn't affect the ExecStream which no longer belongs to this graph.
+void ExecStreamGraphImpl::clear()
+{
+    VertexIterPair verts = boost::vertices(graphRep);
+    while (verts.first != verts.second) {
+        Vertex v = *verts.first;
+        freeVertex(v);
+        ++verts.first;
+    }
+
+    streamMap.clear();
+    streamOutMap.clear();
+    sortedStreams.clear();
+    needsClose = isOpen = isPrepared = false;
 }
 
 void ExecStreamGraphImpl::addDataflow(
@@ -94,15 +165,60 @@ void ExecStreamGraphImpl::addDataflow(
 void ExecStreamGraphImpl::addOutputDataflow(
     ExecStreamId producerId)
 {
-    Vertex consumerId = boost::add_vertex(graphRep);
+    Vertex consumerId = newVertex();
     boost::add_edge(producerId,consumerId,graphRep);
 }
 
 void ExecStreamGraphImpl::addInputDataflow(
     ExecStreamId consumerId)
 {
-    Vertex producerId = boost::add_vertex(graphRep);
+    Vertex producerId = newVertex();
     boost::add_edge(producerId,consumerId,graphRep);
+}
+
+void ExecStreamGraphImpl::mergeFrom(ExecStreamGraph& src)
+{
+    if (ExecStreamGraphImpl *p = dynamic_cast<ExecStreamGraphImpl*>(&src)) {
+        mergeFrom(*p);
+    }
+    assert(false);
+}
+
+void ExecStreamGraphImpl::mergeFrom(ExecStreamGraphImpl& src)
+{
+    // Since the identity of the added graph SRC will be lost, at this time both
+    // graphs must be prepared, and must both be open or both be closed.
+    assert(isPrepared && src.isPrepared);
+    assert(isOpen == src.isOpen);
+
+    // map a source vertex ID to the ID of the copied target vertex 
+    std::map<Vertex, Vertex> vmap;
+
+    // copy the nodes (with attached streams)
+    int n,  nsrc = boost::num_vertices(src.graphRep); // debug
+    VertexIterPair verts = boost::vertices(src.graphRep);
+    for (n = 0; verts.first != verts.second; ++n, ++verts.first) {
+        Vertex vsrc = *verts.first;
+        SharedExecStream pStream = src.getStreamFromVertex(vsrc);
+        Vertex vnew = addVertex(pStream);
+        vmap[vsrc] = vnew;
+    }
+    assert(n == nsrc);                  // debug
+
+    // copy the edges (with attached buffers, which stay bound to the adjacent streams)
+    nsrc = boost::num_edges(src.graphRep);
+    EdgeIterPair edges = boost::edges(src.graphRep);
+    for (n = 0; edges.first != edges.second; ++n, ++edges.first) {
+        Edge esrc = *edges.first;
+        SharedExecStreamBufAccessor pBuf = src.getSharedBufAccessorFromEdge(esrc);
+        std::pair<Edge, bool> x = boost::add_edge(
+            vmap[boost::source(esrc, src.graphRep)], // image of source node
+            vmap[boost::target(esrc, src.graphRep)], // image of target node
+            pBuf, graphRep);
+        assert(x.second);
+    }
+    assert(n == nsrc);                  // debug
+    src.clear();
 }
 
 SharedExecStream ExecStreamGraphImpl::findStream(
@@ -228,6 +344,10 @@ void ExecStreamGraphImpl::open()
     }
 
     // open streams in dataflow order (from producers to consumers)
+    if (sortedStreams.empty()) {
+        // in case removeStream() was called after prepare
+        sortStreams();
+    }
     std::for_each(
         sortedStreams.begin(),
         sortedStreams.end(),
@@ -327,6 +447,9 @@ SharedExecStreamBufAccessor ExecStreamGraphImpl::getStreamOutputAccessor(
 std::vector<SharedExecStream> ExecStreamGraphImpl::getSortedStreams()
 {
     assert(isPrepared);
+    if (sortedStreams.empty()) {
+        sortStreams();
+    }
     return sortedStreams;
 }
 

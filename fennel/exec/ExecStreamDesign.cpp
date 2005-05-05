@@ -199,12 +199,18 @@ automatically.
 
 <h3>ExecStream Lifecycle</h3>
 
-The ExecStream and ExecStreamGraph classes share a common lifecycle:
+The ExecStream and ExecStreamGraph classes have a similar lifecyle. An
+ExecStream is always an element in an ExecStreamGraph; in the simple case this
+is the same graph, so the lifecycles coincide. It is also possible for a stream
+to change graphs: that is, it can be constructed in one graph (its preparation
+context), and then that graph can be merged into a larger graph (its execution
+context). Note that merger is allowed but not arbitrary edits, which could
+easily produce an invalid graph. This feature is intended as a basis for
+query optimization across multiple statements, etc.
+
 
 <hr>
-
 \image html StreamLifecycle.gif
-
 <hr>
 
 <ul>

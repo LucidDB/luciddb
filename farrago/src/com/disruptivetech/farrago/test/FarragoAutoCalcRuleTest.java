@@ -68,11 +68,6 @@ import org.eigenbase.sql.fun.SqlStdOperatorTable;
  */
 public class FarragoAutoCalcRuleTest extends FarragoTestCase
 {
-    //~ Static fields/initializers --------------------------------------------
-
-    private static SqlStdOperatorTable opTab;
-    private static TestOJRexImplementorTable testOjRexImplementor;
-
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -121,30 +116,11 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
         // close any previous connection and create a special one
         FarragoTestCase.forceShutdown();
 
-        opTab = new SqlStdOperatorTable();
-        opTab.init();
-        testOjRexImplementor = new TestOJRexImplementorTable(opTab);
-
         String originalDriverClass =
             FarragoProperties.instance().testJdbcDriverClass.get();
 
         FarragoProperties.instance().testJdbcDriverClass.set(
             TestJdbcEngineDriver.class.getName());
-
-        SqlFunction cppFunc =
-            new SqlFunction("CPLUS", SqlKind.Function,
-                ReturnTypeInferenceImpl.useNullableBiggest,
-                UnknownParamInference.useFirstKnown,
-                OperandsTypeChecking.typeNullableNumericNumeric,
-                SqlFunctionCategory.Numeric);
-        opTab.register(cppFunc);
-
-        CalcRexImplementorTableImpl cImplTab =
-            new CalcRexImplementorTableImpl(CalcRexImplementorTableImpl.std());
-        CalcRexImplementorTableImpl.setThreadInstance(cImplTab);
-        cImplTab.register(
-            cppFunc,
-            cImplTab.get(opTab.plusOperator));
 
         FarragoTestCase.staticSetUp();
 
@@ -368,7 +344,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
         public SqlOperatorTable getSqlOperatorTable(
             FarragoSessionPreparingStmt preparingStmt)
         {
-            return opTab;
+            return TestJdbcEngineDriver.opTab;
         }
 
         public OJRexImplementorTable getOJRexImplementorTable(
@@ -385,7 +361,32 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
      */
     public static class TestJdbcEngineDriver extends FarragoJdbcEngineDriver
     {
+        //~ Static fields/initializers ----------------------------------------
+
+        static SqlStdOperatorTable opTab;
+        static TestOJRexImplementorTable testOjRexImplementor;
+
         static {
+            opTab = new SqlStdOperatorTable();
+            opTab.init();
+            testOjRexImplementor = new TestOJRexImplementorTable(opTab);
+
+            SqlFunction cppFunc =
+                new SqlFunction("CPLUS", SqlKind.Function,
+                                ReturnTypeInferenceImpl.useNullableBiggest,
+                                UnknownParamInference.useFirstKnown,
+                                OperandsTypeChecking.typeNullableNumericNumeric,
+                                SqlFunctionCategory.Numeric);
+            opTab.register(cppFunc);
+
+            CalcRexImplementorTableImpl cImplTab =
+                new CalcRexImplementorTableImpl(
+                    CalcRexImplementorTableImpl.std());
+            CalcRexImplementorTableImpl.setThreadInstance(cImplTab);
+            cImplTab.register(
+                cppFunc,
+                cImplTab.get(opTab.plusOperator));
+
             new TestJdbcEngineDriver().register();
         }
 

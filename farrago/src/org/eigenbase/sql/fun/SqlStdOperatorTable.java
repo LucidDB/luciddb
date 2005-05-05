@@ -350,10 +350,25 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      */
     public final SqlBinaryOperator isDistinctFromOperator =
         new SqlBinaryOperator("IS DISTINCT FROM", SqlKind.Other, 15, true,
-            ReturnTypeInferenceImpl.useNullableBoolean, UnknownParamInference.useFirstKnown, OperandsTypeChecking.typeAnyAny) {
+            ReturnTypeInferenceImpl.useNullableBoolean, UnknownParamInference.useFirstKnown,
+            OperandsTypeChecking.typeNullableComparableUnordered) {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testIsDistinctFromOperator(tester);
+            }
+        };
+
+    /**
+     * <code>IS NOT DISTINCT FROM</code> operator. Is equivalent to
+     * <code>NOT(x IS DISTINCT FROM y)</code>
+     */
+    public final SqlBinaryOperator isNotDistinctFromOperator =
+        new SqlBinaryOperator("IS NOT DISTINCT FROM", SqlKind.Other, 15, true,
+            ReturnTypeInferenceImpl.useNullableBoolean, UnknownParamInference.useFirstKnown,
+            OperandsTypeChecking.typeNullableComparableUnordered) {
+            public void test(SqlTester tester)
+            {
+                SqlOperatorTests.testIsNotDistinctFromOperator(tester);
             }
         };
 

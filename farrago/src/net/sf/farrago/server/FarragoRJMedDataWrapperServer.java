@@ -77,6 +77,16 @@ class FarragoRJMedDataWrapperServer
         //cache_.unloadWrapper(mofId_, libraryName_, options_);
     }
 
+    public FarragoRJDriverPropertyInfo [] getPluginPropertyInfo(
+            Locale locale,
+            Properties wrapperProps)
+            throws RemoteException
+        {
+            return makeSerializable(
+                getWrapper().getPluginPropertyInfo(
+                    locale, wrapperProps));
+        }
+
     public FarragoRJDriverPropertyInfo [] getServerPropertyInfo(
         Locale locale,
         Properties wrapperProps,

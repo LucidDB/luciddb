@@ -28,6 +28,7 @@ import java.util.*;
 import java.util.logging.*;
 
 import javax.jmi.reflect.*;
+import javax.jmi.model.*;
 
 import net.sf.farrago.*;
 import net.sf.farrago.cwm.*;
@@ -47,6 +48,8 @@ import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.util.SaffronProperties;
+import org.eigenbase.jmi.*;
+
 import org.netbeans.api.mdr.*;
 import org.netbeans.mdr.*;
 
@@ -106,6 +109,8 @@ public class FarragoRepos extends FarragoMetadataFactory
     private List resourceBundles;
 
     private String memStorageId;
+
+    private JmiModelGraph modelGraph;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -199,6 +204,8 @@ public class FarragoRepos extends FarragoMetadataFactory
 
         localizedClassNames = new HashMap();
         resourceBundles = new ArrayList();
+
+        modelGraph = new JmiModelGraph(farragoPackage);
 
         tracer.info("Catalog successfully loaded");
     }

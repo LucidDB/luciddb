@@ -275,7 +275,9 @@ Was expecting one of:
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- sorry, view based on personality will no longer work  :(
 0: jdbc:farrago:> select * from random_personality_view;
-Error: net.sf.farrago.parser.impl.FarragoParserImpl$LookaheadSuccess: null (state=,code=0)
+Error: net.sf.farrago.parser.impl.ParseException: Encountered "10" at line 2, column 44.
+Was expecting:
+    "(" ... (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- but view based on UDF will
 0: jdbc:farrago:> select * from random_udf_view;
