@@ -70,6 +70,10 @@ public class StackWriter extends FilterWriter
     public static final int OPEN_SQL_STRING_LITERAL = 0xF0000003;
     /** directive for ending an SQL string literal */
     public static final int CLOSE_SQL_STRING_LITERAL = 0xF0000004;
+    /** directive for beginning an SQL identifier */
+    public static final int OPEN_SQL_IDENTIFIER = 0xF0000005;
+    /** directive for ending an SQL identifier */
+    public static final int CLOSE_SQL_IDENTIFIER = 0xF0000006;
 	
     /** tab indentation */
     public static final String INDENT_TAB = "\t";
@@ -81,7 +85,8 @@ public class StackWriter extends FilterWriter
     private String indentation;
     private boolean needIndent;
     private LinkedList quoteStack;
-    private Character singleQuote;
+    private static final Character singleQuote = new Character('\'');
+    private static final Character doubleQuote = new Character('"');
 
     /**
      * Creates a new StackWriter on top of an existing Writer, with the
@@ -97,7 +102,6 @@ public class StackWriter extends FilterWriter
         super(writer);
         this.indentation = indentation;
         quoteStack = new LinkedList();
-        singleQuote = new Character('\'');
     }
 
     private void indentIfNeeded() throws IOException
@@ -154,12 +158,21 @@ public class StackWriter extends FilterWriter
         case CLOSE_SQL_STRING_LITERAL:
             popQuote(singleQuote);
             break;
+        case OPEN_SQL_IDENTIFIER:
+            pushQuote(doubleQuote);
+            break;
+        case CLOSE_SQL_IDENTIFIER:
+            popQuote(doubleQuote);
+            break;
         case '\n':
             out.write(c);
             needIndent = true;
             break;
         case '\'':
             writeQuote(singleQuote);
+            break;
+        case '"':
+            writeQuote(doubleQuote);
             break;
         default:
             indentIfNeeded();
@@ -186,6 +199,34 @@ public class StackWriter extends FilterWriter
         for (int i = off; i < off+len; i++) {
             write(str.charAt(i));
         }
+    }
+
+    /**
+     * Writes an SQL string literal.
+     *
+     * @param pw PrintWriter on which to write
+     *
+     * @param s text of literal
+     */
+    public static void printSqlStringLiteral(PrintWriter pw, String s)
+    {
+        pw.write(OPEN_SQL_STRING_LITERAL);
+        pw.print(s);
+        pw.write(CLOSE_SQL_STRING_LITERAL);
+    }
+    
+    /**
+     * Writes an SQL identifier.
+     *
+     * @param pw PrintWriter on which to write
+     *
+     * @param s identifier
+     */
+    public static void printSqlIdentifier(PrintWriter pw, String s)
+    {
+        pw.write(OPEN_SQL_IDENTIFIER);
+        pw.print(s);
+        pw.write(CLOSE_SQL_IDENTIFIER);
     }
 }
 
