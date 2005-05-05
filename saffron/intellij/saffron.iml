@@ -9,13 +9,13 @@
       <sourceFolder url="file://$MODULE_DIR$/../examples" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/../src" isTestSource="false" />
     </content>
-    <orderEntry type="inheritedJdk" />
+    <orderEntry type="jdk" jdkName="java version &quot;1.4.2_02&quot;" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="farrago" />
     <orderEntry type="library" name="ant" level="project" />
-    <orderEntry type="library" name="mondrian-utils" level="project" />
-    <orderEntry type="library" name="servlet" level="project" />
     <orderEntry type="library" name="junit" level="project" />
+    <orderEntry type="library" name="servlet" level="project" />
+    <orderEntry type="library" name="resgen" level="project" />
     <orderEntryProperties />
   </component>
 </module>

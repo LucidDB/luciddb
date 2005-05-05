@@ -3,7 +3,6 @@
   <component name="ModuleRootManager" />
   <component name="NewModuleRootManager">
     <output url="file://$MODULE_DIR$/../catalog/java" />
-    <exclude-output />
     <exclude-exploded />
     <content url="file://$MODULE_DIR$/../catalog">
       <sourceFolder url="file://$MODULE_DIR$/../catalog/java" isTestSource="false" />
