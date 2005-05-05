@@ -20,7 +20,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
 
-# Script to set up a new Farrago build environment
+# Script to set up a new Farrago build environment, or to reinitialize
+# an existing one after syncing changes from source control.
 
 usage() {
     echo "Usage:  initBuild.sh --with[out]-fennel [--append-init-properties] [--with[out]-optimization] [--with[out]-debug] [--skip-thirdparty]"
