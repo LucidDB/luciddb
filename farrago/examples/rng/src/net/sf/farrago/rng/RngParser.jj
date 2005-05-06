@@ -69,7 +69,8 @@ import net.sf.farrago.rng.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class RngParser extends FarragoAbstractParserImpl {
+public class RngParser extends FarragoAbstractParserImpl
+{
     public SqlParserPos getCurrentPosition()
     {
         return new SqlParserPos(
@@ -137,11 +138,11 @@ String RngNonReservedKeyWord() :
 }
 {
     (
-          <RNG> | <SEED>
+        <RNG> | <SEED>
     )
-        {
-            return getToken(0).image.toUpperCase();
-        }
+    {
+        return getToken(0).image.toUpperCase();
+    }
 }
 
 CwmModelElement ExtensionModelSchemaObjDefinition() :
@@ -153,19 +154,19 @@ CwmModelElement ExtensionModelSchemaObjDefinition() :
 }
 {
     <RNG>
-        {
-            rng = getRngModelPackage().getRngschema()
-                .getRngRandomNumberGenerator().createRngRandomNumberGenerator();
-        }
+    {
+        rng = getRngModelPackage().getRngschema()
+        .getRngRandomNumberGenerator().createRngRandomNumberGenerator();
+    }
     qualifiedName = CompoundIdentifier3()
-        {
-            farragoParser.getDdlValidator().setSchemaObjectName(
-                rng, qualifiedName);
-        }
+    {
+        farragoParser.getDdlValidator().setSchemaObjectName(
+            rng, qualifiedName);
+    }
     <EXTERNAL> externalLocation = QuotedString()
-        {
-            rng.setSerializedFile(externalLocation);
-        }
+    {
+        rng.setSerializedFile(externalLocation);
+    }
     [ <SEED> seed = UnsignedValue() { rng.setInitialSeed(new Long(seed)); } ]
     {
         return rng;
@@ -178,13 +179,13 @@ long UnsignedValue() :
 }
 {
     t = <UNSIGNED_INTEGER_LITERAL>
-        {
-            try {
-                return Long.parseLong(t.image);
-            } catch (NumberFormatException ex) {
-                 throw generateParseException();
-            }
+    {
+        try {
+            return Long.parseLong(t.image);
+        } catch (NumberFormatException ex) {
+            throw generateParseException();
         }
+    }
 }
 
 CwmModelElement ExtensionModelDefinition() :
@@ -194,9 +195,9 @@ CwmModelElement ExtensionModelDefinition() :
     (
         LOOKAHEAD({false}) <NULL>
     )
-        {
-            return null;
-        }
+    {
+        return null;
+    }
 }
 
 CwmModelElement ExtensionModelDrop() :
@@ -206,17 +207,17 @@ CwmModelElement ExtensionModelDrop() :
 }
 {
     <RNG> qualifiedName = CompoundIdentifier3()
-        {
-            rng = (RngRandomNumberGenerator)
-            farragoParser.getStmtValidator().findSchemaObject(
-                qualifiedName,
-                getRngModelPackage().getRngschema().
-                getRngRandomNumberGenerator());
-        }
+    {
+        rng = (RngRandomNumberGenerator)
+        farragoParser.getStmtValidator().findSchemaObject(
+            qualifiedName,
+            getRngModelPackage().getRngschema().
+            getRngRandomNumberGenerator());
+    }
     CascadeOption()
-        {
-            return rng;
-        }
+    {
+        return rng;
+    }
 }
 
 DdlStmt ExtensionModelAlter() :
@@ -226,9 +227,9 @@ DdlStmt ExtensionModelAlter() :
     (
         LOOKAHEAD({false}) <NULL>
     )
-        {
-            return null;
-        }
+    {
+        return null;
+    }
 }
 
 SqlNode ExtendedBuiltinFunctionCall() :
@@ -240,46 +241,46 @@ SqlNode ExtendedBuiltinFunctionCall() :
 }
 {
     <NEXT_RANDOM_INT>
-         <LPAREN>
-         (
-             <CEILING> longCeiling = UnsignedValue()
-             {
-                 ceiling = (int) longCeiling;
-             }
-             | <UNBOUNDED>
-         )
-         <FROM>
-         id = CompoundIdentifier3()
-         <RPAREN>
+    <LPAREN>
+    (
+        <CEILING> longCeiling = UnsignedValue()
         {
-            rng = (RngRandomNumberGenerator)
-            farragoParser.getStmtValidator().findSchemaObject(
-                id,
-                getRngModelPackage().getRngschema().
-                getRngRandomNumberGenerator());
-            return
-            FarragoRngOperatorTable.rngInstance().nextRandomInt.createCall(
-                new SqlNode [] {
-                    SqlLiteral.createExactNumeric(
-                        Integer.toString(ceiling),
-                        getPos()),
-                    SqlLiteral.createCharString(
-                        FarragoCatalogUtil.getQualifiedName(rng).toString(),
-                        getPos()),
-                    SqlLiteral.createCharString(
-                        FarragoProperties.instance().expandProperties(
-                            rng.getSerializedFile()),
-                        getPos())
-                }, 
-                getPos());
+            ceiling = (int) longCeiling;
         }
+        | <UNBOUNDED>
+    )
+    <FROM>
+    id = CompoundIdentifier3()
+    <RPAREN>
+    {
+        rng = (RngRandomNumberGenerator)
+        farragoParser.getStmtValidator().findSchemaObject(
+            id,
+            getRngModelPackage().getRngschema().
+            getRngRandomNumberGenerator());
+        return
+        FarragoRngOperatorTable.rngInstance().nextRandomInt.createCall(
+            new SqlNode [] {
+                SqlLiteral.createExactNumeric(
+                    Integer.toString(ceiling),
+                    getPos()),
+                SqlLiteral.createCharString(
+                    FarragoCatalogUtil.getQualifiedName(rng).toString(),
+                    getPos()),
+                SqlLiteral.createCharString(
+                    FarragoProperties.instance().expandProperties(
+                        rng.getSerializedFile()),
+                    getPos())
+                }, 
+            getPos());
+    }
 }
 
 TOKEN :
 {
-  < NEXT_RANDOM_INT: "NEXT_RANDOM_INT" >
-| < RNG: "RNG" >
-| < SEED: "SEED" >
+    < NEXT_RANDOM_INT: "NEXT_RANDOM_INT" >
+    | < RNG: "RNG" >
+    | < SEED: "SEED" >
 }
 
 /*

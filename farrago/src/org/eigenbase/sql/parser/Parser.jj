@@ -61,7 +61,8 @@ import java.util.logging.Level;
  * @since Mar 18, 2003
  * @version $Id$
  */
-public class SqlParserImpl extends SqlAbstractParserImpl {
+public class SqlParserImpl extends SqlAbstractParserImpl
+{
     private static final Logger tracer = EigenbaseTrace.getParserTracer();
 }
 
@@ -74,9 +75,10 @@ PARSER_END(SqlParserImpl)
 
 /* For Debug */
 JAVACODE
-void debug_message1() {
+void debug_message1()
+{
     tracer.log(Level.INFO,  getToken( 0 ).image
-             + " , " + getToken( 1 ).image );
+        + " , " + getToken( 1 ).image );
 }
 
 String NonReservedKeyWord() :
@@ -85,9 +87,9 @@ String NonReservedKeyWord() :
 }
 {
     kw = CommonNonReservedKeyWord()
-        {
-            return kw;
-        }
+    {
+        return kw;
+    }
 }
 
 /**
@@ -98,7 +100,9 @@ SqlNode TableOverOpt() :
 {
 }
 {
-    { return null; }
+    {
+        return null;
+    }
 }
 
 /*
@@ -115,9 +119,9 @@ SqlNode ExtendedBuiltinFunctionCall() :
 }
 {
     UnusedExtension()
-        {
-            return null;
-        }
+    {
+        return null;
+    }
 }
 
 /*

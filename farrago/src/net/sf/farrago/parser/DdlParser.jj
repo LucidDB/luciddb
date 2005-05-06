@@ -67,7 +67,8 @@ import net.sf.farrago.fem.sql2003.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoParserImpl extends FarragoAbstractParserImpl {
+public class FarragoParserImpl extends FarragoAbstractParserImpl
+{
     public SqlParserPos getCurrentPosition()
     {
         return new SqlParserPos(
@@ -126,9 +127,9 @@ CwmModelElement ExtensionModelDefinition() :
 }
 {
     UnusedExtension()
-        {
-            return null;
-        }
+    {
+        return null;
+    }
 }
 
 CwmModelElement ExtensionModelSchemaObjDefinition() :
@@ -136,9 +137,9 @@ CwmModelElement ExtensionModelSchemaObjDefinition() :
 }
 {
     UnusedExtension()
-        {
-            return null;
-        }
+    {
+        return null;
+    }
 }
 
 CwmModelElement ExtensionModelDrop() :
@@ -146,9 +147,9 @@ CwmModelElement ExtensionModelDrop() :
 }
 {
     UnusedExtension()
-        {
-            return null;
-        }
+    {
+        return null;
+    }
 }
 
 DdlStmt ExtensionModelAlter() :
@@ -156,9 +157,9 @@ DdlStmt ExtensionModelAlter() :
 }
 {
     UnusedExtension()
-        {
-            return null;
-        }
+    {
+        return null;
+    }
 }
 
 SqlNode ExtendedBuiltinFunctionCall() :
@@ -166,9 +167,9 @@ SqlNode ExtendedBuiltinFunctionCall() :
 }
 {
     UnusedExtension()
-        {
-            return null;
-        }
+    {
+        return null;
+    }
 }
 
 /*
@@ -179,7 +180,7 @@ SqlNode FloorCeilOptions( SqlParserPos pos, boolean floorFlag) :
     SqlNode node;
 }
 {
-    node = StandardFloorCeilOptions( pos, floorFlag)
+    node = StandardFloorCeilOptions( pos, floorFlag )
     {
         return node;
     }

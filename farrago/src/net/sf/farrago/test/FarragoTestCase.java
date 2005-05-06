@@ -35,6 +35,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.config.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.security.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
@@ -554,6 +555,7 @@ public abstract class FarragoTestCase extends DiffTestCase
             restoreParameters();
             dropSchemas();
             dropDataWrappers();
+            dropAuthIds();
         }
 
         private void dropSchemas()
@@ -609,6 +611,20 @@ public abstract class FarragoTestCase extends DiffTestCase
                 String name = (String) iter.next();
                 stmt.execute("drop " + wrapperType + " data wrapper \"" + name
                     + "\" cascade");
+            }
+        }
+
+        private void dropAuthIds()
+            throws Exception
+        {
+            List list = new ArrayList(
+                repos.getSecurityPackage().getFemAuthorizationIdentifier()
+                .refAllOfClass());
+            Iterator iter = list.iterator();
+            while (iter.hasNext()) {
+                FemAuthorizationIdentifier authId =
+                    (FemAuthorizationIdentifier) iter.next();
+                authId.refDelete();
             }
         }
     }

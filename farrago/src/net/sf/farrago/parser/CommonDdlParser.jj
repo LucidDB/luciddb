@@ -48,9 +48,19 @@ SqlIdentifier CompoundIdentifier2() :
     String p;
 }
 {
-    (p = Identifier() {list.add(p);})
-    (<DOT> p = Identifier() {list.add(p);})?
-    {return new SqlIdentifier(SqlParserUtil.toStringArray(list),null);}
+    p = Identifier()
+    {
+        list.add(p);
+    }
+    [
+        <DOT> p = Identifier()
+        {
+            list.add(p);
+        }
+    ]
+    {
+        return new SqlIdentifier(SqlParserUtil.toStringArray(list),null);
+    }
 }
 
 SqlIdentifier CompoundIdentifier3() :
@@ -59,10 +69,25 @@ SqlIdentifier CompoundIdentifier3() :
     String p;
 }
 {
-    (p = Identifier() {list.add(p);})
-        ((<DOT> p = Identifier() {list.add(p);})
-            (<DOT> p = Identifier() {list.add(p);})?)?
-    {return new SqlIdentifier(SqlParserUtil.toStringArray(list),null);}
+    p = Identifier()
+    {
+        list.add(p);
+    }
+    [
+        <DOT> p = Identifier()
+        {
+            list.add(p);
+        }
+        [
+            <DOT> p = Identifier()
+            {
+                list.add(p);
+            }
+        ]
+    ]
+    {
+        return new SqlIdentifier(SqlParserUtil.toStringArray(list),null);
+    }
 }
 
 String QuotedString() :
@@ -72,7 +97,7 @@ String QuotedString() :
 {
     t = <QUOTED_STRING>
     {
-      return SqlParserUtil.parseString(t.image);
+        return SqlParserUtil.parseString(t.image);
     }
 }
 
@@ -89,12 +114,15 @@ Object FarragoSqlStmtEof() :
 {
     (
         obj = DdlStmtEof()
-    |
+        |
         obj = SqlStmtEof()
-    |
-        obj = PsmBody() <EOF>
+        |
+        obj = PsmBody()
     )
-        { return obj; }
+    <EOF>
+    {
+        return obj;
+    }
 }
 
 DdlStmt DdlStmtEof() :
@@ -105,125 +133,134 @@ DdlStmt DdlStmtEof() :
 }
 {
     (
-        ( <CREATE>
-          (
-            modelElement = SchemaDefinition()
-            |
-            LOOKAHEAD(2)
-            modelElement = DataWrapperDefinition()
-            |
-            modelElement = SchemaObjectDefinition()
-            |
-            modelElement = IndexDefinition(null)
-            |
-            modelElement = DataServerDefinition()
-            |
-            modelElement = ExtensionModelDefinition()
-           )
-        {
-            ddlStmt = new DdlCreateStmt(modelElement);
-        }
+        (
+            <CREATE>
+            (
+                modelElement = SchemaDefinition()
+                |
+                LOOKAHEAD(2)
+                modelElement = DataWrapperDefinition()
+                |
+                modelElement = SchemaObjectDefinition()
+                |
+                modelElement = IndexDefinition(null)
+                |
+                modelElement = DataServerDefinition()
+                |
+                modelElement = ExtensionModelDefinition()
+            )
+            {
+                ddlStmt = new DdlCreateStmt(modelElement);
+            }
         )
         |
-        ( <DROP>
-        {
-            // assume RESTRICT; CascadeOption() may override
-            dropRestrict = true;
-        }
-          (
-              modelElement = SchemaDrop()
-              |
-              modelElement = TableDrop()
-              |
-              modelElement = IndexDrop()
-              |
-              modelElement = ViewDrop()
-              |
-              modelElement = RoutineDrop()
-              |
-              modelElement = UserDefinedTypeDrop()
-              |
-              modelElement = UserDefinedOrderingDrop()
-              |
-              modelElement = JarDrop()
-              |
-              modelElement = DataServerDrop()
-              |
-              LOOKAHEAD(2)
-              modelElement = DataWrapperDrop()
-              |
-              LOOKAHEAD(2)
-              modelElement = ForeignTableDrop()
-              |
-              modelElement = ExtensionModelDrop()
-          )
-        {
-            ddlStmt = new DdlDropStmt(modelElement,dropRestrict);
-        }
+        (
+            <DROP>
+            {
+                // assume RESTRICT; CascadeOption() may override
+                dropRestrict = true;
+            }
+            (
+                modelElement = SchemaDrop()
+                |
+                modelElement = TableDrop()
+                |
+                modelElement = IndexDrop()
+                |
+                modelElement = ViewDrop()
+                |
+                modelElement = RoutineDrop()
+                |
+                modelElement = UserDefinedTypeDrop()
+                |
+                modelElement = UserDefinedOrderingDrop()
+                |
+                modelElement = JarDrop()
+                |
+                modelElement = DataServerDrop()
+                |
+                LOOKAHEAD(2)
+                modelElement = DataWrapperDrop()
+                |
+                LOOKAHEAD(2)
+                modelElement = ForeignTableDrop()
+                |
+                modelElement = ExtensionModelDrop()
+            )
+            {
+                ddlStmt = new DdlDropStmt(modelElement,dropRestrict);
+            }
         )
         |
-        ( <TRUNCATE>
-          (
-              <TABLE> modelElement = TableIdentifier()
-          )
-        {
-            ddlStmt = new DdlTruncateStmt(modelElement);
-        }
+        (
+            <TRUNCATE>
+            (
+                <TABLE> modelElement = TableIdentifier()
+            )
+            {
+                ddlStmt = new DdlTruncateStmt(modelElement);
+            }
         )
         |
-        ( <SET>
+        (
+            <SET>
             (
                 <CATALOG> expr = Expression(EXPR_ACCEPT_NONQUERY)
-            {
-                ddlStmt = new DdlSetCatalogStmt(expr);
-            }
+                {
+                    ddlStmt = new DdlSetCatalogStmt(expr);
+                }
                 | <SCHEMA> expr = Expression(EXPR_ACCEPT_NONQUERY)
-            {
-                ddlStmt = new DdlSetSchemaStmt(expr);
-            }
+                {
+                    ddlStmt = new DdlSetSchemaStmt(expr);
+                }
                 | <PATH> expr = Expression(EXPR_ACCEPT_NONQUERY)
-            {
-                ddlStmt = new DdlSetPathStmt(expr);
-            }
+                {
+                    ddlStmt = new DdlSetPathStmt(expr);
+                }
             )
         )
         |
-        ( <ALTER>
-          (
-              <SYSTEM>
-              (
-                  <SET> ddlStmt = SystemParamAssignment()
-                  |
-                  <ADD> ddlStmt = CatalogExtension()
-              )
-              |
-              <SESSION>
-              (
-                  <IMPLEMENTATION> ddlStmt = SessionImplementation()
-              )
-              |
-              ddlStmt = ExtensionModelAlter()
-          )
-        {
-        }
+        (
+            <ALTER>
+            (
+                <SYSTEM>
+                (
+                    <SET> ddlStmt = SystemParamAssignment()
+                    |
+                    <ADD> ddlStmt = CatalogExtension()
+                )
+                |
+                <SESSION>
+                (
+                    <IMPLEMENTATION> ddlStmt = SessionImplementation()
+                )
+                |
+                ddlStmt = ExtensionModelAlter()
+            )
         )
         |
         ddlStmt = GrantStmt()
         |
-        ( <CHECKPOINT> { ddlStmt = new DdlCheckpointStmt(); } )
-        |
-        ( <COMMIT> { ddlStmt = new DdlCommitStmt(); } )
-        |
-        ( <ROLLBACK> ddlStmt = Rollback())
-        |
-        ( <SAVEPOINT> ddlStmt = Savepoint())
-        |
-        ( <RELEASE> <SAVEPOINT> ddlStmt = ReleaseSavepoint())
-    )
-        <EOF>
+        <CHECKPOINT>
         {
-            return ddlStmt;
+            ddlStmt = new DdlCheckpointStmt();
         }
+        |
+        <COMMIT>
+        {
+            ddlStmt = new DdlCommitStmt();
+        }
+        |
+        <ROLLBACK> ddlStmt = Rollback()
+        |
+        <SAVEPOINT> ddlStmt = Savepoint()
+        |
+        <RELEASE> <SAVEPOINT> ddlStmt = ReleaseSavepoint()
+    )
+    <EOF>
+    {
+        return ddlStmt;
+    }
 }
 
 // TODO:  support non-topological order of object definition, e.g. a
@@ -237,44 +274,44 @@ FemLocalSchema SchemaDefinition() :
 }
 {
     <SCHEMA> schemaName = CompoundIdentifier2()
-        {
-            schema = getRepos().newFemLocalSchema();
-            if (schemaName.names.length == 2) {
-                CwmCatalog catalog =
-                    farragoParser.getStmtValidator().findCatalog(
-                        schemaName.names[0]);
-                schema.setNamespace(catalog);
-                schema.setName(schemaName.names[1]);
-            } else {
-                schema.setNamespace(
-                    farragoParser.getStmtValidator().getDefaultCatalog());
-                schema.setName(schemaName.getSimple());
-            }
+    {
+        schema = getRepos().newFemLocalSchema();
+        if (schemaName.names.length == 2) {
+            CwmCatalog catalog =
+            farragoParser.getStmtValidator().findCatalog(
+                schemaName.names[0]);
+            schema.setNamespace(catalog);
+            schema.setName(schemaName.names[1]);
+        } else {
+            schema.setNamespace(
+                farragoParser.getStmtValidator().getDefaultCatalog());
+            schema.setName(schemaName.getSimple());
         }
+    }
     [ <AUTHORIZATION> userName = SimpleIdentifier() ]
-        {
-            // TODO:  store userName
-        }
+    {
+        // TODO:  store userName
+    }
     [ SchemaPath(schema) { pathDefined = true; } ]
-        {
-            if (!pathDefined) {
-                // implicit default path is just this schema itself
-                FemSqlpathElement element = getRepos().newFemSqlpathElement();
-                element.setSearchedSchemaCatalogName(
-                    schema.getNamespace().getName());
-                element.setSearchedSchemaName(
-                    schema.getName());
-                schema.getPathElement().add(element);
-            }
-
-            // set up context which will prevail for any object
-            // definitions included in this schema definition
-            farragoParser.getDdlValidator().setCreatedSchemaContext(schema);
+    {
+        if (!pathDefined) {
+            // implicit default path is just this schema itself
+            FemSqlpathElement element = getRepos().newFemSqlpathElement();
+            element.setSearchedSchemaCatalogName(
+                schema.getNamespace().getName());
+            element.setSearchedSchemaName(
+                schema.getName());
+            schema.getPathElement().add(element);
         }
+
+        // set up context which will prevail for any object
+        // definitions included in this schema definition
+        farragoParser.getDdlValidator().setCreatedSchemaContext(schema);
+    }
     (
         <CREATE>
         SchemaObjectDefinition()
-    )*
+    ) *
     {
         // TODO: character set, all that jazz
         return schema;
@@ -308,9 +345,9 @@ CwmModelElement SchemaObjectDefinition() :
         |
         modelElement = ExtensionModelSchemaObjDefinition()
     )
-        {
-            return modelElement;
-        }
+    {
+        return modelElement;
+    }
 }
 
 void SchemaPath(FemLocalSchema schema) :
@@ -319,25 +356,25 @@ void SchemaPath(FemLocalSchema schema) :
 }
 {
     searchPath = SearchPath()
-        {
-            Iterator iter = searchPath.iterator();
-            while (iter.hasNext()) {
-                CwmSchema searchedSchema = (CwmSchema) iter.next();
-                if (searchedSchema.getNamespace() != schema.getNamespace()) {
-                    throw FarragoResource.instance().newValidatorPathBadCatalog(
-                        getRepos().getLocalizedObjectName(
-                            searchedSchema.getNamespace()),
-                        getRepos().getLocalizedObjectName(
-                            schema.getNamespace()));
-                }
-                FemSqlpathElement element = getRepos().newFemSqlpathElement();
-                element.setSearchedSchemaCatalogName(
-                    searchedSchema.getNamespace().getName());
-                element.setSearchedSchemaName(
-                    searchedSchema.getName());
-                schema.getPathElement().add(element);
+    {
+        Iterator iter = searchPath.iterator();
+        while (iter.hasNext()) {
+            CwmSchema searchedSchema = (CwmSchema) iter.next();
+            if (searchedSchema.getNamespace() != schema.getNamespace()) {
+                throw FarragoResource.instance().newValidatorPathBadCatalog(
+                    getRepos().getLocalizedObjectName(
+                        searchedSchema.getNamespace()),
+                    getRepos().getLocalizedObjectName(
+                        schema.getNamespace()));
             }
+            FemSqlpathElement element = getRepos().newFemSqlpathElement();
+            element.setSearchedSchemaCatalogName(
+                searchedSchema.getNamespace().getName());
+            element.setSearchedSchemaName(
+                searchedSchema.getName());
+            schema.getPathElement().add(element);
         }
+    }
 }
 
 List SearchPath() :
@@ -345,10 +382,13 @@ List SearchPath() :
     List list = new ArrayList();
 }
 {
-    <PATH> SearchPathElement(list) (<COMMA> SearchPathElement(list))*
-        {
-            return list;
-        }
+    <PATH> SearchPathElement(list)
+    (
+        <COMMA> SearchPathElement(list)
+    ) *
+    {
+        return list;
+    }
 }
 
 void SearchPathElement(List list) :
@@ -357,11 +397,11 @@ void SearchPathElement(List list) :
 }
 {
     id = CompoundIdentifier2()
-        {
-            FemLocalSchema searchedSchema =
-                farragoParser.getStmtValidator().findSchema(id);
-            list.add(searchedSchema);
-        }
+    {
+        FemLocalSchema searchedSchema =
+        farragoParser.getStmtValidator().findSchema(id);
+        list.add(searchedSchema);
+    }
 }
 
 // TODO:  support non-topological order of table element definition, e.g. a
@@ -378,21 +418,13 @@ CwmTable TableDefinition() :
         |
         table = ScopedTableDefinition()
     )
-        {
-        }
     [ server = DataServerReference() ]
-        {
-        }
     OptionalStorageOptions(table)
-        {
-        }
-    (LOOKAHEAD(2) <CREATE> IndexDefinition(table))*
-        {
-        }
+    ( LOOKAHEAD(2) <CREATE> IndexDefinition(table) ) *
     {
         if (server == null) {
             server =
-                farragoParser.getStmtValidator().getDefaultLocalDataServer();
+            farragoParser.getStmtValidator().getDefaultLocalDataServer();
         }
         table.setServer(server);
         return table;
@@ -406,17 +438,15 @@ FemLocalTable UnscopedTableDefinition() :
 }
 {
     <TABLE>
-        {
-            table = getRepos().newFemLocalTable();
-        }
+    {
+        table = getRepos().newFemLocalTable();
+    }
     qualifiedTableName = CompoundIdentifier3()
-        {
-            farragoParser.getDdlValidator().setSchemaObjectName(
-                table,qualifiedTableName);
-        }
+    {
+        farragoParser.getDdlValidator().setSchemaObjectName(
+            table,qualifiedTableName);
+    }
     <LPAREN> TableElementList(table) <RPAREN>
-        {
-        }
     {
         return table;
     }
@@ -431,31 +461,31 @@ FemLocalTable ScopedTableDefinition() :
 {
     <GLOBAL> <TEMPORARY>
     table = UnscopedTableDefinition()
-        {
-            table.setTemporary(true);
-
-            // TODO:  support LOCAL (as "MODULE")
-            scope = "SESSION";
-            commitOption = "DELETE";
-        }
-    [ <ON> <COMMIT>
-      (
-          <PRESERVE>
-      {
-          commitOption = "PRESERVE";
-      }
-          |
-          <DELETE>
-      {
-          commitOption = "DELETE";
-      }
-      )
-      <ROWS> ]
-        {
-        }
     {
-        // TODO:  define a tag for commitOption, since CWM doesn't have a place
-        // for it?
+        table.setTemporary(true);
+
+        // TODO:  support LOCAL (as "MODULE")
+        scope = "SESSION";
+        commitOption = "DELETE";
+    }
+    [
+        <ON> <COMMIT>
+        (
+            <PRESERVE>
+            {
+                commitOption = "PRESERVE";
+            }
+            |
+            <DELETE>
+            {
+                commitOption = "DELETE";
+            }
+        )
+        <ROWS>
+    ]
+    {
+        // TODO:  add commitOption to FemLocalTable, since CWM doesn't
+        // have a place for it?
         table.setTemporaryScope(scope + ":COMMIT=" + commitOption);
         return table;
     }
@@ -471,48 +501,47 @@ CwmView ViewDefinition() :
 }
 {
     <VIEW>
-        {
-           view = getRepos().newCwmView();
-        }
+    {
+        view = getRepos().newCwmView();
+    }
     qualifiedViewName = CompoundIdentifier3()
-        {
-            farragoParser.getDdlValidator().setSchemaObjectName(
-                view,qualifiedViewName);
-        }
-    [<LPAREN> columnNameList = SimpleIdentifierCommaList()
+    {
+        farragoParser.getDdlValidator().setSchemaObjectName(
+            view,qualifiedViewName);
+    }
+    [
+        <LPAREN> columnNameList = SimpleIdentifierCommaList()
         {
             Iterator columnNameIter = columnNameList.iterator();
             while (columnNameIter.hasNext()) {
                 String columnName =
-                    ((SqlIdentifier) columnNameIter.next()).getSimple();
+                ((SqlIdentifier) columnNameIter.next()).getSimple();
                 CwmColumn column = getRepos().newFemViewColumn();
                 column.setName(columnName);
                 view.getFeature().add(column);
             }
         }
-     <RPAREN>]
-
+        <RPAREN>
+    ]
     <AS>
-        {
-            defStart = getEndPos();
-            farragoParser.getDdlValidator().setParserOffset(view, defStart);
-        }
-    query = OrderedQueryOrExpr(EXPR_ACCEPT_QUERY)
-        {
-            defEnd = getEndPos();
-
-            // NOTE:  we accept ORDER BY on the view definition, even though
-            // that's not standard SQL, and leave it up to the validator to
-            // decide what to do with it
-
-            String bodyText = farragoParser.getSubstring(defStart, defEnd);
-            CwmQueryExpression queryExpr = getRepos().newCwmQueryExpression();
-            queryExpr.setLanguage("SQL");
-            queryExpr.setBody(bodyText);
-            view.setQueryExpression(queryExpr);
-        }
     {
-       return view;
+        defStart = getEndPos();
+        farragoParser.getDdlValidator().setParserOffset(view, defStart);
+    }
+    query = OrderedQueryOrExpr(EXPR_ACCEPT_QUERY)
+    {
+        defEnd = getEndPos();
+
+        // NOTE:  we accept ORDER BY on the view definition, even though
+        // that's not standard SQL, and leave it up to the validator to
+        // decide what to do with it
+
+        String bodyText = farragoParser.getSubstring(defStart, defEnd);
+        CwmQueryExpression queryExpr = getRepos().newCwmQueryExpression();
+        queryExpr.setLanguage("SQL");
+        queryExpr.setBody(bodyText);
+        view.setQueryExpression(queryExpr);
+        return view;
     }
 }
 
@@ -528,60 +557,54 @@ FemLocalIndex IndexDefinition(CwmTable table) :
 }
 {
     [ <UNIQUE> { unique = true; } ]
-        {
-        }
     [ <CLUSTERED> { clustered = true; } ]
-        {
-        }
     <INDEX>
-        {
-            index = getRepos().newFemLocalIndex();
-        }
-    indexName = SimpleIdentifier()
-        {
-            index.setName(indexName.getSimple());
-        }
-    <ON> specifiedTable = TableIdentifier()
-        {
-            if (table == null) {
-                table = specifiedTable;
-            } else {
-                // TODO:  move rule down into validator
-                if (table != specifiedTable) {
-                    throw farragoParser.getDdlValidator().newPositionalError(
-                        index,
-                        FarragoResource.instance().newValidatorIndexBadTable());
-                }
-            }
-            getRepos().getKeysIndexesPackage().getIndexSpansClass().add(
-                table,index);
-            // REVIEW:  why is this necessary?  shouldn't association above be
-            // sufficient?
-            index.setSpannedClass(table);
-            if (clustered) {
-                index.setClustered(true);
-            }
-            index.setUnique(unique);
-        }
-    <LPAREN> columnNameList = SimpleIdentifierCommaList() <RPAREN>
-        {
-            int iOrdinal = 0;
-            Iterator columnNameIter = columnNameList.iterator();
-            while (columnNameIter.hasNext()) {
-                String columnName =
-                    ((SqlIdentifier) columnNameIter.next()).getSimple();
-                CwmColumn column = farragoParser.getStmtValidator().findColumn(
-                    table,columnName);
-                FemLocalIndexColumn indexColumn =
-                    getRepos().newFemLocalIndexColumn();
-                indexColumn.setName(columnName);
-                indexColumn.setAscending(Boolean.TRUE);
-                indexColumn.setFeature(column);
-                indexColumn.setIndex(index);
-                indexColumn.setOrdinal(iOrdinal++);
-            }
-        }
     {
+        index = getRepos().newFemLocalIndex();
+    }
+    indexName = SimpleIdentifier()
+    {
+        index.setName(indexName.getSimple());
+    }
+    <ON> specifiedTable = TableIdentifier()
+    {
+        if (table == null) {
+            table = specifiedTable;
+        } else {
+            // TODO:  move rule down into validator
+            if (table != specifiedTable) {
+                throw farragoParser.getDdlValidator().newPositionalError(
+                    index,
+                    FarragoResource.instance().newValidatorIndexBadTable());
+            }
+        }
+        getRepos().getKeysIndexesPackage().getIndexSpansClass().add(
+            table,index);
+        // REVIEW:  why is this necessary?  shouldn't association above be
+        // sufficient?
+        index.setSpannedClass(table);
+        if (clustered) {
+            index.setClustered(true);
+        }
+        index.setUnique(unique);
+    }
+    <LPAREN> columnNameList = SimpleIdentifierCommaList() <RPAREN>
+    {
+        int iOrdinal = 0;
+        Iterator columnNameIter = columnNameList.iterator();
+        while (columnNameIter.hasNext()) {
+            String columnName =
+            ((SqlIdentifier) columnNameIter.next()).getSimple();
+            CwmColumn column = farragoParser.getStmtValidator().findColumn(
+                table,columnName);
+            FemLocalIndexColumn indexColumn =
+            getRepos().newFemLocalIndexColumn();
+            indexColumn.setName(columnName);
+            indexColumn.setAscending(Boolean.TRUE);
+            indexColumn.setFeature(column);
+            indexColumn.setIndex(index);
+            indexColumn.setOrdinal(iOrdinal++);
+        }
         return index;
     }
 }
@@ -593,13 +616,11 @@ CwmTable TableIdentifier() :
 }
 {
     qualifiedTableName = CompoundIdentifier3()
-        {
-            table = (CwmTable)
-            farragoParser.getStmtValidator().findSchemaObject(
-                qualifiedTableName,
-                getRepos().getRelationalPackage().getCwmTable());
-        }
     {
+        table = (CwmTable)
+        farragoParser.getStmtValidator().findSchemaObject(
+            qualifiedTableName,
+            getRepos().getRelationalPackage().getCwmTable());
         return table;
     }
 }
@@ -611,12 +632,10 @@ CwmView ViewReference() :
 }
 {
     <VIEW> qualifiedViewName = CompoundIdentifier3()
-        {
-            view = (CwmView) farragoParser.getStmtValidator().findSchemaObject(
-                qualifiedViewName,
-                getRepos().getRelationalPackage().getCwmView());
-        }
     {
+        view = (CwmView) farragoParser.getStmtValidator().findSchemaObject(
+            qualifiedViewName,
+            getRepos().getRelationalPackage().getCwmView());
         return view;
     }
 }
@@ -628,11 +647,7 @@ FemRoutine RoutineReference() :
 }
 {
     [ <SPECIFIC> { specific = true; } ]
-        {
-        }
     routine = RoutineReferenceImpl(specific)
-        {
-        }
     {
         return routine;
     }
@@ -644,8 +659,6 @@ FemRoutine SpecificRoutineReference() :
 }
 {
     <SPECIFIC> routine = RoutineReferenceImpl(true)
-        {
-        }
     {
         return routine;
     }
@@ -660,46 +673,42 @@ FemRoutine RoutineReferenceImpl(boolean specific) :
 {
     (
         <ROUTINE>
-    {
-        routineType = null;
-    }
+        {
+            routineType = null;
+        }
         | <FUNCTION>
-    {
-        routineType = ProcedureTypeEnum.FUNCTION;
-    }
+        {
+            routineType = ProcedureTypeEnum.FUNCTION;
+        }
         | <PROCEDURE>
-    {
-        routineType = ProcedureTypeEnum.PROCEDURE;
-    }
+        {
+            routineType = ProcedureTypeEnum.PROCEDURE;
+        }
     )
-        {
-        }
     qualifiedRoutineName = CompoundIdentifier3()
-        {
-            // TODO jvs 24-Dec-2004: implement lookup by invocation name
-            // and signature when !specific
-            routine = (FemRoutine)
-            farragoParser.getStmtValidator().findSchemaObject(
-                qualifiedRoutineName,
-                getRepos().getSql2003Package().getFemRoutine());
-
-            // REVIEW jvs 29-Dec-2004:  localization in message below
-            // is iffy
-
-            // if they specifically asked for a FUNCTION or PROCEDURE,
-            // and the object found does not match, pretend we
-            // found nothing
-            if ((routineType != null) && (routineType != routine.getType())) {
-                throw farragoParser.newPositionalError(
-                    FarragoResource.instance().newValidatorUnknownObject(
-                        routineType.toString() + " " +
-                        getRepos().getLocalizedObjectName(
-                            routine.getNamespace().getName(),
-                            routine.getName(),
-                            null)));
-            }
-        }
     {
+        // TODO jvs 24-Dec-2004: implement lookup by invocation name
+        // and signature when !specific
+        routine = (FemRoutine)
+        farragoParser.getStmtValidator().findSchemaObject(
+            qualifiedRoutineName,
+            getRepos().getSql2003Package().getFemRoutine());
+
+        // REVIEW jvs 29-Dec-2004:  localization in message below
+        // is iffy
+
+        // if they specifically asked for a FUNCTION or PROCEDURE,
+        // and the object found does not match, pretend we
+        // found nothing
+        if ((routineType != null) && (routineType != routine.getType())) {
+            throw farragoParser.newPositionalError(
+                FarragoResource.instance().newValidatorUnknownObject(
+                    routineType.toString() + " " +
+                    getRepos().getLocalizedObjectName(
+                        routine.getNamespace().getName(),
+                        routine.getName(),
+                        null)));
+        }
         return routine;
     }
 }
@@ -710,9 +719,8 @@ void TableElementList(CwmTable table) :
 {
     TableElement(table)
     (
-        <COMMA>
-        TableElement(table)
-    )*
+        <COMMA> TableElement(table)
+    ) *
 }
 
 
@@ -727,9 +735,9 @@ CwmModelElement TableElement(CwmTable table) :
         |
         modelElement = TableConstraint(table)
     )
-        {
-            return modelElement;
-        }
+    {
+        return modelElement;
+    }
 }
 
 void BasicColumnDefinition(CwmNamedColumnSet table,FemAbstractColumn column) :
@@ -738,10 +746,10 @@ void BasicColumnDefinition(CwmNamedColumnSet table,FemAbstractColumn column) :
 }
 {
     columnName = SimpleIdentifier()
-        {
-            table.getFeature().add(column);
-            column.setName(columnName.getSimple());
-        }
+    {
+        table.getFeature().add(column);
+        column.setName(columnName.getSimple());
+    }
     TypedElement(column)
 }
 
@@ -756,14 +764,14 @@ void TypedElement(FemAbstractTypedElement element) :
             FemSqlmultisetType colType = getRepos().newFemSqlmultisetType();
             colType.setName("MULTISET");
             FemSqltypeAttribute componentType =
-                getRepos().newFemSqltypeAttribute();
+            getRepos().newFemSqltypeAttribute();
             componentType.setName("COMPONENT");
             colType.getFeature().add(componentType);
             farragoParser.getDdlValidator().setSqlDefinition(
                 componentType,
                 dataType.getComponentTypeSpec());
             FemSqltypedElement typedElement =
-                FarragoCatalogUtil.toFemSqltypedElement(element);
+            FarragoCatalogUtil.toFemSqltypedElement(element);
             typedElement.setType(colType);
             return;
         }
@@ -785,29 +793,19 @@ CwmColumn ColumnDefinition(CwmTable table) :
         column = getRepos().newFemStoredColumn();
     }
     BasicColumnDefinition(table,column)
-        {
-        }
     [
         defaultClause = DefaultClause()
         {
             setDefaultExpression(column, defaultClause);
         }
     ]
-        {
-        }
-    ( ColumnConstraint(table,column) )*
-        {
-        }
+    ( ColumnConstraint(table,column) ) *
     [ sqlCollation = CollateClause()
         {
             column.setCollationName(sqlCollation.getCollationName());
         }
     ]
-        {
-        }
     OptionalStorageOptions(column)
-        {
-        }
     {
         return column;
     }
@@ -818,15 +816,16 @@ SqlNode DefaultClause() :
     SqlNode expression;
 }
 {
-    <DEFAULT_KW> (
+    <DEFAULT_KW>
+    (
         // TODO:  allow USER, CURRENT_USER, CURRENT_ROLE, SESSION_USER,
         // SYSTEM_USER, CURRENT_PATH, <datetime value function>,
         // <implicitly typed value specification>
         expression = Literal()
     )
-        {
-            return expression;
-        }
+    {
+        return expression;
+    }
 }
 
 CwmModelElement TableConstraint(CwmTable table) :
@@ -836,19 +835,15 @@ CwmModelElement TableConstraint(CwmTable table) :
 }
 {
     [ <CONSTRAINT> constraintName = Identifier() ]
-        {
-        }
     constraint = TableUniqueConstraint(table)
-        {
-            if (constraintName != null) {
-                constraint.setName(constraintName);
-            } else {
-                FarragoCatalogUtil.generateConstraintName(
-                    getRepos(), constraint);
-            }
-            table.getOwnedElement().add(constraint);
-        }
     {
+        if (constraintName != null) {
+            constraint.setName(constraintName);
+        } else {
+            FarragoCatalogUtil.generateConstraintName(
+                getRepos(), constraint);
+        }
+        table.getOwnedElement().add(constraint);
         return constraint;
     }
 }
@@ -860,22 +855,20 @@ FemAbstractUniqueConstraint TableUniqueConstraint(CwmTable table) :
 }
 {
     constraint = UniqueConstraint()
-        {
-        }
-    <LPAREN> columnNameList = SimpleIdentifierCommaList() <RPAREN>
-        {
-            Iterator columnNameIter = columnNameList.iterator();
-            while (columnNameIter.hasNext()) {
-                String columnName =
-                    ((SqlIdentifier) columnNameIter.next()).getSimple();
-                CwmColumn column = farragoParser.getStmtValidator().findColumn(
-                    table,columnName);
-                constraint.getFeature().add(column);
-                // TODO:  validate no duplicates
-            }
-        }
-    // TODO:  deferrability, etc.
     {
+    }
+    <LPAREN> columnNameList = SimpleIdentifierCommaList() <RPAREN>
+    {
+        Iterator columnNameIter = columnNameList.iterator();
+        while (columnNameIter.hasNext()) {
+            String columnName =
+            ((SqlIdentifier) columnNameIter.next()).getSimple();
+            CwmColumn column = farragoParser.getStmtValidator().findColumn(
+                table,columnName);
+            constraint.getFeature().add(column);
+            // TODO:  validate no duplicates
+        }
+        // TODO:  deferrability, etc.
         return constraint;
     }
 }
@@ -887,19 +880,19 @@ FemAbstractUniqueConstraint UniqueConstraint() :
 {
     (
         <UNIQUE>
-    {
-        constraint = getRepos().newFemUniqueKeyConstraint();
-    }
+        {
+            constraint = getRepos().newFemUniqueKeyConstraint();
+        }
         |
         <PRIMARY> <KEY>
-    {
-        constraint = getRepos().newFemPrimaryKeyConstraint();
-    }
-    )
         {
-            constraint.setDeferrability(DeferrabilityTypeEnum.NOT_DEFERRABLE);
-            return constraint;
+            constraint = getRepos().newFemPrimaryKeyConstraint();
         }
+    )
+    {
+        constraint.setDeferrability(DeferrabilityTypeEnum.NOT_DEFERRABLE);
+        return constraint;
+    }
 }
 
 
@@ -911,13 +904,11 @@ void ColumnConstraint(CwmNamedColumnSet table,CwmColumn column) :
 }
 {
     [ <CONSTRAINT> constraintName = Identifier() ]
-        {
-        }
     (
         <NOT> <NULL>
-    {
-        column.setIsNullable(NullableTypeEnum.COLUMN_NO_NULLS);
-    }
+        {
+            column.setIsNullable(NullableTypeEnum.COLUMN_NO_NULLS);
+        }
         | constraint = UniqueConstraint()
         {
             constraint.getFeature().add(column);
@@ -930,8 +921,6 @@ void ColumnConstraint(CwmNamedColumnSet table,CwmColumn column) :
             }
         }
     )
-        {
-        }
 }
 
 CwmModelElement SchemaDrop() :
@@ -941,12 +930,10 @@ CwmModelElement SchemaDrop() :
 }
 {
     schema = SchemaReference()
-        {
-        }
     CascadeOption()
-        {
-            return schema;
-        }
+    {
+        return schema;
+    }
 }
 
 CwmCatalog CatalogReference() :
@@ -955,10 +942,10 @@ CwmCatalog CatalogReference() :
 }
 {
     <CATALOG> catalogName = SimpleIdentifier()
-        {
-            return farragoParser.getStmtValidator().findCatalog(
-                catalogName.getSimple());
-        }
+    {
+        return farragoParser.getStmtValidator().findCatalog(
+            catalogName.getSimple());
+    }
 }
 
 FemLocalSchema SchemaReference() :
@@ -967,9 +954,9 @@ FemLocalSchema SchemaReference() :
 }
 {
     <SCHEMA> schemaName = CompoundIdentifier2()
-        {
-            return farragoParser.getStmtValidator().findSchema(schemaName);
-        }
+    {
+        return farragoParser.getStmtValidator().findSchema(schemaName);
+    }
 }
 
 CwmModelElement TableDrop() :
@@ -978,12 +965,10 @@ CwmModelElement TableDrop() :
 }
 {
     <TABLE> table = TableIdentifier()
-        {
-        }
     CascadeOption()
-        {
-            return table;
-        }
+    {
+        return table;
+    }
 }
 
 CwmModelElement ViewDrop() :
@@ -992,12 +977,10 @@ CwmModelElement ViewDrop() :
 }
 {
     view = ViewReference()
-        {
-        }
     CascadeOption()
-        {
-            return view;
-        }
+    {
+        return view;
+    }
 }
 
 CwmModelElement RoutineDrop() :
@@ -1006,12 +989,10 @@ CwmModelElement RoutineDrop() :
 }
 {
     routine = RoutineReference()
-        {
-        }
     CascadeOption()
-        {
-            return routine;
-        }
+    {
+        return routine;
+    }
 }
 
 CwmModelElement UserDefinedTypeDrop() :
@@ -1021,14 +1002,12 @@ CwmModelElement UserDefinedTypeDrop() :
 }
 {
     <TYPE> typeName = CompoundIdentifier3()
-        {
-            typeDef = farragoParser.getStmtValidator().findSchemaObject(
-                typeName,
-                getRepos().getSql2003Package().getFemUserDefinedType());
-        }
+    {
+        typeDef = farragoParser.getStmtValidator().findSchemaObject(
+            typeName,
+            getRepos().getSql2003Package().getFemUserDefinedType());
+    }
     CascadeOption()
-        {
-        }
     {
         return typeDef;
     }
@@ -1041,22 +1020,20 @@ CwmModelElement UserDefinedOrderingDrop() :
 }
 {
     <ORDERING> <FOR> typeName = CompoundIdentifier3()
-        {
-            FemUserDefinedType typeDef = (FemUserDefinedType)
-            farragoParser.getStmtValidator().findSchemaObject(
-                typeName,
-                getRepos().getSql2003Package().getFemUserDefinedType());
-            if (typeDef.getOrdering().isEmpty()) {
-                throw FarragoResource.instance().newValidatorNoOrdering(
-                    getRepos().getLocalizedObjectName(
-                        typeDef));
-            }
-            orderingDef = (CwmModelElement)
-            typeDef.getOrdering().iterator().next();
+    {
+        FemUserDefinedType typeDef = (FemUserDefinedType)
+        farragoParser.getStmtValidator().findSchemaObject(
+            typeName,
+            getRepos().getSql2003Package().getFemUserDefinedType());
+        if (typeDef.getOrdering().isEmpty()) {
+            throw FarragoResource.instance().newValidatorNoOrdering(
+                getRepos().getLocalizedObjectName(
+                    typeDef));
         }
+        orderingDef = (CwmModelElement)
+        typeDef.getOrdering().iterator().next();
+    }
     CascadeOption()
-        {
-        }
     {
         return orderingDef;
     }
@@ -1069,15 +1046,9 @@ CwmModelElement JarDrop() :
 }
 {
     <JAR> qualifiedJarName = CompoundIdentifier3()
-        {
-        }
     <OPTIONS>
-         <LPAREN> deploymentState = NumericLiteral(SqlParserPos.ZERO) <RPAREN>
-        {
-        }
+    <LPAREN> deploymentState = NumericLiteral(SqlParserPos.ZERO) <RPAREN>
     CascadeOption()
-        {
-        }
     {
         FemJar jar = (FemJar) farragoParser.getStmtValidator().findSchemaObject(
             qualifiedJarName,
@@ -1093,11 +1064,11 @@ CwmModelElement IndexDrop() :
 }
 {
     <INDEX> qualifiedIndexName = CompoundIdentifier3()
-        {
-            return farragoParser.getStmtValidator().findSchemaObject(
-                qualifiedIndexName,
-                getRepos().getMedPackage().getFemLocalIndex());
-        }
+    {
+        return farragoParser.getStmtValidator().findSchemaObject(
+            qualifiedIndexName,
+            getRepos().getMedPackage().getFemLocalIndex());
+    }
 }
 
 void CascadeOption() :
@@ -1107,13 +1078,13 @@ void CascadeOption() :
     [
         (
             <RESTRICT>
-        {
-            dropRestrict = true;
-        }
+            {
+                dropRestrict = true;
+            }
             | <CASCADE>
-        {
-            dropRestrict = false;
-        }
+            {
+                dropRestrict = false;
+            }
         )
     ]
 }
@@ -1125,14 +1096,8 @@ DdlStmt SystemParamAssignment() :
 }
 {
     paramName = SimpleIdentifier()
-        {
-        }
     <EQ>
-        {
-        }
     paramValue = SystemParamValue()
-        {
-        }
     {
         return new DdlSetSystemParamStmt(
             paramName.getSimple(),paramValue);
@@ -1145,8 +1110,6 @@ DdlStmt CatalogExtension() :
 }
 {
     <CATALOG> <JAR> jarName = CompoundIdentifier3()
-        {
-        }
     {
         return new DdlExtendCatalogStmt(jarName);
     }
@@ -1158,16 +1121,10 @@ DdlStmt SessionImplementation() :
 }
 {
     <SET>
-         (
-             <JAR> jarName = CompoundIdentifier3()
-             {
-             }
-             | <DEFAULT_KW>
-             {
-             }
-         )
-        {
-        }
+    (
+        <JAR> jarName = CompoundIdentifier3()
+        | <DEFAULT_KW>
+    )
     {
         return new DdlSetSessionImplementationStmt(jarName);
     }
@@ -1181,8 +1138,6 @@ SqlLiteral SystemParamValue() :
 {
     (
         paramValue = StrictLiteral()
-        {
-        }
         | <MAX>
         {
             // TODO jvs 22-May-2004:  for MIN and MAX here, use metadata
@@ -1196,9 +1151,9 @@ SqlLiteral SystemParamValue() :
             paramValue = SqlLiteral.createExactNumeric("0", pos);
         }
     )
-        {
-            return paramValue;
-        }
+    {
+        return paramValue;
+    }
 }
 
 DdlStmt Rollback() :
@@ -1206,9 +1161,9 @@ DdlStmt Rollback() :
     SqlIdentifier savepointName = null;
 }
 {
-    (<TO> <SAVEPOINT> savepointName = SimpleIdentifier() )?
-        {
-        }
+    [
+        <TO> <SAVEPOINT> savepointName = SimpleIdentifier()
+    ]
     {
         if (savepointName != null) {
             return new DdlRollbackStmt(savepointName.getSimple());
@@ -1224,8 +1179,6 @@ DdlStmt Savepoint() :
 }
 {
     savepointName = SimpleIdentifier()
-        {
-        }
     {
         return new DdlSavepointStmt(savepointName.getSimple());
     }
@@ -1237,8 +1190,6 @@ DdlStmt ReleaseSavepoint() :
 }
 {
     savepointName = SimpleIdentifier()
-        {
-        }
     {
         return new DdlReleaseSavepointStmt(savepointName.getSimple());
     }
@@ -1253,28 +1204,24 @@ FemDataWrapper DataWrapperDefinition() :
 }
 {
     isForeign = ForeignOpt()
-        {
-        }
     <DATA> <WRAPPER> wrapperName = SimpleIdentifier()
-        {
-            wrapper = getRepos().newFemDataWrapper();
-            wrapper.setName(wrapperName.getSimple());
-            wrapper.setNamespace(
-                getRepos().getCatalog(
-                    FarragoRepos.SYSBOOT_CATALOG_NAME));
-            wrapper.setForeign(isForeign);
-        }
+    {
+        wrapper = getRepos().newFemDataWrapper();
+        wrapper.setName(wrapperName.getSimple());
+        wrapper.setNamespace(
+            getRepos().getCatalog(
+                FarragoRepos.SYSBOOT_CATALOG_NAME));
+        wrapper.setForeign(isForeign);
+    }
     <LIBRARY> libraryFile = QuotedString()
-        {
-            wrapper.setLibraryFile(libraryFile);
-        }
+    {
+        wrapper.setLibraryFile(libraryFile);
+    }
     <LANGUAGE> <JAVA>
-        {
-            wrapper.setLanguage("JAVA");
-        }
+    {
+        wrapper.setLanguage("JAVA");
+    }
     OptionalStorageOptions(wrapper)
-        {
-        }
     {
         return wrapper;
     }
@@ -1285,13 +1232,13 @@ boolean ForeignOpt() :
 }
 {
     <LOCAL>
-        {
-            return false;
-        }
+    {
+        return false;
+    }
     | <FOREIGN>
-        {
-            return true;
-        }
+    {
+        return true;
+    }
 }
 
 FemDataWrapper DataWrapperReference() :
@@ -1301,13 +1248,11 @@ FemDataWrapper DataWrapperReference() :
 }
 {
     isForeign = ForeignOpt()
-        {
-        }
     <DATA> <WRAPPER> name = SimpleIdentifier()
-        {
-            return farragoParser.getStmtValidator().findDataWrapper(
-                name,isForeign);
-        }
+    {
+        return farragoParser.getStmtValidator().findDataWrapper(
+            name,isForeign);
+    }
 }
 
 FemDataServer DataServerDefinition() :
@@ -1320,13 +1265,13 @@ FemDataServer DataServerDefinition() :
 }
 {
     <SERVER> serverName = SimpleIdentifier()
-        {
-            server = getRepos().newFemDataServer();
-            server.setName(serverName.getSimple());
-            server.setNamespace(
-                getRepos().getCatalog(
-                    FarragoRepos.SYSBOOT_CATALOG_NAME));
-        }
+    {
+        server = getRepos().newFemDataServer();
+        server.setName(serverName.getSimple());
+        server.setNamespace(
+            getRepos().getCatalog(
+                FarragoRepos.SYSBOOT_CATALOG_NAME));
+    }
     [
         <TYPE> serverType = QuotedString()
         {
@@ -1339,15 +1284,11 @@ FemDataServer DataServerDefinition() :
             server.setVersion(serverVersion);
         }
     ]
-        {
-        }
     wrapper = DataWrapperReference()
-        {
-            server.setWrapper(wrapper);
-        }
+    {
+        server.setWrapper(wrapper);
+    }
     OptionalStorageOptions(server)
-        {
-        }
     {
         return server;
     }
@@ -1360,38 +1301,32 @@ FemRoutine FunctionDefinition() :
 }
 {
     <FUNCTION>
-        {
-            function = getRepos().newFemRoutine();
-            function.setType(ProcedureTypeEnum.FUNCTION);
-            function.setCalledOnNullInput(true);
-        }
+    {
+        function = getRepos().newFemRoutine();
+        function.setType(ProcedureTypeEnum.FUNCTION);
+        function.setCalledOnNullInput(true);
+    }
     qualifiedName = CompoundIdentifier3()
-        {
-            // REVIEW jvs 27-Dec-2004:  SQL standard says that
-            // specific name is implementation-defined when unspecified.
-            // The behavior here is to use the invocation name, which
-            // means if there's a conflict with an existing specific name,
-            // the CREATE statement will fail.  This forces users to
-            // provide specific names when overloads are defined.  An
-            // alternative is to generate unique specific names automatically
-            // in case of conflict.
-            farragoParser.getDdlValidator().setSchemaObjectName(
-                function,qualifiedName);
-            function.setInvocationName(function.getName());
-        }
+    {
+        // REVIEW jvs 27-Dec-2004:  SQL standard says that
+        // specific name is implementation-defined when unspecified.
+        // The behavior here is to use the invocation name, which
+        // means if there's a conflict with an existing specific name,
+        // the CREATE statement will fail.  This forces users to
+        // provide specific names when overloads are defined.  An
+        // alternative is to generate unique specific names automatically
+        // in case of conflict.
+        farragoParser.getDdlValidator().setSchemaObjectName(
+            function,qualifiedName);
+        function.setInvocationName(function.getName());
+    }
     <LPAREN> [ RoutineParamList(function) ] <RPAREN>
-        {
-        }
     ReturnsClause(function)
-        {
-        }
     RoutineCharacteristics(function)
-        {
-        }
     [ <STATIC> <DISPATCH> ]
-        {
-            function.setStaticDispatch(true);
-        }
+    {
+        function.setStaticDispatch(true);
+    }
     (
         SqlFunctionBody(function)
         | ExternalRoutineBody(function)
@@ -1412,31 +1347,31 @@ FemRoutine ConstructorDefinition() :
 }
 {
     <SPECIFIC> <METHOD> constructorName = CompoundIdentifier3()
-        {
-            method = (FemRoutine)
-            farragoParser.getStmtValidator().findSchemaObject(
-                constructorName,
-                getRepos().getSql2003Package().getFemRoutine());
-        }
+    {
+        method = (FemRoutine)
+        farragoParser.getStmtValidator().findSchemaObject(
+            constructorName,
+            getRepos().getSql2003Package().getFemRoutine());
+    }
     <FOR> typeName = CompoundIdentifier3()
-        {
-            // TODO jvs 26-Feb-2005:  cross-check
-        }
+    {
+        // TODO jvs 26-Feb-2005:  cross-check
+    }
     RightsClause(method)
-        {
-            defStart = getEndPos();
-            farragoParser.getDdlValidator().setParserOffset(method, defStart);
-        }
+    {
+        defStart = getEndPos();
+        farragoParser.getDdlValidator().setParserOffset(method, defStart);
+    }
     PsmBody()
-        {
-            defEnd = getEndPos();
-            String bodyText = farragoParser.getSubstring(defStart, defEnd);
-            CwmProcedureExpression procedureExpr =
-                getRepos().newCwmProcedureExpression();
-            procedureExpr.setLanguage("SQL");
-            procedureExpr.setBody(bodyText);
-            method.setBody(procedureExpr);
-        }
+    {
+        defEnd = getEndPos();
+        String bodyText = farragoParser.getSubstring(defStart, defEnd);
+        CwmProcedureExpression procedureExpr =
+        getRepos().newCwmProcedureExpression();
+        procedureExpr.setLanguage("SQL");
+        procedureExpr.setBody(bodyText);
+        method.setBody(procedureExpr);
+    }
     {
         return method;
     }
@@ -1453,12 +1388,11 @@ SqlNode PsmBody() :
 {
     <BEGIN> (
         stmt = ConstructorAssignment()
-    {
-        list.add(stmt);
-    }
-        )* <RETURN> <SELF> <SEMICOLON> <END>
         {
+            list.add(stmt);
         }
+    ) *
+    <RETURN> <SELF> <SEMICOLON> <END>
     {
         return list;
     }
@@ -1471,9 +1405,7 @@ SqlNode ConstructorAssignment() :
 }
 {
     <SET> <SELF> <DOT> attributeName = SimpleIdentifier()
-         <EQ> expr = Expression(EXPR_ACCEPT_NONQUERY) <SEMICOLON>
-        {
-        }
+    <EQ> expr = Expression(EXPR_ACCEPT_NONQUERY) <SEMICOLON>
     {
         return opTab.equalsOperator.createCall(
             attributeName,
@@ -1488,11 +1420,11 @@ void ReturnsClause(FemRoutine function) :
 }
 {
     <RETURNS> TypedElement(returnParam)
-        {
-            returnParam.setName("RETURN");
-            returnParam.setKind(ParameterDirectionKindEnum.PDK_RETURN);
-            function.getParameter().add(returnParam);
-        }
+    {
+        returnParam.setName("RETURN");
+        returnParam.setKind(ParameterDirectionKindEnum.PDK_RETURN);
+        function.getParameter().add(returnParam);
+    }
 }
 
 FemRoutine ProcedureDefinition() :
@@ -1502,27 +1434,25 @@ FemRoutine ProcedureDefinition() :
 }
 {
     <PROCEDURE>
-        {
-            procedure = getRepos().newFemRoutine();
-            procedure.setType(ProcedureTypeEnum.PROCEDURE);
-            procedure.setCalledOnNullInput(true);
-        }
+    {
+        procedure = getRepos().newFemRoutine();
+        procedure.setType(ProcedureTypeEnum.PROCEDURE);
+        procedure.setCalledOnNullInput(true);
+    }
     qualifiedName = CompoundIdentifier3()
-        {
-            // REVIEW jvs 18-Jan-2005:  see corresponding comment
-            // in FunctionDefinition().
-            farragoParser.getDdlValidator().setSchemaObjectName(
-                procedure,qualifiedName);
-            procedure.setInvocationName(procedure.getName());
-        }
+    {
+        // REVIEW jvs 18-Jan-2005:  see corresponding comment
+        // in FunctionDefinition().
+        farragoParser.getDdlValidator().setSchemaObjectName(
+            procedure,qualifiedName);
+        procedure.setInvocationName(procedure.getName());
+    }
     <LPAREN> [ RoutineParamList(procedure) ] <RPAREN>
-        {
-        }
     RoutineCharacteristics(procedure)
-        {
-            // TODO jvs 18-Jan-2005:  disallow characteristics which
-            // don't apply to procedures
-        }
+    {
+        // TODO jvs 18-Jan-2005:  disallow characteristics which
+        // don't apply to procedures
+    }
     (
         ExternalRoutineBody(procedure)
     )
@@ -1538,48 +1468,45 @@ void SqlFunctionBody(FemRoutine routine) :
 }
 {
     RightsClause(routine)
-        {
-        }
     <RETURN>
-        {
-            defStart = getEndPos();
-            farragoParser.getDdlValidator().setParserOffset(routine, defStart);
+    {
+        defStart = getEndPos();
+        farragoParser.getDdlValidator().setParserOffset(routine, defStart);
 
-            // TODO jvs 24-Dec-2004: eventually allow subqueries and
-            // non-functional routine bodies.
-        }
+        // TODO jvs 24-Dec-2004: eventually allow subqueries and
+        // non-functional routine bodies.
+    }
     expr = Expression(EXPR_ACCEPT_NONQUERY)
-        {
-            defEnd = getEndPos();
+    {
+        defEnd = getEndPos();
 
-            String bodyText = farragoParser.getSubstring(defStart, defEnd);
-            CwmProcedureExpression procedureExpr =
-            getRepos().newCwmProcedureExpression();
-            procedureExpr.setLanguage("SQL");
-            procedureExpr.setBody(
-                FarragoUserDefinedRoutine.addReturnPrefix(bodyText));
-            routine.setBody(procedureExpr);
-        }
+        String bodyText = farragoParser.getSubstring(defStart, defEnd);
+        CwmProcedureExpression procedureExpr =
+        getRepos().newCwmProcedureExpression();
+        procedureExpr.setLanguage("SQL");
+        procedureExpr.setBody(
+            FarragoUserDefinedRoutine.addReturnPrefix(bodyText));
+        routine.setBody(procedureExpr);
+    }
 }
 
 void RightsClause(FemRoutine routine) :
 {
 }
 {
-    [ <SQL> <SECURITY>
+    [
+        <SQL> <SECURITY>
         (
             <INVOKER>
-        {
-            routine.setImpersonateDefiner(false);
-        }
+            {
+                routine.setImpersonateDefiner(false);
+            }
             | <DEFINER>
-        {
-            routine.setImpersonateDefiner(true);
-        }
+            {
+                routine.setImpersonateDefiner(true);
+            }
         )
     ]
-        {
-        }
 }
 
 void ExternalRoutineBody(FemRoutine routine) :
@@ -1588,32 +1515,29 @@ void ExternalRoutineBody(FemRoutine routine) :
 }
 {
     <EXTERNAL> <NAME>
-        (
-             name = Identifier()
-             | name = QuotedString()
-        )
-        {
-            routine.setExternalName(name);
-        }
+    (
+        name = Identifier()
+        | name = QuotedString()
+    )
+    {
+        routine.setExternalName(name);
+    }
     [ RoutineParameterStyle(routine) ]
-        {
-        }
-    [ <EXTERNAL> <SECURITY> (
-        <DEFINER>
-    {
-        routine.setImpersonateDefiner(true);
-    }
-        | <INVOKER>
-    {
-        routine.setImpersonateDefiner(false);
-    }
-        | <IMPLEMENTATION> <DEFINED>
-    {
-        routine.setImpersonateDefiner(true);
-    }
+    [
+        <EXTERNAL> <SECURITY> (
+            <DEFINER>
+            {
+                routine.setImpersonateDefiner(true);
+            }
+            | <INVOKER>
+            {
+                routine.setImpersonateDefiner(false);
+            }
+            | <IMPLEMENTATION> <DEFINED>
+            {
+                routine.setImpersonateDefiner(true);
+            }
         )
-    {
-    }
     ]
 }
 
@@ -1621,25 +1545,24 @@ void RoutineParameterStyle(FemRoutine routine) :
 {
 }
 {
-    <PARAMETER> <STYLE> (
+    <PARAMETER> <STYLE>
+    (
         <SQL>
-    {
-        routine.setParameterStyle(
-            RoutineParameterStyleEnum.RPS_SQL.toString());
-    }
-        | <GENERAL>
-    {
-        routine.setParameterStyle(
-            RoutineParameterStyleEnum.RPS_GENERAL.toString());
-    }
-        | <JAVA>
-    {
-        routine.setParameterStyle(
-            RoutineParameterStyleEnum.RPS_JAVA.toString());
-    }
-    )
         {
+            routine.setParameterStyle(
+                RoutineParameterStyleEnum.RPS_SQL.toString());
         }
+        | <GENERAL>
+        {
+            routine.setParameterStyle(
+                RoutineParameterStyleEnum.RPS_GENERAL.toString());
+        }
+        | <JAVA>
+        {
+            routine.setParameterStyle(
+                RoutineParameterStyleEnum.RPS_JAVA.toString());
+        }
+    )
 }
 
 void RoutineCharacteristics(FemRoutine routine) :
@@ -1649,8 +1572,10 @@ void RoutineCharacteristics(FemRoutine routine) :
 {
 // TODO jvs 24-Dec-2004:  prevent conflicting declarations
     (
-        (<LANGUAGE>
-            (<JAVA>
+        (
+            <LANGUAGE>
+            (
+                <JAVA>
                 {
                     routine.setLanguage("JAVA");
                 }
@@ -1658,67 +1583,65 @@ void RoutineCharacteristics(FemRoutine routine) :
                 {
                     routine.setLanguage("SQL");
                 }
-                ))
-    {
-    }
+            )
+        )
         | RoutineParameterStyle(routine)
-    {
-    }
         | (<SPECIFIC> specificName = CompoundIdentifier2())
-    {
-        if (specificName.names.length > 1) {
-            assert(specificName.names.length == 2);
-            if (!specificName.names[0].equals(routine.getNamespace().getName()))
-            {
-                throw farragoParser.getDdlValidator().newPositionalError(
-                    routine,
-                    FarragoResource.instance().
-                    newValidatorRoutineSchemaMismatch(
-                        getRepos().getLocalizedObjectName(
-                            specificName.names[0]),
-                        getRepos().getLocalizedObjectName(
-                            routine.getNamespace())));
+        {
+            if (specificName.names.length > 1) {
+                assert(specificName.names.length == 2);
+                if (!specificName.names[0].equals(
+                        routine.getNamespace().getName()))
+                {
+                    throw farragoParser.getDdlValidator().newPositionalError(
+                        routine,
+                        FarragoResource.instance().
+                        newValidatorRoutineSchemaMismatch(
+                            getRepos().getLocalizedObjectName(
+                                specificName.names[0]),
+                            getRepos().getLocalizedObjectName(
+                                routine.getNamespace())));
+                }
+                routine.setName(specificName.names[1]);
+            } else {
+                routine.setName(specificName.getSimple());
             }
-            routine.setName(specificName.names[1]);
-        } else {
-            routine.setName(specificName.getSimple());
         }
-    }
-        | ( <DETERMINISTIC> )
-    {
-        routine.setDeterministic(true);
-    }
-        | ( <NOT> <DETERMINISTIC> )
-    {
-        routine.setDeterministic(false);
-    }
-        | (<NO> <SQL>)
-    {
-        routine.setDataAccess(RoutineDataAccessEnum.RDA_NO_SQL);
-    }
-        | (<CONTAINS> <SQL>)
-    {
-        routine.setDataAccess(RoutineDataAccessEnum.RDA_CONTAINS_SQL);
-    }
-        | (<READS> <SQL> <DATA>)
-    {
-        routine.setDataAccess(RoutineDataAccessEnum.RDA_READS_SQL_DATA);
-    }
-        | (<MODIFIES> <SQL> <DATA>)
-    {
-        routine.setDataAccess(RoutineDataAccessEnum.RDA_MODIFIES_SQL_DATA);
-    }
-        | (<RETURNS> <NULL> <ON> <NULL> <INPUT>)
-    {
-        routine.setCalledOnNullInput(false);
-    }
-        | (<CALLED> <ON> <NULL> <INPUT>)
-    {
-        routine.setCalledOnNullInput(true);
-    }
-// TODO jvs 24-Dec-2004:  add characteristics for dynamic result sets
-// and savepoint level
-    )*
+        | <DETERMINISTIC>
+        {
+            routine.setDeterministic(true);
+        }
+        | <NOT> <DETERMINISTIC>
+        {
+            routine.setDeterministic(false);
+        }
+        | <NO> <SQL>
+        {
+            routine.setDataAccess(RoutineDataAccessEnum.RDA_NO_SQL);
+        }
+        | <CONTAINS> <SQL>
+        {
+            routine.setDataAccess(RoutineDataAccessEnum.RDA_CONTAINS_SQL);
+        }
+        | <READS> <SQL> <DATA>
+        {
+            routine.setDataAccess(RoutineDataAccessEnum.RDA_READS_SQL_DATA);
+        }
+        | <MODIFIES> <SQL> <DATA>
+        {
+            routine.setDataAccess(RoutineDataAccessEnum.RDA_MODIFIES_SQL_DATA);
+        }
+        | <RETURNS> <NULL> <ON> <NULL> <INPUT>
+        {
+            routine.setCalledOnNullInput(false);
+        }
+        | <CALLED> <ON> <NULL> <INPUT>
+        {
+            routine.setCalledOnNullInput(true);
+        }
+        // TODO jvs 24-Dec-2004:  add characteristics for dynamic result sets
+        // and savepoint level
+    ) *
 }
 
 void RoutineParamList(FemRoutine routine) :
@@ -1729,7 +1652,7 @@ void RoutineParamList(FemRoutine routine) :
     (
         <COMMA>
         RoutineParam(routine)
-    )*
+    ) *
 }
 
 FemRoutineParameter RoutineParam(FemRoutine routine) :
@@ -1741,33 +1664,27 @@ FemRoutineParameter RoutineParam(FemRoutine routine) :
     routine.getParameter().add(param);
 }
 {
-    {
-    }
     [
         (
             <IN>
-        {
-            param.setKind(ParameterDirectionKindEnum.PDK_IN);
-        }
+            {
+                param.setKind(ParameterDirectionKindEnum.PDK_IN);
+            }
             | <OUT>
-        {
-            param.setKind(ParameterDirectionKindEnum.PDK_OUT);
-        }
+            {
+                param.setKind(ParameterDirectionKindEnum.PDK_OUT);
+            }
             | <INOUT>
-        {
-            param.setKind(ParameterDirectionKindEnum.PDK_INOUT);
-        }
+            {
+                param.setKind(ParameterDirectionKindEnum.PDK_INOUT);
+            }
         )
     ]
-        {
-        }
     name = SimpleIdentifier()
-        {
-            param.setName(name.getSimple());
-        }
+    {
+        param.setName(name.getSimple());
+    }
     TypedElement(param)
-        {
-        }
     {
         return param;
     }
@@ -1782,25 +1699,22 @@ FemJar JarDefinition() :
 }
 {
     <JAR>
-        {
-            jar = getRepos().newFemJar();
-        }
-    qualifiedName = CompoundIdentifier3()
-        {
-            farragoParser.getDdlValidator().setSchemaObjectName(
-                jar,qualifiedName);
-        }
-    <LIBRARY> url = QuotedString()
-        {
-            jar.setUrl(url);
-        }
-    <OPTIONS> <LPAREN>
-
-         deploymentState = NumericLiteral(SqlParserPos.ZERO) <RPAREN>
-        {
-            jar.setDeploymentState(deploymentState.intValue());
-        }
     {
+        jar = getRepos().newFemJar();
+    }
+    qualifiedName = CompoundIdentifier3()
+    {
+        farragoParser.getDdlValidator().setSchemaObjectName(
+            jar,qualifiedName);
+    }
+    <LIBRARY> url = QuotedString()
+    {
+        jar.setUrl(url);
+    }
+    <OPTIONS> <LPAREN>
+    deploymentState = NumericLiteral(SqlParserPos.ZERO) <RPAREN>
+    {
+        jar.setDeploymentState(deploymentState.intValue());
         return jar;
     }
 }
@@ -1814,20 +1728,13 @@ FemUserDefinedType UserDefinedTypeDefinition() :
     // TODO jvs 1-Feb-2005:  UNDER, AS-less, methods,
     // references, cast defs
     <TYPE> qualifiedName = CompoundIdentifier3()
-        {
-        }
-    <AS> (
+    <AS>
+    (
         typeDef = ObjectTypeDefinition()
         | typeDef = DistinctTypeDefinition()
     )
-        {
-        }
     UserDefinedTypeOptions(typeDef)
-        {
-        }
     MethodSpecificationList(typeDef)
-        {
-        }
     {
         farragoParser.getDdlValidator().setSchemaObjectName(
             typeDef, qualifiedName);
@@ -1843,26 +1750,24 @@ FemUserDefinedOrdering UserDefinedOrderingDefinition() :
 }
 {
     <ORDERING> <FOR> typeName = CompoundIdentifier3()
-        {
-            typeDef = (FemUserDefinedType)
-            farragoParser.getStmtValidator().findSchemaObject(
-                typeName,
-                getRepos().getSql2003Package().getFemUserDefinedType());
-            orderingDef = getRepos().newFemUserDefinedOrdering();
-            typeDef.getOrdering().add(orderingDef);
-        }
+    {
+        typeDef = (FemUserDefinedType)
+        farragoParser.getStmtValidator().findSchemaObject(
+            typeName,
+            getRepos().getSql2003Package().getFemUserDefinedType());
+        orderingDef = getRepos().newFemUserDefinedOrdering();
+        typeDef.getOrdering().add(orderingDef);
+    }
     (
         <EQUALS> <ONLY> <BY> OrderingCategory(orderingDef)
-    {
-        orderingDef.setFull(false);
-    }
-        | <ORDER> <FULL> <BY> OrderingCategory(orderingDef)
-    {
-        orderingDef.setFull(true);
-    }
-    )
         {
+            orderingDef.setFull(false);
         }
+        | <ORDER> <FULL> <BY> OrderingCategory(orderingDef)
+        {
+            orderingDef.setFull(true);
+        }
+    )
     {
         return orderingDef;
     }
@@ -1894,8 +1799,6 @@ void OrderingCategory(FemUserDefinedOrdering orderingDef) :
                 UserDefinedOrderingCategoryEnum.UDOC_STATE);
         }
     )
-        {
-        }
     {
         if (routine != null) {
             // NOTE jvs 22-Mar-2005:  This dependency is actually the only
@@ -1912,9 +1815,12 @@ void MethodSpecificationList(FemUserDefinedType typeDef) :
 {
 }
 {
-    (MethodSpecification(typeDef) (<COMMA> MethodSpecification(typeDef))*)?
-        {
-        }
+    [
+        MethodSpecification(typeDef)
+        (
+            <COMMA> MethodSpecification(typeDef)
+        ) *
+    ]
 }
 
 void MethodSpecification(FemUserDefinedType typeDef) :
@@ -1925,36 +1831,32 @@ void MethodSpecification(FemUserDefinedType typeDef) :
 {
     // TODO jvs 25-Feb-2005:  non-constructor methods
     <CONSTRUCTOR> <METHOD>
-         name = SimpleIdentifier()
-        {
-            method = getRepos().newFemRoutine();
-            method.setType(ProcedureTypeEnum.FUNCTION);
-            farragoParser.getDdlValidator().setSchemaObjectName(
-                method, name);
-            method.setInvocationName(method.getName());
-            method.setCalledOnNullInput(true);
-            // TODO jvs 25-Feb-2005:  mark as constructor
-            CwmOperation operation = getRepos().newCwmOperation();
-            operation.setOwner(typeDef);
-            operation.setName(method.getName());
-            operation.setAbstract(false);
-            method.setSpecification(operation);
-        }
+    name = SimpleIdentifier()
+    {
+        method = getRepos().newFemRoutine();
+        method.setType(ProcedureTypeEnum.FUNCTION);
+        farragoParser.getDdlValidator().setSchemaObjectName(
+            method, name);
+        method.setInvocationName(method.getName());
+        method.setCalledOnNullInput(true);
+        // TODO jvs 25-Feb-2005:  mark as constructor
+        CwmOperation operation = getRepos().newCwmOperation();
+        operation.setOwner(typeDef);
+        operation.setName(method.getName());
+        operation.setAbstract(false);
+        method.setSpecification(operation);
+    }
     <LPAREN> [ RoutineParamList(method) ] <RPAREN>
-        {
-            // TODO jvs 25-Feb-2005:  copy parameters to operation
-        }
+    {
+        // TODO jvs 25-Feb-2005:  copy parameters to operation
+    }
     ReturnsClause(method)
-        {
-        }
     <SELF> <AS> <RESULT>
-        {
-            // REVIEW jvs 25-Feb-2005:  according to SQL:2003, SPECIFIC
-            // NAME has to come before SELF AS RESULT
-        }
+    {
+        // REVIEW jvs 25-Feb-2005:  according to SQL:2003, SPECIFIC
+        // NAME has to come before SELF AS RESULT
+    }
     RoutineCharacteristics(method)
-        {
-        }
 }
 
 void UserDefinedTypeOptions(FemUserDefinedType typeDef) :
@@ -1966,29 +1868,25 @@ void UserDefinedTypeOptions(FemUserDefinedType typeDef) :
 // PROHIBIT an instantiability declaration.
     (
         <FINAL>
-    {
-        typeDef.setFinal(true);
-    }
+        {
+            typeDef.setFinal(true);
+        }
         | <INSTANTIABLE>
-    {
-        typeDef.setAbstract(false);
-    }
+        {
+            typeDef.setAbstract(false);
+        }
         | <NOT>
         (
             <FINAL>
-        {
-            typeDef.setFinal(false);
-        }
+            {
+                typeDef.setFinal(false);
+            }
             | <INSTANTIABLE>
-        {
-            typeDef.setAbstract(true);
-        }
+            {
+                typeDef.setAbstract(true);
+            }
         )
-    )*
-        {
-        }
-    {
-    }
+    ) *
 }
 
 FemSqlobjectType ObjectTypeDefinition() :
@@ -1997,10 +1895,11 @@ FemSqlobjectType ObjectTypeDefinition() :
 }
 {
     <LPAREN>
-         AttributeDefinition(typeDef)
-         (<COMMA> AttributeDefinition(typeDef))* <RPAREN>
-        {
-        }
+    AttributeDefinition(typeDef)
+    (
+        <COMMA> AttributeDefinition(typeDef)
+    ) *
+    <RPAREN>
     {
         // NOTE jvs 13-Feb-2005:  for now, this is to trigger an error
         // in case they forget to specify FINAL
@@ -2017,12 +1916,10 @@ FemSqldistinguishedType DistinctTypeDefinition() :
 }
 {
     dataType = DataType()
-        {
-            farragoParser.getDdlValidator().setSqlDefinition(
-                typeDef,
-                dataType);
-        }
     {
+        farragoParser.getDdlValidator().setSqlDefinition(
+            typeDef,
+            dataType);
         typeDef.setFinal(true);
         typeDef.setAbstract(false);
         return typeDef;
@@ -2039,29 +1936,25 @@ void AttributeDefinition(FemSqlobjectType typeDef) :
 }
 {
     name = SimpleIdentifier()
-        {
-            attrDef.setName(name.getSimple());
-        }
+    {
+        attrDef.setName(name.getSimple());
+    }
     dataType = DataType()
-        {
-            farragoParser.getDdlValidator().setSqlDefinition(
-                attrDef,
-                dataType);
-        }
+    {
+        farragoParser.getDdlValidator().setSqlDefinition(
+            attrDef,
+            dataType);
+    }
     [ defaultClause = DefaultClause()
         {
             setDefaultExpression(attrDef, defaultClause);
         }
     ]
-        {
-        }
     [ sqlCollation = CollateClause()
         {
             attrDef.setCollationName(sqlCollation.getCollationName());
         }
     ]
-        {
-        }
     {
         typeDef.getFeature().add(attrDef);
     }
@@ -2073,9 +1966,9 @@ FemDataServer DataServerReference() :
 }
 {
     <SERVER> name = SimpleIdentifier()
-        {
-            return farragoParser.getStmtValidator().findDataServer(name);
-        }
+    {
+        return farragoParser.getStmtValidator().findDataServer(name);
+    }
 }
 
 FemForeignTable ForeignTableDefinition() :
@@ -2086,24 +1979,20 @@ FemForeignTable ForeignTableDefinition() :
 }
 {
     <FOREIGN> <TABLE>
-        {
-            table = getRepos().newFemForeignTable();
-        }
+    {
+        table = getRepos().newFemForeignTable();
+    }
     qualifiedTableName = CompoundIdentifier3()
-        {
-            farragoParser.getDdlValidator().setSchemaObjectName(
-                table,qualifiedTableName);
-        }
+    {
+        farragoParser.getDdlValidator().setSchemaObjectName(
+            table,qualifiedTableName);
+    }
     [ <LPAREN> ForeignTableElementList(table) <RPAREN> ]
-        {
-        }
     server = DataServerReference()
-        {
-            server.getColumnSet().add(table);
-        }
+    {
+        server.getColumnSet().add(table);
+    }
     OptionalStorageOptions(table)
-        {
-        }
     {
         return table;
     }
@@ -2116,13 +2005,11 @@ FemForeignTable ForeignTableReference() :
 }
 {
     <FOREIGN> <TABLE> qualifiedTableName = CompoundIdentifier3()
-        {
-            table = (FemForeignTable)
-            farragoParser.getStmtValidator().findSchemaObject(
-                qualifiedTableName,
-                getRepos().getMedPackage().getFemForeignTable());
-        }
     {
+        table = (FemForeignTable)
+        farragoParser.getStmtValidator().findSchemaObject(
+            qualifiedTableName,
+            getRepos().getMedPackage().getFemForeignTable());
         return table;
     }
 }
@@ -2133,9 +2020,8 @@ void ForeignTableElementList(FemForeignTable table) :
 {
     ColumnDefinition(table)
     (
-        <COMMA>
-        ColumnDefinition(table)
-    )*
+        <COMMA> ColumnDefinition(table)
+    ) *
 }
 
 void OptionalStorageOptions(FemElementWithStorageOptions element) :
@@ -2149,10 +2035,9 @@ void OptionalStorageOptions(FemElementWithStorageOptions element) :
         (
             <COMMA>
             StorageOption(element)
-        )*
+        ) *
         <RPAREN>
-    {
-    } ]
+    ]
 }
 
 void StorageOption(FemElementWithStorageOptions element) :
@@ -2162,11 +2047,7 @@ void StorageOption(FemElementWithStorageOptions element) :
 }
 {
     name = SimpleIdentifier()
-        {
-        }
     value = QuotedString()
-        {
-        }
     {
         FemStorageOption option = getRepos().newFemStorageOption();
         option.setName(name.getSimple());
@@ -2181,12 +2062,10 @@ CwmModelElement DataWrapperDrop() :
 }
 {
     wrapper = DataWrapperReference()
-        {
-        }
     CascadeOption()
-        {
-            return wrapper;
-        }
+    {
+        return wrapper;
+    }
 }
 
 CwmModelElement DataServerDrop() :
@@ -2195,12 +2074,10 @@ CwmModelElement DataServerDrop() :
 }
 {
     server = DataServerReference()
-        {
-        }
     CascadeOption()
-        {
-            return server;
-        }
+    {
+        return server;
+    }
 }
 
 CwmModelElement ForeignTableDrop() :
@@ -2209,12 +2086,10 @@ CwmModelElement ForeignTableDrop() :
 }
 {
     table = ForeignTableReference()
-        {
-        }
     CascadeOption()
-        {
-            return table;
-        }
+    {
+        return table;
+    }
 }
 
 SqlIdentifier PrivilegeElement() :
@@ -2236,11 +2111,19 @@ List PrivilegeElementList() :
     SqlIdentifier privId;
 }
 {
-    privId = PrivilegeElement() { privList.add(privId); }
+    privId = PrivilegeElement()
+    {
+        privList.add(privId);
+    }
     (
-        <COMMA> privId = PrivilegeElement() {privList.add(privId);}
-    )*
-    {return privList;}
+        <COMMA> privId = PrivilegeElement()
+        {
+            privList.add(privId);
+        }
+    ) *
+    {
+        return privList;
+    }
 }
 
 
@@ -2268,7 +2151,7 @@ DdlStmt GrantStmt() :
         stmt.setPrivList(privList);
     }
     <ON> (
-        [<TABLE>] grantedObject = TableIdentifier()
+        [ <TABLE> ] grantedObject = TableIdentifier()
         |
         grantedObject = SpecificRoutineReference()
         // TODO: <SEQUENCE> grantedObject = SequenceIdentifier()
@@ -2276,9 +2159,7 @@ DdlStmt GrantStmt() :
     {
         stmt.setGrantedObject(grantedObject);
     }
-    <TO> (
-        granteeList = SimpleIdentifierCommaList()
-    )
+    <TO> granteeList = SimpleIdentifierCommaList()
     {
         stmt.setGranteeList(granteeList);
     }
@@ -2295,7 +2176,8 @@ DdlStmt GrantStmt() :
         }
     ]
     [
-        <GRANTED> <BY> (
+        <GRANTED> <BY>
+        (
             <CURRENT_ROLE> {stmt.setCurrentUserOption(true);}
             |
             <CURRENT_USER> {stmt.setCurrentRoleOption(true);}
@@ -2317,11 +2199,11 @@ DdlStmt GrantStmt() :
 
 TOKEN :
 {
-  < CHECKPOINT: "CHECKPOINT" >
-| < CLUSTERED: "CLUSTERED" >
-| < INDEX: "INDEX" >
-| < JAR: "JAR" >
-| < TRUNCATE: "TRUNCATE" >
+    < CHECKPOINT: "CHECKPOINT" >
+    | < CLUSTERED: "CLUSTERED" >
+    | < INDEX: "INDEX" >
+    | < JAR: "JAR" >
+    | < TRUNCATE: "TRUNCATE" >
 }
 
 /**
@@ -2343,12 +2225,12 @@ String DdlNonReservedKeyWord() :
 }
 {
     (
-          <INDEX>
+        <INDEX>
         | <JAR>
     )
-        {
-            return getToken(0).image.toUpperCase();
-        }
+    {
+        return getToken(0).image.toUpperCase();
+    }
 }
 
 
