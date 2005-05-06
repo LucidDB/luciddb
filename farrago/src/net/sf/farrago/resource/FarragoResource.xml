@@ -513,6 +513,10 @@ column type family is {1} but default value type family is {2}</text>
 <text>Failed to access URL {0} for {1}</text>
 </exception>
 
+<exception id="420880" name="ValidatorInvalidPrivilege">
+<text>Privilege {0} is not applicable to {1}</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Fennel resources 440,000 - 450,000 -->
 <!-- Actual resources are defined separately in Fennel -->

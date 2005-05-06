@@ -410,11 +410,6 @@ usesLocalFiles                                    false
 | 1000              | 1                      | 0                | 1000          | 1                  | 0            | 2000                       | 2000                    | 1000           | 1000            | 4096           |
 +-------------------+------------------------+------------------+---------------+--------------------+--------------+----------------------------+-------------------------+----------------+-----------------+----------------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from sys_fem."Security"."AuthorizationIdentifier";
-+-------+-------------+------------+--------+---------------+
-| name  | visibility  | namespace  | mofId  | mofClassName  |
-+-------+-------------+------------+--------+---------------+
-+-------+-------------+------------+--------+---------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- TODO jvs 7-Aug-2004:  find out why the attribute order on this
 0: jdbc:farrago:> -- changes with every model edit
