@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/med.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/med.sql#3 $
 0: jdbc:farrago:> -- Test SQL/MED DDL
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- create a private wrapper for mdr (don't use the standard mdr wrapper)
@@ -182,6 +182,7 @@ Error: At line 1, column 15: Table 'MOF_SCHEMA.FOREIGN_EXCEPTION_NAMES' not foun
 | SYS_FTRS_DATA_SERVER          |
 | SYS_MOCK_DATA_SERVER          |
 | SYS_MOCK_FOREIGN_DATA_SERVER  |
+| SYS_MOF                       |
 +-------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
