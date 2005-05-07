@@ -24,6 +24,7 @@
 package org.eigenbase.util;
 
 import java.io.*;
+import java.sql.*;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -1059,6 +1060,24 @@ public class Util extends Toolbox
                 writer.close();
             }
         } catch (IOException ex) {
+            // intentionally suppressed
+        }
+    }
+
+    /**
+     * Closes a Statement, ignoring any SQL exception.  This should only
+     * be used in finally blocks when it's necessary to avoid throwing
+     * an exception which might mask a real exception.
+     *
+     * @param stmt stmt to close
+     */
+    public static void squelchStmt(Statement stmt)
+    {
+        try {
+            if (stmt != null) {
+                stmt.close();
+            }
+        } catch (SQLException ex) {
             // intentionally suppressed
         }
     }

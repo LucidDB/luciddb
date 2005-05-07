@@ -383,10 +383,15 @@ public abstract class JmiUtil
         // Look up the Java interface generated for the class being queried.
         TagProvider tagProvider = new TagProvider();
         String className =
-            tagProvider.getImplFullName((ModelElement) (refClass.refMetaObject()),
+            tagProvider.getImplFullName(
+                (ModelElement) (refClass.refMetaObject()),
                 TagProvider.INSTANCE);
         assert (className.endsWith("Impl"));
         className = className.substring(0, className.length() - 4);
+        // hack for MDR MOF implementation
+        className = className.replaceFirst(
+            "org\\.netbeans\\.jmiimpl\\.mof",
+            "javax.jmi");
         try {
             return Class.forName(className);
         } catch (ClassNotFoundException ex) {

@@ -133,6 +133,10 @@
   <!-- directory in which catalog-related XMI files are stored -->
   <property name="farrago.xmi.dir" location="${farrago.catalog.dir}/xmi"/>
 
+  <!-- directory in which trace files are configured and generated -->
+  <property name="farrago.trace.dir" location="${farrago.dir}/trace"/>
+
+
 
   <!-- Files -->
 
@@ -188,6 +192,13 @@
   <property name="FarragoExtMetamodelUML.zuml"
     location="${farrago.xmi.dir}/FarragoExtMetamodelUML.zuml"/>
 
+  <!-- File defining Farrago tracing -->
+  <property name="FarragoTrace.properties"
+    location="${farrago.trace.dir}/FarragoTrace.properties"/>
+
+  <!-- File for Farrago trace log -->
+  <property name="FarragoTrace.log"
+    location="${farrago.trace.dir}/FarragoTrace.log"/>
 
   <!-- Classpaths -->
 

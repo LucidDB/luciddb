@@ -70,9 +70,6 @@
   <!-- directory for regression test SQL scripts -->
   <property name="regressionsql.dir" location="${farrago.dir}/regressionsql"/>
 
-  <!-- directory in which trace files are configured and generated -->
-  <property name="trace.dir" location="${farrago.dir}/trace"/>
-
 
   <!-- The version of ANT we require. -->
   <property name="required.ant.version" value="1.6.2"/>
@@ -122,12 +119,6 @@ require version '${required.ant.version}'."/>
   <!-- file prefix for catalog storage -->
   <property name="catalog.mdrStorage"
     location="${farrago.catalog.dir}/FarragoCatalog"/>
-
-  <property name="FarragoTrace.properties"
-    location="${trace.dir}/FarragoTrace.properties"/>
-
-  <property name="FarragoTrace.log"
-    location="${trace.dir}/FarragoTrace.log"/>
 
   <!-- NOTE:  this has to use true/false (not 1/0) for MDR import -->
   <property name="fennel.disabled" value="false"/>
@@ -532,7 +523,7 @@ require version '${required.ant.version}'."/>
 
   <!-- set up the default trace configuration file -->
   <target name="configureTrace">
-    <mkdir dir="${trace.dir}"/>
+    <mkdir dir="${farrago.trace.dir}"/>
     <touch file="${FarragoTrace.properties}"/>
     <propertyfile file="${FarragoTrace.properties}"
       comment="Farrago developer tracing configuration (do not add comments)">
