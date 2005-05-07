@@ -2092,7 +2092,7 @@ CwmModelElement ForeignTableDrop() :
     }
 }
 
-SqlIdentifier PrivilegeElement() :
+SqlIdentifier GrantElement() :
 {
     
 }
@@ -2105,18 +2105,18 @@ SqlIdentifier PrivilegeElement() :
 }
 
 
-List PrivilegeElementList() :
+List GrantElementList() :
 {
     List privList = new ArrayList();
     SqlIdentifier privId;
 }
 {
-    privId = PrivilegeElement()
+    privId = GrantElement()
     {
         privList.add(privId);
     }
     (
-        <COMMA> privId = PrivilegeElement()
+        <COMMA> privId = GrantElement()
         {
             privList.add(privId);
         }
@@ -2145,7 +2145,7 @@ DdlStmt GrantStmt() :
             privList = startList(allPrivId);
         }
         |
-        privList = PrivilegeElementList()
+        privList = GrantElementList()
     )
     {
         stmt.setPrivList(privList);

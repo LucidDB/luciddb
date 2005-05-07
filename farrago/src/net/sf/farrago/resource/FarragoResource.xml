@@ -513,7 +513,7 @@ column type family is {1} but default value type family is {2}</text>
 <text>Failed to access URL {0} for {1}</text>
 </exception>
 
-<exception id="420880" name="ValidatorInvalidPrivilege">
+<exception id="420880" name="ValidatorInvalidGrant">
 <text>Privilege {0} is not applicable to {1}</text>
 </exception>
 
@@ -830,12 +830,12 @@ column type family is {1} but default value type family is {2}</text>
 <text>column</text>
 </message>
 
-<message id="510031" name="UmlAuthorizationIdentifier">
+<message id="510031" name="UmlAuthId">
 <text>authorization identifier</text>
 </message>
 
-<message id="510032" name="UmlPrivilege">
-<text>privilege</text>
+<message id="510032" name="UmlGrant">
+<text>grant</text>
 </message>
 
 <message id="510033" name="UmlAbstractColumn">
@@ -898,9 +898,22 @@ column type family is {1} but default value type family is {2}</text>
 <text>user-defined ordering</text>
 </message>
 
-<message id="510047" name="UmlDependency">
+<message id="510048" name="UmlDependency">
 <text>dependency</text>
 </message>
+
+<message id="510049" name="UmlUser">
+<text>user</text>
+</message>
+
+<message id="510050" name="UmlRole">
+<text>role</text>
+</message>
+
+<message id="510051" name="UmlCreationGrant">
+<text>creation grant</text>
+</message>
+
 
 <!-- End of last error section ============================================ -->
 

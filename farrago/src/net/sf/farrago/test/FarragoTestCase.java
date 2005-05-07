@@ -618,12 +618,12 @@ public abstract class FarragoTestCase extends DiffTestCase
             throws Exception
         {
             List list = new ArrayList(
-                repos.getSecurityPackage().getFemAuthorizationIdentifier()
+                repos.getSecurityPackage().getFemAuthId()
                 .refAllOfClass());
             Iterator iter = list.iterator();
             while (iter.hasNext()) {
-                FemAuthorizationIdentifier authId =
-                    (FemAuthorizationIdentifier) iter.next();
+                FemAuthId authId =
+                    (FemAuthId) iter.next();
                 authId.refDelete();
             }
         }

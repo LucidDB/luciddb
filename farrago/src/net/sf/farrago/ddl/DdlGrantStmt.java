@@ -29,7 +29,6 @@ import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.util.*;
-
 import java.util.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.util.*;
@@ -82,7 +81,7 @@ public class DdlGrantStmt extends DdlStmt
     {
         FarragoRepos repos =  ddlValidator.getRepos();
 
-        FemAuthorizationIdentifier grantorAuthId;
+        FemAuthId grantorAuthId;
         if (grantor == null || currentUserOption == true) {
             // The grantor is not specified, then use the current
             // session' user named as our grantor name
@@ -104,7 +103,7 @@ public class DdlGrantStmt extends DdlStmt
         // privilege
 
         // initialized the privilege lookup table. 
-        privilegeMap = initPrivilegeValidationLookupMap(repos);
+        privilegeMap = initGrantValidationLookupMap(repos);
         
         Iterator iter = granteeList.iterator();
         while(iter.hasNext()) {
@@ -114,7 +113,7 @@ public class DdlGrantStmt extends DdlStmt
 
             // Find the repository element id for the grantee,  create one if
             // it does not exist
-            FemAuthorizationIdentifier granteeAuthId = findAuthIdByName(repos,
+            FemAuthId granteeAuthId = findAuthIdByName(repos,
                 id.getSimple());
 
             // for each privilege in the list,  we instantiate a repository
@@ -131,7 +130,7 @@ public class DdlGrantStmt extends DdlStmt
                 if (!legalList.contains(privId.getSimple().toUpperCase()))
                 {
                     // throw an exception, we see an illegal privilege
-                    throw FarragoResource.instance().newValidatorInvalidPrivilege(
+                    throw FarragoResource.instance().newValidatorInvalidGrant(
                         privId.getSimple(),grantedObject.getName());
                 }
                 
@@ -142,18 +141,18 @@ public class DdlGrantStmt extends DdlStmt
                 // have the GRANT option on the privilege specified.
                 
                 // create a privilege object and set its properties
-                FemPrivilege priv = repos.newFemPrivilege();
+                FemGrant grant = repos.newFemGrant();
                 
                 // set the privilege name (i.e. action) and properties
-                priv.setName(privId.getSimple());
-                priv.setWithGrantOption(grantOption);
+                grant.setAction(privId.getSimple());
+                grant.setWithGrantOption(grantOption);
 
-                // TODO: to priv.setHierarchyOption(hierarchyOption);
+                // TODO: to grant.setHierarchyOption(hierarchyOption);
 
                 // associate the privilege with the 
-                priv.setGrantor(grantorAuthId);
-                priv.setGrantee(granteeAuthId);
-                priv.setElement(grantedObject);
+                grant.setGrantor(grantorAuthId);
+                grant.setGrantee(granteeAuthId);
+                grant.setElement(grantedObject);
             }
         }
     }
@@ -200,27 +199,27 @@ public class DdlGrantStmt extends DdlStmt
         this.currentUserOption = currentUserOption;
     }
 
-    private FemAuthorizationIdentifier findAuthIdByName(
+    private FemAuthId findAuthIdByName(
         FarragoRepos repos, String authName)
     {
         Collection authIdCollection =
-            repos.getSecurityPackage().getFemAuthorizationIdentifier().
+            repos.getSecurityPackage().getFemAuthId().
             refAllOfType();
-        FemAuthorizationIdentifier femAuthId =
-            (FemAuthorizationIdentifier)
+        FemAuthId femAuthId =
+            (FemAuthId)
             FarragoCatalogUtil.getModelElementByName(
                 authIdCollection, authName);
 
         if (femAuthId == null) {
             // need to create a new auth id instance for metadata repository
-            femAuthId = repos.newFemAuthorizationIdentifier();
+            femAuthId = repos.newFemUser();
             femAuthId.setName(authName);
         }
         return femAuthId;
     }
 
     
-    private MultiMap initPrivilegeValidationLookupMap (FarragoRepos repos)
+    private MultiMap initGrantValidationLookupMap (FarragoRepos repos)
     {
         // TODO: This routine is temporary. We need to have an extensible way
         // of handling new kind of privileges. Plus we must be move to session level so that
