@@ -41,9 +41,9 @@ import org.eigenbase.util.EnumeratedValues;
 public class SqlIntervalLiteral extends SqlLiteral
 {
     protected SqlIntervalLiteral(
-            int[] values, SqlIntervalQualifier intervalQualifier,
+            String intervalStr, SqlIntervalQualifier intervalQualifier,
             SqlTypeName sqlTypeName, SqlParserPos pos) {
-        super(new IntervalValue(intervalQualifier, values), sqlTypeName, pos);
+        super(new IntervalValue(intervalQualifier, intervalStr), sqlTypeName, pos);
     }
 
     public void unparse(
@@ -63,60 +63,19 @@ public class SqlIntervalLiteral extends SqlLiteral
      */
     static class IntervalValue {
         private final SqlIntervalQualifier intervalQualifier;
-        private final int[] values;
+        private final String intervalStr;
 
-        IntervalValue(SqlIntervalQualifier intervalQualifier, int[] values) {
+        IntervalValue(SqlIntervalQualifier intervalQualifier, String intervalStr) {
             this.intervalQualifier = intervalQualifier;
-            this.values = values;
+            this.intervalStr = intervalStr;
         }
 
         public SqlIntervalQualifier getIntervalQualifier() {
             return intervalQualifier;
         }
 
-        public int[] getValues() {
-            return values;
-        }
-
         public String toString() {
-            StringBuffer ret = new StringBuffer();
-            if (-1 == values[0]) {
-                ret.append('-');
-            }
-            ret.append(String.valueOf(values[1]));
-            if (intervalQualifier.isYearMonth() && 3==values.length) {
-                ret.append("-");
-                ret.append(String.valueOf(values[2]));
-            } else if (values.length > 2) {
-                SqlIntervalQualifier.TimeUnit start =
-                    intervalQualifier.getStartUnit();
-                SqlIntervalQualifier.TimeUnit end =
-                    intervalQualifier.getEndUnit();
-
-                if (SqlIntervalQualifier.TimeUnit.Day.equals(
-                    intervalQualifier.getStartUnit())) {
-                    ret.append(" ");
-                } else if
-                    (!SqlIntervalQualifier.TimeUnit.Second.equals(start)) {
-                    ret.append(":");
-                }
-
-                if (null == end) {
-                    end = start;
-                }
-
-                for (int i = 2; i < values.length; i++) {
-                    if (SqlIntervalQualifier.TimeUnit.Second.equals(end) &&
-                        ((end.ordinal-start.ordinal)<(i-1))) {
-                            ret.append(".");
-                    } else if (i >= 3) {
-                        ret.append(":");
-                    }
-                    ret.append(String.valueOf(values[i]));
-                }
-            }
-
-            return ret.toString();
+            return intervalStr;
         }
     }
 }

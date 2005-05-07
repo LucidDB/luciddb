@@ -504,18 +504,17 @@ public class SqlLiteral extends SqlNode
 
     /**
      * Creates an interval literal.
-     * @param values            Values, e.g. int[]{1, 23, 4} from a
-     *                          input string of'1:23:04'
+     * @param intervalStr       input string of '1:23:04'
      * @param intervalQualifier describes the interval type and precision
      * @param pos               Parser position
      */
-    public static SqlIntervalLiteral createInterval(int[] values,
+    public static SqlIntervalLiteral createInterval(String intervalStr,
         SqlIntervalQualifier intervalQualifier, SqlParserPos pos)
     {
         SqlTypeName typeName = intervalQualifier.isYearMonth() ?
             SqlTypeName.IntervalYearMonth :
             SqlTypeName.IntervalDayTime;
-        return new SqlIntervalLiteral(values, intervalQualifier,
+        return new SqlIntervalLiteral(intervalStr, intervalQualifier,
             typeName, pos);
     }
 
