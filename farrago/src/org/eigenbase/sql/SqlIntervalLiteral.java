@@ -41,9 +41,9 @@ import org.eigenbase.util.EnumeratedValues;
 public class SqlIntervalLiteral extends SqlLiteral
 {
     protected SqlIntervalLiteral(
-            String intervalStr, SqlIntervalQualifier intervalQualifier,
+            int sign, String intervalStr, SqlIntervalQualifier intervalQualifier,
             SqlTypeName sqlTypeName, SqlParserPos pos) {
-        super(new IntervalValue(intervalQualifier, intervalStr), sqlTypeName, pos);
+        super(new IntervalValue(intervalQualifier, sign, intervalStr), sqlTypeName, pos);
     }
 
     public void unparse(
@@ -51,7 +51,11 @@ public class SqlIntervalLiteral extends SqlLiteral
             int leftPrec,
             int rightPrec) {
         IntervalValue interval = (IntervalValue) value;
-        writer.print("(INTERVAL '");
+        writer.print("(INTERVAL ");
+        if (interval.getSign() == -1) {
+            writer.print("-");
+        }
+        writer.print("'");
         writer.print(value.toString());
         writer.print("' ");
         writer.print(interval.intervalQualifier.toString());
@@ -64,14 +68,20 @@ public class SqlIntervalLiteral extends SqlLiteral
     static class IntervalValue {
         private final SqlIntervalQualifier intervalQualifier;
         private final String intervalStr;
+        private final int sign;
 
-        IntervalValue(SqlIntervalQualifier intervalQualifier, String intervalStr) {
+        IntervalValue(SqlIntervalQualifier intervalQualifier, int sign, String intervalStr) {
             this.intervalQualifier = intervalQualifier;
+            this.sign = sign;
             this.intervalStr = intervalStr;
         }
 
         public SqlIntervalQualifier getIntervalQualifier() {
             return intervalQualifier;
+        }
+
+        public int getSign() {
+            return sign;
         }
 
         public String toString() {

@@ -184,7 +184,7 @@ JAVACODE SqlIntervalLiteral parseIntervalLiteral(
             s+" "+intervalQualifier.toString(), pos.toString());
         throw new ParseException(msg);
     }
-    return SqlLiteral.createInterval(intervalStr, intervalQualifier, pos);
+    return SqlLiteral.createInterval(sign, intervalStr, intervalQualifier, pos);
 }
 
 /*****************************************
