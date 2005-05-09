@@ -27,6 +27,10 @@
 #include <boost/test/test_tools.hpp>
 using namespace fennel;
 
+/**
+ * Test Suite for the collect/uncollect xo's
+ * @author Wael Chatila
+ */
 class CollectExecStreamTestSuite : public ExecStreamTestBase
 {
     TupleAttributeDescriptor descAttrInt64;

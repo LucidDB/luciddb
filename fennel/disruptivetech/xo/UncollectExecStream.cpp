@@ -98,7 +98,7 @@ ExecStreamResult UncollectExecStream::execute(ExecStreamQuantum const &quantum)
         if (!pOutAccessor->produceTuple(outputTupleData)) {
             return EXECRC_BUF_OVERFLOW;
         }
-        bytesWritten += outTa.getMaxByteCount();
+        bytesWritten += outTa.getCurrentByteCount();
 
     }
 

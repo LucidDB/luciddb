@@ -33,6 +33,7 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * CollectExecStreamParams defines parameters for instantiating a
  * CollectExecStream.
+ * @author Wael Chatila
  */
 struct CollectExecStreamParams : public ConduitExecStreamParams
 {
