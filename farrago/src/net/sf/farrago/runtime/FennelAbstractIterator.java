@@ -32,7 +32,7 @@ import java.util.NoSuchElementException;
  * FennelAbstractIterator implements the {@link RestartableIterator} interface
  * by unmarshalling Fennel tuples from a buffer.
  *
- * <p>FennelAbsstractIterator only deals with raw byte buffers; it is the
+ * <p>FennelAbstractIterator only deals with raw byte buffers; it is the
  * responsibility of the contained {@link FennelTupleReader} object to
  * unmarshal individual fields.
  *
@@ -50,6 +50,7 @@ public abstract class FennelAbstractIterator implements RestartableIterator
     protected final FennelTupleReader tupleReader;
     protected ByteBuffer byteBuffer;
     protected byte [] bufferAsArray;
+    private boolean endOfData;
 
     /**
      * Creates a new FennelIterator object.
@@ -59,12 +60,13 @@ public abstract class FennelAbstractIterator implements RestartableIterator
     public FennelAbstractIterator(FennelTupleReader tupleReader)
     {
         this.tupleReader = tupleReader;
+        this.endOfData = false;
     }
 
     // implement Iterator
     public boolean hasNext()
     {
-        if (bufferAsArray == null) {
+        if (endOfData) {
             return false;
         }
         if (byteBuffer.hasRemaining()) {
@@ -74,6 +76,7 @@ public abstract class FennelAbstractIterator implements RestartableIterator
         int cb = populateBuffer();
         if (cb == 0) {
             bufferAsArray = null;
+            endOfData = true;
             return false;
         }
         byteBuffer.limit(cb);

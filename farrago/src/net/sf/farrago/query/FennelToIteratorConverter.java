@@ -109,11 +109,11 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
         final RelDataType rowType = getRowType();
         OJClass rowClass = OJUtil.typeToOJClass(rowType, factory);
 
-        FennelRelImplementor farragoRelImplementor =
-            (FennelRelImplementor) implementor;
-        FemExecutionStreamDef rootStream =
-            farragoRelImplementor.visitFennelChild((FennelRel) child);
+        // Implement the child rel as an XO.
+        FemExecutionStreamDef rootStream = childToStreamDef(
+            (FennelRelImplementor) implementor);
         String rootStreamName = rootStream.getName();
+        int rootStreamId = getId();
 
         FemTupleDescriptor tupleDesc =
             FennelRelUtil.createTupleDescriptorFromRowType(
@@ -366,11 +366,26 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
         ExpressionList argList = new ExpressionList();
         argList.add(newTupleReaderExp);
         argList.add(Literal.makeLiteral(rootStreamName));
+        argList.add(Literal.makeLiteral(rootStreamId));
         argList.add(childrenExp);
         return new MethodCall(
             stmt.getConnectionVariable(),
             "newFennelIterator",
             argList);
+    }
+
+    /**
+     * Converts the child relational expression (which is in Fennel
+     * convention) into a {@link FemExecutionStreamDef}.
+     *
+     * <p>Derived classes may override this method.
+     */
+    protected FemExecutionStreamDef childToStreamDef(
+        FennelRelImplementor implementor)
+    {
+        FemExecutionStreamDef rootStream =
+            implementor.visitFennelChild((FennelRel) child);
+        return rootStream;
     }
 
     /**

@@ -24,6 +24,9 @@ package net.sf.farrago.runtime;
 import org.eigenbase.runtime.Interlock;
 
 import java.nio.ByteBuffer;
+import java.util.logging.Logger;
+
+import net.sf.farrago.trace.FarragoTrace;
 
 /**
  * FennelPipeIterator implements the
@@ -49,6 +52,10 @@ import java.nio.ByteBuffer;
  */
 public class FennelPipeIterator extends FennelAbstractIterator
 {
+    // TODO: don't borrow the neighbors' tracer
+    private static final Logger tracer =
+        FarragoTrace.getFarragoIteratorResultSetTracer();
+
     /**
      * Interlock manages the synchronization between producer and consumer.
      */
@@ -62,6 +69,14 @@ public class FennelPipeIterator extends FennelAbstractIterator
     public FennelPipeIterator(FennelTupleReader tupleReader)
     {
         super(tupleReader);
+
+        // Create an empty byteBuffer which will cause us to fetch new rows the
+        // first time our consumer tries to fetch. TODO: Add a new state 'have
+        // not yet checked whether we have more data'.
+        bufferAsArray = new byte[0];
+        byteBuffer = ByteBuffer.wrap(bufferAsArray);
+        byteBuffer.clear();
+        byteBuffer.limit(0);
     }
 
     public void restart()
@@ -72,14 +87,18 @@ public class FennelPipeIterator extends FennelAbstractIterator
     protected int populateBuffer()
     {
         // Wait until the producer has finished populating the buffer.
+//        System.out.println("populateBuffer: 1");
         interlock.beginReading();
+//        System.out.println("populateBuffer: 2");
         return byteBuffer.limit();
     }
 
     protected void releaseBuffer()
     {
         // signal that the producer can start writing to the buffer
+//        System.out.println("endReading: 1");
         interlock.endReading();
+//        System.out.println("endReading: 2");
     }
 
     /**
@@ -93,16 +112,26 @@ public class FennelPipeIterator extends FennelAbstractIterator
      * Also, the limit of the byte buffer is ignored; the
      * <code>byteCount</code> parameter is used instead.
      */
-    public void write(ByteBuffer byteBuffer, int byteCount)
+    public void write(ByteBuffer byteBuffer, int byteCount) throws Throwable
     {
-        // Wait until the consumer has finished reading from the buffer.
-        interlock.beginWriting();
-        byteBuffer.limit(byteCount);
-        this.byteBuffer = byteBuffer;
-        this.bufferAsArray = byteBuffer.array();
-        // Signal that the consumer can start reading. This will allow the
-        // populateBuffer method to complete.
-        interlock.endWriting();
+        try {
+            System.out.println("write: byteCount=" + byteCount);
+            // Wait until the consumer has finished reading from the buffer.
+            interlock.beginWriting();
+//            System.out.println("write: 2");
+            byteBuffer.limit(byteCount);
+//            System.out.println("write: 3");
+            this.byteBuffer = byteBuffer;
+            this.bufferAsArray = byteBuffer.array();
+            // Signal that the consumer can start reading. This will allow the
+            // populateBuffer method to complete.
+//            System.out.println("write: 4");
+            interlock.endWriting();
+//            System.out.println("write: 5");
+        } catch (Throwable e) {
+            tracer.throwing(null, null, e);
+            throw e;
+        }
     }
 }
 
