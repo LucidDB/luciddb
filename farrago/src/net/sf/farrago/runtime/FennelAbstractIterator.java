@@ -63,6 +63,12 @@ public abstract class FennelAbstractIterator implements RestartableIterator
         this.endOfData = false;
     }
 
+    // implement RestartableIterator
+    public void restart()
+    {
+        this.endOfData = false;
+    }
+
     // implement Iterator
     public boolean hasNext()
     {

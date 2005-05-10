@@ -79,11 +79,6 @@ public class FennelPipeIterator extends FennelAbstractIterator
         byteBuffer.limit(0);
     }
 
-    public void restart()
-    {
-        // nothing to do
-    }
-
     protected int populateBuffer()
     {
         // Wait until the producer has finished populating the buffer.
