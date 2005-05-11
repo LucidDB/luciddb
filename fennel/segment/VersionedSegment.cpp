@@ -195,7 +195,7 @@ void VersionedSegment::notifyPageDirty(CachePage &page,bool bDataValid)
         getUsablePageSize());
     VersionedPageFooter *pLogFooter = reinterpret_cast<VersionedPageFooter *>(
         getWritableFooter(logPageLock.getPage()));
-    pLogFooter->versionNumber = pDataFooter->versionNumber;
+    pLogFooter->versionNumber = versionNumber - 1;
     pLogFooter->onlineUuid = onlineUuid;
     PageId dataPageId = DelegatingSegment::translateBlockId(
         page.getBlockId());

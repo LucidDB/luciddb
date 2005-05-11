@@ -176,25 +176,14 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
     pDbHandle->statsTimer.start();
 
     if (pDb->isRecoveryRequired()) {
-        // NOTE jvs 10-Aug-2004 -- the if (false) branch below is the real
-        // recovery code.  It's currently disabled because MDR recovery isn't
-        // working yet.  So for now, once we detect a crash we fail fast.
-        if (false) {
-            SegmentAccessor scratchAccessor =
-                pDb->getSegmentFactory()->newScratchSegment(pDb->getCache());
-            FtrsTableWriterFactory recoveryFactory(
-                pDb,
-                pDb->getCache(),
-                pDb->getTypeFactory(),
-                scratchAccessor);
-            pDb->recover(recoveryFactory);
-        } else {
-            // NOTE jvs 10-Aug-2004 -- this message is intentionally NOT
-            // internationalized because it's supposed to be temporary.
-            throw FennelExcn(
-                "Database crash detected.  "
-                "To repair system, you must restore the catalog from backup.");
-        }
+        SegmentAccessor scratchAccessor =
+            pDb->getSegmentFactory()->newScratchSegment(pDb->getCache());
+        FtrsTableWriterFactory recoveryFactory(
+            pDb,
+            pDb->getCache(),
+            pDb->getTypeFactory(),
+            scratchAccessor);
+        pDb->recover(recoveryFactory);
     }
     setDbHandle(cmd.getResultHandle(),pDbHandle.release());
 }
