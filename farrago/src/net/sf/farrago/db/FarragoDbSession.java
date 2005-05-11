@@ -342,7 +342,18 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         if (isClone || isClosed()) {
             return;
         }
-        endTransactionIfAuto(true);
+        if (isTxnInProgress()) {
+            if (isAutoCommit) {
+                commitImpl();
+            } else {
+                // NOTE jvs 10-May-2005:  Technically,  we're supposed to throw
+                // an invalid state exception here.  However, it's very
+                // unlikely that the caller is going to handle it properly,
+                // so instead we roll back here.  If they wanted their
+                // changes committed, they should have said so.
+                rollbackImpl();
+            }
+        }
         try {
             FarragoDatabase.disconnectSession(this);
         } finally {
