@@ -11,7 +11,7 @@ select emps.name as ename,depts.name as dname
 from emps,depts
 order by 1,2;
 
--- cross product with a non-restartable Java plan for the right-hand input
+-- cross product requiring a Java plan restart for the right-hand input
 select emps.name as ename,d.dnoplus 
 from emps,(select deptno+1 as dnoplus from depts) d
 order by 1,2;

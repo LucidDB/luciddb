@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/optimizer/cartesian.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/optimizer/cartesian.sql#3 $
 0: jdbc:farrago:> -- Test queries which require Cartesian products
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';
@@ -27,7 +27,7 @@
 | Wilma  | Sales      |
 +--------+------------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- cross product with a non-restartable Java plan for the right-hand input
+0: jdbc:farrago:> -- cross product requiring a Java plan restart for the right-hand input
 0: jdbc:farrago:> select emps.name as ename,d.dnoplus 
 . . . . . . . . > from emps,(select deptno+1 as dnoplus from depts) d
 . . . . . . . . > order by 1,2;
