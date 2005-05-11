@@ -33,6 +33,7 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.trace.*;
 
 import org.eigenbase.sql.SqlLiteral;
+import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.Util;
 
@@ -255,6 +256,17 @@ public class CalcProgramBuilder
     {
     }
 
+    /**
+     * Re-initializes a CalcProgramBuilder.
+     */
+    public void clear()
+    {
+        instructions.clear();
+        registerSets.clear();
+        literals.clear();
+        labels.clear();
+    }
+
     //~ Methods ---------------------------------------------------------------
 
     // Methods -----------------------------------------------------------------
@@ -332,6 +344,19 @@ public class CalcProgramBuilder
             return program.replaceAll(separator, SEPARATOR_SEMICOLON_NEWLINE);
         }
         return program;
+    }
+
+    /**
+     * Returns the register of a given ordinal and type.
+     */
+    CalcProgramBuilder.Register getRegister(
+        int ordinal,
+        CalcProgramBuilder.RegisterSetType registerType)
+    {
+        ArrayList registerSet =
+            registerSets.getSet(registerType.ordinal);
+        Register register = (Register) registerSet.get(ordinal);
+        return register;
     }
 
     /**
@@ -1868,7 +1893,7 @@ public class CalcProgramBuilder
      * Enumeration of the types supported by the calculator.
      *
      * <p>TODO: Unify this list with
-     * {@link net.sf.farrago.query.FennelRelUtil#convertSqlTypeNumberToFennelTypeOrdinal}
+     * {@link net.sf.farrago.query.FennelRelUtil#convertSqlTypeNameToFennelTypeOrdinal(SqlTypeName)}
      */
     public static class OpType extends EnumeratedValues.BasicValue
     {
@@ -2084,12 +2109,19 @@ public class CalcProgramBuilder
      */
     protected class RegisterSets
     {
-        //Members variables -----------------
-        private ArrayList [] sets =
+        private final ArrayList [] sets =
             new ArrayList[RegisterSetType.enumeration.getSize()];
 
-        //Methods ---------------------------
-        final public ArrayList getSet(int set)
+        public void clear()
+        {
+            for (int i = 0; i < sets.length; i++) {
+                if (sets[i] != null) {
+                    sets[i].clear();
+                }
+            }
+        }
+
+        public final ArrayList getSet(int set)
         {
             return sets[set];
         }

@@ -41,7 +41,9 @@ public class RexShuttle
 
     public RexNode visit(RexNode rex)
     {
-        if (rex instanceof RexCall) {
+        if (rex instanceof RexOver) {
+            return visit((RexOver) rex);
+        } else if (rex instanceof RexCall) {
             return visit((RexCall) rex);
         } else if (rex instanceof RexCorrelVariable) {
             return visit((RexCorrelVariable) rex);
@@ -58,19 +60,31 @@ public class RexShuttle
         }
     }
 
+    public RexNode visit(RexOver over)
+    {
+        boolean[] update = {false};
+        RexNode[] clonedOperands = visitArray(over.operands, update);
+        if (update[0]) {
+            // REVIEW jvs 8-Mar-2005:  This doesn't take into account
+            // the fact that a rewrite may have changed the result type.
+            // To do that, we would need to take a RexBuilder and
+            // watch out for special operators like CAST and NEW where
+            // the type is embedded in the original call.
+            return new RexOver(
+                over.getType(),
+                over.getAggOperator(),
+                clonedOperands,
+                over.window);
+        } else {
+            return over;
+        }
+    }
+
     public RexNode visit(final RexCall call)
     {
-        boolean update = false;
-        RexNode[] clonedOperands = new RexNode[call.operands.length];
-        for (int i = 0; i < call.operands.length; i++) {
-            RexNode operand = call.operands[i];
-            RexNode clonedOperand = visit(operand);
-            if (clonedOperand != operand) {
-                update = true;
-            }
-            clonedOperands[i] = clonedOperand;
-        }
-        if (update) {
+        boolean[] update = {false};
+        RexNode[] clonedOperands = visitArray(call.operands, update);
+        if (update[0]) {
             // REVIEW jvs 8-Mar-2005:  This doesn't take into account
             // the fact that a rewrite may have changed the result type.
             // To do that, we would need to take a RexBuilder and
@@ -83,6 +97,20 @@ public class RexShuttle
         } else {
             return call;
         }
+    }
+
+    private RexNode[] visitArray(RexNode[] exprs, boolean[] update)
+    {
+        RexNode[] clonedOperands = new RexNode[exprs.length];
+        for (int i = 0; i < exprs.length; i++) {
+            RexNode operand = exprs[i];
+            RexNode clonedOperand = visit(operand);
+            if (clonedOperand != operand) {
+                update[0] = true;
+            }
+            clonedOperands[i] = clonedOperand;
+        }
+        return clonedOperands;
     }
 
     public RexNode visit(RexCorrelVariable variable)

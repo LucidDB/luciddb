@@ -25,17 +25,11 @@ import org.eigenbase.rel.CalcRel;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.util.ArrayQueue;
 import org.eigenbase.util.Util;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexCall;
-import org.eigenbase.rex.RexDynamicParam;
-import org.eigenbase.rex.RexFieldAccess;
-import org.eigenbase.rex.RexInputRef;
-import org.eigenbase.rex.RexVisitor;
-import org.eigenbase.rex.RexLiteral;
-import org.eigenbase.rex.RexCorrelVariable;
-import org.eigenbase.rex.RexRangeRef;
+import org.eigenbase.rex.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.relopt.RelOptCluster;
+import org.eigenbase.relopt.RelTraitSet;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,8 +45,11 @@ import java.io.PrintWriter;
 import net.sf.farrago.trace.FarragoTrace;
 
 /**
- * CalcRelSplitter operates on a CalcRel with multiple RexCalls that cannot
- * all be implemented by a single concrete Rel.  For example, the Java and
+ * CalcRelSplitter operates on a {@link CalcRel} with multiple {@link RexCall}
+ * sub-expressions that cannot all be implemented by a single concrete
+ * {@link RelNode}.
+ *
+ * <p>For example, the Java and
  * Fennel calculator do not implement an identical set of operators.  The
  * CalcRel can be used to split a single CalcRel with mixed Java- and
  * Fennel-only operators into a tree of CalcRel object that can each be
@@ -92,6 +89,7 @@ public abstract class CalcRelSplitter
     private int maxRelLevel;
     private RelType currentRelType;
     private boolean usedRelLevel;
+    private RelType levelZeroRelType;
 
     /**
      * Construct a CalcRelSplitter.  The parameters <code>relType1</code and
@@ -132,7 +130,7 @@ public abstract class CalcRelSplitter
 
     /**
      * Traverses the forest of expressions in <code>calc</code>
-     * breadth-first and assign a level to each node.  Each level
+     * breadth-first and assigns a level to each node.  Each level
      * corresponds to a set of nodes that will be implemented
      * either in rel type 1 or rel type 2.  Nodes can either be
      * pulled up to their parent node's level (if both are
@@ -150,8 +148,16 @@ public abstract class CalcRelSplitter
         nodeDataQueue.addAll(nodeDataList);
         nodeDataQueue.add(LEVEL_MARKER);
 
-        final AssignLevelsVisitor visitor = new AssignLevelsVisitor();
+        // If there is a conditional expression, let it choose what the type
+        // of the first level should be (if it cares). This is necessary
+        // because a conditional cannot be migrated away from the first level.
+        NodeData lastNodeData =
+            (NodeData) nodeDataList.get(nodeDataList.size() - 1);
+        if (lastNodeData.isConditional) {
+            lastNodeData.node.accept(new ChooseRelTypeVisitor());
+        }
 
+        final AssignLevelsVisitor visitor = new AssignLevelsVisitor();
         int relLevel = 0;
 
         while (true) {
@@ -170,6 +176,10 @@ public abstract class CalcRelSplitter
                 }
 
                 if (usedRelLevel) {
+                    if (relLevel == 0) {
+                        // Remember the type of the first level.
+                        levelZeroRelType = currentRelType;
+                    }
                     // Alternate rel types after the first level.
                     if (currentRelType == relType1) {
                         currentRelType = relType2;
@@ -197,9 +207,6 @@ public abstract class CalcRelSplitter
             }
         }
     }
-
-
-
 
     /**
      * Given that rel type alternates with increasing level, two
@@ -465,14 +472,32 @@ public abstract class CalcRelSplitter
         // Generate the actual CalcRel objects that represent the
         // decomposition of the original CalcRel.
         RelDataTypeFactory typeFactory = calc.getCluster().getTypeFactory();
-
         RelNode resultCalcRel = calc.child;
         for (int i = levelExpressions.length - 1; i >= 0; i--) {
             ArrayList expressions = levelExpressions[i];
+            RelType relType = getLevelType(i);
+            int numNodes = expressions.size();
+            RexNode [] nodes;
+            RexNode conditional = null;
+            RelDataType rowType = calc.rowType;
 
-            if (i > 0) {
-                int numNodes = expressions.size();
-                RexNode [] nodes = new RexNode[numNodes];
+            if (i == 0) {
+                // Only the top (furthest downstream) level can have a filter.
+                assert numNodes == nodeDataList.size();
+                NodeData lastNodeData =
+                    (NodeData) nodeDataList.get(numNodes - 1);
+                if (lastNodeData.isConditional) {
+                    conditional = (RexNode) expressions.get(numNodes - 1);
+                    --numNodes;
+                }
+
+                nodes = new RexNode[numNodes];
+                for (int j = 0; j < numNodes; j++) {
+                    nodes[j] = (RexNode) expressions.get(j);
+                    assert !((NodeData) nodeDataList.get(j)).isConditional;
+                }
+            } else {
+                nodes = new RexNode[numNodes];
                 RelDataType [] types = new RelDataType[numNodes];
                 String [] names = new String[numNodes];
                 for (int j = 0; j < numNodes; j++) {
@@ -481,46 +506,45 @@ public abstract class CalcRelSplitter
                     names[j] = "$" + j;
                 }
 
-                RelDataType rowType =
-                    typeFactory.createStructType(types, names);
+                rowType = typeFactory.createStructType(types, names);
 
-                resultCalcRel =
-                    new CalcRel(
-                        calc.getCluster(),
-                        calc.getTraits(),
-                        resultCalcRel,
-                        rowType,
-                        nodes,
-                        null);
-            } else {
-                NodeData lastNodeData =
-                    (NodeData) nodeDataList.get(nodeDataList.size() - 1);
-
-                int numNodes = expressions.size();
-                RexNode conditional = null;
-
-                if (lastNodeData.isConditional) {
-                    conditional = (RexNode) expressions.get(numNodes - 1);
-                    numNodes--;
-                }
-
-                RexNode [] nodes = new RexNode[numNodes];
-                for (int j = 0; j < numNodes; j++) {
-                    nodes[j] = (RexNode) expressions.get(j);
-                }
-
-                resultCalcRel =
-                    new CalcRel(
-                        calc.getCluster(),
-                        calc.getTraits(),
-                        resultCalcRel,
-                        calc.rowType,
-                        nodes,
-                        conditional);
             }
+            resultCalcRel = makeRel(
+                relType, calc.getCluster(), calc.getTraits(), rowType,
+                resultCalcRel, nodes, conditional);
         }
 
         return resultCalcRel;
+    }
+
+    /**
+     * Returns the {@link RelType} for a given level ordinal.
+     */
+    private RelType getLevelType(int levelOrdinal)
+    {
+        if (levelZeroRelType == relType1) {
+            --levelOrdinal;
+        }
+        boolean even = (levelOrdinal % 2) == 0;
+        return even ? relType2 : relType1;
+    }
+
+    protected RelNode makeRel(
+        RelType relType,
+        RelOptCluster cluster,
+        RelTraitSet traits,
+        RelDataType rowType,
+        RelNode child,
+        RexNode[] exprs,
+        RexNode conditionExpr)
+    {
+        return new CalcRel(
+                cluster,
+                traits,
+                child,
+                rowType,
+                exprs,
+                conditionExpr);
     }
 
 
@@ -594,7 +618,7 @@ public abstract class CalcRelSplitter
         assert (nodeData.node instanceof RexCall
                 || nodeData.node instanceof RexFieldAccess);
 
-        RexNode clonedCall = (RexNode) nodeData.node.clone();
+        RexNode clonedNode = (RexNode) nodeData.node.clone();
 
         for (int i = 0; i < nodeData.children.size(); i++) {
             NodeData child = (NodeData) nodeData.children.get(i);
@@ -612,9 +636,9 @@ public abstract class CalcRelSplitter
                             position, grandChild.node.getType());
 
                     if (nodeData.node instanceof RexCall) {
-                        ((RexCall) clonedCall).operands[i] = inputRef;
+                        ((RexCall) clonedNode).operands[i] = inputRef;
                     } else {
-                        ((RexFieldAccess) clonedCall).expr = inputRef;
+                        ((RexFieldAccess) clonedNode).expr = inputRef;
                     }
 
                     children.add(grandChild);
@@ -627,11 +651,9 @@ public abstract class CalcRelSplitter
                             child, children, maxRelLevel);
 
                     if (nodeData.node instanceof RexCall) {
-                        ((RexCall) clonedCall).operands[i] =
-                            clonedChildCall;
+                        ((RexCall) clonedNode).operands[i] = clonedChildCall;
                     } else {
-                        ((RexFieldAccess) clonedCall).expr =
-                            clonedChildCall;
+                        ((RexFieldAccess) clonedNode).expr = clonedChildCall;
                     }
                 } else {
                     RexInputRef inputRef =
@@ -639,9 +661,9 @@ public abstract class CalcRelSplitter
                                         child.node.getType());
 
                     if (nodeData.node instanceof RexCall) {
-                        ((RexCall) clonedCall).operands[i] = inputRef;
+                        ((RexCall) clonedNode).operands[i] = inputRef;
                     } else {
-                        ((RexFieldAccess) clonedCall).expr = inputRef;
+                        ((RexFieldAccess) clonedNode).expr = inputRef;
                     }
 
                     children.add(child);
@@ -649,7 +671,7 @@ public abstract class CalcRelSplitter
             }
         }
 
-        return clonedCall;
+        return clonedNode;
     }
 
 
@@ -784,7 +806,7 @@ public abstract class CalcRelSplitter
     }
 
 
-    public class AssignLevelsVisitor
+    private class AssignLevelsVisitor
         implements RexVisitor
     {
         NodeData nodeData;
@@ -797,6 +819,11 @@ public abstract class CalcRelSplitter
             } else {
                 nodeData.relLevel = 0;
             }
+        }
+
+        public void visitOver(RexOver over)
+        {
+            visitCall(over);
         }
 
         public void visitInputRef(RexInputRef inputRef)
@@ -902,6 +929,50 @@ public abstract class CalcRelSplitter
             this.node = node;
             this.isConditional = isConditional;
             this.parent = parent;
+        }
+    }
+
+    /**
+     * Visitor which sets {@link CalcRelSplitter#currentRelType} if the node
+     * being visited can be implemented in one protocol but not the other.
+     */
+    private class ChooseRelTypeVisitor extends RexVisitorImpl
+    {
+        public ChooseRelTypeVisitor()
+        {
+            super(false);
+        }
+
+        public void visitCall(RexCall call)
+        {
+            boolean isRelType1 = canImplementAs(call, relType1);
+            boolean isRelType2 = canImplementAs(call, relType2);
+            xx(isRelType1, isRelType2);
+        }
+
+        public void visitFieldAccess(RexFieldAccess fieldAccess)
+        {
+            boolean isRelType1 = canImplementAs(fieldAccess, relType1);
+            boolean isRelType2 = canImplementAs(fieldAccess, relType2);
+            xx(isRelType1, isRelType2);
+        }
+
+        public void visitDynamicParam(RexDynamicParam param)
+        {
+            boolean isRelType1 = canImplementAs(param, relType1);
+            boolean isRelType2 = canImplementAs(param, relType2);
+            xx(isRelType1, isRelType2);
+        }
+
+        private void xx(boolean isRelType1, boolean isRelType2)
+        {
+            if (isRelType1 && isRelType2) {
+                ;
+            } else if (isRelType1) {
+                currentRelType = relType1;
+            } else {
+                currentRelType = relType2;
+            }
         }
     }
 }

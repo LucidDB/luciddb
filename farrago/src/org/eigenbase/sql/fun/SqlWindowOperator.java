@@ -126,7 +126,7 @@ public class SqlWindowOperator extends SqlOperator {
         }
         SqlNodeList partitionList =
                 (SqlNodeList) operands[SqlWindow.PartitionList_OPERAND];
-        if (partitionList != null) {
+        if (partitionList.size() > 0) {
             if (clauseCount++ > 0) {
                 writer.println();
             }
@@ -135,7 +135,7 @@ public class SqlWindowOperator extends SqlOperator {
         }
         SqlNodeList orderList =
                 (SqlNodeList) operands[SqlWindow.OrderList_OPERAND];
-        if (orderList != null) {
+        if (orderList.size() > 0) {
             if (clauseCount++ > 0) {
                 writer.println();
             }

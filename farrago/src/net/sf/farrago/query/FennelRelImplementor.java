@@ -22,6 +22,7 @@
 package net.sf.farrago.query;
 
 import net.sf.farrago.fem.fennel.FemExecutionStreamDef;
+import net.sf.farrago.FarragoMetadataFactory;
 
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelImplementor;
@@ -65,6 +66,11 @@ public interface FennelRelImplementor extends RelImplementor
         FemExecutionStreamDef streamDef,
         RelNode rel,
         RelDataType rowType);
+
+    /**
+     * Returns the metadata factory.
+     */
+    public FarragoMetadataFactory getMetadataFactory();
 }
 
 

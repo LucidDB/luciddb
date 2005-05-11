@@ -144,25 +144,19 @@ public abstract class IterRules
                 // We can't convert the child, so we can't convert rel.
                 return null;
             }
-            for (int i = 0; i < calc.projectExprs.length; i++) {
-                if (RexMultisetUtil.containsMultiset(
-                        calc.projectExprs[i], true)) {
-                        return null; // Let FarragoMultisetSplitter work on it first
-                    }
-                }
-                if (calc.conditionExpr != null) {
-                    if (RexMultisetUtil.containsMultiset(
-                        calc.conditionExpr, true)) {
-                        return null; // Let FarragoMultisetSplitter work on it first
-                    }
+            // If there's a multiset, let FarragoMultisetSplitter work on it
+            // first.
+            if (RexMultisetUtil.containsMultiset(
+                calc.projectExprs, calc.conditionExpr)) {
+                return null;
             }
 
             // REVIEW: want to move canTranslate into RelImplementor
             // and implement it for Java & C++ calcs.
             final JavaRelImplementor relImplementor =
                 rel.getCluster().getPlanner().getJavaRelImplementor(rel);
-            if (!relImplementor.canTranslate(convertedChild,
-                        calc.conditionExpr, calc.projectExprs)) {
+            if (!relImplementor.canTranslate(
+                convertedChild, calc.conditionExpr, calc.projectExprs)) {
                 // Some of the expressions cannot be translated into Java
                 return null;
             }
@@ -205,14 +199,11 @@ public abstract class IterRules
             final RexNode [] exps = project.getChildExps();
             final RexNode condition = null;
 
-            for (int i = 0; i < exps.length; i++) {
-                if (RexMultisetUtil.containsMultiset(
-                    exps[i], true)) {
-                    return null; // Let FarragoMultisetSplitter work on it first
-                }
+             // If there's a multiset, let FarragoMultisetSplitter work on it
+            // first.
+            if (RexMultisetUtil.containsMultiset(exps, condition)) {
+                return null;
             }
-
-
 
             // REVIEW: want to move canTranslate into RelImplementor
             // and implement it for Java & C++ calcs.
@@ -275,16 +266,10 @@ public abstract class IterRules
 
             final RexNode [] exps = project.getChildExps();
 
-            for (int i = 0; i < exps.length; i++) {
-                if (RexMultisetUtil.containsMultiset(
-                    exps[i], true)) {
-                    return; // Let FarragoMultisetSplitter work on it first
-                }
-            }
-            if (condition != null) {
-                if (RexMultisetUtil.containsMultiset(condition, true)) {
-                    return; // Let FarragoMultisetSplitter work on it first
-                }
+            // If there's a multiset, let FarragoMultisetSplitter work on it
+            // first.
+            if (RexMultisetUtil.containsMultiset(exps, condition)) {
+                return;
             }
 
             // REVIEW: want to move canTranslate into RelImplementor

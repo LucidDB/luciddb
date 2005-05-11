@@ -202,6 +202,31 @@ public class Util extends Toolbox
         }
     }
 
+    /**
+     * Returns whether two arrays are equal or are both null.
+     */
+    public static final boolean equal(
+        Object[] s0,
+        Object[] s1)
+    {
+        if (s0 == null) {
+            return s1 == null;
+        } else if (s1 == null) {
+            return false;
+        } else if (s0.length != s1.length) {
+            return false;
+        } else {
+            for (int i = 0; i < s0.length; i++) {
+                Object o0 = s0[i];
+                Object o1 = s1[i];
+                if (!equal(o0, o1)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
     public static StatementList clone(StatementList e)
     {
         return (StatementList) e.makeCopy();

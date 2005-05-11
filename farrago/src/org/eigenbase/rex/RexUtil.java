@@ -213,6 +213,34 @@ public class RexUtil
             return (RexCall) e.getNode();
         }
     }
+
+    /**
+     * Creates an array of {@link RexInputRef}, one for each field of a given
+     * rowtype.
+     */
+    public static RexInputRef[] toInputRefs(RelDataType rowType)
+    {
+        final RelDataTypeField[] fields = rowType.getFields();
+        final RexInputRef[] rexNodes = new RexInputRef[fields.length];
+        for (int i = 0; i < rexNodes.length; i++) {
+            rexNodes[i] = new RexInputRef(i, fields[i].getType());
+        }
+        return rexNodes;
+    }
+
+    /**
+     * Converts an array of {@link RexNode} to an array of {@link Integer}.
+     * Every node must be a {@link RexInputRef}.
+     */
+    public static Integer[] toOrdinalArray(RexNode[] rexNodes)
+    {
+        Integer[] orderKeys = new Integer[rexNodes.length];
+        for (int i = 0; i < orderKeys.length; i++) {
+            RexInputRef inputRef = (RexInputRef) rexNodes[i];
+            orderKeys[i] = new Integer(inputRef.index);
+        }
+        return orderKeys;
+    }
 }
 
 

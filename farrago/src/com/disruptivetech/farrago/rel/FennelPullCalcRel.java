@@ -94,10 +94,11 @@ public class FennelPullCalcRel extends FennelCalcRel implements FennelPullRel
             implementor.visitFennelChild((FennelRel) child));
         calcStream.setFilter(getConditionExpr() != null);
         final RexToCalcTranslator translator =
-            new RexToCalcTranslator(cluster.rexBuilder,
-                getProjectExprs(),
-                getConditionExpr());
-        final String program = translator.getProgram(child.getRowType());
+            new RexToCalcTranslator(cluster.rexBuilder);
+        final String program = translator.getProgram(
+            child.getRowType(),
+            getProjectExprs(),
+            getConditionExpr());
         calcStream.setProgram(program);
         return calcStream;
     }

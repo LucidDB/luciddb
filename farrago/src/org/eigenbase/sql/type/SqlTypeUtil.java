@@ -28,11 +28,13 @@ import org.eigenbase.util.Util;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidatorUtil;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.rel.RelNode;
 
 import java.util.*;
+import java.nio.charset.Charset;
 
 /**
  * Contains utility methods used during SQL validation or type derivation.
@@ -44,7 +46,8 @@ import java.util.*;
 public abstract class SqlTypeUtil
 {
     /**
-     * Checks if two types or more are char comparable.
+     * Checks whether two types or more are char comparable.
+     *
      * @pre argTypes != null
      * @pre argTypes.length >= 2
      * @return Returns true if all operands are of char type
@@ -850,6 +853,39 @@ public abstract class SqlTypeUtil
                                              boolean nullable) {
         RelDataType ret = typeFactory.createMultisetType(type, -1);
         return typeFactory.createTypeWithNullability(ret, nullable);
+    }
+
+    /**
+     * Adds collation and charset to a character type, returns other types
+     * unchanged.
+     *
+     * @param type Type
+     * @param typeFactory Type factory
+     * @return Type with added charset and collation, or unchanged type if
+     *   it is not a char type.
+     */
+    public static RelDataType addCharsetAndCollation(
+        RelDataType type,
+        RelDataTypeFactory typeFactory)
+    {
+        if (!inCharFamily(type)) {
+            return type;
+        }
+        Charset charset = type.getCharset();
+        if (charset == null) {
+            charset = Util.getDefaultCharset();
+        }
+        SqlCollation collation = type.getCollation();
+        if (collation == null) {
+            collation = new SqlCollation(SqlCollation.Coercibility.Implicit);
+        }
+
+        // todo: should get the implicit collation from repository
+        //   instead of null
+        type = typeFactory.createTypeWithCharsetAndCollation(
+            type, charset, collation);
+        SqlValidatorUtil.checkCharsetAndCollateConsistentIfCharType(type);
+        return type;
     }
 }
 

@@ -31,6 +31,7 @@ import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.session.FarragoSessionPlanner;
+import net.sf.farrago.FarragoMetadataFactory;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
@@ -115,7 +116,7 @@ public abstract class FennelRelUtil
      * @return generated FemTupleProjection
      */
     public static FemTupleProjection createTupleProjection(
-        FarragoRepos repos,
+        FarragoMetadataFactory repos,
         Integer [] projection)
     {
         FemTupleProjection tupleProj = repos.newFemTupleProjection();

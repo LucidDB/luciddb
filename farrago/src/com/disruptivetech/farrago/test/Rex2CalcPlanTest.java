@@ -163,11 +163,12 @@ public class Rex2CalcPlanTest extends FarragoTestCase
                 .tranformNullSemantics();
         }
         RexToCalcTranslator translator =
-            new RexToCalcTranslator(rexBuilder,
-                project.getChildExps(), condition);
+            new RexToCalcTranslator(rexBuilder);
         translator.setGenerateShortCircuit(shortCircuit);
         translator.setGenerateComments(doComments);
-        String actual = translator.getProgram(null).trim();
+        String actual = translator
+            .getProgram(null, project.getChildExps(), condition)
+            .trim();
 
         // dump the generated code
         try {

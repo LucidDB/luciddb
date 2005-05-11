@@ -20,24 +20,19 @@
 */
 package com.disruptivetech.farrago.calc;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Arrays;
-
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.rex.RexCall;
-import org.eigenbase.rex.RexKind;
-import org.eigenbase.rex.RexLiteral;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.sql.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.sql.SqlAggFunction;
+import org.eigenbase.sql.SqlOperator;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.fun.SqlTrimFunction;
-import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.util.DoubleKeyMap;
-import org.eigenbase.util.MultiMap;
 import org.eigenbase.util.Util;
+
+import java.util.*;
 
 
 /**
@@ -56,6 +51,8 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         SqlStdOperatorTable.instance();
     private static final CalcRexImplementorTableImpl std =
         new CalcRexImplementorTableImpl(null).initStandard();
+    private static final Integer integer0 = new Integer(0);
+    private static final Integer integer1 = new Integer(1);
 
     /**
      * Collection of per-thread instances of {@link CalcRexImplementorTable}.
@@ -84,7 +81,12 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
     /**
      * Maps {@link SqlOperator} to {@link CalcRexImplementor}.
      */
-    private final HashMap operatorImplementationMap = new HashMap();
+    private final Map operatorImplementationMap = new HashMap();
+
+    /**
+     * Maps {@link SqlAggFunction} to {@link CalcRexAggImplementor}.
+     */
+    private final Map aggImplementationMap = new HashMap();
 
     //~ Constructors ----------------------------------------------------------
 
@@ -148,6 +150,28 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             new InstrDefImplementor(instrDef));
     }
 
+    /**
+     * Registers an aggregate function and its implementor.
+     *
+     * <p>It is an error if the aggregate function already has an implementor.
+     * But if the operator has an implementor in a parent table, it is
+     * simply overridden.
+     *
+     * @pre op != null
+     * @pre impl != null
+     * @pre !operatorImplementationMap.containsKey(op)
+     */
+    public void registerAgg(
+        SqlAggFunction agg,
+        CalcRexAggImplementor impl)
+    {
+        Util.pre(agg != null, "agg != null");
+        Util.pre(impl != null, "impl != null");
+        Util.pre(!aggImplementationMap.containsKey(agg),
+            "!aggImplementationMap.containsKey(op)");
+        aggImplementationMap.put(agg, impl);
+    }
+
     // NOTE jvs 16-June-2004:  There's a reason I use the convention
     // implements CalcRexImplementorTable
     // which is that it keeps jalopy from supplying the missing
@@ -161,6 +185,16 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             (CalcRexImplementor) operatorImplementationMap.get(op);
         if ((implementor == null) && (parent != null)) {
             implementor = parent.get(op);
+        }
+        return implementor;
+    }
+
+    public CalcRexAggImplementor getAgg(SqlAggFunction op)
+    {
+        CalcRexAggImplementor implementor =
+            (CalcRexAggImplementor) aggImplementationMap.get(op);
+        if (implementor == null && parent != null) {
+            implementor = parent.getAgg(op);
         }
         return implementor;
     }
@@ -561,6 +595,15 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         registerInstr(opTab.localTimestampFunc,
             ExtInstructionDefTable.localTimestamp);
 
+        // Register agg functions.
+        registerAgg(opTab.sumOperator, new SumCalcRexImplementor());
+        registerAgg(opTab.countOperator, new CountCalcRexImplementor());
+        if (false) {
+            // TODO:
+            registerAgg(opTab.minOperator, new SumCalcRexImplementor());
+            registerAgg(opTab.maxOperator, new SumCalcRexImplementor());
+        }
+
         return this;
     }
 
@@ -734,7 +777,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             RexCall call)
         {
             Util.pre(
-                SqlTypeUtil.inCharFamily(call.operands[operand].getType()), 
+                SqlTypeUtil.inCharFamily(call.operands[operand].getType()),
                 "SqlTypeUtil.inCharFamily(call.operands[operand].getType()");
 
             ArrayList regList = super.makeRegList(translator, call);
@@ -1159,7 +1202,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         public BinaryStringMakeSametypeImplementor(
             CalcProgramBuilder.InstructionDef instr)
         {
-            this(instr, 0 ,1);
+            this(instr, 0, 1);
         }
 
         public CalcProgramBuilder.Register implement(
@@ -1360,6 +1403,141 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
 
             ExtInstructionDefTable.concat.add(translator.builder, regList);
             return resultRegister;
+        }
+    }
+
+    /**
+     * Abstract base class for classes which implement
+     * {@link CalcRexAggImplementor}.
+     */
+    public static abstract class AbstractCalcRexAggImplementor
+        implements CalcRexAggImplementor
+    {
+        public boolean canImplement(RexCall call)
+        {
+            return true;
+        }
+    }
+
+    /**
+     * Implementation of the <code>SUM</code> aggregate function,
+     * {@link SqlStdOperatorTable#sumOperator}.
+     */
+    private static class CountCalcRexImplementor
+        extends AbstractCalcRexAggImplementor
+    {
+        public void implementInitialize(
+            RexCall call,
+            CalcProgramBuilder.Register accumulatorRegister,
+            RexToCalcTranslator translator)
+        {
+            // O s8; V 0; T; MOVE O0, C0;
+            final CalcProgramBuilder.Register zeroReg =
+                translator.builder.newLiteral(
+                    translator.getCalcRegisterDescriptor(call),
+                    integer0);
+            CalcProgramBuilder.move.add(
+                translator.builder,
+                accumulatorRegister,
+                zeroReg);
+        }
+
+        public void implementAdd(
+            RexCall call,
+            CalcProgramBuilder.Register accumulatorRegister,
+            RexToCalcTranslator translator)
+        {
+            // I s8; V 1; T; ADD O0, O0, C0;
+
+            // We have implemented COUNT(*);
+            // TODO: COUNT(x)  (where we check whether x is null)
+            final CalcProgramBuilder.Register oneReg =
+                translator.builder.newLiteral(
+                    translator.getCalcRegisterDescriptor(call),
+                    integer1);
+            CalcProgramBuilder.nativeAdd.add(
+                translator.builder,
+                accumulatorRegister,
+                accumulatorRegister,
+                oneReg);
+        }
+
+        public void implementDrop(
+            RexCall call,
+            CalcProgramBuilder.Register accumulatorRegister,
+            RexToCalcTranslator translator)
+        {
+            // I s8; V 1; T; SUB O0, O0, C0;
+
+            // We have implemented COUNT(*);
+            // TODO: COUNT(x)  (where we check whether x is null)
+            final CalcProgramBuilder.Register oneReg =
+                translator.builder.newLiteral(
+                    translator.getCalcRegisterDescriptor(call),
+                    integer1);
+            CalcProgramBuilder.nativeMinus.add(
+                translator.builder,
+                accumulatorRegister,
+                accumulatorRegister,
+                oneReg);
+        }
+    }
+
+    /**
+     * Implementation of the <code>SUM</code> aggregate function,
+     * {@link SqlStdOperatorTable#sumOperator}.
+     */
+    private static class SumCalcRexImplementor
+        extends AbstractCalcRexAggImplementor
+    {
+        public void implementInitialize(
+            RexCall call,
+            CalcProgramBuilder.Register accumulatorRegister,
+            RexToCalcTranslator translator)
+        {
+            // O s8; V 0; T; MOVE O0, C0;
+            assert call.operands.length == 1;
+
+            final CalcProgramBuilder.Register zeroReg =
+                translator.builder.newLiteral(
+                    translator.getCalcRegisterDescriptor(call),
+                    new Integer(0));
+            CalcProgramBuilder.move.add(
+                translator.builder,
+                accumulatorRegister,
+                zeroReg);
+        }
+
+        public void implementAdd(
+            RexCall call,
+            CalcProgramBuilder.Register accumulatorRegister,
+            RexToCalcTranslator translator)
+        {
+            // I s8; O s8; T; ADD O0, O0, I0;
+            assert call.operands.length == 1;
+            final RexNode operand = call.operands[0];
+
+            CalcProgramBuilder.nativeAdd.add(
+                translator.builder,
+                accumulatorRegister,
+                accumulatorRegister,
+                translator.implementNode(operand));
+        }
+
+        public void implementDrop(
+            RexCall call,
+            CalcProgramBuilder.Register accumulatorRegister,
+            RexToCalcTranslator translator)
+        {
+            // I s8; O s8; T; ADD O0, O0, I0;
+            assert call.operands.length == 1;
+            final RexNode operand = call.operands[0];
+
+            CalcProgramBuilder.nativeAdd.add(
+                translator.builder,
+                accumulatorRegister,
+                accumulatorRegister,
+                translator.implementNode(operand));
         }
     }
 }

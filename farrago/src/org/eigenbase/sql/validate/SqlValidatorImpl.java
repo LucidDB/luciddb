@@ -795,22 +795,7 @@ public class SqlValidatorImpl implements SqlValidator
                     type = fieldType;
                 }
             }
-            if (SqlTypeUtil.inCharFamily(type)) {
-                Charset charset =
-                    (type.getCharset() == null) ? Util.getDefaultCharset()
-                    : type.getCharset();
-                SqlCollation collation =
-                    (type.getCollation() == null)
-                    ? new SqlCollation(SqlCollation.Coercibility.Implicit)
-                    : type.getCollation();
-
-                // todo: should get the implicit collation from repository
-                //   instead of null
-                type =
-                    typeFactory.createTypeWithCharsetAndCollation(type,
-                        charset, collation);
-                SqlValidatorUtil.checkCharsetAndCollateConsistentIfCharType(type);
-            }
+            type = SqlTypeUtil.addCharsetAndCollation(type, getTypeFactory());
             return type;
         }
 

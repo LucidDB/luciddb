@@ -57,6 +57,7 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
         assertBasic(typeName);
         Util.pre(precision >= 0, "precision >= 0");
         RelDataType newType = new BasicSqlType(typeName, precision);
+        newType = SqlTypeUtil.addCharsetAndCollation(newType, this);
         return canonize(newType);
     }
 
@@ -69,9 +70,10 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
         assertBasic(typeName);
         Util.pre(precision >= 0, "precision >= 0");
         RelDataType newType = new BasicSqlType(typeName, precision, scale);
+        newType = SqlTypeUtil.addCharsetAndCollation(newType, this);
         return canonize(newType);
     }
-    
+
     // implement RelDataTypeFactory
     public RelDataType createMultisetType(RelDataType type, long maxCardinality)
     {
@@ -87,7 +89,7 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
         RelDataType newType = new IntervalSqlType(intervalQualifier, false);
         return canonize(newType);
     }
-    
+
     // implement RelDataTypeFactory
     public RelDataType createTypeWithCharsetAndCollation(
         RelDataType type,
@@ -119,7 +121,7 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
     {
         assert (types != null);
         assert (types.length >= 1);
-        
+
         RelDataType type0 = types[0];
         if (type0.getSqlTypeName() != null) {
             RelDataType resultType = leastRestrictiveSqlType(types);
@@ -131,7 +133,7 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
 
         return super.leastRestrictive(types);
     }
-    
+
     private RelDataType leastRestrictiveByCast(RelDataType [] types)
     {
         RelDataType resultType = types[0];
@@ -151,7 +153,7 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
         }
         return resultType;
     }
-    
+
     // implement RelDataTypeFactory
     public RelDataType createTypeWithNullability(
         final RelDataType type,
@@ -172,7 +174,7 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
         }
         return canonize(newType);
     }
-    
+
     private void assertBasic(SqlTypeName typeName)
     {
         assert(typeName != null);
@@ -183,7 +185,7 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
         assert(typeName != SqlTypeName.IntervalYearMonth) :
             "use createSqlIntervalType() instead";
     }
-    
+
     private RelDataType leastRestrictiveSqlType(RelDataType [] types)
     {
         RelDataType resultType = types[0];
@@ -191,7 +193,7 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
         if (resultType.getSqlTypeName() == SqlTypeName.Row) {
             return leastRestrictiveStructuredType(types);
         }
-        
+
         boolean anyNullable = resultType.isNullable();
 
         for (int i = 1; i < types.length; ++i) {
@@ -284,7 +286,7 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
     {
         return createSqlType(SqlTypeName.Double);
     }
-    
+
     private RelDataType copyMultisetType(RelDataType type, boolean nullable)
     {
         MultisetSqlType mt = (MultisetSqlType) type;
@@ -306,7 +308,7 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
             type.getFields(),
             type.getComparability());
     }
-    
+
     // override RelDataTypeFactoryImpl
     protected RelDataType canonize(RelDataType type)
     {

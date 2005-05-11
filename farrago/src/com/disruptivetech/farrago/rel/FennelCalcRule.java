@@ -87,29 +87,15 @@ public class FennelCalcRule extends RelOptRule
         if (fennelInput == null) {
             return;
         }
-        for (int i = 0; i < calc.projectExprs.length; i++) {
-            if (RexMultisetUtil.containsMultiset(
-                calc.projectExprs[i], true)) {
-                return; // Let FarragoMultisetSplitter work on it first.
-            }
-        }
-        if (calc.conditionExpr != null) {
-            if (RexMultisetUtil.containsMultiset(
-                calc.conditionExpr, true)) {
-                return; // Let FarragoMultisetSplitter work on it first.
-            }
+        // If there's a multiset, let FarragoMultisetSplitter work on it first.
+        if (RexMultisetUtil.containsMultiset(
+            calc.projectExprs, calc.conditionExpr)) {
+            return;
         }
 
         final RexToCalcTranslator translator =
-            new RexToCalcTranslator(calc.getCluster().rexBuilder,
-                calc.projectExprs, calc.conditionExpr);
-        for (int i = 0; i < calc.projectExprs.length; i++) {
-            if (!translator.canTranslate(calc.projectExprs[i], true)) {
-                return;
-            }
-        }
-        if ((calc.conditionExpr != null)
-                && !translator.canTranslate(calc.conditionExpr, true)) {
+            new RexToCalcTranslator(calc.getCluster().rexBuilder);
+        if (!translator.canTranslate(calc.projectExprs, calc.conditionExpr)) {
             return;
         }
 
