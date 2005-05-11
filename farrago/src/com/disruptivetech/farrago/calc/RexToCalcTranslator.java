@@ -20,21 +20,21 @@
 */
 package com.disruptivetech.farrago.calc;
 
-import java.util.*;
-
-import net.sf.farrago.resource.*;
-
+import net.sf.farrago.resource.FarragoResource;
+import org.eigenbase.relopt.RelOptQuery;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.SqlTypeUtil;
+import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.SaffronProperties;
 import org.eigenbase.util.Util;
-import org.eigenbase.util.EnumeratedValues;
-import org.eigenbase.relopt.RelOptQuery;
-import com.disruptivetech.farrago.rel.FennelWindowRel;
+
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -713,8 +713,6 @@ public class RexToCalcTranslator implements RexVisitor
         // Maybe it's an aggregate function.
         if (op instanceof SqlAggFunction) {
             SqlAggFunction aggFun = (SqlAggFunction) op;
-            FennelWindowRel.RexWinAggCall aggCall =
-                (FennelWindowRel.RexWinAggCall) call;
             CalcRexAggImplementor aggImplementor =
                 implementorTable.getAgg(aggFun);
             if (aggImplementor != null) {
@@ -722,23 +720,23 @@ public class RexToCalcTranslator implements RexVisitor
                 // output of the 'init' code, and both the input and the output
                 // for the 'add' and 'drop' code.
                 CalcProgramBuilder.Register register =
-                    builder.newLocal(getCalcRegisterDescriptor(aggCall));
+                    builder.newLocal(getCalcRegisterDescriptor(call));
                 switch (aggOp.ordinal) {
                 case AggOp.None_ordinal:
                     throw Util.newInternal(
                         "Cannot generate calc program: Aggregate call " +
                         call + " found in non-aggregating context");
                 case AggOp.Init_ordinal:
-                    aggImplementor.implementInitialize(aggCall, register, this);
-                    setResult(aggCall, register);
+                    aggImplementor.implementInitialize(call, register, this);
+                    setResult(call, register);
                     return;
                 case AggOp.Add_ordinal:
-                    aggImplementor.implementAdd(aggCall, register, this);
-                    setResult(aggCall, register);
+                    aggImplementor.implementAdd(call, register, this);
+                    setResult(call, register);
                     return;
                 case AggOp.Drop_ordinal:
                     aggImplementor.implementDrop(call, register, this);
-                    setResult(aggCall, register);
+                    setResult(call, register);
                     return;
                 default:
                     throw aggOp.unexpected();
