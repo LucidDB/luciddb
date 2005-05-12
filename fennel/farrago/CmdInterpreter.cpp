@@ -117,6 +117,16 @@ void CmdInterpreter::setSvptHandle(
     resultHandle = opaqueToInt(svptId);
 }
 
+CmdInterpreter::DbHandle* CmdInterpreter::newDbHandle()
+{
+    return new DbHandle();
+}
+
+CmdInterpreter::TxnHandle* CmdInterpreter::newTxnHandle()
+{
+    return new TxnHandle();
+}
+
 CmdInterpreter::DbHandle::~DbHandle()
 {
     statsTimer.stop();
@@ -160,7 +170,7 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
     
     jobject javaTrace = getObjectFromLong(cmd.getJavaTraceHandle());
 
-    std::auto_ptr<DbHandle> pDbHandle(new DbHandle());
+    std::auto_ptr<DbHandle> pDbHandle(newDbHandle());
     ++JniUtil::handleCount;
     pDbHandle->pTraceTarget.reset(new JavaTraceTarget(javaTrace));
 
@@ -270,7 +280,7 @@ void CmdInterpreter::visit(ProxyCmdBeginTxn &cmd)
     SXMutexSharedGuard actionMutexGuard(
         pDb->getCheckpointThread()->getActionMutex());
 
-    std::auto_ptr<TxnHandle> pTxnHandle(new TxnHandle());
+    std::auto_ptr<TxnHandle> pTxnHandle(newTxnHandle());
     ++JniUtil::handleCount;
     pTxnHandle->pDb = pDb;
     // TODO:  CacheAccessor factory

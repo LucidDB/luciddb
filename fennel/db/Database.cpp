@@ -399,6 +399,11 @@ void Database::createTempSegment()
             true);
 }
 
+const ConfigMap& Database::getConfigMap() const
+{
+    return configMap;
+}
+
 SharedCache Database::getCache() const
 {
     return pCache;

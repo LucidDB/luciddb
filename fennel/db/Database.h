@@ -181,6 +181,8 @@ public:
     
     virtual ~Database();
 
+    const ConfigMap& getConfigMap() const;
+
     SharedCache getCache() const;
 
     SharedSegmentFactory getSegmentFactory() const;
