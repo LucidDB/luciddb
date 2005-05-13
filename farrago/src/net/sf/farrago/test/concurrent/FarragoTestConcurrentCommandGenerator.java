@@ -335,7 +335,7 @@ public class FarragoTestConcurrentCommandGenerator
     }
 
     /**
-     * Handle adding a command to {@link #threadMap}.
+     * Handles adding a command to {@link #threadMap}.
      * @return the newly-added command
      */
     public FarragoTestConcurrentCommand addCommand(
@@ -363,7 +363,7 @@ public class FarragoTestConcurrentCommandGenerator
     }
 
     /**
-     * Configure a human-readable name for a given thread identifier.
+     * Configures a human-readable name for a given thread identifier.
      * Does not imply that the thread will be created -- that only
      * happens if there are commands added to the thread.
      */
@@ -373,8 +373,8 @@ public class FarragoTestConcurrentCommandGenerator
     }
 
     /**
-     * Insure that the number of commands is the same for each thread,
-     * fill missing order value with null commands, and interleave a
+     * Insures that the number of commands is the same for each thread,
+     * fills missing order value with null commands, and interleaves a
      * synchronization command before each actual command.  These
      * steps are required for synchronized execution in
      * FarragoConcurrencyTestCase.
@@ -478,7 +478,7 @@ public class FarragoTestConcurrentCommandGenerator
     }
 
     /**
-     * Retrieve the name of a given thread.  If no thread names were
+     * Retrieves the name of a given thread.  If no thread names were
      * configured, returns the concatenation of "#" and the thread's
      * numeric identifier.
      *
@@ -837,7 +837,7 @@ public class FarragoTestConcurrentCommandGenerator
         }
 
         /**
-         * Parse expected values.  See {@link
+         * Parses expected values.  See {@link
          * FarragoTestConcurrentCommandGenerator#addFetchAndCompareCommand(int,
          * int, int, String)} for details on format of
          * <code>expected</code>.

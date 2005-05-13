@@ -251,7 +251,7 @@ public class FarragoDatabase extends FarragoCompoundAllocation
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Establish a database reference.  If this is the first reference, the
+     * Establishes a database reference.  If this is the first reference, the
      * database will be loaded first; otherwise, the existing database is
      * reused with an increased reference count.
      *
@@ -306,7 +306,7 @@ public class FarragoDatabase extends FarragoCompoundAllocation
     }
 
     /**
-     * Conditionally shut down the database depending on the number
+     * Conditionally shuts down the database depending on the number
      * of references.
      *
      * @param groundReferences threshold for shutdown; if actual number
@@ -329,7 +329,7 @@ public class FarragoDatabase extends FarragoCompoundAllocation
     }
 
     /**
-     * Shut down the database, killing any running sessions.
+     * Shuts down the database, killing any running sessions.
      */
     public static synchronized void shutdown()
     {
@@ -593,8 +593,6 @@ public class FarragoDatabase extends FarragoCompoundAllocation
     }
 
     /**
-     * .
-     *
      * @return system repos for this database
      */
     public FarragoRepos getSystemRepos()
@@ -603,8 +601,6 @@ public class FarragoDatabase extends FarragoCompoundAllocation
     }
 
     /**
-     * .
-     *
      * @return user repos for this database
      */
     public FarragoRepos getUserRepos()
@@ -613,8 +609,6 @@ public class FarragoDatabase extends FarragoCompoundAllocation
     }
 
     /**
-     * .
-     *
      * @return the Fennel database handle associated with this database
      */
     public FennelDbHandle getFennelDbHandle()
@@ -623,8 +617,8 @@ public class FarragoDatabase extends FarragoCompoundAllocation
     }
 
     /**
-     * Prepare an SQL expression; use a cached implementation if
-     * available, otherwise cache the one generated here.
+     * Prepares an SQL expression; uses a cached implementation if
+     * available, otherwise caches the one generated here.
      *
      * @param stmtValidator generic stmt validator
      *
@@ -650,7 +644,7 @@ public class FarragoDatabase extends FarragoCompoundAllocation
     }
 
     /**
-     * Implement a logical or physical query plan but do not execute it.
+     * Implements a logical or physical query plan but does not execute it.
      * @param prep the FarragoSessionPreparingStmt that is managing the query.
      * @param rootRel root of query plan (relational expression)
      * @param sqlKind SqlKind for the relational expression: only

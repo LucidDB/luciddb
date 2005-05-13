@@ -89,12 +89,12 @@ public interface RelOptPlanner
     public RelOptPlanner chooseDelegate();
 
     /**
-     * Find the most efficient expression to implement this query.
+     * Finds the most efficient expression to implement this query.
      */
     public RelNode findBestExp();
 
     /**
-     * Create a cost object.
+     * Creates a cost object.
      */
     public RelOptCost makeCost(
         double dRows,
@@ -102,27 +102,27 @@ public interface RelOptPlanner
         double dIo);
 
     /**
-     * Create a cost object representing an enormous non-infinite cost.
+     * Creates a cost object representing an enormous non-infinite cost.
      */
     public RelOptCost makeHugeCost();
 
     /**
-     * Create a cost object representing infinite cost.
+     * Creates a cost object representing infinite cost.
      */
     public RelOptCost makeInfiniteCost();
 
     /**
-     * Create a cost object representing a small positive cost.
+     * Creates a cost object representing a small positive cost.
      */
     public RelOptCost makeTinyCost();
 
     /**
-     * Create a cost object representing zero cost.
+     * Creates a cost object representing zero cost.
      */
     public RelOptCost makeZeroCost();
 
     /**
-     * Compute the cost of a RelNode.
+     * Computes the cost of a RelNode.
      */
     public RelOptCost getCost(RelNode rel);
 
@@ -155,7 +155,7 @@ public interface RelOptPlanner
     public void registerSchema(RelOptSchema schema);
 
     /**
-     * Retrieve an implementor appropriate for the context in which
+     * Retrieves an implementor appropriate for the context in which
      * this planner was created.
      */
     public JavaRelImplementor getJavaRelImplementor(RelNode rel);

@@ -45,7 +45,7 @@ public class JavaTupleStream
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Construct a new JavaTupleStream.
+     * Constructs a new JavaTupleStream.
      *
      * @param tupleWriter the FennelTupleWriter to use for marshalling tuples
      * @param iter Iterator producing objects

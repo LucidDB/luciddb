@@ -38,7 +38,8 @@ import org.eigenbase.rel.OneRowRel;
  */
 public class FennelOneRowRule extends RelOptRule {
 
-    public FennelOneRowRule() {
+    public FennelOneRowRule()
+    {
         super(new RelOptRuleOperand(OneRowRel.class, null));
     }
 

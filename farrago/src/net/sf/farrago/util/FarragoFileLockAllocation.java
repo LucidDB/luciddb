@@ -43,7 +43,7 @@ public class FarragoFileLockAllocation implements FarragoAllocation
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Create a new FarragoFileLockAllocation by locking a file.
+     * Creates a new FarragoFileLockAllocation by locking a file.
      *
      * @param owner the FarragoAllocationOwner which will be made responsible
      * for the lock as a result of this call

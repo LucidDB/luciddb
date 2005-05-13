@@ -56,8 +56,6 @@ public abstract class EncodedCharPointer extends BytePointer
     }
 
     /**
-     * .
-     *
      * @return the charset used for this pointer's encoding
      */
     protected abstract String getCharsetName();

@@ -42,7 +42,7 @@ public interface AssignableValue extends DataValue
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Assign value from an Object.
+     * Assigns value from an Object.
      *
      * @param obj value to assign, or null to set null
      */

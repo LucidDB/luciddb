@@ -201,7 +201,7 @@ public class CalcProgramBuilderTest extends TestCase
     }
 
     /**
-     * Test if the builder asserts when trying to call jump to a previous line.
+     * Tests if the builder asserts when trying to call jump to a previous line.
      * If there is a need to have loops in the future. Remove the assert check in the builder
      */
     public void testJumpingBack()

@@ -13,6 +13,11 @@ library 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'
 language java;
 
 
+-- create access to system's own MOF repository
+create server sys_mof
+foreign data wrapper sys_mdr
+options(root_package_name 'MOF', schema_name 'MODEL');
+
 -- create access to system's own CWM repository
 create server sys_cwm
 foreign data wrapper sys_mdr

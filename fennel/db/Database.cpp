@@ -143,6 +143,7 @@ Database::Database(
 
 void Database::prepareForRecovery()
 {
+    FENNEL_TRACE(TRACE_WARNING, "recovery required");
     recoveryRequired = true;
     createTempSegment();
     createDataDevice();
@@ -154,6 +155,8 @@ void Database::prepareForRecovery()
 
 void Database::openSegments()
 {
+    FENNEL_TRACE(TRACE_INFO, "opening database");
+    
     pCheckpointThread = SharedCheckpointThread(
         new CheckpointThread(*this),
         ClosableObjectDestructor());
@@ -187,6 +190,11 @@ void Database::openSegments()
     SharedSegment pShadowLogSegment = createShadowLog(shadowMode);
     createDataSegment(pShadowLogSegment);
     
+    FENNEL_TRACE(
+        TRACE_INFO,
+        "database opened; page version = "
+        << header.versionNumber);
+    
     if (!openMode.create) {
         checkpointImpl();
     }
@@ -200,6 +208,9 @@ Database::~Database()
 
 void Database::closeImpl()
 {
+    FENNEL_TRACE(
+        TRACE_INFO,
+        "closing database");
     if (pCheckpointThread) {
         pCheckpointThread->close();
     }
@@ -211,6 +222,10 @@ void Database::closeImpl()
         closeDevices();
         deleteLogs();
     }
+    FENNEL_TRACE(
+        TRACE_INFO,
+        "database closed; page version = "
+        << header.versionNumber);
 }
 
 void Database::closeDevices()
@@ -382,6 +397,11 @@ void Database::createTempSegment()
         pSegmentFactory->newRandomAllocationSegment(
             pTempDeviceSegment,
             true);
+}
+
+const ConfigMap& Database::getConfigMap() const
+{
+    return configMap;
 }
 
 SharedCache Database::getCache() const
@@ -561,6 +581,11 @@ void Database::recover(
     assert(!openMode.create);
     assert(isRecoveryRequired());
 
+    FENNEL_TRACE(
+        TRACE_INFO,
+        "recovery beginning; page version = "
+        << header.versionNumber);
+
     if (header.shadowRecoveryPageId != NULL_PAGE_ID) {
         pVersionedSegment->recover(header.shadowRecoveryPageId);
         pVersionedSegment->checkpoint(CHECKPOINT_FLUSH_AND_UNMAP);
@@ -600,6 +625,8 @@ void Database::recover(
     closeDevices();
     deleteLogs();
     recoveryRequired = false;
+    FENNEL_TRACE(TRACE_INFO, "recovery completed");
+
     openSegments();
 }
 

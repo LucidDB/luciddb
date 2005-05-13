@@ -31,7 +31,7 @@ package net.sf.farrago.session;
 public interface FarragoStreamFactoryProvider
 {
     /**
-     * Register factories for extension ExecutionStreams in Fennel.
+     * Registers factories for extension ExecStreams in Fennel.
      *
      * @param hStreamGraph native handle to unprepared stream graph
      */

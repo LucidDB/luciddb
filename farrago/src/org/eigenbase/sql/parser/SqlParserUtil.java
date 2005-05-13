@@ -86,7 +86,10 @@ public final class SqlParserUtil
         return s.substring(1, i); // skip prefixed '_'
     }
 
-    /** converts the contents of an sql quoted string literal into a java string */
+    /**
+     * Converts the contents of an sql quoted string literal into a java
+     * string.
+     */
     public static String parseString(String s)
     {
         int i = s.indexOf("'"); // start of body

@@ -78,8 +78,12 @@ public class RexMultisetUtil
     }
 
     /**
-     * Returns true if node contains a multiset operator, otherwise false
+     * Returns true if node contains a multiset operator, otherwise false.
      * Use it with deep=false when checking if a RexCall is a multiset call.
+     *
+     * @param node Expression
+     * @param deep If true, returns whether expression contains a multiset.
+     *   If false, returns whether expression <em>is</em> a multiset.
      */
     public static boolean containsMultiset(final RexNode node, boolean deep)
     {
@@ -87,11 +91,22 @@ public class RexMultisetUtil
     }
 
     /**
-     * Convenicence methods equivalent to {@link #containsMultiset} with deep=false
+     * Returns whether a list of expressions, or an optional single expression,
+     * contain a multiset.
      */
-    public static boolean isMultiset(final RexNode node)
+    public static boolean containsMultiset(RexNode[] exprs, RexNode expr)
     {
-        return containsMultiset(node, false);
+        final boolean deep = true;
+        for (int i = 0; i < exprs.length; i++) {
+            if (containsMultiset(exprs[i], deep)) {
+                return true;
+            }
+        }
+        if (expr != null &&
+            containsMultiset(expr, deep)) {
+            return true;
+        }
+        return false;
     }
 
     /**

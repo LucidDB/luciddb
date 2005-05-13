@@ -182,7 +182,7 @@ public class RelSubset extends AbstractRelNode
     }
 
     /**
-     * Add expression <code>rel</code> to this subset.
+     * Adds expression <code>rel</code> to this subset.
      */
     void add(RelNode rel)
     {
@@ -214,7 +214,7 @@ public class RelSubset extends AbstractRelNode
     }
 
     /**
-     * Recursively build a tree consisting of the cheapest plan at each node.
+     * Recursively builds a tree consisting of the cheapest plan at each node.
      */
     RelNode buildCheapestPlan(VolcanoPlanner planner)
     {

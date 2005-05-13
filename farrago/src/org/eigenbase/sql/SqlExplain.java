@@ -58,8 +58,6 @@ public class SqlExplain extends SqlCall
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * .
-     *
      * @return the underlying SQL statement to be explained
      */
     public SqlNode getExplicandum()
@@ -68,7 +66,7 @@ public class SqlExplain extends SqlCall
     }
 
     /**
-     * Get the source SELECT expression for the data to be inserted.  It is
+     * Gets the source SELECT expression for the data to be inserted.  It is
      * only safe to call this after non-SELECT source expressions (e.g. VALUES)
      * have been expanded by SqlValidator.performUnconditionalRewrites.
      *

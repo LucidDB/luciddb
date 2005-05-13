@@ -43,6 +43,8 @@ public interface RexVisitor
 
     void visitCall(RexCall call);
 
+    void visitOver(RexOver over);
+
     void visitCorrelVariable(RexCorrelVariable correlVariable);
 
     void visitDynamicParam(RexDynamicParam dynamicParam);

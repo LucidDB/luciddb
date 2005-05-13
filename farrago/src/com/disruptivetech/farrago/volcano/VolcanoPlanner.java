@@ -847,7 +847,7 @@ public class VolcanoPlanner implements RelOptPlanner
     }
 
     /**
-     * Fire all rules matched by a relational expression.
+     * Fires all rules matched by a relational expression.
      *
      * @param rel Relational expression which has just been created (or maybe
      *        from the queue)
@@ -929,7 +929,7 @@ public class VolcanoPlanner implements RelOptPlanner
     }
 
     /**
-     * By optimizing its children, find the best implementation of relational
+     * By optimizing its children, finds the best implementation of relational
      * expression <code>rel</code>.  The cost is bounded by
      * <code>targetCost</code>.
      */

@@ -160,7 +160,7 @@ public class DdlValidator extends FarragoCompoundAllocation
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Create a new validator.  The validator will listen for repository
+     * Creates a new validator.  The validator will listen for repository
      * change events and schedule appropriate validation actions on the
      * affected objects.  Validation is deferred until validate() is called.
      *
@@ -309,7 +309,7 @@ public class DdlValidator extends FarragoCompoundAllocation
     }
 
     /**
-     * Determine whether a catalog object has had its visibility set yet.
+     * Determines whether a catalog object has had its visibility set yet.
      * NOTE: this should remain private and only be called prior to
      * executeStorage().
      *

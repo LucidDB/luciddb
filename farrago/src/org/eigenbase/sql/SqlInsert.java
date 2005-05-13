@@ -61,8 +61,6 @@ public class SqlInsert extends SqlCall
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * .
-     *
      * @return the identifier for the target table of the insertion
      */
     public SqlIdentifier getTargetTable()
@@ -71,9 +69,9 @@ public class SqlInsert extends SqlCall
     }
 
     /**
-     * Get the source SELECT expression for the data to be inserted.  This
+     * Gets the source SELECT expression for the data to be inserted. 
      * returns null before the statement
-     * has been expanded by SqlValidator.performUnconditionalRewrites
+     * has been expanded by SqlValidator.performUnconditionalRewrites.
      *
      * @return the source SELECT for the data to be inserted
      */
@@ -83,8 +81,6 @@ public class SqlInsert extends SqlCall
     }
 
     /**
-     * .
-     *
      * @return the source expression for the data to be inserted
      */
     public SqlNode getSource()
@@ -93,8 +89,6 @@ public class SqlInsert extends SqlCall
     }
 
     /**
-     * .
-     *
      * @return the list of target column names, or null for all columns in the
      * target table
      */

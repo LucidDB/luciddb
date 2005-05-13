@@ -38,6 +38,7 @@
 | SYS_FTRS_DATA_SERVER          |
 | SYS_MOCK_DATA_SERVER          |
 | SYS_MOCK_FOREIGN_DATA_SERVER  |
+| SYS_MOF                       |
 +-------------------------------+
 0: jdbc:farrago:> select "name","value" from sys_fem.med."StorageOption" order by 1,2;
 +--------------------+-------------------------------------+
@@ -47,6 +48,8 @@
 | DRIVER_CLASS       | org.relique.jdbc.csv.CsvDriver      |
 | ROOT_PACKAGE_NAME  | CWM                                 |
 | ROOT_PACKAGE_NAME  | FEM                                 |
+| ROOT_PACKAGE_NAME  | MOF                                 |
+| SCHEMA_NAME        | MODEL                               |
 | SCHEMA_NAME        | SALES                               |
 | SCHEMA_NAME        | TESTDATA                            |
 | URL                | jdbc:hsqldb:testcases/hsqldb/scott  |
@@ -132,6 +135,7 @@ Error: DDL validation error near line 1, column 31: Reference to unknown foreign
 | SYS_FTRS_DATA_SERVER          |
 | SYS_MOCK_DATA_SERVER          |
 | SYS_MOCK_FOREIGN_DATA_SERVER  |
+| SYS_MOF                       |
 +-------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop schema csv_schema cascade;

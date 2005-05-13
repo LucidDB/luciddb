@@ -162,7 +162,7 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
     }
 
     /**
-     * Handle details of an exception during execution.
+     * Handles details of an exception during execution.
      */
     private void handleError(
         Throwable error,
@@ -179,7 +179,7 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
     }
 
     /**
-     * Obtain the thread's JDBC connection.
+     * Obtains the thread's JDBC connection.
      */
     public Connection getConnection()
     {
@@ -187,7 +187,7 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
     }
 
     /**
-     * Obtain the thread's current JDBC statement.  May return null.
+     * Obtains the thread's current JDBC statement.  May return null.
      */
     public Statement getStatement()
     {
@@ -195,7 +195,7 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
     }
 
     /**
-     * Set the thread's current JDBC statement.  To clear the JDBC
+     * Sets the thread's current JDBC statement.  To clear the JDBC
      * statement use {@link #clearStatement()}.
      */
     public void setStatement(Statement stmt)
@@ -207,7 +207,7 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
     }
 
     /**
-     * Clear the thread's current JDBC statement.  To set the JDBC
+     * Clears the thread's current JDBC statement.  To set the JDBC
      * statement use {@link #setStatement(Statement)}.
      */
     public void clearStatement()
@@ -216,7 +216,7 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
     }
 
     /**
-     * Retrieve the object used to synchronize threads at a point in
+     * Retrieves the object used to synchronize threads at a point in
      * the list of commands.
      */
     public Sync getSynchronizer()
@@ -225,7 +225,7 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
     }
 
     /**
-     * Check whether an exception occurred during execution.  If this
+     * Checks whether an exception occurred during execution.  If this
      * method returns null, the thread's commands all succeeded.  If
      * this method returns non-null, see {@link #getFailureLocation()}
      * for details on which command caused the failure.
@@ -236,7 +236,7 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
     }
 
     /**
-     * Return location (e.g., command number) for exception returned
+     * Returns location (e.g., command number) for exception returned
      * by {@link #getFailureCause()}.
      */
     public String getFailureLocation()

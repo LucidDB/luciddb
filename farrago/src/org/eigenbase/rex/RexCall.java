@@ -60,7 +60,7 @@ public class RexCall extends RexNode
 
     //~ Constructors ----------------------------------------------------------
 
-    RexCall(
+    protected RexCall(
         RelDataType type,
         SqlOperator op,
         RexNode [] operands)

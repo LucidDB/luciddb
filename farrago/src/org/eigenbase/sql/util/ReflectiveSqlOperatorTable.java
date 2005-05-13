@@ -54,8 +54,8 @@ public abstract class ReflectiveSqlOperatorTable implements SqlOperatorTable
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Call this method after constructing an operator table. It can't be
-     * part of the constructor, because the sub-class' constructor needs to
+     * Performs post-constructor initialization of an operator table. It can't
+     * be part of the constructor, because the subclass constructor needs to
      * complete first.
      */
     public final void init()
@@ -155,7 +155,7 @@ public abstract class ReflectiveSqlOperatorTable implements SqlOperatorTable
     }
 
     /**
-     * Register function to the table.
+     * Registers a function in the table.
      * @param function
      */
     public void register(SqlFunction function)

@@ -61,7 +61,7 @@ public class FennelDmlTest extends FarragoTestCase
     }
 
     /**
-     * Test INSERT ... SELECT
+     * Tests INSERT ... SELECT
      *
      * @throws Exception .
      */
@@ -82,7 +82,7 @@ public class FennelDmlTest extends FarragoTestCase
     }
 
     /**
-     * Test INSERT ... VALUES ()
+     * Tests INSERT ... VALUES ()
      *
      * @throws Exception .
      */
@@ -106,7 +106,7 @@ public class FennelDmlTest extends FarragoTestCase
     }
 
     /**
-     * Test INSERT ... (column-list) VALUES ()
+     * Tests INSERT ... (column-list) VALUES ()
      *
      * @throws Exception .
      */
@@ -133,7 +133,7 @@ public class FennelDmlTest extends FarragoTestCase
     }
 
     /**
-     * Test INSERT ... VALUES (), ()
+     * Tests INSERT ... VALUES (), ()
      *
      * @throws Exception .
      */
@@ -159,7 +159,7 @@ public class FennelDmlTest extends FarragoTestCase
     }
 
     /**
-     * Test INSERT with an implied DEFAULT value.
+     * Tests INSERT with an implied DEFAULT value.
      *
      * @throws Exception .
      */
@@ -182,7 +182,7 @@ public class FennelDmlTest extends FarragoTestCase
     }
 
     /**
-     * Test INSERT ... SELECT ... WHERE ...
+     * Tests INSERT ... SELECT ... WHERE ...
      *
      * @throws Exception .
      */
@@ -203,7 +203,7 @@ public class FennelDmlTest extends FarragoTestCase
     }
 
     /**
-     * Test INSERT where source and target are the same table.
+     * Tests INSERT where source and target are the same table.
      *
      * @throws Exception .
      */
@@ -229,7 +229,7 @@ public class FennelDmlTest extends FarragoTestCase
     }
 
     /**
-     * Test INSERT ... VALUES (?,?,...)
+     * Tests INSERT ... VALUES (?,?,...)
      *
      * @throws Exception .
      */
@@ -263,7 +263,7 @@ public class FennelDmlTest extends FarragoTestCase
     }
 
     /**
-     * Test DELETE.
+     * Tests DELETE.
      *
      * @throws Exception .
      */
@@ -296,7 +296,7 @@ public class FennelDmlTest extends FarragoTestCase
     }
     
     /**
-     * Test DELETE ... WHERE ...
+     * Tests DELETE ... WHERE ...
      *
      * @throws Exception .
      */
@@ -318,7 +318,7 @@ public class FennelDmlTest extends FarragoTestCase
     }
 
     /**
-     * Test UPDATE which can be performed without updating any secondary
+     * Tests UPDATE which can be performed without updating any secondary
      * indexes.
      *
      * @throws Exception .
@@ -343,7 +343,7 @@ public class FennelDmlTest extends FarragoTestCase
     }
 
     /**
-     * Test UPDATE to a column covered by a secondary index.
+     * Tests UPDATE to a column covered by a secondary index.
      *
      * @throws Exception .
      */
@@ -367,7 +367,7 @@ public class FennelDmlTest extends FarragoTestCase
     }
 
     /**
-     * Test explicit checkpoint (results are not verifiable so just test
+     * Tests explicit checkpoint (results are not verifiable so just test
      * that the statement is accepted).
      *
      * @throws Exception .
@@ -383,7 +383,7 @@ public class FennelDmlTest extends FarragoTestCase
     }
 
     /**
-     * Test savepoint API.
+     * Tests savepoint API.
      *
      * @throws Exception .
      */

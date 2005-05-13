@@ -189,8 +189,8 @@ public class SqlLiteral extends SqlNode
     }
 
     /**
-     * Whether value is appropriate for its type. (We have rules about these
-     * things.)
+     * @return whether value is appropriate for its type (we have rules about
+     * these things)
      */
     public static boolean valueMatchesType(
         Object value,
@@ -504,18 +504,17 @@ public class SqlLiteral extends SqlNode
 
     /**
      * Creates an interval literal.
-     * @param values            Values, e.g. int[]{1, 23, 4} from a
-     *                          input string of'1:23:04'
+     * @param intervalStr       input string of '1:23:04'
      * @param intervalQualifier describes the interval type and precision
      * @param pos               Parser position
      */
-    public static SqlIntervalLiteral createInterval(int[] values,
+    public static SqlIntervalLiteral createInterval(int sign, String intervalStr,
         SqlIntervalQualifier intervalQualifier, SqlParserPos pos)
     {
         SqlTypeName typeName = intervalQualifier.isYearMonth() ?
             SqlTypeName.IntervalYearMonth :
             SqlTypeName.IntervalDayTime;
-        return new SqlIntervalLiteral(values, intervalQualifier,
+        return new SqlIntervalLiteral(sign, intervalStr, intervalQualifier,
             typeName, pos);
     }
 

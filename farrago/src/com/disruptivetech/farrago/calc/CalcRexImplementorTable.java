@@ -21,6 +21,7 @@
 package com.disruptivetech.farrago.calc;
 
 import org.eigenbase.sql.SqlOperator;
+import org.eigenbase.sql.SqlAggFunction;
 
 
 /**
@@ -40,6 +41,11 @@ public interface CalcRexImplementorTable
      * implementor registered.
      */
     CalcRexImplementor get(SqlOperator op);
+
+    /**
+     * Retrieves the implementor of an aggregate function.
+     */
+    CalcRexAggImplementor getAgg(SqlAggFunction op);
 }
 
 

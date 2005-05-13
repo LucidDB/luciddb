@@ -53,8 +53,6 @@ public interface FarragoTypeFactory extends OJTypeFactory
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * .
-     *
      * @return associated FarragoRepos
      */
     public FarragoRepos getRepos();

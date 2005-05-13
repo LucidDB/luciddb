@@ -147,7 +147,7 @@ public class SqlIdentifier extends SqlNode
     }
 
     /**
-     * Find out all the valid alternatives for this identifier.
+     * Lists all the valid alternatives for this identifier.
      *
      * @param validator Validator
      * @param scope Validation scope

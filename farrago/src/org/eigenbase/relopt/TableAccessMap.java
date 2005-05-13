@@ -68,7 +68,7 @@ public class TableAccessMap
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Construct a TableAccessMap for all tables accessed by a RelNode and
+     * Constructs a TableAccessMap for all tables accessed by a RelNode and
      * its descendants.
      *
      * @param rel the RelNode for which to build the map
@@ -84,7 +84,7 @@ public class TableAccessMap
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Determine whether a table is accessed at all.
+     * Determines whether a table is accessed at all.
      *
      * @param table the table of interest
      *
@@ -96,7 +96,7 @@ public class TableAccessMap
     }
 
     /**
-     * Determine whether a table is accessed for read.
+     * Determines whether a table is accessed for read.
      *
      * @param table the table of interest
      *
@@ -108,7 +108,7 @@ public class TableAccessMap
     }
 
     /**
-     * Determine whether a table is accessed for write.
+     * Determines whether a table is accessed for write.
      *
      * @param table the table of interest
      *
@@ -120,7 +120,7 @@ public class TableAccessMap
     }
 
     /**
-     * Determine the access mode of a table.
+     * Determines the access mode of a table.
      *
      * @param table the table of interest
      *

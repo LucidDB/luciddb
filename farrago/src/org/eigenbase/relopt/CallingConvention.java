@@ -227,8 +227,8 @@ public class CallingConvention implements RelTrait
     }
 
     /**
-     * Compare this CallingConvention to another for equality by ordinal.
-
+     * Compares this CallingConvention to another for equality by ordinal.
+     *
      * @param o the other CallingConvention
      * @return true if they are equal, false otherwise
      */

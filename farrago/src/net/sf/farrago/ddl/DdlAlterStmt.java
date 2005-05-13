@@ -40,7 +40,7 @@ public class DdlAlterStmt extends DdlStmt
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Construct a new DdlAlterStmt.
+     * Constructs a new DdlAlterStmt.
      *
      * @param alterElement top-level element altered by this stmt
      */

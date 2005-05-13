@@ -60,7 +60,7 @@ public class DoubleKeyMap
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Set to true if you want to ennforces the inserting of one key pair once 
+     * Enables or disables uniqueness checking.
      */
     public void setEnforceUniqueness(boolean enforce)
     {
@@ -98,7 +98,7 @@ public class DoubleKeyMap
     }
 
     /**
-     * Convenience method to define a set of key pairs at once. All pairs will
+     * Defines a set of key pairs at once. All pairs will
      * be created with the same value. For Example
      * <blockquote><pre><code>
      * Object[] 408SantaClaraCountyCities = new Object[]{"San Jose", "Sunnyvale",...};
@@ -131,7 +131,7 @@ public class DoubleKeyMap
     }
 
     /**
-     * Convenience method to define a set of key pairs at once. All pairs will
+     * Defines a set of key pairs at once. All pairs will
      * be created with the same value.
      * @see {@link #put(java.lang.Object[], java.lang.Object, java.lang.Object)}
      *
@@ -154,7 +154,7 @@ public class DoubleKeyMap
     }
 
     /**
-     * Convenience method to define a set of key pairs at once. All pairs will
+     * Defines a set of key pairs at once. All pairs will
      * be created with the same value. For Example
      * <blockquote><pre><code>
      * Object[] a = new Object[]{objA0, objA1};

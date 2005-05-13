@@ -117,6 +117,16 @@ void CmdInterpreter::setSvptHandle(
     resultHandle = opaqueToInt(svptId);
 }
 
+CmdInterpreter::DbHandle* CmdInterpreter::newDbHandle()
+{
+    return new DbHandle();
+}
+
+CmdInterpreter::TxnHandle* CmdInterpreter::newTxnHandle()
+{
+    return new TxnHandle();
+}
+
 CmdInterpreter::DbHandle::~DbHandle()
 {
     statsTimer.stop();
@@ -160,7 +170,7 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
     
     jobject javaTrace = getObjectFromLong(cmd.getJavaTraceHandle());
 
-    std::auto_ptr<DbHandle> pDbHandle(new DbHandle());
+    std::auto_ptr<DbHandle> pDbHandle(newDbHandle());
     ++JniUtil::handleCount;
     pDbHandle->pTraceTarget.reset(new JavaTraceTarget(javaTrace));
 
@@ -176,25 +186,14 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
     pDbHandle->statsTimer.start();
 
     if (pDb->isRecoveryRequired()) {
-        // NOTE jvs 10-Aug-2004 -- the if (false) branch below is the real
-        // recovery code.  It's currently disabled because MDR recovery isn't
-        // working yet.  So for now, once we detect a crash we fail fast.
-        if (false) {
-            SegmentAccessor scratchAccessor =
-                pDb->getSegmentFactory()->newScratchSegment(pDb->getCache());
-            FtrsTableWriterFactory recoveryFactory(
-                pDb,
-                pDb->getCache(),
-                pDb->getTypeFactory(),
-                scratchAccessor);
-            pDb->recover(recoveryFactory);
-        } else {
-            // NOTE jvs 10-Aug-2004 -- this message is intentionally NOT
-            // internationalized because it's supposed to be temporary.
-            throw FennelExcn(
-                "Database crash detected.  "
-                "To repair system, you must restore the catalog from backup.");
-        }
+        SegmentAccessor scratchAccessor =
+            pDb->getSegmentFactory()->newScratchSegment(pDb->getCache());
+        FtrsTableWriterFactory recoveryFactory(
+            pDb,
+            pDb->getCache(),
+            pDb->getTypeFactory(),
+            scratchAccessor);
+        pDb->recover(recoveryFactory);
     }
     setDbHandle(cmd.getResultHandle(),pDbHandle.release());
 }
@@ -281,7 +280,7 @@ void CmdInterpreter::visit(ProxyCmdBeginTxn &cmd)
     SXMutexSharedGuard actionMutexGuard(
         pDb->getCheckpointThread()->getActionMutex());
 
-    std::auto_ptr<TxnHandle> pTxnHandle(new TxnHandle());
+    std::auto_ptr<TxnHandle> pTxnHandle(newTxnHandle());
     ++JniUtil::handleCount;
     pTxnHandle->pDb = pDb;
     // TODO:  CacheAccessor factory

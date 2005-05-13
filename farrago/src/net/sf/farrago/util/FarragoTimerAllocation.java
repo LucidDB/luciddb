@@ -43,7 +43,7 @@ public class FarragoTimerAllocation implements FarragoAllocation
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Create a new FarragoTimerAllocation.
+     * Creates a new FarragoTimerAllocation.
      *
      * @param owner the owner for the timer
      *

@@ -228,7 +228,7 @@ public abstract class FarragoTestCase extends DiffTestCase
     }
 
     /**
-     * Save system parameters.
+     * Saves system parameters.
      */
     protected static void saveParameters()
     {
@@ -243,7 +243,7 @@ public abstract class FarragoTestCase extends DiffTestCase
     }
 
     /**
-     * Restore system parameters to state saved by saveParameters().
+     * Restores system parameters to state saved by saveParameters().
      */
     protected static void restoreParameters()
     {
@@ -318,12 +318,8 @@ public abstract class FarragoTestCase extends DiffTestCase
     }
 
     /**
-     * .
-     *
      * @return the number of rows in resultSet (which is consumed as a side
      * effect)
-     *
-     * @throws Exception .
      */
     protected int getResultSetCount()
         throws Exception
@@ -402,7 +398,7 @@ public abstract class FarragoTestCase extends DiffTestCase
     }
 
     /**
-     * Compare the first column of a result set against a String-valued
+     * Compares the first column of a result set against a String-valued
      * reference set, disregarding order entirely.
      *
      * @param refSet expected results
@@ -422,7 +418,7 @@ public abstract class FarragoTestCase extends DiffTestCase
     }
 
     /**
-     * Compare the first column of a result set against a pattern. The result
+     * Compares the first column of a result set against a pattern. The result
      * set must return exactly one row.
      *
      * @param pattern Expected pattern
@@ -444,7 +440,7 @@ public abstract class FarragoTestCase extends DiffTestCase
     }
 
     /**
-     * Compare the first column of a result set against a String-valued
+     * Compares the first column of a result set against a String-valued
      * reference set, taking order into account.
      *
      * @param refList expected results
@@ -464,7 +460,7 @@ public abstract class FarragoTestCase extends DiffTestCase
     }
 
     /**
-     * Retrieve a new instance of the FarragoJdbcEngineDriver
+     * Retrieves a new instance of the FarragoJdbcEngineDriver
      * configured for this test.
      *
      * @return an instance of FarragoJdbcEngineDriver (or a subclass)

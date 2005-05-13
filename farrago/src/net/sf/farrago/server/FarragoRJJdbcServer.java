@@ -35,7 +35,8 @@ import java.rmi.RemoteException;
  */
 class FarragoRJJdbcServer extends RJJdbcServer
 {
-    public static void main(String[] args) {
+    public static void main(String[] args)
+    {
         try {
             Class.forName("net.sf.farrago.server.FarragoRJDriverServer_Stub");
         } catch (ClassNotFoundException cnfe) {
@@ -53,7 +54,8 @@ class FarragoRJJdbcServer extends RJJdbcServer
 
     }
 
-    protected RJDriverServer buildDriverServer() throws RemoteException {
+    protected RJDriverServer buildDriverServer() throws RemoteException
+    {
         return new FarragoRJDriverServer(admpasswd_);
     }
 }

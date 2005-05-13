@@ -38,7 +38,7 @@ public class RelTraitSet
     private RelTrait[] traits;
 
     /**
-     * Construct a RelTraitSet with the given set of RelTraits.
+     * Constructs a RelTraitSet with the given set of RelTraits.
      *
      * @param traits
      */
@@ -52,7 +52,7 @@ public class RelTraitSet
     }
 
     /**
-     * Construct a RelTraitSet with a single RelTrait.  Equivalent to calling
+     * Constructs a RelTraitSet with a single RelTrait.  Equivalent to calling
      * {@link #RelTraitSet(RelTrait[])} with a value of
      * <code>new RelTrait[] { trait }</code>.
      */
@@ -62,7 +62,7 @@ public class RelTraitSet
     }
 
     /**
-     * Retrieve a RelTrait from the set.
+     * Retrieves a RelTrait from the set.
      *
      * @param index 0-based index into ordered RelTraitSet
      * @return the RelTrait
@@ -76,7 +76,7 @@ public class RelTraitSet
 
 
     /**
-     * Retrieve a RelTrait of the given type from the set.
+     * Retrieves a RelTrait of the given type from the set.
      *
      * @param traitDef the type of RelTrit to retrieve
      * @return the RelTrait, or null if not found
@@ -92,7 +92,7 @@ public class RelTraitSet
     }
 
     /**
-     * Replace an existing RelTrait in the set.  This method <b>must
+     * Replaces an existing RelTrait in the set.  This method <b>must
      * not</b> be used to modify the traits of a 
      * {@link org.eigenbase.rel.RelNode} that has already been
      * registered with a {@link RelOptPlanner}.
@@ -114,7 +114,7 @@ public class RelTraitSet
     }
 
     /**
-     * Replace an existing RelTrait in the set.  This method <b>must
+     * Replaces an existing RelTrait in the set.  This method <b>must
      * not</b> be used to modify the traits of a 
      * {@link org.eigenbase.rel.RelNode} that has already been
      * registered with a {@link RelOptPlanner}.
@@ -134,7 +134,7 @@ public class RelTraitSet
     }
 
     /**
-     * Add a new RelTrait to the set.  This method <b>must
+     * Adds a new RelTrait to the set.  This method <b>must
      * not</b> be used to modify the traits of a 
      * {@link org.eigenbase.rel.RelNode} that has already been
      * registered with a {@link RelOptPlanner}.
@@ -175,7 +175,7 @@ public class RelTraitSet
     }
 
     /**
-     * Compare two RelTraitSet objects for equality.
+     * Compares two RelTraitSet objects for equality.
      *
      * @param obj another RelTraitSet
      * @return true if traits are equal and in the same order, false otherwise
@@ -189,7 +189,7 @@ public class RelTraitSet
     }
 
     /**
-     * Compare two RelTraitSet objects to see if they match for the purposes
+     * Compares two RelTraitSet objects to see if they match for the purposes
      * of firing a rule.  A null RelTrait within a RelTraitSet indicates a
      * wildcard: any RelTrait in the other RelTraitSet will match.  If one
      * RelTraitSet is smaller than the other, comparison stops when the last
@@ -220,7 +220,7 @@ public class RelTraitSet
     }
 
     /**
-     * Output the traits of this set as a String.  Traits are output in
+     * Outputs the traits of this set as a String.  Traits are output in
      * the String in order, separated by periods.
      */
     public String toString()

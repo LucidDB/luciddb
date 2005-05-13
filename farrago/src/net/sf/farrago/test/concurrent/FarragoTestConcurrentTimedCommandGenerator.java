@@ -51,7 +51,7 @@ public class FarragoTestConcurrentTimedCommandGenerator
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Construct a new FarragoTestConcurrentTimedCommandGenerator that
+     * Constructs a new FarragoTestConcurrentTimedCommandGenerator that
      * will run for at least the given amount of time.  See
      * {@link FarragoTestConcurrentTimedCommandGenerator} for more
      * information on the semantics of run-time length.

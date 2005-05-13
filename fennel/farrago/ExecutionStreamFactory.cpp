@@ -24,6 +24,7 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/farrago/ExecutionStreamFactory.h"
 #include "fennel/farrago/JavaTupleStream.h"
+#include "fennel/farrago/JavaSinkExecStream.h"
 #include "fennel/farrago/CmdInterpreter.h"
 #include "fennel/xo/BTreeScan.h"
 #include "fennel/xo/BTreeSearch.h"

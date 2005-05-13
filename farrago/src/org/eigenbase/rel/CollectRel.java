@@ -30,7 +30,7 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.type.SqlTypeUtil;
 
 /**
- * A relational expression which collapses multiply rows into one
+ * A relational expression which collapses multiple rows into one.
  *
  * @author Wael Chatila 
  * @since Dec 12, 2004

@@ -24,8 +24,6 @@
 package org.eigenbase.oj.rex;
 
 import java.math.*;
-import java.sql.*;
-import java.sql.Date;
 import java.util.*;
 
 import openjava.mop.*;
@@ -35,11 +33,9 @@ import org.eigenbase.oj.*;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
-import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
@@ -220,6 +216,12 @@ public class RexToOJTranslator implements RexVisitor
             throw Util.needToImplement(call);
         }
         return implementor.implement(this, call, operandExprs);
+    }
+
+    // implement RexVisitor
+    public void visitOver(RexOver over)
+    {
+        throw Util.needToImplement("Row-expression RexOver");
     }
 
     // implement RexVisitor

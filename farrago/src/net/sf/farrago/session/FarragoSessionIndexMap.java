@@ -39,7 +39,7 @@ public interface FarragoSessionIndexMap
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Get an index by its repository ID.
+     * Gets an index by its repository ID.
      *
      * @param id index ID in repository
      *
@@ -48,7 +48,7 @@ public interface FarragoSessionIndexMap
     public FemLocalIndex getIndexById(long id);
 
     /**
-     * Get the root PageId of an index.
+     * Gets the root PageId of an index.
      *
      * @param index the index of interest
      *
@@ -69,7 +69,7 @@ public interface FarragoSessionIndexMap
         CwmTable table);
 
     /**
-     * Create an index and record its root in this map.
+     * Creates an index and records its root in this map.
      *
      * @param wrapperCache cache for looking up data wrappers
      *
@@ -80,7 +80,7 @@ public interface FarragoSessionIndexMap
         FemLocalIndex index);
 
     /**
-     * Drop an index and remove its root from this map.
+     * Drops an index and removes its root from this map.
      *
      * @param wrapperCache cache for looking up data wrappers
      *

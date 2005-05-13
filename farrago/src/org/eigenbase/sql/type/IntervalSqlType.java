@@ -37,7 +37,8 @@ public class IntervalSqlType extends AbstractSqlType
     private SqlIntervalQualifier intervalQualifier;
 
     /**
-     * This should only be called from a factory method.
+     * Constructs an IntervalSqlType.  This should only be called from a
+     * factory method.
      */
     public IntervalSqlType(
         SqlIntervalQualifier intervalQualifier,

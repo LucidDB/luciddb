@@ -30,6 +30,7 @@ import net.sf.farrago.runtime.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.FarragoMetadataFactory;
 
 import openjava.mop.*;
 import openjava.ptree.*;
@@ -78,12 +79,12 @@ public class FarragoRelImplementor extends JavaRelImplementor
         streamDefSet = new HashSet();
 
         // set up an operator implementor table which knows about UDF's
-        ojRexImplementorTable = new OJRexImplementorTable() 
+        ojRexImplementorTable = new OJRexImplementorTable()
             {
                 private final OJRexImplementorTable delegate =
                     preparingStmt.getSession().getPersonality()
                     .getOJRexImplementorTable(preparingStmt);
-                
+
                 public OJRexImplementor get(SqlOperator op)
                 {
                     if (op instanceof FarragoUserDefinedRoutine) {
@@ -92,7 +93,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
                         return delegate.get(op);
                     }
                 }
-                
+
                 public OJAggImplementor get(Aggregation aggregation)
                 {
                     return delegate.get(aggregation);
@@ -101,6 +102,12 @@ public class FarragoRelImplementor extends JavaRelImplementor
     }
 
     //~ Methods ---------------------------------------------------------------
+
+    // implement FennelRelImplementor
+    public FarragoMetadataFactory getMetadataFactory()
+    {
+        return preparingStmt.getRepos();
+    }
 
     // implement FennelRelImplementor
     public FemExecutionStreamDef visitFennelChild(FennelRel rel)
@@ -178,7 +185,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
     }
 
     /**
-     * Construct a globally unique name for an execution stream.  This name is
+     * Constructs a globally unique name for an execution stream.  This name is
      * used to label and find C++ ExecutionStreams.
      *
      * @param streamDef stream definition
@@ -255,7 +262,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
             lhsExp,
             rhsExp);
     }
-    
+
     // override JavaRelImplementor
     public Expression implementRoot(JavaRel rel)
     {

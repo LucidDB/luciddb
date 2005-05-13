@@ -38,7 +38,7 @@ public interface FennelTupleReader
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Unmarshal one tuple.
+     * Unmarshals one tuple.
      *
      * @param byteBuffer read-only buffer containing marshalled tuple data; on
      *        entry, the buffer position is at beginning of tuple

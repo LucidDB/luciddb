@@ -59,7 +59,7 @@ public abstract class RelOptRule
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a rule
+     * Creates a rule.
      *
      * @param operand Root operand, must not be null
      * @pre operand != null
@@ -106,7 +106,7 @@ public abstract class RelOptRule
     }
 
     /**
-     * This method is called every time the rule matches. At the time that
+     * Receives notification about a rule match. At the time that
      * this method is called, {@link RelOptRuleCall#rels call.rels} holds
      * the set of relational expressions which match the operands to the
      * rule; <code>call.rels[0]</code> is the root expression.

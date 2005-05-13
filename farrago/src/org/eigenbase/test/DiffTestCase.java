@@ -57,7 +57,7 @@ public abstract class DiffTestCase extends TestCase
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Initialize a new DiffTestCase.
+     * Initializes a new DiffTestCase.
      *
      * @param testCaseName JUnit test case name
      */
@@ -94,7 +94,7 @@ public abstract class DiffTestCase extends TestCase
     }
 
     /**
-     * Initialize a diff-based test.  Any existing .log and .dif files
+     * Initializes a diff-based test.  Any existing .log and .dif files
      * corresponding to this test case are deleted, and a new, empty .log
      * file is created.  The default log file location is a subdirectory
      * under the result getTestlogRoot(), where the subdirectory
@@ -125,7 +125,7 @@ public abstract class DiffTestCase extends TestCase
         throws Exception;
 
     /**
-     * Initialize a diff-based test, overriding the default
+     * Initializes a diff-based test, overriding the default
      * log file naming scheme altogether.
      *
      * @param testFileSansExt full path to log filename, without .log/.ref
@@ -146,7 +146,7 @@ public abstract class DiffTestCase extends TestCase
     }
 
     /**
-     * Finish a diff-based test.  Output that was written to the Writer
+     * Finishes a diff-based test.  Output that was written to the Writer
      * returned by openTestLog is diffed against a .ref file, and if any
      * differences are detected, the test case fails.  Note that the diff
      * used is just a boolean test, and does not create any .dif ouput.
@@ -208,7 +208,7 @@ public abstract class DiffTestCase extends TestCase
     }
 
     /**
-     * Add a diff mask.  Strings matching the given regular expression
+     * Adds a diff mask.  Strings matching the given regular expression
      * will be masked before diffing.  This can be used to suppress
      * spurious diffs on a case-by-case basis.
      *

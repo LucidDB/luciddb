@@ -83,7 +83,7 @@ public abstract class RelTraitDef
     public abstract String getSimpleName();
 
     /**
-     * Take an arbitrary RelTrait and return the canonical representation
+     * Takes an arbitrary RelTrait and returns the canonical representation
      * of that RelTrait.  Canonized RelTrait objects may always be
      * compared using the equality operator (<code>==</code>).
      *
@@ -126,7 +126,7 @@ public abstract class RelTraitDef
 
 
     /**
-     * Convert the given RelNode to the given RelTrait.
+     * Converts the given RelNode to the given RelTrait.
      *
      * @param planner the planner requesting the conversion
      * @param rel RelNode to convert
@@ -140,7 +140,7 @@ public abstract class RelTraitDef
         boolean allowInfiniteCostConverters);
 
     /**
-     * Test whether the given RelTrait can be converted to another RelTrait.
+     * Tests whether the given RelTrait can be converted to another RelTrait.
      *
      * @param planner the planner requesting the conversion test
      * @param fromTrait the RelTrait to convert from
@@ -152,7 +152,7 @@ public abstract class RelTraitDef
 
 
     /**
-     * Provide notification of the registration of a particular
+     * Provides notification of the registration of a particular
      * {@link ConverterRule} with a {@link RelOptPlanner}.  The default
      * implementation does nothing.
      *

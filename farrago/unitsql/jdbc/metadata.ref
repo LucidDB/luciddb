@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/jdbc/metadata.sql#4 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/jdbc/metadata.sql#5 $
 0: jdbc:farrago:> -- Test JDBC metadata calls
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test getCatalogs
@@ -14,6 +14,7 @@
 | SYS_FTRS_DATA_SERVER          |
 | SYS_MOCK_DATA_SERVER          |
 | SYS_MOCK_FOREIGN_DATA_SERVER  |
+| SYS_MOF                       |
 +-------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test getSchemas

@@ -47,7 +47,7 @@ public class SqlParser
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creats a <code>SqlParser</code> which reads input from a string.
+     * Creates a <code>SqlParser</code> which reads input from a string.
      */
     public SqlParser(String s)
     {
@@ -55,7 +55,7 @@ public class SqlParser
     }
 
     /**
-     * Creats a <code>SqlParser</code> which reads input from a reader.
+     * Creates a <code>SqlParser</code> which reads input from a reader.
      */
     public SqlParser(Reader reader)
     {

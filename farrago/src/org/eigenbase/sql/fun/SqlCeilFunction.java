@@ -29,6 +29,8 @@ import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.type.ReturnTypeInferenceImpl;
 import org.eigenbase.sql.type.OperandsTypeChecking;
 
+// REVIEW jvs 12-May-2005:  I suggest you follow Intellij's recommendation
+// and edit your template to match all of the other classes in this package.
 /**
  * Created by IntelliJ IDEA.
  * User: jack

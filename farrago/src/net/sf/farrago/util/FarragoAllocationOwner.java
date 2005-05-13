@@ -36,7 +36,7 @@ public interface FarragoAllocationOwner extends FarragoAllocation
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Take ownership of a FarragoAllocation.
+     * Assigns ownership of a FarragoAllocation to this owner.
      *
      * @param allocation the FarragoAllocation to take over
      */

@@ -158,7 +158,7 @@ class FtrsDataServer extends MedAbstractLocalDataServer
     }
 
     /**
-     * Get the SegmentId of the segment storing an index.
+     * Gets the SegmentId of the segment storing an index.
      *
      * @param index the index of interest
      *

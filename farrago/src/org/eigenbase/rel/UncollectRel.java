@@ -29,8 +29,7 @@ import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.reltype.RelDataType;
 
 /**
- * A relational expression which extract "collapses"
- * of multiply rows from one row
+ * A relational expression which serves as the inverse of CollectRel.
  *
  * @author Wael Chatila 
  * @since Dec 12, 2004

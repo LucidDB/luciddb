@@ -143,7 +143,7 @@ JAVACODE SqlTimeLiteral parseTimeLiteral(
     SqlParserUtil.PrecisionTime pt =
     SqlParserUtil.parsePrecisionDateTimeLiteral(
         dateStr, SqlParserUtil.TimeFormatStr);
-    if (null==pt) {
+    if (null == pt) {
         EigenbaseResource res = EigenbaseResource.instance();
         String msg = res.getIllegalLiteral("TIME", s, pos.toString(),
             res.getBadFormat(SqlParserUtil.TimeFormatStr));
@@ -153,15 +153,14 @@ JAVACODE SqlTimeLiteral parseTimeLiteral(
 }
 
 JAVACODE SqlTimestampLiteral parseTimestampLiteral(
-    String s, SqlParserPos pos)
-throws ParseException
+    String s, SqlParserPos pos) throws ParseException
 {
     pos = getPos();
     String dateStr = SqlParserUtil.strip(s, "'");
     SqlParserUtil.PrecisionTime pt =
     SqlParserUtil.parsePrecisionDateTimeLiteral(
         dateStr, SqlParserUtil.TimestampFormatStr);
-    if (null==pt) {
+    if (null == pt) {
         EigenbaseResource res = EigenbaseResource.instance();
         String msg = res.getIllegalLiteral("TIMESTAMP", s, pos.toString(),
             res.getBadFormat(SqlParserUtil.TimestampFormatStr));
@@ -177,16 +176,14 @@ JAVACODE SqlIntervalLiteral parseIntervalLiteral(
 {
     SqlParserPos pos = getPos();
     String intervalStr = SqlParserUtil.strip(s, "'");
-    int[] values = SqlParserUtil.parseIntervalValue(
-        intervalStr, intervalQualifier);
-    if (null==values) {
+
+    if ("".equals(intervalStr)) {
         EigenbaseResource res = EigenbaseResource.instance();
         String msg = res.getIllegalIntervalLiteral(
             s+" "+intervalQualifier.toString(), pos.toString());
         throw new ParseException(msg);
     }
-    values[0] = sign * values[0]; // first item in array is sign
-    return SqlLiteral.createInterval(values, intervalQualifier, pos);
+    return SqlLiteral.createInterval(sign, intervalStr, intervalQualifier, pos);
 }
 
 /*****************************************
@@ -1113,12 +1110,12 @@ SqlWindow WindowSpecification() :
         <PARTITION> <BY> list = SimpleIdentifierCommaList()
         { partitionList = new SqlNodeList(list, getPos()); }
         |
-        { partitionList = null; }
+        { partitionList = SqlNodeList.Empty; }
     )
     (
         orderList = OrderBy(true)
         |
-        { orderList = null; }
+        { orderList = SqlNodeList.Empty; }
     )
     [
         (
@@ -1912,7 +1909,7 @@ SqlLiteral DateTimeLiteral(SqlParserPos pos) :
     }
 }
 
-/** Parse a MULTISET constructor */
+/** Parses a MULTISET constructor */
 SqlNode MultisetConstructor() :
 {
     List args;

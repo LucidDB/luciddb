@@ -31,6 +31,7 @@ import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.session.FarragoSessionPlanner;
+import net.sf.farrago.FarragoMetadataFactory;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
@@ -42,13 +43,6 @@ import org.eigenbase.util.*;
 /**
  * Static utilities for FennelRel implementations.
  *
- * <p>Examples in the comments
- * refer to the test tables EMPS and DEPTS defined in
- * <code>farrago/initsql/createSalesSchema.sql</code>.  For an overview and
- * terminology, please see
- * <a href="http://farrago.sf.net/design/TableIndexing.html">
- * the design docs</a>.
- *
  * @author John V. Sichi
  * @version $Id$
  */
@@ -57,7 +51,7 @@ public abstract class FennelRelUtil
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Generate a FemTupleAccessor from a FemTupleDescriptor.
+     * Generates a FemTupleAccessor from a FemTupleDescriptor.
      *
      * @param repos repos for storing transient objects
      * @param fennelDbHandle handle to Fennel database being accessed
@@ -82,7 +76,7 @@ public abstract class FennelRelUtil
     }
 
     /**
-     * Create a FemTupleDescriptor for a RelDataType which is a row.
+     * Creates a FemTupleDescriptor for a RelDataType which is a row.
      *
      * @param repos repos storing object definitions
      * @param rowType row type descriptor
@@ -107,7 +101,7 @@ public abstract class FennelRelUtil
     }
 
     /**
-     * Generate a FemTupleProjection.
+     * Generates a FemTupleProjection.
      *
      * @param repos the repos for storing transient objects
      * @param projection the projection to generate
@@ -115,7 +109,7 @@ public abstract class FennelRelUtil
      * @return generated FemTupleProjection
      */
     public static FemTupleProjection createTupleProjection(
-        FarragoRepos repos,
+        FarragoMetadataFactory repos,
         Integer [] projection)
     {
         FemTupleProjection tupleProj = repos.newFemTupleProjection();
@@ -130,7 +124,7 @@ public abstract class FennelRelUtil
     }
 
     /**
-     * Generate a projection of attribute indices in sequence from 0 to n-1.
+     * Generates a projection of attribute indices in sequence from 0 to n-1.
      *
      * @param n length of array to generate
      *
@@ -146,7 +140,7 @@ public abstract class FennelRelUtil
     }
 
     /**
-     * Generate a projection of attribute indices in sequence from
+     * Generates a projection of attribute indices in sequence from
      * (base) to (base + n-1).
      *
      * @param n length of array to generate
@@ -237,7 +231,7 @@ public abstract class FennelRelUtil
     }
 
     /**
-     * Returns the repository that a relational expression belongs to.
+     * Returnss the repository that a relational expression belongs to.
      */
     public static FarragoRepos getRepos(FennelRel rel)
     {

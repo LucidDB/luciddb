@@ -63,8 +63,6 @@ public interface FennelRel extends RelNode
     Object implementFennelChild(FennelRelImplementor implementor);
 
     /**
-     * .
-     *
      * @return the sort order produced by this FennelRel, or an empty array if
      * the output is not guaranteed to be in any particular order
      */

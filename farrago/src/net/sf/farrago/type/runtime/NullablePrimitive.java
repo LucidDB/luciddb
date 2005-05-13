@@ -127,18 +127,6 @@ public abstract class NullablePrimitive implements NullableValue,
      */
     protected abstract void setNumber(Number number);
 
-    /**
-     *
-     * @param Class
-     */
-    public static Class getPrimitiveClass(Class np)
-        throws NoSuchFieldException
-    {
-        assert NullablePrimitive.class.isAssignableFrom(np) : "parameter to static getPrimitiveClass must be assignable to NullablePrimitive: "
-        + np.toString();
-        return np.getField(VALUE_FIELD_NAME).getType();
-    }
-
     //~ Inner Classes ---------------------------------------------------------
 
     /**

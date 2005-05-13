@@ -86,7 +86,7 @@ public abstract class DdlStmt implements FarragoSessionDdlStmt
     }
 
     /**
-     * Invoke a visitor on this statement.
+     * Invokes a visitor on this statement.
      *
      * @param visitor DdlVisitor to invoke
      */

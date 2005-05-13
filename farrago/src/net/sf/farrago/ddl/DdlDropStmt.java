@@ -41,7 +41,7 @@ public class DdlDropStmt extends DdlStmt
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Construct a new DdlDropStmt.
+     * Constructs a new DdlDropStmt.
      *
      * @param droppedElement top-level element dropped by this stmt
      *

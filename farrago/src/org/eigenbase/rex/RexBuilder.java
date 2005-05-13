@@ -24,7 +24,6 @@
 package org.eigenbase.rex;
 
 import java.math.BigDecimal;
-import java.nio.charset.Charset;
 import java.util.Calendar;
 
 import org.eigenbase.reltype.RelDataType;
@@ -186,16 +185,23 @@ public class RexBuilder
     /**
      * Creates a call to a windowed agg.
      */
-    public RexNode makeOver(RelDataType type,
-        SqlOperator operator,
+    public RexNode makeOver(
+        RelDataType type,
+        SqlAggFunction operator,
         RexNode[] exprs,
-        SqlWindow window,
+        RexNode[] partitionKeys,
+        RexNode[] orderKeys,
         SqlNode lowerBound,
         SqlNode upperBound,
         boolean physical)
     {
-        return new RexOver(type, operator, exprs, window, lowerBound,
-            upperBound, physical);
+        assert operator != null;
+        assert exprs != null;
+        assert partitionKeys != null;
+        assert orderKeys != null;
+        final RexOver.RexWindow window = new RexOver.RexWindow(
+            partitionKeys, orderKeys, lowerBound, upperBound, physical);
+        return new RexOver(type, operator, exprs, window);
     }
 
     /**
@@ -271,21 +277,7 @@ public class RexBuilder
         RelDataType type,
         int i)
     {
-        if (SqlTypeUtil.inCharFamily(type)) {
-            Charset charset =
-                (type.getCharset() == null) ? Util.getDefaultCharset()
-                : type.getCharset();
-            SqlCollation collation =
-                (type.getCollation() == null)
-                ? new SqlCollation(SqlCollation.Coercibility.Implicit)
-                : type.getCollation();
-
-            //todo: should get the implicit collation from repository instead of null
-            type =
-                typeFactory.createTypeWithCharsetAndCollation(type, charset,
-                    collation);
-        }
-
+        type = SqlTypeUtil.addCharsetAndCollation(type, typeFactory);
         return new RexInputRef(i, type);
     }
 

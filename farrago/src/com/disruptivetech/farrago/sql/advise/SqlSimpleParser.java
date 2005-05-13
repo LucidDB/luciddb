@@ -74,7 +74,7 @@ public class SqlSimpleParser
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Turn a partially completed or syntatically incorrect sql statement into
+     * Turns a partially completed or syntatically incorrect sql statement into
      * a simplified, valid one that can be passed into getCompletionHints()
      *
      * @param sql A partial or syntatically incorrect sql statement
@@ -98,7 +98,7 @@ public class SqlSimpleParser
     }
 
     /**
-     * Turn a partially completed or syntatically incorrect sql statement into
+     * Turns a partially completed or syntatically incorrect sql statement into
      * a simplified, valid one that can be validated
      *
      * @param sql A partial or syntatically incorrect sql statement

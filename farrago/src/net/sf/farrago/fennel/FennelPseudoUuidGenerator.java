@@ -42,7 +42,7 @@ public class FennelPseudoUuidGenerator
         Util.loadLibrary("farrago");
     }
 
-    /** Inaccessible constrcutor. */
+    /** Inaccessible constructor. */
     private FennelPseudoUuidGenerator()
     {
     }

@@ -602,7 +602,7 @@ public class FarragoJdbcTest extends FarragoTestCase
     }
 
     /**
-     * Override {@link Assert#assertEquals(String,Object,Object)} to handle
+     * Overrides {@link Assert#assertEquals(String,Object,Object)} to handle
      * byte arrays correctly.
      */
     public static void assertEquals(
@@ -1397,7 +1397,7 @@ public class FarragoJdbcTest extends FarragoTestCase
     }
 
     /**
-     * Test sql Date/Time to java.sql Date/Time translations.
+     * Tests sql Date/Time to java.sql Date/Time translations.
      */
     public void testDateTimeSql()
         throws Exception
@@ -1451,7 +1451,7 @@ public class FarragoJdbcTest extends FarragoTestCase
     }
 
     /**
-     * Test setQueryTimeout
+     * Tests setQueryTimeout.
      *
      * @throws Exception .
      */
@@ -1496,7 +1496,7 @@ public class FarragoJdbcTest extends FarragoTestCase
     }
 
     /**
-     * Test char and varchar Data Type in JDBC
+     * Tests char and varchar Data Type in JDBC.
      *
      * @throws Exception .
      */
@@ -1695,7 +1695,7 @@ public class FarragoJdbcTest extends FarragoTestCase
     }
 
     /**
-     * Test integer Data Type in JDBC
+     * Tests integer Data Type in JDBC.
      *
      * @throws Exception .
      */
@@ -1809,7 +1809,7 @@ public class FarragoJdbcTest extends FarragoTestCase
     }
 
     /**
-     * Test re-execution of a prepared query.
+     * Tests re-execution of a prepared query.
      *
      * @throws Exception .
      */
@@ -1829,7 +1829,7 @@ public class FarragoJdbcTest extends FarragoTestCase
     }
 
     /**
-     * Test re-execution of an unprepared query.  There's no black-box way to
+     * Tests re-execution of an unprepared query.  There's no black-box way to
      * verify that caching is working, but if it is, this will at least
      * exercise it.
      *
@@ -1842,7 +1842,7 @@ public class FarragoJdbcTest extends FarragoTestCase
     }
 
     /**
-     * Test re-execution of an unprepared query with statement caching
+     * Tests re-execution of an unprepared query with statement caching
      * disabled.
      *
      * @throws Exception .
@@ -1873,7 +1873,7 @@ public class FarragoJdbcTest extends FarragoTestCase
     }
 
     /**
-     * Test retrieval of ResultSetMetaData without actually executing query.
+     * Tests retrieval of ResultSetMetaData without actually executing query.
      */
     public void testPreparedMetaData()
         throws Exception
@@ -1905,7 +1905,7 @@ public class FarragoJdbcTest extends FarragoTestCase
     // TODO:  re-execute DDL, DML
 
     /**
-     * Test valid usage of a dynamic parameter and retrieval of associated
+     * Tests valid usage of a dynamic parameter and retrieval of associated
      * metadata.
      */
     public void testDynamicParameter()
@@ -1946,7 +1946,7 @@ public class FarragoJdbcTest extends FarragoTestCase
     }
 
     /**
-     * Test metadata for dynamic parameter in an UPDATE statement.
+     * Tests metadata for dynamic parameter in an UPDATE statement.
      */
     public void testDynamicParameterInUpdate()
         throws Exception
@@ -1966,7 +1966,7 @@ public class FarragoJdbcTest extends FarragoTestCase
     }
 
     /**
-     * Test invalid usage of a dynamic parameter.
+     * Tests invalid usage of a dynamic parameter.
      */
     public void testInvalidDynamicParameter()
         throws Exception
@@ -1982,7 +1982,7 @@ public class FarragoJdbcTest extends FarragoTestCase
     }
 
     /**
-     * Test invalid attempt to execute a statement with a dynamic parameter
+     * Tests invalid attempt to execute a statement with a dynamic parameter
      * without preparation.
      */
     public void testDynamicParameterExecuteImmediate()

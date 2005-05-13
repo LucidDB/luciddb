@@ -47,7 +47,7 @@ public interface NullableValue extends DataValue
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Set whether or not the value is null.  Note that once a value has been
+     * Sets whether or not the value is null.  Note that once a value has been
      * set to null, its data should not be updated until the null state has
      * been cleared with a call to setNull(false).
      *

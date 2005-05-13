@@ -154,7 +154,7 @@ public class FennelDbHandle implements FarragoAllocation
     }
 
     /**
-     * Construct a FemTupleAccessor for a FemTupleDescriptor.  This shouldn't
+     * Constructs a FemTupleAccessor for a FemTupleDescriptor.  This shouldn't
      * be called directly except from FennelRelUtil.
      *
      * @param tupleDesc source FemTupleDescriptor
@@ -176,7 +176,7 @@ public class FennelDbHandle implements FarragoAllocation
     }
 
     /**
-     * Execute a FemCmd object.  If the command produces a resultHandle, it
+     * Executes a FemCmd object.  If the command produces a resultHandle, it
      * will be set after successful execution.
      *
      * @param cmd instance of FemCmd with all parameters set
@@ -264,7 +264,7 @@ public class FennelDbHandle implements FarragoAllocation
     }
 
     /**
-     * Create a native handle for a Java object for reference by XML commands.
+     * Creates a native handle for a Java object for reference by XML commands.
      * After this, the Java object cannot be garbage collected until
      * its owner explicitly calls closeAllocation.
      *
@@ -287,7 +287,7 @@ public class FennelDbHandle implements FarragoAllocation
     }
 
     /**
-     * Change the object referenced by a handle.
+     * Changes the object referenced by a handle.
      *
      * @param handle the handle to change
      * @param obj new object

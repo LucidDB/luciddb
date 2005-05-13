@@ -58,7 +58,7 @@ public class NativeTrace
     }
 
     /**
-     * This is called from native code to determine the trace level
+     * Called from native code to determine the trace level
      * for a given component.
      *
      * @param loggerSuffix suffix to use in constructing logger name
@@ -81,7 +81,7 @@ public class NativeTrace
     }
 
     /**
-     * This is called from native code to emit a trace message.
+     * Called from native code to emit a trace message.
      *
      * @param loggerSuffix suffix to use in constructing logger name
      * @param iLevel level (from Level enum) at which to trace

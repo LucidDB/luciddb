@@ -785,7 +785,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     /**
-     * Testing for casting to/from date/time types.
+     * Tests casting to/from date/time types.
      */
     public void testDateTimeCast() {
         checkExpFails("CAST(1 as DATE)",

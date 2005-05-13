@@ -24,6 +24,7 @@
 package org.eigenbase.util;
 
 import java.io.*;
+import java.sql.*;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -201,6 +202,31 @@ public class Util extends Toolbox
         }
     }
 
+    /**
+     * Returns whether two arrays are equal or are both null.
+     */
+    public static final boolean equal(
+        Object[] s0,
+        Object[] s1)
+    {
+        if (s0 == null) {
+            return s1 == null;
+        } else if (s1 == null) {
+            return false;
+        } else if (s0.length != s1.length) {
+            return false;
+        } else {
+            for (int i = 0; i < s0.length; i++) {
+                Object o0 = s0[i];
+                Object o1 = s1[i];
+                if (!equal(o0, o1)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
     public static StatementList clone(StatementList e)
     {
         return (StatementList) e.makeCopy();
@@ -269,7 +295,7 @@ public class Util extends Toolbox
     }
 
     /**
-     * Return a set of the elements which are in <code>set1</code> but not in
+     * Returns a set of the elements which are in <code>set1</code> but not in
      * <code>set2</code>, without modifying either.
      */
     public static Set minus(
@@ -298,7 +324,7 @@ public class Util extends Toolbox
     }
 
     /**
-     * Print an object using reflection. We can handle <code>null</code>;
+     * Prints an object using reflection. We can handle <code>null</code>;
      * arrays of objects and primitive values; for regular objects, we print
      * all public fields.
      */
@@ -1059,6 +1085,24 @@ public class Util extends Toolbox
                 writer.close();
             }
         } catch (IOException ex) {
+            // intentionally suppressed
+        }
+    }
+
+    /**
+     * Closes a Statement, ignoring any SQL exception.  This should only
+     * be used in finally blocks when it's necessary to avoid throwing
+     * an exception which might mask a real exception.
+     *
+     * @param stmt stmt to close
+     */
+    public static void squelchStmt(Statement stmt)
+    {
+        try {
+            if (stmt != null) {
+                stmt.close();
+            }
+        } catch (SQLException ex) {
             // intentionally suppressed
         }
     }

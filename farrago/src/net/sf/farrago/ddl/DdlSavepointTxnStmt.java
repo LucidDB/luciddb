@@ -39,7 +39,7 @@ public abstract class DdlSavepointTxnStmt extends DdlTxnStmt
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Construct a new DdlSavepointTxnStmt.
+     * Constructs a new DdlSavepointTxnStmt.
      *
      * @param savepointName name of savepoint operated on by this statement
      */
@@ -51,8 +51,6 @@ public abstract class DdlSavepointTxnStmt extends DdlTxnStmt
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * .
-     *
      * @return name of savepoint operated on by this statement
      */
     public String getSavepointName()

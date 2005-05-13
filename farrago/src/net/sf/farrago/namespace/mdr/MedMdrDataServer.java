@@ -133,6 +133,11 @@ class MedMdrDataServer extends MedAbstractDataServer
 
     private void setRootPackage(String rootPackageName)
     {
+        if (!foreignRepository && rootPackageName.equals("MOF")) {
+            extentPackage = repository.getExtent(rootPackageName);
+            rootPackage = extentPackage;
+            return;
+        }
         if (rootPackageName.equals("..")) {
             rootPackage = rootPackage.refImmediatePackage();
             return;

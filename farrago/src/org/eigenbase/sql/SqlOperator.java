@@ -114,7 +114,6 @@ public abstract class SqlOperator
      *
      * @pre kind != null
      */
-
     // @pre paramTypes != null
     protected SqlOperator(
         String name,

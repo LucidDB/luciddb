@@ -159,12 +159,6 @@ public class FarragoJdbcEngineConnection
             } catch (Throwable ex) {
                 throw FarragoJdbcEngineDriver.newSqlException(ex);
             }
-            if (session.isTxnInProgress()) {
-                // TODO:  generate SQLException in FarragoResource?
-                throw new SQLException(
-                    FarragoResource.instance().getJdbcInvalidTxnState(),
-                    "25000");
-            }
             sessionFactory.cleanupSessions();
         } finally {
             session = null;

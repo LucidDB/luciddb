@@ -40,7 +40,7 @@ public interface UnknownParamInference
     //~ INTERFACE -------------------------------------------
 
     /**
-     * Infer any unknown operand types.
+     * Infers any unknown operand types.
      *
      * @param validator the validator context
      * @param scope the the validator scope context
@@ -87,6 +87,7 @@ public interface UnknownParamInference
                 }
             }
         };
+    
     /**
      * Parameter type-inference strategy where an unknown operand
      * type is derived from the call's return type.  If the return type is
@@ -111,6 +112,7 @@ public interface UnknownParamInference
                 }
             }
         };
+    
     /**
      * Parameter type-inference strategy where an unknown operand
      * type is assumed to be boolean.

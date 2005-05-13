@@ -57,7 +57,7 @@ public class RelOptXmlPlanWriter extends RelOptPlanWriter
     }
 
     /**
-     * Generate generic XML (sometimes called 'element-oriented XML').
+     * Generates generic XML (sometimes called 'element-oriented XML').
      * Like this:
      *
      * <pre>
@@ -123,7 +123,7 @@ public class RelOptXmlPlanWriter extends RelOptPlanWriter
     }
 
     /**
-     * Generate specific XML (sometimes called 'attribute-oriented XML').
+     * Generates specific XML (sometimes called 'attribute-oriented XML').
      * Like this:
      *
      * <pre>

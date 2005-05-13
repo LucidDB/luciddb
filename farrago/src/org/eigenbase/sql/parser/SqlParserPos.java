@@ -85,7 +85,6 @@ public class SqlParserPos
     //~ Methods ---------------------------------------------------------------
 
     /**
-     *
      * @return 1-based starting line number
      */
     public int getLineNum()
@@ -94,7 +93,6 @@ public class SqlParserPos
     }
 
     /**
-     *
      * @return 1-based starting column number
      */
     public int getColumnNum()
@@ -103,7 +101,6 @@ public class SqlParserPos
     }
 
     /**
-     *
      * @return 1-based end line number (same as starting line number if the 
      * ParserPos is a point, not a range)
      */
@@ -113,7 +110,6 @@ public class SqlParserPos
     }
     
     /**
-     *
      * @return 1-based end column number (same as starting column number if the 
      * ParserPos is a point, not a range)
      */

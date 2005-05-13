@@ -41,9 +41,9 @@ import org.eigenbase.util.EnumeratedValues;
 public class SqlIntervalLiteral extends SqlLiteral
 {
     protected SqlIntervalLiteral(
-            int[] values, SqlIntervalQualifier intervalQualifier,
+            int sign, String intervalStr, SqlIntervalQualifier intervalQualifier,
             SqlTypeName sqlTypeName, SqlParserPos pos) {
-        super(new IntervalValue(intervalQualifier, values), sqlTypeName, pos);
+        super(new IntervalValue(intervalQualifier, sign, intervalStr), sqlTypeName, pos);
     }
 
     public void unparse(
@@ -51,7 +51,11 @@ public class SqlIntervalLiteral extends SqlLiteral
             int leftPrec,
             int rightPrec) {
         IntervalValue interval = (IntervalValue) value;
-        writer.print("(INTERVAL '");
+        writer.print("(INTERVAL ");
+        if (interval.getSign() == -1) {
+            writer.print("-");
+        }
+        writer.print("'");
         writer.print(value.toString());
         writer.print("' ");
         writer.print(interval.intervalQualifier.toString());
@@ -63,60 +67,25 @@ public class SqlIntervalLiteral extends SqlLiteral
      */
     static class IntervalValue {
         private final SqlIntervalQualifier intervalQualifier;
-        private final int[] values;
+        private final String intervalStr;
+        private final int sign;
 
-        IntervalValue(SqlIntervalQualifier intervalQualifier, int[] values) {
+        IntervalValue(SqlIntervalQualifier intervalQualifier, int sign, String intervalStr) {
             this.intervalQualifier = intervalQualifier;
-            this.values = values;
+            this.sign = sign;
+            this.intervalStr = intervalStr;
         }
 
         public SqlIntervalQualifier getIntervalQualifier() {
             return intervalQualifier;
         }
 
-        public int[] getValues() {
-            return values;
+        public int getSign() {
+            return sign;
         }
 
         public String toString() {
-            StringBuffer ret = new StringBuffer();
-            if (-1 == values[0]) {
-                ret.append('-');
-            }
-            ret.append(String.valueOf(values[1]));
-            if (intervalQualifier.isYearMonth() && 3==values.length) {
-                ret.append("-");
-                ret.append(String.valueOf(values[2]));
-            } else if (values.length > 2) {
-                SqlIntervalQualifier.TimeUnit start =
-                    intervalQualifier.getStartUnit();
-                SqlIntervalQualifier.TimeUnit end =
-                    intervalQualifier.getEndUnit();
-
-                if (SqlIntervalQualifier.TimeUnit.Day.equals(
-                    intervalQualifier.getStartUnit())) {
-                    ret.append(" ");
-                } else if
-                    (!SqlIntervalQualifier.TimeUnit.Second.equals(start)) {
-                    ret.append(":");
-                }
-
-                if (null == end) {
-                    end = start;
-                }
-
-                for (int i = 2; i < values.length; i++) {
-                    if (SqlIntervalQualifier.TimeUnit.Second.equals(end) &&
-                        ((end.ordinal-start.ordinal)<(i-1))) {
-                            ret.append(".");
-                    } else if (i >= 3) {
-                        ret.append(":");
-                    }
-                    ret.append(String.valueOf(values[i]));
-                }
-            }
-
-            return ret.toString();
+            return intervalStr;
         }
     }
 }

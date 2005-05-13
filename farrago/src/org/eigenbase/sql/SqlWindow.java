@@ -75,12 +75,18 @@ public class SqlWindow extends SqlCall
      */
     public static final int UpperBound_OPERAND = 6;
 
-    public SqlWindow(SqlWindowOperator operator, SqlNode[] operands,
-            SqlParserPos pos)
+    /**
+     * Creates a window.
+     */ 
+    public SqlWindow(
+        SqlWindowOperator operator,
+        SqlNode[] operands,
+        SqlParserPos pos)
     {
         super(operator,operands,pos);
         final SqlIdentifier declId = (SqlIdentifier) operands[DeclName_OPERAND];
         Util.pre(declId == null || declId.isSimple(), "declId.isSimple()");
+        Util.pre(getPartitionList() != null, "getPartitionList() != null");
     }
 
     public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {

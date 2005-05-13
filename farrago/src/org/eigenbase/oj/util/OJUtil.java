@@ -303,8 +303,8 @@ public abstract class OJUtil
     }
 
     /**
-     * If env is a {@link ClassEnvironment} for declarerName, record new inner
-     * class innerName; otherwise, pass up the environment hierarchy.
+     * If env is a {@link ClassEnvironment} for declarerName, records new inner
+     * class innerName; otherwise, delegates up the environment hierarchy.
      *
      * @param env environment to start search from
      * @param declarerName fully-qualified name of enclosing class

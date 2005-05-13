@@ -76,7 +76,7 @@ class FarragoDbSessionIndexMap extends FarragoCompoundAllocation
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Create a new FarragoDbSessionIndexMap.
+     * Creates a new FarragoDbSessionIndexMap.
      *
      * @param owner FarragoAllocationOwner which will own this map; on
      * closeAllocation, any temporary indexes will be deleted automatically
@@ -174,7 +174,7 @@ class FarragoDbSessionIndexMap extends FarragoCompoundAllocation
     }
 
     /**
-     * Commit hook:  truncate any indexes for tables defined with
+     * Commit hook:  truncates any indexes for tables defined with
      * ON COMMIT DELETE ROWS.
      */
     public void onCommit()

@@ -44,7 +44,7 @@ public class TestLeaks extends FarragoTestCase
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Main entry point
+     * Main entry point.
      *
      * @param args ignored
      *

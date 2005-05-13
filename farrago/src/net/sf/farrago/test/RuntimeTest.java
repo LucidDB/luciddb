@@ -37,33 +37,34 @@ import java.util.Arrays;
  **/
 public class RuntimeTest extends TestCase
  {
-    /** Test {@link CharStringComparator}. */
-    public void testCharStringComparator() {
-        assertEquals(0, CharStringComparator.compareCharStrings("x ", "x"));
-        assertEquals(-1, CharStringComparator.compareCharStrings("a", "b"));
-        assertEquals(1, CharStringComparator.compareCharStrings("aa", "a"));
-        assertEquals(0, CharStringComparator.compareCharStrings("aa  ", "aa   "));
-        assertEquals(2, CharStringComparator.compareCharStrings("aa a", "aa   "));
-        assertEquals(0, CharStringComparator.compareCharStrings("", ""));
-        assertEquals(0, CharStringComparator.compareCharStrings("", " "));
-        assertEquals(0, CharStringComparator.compareCharStrings(" ", ""));
-        assertEquals(1, CharStringComparator.compareCharStrings("a", ""));
-        String[] beatles = {"john", "paul", "george", "", "ringo"};
-        Arrays.sort(beatles, new CharStringComparator());
-        assertEquals(", george, john, paul, ringo", toString(beatles));
-    }
+     /** Test {@link CharStringComparator}. */
+     public void testCharStringComparator()
+     {
+         assertEquals(0, CharStringComparator.compareCharStrings("x ", "x"));
+         assertEquals(-1, CharStringComparator.compareCharStrings("a", "b"));
+         assertEquals(1, CharStringComparator.compareCharStrings("aa", "a"));
+         assertEquals(0, CharStringComparator.compareCharStrings("aa  ", "aa   "));
+         assertEquals(2, CharStringComparator.compareCharStrings("aa a", "aa   "));
+         assertEquals(0, CharStringComparator.compareCharStrings("", ""));
+         assertEquals(0, CharStringComparator.compareCharStrings("", " "));
+         assertEquals(0, CharStringComparator.compareCharStrings(" ", ""));
+         assertEquals(1, CharStringComparator.compareCharStrings("a", ""));
+         String[] beatles = {"john", "paul", "george", "", "ringo"};
+         Arrays.sort(beatles, new CharStringComparator());
+         assertEquals(", george, john, paul, ringo", toString(beatles));
+     }
 
-
-    private String toString(String[] a) {
-        StringBuffer buf = new StringBuffer();
-        for (int i = 0; i < a.length; i++) {
-            if (i > 0) {
-                buf.append(", ");
-            }
-            buf.append(a[i]);
-        }
-        return buf.toString();
-    }
+     private String toString(String[] a)
+     {
+         StringBuffer buf = new StringBuffer();
+         for (int i = 0; i < a.length; i++) {
+             if (i > 0) {
+                 buf.append(", ");
+             }
+             buf.append(a[i]);
+         }
+         return buf.toString();
+     }
 }
 
 // End RuntimeTest.java

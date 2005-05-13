@@ -157,7 +157,7 @@ public class ProxyGen
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Add all classes from a JMI package to the set of interfaces to be
+     * Adds all classes from a JMI package to the set of interfaces to be
      * generated.
      *
      * @param refPackage the source JMI package
@@ -175,7 +175,7 @@ public class ProxyGen
     }
 
     /**
-     * Add all classes from a JMI package to the set of interfaces to use
+     * Adds all classes from a JMI package to the set of interfaces to use
      * as bases.
      *
      * @param refPackage the source JMI package
@@ -193,7 +193,7 @@ public class ProxyGen
     }
 
     /**
-     * Generate the C++ class definition for one interface
+     * Generates the C++ class definition for one interface.
      *
      * @param clazz the interface
      */
@@ -237,7 +237,7 @@ public class ProxyGen
     }
 
     /**
-     * Generate the C++ code for all class definitions.
+     * Generates the C++ code for all class definitions.
      *
      * @param pw output
      */
@@ -286,7 +286,7 @@ public class ProxyGen
     }
 
     /**
-     * Generate the C++ code for all enumerations.
+     * Generates the C++ code for all enumerations.
      *
      * @param pw output
      */
@@ -310,7 +310,7 @@ public class ProxyGen
     }
 
     /**
-     * Generate the C++ code for all method definitions.
+     * Generates the C++ code for all method definitions.
      *
      * @param pw output
      */
@@ -371,7 +371,7 @@ public class ProxyGen
     }
 
     /**
-     * Generate the C++ declaration for one method.
+     * Generates the C++ declaration for one method.
      *
      * @param method .
      */
@@ -390,7 +390,7 @@ public class ProxyGen
     }
 
     /**
-     * Generate the C++ definition for one method
+     * Generates the C++ definition for one method
      *
      * @param method .
      */
@@ -544,7 +544,7 @@ public class ProxyGen
     }
 
     /**
-     * Get the name of the C++ type for a proxy instance.
+     * Gets the name of the C++ type for a proxy instance.
      *
      * @param clazz the source Java interface
      *
@@ -565,7 +565,7 @@ public class ProxyGen
     }
 
     /**
-     * Get the name of the C++ type used to return a proxy instance by
+     * Gets the name of the C++ type used to return a proxy instance by
      * reference.
      *
      * @param clazz the source Java interface
@@ -617,7 +617,7 @@ public class ProxyGen
     }
 
     /**
-     * Decide whether a Java method is a getter for a JMI attribute.  We
+     * Decides whether a Java method is a getter for a JMI attribute.  We
      * ignore all others.
      *
      * @param method the Java method
@@ -710,7 +710,7 @@ public class ProxyGen
     }
 
     /**
-     * Find the JMI class corresponding to a Java interface.
+     * Finds the JMI class corresponding to a Java interface.
      *
      * @param clazz the Java interface
      *

@@ -57,8 +57,6 @@ public class FennelJavaHandle implements FarragoAllocation
     }
 
     /**
-     * .
-     *
      * @return the native handle as a long
      */
     public long getLongHandle()

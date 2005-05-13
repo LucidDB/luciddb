@@ -188,7 +188,7 @@ public class OJClassMap
 
 
     /**
-     * <p>Make the type of a join.  There are two kinds of classes. A <dfn>real
+     * <p>Makes the type of a join.  There are two kinds of classes. A <dfn>real
      * class</dfn> exists in the developer's environment.  A <dfn>synthetic
      * class</dfn> is constructed by the system to describe the
      * intermediate and final results of a query.  We are at liberty to modify

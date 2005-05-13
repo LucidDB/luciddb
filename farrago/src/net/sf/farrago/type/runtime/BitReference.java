@@ -35,14 +35,14 @@ public interface BitReference
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Set the bit value referenced by this.
+     * Sets the bit value referenced by this.
      *
      * @param bit new value
      */
     public void setBit(boolean bit);
 
     /**
-     * Get the bit value referenced by this.
+     * @return the bit value referenced by this
      */
     public boolean getBit();
 }

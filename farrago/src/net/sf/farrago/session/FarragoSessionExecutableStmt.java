@@ -52,7 +52,7 @@ public interface FarragoSessionExecutableStmt extends FarragoAllocationOwner
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Execute this statement.
+     * Executes this statement.
      *
      * @param runtimeContext context in which to execute
      *

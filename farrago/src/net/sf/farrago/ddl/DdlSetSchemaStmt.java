@@ -37,7 +37,7 @@ public class DdlSetSchemaStmt extends DdlSetContextStmt
     private SqlIdentifier schemaName;
     
     /**
-     * Constructs a new DdlSetSchemaStmt.
+     * Constructss a new DdlSetSchemaStmt.
      *
      * @param valueExpr value expression for new catalog
      */

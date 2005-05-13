@@ -83,6 +83,7 @@ public class FennelIterator extends FennelAbstractIterator
     // implement RestartableIterator
     public void restart()
     {
+        super.restart();
         bufferAsArray = byteBuffer.array();
         byteBuffer.clear();
         byteBuffer.limit(0);

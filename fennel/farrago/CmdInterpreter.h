@@ -65,7 +65,7 @@ public:
         {
         }
 
-        ~DbHandle();
+        virtual ~DbHandle();            // make class polymorphic
     };
     
     /**
@@ -80,7 +80,7 @@ public:
         // DEPRECATED
         SharedTableWriterFactory pTableWriterFactory;
 
-        ~TxnHandle();
+        virtual ~TxnHandle();           // make class polymorphic
     };
 
     struct StreamGraphHandle
@@ -129,6 +129,8 @@ protected:
         SharedProxyStreamGraphHandle);
     static SavepointId getSavepointId(SharedProxySvptHandle);
 
+    virtual DbHandle *newDbHandle();    /// factory method
+    virtual TxnHandle *newTxnHandle();  /// factory method
     void deleteDbHandle(DbHandle *);
     
     void setDbHandle(SharedProxyDbHandle,DbHandle *);

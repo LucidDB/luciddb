@@ -38,7 +38,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 
 /**
- * Utility to generate SQL a script from validator test.
+ * Utility to generate a SQL script from validator test.
  *
  * @author jhyde
  * @since Nov 10, 2004

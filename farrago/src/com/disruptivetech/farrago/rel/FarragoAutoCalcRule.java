@@ -32,10 +32,7 @@ import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelOptRuleOperand;
-import org.eigenbase.rex.RexCall;
-import org.eigenbase.rex.RexDynamicParam;
-import org.eigenbase.rex.RexFieldAccess;
-import org.eigenbase.rex.RexMultisetUtil;
+import org.eigenbase.rex.*;
 
 
 /**
@@ -114,7 +111,7 @@ public class FarragoAutoCalcRule extends RelOptRule
 
     private static final CalcRelSplitter.RelType REL_TYPE_JAVA =
         new CalcRelSplitter.RelType("REL_TYPE_JAVA");
-    
+
     private static final CalcRelSplitter.RelType REL_TYPE_FENNEL =
         new CalcRelSplitter.RelType("REL_TYPE_FENNEL");
 
@@ -156,17 +153,15 @@ public class FarragoAutoCalcRule extends RelOptRule
         CalcRel calc = (CalcRel) call.rels[0];
         RelNode relInput = call.rels[1];
 
-        for (int i = 0; i < calc.projectExprs.length; i++) {
-            if (RexMultisetUtil.containsMultiset(
-                calc.projectExprs[i], true)) {
-                return; // Let FarragoMultisetSplitter work on it first.
-            }
+        // If there's a multiset expression, let FarragoMultisetSplitter work
+        // on it first.
+        if (RexMultisetUtil.containsMultiset(
+            calc.projectExprs, calc.conditionExpr)) {
+            return;
         }
-        if (calc.conditionExpr != null) {
-            if (RexMultisetUtil.containsMultiset(
-                calc.conditionExpr, true)) {
-                return; // Let FarragoMultisetSplitter work on it first.
-            }
+        // If there's a windowed agg expression, split that out first.
+        if (RexOver.containsOver(calc.projectExprs, calc.conditionExpr)) {
+            return;
         }
 
         // Test if we can translate the CalcRel to a fennel calc program
@@ -175,27 +170,13 @@ public class FarragoAutoCalcRule extends RelOptRule
                 calc.getTraits(), FennelPullRel.FENNEL_PULL_CONVENTION, relInput);
 
         final RexToCalcTranslator translator =
-            new RexToCalcTranslator(calc.getCluster().rexBuilder,
-                calc.projectExprs, calc.conditionExpr);
+            new RexToCalcTranslator(calc.getCluster().rexBuilder);
 
-        if (fennelInput != null) {
-            boolean canTranslate = true;
-            for (int i = 0; i < calc.projectExprs.length; i++) {
-                if (!translator.canTranslate(calc.projectExprs[i], true)) {
-                    canTranslate = false;
-                    break;
-                }
-            }
-
-            if ((calc.conditionExpr != null)
-                    && !translator.canTranslate(calc.conditionExpr, true)) {
-                canTranslate = false;
-            }
-
-            if (canTranslate) {
-                // yes: do nothing, let FennelCalcRule handle this CalcRel
-                return;
-            }
+        // If can translate, do nothing, and let FennelCalcRule handle this
+        // CalcRel.
+        if (fennelInput != null &&
+            translator.canTranslate(calc.projectExprs, calc.conditionExpr)) {
+            return;
         }
 
         // Test if we can translate the CalcRel to a java calc program

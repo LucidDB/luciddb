@@ -64,15 +64,15 @@ public class SqlToRelConverter
     //~ Instance fields -------------------------------------------------------
 
     private final SqlValidator validator;
-    private RexBuilder rexBuilder;
-    private RelOptPlanner planner;
-    private RelOptConnection connection;
-    private RelOptSchema schema;
-    private RelOptCluster cluster;
-    private HashMap mapScopeToRel = new HashMap();
+    private final RexBuilder rexBuilder;
+    private final RelOptPlanner planner;
+    private final RelOptConnection connection;
+    private final RelOptSchema schema;
+    private final RelOptCluster cluster;
+    private final Map mapScopeToRel = new HashMap();
     private DefaultValueFactory defaultValueFactory;
     final ArrayList leaves = new ArrayList();
-    private List dynamicParamSqlNodes;
+    private final List dynamicParamSqlNodes = new ArrayList();
     private final SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
     private boolean shouldConvertTableAccess;
     private final RelDataTypeFactory typeFactory;
@@ -80,7 +80,7 @@ public class SqlToRelConverter
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a converter
+     * Creates a converter.
      *
      * @pre connection != null
      * @param validator
@@ -105,11 +105,8 @@ public class SqlToRelConverter
         this.defaultValueFactory = new NullDefaultValueFactory();
         this.rexBuilder = rexBuilder;
         this.typeFactory = rexBuilder.getTypeFactory();
-
         this.cluster = createCluster(env);
-
-        dynamicParamSqlNodes = new ArrayList();
-        shouldConvertTableAccess = true;
+        this.shouldConvertTableAccess = true;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -698,18 +695,29 @@ public class SqlToRelConverter
     private RexNode convertOver(Blackboard bb, SqlNode node) {
         SqlCall call = (SqlCall) node;
         SqlCall aggCall = (SqlCall) call.operands[0];
-        assert(aggCall.operator.isAggregator());
+        SqlAggFunction operator = (SqlAggFunction) aggCall.operator;
         SqlNode windowOrRef = call.operands[1];
         SqlWindow window = validator.resolveWindow(windowOrRef, bb.scope);
         final RexNode[] exprs =
             convertExpressionList(bb, aggCall.operands);
         final RelDataType type = validator.getValidatedNodeType(aggCall);
-        return rexBuilder.makeOver(type, aggCall.operator, exprs, window,
+        final SqlNodeList partitionList = window.getPartitionList();
+        RexNode[] partitionKeys = new RexNode[partitionList.size()];
+        for (int i = 0; i < partitionKeys.length; i++) {
+            partitionKeys[i] = convertExpression(bb, partitionList.get(i));
+        }
+        final SqlNodeList orderList = window.getOrderList();
+        RexNode[] orderKeys = new RexNode[orderList.size()];
+        for (int i = 0; i < orderKeys.length; i++) {
+            orderKeys[i] = convertExpression(bb, orderList.get(i));
+        }
+        return rexBuilder.makeOver(
+            type, operator, exprs, partitionKeys, orderKeys,
             window.getLowerBound(), window.getUpperBound(), window.isRows());
     }
 
     /**
-     * converts a between call node.
+     * Converts a between expression.
      */
     private RexNode convertBetween(
         Blackboard bb,
@@ -775,7 +783,8 @@ public class SqlToRelConverter
     }
 
     /**
-     * converts a cast function node.
+     * Converts a cast expression.
+     *
      * @param bb
      * @param call
      * @return

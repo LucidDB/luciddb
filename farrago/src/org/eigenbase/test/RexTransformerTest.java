@@ -35,11 +35,8 @@ import org.eigenbase.sql.SqlOperatorTable;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.type.SqlTypeName;
 
-// FIXME jvs 16-Dec-2004:  class comment below was wrongly copied and
-// pasted!
-
 /**
- * Validates that rex expressions gets correctly translated to a correct calculator program
+ * Tests transformations on rex nodes.
  *
  * @author wael
  * @since Mar 9, 2004

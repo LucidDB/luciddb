@@ -51,7 +51,7 @@ public class DdlSetSystemParamStmt extends DdlStmt
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Construct a new DdlSetSystemParamStmt.
+     * Constructs a new DdlSetSystemParamStmt.
      *
      * @param paramName name of parameter to set
      *
@@ -69,8 +69,6 @@ public class DdlSetSystemParamStmt extends DdlStmt
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * .
-     *
      * @return name of the parameter set by this statement
      */
     public String getParamName()

@@ -38,7 +38,7 @@ public abstract class FennelTupleWriter
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Marshal one tuple if it can fit; otherwise, throw either
+     * Marshals one tuple if it can fit; otherwise, throws either
      * BufferOverflowException or IndexOutOfBoundsException (depending on
      * whether absolute or relative puts are used).
      *
@@ -55,7 +55,7 @@ public abstract class FennelTupleWriter
         Object object);
 
     /**
-     * Marshal one tuple if it can fit.
+     * Marshals one tuple if it can fit.
      *
      * @param byteBuffer buffer to be filled with marshalled tuple data,
      * starting at current buffer position; on return, the buffer position

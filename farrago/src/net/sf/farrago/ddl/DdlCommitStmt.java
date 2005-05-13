@@ -34,7 +34,7 @@ public class DdlCommitStmt extends DdlTxnStmt
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Construct a new DdlCommitStmt.
+     * Constructs a new DdlCommitStmt.
      */
     public DdlCommitStmt()
     {

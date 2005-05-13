@@ -118,7 +118,7 @@ class RelSet
     }
 
     /**
-     * Add a relational expression to a set, with its results available under
+     * Adds a relational expression to a set, with its results available under
      * a particular calling convention.  An expression may be in the set
      * several times with different calling conventions (and hence different
      * costs).

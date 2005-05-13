@@ -62,7 +62,7 @@ public class SqlAdvisor
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Get completion hints for a partially completed or syntatically incorrect      * sql statement with cursor pointing to the position where completion
+     * Gets completion hints for a partially completed or syntatically incorrect      * sql statement with cursor pointing to the position where completion
      * hints are requested
      *
      * @param sql A partial or syntatically incorrect sql statement for which
@@ -85,7 +85,7 @@ public class SqlAdvisor
     }
 
     /**
-     * Get completion hints for a syntatically correct sql statement with
+     * Gets completion hints for a syntatically correct sql statement with
      * dummy SqlIdentifier
      *
      * @param sql A syntatically correct sql statement for which to retrieve
@@ -121,7 +121,7 @@ public class SqlAdvisor
     }
 
     /**
-     * Attempt to complete and validate a given partially completed 
+     * Attempts to complete and validate a given partially completed 
      * sql statement.  return whether it's valid.  
      *
      * @param sql A partial or syntatically incorrect sql statement to validate
@@ -147,7 +147,7 @@ public class SqlAdvisor
     }
 
     /**
-     * attempt to parse and validate a SQL statement.  Throws the first
+     * Attempts to parse and validate a SQL statement.  Throws the first
      * exception encountered.  The error message of this exception is to be
      * displayed on the UI
      *
@@ -205,7 +205,7 @@ public class SqlAdvisor
     }
 
     /**
-     * Turn a partially completed or syntatically incorrect sql statement into
+     * Turns a partially completed or syntatically incorrect sql statement into
      * a simplified, valid one that can be passed into getCompletionHints()
      *
      * @param sql A partial or syntatically incorrect sql statement

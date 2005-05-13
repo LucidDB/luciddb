@@ -34,7 +34,7 @@ public class DdlReleaseSavepointStmt extends DdlSavepointTxnStmt
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Construct a new DdlReleaseSavepointStmt.
+     * Constructs a new DdlReleaseSavepointStmt.
      *
      * @param savepointName name of savepoint to release
      */
