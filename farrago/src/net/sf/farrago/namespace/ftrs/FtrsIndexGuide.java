@@ -41,10 +41,14 @@ import org.eigenbase.sql.type.*;
 
 /**
  * FtrsIndexGuide provides information about the mapping from catalog
- * definitions for tables and indexes to their Fennel representation.  For more
- * information, see <a
- * href="http://farrago.sf.net/design/TableIndexing.html">the FTRS table
- * indexing overview</a>
+ * definitions for tables and indexes to their Fennel representation.
+ *
+ * <p>Examples in the comments
+ * refer to the test tables EMPS and DEPTS defined in
+ * <code>farrago/initsql/createSalesSchema.sql</code>.  For an overview and
+ * terminology, please see
+ * <a href="http://farrago.sf.net/design/TableIndexing.html">
+ * the design docs</a>.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -306,7 +310,7 @@ class FtrsIndexGuide
     }
 
     /**
-     * Generate a FemTupleProjection from a list of CWM columns.
+     * Generates a FemTupleProjection from a list of CWM columns.
      *
      * @param indexColumnList list of columns
      *

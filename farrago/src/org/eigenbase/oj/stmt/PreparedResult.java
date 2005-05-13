@@ -49,7 +49,7 @@ public interface PreparedResult
     boolean isDml();
 
     /**
-     * Execute the prepared result.
+     * Executes the prepared result.
      *
      * @return producer of rows resulting from execution
      */

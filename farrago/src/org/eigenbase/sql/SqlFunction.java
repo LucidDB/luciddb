@@ -164,7 +164,6 @@ public class SqlFunction extends SqlOperator
     }
 
     /**
-     *
      * @return function category
      */
     public SqlFunctionCategory getFunctionType()

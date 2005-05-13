@@ -539,8 +539,6 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
     }
 
     /**
-     * .
-     *
      * @return handle to Fennel database being accessed
      */
     public FennelDbHandle getFennelDbHandle()

@@ -61,7 +61,7 @@ public class FarragoQueryTest extends FarragoTestCase
     }
 
     /**
-     * Test a query which involves operation on columns
+     * Tests a query which involves operation on columns.
      */
     public void testPrimitiveColumnOperation()
         throws Exception
@@ -80,7 +80,7 @@ public class FarragoQueryTest extends FarragoTestCase
     }
 
     /**
-     * Test a query which involves comparison with VARBINARY values.
+     * Tests a query which involves comparison with VARBINARY values.
      */
     public void testVarbinaryComparison()
         throws Exception
@@ -96,7 +96,7 @@ public class FarragoQueryTest extends FarragoTestCase
     }
 
     /**
-     * Test a query which involves sorting VARBINARY values.
+     * Tests a query which involves sorting VARBINARY values.
      */
     public void testOrderByVarbinary()
         throws Exception
@@ -113,7 +113,7 @@ public class FarragoQueryTest extends FarragoTestCase
     }
 
     /**
-     * Test a query using a different catalog.
+     * Tests a query using a different catalog.
      */
     public void testSetCatalog()
         throws Exception

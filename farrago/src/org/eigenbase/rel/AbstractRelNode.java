@@ -102,7 +102,7 @@ public abstract class AbstractRelNode implements RelNode
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Clone this RelNode.  Traits of the RelNode must be explicitly cloned
+     * Clones this RelNode.  Traits of the RelNode must be explicitly cloned
      * as the RelNode may have traits of which it has now knowledge.
      * Example implementation:
      *

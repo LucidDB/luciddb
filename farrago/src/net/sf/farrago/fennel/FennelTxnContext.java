@@ -62,8 +62,6 @@ public class FennelTxnContext
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * .
-     *
      * @return handle to Fennel database accessed by this txn context
      */
     public FennelDbHandle getFennelDbHandle()
@@ -72,8 +70,8 @@ public class FennelTxnContext
     }
 
     /**
-     * Get the handle to the current txn.  If no txn is in progress, start one
-     * and return the new handle.
+     * Gets the handle to the current txn.  If no txn is in progress, starts one
+     * and returns the new handle.
      *
      * @return txn handle as long
      */
@@ -104,8 +102,6 @@ public class FennelTxnContext
     }
 
     /**
-     * .
-     *
      * @return whether a txn is in progress on this connection
      */
     public boolean isTxnInProgress()
@@ -114,7 +110,7 @@ public class FennelTxnContext
     }
 
     /**
-     * Commit the current txn, if any.
+     * Commits the current txn, if any.
      */
     public void commit()
     {
@@ -136,7 +132,7 @@ public class FennelTxnContext
     }
 
     /**
-     * Roll back the current txn, if any.
+     * Rolls back the current txn, if any.
      */
     public void rollback()
     {
@@ -158,7 +154,7 @@ public class FennelTxnContext
     }
 
     /**
-     * Create a new savepoint, starting a new transaction if necessary.  Note
+     * Creates a new savepoint, starting a new transaction if necessary.  Note
      * that savepoint handles are "lightweight" and thus don't require
      * deallocation.
      *
@@ -178,7 +174,7 @@ public class FennelTxnContext
     }
 
     /**
-     * Rollback to an existing savepoint.
+     * Rolls back to an existing savepoint.
      *
      * @param fennelSvptHandle handle to savepoint to rollback to
      */

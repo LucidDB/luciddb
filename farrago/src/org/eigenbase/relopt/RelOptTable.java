@@ -42,7 +42,7 @@ public interface RelOptTable
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Obtain an identifier for this table.  The identifier must be unique
+     * Obtains an identifier for this table.  The identifier must be unique
      * with respect to the Connection producing this table.
      *
      * @return qualified name

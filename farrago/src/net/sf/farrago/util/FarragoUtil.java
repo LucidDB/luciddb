@@ -41,7 +41,7 @@ public abstract class FarragoUtil
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Calculate the memory used by a string's data (not including the String
+     * Calculates the memory used by a string's data (not including the String
      * object itself).  This represents the actual memory used by the Java
      * Unicode representation, not an encoding.
      *
@@ -79,7 +79,7 @@ public abstract class FarragoUtil
     }
 
     /**
-     * Converter from any Throwable to SQLException.
+     * Converts any Throwable to a SQLException.
      *
      * @param ex Throwable to be converted
      *

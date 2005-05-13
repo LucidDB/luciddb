@@ -34,7 +34,7 @@ public interface Walkable
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * returns an array of the object's children.  Those which are not
+     * Returns an array of the object's children.  Those which are not
      * Walkable are ignored.
      */
     public abstract Object [] getChildren();

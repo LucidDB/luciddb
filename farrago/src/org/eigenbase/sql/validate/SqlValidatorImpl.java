@@ -266,7 +266,7 @@ public class SqlValidatorImpl implements SqlValidator
     }
 
     /**
-     * Look up completion hints for a syntatically correct SQL that has been
+     * Looks up completion hints for a syntatically correct SQL that has been
      * parsed into an expression tree
      *
      * @param topNode top of expression tree in which to lookup completion hints
@@ -303,7 +303,7 @@ public class SqlValidatorImpl implements SqlValidator
     }
 
     /**
-     * Look up completion hints for a syntatically correct select SQL
+     * Looks up completion hints for a syntatically correct select SQL
      * that has been parsed into an expression tree
      *
      * @param select the Select node of the parsed expression tree

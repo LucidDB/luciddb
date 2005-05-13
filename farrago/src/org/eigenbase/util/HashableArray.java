@@ -60,7 +60,7 @@ public class HashableArray
 	return h;
     }
 
-    /** Return whether two arrays are equal (deep compare). */
+    /** Returns whether two arrays are equal (deep compare). */
     public static boolean arraysAreEqual(Object[] a1, Object[] a2)
     {
 	if (a1.length != a2.length) {

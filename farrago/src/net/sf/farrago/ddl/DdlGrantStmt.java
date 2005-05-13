@@ -59,7 +59,7 @@ public class DdlGrantStmt extends DdlStmt
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Construct a new DdlGrantStmt.
+     * Constructs a new DdlGrantStmt.
      *
      */
     public DdlGrantStmt()

@@ -335,7 +335,7 @@ public class CalcProgramBuilder
     }
 
     /**
-     * introduce NL's for prettyness.
+     * Introduces NL's for prettiness.
      * Comments would be nice too.
      */
     private String prettyPrint(String program)
@@ -503,7 +503,7 @@ public class CalcProgramBuilder
     }
 
     /**
-     * Tries to optimize the program
+     * Tries to optimize the program.
      */
     private void optimize()
     {

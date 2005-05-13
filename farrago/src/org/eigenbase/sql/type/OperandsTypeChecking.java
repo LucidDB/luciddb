@@ -42,18 +42,19 @@ import java.util.ArrayList;
 public abstract class OperandsTypeChecking
 {
     /**
-     * Checks if a node is of correct type
-     * @param call
-     * @param validator
-     * @param scope
-     * @param node
-     * @param ruleOrdinal
+     * Checks if a node is of correct type.
      *
      * Note that <code>ruleOrdinal</code> is <emp>not</emp> an index in any
      * call.operands[] array. It's used to specify which
      * signature the node should correspond too.
      * <p>For example, if we have typeStringInt, a check can be made to see
-     * if a <code>node</code> is of type int by calling
+     * if a <code>node</code> is of type int by calling.
+     *
+     * @param call
+     * @param validator
+     * @param scope
+     * @param node
+     * @param ruleOrdinal
      */
     public abstract boolean check(
         SqlCall call,
@@ -70,7 +71,7 @@ public abstract class OperandsTypeChecking
         boolean throwOnFailure);
 
     /**
-     * Returns the argument count
+     * @return the argument count.
      */
     public abstract int getArgCount();
 

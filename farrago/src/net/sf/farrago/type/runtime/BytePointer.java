@@ -111,7 +111,7 @@ public class BytePointer extends ByteArrayInputStream
     }
 
     /**
-     * Set the pointer to reference a buffer.
+     * Sets the pointer to reference a buffer.
      *
      * @param buf the buffer to point into
      * @param pos position in buffer to point at
@@ -159,7 +159,7 @@ public class BytePointer extends ByteArrayInputStream
     }
 
     /**
-     * Pad or truncate this value according to the given precision.
+     * Pads or truncates this value according to the given precision.
      *
      * @param precision desired precision
      *
@@ -200,7 +200,7 @@ public class BytePointer extends ByteArrayInputStream
     }
 
     /**
-     * Write the contents of this pointer to a ByteBuffer.
+     * Writes the contents of this pointer to a ByteBuffer.
      *
      * @param byteBuffer target
      */
@@ -213,7 +213,7 @@ public class BytePointer extends ByteArrayInputStream
     }
 
     /**
-     * Write the contents of this pointer to a ByteBuffer
+     * Writes the contents of this pointer to a ByteBuffer
      * at a given offset without modifying the current position.
      *
      * @param byteBuffer target
@@ -237,7 +237,7 @@ public class BytePointer extends ByteArrayInputStream
     }
 
     /**
-     * Get the byte representation of a string.  Subclasses may override.
+     * Gets the byte representation of a string.  Subclasses may override.
      *
      * @param string source
      *

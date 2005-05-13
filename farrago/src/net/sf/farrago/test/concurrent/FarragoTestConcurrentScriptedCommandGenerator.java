@@ -512,7 +512,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     }
 
     /**
-     * Convert a state name into a map.  Map keys are the names of
+     * Converts a state name into a map.  Map keys are the names of
      * available commands (e.g. @sync), and map values are the state
      * to switch to open seeing the command.
      */
@@ -538,7 +538,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     }
 
     /**
-     * Return the first word of the given line, assuming the line is
+     * Returns the first word of the given line, assuming the line is
      * trimmed.  Returns the characters up the first non-whitespace
      * character in the line.
      */
@@ -548,7 +548,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     }
 
     /**
-     * Return everything but the first word of the given line,
+     * Returns everything but the first word of the given line,
      * assuming the line is trimmed.  Returns the characters following
      * the first series of consecutive whitespace characters in the
      * line.
@@ -559,7 +559,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     }
 
     /**
-     * Return a block of SQL, starting with the given String.  Returns
+     * Returns a block of SQL, starting with the given String.  Returns
      * <code>startOfSql</code> concatenated with each line from
      * <code>in</code> until a line ending with a semicolon is found.
      */
@@ -583,7 +583,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     }
 
     /**
-     * Determine if a block of SQL is a select statment or not.
+     * Determines if a block of SQL is a select statment or not.
      */
     private boolean isSelect(String sql)
     {
@@ -676,7 +676,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     }
 
     /**
-     * Retrieve the output stream for the given thread id.
+     * Retrieves the output stream for the given thread id.
      *
      * @return a BufferedWriter on a StringWriter for the thread.
      */
@@ -751,7 +751,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     }
 
     /**
-     * Print an output table separator.  Something like
+     * Prints an output table separator.  Something like
      * <code>"+----+--------+"</code>.
      */
     private void printSeparator(BufferedWriter out, int[] widths)
@@ -778,7 +778,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     }
 
     /**
-     * Print an output table row.  Something like
+     * Prints an output table row.  Something like
      * <code>"| COL1 | COL2    |"</code>.
      */
     private void printRow(BufferedWriter out, String[] values, int[] widths)
@@ -811,7 +811,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
 
 
     /**
-     * Print the given SQL to the thread's output.
+     * Prints the given SQL to the thread's output.
      */
     private void storeSql(Integer threadId, String sql)
     {
@@ -845,7 +845,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
 
 
     /**
-     * Print the given message to the thread's output.
+     * Prints the given message to the thread's output.
      */
     private void storeMessage(Integer threadId, String message)
     {

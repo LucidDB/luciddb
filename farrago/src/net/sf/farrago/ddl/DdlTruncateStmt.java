@@ -37,7 +37,7 @@ public class DdlTruncateStmt extends DdlStmt
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Construct a new DdlTruncateStmt.
+     * Constructs a new DdlTruncateStmt.
      *
      * @param truncatedElement top-level element truncated by this stmt
      */

@@ -61,9 +61,9 @@ public interface OJAggImplementor
         AggregateRel.Call call);
 
     /**
-     * Whether this aggregation can merge together two accumulators.
+     * @return whether this aggregation can merge together two accumulators.
      * <code>count</code> can (you just add the accumulators);
-     * <code>avg</code> and {@link net.sf.saffron.ext.Nth} cannot.
+     * <code>avg</code> and {@link net.sf.saffron.ext.Nth} cannot
      */
     boolean canMerge();
 

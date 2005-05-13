@@ -319,7 +319,7 @@ public class ArrayQueue
     }
 
     /**
-     * Copy the contents of the queue into an array.  The elements are
+     * Copies the contents of the queue into an array.  The elements are
      * copied such that the first element of the queue ends up in
      * <code>otherQueue[0]</code>.  Elements are copied in order.
      *

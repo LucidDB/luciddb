@@ -82,7 +82,7 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Create a runtime object with timezone offset set from localtime.
+     * Creates a runtime object with timezone offset set from localtime.
      *
      * <p>FIXME    - we need the session tz, not the server tz.
      */
@@ -95,7 +95,6 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
     //~ Methods ---------------------------------------------------------------
 
     /**
-     *
      * @return long.class
      */
     public static Class getPrimitiveClass()
@@ -105,14 +104,7 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
 
     public abstract Object getData(long millisecond);
 
-    /**
-     * Set whether or not the value is null.  Note that once a value has been
-     * set to null, its data should not be updated until the null state has
-     * been cleared with a call to setNull(false).
-     *
-     * @param b true to set a null value; false to indicate a non-null
-     *        value
-     */
+    // (optionally) implement NullableValue
     public void setNull(boolean b)
     {
         isNull = b;
@@ -136,7 +128,6 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
     }
 
     /**
-     *
      * @return whether the value has been set to null
      */
     public boolean isNull()
@@ -145,7 +136,7 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
     }
 
     /**
-     * Assign value from an Object.
+     * Assigns value from an Object.
      *
      * @param date value to assign, or null to set null
      */
@@ -225,7 +216,7 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
     //~ Inner Classes ---------------------------------------------------------
 
     /**
-     * sql date
+     * SQL date value.
      */
     public static class SqlDate extends SqlDateTimeWithoutTZ
     {
@@ -267,7 +258,7 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
         }
 
         /**
-         * use java.sql objects for jdbcs benefit.
+         * Use java.sql objects for JDBC's benefit.
          *
          * @return an Object representation of this value's data, or null if this
          *         value is null
@@ -279,12 +270,12 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
     }
 
     /**
-     * sql time
+     * SQL time value.
      */
     public static class SqlTime extends SqlDateTimeWithoutTZ
     {
         /**
-         * Assigns time from a String
+         * Assigns time from a String.
          */
         public void assignFrom(Object obj)
         {
@@ -309,7 +300,7 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
         }
 
         /**
-         * Returns a string in default format representing the time
+         * Returns a string in default format representing the time.
          */
         public String toString()
         {
@@ -317,7 +308,7 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
         }
 
         /**
-         * use java.sql objects for jdbcs benefit.
+         * Use java.sql objects for JDBC's benefit.
          *
          * @return an Object representation of this value's data, or null if this
          *         value is null
@@ -332,12 +323,12 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
     }
 
     /**
-     * sql timestamp.
+     * SQL timestamp value.
      */
     public static class SqlTimestamp extends SqlDateTimeWithoutTZ
     {
         /**
-         * Assigns timestamp from a String
+         * Assigns timestamp from a String.
          */
         public void assignFrom(Object obj)
         {
@@ -363,7 +354,7 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
         }
 
         /**
-         * Returns a string in default format representing the timestamp
+         * Returns a string in default format representing the timestamp.
          */
         public String toString()
         {
@@ -371,7 +362,7 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
         }
 
         /**
-         * use java.sql objects for jdbc's benefit.
+         * Use java.sql objects for JDBC's benefit.
          *
          * @return an Object representation of this value's data, or null if this
          *         value is null

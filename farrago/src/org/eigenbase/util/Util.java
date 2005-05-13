@@ -295,7 +295,7 @@ public class Util extends Toolbox
     }
 
     /**
-     * Return a set of the elements which are in <code>set1</code> but not in
+     * Returns a set of the elements which are in <code>set1</code> but not in
      * <code>set2</code>, without modifying either.
      */
     public static Set minus(
@@ -324,7 +324,7 @@ public class Util extends Toolbox
     }
 
     /**
-     * Print an object using reflection. We can handle <code>null</code>;
+     * Prints an object using reflection. We can handle <code>null</code>;
      * arrays of objects and primitive values; for regular objects, we print
      * all public fields.
      */

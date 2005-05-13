@@ -48,7 +48,7 @@ public class CoerceInputsRule extends RelOptRule
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Construct the rule.
+     * Constructs the rule.
      *
      * @param consumerRelClass the RelNode class which will consume
      * the inputs

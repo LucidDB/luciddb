@@ -34,7 +34,7 @@ public class DdlRollbackStmt extends DdlSavepointTxnStmt
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Construct a new DdlRollbackStmt.
+     * Constructs a new DdlRollbackStmt.
      *
      * @param savepointName name of savepoint to which to rollback,
      * or null to rollback entire txn

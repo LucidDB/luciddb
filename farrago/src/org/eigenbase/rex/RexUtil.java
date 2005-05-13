@@ -74,7 +74,7 @@ public class RexUtil
     }
 
     /**
-     * Generate a cast from one row type to another
+     * Generates a cast from one row type to another
      *
      * @param rexBuilder RexBuilder to use for constructing casts
      *
@@ -103,7 +103,7 @@ public class RexUtil
     }
 
     /**
-     * Generate a cast for a row type.
+     * Generates a cast for a row type.
      *
      * @param rexBuilder RexBuilder to use for constructing casts
      *

@@ -77,7 +77,7 @@ public class SqlDelete extends SqlCall
     }
 
     /**
-     * Get the filter condition for rows to be deleted.
+     * Gets the filter condition for rows to be deleted.
      *
      * @return the condition expression for the data to be deleted, or null for
      * all rows in the table
@@ -88,7 +88,7 @@ public class SqlDelete extends SqlCall
     }
 
     /**
-     * Get the source SELECT expression for the data to be inserted.  This
+     * Gets the source SELECT expression for the data to be inserted.  This
      * returns null before the condition has been expanded
      * by SqlValidator.performUnconditionRewrites.
      *

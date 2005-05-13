@@ -717,7 +717,7 @@ public class SqlToRelConverter
     }
 
     /**
-     * converts a between call node.
+     * Converts a between expression.
      */
     private RexNode convertBetween(
         Blackboard bb,
@@ -783,7 +783,8 @@ public class SqlToRelConverter
     }
 
     /**
-     * converts a cast function node.
+     * Converts a cast expression.
+     *
      * @param bb
      * @param call
      * @return

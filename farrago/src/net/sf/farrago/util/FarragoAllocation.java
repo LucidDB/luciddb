@@ -35,7 +35,7 @@ public interface FarragoAllocation
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Close this object.
+     * Closes this object.
      */
     public void closeAllocation();
 }

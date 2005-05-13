@@ -34,7 +34,7 @@ public class DdlCheckpointStmt extends DdlStmt
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Construct a new DdlCheckpointStmt.
+     * Constructs a new DdlCheckpointStmt.
      */
     public DdlCheckpointStmt()
     {

@@ -104,7 +104,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Get the column referenced by a FieldAccess relative to this scan.
+     * Gets the column referenced by a FieldAccess relative to this scan.
      *
      * @param columnOrdinal 0-based ordinal of an output field of the scan
      *
@@ -227,7 +227,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
     }
 
     /**
-     * Fill in a stream definition for this scan.
+     * Fills in a stream definition for this scan.
      *
      * @param scanStream stream definition to fill in
      */

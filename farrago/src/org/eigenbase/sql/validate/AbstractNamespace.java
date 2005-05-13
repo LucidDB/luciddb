@@ -26,6 +26,8 @@ import org.eigenbase.sql.SqlNodeList;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.util.Util;
 
+// REVIEW jvs 12-May-2005:  I suggest you follow Intellij's recommendation
+// and edit your template to match all of the other classes in this package.
 /**
  * Created by IntelliJ IDEA.
  * User: jhyde

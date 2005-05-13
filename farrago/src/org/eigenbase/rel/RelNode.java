@@ -133,7 +133,7 @@ public interface RelNode
     public int getId();
 
     /**
-     * Get the <code>i</code><sup>th</sup> input.
+     * Gets the <code>i</code><sup>th</sup> input.
      */
     public RelNode getInput(int i);
 
@@ -221,8 +221,8 @@ public interface RelNode
     public void explain(RelOptPlanWriter pw);
 
     /**
-     * This method is called just before the expression is registered.  The
-     * implementation of this method must at least register all child
+     * Receives notification that this expression is about to be registered.
+     * The implementation of this method must at least register all child
      * expressions.
      */
     public void onRegister(RelOptPlanner planner);

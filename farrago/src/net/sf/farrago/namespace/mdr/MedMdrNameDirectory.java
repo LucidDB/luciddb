@@ -56,7 +56,7 @@ class MedMdrNameDirectory extends MedAbstractNameDirectory
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Instantiate a MedMdrNameDirectory.
+     * Instantiates a MedMdrNameDirectory.
      *
      * @param server MedMdrDataServer from which
      * this directory was opened
@@ -91,7 +91,7 @@ class MedMdrNameDirectory extends MedAbstractNameDirectory
     }
 
     /**
-     * Look up a RefClass from its qualified name.
+     * Looks up a RefClass from its qualified name.
      *
      * @param foreignName name of this class relative to this directory's
      * root package

@@ -123,7 +123,7 @@ public class OJSyntheticClass extends OJClass
     }
 
     /**
-     * Add declarations of a set of classes <code>classes</code> as inner
+     * Adds declarations of a set of classes <code>classes</code> as inner
      * classes of a class declaration <code>outerClassDecl</code>.
      * Declarations which are already present are not added again.
      **/

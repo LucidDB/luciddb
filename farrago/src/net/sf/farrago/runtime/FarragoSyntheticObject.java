@@ -69,7 +69,7 @@ public abstract class FarragoSyntheticObject
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Marshal all bit fields in this tuple.
+     * Marshals all bit fields in this tuple.
      *
      * @param byteBuffer destination ByteBuffer
      * @param bitFieldByteOffset absolute offset of first byte of bit fields in
@@ -108,7 +108,7 @@ public abstract class FarragoSyntheticObject
     }
 
     /**
-     * Unmarshal all bit fields in this tuple.
+     * Unmarshals all bit fields in this tuple.
      *
      * @param byteBuffer source ByteBuffer
      * @param bitFieldByteOffset absolute offset of first byte of bit fields in
@@ -137,7 +137,7 @@ public abstract class FarragoSyntheticObject
     }
 
     /**
-     * Construct an array of BitReferences for use in marshalling and
+     * Constructs an array of BitReferences for use in marshalling and
      * unmarshalling bit fields.  Note that this can't be done at
      * construction time, because subclass constructors may change field
      * references.  Instead, we do it lazily.
@@ -178,7 +178,7 @@ public abstract class FarragoSyntheticObject
     }
 
     /**
-     * Use reflection to construct instances of all non-primitive fields.
+     * Uses reflection to construct instances of all non-primitive fields.
      */
     private void initFields()
     {

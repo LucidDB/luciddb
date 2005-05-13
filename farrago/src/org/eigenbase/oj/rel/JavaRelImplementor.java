@@ -126,7 +126,7 @@ public class JavaRelImplementor implements RelImplementor
     }
 
     /**
-     * Record the fact that instances of <code>rel</code> are available in
+     * Records the fact that instances of <code>rel</code> are available in
      * <code>variable</code>.
      */
     public void bind(
@@ -139,7 +139,7 @@ public class JavaRelImplementor implements RelImplementor
     }
 
     /**
-     * Declare a variable, and bind it lazily, so it only gets initialized if
+     * Declares a variable, and binds it lazily, so it only gets initialized if
      * it is actually used.
      *
      * @return the Variable so declared
@@ -655,7 +655,7 @@ public class JavaRelImplementor implements RelImplementor
     }
 
     /**
-     * Record the fact that instances of <code>rel</code> are available via
+     * Records the fact that instances of <code>rel</code> are available via
      * <code>bind</code> (which may be eager or lazy).
      */
     private void bind(

@@ -34,7 +34,7 @@ public class DdlSavepointStmt extends DdlSavepointTxnStmt
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Construct a new DdlSavepointStmt.
+     * Constructs a new DdlSavepointStmt.
      *
      * @param savepointName name of savepoint to create
      */

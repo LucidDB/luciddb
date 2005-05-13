@@ -40,10 +40,14 @@ import java.sql.SQLException;
 public class FarragoDriver extends org.objectweb.rmijdbc.Driver 
     implements java.sql.Driver, java.io.Serializable 
 {
-    public FarragoDriver() throws Exception { super(); }
+    public FarragoDriver() throws Exception
+    {
+        super();
+    }
 
     public java.sql.Connection buildConnection(RJConnectionInterface c)
-    throws SQLException {
+        throws SQLException
+    {
         return new FarragoRJConnection(c);
     }
 };

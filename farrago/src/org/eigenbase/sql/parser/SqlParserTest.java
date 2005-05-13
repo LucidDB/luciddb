@@ -1350,7 +1350,7 @@ public class SqlParserTest extends TestCase
     }
 
     /**
-     * Testing for casting to/from date/time types.
+     * Tests for casting to/from date/time types.
      */
     public void testDateTimeCast()
     {

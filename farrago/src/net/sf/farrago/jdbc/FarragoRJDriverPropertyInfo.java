@@ -38,7 +38,8 @@ import org.objectweb.rmijdbc.RJDriverPropertyInfo;
 public class FarragoRJDriverPropertyInfo extends RJDriverPropertyInfo
     implements java.io.Serializable {
 
-    public FarragoRJDriverPropertyInfo(DriverPropertyInfo dpi) {
+    public FarragoRJDriverPropertyInfo(DriverPropertyInfo dpi)
+    {
         super(dpi);
     }
 };

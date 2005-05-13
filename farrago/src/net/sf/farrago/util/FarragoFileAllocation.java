@@ -50,7 +50,7 @@ public class FarragoFileAllocation implements FarragoAllocation
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Create a new FarragoFileAllocation.
+     * Creates a new FarragoFileAllocation.
      *
      * @param file the file to be deleted when this allocation is closed
      */

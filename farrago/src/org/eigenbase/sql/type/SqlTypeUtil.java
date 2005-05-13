@@ -166,8 +166,8 @@ public abstract class SqlTypeUtil
     }
 
     /**
-     * Helper function that recreates a given RelDataType with nullablility
-     * iff any of a calls operand types are nullable.
+     * Recreates a given RelDataType with nullablility iff any of a calls
+     * operand types are nullable.
      */
     public final static RelDataType makeNullableIfOperandsAre(
         final SqlValidator validator,
@@ -189,8 +189,8 @@ public abstract class SqlTypeUtil
     }
 
     /**
-     * Helper function that recreates a given RelDataType with nullablility
-     * iff any of the {@param argTypes} are nullable.
+     * Recreates a given RelDataType with nullablility iff any of the param
+     * argTypes are nullable.
      */
     public final static RelDataType makeNullableIfOperandsAre(
         final RelDataTypeFactory typeFactory,
@@ -244,8 +244,8 @@ public abstract class SqlTypeUtil
     }
 
     /**
-     * @return Returns typeName.equals(type.getSqlTypeName())
-     *         If typeName.equals(SqlTypeName.Any) true is always returned
+     * Returns typeName.equals(type.getSqlTypeName()). If
+     * typeName.equals(SqlTypeName.Any) true is always returned.
      */
     public static boolean isOfSameTypeName(SqlTypeName typeName,
         RelDataType type) {
@@ -254,8 +254,9 @@ public abstract class SqlTypeUtil
     }
 
     /**
-     * @return Returns true if any element in typeNames
-     * matches type.getSqlTypeName()
+     * Returns true if any element in typeNames
+     * matches type.getSqlTypeName().
+     *
      * @see {@link #isOfSameTypeName(SqlTypeName, RelDataType)}
      */
     public static boolean isOfSameTypeName(SqlTypeName[] typeNames,

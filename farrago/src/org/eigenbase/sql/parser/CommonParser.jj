@@ -1909,7 +1909,7 @@ SqlLiteral DateTimeLiteral(SqlParserPos pos) :
     }
 }
 
-/** Parse a MULTISET constructor */
+/** Parses a MULTISET constructor */
 SqlNode MultisetConstructor() :
 {
     List args;

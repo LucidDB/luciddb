@@ -70,8 +70,6 @@ public class SqlUpdate extends SqlCall
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * .
-     *
      * @return the identifier for the target table of the insertion
      */
     public SqlIdentifier getTargetTable()
@@ -88,8 +86,6 @@ public class SqlUpdate extends SqlCall
     }
 
     /**
-     * .
-     *
      * @return the list of target column names
      */
     public SqlNodeList getTargetColumnList()
@@ -98,8 +94,6 @@ public class SqlUpdate extends SqlCall
     }
 
     /**
-     * .
-     *
      * @return the list of source expressions
      */
     public SqlNodeList getSourceExpressionList()
@@ -108,7 +102,7 @@ public class SqlUpdate extends SqlCall
     }
 
     /**
-     * Get the filter condition for rows to be updated.
+     * Gets the filter condition for rows to be updated.
      *
      * @return the condition expression for the data to be updated, or null for
      * all rows in the table
@@ -119,9 +113,9 @@ public class SqlUpdate extends SqlCall
     }
 
     /**
-     * Get the source SELECT expression for the data to be updated.  This
-     * returns null before the statement
-     * has been expanded by SqlValidator.performUnconditionalRewrites.
+     * Gets the source SELECT expression for the data to be updated.  Returns
+     * null before the statement has been expanded by
+     * SqlValidator.performUnconditionalRewrites.
      *
      * @return the source SELECT for the data to be updated
      */

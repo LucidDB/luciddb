@@ -107,7 +107,7 @@ public abstract class ConverterRel extends SingleRel
     }
 
     /**
-     * Return a new trait set based on <code>traits</code>, with a different
+     * Returns a new trait set based on <code>traits</code>, with a different
      * trait for a given type of trait.  Clones <code>traits</code>, and then
      * replaces the existing trait matching <code>trait.getTraitDef()</code>
      * with <code>trait</code>.

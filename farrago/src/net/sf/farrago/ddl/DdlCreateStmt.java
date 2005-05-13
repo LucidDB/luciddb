@@ -41,7 +41,7 @@ public class DdlCreateStmt extends DdlStmt
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Construct a new DdlCreateStmt.
+     * Constructs a new DdlCreateStmt.
      *
      * @param createdElement top-level element created by this stmt
      */

@@ -36,7 +36,8 @@ public class MultisetSqlType extends AbstractSqlType
     private RelDataType elementType;
 
     /**
-     * This constructor should only be called from a factory method.
+     * Constructs a new MultisetSqlType.  This constructor should only be
+     * called from a factory method.
      *
      * @pre null!=elementType
      */

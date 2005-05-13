@@ -97,7 +97,7 @@ class PersistentPropertyStorage
     }
 
     /**
-     * Store the given property's value in the property file.  Unlike
+     * Stores the given property's value in the property file.  Unlike
      * {@link java.util.Properties#store(java.io.OutputStream, String)}
      * this method does not obliterate the format of the existing
      * property file.

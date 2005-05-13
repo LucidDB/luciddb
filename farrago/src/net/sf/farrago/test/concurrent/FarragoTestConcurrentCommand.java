@@ -52,8 +52,8 @@ public interface FarragoTestConcurrentCommand
         throws Exception;
 
     /**
-     * Mark a command to show that it is expected to fail, and
-     * indicate how.  Used for negative tests.  Normally when a
+     * Marks a command to show that it is expected to fail, and
+     * indicates how.  Used for negative tests.  Normally when a
      * command fails the embracing test fails (see {@link
      * FarragoTestConcurrentTestCase#executeTest(FarragoTestConcurrentCommandGenerator,
      * boolean)}).  But when a marked command fails, the error is

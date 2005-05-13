@@ -122,7 +122,7 @@ public abstract class SqlUtil
     }
 
     /**
-     * Convenience method to convert an SqlNode array to a SqlNodeList
+     * Converts an SqlNode array to a SqlNodeList
      */
     public static SqlNodeList toNodeList(SqlNode[] operands) {
         SqlNodeList ret = new SqlNodeList(SqlParserPos.ZERO);
@@ -202,7 +202,7 @@ public abstract class SqlUtil
     }
 
     /**
-     * Unparse a call to an operator which has function syntax.
+     * Unparses a call to an operator which has function syntax.
      *
      * @param operator The operator
      * @param writer Writer

@@ -72,7 +72,7 @@ public class Walker implements Enumeration
     }
 
     /**
-     * get the ordinal within its parent node of the <code>iDepth</code>th
+     * Gets the ordinal within its parent node of the <code>iDepth</code>th
      * ancestor.
      */
     public int getAncestorOrdinal(int iDepth)
@@ -96,7 +96,7 @@ public class Walker implements Enumeration
     }
 
     /**
-     * get the ordinal within its parent node of the current node.  Returns 0
+     * Gets the ordinal within its parent node of the current node.  Returns 0
      * for the root element.  Equivalent to getAncestorOrdinal(0).
      */
     public int getOrdinal()
@@ -108,7 +108,7 @@ public class Walker implements Enumeration
     }
 
     /**
-     * returns the current object.  Not valid until nextElement() has been
+     * Returns the current object.  Not valid until nextElement() has been
      * called.
      */
     public Object currentElement()
@@ -122,7 +122,7 @@ public class Walker implements Enumeration
     }
 
     /**
-     * returns level in the tree of the current element (that is, last element
+     * Returns level in the tree of the current element (that is, last element
      * returned from nextElement()).  The level of the root element is 0.
      */
     public int level()
@@ -269,7 +269,7 @@ public class Walker implements Enumeration
     }
 
     /**
-     * returns the <code>iDepth</code>th ancestor of the current element
+     * Returns the <code>iDepth</code>th ancestor of the current element.
      */
     private Frame getAncestorFrame(int iDepth)
     {

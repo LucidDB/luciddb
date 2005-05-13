@@ -28,6 +28,7 @@ import java.util.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.SqlOperatorTable;
 
+// REVIEW jvs 12-May-2005:  Why does this class exist?
 
 /**
  * A class that is capable of enumerating over all the SqlOperators defined in

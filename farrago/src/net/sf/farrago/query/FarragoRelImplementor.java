@@ -185,7 +185,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
     }
 
     /**
-     * Construct a globally unique name for an execution stream.  This name is
+     * Constructs a globally unique name for an execution stream.  This name is
      * used to label and find C++ ExecutionStreams.
      *
      * @param streamDef stream definition

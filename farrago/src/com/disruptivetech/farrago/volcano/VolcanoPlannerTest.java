@@ -72,7 +72,7 @@ public class VolcanoPlannerTest extends TestCase
     }
 
     /**
-     * Test transformation of a leaf from NONE to PHYS.
+     * Tests transformation of a leaf from NONE to PHYS.
      */
     public void testTransformLeaf()
     {
@@ -94,7 +94,7 @@ public class VolcanoPlannerTest extends TestCase
     }
 
     /**
-     * Test transformation of a single+leaf from NONE to PHYS.
+     * Tests transformation of a single+leaf from NONE to PHYS.
      */
     public void testTransformSingleGood()
     {
@@ -120,7 +120,7 @@ public class VolcanoPlannerTest extends TestCase
     }
 
     /**
-     * Test transformation of a single+leaf from NONE to PHYS.
+     * Tests transformation of a single+leaf from NONE to PHYS.
      * This one doesn't work due to the definition of BadSingleRule.
      */
     public void _testTransformSingleBad()
@@ -209,7 +209,7 @@ public class VolcanoPlannerTest extends TestCase
     }
 
     /**
-     * Test whether planner correctly notifies listeners of events.
+     * Tests whether planner correctly notifies listeners of events.
      */
     public void testListener()
     {

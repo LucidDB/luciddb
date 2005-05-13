@@ -45,23 +45,24 @@ class FarragoRJMedDataWrapper
 {
     protected final FarragoRJMedDataWrapperInterface rmiDataWrapper_;
 
-    public FarragoRJMedDataWrapper(FarragoRJMedDataWrapperInterface wrapper) {
+    public FarragoRJMedDataWrapper(FarragoRJMedDataWrapperInterface wrapper)
+    {
         rmiDataWrapper_ = wrapper;
     }
 
     public DriverPropertyInfo [] getPluginPropertyInfo(
             Locale locale,
             Properties wrapperProps)
-    	{
-            try {
-                return getDriverPropertyInfo(
-                    rmiDataWrapper_.getPluginPropertyInfo(
-                        locale, wrapperProps));
-            } catch (RemoteException e) {
-                throw new RuntimeException(e.getMessage());
-                // TODO: add 'throws SQLException' to interface, and throw new SQLException(e.getMessage());
-            }
+    {
+        try {
+            return getDriverPropertyInfo(
+                rmiDataWrapper_.getPluginPropertyInfo(
+                    locale, wrapperProps));
+        } catch (RemoteException e) {
+            throw new RuntimeException(e.getMessage());
+            // TODO: add 'throws SQLException' to interface, and throw new SQLException(e.getMessage());
         }
+    }
      
     public DriverPropertyInfo [] getServerPropertyInfo(
         Locale locale,

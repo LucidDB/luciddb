@@ -182,9 +182,9 @@ public abstract class SqlNode implements Cloneable
         SqlValidatorScope scope);
 
     /**
-     * Find out all the valid alternatives for this node if the parse position
+     * Lists all the valid alternatives for this node if the parse position
      * of the node matches that of pp.  Only implemented now for
-     * SqlCall and SqlOperator
+     * SqlCall and SqlOperator.
      *
      * @param validator Validator
      * @param scope Validation scope
@@ -201,8 +201,8 @@ public abstract class SqlNode implements Cloneable
     }
 
     /**
-     * Find out all the valid alternatives for this node.  Only implemented
-     * now for SqlIdentifier
+     * Lists all the valid alternatives for this node.  Only implemented
+     * now for SqlIdentifier.
      *
      * @param validator Validator
      * @param scope Validation scope

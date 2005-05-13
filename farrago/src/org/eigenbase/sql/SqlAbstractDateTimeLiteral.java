@@ -75,8 +75,9 @@ abstract class SqlAbstractDateTimeLiteral extends SqlLiteral {
     }
 
     /**
-     * technically, a sql date doesn't come with a tz, but time and ts
-     * inherit this, and the calendar object has one, so it seems harmless.
+     * Returns timezone component of this literal.  Technically, a sql date
+     * doesn't come with a tz, but time and ts inherit this, and the calendar
+     * object has one, so it seems harmless.
      * @return timezone
      */
     public TimeZone getTimeZone()

@@ -67,7 +67,7 @@ public class FarragoObjectCache implements FarragoAllocation
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Create an empty cache.
+     * Creates an empty cache.
      *
      * @param owner FarragoAllocationOwner for this cache, to make sure
      * everything gets discarded eventually
@@ -87,7 +87,7 @@ public class FarragoObjectCache implements FarragoAllocation
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Pin an entry in the cache.  When the caller is done with it, the
+     * Pins an entry in the cache.  When the caller is done with it, the
      * returned entry must be unpinned, otherwise the entry can never be
      * discarded from the cache.
      *
@@ -266,7 +266,7 @@ public class FarragoObjectCache implements FarragoAllocation
     }
 
     /**
-     * Change the cache size limit.  This will discard entries if necessary.
+     * Changes the cache size limit, discarding entries if necessary.
      *
      * @param bytesMaxNew new limit
      */
@@ -280,7 +280,7 @@ public class FarragoObjectCache implements FarragoAllocation
     }
 
     /**
-     * Unpin an entry returned by pin.  After unpin, the caller should
+     * Unpins an entry returned by pin.  After unpin, the caller should
      * immediately nullify its reference to the entry, its key, its value, and
      * any sub-objects so that they can be garbage collected.
      *
@@ -303,7 +303,7 @@ public class FarragoObjectCache implements FarragoAllocation
     }
 
     /**
-     * Immediately discard any entries associated with a key.
+     * Discards any entries associated with a key.
      *
      * @param key key of the Entry to discard
      */
@@ -322,7 +322,7 @@ public class FarragoObjectCache implements FarragoAllocation
     }
 
     /**
-     * Discard all entries.
+     * Discards all entries.
      */
     public void discardAll()
     {
@@ -391,7 +391,7 @@ public class FarragoObjectCache implements FarragoAllocation
     public interface UninitializedEntry
     {
         /**
-         * Initialize the entry.
+         * Initializes the entry.
          *
          * @param value the value to associate with the entry's key; if this
          * Object implements FarragoAllocation, it will be closed when

@@ -189,8 +189,8 @@ public class SqlLiteral extends SqlNode
     }
 
     /**
-     * Whether value is appropriate for its type. (We have rules about these
-     * things.)
+     * @return whether value is appropriate for its type (we have rules about
+     * these things)
      */
     public static boolean valueMatchesType(
         Object value,

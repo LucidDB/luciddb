@@ -396,7 +396,7 @@ public abstract class RelOptUtil
     }
 
     /**
-     * Create a ProjectRel which accomplishes a rename.
+     * Creates a ProjectRel which accomplishes a rename.
      *
      * @param outputType a row type descriptor whose field names the generated
      * ProjectRel must match
@@ -441,7 +441,7 @@ public abstract class RelOptUtil
     }
 
     /**
-     * Create a filter which will remove rows containing NULL values.
+     * Creates a filter which will remove rows containing NULL values.
      *
      * @param rel the rel to be filtered
      *
@@ -499,7 +499,7 @@ public abstract class RelOptUtil
     }
 
     /**
-     * Create a projection which casts a rel's output to a desired row type.
+     * Creates a projection which casts a rel's output to a desired row type.
      *
      * @param rel producer of rows to be converted
      *

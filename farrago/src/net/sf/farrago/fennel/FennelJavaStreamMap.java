@@ -35,7 +35,7 @@ public interface FennelJavaStreamMap
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Look up the handle of a JavaTupleStream by its ID.  This is called by
+     * Looks up the handle of a JavaTupleStream by its ID.  This is called by
      * native code when a TupleStream is opened.  The ID is a placeholder in
      * the TupleStream definition; each open may result in a different handle.
      *
@@ -47,7 +47,7 @@ public interface FennelJavaStreamMap
     public long getJavaStreamHandle(int streamId);
 
     /**
-     * Look up the root PageId of an index.  This is called by
+     * Looks up the root PageId of an index.  This is called by
      * native code when a TupleStream accessing a temporary BTree is opened.
      *
      * @param pageOwnerId the identifier for the index

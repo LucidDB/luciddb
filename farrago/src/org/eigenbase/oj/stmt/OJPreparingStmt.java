@@ -80,7 +80,7 @@ public abstract class OJPreparingStmt
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a statement
+     * Creates a statement.
      *
      * @param connection Connection statement belongs to; may be null, but only
      *   if this statement implements {@link RelOptConnection}
@@ -256,7 +256,7 @@ public abstract class OJPreparingStmt
             arguments);
     }
 
-    /** optimize a query plan.
+    /** Optimizes a query plan.
      * @param rootRel root of a relational expression
      * @return an equivalent optimized relational expression
      */
@@ -274,7 +274,7 @@ public abstract class OJPreparingStmt
         return rootRel;
     }
 
-    /** implement a physical query plan.
+    /** Implements a physical query plan.
      * @param rootRel root of the relational expression.
      * @param sqlKind SqlKind of the original statement.
      * @param decl ClassDeclaration of the generated result.
