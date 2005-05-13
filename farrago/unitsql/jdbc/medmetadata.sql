@@ -20,6 +20,15 @@ select "name" from sys_fem.med."DataWrapper" order by 1;
 select "name" from sys_fem.med."DataServer" order by 1;
 select "name","value" from sys_fem.med."StorageOption" order by 1,2;
 
+-- Test a join to look up the storage options for a server
+select o."name",o."value" 
+from 
+(select * from sys_fem.med."DataServer" where "name"='SYS_MOF') s
+inner join
+sys_fem.med."StorageOption" o
+on s."mofId"=o."StoredElement"
+order by 1,2;
+
 -- Create schema and table
 create schema csv_schema;
 !metadata getSchemas
