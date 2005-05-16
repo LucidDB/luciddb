@@ -121,6 +121,35 @@ public class SqlAdvisor
     }
 
     /**
+     * Gets the fully qualified name for a {@link SqlIdentifier} at a given
+     * position of a sql statement
+     *
+     * @param sql A syntatically correct sql statement for which to retrieve
+     * a fully qualified SQL identifier name
+     * @param cursor to indicate the 0-based cursor position in the query 
+     * that represents a SQL identifier for which its fully qualified name is
+     * to be returned.
+     *
+     * @return a string that is the fully qualified name of the specified SQL
+     * identifier, returns an empty string if none is found or the SQL statement
+     * is invalid.
+     *
+     */
+    public String getQualifiedName(String sql, int cursor)
+    {
+        SqlParser parser = new SqlParser(sql);
+        SqlNode sqlNode;
+        try {
+            sqlNode = parser.parseQuery();
+            validator.validate(sqlNode);
+        } catch (Exception e) {
+            return "";
+        }
+        SqlParserPos pp = new SqlParserPos(1, cursor+1);
+        return ((SqlValidatorImpl) validator).lookupQualifiedName(sqlNode, pp);
+    }
+
+    /**
      * Attempts to complete and validate a given partially completed 
      * sql statement.  return whether it's valid.  
      *

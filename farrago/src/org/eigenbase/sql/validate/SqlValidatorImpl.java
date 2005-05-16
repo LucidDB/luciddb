@@ -268,8 +268,10 @@ public class SqlValidatorImpl implements SqlValidator
     /**
      * Looks up completion hints for a syntatically correct SQL that has been
      * parsed into an expression tree
+     * (Note this should be called after validate())
      *
      * @param topNode top of expression tree in which to lookup completion hints
+     *
      * @param pp indicates the position in the sql statement we want to get
      * completion hints for. For example,
      * "select a.ename, b.deptno from sales.emp a join sales.dept b
@@ -299,6 +301,40 @@ public class SqlValidatorImpl implements SqlValidator
         }
         finally {
             outermostNode = null;
+        }
+    }
+
+    /**
+     * Looks up the fully qualified name for a {@link SqlIdentifier} at a given
+     * Parser Position in a parsed expression tree
+     * Note: call this only after {@link #validate} has been called.
+     *
+     * @param topNode top of expression tree in which to lookup the qualfied 
+     * name for the SqlIdentifier
+     * @param pp indicates the position of the {@link SqlIdentifier} in the sql 
+     * statement we want to get the qualified name for 
+     *
+     * @return a string of the fully qualified name of the {@link SqlIdentifier}
+     * if the Parser position represents a valid {@link SqlIdentifier}.  Else 
+     * return an empty string
+     *
+     */
+    public String lookupQualifiedName(SqlNode topNode, SqlParserPos pp)
+    {
+        SqlIdentifier id = null;
+        Object o = sqlids.get(pp.toString());
+        if (o != null) {
+            id = (SqlIdentifier) o;
+        }
+        SqlValidatorScope scope = null;
+        o = idscopes.get(pp.toString());
+        if (o != null) {
+            scope = (SqlValidatorScope) o;
+        }
+        if (id != null && scope != null) {
+            return scope.fullyQualify(id).toString();
+        } else {
+            return "";
         }
     }
 
