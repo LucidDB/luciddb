@@ -1,0 +1,49 @@
+
+<html>
+
+<head>
+<title>Farrago Low-Hanging Fruit</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" />
+
+</head>
+
+<body>
+
+<h1>Farrago Low-Hanging Fruit</h1>
+
+This is a list of small projects which do not require any deep
+knowledge of Farrago internals; they should be accessible to anyone
+familiar with Java.  In some cases, it may be possible to implement
+them using just a binary release of Farrago; but if you run into
+trouble, a source release may be required for debugging and tweaking
+peripheral code (e.g. in the JDBC driver).
+
+<ul>
+
+<li>Get Farrago to run in a web app container such as Tomcat.  Use the
+Farrago engine JDBC driver directly (instead of the RMI driver);
+provide a web page which performs administrative functions such as
+starting and stopping the engine, and other web pages which access
+data via direct JDBC calls.  Optionally, allow control over starting
+and stopping the RMI server as well.
+
+<li>Make it possible for Farrago to query XML data via SQL/MED.
+ObjectWeb provides a simple XML JDBC driver as part of their Octopus
+ETL project.  See <a href="design/medjdbc.html">the Farrago SQL/MED
+Plugin for JDBC</a> and <a href="http://octopus.objectweb.org">the
+Octopus project</a>.
+
+<li>Set up a benchmark or standard test suite for Farrago.  We don't
+expect good performance right now, but benchmarks usually make good
+system-level tests.  Some possibilities include <a
+href="http://www.ece.wisc.edu/~pharm/tpcw.shtml">TPC-W</a>, <a
+href="http://incubator.apache.org/derby/DOTS_Derby.html">DOTS</a>, <a
+href="https://www.osdl.org/lab_activities/kernel_testing/osdl_database_test_suite/">osdldbt</a>,
+and <a href="http://osdb.sf.net">osdb</a>.
+
+</ul>
+
+</body>
+
+</html>
+
