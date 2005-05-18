@@ -132,6 +132,6 @@ TupleAccessor const &BTreeReader::getTupleAccessorForRead() const
     return pLeafNodeAccessor->tupleAccessor;
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/btree/BTreeReader.cpp#3 $");
+FENNEL_END_CPPFILE("$Id$");
 
 // End BTreeReader.cpp
