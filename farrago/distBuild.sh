@@ -102,6 +102,8 @@ cp resgen/lib/eigenbase-resgen.jar $LIB_DIR
 cp resgen/lib/eigenbase-xom.jar $LIB_DIR
 cp resgen/COPYING $LIB_DIR/resgen.license.txt
 cp mdrlibs/* $LIB_DIR/mdrlibs
+rm -f $LIB_DIR/mdrlibs/uml*.jar
+rm -f $LIB_DIR/mdrlibs/mdrant.jar
 cp OpenJava/openjava.jar $LIB_DIR
 cp OpenJava/COPYRIGHT $LIB_DIR/openjava.license.txt
 cp RmiJdbc/dist/lib/*.jar $LIB_DIR
@@ -113,8 +115,10 @@ cp jline.jar $LIB_DIR
 cp hsqldb/doc/hypersonic_lic.txt $LIB_DIR/hsqldb.license.txt
 cp hsqldb/lib/hsqldb.jar $LIB_DIR
 cp -d stlport/lib/$SO_3P_PATTERN $LIB_DIR/fennel
+rm -f $LIB_DIR/fennel/*debug*
 cp stlport/README $LIB_DIR/fennel/stlport.README.txt
 cp -d boost/lib/$SO_3P_PATTERN $LIB_DIR/fennel
+rm -f $LIB_DIR/fennel/*gdp*
 cp boost/LICENSE_1_0.txt $LIB_DIR/fennel/boost.license.txt
 
 # TODO jvs 12-Mar-2005

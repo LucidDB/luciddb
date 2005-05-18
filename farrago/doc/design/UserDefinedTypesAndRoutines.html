@@ -16,7 +16,9 @@ see the relevant portions of the standard.  Much but not all of this
 is already implemented in Farrago.
 
 
+<a name="Types">
 <h2>User-Defined Types</h2>
+</a>
 
 In SQL:2003, it's possible to extend the type system in a number of ways:
 
@@ -144,7 +146,9 @@ cover locators and references; instead, the focus is on the semantics
 of structured types and their instances.
 
 
+<a name="Routines">
 <h2>Routines</h2>
+</a>
 
 SQL behavior can be extended by defining various kinds of
 <em>SQL-invoked routines</em>.  SQL-invoked routines may be
@@ -190,7 +194,7 @@ SELECT sum(3.1415927*sqr(d.dot.radius)) as total_area FROM PolkaDots d;
 
 </code></pre>
 
-<li><em>Methods</em> are routines which invoked from SQL row
+<li><em>Methods</em> are routines which can be invoked from SQL row
 expressions and which are associated with a particular type.  An
 SQL-invoked method is similar to a method in C++ or Java, and may be
 either static (type-level) or non-static (instance-level).  Methods

@@ -17,8 +17,6 @@ fi
 set -e
 set -v
 
-export ANT_HOME=$LIB_DIR/ant
-
 export LD_LIBRARY_PATH=$LIB_DIR/fennel
 
 # configure tracing

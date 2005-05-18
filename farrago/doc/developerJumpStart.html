@@ -10,19 +10,21 @@
 
 <h1>Getting Started With Farrago</h1>
 
-This document provides instructions on how to build and run Farrago.
+This document provides instructions on how to build and run Farrago
+and its dependencies (including Fennel).
 
 <h2>Supported Platforms</h2>
 
-So far, the Fennel kernel only runs on Linux and Windows.  This means
-to actually store data in Farrago, you have to be running one of these
-operating systems.  However, the Java portion is likely to run on
-other platforms where JDK 1.4 is available.  You can use it to test
-parsing, validation, optimization, and the metadata aspects of DDL, as
-well as queries against foreign data accessible via Java (a
-sample <a href="http://hsqldb.sf.net">HSQLDB</a> source is provided
-for testing JDBC, and the <a href="howto/medmdr.html">MDR HOWTO</a>
-explains MDR/JMI usage).
+So far, the Fennel C++ library only builds and runs on Linux and
+Windows.  This means that if you want to get a fully functional
+Farrago build, you have to be running one of these operating systems.
+However, the Java portion is likely to run on other platforms where
+JDK 1.4 is available.  You can use it to test parsing, validation,
+optimization, and the metadata aspects of DDL, as well as queries
+against foreign data accessible via Java (a sample <a
+href="http://hsqldb.sf.net">HSQLDB</a> source is provided for testing
+JDBC, and the <a href="howto/medmdr.html">MDR HOWTO</a> explains
+MDR/JMI usage).
 
 <p>
 
@@ -32,7 +34,8 @@ options:
 
 <ul>
 
-<li>use your own Linux or Windows box if you have one
+<li>use your own Linux or Windows box if you have one (Linux is strongly
+recommended; the Windows C++ build/debug environment is slow and touchy)
 
 <li>use one of the Sourceforge compile farm machines (Fennel has
 been successfully tested on some of them)
@@ -41,7 +44,7 @@ been successfully tested on some of them)
 
 </ul>
 
-<h2>Important Windows Note</h2>
+<h3>Important Windows Note</h3>
 
 If you are using Windows, please read and follow the <a
 href="cygwinSetup.html">Cygwin setup instructions</a> before going any
@@ -49,14 +52,28 @@ further.
 
 <h2>Get the Source Code</h2>
 
-Currently, the only way to build Farrago is to get the source from
-Perforce.  (If you just want to take a look-see through the codebase,
+There are two ways to get the Farrago source code; either
+<a href="http://www.eigenbase.org/download.html">
+download a full Eigenbase source release</a>
+or pull the latest code from the Eigenbase Perforce server.
+(If you just want to take a look-see through the codebase,
 you can use <a href="http://p4web.eigenbase.org/open/dev/farrago/">
-p4web</a>.)  If you're new to Perforce, you might want to read the
-official <a
+p4web</a>.)  
+
+<p>
+
+If you have downloaded a full Eigenbase source release, you can skip the
+rest of this section about Perforce and continue on with 
+<a href="#InitBuild">Initial Build</a>; note that in this case 
+we'll refer to the top-level directory created when you unpacked the
+release archive as <code>dev</code> in this and other developer docs.
+
+<p>
+
+If you're new to Perforce, you might want to read the official <a
 href="http://www.perforce.com/perforce/doc.022/manuals/boilerplates/quickstart.html">
-Perforce Quick Start</a>.  If you don't already have p4.exe, download
-the appropriate binary from 
+Perforce Quick Start</a>.  If you don't already have a p4 client
+program, download the appropriate binary from
 <a href="http://www.perforce.com/perforce/loadprog.html">
 Perforce</a> (you only need the client, not the server).
 
@@ -110,30 +127,17 @@ CRLF's from getting checked in.
 
 Finally, run <code>p4 sync</code> to get all the source files and
 thirdparty distributions into your client workspace.  This may take a
-while because some of the thirdparty distributions are large.  You
-should also make sure you have <a
+while because some of the thirdparty distributions are large.  
+
+<a name="InitBuild">
+<h2>Initial Build</h2>
+</a>
+
+Before proceeding, make sure you have <a
 href="http://java.sun.com/j2se/1.4">JDK 1.4</a> or higher installed,
 with JAVA_HOME set to the JDK installation root.
 
 <p>
-
-If you will be building Fennel, now is the time to make sure you have
-the correct versions of the required build tools such as autoconf.
-The file <code>dev/fennel/INSTALL</code> (and
-<code>dev/fennel/INSTALL.mingw</code> for Windows) has more
-information.  If your autotools are out of date, you can either
-install updated packages for your Linux or Cygwin distribution, or
-build them from source by running <code>make autotools</code> in
-directory <code>dev/thirdparty</code> and then following the
-installation instructions.
-
-<p>
-
-You can ignore the Fennel instructions for building STLport,
-Boost, and Fennel manually, since the next step is going to take care
-of all of that automatically.
-
-<h2>Initial Build</h2>
 
 For the first build in a new sandbox, there's a lot of
 one-time setup that needs to be done, including building some
@@ -155,9 +159,26 @@ ten minutes on most machines); with Fennel it will take quite a bit
 longer.  If all goes well, you'll be left with a complete Farrago
 build for your platform.  Otherwise, you'll need to dig into the
 script and its output to see what's going wrong.  If you can't figure
-it out, ask for help on the <a href="#Feedback">farrago-developers
+it out, ask for help on the <a
+href="http://sourceforge.net/mail/?group_id=80183">farrago-developers
 mailing list</a>.  You should probably include the last 100 lines of
 build output including the error.
+
+<h3>Fennel and Autotools</h3>
+
+If you are building with Fennel, the initBuild script will check to
+see if you have a autotools versions (autoconf, automake, and libtool)
+which are known to work; if you don't, the script will fail before
+starting the C++ build.  If this occurs, you can either follow the
+directions in the script error message to build and install the
+autotools from thirdparty, or update your machine using the mechanism
+provided by your OS distribution (Linux or Cygwin).
+
+<p>
+
+If you need help with problems in the C++ portion of the build, use
+the <a href="http://sourceforge.net/mail/?group_id=53161">fennel-developers
+mailing list</a>.
 
 <h2>Environment Variables</h2>
 
@@ -183,7 +204,8 @@ variable settings to take effect for subsequent commands.
 <h2>Incremental Builds</h2>
 
 Once you already have a working build, updating to the latest code
-requires following these steps:
+(assuming you're using the Perforce server) requires following these
+steps:
 
 <ol>
 
@@ -201,15 +223,18 @@ initBuild.sh process.
 
 <li>
 If anything under <code>dev/fennel/...</code> has changed (and you're
-building with Fennel support), cd to that directory and run make.  In
-very rare cases, you may need to make clean first (or even rerun
-initBuild.sh), but that should be a last resort.
+building with Fennel support), cd to that directory and run
+<code>make</code>.  If it has been a long time since your last sync,
+you may get errors, in which case you should run <code>make
+clean</code> and then try again.  If you still get errors, see below
+on forcing a full rebuild.
 
 <li>
-cd to <code>dev/farrago</code> and run "ant test" to make sure you'll
-be working from a good build (WARNING: this will rebuild your catalog
-automatically, destroying any data in your Farrago database).  To avoid
-running the tests, use "ant createCatalog" instead.
+cd to <code>dev/farrago</code> and run <code>ant test</code> to make
+sure you'll be working from a good build (WARNING: this will rebuild
+your catalog automatically, destroying any data in your Farrago
+database).  To avoid running the tests, run <code>ant createCatalog</code>
+instead.
 
 </ol>
 
@@ -341,6 +366,11 @@ template for passing the right startup information.  Also, as part of
 a successful build, the full classpath is always dumped to the file
 <code>dev/farrago/classpath.gen</code>.
 
+<p>
+
+The <a href="faqTech.html">developer FAQ</a> contains some
+useful information on debugging.
+
 <h2>Client/Server Operation</h2>
 
 So far, all of the execution modes discussed have been <em>embedded
@@ -349,8 +379,8 @@ single process such as iSQL-Viewer or sqlline.  This is the most
 useful for debugging, but scripts are also available to test
 client/server mode.  Run the <code>farragoServer</code> script to
 start the server in a shell (after startup, it waits listening for
-connections; enter the <code>!quit</code> command in order to shut it
-down).  From another shell, run <code>sqllineClient</code> (or
+connections; enter the <code>!quit</code> command in that shell to
+shut it down).  From another shell, run <code>sqllineClient</code> (or
 <code>ant isql.client</code>, and choose the
 <code>FarragoServer</code> service) to communicate with the server in
 client/server mode.  To debug the server, start it with <code>ant

@@ -11,13 +11,14 @@
 <h1>What's Working Already?</h1>
 
 Here's a laundry list of SQL features which are already working in
-Farrago.  Restrictions are noted inline as well as in subsequent
-sections.  If a sub-feature isn't mentioned (e.g. CHECK clause in
-CREATE TABLE), it isn't available yet.  Everything is supposed to work
-according to the SQL standard, so if something doesn't, that's either
-a bug or an incomplete feature.  Which standard?  Normal procedure is
-to consult the SQL-2003 standard and cross-check it with SQL-92
-and SQL-99 to see if there are any incompatibilities.
+Farrago as of release 0.5.  Restrictions are noted inline as well as
+in subsequent sections.  If a sub-feature isn't mentioned (e.g. CHECK
+clause in CREATE TABLE), it isn't available yet.  Everything is
+supposed to work according to the SQL standard, so if something
+doesn't, that's either a bug or an incomplete feature.  Which
+standard?  Normal procedure is to consult the SQL:2003 standard and
+cross-check it with SQL-92 and SQL:1999 to see if there are any
+incompatibilities.
 
 <h2>DDL</h2>
 
@@ -30,15 +31,17 @@ before both storage and lookup).  The compound identifier
 element.
 
 <li>SET CATALOG: the system currently starts out with several catalogs
-predefined (SYS_BOOT, SYS_CWM, SYS_FEM, and LOCALDB).  Additional
-catalogs can be created implicitly via the SQL/MED CREATE SERVER
-command.  The SYS_BOOT catalog contains internal tables for metadata
-storage, along with things like views for implementing JDBC metadata.
-The SYS_CWM catalog is a virtual catalog exposing the contents of the
-CWM-based repository.  SYS_FEM is similar, but for Farrago extensions
-to CWM.  The LOCALDB catalog stores user metadata about both local and
-foreign tables.  The default catalog starts out as LOCALDB; SET
-CATALOG can be used to change this per-session.
+predefined (SYS_BOOT, SYS_MOF, SYS_CWM, SYS_FEM, and LOCALDB).
+Additional catalogs can be created implicitly via the SQL/MED CREATE
+SERVER command.  The SYS_BOOT catalog contains internal tables for
+metadata storage, along with things like views for implementing JDBC
+metadata.  The SYS_MOF catalog is a virtual catalog exposing the
+highest-level metamodel.  The SYS_CWM catalog is a virtual catalog
+exposing the contents of the CWM-based repository.  SYS_FEM is
+similar, but for Farrago extensions to CWM.  The LOCALDB catalog
+stores user metadata about both local and foreign tables.  The default
+catalog starts out as LOCALDB; SET CATALOG can be used to change this
+per-session.
 
 <li>SET SCHEMA: user schemas are created in the LOCALDB catalog.
 SET SCHEMA can be used to change the default schema within the
@@ -56,14 +59,13 @@ implemented.
 <li>CREATE TABLE: every table must have a primary key.  Supported
 column datatypes are BOOLEAN, TINYINT, SMALLINT, INTEGER, BIGINT,
 REAL, DOUBLE (alias DOUBLE PRECISION), VARCHAR (alias CHARACTER
-VARYING), VARBINARY, CHAR (alias CHARACTER), BINARY, DATE, TIME, and
-TIMESTAMP.  Time precision is currently limited to seconds, but will
-eventually be enhanced to microseconds (which should be the default
-for TIMESTAMP according to the SQL standard).  Timezones are not yet
-supported.  Support for <a
-href="design/CollectionTypes.html">multisets</a>, time intervals, and
-<a href="design/UserDefinedTypesAndRoutines.html">user-defined
-types</a> is currently under development.
+VARYING), VARBINARY, CHAR (alias CHARACTER), BINARY, DATE, TIME,
+TIMESTAMP, and user-defined type.  Time precision is currently limited
+to seconds, but will eventually be enhanced to microseconds (which
+should be the default for TIMESTAMP according to the SQL standard).
+Timezones are not yet supported.  Support for standard <a
+href="design/CollectionTypes.html">multisets</a> and time intervals
+is currently under development.
 
 <li>NOT NULL:  can be specified explicitly on any column; is also implied
 for columns which participate in the table's primary key or clustered index.
@@ -105,7 +107,42 @@ temporary tables support the same features as permanent tables
 
 <li>CREATE VIEW:  all views are currently read-only.
 
-<li>DROP SCHEMA/TABLE/VIEW: both RESTRICT and CASCADE are supported.
+<li><a href="design/sqlmed.html">SQL/MED</a> support.  CREATE/DROP
+FOREIGN DATA WRAPPER, CREATE/DROP SERVER, and CREATE/DROP FOREIGN
+TABLE are working.  Implementations for JDBC and MDR are
+available (the MDR implementation is already being used for exposing
+the catalog contents via SQL).
+
+<li><a href="design/UserDefinedTypesAndRoutines.html#Routines">CREATE
+FUNCTION/PROCEDURE</a>: supports functions with SQL-defined bodies
+consisting of a single RETURN statement, and Java-defined external
+functions and procedures with IN parameters only.  For external functions,
+parameters must be of builtin type.  Procedure result sets are not supported.
+External routines may call back into JDBC via standard
+<code>jdbc:default:connection</code>.
+</li>
+
+<li><a href="design/UserDefinedTypesAndRoutines.html#Types">CREATE
+TYPE/CONSTRUCTOR/ORDERING</a>: supports SQL-defined types (both
+structured and distinct, but not domains and not SQL/JRT).  Neither
+type inheritance nor typed tables are supported.  Constructor methods
+may only consist of a list of SET attribute statements followed by
+RETURN SELF.  Observers are supported but mutators are not.
+User-defined casts and transformations are not supported, but
+user-defined orderings are.  Directly querying distinct type values via
+JDBC is supported; this is currently unreliable for structured types.
+</li>
+
+<li>CALL SQLJ.INSTALL_JAR/REMOVE_JAR: standard system-defined
+procedures for jar management.  Also supported are non-standard
+CREATE/DROP JAR statements; these are equivalent and used internally
+to implement the standard SQLJ procedures.  Deployment descriptors and
+jar paths are not yet supported.
+
+<li>SET PATH: defines the lookup scope for user-defined routine and
+type references.</li>
+
+<li>DROP: both RESTRICT and CASCADE are supported where relevant.
 
 <li>DROP INDEX:  only unclustered indexes may be dropped.
 
@@ -126,17 +163,9 @@ parameter (TODO: documentation for parameters).
 <li>ROLLBACK TO SAVEPOINT "x": partially rollback current transaction
 to savepoint x.
 
-<li><a href="design/sqlmed.html">SQL/MED</a> support.  CREATE/DROP
-FOREIGN DATA WRAPPER, CREATE/DROP SERVER, and CREATE/DROP FOREIGN
-TABLE are working.  Implementations for JDBC and MDR are
-available (the MDR implementation is already being used for exposing
-the catalog contents via SQL).
-
-<li><a href="design/UserDefinedTypesAndRoutines.html">CREATE FUNCTION</a>:  
-supports functions with SQL-defined bodies consisting 
-of a single RETURN statement).  Support for external Java functions is
-currently under development.
-</li>
+<li><a href="extensibility.html">
+ALTER SYSTEM ADD CATALOG JAR and ALTER SESSION IMPLEMENTATION SET JAR</a>:
+Farrago-specific mechanisms for system extensibility
 
 </ul>
 
@@ -152,16 +181,13 @@ currently under development.
 LEFT/RIGHT/INNER/CROSS JOIN, old-style comma list, nested queries,
 and explicit TABLE references.
 
-<li>EXPLAIN PLAN [{WITH|WITHOUT} IMPLEMENTATION] FOR
+<li>EXPLAIN PLAN [{WITH|WITHOUT} IMPLEMENTATION] [AS XML] FOR
 <em>query-or-DML-statement</em>; shows optimizer plan.  WITHOUT
 IMPLEMENTATION yields unoptimized abstract relational plan.  Default
 is WITH IMPLEMENTATION, which yields optimized plan with all physical
-operators.
+operators.  AS XML yields detailed output in element-oriented XML.
 
-<li>Row expression support is currently very limited (basic
-equality/inequality comparisons, AND, +, a few others).  
-SESSION_USER, CURRENT_USER,  and SYSTEM_USER are supported
-(but authentication and privileges are not yet implemented).
+<li>row expressions:  (TODO:  list)
 
 </ul>
 
@@ -174,6 +200,8 @@ SESSION_USER, CURRENT_USER,  and SYSTEM_USER are supported
 <li>UPDATE
 
 <li>DELETE
+
+<li>CALL
 
 </ul>
 
@@ -267,7 +295,7 @@ mentioning some serious limitations in the features listed above:
 <ul>
 
 <li>The validator is still under development, so when you make an invalid
-request, you'll very likely get ugly internal errors, data corruption,
+request, you may get ugly internal errors, data corruption,
 printer spontaneous combustion, etc.
 
 <li>ORDER BY descending is not supported (nor is the non-standard
