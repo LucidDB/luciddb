@@ -416,6 +416,7 @@
   <macrodef name="farrago.synthesizeMetamodel">
     <attribute name="extMofBasename" default="unspecified" />
     <attribute name="xmiDir" default="unspecified" />
+    <attribute name="extPresent" default="true" />
     <sequential>
       <xslt style="${farrago.xmi.dir}/transformCWM.xsl"
         in="${farrago.cwm.xmi}"
@@ -424,6 +425,7 @@
           expression="${FarragoExtMetamodelTransformed.xmi}"/>
         <param name="extXmiFilename"
           expression="@{xmiDir}/@{extMofBasename}Transformed.xmi"/>
+        <param name="extPresent" expression="@{extPresent}"/>
       </xslt>
       <xslt style="${farrago.xmi.dir}/resolveCwmRefs.xsl"
         in="@{xmiDir}/FarragoMetamodelUnresolved.xmi"
