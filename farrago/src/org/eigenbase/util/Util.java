@@ -726,6 +726,23 @@ public class Util extends Toolbox
     }
 
     /**
+     * Materializes the results of a {@link java.util.Iterator} as a
+     * {@link java.util.List}.
+     *
+     * @param iter iterator to materialize
+     *
+     * @return materialized list
+     */
+    public static List toList(Iterator iter)
+    {
+        List list = new ArrayList();
+        while (iter.hasNext()) {
+            list.add(iter.next());
+        }
+        return list;
+    }
+
+    /**
      * @deprecated use {@link Vector#toArray} on Java2
      */
     public static Object [] toArray(Vector v)

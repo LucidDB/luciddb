@@ -300,7 +300,7 @@ public class MockMetadataFactory extends FarragoMetadataFactory
                     Class attrClass = method.getReturnType();
                     Object attrValue;
                     try {
-                        attrValue = method.invoke(o, null);
+                        attrValue = method.invoke(o, (Object[]) null);
                     } catch (IllegalAccessException e) {
                         throw Util.newInternal(e);
                     } catch (InvocationTargetException e) {

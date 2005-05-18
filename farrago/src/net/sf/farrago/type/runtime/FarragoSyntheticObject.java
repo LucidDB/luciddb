@@ -20,14 +20,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package net.sf.farrago.runtime;
+package net.sf.farrago.type.runtime;
 
 import java.lang.reflect.*;
 import java.nio.*;
 import java.util.*;
 import java.sql.*;
-
-import net.sf.farrago.type.runtime.*;
 
 import org.eigenbase.runtime.*;
 import org.eigenbase.util.*;

@@ -33,7 +33,6 @@ import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.resource.*;
-import net.sf.farrago.runtime.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
 
