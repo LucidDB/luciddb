@@ -457,8 +457,10 @@ require version '${required.ant.version}'."/>
     depends="configureTrace, convertExtMetamodel, convertExtModel">
     <mkdir dir="${farrago.catalog.dir}"/>
     <mkdir dir="${farrago.catalog.src.dir}"/>
+    <property name="ext.model.file" value=""/>
     <farrago.synthesizeMetamodel
       extMofBasename="ExtModel"
+      extPresent="${ext.model.file}"
       xmiDir="${farrago.xmi.dir}"/>
     <farrago.mdrFork target="forked_importMetamodel"/>
     <farrago.javaCompile
