@@ -91,6 +91,7 @@ rm -f $SRC_RELEASE.$ARCHIVE_SUFFIX
 rm -rf $SRC_RELEASE
 mkdir $SRC_RELEASE
 cp -R $OPEN_DIR/thirdparty $SRC_RELEASE
+rm -f $SRC_RELEASE/thirdparty/icu-2.8.patch.tgz
 cp -R $OPEN_DIR/fennel $SRC_RELEASE
 cp -R $OPEN_DIR/farrago $SRC_RELEASE
 cp $DIST_DIR/VERSION $SRC_RELEASE
