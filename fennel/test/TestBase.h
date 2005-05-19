@@ -94,12 +94,23 @@ protected:
     // TODO:  move to SynchObj
     void snooze(uint nSeconds);
 
+    /**
+     * Copy trace output to stdout
+     */
+    bool traceStdout;
+
+    /**
+     * Copy trace output to file
+     */
+    bool traceFile;
+
 public:
     static ParamName paramTestSuiteName;
     static ParamName paramTraceFileName;
     static ParamName paramDictionaryFileName;
     static ParamName paramTraceLevel;
     static ParamName paramStatsFileName;
+    static ParamName paramTraceStdout;
     
     /**
      * Configuration parameters.  The reason this is static is so that no
