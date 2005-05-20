@@ -1,0 +1,83 @@
+# $Id:$
+
+# Find all non-leaf Classes.
+EXPLAIN AND EXECUTE
+select s
+from class "Class" as e then {
+    follow association Generalizes backward as s
+};
+
+# Find all Classes which have grandchildren.  Instead of specifying the
+# association and direction, test navigation via end instead.
+EXPLAIN AND EXECUTE
+select g
+from class "Class" as e then {
+    follow origin end subtype as s then {
+        follow destination end supertype as g
+    }
+};
+
+# Find all Classes which are direct descendants of 'BehavioralFeature'
+EXPLAIN AND EXECUTE
+select d
+from class "Class" as b where name='BehavioralFeature' then {
+    follow association Generalizes forward as d
+};
+
+# Find all non-inherited Attributes of Class 'Import' in Package 'Model'
+EXPLAIN AND EXECUTE
+select a
+from class Package as p where name='Model' then {
+    follow composite forward
+    destination class "Class" as c where name='Import' then {
+        follow composite forward
+        destination class Attribute as a
+    }
+};
+
+# Find all Attributes of Class 'Import' in Package 'Model', including
+# those inherited from its superclass (ModelElement)
+EXPLAIN AND EXECUTE
+select a
+from class Package as p where name='Model' then {
+    follow composite forward
+    destination class "Class" as c where name='Import' then {
+        follow association Generalizes backward as s
+    } gather with parent then {
+        follow composite forward
+        destination class Attribute as a
+    }
+};
+
+# Find all Classes with non-inherited attributes named
+# 'annotation' or 'visibility'.
+EXPLAIN AND EXECUTE
+select c
+from {
+    class Attribute as a1 where name='annotation'
+    union
+    class Attribute as a2 where name='visibility'
+} gather then {
+    follow composite backward destination class "Class" as c
+};
+
+# Verify that target classes are subsumed
+EXPLAIN
+select e
+from class ModelElement then {
+    follow forward as e
+};
+
+# Verify that target classes are filtered by applicability
+EXPLAIN
+select t
+from class ModelElement then {
+    follow forward as t where tagId='1'
+};
+
+# Test a follow that doesn't go anywhere
+EXPLAIN
+select *
+from class Exception then {
+    follow association CanRaise forward
+};

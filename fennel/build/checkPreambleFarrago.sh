@@ -22,6 +22,7 @@ grep -v -F \
 farrago/src/net/sf/farrago/parser/impl/
 farrago/src/net/sf/farrago/resource/FarragoResource.java
 farrago/src/net/sf/farrago/resource/FarragoResource_en_US.java
+farrago/src/com/lucidera/lurql/parser/
 farrago/src/org/eigenbase/resource/EigenbaseResource.java
 farrago/src/org/eigenbase/resource/EigenbaseResource_en_US.java
 farrago/src/org/eigenbase/sql/parser/impl/' |

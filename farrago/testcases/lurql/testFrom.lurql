@@ -1,0 +1,28 @@
+# $Id:$
+
+# Find all Exceptions.
+EXPLAIN AND EXECUTE
+select *
+from class Exception;
+
+# Test IN filter with literals.
+EXPLAIN AND EXECUTE
+select *
+from class ModelElement where name in ('Class', 'Exception');
+
+# Test IN filter with SQL query.
+EXPLAIN AND EXECUTE
+select *
+from class ModelElement where name in [values ('Class'), ('Exception')];
+
+# Test IN filter with SQL query which returns object ID.
+EXECUTE
+select *
+from class ModelElement where mofId in
+[select "mofId" from sys_mof.model."Class" where "name"='Exception'];
+
+# Test filter based on association.
+EXECUTE
+select *
+from class Attribute where container in
+[select "mofId" from sys_mof.model."Class" where "name"='ModelElement'];

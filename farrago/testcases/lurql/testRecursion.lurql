@@ -1,0 +1,39 @@
+# $Id:$
+
+# Test a static recursion that doesn't go very far
+EXPLAIN
+select *
+from class Operation then {
+    recursively {
+        follow association CanRaise forward
+    }
+};
+
+# Test a simple dynamic recursion
+EXPLAIN AND EXECUTE
+select *
+from class "Class" where name='Exception' then {
+    recursively {
+        follow association Generalizes backward
+    }
+};
+
+# Test a bigger dynamic recursion
+EXECUTE
+select *
+from class "Class" where name='ModelElement' then {
+    recursively {
+        follow association Generalizes forward
+    }
+};
+
+# Test recursion with THEN
+EXPLAIN AND EXECUTE
+select a
+from class "Class" where name='Exception' then {
+    recursively {
+        follow association Generalizes backward
+    } then {
+        follow association Contains destination class Attribute as a
+    }
+};

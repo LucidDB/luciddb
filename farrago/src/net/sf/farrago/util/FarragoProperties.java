@@ -110,6 +110,13 @@ public class FarragoProperties extends Properties
     public final StringProperty testFilesetConcurrent =
         new StringProperty(this, "net.sf.farrago.fileset.concurrentsql", null);
 
+    /**
+     * The string property "com.lucidera.fileset.unitlurql" specifies a
+     * newline-separated list of LURQL test script files to run.
+     */
+    public final StringProperty testFilesetUnitlurql =
+        new StringProperty(this, "com.lucidera.fileset.unitlurql", null);
+
     //~ Constructors ----------------------------------------------------------
 
     private FarragoProperties()

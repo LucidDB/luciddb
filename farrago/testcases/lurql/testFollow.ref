@@ -1,0 +1,246 @@
+# $Id:$
+
+# Find all non-leaf Classes.
+PARSE RESULT:
+select "s" 
+from
+class "Class" as "e"
+then {
+    follow association "Generalizes" backward as "s"
+};
+
+EXPLANATION:
+e_1 { Class }
+e_1:subtype->Generalizes->s_2:supertype
+s_2 { GeneralizableElement }
+
+EXECUTION RESULT:
+Class: BehavioralFeature
+Class: Classifier
+Class: DataType
+Class: Feature
+Class: GeneralizableElement
+Class: ModelElement
+Class: Namespace
+Class: StructuralFeature
+Class: TypedElement
+
+****
+
+# Find all Classes which have grandchildren.  Instead of specifying the
+# association and direction, test navigation via end instead.
+PARSE RESULT:
+select "g" 
+from
+class "Class" as "e"
+then {
+    follow origin end "subtype" as "s"
+    then {
+        follow destination end "supertype" as "g"
+    }
+};
+
+EXPLANATION:
+e_1 { Class }
+e_1:subtype->Generalizes->s_2:supertype
+g_3 { GeneralizableElement }
+s_2 { GeneralizableElement }
+s_2:subtype->Generalizes->g_3:supertype
+
+EXECUTION RESULT:
+Class: Classifier
+Class: Feature
+Class: GeneralizableElement
+Class: ModelElement
+Class: Namespace
+Class: TypedElement
+
+****
+
+# Find all Classes which are direct descendants of 'BehavioralFeature'
+PARSE RESULT:
+select "d" 
+from
+class "Class" as "b"
+where
+    "name" = 'BehavioralFeature'
+then {
+    follow association "Generalizes" forward as "d"
+};
+
+EXPLANATION:
+b_1 { Class } where "name" = 'BehavioralFeature'
+b_1:supertype->Generalizes->d_2:subtype
+d_2 { GeneralizableElement }
+
+EXECUTION RESULT:
+Class: Exception
+Class: Operation
+
+****
+
+# Find all non-inherited Attributes of Class 'Import' in Package 'Model'
+PARSE RESULT:
+select "a" 
+from
+class "Package" as "p"
+where
+    "name" = 'Model'
+then {
+    follow composite forward destination class "Class" as "c"
+    where
+        "name" = 'Import'
+    then {
+        follow composite forward destination class "Attribute" as "a"
+    }
+};
+
+EXPLANATION:
+a_3 { Attribute }
+c_2 { Class } where "name" = 'Import'
+c_2:container->Contains->a_3:containedElement { Attribute }
+p_1 { Package } where "name" = 'Model'
+p_1:container->Contains->c_2:containedElement { Class }
+
+EXECUTION RESULT:
+Attribute: isClustered
+Attribute: visibility
+
+****
+
+# Find all Attributes of Class 'Import' in Package 'Model', including
+# those inherited from its superclass (ModelElement)
+PARSE RESULT:
+select "a" 
+from
+class "Package" as "p"
+where
+    "name" = 'Model'
+then {
+    follow composite forward destination class "Class" as "c"
+    where
+        "name" = 'Import'
+    then {
+        follow association "Generalizes" backward as "s"
+    } gather with parent then {
+        follow composite forward destination class "Attribute" as "a"
+    }
+};
+
+EXPLANATION:
+a_4 { Attribute }
+c_2 { Class } where "name" = 'Import'
+c_2:container->Contains->a_4:containedElement { Attribute }
+c_2:subtype->Generalizes->s_3:supertype
+p_1 { Package } where "name" = 'Model'
+p_1:container->Contains->c_2:containedElement { Class }
+s_3 { GeneralizableElement }
+s_3:container->Contains->a_4:containedElement { Attribute }
+
+EXECUTION RESULT:
+Attribute: annotation
+Attribute: isClustered
+Attribute: name
+Attribute: qualifiedName
+Attribute: visibility
+
+****
+
+# Find all Classes with non-inherited attributes named
+# 'annotation' or 'visibility'.
+PARSE RESULT:
+select "c" 
+from
+{
+    class "Attribute" as "a1"
+    where
+        "name" = 'annotation'
+    union
+    class "Attribute" as "a2"
+    where
+        "name" = 'visibility'
+} gather then {
+    follow composite backward destination class "Class" as "c"
+};
+
+EXPLANATION:
+a1_1 { Attribute } where "name" = 'annotation'
+a1_1:containedElement->Contains->c_3:container { Class }
+a2_2 { Attribute } where "name" = 'visibility'
+a2_2:containedElement->Contains->c_3:container { Class }
+c_3 { Class }
+
+EXECUTION RESULT:
+Class: Feature
+Class: GeneralizableElement
+Class: Import
+Class: ModelElement
+
+****
+
+# Verify that target classes are subsumed
+PARSE RESULT:
+select "e" 
+from
+class "ModelElement"
+then {
+    follow forward as "e"
+};
+
+EXPLANATION:
+anon_1 { ModelElement }
+anon_1:constraint->Constrains->e_2:constrainedElement
+anon_1:container->Contains->e_2:containedElement
+anon_1:dependent->DependsOn->e_2:provider
+anon_1:importer->Aliases->e_2:imported
+anon_1:modelElement->AttachesTo->e_2:tag
+anon_1:operation->CanRaise->e_2:except
+anon_1:referent->RefersTo->e_2:referencedEnd
+anon_1:referrer->Exposes->e_2:exposedEnd
+anon_1:supertype->Generalizes->e_2:subtype
+anon_1:type->IsOfType->e_2:typedElements
+e_2 { ModelElement }
+
+****
+
+# Verify that target classes are filtered by applicability
+PARSE RESULT:
+select "t" 
+from
+class "ModelElement"
+then {
+    follow forward as "t"
+    where
+        "tagId" = '1'
+};
+
+EXPLANATION:
+anon_1 { ModelElement }
+anon_1:constraint->Constrains->t_2:constrainedElement
+anon_1:container->Contains->t_2:containedElement
+anon_1:dependent->DependsOn->t_2:provider
+anon_1:importer->Aliases->t_2:imported
+anon_1:modelElement->AttachesTo->t_2:tag
+anon_1:operation->CanRaise->t_2:except
+anon_1:referent->RefersTo->t_2:referencedEnd
+anon_1:referrer->Exposes->t_2:exposedEnd
+anon_1:supertype->Generalizes->t_2:subtype
+anon_1:type->IsOfType->t_2:typedElements
+t_2 { Tag } where "tagId" = '1'
+
+****
+
+# Test a follow that doesn't go anywhere
+PARSE RESULT:
+select * 
+from
+class "Exception"
+then {
+    follow association "CanRaise" forward
+};
+
+EXPLANATION:
+anon_1 { Exception }
+
+****
+
