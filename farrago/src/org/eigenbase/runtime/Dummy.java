@@ -3,7 +3,7 @@
 // Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2002-2004 The Eigenbase Project
 // Copyright (C) 2002-2004 Disruptive Tech
-// Copyright (C) 2002-2004 Red Square, Inc.
+// Copyright (C) 2002-2004 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free

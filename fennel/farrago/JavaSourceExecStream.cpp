@@ -3,7 +3,7 @@
 // Fennel is a library of data storage and processing components.
 // Copyright (C) 2005-2005 The Eigenbase Project
 // Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 Red Square, Inc.
+// Copyright (C) 2005-2005 LucidEra, Inc.
 // Portions Copyright (C) 2004-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -127,6 +127,6 @@ JavaSourceExecStream::getOutputBufProvision() const
     return BUFPROV_PRODUCER;
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/farrago/JavaSourceExecStream.cpp#4 $");
+FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/farrago/JavaSourceExecStream.cpp#5 $");
 
 // End JavaSourceExecStream.cpp

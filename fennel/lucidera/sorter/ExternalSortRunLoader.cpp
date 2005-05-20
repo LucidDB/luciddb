@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2005 Red Square, Inc.
+// Copyright (C) 2004-2005 LucidEra, Inc.
 // Copyright (C) 2005-2005 The Eigenbase Project
 // Portions Copyright (C) 2004-2005 John V. Sichi
 //

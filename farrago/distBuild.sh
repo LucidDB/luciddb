@@ -135,8 +135,8 @@ cp -d libfennel/.libs/$SO_PATTERN $LIB_DIR/fennel
 cp -d farrago/.libs/$SO_PATTERN $LIB_DIR/fennel
 cp -d disruptivetech/libfennel_dt/.libs/$SO_PATTERN $LIB_DIR/fennel
 cp -d disruptivetech/farrago/.libs/$SO_PATTERN $LIB_DIR/fennel
-cp -d redsquare/libfennel_rs/.libs/$SO_PATTERN $LIB_DIR/fennel
-cp -d redsquare/farrago/.libs/$SO_PATTERN $LIB_DIR/fennel
+cp -d lucidera/libfennel_lu/.libs/$SO_PATTERN $LIB_DIR/fennel
+cp -d lucidera/farrago/.libs/$SO_PATTERN $LIB_DIR/fennel
 
 # copy fennel resources
 cp common/*.properties $CATALOG_DIR/fennel

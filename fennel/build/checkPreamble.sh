@@ -7,7 +7,7 @@ usage() {
   echo "Options:"
   echo " -eigenbase       Require Eigenbase copyright"
   echo " -disruptivetech  Require Disruptive Tech copyright"
-  echo " -redsquare       Require Red Square copyright"
+  echo " -lucidera        Require LucidEra  copyright"
   echo " -fennel          Require Fennel description, 'Fennel is a library of"
   echo "                  data storage and processing components.'"
   echo " -farrago         Require Farrago description, 'Farrago is an"
@@ -44,8 +44,8 @@ BEGIN {
         actuals[n]   = "// Copyright (C) year-year The Eigenbase Project";
         expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] Disruptive Tech";
         actuals[n]   = "// Copyright (C) year-year Disruptive Tech";
-        expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] Red Square, Inc\\.";
-        actuals[n]   = "// Copyright (C) year-year Red Square, Inc.";
+        expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] LucidEra, Inc\\.";
+        actuals[n]   = "// Copyright (C) year-year LucidEra, Inc.";
     }
     if (zone == "disruptivetech") {
         expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] Disruptive Tech";
@@ -53,9 +53,9 @@ BEGIN {
         expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] The Eigenbase Project";
         actuals[n]   = "// Copyright (C) year-year The Eigenbase Project";
     }
-    if (zone == "redsquare") {
-        expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] Red Square, Inc\\.";
-        actuals[n]   = "// Copyright (C) year-year Red Square, Inc.";
+    if (zone == "lucidera") {
+        expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] LucidEra, Inc\\.";
+        actuals[n]   = "// Copyright (C) year-year LucidEra, Inc.";
         expects[++n] = "// Copyright \\(C\\) [0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9] The Eigenbase Project";
         actuals[n]   = "// Copyright (C) year-year The Eigenbase Project";
     }
@@ -121,7 +121,7 @@ do
    case "$1" in
    -eigenbase) zone=eigenbase ; shift ;;
    -disruptivetech) zone=disruptivetech ; shift ;;
-   -redsquare) zone=redsquare ; shift ;;
+   -lucidera) zone=lucidera ; shift ;;
    -fennel) component=fennel ; shift ;;
    -farrago) component=farrago ; shift ;;
    -farrago-eigenbase) component=farrago-eigenbase ; shift ;;

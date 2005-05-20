@@ -1,7 +1,7 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2004-2005 Red Square, Inc.
+// Copyright (C) 2004-2005 LucidEra, Inc.
 // Copyright (C) 2005-2005 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -23,7 +23,7 @@ package com.lucidera.farrago.fennel;
 import org.eigenbase.util.*;
 
 /**
- * JNI interface for Red Square extensions to Fennel which are used by
+ * JNI interface for LucidEra extensions to Fennel which are used by
  * Farrago.
  *
  * @author John V. Sichi

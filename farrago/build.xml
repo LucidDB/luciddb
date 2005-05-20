@@ -4,7 +4,7 @@
 // Farrago is an extensible data management system.
 // Copyright (C) 2005-2005 The Eigenbase Project
 // Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 Red Square, Inc.
+// Copyright (C) 2005-2005 LucidEra, Inc.
 // Portions Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -129,10 +129,13 @@ require version '${required.ant.version}'."/>
   <!-- a fileset of all files for which tags should be built -->
   <fileset dir="${farrago.dir}" id="fileset.taggable">
     <include name="catalog/java/**/*.java"/>
+    <include name="src/**/*.jj"/>
     <include name="src/**/*.java"/>
     <include name="examples/**/*.java"/>
     <include name="examples/**/package.java"/>
     <include name="src/**/package.html"/>
+    <exclude name="src/**/parser/impl/*"/>
+    <exclude name="examples/**/parserimpl/*"/>
   </fileset>
 
   <!-- a fileset of all SQL unit tests -->
@@ -1016,6 +1019,7 @@ require version '${required.ant.version}'."/>
   <target name="etags">
     <antcall target="tags.find_taggable_files"/>
     <exec dir="${farrago.dir}" executable="ctags">
+      <arg line="--langmap=java:+.jj"/>
       <arg line="-e"/>
       <arg line="-L taggedfiles"/>
     </exec>

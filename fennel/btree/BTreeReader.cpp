@@ -3,7 +3,7 @@
 // Fennel is a library of data storage and processing components.
 // Copyright (C) 2005-2005 The Eigenbase Project
 // Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 Red Square, Inc.
+// Copyright (C) 2005-2005 LucidEra, Inc.
 // Portions Copyright (C) 1999-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -132,6 +132,6 @@ TupleAccessor const &BTreeReader::getTupleAccessorForRead() const
     return pLeafNodeAccessor->tupleAccessor;
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/btree/BTreeReader.cpp#3 $");
+FENNEL_END_CPPFILE("$Id$");
 
 // End BTreeReader.cpp
