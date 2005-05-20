@@ -23,18 +23,18 @@
 #ifndef Fennel_ExternalSortStreamImpl_Included
 #define Fennel_ExternalSortStreamImpl_Included
 
-#include "fennel/redsquare/sorter/ExternalSortStream.h"
+#include "fennel/lucidera/sorter/ExternalSortStream.h"
 #include "fennel/synch/SynchObj.h"
 #include "fennel/synch/ThreadPool.h"
 
 #include <boost/scoped_ptr.hpp>
 
-#include "fennel/redsquare/sorter/ExternalSortInfo.h"
-#include "fennel/redsquare/sorter/ExternalSortRunLoader.h"
-#include "fennel/redsquare/sorter/ExternalSortRunAccessor.h"
-#include "fennel/redsquare/sorter/ExternalSortMerger.h"
-#include "fennel/redsquare/sorter/ExternalSortOutput.h"
-#include "fennel/redsquare/sorter/ExternalSortTask.h"
+#include "fennel/lucidera/sorter/ExternalSortInfo.h"
+#include "fennel/lucidera/sorter/ExternalSortRunLoader.h"
+#include "fennel/lucidera/sorter/ExternalSortRunAccessor.h"
+#include "fennel/lucidera/sorter/ExternalSortMerger.h"
+#include "fennel/lucidera/sorter/ExternalSortOutput.h"
+#include "fennel/lucidera/sorter/ExternalSortTask.h"
 
 FENNEL_BEGIN_NAMESPACE
 

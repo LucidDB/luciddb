@@ -9,7 +9,7 @@ farragoDir=$(dirname $0)/../../farrago
 
 # Check preambles of all Java files. Which copyright notices are
 # required depends upon the zone of the file:
-# * Red Square: Files under farrago/src/com/redsquare must have
+# * Red Square: Files under farrago/src/com/lucidera must have
 #   Eigenbase and Red Square copyright notices.
 # * Disruptive Tech: Files under farrago/src/com/disruptivetech must
 #   have Eigenbase and Disruptive Tech copyright notices.
@@ -32,7 +32,7 @@ do
     zone=eigenbase
     component=farrago
     case "$filename" in
-    */farrago/src/com/redsquare/*) zone=redsquare ;;
+    */farrago/src/com/lucidera/*) zone=redsquare ;;
     */farrago/src/com/disruptivetech/*) zone=disruptivetech ;;
     */farrago/src/org/eigenbase/*) component=farrago-eigenbase ;;
     *) ;;

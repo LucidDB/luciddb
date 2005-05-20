@@ -71,7 +71,7 @@ JNI_OnLoad(JavaVM *vm,void *reserved)
 
     // REVIEW jvs 26-Nov-2004:  I had to put this in to squelch strange
     // shutdown problems when extension JNI libraries (such as
-    // libfarrago_dt and libfarrago_rs) are loaded.  It pins our .so
+    // libfarrago_dt and libfarrago_lu) are loaded.  It pins our .so
     // artificially, which probably isn't a good thing either.
 #ifndef __MINGW32__
     dlopen("libfarrago.so", RTLD_NOW | RTLD_GLOBAL);

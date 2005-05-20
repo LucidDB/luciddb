@@ -22,7 +22,7 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/test/ExecStreamTestBase.h"
-#include "fennel/redsquare/sorter/ExternalSortExecStream.h"
+#include "fennel/lucidera/sorter/ExternalSortExecStream.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
 #include "fennel/exec/MockProducerExecStream.h"
 #include "fennel/exec/ExecStreamEmbryo.h"

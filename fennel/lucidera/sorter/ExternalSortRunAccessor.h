@@ -24,7 +24,7 @@
 #define Fennel_ExternalSortRunAccessor_Included
 
 #include "fennel/tuple/TupleAccessor.h"
-#include "fennel/redsquare/sorter/ExternalSortSubStream.h"
+#include "fennel/lucidera/sorter/ExternalSortSubStream.h"
 
 FENNEL_BEGIN_NAMESPACE
 

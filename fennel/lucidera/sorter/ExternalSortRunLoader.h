@@ -27,7 +27,7 @@
 #include "fennel/tuple/TupleProjectionAccessor.h"
 #include "fennel/tuple/TupleData.h"
 #include "fennel/segment/SegPageLock.h"
-#include "fennel/redsquare/sorter/ExternalSortSubStream.h"
+#include "fennel/lucidera/sorter/ExternalSortSubStream.h"
 
 #include <vector>
 

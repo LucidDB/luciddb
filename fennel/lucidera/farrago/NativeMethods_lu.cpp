@@ -22,13 +22,13 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/farrago/ExecStreamFactory.h"
-#include "fennel/redsquare/sorter/ExternalSortExecStream.h"
+#include "fennel/lucidera/sorter/ExternalSortExecStream.h"
 #include "fennel/db/Database.h"
 #include "fennel/segment/SegmentFactory.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
 
 // DEPRECATED
-#include "fennel/redsquare/sorter/ExternalSortStream.h"
+#include "fennel/lucidera/sorter/ExternalSortStream.h"
 #include "fennel/farrago/ExecutionStreamFactory.h"
 
 #ifdef __MINGW32__
@@ -37,7 +37,7 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-class ExecStreamSubFactory_rs
+class ExecStreamSubFactory_lu
     : public ExecutionStreamSubFactory, // DEPRECATED
         public ExecStreamSubFactory,
         public FemVisitor
@@ -175,7 +175,7 @@ JNI_OnLoad(JavaVM *vm,void *)
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_redsquare_farrago_fennel_RedSquareJni_registerStreamFactory(
+Java_com_lucidera_farrago_fennel_LucidEraJni_registerStreamFactory(
     JNIEnv *pEnvInit, jclass, jlong hStreamGraph)
 {
     JniEnvRef pEnv(pEnvInit);
@@ -186,12 +186,12 @@ Java_com_redsquare_farrago_fennel_RedSquareJni_registerStreamFactory(
             // DEPRECATED
             streamGraphHandle.pStreamFactory->addSubFactory(
                 SharedExecutionStreamSubFactory(
-                    new ExecStreamSubFactory_rs()));
+                    new ExecStreamSubFactory_lu()));
         }
         if (streamGraphHandle.pExecStreamFactory) {
             streamGraphHandle.pExecStreamFactory->addSubFactory(
                 SharedExecStreamSubFactory(
-                    new ExecStreamSubFactory_rs()));
+                    new ExecStreamSubFactory_lu()));
         }
     } catch (std::exception &ex) {
         pEnv.handleExcn(ex);
@@ -200,4 +200,4 @@ Java_com_redsquare_farrago_fennel_RedSquareJni_registerStreamFactory(
 
 FENNEL_END_CPPFILE("$Id$");
 
-// End NativeMethods_rs.cpp
+// End NativeMethods_lu.cpp

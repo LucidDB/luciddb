@@ -23,7 +23,7 @@
 #ifndef Fennel_ExternalSortMerger_Included
 #define Fennel_ExternalSortMerger_Included
 
-#include "fennel/redsquare/sorter/ExternalSortSubStream.h"
+#include "fennel/lucidera/sorter/ExternalSortSubStream.h"
 #include "fennel/tuple/TupleAccessor.h"
 #include "fennel/tuple/TupleData.h"
 #include "fennel/tuple/TupleProjectionAccessor.h"

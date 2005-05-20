@@ -21,8 +21,8 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/redsquare/sorter/ExternalSortOutput.h"
-#include "fennel/redsquare/sorter/ExternalSortInfo.h"
+#include "fennel/lucidera/sorter/ExternalSortOutput.h"
+#include "fennel/lucidera/sorter/ExternalSortInfo.h"
 #include "fennel/common/ByteOutputStream.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 

@@ -21,7 +21,7 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/redsquare/sorter/ExternalSortStreamImpl.h"
+#include "fennel/lucidera/sorter/ExternalSortStreamImpl.h"
 #include "fennel/common/ByteOutputStream.h"
 #include "fennel/segment/Segment.h"
 

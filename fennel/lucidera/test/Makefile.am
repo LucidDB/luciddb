@@ -19,9 +19,9 @@ ExternalSortExecStreamTest_SOURCES=ExternalSortExecStreamTest.cpp
 LDADD = \
 	-L$(top_builddir)/test \
 	-L$(top_builddir)/libfennel \
-	-L$(top_builddir)/redsquare/libfennel_rs \
+	-L$(top_builddir)/lucidera/libfennel_lu \
 	-l$(TEST_LIB) \
-	-lfennel_rs_sorter \
+	-lfennel_lu_sorter \
 	-lfennel_xo \
 	-lfennel_db \
 	-lfennel_btree \

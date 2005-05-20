@@ -22,7 +22,7 @@
 package net.sf.farrago.defimpl;
 
 import com.disruptivetech.farrago.fennel.*;
-import com.redsquare.farrago.fennel.*;
+import com.lucidera.farrago.fennel.*;
 
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.sql.*;
@@ -84,7 +84,7 @@ public class FarragoDefaultSessionPersonality
     public void registerStreamFactories(long hStreamGraph)
     {
         DisruptiveTechJni.registerStreamFactory(hStreamGraph);
-        RedSquareJni.registerStreamFactory(hStreamGraph);
+        LucidEraJni.registerStreamFactory(hStreamGraph);
     }
     
     // implement FarragoSessionPersonality

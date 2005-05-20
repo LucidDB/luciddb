@@ -4,16 +4,16 @@ EXTRA_INCLUDES=\
 
 include $(top_srcdir)/am_include.mk
 
-lib_LTLIBRARIES=libfarrago_rs.la
+lib_LTLIBRARIES=libfarrago_lu.la
 
-libfarrago_rs_la_SOURCES=\
-NativeMethods_rs.cpp
+libfarrago_lu_la_SOURCES=\
+NativeMethods_lu.cpp
 
-libfarrago_rs_la_LIBADD = \
+libfarrago_lu_la_LIBADD = \
 	-L$(top_builddir)/libfennel \
 	-L$(top_builddir)/farrago \
-	-L$(top_builddir)/redsquare/libfennel_rs \
-	-lfennel_rs_sorter \
+	-L$(top_builddir)/lucidera/libfennel_lu \
+	-lfennel_lu_sorter \
 	-lfarrago \
 	-lfennel_xo \
 	-lfennel_db \

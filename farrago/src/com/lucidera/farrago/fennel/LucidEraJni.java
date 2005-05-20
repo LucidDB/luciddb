@@ -18,7 +18,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package com.redsquare.farrago.fennel;
+package com.lucidera.farrago.fennel;
 
 import org.eigenbase.util.*;
 
@@ -29,13 +29,13 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class RedSquareJni
+public abstract class LucidEraJni
 {
     static {
-        Util.loadLibrary("farrago_rs");
+        Util.loadLibrary("farrago_lu");
     }
 
     public static native void registerStreamFactory(long hStreamGraph);
 }
 
-// End RedSquareJni.java
+// End LucidEraJni.java

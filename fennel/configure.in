@@ -260,11 +260,11 @@ disruptivetech/xo/Makefile \
 disruptivetech/libfennel_dt/Makefile \
 disruptivetech/test/Makefile \
 disruptivetech/farrago/Makefile \
-redsquare/Makefile \
-redsquare/sorter/Makefile \
-redsquare/libfennel_rs/Makefile \
-redsquare/test/Makefile \
-redsquare/farrago/Makefile \
+lucidera/Makefile \
+lucidera/sorter/Makefile \
+lucidera/libfennel_lu/Makefile \
+lucidera/test/Makefile \
+lucidera/farrago/Makefile \
 build/Makefile \
 ])
 
