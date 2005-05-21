@@ -260,6 +260,10 @@
     <text>Binary literal string must contain an even number of hexits</text>
 </exception>
 
+<exception id="120420" name="UnsupportedIntervalLiteral" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Illegal interval literal format {0} for {1}</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Eigenbase Generic resources 130,000 - 140,000 -->
 <!-- ====================================================================== -->

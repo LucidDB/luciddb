@@ -255,8 +255,11 @@ public final class SqlParserUtil
      *  </li>
      * </ul>
      */
-    public static int[] parseIntervalValue(String value,
-        SqlIntervalQualifier intervalQualifier) {
+    public static int[] parseIntervalValue(SqlIntervalLiteral.IntervalValue interval)
+    {
+        String value = interval.getIntervalLiteral();
+        SqlIntervalQualifier intervalQualifier = interval.getIntervalQualifier();
+
         value = value.trim();
         if (Util.isNullOrEmpty(value)) {
             return null;
@@ -346,10 +349,6 @@ public final class SqlParserUtil
                 return null;
             }
         } catch (NumberFormatException e) {
-            if (true) {
-                // temporary!!
-                return new int[] {0,0,0,10};
-            }
             return null;
         }
     }

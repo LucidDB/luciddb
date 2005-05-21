@@ -1777,7 +1777,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("cast(interval '1:1' hour to minute as interval minute to second)", "INTERVAL MINUTE TO SECOND");
 
         checkExpFails("cast(interval '1:1' hour to minute as interval month)", "Cast function cannot convert value of type INTERVAL HOUR TO MINUTE to type INTERVAL MONTH");
-        checkExpFails("cast(interval '1:1' year as interval second)", "Cast function cannot convert value of type INTERVAL YEAR to type INTERVAL SECOND");
+        checkExpFails("cast(interval '1:1' year to month as interval second)", "Cast function cannot convert value of type INTERVAL YEAR TO MONTH to type INTERVAL SECOND");
     }
 
     public void testMinusDateOperator() {

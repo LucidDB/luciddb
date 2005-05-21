@@ -65,7 +65,7 @@ public class SqlIntervalLiteral extends SqlLiteral
     /**
      * A Interval value.
      */
-    static class IntervalValue {
+    public static class IntervalValue {
         private final SqlIntervalQualifier intervalQualifier;
         private final String intervalStr;
         private final int sign;
@@ -78,6 +78,10 @@ public class SqlIntervalLiteral extends SqlLiteral
 
         public SqlIntervalQualifier getIntervalQualifier() {
             return intervalQualifier;
+        }
+
+        public String getIntervalLiteral() {
+            return intervalStr;
         }
 
         public int getSign() {

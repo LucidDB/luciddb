@@ -31,6 +31,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlRowOperator;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.trace.EigenbaseTrace;
 import org.eigenbase.util.*;
@@ -1662,6 +1663,20 @@ public class SqlValidatorImpl implements SqlValidator
             if (bitString.getBitCount() % 8 != 0) {
                 throw newValidationError(literal,
                     EigenbaseResource.instance().newBinaryLiteralOdd());
+            }
+            break;
+        case SqlTypeName.IntervalYearMonth_ordinal:
+        case SqlTypeName.IntervalDayTime_ordinal:
+            if (literal instanceof SqlIntervalLiteral) {
+                SqlIntervalLiteral.IntervalValue interval = (SqlIntervalLiteral.IntervalValue)
+                        ((SqlIntervalLiteral) literal).getValue();
+                int[] values = SqlParserUtil.parseIntervalValue(interval);
+                if (values == null) {
+                    throw newValidationError(literal,
+                            EigenbaseResource.instance().newUnsupportedIntervalLiteral
+                            (interval.toString(), "INTERVAL " +
+                            interval.getIntervalQualifier().toString()));
+                }
             }
             break;
         default:
