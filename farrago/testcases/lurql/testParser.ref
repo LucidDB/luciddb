@@ -1,0 +1,52 @@
+# $Id:$
+
+# Should fail:  syntax error.
+PARSE INPUT:
+select goober, bloob
+from
+{
+};
+PARSE ERROR:  Encountered "}" at line 4, column 1.
+Was expecting one of:
+    "class" ...
+    "{" ...
+    
+****
+
+# Test a mish-mash of parsable constructs.
+PARSE RESULT:
+select "goober", "bloob" 
+from
+{
+    class "x" as "m"
+    then {
+        follow composite as "o"
+        then {
+            follow destination end "z" as "p"
+        }
+        union
+        follow forward as "q"
+        then {
+            follow backward as "r"
+            union
+            follow origin class "a"
+        } gather then {
+            follow as "s"
+        }
+    }
+    union
+    class "y" as "n"
+    where
+        "beebee" = 'c'
+    then {
+        recursively {
+            follow as "t"
+        }
+        then {
+            follow as "u"
+        }
+    }
+};
+
+****
+

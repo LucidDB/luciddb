@@ -3,7 +3,7 @@
 // Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2005 The Eigenbase Project
 // Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 Red Square, Inc.
+// Copyright (C) 2005-2005 LucidEra, Inc.
 // Portions Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -255,8 +255,11 @@ public final class SqlParserUtil
      *  </li>
      * </ul>
      */
-    public static int[] parseIntervalValue(String value,
-        SqlIntervalQualifier intervalQualifier) {
+    public static int[] parseIntervalValue(SqlIntervalLiteral.IntervalValue interval)
+    {
+        String value = interval.getIntervalLiteral();
+        SqlIntervalQualifier intervalQualifier = interval.getIntervalQualifier();
+
         value = value.trim();
         if (Util.isNullOrEmpty(value)) {
             return null;
@@ -346,10 +349,6 @@ public final class SqlParserUtil
                 return null;
             }
         } catch (NumberFormatException e) {
-            if (true) {
-                // temporary!!
-                return new int[] {0,0,0,10};
-            }
             return null;
         }
     }

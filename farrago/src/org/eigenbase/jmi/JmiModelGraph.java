@@ -3,7 +3,7 @@
 // Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2005 The Eigenbase Project
 // Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 Red Square, Inc.
+// Copyright (C) 2005-2005 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -34,7 +34,8 @@ import java.util.*;
 /**
  * JmiModelGraph is a directed graph representation of a JMI model.  Vertices
  * are instances of {@link JmiClassVertex}.  Edges are instance of either
- * {@link JmiInheritanceEdge} or {@link JmiAssocEdge}.
+ * {@link JmiInheritanceEdge} or {@link JmiAssocEdge}.  Instances are immutable
+ * and can be accessed concurrently by multiple threads.
  *
  * @author John V. Sichi
  * @version $Id$

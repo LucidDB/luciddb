@@ -1,0 +1,128 @@
+# $Id:$
+
+# Test a static recursion that doesn't go very far
+PARSE RESULT:
+select * 
+from
+class "Operation"
+then {
+    recursively {
+        follow association "CanRaise" forward
+    }
+};
+
+EXPLANATION:
+anon_1 { Operation }
+anon_1:operation->CanRaise->anon_2:except
+anon_2 { Exception }
+
+****
+
+# Test a simple dynamic recursion
+PARSE RESULT:
+select * 
+from
+class "Class"
+where
+    "name" = 'Exception'
+then {
+    recursively {
+        follow association "Generalizes" backward
+    }
+};
+
+EXPLANATION:
+anon_1 { Class } where "name" = 'Exception'
+anon_1:subtype->Generalizes->anon_2:supertype
+anon_2 { GeneralizableElement }
+anon_2:subtype->Generalizes->anon_3:supertype
+anon_3 { GeneralizableElement } recursively to anon_2
+
+EXECUTION RESULT:
+Class: BehavioralFeature
+Class: Exception
+Class: Feature
+Class: ModelElement
+Class: Namespace
+
+****
+
+# Test a bigger dynamic recursion
+PARSE RESULT:
+select * 
+from
+class "Class"
+where
+    "name" = 'ModelElement'
+then {
+    recursively {
+        follow association "Generalizes" forward
+    }
+};
+
+EXECUTION RESULT:
+Class: AliasType
+Class: Association
+Class: AssociationEnd
+Class: Attribute
+Class: BehavioralFeature
+Class: Class
+Class: Classifier
+Class: CollectionType
+Class: Constant
+Class: Constraint
+Class: DataType
+Class: EnumerationType
+Class: Exception
+Class: Feature
+Class: GeneralizableElement
+Class: Import
+Class: ModelElement
+Class: Namespace
+Class: Operation
+Class: Package
+Class: Parameter
+Class: PrimitiveType
+Class: Reference
+Class: StructuralFeature
+Class: StructureField
+Class: StructureType
+Class: Tag
+Class: TypedElement
+
+****
+
+# Test recursion with THEN
+PARSE RESULT:
+select "a" 
+from
+class "Class"
+where
+    "name" = 'Exception'
+then {
+    recursively {
+        follow association "Generalizes" backward
+    }
+    then {
+        follow association "Contains" destination class "Attribute" as "a"
+    }
+};
+
+EXPLANATION:
+a_4 { Attribute }
+anon_1 { Class } where "name" = 'Exception'
+anon_1:subtype->Generalizes->anon_2:supertype
+anon_2 { GeneralizableElement }
+anon_2:container->Contains->a_4:containedElement { Attribute }
+anon_2:subtype->Generalizes->anon_3:supertype
+anon_3 { GeneralizableElement } recursively to anon_2
+
+EXECUTION RESULT:
+Attribute: annotation
+Attribute: name
+Attribute: qualifiedName
+Attribute: scope
+Attribute: visibility
+
+****
+

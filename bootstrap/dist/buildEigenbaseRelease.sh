@@ -3,7 +3,7 @@
 # Eigenbase master build script for creating release images
 # Copyright (C) 2005-2005 The Eigenbase Project
 # Copyright (C) 2005-2005 Disruptive Tech
-# Copyright (C) 2005-2005 Red Square, Inc.
+# Copyright (C) 2005-2005 LucidEra, Inc.
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -91,6 +91,7 @@ rm -f $SRC_RELEASE.$ARCHIVE_SUFFIX
 rm -rf $SRC_RELEASE
 mkdir $SRC_RELEASE
 cp -R $OPEN_DIR/thirdparty $SRC_RELEASE
+rm -f $SRC_RELEASE/thirdparty/icu-2.8.patch.tgz
 cp -R $OPEN_DIR/fennel $SRC_RELEASE
 cp -R $OPEN_DIR/farrago $SRC_RELEASE
 cp $DIST_DIR/VERSION $SRC_RELEASE

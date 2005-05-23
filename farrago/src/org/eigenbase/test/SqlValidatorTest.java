@@ -3,7 +3,7 @@
 // Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2005 The Eigenbase Project
 // Copyright (C) 2002-2005 Disruptive Tech
-// Copyright (C) 2005-2005 Red Square, Inc.
+// Copyright (C) 2005-2005 LucidEra, Inc.
 // Portions Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -1777,7 +1777,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("cast(interval '1:1' hour to minute as interval minute to second)", "INTERVAL MINUTE TO SECOND");
 
         checkExpFails("cast(interval '1:1' hour to minute as interval month)", "Cast function cannot convert value of type INTERVAL HOUR TO MINUTE to type INTERVAL MONTH");
-        checkExpFails("cast(interval '1:1' year as interval second)", "Cast function cannot convert value of type INTERVAL YEAR to type INTERVAL SECOND");
+        checkExpFails("cast(interval '1-1' year to month as interval second)", "Cast function cannot convert value of type INTERVAL YEAR TO MONTH to type INTERVAL SECOND");
     }
 
     public void testMinusDateOperator() {

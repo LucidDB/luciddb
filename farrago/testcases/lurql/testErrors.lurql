@@ -1,0 +1,33 @@
+# $Id:$
+
+# Should fail:  class lookup.
+EXPLAIN
+select * 
+from
+class "NonExistent";
+
+# Should fail:  unknown alias
+EXPLAIN
+select "a" 
+from
+class "Exception" as "e";
+
+# Should fail:  duplicate alias.
+EXPLAIN
+select * 
+from
+{
+    class "Class" as "c"
+    union
+    class "Exception" as "c"
+};
+
+# Should fail:  bad SQL
+EXPLAIN AND EXECUTE
+select * 
+from
+class "ModelElement"
+where
+    "name" in [
+        select foo from bar
+    ];

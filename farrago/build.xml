@@ -4,7 +4,7 @@
 // Farrago is an extensible data management system.
 // Copyright (C) 2005-2005 The Eigenbase Project
 // Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 Red Square, Inc.
+// Copyright (C) 2005-2005 LucidEra, Inc.
 // Portions Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -70,6 +70,12 @@
   <!-- directory for regression test SQL scripts -->
   <property name="regressionsql.dir" location="${farrago.dir}/regressionsql"/>
 
+  <!-- directory for unit test LURQL scripts -->
+  <property name="unitlurql.dir" location="${farrago.dir}/testcases/lurql"/>
+
+  <!-- directory containing definition of LURQL parser -->
+  <property name="lurql.parser.dir" 
+    location="${farrago.src.dir}/com/lucidera/lurql/parser"/>
 
   <!-- The version of ANT we require. -->
   <property name="required.ant.version" value="1.6.2"/>
@@ -129,10 +135,13 @@ require version '${required.ant.version}'."/>
   <!-- a fileset of all files for which tags should be built -->
   <fileset dir="${farrago.dir}" id="fileset.taggable">
     <include name="catalog/java/**/*.java"/>
+    <include name="src/**/*.jj"/>
     <include name="src/**/*.java"/>
     <include name="examples/**/*.java"/>
     <include name="examples/**/package.java"/>
     <include name="src/**/package.html"/>
+    <exclude name="src/**/parser/impl/*"/>
+    <exclude name="examples/**/parserimpl/*"/>
   </fileset>
 
   <!-- a fileset of all SQL unit tests -->
@@ -179,6 +188,13 @@ require version '${required.ant.version}'."/>
     <include name="**/*.mtsql"/>
   </fileset>
   <pathconvert property="fileset.concurrentsql" refid="fileset.concurrentsql"
+    pathsep="${line.separator}" dirsep="${file.separator}" />
+
+  <!-- a fileset of all LURQL unit tests -->
+  <fileset dir="${unitlurql.dir}" id="fileset.unitlurql">
+    <include name="**/*.lurql"/>
+  </fileset>
+  <pathconvert property="fileset.unitlurql" refid="fileset.unitlurql"
     pathsep="${line.separator}" dirsep="${file.separator}" />
 
   <!-- name for a temp file used during tags generation -->
@@ -275,7 +291,8 @@ require version '${required.ant.version}'."/>
     </rmic>
   </target>
 
-  <target name="compile" depends="generateResources,sqlParser,ddlParser">
+  <target name="compile" 
+    depends="generateResources,sqlParser,ddlParser,lurqlParser">
     <farrago.javaCompile
       deprecation="off"
       srcdir="${farrago.src.dir}"
@@ -379,28 +396,7 @@ require version '${required.ant.version}'."/>
       </fileset>
       <fileset dir="${farrago.parser.ddl.dir}/impl" includes="*.java,*.jj"/>
       <fileset dir="${farrago.parser.sql.dir}/impl" includes="*.java,*.jj"/>
-      <!-- TODO jvs 25-Jan-2005:  delete these after a while -->
-      <fileset dir="${farrago.parser.ddl.dir}">
-        <include name="CombinedParser.jj"/>
-        <include name="FarragoParserImpl.java"/>
-        <include name="FarragoParserImplConstants.java"/>
-        <include name="FarragoParserImplTokenManager.java"/>
-        <include name="TokenMgrError.java"/>
-        <include name="ParseException.java"/>
-        <include name="JavaCharStream.java"/>
-        <include name="Token.java"/>
-      </fileset>
-      <fileset dir="${farrago.parser.sql.dir}">
-        <include name="CombinedParser.jj"/>
-        <include name="Parser.java"/>
-        <include name="ParserConstants.java"/>
-        <include name="ParserTokenManager.java"/>
-        <include name="TokenMgrError.java"/>
-        <include name="ParseException.java"/>
-        <include name="JavaCharStream.java"/>
-        <include name="Token.java"/>
-        <include name="ASCII_UCodeESC_CharStream.java"/>
-      </fileset>
+      <fileset dir="${lurql.parser.dir}" includes="*.java"/>
     </delete>
   </target>
 
@@ -411,6 +407,7 @@ require version '${required.ant.version}'."/>
       <fileset dir="${testlog.dir}" includes="*.log"/>
       <fileset dir="${testlog.dir}" includes="*.dif"/>
       <fileset dir="${unitsql.dir}" includes="**/*.log"/>
+      <fileset dir="${unitlurql.dir}" includes="**/*.log"/>
       <fileset dir="${regressionsql.dir}" includes="**/*.log"/>
     </delete>
     <delete quiet="true" file="${FarragoTrace.log}"/>
@@ -735,6 +732,12 @@ require version '${required.ant.version}'."/>
       <srcfiles refid="farrago.parser.common.ddl"/>
       <srcfiles refid="farrago.parser.common.sql"/>
     </uptodate>
+    <uptodate property="lurqlParser.uptodate"
+      targetfile="${lurql.parser.dir}/LurqlParser.java">
+      <srcfiles dir="${lurql.parser.dir}">
+        <include name="LurqlParser.jj"/>
+      </srcfiles>
+    </uptodate>
   </target>
 
   <target name="checkCatalogUptodate">
@@ -761,6 +764,13 @@ require version '${required.ant.version}'."/>
         <fileset refid="farrago.parser.common.sql"/>
       </components>
     </farrago.generateParser>
+  </target>
+
+  <target name="lurqlParser" depends="checkParserUptodate"
+    unless="lurqlParser.uptodate">
+    <javacc 
+      target="${lurql.parser.dir}/LurqlParser.jj" 
+      javacchome="${javacc.dir}"/>
   </target>
 
   <!-- Generate the SQL parser. Generated files are:
@@ -804,6 +814,8 @@ require version '${required.ant.version}'."/>
       <junitargs>
         <sysproperty key="net.sf.farrago.fileset.unitsql"
           value="${fileset.unitsql}"/>
+        <sysproperty key="com.lucidera.fileset.unitlurql"
+          value="${fileset.unitlurql}"/>
       </junitargs>
     </farrago.runTests>
   </target>
@@ -878,6 +890,7 @@ require version '${required.ant.version}'."/>
       classname="junit.textui.TestRunner">
       <jvmargs>
         <arg value="-Dnet.sf.farrago.fileset.unitsql=${fileset.unitsql}"/>
+        <arg value="-Dcom.lucidera.fileset.unitlurql=${fileset.unitlurql}"/>
         <arg value="-Djava.ext.dirs=${sqlline.dir}"/>
         <arg line="&FarragoProps;"/>
       </jvmargs>
@@ -1016,6 +1029,7 @@ require version '${required.ant.version}'."/>
   <target name="etags">
     <antcall target="tags.find_taggable_files"/>
     <exec dir="${farrago.dir}" executable="ctags">
+      <arg line="--langmap=java:+.jj"/>
       <arg line="-e"/>
       <arg line="-L taggedfiles"/>
     </exec>

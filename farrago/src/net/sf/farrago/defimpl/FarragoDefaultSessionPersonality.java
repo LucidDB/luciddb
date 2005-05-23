@@ -3,7 +3,7 @@
 // Farrago is an extensible data management system.
 // Copyright (C) 2005-2005 The Eigenbase Project
 // Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 Red Square, Inc.
+// Copyright (C) 2005-2005 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,8 +22,10 @@
 package net.sf.farrago.defimpl;
 
 import com.disruptivetech.farrago.fennel.*;
-import com.redsquare.farrago.fennel.*;
+import com.lucidera.farrago.fennel.*;
+import com.lucidera.lurql.*;
 
+import org.eigenbase.jmi.*;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
@@ -84,7 +86,7 @@ public class FarragoDefaultSessionPersonality
     public void registerStreamFactories(long hStreamGraph)
     {
         DisruptiveTechJni.registerStreamFactory(hStreamGraph);
-        RedSquareJni.registerStreamFactory(hStreamGraph);
+        LucidEraJni.registerStreamFactory(hStreamGraph);
     }
     
     // implement FarragoSessionPersonality
@@ -207,6 +209,14 @@ public class FarragoDefaultSessionPersonality
         FarragoSessionStmtValidator stmtValidator,
         SqlNode sqlNode)
     {
+    }
+    
+    // implement FarragoSessionPersonality
+    public JmiQueryProcessor getJmiQueryProcessor()
+    {
+        // TODO:  share a common instance, query plan caching, all that
+        return new LurqlQueryProcessor(
+            database.getSystemRepos().getMdrRepos());
     }
 }
 

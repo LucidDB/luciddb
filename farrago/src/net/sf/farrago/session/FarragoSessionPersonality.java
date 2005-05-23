@@ -3,7 +3,7 @@
 // Farrago is an extensible data management system.
 // Copyright (C) 2005-2005 The Eigenbase Project
 // Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 Red Square, Inc.
+// Copyright (C) 2005-2005 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,6 +23,7 @@ package net.sf.farrago.session;
 
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.jmi.*;
 
 import java.util.*;
 
@@ -160,6 +161,11 @@ public interface FarragoSessionPersonality extends FarragoStreamFactoryProvider
     public void validate(
         FarragoSessionStmtValidator stmtValidator,
         SqlNode sqlNode);
+    
+    /**
+     * @return processor for JMI queries
+     */
+    public JmiQueryProcessor getJmiQueryProcessor();
 }
 
 // End FarragoSessionPersonality.java

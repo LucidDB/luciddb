@@ -3,7 +3,7 @@
 // Fennel is a library of data storage and processing components.
 // Copyright (C) 2005-2005 The Eigenbase Project
 // Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 Red Square, Inc.
+// Copyright (C) 2005-2005 LucidEra, Inc.
 // Portions Copyright (C) 1999-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -38,6 +38,7 @@ ParamName TestBase::paramTraceFileName = "testTraceFileName";
 ParamName TestBase::paramDictionaryFileName = "testDictionaryFileName";
 ParamName TestBase::paramTraceLevel = "testTraceLevel";
 ParamName TestBase::paramStatsFileName = "testStatsFileName";
+ParamName TestBase::paramTraceStdout = "testTraceStdout";
 
 TestBase::TestBase()
     : statsTarget(
@@ -49,10 +50,24 @@ TestBase::TestBase()
     traceLevel = static_cast<TraceLevel>(
         configMap.getIntParam(paramTraceLevel,TRACE_INFO));
     pTestSuite = BOOST_TEST_SUITE(testName.c_str());
+
+    std::string traceStdoutParam = 
+        configMap.getStringParam(paramTraceStdout,"");
+    traceStdout = ((traceStdoutParam.length() == 0) ? false : true);
+
     std::string traceFileName =
         configMap.getStringParam(paramTraceFileName,testName+"_trace.log");
-    if (!traceFileName.empty()) {
-        traceStream.open(traceFileName.c_str());
+
+    traceFile = false;
+    if (traceFileName == "-") {
+        traceStdout = true;
+    } else if (traceFileName != "none") {
+        if (!traceFileName.empty()) {
+            traceStream.open(traceFileName.c_str());
+            if (traceStream.good()) {
+                traceFile = true;
+            }
+        }
     }
 }
 
@@ -128,10 +143,16 @@ void TestBase::testCaseTearDown()
 
 void TestBase::notifyTrace(std::string source,TraceLevel,std::string message)
 {
-    if (traceStream.good()) {
+    if (traceFile || traceStdout) {
         StrictMutexGuard traceMutexGuard(traceMutex);
-        traceStream << "[" << source << "] " << message << std::endl;
-        traceStream.flush();
+        if (traceFile) {
+            traceStream << "[" << source << "] " << message << std::endl;
+            traceStream.flush();
+        }
+        if (traceStdout) {
+            std::cout << "[" << source << "] " << message << std::endl;
+            std::cout.flush();
+        }
     }
 }
 

@@ -1,0 +1,87 @@
+# $Id:$
+
+# Find all Exceptions.
+PARSE RESULT:
+select * 
+from
+class "Exception";
+
+EXPLANATION:
+anon_1 { Exception }
+
+EXECUTION RESULT:
+Exception: NameNotFound
+Exception: NameNotResolved
+
+****
+
+# Test IN filter with literals.
+PARSE RESULT:
+select * 
+from
+class "ModelElement"
+where
+    "name" in ('Class', 'Exception');
+
+EXPLANATION:
+anon_1 { ModelElement } where "name" in ('Class', 'Exception')
+
+EXECUTION RESULT:
+Class: Class
+Class: Exception
+
+****
+
+# Test IN filter with SQL query.
+PARSE RESULT:
+select * 
+from
+class "ModelElement"
+where
+    "name" in [
+        values ('Class'), ('Exception')
+    ];
+
+EXPLANATION:
+anon_1 { ModelElement } where "name" in [
+    values ('Class'), ('Exception')
+]
+
+EXECUTION RESULT:
+Class: Class
+Class: Exception
+
+****
+
+# Test IN filter with SQL query which returns object ID.
+PARSE RESULT:
+select * 
+from
+class "ModelElement"
+where
+    "mofId" in [
+        select "mofId" from sys_mof.model."Class" where "name"='Exception'
+    ];
+
+EXECUTION RESULT:
+Class: Exception
+
+****
+
+# Test filter based on association.
+PARSE RESULT:
+select * 
+from
+class "Attribute"
+where
+    "container" in [
+        select "mofId" from sys_mof.model."Class" where "name"='ModelElement'
+    ];
+
+EXECUTION RESULT:
+Attribute: annotation
+Attribute: name
+Attribute: qualifiedName
+
+****
+

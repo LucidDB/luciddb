@@ -8,14 +8,14 @@ fennelDir=$(dirname $0)/..
 
 # Check preambles of Eigenbase ('green zone') files.
 # These are all files under fennel except those under
-# fennel/disruptivetech or fennel/redsquare.
-# They must have Eigenbase, Disruptive Tech and Red
-# Square copyright notices.
+# fennel/disruptivetech or fennel/lucidera.
+# They must have Eigenbase, Disruptive Tech and LucidEra
+# copyright notices.
 
 /usr/bin/find $fennelDir \( -name \*.cpp -o -name \*.h \) |
 grep -v -F \
 'disruptivetech
-redsquare
+lucidera
 build/wshack.cpp
 common/FemGeneratedEnums.h
 common/FennelResource.cpp
@@ -27,11 +27,11 @@ farrago/JniPseudoUuid.h
 farrago/NativeMethods.h' |
     xargs $fennelDir/build/checkPreamble.sh -fennel -eigenbase
 
-# Check preambles of Red Square files.
-# These are all files under fennel/redsquare.
-# They must have Eigenbase and Red Square copyright notices.
-/usr/bin/find $fennelDir/redsquare \( -name \*.cpp -o -name \*.h \) |
-    xargs $fennelDir/build/checkPreamble.sh -fennel -redsquare
+# Check preambles of LucidEra files.
+# These are all files under fennel/lucidera.
+# They must have Eigenbase and LucidEra copyright notices.
+/usr/bin/find $fennelDir/lucidera \( -name \*.cpp -o -name \*.h \) |
+    xargs $fennelDir/build/checkPreamble.sh -fennel -lucidera
 
 # Check preambles of Disruptive Tech files.
 # These are all files under fennel/disruptivetech.

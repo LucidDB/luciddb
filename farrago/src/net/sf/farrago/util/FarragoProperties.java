@@ -3,7 +3,7 @@
 // Farrago is an extensible data management system.
 // Copyright (C) 2005-2005 The Eigenbase Project
 // Copyright (C) 2005-2005 Disruptive Tech
-// Copyright (C) 2005-2005 Red Square, Inc.
+// Copyright (C) 2005-2005 LucidEra, Inc.
 // Portions Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -109,6 +109,13 @@ public class FarragoProperties extends Properties
      */
     public final StringProperty testFilesetConcurrent =
         new StringProperty(this, "net.sf.farrago.fileset.concurrentsql", null);
+
+    /**
+     * The string property "com.lucidera.fileset.unitlurql" specifies a
+     * newline-separated list of LURQL test script files to run.
+     */
+    public final StringProperty testFilesetUnitlurql =
+        new StringProperty(this, "com.lucidera.fileset.unitlurql", null);
 
     //~ Constructors ----------------------------------------------------------
 
