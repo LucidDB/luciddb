@@ -1,0 +1,557 @@
+<html>
+
+<head>
+<title>LURQL</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" />
+
+</head>
+
+<body>
+
+<h1>LURQL</h1>
+
+LURQL is a specialized language for querying metadata via <a
+href="http://java.sun.com/products/jmi/index.jsp">JMI</a>.  As input,
+a LURQL query takes a JMI object extent and its corresponding
+metamodel, and as output produces references to the JMI objects which
+match the query specification.  LURQL has several special features which
+make it the right tool for the job:
+
+<ul>
+
+<li><em>Metamodel-guided query evaluation</em>.  This makes it
+possible to express a very generic query such as "retrieve all of the
+composite parts of object O as well as any objects which refer to
+them" and apply it to an object of any type.  Before execution, the
+query processor will automatically filter the metamodel to find the
+relevant composite associations.  This also means that if the
+metamodel later changes, the query definition does not need to be
+modified; new associations will be traversed automatically as
+appropriate.
+
+<li><em>Recursion</em>.  This makes it possible to express queries
+such as "retrieve a definition for view V as well as all of the
+objects it depends on, recursively expanding the definitions for other
+views and user-defined functions encountered along the way."
+
+<li><em>Understanding of class hierarchies and associations</em>.
+This means that if "materialized view" is a subclass of "view" in the
+model being queried in the previous example, the query will work for
+materialized views as well, and in addition will pick up any
+additional dependencies such as the storage or triggers used to
+maintain the materialization.  Further, LURQL has no trouble dealing
+with heterogeneous intermediate and final result sets.
+
+</ul>
+
+By contrast, SQL is excellent for querying relational data, but not
+for querying the complex object hierarchies and associations typical
+of metadata.  (Recent additions of object types and recursive queries
+to SQL have improved the expressiveness, but optimizer technology
+hasn't caught up enough yet to make usage practical, and
+metamodel-guided evaluation is still completely lacking.)  In the
+other corner, XQuery is good for semi-structured hierarchical data,
+and has some support for recursion, but is not appropriate for
+metadata (which has rich graph structure and a well-defined
+metamodel).  However, a special-purpose language like LURQL is
+necessarily limited in what it can do, and there is much room for
+improvement.
+
+<p>
+
+This document presents the syntax and semantics of LURQL along with
+examples of how to use it.  It assumes familiarity with UML.  
+
+<h2>Example Model</h2>
+
+As our example metamodel, we use the
+<a href="http://www.omg.org/technology/cwm">
+Common Warehouse Metamodel (CWM)</a>, which defines standard
+relational objects such as Schema, Table, View, and Column using UML
+concepts such as Namespace, Class, and Attribute as a base.  Here's a UML
+class diagram for the portion of the model referenced by the
+example queries:
+
+<p>
+
+<img src="lurqlDiagrams/cwmExampleMetamodel.png">
+
+<p>
+
+As sample metadata to be retrieved (instantiating the above
+metamodel), we use the <a
+href="http://p4web.eigenbase.org/open/dev/farrago/initsql/createSalesSchema.sql">standard
+Farrago example schema</a>.  Here's a UML object diagram for the
+partial definition of one of the tables (including its containers,
+columns, and their datatypes):
+
+<p>
+
+<img src="lurqlDiagrams/cwmExampleMetadata.png">
+
+<p>
+
+In CWM, a Catalog isa Package isa Namespace, so it can contain any
+kind of ModelElement (including Schema) via the ElementOwnership
+association.  Likewise, the same association can be used to link a Schema
+with a Table it contains.
+
+<h2>Simple Queries</h2>
+
+Here's our first LURQL query, which finds a table by name together with
+all of its columns:
+
+<pre><code>
+select * 
+from class Table 
+where name = 'DEPTS' 
+then {
+    follow association ClassifierFeature
+};
+
+EXECUTION RESULT:
+LocalTable: DEPTS
+StoredColumn: DEPTNO
+StoredColumn: NAME
+</code></pre>
+
+As you can see, LURQL uses a SQL-ish <code>select/from/where</code>
+structure, but the resemblance is only superficial.  LURQL queries
+have a mapping to the directed graph structure of the metamodel of
+interest.  In this case, we are starting from the extent of all
+tables, filtering down to just those tables whose name matches the
+string literal 'DEPTS', and then following the association
+ClassifierFeature to pick up the corresponding columns.  The result
+set is a collection of JMI objects (one table and two columns); we
+only display the object types and names in this document, but the
+actual return value is a reference to the live object in the
+repository (from which all of its attributes and links are
+accessible).  Note that the actual type returned for DEPTS
+(LocalTable) is a subtype of the requested CWM type (Table); LURQL
+automatically includes all subtypes in its search.
+
+<p>
+
+Unlike SQL, the <code>*</code> in the <code>select</code> clause does
+not project attributes; instead, it projects entire nodes of the query
+graph.  For example, if we only wanted to retrieve the columns:
+
+<pre><code>
+select c
+from class Table as t where name='DEPTS' then {
+    follow association ClassifierFeature as c
+};
+
+EXECUTION RESULT:
+StoredColumn: DEPTNO
+StoredColumn: NAME
+</code></pre>
+
+The <code>as</code> clause can be used to apply a label to each
+<code>from</code> or <code>follow</code> clause.  In this case the
+label "t" is unused and is only specified as a syntax example.  For
+follow clauses, the label is applied to the set of classes reached via
+the association (or associations) traversed (StoredColumn for c).
+
+<p>
+
+Follow clauses can be chained to arbitrary depth.  For example, to
+retrieve the schema and table containing column EMPNO:
+
+<pre><code>
+select s, t
+from class Column where name='EMPNO' then {
+    follow association ClassifierFeature as t then {
+        follow association ElementOwnership backward as s
+    }
+};
+
+EXECUTION RESULT:
+LocalSchema: SALES
+LocalTable: EMPS
+LocalTable: TEMPS
+View: EMPSVIEW
+View: TEMPSVIEW
+</code></pre>
+
+Wait, where did those extra objects come from?  It turns out that
+there are four different objects in schema SALES with columns named
+EMPNO: two tables (EMPS and TEMPS) and two views (EMPSVIEW and
+TEMPSVIEW).  LURQL followed all of these paths from the root column
+object EMPNO, and then merged all of them at the single parent schema
+(duplicates are always removed from the final result set).
+
+<p>
+
+Note that the query above specified the <code>backward</code>
+qualifier on the traversal of association ElementOwnership, which is
+what takes us from table to containing schema.  The reason is that the
+ElementOwnership association also links tables to other objects such
+as constraints and dependencies.  LURQL imposes direction on the
+underlying metamodel as follows:
+
+<ul>
+
+<li>for a composite association, "forward" means "from container to contained"
+
+<li>for a 1-to-many association, "forward" means "from one to many"
+
+<li>for other associations, "forward" means "from first end to second end"
+(ends are somewhat in many UML models, so this isn't guaranteed to be useful)
+
+</ul>
+
+In this case, we happen to know that the only traversal we are
+interested in follows the backward direction.  As contrast, here are the
+query results without the directional qualifier:
+
+<pre><code>
+select s, t
+from class Column where name='EMPNO' then {
+    follow association ClassifierFeature as t then {
+        follow association ElementOwnership as s
+    }
+};
+
+EXECUTION RESULT:
+Dependency: EMPS$DEP
+Dependency: EMPSVIEW$DEP
+Dependency: TEMPS$DEP
+Dependency: TEMPSVIEW$DEP
+LocalSchema: SALES
+LocalTable: EMPS
+LocalTable: TEMPS
+PrimaryKeyConstraint: SYS$PRIMARY_KEY
+PrimaryKeyConstraint: SYS$PRIMARY_KEY
+UniqueKeyConstraint: SYS$UNIQUE_KEY$EMPID
+View: EMPSVIEW
+View: TEMPSVIEW
+</code></pre>
+
+Direction is not the only qualifier available for filtering
+association traversals.  The others are covered in some of the later
+examples as well as the formal syntax.
+
+<h2>Divergence and Convergence</h2>
+
+In the previous example, we saw how LURQL can follow many different
+links in parallel, all matching a single <code>follow</code> clause.
+It is also possible to explicitly specify more than one
+<code>follow</code> branching out from the same origin along different
+associations.  For example, suppose we'd like to find the datatype and
+containing tables of a column:
+
+<pre><code>
+select t, d
+from class Column where name='CITY' then {
+    follow destination class Table as t
+    union
+    follow destination class SQLDataType as d
+};
+
+EXECUTION RESULT:
+LocalTable: EMPS
+LocalTable: TEMPS
+SQLSimpleType: VARCHAR
+</code></pre>
+
+The keyword <code>union</code> is used because the final results are
+based on the two paths combined (with duplicates removed as always).
+Intersect and other set operations are not currently supported.  The
+<code>follow</code> qualifier used here is based on the
+<code>class</code> (Table or SQLDataType) reached rather than the
+association.  The <code>destination</code> qualifier means filter
+based on the class reached rather than the starting class (the
+<code>origin</code> qualifier provides this alternative).
+
+<p>
+
+The example above shows diverging paths; it is also possible for paths
+to converge and then carry on together.  Suppose we'd like to query the
+union of the columns of view EMPSVIEW and table DEPTS in schema SALES:
+
+<pre><code>
+select c
+from class Schema where name='SALES' then {
+    follow destination class Table where name='DEPTS' 
+    union
+    follow destination class View where name='EMPSVIEW'
+} gather then {
+    follow destination class Column as c
+};
+
+EXECUTION RESULT:
+StoredColumn: DEPTNO
+StoredColumn: NAME
+ViewColumn: EMPNO
+ViewColumn: NAME
+</code></pre>
+
+The <code>gather</code> clause combines the leaves of the unioned
+paths and then applies the last <code>then</code> clause to that
+combination.  Schematically:
+
+<p>
+
+<img src="lurqlDiagrams/gather.gif">
+
+<p>
+
+In some cases, a query may need to contain excursions; the
+<code>gather with parent</code> variation can be used for this
+purpose.  For example, suppose we want to query the columns of a view
+together with all columns of directly underlying tables:
+
+<pre><code>
+select c, t
+from class View where name='JOINVIEW' then {
+    follow association ElementOwnership destination class Dependency then {
+        follow destination end supplier destination class Table as t
+    }
+} gather with parent then {
+    follow association ClassifierFeature as c
+};
+
+EXECUTION RESULT:
+LocalTable: DEPTS
+LocalTable: EMPS
+StoredColumn: AGE
+StoredColumn: CITY
+StoredColumn: DEPTNO
+StoredColumn: DEPTNO
+StoredColumn: EMPID
+StoredColumn: EMPNO
+StoredColumn: GENDER
+StoredColumn: MANAGER
+StoredColumn: NAME
+StoredColumn: NAME
+StoredColumn: PUBLIC_KEY
+StoredColumn: SLACKER
+ViewColumn: DNAME
+ViewColumn: ENAME
+</code></pre>
+
+The first <code>follow</code> chain defines the view dependency
+traversal (and demonstrates association filtering via end names).  It
+is an "excursion" in the sense that regardless of what it finds, we
+also want to include the original view (the "parent") as a source for
+the final <code>follow</code> after the <code>gather with
+parent</code>.  Here's the corresponding query graph:
+
+<p>
+
+<img src="lurqlDiagrams/gatherWithParent.gif">
+
+<h2>Recursion</h2>
+
+The examples so far have contained query graphs which match the
+structure of the underlying metamodel exactly.  If the structure is
+complex, this may be cumbersome (consider enumerating all of the parts
+of an object such as a table).  And in some cases, the structure may
+be recursive, allowing chains of arbitrary depth.  To address these
+requirements, LURQL provides recursion.  Here's a simple example which
+expands all of the containers of a table:
+
+<pre><code>
+select *
+from class Table where name='TEMPS' then {
+    recursively {
+        follow composite backward
+    }
+};
+
+EXECUTION RESULT:
+Catalog: LOCALDB
+LocalSchema: SALES
+LocalTable: TEMPS
+</code></pre>
+
+The query did not mention any particular association or class other
+than Table; the structure was discovered automatically by query execution.
+
+<p>
+
+Recursion may contain follow chains (or diverging chains as long as
+they all eventually converge back to a single endpoint) and may be
+followed by more non-recursive query processing.  Here's the previous
+view dependency example, this time capable of handling arbitrary depth
+(the results are not shown since the example views only have one
+level):
+
+<pre><code>
+select c, t
+from class View where name='JOINVIEW' then {
+    recursively {
+        follow association ElementOwnership destination class Dependency then {
+            follow destination end supplier destination class ColumnSet as t
+        }
+    }
+} gather with parent then {
+    follow association ClassifierFeature as c
+};
+</code></pre>
+
+Note that the dependency destination has been changed from Table to
+ColumnSet (which includes the views we want to recursively expand).
+Such a recursive query can be diagrammed as a cyclic graph:
+
+<p>
+
+<img src="lurqlDiagrams/recursion.gif">
+
+<h2>SQL Integration</h2>
+
+At times it can be useful to complement LURQL with SQL.  When properly
+configured, a LURQL query processor can use SQL queries as sources for
+filter lists.  Here's an example of how to get the datatypes for all
+columns having a name ending with 'NO':
+
+<pre><code>
+select dt
+from class Column where mofId in
+[select "mofId" from sys_cwm."Relational"."Column" where "name" like '%NO']
+then {
+    follow destination class SQLDataType as dt
+};
+
+EXECUTION RESULT:
+SQLSimpleType: INTEGER
+</code></pre>
+
+Any query text in between square brackets is not parsed by LURQL; it
+is instead sent to the configured SQL connection for execution.  The
+SQL query should return a result set with exactly one column.
+
+<p>
+
+In this case, the SQL query is against the catalog views derived from the
+same metadata being queried by LURQL.  The "mofId" column is a special
+internal column representing the JMI object ID.
+
+<h2>API</h2>
+
+TBD
+
+<h2>Formal Grammar</h2>
+
+<pre><code>
+&lt;lurql-query&gt; ::= 
+select &lt;select-list&gt;
+from &lt;root&gt;
+
+select-list ::=
+'*'
+| 
+&lt;id&gt; [, &lt;id&gt; ... ]
+
+&lt;root&gt; ::=
+&lt;simple-root&gt;
+|
+&lt;compound-root&gt;
+
+&lt;simple-root&gt; ::=
+class &lt;id&gt; [ as &lt;id&gt; ]
+[ &lt;where-clause&gt; ]
+[ then &lt;path-spec&gt; ]
+
+&lt;compound-root&gt; ::=
+'{' &lt;root&gt; [ union &lt;root&gt; ... ] '}'
+[ gather then &lt;path-spec&gt; ]
+
+&lt;where-clause&gt; ::=
+where &lt;filter&gt; [ and &lt;filter&gt; ... ]
+
+&lt;filter&gt; ::=
+&lt;id&gt; '=' &lt;literal&gt;
+|
+&lt;id&gt; in '(' &lt;literal&gt; [, &lt;literal&gt; ... ] ')'
+|
+&lt;id&gt; in '[' &lt;sql-query-text&gt; ']'
+
+&lt;path-spec&gt; ::=
+'{' &lt;path-branch&gt; [ union &lt;path-branch&gt; ... ] '}'
+[ gather [ with parent ] then &lt;path-spec&gt; ]
+
+&lt;path-branch&gt; ::=
+&lt;follow&gt;
+|
+&lt;recurse&gt;
+
+&lt;follow&gt; ::=
+follow [ &lt;association-filter&gt; ... ]
+[ as &lt;id&gt; ]
+[ &lt;where-clause&gt; ]
+[ then &lt;path-spec&gt; ]
+
+&lt;association-filter&gt; ::=
+( origin | destination ) ( end | class ) &lt;id&gt;
+| composite
+| noncomposite
+| association &lt;id&gt;
+| forward
+| backward
+
+&lt;recurse&gt; ::=
+recursively &lt;path-spec&gt;
+[ then &lt;path-spec&gt; ]
+
+&lt;id&gt; ::= 
+&lt;double-quoted-id&gt; 
+| &lt;unquoted-id&gt;
+
+&lt;literal&gt; ::=
+&lt;single-quoted-string&gt;
+</code></pre>
+
+<ul>
+
+<li>Unlike SQL, identifiers are always case sensitive.
+
+<li>Identifiers only need to be quoted if they are keywords, contain
+non-alphanumeric characters, or start with a number.
+
+</ul>
+
+<h2>Formal Semantics</h2>
+
+TBD
+
+<h2>History and Credits</h2>
+
+<img src="berql.gif" align="right">
+
+LURQL was originally developed in 1998 under the name BERQL by <a
+href="http://www-db.stanford.edu/~royg">Roy Goldman</a>, John Sichi,
+and others at Broadbase Software.  BERQL was an acronym for Broadbase
+Entity Relationship Query Language, but there also happens to be a
+restaurant on Telegraph Avenue in Berkeley named Berkel Berkel.  The
+original implementation of the language didn't have its own parser;
+instead, queries were phrased in XML (just like <a
+href="http://www.w3.org/TR/xqueryx">XQueryX</a>), which was nice for
+machines but no so nice for humans.
+
+<p>
+
+In 2005, the code was contributed under GPL licensing to The Eigenbase
+Project via LucidEra, a startup which has acquired the rights to the
+Broadbase code.  Besides rechristening as LURQL, major changes from
+BERQL include:
+
+<ul>
+
+<li>a human-friendly grammar and JavaCC parser
+
+<li>sourcing from standard JMI metadata instead of the proprietary
+Broadbase repository
+
+<li>support for execution of SQL queries to produce filter values
+
+<li>support for merging paths from different roots
+
+<li>new name, even more fun to say aloud
+
+</ul>
+
+</body>
+
+</html>

@@ -110,6 +110,7 @@ List WhereClause() :
     LurqlFilter filter;
 }
 {
+    <WHERE>
     filter = Filter()
     {
         filterList.add(filter);
@@ -174,7 +175,7 @@ LurqlRoot SimpleRoot() :
         <AS> aliasName = Identifier()
     ]
     [ 
-        <WHERE> whereClause = WhereClause()
+        whereClause = WhereClause()
     ]
     [
         <THEN> pathSpec = PathSpec()
@@ -270,7 +271,7 @@ LurqlFollow Follow() :
         <AS> aliasName = Identifier()
     ]
     [ 
-        <WHERE> whereClause = WhereClause()
+        whereClause = WhereClause()
     ]
     [
         <THEN> thenSpec = PathSpec()

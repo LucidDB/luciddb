@@ -53,7 +53,7 @@ anon_1 { ModelElement } where "name" in [
         
 ]
 
-EXECUTION ERROR:  No default schema specified; execute SET SCHEMA or use fully qualified names
+EXECUTION ERROR:  error executing SQL subquery
 
 ****
 

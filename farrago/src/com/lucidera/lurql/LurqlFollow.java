@@ -51,8 +51,6 @@ public class LurqlFollow extends LurqlPathBranch
 
     public static final String AF_BACKWARD = "backward";
 
-    private final String aliasName;
-
     private final List filterList;
 
     private final Map associationFilters;
@@ -63,16 +61,10 @@ public class LurqlFollow extends LurqlPathBranch
         List filterList,
         LurqlPathSpec thenSpec)
     {
-        super(thenSpec);
-        this.aliasName = aliasName;
+        super(aliasName, thenSpec);
         this.associationFilters = Collections.unmodifiableMap(
             associationFilters);
         this.filterList = Collections.unmodifiableList(filterList);
-    }
-
-    public String getAliasName()
-    {
-        return aliasName;
     }
 
     public Map getAssociationFilters()
@@ -99,10 +91,7 @@ public class LurqlFollow extends LurqlPathBranch
                 StackWriter.printSqlIdentifier(pw, entry.getValue().toString());
             }
         }
-        if (aliasName != null) {
-            pw.print(" as ");
-            StackWriter.printSqlIdentifier(pw, aliasName);
-        }
+        unparseAlias(pw);
         unparseFilterList(pw, filterList);
         unparseThenSpec(pw);
     }

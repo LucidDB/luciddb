@@ -23,7 +23,9 @@ package net.sf.farrago.defimpl;
 
 import com.disruptivetech.farrago.fennel.*;
 import com.lucidera.farrago.fennel.*;
+import com.lucidera.lurql.*;
 
+import org.eigenbase.jmi.*;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
@@ -207,6 +209,14 @@ public class FarragoDefaultSessionPersonality
         FarragoSessionStmtValidator stmtValidator,
         SqlNode sqlNode)
     {
+    }
+    
+    // implement FarragoSessionPersonality
+    public JmiQueryProcessor getJmiQueryProcessor()
+    {
+        // TODO:  share a common instance, query plan caching, all that
+        return new LurqlQueryProcessor(
+            database.getSystemRepos().getMdrRepos());
     }
 }
 

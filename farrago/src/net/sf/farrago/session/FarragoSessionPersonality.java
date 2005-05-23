@@ -23,6 +23,7 @@ package net.sf.farrago.session;
 
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.jmi.*;
 
 import java.util.*;
 
@@ -160,6 +161,11 @@ public interface FarragoSessionPersonality extends FarragoStreamFactoryProvider
     public void validate(
         FarragoSessionStmtValidator stmtValidator,
         SqlNode sqlNode);
+    
+    /**
+     * @return processor for JMI queries
+     */
+    public JmiQueryProcessor getJmiQueryProcessor();
 }
 
 // End FarragoSessionPersonality.java

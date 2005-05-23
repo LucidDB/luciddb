@@ -28,7 +28,8 @@ import org._3pq.jgrapht.traverse.*;
 import java.util.*;
 
 /**
- * JmiModelView represents an annotated view of a JMI model.
+ * JmiModelView represents an annotated view of a JMI model.  Instances
+ * are immutable and can be accessed concurrently by multiple threads.
  *
  *<p>
  *

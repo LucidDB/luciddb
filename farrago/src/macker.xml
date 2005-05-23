@@ -32,7 +32,8 @@
 
     <pattern name="farrago">
       <include class="net.sf.farrago.****" />
-      <include class="com.disruptivetech.farrago.****" />
+      <include class="com.disruptivetech.****" />
+      <include class="com.lucidera.****" />
     </pattern>
 
     <!-- farrago components -->
@@ -78,7 +79,11 @@
     <pattern name="dt.fennel" class="com.disruptivetech.farrago.fennel.*" />
     <pattern name="dt.sql.advise" class="com.disruptivetech.farrago.sql.advise.*" />
 
-    <pattern name="rs.fennel" class="com.redsquare.farrago.fennel.*" />
+    <pattern name="lu.lurql" class="com.lucidera.lurql.*"/>
+    <pattern name="lu.lurql.parser" class="com.lucidera.lurql.parser.*"/>
+    <pattern name="lu.lurql.test" class="com.lucidera.lurql.test.*"/>
+
+    <pattern name="lu.fennel" class="com.lucidera.farrago.fennel.*" />
 
     <pattern name="defimpl" class="net.sf.farrago.defimpl.*" />
 
@@ -127,7 +132,10 @@
       <include pattern="dt.rel"/>
       <include pattern="dt.fennel"/>
       <include pattern="dt.sql.advise"/>
-      <include pattern="rs.fennel"/>
+      <include pattern="lu.lurql"/>
+      <include pattern="lu.lurql.parser"/>
+      <include pattern="lu.lurql.test"/>
+      <include pattern="lu.fennel"/>
       <include pattern="defimpl"/>
       <include pattern="test"/>
       <include pattern="dt.test"/>
@@ -703,17 +711,49 @@
       </deny>
     </access-rule>
 
-    <pattern name="rs.fennel.deps">
-      <include pattern="rs.fennel" />
+    <pattern name="lu.fennel.deps">
+      <include pattern="lu.fennel" />
     </pattern>
 
     <access-rule>
-      <message>rs.fennel dependency violation</message>
+      <message>lu.fennel dependency violation</message>
       <deny>
-        <from pattern="rs.fennel" />
+        <from pattern="lu.fennel" />
         <to pattern="farrago" />
         <allow>
-          <to pattern="rs.fennel.deps" />
+          <to pattern="lu.fennel.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="lu.lurql.deps">
+      <include pattern="lu.lurql" />
+      <include pattern="lu.lurql.parser" />
+      <include pattern="util" />
+    </pattern>
+
+    <access-rule>
+      <message>lu.lurql dependency violation</message>
+      <deny>
+        <from pattern="lu.lurql" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="lu.lurql.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="lu.lurql.parser.deps">
+      <include pattern="lu.lurql.deps" />
+    </pattern>
+
+    <access-rule>
+      <message>lu.lurql.parser dependency violation</message>
+      <deny>
+        <from pattern="lu.lurql.parser" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="lu.lurql.parser.deps" />
         </allow>
       </deny>
     </access-rule>
@@ -724,7 +764,8 @@
       <include pattern="dt.volcano.deps" />
       <include pattern="dt.rel.deps" />
       <include pattern="dt.fennel.deps" />
-      <include pattern="rs.fennel.deps" />
+      <include pattern="lu.fennel.deps" />
+      <include pattern="lu.lurql.deps" />
       <include pattern="defimpl" />
     </pattern>
 
@@ -774,6 +815,23 @@
         <to pattern="farrago" />
         <allow>
           <to pattern="dt.test.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="lu.lurql.test.deps">
+      <include pattern="lu.lurql.deps" />
+      <include pattern="lu.lurql.test" />
+      <include pattern="test.deps" />
+    </pattern>
+
+    <access-rule>
+      <message>lu.lurql.test dependency violation</message>
+      <deny>
+        <from pattern="lu.lurql.test" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="lu.lurql.test.deps" />
         </allow>
       </deny>
     </access-rule>

@@ -39,18 +39,20 @@ import javax.jmi.reflect.*;
 import javax.jmi.model.*;
 
 /**
- * LurqlQueryTest is a JUnit harness for executing tests which are
- * implemented by running a script of LURQL queries and diffing the
- * output against a reference file containing the expected results.
- * MOF serves as both the metamodel and the model to be queried.
- * The script format is fairly limited; see the .lurql files
- * in the test suite for details (TODO:  link).
+ * LurqlQueryTest is a JUnit harness for executing tests which are implemented
+ * by running a script of LURQL queries and diffing the output against a
+ * reference file containing the expected results.  By default, MOF serves as
+ * both the metamodel and the model to be queried; this can be changed within a
+ * script.  The script format is fairly limited; see the .lurql files in the
+ * test suite for details (TODO: link).
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class LurqlQueryTest extends FarragoSqlTest
 {
+    private JmiModelView modelView;
+    
     public LurqlQueryTest(String testName)
         throws Exception
     {
@@ -79,9 +81,7 @@ public class LurqlQueryTest extends FarragoSqlTest
         // mask out source control Id
         addDiffMask("\\$Id.*\\$");
 
-        RefPackage mofPackage = repos.getMdrRepos().getExtent("MOF");
-        JmiModelGraph modelGraph = new JmiModelGraph(mofPackage);
-        JmiModelView modelView = new JmiModelView(modelGraph);
+        modelView = loadModelView("MOF");
         
         assert(getName().endsWith(".lurql"));
         File fileSansExt =
@@ -105,7 +105,7 @@ public class LurqlQueryTest extends FarragoSqlTest
             if (action != null) {
                 if ((line == null) || (line.trim().equals(""))) {
                     try {
-                        executeAction(modelView, action, sb.toString(), pw);
+                        executeAction(action, sb.toString(), pw);
                     } finally {
                         pw.println("****");
                         pw.println();
@@ -135,15 +135,27 @@ public class LurqlQueryTest extends FarragoSqlTest
         diffTestLog();
     }
 
+    private JmiModelView loadModelView(String extentName)
+    {
+        RefPackage mofPackage = repos.getMdrRepos().getExtent(extentName);
+        JmiModelGraph modelGraph = new JmiModelGraph(mofPackage);
+        return new JmiModelView(modelGraph);
+    }
+
     private void executeAction(
-        JmiModelView modelView, String action,
+        String action,
         String queryString, PrintWriter pw)
         throws Exception
     {
         boolean explain = false;
         boolean execute = false;
 
-        if (action.equals("EXPLAIN AND EXECUTE")) {
+        if (action.startsWith("EXTENT ")) {
+            pw.println(action);
+            String extentName = action.substring(7);
+            modelView = loadModelView(extentName);
+            return;
+        } else if (action.equals("EXPLAIN AND EXECUTE")) {
             explain = true;
             execute = true;
         } else if (action.equals("EXECUTE")) {
@@ -172,7 +184,6 @@ public class LurqlQueryTest extends FarragoSqlTest
             LurqlPlan plan;
             try {
                 plan = new LurqlPlan(
-                    repos.getMdrRepos(),
                     modelView,
                     query);
             } catch (Throwable ex) {
@@ -183,20 +194,13 @@ public class LurqlQueryTest extends FarragoSqlTest
 
             if (explain) {
                 pw.println("EXPLANATION:");
-                List list = new ArrayList();
-                list.addAll(plan.getGraph().vertexSet());
-                list.addAll(plan.getGraph().edgeSet());
-                Collections.sort(list, new StringRepresentationComparator());
-                Iterator iter = list.iterator();
-                while (iter.hasNext()) {
-                    pw.println(iter.next());
-                }
-                pw.println();
+                plan.explain(pw);
             }
 
             if (execute) {
                 LurqlReflectiveExecutor executor =
-                    new LurqlReflectiveExecutor(plan, connection);
+                    new LurqlReflectiveExecutor(
+                        repos.getMdrRepos(), plan, connection);
                 Set set;
                 try {
                     set = executor.execute();
@@ -209,12 +213,10 @@ public class LurqlQueryTest extends FarragoSqlTest
                 List result = new ArrayList();
                 Iterator iter = set.iterator();
                 while (iter.hasNext()) {
-                    // We're querying MOF, so we know that everything coming
-                    // back will be some kind of ModelElement.
-                    ModelElement element = (ModelElement) iter.next();
+                    RefObject refObj = (RefObject) iter.next();
                     String typeName =
-                        ((ModelElement) element.refMetaObject()).getName();
-                    result.add(typeName + ": " + element.getName());
+                        ((ModelElement) refObj.refMetaObject()).getName();
+                    result.add(typeName + ": " + refObj.refGetValue("name"));
                 }
                 Collections.sort(result);
                 iter = result.iterator();

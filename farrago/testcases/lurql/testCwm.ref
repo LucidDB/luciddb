@@ -1,0 +1,213 @@
+# $Id:$
+
+EXTENT FarragoCatalog
+****
+
+PARSE RESULT:
+select * 
+from
+class "Table"
+where
+    "name" = 'DEPTS'
+then {
+    follow association "ClassifierFeature"
+};
+
+EXECUTION RESULT:
+LocalTable: DEPTS
+StoredColumn: DEPTNO
+StoredColumn: NAME
+
+****
+
+PARSE RESULT:
+select "c" 
+from
+class "Table"
+where
+    "name" = 'DEPTS'
+then {
+    follow association "ClassifierFeature" as "c"
+};
+
+EXECUTION RESULT:
+StoredColumn: DEPTNO
+StoredColumn: NAME
+
+****
+
+PARSE RESULT:
+select "s", "t" 
+from
+class "Column"
+where
+    "name" = 'EMPNO'
+then {
+    follow association "ClassifierFeature" as "t"
+    then {
+        follow association "ElementOwnership" backward as "s"
+    }
+};
+
+EXECUTION RESULT:
+LocalSchema: SALES
+LocalTable: EMPS
+LocalTable: TEMPS
+View: EMPSVIEW
+View: TEMPSVIEW
+
+****
+
+PARSE RESULT:
+select "t", "d" 
+from
+class "Column"
+where
+    "name" = 'CITY'
+then {
+    follow destination class "Table" as "t"
+    union
+    follow destination class "SQLDataType" as "d"
+};
+
+EXECUTION RESULT:
+LocalTable: EMPS
+LocalTable: TEMPS
+SQLSimpleType: VARCHAR
+
+****
+
+PARSE RESULT:
+select "c" 
+from
+class "Schema"
+where
+    "name" = 'SALES'
+then {
+    follow destination class "Table"
+    where
+        "name" = 'DEPTS'
+    union
+    follow destination class "View"
+    where
+        "name" = 'EMPSVIEW'
+} gather then {
+    follow association "ClassifierFeature" as "c"
+};
+
+EXECUTION RESULT:
+StoredColumn: DEPTNO
+StoredColumn: NAME
+ViewColumn: EMPNO
+ViewColumn: NAME
+
+****
+
+PARSE RESULT:
+select "c", "t" 
+from
+class "View"
+where
+    "name" = 'JOINVIEW'
+then {
+    follow association "ElementOwnership" destination class "Dependency"
+    then {
+        follow destination end "supplier" destination class "Table" as "t"
+    }
+} gather with parent then {
+    follow association "ClassifierFeature" as "c"
+};
+
+EXECUTION RESULT:
+LocalTable: DEPTS
+LocalTable: EMPS
+StoredColumn: AGE
+StoredColumn: CITY
+StoredColumn: DEPTNO
+StoredColumn: DEPTNO
+StoredColumn: EMPID
+StoredColumn: EMPNO
+StoredColumn: GENDER
+StoredColumn: MANAGER
+StoredColumn: NAME
+StoredColumn: NAME
+StoredColumn: PUBLIC_KEY
+StoredColumn: SLACKER
+ViewColumn: DNAME
+ViewColumn: ENAME
+
+****
+
+PARSE RESULT:
+select * 
+from
+class "Table"
+where
+    "name" = 'TEMPS'
+then {
+    recursively {
+        follow composite backward
+    }
+};
+
+EXECUTION RESULT:
+Catalog: LOCALDB
+LocalSchema: SALES
+LocalTable: TEMPS
+
+****
+
+PARSE RESULT:
+select "c", "t" 
+from
+class "View"
+where
+    "name" = 'JOINVIEW'
+then {
+    recursively {
+        follow association "ElementOwnership" destination class "Dependency"
+        then {
+            follow destination end "supplier" destination class "ColumnSet" as "t"
+        }
+    }
+} gather with parent then {
+    follow association "ClassifierFeature" as "c"
+};
+
+EXECUTION RESULT:
+LocalTable: DEPTS
+LocalTable: EMPS
+StoredColumn: AGE
+StoredColumn: CITY
+StoredColumn: DEPTNO
+StoredColumn: DEPTNO
+StoredColumn: EMPID
+StoredColumn: EMPNO
+StoredColumn: GENDER
+StoredColumn: MANAGER
+StoredColumn: NAME
+StoredColumn: NAME
+StoredColumn: PUBLIC_KEY
+StoredColumn: SLACKER
+ViewColumn: DNAME
+ViewColumn: ENAME
+
+****
+
+PARSE RESULT:
+select "dt" 
+from
+class "Column"
+where
+    "mofId" in [
+        select "mofId" from sys_cwm."Relational"."Column" where "name" like '%NO'
+    ]
+then {
+    follow destination class "SQLDataType" as "dt"
+};
+
+EXECUTION RESULT:
+SQLSimpleType: INTEGER
+
+****
+

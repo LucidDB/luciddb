@@ -22,6 +22,8 @@ package com.lucidera.lurql;
 
 import java.io.*;
 
+import org.eigenbase.util.*;
+
 /**
  * LurqlPathBranch represents a parsed path branch (either FROM, FOLLOW, or
  * RECURSIVELY) in a LURQL query.
@@ -31,11 +33,19 @@ import java.io.*;
  */
 public abstract class LurqlPathBranch extends LurqlQueryNode
 {
+    private final String aliasName;
+    
     private final LurqlPathSpec thenSpec;
 
-    protected LurqlPathBranch(LurqlPathSpec thenSpec)
+    protected LurqlPathBranch(String aliasName, LurqlPathSpec thenSpec)
     {
+        this.aliasName = aliasName;
         this.thenSpec = thenSpec;
+    }
+
+    public String getAliasName()
+    {
+        return aliasName;
     }
 
     public LurqlPathSpec getThenSpec()
@@ -49,6 +59,14 @@ public abstract class LurqlPathBranch extends LurqlQueryNode
             pw.println();
             pw.print("then ");
             thenSpec.unparse(pw);
+        }
+    }
+
+    protected void unparseAlias(PrintWriter pw)
+    {
+        if (aliasName != null) {
+            pw.print(" as ");
+            StackWriter.printSqlIdentifier(pw, aliasName);
         }
     }
 }

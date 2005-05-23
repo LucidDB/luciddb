@@ -26,9 +26,8 @@ import org._3pq.jgrapht.graph.*;
 import org.eigenbase.util.*;
 import org.eigenbase.jmi.*;
 
-import org.netbeans.api.mdr.*;
-
 import java.util.*;
+import java.io.*;
 
 import javax.jmi.reflect.*;
 import javax.jmi.model.*;
@@ -41,15 +40,12 @@ import javax.jmi.model.*;
  */
 public class LurqlPlan
 {
-    /** Map from alias name to corresponding LurqlPlanVertex */
-    private final Map aliasToVertexMap;
+    /** Map from alias name to corresponding LurqlPathBranch */
+    private final Map aliasToBranchMap;
     
     /** All variables part of a recursion */
     private final Set recVars;
 	
-    /** The repository we are querying */
-    private final MDRepository repos;
-    
     /** The model view we are querying */
     private final JmiModelView modelView;
 
@@ -65,14 +61,13 @@ public class LurqlPlan
     private int idGen;
 
     public LurqlPlan(
-        MDRepository repos,
         JmiModelView modelView,
         LurqlQuery query)
+        throws JmiQueryException
     {
-        this.repos = repos;
         this.modelView = modelView;
         this.query = query;
-        aliasToVertexMap = new HashMap();
+        aliasToBranchMap = new HashMap();
         recVars = new HashSet();
         graph = new DirectedMultigraph();
         idGen = 0;
@@ -85,11 +80,6 @@ public class LurqlPlan
         return modelView;
     }
 
-    public MDRepository getRepos()
-    {
-        return repos;
-    }
-
     public boolean isSelectAll()
     {
         return projectSet == null;
@@ -100,7 +90,21 @@ public class LurqlPlan
         return isSelectAll() || projectSet.contains(varName);
     }
 
+    public void explain(PrintWriter pw)
+    {
+        List list = new ArrayList();
+        list.addAll(graph.vertexSet());
+        list.addAll(graph.edgeSet());
+        Collections.sort(list, new StringRepresentationComparator());
+        Iterator iter = list.iterator();
+        while (iter.hasNext()) {
+            pw.println(iter.next());
+        }
+        pw.println();
+    }
+
     void prepareQuery()
+        throws JmiQueryException
     {
         if (query.getRoot() instanceof LurqlRoot) {
             prepareRoot((LurqlRoot) query.getRoot(), new ArrayList());
@@ -118,7 +122,7 @@ public class LurqlPlan
         } else {
             projectSet = new HashSet(query.getSelectList());
             List list = new ArrayList(query.getSelectList());
-            list.removeAll(aliasToVertexMap.keySet());
+            list.removeAll(aliasToBranchMap.keySet());
             if (!list.isEmpty()) {
                 throw newException(
                     "unknown alias reference in select:  " + list);
@@ -134,12 +138,13 @@ public class LurqlPlan
     }
 
     private void prepareRoot(LurqlRoot root, List leafVertexList)
+        throws JmiQueryException
     {
         Set rootObjectIds = Collections.EMPTY_SET;
         JmiClassVertex classVertex = findClassVertex(root.getClassName());
         
         LurqlPlanVertex planVertex = newPlanVertex(
-            root.getAliasName(), rootObjectIds);
+            root, rootObjectIds);
 
         planVertex.addClassVertex(classVertex);
         planVertex.addFilters(root.getFilterList());
@@ -152,13 +157,14 @@ public class LurqlPlan
     }
 
     private LurqlPlanVertex newPlanVertex(
-        String alias, Set rootObjectIds)
+        LurqlPathBranch branch, Set rootObjectIds)
+        throws JmiQueryException
     {
-        String name = validateAlias(alias);
+        String name = validateAlias(branch);
         LurqlPlanVertex planVertex = new LurqlPlanVertex(
-            this, name, alias, rootObjectIds);
-        if (alias != null) {
-            aliasToVertexMap.put(alias, planVertex);
+            this, name, branch.getAliasName(), rootObjectIds);
+        if (branch.getAliasName() != null) {
+            aliasToBranchMap.put(branch.getAliasName(), branch);
         }
         graph.addVertex(planVertex);
         return planVertex;
@@ -168,6 +174,7 @@ public class LurqlPlan
         List parentVertexList,
         LurqlPathSpec pathSpec,
         List leafVertexList)
+        throws JmiQueryException
     {
         if (pathSpec == null) {
             leafVertexList.addAll(parentVertexList);
@@ -231,6 +238,7 @@ public class LurqlPlan
         LurqlRecurse recurse,
         List parentVertexList,
         List leafVertexList)
+        throws JmiQueryException
     {
         assert(parentVertexList.size() == 1);
         
@@ -284,9 +292,10 @@ public class LurqlPlan
         LurqlFollow follow,
         List parentVertexList,
         List leafVertexList)
+        throws JmiQueryException
     {
         LurqlPlanVertex planVertex = newPlanVertex(
-            follow.getAliasName(), Collections.EMPTY_SET);
+            follow, Collections.EMPTY_SET);
 
         Iterator iter = parentVertexList.iterator();
         while (iter.hasNext()) {
@@ -313,6 +322,7 @@ public class LurqlPlan
         LurqlPlanVertex sourceVertex, 
         LurqlPlanVertex targetVertex, 
         LurqlFollow follow)
+        throws JmiQueryException
     {
         boolean forward = 
             follow.getAssociationFilters().containsKey(LurqlFollow.AF_FORWARD);
@@ -417,6 +427,7 @@ public class LurqlPlan
         Collection assocEdges,
         JmiClassVertex destinationClassVertex,
         int iOriginEnd)
+        throws JmiQueryException
     {
         Map assocFilters = follow.getAssociationFilters();
 
@@ -505,6 +516,7 @@ public class LurqlPlan
     }
 
     private JmiClassVertex findClassVertex(String className)
+        throws JmiQueryException
     {
         JmiClassVertex classVertex =
             modelView.getModelGraph().getVertexForClassName(className);
@@ -536,20 +548,28 @@ public class LurqlPlan
         return true;
     }
 
-    IllegalArgumentException newException(String err)
+    JmiQueryException newException(String err)
     {
-        // TODO:  proper excn
-        return new IllegalArgumentException(err);
+        // FIXME:  i18n everywhere this is used
+        return new JmiQueryException(err);
     }
 
-    private String validateAlias(String alias)
+    JmiQueryException newException(String err, Throwable cause)
+    {
+        return new JmiQueryException(err, cause);
+    }
+
+    private String validateAlias(LurqlPathBranch branch)
+        throws JmiQueryException
     {
         ++idGen;
-        if (alias != null) {
-            if (aliasToVertexMap.containsKey(alias)) {
-                throw newException("duplicate definition for alias " + alias);
+        if (branch.getAliasName() != null) {
+            Object obj = aliasToBranchMap.get(branch.getAliasName());
+            if ((obj != null) && (obj != branch)) {
+                throw newException("duplicate definition for alias "
+                    + branch.getAliasName());
             }
-            return alias + "_" + idGen;
+            return branch.getAliasName() + "_" + idGen;
         }
         return "anon_" + idGen;
     }

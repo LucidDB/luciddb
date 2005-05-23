@@ -1,8 +1,9 @@
 /*
 // $Id$
-// Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2005-2005 Disruptive Tech
+// Copyright (C) 2005-2005 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -18,38 +19,40 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package com.lucidera.lurql;
-
-import java.io.*;
+package org.eigenbase.jmi;
 
 /**
- * LurqlRecurse represents a parsed RECURSIVELY clause in a LURQL query.
+ * JmiQueryException specifies an exception thrown during JMI query processing.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class LurqlRecurse extends LurqlPathBranch
+public class JmiQueryException extends Exception
 {
-    private final LurqlPathSpec pathSpec;
-
-    public LurqlRecurse(LurqlPathSpec pathSpec, LurqlPathSpec thenSpec)
+    /**
+     * Constructs a new exception.
+     *
+     * @param message description of exception
+     */
+    public JmiQueryException(
+        String message)
     {
-        super(null, thenSpec);
-        this.pathSpec = pathSpec;
-    }
-
-    public LurqlPathSpec getPathSpec()
-    {
-        return pathSpec;
+        this(message, null);
     }
     
-    // implement LurqlQueryNode
-    public void unparse(PrintWriter pw)
+    /**
+     * Constructs a new exception with an underlying cause.
+     *
+     * @param message description of exception
+     *
+     * @param cause underlying cause
+     */
+    public JmiQueryException(
+        String message,
+        Throwable cause)
     {
-        pw.print("recursively ");
-        pathSpec.unparse(pw);
-        unparseThenSpec(pw);
+        super(message, cause);
     }
 }
 
-// End LurqlRecurse.java
+// End JmiQueryException.java

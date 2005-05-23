@@ -45,6 +45,8 @@ import javax.jmi.model.*;
 public class LurqlReflectiveExecutor
 {
     private static final RefObject [] EMPTY_REFOBJ_ARRAY = new RefObject[0];
+
+    private final MDRepository repos;
     
     private final LurqlPlan plan;
 
@@ -59,15 +61,19 @@ public class LurqlReflectiveExecutor
     /**
      * Creates a new executor for a plan.
      *
+     * @param repos the repository to be accessed
+     *
      * @param plan the plan to be executed
      *
      * @param sqlConnection JDBC connection for evaluation of SQL queries,
      * or null if no SQL context is available
      */
     public LurqlReflectiveExecutor(
+        MDRepository repos,
         LurqlPlan plan,
         Connection sqlConnection)
     {
+        this.repos = repos;
         this.plan = plan;
         this.sqlConnection = sqlConnection;
     }
@@ -78,6 +84,7 @@ public class LurqlReflectiveExecutor
      * @return objects found (as a modifiable set of RefObjects)
      */
     public Set execute()
+        throws JmiQueryException
     {
         sqlMap = new HashMap();
         vertexToResultMap = new HashMap();
@@ -117,6 +124,7 @@ public class LurqlReflectiveExecutor
     }
 
     private void executeRecursion(LurqlPlanVertex rootVertex)
+        throws JmiQueryException
     {
         // materialize execution order
         List vertexList = Util.toList(
@@ -165,6 +173,7 @@ public class LurqlReflectiveExecutor
     private void transferResults(
         List vertexList, Map dstMap, Map srcMap,
         LurqlPlanVertex rootVertex)
+        throws JmiQueryException
     {
         Iterator iter = vertexList.iterator();
         while (iter.hasNext()) {
@@ -187,6 +196,7 @@ public class LurqlReflectiveExecutor
     }
 
     private void executeRoot(LurqlPlanVertex planVertex, Set output)
+        throws JmiQueryException
     {
         LurqlFilter [] filters = getFilters(planVertex);
         
@@ -205,7 +215,7 @@ public class LurqlReflectiveExecutor
             Iterator iter = planVertex.getRootObjectIds().iterator();
             while (iter.hasNext()) {
                 String mofId = (String) iter.next();
-                RefBaseObject refObj = plan.getRepos().getByMofId(mofId);
+                RefBaseObject refObj = repos.getByMofId(mofId);
                 if (refObj != null) {
                     objList.add(refObj);
                 }
@@ -223,6 +233,7 @@ public class LurqlReflectiveExecutor
     private void executeOutgoingEdges(
         DirectedGraph graph, LurqlPlanVertex planVertex, Set input,
         boolean executeRecursive)
+        throws JmiQueryException
     {
         // we're going to repetitively iterate the obj list, so
         // copy it as an array
@@ -260,6 +271,7 @@ public class LurqlReflectiveExecutor
     private void executeFilters(
         Collection input, Set output, LurqlFilter [] filters,
         JmiClassVertex typeFilter)
+        throws JmiQueryException
     {
         if ((filters.length == 0) && (typeFilter == null)) {
             output.addAll(input);
@@ -303,6 +315,7 @@ outer:
     }
 
     private Set getFilterValues(LurqlFilter filter)
+        throws JmiQueryException
     {
         if (filter.getValues() != null) {
             return filter.getValues();
@@ -326,7 +339,7 @@ outer:
                 set.add(s);
             }
         } catch (SQLException ex) {
-            throw plan.newException(ex.getMessage());
+            throw plan.newException("error executing SQL subquery", ex);
         } finally {
             Util.squelchStmt(stmt);
         }

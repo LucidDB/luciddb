@@ -34,8 +34,6 @@ import org.eigenbase.util.*;
  */
 public class LurqlRoot extends LurqlPathBranch
 {
-    private final String aliasName;
-
     private final String className;
 
     private final List filterList;
@@ -46,15 +44,9 @@ public class LurqlRoot extends LurqlPathBranch
         List filterList,
         LurqlPathSpec pathSpec)
     {
-        super(pathSpec);
-        this.aliasName = aliasName;
+        super(aliasName, pathSpec);
         this.className = className;
         this.filterList = Collections.unmodifiableList(filterList);
-    }
-
-    public String getAliasName()
-    {
-        return aliasName;
     }
 
     public String getClassName()
@@ -72,10 +64,7 @@ public class LurqlRoot extends LurqlPathBranch
     {
         pw.print("class ");
         StackWriter.printSqlIdentifier(pw, className);
-        if (aliasName != null) {
-            pw.print(" as ");
-            StackWriter.printSqlIdentifier(pw, aliasName);
-        }
+        unparseAlias(pw);
         unparseFilterList(pw, filterList);
         unparseThenSpec(pw);
     }
