@@ -60,6 +60,8 @@ public class LurqlPlan
 
     private int idGen;
 
+    private Map paramMap;
+
     public LurqlPlan(
         JmiModelView modelView,
         LurqlQuery query)
@@ -71,6 +73,7 @@ public class LurqlPlan
         recVars = new HashSet();
         graph = new DirectedMultigraph();
         idGen = 0;
+        paramMap = new HashMap();
         
         prepareQuery();
     }
@@ -137,6 +140,11 @@ public class LurqlPlan
         return new UnmodifiableDirectedGraph(graph);
     }
 
+    public Map getParamMap()
+    {
+        return Collections.unmodifiableMap(paramMap);
+    }
+
     private void prepareRoot(LurqlRoot root, List leafVertexList)
         throws JmiQueryException
     {
@@ -147,7 +155,7 @@ public class LurqlPlan
             root, rootObjectIds);
 
         planVertex.addClassVertex(classVertex);
-        planVertex.addFilters(root.getFilterList());
+        addFilters(planVertex, root.getFilterList());
         planVertex.freeze();
         
         preparePathSpec(
@@ -303,7 +311,7 @@ public class LurqlPlan
             prepareFollowEdges(parentVertex, planVertex, follow);
         }
         
-        planVertex.addFilters(follow.getFilterList());
+        addFilters(planVertex, follow.getFilterList());
         planVertex.freeze();
 
         if (planVertex.getClassVertexSet().isEmpty()) {
@@ -557,6 +565,44 @@ public class LurqlPlan
     JmiQueryException newException(String err, Throwable cause)
     {
         return new JmiQueryException(err, cause);
+    }
+
+    private void addFilters(LurqlPlanVertex planVertex, List filters)
+        throws JmiQueryException
+    {
+        Iterator iter = filters.iterator();
+        while (iter.hasNext()) {
+            LurqlFilter filter = (LurqlFilter) iter.next();
+            if (!filter.hasDynamicParams()) {
+                continue;
+            }
+            if (filter.getSetParam() != null) {
+                addParam(filter.getSetParam(), Set.class);
+            } else {
+                Iterator valuesIter = filter.getValues().iterator();
+                while (valuesIter.hasNext()) {
+                    Object obj = valuesIter.next();
+                    if (obj instanceof LurqlDynamicParam) {
+                        addParam((LurqlDynamicParam) obj, String.class);
+                    }
+                }
+            }
+        }
+        
+        planVertex.addFilters(filters);
+    }
+
+    private void addParam(LurqlDynamicParam param, Class paramType)
+        throws JmiQueryException
+    {
+        Object obj = paramMap.get(param.getId());
+        if (obj != null) {
+            if (obj != paramType) {
+                throw newException(
+                    "conflicting type for parameter " + param.getId());
+            }
+        }
+        paramMap.put(param.getId(), paramType);
     }
 
     private String validateAlias(LurqlPathBranch branch)

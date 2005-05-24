@@ -33,7 +33,11 @@ import org.eigenbase.util.*;
  *
  *<li><code>ATTRIBUTE = 'VALUE'</code>
  *
+ *<li><code>ATTRIBUTE = ?scalar-param</code>
+ *
  *<li><code>ATTRIBUTE IN ('VALUE1', 'VALUE2', ...)</code>
+ *
+ *<li><code>ATTRIBUTE IN ?set-param</code>
  *
  *<li><code>ATTRIBUTE IN [SQL-QUERY]</code>
  *
@@ -51,19 +55,42 @@ public class LurqlFilter extends LurqlQueryNode
     private final Set values;
 
     private final String sqlQuery;
+    
+    private final LurqlDynamicParam setParam;
+
+    private boolean hasDynamicParams;
 
     public LurqlFilter(String attributeName, Set values)
     {
         this.attributeName = attributeName;
         this.values = Collections.unmodifiableSet(values);
         this.sqlQuery = null;
+        this.setParam = null;
+        Iterator iter = values.iterator();
+        while (iter.hasNext()) {
+            Object obj = iter.next();
+            if (obj instanceof LurqlDynamicParam) {
+                hasDynamicParams = true;
+                break;
+            }
+        }
     }
 
     public LurqlFilter(String attributeName, String sqlQuery)
     {
         this.attributeName = attributeName;
         this.values = null;
+        this.setParam = null;
         this.sqlQuery = sqlQuery;
+    }
+
+    public LurqlFilter(String attributeName, LurqlDynamicParam param)
+    {
+        this.attributeName = attributeName;
+        this.values = null;
+        this.sqlQuery = null;
+        this.setParam = param;
+        hasDynamicParams = true;
     }
 
     public String getAttributeName()
@@ -85,25 +112,36 @@ public class LurqlFilter extends LurqlQueryNode
     {
         return attributeName.equals("mofId");
     }
+
+    public boolean hasDynamicParams()
+    {
+        return hasDynamicParams;
+    }
+
+    public LurqlDynamicParam getSetParam()
+    {
+        return setParam;
+    }
     
     // implement LurqlQueryNode
     public void unparse(PrintWriter pw)
     {
         StackWriter.printSqlIdentifier(pw, attributeName);
         if (sqlQuery == null) {
+            if (values == null) {
+                pw.print(" in ");
+                setParam.unparse(pw);
+                return;
+            }
             Iterator iter = values.iterator();
             if (values.size() == 1) {
                 pw.print(" = ");
-                StackWriter.printSqlStringLiteral(
-                    pw,
-                    iter.next().toString());
+                unparseValue(pw, iter.next());
             } else {
                 pw.print(" in (");
                 while (iter.hasNext()) {
                     Object obj = iter.next();
-                    StackWriter.printSqlStringLiteral(
-                        pw,
-                        obj.toString());
+                    unparseValue(pw, obj);
                     if (iter.hasNext()) {
                         pw.print(", ");
                     }
@@ -117,6 +155,17 @@ public class LurqlFilter extends LurqlQueryNode
             pw.println(sqlQuery);
             pw.write(StackWriter.OUTDENT);
             pw.print("]");
+        }
+    }
+
+    private void unparseValue(PrintWriter pw, Object value)
+    {
+        if (value instanceof LurqlDynamicParam) {
+            ((LurqlDynamicParam) value).unparse(pw);
+        } else {
+            StackWriter.printSqlStringLiteral(
+                pw,
+                value.toString());
         }
     }
 }

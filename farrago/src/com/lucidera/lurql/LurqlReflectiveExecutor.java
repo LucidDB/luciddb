@@ -56,7 +56,9 @@ public class LurqlReflectiveExecutor
 
     private Map vertexToStashMap;
 
-    private Map sqlMap;
+    private Map filterMap;
+
+    private Map args;
 
     /**
      * Creates a new executor for a plan.
@@ -67,15 +69,19 @@ public class LurqlReflectiveExecutor
      *
      * @param sqlConnection JDBC connection for evaluation of SQL queries,
      * or null if no SQL context is available
+     *
+     * @param args argument values for parameters
      */
     public LurqlReflectiveExecutor(
         MDRepository repos,
         LurqlPlan plan,
-        Connection sqlConnection)
+        Connection sqlConnection,
+        Map args)
     {
         this.repos = repos;
         this.plan = plan;
         this.sqlConnection = sqlConnection;
+        this.args = args;
     }
 
     /**
@@ -86,7 +92,7 @@ public class LurqlReflectiveExecutor
     public Set execute()
         throws JmiQueryException
     {
-        sqlMap = new HashMap();
+        filterMap = new HashMap();
         vertexToResultMap = new HashMap();
         vertexToStashMap = new HashMap();
         Set finalResult = new HashSet();
@@ -119,7 +125,7 @@ public class LurqlReflectiveExecutor
 
         vertexToResultMap = null;
         vertexToStashMap = null;
-        sqlMap = null;
+        filterMap = null;
         return finalResult;
     }
 
@@ -317,19 +323,39 @@ outer:
     private Set getFilterValues(LurqlFilter filter)
         throws JmiQueryException
     {
-        if (filter.getValues() != null) {
+        if ((filter.getValues() != null) && !filter.hasDynamicParams()) {
             return filter.getValues();
         }
 
-        Set set = (Set) sqlMap.get(filter.getSqlQuery());
+        Set set = (Set) filterMap.get(filter);
         if (set != null) {
+            return set;
+        }
+        set = new HashSet();
+
+        if (filter.hasDynamicParams()) {
+            if (filter.getSetParam() != null) {
+                set = (Set) args.get(filter.getSetParam().getId());
+                filterMap.put(filter, set);
+                return set;
+            }
+            Iterator iter = filter.getValues().iterator();
+            while (iter.hasNext()) {
+                Object obj = iter.next();
+                if (obj instanceof LurqlDynamicParam) {
+                    LurqlDynamicParam param = (LurqlDynamicParam) obj;
+                    set.add(args.get(param.getId()));
+                } else {
+                    set.add(obj);
+                }
+            }
+            filterMap.put(filter, set);
             return set;
         }
 
         if (sqlConnection == null) {
             throw plan.newException("no SQL connection available");
         }
-        set = new HashSet();
         Statement stmt = null;
         try {
             stmt = sqlConnection.createStatement();
@@ -343,7 +369,7 @@ outer:
         } finally {
             Util.squelchStmt(stmt);
         }
-        sqlMap.put(filter.getSqlQuery(), set);
+        filterMap.put(filter, set);
         
         return set;
     }

@@ -129,15 +129,18 @@ List WhereClause() :
 LurqlFilter Filter() :
 {
     String attributeName;
-    String value = null;
-    Set values = null;
+    Object value;
+    Set values;
+    String sqlQuery;
+    LurqlDynamicParam param;
 }
 {
     attributeName = Identifier()
     (
-        <EQUALS> value = StringLiteral()
+        <EQUALS> value = FilterValue()
         {
             values = Collections.singleton(value);
+            return new LurqlFilter(attributeName, values);
         }
         |
         <IN>
@@ -146,19 +149,23 @@ LurqlFilter Filter() :
             {
                 values = new LinkedHashSet();
             }
-            StringLiteralList(values)
+            FilterValueList(values)
             <RPAREN>
+            {
+                return new LurqlFilter(attributeName, values);
+            }
             |
-            value = SqlQuery()
+            sqlQuery = SqlQuery()
+            {
+                return new LurqlFilter(attributeName, sqlQuery);
+            }
+            |
+            param = DynamicParameter()
+            {
+                return new LurqlFilter(attributeName, param);
+            }
         )
     )
-    {
-        if (values == null) {
-            return new LurqlFilter(attributeName, value);
-        } else {
-            return new LurqlFilter(attributeName, values);
-        }
-    }
 }
 
 LurqlRoot SimpleRoot() :
@@ -376,7 +383,6 @@ String Identifier() :
     }
 }
 
-
 String StringLiteral() :
 {
 }
@@ -387,18 +393,18 @@ String StringLiteral() :
     }
 }
 
-void StringLiteralList(Collection collection) :
+void FilterValueList(Collection collection) :
 {
-    String s;
+    Object s;
 }
 {
-    s = StringLiteral()
+    s = FilterValue()
     {
         collection.add(s);
     }
     (
         <COMMA>
-        s = StringLiteral()
+        s = FilterValue()
         {
             collection.add(s);
         }
@@ -413,6 +419,31 @@ String SqlQuery() :
     {
         String s = getToken(0).image;
         return s.substring(1, s.length() - 1);
+    }
+}
+
+LurqlDynamicParam DynamicParameter() :
+{
+    String id;
+}
+{
+    <QMARK> id = Identifier()
+    {
+        return new LurqlDynamicParam(id);
+    }
+}
+
+Object FilterValue() :
+{
+    Object obj;
+}
+{
+    (
+        obj = DynamicParameter()
+        | obj = StringLiteral()
+    )
+    {
+        return obj;
     }
 }
 
@@ -434,6 +465,7 @@ TOKEN :
     | < RCURLY: "}" >
     | < LSQUARE: "[" >
     | < RSQUARE: "]" >
+    | < QMARK: "?" >
     | < UNION: "union" >
     | < GATHER: "gather" >
     | < THEN: "then" >

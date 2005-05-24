@@ -462,11 +462,18 @@ class &lt;id&gt; [ as &lt;id&gt; ]
 where &lt;filter&gt; [ and &lt;filter&gt; ... ]
 
 &lt;filter&gt; ::=
-&lt;id&gt; '=' &lt;literal&gt;
+&lt;id&gt; '=' &lt;value&gt;
 |
-&lt;id&gt; in '(' &lt;literal&gt; [, &lt;literal&gt; ... ] ')'
+&lt;id&gt; in '(' &lt;value&gt; [, &lt;value&gt; ... ] ')'
 |
 &lt;id&gt; in '[' &lt;sql-query-text&gt; ']'
+
+&lt;value&gt; ::=
+&lt;literal&gt;
+| &lt;dynamic-param&gt;
+
+&lt;dynamic-param&gt; ::=
+'?' &lt;id&gt;
 
 &lt;path-spec&gt; ::=
 '{' &lt;path-branch&gt; [ union &lt;path-branch&gt; ... ] '}'

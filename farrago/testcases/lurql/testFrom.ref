@@ -85,3 +85,67 @@ Attribute: qualifiedName
 
 ****
 
+PARAM_VALUE className
+Exception
+
+****
+
+PARAM_VALUES classNames
+Class
+Exception
+
+****
+
+# Test single-valued dynamic parameter
+PARSE RESULT:
+select * 
+from
+class "ModelElement"
+where
+    "name" = ?"className";
+
+EXPLANATION:
+param ?className : class java.lang.String
+anon_1 { ModelElement } where "name" = ?"className"
+
+EXECUTION RESULT:
+Class: Exception
+
+****
+
+# Test set-valued dynamic parameter
+PARSE RESULT:
+select * 
+from
+class "ModelElement"
+where
+    "name" in ?"classNames";
+
+EXPLANATION:
+param ?classNames : interface java.util.Set
+anon_1 { ModelElement } where "name" in ?"classNames"
+
+EXECUTION RESULT:
+Class: Class
+Class: Exception
+
+****
+
+# Test single-valued dynamic parameter as a set element
+PARSE RESULT:
+select * 
+from
+class "ModelElement"
+where
+    "name" in ('Class', ?"className");
+
+EXPLANATION:
+param ?className : class java.lang.String
+anon_1 { ModelElement } where "name" in ('Class', ?"className")
+
+EXECUTION RESULT:
+Class: Class
+Class: Exception
+
+****
+

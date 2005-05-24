@@ -26,3 +26,25 @@ EXECUTE
 select *
 from class Attribute where container in
 [select "mofId" from sys_mof.model."Class" where "name"='ModelElement'];
+
+PARAM_VALUE className
+Exception
+
+PARAM_VALUES classNames
+Class
+Exception
+
+# Test single-valued dynamic parameter
+EXPLAIN AND EXECUTE
+select *
+from class ModelElement where name=?className;
+
+# Test set-valued dynamic parameter
+EXPLAIN AND EXECUTE
+select *
+from class ModelElement where name in ?classNames;
+
+# Test single-valued dynamic parameter as a set element
+EXPLAIN AND EXECUTE
+select *
+from class ModelElement where name in ('Class',?className);

@@ -52,11 +52,15 @@ import javax.jmi.model.*;
 public class LurqlQueryTest extends FarragoSqlTest
 {
     private JmiModelView modelView;
+
+    private Map args;
     
     public LurqlQueryTest(String testName)
         throws Exception
     {
         super(testName);
+
+        args = new HashMap();
     }
     
     // implement TestCase
@@ -155,6 +159,28 @@ public class LurqlQueryTest extends FarragoSqlTest
             String extentName = action.substring(7);
             modelView = loadModelView(extentName);
             return;
+        } else if (action.startsWith("PARAM_VALUE ")) {
+            String paramName = action.substring(12);
+            args.put(paramName, queryString.trim());
+            pw.println(action);
+            pw.println(queryString);
+            return;
+        } else if (action.startsWith("PARAM_VALUES ")) {
+            String paramName = action.substring(13);
+            LineNumberReader lineReader = new LineNumberReader(
+                new StringReader(queryString));
+            Set set = new HashSet();
+            for (;;) {
+                String s = lineReader.readLine();
+                if (s == null) {
+                    break;
+                }
+                set.add(s);
+            }
+            args.put(paramName, set);
+            pw.println(action);
+            pw.println(queryString);
+            return;
         } else if (action.equals("EXPLAIN AND EXECUTE")) {
             explain = true;
             execute = true;
@@ -194,13 +220,23 @@ public class LurqlQueryTest extends FarragoSqlTest
 
             if (explain) {
                 pw.println("EXPLANATION:");
+                Iterator iter =
+                    (new TreeMap(plan.getParamMap())).entrySet().iterator();
+                while (iter.hasNext()) {
+                    Map.Entry entry = (Map.Entry) iter.next();
+                    pw.print("param ?");
+                    pw.print(entry.getKey());
+                    pw.print(" : ");
+                    pw.println(entry.getValue());
+                }
                 plan.explain(pw);
             }
 
             if (execute) {
                 LurqlReflectiveExecutor executor =
                     new LurqlReflectiveExecutor(
-                        repos.getMdrRepos(), plan, connection);
+                        repos.getMdrRepos(), plan, connection,
+                        args);
                 Set set;
                 try {
                     set = executor.execute();

@@ -90,7 +90,7 @@ public class LurqlQueryProcessor implements JmiQueryProcessor
         // implement JmiPreparedQuery
         public Map describeParameters()
         {
-            return Collections.EMPTY_MAP;
+            return plan.getParamMap();
         }
         
         // implement JmiPreparedQuery
@@ -108,7 +108,7 @@ public class LurqlQueryProcessor implements JmiQueryProcessor
             throws JmiQueryException
         {
             LurqlReflectiveExecutor executor =
-                new LurqlReflectiveExecutor(repos, plan, connection);
+                new LurqlReflectiveExecutor(repos, plan, connection, args);
             return executor.execute();
         }
     }
