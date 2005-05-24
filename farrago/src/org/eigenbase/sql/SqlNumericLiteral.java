@@ -114,6 +114,11 @@ public class SqlNumericLiteral extends SqlLiteral
         // else we have a a float, real or double.  make them all double for now.
         return typeFactory.createSqlType(SqlTypeName.Double);
     }
+
+    public boolean isInteger()
+    {
+        return (0 == scale.intValue());
+    }
 }
 
 // End SqlNumericLiteral.java

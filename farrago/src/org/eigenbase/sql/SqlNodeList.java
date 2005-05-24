@@ -163,6 +163,15 @@ public class SqlNodeList extends SqlNode
     {
         return (SqlNode []) list.toArray(new SqlNode[list.size()]);
     }
+
+    public static boolean isEmptyList(final SqlNode node) {
+        if (node instanceof SqlNodeList) {
+           if (0  == ((SqlNodeList)node).size()) {
+               return true;
+           }
+        }
+        return false;
+    }
 }
 
 

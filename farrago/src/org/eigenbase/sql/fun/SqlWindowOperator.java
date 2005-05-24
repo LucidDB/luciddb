@@ -25,9 +25,18 @@ import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.SqlTypeUtil;
+import org.eigenbase.sql.type.SqlTypeFamily;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.EnumeratedValues;
+import org.eigenbase.util.Util;
+import org.eigenbase.resource.EigenbaseResource;
+import org.eigenbase.reltype.RelDataType;
+
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * An operator describing a window specification.
@@ -180,25 +189,150 @@ public class SqlWindowOperator extends SqlOperator {
         SqlValidatorScope scope,
         SqlValidatorScope operandScope)
     {
-        // TODO: validate
         assert call.operator == this;
-        final SqlNode [] operands = call.operands;
+        SqlNode [] operands = call.operands;
         SqlIdentifier refName =
                 (SqlIdentifier) operands[SqlWindow.RefName_OPERAND];
+        if (refName != null) {
+            SqlWindow win = validator.resolveWindow(call,operandScope);
+            operands = win.operands;
+        }
+
         SqlNodeList partitionList =
                 (SqlNodeList) operands[SqlWindow.PartitionList_OPERAND];
+        if (null != partitionList) {
+            for (int i =0; i < partitionList.size(); i++) {
+                SqlNode partitionItem = partitionList.get(i);
+                partitionItem.validateExpr(validator,operandScope);
+            }
+        }
+
         SqlNodeList orderList =
                 (SqlNodeList) operands[SqlWindow.OrderList_OPERAND];
         if (orderList != null) {
-            for (int i = 0; i < orderList.size(); i++) {
-                SqlNode orderItem = orderList.get(i);
-                orderItem.validate(validator, scope);
+            if (0 != orderList.size()) {
+                for (int i = 0; i < orderList.size(); i++) {
+                    SqlNode orderItem = orderList.get(i);
+                    orderItem.validate(validator, scope);
+                }
+            } else {
+                // list is empty so reset the base reference to null so
+                // we don't need to keep checking two conditions
+                orderList = null;
             }
         }
+        // 03 standard calls rquires an ORDER BY clause. We relax this
+        // requirment if the table appears to be sorted already
+        if (orderList == null) {
+            if (!isTableSorted(scope)) {
+                throw validator.newValidationError(call,
+                    EigenbaseResource.instance().newOverMissingOrderBy());
+            }
+        }
+
         boolean isRows =
                 SqlLiteral.booleanValue(operands[SqlWindow.IsRows_OPERAND]);
         SqlNode lowerBound = operands[SqlWindow.LowerBound_OPERAND],
                 upperBound = operands[SqlWindow.UpperBound_OPERAND];
+        // see if we need to run any checks at all
+        if (null != upperBound || null != lowerBound) {
+            SqlTypeFamily orderTypeFam = null;
+            if (null != orderList) {
+                // if order by is a conpound list then range not allowed
+                if (orderList.size() > 1 && !isRows) {
+                    throw validator.newValidationError(call,
+                        EigenbaseResource.instance().newCompoundOrderByProhibitsRange());
+                }
+                RelDataType orderType = validator.deriveType(scope,orderList.get(0));
+                orderTypeFam = SqlTypeFamily.getFamilyForSqlType(orderType.getSqlTypeName());
+            }
+            // Let the bounds validate themselves
+            validateFrameBoundry(lowerBound,isRows,orderTypeFam,validator,operandScope);
+            validateFrameBoundry(upperBound,isRows,orderTypeFam,validator,operandScope);
+        }
+    }
+
+    private void validateFrameBoundry(
+        SqlNode bound,
+        boolean isRows,
+        SqlTypeFamily orderTypeFam,
+        SqlValidator validator,
+        SqlValidatorScope scope)
+    {
+        if (null == bound) {
+            return;
+        }
+        bound.validate(validator, scope);
+        switch (bound.getKind().getOrdinal()) {
+        case SqlKind.LiteralORDINAL:
+            // is there really anything to validate here?
+            // this covers "unbounded preceding" & "unbounded following"
+            break;
+
+        case SqlKind.OtherORDINAL:
+            assert(bound instanceof SqlCall);
+            final SqlNode boundVal = ((SqlCall)bound).getOperands()[0];
+            // Boundries must be a constant
+            if (!(boundVal instanceof SqlLiteral)) {
+                throw validator.newValidationError(boundVal,
+                    EigenbaseResource.instance().newRangeOrRowMustBeConstant());
+            }
+            // Physical ROWS must be a numeric constant.
+            if (isRows && !(boundVal instanceof SqlNumericLiteral)) {
+                throw validator.newValidationError(boundVal,
+                    EigenbaseResource.instance().newRowMustBeNumeric());
+            }
+            // if this is a range spec check and make sure the boundery type
+            // and order by type are compatible
+            if (null != orderTypeFam && !isRows) {
+                RelDataType bndType = validator.deriveType(scope,boundVal);
+                SqlTypeFamily bndTypeFam =
+                    SqlTypeFamily.getFamilyForSqlType(bndType.getSqlTypeName());
+                switch (orderTypeFam.getOrdinal()) {
+                case SqlTypeFamily.Numeric_ordinal:
+                    if (SqlTypeFamily.Numeric != bndTypeFam) {
+                        throw validator.newValidationError(boundVal,
+                            EigenbaseResource.instance().newOrderByRangeMismatch());
+                    }
+                    break;
+                case SqlTypeFamily.Date_ordinal:
+                case SqlTypeFamily.Time_ordinal:
+                case SqlTypeFamily.Timestamp_ordinal:
+                    if (SqlTypeFamily.IntervalDayTime != bndTypeFam &&
+                        SqlTypeFamily.IntervalYearMonth != bndTypeFam) {
+                        throw validator.newValidationError(boundVal,
+                            EigenbaseResource.instance().newOrderByRangeMismatch());
+                    }
+                    break;
+                default:
+                    throw validator.newValidationError(boundVal,
+                        EigenbaseResource.instance().newOrderByDataTypeProhibitsRange());
+                }
+            }
+            break;
+        default:
+            throw Util.newInternal("Unexpected node type");
+        }
+    }
+
+    /**
+     * This method retrieves the list of columns for the current table
+     * then walks through the list looking for a column that is monotonic
+     * (sorted)
+     */
+    private static boolean isTableSorted(SqlValidatorScope scope)
+    {
+        List columnNames = new ArrayList();
+        scope.findAllColumnNames(null,columnNames);
+        if (0 != columnNames.size()) {
+            for (int i=0; i < columnNames.size(); i++) {
+                SqlIdentifier columnName = new SqlIdentifier((String) columnNames.get(i),null);
+                if (scope.isMonotonic(columnName)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public void test(SqlTester tester) {

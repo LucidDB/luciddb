@@ -2245,14 +2245,31 @@ public class SqlValidatorImpl implements SqlValidator
         return contextExcn;
     }
 
+    private SqlWindow getWindowByName(
+        SqlIdentifier id,
+        SqlValidatorScope scope)
+    {
+        SqlWindow window = null;
+        if (id.isSimple()) {
+            final String name = id.getSimple();
+            window = scope.lookupWindow(name);
+        }
+        if (window == null) {
+            throw newValidationError(
+                id,
+                EigenbaseResource.instance().newWindowNotFound(
+                    id.toString()));
+        }
+        return window;
+    }
+
     public SqlWindow resolveWindow(
         SqlNode windowOrRef,
         SqlValidatorScope scope)
     {
         SqlWindow window;
         if (windowOrRef instanceof SqlIdentifier) {
-            String windowName = ((SqlIdentifier) windowOrRef).getSimple();
-            window = scope.lookupWindow(windowName);
+            window = getWindowByName((SqlIdentifier) windowOrRef, scope);
         } else {
             window = (SqlWindow) windowOrRef;
         }
@@ -2374,20 +2391,7 @@ public class SqlValidatorImpl implements SqlValidator
     public void validateWindow(SqlNode windowOrId, SqlValidatorScope scope) {
         switch (windowOrId.getKind().ordinal) {
         case SqlKind.IdentifierORDINAL:
-            SqlIdentifier id = (SqlIdentifier) windowOrId;
-            final SqlWindow window;
-            if (id.isSimple()) {
-                final String name = id.names[0];
-                window = scope.lookupWindow(name);
-            } else {
-                window = null;
-            }
-            if (window == null) {
-                throw newValidationError(
-                    id,
-                    EigenbaseResource.instance().newWindowNotFound(
-                        id.toString()));
-            }
+            final SqlWindow window = getWindowByName((SqlIdentifier) windowOrId, scope);
             break;
         case SqlKind.WindowORDINAL:
             windowOrId.validate(this, scope);

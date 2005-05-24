@@ -77,7 +77,6 @@ public class SqlWindow extends SqlCall
 
     /**
      * Creates a window.
-     */ 
     public SqlWindow(
         SqlWindowOperator operator,
         SqlNode[] operands,
@@ -88,6 +87,33 @@ public class SqlWindow extends SqlCall
         Util.pre(declId == null || declId.isSimple(), "declId.isSimple()");
         Util.pre(getPartitionList() != null, "getPartitionList() != null");
     }
+     */
+
+    /**
+     * Creates a window.
+     *
+     * @pre operands[DeclName_OPERAND] == null ||
+            operands[DeclName_OPERAND].isSimple()
+     * @pre operands[OrderList_OPERAND] != null
+     * @pre operands[PartitionList_OPERAND] != null
+     */
+    public SqlWindow(
+        SqlWindowOperator operator,
+        SqlNode[] operands,
+        SqlParserPos pos)
+    {
+        super(operator,operands,pos);
+        final SqlIdentifier declId =
+            (SqlIdentifier) operands[DeclName_OPERAND];
+        Util.pre(declId == null || declId.isSimple(),
+            "operands[DeclName_OPERAND] == null || " +
+            "operands[DeclName_OPERAND].isSimple()");
+        Util.pre(operands[PartitionList_OPERAND] != null,
+            "operands[PartitionList_OPERAND] != null");
+        Util.pre(operands[OrderList_OPERAND] != null,
+            "operands[OrderList_OPERAND] != null");
+    }
+
 
     public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
         // Override, so we don't print extra parentheses.
@@ -165,15 +191,16 @@ public class SqlWindow extends SqlCall
         int i,
         SqlValidator validator)
     {
-        SqlNode thatOperand = srcOperands[i];
-        if (thatOperand != null) {
+        final SqlNode thatOperand = srcOperands[i];
+        if (thatOperand != null && !SqlNodeList.isEmptyList(thatOperand)) {
             final SqlNode clonedOperand = destOperands[i];
-            if (clonedOperand != null) {
+            if (clonedOperand == null || SqlNodeList.isEmptyList(clonedOperand)) {
+                destOperands[i] = thatOperand;
+            } else {
                 throw validator.newValidationError(clonedOperand,
                     EigenbaseResource.instance()
                     .newCannotOverrideWindowAttribute());
             }
-            destOperands[i] = thatOperand;
         }
     }
 }

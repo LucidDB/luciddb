@@ -1016,7 +1016,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
      }
 
-    public void _testWinFunc()
+    public void _testWindowFunc()
     {
         // Definition 6.10
 
@@ -1036,7 +1036,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkWinFuncExpWithWinClause("sum(sal)", null);
 
         // row_number function
-        checkWinFuncExpWithWinClause("row_number()", null);
+        //checkWinFuncExpWithWinClause("row_number()", null);
 
         // rank function type
         checkWinFuncExpWithWinClause("rank()", null);
@@ -1047,7 +1047,6 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         // rule 6
         // a)
         // missing order by in window clause
-
         assertExceptionIsThrown("select rank() over w from emps window w as (partition by dept)", null);
         assertExceptionIsThrown("select dense_rank() over w from emps window w as (partition by dept)", null);
 
@@ -1067,23 +1066,64 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         assertExceptionIsThrown("select prercent_rank() over (row 2 preceding ) from emps", null);
         assertExceptionIsThrown("select cume_dist() over (row 2 preceding ) from emps ", null);
 
-
-
-
         // invalid column reference
         checkWinFuncExpWithWinClause("sum(invalidColumn)", null);
-
 
         // invalid window functions
         checkWinFuncExpWithWinClause("invalidFun(sal)", null);
 
         // rule 10. no distinct allow
-        checkWinFuncExpWithWinClause("select dictinct sum(sal) over w from emps window as w (order by deptno)", null);
+        checkWinFuncExpWithWinClause("select distinct sum(sal) over w from emps window as w (order by deptno)", null);
     }
 
-    public void _testInlineWinDef()
+    public void testInlineWinDef()
     {
+        check("select sum(sal) over (partition by deptno order by empno) from emp order by empno");
+        checkWinFuncExp("sum(sal) OVER (" +
+            "partition by deptno " +
+            "order by empno " +
+            "rows 2 preceding )", null);
+        checkWinFuncExp("sum(sal) OVER (" +
+            "order by 1 " +
+            "rows 2 preceding )", null);
+        checkWinFuncExp("sum(sal) OVER (" +
+            "order by 'b' " +
+            "rows 2 preceding )", null);
+        checkWinFuncExp("sum(sal) over ("+
+            "partition by deptno "+
+            "order by 1+1 rows 26 preceding)",null);
+        checkWinFuncExp("sum(sal) over (order by deptno rows unbounded preceding)",null);
+        checkWinFuncExp("sum(sal) over (order by deptno rows current row)",null);
+        checkWinFuncExp("sum(sal) over ("+
+            "order by deptno "+
+            "rows between unbounded preceding and unbounded following)",null);
+        checkWinFuncExpWithWinClause("sum(sal) OVER (w " +
+            "order by empno " +
+            "rows 2 preceding )", null) ;
+        checkWinFuncExp("sum(sal) over (order by deptno range 2.0 preceding)",null);
 
+        // Failure mode tests
+        checkWinFuncExp("sum(sal) over ("+
+            "order by deptno "+
+            "rows between unbounded following and unbounded preceding)",null);
+        checkWinFuncExp("sum(sal) over ("+
+            "order by deptno "+
+            "RANGE BETWEEN INTERVAL '1' SECOND PRECEDING AND INTERVAL '1' SECOND FOLLOWING)",
+            "Data Type mismatch between ORDER BY and RANGE clause");
+        checkWinFuncExp("sum(sal) over ("+
+            "order by empno "+
+            "RANGE BETWEEN INTERVAL '1' SECOND PRECEDING AND INTERVAL '1' SECOND FOLLOWING)",
+            "Data Type mismatch between ORDER BY and RANGE clause");
+        checkWinFuncExp("sum(sal) over (order by deptno, empno range 2 preceding)",
+            "RANGE clause cannot be used with compound ORDER BY clause");
+        checkWinFuncExp("sum(sal) over (partition by deptno)",
+            "Window specification must contain a ORDER BY clause");
+
+        checkWinFuncExp("sum(sal) over w1","Window 'W1' not found");
+        checkWinFuncExp("sum(sal) OVER (w1 " +
+            "partition by deptno " +
+            "order by empno " +
+            "rows 2 preceding )", "Window 'W1' not found") ;
     }
 
     public void testWindowClause()

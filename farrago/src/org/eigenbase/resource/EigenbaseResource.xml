@@ -264,6 +264,34 @@
     <text>Illegal interval literal format {0} for {1}</text>
 </exception>
 
+<exception id="120425" name="CompoundOrderByProhibitsRange" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>RANGE clause cannot be used with compound ORDER BY clause</text>
+</exception>
+
+<exception id="120430" name="OrderByDataTypeProhibitsRange" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Data type of ORDER BY prohibits use of RANGE clause</text>
+</exception>
+
+<exception id="120435" name="OrderByRangeMismatch" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Data Type mismatch between ORDER BY and RANGE clause</text>
+</exception>
+
+<exception id="120440" name="DateRequiresInterval" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Window ORDER BY expression of type DATE requires range of type INTERVAL</text>
+</exception>
+
+<exception id="120450" name="RangeOrRowMustBeConstant" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Window boundry must be constant</text>
+</exception>
+
+<exception id="120460" name="RowMustBeNumeric" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>ROWS value must be a numeric constant</text>
+</exception>
+
+<exception id="120470" name="OverMissingOrderBy" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Window specification must contain a ORDER BY clause</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Eigenbase Generic resources 130,000 - 140,000 -->
 <!-- ====================================================================== -->
