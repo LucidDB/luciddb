@@ -200,7 +200,7 @@ LurqlPathSpec CompoundRoot() :
     LurqlPathSpec gatherThen = null;
 }
 {
-    <LCURLY> root = Root()
+    <LPAREN> root = Root()
     {
         roots.add(root);
     }
@@ -210,7 +210,7 @@ LurqlPathSpec CompoundRoot() :
             roots.add(root);
         }
     ) *
-    <RCURLY>
+    <RPAREN>
     [
         <GATHER> <THEN> gatherThen = PathSpec()
     ]
@@ -227,7 +227,7 @@ LurqlPathSpec PathSpec() :
     boolean gatherParent = false;
 }
 {
-    <LCURLY> branch = PathBranch()
+    <LPAREN> branch = PathBranch()
     {
         branches.add(branch);
     }
@@ -237,7 +237,7 @@ LurqlPathSpec PathSpec() :
             branches.add(branch);
         }
     ) *
-    <RCURLY>
+    <RPAREN>
     [
         <GATHER> [ <WITH> <PARENT> { gatherParent = true; } ]
         <THEN>
@@ -461,8 +461,6 @@ TOKEN :
     | < RPAREN: ")" >
     | < CLASS: "class" >
     | < AS: "as" >
-    | < LCURLY: "{" >
-    | < RCURLY: "}" >
     | < LSQUARE: "[" >
     | < RSQUARE: "]" >
     | < QMARK: "?" >

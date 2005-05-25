@@ -163,9 +163,13 @@ public interface FarragoSessionPersonality extends FarragoStreamFactoryProvider
         SqlNode sqlNode);
     
     /**
-     * @return processor for JMI queries
+     * Creates a new processor for JMI queries.
+     *
+     * @param language query language (e.g. "LURQL")
+     *
+     * @return query processor, or null if language not supported
      */
-    public JmiQueryProcessor getJmiQueryProcessor();
+    public JmiQueryProcessor newJmiQueryProcessor(String language);
 }
 
 // End FarragoSessionPersonality.java

@@ -9,9 +9,9 @@ from
 class "Table"
 where
     "name" = 'DEPTS'
-then {
+then (
     follow association "ClassifierFeature"
-};
+);
 
 EXECUTION RESULT:
 LocalTable: DEPTS
@@ -26,9 +26,9 @@ from
 class "Table"
 where
     "name" = 'DEPTS'
-then {
+then (
     follow association "ClassifierFeature" as "c"
-};
+);
 
 EXECUTION RESULT:
 StoredColumn: DEPTNO
@@ -42,12 +42,12 @@ from
 class "Column"
 where
     "name" = 'EMPNO'
-then {
+then (
     follow association "ClassifierFeature" as "t"
-    then {
+    then (
         follow association "ElementOwnership" backward as "s"
-    }
-};
+    )
+);
 
 EXECUTION RESULT:
 LocalSchema: SALES
@@ -64,11 +64,11 @@ from
 class "Column"
 where
     "name" = 'CITY'
-then {
+then (
     follow destination class "Table" as "t"
     union
     follow destination class "SQLDataType" as "d"
-};
+);
 
 EXECUTION RESULT:
 LocalTable: EMPS
@@ -83,7 +83,7 @@ from
 class "Schema"
 where
     "name" = 'SALES'
-then {
+then (
     follow destination class "Table"
     where
         "name" = 'DEPTS'
@@ -91,9 +91,9 @@ then {
     follow destination class "View"
     where
         "name" = 'EMPSVIEW'
-} gather then {
+) gather then (
     follow association "ClassifierFeature" as "c"
-};
+);
 
 EXECUTION RESULT:
 StoredColumn: DEPTNO
@@ -109,14 +109,14 @@ from
 class "View"
 where
     "name" = 'JOINVIEW'
-then {
+then (
     follow association "ElementOwnership" destination class "Dependency"
-    then {
+    then (
         follow destination end "supplier" destination class "Table" as "t"
-    }
-} gather with parent then {
+    )
+) gather with parent then (
     follow association "ClassifierFeature" as "c"
-};
+);
 
 EXECUTION RESULT:
 LocalTable: DEPTS
@@ -144,11 +144,11 @@ from
 class "Table"
 where
     "name" = 'TEMPS'
-then {
-    recursively {
+then (
+    recursively (
         follow composite backward
-    }
-};
+    )
+);
 
 EXECUTION RESULT:
 Catalog: LOCALDB
@@ -163,16 +163,16 @@ from
 class "View"
 where
     "name" = 'JOINVIEW'
-then {
-    recursively {
+then (
+    recursively (
         follow association "ElementOwnership" destination class "Dependency"
-        then {
+        then (
             follow destination end "supplier" destination class "ColumnSet" as "t"
-        }
-    }
-} gather with parent then {
+        )
+    )
+) gather with parent then (
     follow association "ClassifierFeature" as "c"
-};
+);
 
 EXECUTION RESULT:
 LocalTable: DEPTS
@@ -202,9 +202,9 @@ where
     "mofId" in [
         select "mofId" from sys_cwm."Relational"."Column" where "name" like '%NO'
     ]
-then {
+then (
     follow destination class "SQLDataType" as "dt"
-};
+);
 
 EXECUTION RESULT:
 SQLSimpleType: INTEGER

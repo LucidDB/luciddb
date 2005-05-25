@@ -22,7 +22,7 @@
 */
 package net.sf.farrago.db;
 
-import java.sql.DatabaseMetaData;
+import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
 
@@ -47,6 +47,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.*;
+import org.eigenbase.jmi.*;
 
 
 /**
@@ -474,6 +475,29 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         } else {
             int iSavepoint = validateSavepoint(savepoint);
             rollbackToSavepoint(iSavepoint);
+        }
+    }
+
+    // implement FarragoSession
+    public Collection executeLurqlQuery(
+        String lurql,
+        Map argMap)
+    {
+        // TODO jvs 24-May-2005:  query cache
+        Connection connection = null;
+        try {
+            if (connectionSource != null) {
+                connection = connectionSource.newConnection();
+            }
+            JmiQueryProcessor queryProcessor =
+                getPersonality().newJmiQueryProcessor("LURQL");
+            JmiPreparedQuery query = queryProcessor.prepare(
+                getRepos().getModelView(), lurql);
+            return query.execute(connection, argMap);
+        } catch (JmiQueryException ex) {
+            throw FarragoResource.instance().newSessionInternalQueryFailed(ex);
+        } finally {
+            Util.squelchConnection(connection);
         }
     }
 

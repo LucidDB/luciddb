@@ -4,76 +4,76 @@ EXTENT FarragoCatalog
 
 EXECUTE
 select *
-from class Table where name='DEPTS' then {
+from class Table where name='DEPTS' then (
     follow association ClassifierFeature
-};
+);
 
 EXECUTE
 select c
-from class Table where name='DEPTS' then {
+from class Table where name='DEPTS' then (
     follow association ClassifierFeature as c
-};
+);
 
 EXECUTE
 select s,t
-from class Column where name='EMPNO' then {
-    follow association ClassifierFeature as t then {
+from class Column where name='EMPNO' then (
+    follow association ClassifierFeature as t then (
         follow association ElementOwnership backward as s
-    }
-};
+    )
+);
 
 EXECUTE
 select t,d
-from class Column where name='CITY' then {
+from class Column where name='CITY' then (
     follow destination class Table as t
     union
     follow destination class SQLDataType as d
-};
+);
 
 EXECUTE
 select c
-from class Schema where name='SALES' then {
+from class Schema where name='SALES' then (
     follow destination class Table where name='DEPTS' 
     union
     follow destination class View where name='EMPSVIEW'
-} gather then {
+) gather then (
     follow association ClassifierFeature as c
-};
+);
 
 EXECUTE
 select c, t
-from class View where name='JOINVIEW' then {
-    follow association ElementOwnership destination class Dependency then {
+from class View where name='JOINVIEW' then (
+    follow association ElementOwnership destination class Dependency then (
         follow destination end supplier destination class Table as t
-    }
-} gather with parent then {
+    )
+) gather with parent then (
     follow association ClassifierFeature as c
-};
+);
 
 EXECUTE
 select *
-from class Table where name='TEMPS' then {
-    recursively {
+from class Table where name='TEMPS' then (
+    recursively (
         follow composite backward
-    }
-};
+    )
+);
 
 EXECUTE
 select c, t
-from class View where name='JOINVIEW' then {
-    recursively {
-        follow association ElementOwnership destination class Dependency then {
+from class View where name='JOINVIEW' then (
+    recursively (
+        follow association ElementOwnership destination class Dependency then (
             follow destination end supplier destination class ColumnSet as t
-        }
-    }
-} gather with parent then {
+        )
+    )
+) gather with parent then (
     follow association ClassifierFeature as c
-};
+);
 
 EXECUTE
 select dt
 from class Column where mofId in
 [select "mofId" from sys_cwm."Relational"."Column" where "name" like '%NO']
-then {
+then (
     follow destination class SQLDataType as dt
-};
+);

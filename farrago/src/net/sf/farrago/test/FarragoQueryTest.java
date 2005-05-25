@@ -22,15 +22,21 @@
 */
 package net.sf.farrago.test;
 
+import net.sf.farrago.session.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.jdbc.engine.*;
+import net.sf.farrago.cwm.relational.*;
+
 import java.sql.*;
 import java.util.*;
 
 import junit.framework.*;
 
+import org.eigenbase.jmi.*;
 
 /**
- * FarragoQueryTest tests miscellaneous aspects of Farrago SQL query
- * processing.
+ * FarragoQueryTest tests miscellaneous aspects of Farrago query
+ * processing which are impossible to test via SQL scripts.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -134,7 +140,36 @@ public class FarragoQueryTest extends FarragoTestCase
         sql = "set catalog 'localdb'";
         stmt.execute(sql);
     }
-}
 
+    /**
+     * Tests execution of an internal LURQL query defined in a resource file.
+     */
+    public void testInternalLurqlQuery()
+        throws Exception
+    {
+        String lurql = FarragoInternalQuery.instance().getTestQuery();
+
+        checkLurqlTableSchema(lurql, "DEPTS", "SALES");
+        checkLurqlTableSchema(lurql, "CATALOGS_VIEW", "JDBC_METADATA");
+    }
+
+    private void checkLurqlTableSchema(
+        String lurql, String tableName, String schemaName)
+        throws Exception
+    {
+        Map argMap = new HashMap();
+        argMap.put("tableName", tableName);
+        FarragoJdbcEngineConnection farragoConnection =
+            (FarragoJdbcEngineConnection) connection;
+        FarragoSession session = (FarragoSession)
+            farragoConnection.getSession();
+        Collection result = session.executeLurqlQuery(
+            lurql, argMap);
+        assertEquals(1, result.size());
+        Object obj = result.iterator().next();
+        assertTrue(obj instanceof CwmSchema);
+        assertEquals(schemaName, ((CwmSchema) obj).getName());
+    }
+}
 
 // End FarragoQueryTest.java

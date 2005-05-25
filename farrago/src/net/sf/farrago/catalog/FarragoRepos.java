@@ -112,6 +112,8 @@ public class FarragoRepos extends FarragoMetadataFactory
 
     private JmiModelGraph modelGraph;
 
+    private JmiModelView modelView;
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -206,6 +208,7 @@ public class FarragoRepos extends FarragoMetadataFactory
         resourceBundles = new ArrayList();
 
         modelGraph = new JmiModelGraph(farragoPackage);
+        modelView = new JmiModelView(modelGraph);
 
         tracer.info("Catalog successfully loaded");
     }
@@ -254,6 +257,22 @@ public class FarragoRepos extends FarragoMetadataFactory
     public MDRepository getMdrRepos()
     {
         return mdrRepository;
+    }
+
+    /**
+     * @return model graph for repository metamodel
+     */
+    public JmiModelGraph getModelGraph()
+    {
+        return modelGraph;
+    }
+
+    /**
+     * @return model view for repository metamodel
+     */
+    public JmiModelView getModelView()
+    {
+        return modelView;
     }
 
     /**

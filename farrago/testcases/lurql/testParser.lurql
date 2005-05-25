@@ -4,33 +4,33 @@
 PARSE
 select goober, bloob
 from
-{
-};
+(
+);
 
 # Test a mish-mash of parsable constructs.
 PARSE
 select goober, bloob
 from 
-{
-    class "x" as m then {
-        follow composite as o then {
+(
+    class "x" as m then (
+        follow composite as o then (
             follow destination end z as p
-        }
+        )
         union
-        follow forward as q then {
+        follow forward as q then (
             follow backward as r
             union
             follow origin class a
-        } gather then {
+        ) gather then (
             follow as s
-        }
-    }
+        )
+    )
     union
-    class "y" as n where "beebee" = 'c' then {
-        recursively {
+    class "y" as n where "beebee" = 'c' then (
+        recursively (
             follow as t
-        } then {
+        ) then (
             follow as u
-        }
-    }
-};
+        )
+    )
+);

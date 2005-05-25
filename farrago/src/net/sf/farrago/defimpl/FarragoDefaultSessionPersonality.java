@@ -212,9 +212,11 @@ public class FarragoDefaultSessionPersonality
     }
     
     // implement FarragoSessionPersonality
-    public JmiQueryProcessor getJmiQueryProcessor()
+    public JmiQueryProcessor newJmiQueryProcessor(String language)
     {
-        // TODO:  share a common instance, query plan caching, all that
+        if (!language.equals("LURQL")) {
+            return null;
+        }
         return new LurqlQueryProcessor(
             database.getSystemRepos().getMdrRepos());
     }

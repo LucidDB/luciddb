@@ -627,6 +627,10 @@ column type family is {1} but default value type family is {2}</text>
 <text>Cannot EXECUTE IMMEDIATE a statement with dynamic parameters:  {0}</text>
 </exception>
 
+<exception id="470090" name="SessionInternalQueryFailed">
+<text>Failed executing internal query</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Server resources 480,000 - 490,000 -->
 <!-- ====================================================================== -->

@@ -682,7 +682,10 @@ require version '${required.ant.version}'."/>
         <uptodate
           srcfile="${farrago.resource.dir}/FarragoResource.xml"
           targetfile="${farrago.resource.dir}/FarragoResource.java"/>
-        <uptodate property="resource.uptodate"
+        <uptodate
+          srcfile="${farrago.resource.dir}/FarragoInternalQuery.xml"
+          targetfile="${farrago.resource.dir}/FarragoInternalQuery.java"/>
+        <uptodate
           srcfile="${eigenbase.resource.dir}/EigenbaseResource.xml"
           targetfile="${eigenbase.resource.dir}/EigenbaseResource.java"/>
       </and>
@@ -708,6 +711,13 @@ require version '${required.ant.version}'."/>
       resdir="${farrago.classes.dir}"
       locales="en_US">
       <include name="net/sf/farrago/resource/FarragoResource.xml"/>
+    </resgen>
+    <resgen
+      srcdir="${farrago.src.dir}"
+      destdir="${farrago.src.dir}"
+      resdir="${farrago.classes.dir}"
+      locales="en_US">
+      <include name="net/sf/farrago/resource/FarragoInternalQuery.xml"/>
     </resgen>
     <resgen
       srcdir="${farrago.src.dir}"

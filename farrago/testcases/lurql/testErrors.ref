@@ -24,11 +24,11 @@ PREPARATION ERROR:  unknown alias reference in select:  [a]
 PARSE RESULT:
 select * 
 from
-{
+(
     class "Class" as "c"
     union
     class "Exception" as "c"
-};
+);
 
 PREPARATION ERROR:  duplicate definition for alias c
 

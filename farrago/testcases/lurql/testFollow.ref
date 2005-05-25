@@ -5,9 +5,9 @@ PARSE RESULT:
 select "s" 
 from
 class "Class" as "e"
-then {
+then (
     follow association "Generalizes" backward as "s"
-};
+);
 
 EXPLANATION:
 e_1 { Class }
@@ -33,12 +33,12 @@ PARSE RESULT:
 select "g" 
 from
 class "Class" as "e"
-then {
+then (
     follow origin end "subtype" as "s"
-    then {
+    then (
         follow destination end "supertype" as "g"
-    }
-};
+    )
+);
 
 EXPLANATION:
 e_1 { Class }
@@ -64,9 +64,9 @@ from
 class "Class" as "b"
 where
     "name" = 'BehavioralFeature'
-then {
+then (
     follow association "Generalizes" forward as "d"
-};
+);
 
 EXPLANATION:
 b_1 { Class } where "name" = 'BehavioralFeature'
@@ -86,14 +86,14 @@ from
 class "Package" as "p"
 where
     "name" = 'Model'
-then {
+then (
     follow composite forward destination class "Class" as "c"
     where
         "name" = 'Import'
-    then {
+    then (
         follow composite forward destination class "Attribute" as "a"
-    }
-};
+    )
+);
 
 EXPLANATION:
 a_3 { Attribute }
@@ -116,16 +116,16 @@ from
 class "Package" as "p"
 where
     "name" = 'Model'
-then {
+then (
     follow composite forward destination class "Class" as "c"
     where
         "name" = 'Import'
-    then {
+    then (
         follow association "Generalizes" backward as "s"
-    } gather with parent then {
+    ) gather with parent then (
         follow composite forward destination class "Attribute" as "a"
-    }
-};
+    )
+);
 
 EXPLANATION:
 a_4 { Attribute }
@@ -151,7 +151,7 @@ Attribute: visibility
 PARSE RESULT:
 select "c" 
 from
-{
+(
     class "Attribute" as "a1"
     where
         "name" = 'annotation'
@@ -159,9 +159,9 @@ from
     class "Attribute" as "a2"
     where
         "name" = 'visibility'
-} gather then {
+) gather then (
     follow composite backward destination class "Class" as "c"
-};
+);
 
 EXPLANATION:
 a1_1 { Attribute } where "name" = 'annotation'
@@ -183,9 +183,9 @@ PARSE RESULT:
 select "e" 
 from
 class "ModelElement"
-then {
+then (
     follow forward as "e"
-};
+);
 
 EXPLANATION:
 anon_1 { ModelElement }
@@ -208,11 +208,11 @@ PARSE RESULT:
 select "t" 
 from
 class "ModelElement"
-then {
+then (
     follow forward as "t"
     where
         "tagId" = '1'
-};
+);
 
 EXPLANATION:
 anon_1 { ModelElement }
@@ -235,9 +235,9 @@ PARSE RESULT:
 select * 
 from
 class "Exception"
-then {
+then (
     follow association "CanRaise" forward
-};
+);
 
 EXPLANATION:
 anon_1 { Exception }

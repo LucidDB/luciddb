@@ -16,11 +16,11 @@ class "Exception" as "e";
 EXPLAIN
 select * 
 from
-{
+(
     class "Class" as "c"
     union
     class "Exception" as "c"
-};
+);
 
 # Should fail:  bad SQL
 EXPLAIN AND EXECUTE

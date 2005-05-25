@@ -208,6 +208,20 @@ public interface FarragoSession extends FarragoAllocation
         String sql,
         RelDataTypeFactory typeFactory,
         RelDataType paramRowType);
+
+    /**
+     * Executes a LURQL query against the repository.
+     *
+     * @param lurql query string
+     *
+     * @param map from parameter name (String) to argument value
+     * (typically String or Set)
+     *
+     * @return collection of RefObjects retrieved by query
+     */
+    public Collection executeLurqlQuery(
+        String lurql,
+        Map argMap);
 }
 
 

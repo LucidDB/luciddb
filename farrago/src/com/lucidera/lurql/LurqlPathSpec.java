@@ -73,7 +73,7 @@ public class LurqlPathSpec extends LurqlQueryNode
     // implement LurqlQueryNode
     public void unparse(PrintWriter pw)
     {
-        pw.println("{");
+        pw.println("(");
         pw.write(StackWriter.INDENT);
         Iterator iter = branches.iterator();
         while (iter.hasNext()) {
@@ -85,7 +85,7 @@ public class LurqlPathSpec extends LurqlQueryNode
             }
         }
         pw.write(StackWriter.OUTDENT);
-        pw.print("}");
+        pw.print(")");
         if (isGather()) {
             pw.print(" gather ");
             if (isGatherParent()) {

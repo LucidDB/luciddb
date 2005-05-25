@@ -4,12 +4,12 @@
 PARSE INPUT:
 select goober, bloob
 from
-{
-};
-PARSE ERROR:  Encountered "}" at line 4, column 1.
+(
+);
+PARSE ERROR:  Encountered ")" at line 4, column 1.
 Was expecting one of:
+    "(" ...
     "class" ...
-    "{" ...
     
 ****
 
@@ -17,36 +17,36 @@ Was expecting one of:
 PARSE RESULT:
 select "goober", "bloob" 
 from
-{
+(
     class "x" as "m"
-    then {
+    then (
         follow composite as "o"
-        then {
+        then (
             follow destination end "z" as "p"
-        }
+        )
         union
         follow forward as "q"
-        then {
+        then (
             follow backward as "r"
             union
             follow origin class "a"
-        } gather then {
+        ) gather then (
             follow as "s"
-        }
-    }
+        )
+    )
     union
     class "y" as "n"
     where
         "beebee" = 'c'
-    then {
-        recursively {
+    then (
+        recursively (
             follow as "t"
-        }
-        then {
+        )
+        then (
             follow as "u"
-        }
-    }
-};
+        )
+    )
+);
 
 ****
 

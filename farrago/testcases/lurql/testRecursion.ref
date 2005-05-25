@@ -5,11 +5,11 @@ PARSE RESULT:
 select * 
 from
 class "Operation"
-then {
-    recursively {
+then (
+    recursively (
         follow association "CanRaise" forward
-    }
-};
+    )
+);
 
 EXPLANATION:
 anon_1 { Operation }
@@ -25,11 +25,11 @@ from
 class "Class"
 where
     "name" = 'Exception'
-then {
-    recursively {
+then (
+    recursively (
         follow association "Generalizes" backward
-    }
-};
+    )
+);
 
 EXPLANATION:
 anon_1 { Class } where "name" = 'Exception'
@@ -54,11 +54,11 @@ from
 class "Class"
 where
     "name" = 'ModelElement'
-then {
-    recursively {
+then (
+    recursively (
         follow association "Generalizes" forward
-    }
-};
+    )
+);
 
 EXECUTION RESULT:
 Class: AliasType
@@ -99,14 +99,14 @@ from
 class "Class"
 where
     "name" = 'Exception'
-then {
-    recursively {
+then (
+    recursively (
         follow association "Generalizes" backward
-    }
-    then {
+    )
+    then (
         follow association "Contains" destination class "Attribute" as "a"
-    }
-};
+    )
+);
 
 EXPLANATION:
 a_4 { Attribute }

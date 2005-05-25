@@ -105,9 +105,9 @@ all of its columns:
 select * 
 from class Table 
 where name = 'DEPTS' 
-then {
+then (
     follow association ClassifierFeature
-};
+);
 
 EXECUTION RESULT:
 LocalTable: DEPTS
@@ -138,9 +138,9 @@ graph.  For example, if we only wanted to retrieve the columns:
 
 <pre><code>
 select c
-from class Table as t where name='DEPTS' then {
+from class Table as t where name='DEPTS' then (
     follow association ClassifierFeature as c
-};
+);
 
 EXECUTION RESULT:
 StoredColumn: DEPTNO
@@ -160,11 +160,11 @@ retrieve the schema and table containing column EMPNO:
 
 <pre><code>
 select s, t
-from class Column where name='EMPNO' then {
-    follow association ClassifierFeature as t then {
+from class Column where name='EMPNO' then (
+    follow association ClassifierFeature as t then (
         follow association ElementOwnership backward as s
-    }
-};
+    )
+);
 
 EXECUTION RESULT:
 LocalSchema: SALES
@@ -207,11 +207,11 @@ query results without the directional qualifier:
 
 <pre><code>
 select s, t
-from class Column where name='EMPNO' then {
-    follow association ClassifierFeature as t then {
+from class Column where name='EMPNO' then (
+    follow association ClassifierFeature as t then (
         follow association ElementOwnership as s
-    }
-};
+    )
+);
 
 EXECUTION RESULT:
 Dependency: EMPS$DEP
@@ -243,11 +243,11 @@ containing tables of a column:
 
 <pre><code>
 select t, d
-from class Column where name='CITY' then {
+from class Column where name='CITY' then (
     follow destination class Table as t
     union
     follow destination class SQLDataType as d
-};
+);
 
 EXECUTION RESULT:
 LocalTable: EMPS
@@ -272,13 +272,13 @@ union of the columns of view EMPSVIEW and table DEPTS in schema SALES:
 
 <pre><code>
 select c
-from class Schema where name='SALES' then {
+from class Schema where name='SALES' then (
     follow destination class Table where name='DEPTS' 
     union
     follow destination class View where name='EMPSVIEW'
-} gather then {
+) gather then (
     follow destination class Column as c
-};
+);
 
 EXECUTION RESULT:
 StoredColumn: DEPTNO
@@ -304,13 +304,13 @@ together with all columns of directly underlying tables:
 
 <pre><code>
 select c, t
-from class View where name='JOINVIEW' then {
-    follow association ElementOwnership destination class Dependency then {
+from class View where name='JOINVIEW' then (
+    follow association ElementOwnership destination class Dependency then (
         follow destination end supplier destination class Table as t
-    }
-} gather with parent then {
+    )
+) gather with parent then (
     follow association ClassifierFeature as c
-};
+);
 
 EXECUTION RESULT:
 LocalTable: DEPTS
@@ -354,11 +354,11 @@ expands all of the containers of a table:
 
 <pre><code>
 select *
-from class Table where name='TEMPS' then {
-    recursively {
+from class Table where name='TEMPS' then (
+    recursively (
         follow composite backward
-    }
-};
+    )
+);
 
 EXECUTION RESULT:
 Catalog: LOCALDB
@@ -380,15 +380,15 @@ level):
 
 <pre><code>
 select c, t
-from class View where name='JOINVIEW' then {
-    recursively {
-        follow association ElementOwnership destination class Dependency then {
+from class View where name='JOINVIEW' then (
+    recursively (
+        follow association ElementOwnership destination class Dependency then (
             follow destination end supplier destination class ColumnSet as t
-        }
-    }
-} gather with parent then {
+        )
+    )
+) gather with parent then (
     follow association ClassifierFeature as c
-};
+);
 </code></pre>
 
 Note that the dependency destination has been changed from Table to
@@ -410,9 +410,9 @@ columns having a name ending with 'NO':
 select dt
 from class Column where mofId in
 [select "mofId" from sys_cwm."Relational"."Column" where "name" like '%NO']
-then {
+then (
     follow destination class SQLDataType as dt
-};
+);
 
 EXECUTION RESULT:
 SQLSimpleType: INTEGER
@@ -455,7 +455,7 @@ class &lt;id&gt; [ as &lt;id&gt; ]
 [ then &lt;path-spec&gt; ]
 
 &lt;compound-root&gt; ::=
-'{' &lt;root&gt; [ union &lt;root&gt; ... ] '}'
+'(' &lt;root&gt; [ union &lt;root&gt; ... ] ')'
 [ gather then &lt;path-spec&gt; ]
 
 &lt;where-clause&gt; ::=
@@ -476,7 +476,7 @@ where &lt;filter&gt; [ and &lt;filter&gt; ... ]
 '?' &lt;id&gt;
 
 &lt;path-spec&gt; ::=
-'{' &lt;path-branch&gt; [ union &lt;path-branch&gt; ... ] '}'
+'(' &lt;path-branch&gt; [ union &lt;path-branch&gt; ... ] ')'
 [ gather [ with parent ] then &lt;path-spec&gt; ]
 
 &lt;path-branch&gt; ::=
