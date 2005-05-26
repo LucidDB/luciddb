@@ -320,7 +320,7 @@ public class SqlValidatorImpl implements SqlValidator
      * return an empty string
      *
      */
-    public String lookupQualifiedName(SqlNode topNode, SqlParserPos pp)
+    public Moniker lookupQualifiedName(SqlNode topNode, SqlParserPos pp)
     {
         SqlIdentifier id = null;
         Object o = sqlids.get(pp.toString());
@@ -333,9 +333,9 @@ public class SqlValidatorImpl implements SqlValidator
             scope = (SqlValidatorScope) o;
         }
         if (id != null && scope != null) {
-            return scope.fullyQualify(id).toString();
+            return new IdentifierMoniker(scope.fullyQualify(id));
         } else {
-            return "";
+            return null;
         }
     }
 

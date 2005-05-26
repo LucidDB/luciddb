@@ -22,6 +22,7 @@
 package com.disruptivetech.farrago.sql.advise;
 
 import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.validate.Moniker;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.validate.SqlValidatorImpl;
 import org.eigenbase.sql.parser.SqlParseException;
@@ -130,12 +131,12 @@ public class SqlAdvisor
      * that represents a SQL identifier for which its fully qualified name is
      * to be returned.
      *
-     * @return a string that is the fully qualified name of the specified SQL
-     * identifier, returns an empty string if none is found or the SQL statement
-     * is invalid.
+     * @return a {@link Moniker} that contains the fully qualified name of the 
+     * specified SQL identifier, returns null if none is found or the SQL 
+     * statement is invalid.
      *
      */
-    public String getQualifiedName(String sql, int cursor)
+    public Moniker getQualifiedName(String sql, int cursor)
     {
         SqlParser parser = new SqlParser(sql);
         SqlNode sqlNode;
@@ -143,7 +144,7 @@ public class SqlAdvisor
             sqlNode = parser.parseQuery();
             validator.validate(sqlNode);
         } catch (Exception e) {
-            return "";
+            return null;
         }
         SqlParserPos pp = new SqlParserPos(1, cursor+1);
         return ((SqlValidatorImpl) validator).lookupQualifiedName(sqlNode, pp);
