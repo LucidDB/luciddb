@@ -46,7 +46,6 @@ jmethodID JniUtil::methFillBuffer = 0;
 jmethodID JniUtil::methRestart = 0;
 jmethodID JniUtil::methGetJavaStreamHandle = 0;
 jmethodID JniUtil::methGetIndexRoot = 0;
-jmethodID JniUtil::methFennelPipeIterWrite = 0;
 jmethodID JniUtil::methToString = 0;
 
 AtomicCounter JniUtil::handleCount;
@@ -124,8 +123,6 @@ jint JniUtil::init(JavaVM *pVmInit)
         "net/sf/farrago/runtime/JavaTupleStream");
     jclass classFennelJavaStreamMap = pEnv->FindClass(
         "net/sf/farrago/fennel/FennelJavaStreamMap");
-    jclass classFennelPipeIter = pEnv->FindClass(
-        "net/sf/farrago/runtime/FennelPipeIterator");
     methGetClassName = pEnv->GetMethodID(
         classClass,"getName","()Ljava/lang/String;");
     methIterator = pEnv->GetMethodID(
@@ -144,9 +141,6 @@ jint JniUtil::init(JavaVM *pVmInit)
     methGetIndexRoot = pEnv->GetMethodID(
         classFennelJavaStreamMap,"getIndexRoot",
         "(J)J");
-    methFennelPipeIterWrite = pEnv->GetMethodID(
-        classFennelPipeIter,"write",
-        "(Ljava/nio/ByteBuffer;I)V");
     methToString = pEnv->GetMethodID(
         classObject,"toString","()Ljava/lang/String;");
     return jniVersion;
