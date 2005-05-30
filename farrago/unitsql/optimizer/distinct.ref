@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/optimizer/distinct.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/optimizer/distinct.sql#2 $
 0: jdbc:farrago:> -- Test queries with DISTINCT
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';
@@ -29,6 +29,16 @@
 | 110    | M       |
 | 120    | F       |
 +--------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- redundant distinct
+0: jdbc:farrago:> select distinct * from (select distinct gender from emps) order by 1;
++---------+
+| GENDER  |
++---------+
+|         |
+| F       |
+| M       |
++---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify plans
@@ -63,5 +73,13 @@
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 3]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select distinct * from (select distinct gender from emps) order by 1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[3]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

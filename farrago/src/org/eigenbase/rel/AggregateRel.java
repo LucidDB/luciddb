@@ -99,6 +99,13 @@ public class AggregateRel extends SingleRel
 
     //~ Methods ---------------------------------------------------------------
 
+    // implement RelNode
+    public boolean isDistinct()
+    {
+        return (aggCalls.length == 0)
+            && (groupCount == child.getRowType().getFieldList().size());
+    }
+
     public Call [] getAggCalls()
     {
         return aggCalls;

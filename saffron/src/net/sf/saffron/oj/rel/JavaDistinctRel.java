@@ -24,8 +24,7 @@ import openjava.ptree.*;
 
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.util.OJUtil;
-import org.eigenbase.rel.DistinctRel;
-import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
@@ -35,10 +34,10 @@ import org.eigenbase.util.Util;
 
 
 /**
- * <code>JavaDistinctRel</code> implements {@link DistinctRel} inline. See
+ * <code>JavaDistinctRel</code> implements DISTINCT inline. See
  * also {@link JavaAggregateRel}.
  */
-public class JavaDistinctRel extends DistinctRel implements JavaLoopRel
+public class JavaDistinctRel extends SingleRel implements JavaLoopRel
 {
     Variable var_h;
 
@@ -47,6 +46,12 @@ public class JavaDistinctRel extends DistinctRel implements JavaLoopRel
         RelNode child)
     {
         super(cluster, new RelTraitSet(CallingConvention.JAVA), child);
+    }
+
+    // implement RelNode
+    public boolean isDistinct()
+    {
+        return true;
     }
 
     // implement RelNode

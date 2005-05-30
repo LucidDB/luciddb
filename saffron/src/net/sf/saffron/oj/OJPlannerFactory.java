@@ -270,13 +270,16 @@ public class OJPlannerFactory
     {
         public DistinctToJavaRule()
         {
-            super(DistinctRel.class, CallingConvention.NONE,
+            super(AggregateRel.class, CallingConvention.NONE,
                 CallingConvention.JAVA, "DistinctToJavaRule");
         }
 
         public RelNode convert(RelNode rel)
         {
-            final DistinctRel distinct = (DistinctRel) rel;
+            final AggregateRel distinct = (AggregateRel) rel;
+            if (!distinct.isDistinct()) {
+                return null;
+            }
             final RelNode javaChild =
                 mergeTraitsAndConvert(
                     distinct.getTraits(), CallingConvention.JAVA,

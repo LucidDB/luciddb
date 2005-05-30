@@ -224,7 +224,7 @@ public class SqlToRelConverter
                 select);
         }
         if (select.isDistinct()) {
-            bb.setRoot(new DistinctRel(cluster, bb.root));
+            bb.setRoot(RelOptUtil.createDistinctRel(bb.root));
         }
         convertOrder(
             bb,

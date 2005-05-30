@@ -361,11 +361,6 @@ public class RelStructuredTypeFlattener
         setNewForOldRel(rel, newRel);
     }
 
-    public void rewriteRel(DistinctRel rel)
-    {
-        rewriteGeneric(rel);
-    }
-
     public void rewriteRel(CollectRel rel)
     {
         rewriteGeneric(rel);

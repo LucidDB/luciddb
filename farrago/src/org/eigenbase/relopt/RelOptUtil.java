@@ -528,6 +528,24 @@ public abstract class RelOptUtil
             ProjectRel.Flags.Boxed);
     }
 
+    /**
+     * Creates an AggregateRel which removes all duplicates from the result of
+     * an underlying rel.
+     *
+     * @param rel underlying rel
+     *
+     * @return rel implementing DISTINCT
+     */
+    public static RelNode createDistinctRel(
+        RelNode rel)
+    {
+        return new AggregateRel(
+            rel.getCluster(),
+            rel,
+            rel.getRowType().getFieldList().size(),
+            new AggregateRel.Call[0]);
+    }
+
     public static boolean analyzeSimpleEquiJoin(
         JoinRel joinRel,
         int [] joinFieldOrdinals)
@@ -568,7 +586,6 @@ public abstract class RelOptUtil
     public static void registerAbstractRels(RelOptPlanner planner)
     {
         AggregateRel.register(planner);
-        DistinctRel.register(planner);
         FilterRel.register(planner);
         JoinRel.register(planner);
         OneRowRel.register(planner);

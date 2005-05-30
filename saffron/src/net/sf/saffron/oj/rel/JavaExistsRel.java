@@ -23,7 +23,7 @@ import openjava.ptree.ParseTree;
 import openjava.ptree.StatementList;
 
 import org.eigenbase.oj.rel.*;
-import org.eigenbase.rel.DistinctRel;
+import org.eigenbase.rel.SingleRel;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
@@ -34,10 +34,10 @@ import org.eigenbase.util.Util;
 
 
 /**
- * <code>JavaExistsRel</code> implements {@link DistinctRel} inline for the
+ * <code>JavaExistsRel</code> implements DISTINCT inline for the
  * special case that the input relation has zero columns.
  */
-public class JavaExistsRel extends DistinctRel implements JavaLoopRel
+public class JavaExistsRel extends SingleRel implements JavaLoopRel
 {
     public JavaExistsRel(
         RelOptCluster cluster,
@@ -45,6 +45,12 @@ public class JavaExistsRel extends DistinctRel implements JavaLoopRel
     {
         super(cluster, new RelTraitSet(CallingConvention.JAVA), child);
         assert child.getRowType().getFieldList().size() == 0;
+    }
+
+    // implement RelNode
+    public boolean isDistinct()
+    {
+        return true;
     }
 
     // implement RelNode

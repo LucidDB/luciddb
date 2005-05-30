@@ -23,14 +23,12 @@
 
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelOptRuleOperand;
+import org.eigenbase.relopt.*;
 
 
 /**
  * <code>UnionToDistinctRule</code> translates a distinct {@link UnionRel}
- * (<code>all</code> = <code>false</code>) into a {@link DistinctRel} on top
+ * (<code>all</code> = <code>false</code>) into an {@link AggregateRel} on top
  * of a non-distinct {@link UnionRel} (<code>all</code> = <code>true</code>).
  */
 public class UnionToDistinctRule extends RelOptRule
@@ -54,7 +52,7 @@ public class UnionToDistinctRule extends RelOptRule
             return; // nothing to do
         }
         UnionRel unionAll = new UnionRel(union.cluster, union.inputs, true);
-        call.transformTo(new DistinctRel(union.cluster, unionAll));
+        call.transformTo(RelOptUtil.createDistinctRel(unionAll));
     }
 }
 

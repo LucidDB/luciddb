@@ -159,6 +159,12 @@ public class RelSubset extends AbstractRelNode
         return set.rel.getRowType();
     }
 
+    // implement RelNode
+    public boolean isDistinct()
+    {
+        return set.rel.isDistinct();
+    }
+
     ArrayList getParentRels()
     {
         return parents;
