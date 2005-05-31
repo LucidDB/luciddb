@@ -45,9 +45,6 @@ public class UnionToDistinctRule extends RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
         UnionRel union = (UnionRel) call.rels[0];
-        if (union.getClass() != UnionRel.class) {
-            return; // require precise class, otherwise we loop
-        }
         if (union.all) {
             return; // nothing to do
         }

@@ -2,9 +2,8 @@
 // $Id$
 // Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
+// Copyright (C) 2005-2005 Disruptive Tech
 // Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -20,62 +19,41 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 
 /**
- * <code>MinusRel</code> returns the rows of its first input minus any
- * matching rows from its other inputs.  If "all" is true, then multiset
- * subtraction is performed; otherwise, set subtraction is performed
- * (implying no duplicates in the results).
+ * <code>UnionRelBase</code> is an abstract base class for implementations
+ * of {@link UnionRel}.
  *
- * @author jhyde
+ * @author John V. Sichi
  * @version $Id$
- *
- * @since 23 September, 2001
  */
-public final class MinusRel extends SetOpRel
+public abstract class UnionRelBase extends SetOpRel
 {
-    //~ Constructors ----------------------------------------------------------
-    
-    public MinusRel(
+    protected UnionRelBase(
         RelOptCluster cluster,
+        RelTraitSet traits,
         RelNode [] inputs,
         boolean all)
     {
-        super(
-            cluster,
-            new RelTraitSet(CallingConvention.NONE),
-            inputs,
-            all);
+        super(cluster, traits, inputs, all);
     }
     
     // implement RelNode
     public double getRows()
     {
-        // REVIEW jvs 30-May-2005:  I just pulled this out of a hat.
-        double dRows = inputs[0].getRows();
-        for (int i = 1; i < inputs.length; i++) {
-            dRows -= 0.5*inputs[i].getRows();
+        double dRows = 0;
+        for (int i = 0; i < getInputs().length; i++) {
+            dRows += getInputs()[i].getRows();
         }
-        if (dRows < 0) {
-            dRows = 0;
+        if (isDistinct()) {
+            dRows *= 0.5;
         }
         return dRows;
     }
-
-    public Object clone()
-    {
-        MinusRel clone = new MinusRel(
-            cluster,
-            RelOptUtil.clone(inputs),
-            all);
-        clone.inheritTraitsFrom(this);
-        return clone;
-    }
 }
 
-
-// End MinusRel.java
+// End UnionRelBase.java

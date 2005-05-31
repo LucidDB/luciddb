@@ -70,7 +70,7 @@ class FennelCartesianProductRel extends FennelPullDoubleRel
             RelOptUtil.clone(left),
             RelOptUtil.clone(right),
             joinType);
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 

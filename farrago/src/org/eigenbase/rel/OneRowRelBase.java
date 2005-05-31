@@ -2,9 +2,8 @@
 // $Id$
 // Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
+// Copyright (C) 2005-2005 Disruptive Tech
 // Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -20,38 +19,59 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
 
-
 /**
- * <code>OneRowRel</code> always returns one row, one column (containing
- * the value 0).
+ * <code>OneRowRelBase</code> is an abstract base class for implementations
+ * of {@link OneRowRel}.
  *
- * @author jhyde
+ * @author John V. Sichi
  * @version $Id$
- *
- * @since 23 September, 2001
  */
-public final class OneRowRel extends OneRowRelBase
+public abstract class OneRowRelBase extends AbstractRelNode
 {
     //~ Constructors ----------------------------------------------------------
-
+    
     /**
-     * Creates a <code>OneRowRel</code>.
+     * Creates a <code>OneRowRelBase</code> with specific traits.
      *
      * @param cluster {@link RelOptCluster} this relational expression
      *        belongs to
+     * @param traits for this rel
      */
-    public OneRowRel(RelOptCluster cluster)
+    protected OneRowRelBase(RelOptCluster cluster, RelTraitSet traits)
     {
-        super(cluster, new RelTraitSet(CallingConvention.NONE));
+        super(cluster, traits);
+    }
+    
+    //~ Methods ---------------------------------------------------------------
+
+    public Object clone()
+    {
+        return this;
+    }
+
+    public RelOptCost computeSelfCost(RelOptPlanner planner)
+    {
+        return planner.makeTinyCost();
+    }
+
+    protected RelDataType deriveRowType()
+    {
+        return deriveOneRowType(cluster.typeFactory);
+    }
+
+    public static RelDataType deriveOneRowType(RelDataTypeFactory typeFactory)
+    {
+        return typeFactory.createStructType(
+            new RelDataType [] { typeFactory.createSqlType(
+                    SqlTypeName.Integer) },
+            new String [] { "ZERO" });
     }
 }
 
-
-// End OneRowRel.java
+// End OneRowRelBase.java

@@ -920,7 +920,7 @@ public class SqlToRelConverter
                 throw Util.needToImplement("natural join");
             }
             int convertedJoinType = convertJoinType(joinType);
-            final JoinRel joinRel;
+            final JoinRelBase joinRel;
             if (convertedJoinType == JoinRel.JoinType.RIGHT) {
                 // "class Join" does not support RIGHT, so swap...
                 joinRel = createJoin(
@@ -970,7 +970,7 @@ public class SqlToRelConverter
         }
     }
 
-    private JoinRel createJoin(
+    private JoinRelBase createJoin(
         Blackboard bb,
         RelNode leftRel,
         RelNode rightRel,
@@ -1338,11 +1338,17 @@ public class SqlToRelConverter
                     new RelNode [] { left, right },
                     all);
             case SqlKind.IntersectORDINAL:
-
                 // TODO:  all
-                return new IntersectRel(cluster, left, right);
+                return new IntersectRel(
+                    cluster,
+                    new RelNode [] { left, right },
+                    false);
             case SqlKind.ExceptORDINAL:
-                throw Util.needToImplement(this);
+                // TODO:  all
+                return new MinusRel(
+                    cluster,
+                    new RelNode [] { left, right },
+                    false);
             default:
                 throw Util.newInternal("not a set operator "
                     + SqlKind.enumeration.getName(kind));
@@ -1785,7 +1791,7 @@ public class SqlToRelConverter
                     root.getRowType(),
                     0);
             } else {
-                final JoinRel join = createJoin(
+                final JoinRelBase join = createJoin(
                     this,
                     root,
                     rel,

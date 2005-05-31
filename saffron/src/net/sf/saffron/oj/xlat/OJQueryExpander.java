@@ -264,9 +264,15 @@ public class OJQueryExpander extends QueryExpander
                         new RelNode [] { left, right },
                         false);
                 case BinaryExpression.EXCEPT:
-                    return new MinusRel(cluster, left, right);
+                    return new MinusRel(
+                        cluster, 
+                        new RelNode [] { left, right },
+                        false);
                 case BinaryExpression.INTERSECT:
-                    return new IntersectRel(cluster, left, right);
+                    return new IntersectRel(
+                        cluster, 
+                        new RelNode [] { left, right },
+                        false);
                 default:
                     throw Util.newInternal("bad case");
                 }

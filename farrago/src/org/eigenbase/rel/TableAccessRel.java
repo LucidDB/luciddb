@@ -23,7 +23,7 @@
 
 package org.eigenbase.rel;
 
-import java.util.Arrays;
+import java.util.*;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
@@ -57,16 +57,8 @@ import org.eigenbase.reltype.*;
  *
  * @since 10 November, 2001
  */
-public class TableAccessRel extends AbstractRelNode
+public final class TableAccessRel extends TableAccessRelBase
 {
-    //~ Instance fields -------------------------------------------------------
-
-    /** The connection to the optimizing session. */
-    protected RelOptConnection connection;
-
-    /** The table definition. */
-    protected RelOptTable table;
-
     //~ Constructors ----------------------------------------------------------
 
     public TableAccessRel(
@@ -74,66 +66,9 @@ public class TableAccessRel extends AbstractRelNode
         RelOptTable table,
         RelOptConnection connection)
     {
-        this(
+        super(
             cluster, new RelTraitSet(CallingConvention.NONE), table,
             connection);
-    }
-
-    protected TableAccessRel(
-        RelOptCluster cluster,
-        RelTraitSet traits,
-        RelOptTable table,
-        RelOptConnection connection)
-    {
-        super(cluster, traits);
-        this.table = table;
-        this.connection = connection;
-        if (table.getRelOptSchema() != null) {
-            cluster.getPlanner().registerSchema(table.getRelOptSchema());
-        }
-    }
-
-    //~ Methods ---------------------------------------------------------------
-
-    public RelOptConnection getConnection()
-    {
-        return connection;
-    }
-
-    public double getRows()
-    {
-        return table.getRowCount();
-    }
-
-    public RelOptTable getTable()
-    {
-        return table;
-    }
-
-    public Object clone()
-    {
-        return this;
-    }
-
-    public RelOptCost computeSelfCost(RelOptPlanner planner)
-    {
-        double dRows = table.getRowCount();
-        double dCpu = dRows + 1; // ensure non-zero cost
-        double dIo = 0;
-        return planner.makeCost(dRows, dCpu, dIo);
-    }
-
-    public RelDataType deriveRowType()
-    {
-        return table.getRowType();
-    }
-
-    public void explain(RelOptPlanWriter pw)
-    {
-        pw.explain(
-            this,
-            new String [] { "table" },
-            new Object [] { Arrays.asList(table.getQualifiedName()) });
     }
 }
 

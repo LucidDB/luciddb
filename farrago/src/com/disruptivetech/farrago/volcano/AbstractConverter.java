@@ -29,7 +29,7 @@ import org.eigenbase.relopt.*;
  * Converts a relational expression to any given output convention.
  *
  * <p>
- * Unlike most {@link ConverterRel}s, and abstract converter is always
+ * Unlike most {@link ConverterRel}s, an abstract converter is always
  * abstract. You would typically create an <code>AbstractConverter</code>
  * when it is necessary to transform a relational expression immediately;
  * later, rules will transform it into relational expressions which can be

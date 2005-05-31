@@ -36,7 +36,7 @@ import org.eigenbase.sql.type.SqlTypeUtil;
  * @since Dec 12, 2004
  * @version $Id$
  */
-public class CollectRel extends SingleRel {
+public final class CollectRel extends SingleRel {
 
     public final String name;
 
@@ -51,7 +51,7 @@ public class CollectRel extends SingleRel {
     public Object clone() {
         CollectRel clone =
             new CollectRel(cluster, RelOptUtil.clone(child), name);
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 

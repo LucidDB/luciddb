@@ -95,7 +95,7 @@ public class FennelSortRel extends FennelPullSingleRel
             RelOptUtil.clone(child),
             keyProjection,
             discardDuplicates);
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 

@@ -588,11 +588,16 @@ public abstract class RelOptUtil
         AggregateRel.register(planner);
         FilterRel.register(planner);
         JoinRel.register(planner);
+        CorrelatorRel.register(planner);
         OneRowRel.register(planner);
         ProjectRel.register(planner);
         TableAccessRel.register(planner);
         UnionRel.register(planner);
+        IntersectRel.register(planner);
+        MinusRel.register(planner);
         CalcRel.register(planner);
+        CollectRel.register(planner);
+        UncollectRel.register(planner);
         planner.addRule(FilterToCalcRule.instance);
         planner.addRule(ProjectToCalcRule.instance);
         planner.addRule(MergeFilterOntoCalcRule.instance);

@@ -400,9 +400,6 @@ public class OJPlannerFactory
         public RelNode convert(RelNode rel)
         {
             final ProjectRel project = (ProjectRel) rel;
-            if (project instanceof JavaProjectRel) {
-                return null;
-            }
             final RelNode javaChild =
                 mergeTraitsAndConvert(
                     project.getTraits(), CallingConvention.JAVA,
@@ -459,9 +456,6 @@ public class OJPlannerFactory
         public RelNode convert(RelNode rel)
         {
             final UnionRel union = (UnionRel) rel;
-            if (union.getClass() != UnionRel.class) {
-                return null; // require precise class, otherwise we loop
-            }
             if (union.isDistinct()) {
                 return null; // can only convert non-distinct Union
             }

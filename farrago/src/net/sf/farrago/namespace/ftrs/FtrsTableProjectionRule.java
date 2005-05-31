@@ -144,7 +144,7 @@ class FtrsTableProjectionRule extends RelOptRule
             if (needRename) {
                 // Replace calling convention with FENNEL_PULL_CONVENTION
                 RelTraitSet traits =
-                    (RelTraitSet)origProject.getTraits().clone();
+                    RelOptUtil.clone(origProject.getTraits());
                 traits.setTrait(
                     CallingConventionTraitDef.instance,
                     FennelPullRel.FENNEL_PULL_CONVENTION);

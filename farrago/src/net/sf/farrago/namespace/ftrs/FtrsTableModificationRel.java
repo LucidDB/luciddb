@@ -44,7 +44,7 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsTableModificationRel extends TableModificationRel
+class FtrsTableModificationRel extends TableModificationRelBase
     implements FennelPullRel
 {
     //~ Instance fields -------------------------------------------------------
@@ -103,7 +103,7 @@ class FtrsTableModificationRel extends TableModificationRel
             RelOptUtil.clone(child),
             getOperation(),
             getUpdateColumnList());
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 

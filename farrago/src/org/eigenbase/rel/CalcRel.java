@@ -23,24 +23,12 @@
 
 package org.eigenbase.rel;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.*;
 
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptPlanWriter;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexUtil;
-import org.eigenbase.util.Util;
-
-
-// TODO jvs 10-May-2004:  inherit from a new CalcRelBase
-// REVIEW jvs 16-June-2004:  also, consider renaming this
-// to ComputeRel, to avoid confusion with the Fennel calculator?
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.util.*;
 
 /**
  * A relational expression which computes project expressions and also filters.
@@ -48,7 +36,7 @@ import org.eigenbase.util.Util;
  * <p>This relational expression combines the functionality of
  * {@link ProjectRel} and {@link FilterRel}. It should be created in the
  * latter stages of optimization, by merging consecutive {@link ProjectRel}
- * and {@link FilterRel} together.
+ * and {@link FilterRel} nodes together.
  *
  * <p>The following rules relate to <code>CalcRel</code>:<ul>
  * <li>{@link FilterToCalcRule} creates this from a {@link FilterRel}</li>
@@ -63,13 +51,8 @@ import org.eigenbase.util.Util;
  * @since Mar 7, 2004
  * @version $Id$
  **/
-public class CalcRel extends SingleRel
+public final class CalcRel extends CalcRelBase
 {
-    //~ Instance fields -------------------------------------------------------
-
-    public final RexNode [] projectExprs;
-    public final RexNode conditionExpr;
-
     //~ Constructors ----------------------------------------------------------
 
     public CalcRel(
@@ -80,77 +63,19 @@ public class CalcRel extends SingleRel
         RexNode [] projectExprs,
         RexNode conditionExpr)
     {
-        super(cluster, traits, child);
-        this.rowType = rowType;
-        this.projectExprs = projectExprs;
-        this.conditionExpr = conditionExpr;
+        super(cluster, traits, child, rowType, projectExprs, conditionExpr);
     }
 
     //~ Methods ---------------------------------------------------------------
 
     public Object clone()
     {
-        return new CalcRel(cluster, cloneTraits(), child, rowType,
-            RexUtil.clone(projectExprs), (RexNode) (null==conditionExpr ? null : conditionExpr.clone()));
+        return new CalcRel(
+            cluster, cloneTraits(), child, rowType,
+            RexUtil.clone(projectExprs),
+            (RexNode) (null==conditionExpr ? null : conditionExpr.clone()));
     }
 
-    public RelOptCost computeSelfCost(RelOptPlanner planner)
-    {
-        double dRows = child.getRows();
-        int nExprs = projectExprs.length;
-        if (conditionExpr != null) {
-            ++nExprs;
-        }
-        double dCpu = child.getRows() * nExprs;
-        double dIo = 0;
-        return planner.makeCost(dRows, dCpu, dIo);
-    }
-
-    public static void explainCalc(
-        RelNode rel,
-        RelOptPlanWriter pw,
-        RexNode conditionExpr,
-        RexNode [] projectExprs)
-    {
-        String [] terms = getExplainTerms(rel, projectExprs, conditionExpr);
-        pw.explain(rel, terms, Util.emptyObjectArray);
-    }
-
-    private static String [] getExplainTerms(
-        RelNode rel,
-        RexNode [] projectExprs,
-        RexNode conditionExpr)
-    {
-        ArrayList termList = new ArrayList(projectExprs.length + 2);
-        termList.add("child");
-        final RelDataTypeField [] fields = rel.getRowType().getFields();
-        assert fields.length == projectExprs.length : "fields.length="
-        + fields.length + ", projectExprs.length=" + projectExprs.length;
-        for (int i = 0; i < fields.length; i++) {
-            termList.add(fields[i].getName());
-        }
-        if (conditionExpr != null) {
-            termList.add("condition");
-        }
-        final String [] terms =
-            (String []) termList.toArray(new String[termList.size()]);
-        return terms;
-    }
-
-    public RexNode [] getChildExps()
-    {
-        final ArrayList list = new ArrayList(Arrays.asList(projectExprs));
-        if (conditionExpr != null) {
-            list.add(conditionExpr);
-        }
-        return (RexNode []) list.toArray(new RexNode[list.size()]);
-    }
-
-    public void explain(RelOptPlanWriter pw)
-    {
-        explainCalc(this, pw, conditionExpr, projectExprs);
-    }
 }
-
 
 // End CalcRel.java

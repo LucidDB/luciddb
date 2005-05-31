@@ -83,7 +83,7 @@ public class IteratorToFennelConverter extends ConverterRel
     {
         IteratorToFennelConverter clone =
             new IteratorToFennelConverter(cluster, child);
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 

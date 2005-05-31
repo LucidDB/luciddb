@@ -56,11 +56,11 @@ public class FennelPullOneRowRel extends AbstractRelNode implements FennelPullRe
         super(cluster, new RelTraitSet(FENNEL_PULL_CONVENTION));
     }
 
-    // override Object (public, does not throw CloneNotSupportedException)
+    // override Object
     public Object clone()
     {
         FennelPullOneRowRel clone = new FennelPullOneRowRel(cluster);
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 

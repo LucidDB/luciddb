@@ -108,6 +108,8 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
         planner.addRule(new UnionToDistinctRule());
         planner.addRule(new UnionEliminatorRule());
         planner.addRule(new CoerceInputsRule(UnionRel.class));
+        planner.addRule(new CoerceInputsRule(IntersectRel.class));
+        planner.addRule(new CoerceInputsRule(MinusRel.class));
         planner.addRule(new CoerceInputsRule(TableModificationRel.class));
         planner.addRule(new SwapJoinRule());
         planner.addRule(new RemoveTrivialProjectRule());

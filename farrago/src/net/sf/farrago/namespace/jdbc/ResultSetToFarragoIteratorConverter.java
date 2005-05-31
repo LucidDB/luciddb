@@ -84,7 +84,7 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
     {
         ResultSetToFarragoIteratorConverter clone =
             new ResultSetToFarragoIteratorConverter(cluster, child);
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 

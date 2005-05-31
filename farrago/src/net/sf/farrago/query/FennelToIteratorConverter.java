@@ -84,7 +84,7 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
     {
         FennelToIteratorConverter clone =
             new FennelToIteratorConverter(cluster, child);
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 

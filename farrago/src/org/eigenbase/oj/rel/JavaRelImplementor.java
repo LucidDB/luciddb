@@ -196,7 +196,9 @@ public class JavaRelImplementor implements RelImplementor
     {
         if (expression instanceof RexInputRef) {
             RexInputRef variable = (RexInputRef) expression;
-            if (rel instanceof JoinRel && false) {
+            // REVIEW jvs 30-May-2005:  What's up with this?  The "&& false"
+            // should have at least a comment!
+            if (rel instanceof JoinRelBase && false) {
                 return (JavaRel) findInputRel(rel, variable.index);
             } else {
                 return (JavaRel) rel.getInput(variable.index);

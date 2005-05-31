@@ -26,8 +26,7 @@ package org.eigenbase.oj.rel;
 import openjava.mop.OJClass;
 import openjava.ptree.*;
 
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.UnionRel;
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
@@ -41,7 +40,7 @@ import org.eigenbase.util.Util;
  * <code>IterConcatenateRel</code> concatenates several iterators. It is an
  * iterator implementation of {@link UnionRel}.
  */
-public class IterConcatenateRel extends UnionRel implements JavaRel
+public class IterConcatenateRel extends UnionRelBase implements JavaRel
 {
     //~ Constructors ----------------------------------------------------------
 
@@ -59,7 +58,7 @@ public class IterConcatenateRel extends UnionRel implements JavaRel
     public Object clone()
     {
         IterConcatenateRel clone = new IterConcatenateRel(cluster, inputs);
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 

@@ -76,7 +76,7 @@ public class FennelPullUncollectRel extends FennelSingleRel
     public Object clone() {
         FennelPullUncollectRel clone =
             new FennelPullUncollectRel(cluster, RelOptUtil.clone(child));
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 }

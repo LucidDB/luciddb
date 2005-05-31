@@ -30,7 +30,7 @@ import openjava.ptree.*;
 
 import org.eigenbase.util.Util;
 import org.eigenbase.oj.util.OJUtil;
-import org.eigenbase.rel.OneRowRel;
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
@@ -43,7 +43,7 @@ import org.eigenbase.runtime.*;
  * <code>IterOneRowRel</code> is an iterator implementation of
  * {@link OneRowRel}.
  */
-public class IterOneRowRel extends OneRowRel implements JavaRel
+public class IterOneRowRel extends OneRowRelBase implements JavaRel
 {
     //~ Constructors ----------------------------------------------------------
 

@@ -37,7 +37,7 @@ import org.eigenbase.util.Util;
  * <li>Created by {@link com.disruptivetech.farrago.rel.WindowedAggSplitterRule}.
  * <li>Triggers {@link com.disruptivetech.farrago.rel.FennelWindowRule}.
  */
-public class WindowedAggregateRel extends SingleRel
+public final class WindowedAggregateRel extends SingleRel
 {
     public final RexNode[] aggs;
 

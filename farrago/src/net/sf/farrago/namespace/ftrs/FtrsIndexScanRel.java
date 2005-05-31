@@ -50,7 +50,7 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
+class FtrsIndexScanRel extends TableAccessRelBase implements FennelPullRel
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -126,7 +126,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
             new FtrsIndexScanRel(
                 cluster, ftrsTable, index, connection, projectedColumns,
                 isOrderPreserving);
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 

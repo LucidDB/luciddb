@@ -53,7 +53,7 @@ import org.netbeans.api.mdr.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class MedMdrJoinRel extends JoinRel implements JavaRel
+class MedMdrJoinRel extends JoinRelBase implements JavaRel
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -102,7 +102,7 @@ class MedMdrJoinRel extends JoinRel implements JavaRel
             joinType,
             leftOrdinal,
             rightReference);
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 

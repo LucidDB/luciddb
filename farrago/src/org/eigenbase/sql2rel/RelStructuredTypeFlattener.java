@@ -545,13 +545,6 @@ public class RelStructuredTypeFlattener
 
     public void rewriteRel(TableAccessRel rel)
     {
-        // TODO jvs 10-Feb-2005:  reintroduce AbstractTableAccessRel
-        // and get rid of this
-        if (!rel.getClass().equals(TableAccessRel.class)) {
-            setNewForOldRel(rel, rel);
-            return;
-        }
-        
         RelNode newRel = rel.getTable().toRel(
             rel.getCluster(),
             rel.getConnection());

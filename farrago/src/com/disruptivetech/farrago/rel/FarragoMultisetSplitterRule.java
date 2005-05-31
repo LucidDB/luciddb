@@ -434,16 +434,16 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                 final RelNode setRel;
                 if (RexMultisetUtil.opTab.multisetExceptAllOperator == rexCall.op) {
                     setRel =
-                        new MinusRel(cluster, uncollectRel, uncollectRel2, true);
+                        new MinusRel(cluster, inputs, true);
                 } else if (RexMultisetUtil.opTab.multisetExceptOperator == rexCall.op) {
                     setRel =
-                        new MinusRel(cluster, uncollectRel, uncollectRel2, false);
+                        new MinusRel(cluster, inputs, false);
                 } else if (RexMultisetUtil.opTab.multisetIntersectAllOperator == rexCall.op) {
                     setRel =
-                        new IntersectRel(cluster, uncollectRel, uncollectRel2,true);
+                        new IntersectRel(cluster, inputs, true);
                 } else if (RexMultisetUtil.opTab.multisetIntersectOperator == rexCall.op) {
                     setRel =
-                        new IntersectRel(cluster, uncollectRel,uncollectRel2,false);
+                        new IntersectRel(cluster, inputs, false);
                 } else if (RexMultisetUtil.opTab.multisetUnionAllOperator == rexCall.op) {
                     setRel =
                         new UnionRel(cluster, inputs, true);

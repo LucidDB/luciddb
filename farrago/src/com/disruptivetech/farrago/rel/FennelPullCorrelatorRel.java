@@ -31,7 +31,7 @@ import org.eigenbase.rel.CorrelatorRel;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.type.SqlTypeName;
 
-import java.util.ArrayList;
+import java.util.*;
 
 /**
  * FennelPullCorrelatorRel is the relational expression corresponding to a
@@ -45,7 +45,7 @@ public class FennelPullCorrelatorRel extends FennelPullDoubleRel
 {
     //~ Instance fields -------------------------------------------------------
 
-    protected ArrayList correlations;
+    protected List correlations;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -63,7 +63,7 @@ public class FennelPullCorrelatorRel extends FennelPullDoubleRel
         RelOptCluster cluster,
         RelNode left,
         RelNode right,
-        ArrayList correlations)
+        List correlations)
     {
         super(cluster, left, right);
         this.correlations = correlations;
@@ -78,11 +78,16 @@ public class FennelPullCorrelatorRel extends FennelPullDoubleRel
             cluster,
             RelOptUtil.clone(left),
             RelOptUtil.clone(right),
-            (ArrayList) correlations.clone());
-        clone.traits = cloneTraits();
+            cloneCorrelations());
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 
+    public List cloneCorrelations()
+    {
+        return new ArrayList(correlations);
+    }
+    
     // override RelNode
     public void explain(RelOptPlanWriter pw)
     {

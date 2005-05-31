@@ -56,7 +56,7 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class MedMdrClassExtentRel extends TableAccessRel implements JavaRel
+class MedMdrClassExtentRel extends TableAccessRelBase implements JavaRel
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -90,7 +90,7 @@ class MedMdrClassExtentRel extends TableAccessRel implements JavaRel
     {
         MedMdrClassExtentRel clone =
             new MedMdrClassExtentRel(cluster, mdrClassExtent, connection);
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 

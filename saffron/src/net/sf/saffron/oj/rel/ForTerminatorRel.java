@@ -70,7 +70,7 @@ public class ForTerminatorRel extends SingleRel implements TerminatorRel,
             (Variable) Util.clone(variable),
             Util.clone(body),
             label);
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 

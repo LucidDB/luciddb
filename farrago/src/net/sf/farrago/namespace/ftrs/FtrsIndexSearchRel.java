@@ -112,7 +112,7 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
             isOuter,
             inputKeyProj,
             inputJoinProj);
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 

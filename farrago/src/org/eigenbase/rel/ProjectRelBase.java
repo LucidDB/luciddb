@@ -38,10 +38,8 @@ import org.eigenbase.sql.type.SqlTypeUtil;
 
 
 /**
- * <code>ProjectRelBase</code> is an abstract base class for RelNodes which
- * perform projection.  RelNodes which combine projection with other
- * operations should subclass ProjectRelBase rather than ProjectRel (which
- * represents pure projection).
+ * <code>ProjectRelBase</code> is an abstract base class for implementations
+ * of {@link ProjectRel}.
  */
 public abstract class ProjectRelBase extends SingleRel
 {

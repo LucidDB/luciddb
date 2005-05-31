@@ -138,7 +138,7 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
     {
         JdbcQuery clone = new JdbcQuery(cluster, rowType, connection, dialect,
             (SqlSelect) sql.clone(), dataSource);
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 

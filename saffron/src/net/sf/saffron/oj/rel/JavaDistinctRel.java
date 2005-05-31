@@ -58,7 +58,7 @@ public class JavaDistinctRel extends SingleRel implements JavaLoopRel
     public Object clone()
     {
         JavaDistinctRel clone = new JavaDistinctRel(cluster, child);
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 

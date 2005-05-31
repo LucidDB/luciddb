@@ -423,7 +423,7 @@ public class VolcanoPlannerTest extends TestCase
         public Object clone()
         {
             NoneSingleRel clone = new NoneSingleRel(cluster, child);
-            clone.traits = cloneTraits();
+            clone.inheritTraitsFrom(this);
             return clone;
         }
     }
@@ -473,7 +473,7 @@ public class VolcanoPlannerTest extends TestCase
         public Object clone()
         {
             PhysSingleRel clone = new PhysSingleRel(cluster, child);
-            clone.traits = cloneTraits();
+            clone.inheritTraitsFrom(this);
             return clone;
         }
     }
@@ -494,7 +494,7 @@ public class VolcanoPlannerTest extends TestCase
         {
             PhysToIteratorConverter clone =
                 new PhysToIteratorConverter(cluster, child);
-            clone.traits = cloneTraits();
+            clone.inheritTraitsFrom(this);
             return clone;
         }
     }

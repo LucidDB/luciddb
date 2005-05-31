@@ -57,7 +57,8 @@ public class JavaExistsRel extends SingleRel implements JavaLoopRel
     public Object clone()
     {
         JavaExistsRel clone = new JavaExistsRel(cluster, child);
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
+
         return clone;
     }
 

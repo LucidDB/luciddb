@@ -42,12 +42,12 @@ import org.eigenbase.util.Util;
  * and consist of the raw value type.
  * </p>
  */
-public class ProjectRel extends ProjectRelBase
+public final class ProjectRel extends ProjectRelBase
 {
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a ProjectRel with default traits.
+     * Creates a ProjectRel.
      *
      * @param cluster {@link RelOptCluster} this relational expression
      *        belongs to
@@ -64,42 +64,23 @@ public class ProjectRel extends ProjectRelBase
         int flags)
     {
         super(
-            cluster, new RelTraitSet(CallingConvention.NONE), child, exps,
-            fieldNames, flags);
+            cluster,
+            new RelTraitSet(CallingConvention.NONE),
+            child, exps, fieldNames, flags);
     }
-
-    /**
-     * Creates a Project with specific traits.
-     *
-     * @param cluster {@link RelOptCluster} this relational expression
-     *        belongs to
-     * @param traits the traits for this project rel
-     * @param child input relational expression
-     * @param exps set of expressions for the input columns
-     * @param fieldNames aliases of the expressions
-     * @param flags values as in {@link ProjectRelBase.Flags}
-     */
-    protected ProjectRel(
-        RelOptCluster cluster,
-        RelTraitSet traits,
-        RelNode child,
-        RexNode [] exps,
-        String [] fieldNames,
-        int flags)
-    {
-        super(cluster, traits, child, exps, fieldNames, flags);
-    }
+    
     //~ Methods ---------------------------------------------------------------
 
     public Object clone()
     {
-        return new ProjectRel(
+        ProjectRel clone = new ProjectRel(
             cluster,
-            cloneTraits(),
             RelOptUtil.clone(child),
             RexUtil.clone(exps),
             Util.clone(fieldNames),
             getFlags());
+        clone.inheritTraitsFrom(this);
+        return clone;
     }
 }
 

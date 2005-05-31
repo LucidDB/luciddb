@@ -82,7 +82,7 @@ public class JavaConverterRel extends ConverterRel implements JavaRel,
     {
         JavaConverterRel clone =
             new JavaConverterRel(cluster, child, convertlet);
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 

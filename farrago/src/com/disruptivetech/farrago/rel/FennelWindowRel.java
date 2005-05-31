@@ -120,7 +120,7 @@ public class FennelWindowRel extends FennelSingleRel
         FennelWindowRel clone = new FennelWindowRel(
             cluster, child, rowType, inputExprs, windows, outputExprs,
             conditionExpr);
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 

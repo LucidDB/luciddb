@@ -49,11 +49,11 @@ import org.eigenbase.reltype.RelDataType;
  *
  * @since 23 September, 2001
  */
-public class CorrelatorRel extends JoinRel
+public final class CorrelatorRel extends JoinRelBase
 {
     //~ Instance fields -------------------------------------------------------
 
-    protected ArrayList correlations;
+    protected List correlations;
 
     //~ Inner Classes ---------------------------------------------------------
 
@@ -70,7 +70,13 @@ public class CorrelatorRel extends JoinRel
             this.id = id;
             this.offset = offset;
         }
+
+        public String toString()
+        {
+            return "var" + id + "=offset" + offset;
+        }
     }
+    
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -87,7 +93,7 @@ public class CorrelatorRel extends JoinRel
         RelOptCluster cluster,
         RelNode left,
         RelNode right,
-        ArrayList correlations)
+        List correlations)
     {
         super(cluster, new RelTraitSet(CallingConvention.NONE), left, right,
             cluster.rexBuilder.makeLiteral(true), JoinType.LEFT,
@@ -103,8 +109,8 @@ public class CorrelatorRel extends JoinRel
             cluster,
             RelOptUtil.clone(left),
             RelOptUtil.clone(right),
-            (ArrayList) correlations.clone());
-        clone.traits = cloneTraits();
+            cloneCorrelations());
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 
@@ -115,16 +121,25 @@ public class CorrelatorRel extends JoinRel
 
     public void explain(RelOptPlanWriter pw)
     {
-        // todo wael: add var and col descriptions;
         pw.explain(
             this,
-            new String [] { "left", "right", "condition", "joinType" },
-            new Object [] { JoinType.toString(joinType) });
+            new String [] {
+                "left", "right", "condition", "joinType", "correlations"
+            },
+            new Object [] {
+                JoinType.toString(joinType),
+                correlations
+            });
     }
 
-    public ArrayList getCorrelations()
+    public List getCorrelations()
     {
         return correlations;
+    }
+
+    public List cloneCorrelations()
+    {
+        return new ArrayList(correlations);
     }
 }
 

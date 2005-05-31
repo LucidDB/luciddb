@@ -40,7 +40,6 @@ import org.eigenbase.runtime.CalcIterator;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.util.Util;
 
-
 /**
  * <code>IterCalcRel</code> is an iterator implementation of a combination of
  * {@link ProjectRel} above an optional {@link FilterRel}.  It takes an
@@ -93,7 +92,7 @@ public class IterCalcRel extends ProjectRelBase implements JavaRel
     }
 
     // TODO jvs 10-May-2004: need a computeSelfCost which takes condition into
-    // account; maybe inherit from a new CalcRelBase?
+    // account; maybe inherit from CalcRelBase?
     public void explain(RelOptPlanWriter pw)
     {
         if (condition == null) {
@@ -115,7 +114,7 @@ public class IterCalcRel extends ProjectRelBase implements JavaRel
             (condition == null) ? null : RexUtil.clone(condition),
             Util.clone(fieldNames),
             getFlags());
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 

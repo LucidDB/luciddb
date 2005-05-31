@@ -80,7 +80,7 @@ public class FennelPullCalcRel extends FennelCalcRel implements FennelPullRel
             rowType,
             RexUtil.clone(getProjectExprs()),
             clonedConditionExpr);
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 

@@ -24,7 +24,7 @@ import net.sf.saffron.core.ImplementableTable;
 import openjava.ptree.ParseTree;
 
 import org.eigenbase.oj.rel.*;
-import org.eigenbase.rel.TableAccessRel;
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptConnection;
@@ -35,7 +35,8 @@ import org.eigenbase.util.Util;
 /**
  * Implements the {@link TableAccessRel} relational expression in Java code.
  */
-public class JavaTableAccessRel extends TableAccessRel implements JavaLoopRel
+public class JavaTableAccessRel
+    extends TableAccessRelBase implements JavaLoopRel
 {
     public JavaTableAccessRel(
         RelOptCluster cluster,

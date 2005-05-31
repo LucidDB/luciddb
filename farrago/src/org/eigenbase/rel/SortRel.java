@@ -36,7 +36,7 @@ import org.eigenbase.rex.RexNode;
  * Relational expression which imposes a
  * particular sort order on its input without otherwise changing its content.
  */
-public class SortRel extends SingleRel
+public final class SortRel extends SingleRel
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -80,7 +80,7 @@ public class SortRel extends SingleRel
             cluster,
             RelOptUtil.clone(child),
             collations);
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 
@@ -90,8 +90,6 @@ public class SortRel extends SingleRel
     }
 
     /**
-     * .
-     *
      * @return array of RelFieldCollations, from most significant to least
      * significant
      */

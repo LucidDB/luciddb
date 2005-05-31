@@ -47,7 +47,7 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class MedMockIterRel extends TableAccessRel implements JavaRel
+class MedMockIterRel extends TableAccessRelBase implements JavaRel
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -95,7 +95,7 @@ class MedMockIterRel extends TableAccessRel implements JavaRel
     {
         MedMockIterRel clone =
             new MedMockIterRel(columnSet, cluster, connection);
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 }

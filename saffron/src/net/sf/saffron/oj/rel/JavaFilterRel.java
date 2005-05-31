@@ -25,8 +25,7 @@ import openjava.ptree.ParseTree;
 import openjava.ptree.StatementList;
 
 import org.eigenbase.oj.rel.*;
-import org.eigenbase.rel.FilterRel;
-import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptUtil;
@@ -39,7 +38,7 @@ import org.eigenbase.util.Util;
 /**
  * Implements the {@link FilterRel} relational expression in Java code.
  */
-public class JavaFilterRel extends FilterRel implements JavaLoopRel
+public class JavaFilterRel extends FilterRelBase implements JavaLoopRel
 {
     public JavaFilterRel(
         RelOptCluster cluster,
@@ -57,7 +56,7 @@ public class JavaFilterRel extends FilterRel implements JavaLoopRel
             cluster,
             RelOptUtil.clone(child),
             RexUtil.clone(condition));
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 
