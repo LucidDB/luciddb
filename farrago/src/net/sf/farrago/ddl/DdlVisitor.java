@@ -89,6 +89,11 @@ public class DdlVisitor
     }
 
     // visitor dispatch
+    public void visit(DdlSetParamStmt stmt)
+    {
+    }
+
+    // visitor dispatch
     public void visit(DdlSetSystemParamStmt stmt)
     {
     }
