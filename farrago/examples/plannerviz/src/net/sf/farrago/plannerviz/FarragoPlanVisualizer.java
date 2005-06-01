@@ -344,7 +344,7 @@ public class FarragoPlanVisualizer
     public void ruleAttempted(RuleAttemptedEvent event)
     {
         if (event.isBefore()) {
-            ruleName = event.getRuleCall().rule.toString();
+            ruleName = event.getRuleCall().getRule().toString();
         } else {
             ruleName = null;
         }
@@ -391,8 +391,8 @@ public class FarragoPlanVisualizer
             return;
         }
         setStatus(
-            "Rule " + event.getRuleCall().rule + " " + verb + " new expression "
-            + event.getRel());
+            "Rule " + event.getRuleCall().getRule() + " " + verb
+            + " new expression " + event.getRel());
         updateGraph();
         highlightRuleVertices(event);
         waitForInput();
