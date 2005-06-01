@@ -74,8 +74,8 @@ public final class ProjectRel extends ProjectRelBase
     public Object clone()
     {
         ProjectRel clone = new ProjectRel(
-            cluster,
-            RelOptUtil.clone(child),
+            getCluster(),
+            RelOptUtil.clone(getChild()),
             RexUtil.clone(exps),
             Util.clone(fieldNames),
             getFlags());

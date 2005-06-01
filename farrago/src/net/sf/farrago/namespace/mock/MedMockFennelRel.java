@@ -97,7 +97,7 @@ class MedMockFennelRel extends TableAccessRelBase implements FennelPullRel
     public Object clone()
     {
         MedMockFennelRel clone =
-            new MedMockFennelRel(columnSet, cluster, connection);
+            new MedMockFennelRel(columnSet, getCluster(), connection);
         clone.inheritTraitsFrom(this);
         return clone;
     }

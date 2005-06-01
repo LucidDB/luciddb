@@ -2308,7 +2308,7 @@ public class FarragoJdbcTest extends FarragoTestCase
         public static final int VALID = 0;
         public static final int INVALID = 1;
         public static final int OUTOFRANGE = 2;
-        public static String [] validityName =
+        public static final String [] validityName =
         { "valid", "invalid", "outofrange" };
         private final int ordinal;
         private final String string;

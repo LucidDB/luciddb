@@ -60,7 +60,7 @@ public class SqlThrowOperator extends SqlInternalOperator
         int leftPrec,
         int rightPrec)
     {
-        writer.print(name);
+        writer.print(getName());
         writer.print("(");
         operands[0].unparse(writer, 0, 0);
         writer.print(")");

@@ -83,7 +83,7 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
     public Object clone()
     {
         ResultSetToFarragoIteratorConverter clone =
-            new ResultSetToFarragoIteratorConverter(cluster, child);
+            new ResultSetToFarragoIteratorConverter(getCluster(), getChild());
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -95,7 +95,7 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
             (FarragoRelImplementor) implementor;
 
         Expression childObj =
-            implementor.visitJavaChild(this, 0, (ResultSetRel) child);
+            implementor.visitJavaChild(this, 0, (ResultSetRel) getChild());
 
         StatementList methodBody = new StatementList();
 
@@ -119,7 +119,7 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
         OJClass rowClass = OJUtil.typeToOJClass(rowType,factory);
 
         JavaRexBuilder javaRexBuilder =
-            (JavaRexBuilder) getCluster().rexBuilder;
+            (JavaRexBuilder) getCluster().getRexBuilder();
 
         MemberDeclarationList memberList = new MemberDeclarationList();
 
@@ -145,7 +145,8 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
                 rhsExp =
                     new MethodCall(castResultSet, "getObject", colPosExpList);
             }
-            RexNode rhs = javaRexBuilder.makeJava(getCluster().env, rhsExp);
+            RexNode rhs = javaRexBuilder.makeJava(
+                getCluster().getEnv(), rhsExp);
             rhs = javaRexBuilder.makeAbstractCast(
                     field.getType(),
                     rhs);

@@ -66,7 +66,7 @@ class FennelCartesianProductRel extends FennelPullDoubleRel
     public Object clone()
     {
         FennelCartesianProductRel clone = new FennelCartesianProductRel(
-            cluster,
+            getCluster(),
             RelOptUtil.clone(left),
             RelOptUtil.clone(right),
             joinType);
@@ -107,7 +107,7 @@ class FennelCartesianProductRel extends FennelPullDoubleRel
     protected RelDataType deriveRowType()
     {
         return JoinRel.deriveJoinRowType(
-            left, right, joinType, cluster.typeFactory);
+            left, right, joinType, getCluster().getTypeFactory());
     }
 
     // implement FennelRel

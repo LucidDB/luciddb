@@ -124,7 +124,7 @@ class FtrsIndexScanRel extends TableAccessRelBase implements FennelPullRel
     {
         FtrsIndexScanRel clone =
             new FtrsIndexScanRel(
-                cluster, ftrsTable, index, connection, projectedColumns,
+                getCluster(), ftrsTable, index, connection, projectedColumns,
                 isOrderPreserving);
         clone.inheritTraitsFrom(this);
         return clone;
@@ -147,7 +147,7 @@ class FtrsIndexScanRel extends TableAccessRelBase implements FennelPullRel
             return flattenedRowType;
         } else {
             final RelDataTypeField [] fields = flattenedRowType.getFields();
-            return cluster.typeFactory.createStructType(
+            return getCluster().getTypeFactory().createStructType(
                 new RelDataTypeFactory.FieldInfo() {
                     public int getFieldCount()
                     {

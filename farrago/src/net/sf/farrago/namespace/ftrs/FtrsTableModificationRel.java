@@ -90,17 +90,17 @@ class FtrsTableModificationRel extends TableModificationRelBase
     // implement FennelRel
     public FarragoTypeFactory getFarragoTypeFactory()
     {
-        return (FarragoTypeFactory) cluster.typeFactory;
+        return (FarragoTypeFactory) getCluster().getTypeFactory();
     }
 
     // implement Cloneable
     public Object clone()
     {
         FtrsTableModificationRel clone = new FtrsTableModificationRel(
-            cluster,
+            getCluster(),
             ftrsTable,
             getConnection(),
-            RelOptUtil.clone(child),
+            RelOptUtil.clone(getChild()),
             getOperation(),
             getUpdateColumnList());
         clone.inheritTraitsFrom(this);
@@ -117,7 +117,7 @@ class FtrsTableModificationRel extends TableModificationRelBase
     // implement FennelRel
     public Object implementFennelChild(FennelRelImplementor implementor)
     {
-        return implementor.visitChild(this, 0, child);
+        return implementor.visitChild(this, 0, getChild());
     }
 
     private List getUpdateCwmColumnList()
@@ -139,7 +139,7 @@ class FtrsTableModificationRel extends TableModificationRelBase
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FemExecutionStreamDef input =
-            implementor.visitFennelChild((FennelRel) child);
+            implementor.visitFennelChild((FennelRel) getChild());
         FarragoTypeFactory typeFactory = getFarragoTypeFactory();
         if (!(ftrsTable.getCwmColumnSet() instanceof CwmTable)) {
             // e.g. view update
@@ -299,7 +299,7 @@ class FtrsTableModificationRel extends TableModificationRelBase
                 FennelRelUtil.createTupleDescriptorFromRowType(
                     repos,
                     getFarragoTypeFactory(),
-                    child.getRowType()));
+                    getChild().getRowType()));
 
             buffer.getInput().add(input);
 

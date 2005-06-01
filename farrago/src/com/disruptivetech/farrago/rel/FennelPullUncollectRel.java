@@ -67,7 +67,7 @@ public class FennelPullUncollectRel extends FennelSingleRel
             repos.newFemUncollectTupleStreamDef();
 
         uncollectStream.getInput().add(
-            implementor.visitFennelChild((FennelRel) child));
+            implementor.visitFennelChild((FennelRel) getChild()));
 
         return uncollectStream;
     }
@@ -75,7 +75,8 @@ public class FennelPullUncollectRel extends FennelSingleRel
     // override Object (public, does not throw CloneNotSupportedException)
     public Object clone() {
         FennelPullUncollectRel clone =
-            new FennelPullUncollectRel(cluster, RelOptUtil.clone(child));
+            new FennelPullUncollectRel(
+                getCluster(), RelOptUtil.clone(getChild()));
         clone.inheritTraitsFrom(this);
         return clone;
     }

@@ -59,8 +59,8 @@ public class JavaProjectRel extends ProjectRelBase implements JavaLoopRel,
     public Object clone()
     {
         JavaProjectRel clone = new JavaProjectRel(
-            cluster,
-            RelOptUtil.clone(child),
+            getCluster(),
+            RelOptUtil.clone(getChild()),
             RexUtil.clone(exps),
             Util.clone(fieldNames),
             getFlags());
@@ -71,7 +71,7 @@ public class JavaProjectRel extends ProjectRelBase implements JavaLoopRel,
     // implement RelNode
     public ParseTree implement(JavaRelImplementor implementor)
     {
-        return implementor.visitJavaChild(this, 0, (JavaRel) child);
+        return implementor.visitJavaChild(this, 0, (JavaRel) getChild());
     }
 
     public void implementJavaParent(

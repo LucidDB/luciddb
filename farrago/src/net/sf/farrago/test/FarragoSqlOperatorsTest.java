@@ -99,13 +99,13 @@ public class FarragoSqlOperatorsTest extends FarragoTestCase
         Iterator operatorsIt = new SqlOperatorIterator();
         while (operatorsIt.hasNext()) {
             SqlOperator op = (SqlOperator) operatorsIt.next();
-            String testName = "SQL-TESTER-" + op.name + "-";
+            String testName = "SQL-TESTER-" + op.getName() + "-";
             if (!vm.canImplement(op)) {
                 continue;
             }
             suite.addTest(
                 new FarragoSqlOperatorsTest(vm,
-                    op, testName + vm.name));
+                    op, testName + vm.getName()));
         }
     }
 
@@ -160,7 +160,7 @@ public class FarragoSqlOperatorsTest extends FarragoTestCase
                     // check that query really contains a call to the operator we
                     // are looking at
                     String queryCmp = query.toUpperCase();
-                    String opNameCmp = operator.name.toUpperCase();
+                    String opNameCmp = operator.getName().toUpperCase();
                     if (queryCmp.indexOf(opNameCmp) < 0) {
                         fail("Not exercising operator <" + operator + "> "
                             + "with the query <" + query + ">");

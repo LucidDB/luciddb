@@ -72,10 +72,10 @@ public abstract class SqlSyntax extends EnumeratedValues.BasicValue
                 SqlNode[] operands, int leftPrec, int rightPrec)
             {
                 assert(operands.length == 1);
-                writer.print(operator.name);
+                writer.print(operator.getName());
                 writer.print(' ');
-                operands[0].unparse(writer, operator.leftPrec,
-                    operator.rightPrec);
+                operands[0].unparse(writer, operator.getLeftPrec(),
+                    operator.getRightPrec());
             }
         };
     public static final int Postfix_ordinal = 3;
@@ -87,10 +87,10 @@ public abstract class SqlSyntax extends EnumeratedValues.BasicValue
                 SqlNode[] operands, int leftPrec, int rightPrec)
             {
                 assert(operands.length == 1);
-                operands[0].unparse(writer, operator.leftPrec,
-                    operator.rightPrec);
+                operands[0].unparse(writer, operator.getLeftPrec(),
+                    operator.getRightPrec());
                 writer.print(' ');
-                writer.print(operator.name);
+                writer.print(operator.getName());
             }
         };
     public static final int Special_ordinal = 4;

@@ -36,63 +36,74 @@ import org.eigenbase.sql.*;
  */
 public class SqlBasicVisitor implements SqlVisitor
  {
-    /**
-     * Used to keep track of the current SqlNode parent of a visiting node.
-     * A value of null mean no parent.
-     * NOTE: In case of extending SqlBasicVisitor, remember that
-     * parent value might not be set depending on if and how
-     * visit(SqlCall) and visit(SqlNodeList) is implemented.
-     */
-    public SqlNode currentParent = null;
-    /**
-     *  Only valid if currentParrent is a SqlCall or SqlNodeList
-     *  Describes the offset within the parent
-     */
-    public Integer currentOffset = null;
+     /**
+      * Used to keep track of the current SqlNode parent of a visiting node.
+      * A value of null mean no parent.
+      * NOTE: In case of extending SqlBasicVisitor, remember that
+      * parent value might not be set depending on if and how
+      * visit(SqlCall) and visit(SqlNodeList) is implemented.
+      */
+     protected SqlNode currentParent = null;
+     
+     /**
+      *  Only valid if currentParrent is a SqlCall or SqlNodeList
+      *  Describes the offset within the parent
+      */
+     protected Integer currentOffset = null;
 
-    public void visit(SqlLiteral literal)
-    {
-    }
+     public SqlNode getCurrentParent()
+     {
+         return currentParent;
+     }
 
-    public void visit(SqlCall call)
-    {
-        call.operator.acceptCall(this, call);
-    }
+     public Integer getCurrentOffset()
+     {
+         return currentOffset;
+     }
+     
+     public void visit(SqlLiteral literal)
+     {
+     }
 
-    public void visit(SqlNodeList nodeList)
-    {
-        for (int i = 0; i < nodeList.size(); i++) {
-            currentParent = nodeList;
-            currentOffset = new Integer(i);
-            SqlNode node = nodeList.get(i);
-            node.accept(this);
-        }
-        currentParent = null;
-    }
+     public void visit(SqlCall call)
+     {
+         call.getOperator().acceptCall(this, call);
+     }
 
-    public void visit(SqlIdentifier id)
-    {
-    }
+     public void visit(SqlNodeList nodeList)
+     {
+         for (int i = 0; i < nodeList.size(); i++) {
+             currentParent = nodeList;
+             currentOffset = new Integer(i);
+             SqlNode node = nodeList.get(i);
+             node.accept(this);
+         }
+         currentParent = null;
+     }
 
-    public void visit(SqlDataTypeSpec type)
-    {
-    }
+     public void visit(SqlIdentifier id)
+     {
+     }
 
-    public void visit(SqlDynamicParam param)
-    {
-    }
+     public void visit(SqlDataTypeSpec type)
+     {
+     }
 
-    public void visit(SqlIntervalQualifier intervalQualifier)
-    {
-    }
+     public void visit(SqlDynamicParam param)
+     {
+     }
 
-    public void visitChild(SqlNode parent, int ordinal, SqlNode child)
-    {
-        currentParent = parent;
-        currentOffset = new Integer(ordinal);
-        child.accept(this);
-        currentParent = null;
-    }
+     public void visit(SqlIntervalQualifier intervalQualifier)
+     {
+     }
+
+     public void visitChild(SqlNode parent, int ordinal, SqlNode child)
+     {
+         currentParent = parent;
+         currentOffset = new Integer(ordinal);
+         child.accept(this);
+         currentParent = null;
+     }
 }
 
 // End SqlBasicVisitor.java

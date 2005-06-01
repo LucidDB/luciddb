@@ -118,7 +118,7 @@ public class SqlKind extends EnumeratedValues.BasicValue
 
     public static final int OverORDINAL = 16;
     /** Over */
-    public static SqlKind Over = new SqlKind("Over", OverORDINAL);
+    public static final SqlKind Over = new SqlKind("Over", OverORDINAL);
 
     public static final int WindowORDINAL = 17;
     /** Window specification */

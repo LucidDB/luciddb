@@ -94,7 +94,7 @@ public class RexTransformer
 
         if (node instanceof RexCall) {
             RexCall call = (RexCall) node;
-            return !transformableOperators.contains(call.op)
+            return !transformableOperators.contains(call.getOperator())
                 && isNullable(node);
         }
         return isNullable(node);
@@ -176,7 +176,7 @@ public class RexTransformer
                 return call.operands[0];
             }
 
-            if (transformableOperators.contains(call.op)) {
+            if (transformableOperators.contains(call.getOperator())) {
                 assert (2 == call.operands.length);
                 RexNode isNotNullOne = null;
                 RexNode isNotNullTwo = null;

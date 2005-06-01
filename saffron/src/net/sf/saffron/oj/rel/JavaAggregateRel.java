@@ -106,14 +106,15 @@ public class JavaAggregateRel extends AggregateRelBase implements JavaLoopRel
     public Object clone()
     {
         JavaAggregateRel clone =
-            new JavaAggregateRel(cluster, child, groupCount, aggCalls);
+            new JavaAggregateRel(
+                getCluster(), getChild(), groupCount, aggCalls);
         clone.inheritTraitsFrom(this);
         return clone;
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        double dRows = child.getRows();
+        double dRows = getChild().getRows();
         double 
         // reflects memory cost also
         dCpu = Util.nLogN(dRows) + (aggCalls.length * 4);
@@ -155,7 +156,8 @@ public class JavaAggregateRel extends AggregateRelBase implements JavaLoopRel
                 new AllocationExpression(
                     new TypeName("java.util.HashMap"),
                     null)));
-        Expression o = implementor.visitJavaChild(this, 0, (JavaRel) child);
+        Expression o = implementor.visitJavaChild(
+            this, 0, (JavaRel) getChild());
         assert (o == null);
         stmtList.add(
             new VariableDeclaration(

@@ -164,8 +164,8 @@ public abstract class JoinRelBase extends AbstractRelNode
 
     protected RelDataType deriveRowType()
     {
-        return deriveJoinRowType(left, right, joinType, cluster.typeFactory);
-
+        return deriveJoinRowType(
+            left, right, joinType, getCluster().getTypeFactory());
     }
 
     public static RelDataType deriveJoinRowType(RelNode left,

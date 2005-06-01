@@ -47,7 +47,8 @@ public class MapToExistsConvertlet extends JavaConvertlet
         ConverterRel converter)
     {
         Expression exp =
-            implementor.visitJavaChild(converter, 0, (JavaRel) converter.child);
+            implementor.visitJavaChild(
+                converter, 0, (JavaRel) converter.getChild());
         return new UnaryExpression(
             UnaryExpression.NOT,
             new MethodCall(

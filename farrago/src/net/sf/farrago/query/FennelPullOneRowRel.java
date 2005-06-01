@@ -59,14 +59,14 @@ public class FennelPullOneRowRel extends AbstractRelNode implements FennelPullRe
     // override Object
     public Object clone()
     {
-        FennelPullOneRowRel clone = new FennelPullOneRowRel(cluster);
+        FennelPullOneRowRel clone = new FennelPullOneRowRel(getCluster());
         clone.inheritTraitsFrom(this);
         return clone;
     }
 
     protected RelDataType deriveRowType()
     {
-        return OneRowRel.deriveOneRowType(cluster.typeFactory);
+        return OneRowRel.deriveOneRowType(getCluster().getTypeFactory());
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)

@@ -67,7 +67,7 @@ public class SqlBinaryOperator extends SqlOperator
 
     boolean needsSpace()
     {
-        return !name.equals(".");
+        return !getName().equals(".");
     }
 }
 

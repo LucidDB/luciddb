@@ -76,27 +76,27 @@ public abstract class SqlOperator
     /**
      * The name of the operator/function. Ex. "OVERLAY" or "TRIM"
      */
-    public final String name;
+    private final String name;
 
     /**
      * See {@link SqlKind}. It's possible to have a name that doesn't match
      * the kind
      */
-    public final SqlKind kind;
+    private final SqlKind kind;
 
     /**
      * The precedence with which this operator binds to the expression to the
      * left. This is less than the right precedence if the operator is
      * left-associative.
      */
-    public final int leftPrec;
+    private final int leftPrec;
 
     /**
      * The precedence with which this operator binds to the expression to the
      * right. This is more than the left precedence if the operator is
      * left-associative.
      */
-    public final int rightPrec;
+    private final int rightPrec;
 
     /** used to get the return type of operator/function */
     private final ReturnTypeInference returnTypeInference;
@@ -169,9 +169,29 @@ public abstract class SqlOperator
         throw Util.needToImplement(this);
     }
 
+    public String getName()
+    {
+        return name;
+    }
+
+    public SqlKind getKind()
+    {
+        return kind;
+    }
+
     public String toString()
     {
         return name;
+    }
+
+    public int getLeftPrec()
+    {
+        return leftPrec;
+    }
+
+    public int getRightPrec()
+    {
+        return rightPrec;
     }
 
     /**
@@ -354,7 +374,7 @@ public abstract class SqlOperator
         SqlValidatorScope scope,
         SqlValidatorScope operandScope)
     {
-        assert call.operator == this;
+        assert call.getOperator() == this;
         final SqlNode[] operands = call.getOperands();
         for (int i = 0; i < operands.length; i++) {
             operands[i].validateExpr(validator, operandScope);
@@ -466,7 +486,7 @@ public abstract class SqlOperator
         SqlCall call)
     {
         OperandsCountDescriptor od =
-            call.operator.getOperandsCountDescriptor();
+            call.getOperator().getOperandsCountDescriptor();
         if (!od.isVariadic()
                 && !od.getPossibleNumOfOperands().contains(
                     new Integer(call.operands.length))) {

@@ -92,6 +92,11 @@ public class RelCrossType extends RelDataTypeImpl
             "not applicable to a join type");
     }
 
+    public RelDataType [] getTypes()
+    {
+        return types;
+    }
+
     protected void generateTypeString(StringBuffer sb, boolean withDetail)
     {
         sb.append("CrossType(");

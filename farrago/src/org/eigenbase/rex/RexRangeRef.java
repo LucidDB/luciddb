@@ -55,7 +55,7 @@ public class RexRangeRef extends RexNode
     //~ Instance fields -------------------------------------------------------
 
     private final RelDataType type;
-    public final int offset;
+    private final int offset;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -77,6 +77,11 @@ public class RexRangeRef extends RexNode
     public RelDataType getType()
     {
         return type;
+    }
+
+    public int getOffset()
+    {
+        return offset;
     }
 
     public Object clone()

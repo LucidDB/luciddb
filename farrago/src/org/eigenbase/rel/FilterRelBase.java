@@ -35,7 +35,7 @@ public abstract class FilterRelBase extends SingleRel
 {
     //~ Instance fields -------------------------------------------------------
 
-    public final RexNode condition;
+    private final RexNode condition;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -66,10 +66,15 @@ public abstract class FilterRelBase extends SingleRel
         return new RexNode [] { condition };
     }
 
+    public RexNode getCondition()
+    {
+        return condition;
+    }
+
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         double dRows = getRows();
-        double dCpu = child.getRows();
+        double dCpu = getChild().getRows();
         double dIo = 0;
         return planner.makeCost(dRows, dCpu, dIo);
     }
@@ -77,7 +82,7 @@ public abstract class FilterRelBase extends SingleRel
     // override RelNode
     public double getRows()
     {
-        return child.getRows() * RexUtil.getSelectivity(condition);
+        return getChild().getRows() * RexUtil.getSelectivity(condition);
     }
 
     public void explain(RelOptPlanWriter pw)

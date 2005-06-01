@@ -171,7 +171,7 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
     // override VolcanoPlanner
     public JavaRelImplementor getJavaRelImplementor(RelNode rel)
     {
-        return stmt.getRelImplementor(rel.getCluster().rexBuilder);
+        return stmt.getRelImplementor(rel.getCluster().getRexBuilder());
     }
 }
 

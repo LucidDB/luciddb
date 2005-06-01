@@ -60,7 +60,7 @@ public abstract class AggregateRelBase extends SingleRel
     public boolean isDistinct()
     {
         return (aggCalls.length == 0)
-            && (groupCount == child.getRowType().getFieldList().size());
+            && (groupCount == getChild().getRowType().getFieldList().size());
     }
 
     public Call [] getAggCalls()
@@ -97,17 +97,18 @@ public abstract class AggregateRelBase extends SingleRel
 
     protected RelDataType deriveRowType()
     {
-        final RelDataType childType = child.getRowType();
+        final RelDataType childType = getChild().getRowType();
         RelDataType [] types = new RelDataType[groupCount + aggCalls.length];
         for (int i = 0; i < groupCount; i++) {
             types[i] = childType.getFields()[i].getType();
         }
         for (int i = 0; i < aggCalls.length; i++) {
             final RelDataType returnType =
-                aggCalls[i].aggregation.getReturnType(cluster.typeFactory);
+                aggCalls[i].aggregation.getReturnType(
+                    getCluster().getTypeFactory());
             types[groupCount + i] = returnType;
         }
-        return cluster.typeFactory.createStructType(
+        return getCluster().getTypeFactory().createStructType(
             new RelDataTypeFactory.FieldInfo() {
                 public int getFieldCount()
                 {
@@ -129,7 +130,8 @@ public abstract class AggregateRelBase extends SingleRel
                         return childType.getFields()[index].getType();
                     } else {
                         final Call aggCall = aggCalls[index - groupCount];
-                        return aggCall.aggregation.getReturnType(cluster.typeFactory);
+                        return aggCall.aggregation.getReturnType(
+                            getCluster().getTypeFactory());
                     }
                 }
             });
@@ -139,9 +141,9 @@ public abstract class AggregateRelBase extends SingleRel
 
     public static class Call
     {
-        public final Aggregation aggregation;
+        private final Aggregation aggregation;
         public final int [] args;
-        public final RelDataType type;
+        private final RelDataType type;
 
         public Call(
             Aggregation aggregation,

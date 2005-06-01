@@ -189,7 +189,7 @@ public class SqlWindowOperator extends SqlOperator {
         SqlValidatorScope scope,
         SqlValidatorScope operandScope)
     {
-        assert call.operator == this;
+        assert call.getOperator() == this;
         SqlNode [] operands = call.operands;
         SqlIdentifier refName =
                 (SqlIdentifier) operands[SqlWindow.RefName_OPERAND];

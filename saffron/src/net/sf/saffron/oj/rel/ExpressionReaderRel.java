@@ -135,7 +135,7 @@ public class ExpressionReaderRel extends AbstractRelNode implements JavaRel
     {
         super(cluster, new RelTraitSet(chooseConvention(cluster, exp)));
         if (rowType != null) {
-            exp = cluster.rexBuilder.makeCast(
+            exp = cluster.getRexBuilder().makeCast(
                     cluster.getTypeFactory().createArrayType(rowType, -1),
                     exp);
         }
@@ -162,7 +162,7 @@ public class ExpressionReaderRel extends AbstractRelNode implements JavaRel
     public Object clone()
     {
         return new ExpressionReaderRel(
-            cluster,
+            getCluster(),
             RexUtil.clone(exp),
             rowType);
     }
@@ -198,7 +198,7 @@ public class ExpressionReaderRel extends AbstractRelNode implements JavaRel
         }
         distinct = isDistinct(exp);
         if (false) {
-            return cluster.typeFactory.createStructType(
+            return getCluster().getTypeFactory().createStructType(
                 new RelDataType [] { componentType },
                 new String [] { "$f0" });
         } else {
@@ -210,13 +210,14 @@ public class ExpressionReaderRel extends AbstractRelNode implements JavaRel
     {
         final RelDataType type = exp.getType();
         final OJClass ojClass =
-            ((OJTypeFactory) cluster.typeFactory).toOJClass(null, type);
+            ((OJTypeFactory) getCluster().getTypeFactory()).toOJClass(
+                null, type);
         if (Util.clazzSet.isAssignableFrom(ojClass)) {
             return true;
         } else if (exp instanceof JavaRowExpression
-                && ((JavaRowExpression) exp).expression instanceof ArrayAllocationExpression) {
+            && ((JavaRowExpression) exp).getExpression() instanceof ArrayAllocationExpression) {
             ArrayAllocationExpression arrayAlloc =
-                (ArrayAllocationExpression) ((JavaRowExpression) exp).expression;
+                (ArrayAllocationExpression) ((JavaRowExpression) exp).getExpression();
             return isDistinct(arrayAlloc);
         } else {
             return false;

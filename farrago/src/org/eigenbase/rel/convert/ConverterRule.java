@@ -47,11 +47,11 @@ public abstract class ConverterRule extends RelOptRule
 {
     //~ Instance fields -------------------------------------------------------
 
-    public final RelTraitSet inTraits;
-    public final RelTraitSet outTraits;
+    private final RelTraitSet inTraits;
+    private final RelTraitSet outTraits;
 
     /** The RelTraitDef of traits that this ConverterRule applies to. */
-    public final RelTraitDef traitDef;
+    private final RelTraitDef traitDef;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -182,8 +182,8 @@ public abstract class ConverterRule extends RelOptRule
             // on the same RelTraitDef -- otherwise we get
             // an n^2 effect.
             if (rel instanceof ConverterRel) {
-                if (((ConverterRule)rule).getTraitDef() ==
-                    ((ConverterRel)rel).traitDef) {
+                if (((ConverterRule)getRule()).getTraitDef() ==
+                    ((ConverterRel)rel).getTraitDef()) {
                     return false;
                 }
             }

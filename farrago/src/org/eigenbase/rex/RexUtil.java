@@ -153,7 +153,7 @@ public class RexUtil
     {
         if (node instanceof RexLiteral) {
             RexLiteral literal = (RexLiteral) node;
-            if (literal.typeName == SqlTypeName.Null) {
+            if (literal.getTypeName() == SqlTypeName.Null) {
                 assert (null == literal.getValue());
                 return true;
             } else {
@@ -200,7 +200,7 @@ public class RexUtil
             RexShuttle shuttle = new RexShuttle() {
                 public RexNode visit(RexCall call)
                 {
-                    if (call.op.equals(operator)) {
+                    if (call.getOperator().equals(operator)) {
                         throw new Util.FoundOne(call);
                     }
                     return super.visit(call);
@@ -237,7 +237,7 @@ public class RexUtil
         Integer[] orderKeys = new Integer[rexNodes.length];
         for (int i = 0; i < orderKeys.length; i++) {
             RexInputRef inputRef = (RexInputRef) rexNodes[i];
-            orderKeys[i] = new Integer(inputRef.index);
+            orderKeys[i] = new Integer(inputRef.getIndex());
         }
         return orderKeys;
     }

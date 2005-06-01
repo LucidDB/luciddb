@@ -43,7 +43,7 @@ public class SqlCall extends SqlNode
 {
     //~ Instance fields -------------------------------------------------------
 
-    public SqlOperator operator;
+    private SqlOperator operator;
     public final SqlNode [] operands;
 
     //~ Constructors ----------------------------------------------------------
@@ -62,12 +62,12 @@ public class SqlCall extends SqlNode
 
     public boolean isA(SqlKind kind)
     {
-        return operator.kind.isA(kind);
+        return operator.getKind().isA(kind);
     }
 
     public SqlKind getKind()
     {
-        return operator.kind;
+        return operator.getKind();
     }
 
     // REVIEW jvs 10-Sept-2003:  I added this to allow for some rewrite by
@@ -77,6 +77,16 @@ public class SqlCall extends SqlNode
         SqlNode operand)
     {
         operands[i] = operand;
+    }
+
+    public void setOperator(SqlOperator operator)
+    {
+        this.operator = operator;
+    }
+
+    public SqlOperator getOperator()
+    {
+        return operator;
     }
 
     public SqlNode [] getOperands()
@@ -96,8 +106,8 @@ public class SqlCall extends SqlNode
         int leftPrec,
         int rightPrec)
     {
-        if ((leftPrec > operator.leftPrec) ||
-            (operator.rightPrec <= rightPrec) ||
+        if ((leftPrec > operator.getLeftPrec()) ||
+            (operator.getRightPrec() <= rightPrec) ||
             (SqlWriter.alwaysUseParentheses && isA(SqlKind.Expression))) {
             writer.print('(');
             operator.unparse(writer, operands, 0, 0);
@@ -160,7 +170,7 @@ public class SqlCall extends SqlNode
         SqlCall that = (SqlCall) node;
         // Compare operators by name, not identity, because they may not
         // have been resolved yet.
-        if (!this.operator.name.equals(that.operator.name)) {
+        if (!this.operator.getName().equals(that.operator.getName())) {
             return false;
         }
         if (this.operands.length != that.operands.length) {
@@ -203,7 +213,7 @@ public class SqlCall extends SqlNode
         return validator.newValidationError(
             this,
             EigenbaseResource.instance().newCanNotApplyOp2Type(
-                operator.name,
+                operator.getName(),
                 getCallSignature(validator, scope),
                 operator.getAllowedSignatures()));
     }

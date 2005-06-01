@@ -71,15 +71,15 @@ public class FennelRenameRel extends FennelSingleRel
     // implement RelNode
     public boolean isDistinct()
     {
-        return child.isDistinct();
+        return getChild().isDistinct();
     }
 
     // implement Cloneable
     public Object clone()
     {
         return new FennelRenameRel(
-            cluster,
-            RelOptUtil.clone(child),
+            getCluster(),
+            RelOptUtil.clone(getChild()),
             fieldNames,
             cloneTraits());
     }
@@ -93,8 +93,8 @@ public class FennelRenameRel extends FennelSingleRel
     // implement RelNode
     public RelDataType deriveRowType()
     {
-        final RelDataTypeField [] fields = child.getRowType().getFields();
-        return cluster.typeFactory.createStructType(
+        final RelDataTypeField [] fields = getChild().getRowType().getFields();
+        return getCluster().getTypeFactory().createStructType(
             new RelDataTypeFactory.FieldInfo() {
                 public int getFieldCount()
                 {
@@ -127,7 +127,7 @@ public class FennelRenameRel extends FennelSingleRel
     {
         // no implementation needed for the rename itself, since that is done
         // implicitly by the returned row type
-        return implementor.visitFennelChild((FennelRel) child);
+        return implementor.visitFennelChild((FennelRel) getChild());
     }
 }
 

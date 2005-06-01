@@ -51,13 +51,13 @@ public class RelOptCluster
 {
     //~ Instance fields -------------------------------------------------------
 
-    public final Environment env;
-    public final RelDataTypeFactory typeFactory;
-    public final RelOptQuery query;
-    public RelOptPlanner planner;
-    public RexNode originalExpression;
-    public final RexBuilder rexBuilder;
-    public RexToSqlTranslator rexToSqlTranslator;
+    private final Environment env;
+    private final RelDataTypeFactory typeFactory;
+    private final RelOptQuery query;
+    private RelOptPlanner planner;
+    private RexNode originalExpression;
+    private final RexBuilder rexBuilder;
+    private RexToSqlTranslator rexToSqlTranslator;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -86,9 +86,29 @@ public class RelOptCluster
 
     //~ Methods ---------------------------------------------------------------
 
+    public Environment getEnv()
+    {
+        return env;
+    }
+
+    public RelOptQuery getQuery()
+    {
+        return query;
+    }
+
+    public RexToSqlTranslator getRexToSqlTranslator()
+    {
+        return rexToSqlTranslator;
+    }
+    
     public RexNode getOriginalExpression()
     {
         return originalExpression;
+    }
+
+    public void setOriginalExpression(RexNode originalExpression)
+    {
+        this.originalExpression = originalExpression;
     }
 
     public RelOptPlanner getPlanner()

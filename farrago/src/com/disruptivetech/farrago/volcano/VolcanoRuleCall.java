@@ -58,7 +58,7 @@ public class VolcanoRuleCall extends RelOptRuleCall
         VolcanoPlanner planner,
         RelOptRuleOperand operand)
     {
-        this(planner, operand, new RelNode[operand.rule.operands.length]);
+        this(planner, operand, new RelNode[operand.getRule().operands.length]);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -72,7 +72,7 @@ public class VolcanoRuleCall extends RelOptRuleCall
                 return;
             }
 
-            if (rel instanceof RelSubset || planner.isRegistered(rel)) {
+            if (rel instanceof RelSubset || getPlanner().isRegistered(rel)) {
                 return;
             }
 
@@ -81,10 +81,10 @@ public class VolcanoRuleCall extends RelOptRuleCall
             RelTraitSet rels0Traits = rels[0].getTraits();
 
             RelOptUtil.go(
-                new TraitPropagationVisitor(planner, rels0Traits), rel);
+                new TraitPropagationVisitor(getPlanner(), rels0Traits), rel);
 
             if (tracer.isLoggable(Level.FINEST)) {
-                tracer.finest("Rule " + rule + " arguments "
+                tracer.finest("Rule " + getRule() + " arguments "
                     + RelOptUtil.toString(rels) + " created " + rel);
             }
 
@@ -98,7 +98,7 @@ public class VolcanoRuleCall extends RelOptRuleCall
                 volcanoPlanner.listener.ruleProductionSucceeded(event);
             }
             
-            Util.discard(planner.register(rel, rels[0]));
+            Util.discard(getPlanner().register(rel, rels[0]));
             
             if (volcanoPlanner.listener != null) {
                 RelOptListener.RuleProductionEvent event =
@@ -112,7 +112,7 @@ public class VolcanoRuleCall extends RelOptRuleCall
             
         } catch (Throwable e) {
             throw Util.newInternal(e,
-                "Error occurred while applying rule " + rule);
+                "Error occurred while applying rule " + getRule());
         }
     }
 
@@ -123,7 +123,7 @@ public class VolcanoRuleCall extends RelOptRuleCall
     {
         try {
             if (tracer.isLoggable(Level.FINEST)) {
-                tracer.finest("Apply rule [" + rule + "] to ["
+                tracer.finest("Apply rule [" + getRule() + "] to ["
                     + RelOptUtil.toString(rels) + "]");
             }
             
@@ -137,7 +137,7 @@ public class VolcanoRuleCall extends RelOptRuleCall
                 volcanoPlanner.listener.ruleAttempted(event);
             }
             
-            rule.onMatch(this);
+            getRule().onMatch(this);
             
             if (volcanoPlanner.listener != null) {
                 RelOptListener.RuleAttemptedEvent event =
@@ -150,13 +150,8 @@ public class VolcanoRuleCall extends RelOptRuleCall
             }
             
         } catch (Throwable e) {
-            throw Util.newInternal(e, "Error while applying rule " + rule);
+            throw Util.newInternal(e, "Error while applying rule " + getRule());
         }
-    }
-
-    RelOptRule getRule()
-    {
-        return operand0.rule;
     }
 
     /**
@@ -166,9 +161,9 @@ public class VolcanoRuleCall extends RelOptRuleCall
      */
     void match(RelNode rel)
     {
-        assert (operand0.matches(rel));
+        assert (getOperand0().matches(rel));
         final int solve = 0;
-        int operandOrdinal = operand0.solveOrder[solve];
+        int operandOrdinal = getOperand0().solveOrder[solve];
         this.rels[operandOrdinal] = rel;
         matchRecurse(solve + 1);
     }
@@ -179,24 +174,24 @@ public class VolcanoRuleCall extends RelOptRuleCall
      */
     private void matchRecurse(int solve)
     {
-        if (solve == rule.operands.length) {
+        if (solve == getRule().operands.length) {
             onMatch();
         } else {
-            int operandOrdinal = operand0.solveOrder[solve];
-            int previousOperandOrdinal = operand0.solveOrder[solve - 1];
+            int operandOrdinal = getOperand0().solveOrder[solve];
+            int previousOperandOrdinal = getOperand0().solveOrder[solve - 1];
             boolean ascending = operandOrdinal < previousOperandOrdinal;
             RelOptRuleOperand previousOperand =
-                rule.operands[previousOperandOrdinal];
-            RelOptRuleOperand operand = rule.operands[operandOrdinal];
+                getRule().operands[previousOperandOrdinal];
+            RelOptRuleOperand operand = getRule().operands[operandOrdinal];
 
             List successors;
             if (ascending) {
-                assert (previousOperand.parent == operand);
+                assert (previousOperand.getParent() == operand);
                 final RelNode childRel = rels[previousOperandOrdinal];
                 RelSet set = volcanoPlanner.getSet(childRel);
                 successors = set.getParentRels();
             } else {
-                int parentOrdinal = operand.parent.ordinalInRule;
+                int parentOrdinal = operand.getParent().ordinalInRule;
                 RelNode parentRel = rels[parentOrdinal];
                 RelNode [] inputs = parentRel.getInputs();
                 if (operand.ordinalInParent < inputs.length) {

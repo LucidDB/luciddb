@@ -42,7 +42,7 @@ public abstract class Property
     //~ Instance fields -------------------------------------------------------
 
     protected final Properties properties;
-    public final String path;
+    private final String path;
     private final String defaultValue;
 
     //~ Constructors ----------------------------------------------------------

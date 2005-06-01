@@ -53,9 +53,9 @@ public class JavaFilterRel extends FilterRelBase implements JavaLoopRel
     public Object clone()
     {
         JavaFilterRel clone = new JavaFilterRel(
-            cluster,
-            RelOptUtil.clone(child),
-            RexUtil.clone(condition));
+            getCluster(),
+            RelOptUtil.clone(getChild()),
+            RexUtil.clone(getCondition()));
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -63,7 +63,7 @@ public class JavaFilterRel extends FilterRelBase implements JavaLoopRel
     // implement RelNode
     public ParseTree implement(JavaRelImplementor implementor)
     {
-        return implementor.visitJavaChild(this, 0, (JavaRel) child);
+        return implementor.visitJavaChild(this, 0, (JavaRel) getChild());
     }
 
     public void implementJavaParent(
@@ -73,9 +73,9 @@ public class JavaFilterRel extends FilterRelBase implements JavaLoopRel
         assert ordinal == 0;
         StatementList stmtList = implementor.getStatementList();
         StatementList ifBody = new StatementList();
-        Expression condition2 = implementor.translate(this, condition);
+        Expression condition2 = implementor.translate(this, getCondition());
         stmtList.add(new IfStatement(condition2, ifBody));
-        implementor.bind(this, child);
+        implementor.bind(this, getChild());
         implementor.generateParentBody(this, ifBody);
     }
 }

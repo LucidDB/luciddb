@@ -226,9 +226,7 @@ public final class SqlParserUtil
         }
 
         assert (pp.getIndex() == s.length());
-        PrecisionTime ret = new PrecisionTime();
-        ret.cal = cal;
-        ret.precision = p;
+        PrecisionTime ret = new PrecisionTime(cal, p);
         return ret;
     }
 
@@ -340,7 +338,7 @@ public final class SqlParserUtil
                         if (null==end && timeUnitsCount>1) {
                             return null;
                         } else if ((null!=end) &&
-                            ((end.ordinal-start.ordinal+1)!=timeUnitsCount)) {
+                            ((end.getOrdinal()-start.getOrdinal()+1)!=timeUnitsCount)) {
                             return null;
                         }
                         return ret;
@@ -446,15 +444,30 @@ public final class SqlParserUtil
     }
 
     public static class ParsedCollation {
-        public final Charset charset;
-        public final Locale locale;
-        public final String strength;
+        private final Charset charset;
+        private final Locale locale;
+        private final String strength;
 
         public ParsedCollation(Charset charset, Locale locale, String strength)
         {
             this.charset = charset;
             this.locale = locale;
             this.strength = strength;
+        }
+
+        public Charset getCharset()
+        {
+            return charset;
+        }
+
+        public Locale getLocale()
+        {
+            return locale;
+        }
+
+        public String getStrength()
+        {
+            return strength;
         }
     }
 
@@ -596,13 +609,13 @@ outer:
                 SqlOperator current = ((ToTreeListItem) list.get(i)).op;
                 SqlParserPos currentPos = ((ToTreeListItem) list.get(i)).pos;
                 if ((stopperKind != SqlKind.Other)
-                        && (current.kind == stopperKind)) {
+                        && (current.getKind() == stopperKind)) {
                     break outer;
                 }
                 SqlOperator next;
                 int previousRight;
-                int left = current.leftPrec;
-                int right = current.rightPrec;
+                int left = current.getLeftPrec();
+                int right = current.getRightPrec();
                 if (left < minPrec) {
                     break outer;
                 }
@@ -613,15 +626,15 @@ outer:
                         previousRight = 0;
                     } else {
                         previous = ((ToTreeListItem) list.get(i - 2)).op;
-                        previousRight = previous.rightPrec;
+                        previousRight = previous.getRightPrec();
                     }
                     if (i == (count - 2)) {
                         next = null;
                         nextLeft = 0;
                     } else {
                         next = ((ToTreeListItem) list.get(i + 2)).op;
-                        nextLeft = next.leftPrec;
-                        if ((next.kind == stopperKind)
+                        nextLeft = next.getLeftPrec();
+                        if ((next.getKind() == stopperKind)
                                 && (stopperKind != SqlKind.Other)) {
                             // Suppose we're looking at 'AND' in
                             //    a BETWEEN b OR c AND d
@@ -669,7 +682,7 @@ outer:
                         previousRight = 0;
                     } else {
                         previous = ((ToTreeListItem) list.get(i - 2)).op;
-                        previousRight = previous.rightPrec;
+                        previousRight = previous.getRightPrec();
                     }
                     if (previousRight < left) {
                         // For example,
@@ -707,7 +720,7 @@ outer:
                         previousRight = 0;
                     } else {
                         previous = ((ToTreeListItem) list.get(i - 2)).op;
-                        previousRight = previous.rightPrec;
+                        previousRight = previous.getRightPrec();
                     }
                     int nextOrdinal = i + 2;
                     if (i == (count - 2)) {
@@ -721,9 +734,9 @@ outer:
                             Object listItem = list.get(nextOrdinal);
                             if (listItem instanceof ToTreeListItem) {
                                 next = ((ToTreeListItem) listItem).op;
-                                nextLeft = next.leftPrec;
+                                nextLeft = next.getLeftPrec();
                                 if ((stopperKind != SqlKind.Other)
-                                        && (next.kind == stopperKind)) {
+                                        && (next.getKind() == stopperKind)) {
                                     break outer;
                                 } else {
                                     break;
@@ -762,8 +775,24 @@ outer:
      */
     public static class PrecisionTime
     {
-        public Calendar cal;
-        public int precision;
+        private final Calendar cal;
+        private final int precision;
+
+        public PrecisionTime(Calendar cal, int precision)
+        {
+            this.cal = cal;
+            this.precision = precision;
+        }
+
+        public Calendar getCalendar()
+        {
+            return cal;
+        }
+
+        public int getPrecision()
+        {
+            return precision;
+        }
     }
 
     /**
@@ -773,8 +802,8 @@ outer:
      */
     public static class ToTreeListItem
     {
-        public SqlOperator op;
-        public SqlParserPos pos;
+        private final SqlOperator op;
+        private final SqlParserPos pos;
 
         public ToTreeListItem(
             SqlOperator op,
@@ -782,6 +811,16 @@ outer:
         {
             this.op = op;
             this.pos = pos;
+        }
+
+        public SqlOperator getOperator()
+        {
+            return op;
+        }
+
+        public SqlParserPos getPos()
+        {
+            return pos;
         }
     }
 }

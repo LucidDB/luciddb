@@ -148,7 +148,7 @@ public class SqlLiteral extends SqlNode
      * {@link SqlTypeName#Decimal}, but on validation may become
      * {@link SqlTypeName#Integer}.
      */
-    public final SqlTypeName typeName;
+    private final SqlTypeName typeName;
 
     /**
      * The value of this literal. The type of the value must be appropriate
@@ -196,7 +196,7 @@ public class SqlLiteral extends SqlNode
         Object value,
         SqlTypeName typeName)
     {
-        switch (typeName.ordinal) {
+        switch (typeName.getOrdinal()) {
         case SqlTypeName.Boolean_ordinal:
             return (value == null) || value instanceof Boolean;
         case SqlTypeName.Null_ordinal:
@@ -290,7 +290,7 @@ public class SqlLiteral extends SqlNode
         if (value == null) {
             return null;
         }
-        switch (typeName.ordinal) {
+        switch (typeName.getOrdinal()) {
         case SqlTypeName.Char_ordinal:
 
             // We want 'It''s superman!', not _ISO-8859-1'It''s superman!'
@@ -378,7 +378,7 @@ public class SqlLiteral extends SqlNode
 
     public int intValue()
     {
-        switch (typeName.ordinal) {
+        switch (typeName.getOrdinal()) {
         case SqlTypeName.Decimal_ordinal:
         case SqlTypeName.Double_ordinal:
             BigDecimal bd = (BigDecimal) value;
@@ -398,7 +398,7 @@ public class SqlLiteral extends SqlNode
         int leftPrec,
         int rightPrec)
     {
-        switch (typeName.ordinal) {
+        switch (typeName.getOrdinal()) {
         case SqlTypeName.Boolean_ordinal:
             writer.print((value == null) ? "UNKNOWN"
                 : (((Boolean) value).booleanValue() ? "TRUE" : "FALSE"));
@@ -426,7 +426,7 @@ public class SqlLiteral extends SqlNode
     public RelDataType createSqlType(RelDataTypeFactory typeFactory)
     {
         BitString bitString;
-        switch (typeName.ordinal) {
+        switch (typeName.getOrdinal()) {
         case SqlTypeName.Null_ordinal:
         case SqlTypeName.Boolean_ordinal:
             RelDataType ret = typeFactory.createSqlType(typeName);

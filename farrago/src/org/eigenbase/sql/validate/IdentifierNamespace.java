@@ -42,7 +42,7 @@ import org.eigenbase.resource.EigenbaseResource;
  */
 public class IdentifierNamespace extends AbstractNamespace
 {
-    public final SqlIdentifier id;
+    private final SqlIdentifier id;
 
     /** The underlying table. Set on validate. */
     private SqlValidatorTable table;
@@ -73,6 +73,11 @@ public class IdentifierNamespace extends AbstractNamespace
             }
         }
         return table.getRowType();
+    }
+
+    public SqlIdentifier getId()
+    {
+        return id;
     }
 
     public SqlNode getNode()

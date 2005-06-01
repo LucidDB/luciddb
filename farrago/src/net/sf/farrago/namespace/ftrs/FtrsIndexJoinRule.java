@@ -188,7 +188,7 @@ class FtrsIndexJoinRule extends RelOptRule
                     });
             RexNode [] castExps = new RexNode[leftFieldCount + 1];
             String [] fieldNames = new String[leftFieldCount + 1];
-            RexBuilder rexBuilder = leftRel.getCluster().rexBuilder;
+            RexBuilder rexBuilder = leftRel.getCluster().getRexBuilder();
             for (int i = 0; i < leftFieldCount; ++i) {
                 castExps[i] =
                     rexBuilder.makeInputRef(

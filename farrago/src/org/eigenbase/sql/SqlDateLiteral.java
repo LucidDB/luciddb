@@ -74,7 +74,7 @@ public class SqlDateLiteral extends SqlAbstractDateTimeLiteral
 
     public RelDataType createSqlType(RelDataTypeFactory typeFactory)
     {
-        return typeFactory.createSqlType(typeName);
+        return typeFactory.createSqlType(getTypeName());
     }
 }
 

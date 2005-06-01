@@ -50,7 +50,8 @@ public class EnumerationToExistsConvertlet extends JavaConvertlet
         ConverterRel converter)
     {
         Expression exp =
-            implementor.visitJavaChild(converter, 0, (JavaRel) converter.child);
+            implementor.visitJavaChild(
+                converter, 0, (JavaRel) converter.getChild());
         return new MethodCall(
             exp,
             "hasNext",

@@ -136,7 +136,7 @@ public class SqlCastFunction extends SqlFunction
         int leftPrec,
         int rightPrec)
     {
-        writer.print(name);
+        writer.print(getName());
         writer.print('(');
         for (int i = 0; i < operands.length; i++) {
             SqlNode operand = operands[i];

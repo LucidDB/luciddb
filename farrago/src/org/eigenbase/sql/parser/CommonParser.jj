@@ -149,7 +149,7 @@ JAVACODE SqlTimeLiteral parseTimeLiteral(
             res.getBadFormat(SqlParserUtil.TimeFormatStr));
         throw new ParseException(msg);
     }
-    return SqlLiteral.createTime(pt.cal, pt.precision, pos);
+    return SqlLiteral.createTime(pt.getCalendar(), pt.getPrecision(), pos);
 }
 
 JAVACODE SqlTimestampLiteral parseTimestampLiteral(
@@ -166,7 +166,7 @@ JAVACODE SqlTimestampLiteral parseTimestampLiteral(
             res.getBadFormat(SqlParserUtil.TimestampFormatStr));
         throw new ParseException(msg);
     }
-    return SqlLiteral.createTimestamp(pt.cal, pt.precision, pos);
+    return SqlLiteral.createTimestamp(pt.getCalendar(), pt.getPrecision(), pos);
 }
 
 JAVACODE SqlIntervalLiteral parseIntervalLiteral(
@@ -2245,86 +2245,105 @@ SqlIdentifier TypeName() :
         (
             <CHARACTER> | <CHAR>
             {
-                typeName = new SqlIdentifier(SqlTypeName.Char.name, pos);
+                typeName = new SqlIdentifier(
+                    SqlTypeName.Char.getName(), pos);
             }
         )
         [
             <VARYING>
             {
-                typeName = new SqlIdentifier(SqlTypeName.Varchar.name, pos);
+                typeName = new SqlIdentifier(
+                    SqlTypeName.Varchar.getName(), pos);
             }
         ]
         | <VARCHAR>
         {
-            typeName = new SqlIdentifier(SqlTypeName.Varchar.name, pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Varchar.getName(), pos);
         }
         | <DATE>
         {
-            typeName = new SqlIdentifier(SqlTypeName.Date.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Date.getName(),pos);
         }
         | <TIME>
         {
-            typeName = new SqlIdentifier(SqlTypeName.Time.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Time.getName(),pos);
         }
         | <TIMESTAMP>
         {
-            typeName = new SqlIdentifier(SqlTypeName.Timestamp.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Timestamp.getName(),pos);
         }
         | (<DECIMAL> | <DEC> | <NUMERIC>)
         {
-            typeName = new SqlIdentifier(SqlTypeName.Decimal.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Decimal.getName(),pos);
         }
         | <BOOLEAN>
         {
-            typeName = new SqlIdentifier(SqlTypeName.Boolean.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Boolean.getName(),pos);
         }
         | <INTEGER>
         {
-            typeName = new SqlIdentifier(SqlTypeName.Integer.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Integer.getName(),pos);
         }
         | <INT>
         {
-            typeName = new SqlIdentifier(SqlTypeName.Integer.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Integer.getName(),pos);
         }
         | (
             <BINARY>
             {
-                typeName = new SqlIdentifier(SqlTypeName.Binary.name,pos);
+                typeName = new SqlIdentifier(
+                    SqlTypeName.Binary.getName(),pos);
             }
         )
         [
             <VARYING>
             {
-                typeName = new SqlIdentifier(SqlTypeName.Varbinary.name, pos);
+                typeName = new SqlIdentifier(
+                    SqlTypeName.Varbinary.getName(), pos);
             }
         ]
         | <VARBINARY>
         {
-            typeName = new SqlIdentifier(SqlTypeName.Varbinary.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Varbinary.getName(),pos);
         }
         | <TINYINT>
         {
-            typeName = new SqlIdentifier(SqlTypeName.Tinyint.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Tinyint.getName(),pos);
         }
         | <SMALLINT>
         {
-            typeName = new SqlIdentifier(SqlTypeName.Smallint.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Smallint.getName(),pos);
         }
         | <BIGINT>
         {
-            typeName = new SqlIdentifier(SqlTypeName.Bigint.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Bigint.getName(),pos);
         }
         | <REAL>
         {
-            typeName = new SqlIdentifier(SqlTypeName.Real.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Real.getName(),pos);
         }
         | <DOUBLE> [ <PRECISION> ]
         {
-            typeName = new SqlIdentifier(SqlTypeName.Double.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Double.getName(),pos);
         }
         | <FLOAT>
         {
-            typeName = new SqlIdentifier(SqlTypeName.Float.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Float.getName(),pos);
         }
         |   typeName = CollectionsTypeName()
         |   typeName = CompoundIdentifier()
@@ -2342,7 +2361,8 @@ SqlIdentifier CollectionsTypeName() :
 {
     <MULTISET>
     {
-        typeName = new SqlIdentifier(SqlTypeName.Multiset.name,pos);
+        typeName = new SqlIdentifier(
+            SqlTypeName.Multiset.getName(),pos);
         return typeName;
     }
 }

@@ -110,7 +110,7 @@ public class FarragoOJRexImplementorTable extends OJRexImplementorTableImpl
     {
         registerOperator(
             op,
-            new FarragoOJRexContextVariableImplementor(op.name));
+            new FarragoOJRexContextVariableImplementor(op.getName()));
     }
 
     // override OJRexImplementorTableImpl

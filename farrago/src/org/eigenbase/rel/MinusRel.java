@@ -69,7 +69,7 @@ public final class MinusRel extends SetOpRel
     public Object clone()
     {
         MinusRel clone = new MinusRel(
-            cluster,
+            getCluster(),
             RelOptUtil.clone(inputs),
             all);
         clone.inheritTraitsFrom(this);

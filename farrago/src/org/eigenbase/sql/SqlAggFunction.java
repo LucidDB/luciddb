@@ -46,11 +46,6 @@ public abstract class SqlAggFunction extends SqlFunction implements Aggregation
             funcType);
     }
 
-    public String getName()
-    {
-        return name;
-    }
-
     public OJClass [] getStartParameterTypes()
     {
         return new OJClass[0];

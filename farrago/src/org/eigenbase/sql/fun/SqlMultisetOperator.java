@@ -118,19 +118,19 @@ public class SqlMultisetOperator extends SqlSpecialOperator
         int rightPrec) {
 
         writer.print("MULTISET");
-        if (kind.isA(SqlKind.MultisetValueConstructor)) {
+        if (getKind().isA(SqlKind.MultisetValueConstructor)) {
             writer.print("[");
         } else {
             writer.print("(");
         }
         for (int i = 0; i < operands.length; i++) {
             if (i>0) {
-                assert(kind.isA(SqlKind.MultisetValueConstructor));
+                assert(getKind().isA(SqlKind.MultisetValueConstructor));
                 writer.print(", ");
             }
             operands[i].unparse(writer, leftPrec, rightPrec);
         }
-        if (kind.isA(SqlKind.MultisetValueConstructor)) {
+        if (getKind().isA(SqlKind.MultisetValueConstructor)) {
             writer.print("]");
         } else {
             writer.print(")");

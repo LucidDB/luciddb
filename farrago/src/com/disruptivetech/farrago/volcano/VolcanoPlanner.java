@@ -134,7 +134,7 @@ public class VolcanoPlanner implements RelOptPlanner
         ArrayList list = new ArrayList();
         for (int i = 0, count = allOperands.size(); i < count; i++) {
             RelOptRuleOperand operand = (RelOptRuleOperand) allOperands.get(i);
-            if (operand.rule.getOutConvention() == toConvention) {
+            if (operand.getRule().getOutConvention() == toConvention) {
                 list.add(operand);
             }
         }
@@ -207,14 +207,14 @@ public class VolcanoPlanner implements RelOptPlanner
         }
 
         // Each of this rule's operands is an 'entry point' for a rule call.
-        Walker operandWalker = new Walker(rule.operand);
+        Walker operandWalker = new Walker(rule.getOperand());
         int ordinalInRule = 0;
         ArrayList operandsOfRule = new ArrayList();
         while (operandWalker.hasMoreElements()) {
             RelOptRuleOperand operand =
                 (RelOptRuleOperand) operandWalker.nextElement();
-            operand.rule = rule;
-            operand.parent = (RelOptRuleOperand) operandWalker.getParent();
+            operand.setRule(rule);
+            operand.setParent((RelOptRuleOperand) operandWalker.getParent());
             operand.ordinalInParent = operandWalker.getOrdinal();
             operand.ordinalInRule = ordinalInRule++;
             operandsOfRule.add(operand);
@@ -232,7 +232,7 @@ public class VolcanoPlanner implements RelOptPlanner
             RelOptRuleOperand operand = rule.operands[j];
             operand.solveOrder = new int[rule.operands.length];
             int m = 0;
-            for (RelOptRuleOperand o = operand; o != null; o = o.parent) {
+            for (RelOptRuleOperand o = operand; o != null; o = o.getParent()) {
                 operand.solveOrder[m++] = o.ordinalInRule;
             }
             for (int k = 0; k < rule.operands.length; k++) {
@@ -497,7 +497,7 @@ public class VolcanoPlanner implements RelOptPlanner
 
     public JavaRelImplementor getJavaRelImplementor(RelNode rel)
     {
-        return new JavaRelImplementor(rel.getCluster().rexBuilder);
+        return new JavaRelImplementor(rel.getCluster().getRexBuilder());
     }
 
     /**
@@ -1008,7 +1008,7 @@ loop:
             return registerSubset(set, (RelSubset) rel);
         }
 
-        if (rel.getCluster().planner != this) {
+        if (rel.getCluster().getPlanner() != this) {
             throw Util.newInternal("Relational expression " + rel +
                 " belongs to a different planner than is currently being" +
                 " used.");
@@ -1019,12 +1019,12 @@ loop:
         final RelTraitSet traits = rel.getTraits();
         final CallingConvention convention =
             (CallingConvention)traits.getTrait(0);
-        if (!convention.interfaze.isInstance(rel)
+        if (!convention.getInterface().isInstance(rel)
                 && !(rel instanceof ConverterRel)) {
             throw Util.newInternal("Relational expression " + rel
                 + " has calling-convention " + convention
                 + " but does not implement the required interface '"
-                + convention.interfaze + "' of that convention");
+                + convention.getInterface() + "' of that convention");
         }
         if (traits.size() != traitDefs.size()) {
             throw Util.newInternal("Relational expression " + rel
@@ -1057,7 +1057,7 @@ loop:
 
         // Converters are in the same set as their children.
         if (rel instanceof ConverterRel) {
-            final RelNode input = ((ConverterRel) rel).child;
+            final RelNode input = ((ConverterRel) rel).getChild();
             final RelSet childSet = getSet(input);
             if ((set != null) && (set != childSet)
                     && (set.equivalentSet == null)) {
@@ -1201,7 +1201,7 @@ loop:
         protected void onMatch()
         {
             final VolcanoRuleMatch match =
-                new VolcanoRuleMatch(volcanoPlanner, operand0, rels);
+                new VolcanoRuleMatch(volcanoPlanner, getOperand0(), rels);
             volcanoPlanner.ruleQueue.addMatch(match);
         }
     }

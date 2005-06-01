@@ -44,7 +44,7 @@ public class JavaOneRowRel extends OneRowRelBase implements JavaLoopRel,
     // implement RelNode
     public Object clone()
     {
-        JavaOneRowRel clone = new JavaOneRowRel(cluster);
+        JavaOneRowRel clone = new JavaOneRowRel(getCluster());
         clone.inheritTraitsFrom(this);
         return clone;
     }

@@ -353,7 +353,7 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
      */
     protected class JavaType extends RelDataTypeImpl
     {
-        public final Class clazz;
+        private final Class clazz;
         private boolean isNullable;
         private SqlCollation collation;
         private Charset charset;
@@ -398,6 +398,11 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
             this.isNullable = nullable;
             this.charset = charset;
             this.collation = collation;
+        }
+
+        public Class getJavaClass()
+        {
+            return clazz;
         }
 
         public boolean isNullable()

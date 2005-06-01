@@ -62,13 +62,23 @@ public final class CorrelatorRel extends JoinRelBase
      * to identify and set dynamic variables
      */
     public static class Correlation implements Cloneable {
-        public final int id;
-        public final int offset;
+        private final int id;
+        private final int offset;
 
         public Correlation(int id, int offset)
         {
             this.id = id;
             this.offset = offset;
+        }
+
+        public int getId()
+        {
+            return id;
+        }
+
+        public int getOffset()
+        {
+            return offset;
         }
 
         public String toString()
@@ -96,7 +106,7 @@ public final class CorrelatorRel extends JoinRelBase
         List correlations)
     {
         super(cluster, new RelTraitSet(CallingConvention.NONE), left, right,
-            cluster.rexBuilder.makeLiteral(true), JoinType.LEFT,
+            cluster.getRexBuilder().makeLiteral(true), JoinType.LEFT,
             Collections.EMPTY_SET);
         this.correlations = correlations;
     }
@@ -106,7 +116,7 @@ public final class CorrelatorRel extends JoinRelBase
     public Object clone()
     {
         CorrelatorRel clone = new CorrelatorRel(
-            cluster,
+            getCluster(),
             RelOptUtil.clone(left),
             RelOptUtil.clone(right),
             cloneCorrelations());

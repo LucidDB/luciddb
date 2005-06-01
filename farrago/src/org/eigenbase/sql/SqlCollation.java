@@ -64,9 +64,9 @@ public class SqlCollation
         this.coercibility = coercibility;
         SqlParserUtil.ParsedCollation parseValues =
             SqlParserUtil.parseCollation(collation);
-        charset = parseValues.charset;
-        locale = parseValues.locale;
-        strength = parseValues.strength;
+        charset = parseValues.getCharset();
+        locale = parseValues.getLocale();
+        strength = parseValues.getStrength();
         String c = charset.name().toUpperCase() + "$" + locale.toString();
         if ((strength != null) && (strength.length() > 0)) {
             c += ("$" + strength);

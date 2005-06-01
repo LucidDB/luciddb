@@ -98,7 +98,7 @@ public class FarragoRngNextRandomIntOperator extends SqlFunction
         int leftPrec,
         int rightPrec)
     {
-        writer.print(name);
+        writer.print(getName());
         writer.print("(");
         SqlLiteral ceiling = (SqlLiteral) operands[0];
         if (ceiling.intValue() == -1) {

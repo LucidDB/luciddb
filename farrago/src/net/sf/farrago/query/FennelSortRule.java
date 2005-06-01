@@ -79,7 +79,8 @@ public class FennelSortRule extends RelOptRule
 
         Integer [] keyProjection = new Integer[sortRel.getCollations().length];
         for (int i = 0; i < keyProjection.length; ++i) {
-            keyProjection[i] = new Integer(sortRel.getCollations()[i].iField);
+            keyProjection[i] = new Integer(
+                sortRel.getCollations()[i].getFieldIndex());
         }
 
         boolean discardDuplicates = false;

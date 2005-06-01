@@ -102,11 +102,11 @@ class FtrsTableProjectionRule extends RelOptRule
             String projFieldName = projFields[i].getName();
             fieldNames[i] = projFieldName;
             String origFieldName =
-                rowType.getFields()[fieldAccess.index].getName();
+                rowType.getFields()[fieldAccess.getIndex()].getName();
             if (!projFieldName.equals(origFieldName)) {
                 needRename = true;
             }
-            projectedColumns[i] = new Integer(fieldAccess.index);
+            projectedColumns[i] = new Integer(fieldAccess.getIndex());
         }
 
         // Generate a potential scan for each available index covering the

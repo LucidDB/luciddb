@@ -288,7 +288,7 @@ public abstract class OJPreparingStmt
         Argument [] args)
     {
         JavaRelImplementor relImplementor =
-            getRelImplementor(rootRel.getCluster().rexBuilder);
+            getRelImplementor(rootRel.getCluster().getRexBuilder());
         Expression expr = relImplementor.implementRoot((JavaRel) rootRel);
         boolean isDml = sqlKind.isA(SqlKind.Dml);
         ParseTree parseTree = expr;

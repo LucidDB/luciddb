@@ -52,7 +52,7 @@ public final class UnionRel extends UnionRelBase
     public Object clone()
     {
         UnionRel clone = new UnionRel(
-            cluster,
+            getCluster(),
             RelOptUtil.clone(inputs),
             all);
         clone.inheritTraitsFrom(this);

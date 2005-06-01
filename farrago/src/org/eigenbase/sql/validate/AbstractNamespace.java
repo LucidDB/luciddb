@@ -65,7 +65,7 @@ abstract class AbstractNamespace implements SqlValidatorNamespace
 
     public void validate()
     {
-        switch (status.ordinal) {
+        switch (status.getOrdinal()) {
         case SqlValidatorImpl.Status.Unvalidated_ordinal:
             try {
                 status = SqlValidatorImpl.Status.InProgress;

@@ -383,7 +383,7 @@ public class SqlJdbcFunctionCall extends SqlFunction
 
     public String getAllowedSignatures()
     {
-        return lookupMakeCallObj.operator.getAllowedSignatures(name);
+        return lookupMakeCallObj.operator.getAllowedSignatures(getName());
     }
 
     public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()
@@ -401,7 +401,8 @@ public class SqlJdbcFunctionCall extends SqlFunction
             // only expected to come here if validator called this method
             throw validator.newValidationError(
                 (SqlCall) callOperands.getUnderlyingObject(),
-                    EigenbaseResource.instance().newFunctionUndefined(name));
+                    EigenbaseResource.instance().newFunctionUndefined(
+                        getName()));
         }
 
         if (!lookupMakeCallObj.checkNumberOfArg(callOperands.size())) {
@@ -409,7 +410,7 @@ public class SqlJdbcFunctionCall extends SqlFunction
             throw validator.newValidationError(
                 (SqlCall) callOperands.getUnderlyingObject(),
                     EigenbaseResource.instance().newWrongNumberOfParam(
-                    name,
+                    getName(),
                     new Integer(thisOperands.length),
                     getArgCountMismatchMsg()));
         }

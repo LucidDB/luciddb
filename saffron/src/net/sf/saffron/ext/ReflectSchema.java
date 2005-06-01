@@ -138,13 +138,14 @@ public class ReflectSchema implements RelOptSchema
                             final FieldAccess expr =
                                 new FieldAccess(connectionInfo.expr, name);
                             final JavaRexBuilder javaRexBuilder =
-                                (JavaRexBuilder) cluster.rexBuilder;
+                                (JavaRexBuilder) cluster.getRexBuilder();
                             final RexNode rex =
                                 javaRexBuilder.makeJava(connectionInfo.env,
                                     expr);
                             return new ExpressionReaderRel(
                                 cluster,
-                                cluster.rexBuilder.makeFieldAccess(rex, name),
+                                cluster.getRexBuilder().makeFieldAccess(
+                                    rex, name),
                                 getRowType());
                         }
                     };

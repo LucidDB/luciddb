@@ -56,7 +56,7 @@ public class JavaExistsRel extends SingleRel implements JavaLoopRel
     // implement RelNode
     public Object clone()
     {
-        JavaExistsRel clone = new JavaExistsRel(cluster, child);
+        JavaExistsRel clone = new JavaExistsRel(getCluster(), getChild());
         clone.inheritTraitsFrom(this);
 
         return clone;
@@ -79,7 +79,7 @@ public class JavaExistsRel extends SingleRel implements JavaLoopRel
     {
         // Generate
         //     <<parent>>
-        return implementor.visitJavaChild(this, 0, (JavaRel) child);
+        return implementor.visitJavaChild(this, 0, (JavaRel) getChild());
     }
 
     public void implementJavaParent(

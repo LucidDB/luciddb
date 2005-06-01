@@ -94,7 +94,7 @@ class MedMockIterRel extends TableAccessRelBase implements JavaRel
     public Object clone()
     {
         MedMockIterRel clone =
-            new MedMockIterRel(columnSet, cluster, connection);
+            new MedMockIterRel(columnSet, getCluster(), connection);
         clone.inheritTraitsFrom(this);
         return clone;
     }

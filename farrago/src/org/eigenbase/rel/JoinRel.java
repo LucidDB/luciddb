@@ -56,7 +56,7 @@ public final class JoinRel extends JoinRelBase
     public Object clone()
     {
         JoinRel clone = new JoinRel(
-            cluster,
+            getCluster(),
             RelOptUtil.clone(left),
             RelOptUtil.clone(right),
             RexUtil.clone(condition),

@@ -38,36 +38,44 @@ import org.eigenbase.sql.type.SqlTypeUtil;
  */
 public final class CollectRel extends SingleRel {
 
-    public final String name;
+    private final String fieldName;
 
     public CollectRel(
-        RelOptCluster cluster, RelNode child, String name)
+        RelOptCluster cluster, RelNode child, String fieldName)
     {
         super(cluster, new RelTraitSet(CallingConvention.NONE), child);
-        this.name = name;
+        this.fieldName = fieldName;
     }
 
     // override Object (public, does not throw CloneNotSupportedException)
     public Object clone() {
         CollectRel clone =
-            new CollectRel(cluster, RelOptUtil.clone(child), name);
+            new CollectRel(
+                getCluster(), RelOptUtil.clone(getChild()), fieldName);
         clone.inheritTraitsFrom(this);
         return clone;
     }
 
-    protected RelDataType deriveRowType()
+    public String getFieldName()
     {
-        return deriveCollectRowType(this, name);
+        return fieldName;
     }
 
-    public static RelDataType deriveCollectRowType(SingleRel rel, String name)
+    protected RelDataType deriveRowType()
     {
-        RelDataType childType = rel.child.getRowType();
+        return deriveCollectRowType(this, fieldName);
+    }
+
+    public static RelDataType deriveCollectRowType(
+        SingleRel rel, String fieldName)
+    {
+        RelDataType childType = rel.getChild().getRowType();
         assert(childType.isStruct());
         RelDataType ret = SqlTypeUtil.createMultisetType(
-            rel.cluster.typeFactory, childType, false);
-        ret = rel.cluster.typeFactory.createStructType(
-            new RelDataType[]{ret}, new String[]{name} );
-        return rel.cluster.typeFactory.createTypeWithNullability(ret, false);
+            rel.getCluster().getTypeFactory(), childType, false);
+        ret = rel.getCluster().getTypeFactory().createStructType(
+            new RelDataType[]{ret}, new String[]{fieldName} );
+        return rel.getCluster().getTypeFactory().createTypeWithNullability(
+            ret, false);
     }
 }

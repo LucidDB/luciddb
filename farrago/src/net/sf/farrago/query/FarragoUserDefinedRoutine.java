@@ -115,7 +115,7 @@ public class FarragoUserDefinedRoutine
     {
         if (!hasDefinition()) {
             throw FarragoResource.instance().newValidatorConstructorUndefined(
-                getAllowedSignatures(name));
+                getAllowedSignatures(getName()));
         }
         super.checkArgCount(validator, argType, call);
     }

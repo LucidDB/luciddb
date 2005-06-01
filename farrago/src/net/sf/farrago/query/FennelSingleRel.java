@@ -59,7 +59,7 @@ public abstract class FennelSingleRel extends SingleRel implements FennelRel
     // implement FennelRel
     public FarragoTypeFactory getFarragoTypeFactory()
     {
-        return (FarragoTypeFactory) cluster.typeFactory;
+        return (FarragoTypeFactory) getCluster().getTypeFactory();
     }
 
     /**
@@ -71,7 +71,7 @@ public abstract class FennelSingleRel extends SingleRel implements FennelRel
      */
     private FennelRel getFennelInput()
     {
-        return (FennelRel) child;
+        return (FennelRel) getChild();
     }
 
     // default implementation for FennelRel
@@ -83,7 +83,7 @@ public abstract class FennelSingleRel extends SingleRel implements FennelRel
     // implement FennelRel
     public Object implementFennelChild(FennelRelImplementor implementor)
     {
-        return implementor.visitChild(this, 0, child);
+        return implementor.visitChild(this, 0, getChild());
     }
 }
 

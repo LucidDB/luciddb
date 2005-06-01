@@ -470,7 +470,8 @@ public abstract class OperandsTypeChecking
                 if (!SqlUtil.isLiteral(node)) {
                     if (throwOnFailure) {
                         throw EigenbaseResource.instance()
-                            .newArgumentMustBeLiteral(call.operator.name);
+                            .newArgumentMustBeLiteral(
+                                call.getOperator().getName());
                     }
                     return false;
                 }
@@ -519,14 +520,16 @@ public abstract class OperandsTypeChecking
                 if (SqlUtil.isNullLiteral(node, true)) {
                     if (throwOnFailure) {
                         throw EigenbaseResource.instance()
-                            .newArgumentMustNotBeNull(call.operator.name);
+                            .newArgumentMustNotBeNull(
+                                call.getOperator().getName());
                     }
                     return false;
                 }
                 if (!SqlUtil.isLiteral(node)) {
                     if (throwOnFailure) {
                         throw EigenbaseResource.instance()
-                            .newArgumentMustBeLiteral(call.operator.name);
+                            .newArgumentMustBeLiteral(
+                                call.getOperator().getName());
                     }
                     return false;
                 }
@@ -584,7 +587,8 @@ public abstract class OperandsTypeChecking
                 if (value < 0) {
                     if (throwOnFailure) {
                         throw EigenbaseResource.instance()
-                            .newArgumentMustBePositiveInteger(call.operator.name);
+                            .newArgumentMustBePositiveInteger(
+                                call.getOperator().getName());
                     }
                     return false;
                 }
@@ -1519,7 +1523,7 @@ public abstract class OperandsTypeChecking
             }
 
             public String getAllowedSignatures(SqlOperator op) {
-                return "<MULTISET> "+op.name+" <MULTISET>";
+                return "<MULTISET> "+op.getName()+" <MULTISET>";
             }
         };
 
@@ -1580,7 +1584,7 @@ public abstract class OperandsTypeChecking
                             operand,
                             EigenbaseResource.instance()
                             .newColumnCountMismatchInSetop(
-                                call.operator.name));
+                                call.getOperator().getName()));
                     } else {
                         return false;
                     }
@@ -1606,7 +1610,7 @@ public abstract class OperandsTypeChecking
                             EigenbaseResource.instance()
                             .newColumnTypeMismatchInSetop(
                                 new Integer(i + 1), // 1-based
-                                call.operator.name));
+                                call.getOperator().getName()));
                     } else {
                         return false;
                     }

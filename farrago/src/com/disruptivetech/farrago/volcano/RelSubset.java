@@ -176,7 +176,7 @@ public class RelSubset extends AbstractRelNode
         for (Iterator iterator = parents.iterator(); iterator.hasNext();) {
             RelNode rel = (RelNode) iterator.next();
             final RelSubset subset =
-                ((VolcanoPlanner) cluster.planner).getSubset(rel);
+                ((VolcanoPlanner) getCluster().getPlanner()).getSubset(rel);
             set.add(subset);
         }
         return set;
@@ -196,7 +196,7 @@ public class RelSubset extends AbstractRelNode
             return;
         }
 
-        VolcanoPlanner planner = (VolcanoPlanner) rel.getCluster().planner;
+        VolcanoPlanner planner = (VolcanoPlanner) rel.getCluster().getPlanner();
         if (planner.listener != null) {
             RelOptListener.RelEquivalenceEvent event =
                 new RelOptListener.RelEquivalenceEvent(
@@ -215,7 +215,8 @@ public class RelSubset extends AbstractRelNode
 //        assert (set.variablesPropagated.containsAll(variablesPropagated));
         Set variablesUsed = RelOptUtil.getVariablesUsed(rel);
 //        assert (set.variablesUsed.containsAll(variablesUsed));
-        propagateCostImprovements((VolcanoPlanner) (rel.getCluster().planner),
+        propagateCostImprovements(
+            (VolcanoPlanner) (rel.getCluster().getPlanner()),
             rel);
     }
 

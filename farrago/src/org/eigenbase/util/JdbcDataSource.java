@@ -43,7 +43,7 @@ public class JdbcDataSource implements DataSource
 {
     //~ Instance fields -------------------------------------------------------
 
-    public final String url;
+    private final String url;
     private PrintWriter logWriter;
     private int loginTimeout;
 
@@ -74,6 +74,11 @@ public class JdbcDataSource implements DataSource
         } else {
             return DriverManager.getConnection(url);
         }
+    }
+
+    public String getUrl()
+    {
+        return url;
     }
 
     public Connection getConnection(

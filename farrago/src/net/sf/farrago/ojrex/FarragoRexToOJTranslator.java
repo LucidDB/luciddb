@@ -101,7 +101,7 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         // is needed for implementing assignments also
         castImplementor = (FarragoOJRexCastImplementor)
             getImplementorTable().get(
-                SqlStdOperatorTable.instance().castFunc);
+                SqlStdOperatorTable.castFunc);
 
         ojNullablePrimitive = OJClass.forClass(NullablePrimitive.class);
     }
@@ -125,7 +125,9 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
             convertVariable(
                 dynamicParam.getType(),
                 "getDynamicParamValue",
-                new ExpressionList(Literal.makeLiteral(dynamicParam.index))));
+                new ExpressionList(
+                    Literal.makeLiteral(
+                        dynamicParam.getIndex()))));
     }
 
     Expression convertVariable(

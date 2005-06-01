@@ -99,7 +99,7 @@ class VolcanoRuleMatch extends VolcanoRuleCall
 
     private String computeDigest()
     {
-        StringBuffer buf = new StringBuffer("rule [" + rule + "] rels [");
+        StringBuffer buf = new StringBuffer("rule [" + getRule() + "] rels [");
         for (int i = 0; i < rels.length; i++) {
             if (i > 0) {
                 buf.append(", ");
@@ -115,7 +115,7 @@ class VolcanoRuleMatch extends VolcanoRuleCall
         if (targetSubset != null) {
             return targetSubset;
         }
-        final RelTraitSet targetTraits = rule.getOutTraits();
+        final RelTraitSet targetTraits = getRule().getOutTraits();
         if ((targetSet != null) && (targetTraits.size() > 0)) {
             targetSubset = targetSet.getSubset(targetTraits);
             if (targetSubset != null) {

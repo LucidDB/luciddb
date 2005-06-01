@@ -118,7 +118,7 @@ public class FennelWindowRel extends FennelSingleRel
     // override Object (public, does not throw CloneNotSupportedException)
     public Object clone() {
         FennelWindowRel clone = new FennelWindowRel(
-            cluster, child, rowType, inputExprs, windows, outputExprs,
+            getCluster(), getChild(), rowType, inputExprs, windows, outputExprs,
             conditionExpr);
         clone.inheritTraitsFrom(this);
         return clone;
@@ -178,7 +178,7 @@ public class FennelWindowRel extends FennelSingleRel
         // TODO #1. Add memory cost. Memory cost is higher for MIN and MAX
         //    than say SUM and COUNT (because they maintain a binary tree).
         // TODO #2. MIN and MAX have higher CPU cost than SUM and COUNT.
-        RelOptCost childCost = planner.getCost(child);
+        RelOptCost childCost = planner.getCost(getChild());
         final double rowsIn = childCost.getRows();
         int count = windows.length;
         for (int i = 0; i < windows.length; i++) {
@@ -202,23 +202,23 @@ public class FennelWindowRel extends FennelSingleRel
         final FemWindowStreamDef windowStreamDef =
             repos.newFemWindowStreamDef();
         windowStreamDef.getInput().add(
-            implementor.visitFennelChild((FennelRel) child));
+            implementor.visitFennelChild((FennelRel) getChild()));
         windowStreamDef.setFilter(conditionExpr != null);
 
         // Generate output program.
         RexToCalcTranslator translator =
-            new RexToCalcTranslator(cluster.rexBuilder);
+            new RexToCalcTranslator(getCluster().getRexBuilder());
         String program = translator.getProgram(
             // REVIEW: Is the input to the output program the buckets of all
             //   windows: [w0.b0] [w0.b1] [w1.b0] [w1.b1] [w1.b2]
-            child.getRowType(),
+            getChild().getRowType(),
             outputExprs,
             conditionExpr);
         windowStreamDef.setOutputProgram(program);
 
         // Setup sort list.
         Integer[] sortFields = {};
-        final RelDataTypeField[] fields = child.getRowType().getFields();
+        final RelDataTypeField[] fields = getChild().getRowType().getFields();
         for (int i = 0; i < fields.length; i++) {
             RelDataTypeField field = fields[i];
             // FIXME (jhyde, 2004/12/6) programmatically determine which are
@@ -246,10 +246,11 @@ public class FennelWindowRel extends FennelSingleRel
                 final FemWindowPartitionDef windowPartitionDef =
                     repos.newFemWindowPartitionDef();
                 windowDef.getPartition().add(windowPartitionDef);
-                translator = new RexToCalcTranslator(cluster.rexBuilder);
+                translator = new RexToCalcTranslator(
+                    getCluster().getRexBuilder());
                 final RexCall[] overs = (RexCall[]) partition.overList.toArray(
                     new RexCall[partition.overList.size()]);
-                RelDataType inputRowType = child.getRowType();
+                RelDataType inputRowType = getChild().getRowType();
                 String[] programs = new String[3];
                 translator.getAggProgram(inputRowType, overs, programs);
                 windowPartitionDef.setInitializeProgram(programs[0]);
@@ -296,26 +297,26 @@ public class FennelWindowRel extends FennelSingleRel
                     over.getType(),
                     over.getAggOperator(),
                     clonedOperands,
-                    over.window.partitionKeys,
-                    over.window.orderKeys,
-                    over.window.getLowerBound(),
-                    over.window.getUpperBound(),
-                    over.window.isRows());
+                    over.getWindow().partitionKeys,
+                    over.getWindow().orderKeys,
+                    over.getWindow().getLowerBound(),
+                    over.getWindow().getUpperBound(),
+                    over.getWindow().isRows());
             } else {
                 RexNode[] clonedOperands = new RexNode[call.operands.length];
                 for (int i = 0; i < call.operands.length; i++) {
                     RexNode operand = call.operands[i];
                     clonedOperands[i] = subCollector.visit(operand);
                 }
-                return builder.makeCall(call.op, clonedOperands);
+                return builder.makeCall(call.getOperator(), clonedOperands);
             }
         }
 
         private void registerWindow(RexOver over) {
             Window newWindow = new Window(
-                over.window.physical,
-                over.window.getLowerBound(),
-                over.window.getUpperBound(),
+                over.getWindow().isRows(),
+                over.getWindow().getLowerBound(),
+                over.getWindow().getUpperBound(),
                 null /*todo*/);
             final int windowIndex = windows.indexOf(newWindow);
             Window window;

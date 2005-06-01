@@ -62,7 +62,7 @@ public class JavaNestedLoopJoinRel extends JoinRelBase implements JavaLoopRel,
     public Object clone()
     {
         JavaNestedLoopJoinRel clone = new JavaNestedLoopJoinRel(
-            cluster,
+            getCluster(),
             RelOptUtil.clone(left),
             RelOptUtil.clone(right),
             RexUtil.clone(condition),
@@ -144,7 +144,7 @@ public class JavaNestedLoopJoinRel extends JoinRelBase implements JavaLoopRel,
             args.add(
                 implementor.translate(
                     this,
-                    cluster.rexBuilder.makeInputRef(
+                    getCluster().getRexBuilder().makeInputRef(
                         field.getType(),
                         i)));
         }

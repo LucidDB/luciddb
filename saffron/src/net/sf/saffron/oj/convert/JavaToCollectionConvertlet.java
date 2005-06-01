@@ -83,7 +83,8 @@ public class JavaToCollectionConvertlet extends JavaConvertlet
         // call us back so we can write "v.add(i);".
         implementor.pushStatementList(stmtList);
         Expression o =
-            implementor.visitJavaChild(converter, 0, (JavaRel) converter.child);
+            implementor.visitJavaChild(
+                converter, 0, (JavaRel) converter.getChild());
         assert (o == null);
         implementor.popStatementList(stmtList);
 
@@ -128,7 +129,7 @@ public class JavaToCollectionConvertlet extends JavaConvertlet
                     new ExpressionList(
                         OJUtil.box(
                             OJUtil.typeToOJClass(
-                                converter.child.getRowType(),
+                                converter.getChild().getRowType(),
                                 implementor.getTypeFactory()),
                             implementor.translateInput(javaConverter, 0))))));
     }

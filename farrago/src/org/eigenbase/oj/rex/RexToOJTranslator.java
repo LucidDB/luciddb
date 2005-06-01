@@ -107,13 +107,14 @@ public class RexToOJTranslator implements RexVisitor
 
     public RelDataTypeFactory getTypeFactory()
     {
-        return contextRel.getCluster().typeFactory;
+        return contextRel.getCluster().getTypeFactory();
     }
 
     // implement RexVisitor
     public void visitInputRef(RexInputRef inputRef)
     {
-        WhichInputResult inputAndCol = whichInput(inputRef.index, contextRel);
+        WhichInputResult inputAndCol = whichInput(
+            inputRef.getIndex(), contextRel);
         if (inputAndCol == null) {
             throw Util.newInternal("input not found");
         }
@@ -136,7 +137,7 @@ public class RexToOJTranslator implements RexVisitor
         final Object value = literal.getValue();
         Calendar calendar;
         long timeInMillis;
-        switch (literal.typeName.ordinal) {
+        switch (literal.getTypeName().getOrdinal()) {
         case SqlTypeName.Null_ordinal:
             setTranslation(Literal.constantNull());
             break;
@@ -240,7 +241,7 @@ public class RexToOJTranslator implements RexVisitor
     public void visitRangeRef(RexRangeRef rangeRef)
     {
         final WhichInputResult inputAndCol =
-            whichInput(rangeRef.offset, contextRel);
+            whichInput(rangeRef.getOffset(), contextRel);
         if (inputAndCol == null) {
             throw Util.newInternal("input not found");
         }
@@ -289,7 +290,7 @@ public class RexToOJTranslator implements RexVisitor
     public Expression translateRexNode(RexNode node)
     {
         if (node instanceof JavaRowExpression) {
-            return ((JavaRowExpression) node).expression;
+            return ((JavaRowExpression) node).getExpression();
         } else {
             node.accept(this);
             Expression expr = translatedExpr;

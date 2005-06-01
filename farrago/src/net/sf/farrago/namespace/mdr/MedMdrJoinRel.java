@@ -95,7 +95,7 @@ class MedMdrJoinRel extends JoinRelBase implements JavaRel
     public Object clone()
     {
         MedMdrJoinRel clone = new MedMdrJoinRel(
-            cluster,
+            getCluster(),
             RelOptUtil.clone(left),
             RelOptUtil.clone(right),
             RexUtil.clone(condition),

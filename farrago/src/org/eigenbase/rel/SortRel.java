@@ -64,9 +64,9 @@ public final class SortRel extends SingleRel
         fieldExps = new RexNode[collations.length];
         final RelDataTypeField [] fields = getRowType().getFields();
         for (int i = 0; i < collations.length; ++i) {
-            int iField = collations[i].iField;
+            int iField = collations[i].getFieldIndex();
             fieldExps[i] =
-                cluster.rexBuilder.makeInputRef(
+                cluster.getRexBuilder().makeInputRef(
                     fields[iField].getType(),
                     iField);
         }
@@ -77,8 +77,8 @@ public final class SortRel extends SingleRel
     public Object clone()
     {
         SortRel clone = new SortRel(
-            cluster,
-            RelOptUtil.clone(child),
+            getCluster(),
+            RelOptUtil.clone(getChild()),
             collations);
         clone.inheritTraitsFrom(this);
         return clone;

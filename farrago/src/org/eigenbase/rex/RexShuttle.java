@@ -74,7 +74,7 @@ public class RexShuttle
                 over.getType(),
                 over.getAggOperator(),
                 clonedOperands,
-                over.window);
+                over.getWindow());
         } else {
             return over;
         }
@@ -92,7 +92,7 @@ public class RexShuttle
             // the type is embedded in the original call.
             return new RexCall(
                 call.getType(),
-                call.op,
+                call.getOperator(),
                 clonedOperands);
         } else {
             return call;

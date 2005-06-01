@@ -83,7 +83,7 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
     public Object clone()
     {
         FennelToIteratorConverter clone =
-            new FennelToIteratorConverter(cluster, child);
+            new FennelToIteratorConverter(getCluster(), getChild());
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -91,15 +91,16 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
     // implement RelNode
     public ParseTree implement(JavaRelImplementor implementor)
     {
-        assert (child.getConvention().equals(FennelPullRel.FENNEL_PULL_CONVENTION)) : child.getClass()
-            .getName();
+        assert (getChild().getConvention().equals(
+                    FennelPullRel.FENNEL_PULL_CONVENTION))
+            : getChild().getClass().getName();
 
         // Give children a chance to generate code.  Most FennelRels don't
         // require this, but IteratorToFennelConverter does.
         Expression childrenExp =
-            (Expression) implementor.visitChild(this, 0, child);
+            (Expression) implementor.visitChild(this, 0, getChild());
 
-        FennelRel fennelRel = (FennelRel) child;
+        FennelRel fennelRel = (FennelRel) getChild();
         FarragoRepos repos = FennelRelUtil.getRepos(fennelRel);
 
         final FarragoPreparingStmt stmt =
@@ -384,7 +385,7 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
         FennelRelImplementor implementor)
     {
         FemExecutionStreamDef rootStream =
-            implementor.visitFennelChild((FennelRel) child);
+            implementor.visitFennelChild((FennelRel) getChild());
         return rootStream;
     }
 

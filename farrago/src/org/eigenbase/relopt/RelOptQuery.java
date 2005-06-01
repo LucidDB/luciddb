@@ -24,7 +24,7 @@
 package org.eigenbase.relopt;
 
 
-import java.util.HashMap;
+import java.util.*;
 
 import openjava.mop.Environment;
 
@@ -54,7 +54,7 @@ public class RelOptQuery
      * items have correlating variables. We will later resolve to a {@link
      * RelNode}.
      */
-    public final HashMap mapDeferredToCorrel = new HashMap();
+    private final HashMap mapDeferredToCorrel = new HashMap();
 
     /**
      * Maps name of correlating variable (e.g. "$cor3") to the {@link
@@ -75,6 +75,11 @@ public class RelOptQuery
     public static int getCorrelOrdinal(String correlName) {
         assert(correlName.startsWith(correlPrefix));
         return Integer.parseInt(correlName.substring(correlPrefix.length()));
+    }
+
+    public Map getMapDeferredToCorrel()
+    {
+        return mapDeferredToCorrel;
     }
 
     public RelOptCluster createCluster(

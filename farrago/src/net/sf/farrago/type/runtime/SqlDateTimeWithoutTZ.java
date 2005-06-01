@@ -288,7 +288,7 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
             SqlParserUtil.PrecisionTime pt =
                 SqlParserUtil.parsePrecisionDateTimeLiteral(date, TimeFormatStr);
             if (pt != null) {
-                java.util.Date parsedDate = pt.cal.getTime();
+                java.util.Date parsedDate = pt.getCalendar().getTime();
                 assignFrom(parsedDate);
             } else {
                 String reason =
@@ -342,7 +342,7 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
                 SqlParserUtil.parsePrecisionDateTimeLiteral(date,
                     TimestampFormatStr);
             if (pt != null) {
-                java.util.Date parsedDate = pt.cal.getTime();
+                java.util.Date parsedDate = pt.getCalendar().getTime();
                 assignFrom(parsedDate);
             } else {
                 String reason =

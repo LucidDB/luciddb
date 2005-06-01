@@ -103,7 +103,7 @@ public class PersistentStringProperty extends StringProperty
             } catch(IOException e) {
                 tracer.warning(
                     "Unable to initialize persistent property storage for '"
-                    + path + "'");
+                    + getPath() + "'");
                 tracer.throwing("PersistentPropertyStorage", "<init>", e);
                 return;
             }

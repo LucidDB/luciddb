@@ -67,8 +67,8 @@ public final class AggregateRel extends AggregateRelBase
     public Object clone()
     {
         AggregateRel clone = new AggregateRel(
-            cluster,
-            RelOptUtil.clone(child),
+            getCluster(),
+            RelOptUtil.clone(getChild()),
             groupCount,
             aggCalls);
         clone.inheritTraitsFrom(this);

@@ -155,7 +155,7 @@ public class RexLiteral extends RexNode
      * {@link SqlTypeName#Decimal}. See {@link #valueMatchesType} for the
      * definitive story.
      */
-    public final SqlTypeName typeName;
+    private final SqlTypeName typeName;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -193,7 +193,7 @@ public class RexLiteral extends RexNode
         Object value,
         SqlTypeName typeName)
     {
-        switch (typeName.ordinal) {
+        switch (typeName.getOrdinal()) {
         case SqlTypeName.Boolean_ordinal:
 
             // Unlike SqlLiteral, we do not allow boolean null.
@@ -262,7 +262,7 @@ public class RexLiteral extends RexNode
         SqlTypeName typeName,
         boolean java)
     {
-        switch (typeName.ordinal) {
+        switch (typeName.getOrdinal()) {
         case SqlTypeName.Char_ordinal:
             NlsString nlsString = (NlsString) value;
             if (java) {
@@ -314,6 +314,11 @@ public class RexLiteral extends RexNode
         }
     }
 
+    public SqlTypeName getTypeName()
+    {
+        return typeName;
+    }
+    
     public RelDataType getType()
     {
         return type;
@@ -341,7 +346,7 @@ public class RexLiteral extends RexNode
      */
     public Object getValue2()
     {
-        switch (typeName.ordinal) {
+        switch (typeName.getOrdinal()) {
         case SqlTypeName.Char_ordinal:
             return ((NlsString) value).getValue();
         case SqlTypeName.Date_ordinal:

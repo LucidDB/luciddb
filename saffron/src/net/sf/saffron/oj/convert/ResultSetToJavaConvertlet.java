@@ -148,8 +148,9 @@ public class ResultSetToJavaConvertlet extends JavaConvertlet
                         new AssignmentExpression(
                             varRs,
                             AssignmentExpression.EQUALS,
-                            implementor.visitJavaChild(converter, 0,
-                                (JavaRel) converter.child))),
+                            implementor.visitJavaChild(
+                                converter, 0,
+                                (JavaRel) converter.getChild()))),
                     
         // while (resultSet.next()) {
         new WhileStatement(new MethodCall(varRs, "next", null),

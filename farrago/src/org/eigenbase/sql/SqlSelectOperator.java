@@ -158,8 +158,8 @@ public class SqlSelectOperator extends SqlOperator
         // sure that an unjoined nested select will be properly
         // parenthesized
         fromClause.unparse(writer,
-            SqlStdOperatorTable.instance().joinOperator.leftPrec - 1,
-            SqlStdOperatorTable.instance().joinOperator.rightPrec - 1);
+            SqlStdOperatorTable.joinOperator.getLeftPrec() - 1,
+            SqlStdOperatorTable.joinOperator.getRightPrec() - 1);
         SqlNode whereClause = operands[SqlSelect.WHERE_OPERAND];
         if (whereClause != null) {
             writer.println();

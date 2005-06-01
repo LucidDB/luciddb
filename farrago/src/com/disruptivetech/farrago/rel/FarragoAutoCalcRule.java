@@ -156,11 +156,11 @@ public class FarragoAutoCalcRule extends RelOptRule
         // If there's a multiset expression, let FarragoMultisetSplitter work
         // on it first.
         if (RexMultisetUtil.containsMultiset(
-            calc.projectExprs, calc.conditionExpr)) {
+            calc.projectExprs, calc.getCondition())) {
             return;
         }
         // If there's a windowed agg expression, split that out first.
-        if (RexOver.containsOver(calc.projectExprs, calc.conditionExpr)) {
+        if (RexOver.containsOver(calc.projectExprs, calc.getCondition())) {
             return;
         }
 
@@ -170,26 +170,26 @@ public class FarragoAutoCalcRule extends RelOptRule
                 calc.getTraits(), FennelPullRel.FENNEL_PULL_CONVENTION, relInput);
 
         final RexToCalcTranslator translator =
-            new RexToCalcTranslator(calc.getCluster().rexBuilder);
+            new RexToCalcTranslator(calc.getCluster().getRexBuilder());
 
         // If can translate, do nothing, and let FennelCalcRule handle this
         // CalcRel.
         if (fennelInput != null &&
-            translator.canTranslate(calc.projectExprs, calc.conditionExpr)) {
+            translator.canTranslate(calc.projectExprs, calc.getCondition())) {
             return;
         }
 
         // Test if we can translate the CalcRel to a java calc program
         final RelNode convertedChild =
             mergeTraitsAndConvert(
-                calc.getTraits(), CallingConvention.ITERATOR, calc.child);
+                calc.getTraits(), CallingConvention.ITERATOR, calc.getChild());
 
         final JavaRelImplementor relImplementor =
             calc.getCluster().getPlanner().getJavaRelImplementor(calc);
 
         if (convertedChild != null) {
             if (relImplementor.canTranslate(convertedChild,
-                        calc.conditionExpr, calc.projectExprs)) {
+                        calc.getCondition(), calc.projectExprs)) {
                 // yes: do nothing, let IterCalcRule handle this CalcRel
                 return;
             }

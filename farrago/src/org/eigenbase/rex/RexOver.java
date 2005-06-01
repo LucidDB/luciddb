@@ -38,7 +38,7 @@ import java.io.StringWriter;
  */
 public class RexOver extends RexCall
 {
-    public final RexWindow window;
+    private final RexWindow window;
 
     /**
      * Creates a RexOver.
@@ -78,7 +78,12 @@ public class RexOver extends RexCall
      */
     public SqlAggFunction getAggOperator()
     {
-        return (SqlAggFunction) op;
+        return (SqlAggFunction) getOperator();
+    }
+
+    public RexWindow getWindow()
+    {
+        return window;
     }
 
     protected String computeDigest(boolean withType)
@@ -88,7 +93,8 @@ public class RexOver extends RexCall
 
     public Object clone()
     {
-        return new RexOver(getType(), (SqlAggFunction) op, operands, window);
+        return new RexOver(
+            getType(), getAggOperator(), operands, window);
     }
 
     public void accept(RexVisitor visitor)
@@ -170,7 +176,7 @@ public class RexOver extends RexCall
         public final RexNode[] orderKeys;
         private final SqlNode lowerBound;
         private final SqlNode upperBound;
-        public final boolean physical;
+        private final boolean physical;
         private String digest;
 
         RexWindow(

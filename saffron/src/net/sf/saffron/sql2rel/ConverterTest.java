@@ -110,7 +110,7 @@ public class ConverterTest extends TestCase
         final StringWriter sw = new StringWriter();
         final RelOptPlanWriter planWriter =
             new RelOptPlanWriter(new PrintWriter(sw));
-        planWriter.withIdPrefix = false;
+        planWriter.setIdPrefix(false);
         rel.explain(planWriter);
         planWriter.flush();
         String actual = sw.toString();

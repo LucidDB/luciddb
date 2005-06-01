@@ -59,9 +59,9 @@ public class JavaToIterableConvertlet extends JavaConvertlet
                     new ExpressionList(
                         implementor.translate(
                             (JavaRel) converter,
-                            converter.getCluster().rexBuilder
+                            converter.getCluster().getRexBuilder()
                                 .makeRangeReference(
-                                    converter.child.getRowType()))))));
+                                    converter.getChild().getRowType()))))));
     }
 
     public ParseTree implement(
@@ -72,7 +72,8 @@ public class JavaToIterableConvertlet extends JavaConvertlet
             UnboundVariableCollector.collectFromRel(converter);
         StatementList body = new StatementList();
         implementor.pushStatementList(body);
-        implementor.visitJavaChild(converter, 0, (JavaRel) converter.child);
+        implementor.visitJavaChild(
+            converter, 0, (JavaRel) converter.getChild());
         implementor.popStatementList(body);
 
         // private C0 v0;

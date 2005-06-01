@@ -48,7 +48,8 @@ public class UnionToDistinctRule extends RelOptRule
         if (union.all) {
             return; // nothing to do
         }
-        UnionRel unionAll = new UnionRel(union.cluster, union.inputs, true);
+        UnionRel unionAll = new UnionRel(
+            union.getCluster(), union.inputs, true);
         call.transformTo(RelOptUtil.createDistinctRel(unionAll));
     }
 }

@@ -44,7 +44,7 @@ import org.eigenbase.reltype.RelDataTypeFactory;
  */
 public class SqlSumAggFunction extends SqlAggFunction
 {
-    public final RelDataType type;
+    private final RelDataType type;
 
     public SqlSumAggFunction(RelDataType type)
     {
@@ -59,6 +59,11 @@ public class SqlSumAggFunction extends SqlAggFunction
     public RelDataType[] getParameterTypes(RelDataTypeFactory typeFactory)
     {
         return new RelDataType [] { type };
+    }
+
+    public RelDataType getType()
+    {
+        return type;
     }
 
     public RelDataType getReturnType(RelDataTypeFactory typeFactory)

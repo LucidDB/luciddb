@@ -44,7 +44,7 @@ public class RelFieldCollation
     /**
      * 0-based index of field being sorted.
      */
-    public final int iField;
+    private final int iField;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -67,6 +67,11 @@ public class RelFieldCollation
 
     // implement Object
     public int hashCode()
+    {
+        return iField;
+    }
+
+    public int getFieldIndex()
     {
         return iField;
     }

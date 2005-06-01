@@ -58,7 +58,7 @@ public class SqlValidatorUtil
         if (namespace instanceof IdentifierNamespace) {
             IdentifierNamespace identifierNamespace =
                 (IdentifierNamespace) namespace;
-            final String [] names = identifierNamespace.id.names;
+            final String [] names = identifierNamespace.getId().names;
             return schema.getTableForMember(names);
         } else {
             return null;
@@ -109,7 +109,7 @@ public class SqlValidatorUtil
         String alias)
     {
         final SqlIdentifier id = new SqlIdentifier(alias, SqlParserPos.ZERO);
-        return SqlStdOperatorTable.instance().asOperator.createCall(
+        return SqlStdOperatorTable.asOperator.createCall(
             expr, id, SqlParserPos.ZERO);
     }
 

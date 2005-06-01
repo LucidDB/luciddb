@@ -73,7 +73,7 @@ class AddFilterToQueryRule extends RelOptRule
         final RexToSqlTranslator translator = new RexToSqlTranslator();
         writer.pushQuery(query.sql);
         final SqlNode sqlCondition =
-            translator.translate(writer, filter.condition);
+            translator.translate(writer, filter.getCondition());
         query.sql.addWhere(sqlCondition);
         writer.popQuery(query.sql);
         call.transformTo(query);

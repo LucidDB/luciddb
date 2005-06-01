@@ -34,8 +34,8 @@ import org.eigenbase.util.EnumeratedValues;
  */
 public class SqlStateCodes  extends EnumeratedValues.BasicValue
 {
-    private String stateClass;
-    private String stateSubClass;
+    private final String stateClass;
+    private final String stateSubClass;
 
     public SqlStateCodes(String name, int ordinal, String stateClass, String stateSubClass)
     {
@@ -59,16 +59,16 @@ public class SqlStateCodes  extends EnumeratedValues.BasicValue
         return stateClass + stateSubClass;
     }
 
-    public static int CardinalityViolation_ORDINAL = 0;
-    public static SqlStateCodes CardinalityViolation =
+    public static final int CardinalityViolation_ORDINAL = 0;
+    public static final SqlStateCodes CardinalityViolation =
         new SqlStateCodes(
             "cardinality violation",
             CardinalityViolation_ORDINAL,
             "21",
             "000");
 
-    public static int NullValueNotAllowed_ORDINAL = 1;
-    public static SqlStateCodes NullValueNotAllowed =
+    public static final int NullValueNotAllowed_ORDINAL = 1;
+    public static final SqlStateCodes NullValueNotAllowed =
         new SqlStateCodes(
             "null value not allowed",
             NullValueNotAllowed_ORDINAL,

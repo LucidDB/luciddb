@@ -59,11 +59,11 @@ public class SqlOverOperator extends SqlBinaryOperator
         SqlValidatorScope scope,
         SqlValidatorScope operandScope)
     {
-        assert call.operator == this;
+        assert call.getOperator() == this;
         final SqlNode[] operands = call.getOperands();
         assert operands.length == 2;
         SqlCall aggCall = (SqlCall) operands[0];
-        if (!aggCall.operator.isAggregator()) {
+        if (!aggCall.getOperator().isAggregator()) {
             throw validator.newValidationError(aggCall,
                 EigenbaseResource.instance().newOverNonAggregate());
         }

@@ -43,7 +43,7 @@ public class SqlSetOperator extends SqlBinaryOperator
 {
     //~ Instance fields -------------------------------------------------------
 
-    public final boolean all;
+    private final boolean all;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -71,6 +71,16 @@ public class SqlSetOperator extends SqlBinaryOperator
     {
         super(name, kind, prec, true, typeInference, paramTypeInference, argTypes);
         this.all = all;
+    }
+
+    public boolean isAll()
+    {
+        return all;
+    }
+
+    public boolean isDistinct()
+    {
+        return !all;
     }
 
     public void validateCall(

@@ -104,9 +104,11 @@ public abstract class TableModificationRelBase extends SingleRel
     {
         RelDataType [] types = new RelDataType[1];
         String [] fieldNames = new String[1];
-        types[0] = cluster.typeFactory.createSqlType(SqlTypeName.Bigint);
+        types[0] =
+            getCluster().getTypeFactory().createSqlType(SqlTypeName.Bigint);
         fieldNames[0] = "ROWCOUNT";
-        return cluster.typeFactory.createStructType(types, fieldNames);
+        return getCluster().getTypeFactory().createStructType(
+            types, fieldNames);
     }
 
     // override RelNode
@@ -120,12 +122,12 @@ public abstract class TableModificationRelBase extends SingleRel
 
         if (operation.equals(Operation.UPDATE)) {
             inputRowType =
-                cluster.typeFactory.createJoinType(
+                getCluster().getTypeFactory().createJoinType(
                     new RelDataType [] {
                         table.getRowType(),
                         RelOptUtil.createTypeFromProjection(
                             table.getRowType(),
-                            getCluster().typeFactory, 
+                            getCluster().getTypeFactory(), 
                             updateColumnList)
                     });
         } else {

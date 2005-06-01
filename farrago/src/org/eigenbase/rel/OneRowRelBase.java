@@ -62,7 +62,7 @@ public abstract class OneRowRelBase extends AbstractRelNode
 
     protected RelDataType deriveRowType()
     {
-        return deriveOneRowType(cluster.typeFactory);
+        return deriveOneRowType(getCluster().getTypeFactory());
     }
 
     public static RelDataType deriveOneRowType(RelDataTypeFactory typeFactory)

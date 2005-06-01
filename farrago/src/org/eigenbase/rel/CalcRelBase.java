@@ -40,7 +40,7 @@ public abstract class CalcRelBase extends SingleRel
     //~ Instance fields -------------------------------------------------------
 
     public final RexNode [] projectExprs;
-    public final RexNode conditionExpr;
+    private final RexNode conditionExpr;
 
     protected CalcRelBase(
         RelOptCluster cluster,
@@ -55,15 +55,25 @@ public abstract class CalcRelBase extends SingleRel
         this.projectExprs = projectExprs;
         this.conditionExpr = conditionExpr;
     }
+
+    public RexNode [] getProjectExprs()
+    {
+        return projectExprs;
+    }
+
+    public RexNode getCondition()
+    {
+        return conditionExpr;
+    }
     
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        double dRows = child.getRows();
+        double dRows = getChild().getRows();
         int nExprs = projectExprs.length;
         if (conditionExpr != null) {
             ++nExprs;
         }
-        double dCpu = child.getRows() * nExprs;
+        double dCpu = getChild().getRows() * nExprs;
         double dIo = 0;
         return planner.makeCost(dRows, dCpu, dIo);
     }

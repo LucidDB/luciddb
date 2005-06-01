@@ -57,7 +57,7 @@ public class IterConcatenateRel extends UnionRelBase implements JavaRel
 
     public Object clone()
     {
-        IterConcatenateRel clone = new IterConcatenateRel(cluster, inputs);
+        IterConcatenateRel clone = new IterConcatenateRel(getCluster(), inputs);
         clone.inheritTraitsFrom(this);
         return clone;
     }

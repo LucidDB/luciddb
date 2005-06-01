@@ -75,7 +75,7 @@ public abstract class SqlUtil
         } else {
             list.add(node2);
         }
-        return SqlStdOperatorTable.instance().andOperator.createCall(
+        return SqlStdOperatorTable.andOperator.createCall(
             (SqlNode []) list.toArray(new SqlNode[list.size()]), null);
     }
 
@@ -150,7 +150,7 @@ public abstract class SqlUtil
     {
         if (node instanceof SqlLiteral) {
             SqlLiteral literal = (SqlLiteral) node;
-            if (literal.typeName == SqlTypeName.Null) {
+            if (literal.getTypeName() == SqlTypeName.Null) {
                 assert (null == literal.getValue());
                 return true;
             } else {
@@ -224,12 +224,12 @@ public abstract class SqlUtil
             }
             SqlIdentifier id = function.getSqlIdentifier();
             if (id == null) {
-                writer.print(operator.name);
+                writer.print(operator.getName());
             } else {
                 id.unparse(writer, 0, 0);
             }
         } else {
-            writer.print(operator.name);
+            writer.print(operator.getName());
         }
         if (operands.length == 0 && !emptyParens) {
             // For example, the "LOCALTIME" function appears as "LOCALTIME"
@@ -256,15 +256,15 @@ public abstract class SqlUtil
     {
         SqlBinaryOperator binop = (SqlBinaryOperator) operator;
         assert operands.length == 2;
-        operands[0].unparse(writer,leftPrec,binop.leftPrec);
+        operands[0].unparse(writer,leftPrec,binop.getLeftPrec());
         if (binop.needsSpace()) {
             writer.print(' ');
-            writer.print(binop.name);
+            writer.print(binop.getName());
             writer.print(' ');
         } else {
-            writer.print(binop.name);
+            writer.print(binop.getName());
         }
-        operands[1].unparse(writer,binop.rightPrec,rightPrec);
+        operands[1].unparse(writer,binop.getRightPrec(),rightPrec);
     }
 
     /**

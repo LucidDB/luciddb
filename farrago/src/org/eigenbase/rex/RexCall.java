@@ -53,7 +53,7 @@ public class RexCall extends RexNode
 {
     //~ Instance fields -------------------------------------------------------
 
-    public final SqlOperator op;
+    private final SqlOperator op;
     public final RexNode [] operands;
     private final RelDataType type;
     private final RexKind kind;
@@ -71,7 +71,7 @@ public class RexCall extends RexNode
         this.type = type;
         this.op = op;
         this.operands = operands;
-        this.kind = sqlKindToRexKind(op.kind);
+        this.kind = sqlKindToRexKind(op.getKind());
         assert this.kind != null : op;
         this.digest = computeDigest(true);
     }
@@ -160,7 +160,7 @@ public class RexCall extends RexNode
 
     protected String computeDigest(boolean withType)
     {
-        StringBuffer sb = new StringBuffer(op.name);
+        StringBuffer sb = new StringBuffer(op.getName());
         if (operands.length == 0
             && op.getSyntax() == SqlSyntax.FunctionId) {
             // Don't print params for empty arg list. For example, we want

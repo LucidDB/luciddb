@@ -62,10 +62,10 @@ public final class TableModificationRel extends TableModificationRelBase
     public Object clone()
     {
         TableModificationRel clone = new TableModificationRel(
-            cluster,
+            getCluster(),
             table,
             connection,
-            RelOptUtil.clone(child),
+            RelOptUtil.clone(getChild()),
             getOperation(),
             getUpdateColumnList(),
             isFlattened());

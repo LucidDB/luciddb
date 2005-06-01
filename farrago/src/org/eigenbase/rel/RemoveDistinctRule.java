@@ -52,9 +52,9 @@ public class RemoveDistinctRule extends RelOptRule
         if (!distinct.isDistinct()) {
             return;
         }
-        RelNode child = distinct.child;
+        RelNode child = distinct.getChild();
         if (child.isDistinct()) {
-            child = call.planner.register(child, distinct);
+            child = call.getPlanner().register(child, distinct);
             child = convert(child, distinct.getTraits());
             if (child != null) {
                 call.transformTo(child);

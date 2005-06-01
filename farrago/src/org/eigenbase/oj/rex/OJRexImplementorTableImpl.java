@@ -34,8 +34,7 @@ import org.eigenbase.sql.SqlBinaryOperator;
 import org.eigenbase.sql.SqlOperator;
 import org.eigenbase.sql.SqlOperatorTable;
 import org.eigenbase.sql.SqlPrefixOperator;
-import org.eigenbase.sql.fun.SqlMinMaxAggFunction;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.util.Util;
 
 import java.util.HashMap;
@@ -236,8 +235,8 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
             AggregateRel.Call call)
         {
             final int [] args = call.args;
-            final org.eigenbase.sql.fun.SqlSumAggFunction agg =
-                (org.eigenbase.sql.fun.SqlSumAggFunction) call.aggregation;
+            final SqlSumAggFunction agg =
+                (SqlSumAggFunction) call.getAggregation();
             assert (args.length == 1);
             StatementList stmtList = implementor.getStatementList();
             Expression arg = implementor.translateInputField(rel, 0, args[0]);
@@ -248,7 +247,8 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
                     new AssignmentExpression(
                         new FieldAccess(
                             new CastExpression(
-                                new TypeName(holderClassName + "." + agg.type
+                                new TypeName(holderClassName + "."
+                                    + agg.getType()
                                     + "_Holder"),
                                 accumulator),
                             "value"),
@@ -262,11 +262,12 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
             AggregateRel.Call call)
         {
             // e.g. "o" becomes "((Holder.int_Holder) o).value"
-            final org.eigenbase.sql.fun.SqlSumAggFunction agg =
-                (org.eigenbase.sql.fun.SqlSumAggFunction) call.aggregation;
+            final SqlSumAggFunction agg =
+                (SqlSumAggFunction) call.getAggregation();
             return new FieldAccess(
                 new CastExpression(
-                    new TypeName(holderClassName + "." + agg.type + "_Holder"),
+                    new TypeName(holderClassName + "."
+                        + agg.getType() + "_Holder"),
                     accumulator),
                 "value");
         }
@@ -277,10 +278,10 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
             AggregateRel.Call call)
         {
             // e.g. "new Holder.int_Holder(0)"
-            final org.eigenbase.sql.fun.SqlSumAggFunction agg =
-                (org.eigenbase.sql.fun.SqlSumAggFunction) call.aggregation;
+            final SqlSumAggFunction agg =
+                (SqlSumAggFunction) call.getAggregation();
             return new AllocationExpression(
-                new TypeName(holderClassName + "." + agg.type + "_Holder"),
+                new TypeName(holderClassName + "." + agg.getType() + "_Holder"),
                 new ExpressionList(Literal.constantZero()));
         }
 
@@ -308,8 +309,8 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
             Expression accumulator,
             AggregateRel.Call call)
         {
-            org.eigenbase.sql.fun.SqlCountAggFunction agg =
-                (org.eigenbase.sql.fun.SqlCountAggFunction) call.aggregation;
+            SqlCountAggFunction agg =
+                (SqlCountAggFunction) call.getAggregation();
             StatementList stmtList = implementor.getStatementList();
             ExpressionStatement stmt =
                 new ExpressionStatement(new UnaryExpression(
@@ -356,8 +357,8 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
             AggregateRel.Call call)
         {
             // e.g. "o" becomes "((Holder.int_Holder) o).value"
-            org.eigenbase.sql.fun.SqlCountAggFunction agg =
-                (org.eigenbase.sql.fun.SqlCountAggFunction) call.aggregation;
+            SqlCountAggFunction agg =
+                (SqlCountAggFunction) call.getAggregation();
             return new FieldAccess(
                 new CastExpression(
                     new TypeName(holderClassName +
@@ -372,8 +373,8 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
             AggregateRel.Call call)
         {
             // e.g. "new Holder.int_Holder(0)"
-            org.eigenbase.sql.fun.SqlCountAggFunction agg =
-                (org.eigenbase.sql.fun.SqlCountAggFunction) call.aggregation;
+            SqlCountAggFunction agg =
+                (SqlCountAggFunction) call.getAggregation();
             return new AllocationExpression(
                 new TypeName(holderClassName +
                     "." + agg.type + "_Holder"),
@@ -399,10 +400,10 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
             AggregateRel.Call call)
         {
             SqlMinMaxAggFunction agg =
-                (SqlMinMaxAggFunction) call.aggregation;
+                (SqlMinMaxAggFunction) call.getAggregation();
             StatementList stmtList = implementor.getStatementList();
             final int [] args = call.args;
-            switch (agg.kind) {
+            switch (agg.getMinMaxKind()) {
             case SqlMinMaxAggFunction.MINMAX_PRIMITIVE:
 
                 // "((Holder.int_Holder) acc).setLesser(arg)"
@@ -415,7 +416,7 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
                                 new TypeName(holderClassName + "."
                                     + agg.argTypes[0] + "_Holder"),
                                 accumulator),
-                            agg.isMin ? "setLesser" : "setGreater",
+                            agg.isMin() ? "setLesser" : "setGreater",
                             new ExpressionList(arg))));
                 return;
             case SqlMinMaxAggFunction.MINMAX_COMPARABLE:
@@ -472,11 +473,11 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
                                 new TypeName(holderClassName + "."
                                     + agg.argTypes[1] + "_Holder"),
                                 accumulator),
-                            agg.isMin ? "setLesser" : "setGreater",
+                            agg.isMin() ? "setLesser" : "setGreater",
                             new ExpressionList(arg))));
                 return;
             default:
-                throw Util.newInternal("bad kind: " + agg.kind);
+                throw Util.newInternal("bad kind: " + agg.getKind());
             }
         }
 
@@ -486,8 +487,8 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
             AggregateRel.Call call)
         {
             SqlMinMaxAggFunction agg =
-                (SqlMinMaxAggFunction) call.aggregation;
-            switch (agg.kind) {
+                (SqlMinMaxAggFunction) call.getAggregation();
+            switch (agg.getMinMaxKind()) {
             case SqlMinMaxAggFunction.MINMAX_PRIMITIVE:
 
                 // ((Holder.int_Holder) acc).value
@@ -521,7 +522,7 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
                             accumulator),
                         "value"));
             default:
-                throw Util.newInternal("bad kind: " + agg.kind);
+                throw Util.newInternal("bad kind: " + agg.getKind());
             }
         }
 
@@ -531,8 +532,8 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
             AggregateRel.Call call)
         {
             SqlMinMaxAggFunction agg =
-                (SqlMinMaxAggFunction) call.aggregation;
-            switch (agg.kind) {
+                (SqlMinMaxAggFunction) call.getAggregation();
+            switch (agg.getMinMaxKind()) {
             case SqlMinMaxAggFunction.MINMAX_PRIMITIVE:
 
                 // "new Holder.int_Holder(Integer.MAX_VALUE)" if
@@ -547,7 +548,7 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
                                     agg.argTypes[0],
                                     implementor.getTypeFactory()).
                                 primitiveWrapper()),
-                            agg.isMin ? "MAX_VALUE" : "MIN_VALUE")));
+                            agg.isMin() ? "MAX_VALUE" : "MIN_VALUE")));
             case SqlMinMaxAggFunction.MINMAX_COMPARABLE:
 
                 // "null"
@@ -563,7 +564,7 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
                         arg,
                         Literal.constantNull()));
             default:
-                throw Util.newInternal("bad kind: " + agg.kind);
+                throw Util.newInternal("bad kind: " + agg.getKind());
             }
         }
     }

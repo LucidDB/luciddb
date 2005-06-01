@@ -181,7 +181,7 @@ public class FarragoCalcSystemTest extends FarragoTestCase
         VirtualMachine vm)
         throws Exception
     {
-        assert (null != op.name) : "Operator name must not be null";
+        assert (null != op.getName()) : "Operator name must not be null";
 
         // Some operators cannot be implemented in all VMs.
         if (!vm.canImplement(op)) {
@@ -219,7 +219,8 @@ public class FarragoCalcSystemTest extends FarragoTestCase
                     precision = 1;
                 }
                 SqlDataTypeSpec dt =
-                    new SqlDataTypeSpec(new SqlIdentifier(typeName.name, null),
+                    new SqlDataTypeSpec(
+                        new SqlIdentifier(typeName.getName(), null),
                         precision,
                         0,
                         null,
@@ -242,7 +243,7 @@ public class FarragoCalcSystemTest extends FarragoTestCase
             SqlCall call = op.createCall(operands, null);
 
             String sql = "SELECT " + call.toString() + " FROM (VALUES(1))";
-            String testName = "NULL-TEST-" + op.name + "-";
+            String testName = "NULL-TEST-" + op.getName() + "-";
             suite.addTest(
                 new FarragoCalcSystemTest(vm, sql, testName + vm.name));
         }
@@ -292,11 +293,16 @@ public class FarragoCalcSystemTest extends FarragoTestCase
      */
     public static class VirtualMachine
     {
-        public final String name;
+        private final String name;
 
         private VirtualMachine(String name)
         {
             this.name = name;
+        }
+
+        public String getName()
+        {
+            return name;
         }
 
         public String getAlterSystemCommand()

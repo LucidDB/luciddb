@@ -75,8 +75,8 @@ public class SqlMinMaxAggFunction extends SqlAggFunction
     public static final int MINMAX_COMPARATOR = 2;
 
     public final RelDataType [] argTypes;
-    public final boolean isMin;
-    public final int kind;
+    private final boolean isMin;
+    private final int kind;
 
     public SqlMinMaxAggFunction(
         RelDataType [] argTypes,
@@ -94,6 +94,16 @@ public class SqlMinMaxAggFunction extends SqlAggFunction
         this.argTypes = argTypes;
         this.isMin = isMin;
         this.kind = kind;
+    }
+
+    public boolean isMin()
+    {
+        return isMin;
+    }
+
+    public int getMinMaxKind()
+    {
+        return kind;
     }
 
     public RelDataType[] getParameterTypes(RelDataTypeFactory typeFactory)

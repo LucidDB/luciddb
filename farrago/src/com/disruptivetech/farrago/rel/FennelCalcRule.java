@@ -89,13 +89,13 @@ public class FennelCalcRule extends RelOptRule
         }
         // If there's a multiset, let FarragoMultisetSplitter work on it first.
         if (RexMultisetUtil.containsMultiset(
-            calc.projectExprs, calc.conditionExpr)) {
+            calc.projectExprs, calc.getCondition())) {
             return;
         }
 
         final RexToCalcTranslator translator =
-            new RexToCalcTranslator(calc.getCluster().rexBuilder);
-        if (!translator.canTranslate(calc.projectExprs, calc.conditionExpr)) {
+            new RexToCalcTranslator(calc.getCluster().getRexBuilder());
+        if (!translator.canTranslate(calc.projectExprs, calc.getCondition())) {
             return;
         }
 
@@ -105,7 +105,7 @@ public class FennelCalcRule extends RelOptRule
                 fennelInput,
                 calc.getRowType(),
                 calc.projectExprs,
-                calc.conditionExpr);
+                calc.getCondition());
         call.transformTo(fennelCalcRel);
     }
 }

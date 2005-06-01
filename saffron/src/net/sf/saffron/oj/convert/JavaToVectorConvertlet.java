@@ -65,7 +65,7 @@ public class JavaToVectorConvertlet extends JavaConvertlet
                     new ExpressionList(
                         OJUtil.box(
                             OJUtil.typeToOJClass(
-                                converter.child.getRowType(),
+                                converter.getChild().getRowType(),
                                 implementor.getTypeFactory()),
                             implementor.translateInput(javaConverter, 0))))));
     }
@@ -106,7 +106,8 @@ public class JavaToVectorConvertlet extends JavaConvertlet
         // call us back so we can write "v.addElement(i);".
         implementor.pushStatementList(stmtList);
         Object o =
-            implementor.visitJavaChild(converter, 0, (JavaRel) converter.child);
+            implementor.visitJavaChild(
+                converter, 0, (JavaRel) converter.getChild());
         assert (o == null);
         implementor.popStatementList(stmtList);
 

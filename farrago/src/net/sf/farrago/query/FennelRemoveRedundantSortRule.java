@@ -91,7 +91,7 @@ public class FennelRemoveRedundantSortRule extends RelOptRule
         FennelSortRel sortRel,
         FennelRel inputRel)
     {
-        if (sortRel.discardDuplicates) {
+        if (sortRel.isDiscardDuplicates()) {
             // TODO:  once we can obtain the key for a RelNode, check
             // that
             return false;

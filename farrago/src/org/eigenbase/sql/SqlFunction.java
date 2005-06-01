@@ -143,7 +143,7 @@ public class SqlFunction extends SqlOperator
         if (sqlIdentifier != null) {
             return sqlIdentifier;
         }
-        return new SqlIdentifier(name, null);
+        return new SqlIdentifier(getName(), null);
     }
 
     /**

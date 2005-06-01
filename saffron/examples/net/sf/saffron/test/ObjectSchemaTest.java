@@ -205,7 +205,7 @@ public class ObjectSchemaTest extends SaffronTestCase
             final RelNode rel = call.rels[1];
             ExtentRel extent = (ExtentRel) call.rels[2];
             Util.discard(extent);
-            final RexBuilder rexBuilder = join.getCluster().rexBuilder;
+            final RexBuilder rexBuilder = join.getCluster().getRexBuilder();
             int fieldIndex = rel.getRowType().getFieldList().size();
             final EqualsPattern equalsPattern =
                 new EqualsPattern(
@@ -528,7 +528,7 @@ public class ObjectSchemaTest extends SaffronTestCase
             if (!rel.isAccessTo(table)) {
                 return;
             }
-            RexNode condition = filter.condition;
+            RexNode condition = filter.getCondition();
             this.call = call; // non-reentrant!! but okay
             pattern.match(condition, this);
         }

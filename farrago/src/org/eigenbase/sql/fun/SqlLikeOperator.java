@@ -57,7 +57,7 @@ public class SqlLikeOperator extends SqlSpecialOperator
 {
     //~ Instance fields -------------------------------------------------------
 
-    public final boolean negated;
+    private final boolean negated;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -79,6 +79,11 @@ public class SqlLikeOperator extends SqlSpecialOperator
 
     //~ Methods ---------------------------------------------------------------
 
+    public boolean isNegated()
+    {
+        return negated;
+    }
+    
     public OperandsCountDescriptor getOperandsCountDescriptor()
     {
         return new OperandsCountDescriptor(2, 3);
@@ -123,15 +128,16 @@ public class SqlLikeOperator extends SqlSpecialOperator
         int leftPrec,
         int rightPrec)
     {
-        operands[0].unparse(writer, this.leftPrec, this.rightPrec);
+        operands[0].unparse(
+            writer, getLeftPrec(), getRightPrec());
         writer.print(' ');
-        writer.print(name);
+        writer.print(getName());
         writer.print(' ');
 
-        operands[1].unparse(writer, this.leftPrec, this.rightPrec);
+        operands[1].unparse(writer, getLeftPrec(), getRightPrec());
         if (operands.length == 3) {
             writer.print(" ESCAPE ");
-            operands[2].unparse(writer, this.leftPrec, this.rightPrec);
+            operands[2].unparse(writer, getLeftPrec(), getRightPrec());
         }
     }
 
@@ -144,18 +150,22 @@ public class SqlLikeOperator extends SqlSpecialOperator
         // |  |    |      |      |      |
         //  exp0    exp1          exp2
         SqlNode exp0 = (SqlNode) list.get(opOrdinal - 1);
-        SqlOperator op = ((SqlParserUtil.ToTreeListItem) list.get(opOrdinal)).op;
+        SqlOperator op = ((SqlParserUtil.ToTreeListItem)
+            list.get(opOrdinal)).getOperator();
         assert op instanceof SqlLikeOperator;
         SqlNode exp1 =
-            SqlParserUtil.toTreeEx(list, opOrdinal + 1, rightPrec, SqlKind.Escape);
+            SqlParserUtil.toTreeEx(
+                list, opOrdinal + 1, getRightPrec(), SqlKind.Escape);
         SqlNode exp2 = null;
         if ((opOrdinal + 2) < list.size()) {
             final Object o = list.get(opOrdinal + 2);
             if (o instanceof SqlParserUtil.ToTreeListItem) {
-                final SqlOperator op2 = ((SqlParserUtil.ToTreeListItem) o).op;
-                if (op2.kind == SqlKind.Escape) {
+                final SqlOperator op2 =
+                    ((SqlParserUtil.ToTreeListItem) o).getOperator();
+                if (op2.getKind() == SqlKind.Escape) {
                     exp2 =
-                        SqlParserUtil.toTreeEx(list, opOrdinal + 3, rightPrec,
+                        SqlParserUtil.toTreeEx(
+                            list, opOrdinal + 3, getRightPrec(),
                             SqlKind.Escape);
                 }
             }

@@ -55,7 +55,7 @@ public class RexBuilder
     private final RexLiteral booleanFalse;
     private final RexLiteral varcharEmpty;
     private final RexLiteral constantNull;
-    public final SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
+    private final SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
 
     //~ Constructors ----------------------------------------------------------
 
@@ -94,6 +94,11 @@ public class RexBuilder
         return typeFactory;
     }
 
+    public SqlStdOperatorTable getOpTab()
+    {
+        return opTab;
+    }
+
     public RexNode makeFieldAccess(
         RexNode expr,
         String fieldName)
@@ -127,7 +132,7 @@ public class RexBuilder
         if (expr instanceof RexRangeRef) {
             RexRangeRef range = (RexRangeRef) expr;
             return new RexInputRef(
-                range.offset + field.getIndex(),
+                range.getOffset() + field.getIndex(),
                 field.getType());
         }
         return new RexFieldAccess(expr, field);

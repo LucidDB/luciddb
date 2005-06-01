@@ -62,7 +62,7 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
         writer.print(", ");
         operands[1].unparse(writer, leftPrec, rightPrec);
         writer.print(") ");
-        writer.print(name);
+        writer.print(getName());
         writer.print(" (");
         operands[2].unparse(writer, leftPrec, rightPrec);
         writer.print(", ");

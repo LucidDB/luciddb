@@ -59,7 +59,7 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
 {
     //~ Instance fields -------------------------------------------------------
 
-    public final DataSource dataSource;
+    private final DataSource dataSource;
 
     /** The expression which yields the connection object. */
     protected RelOptConnection connection;
@@ -107,7 +107,7 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
         this.connection = connection;
         this.dialect = dialect;
         if (sql == null) {
-            sql = SqlStdOperatorTable.instance().selectOperator.createCall(null,
+            sql = SqlStdOperatorTable.selectOperator.createCall(null,
                 null, null, null, null, null, null, null,
                 SqlParserPos.ZERO);
         } else {
@@ -126,6 +126,11 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
         return connection;
     }
 
+    public DataSource getDataSource()
+    {
+        return dataSource;
+    }
+
     public String getQualifier()
     {
         if (queryString == null) {
@@ -136,7 +141,8 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
 
     public Object clone()
     {
-        JdbcQuery clone = new JdbcQuery(cluster, rowType, connection, dialect,
+        JdbcQuery clone = new JdbcQuery(
+            getCluster(), rowType, connection, dialect,
             (SqlSelect) sql.clone(), dataSource);
         clone.inheritTraitsFrom(this);
         return clone;
@@ -218,7 +224,7 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
         assert dataSource instanceof JdbcDataSource; // hack
 
         // DriverManager.getConnection("jdbc...", "scott", "tiger");
-        final String url = ((JdbcDataSource) dataSource).url;
+        final String url = ((JdbcDataSource) dataSource).getUrl();
         final MethodCall connectionExpr =
             new MethodCall(
                 OJUtil.typeNameForClass(java.sql.DriverManager.class),

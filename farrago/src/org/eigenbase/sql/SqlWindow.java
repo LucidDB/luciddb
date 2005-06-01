@@ -117,7 +117,7 @@ public class SqlWindow extends SqlCall
 
     public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
         // Override, so we don't print extra parentheses.
-        operator.unparse(writer, operands, 0, 0);
+        getOperator().unparse(writer, operands, 0, 0);
     }
 
     public SqlIdentifier getDeclName() {
@@ -181,7 +181,7 @@ public class SqlWindow extends SqlCall
         setOperand(newOperands, that.operands, OrderList_OPERAND, validator);
         setOperand(newOperands, that.operands, LowerBound_OPERAND, validator);
         setOperand(newOperands, that.operands, UpperBound_OPERAND, validator);
-        return new SqlWindow((SqlWindowOperator) operator, newOperands,
+        return new SqlWindow((SqlWindowOperator) getOperator(), newOperands,
             SqlParserPos.ZERO);
     }
 

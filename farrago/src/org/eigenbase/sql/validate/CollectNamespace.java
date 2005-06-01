@@ -54,7 +54,7 @@ public class CollectNamespace extends AbstractNamespace
         // XXX call derive type and make deriveTypeImpl private
         RelDataType type = validator.deriveTypeImpl(scope, child);
         boolean isNullable = type.isNullable();
-        final RelDataTypeFactory typeFactory = validator.typeFactory;
+        final RelDataTypeFactory typeFactory = validator.getTypeFactory();
         type = typeFactory.createStructType(
             new RelDataType[]{type},
             new String[]{ validator.deriveAlias(child, 0) });

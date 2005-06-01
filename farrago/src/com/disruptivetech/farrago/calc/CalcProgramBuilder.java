@@ -354,7 +354,7 @@ public class CalcProgramBuilder
         CalcProgramBuilder.RegisterSetType registerType)
     {
         ArrayList registerSet =
-            registerSets.getSet(registerType.ordinal);
+            registerSets.getSet(registerType.getOrdinal());
         Register register = (Register) registerSet.get(ordinal);
         return register;
     }
@@ -666,12 +666,13 @@ public class CalcProgramBuilder
                     LiteralPair that = (LiteralPair) o;
 
                     if ((null == this.value) && (null == that.value)) {
-                        return this.type.ordinal == that.type.ordinal;
+                        return this.type.getOrdinal() == that.type.getOrdinal();
                     }
 
                     if (null != this.value) {
                         return this.value.equals(that.value)
-                            && (this.type.ordinal == that.type.ordinal);
+                            && (this.type.getOrdinal()
+                                == that.type.getOrdinal());
                     }
                 }
                 return false;
@@ -989,7 +990,7 @@ public class CalcProgramBuilder
     {
         compilationAssert(reg.getOpType().getOrdinal() == OpType.Bool_ordinal,
             "Expected a register of Boolean type. " + "Found "
-            + reg.getOpType().name);
+            + reg.getOpType().getName());
     }
 
     /**
@@ -1943,7 +1944,7 @@ public class CalcProgramBuilder
 
         public boolean isExact()
         {
-            switch (ordinal) {
+            switch (getOrdinal()) {
             case Int1_ordinal:
             case Uint1_ordinal:
             case Int2_ordinal:
@@ -1959,7 +1960,7 @@ public class CalcProgramBuilder
 
         public boolean isApprox()
         {
-            switch (ordinal) {
+            switch (getOrdinal()) {
             case Real_ordinal:
             case Double_ordinal:
                 return true;

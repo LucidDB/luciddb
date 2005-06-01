@@ -124,7 +124,7 @@ public abstract class ReflectiveSqlOperatorTable implements SqlOperatorTable
         // REVIEW jvs 1-Jan-2005:  why is this extra lookup required?
         // Shouldn't it be covered by search above?
         Object extra = null;
-        switch (syntax.ordinal) {
+        switch (syntax.getOrdinal()) {
         case SqlSyntax.Binary_ordinal:
             extra = mapNameToOp.get(simpleName + ":BINARY");
         case SqlSyntax.Prefix_ordinal:
@@ -144,13 +144,13 @@ public abstract class ReflectiveSqlOperatorTable implements SqlOperatorTable
 
     public void register(SqlOperator op)
     {
-        operators.putMulti(op.name, op);
+        operators.putMulti(op.getName(), op);
         if (op instanceof SqlBinaryOperator) {
-            mapNameToOp.put(op.name + ":BINARY", op);
+            mapNameToOp.put(op.getName() + ":BINARY", op);
         } else if (op instanceof SqlPrefixOperator) {
-            mapNameToOp.put(op.name + ":PREFIX", op);
+            mapNameToOp.put(op.getName() + ":PREFIX", op);
         } else if (op instanceof SqlPostfixOperator) {
-            mapNameToOp.put(op.name + ":POSTFIX", op);
+            mapNameToOp.put(op.getName() + ":POSTFIX", op);
         }
     }
 
@@ -160,9 +160,9 @@ public abstract class ReflectiveSqlOperatorTable implements SqlOperatorTable
      */
     public void register(SqlFunction function)
     {
-        operators.putMulti(function.name, function);
+        operators.putMulti(function.getName(), function);
         SqlFunctionCategory funcType = function.getFunctionType();
-        assert (funcType != null) : "Function type for " + function.name
+        assert (funcType != null) : "Function type for " + function.getName()
         + " not set";
     }
 

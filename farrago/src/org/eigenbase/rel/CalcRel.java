@@ -71,9 +71,9 @@ public final class CalcRel extends CalcRelBase
     public Object clone()
     {
         return new CalcRel(
-            cluster, cloneTraits(), child, rowType,
+            getCluster(), cloneTraits(), getChild(), rowType,
             RexUtil.clone(projectExprs),
-            (RexNode) (null==conditionExpr ? null : conditionExpr.clone()));
+            (RexNode) (null==getCondition() ? null : getCondition().clone()));
     }
 
 }

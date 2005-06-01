@@ -86,7 +86,7 @@ public class SqlInfixOperator extends SqlSpecialOperator
                     writer.print(names[i - 1]);
                 }
             }
-            operands[i].unparse(writer, leftPrec, this.leftPrec);
+            operands[i].unparse(writer, leftPrec, getLeftPrec());
         }
     }
 

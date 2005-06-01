@@ -43,7 +43,7 @@ import java.sql.Time;
 abstract class SqlAbstractDateTimeLiteral extends SqlLiteral {
     protected final boolean hasTimeZone;
     protected final String formatString;
-    public final int precision;
+    protected final int precision;
 
     protected SqlAbstractDateTimeLiteral(
         Calendar d,
@@ -99,7 +99,7 @@ abstract class SqlAbstractDateTimeLiteral extends SqlLiteral {
 
     public RelDataType createSqlType(RelDataTypeFactory typeFactory)
     {
-        return typeFactory.createSqlType(typeName, precision);
+        return typeFactory.createSqlType(getTypeName(), getPrec());
     }
 
     public void unparse(

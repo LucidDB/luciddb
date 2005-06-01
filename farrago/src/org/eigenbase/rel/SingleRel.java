@@ -41,7 +41,7 @@ public abstract class SingleRel extends AbstractRelNode
 {
     //~ Instance fields -------------------------------------------------------
 
-    public RelNode child;
+    private RelNode child;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -63,6 +63,11 @@ public abstract class SingleRel extends AbstractRelNode
 
     //~ Methods ---------------------------------------------------------------
 
+    public RelNode getChild()
+    {
+        return child;
+    }
+    
     // implement RelNode
     public RelNode [] getInputs()
     {

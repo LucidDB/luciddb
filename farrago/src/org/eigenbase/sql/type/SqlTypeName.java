@@ -359,7 +359,7 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
      */
     public boolean isSpecial()
     {
-        switch (ordinal) {
+        switch (getOrdinal()) {
         case Any_ordinal:
         case Null_ordinal:
         case Symbol_ordinal:
@@ -375,7 +375,7 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
      */
     public int getJdbcOrdinal()
     {
-        switch (ordinal) {
+        switch (getOrdinal()) {
         case Boolean_ordinal:
             return Types.BOOLEAN;
         case Tinyint_ordinal:
@@ -441,7 +441,7 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
      */
     public int getDefaultPrecision()
     {
-        switch (ordinal) {
+        switch (getOrdinal()) {
         case Char_ordinal:
         case Binary_ordinal:
             return 1;

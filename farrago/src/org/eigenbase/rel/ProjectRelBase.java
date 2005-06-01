@@ -111,8 +111,8 @@ public abstract class ProjectRelBase extends SingleRel
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        double dRows = child.getRows();
-        double dCpu = child.getRows() * exps.length;
+        double dRows = getChild().getRows();
+        double dCpu = getChild().getRows() * exps.length;
         double dIo = 0;
         return planner.makeCost(dRows, dCpu, dIo);
     }
@@ -146,7 +146,8 @@ public abstract class ProjectRelBase extends SingleRel
         String fieldName)
     {
         if (!isBoxed()) {
-            return implementor.implementFieldAccess((JavaRel) child, fieldName);
+            return implementor.implementFieldAccess(
+                (JavaRel) getChild(), fieldName);
         }
         RelDataType type = getRowType();
         int field = type.getFieldOrdinal(fieldName);
@@ -160,9 +161,9 @@ public abstract class ProjectRelBase extends SingleRel
         }
         final RelDataType [] types = SqlTypeUtil.collectTypes(exps);
         if (((flags & Flags.AnonFields) == Flags.AnonFields) && false) {
-            return cluster.typeFactory.createJoinType(types);
+            return getCluster().getTypeFactory().createJoinType(types);
         } else {
-            return cluster.typeFactory.createStructType(
+            return getCluster().getTypeFactory().createStructType(
                 new RelDataTypeFactory.FieldInfo() {
                     public int getFieldCount()
                     {

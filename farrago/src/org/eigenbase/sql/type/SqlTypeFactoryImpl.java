@@ -106,7 +106,7 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
         } else if (type instanceof JavaType) {
             JavaType javaType = (JavaType) type;
             newType = new JavaType(
-                javaType.clazz,
+                javaType.getJavaClass(),
                 javaType.isNullable(),
                 charset,
                 collation);

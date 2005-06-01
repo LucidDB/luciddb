@@ -58,7 +58,7 @@ public class RexFieldAccess extends RexNode
 {
     //~ Instance fields -------------------------------------------------------
 
-    public RexNode expr;
+    private RexNode expr;
     private final RelDataTypeField field;
 
     //~ Constructors ----------------------------------------------------------
@@ -105,6 +105,11 @@ public class RexFieldAccess extends RexNode
     public RexNode getReferenceExpr()
     {
         return expr;
+    }
+
+    public void setReferenceExpr(RexNode expr)
+    {
+        this.expr = expr;
     }
 
     /**

@@ -48,10 +48,10 @@ public class FennelSortRel extends FennelPullSingleRel
      * 0-based ordinals of fields on which to sort, from most significant to
      * least significant.
      */
-    public final Integer [] keyProjection;
+    private final Integer [] keyProjection;
 
     /** Whether to discard tuples with duplicate keys. */
-    public final boolean discardDuplicates;
+    private final boolean discardDuplicates;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -87,12 +87,17 @@ public class FennelSortRel extends FennelPullSingleRel
             && (keyProjection.length == getRowType().getFieldList().size());
     }
 
+    public boolean isDiscardDuplicates()
+    {
+        return discardDuplicates;
+    }
+
     // implement Cloneable
     public Object clone()
     {
         FennelSortRel clone = new FennelSortRel(
-            cluster,
-            RelOptUtil.clone(child),
+            getCluster(),
+            RelOptUtil.clone(getChild()),
             keyProjection,
             discardDuplicates);
         clone.inheritTraitsFrom(this);
@@ -137,7 +142,7 @@ public class FennelSortRel extends FennelPullSingleRel
                 repos,
                 keyProjection));
         sortingStream.getInput().add(
-            implementor.visitFennelChild((FennelRel) child));
+            implementor.visitFennelChild((FennelRel) getChild()));
         return sortingStream;
     }
 

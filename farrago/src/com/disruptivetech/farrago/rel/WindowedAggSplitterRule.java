@@ -73,7 +73,7 @@ public class WindowedAggSplitterRule extends RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
         CalcRel calc = (CalcRel) call.rels[0];
-        if (!RexOver.containsOver(calc.projectExprs, calc.conditionExpr)) {
+        if (!RexOver.containsOver(calc.projectExprs, calc.getCondition())) {
             return;
         }
         CalcRel calcClone = (CalcRel) calc.clone();

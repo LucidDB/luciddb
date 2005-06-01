@@ -53,7 +53,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     private static final boolean bug269fixed = false;
     public static final boolean todoTypeInference = false;
 
-    public final Logger logger = Logger.getLogger(getClass().getName());
+    protected final Logger logger = Logger.getLogger(getClass().getName());
 
     //~ Methods ---------------------------------------------------------------
 

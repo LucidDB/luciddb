@@ -81,9 +81,15 @@ public final class WindowedAggregateRel extends SingleRel
         }
     }
 
+    public RexNode [] getAggs()
+    {
+        return aggs;
+    }
+
     public Object clone()
     {
-        return new WindowedAggregateRel(cluster, traits, child, aggs, rowType);
+        return new WindowedAggregateRel(
+            getCluster(), traits, getChild(), aggs, rowType);
     }
 }
 

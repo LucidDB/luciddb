@@ -58,7 +58,8 @@ public class NoneConverterRel extends ConverterRel
 
     public Object clone()
     {
-        NoneConverterRel clone = new NoneConverterRel(this.cluster, child);
+        NoneConverterRel clone = new NoneConverterRel(
+            getCluster(), getChild());
         clone.inheritTraitsFrom(this);
         return clone;
     }

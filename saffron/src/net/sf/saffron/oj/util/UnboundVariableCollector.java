@@ -63,7 +63,7 @@ public class UnboundVariableCollector extends RexShuttle
     public static UnboundVariableCollector collectFromRel(RelNode rel)
     {
         UnboundVariableCollector unboundVars =
-            new UnboundVariableCollector(rel.getCluster().env);
+            new UnboundVariableCollector(rel.getCluster().getEnv());
         RelOptUtil.go(
             new VisitorRelVisitor(unboundVars),
             rel);

@@ -81,7 +81,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
     private final Flag flag;
 
     /** If true the call represents 'NOT BETWEEN'. */
-    public final boolean negated;
+    private final boolean negated;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -97,6 +97,11 @@ public class SqlBetweenOperator extends SqlInfixOperator
 
     //~ Methods ---------------------------------------------------------------
 
+    public boolean isNegated()
+    {
+        return negated;
+    }
+    
     private RelDataType [] getTypeArray(
         SqlValidator validator,
         SqlValidatorScope scope,
@@ -201,15 +206,15 @@ public class SqlBetweenOperator extends SqlInfixOperator
         int leftPrec,
         int rightPrec)
     {
-        operands[VALUE_OPERAND].unparse(writer, this.leftPrec, 0);
+        operands[VALUE_OPERAND].unparse(writer, getLeftPrec(), 0);
         writer.print(" ");
-        writer.print(name);
+        writer.print(getName());
         writer.print(" ");
         operands[SYMFLAG_OPERAND].unparse(writer, 0, 0);
         writer.print(" ");
         operands[LOWER_OPERAND].unparse(writer, 0, 0);
         writer.print(" AND ");
-        operands[UPPER_OPERAND].unparse(writer, 0, this.rightPrec);
+        operands[UPPER_OPERAND].unparse(writer, 0, getRightPrec());
     }
 
     public int reduceExpr(
@@ -218,7 +223,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
     {
         final SqlParserUtil.ToTreeListItem betweenNode =
             (SqlParserUtil.ToTreeListItem) list.get(opOrdinal);
-        SqlOperator op = betweenNode.op;
+        SqlOperator op = betweenNode.getOperator();
         assert op == this;
 
         // Break the expression up into expressions. For example, a simple
@@ -236,7 +241,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
             SqlParserUtil.toTreeEx(list, opOrdinal + 1, 0, SqlKind.And);
         if (((opOrdinal + 2) >= list.size())
                 || !(list.get(opOrdinal + 2) instanceof SqlParserUtil.ToTreeListItem)
-                || (((SqlParserUtil.ToTreeListItem) list.get(opOrdinal + 2)).op.kind != SqlKind.And)) {
+                || (((SqlParserUtil.ToTreeListItem) list.get(opOrdinal + 2)).getOperator().getKind() != SqlKind.And)) {
             throw EigenbaseResource.instance().newBetweenWithoutAnd(
                 new Integer(pos.getLineNum()),
                 new Integer(pos.getColumnNum()));
@@ -251,7 +256,8 @@ public class SqlBetweenOperator extends SqlInfixOperator
         //   (a BETWEEN b AND c + d) OR e
         // because OR has lower precedence than BETWEEN.
         SqlNode exp2 =
-            SqlParserUtil.toTreeEx(list, opOrdinal + 3, rightPrec, SqlKind.Other);
+            SqlParserUtil.toTreeEx(
+                list, opOrdinal + 3, getRightPrec(), SqlKind.Other);
 
         // Create the call.
         SqlNode exp0 = (SqlNode) list.get(opOrdinal - 1);
@@ -259,7 +265,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
             createCall(
                 new SqlNode [] {
                     exp0, exp1, exp2, SqlLiteral.createSymbol(flag, null) },
-                betweenNode.pos);
+                betweenNode.getPos());
 
         // Replace all of the matched nodes with the single reduced node.
         SqlParserUtil.replaceSublist(list, opOrdinal - 1, opOrdinal + 4, newExp);

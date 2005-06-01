@@ -93,7 +93,7 @@ public abstract class SetOpRel extends AbstractRelNode
         for (int i = 0; i < inputs.length; i++) {
             types[i] = inputs[i].getRowType();
         }
-        return cluster.typeFactory.leastRestrictive(types);
+        return getCluster().getTypeFactory().leastRestrictive(types);
     }
 }
 

@@ -424,7 +424,7 @@ public class ReturnTypeInferenceImpl
                 CallOperands callOperands,
                 RelDataType typeToTransform)
             {
-                switch (typeToTransform.getSqlTypeName().ordinal) {
+                switch (typeToTransform.getSqlTypeName().getOrdinal()) {
                 case SqlTypeName.Varchar_ordinal:
                 case SqlTypeName.Varbinary_ordinal:
                     return typeToTransform;
@@ -450,7 +450,7 @@ public class ReturnTypeInferenceImpl
             private SqlTypeName toVar(RelDataType type)
             {
                 final SqlTypeName sqlTypeName = type.getSqlTypeName();
-                switch (sqlTypeName.ordinal) {
+                switch (sqlTypeName.getOrdinal()) {
                 case SqlTypeName.Char_ordinal:
                     return SqlTypeName.Varchar;
                 case SqlTypeName.Binary_ordinal:

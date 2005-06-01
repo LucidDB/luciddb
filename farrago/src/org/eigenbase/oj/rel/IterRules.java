@@ -136,7 +136,8 @@ public abstract class IterRules
             final CalcRel calc = (CalcRel) rel;
             final RelNode convertedChild =
                 mergeTraitsAndConvert(
-                    calc.getTraits(), CallingConvention.ITERATOR, calc.child);
+                    calc.getTraits(), CallingConvention.ITERATOR,
+                    calc.getChild());
             if (convertedChild == null) {
                 // We can't convert the child, so we can't convert rel.
                 return null;
@@ -144,7 +145,7 @@ public abstract class IterRules
             // If there's a multiset, let FarragoMultisetSplitter work on it
             // first.
             if (RexMultisetUtil.containsMultiset(
-                calc.projectExprs, calc.conditionExpr)) {
+                calc.projectExprs, calc.getCondition())) {
                 return null;
             }
 
@@ -153,7 +154,7 @@ public abstract class IterRules
             final JavaRelImplementor relImplementor =
                 rel.getCluster().getPlanner().getJavaRelImplementor(rel);
             if (!relImplementor.canTranslate(
-                convertedChild, calc.conditionExpr, calc.projectExprs)) {
+                convertedChild, calc.getCondition(), calc.projectExprs)) {
                 // Some of the expressions cannot be translated into Java
                 return null;
             }
@@ -162,7 +163,7 @@ public abstract class IterRules
                 rel.getCluster(),
                 convertedChild,
                 calc.projectExprs,
-                calc.conditionExpr,
+                calc.getCondition(),
                 RelOptUtil.getFieldNames(calc.getRowType()),
                 IterCalcRel.Flags.Boxed);
         }
@@ -173,7 +174,7 @@ public abstract class IterRules
      */
     public static class ProjectToIteratorRule extends ConverterRule
     {
-        public static ProjectToIteratorRule instance =
+        public static final ProjectToIteratorRule instance =
             new ProjectToIteratorRule();
 
         private ProjectToIteratorRule()
@@ -185,7 +186,7 @@ public abstract class IterRules
         public RelNode convert(RelNode rel)
         {
             final ProjectRel project = (ProjectRel) rel;
-            RelNode inputRel = project.child;
+            RelNode inputRel = project.getChild();
             final RelNode iterChild =
                 mergeTraitsAndConvert(
                     project.getTraits(), CallingConvention.ITERATOR, inputRel);
@@ -250,8 +251,8 @@ public abstract class IterRules
             ProjectRel project = (ProjectRel) call.rels[0];
             FilterRel filterRel = (FilterRel) call.rels[1];
 
-            RelNode inputRel = filterRel.child;
-            RexNode condition = filterRel.condition;
+            RelNode inputRel = filterRel.getChild();
+            RexNode condition = filterRel.getCondition();
 
             RelNode iterChild =
                 mergeTraitsAndConvert(
@@ -272,7 +273,7 @@ public abstract class IterRules
             // REVIEW: want to move canTranslate into RelImplementor
             // and implement it for Java & C++ calcs.
             final JavaRelImplementor relImplementor =
-                call.planner.getJavaRelImplementor(project);
+                call.getPlanner().getJavaRelImplementor(project);
             if (!relImplementor.canTranslate(iterChild, condition, exps)) {
                 // some of the expressions cannot be translated into Java
                 return;

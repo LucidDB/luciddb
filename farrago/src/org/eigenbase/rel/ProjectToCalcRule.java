@@ -50,7 +50,7 @@ public class ProjectToCalcRule extends RelOptRule
 {
     //~ Static fields/initializers --------------------------------------------
 
-    public static ProjectToCalcRule instance = new ProjectToCalcRule();
+    public static final ProjectToCalcRule instance = new ProjectToCalcRule();
 
     //~ Constructors ----------------------------------------------------------
 
@@ -79,7 +79,7 @@ public class ProjectToCalcRule extends RelOptRule
         final RexNode [] projectExprs = RexUtil.clone(project.exps);
         final CalcRel calc =
             new CalcRel(
-                project.cluster, RelOptUtil.clone(project.traits), child,
+                project.getCluster(), RelOptUtil.clone(project.traits), child,
                 rowType, projectExprs, null);
         call.transformTo(calc);
     }

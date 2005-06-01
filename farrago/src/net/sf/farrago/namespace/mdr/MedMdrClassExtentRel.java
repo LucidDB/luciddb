@@ -89,7 +89,7 @@ class MedMdrClassExtentRel extends TableAccessRelBase implements JavaRel
     public Object clone()
     {
         MedMdrClassExtentRel clone =
-            new MedMdrClassExtentRel(cluster, mdrClassExtent, connection);
+            new MedMdrClassExtentRel(getCluster(), mdrClassExtent, connection);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -178,7 +178,7 @@ class MedMdrClassExtentRel extends TableAccessRelBase implements JavaRel
         Variable varInputRow = implementor.newVariable();
 
         RelDataType inputRowType =
-            getCluster().typeFactory.createJavaType(rowClass);
+            getCluster().getTypeFactory().createJavaType(rowClass);
         RelDataType outputRowType = getRowType();
 
         RexNode [] rexExps = implementProjection(varInputRow);
@@ -257,11 +257,11 @@ class MedMdrClassExtentRel extends TableAccessRelBase implements JavaRel
                 new ExpressionList(Literal.makeLiteral("name")));
 
         JavaRexBuilder javaRexBuilder =
-            (JavaRexBuilder) getCluster().rexBuilder;
+            (JavaRexBuilder) getCluster().getRexBuilder();
         RexNode [] rexExps = new RexNode[accessorExps.length];
         for (int i = 0; i < accessorExps.length; ++i) {
             rexExps[i] =
-                javaRexBuilder.makeJava(getCluster().env, accessorExps[i]);
+                javaRexBuilder.makeJava(getCluster().getEnv(), accessorExps[i]);
 
             // REVIEW:  This cast may cause the generated code to forget
             // something important like pad/truncate.

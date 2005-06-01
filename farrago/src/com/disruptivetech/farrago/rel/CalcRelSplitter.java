@@ -472,14 +472,14 @@ public abstract class CalcRelSplitter
         // Generate the actual CalcRel objects that represent the
         // decomposition of the original CalcRel.
         RelDataTypeFactory typeFactory = calc.getCluster().getTypeFactory();
-        RelNode resultCalcRel = calc.child;
+        RelNode resultCalcRel = calc.getChild();
         for (int i = levelExpressions.length - 1; i >= 0; i--) {
             ArrayList expressions = levelExpressions[i];
             RelType relType = getLevelType(i);
             int numNodes = expressions.size();
             RexNode [] nodes;
             RexNode conditional = null;
-            RelDataType rowType = calc.rowType;
+            RelDataType rowType = calc.getRowType();
 
             if (i == 0) {
                 // Only the top (furthest downstream) level can have a filter.
@@ -638,7 +638,8 @@ public abstract class CalcRelSplitter
                     if (nodeData.node instanceof RexCall) {
                         ((RexCall) clonedNode).operands[i] = inputRef;
                     } else {
-                        ((RexFieldAccess) clonedNode).expr = inputRef;
+                        ((RexFieldAccess) clonedNode).setReferenceExpr(
+                            inputRef);
                     }
 
                     children.add(grandChild);
@@ -653,7 +654,8 @@ public abstract class CalcRelSplitter
                     if (nodeData.node instanceof RexCall) {
                         ((RexCall) clonedNode).operands[i] = clonedChildCall;
                     } else {
-                        ((RexFieldAccess) clonedNode).expr = clonedChildCall;
+                        ((RexFieldAccess) clonedNode).setReferenceExpr(
+                            clonedChildCall);
                     }
                 } else {
                     RexInputRef inputRef =
@@ -663,7 +665,8 @@ public abstract class CalcRelSplitter
                     if (nodeData.node instanceof RexCall) {
                         ((RexCall) clonedNode).operands[i] = inputRef;
                     } else {
-                        ((RexFieldAccess) clonedNode).expr = inputRef;
+                        ((RexFieldAccess) clonedNode).setReferenceExpr(
+                            inputRef);
                     }
 
                     children.add(child);
@@ -701,9 +704,9 @@ public abstract class CalcRelSplitter
                 nodeDataList.add(new NodeData(projectExpr, false, null));
             }
         }
-        if (calc.conditionExpr != null) {
-            baseNodes.add(calc.conditionExpr);
-            nodeDataList.add(new NodeData(calc.conditionExpr, true, null));
+        if (calc.getCondition() != null) {
+            baseNodes.add(calc.getCondition());
+            nodeDataList.add(new NodeData(calc.getCondition(), true, null));
         }
 
         buildNodeDataTreeList(nodeDataList, baseNodes);
@@ -747,12 +750,13 @@ public abstract class CalcRelSplitter
                 nodeData.children = new ArrayList(1);
 
                 nodeData.children.add(
-                    new NodeData(fieldAccess.expr, nodeData.isConditional,
-                                 nodeData));
+                    new NodeData(
+                        fieldAccess.getReferenceExpr(), nodeData.isConditional,
+                        nodeData));
 
                 buildNodeDataTreeList(
                     nodeData.children,
-                    Collections.singletonList(fieldAccess.expr));
+                    Collections.singletonList(fieldAccess.getReferenceExpr()));
             }
         }
     }

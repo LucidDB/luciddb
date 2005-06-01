@@ -90,9 +90,9 @@ class QueryInfo
         this.cluster = createCluster(
                 parent,
                 env.getParent());
-        this.rexBuilder = (JavaRexBuilder) cluster.rexBuilder;
+        this.rexBuilder = (JavaRexBuilder) cluster.getRexBuilder();
         if (exp != null) {
-            cluster.originalExpression = rexBuilder.makeJava(env, exp);
+            cluster.setOriginalExpression(rexBuilder.makeJava(env, exp));
         }
     }
 
@@ -162,7 +162,7 @@ class QueryInfo
             query = new RelOptQuery(
                 OJPlannerFactory.threadInstance().newPlanner());
         } else {
-            query = queryInfo.cluster.query;
+            query = queryInfo.cluster.getQuery();
         }
         final RelDataTypeFactory typeFactory =
             OJUtil.threadTypeFactory();
@@ -208,13 +208,13 @@ class QueryInfo
             RelNode right = convertFromExpToRel(rightExp);
 
             // Deal with any forward-references.
-            if (!cluster.query.mapDeferredToCorrel.isEmpty()) {
+            if (!cluster.getQuery().getMapDeferredToCorrel().isEmpty()) {
                 Iterator lookups =
-                    cluster.query.mapDeferredToCorrel.keySet().iterator();
+                    cluster.getQuery().getMapDeferredToCorrel().keySet().iterator();
                 while (lookups.hasNext()) {
                     DeferredLookup lookup = (DeferredLookup) lookups.next();
                     String correlName =
-                        (String) cluster.query.mapDeferredToCorrel.get(lookup);
+                        (String) cluster.getQuery().getMapDeferredToCorrel().get(lookup);
 
                     // as a side-effect, this associates correlName with rel
                     LookupResult lookupResult =
@@ -223,7 +223,7 @@ class QueryInfo
                             correlName);
                     assert (lookupResult != null);
                 }
-                cluster.query.mapDeferredToCorrel.clear();
+                cluster.getQuery().getMapDeferredToCorrel().clear();
             }
 
             // Make sure that left does not depend upon a correlating variable

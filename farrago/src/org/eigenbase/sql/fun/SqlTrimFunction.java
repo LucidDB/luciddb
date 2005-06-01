@@ -70,7 +70,7 @@ public class SqlTrimFunction extends SqlFunction
         int leftPrec,
         int rightPrec)
     {
-        writer.print(name);
+        writer.print(getName());
         writer.print("(");
         assert operands[0] instanceof SqlLiteral;
         operands[0].unparse(writer, 0, 0);
@@ -145,8 +145,8 @@ public class SqlTrimFunction extends SqlFunction
      */
     public static class Flag extends EnumeratedValues.BasicValue
     {
-        public final int left;
-        public final int right;
+        private final int left;
+        private final int right;
 
         private Flag(String name,
             int left,
@@ -155,6 +155,16 @@ public class SqlTrimFunction extends SqlFunction
             super(name, ordinal, null);
             this.left = left;
             this.right = right;
+        }
+
+        public int getLeft()
+        {
+            return left;
+        }
+
+        public int getRight()
+        {
+            return right;
         }
 
         public static final int Both_ordinal = 0;

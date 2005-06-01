@@ -52,7 +52,8 @@ public class VectorToEnumerationConvertlet extends JavaConvertlet
         // Generate
         //   <<exp>>.elements()
         Expression exp =
-            implementor.visitJavaChild(converter, 0, (JavaRel) converter.child);
+            implementor.visitJavaChild(
+                converter, 0, (JavaRel) converter.getChild());
         return new MethodCall(
             exp,
             "elements",

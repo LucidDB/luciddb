@@ -40,10 +40,10 @@ public abstract class RelOptRuleCall
 
     //~ Instance fields -------------------------------------------------------
 
-    public final RelOptRuleOperand operand0;
-    public final RelOptRule rule;
+    private final RelOptRuleOperand operand0;
+    private final RelOptRule rule;
     public final RelNode [] rels;
-    public final RelOptPlanner planner;
+    private final RelOptPlanner planner;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -54,13 +54,33 @@ public abstract class RelOptRuleCall
     {
         this.planner = planner;
         this.operand0 = operand;
-        this.rule = operand.rule;
+        this.rule = operand.getRule();
         this.rels = rels;
         assert (rels.length == rule.operands.length);
     }
 
     //~ Methods ---------------------------------------------------------------
 
+    public RelOptRuleOperand getOperand0()
+    {
+        return operand0;
+    }
+
+    public RelOptRule getRule()
+    {
+        return rule;
+    }
+
+    public RelNode [] getRels()
+    {
+        return rels;
+    }
+
+    public RelOptPlanner getPlanner()
+    {
+        return planner;
+    }
+    
     /**
      * Called by the rule whenever it finds a match.  The implementation of
      * this method will guarantee that the original relational expression

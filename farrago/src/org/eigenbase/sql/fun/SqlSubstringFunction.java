@@ -149,7 +149,7 @@ public class SqlSubstringFunction extends SqlFunction {
         int leftPrec,
         int rightPrec)
     {
-        writer.print(name);
+        writer.print(getName());
         writer.print("(");
         operands[0].unparse(writer, leftPrec, rightPrec);
         writer.print(" FROM ");

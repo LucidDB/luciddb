@@ -59,9 +59,9 @@ public final class FilterRel extends FilterRelBase
     public Object clone()
     {
         FilterRel clone = new FilterRel(
-            cluster,
-            RelOptUtil.clone(child),
-            RexUtil.clone(condition));
+            getCluster(),
+            RelOptUtil.clone(getChild()),
+            RexUtil.clone(getCondition()));
         clone.inheritTraitsFrom(this);
         return clone;
     }

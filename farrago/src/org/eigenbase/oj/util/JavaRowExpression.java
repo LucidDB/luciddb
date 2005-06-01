@@ -50,7 +50,7 @@ public class JavaRowExpression extends RexNode
 
     final Environment env;
     private final RelDataType type;
-    public final Expression expression;
+    private final Expression expression;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -80,6 +80,11 @@ public class JavaRowExpression extends RexNode
     public RelDataType getType()
     {
         return type;
+    }
+
+    public Expression getExpression()
+    {
+        return expression;
     }
 
     public Object clone()

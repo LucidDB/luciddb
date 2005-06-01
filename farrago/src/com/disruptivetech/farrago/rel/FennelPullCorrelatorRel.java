@@ -75,7 +75,7 @@ public class FennelPullCorrelatorRel extends FennelPullDoubleRel
     public Object clone()
     {
         FennelPullCorrelatorRel clone = new FennelPullCorrelatorRel(
-            cluster,
+            getCluster(),
             RelOptUtil.clone(left),
             RelOptUtil.clone(right),
             cloneCorrelations());
@@ -113,7 +113,8 @@ public class FennelPullCorrelatorRel extends FennelPullDoubleRel
 
     protected RelDataType deriveRowType()
     {
-        return JoinRel.deriveJoinRowType(left, right, JoinRel.JoinType.LEFT, cluster.typeFactory);
+        return JoinRel.deriveJoinRowType(
+            left, right, JoinRel.JoinType.LEFT, getCluster().getTypeFactory());
     }
 
     // implement FennelRel
@@ -127,8 +128,8 @@ public class FennelPullCorrelatorRel extends FennelPullDoubleRel
             CorrelatorRel.Correlation correlation =
                 (CorrelatorRel.Correlation) correlations.get(i);
             FemCorrelation newFemCorrelation = repos.newFemCorrelation();
-            newFemCorrelation.setId(correlation.id);
-            newFemCorrelation.setOffset(correlation.offset);
+            newFemCorrelation.setId(correlation.getId());
+            newFemCorrelation.setOffset(correlation.getOffset());
             streamDef.getCorrelations().add(newFemCorrelation);
         }
 

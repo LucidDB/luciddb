@@ -98,7 +98,7 @@ public class FennelRenameRule extends RelOptRule
                 return;
             }
             RexInputRef fieldAccess = (RexInputRef) exp;
-            if (i != fieldAccess.index) {
+            if (i != fieldAccess.getIndex()) {
                 // can't support reorder yet
                 return;
             }

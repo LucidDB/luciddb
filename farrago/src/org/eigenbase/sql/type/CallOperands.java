@@ -148,7 +148,7 @@ public interface CallOperands
             SqlValidatorScope scope,
             SqlCall call)
         {
-            super(validator.getTypeFactory(), call.operator);
+            super(validator.getTypeFactory(), call.getOperator());
             this.validator = validator;
             this.scope = scope;
             this.call = call;

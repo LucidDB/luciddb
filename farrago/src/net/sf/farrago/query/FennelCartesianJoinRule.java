@@ -75,7 +75,7 @@ public class FennelCartesianJoinRule extends RelOptRule
         }
 
         if (!joinRel.getCondition().equals(
-                    joinRel.getCluster().rexBuilder.makeLiteral(true))) {
+                joinRel.getCluster().getRexBuilder().makeLiteral(true))) {
             // TODO: implement condition with a filter, or better: do that in a
             // separate logical transformation
             return;
