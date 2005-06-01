@@ -831,6 +831,7 @@ require version '${required.ant.version}'."/>
   </target>
 
   <target name="test">
+    <antcall target="cleanExamples"/>
     <antcall target="createCatalog"/>
     <antcall target="buildExamples"/>
     <antcall target="junit"/>
@@ -1207,6 +1208,13 @@ require version '${required.ant.version}'."/>
   <target name="buildExamples" depends="compile">
     <ant antfile="examples/plannerviz/build.xml" inheritAll="false"/>
     <ant antfile="examples/rng/build.xml" target="createPlugin" 
+      inheritAll="false"/>
+  </target>
+
+  <target name="cleanExamples">
+    <ant antfile="examples/plannerviz/build.xml" target="clean" 
+      inheritAll="false"/>
+    <ant antfile="examples/rng/build.xml" target="clean" 
       inheritAll="false"/>
   </target>
 
