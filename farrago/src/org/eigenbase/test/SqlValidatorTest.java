@@ -81,7 +81,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("n'ab '" + NL + "' cd'", "CHAR(6)");
         checkExpType("_iso_8859-2'ab '" + NL + "' cd'", "CHAR(6)");
 
-        checkExpFails("x'abc'",
+        checkExpFails("^x'abc'^",
             "Binary literal string must contain an even number of hexits");
         checkExpType("x'abcd'", "BINARY(2)");
         checkExpType("x'abcd'" + NL + "'ff001122aabb'", "BINARY(8)");
@@ -106,20 +106,20 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     public void testAndOrIllegalTypesFails() {
         //TODO need col+line number
-        assertExceptionIsThrown("select 'abc' AND FaLsE from (values(true))",
+        checkWholeExpFails("'abc' AND FaLsE",
             "(?s).*'<CHAR.3.> AND <BOOLEAN>'.*");
 
-        assertExceptionIsThrown("select TRUE OR 1 from (values(true))", "(?s).*");
+        checkWholeExpFails("TRUE OR 1", "(?s).*");
 
-        assertExceptionIsThrown("select unknown OR 1.0 from (values(true))",
+        checkWholeExpFails("unknown OR 1.0",
             "(?s).*");
 
-        assertExceptionIsThrown("select true OR 1.0e4 from (values(true))",
+        checkWholeExpFails("true OR 1.0e4",
             "(?s).*");
 
         if (todo) {
-            assertExceptionIsThrown("select TRUE OR (TIME '12:00' AT LOCAL) from (values(true))",
-                "some error msg with line + col");
+            checkWholeExpFails("TRUE OR (TIME '12:00' AT LOCAL)",
+                "(?s).*");
         }
     }
 
@@ -391,10 +391,12 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         //all thens and else return null
         checkExpFails("case 1 when 1 then null end",
             "(?s).*ELSE clause or at least one THEN clause must be non-NULL.*");
-        checkExpFails("case when true and true then 1 " + "when false then 2 "
+        checkWholeExpFails(
+            "case when true and true then 1 "
+            + "when false then 2 "
             + "when false then true " + "else "
             + "case when true then 3 end end",
-            "Illegal mixing of types in CASE or COALESCE statement", 1, 8);
+            "Illegal mixing of types in CASE or COALESCE statement");
     }
 
     public void testNullIf() {
@@ -409,10 +411,10 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testCoalesceFails() {
-        checkExpFails("coalesce('a',1)",
-            "Illegal mixing of types in CASE or COALESCE statement", 1, 8);
-        checkExpFails("coalesce('a','b',1)",
-            "Illegal mixing of types in CASE or COALESCE statement", 1, 8);
+        checkWholeExpFails("coalesce('a',1)",
+            "Illegal mixing of types in CASE or COALESCE statement");
+        checkWholeExpFails("coalesce('a','b',1)",
+            "Illegal mixing of types in CASE or COALESCE statement");
     }
 
     public void testStringCompare() {
@@ -712,8 +714,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExp("LOCALTIME"); //    fix sqlcontext later.
         checkExpFails("LOCALTIME(1+2)",
             "Argument to function 'LOCALTIME' must be a positive integer literal");
-        checkExpFails("LOCALTIME()",
-            "No match found for function signature LOCALTIME..", 1, 8);
+        checkWholeExpFails("LOCALTIME()",
+            "No match found for function signature LOCALTIME..");
         checkExpType("LOCALTIME", "TIME(0)"); //  NOT NULL, with TZ ?
         checkExpFails("LOCALTIME(-1)",
             "Argument to function 'LOCALTIME' must be a positive integer literal"); // i guess -s1 is an expression?
@@ -725,8 +727,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExp("LOCALTIMESTAMP"); //    fix sqlcontext later.
         checkExpFails("LOCALTIMESTAMP(1+2)",
             "Argument to function 'LOCALTIMESTAMP' must be a positive integer literal");
-        checkExpFails("LOCALTIMESTAMP()",
-            "No match found for function signature LOCALTIMESTAMP..", 1, 8);
+        checkWholeExpFails("LOCALTIMESTAMP()",
+            "No match found for function signature LOCALTIMESTAMP..");
         checkExpType("LOCALTIMESTAMP", "TIMESTAMP(0)"); //  NOT NULL, with TZ ?
         checkExpFails("LOCALTIMESTAMP(-1)",
             "Argument to function 'LOCALTIMESTAMP' must be a positive integer literal"); // i guess -s1 is an expression?
@@ -734,16 +736,16 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "Argument to function 'LOCALTIMESTAMP' must be a positive integer literal");
 
         // CURRENT_DATE
-        checkExpFails("CURRENT_DATE(3)",
-            "No match found for function signature CURRENT_DATE..NUMERIC..", 1, 8);
+        checkWholeExpFails("CURRENT_DATE(3)",
+            "No match found for function signature CURRENT_DATE..NUMERIC..");
         checkExp("CURRENT_DATE"); //    fix sqlcontext later.
-        checkExpFails("CURRENT_DATE(1+2)",
-            "No match found for function signature CURRENT_DATE..NUMERIC..", 1, 8);
-        checkExpFails("CURRENT_DATE()",
-            "No match found for function signature CURRENT_DATE..", 1, 8);
+        checkWholeExpFails("CURRENT_DATE(1+2)",
+            "No match found for function signature CURRENT_DATE..NUMERIC..");
+        checkWholeExpFails("CURRENT_DATE()",
+            "No match found for function signature CURRENT_DATE..");
         checkExpType("CURRENT_DATE", "DATE"); //  NOT NULL, with TZ?
-        checkExpFails("CURRENT_DATE(-1)",
-            "No match found for function signature CURRENT_DATE..NUMERIC..", 1, 8); // i guess -s1 is an expression?
+        checkWholeExpFails("CURRENT_DATE(-1)",
+            "No match found for function signature CURRENT_DATE..NUMERIC.."); // i guess -s1 is an expression?
         checkExpFails("CURRENT_DATE('foo')", "(?s).*");
 
         // current_time
@@ -751,8 +753,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExp("current_time"); //    fix sqlcontext later.
         checkExpFails("current_time(1+2)",
             "Argument to function 'CURRENT_TIME' must be a positive integer literal");
-        checkExpFails("current_time()",
-            "No match found for function signature CURRENT_TIME..", 1, 8);
+        checkWholeExpFails("current_time()",
+            "No match found for function signature CURRENT_TIME..");
         checkExpType("current_time", "TIME(0)"); //  NOT NULL, with TZ ?
         checkExpFails("current_time(-1)",
             "Argument to function 'CURRENT_TIME' must be a positive integer literal");
@@ -764,8 +766,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExp("CURRENT_TIMESTAMP"); //    fix sqlcontext later.
         checkExpFails("CURRENT_TIMESTAMP(1+2)",
             "Argument to function 'CURRENT_TIMESTAMP' must be a positive integer literal");
-        checkExpFails("CURRENT_TIMESTAMP()",
-            "No match found for function signature CURRENT_TIMESTAMP..", 1, 8);
+        checkWholeExpFails("CURRENT_TIMESTAMP()",
+            "No match found for function signature CURRENT_TIMESTAMP..");
         checkExpType("CURRENT_TIMESTAMP", "TIMESTAMP(0)"); //  NOT NULL, with TZ ?
         checkExpType("CURRENT_TIMESTAMP(2)", "TIMESTAMP(2)"); //  NOT NULL, with TZ ?
         checkExpFails("CURRENT_TIMESTAMP(-1)",
@@ -799,10 +801,10 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testInvalidFunction() {
-        checkExpFails("foo()",
-            "No match found for function signature FOO..", 1, 8);
-        checkExpFails("mod(123)",
-            "Invalid number of arguments to function 'MOD'. Was expecting 2 arguments", 1, 8);
+        checkWholeExpFails("foo()",
+            "No match found for function signature FOO..");
+        checkWholeExpFails("mod(123)",
+            "Invalid number of arguments to function 'MOD'. Was expecting 2 arguments");
     }
 
     public void testJdbcFunctionCall() {
@@ -853,7 +855,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("multiset[1,2.3]","DECIMAL(2, 1) MULTISET");
         checkExpType("multiset[1,2.3, 4]","DECIMAL(2, 1) MULTISET");
         checkExpType("multiset['1','22', '333','22']","CHAR(3) MULTISET");
-        checkExpFails("multiset[1, '2']", "Parameters must be of the same type", 1, 23);
+        checkExpFails("multiset[1, '2'^]", "Parameters must be of the same type"); // todo: fix pos
         checkExpType("multiset[ROW(1,2)]","RecordType(INTEGER EXPR$0, INTEGER EXPR$1) MULTISET");
         checkExpType("multiset[ROW(1,2),ROW(2,5)]","RecordType(INTEGER EXPR$0, INTEGER EXPR$1) MULTISET");
         checkExpType("multiset[ROW(1,2),ROW(3.4,5.4)]","RecordType(DECIMAL(2, 1) EXPR$0, DECIMAL(2, 1) EXPR$1) MULTISET");
@@ -871,10 +873,11 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExp("multiset[1] multiset intersect multiset[1,2.3]");
         checkExp("multiset[1] multiset intersect all multiset[1,2.3]");
 
-        checkExpFails("multiset[1, '2'] multiset union multiset[1]", "Parameters must be of the same type", 1, 23);
+        checkExpFails("multiset[1, '2'^] multiset union multiset[1]", "Parameters must be of the same type");
         checkExp("multiset[ROW(1,2)] multiset intersect multiset[row(3,4)]");
         if (todo) {
-            checkExpFails("multiset[ROW(1,'2')] multiset union multiset[ROW(1,2)]", "Parameters must be of the same type", 1, 23);
+            checkWholeExpFails("multiset[ROW(1,'2')] multiset union multiset[ROW(1,2)]",
+                "Parameters must be of the same type");
         }
     }
 
@@ -882,7 +885,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("multiset[1] submultiset of multiset[1,2.3]", "BOOLEAN");
         checkExpType("multiset[1] submultiset of multiset[1]", "BOOLEAN");
 
-        checkExpFails("multiset[1, '2'] submultiset of multiset[1]", "Parameters must be of the same type", 1, 23);
+        checkExpFails("multiset[1, '2'^] submultiset of multiset[1]", "Parameters must be of the same type"); // todo: fix pos
         checkExp("multiset[ROW(1,2)] submultiset of multiset[row(3,4)]");
     }
 
@@ -896,7 +899,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     public void testMemberOf() {
         checkExpType("1 member of multiset[1]", "BOOLEAN");
-        checkExpFails("1 member of multiset['1']", "Cannot compare values of types 'INTEGER', 'CHAR\\(1\\)'", 1, 32);
+        checkWholeExpFails("1 member of multiset['1']", "Cannot compare values of types 'INTEGER', 'CHAR\\(1\\)'");
     }
 
     public void testIsASet() {
@@ -908,7 +911,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     public void testCardinality() {
         checkExpType("cardinality(multiset[1])", "INTEGER");
         checkExpType("cardinality(multiset['1'])", "INTEGER");
-        checkExpFails("cardinality('a')", "Cannot apply 'CARDINALITY' to arguments of type 'CARDINALITY.<CHAR.1.>.'. Supported form.s.: 'CARDINALITY.<MULTISET>.'", 1, 8);
+        checkWholeExpFails("cardinality('a')", "Cannot apply 'CARDINALITY' to arguments of type 'CARDINALITY.<CHAR.1.>.'. Supported form.s.: 'CARDINALITY.<MULTISET>.'");
     }
 
     public void testIntervalTimeUnitEnumeration() {
@@ -974,10 +977,14 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("interval '1' day - interval '1' hour", "INTERVAL DAY TO HOUR");
         checkExpType("interval '1' year - interval '1' month", "INTERVAL YEAR TO MONTH");
         checkExpType("interval '1' month - interval '1' year", "INTERVAL YEAR TO MONTH");
-        checkExpFails("interval '1' year + interval '1' day");
-        checkExpFails("interval '1' month + interval '1' second");
-        checkExpFails("interval '1' year - interval '1' day");
-        checkExpFails("interval '1' month - interval '1' second");
+        checkExpFails("interval '1' year + interval '1' day",
+            "(?s).*Cannot apply '\\+' to arguments of type '<INTERVAL YEAR> \\+ <INTERVAL DAY>'.*");
+        checkExpFails("interval '1' month + interval '1' second",
+            "(?s).*Cannot apply '\\+' to arguments of type '<INTERVAL MONTH> \\+ <INTERVAL SECOND>'.*");
+        checkExpFails("interval '1' year - interval '1' day",
+            "(?s).*Cannot apply '-' to arguments of type '<INTERVAL YEAR> - <INTERVAL DAY>'.*");
+        checkExpFails("interval '1' month - interval '1' second",
+            "(?s).*Cannot apply '-' to arguments of type '<INTERVAL MONTH> - <INTERVAL SECOND>'.*");
 
         // mixing between datetime and interval
 //todo        checkExpType("date '1234-12-12' + INTERVAL '1' month + interval '1' day","DATE");
@@ -1442,21 +1449,21 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     public void testUnionTypeMismatchFails() {
         // error here         v
-        checkFails("select 1, 2 from emp union select deptno, name from dept",
-            "Type mismatch in column 2 of UNION", 1, 9);
+        checkFails("select 1, ^2 from emp union select deptno, name from dept",
+            "Type mismatch in column 2 of UNION");
     }
 
     public void testUnionTypeMismatchWithStarFails() {
         // error here      v
-        checkFails("select * from dept union select 1, 2 from emp",
-            "Type mismatch in column 2 of UNION", 1, 8);
+        checkFails("select ^* from dept union select 1, 2 from emp",
+            "Type mismatch in column 2 of UNION");
     }
 
     public void testUnionTypeMismatchWithValuesFails() {
         // error here          v
-        checkFails("values (1, 2, 3), (3, 4, 5), (6, 7, 8) union " + NL +
+        checkFails("values (1, ^2, 3), (3, 4, 5), (6, 7, 8) union " + NL +
             "select deptno, name, deptno from dept",
-            "Type mismatch in column 2 of UNION", 1, 10);
+            "Type mismatch in column 2 of UNION");
     }
 
     public void testUnionOfNonQueryFails() {
@@ -1502,8 +1509,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     public void testCrossJoinOnFails() {
         checkFails("select * from emp cross join dept" + NL +
-            " on emp.deptno = dept.deptno",
-            "Cannot specify condition \\(NATURAL keyword, or ON or USING clause\\) following CROSS JOIN", 2, 23);
+            " on ^emp.deptno = dept.deptno",
+            "Cannot specify condition \\(NATURAL keyword, or ON or USING clause\\) following CROSS JOIN");
     }
 
     public void testInnerJoinWithoutUsingOrOnFails() {
@@ -1795,9 +1802,12 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExp("(time '1:2:3', interval '1' second) overlaps (time '23:59:59', time '1:2:3')");
         checkExp("(timestamp '1-2-3 4:5:6', timestamp '1-2-3 4:5:6' ) overlaps (timestamp '1-2-3 4:5:6', interval '1 2:3:4.5' day to second)");
 
-        checkExpFails("(timestamp '1-2-3 4:5:6', timestamp '1-2-3 4:5:6' ) overlaps (time '4:5:6', interval '1 2:3:4.5' day to second)","(?s).*Cannot apply 'OVERLAPS' to arguments of type '.<TIMESTAMP.0.>, <TIMESTAMP.0.>. OVERLAPS .<TIME.0.>, <INTERVAL DAY TO SECOND>.*");
-        checkExpFails("(time '4:5:6', timestamp '1-2-3 4:5:6' ) overlaps (time '4:5:6', interval '1 2:3:4.5' day to second)");
-        checkExpFails("(time '4:5:6', time '4:5:6' ) overlaps (time '4:5:6', date '1-2-3')");
+        checkExpFails("(timestamp '1-2-3 4:5:6', timestamp '1-2-3 4:5:6' ) overlaps (time '4:5:6', interval '1 2:3:4.5' day to second)",
+            "(?s).*Cannot apply 'OVERLAPS' to arguments of type '.<TIMESTAMP.0.>, <TIMESTAMP.0.>. OVERLAPS .<TIME.0.>, <INTERVAL DAY TO SECOND>.*");
+        checkExpFails("(time '4:5:6', timestamp '1-2-3 4:5:6' ) overlaps (time '4:5:6', interval '1 2:3:4.5' day to second)",
+            "(?s).*Cannot apply 'OVERLAPS' to arguments of type '.<TIME.0.>, <TIMESTAMP.0.>. OVERLAPS .<TIME.0.>, <INTERVAL DAY TO SECOND>.'.*");
+        checkExpFails("(time '4:5:6', time '4:5:6' ) overlaps (time '4:5:6', date '1-2-3')",
+            "(?s).*Cannot apply 'OVERLAPS' to arguments of type '.<TIME.0.>, <TIME.0.>. OVERLAPS .<TIME.0.>, <DATE>.'.*");
     }
 
     public void testExtract() {

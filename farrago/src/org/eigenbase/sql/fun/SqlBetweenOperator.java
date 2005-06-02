@@ -102,7 +102,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
     {
         return negated;
     }
-    
+
     private RelDataType [] getTypeArray(
         SqlValidator validator,
         SqlValidatorScope scope,
@@ -265,7 +265,11 @@ public class SqlBetweenOperator extends SqlInfixOperator
         SqlCall newExp =
             createCall(
                 new SqlNode [] {
-                    exp0, exp1, exp2, SqlLiteral.createSymbol(flag, null) },
+                    exp0,
+                    exp1,
+                    exp2,
+                    SqlLiteral.createSymbol(flag, SqlParserPos.ZERO)
+                },
                 betweenNode.getPos());
 
         // Replace all of the matched nodes with the single reduced node.

@@ -24,12 +24,10 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.util.EnumeratedValues;
-import org.eigenbase.util.Util;
-import org.eigenbase.sql.type.UnknownParamInference;
-import org.eigenbase.sql.type.ReturnTypeInference;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.OperandsTypeChecking;
-import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.ReturnTypeInference;
+import org.eigenbase.sql.type.UnknownParamInference;
 
 
 /**
@@ -99,18 +97,18 @@ public class SqlFunction extends SqlOperator
      * @param funcType function category
      */
     public SqlFunction(
-        SqlIdentifier sqlIdentifier, 
+        SqlIdentifier sqlIdentifier,
         ReturnTypeInference typeInference,
         UnknownParamInference paramTypeInference,
         OperandsTypeChecking paramTypeChecking,
-        RelDataType [] paramTypes, 
+        RelDataType [] paramTypes,
         SqlFunctionCategory funcType)
     {
         super(
             sqlIdentifier.names[sqlIdentifier.names.length - 1],
             SqlKind.Function,
             100,
-            100, 
+            100,
             typeInference,
             paramTypeInference,
             paramTypeChecking);
@@ -143,7 +141,7 @@ public class SqlFunction extends SqlOperator
         if (sqlIdentifier != null) {
             return sqlIdentifier;
         }
-        return new SqlIdentifier(getName(), null);
+        return new SqlIdentifier(getName(), SqlParserPos.ZERO);
     }
 
     /**

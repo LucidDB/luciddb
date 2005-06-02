@@ -315,7 +315,7 @@ public final class SqlParserUtil
                 } else {
                     ps = withoutDayPattern;
                 }
-                
+
                 for (int iPattern = 0; iPattern < ps.length; iPattern++) {
                     String p = ps[iPattern];
                     Matcher m = Pattern.compile(p).matcher(value);
@@ -441,6 +441,105 @@ public final class SqlParserUtil
         }
 
         return s.substring(start, stop);
+    }
+
+    /**
+     * Looks for one or two carets in a SQL string, and if present, converts
+     * them into a parser position.
+     *
+     * <p>Examples:<ul>
+     * <li>findPos("xxx^yyy") yields {"xxxyyy", position 3, line 1 column 4}
+     * <li>findPos("xxxyyy") yields {"xxxyyy", null}
+     * <li>findPos("xxx^yy^y") yields {"xxxyyy", position 3, line 4 column 4
+     *     through line 1 column 6}
+     * </ul>
+     */
+    public static StringAndPos findPos(String sql)
+    {
+        int firstCaret = sql.indexOf('^');
+        if (firstCaret < 0) {
+            return new StringAndPos(sql, -1, null);
+        }
+        int secondCaret = sql.indexOf('^', firstCaret + 1);
+        if (secondCaret < 0) {
+            String sqlSansCaret = sql.substring(0, firstCaret) +
+                sql.substring(firstCaret + 1);
+            int[] start = indexToLineCol(sql, firstCaret);
+            SqlParserPos pos = new SqlParserPos(start[0], start[1]);
+            return new StringAndPos(sqlSansCaret, firstCaret, pos);
+        } else {
+            String sqlSansCaret = sql.substring(0, firstCaret) +
+                sql.substring(firstCaret + 1, secondCaret) +
+                sql.substring(secondCaret + 1);
+            int[] start = indexToLineCol(sql, firstCaret);
+            int[] end = indexToLineCol(sql, secondCaret);
+            SqlParserPos pos =
+                new SqlParserPos(start[0], start[1], end[0], end[1]);
+            StringAndPos sap = new StringAndPos(sqlSansCaret, firstCaret, pos);
+            return sap;
+        }
+    }
+
+    /**
+     * Returns the (1-based) line and column corresponding to a particular
+     * (0-based) offset in a string.
+     *
+     * <p>Converse of {@link #lineColToIndex(String, int, int)}.
+     */
+    public static int[] indexToLineCol(String sql, int i)
+    {
+        int line = 0;
+        int j = 0;
+        while (true) {
+            int prevj = j;
+            j = sql.indexOf(Util.lineSeparator, j + 1);
+            if (j < 0 || j > i) {
+                return new int[] {line + 1, i - prevj + 1};
+            }
+            j += Util.lineSeparator.length();
+            ++line;
+        }
+    }
+
+    /**
+     * Finds the position (0-based) in a string which corresponds to a
+     * given line and column (1-based).
+     *
+     * <p>Converse of {@link #indexToLineCol(String, int)}.
+     */
+    public static int lineColToIndex(String sql, int line, int column)
+    {
+        --line;
+        --column;
+        int i = 0;
+        while (line-- > 0) {
+            i = sql.indexOf(Util.lineSeparator, i) +
+                Util.lineSeparator.length();
+        }
+        return i + column;
+    }
+
+    /**
+     * Converts a string to a string with one or two carets in it.
+     * For example, <code>addCarets("values (foo)", 1, 9, 1, 12)</code>
+     * yields "values (^foo^)".
+     */ 
+    public static String addCarets(
+        String sql, int line, int col, int endLine, int endCol)
+    {
+        String sqlWithCarets;
+        int cut = lineColToIndex(sql, line, col);
+        sqlWithCarets = sql.substring(0, cut) + "^" +
+            sql.substring(cut);
+        if (col != endCol ||
+            line != endLine) {
+            cut = lineColToIndex(sqlWithCarets,
+                endLine, endCol);
+            ++cut; // for caret
+            sqlWithCarets = sqlWithCarets.substring(0, cut) +
+                "^" + sqlWithCarets.substring(cut);
+        }
+        return sqlWithCarets;
     }
 
     public static class ParsedCollation {
@@ -665,8 +764,11 @@ outer:
                         // surrounding precedences obey the relation 2 < 3 and
                         // 4 >= 3, so we can reduce (b * c) to a single node.
                         SqlNode rightExp = (SqlNode) list.get(i + 1);
+                        SqlParserPos callPos = combinePos(
+                            currentPos,
+                            new SqlNode[] {leftExp, rightExp});
                         final SqlCall newExp =
-                            current.createCall(leftExp, rightExp, currentPos);
+                            current.createCall(leftExp, rightExp, callPos);
                         if (tracer.isLoggable(Level.FINE)) {
                             tracer.fine("Reduced infix: " + newExp);
                         }
@@ -768,6 +870,58 @@ outer:
         return (SqlNode) list.get(start);
     }
 
+    public static SqlParserPos combinePos(
+        SqlParserPos currentPos,
+        SqlNode[] nodes)
+    {
+        int line = currentPos.getLineNum();
+        int column = currentPos.getColumnNum();
+        int endLine = currentPos.getEndLineNum();
+        int endColumn = currentPos.getEndColumnNum();
+        return combinePos(nodes, line, column, endLine, endColumn);
+    }
+
+    public static SqlParserPos combinePos(
+        SqlNode[] nodes)
+    {
+        return combinePos(nodes, -1, -1, Integer.MAX_VALUE, Integer.MAX_VALUE);
+    }
+
+    public static SqlParserPos combinePos(
+        SqlNode[] nodes,
+        int line,
+        int column,
+        int endLine,
+        int endColumn)
+    {
+        for (int i = 0; i < nodes.length; i++) {
+            SqlNode node = nodes[i];
+            SqlParserPos pos = node.getParserPosition();
+            if (pos.getLineNum() < line ||
+                pos.getLineNum() == line &&
+                pos.getColumnNum() < column) {
+                line = pos.getLineNum();
+                column = pos.getColumnNum();
+            }
+            if (pos.getEndLineNum() > endLine ||
+                pos.getEndLineNum() == endColumn &&
+                pos.getEndColumnNum() > endColumn) {
+                endLine = pos.getLineNum();
+                endColumn = pos.getColumnNum();
+            }
+        }
+        return new SqlParserPos(line, column, endLine, endColumn);
+    }
+
+    public static SqlParserPos combine(SqlParserPos pos0, SqlParserPos pos1)
+    {
+        return new SqlParserPos(
+            pos0.getLineNum(),
+            pos0.getColumnNum(),
+            pos1.getEndLineNum(),
+            pos1.getEndColumnNum());
+    }
+
     //~ Inner Classes ---------------------------------------------------------
 
     /**
@@ -797,7 +951,8 @@ outer:
 
     /**
      * Class that holds a {@link SqlOperator} and a {@link SqlParserPos}.
-     * Used by {@link #toTree} and the parser to associate a parsed operator
+     * Used by {@link SqlSpecialOperator#reduceExpr(int, List)} and the parser
+     * to associate a parsed operator
      * with a parser position.
      */
     public static class ToTreeListItem
@@ -821,6 +976,21 @@ outer:
         public SqlParserPos getPos()
         {
             return pos;
+        }
+    }
+
+    /**
+     * Contains a string, the offset of a token within the string, and a
+     * parser position containing the beginning and end line number.
+     */
+    public static class StringAndPos {
+        public final String sql;
+        public final int cursor;
+        public final SqlParserPos pos;
+        StringAndPos(String sql, int cursor, SqlParserPos pos) {
+            this.sql = sql;
+            this.cursor = cursor;
+            this.pos = pos;
         }
     }
 }

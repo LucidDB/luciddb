@@ -83,7 +83,7 @@ public class SqlLikeOperator extends SqlSpecialOperator
     {
         return negated;
     }
-    
+
     public OperandsCountDescriptor getOperandsCountDescriptor()
     {
         return new OperandsCountDescriptor(2, 3);
@@ -170,8 +170,6 @@ public class SqlLikeOperator extends SqlSpecialOperator
                 }
             }
         }
-        SqlCall call;
-        final SqlParserPos pos = null;
         final SqlNode [] operands;
         int end;
         if (exp2 != null) {
@@ -181,7 +179,7 @@ public class SqlLikeOperator extends SqlSpecialOperator
             operands = new SqlNode [] { exp0, exp1 };
             end = opOrdinal + 2;
         }
-        call = createCall(operands, pos);
+        SqlCall call = createCall(operands, SqlParserPos.ZERO);
         SqlParserUtil.replaceSublist(list, opOrdinal - 1, end, call);
         return opOrdinal - 1;
     }

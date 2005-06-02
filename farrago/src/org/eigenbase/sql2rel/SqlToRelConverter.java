@@ -414,7 +414,7 @@ public class SqlToRelConverter
                     call =
                         opTab.rowConstructor.createCall(
                             new SqlNode [] { node },
-                            null);
+                            SqlParserPos.ZERO);
                 }
                 inputs[i] = convertRowConstructor(bb, call);
             }

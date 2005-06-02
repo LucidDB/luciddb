@@ -117,7 +117,7 @@
 <text>Duplicate definition for {0} within {1}; earlier definition was near {2}</text>
 </exception>
 
-<exception id="420005" name="ValidatorPositionContext">
+<exception id="420005" name="ValidatorPositionContext" className="org.eigenbase.util.EigenbaseContextException">
 <text>DDL validation error near {0}</text>
 </exception>
 

@@ -76,7 +76,8 @@ public abstract class SqlUtil
             list.add(node2);
         }
         return SqlStdOperatorTable.andOperator.createCall(
-            (SqlNode []) list.toArray(new SqlNode[list.size()]), null);
+            (SqlNode []) list.toArray(new SqlNode[list.size()]),
+            SqlParserPos.ZERO);
     }
 
     static ArrayList flatten(SqlNode node)
@@ -310,8 +311,8 @@ public abstract class SqlUtil
      *
      * @param argTypes argument types
      *
-     * @param isProcedure true if a procedure is being invoked, in
-     * which case the overload rules are simpler
+     * @param category whether a function or a procedure.
+     *       (If a procedure is being invoked, the overload rules are simpler.)
      *
      * @return matching routine, or null if none found
      *

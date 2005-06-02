@@ -23,6 +23,7 @@
 package org.eigenbase.test;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.validate.SqlValidatorCatalogReader;
 import org.eigenbase.sql.validate.SqlValidatorTable;
 import org.eigenbase.sql.type.*;
@@ -66,7 +67,7 @@ public class MockCatalogReader implements SqlValidatorCatalogReader
         // factory
         addressType = new ObjectSqlType(
             SqlTypeName.Structured,
-            new SqlIdentifier("ADDRESS", null),
+            new SqlIdentifier("ADDRESS", SqlParserPos.ZERO),
             false,
             new RelDataTypeField [] {
                 new RelDataTypeFieldImpl("STREET", 0, varchar20Type),

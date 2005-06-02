@@ -1047,7 +1047,7 @@ CwmModelElement JarDrop() :
 {
     <JAR> qualifiedJarName = CompoundIdentifier3()
     <OPTIONS>
-    <LPAREN> deploymentState = NumericLiteral(SqlParserPos.ZERO) <RPAREN>
+    <LPAREN> deploymentState = NumericLiteral() <RPAREN>
     CascadeOption()
     {
         FemJar jar = (FemJar) farragoParser.getStmtValidator().findSchemaObject(
@@ -1712,7 +1712,7 @@ FemJar JarDefinition() :
         jar.setUrl(url);
     }
     <OPTIONS> <LPAREN>
-    deploymentState = NumericLiteral(SqlParserPos.ZERO) <RPAREN>
+    deploymentState = NumericLiteral() <RPAREN>
     {
         jar.setDeploymentState(deploymentState.intValue());
         return jar;

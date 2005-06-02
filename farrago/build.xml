@@ -700,6 +700,7 @@ require version '${required.ant.version}'."/>
       destdir="${farrago.classes.dir}"
       classpathref="farrago.3p.classpath">
       <include name="**/EigenbaseException.java" />
+      <include name="**/EigenbaseContextException.java" />
       <include name="**/SqlValidatorException.java" />
     </farrago.javaCompile>
     <taskdef name="resgen" classname="org.eigenbase.resgen.ResourceGenTask">

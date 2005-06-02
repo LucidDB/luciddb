@@ -21,17 +21,11 @@
 */
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.resource.*;
-import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
-import org.eigenbase.sql.util.*;
-import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.test.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
-
-import java.util.*;
+import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.test.SqlOperatorTests;
+import org.eigenbase.sql.test.SqlTester;
+import org.eigenbase.util.Util;
 
 /**
  * The <code>NULLIF</code> function.
@@ -46,7 +40,7 @@ public class SqlNullifFunction extends SqlFunction
         super("NULLIF", SqlKind.Function, null, null, null,
             SqlFunctionCategory.System);
     }
-    
+
     // override SqlOperator
     public SqlNode rewriteCall(SqlCall call)
     {
@@ -54,19 +48,13 @@ public class SqlNullifFunction extends SqlFunction
         SqlParserPos pos = call.getParserPosition();
 
         if (2 != operands.length) {
-            //todo put this in the validator
-            throw EigenbaseResource.instance().newValidatorContext(
-                new Integer(pos.getLineNum()),
-                new Integer(pos.getColumnNum()),
-                EigenbaseResource.instance().newInvalidArgCount(
-                    getName(),
-                    new Integer(2)));
+            throw Util.newInternal("Invalid arg count: " + call);
         }
 
         SqlNodeList whenList = new SqlNodeList(pos);
         SqlNodeList thenList = new SqlNodeList(pos);
         whenList.add(operands[1]);
-        thenList.add(SqlLiteral.createNull(null));
+        thenList.add(SqlLiteral.createNull(SqlParserPos.ZERO));
         return SqlStdOperatorTable.caseOperator.createCall(
             operands[0], whenList,
             thenList, operands[0], pos);

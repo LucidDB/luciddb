@@ -33,6 +33,7 @@ import net.sf.farrago.test.FarragoTestCase;
 import net.sf.farrago.ojrex.FarragoOJRexImplementorTable;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.test.SqlOperatorIterator;
 import org.eigenbase.sql.type.SqlTypeName;
@@ -240,7 +241,7 @@ public class FarragoCalcSystemTest extends FarragoTestCase
                 // operator.
                 continue;
             }
-            SqlCall call = op.createCall(operands, null);
+            SqlCall call = op.createCall(operands, SqlParserPos.ZERO);
 
             String sql = "SELECT " + call.toString() + " FROM (VALUES(1))";
             String testName = "NULL-TEST-" + op.getName() + "-";

@@ -309,13 +309,13 @@ public class SqlValidatorImpl implements SqlValidator
      * Parser Position in a parsed expression tree
      * Note: call this only after {@link #validate} has been called.
      *
-     * @param topNode top of expression tree in which to lookup the qualfied 
+     * @param topNode top of expression tree in which to lookup the qualfied
      * name for the SqlIdentifier
-     * @param pp indicates the position of the {@link SqlIdentifier} in the sql 
-     * statement we want to get the qualified name for 
+     * @param pp indicates the position of the {@link SqlIdentifier} in the sql
+     * statement we want to get the qualified name for
      *
      * @return a string of the fully qualified name of the {@link SqlIdentifier}
-     * if the Parser position represents a valid {@link SqlIdentifier}.  Else 
+     * if the Parser position represents a valid {@link SqlIdentifier}.  Else
      * return an empty string
      *
      */
@@ -2240,12 +2240,23 @@ public class SqlValidatorImpl implements SqlValidator
     {
         Util.pre(node != null, "node != null");
         final SqlParserPos pos = node.getParserPosition();
-        EigenbaseException contextExcn =
+        int line = pos.getLineNum();
+        int col = pos.getColumnNum();
+        int endLine = pos.getEndLineNum();
+        int endCol = pos.getEndColumnNum();
+        EigenbaseContextException contextExcn =
+            line == endLine && col == endCol ?
+            EigenbaseResource.instance().newValidatorContextPoint(
+                new Integer(line),
+                new Integer(col),
+                e) :
             EigenbaseResource.instance().newValidatorContext(
-                new Integer(pos.getLineNum()),
-                new Integer(pos.getColumnNum()),
+                new Integer(line),
+                new Integer(col),
+                new Integer(endLine),
+                new Integer(endCol),
                 e);
-        contextExcn.setPosition(pos.getLineNum(), pos.getColumnNum());
+        contextExcn.setPosition(line, col, endLine, endCol);
         return contextExcn;
     }
 

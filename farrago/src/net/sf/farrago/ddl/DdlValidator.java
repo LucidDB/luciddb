@@ -772,7 +772,7 @@ public class DdlValidator extends FarragoCompoundAllocation
             dependency = getRepos().newCwmDependency();
             dependency.setName(client.getName() + "$DEP");
             dependency.setKind("GenericDependency");
-            
+
             // NOTE: The client owns the dependency, so their lifetimes are
             // coeval.  We don't use the DependencyClient association at all
             // because it causes weird problems.  That's why we have to
@@ -831,11 +831,13 @@ public class DdlValidator extends FarragoCompoundAllocation
         SqlParserPos parserContext = getParserPos(refObj);
         assert(parserContext != null);
         String msg = parserContext.toString();
-        EigenbaseException contextExcn =
+        EigenbaseContextException contextExcn =
             FarragoResource.instance().newValidatorPositionContext(msg, ex);
         contextExcn.setPosition(
             parserContext.getLineNum(),
-            parserContext.getColumnNum());
+            parserContext.getColumnNum(),
+            parserContext.getEndLineNum(),
+            parserContext.getEndColumnNum());
         return contextExcn;
     }
 

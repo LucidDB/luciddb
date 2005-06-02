@@ -376,7 +376,8 @@ public class SqlJdbcFunctionCall extends SqlFunction
     public SqlCall getLookupCall()
     {
         if (null == lookupCall) {
-            lookupCall = lookupMakeCallObj.createCall(thisOperands, null);
+            lookupCall =
+                lookupMakeCallObj.createCall(thisOperands, SqlParserPos.ZERO);
         }
         return lookupCall;
     }
