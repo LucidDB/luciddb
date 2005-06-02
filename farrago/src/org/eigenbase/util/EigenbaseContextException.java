@@ -66,7 +66,7 @@ public class EigenbaseContextException extends EigenbaseException
         int posLine, int posColumn, int endPosLine, int endPosColumn)
     {
         super(message, cause);
-        Util.pre(cause != null, "cause != null");
+        assert(cause != null);
         setPosition(posLine, posColumn, endPosLine, endPosColumn);
     }
 
