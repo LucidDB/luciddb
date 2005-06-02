@@ -20,10 +20,9 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-package org.eigenbase.sql.fun;
+package org.eigenbase.sql;
 
 import org.eigenbase.resource.EigenbaseResource;
-import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.type.OperandsTypeChecking;

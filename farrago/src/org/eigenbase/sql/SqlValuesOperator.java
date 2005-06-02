@@ -2,9 +2,8 @@
 // $Id$
 // Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
+// Copyright (C) 2005-2005 Disruptive Tech
 // Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,31 +21,50 @@
 */
 package org.eigenbase.sql;
 
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.sql.util.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.test.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
+import org.eigenbase.resource.*;
+
+import java.util.*;
+
 /**
- * SqlNewOperator represents an SQL <code>new specification</code> such as
- * <code>NEW UDT(1, 2)</code>.  When used in an SqlCall, SqlNewOperator takes a
- * single operand, which is an invocation of the constructor method; but when
- * used in a RexCall, the operands are the initial values to be used
- * for the new instance.
+ * The <code>VALUES</code> operator.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class SqlNewOperator extends SqlPrefixOperator
+public class SqlValuesOperator extends SqlSpecialOperator
 {
-    public SqlNewOperator()
+    public SqlValuesOperator()
     {
-        super("NEW", SqlKind.NewSpecification, 0, null, null, null);
+        super("VALUES", SqlKind.Values);
     }
-    
-    // override SqlOperator
-    public SqlNode rewriteCall(
-        SqlCall call)
+
+    public void unparse(
+        SqlWriter writer,
+        SqlNode [] operands,
+        int leftPrec,
+        int rightPrec)
     {
-        // New specification is purely syntactic, so we rewrite it as a
-        // direct call to the constructor method.
-        return call.getOperands()[0];
+        writer.print("VALUES ");
+        for (int i = 0; i < operands.length; i++) {
+            if (i > 0) {
+                writer.print(", ");
+            }
+            SqlNode operand = operands[i];
+            operand.unparse(writer, 0, 0);
+        }
+    }
+
+    public void test(SqlTester tester)
+    {
+        SqlOperatorTests.testValuesOperator(tester);
     }
 }
 
-// End SqlNewOperator.java
+// End SqlValuesOperator.java

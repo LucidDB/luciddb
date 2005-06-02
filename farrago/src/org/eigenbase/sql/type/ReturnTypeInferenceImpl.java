@@ -637,7 +637,7 @@ public class ReturnTypeInferenceImpl
     public static final ReturnTypeInference useNullableBiggest =
         new TransformCascade(useLeastRestrictive, toLeastRestrictiveInterval, toNullable);
 
-    public static final ReturnTypeInference useNullableMutliplyDivison =
+    public static final ReturnTypeInference useNullableProduct =
         new FallbackCascade(useNullableFirstInterval, useNullableBiggest);
 
     /**

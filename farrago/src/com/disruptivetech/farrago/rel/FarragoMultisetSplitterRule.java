@@ -24,9 +24,8 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.SqlOperator;
-import org.eigenbase.sql.SqlStateCodes;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.Util;
 
@@ -382,7 +381,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             convertedRel =
                 new CorrelatorRel(cluster, input, limitRel, correlations);
         } else if (rexCall.getOperator() instanceof
-            SqlStdOperatorTable.SqlMultisetSetOperator  ||
+            SqlMultisetSetOperator  ||
             (RexMultisetUtil.opTab.memberOfOperator == rexCall.getOperator())) {
             // A call to
             // CalcRel=[...,ms1 UNION ms2,...]
@@ -435,7 +434,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
 
             ///////////////////////////////////
             if (rexCall.getOperator() instanceof
-                SqlStdOperatorTable.SqlMultisetSetOperator) {
+                SqlMultisetSetOperator) {
                 final UncollectRel uncollectRel =
                     new UncollectRel(cluster, corProjectRel);
                 final UncollectRel uncollectRel2 =

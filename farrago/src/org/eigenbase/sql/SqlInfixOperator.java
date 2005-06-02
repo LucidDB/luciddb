@@ -48,7 +48,7 @@ public class SqlInfixOperator extends SqlSpecialOperator
     //~ Constructors ----------------------------------------------------------
 
     // @pre paramTypes != null
-    SqlInfixOperator(
+    protected SqlInfixOperator(
         String [] names,
         SqlKind kind,
         int precedence,

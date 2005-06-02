@@ -23,7 +23,6 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.fun.SqlWindowOperator;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.Util;
 import org.eigenbase.resource.EigenbaseResource;

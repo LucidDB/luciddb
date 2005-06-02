@@ -48,7 +48,7 @@ public class SqlCall extends SqlNode
 
     //~ Constructors ----------------------------------------------------------
 
-    SqlCall(
+    protected SqlCall(
         SqlOperator operator,
         SqlNode [] operands,
         SqlParserPos pos)
