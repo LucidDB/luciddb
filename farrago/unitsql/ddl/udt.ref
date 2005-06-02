@@ -48,7 +48,7 @@ Error: DDL validation error near line 1, column 24: Reference to unknown routine
 . . . . . . . . > begin
 . . . . . . . . >     set self.x = z_init; set self.y = y_init; return self
 . . . . . . . . > ; end;
-Error: At line 1, column 1: Unknown identifier 'Z_INIT' (state=,code=0)
+Error: From line 1, column 1 to line 1, column 8: Unknown identifier 'Z_INIT' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  unknown target ref
 0: jdbc:farrago:> create specific method rectilinear_coord_non0

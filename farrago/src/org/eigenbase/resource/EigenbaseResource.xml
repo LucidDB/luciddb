@@ -83,7 +83,7 @@
 </exception>
 
 <exception id="120004" name="ValidatorContext" className="org.eigenbase.util.EigenbaseContextException">
-    <text>From line {0,number,#}, column {1,number,#} to {2,number,#}, column {3,number,#}</text>
+    <text>From line {0,number,#}, column {1,number,#} to line {2,number,#}, column {3,number,#}</text>
 </exception>
 
 <exception id="120010" name="CannotCastValue">

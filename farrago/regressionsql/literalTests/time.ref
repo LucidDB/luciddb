@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/time.sql#4 $ 
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/time.sql#5 $ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test time literal
 0: jdbc:farrago:> values TIME '12:01:01';
@@ -80,7 +80,7 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast fro
 0: jdbc:farrago:> insert into t_time values(1234,null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'INTEGER' to 'TIME' (state=,code=0)
 0: jdbc:farrago:> insert into t_time values(1e400,null);
-Error: At line 1, column 26: Numeric literal '1E400' out of range (state=,code=0)
+Error: From line 1, column 27 to line 1, column 31: Numeric literal '1E400' out of range (state=,code=0)
 0: jdbc:farrago:> insert into t_time values(-1.2345678901234e-200,null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DOUBLE' to 'TIME' (state=,code=0)
 0: jdbc:farrago:> insert into t_time values(-1234.03,null);
@@ -88,7 +88,7 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast fro
 0: jdbc:farrago:> insert into t_time values(x'ff',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(1)' to 'TIME' (state=,code=0)
 0: jdbc:farrago:> insert into t_date values(date '1999-01-08',null);
-Error: At line 1, column 13: Table 'T_DATE' not found (state=,code=0)
+Error: From line 1, column 13 to line 1, column 18: Table 'T_DATE' not found (state=,code=0)
 0: jdbc:farrago:> insert into t_time values(timestamp '2004-12-01 12:01:01',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIMESTAMP(0)' to 'TIME' (state=,code=0)
 0: jdbc:farrago:> 

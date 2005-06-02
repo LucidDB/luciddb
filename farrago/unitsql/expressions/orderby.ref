@@ -55,7 +55,7 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- disallow internal ORDER BY
 0: jdbc:farrago:> select * from (select name from sales.depts order by name);
-Error: At line 1, column 23: ORDER BY is only allowed on top-level SELECT (state=,code=0)
+Error: From line 1, column 23 to line 1, column 26: ORDER BY is only allowed on top-level SELECT (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- ORDER BY on explicit TABLE
 0: jdbc:farrago:> table sales.depts order by name;
