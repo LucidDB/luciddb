@@ -67,7 +67,17 @@ public class SameOperandTypeChecker extends ExplicitOperandTypeChecker
             if (prev == -1) {
                 prev = i;
             } else {
-                if (SqlTypeUtil.inSameFamily(types[i], types[prev])) {
+                RelDataTypeFamily family1 = types[i].getFamily();
+                RelDataTypeFamily family2 = types[prev].getFamily();
+                // REVIEW jvs 2-June-2005:  This is needed to keep
+                // the Saffron type system happy.
+                if (types[i].getSqlTypeName() != null) {
+                    family1 = types[i].getSqlTypeName().getFamily();
+                }
+                if (types[prev].getSqlTypeName() != null) {
+                    family2 = types[prev].getSqlTypeName().getFamily();
+                }
+                if (family1 == family2) {
                     continue;
                 }
                 if (!throwOnFailure) {
