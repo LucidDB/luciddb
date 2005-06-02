@@ -23,10 +23,7 @@
 
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.type.ReturnTypeInference;
-import org.eigenbase.sql.type.UnknownParamInference;
-import org.eigenbase.sql.type.OperandsTypeChecking;
-import org.eigenbase.sql.type.ReturnTypeInferenceImpl;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
 
@@ -54,9 +51,9 @@ public class SqlSetOperator extends SqlBinaryOperator
         boolean all)
     {
         super(name, kind, prec, true,
-            ReturnTypeInferenceImpl.useLeastRestrictive,
+            SqlTypeStrategies.rtiLeastRestrictive,
             null,
-            OperandsTypeChecking.typeSetop);
+            SqlTypeStrategies.otcSetop);
         this.all = all;
     }
 
@@ -65,9 +62,9 @@ public class SqlSetOperator extends SqlBinaryOperator
         SqlKind kind,
         int prec,
         boolean all,
-        ReturnTypeInference typeInference,
-        UnknownParamInference paramTypeInference,
-        OperandsTypeChecking argTypes)
+        SqlReturnTypeInference typeInference,
+        SqlOperandTypeInference paramTypeInference,
+        SqlOperandTypeChecker argTypes)
     {
         super(name, kind, prec, true, typeInference, paramTypeInference, argTypes);
         this.all = all;

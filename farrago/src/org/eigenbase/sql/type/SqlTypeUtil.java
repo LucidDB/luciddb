@@ -527,7 +527,7 @@ public abstract class SqlTypeUtil
     }
 
     /**
-     * Calls {@link ReturnTypeInferenceImpl#useNullableBiggest} by wrapping
+     * Calls {@link SqlTypeStrategies.rtiNullableBiggest} by wrapping
      * the argTypes parameter in a {@link CallOperands.RelDataTypesCallOperands}
      * object
      */
@@ -536,7 +536,7 @@ public abstract class SqlTypeUtil
     {
         CallOperands.RelDataTypesCallOperands types =
             new CallOperands.RelDataTypesCallOperands(argTypes);
-        return ReturnTypeInferenceImpl.useNullableBiggest.getType(
+        return SqlTypeStrategies.rtiNullableBiggest.getType(
                  null, null, typeFactory, types);
     }
 

@@ -47,9 +47,9 @@ public class SqlAsOperator extends SqlBinaryOperator
             SqlKind.As,
             10,
             true,
-            ReturnTypeInferenceImpl.useFirstArgType,
-            UnknownParamInference.useReturnType,
-            OperandsTypeChecking.typeAnyAny);
+            SqlTypeStrategies.rtiFirstArgType,
+            SqlTypeStrategies.otiReturnType,
+            SqlTypeStrategies.otcAnyX2);
     }
     
     public void validateCall(

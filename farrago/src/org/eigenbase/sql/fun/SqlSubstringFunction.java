@@ -44,7 +44,7 @@ public class SqlSubstringFunction extends SqlFunction {
 
     SqlSubstringFunction() {
         super("SUBSTRING", SqlKind.Function,
-            ReturnTypeInferenceImpl.useNullableVaryingFirstArgType, null, null,
+            SqlTypeStrategies.rtiNullableVaryingFirstArgType, null, null,
             SqlFunctionCategory.String);
     }
 
@@ -88,12 +88,12 @@ public class SqlSubstringFunction extends SqlFunction {
     {
         int n = call.operands.length;
         assert ((3 == n) || (2 == n));
-        if (!OperandsTypeChecking.typeNullableString.check(call, validator,
+        if (!SqlTypeStrategies.otcNullableString.check(call, validator,
             scope, call.operands[0], 0, throwOnFailure)) {
             return false;
         }
         if (2 == n) {
-            if (!OperandsTypeChecking.typeNullableNumeric.check(call, validator,
+            if (!SqlTypeStrategies.otcNullableNumeric.check(call, validator,
                 scope, call.operands[1], 0, throwOnFailure)) {
                 return false;
             }
@@ -104,11 +104,11 @@ public class SqlSubstringFunction extends SqlFunction {
                 validator.deriveType(scope, call.operands[2]);
 
             if (SqlTypeUtil.inCharFamily(t1)) {
-                if (!OperandsTypeChecking.typeNullableString.check(call, validator,
+                if (!SqlTypeStrategies.otcNullableString.check(call, validator,
                     scope, call.operands[1], 0, throwOnFailure)) {
                     return false;
                 }
-                if (!OperandsTypeChecking.typeNullableString.check(call, validator,
+                if (!SqlTypeStrategies.otcNullableString.check(call, validator,
                     scope, call.operands[2], 0, throwOnFailure)) {
                     return false;
                 }
@@ -118,11 +118,11 @@ public class SqlSubstringFunction extends SqlFunction {
                     return false;
                 }
             } else {
-                if (!OperandsTypeChecking.typeNullableNumeric.check(call, validator,
+                if (!SqlTypeStrategies.otcNullableNumeric.check(call, validator,
                     scope, call.operands[1], 0, throwOnFailure)) {
                     return false;
                 }
-                if (!OperandsTypeChecking.typeNullableNumeric.check(call, validator,
+                if (!SqlTypeStrategies.otcNullableNumeric.check(call, validator,
                     scope, call.operands[2], 0, throwOnFailure)) {
                     return false;
                 }

@@ -26,8 +26,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.test.SqlOperatorTests;
-import org.eigenbase.sql.type.ReturnTypeInferenceImpl;
-import org.eigenbase.sql.type.OperandsTypeChecking;
+import org.eigenbase.sql.type.*;
 
 // REVIEW jvs 12-May-2005:  I suggest you follow Intellij's recommendation
 // and edit your template to match all of the other classes in this package.
@@ -43,9 +42,9 @@ public class SqlCeilFunction extends SqlFunction
     public SqlCeilFunction()
     {
         super("CEIL", SqlKind.Function,
-            ReturnTypeInferenceImpl.useFirstArgType,
+            SqlTypeStrategies.rtiFirstArgType,
             null,
-            OperandsTypeChecking.typeNumeric,
+            SqlTypeStrategies.otcNumeric,
             SqlFunctionCategory.Numeric);
 
     }

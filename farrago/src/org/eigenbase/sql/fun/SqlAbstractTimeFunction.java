@@ -70,7 +70,7 @@ public abstract class SqlAbstractTimeFunction extends SqlFunction
             return super.checkArgTypes(
                 call, validator, scope, throwOnFailure);
         } else if (1==call.operands.length) {
-            if (!OperandsTypeChecking.typePositiveIntegerLiteral.check(
+            if (!SqlTypeStrategies.otcPositiveIntLit.check(
                     validator,  scope, call, false)) {
                 if (throwOnFailure) {
                     throw EigenbaseResource.instance().

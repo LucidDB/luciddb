@@ -198,18 +198,21 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
      */
     private final int signatures;
 
-    public static final SqlTypeName [] booleanTypes =
-            { Boolean };
-        public static final SqlTypeName [] booleanNullableTypes =
-            makeNullable(booleanTypes);
+    public static final SqlTypeName [] booleanTypes = {
+        Boolean
+    };
+    public static final SqlTypeName [] booleanNullableTypes =
+        makeNullable(booleanTypes);
 
-    public static final SqlTypeName [] binaryTypes =
-        { Binary, Varbinary };
+    public static final SqlTypeName [] binaryTypes = {
+        Binary, Varbinary
+    };
     public static final SqlTypeName [] binaryNullableTypes =
         makeNullable(binaryTypes);
 
-    public static final SqlTypeName [] intTypes =
-        { Tinyint, Smallint, Integer, Bigint };
+    public static final SqlTypeName [] intTypes = {
+        Tinyint, Smallint, Integer, Bigint
+    };
     public static final SqlTypeName [] intNullableTypes =
         makeNullable(intTypes);
 
@@ -218,8 +221,9 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
     public static final SqlTypeName[] exactNullableTypes =
         makeNullable(exactTypes);
 
-    public static final SqlTypeName[] approxTypes =
-        { Float, Real, Double };
+    public static final SqlTypeName[] approxTypes = {
+        Float, Real, Double
+    };
     public static final SqlTypeName[] approxNullableTypes =
         makeNullable(approxTypes);
 
@@ -228,8 +232,9 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
     public static final SqlTypeName [] numericNullableTypes =
         makeNullable(numericTypes);
 
-    public static final SqlTypeName [] charTypes =
-        { Char, Varchar };
+    public static final SqlTypeName [] charTypes = {
+        Char, Varchar
+    };
     public static final SqlTypeName [] charNullableTypes =
         makeNullable(charTypes);
 
@@ -238,20 +243,23 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
     public static final SqlTypeName [] stringNullableTypes =
         makeNullable(stringTypes);
 
-    public static final SqlTypeName [] datetimeTypes =
-        { Date, Time, Timestamp };
+    public static final SqlTypeName [] datetimeTypes = {
+        Date, Time, Timestamp
+    };
     public static final SqlTypeName [] datetimeNullableTypes =
         makeNullable(datetimeTypes);
 
-    public static final SqlTypeName [] timeIntervalTypes =
-        { IntervalDayTime, IntervalYearMonth };
+    public static final SqlTypeName [] timeIntervalTypes = {
+        IntervalDayTime, IntervalYearMonth
+    };
     public static final SqlTypeName [] timeIntervalNullableTypes =
         makeNullable(timeIntervalTypes);
 
-    public static final SqlTypeName [] multisetType =
-            { Multiset };
-        public static final SqlTypeName [] multisetNullableType =
-            makeNullable(multisetType);
+    public static final SqlTypeName [] multisetTypes = {
+        Multiset
+    };
+    public static final SqlTypeName [] multisetNullableTypes =
+        makeNullable(multisetTypes);
 
 
 

@@ -54,8 +54,8 @@ public class SqlLiteralChainOperator extends SqlInternalOperator {
     SqlLiteralChainOperator() {
         super("$LiteralChain", SqlKind.LiteralChain, 40, true,
             // precedence tighter than the * and || operators
-            ReturnTypeInferenceImpl.useFirstArgType,
-            UnknownParamInference.useFirstKnown, null);
+            SqlTypeStrategies.rtiFirstArgType,
+            SqlTypeStrategies.otiFirstKnown, null);
     }
 
     // REVIEW mb 8/8/04: Can't use SqlOperator.OperandsTypeChecking here;

@@ -223,9 +223,9 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
 
             SqlFunction jplusFunc =
                 new SqlFunction("JPLUS", SqlKind.Function,
-                    ReturnTypeInferenceImpl.useNullableBiggest,
-                    UnknownParamInference.useFirstKnown,
-                    OperandsTypeChecking.typeNullableNumericNumeric,
+                    SqlTypeStrategies.rtiNullableBiggest,
+                    SqlTypeStrategies.otiFirstKnown,
+                    SqlTypeStrategies.otcNullableNumericX2,
                     SqlFunctionCategory.Numeric);
             opTab.register(jplusFunc);
 
@@ -235,8 +235,8 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
 
             SqlFunction jrowFunc =
                 new SqlFunction("JROW", SqlKind.Function, null,
-                    UnknownParamInference.useFirstKnown,
-                    OperandsTypeChecking.typeNullableNumericNumeric,
+                    SqlTypeStrategies.otiFirstKnown,
+                    SqlTypeStrategies.otcNullableNumericX2,
                     SqlFunctionCategory.Numeric)
                 {
                     protected RelDataType getType(
@@ -373,9 +373,9 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
 
             SqlFunction cppFunc =
                 new SqlFunction("CPLUS", SqlKind.Function,
-                                ReturnTypeInferenceImpl.useNullableBiggest,
-                                UnknownParamInference.useFirstKnown,
-                                OperandsTypeChecking.typeNullableNumericNumeric,
+                                SqlTypeStrategies.rtiNullableBiggest,
+                                SqlTypeStrategies.otiFirstKnown,
+                                SqlTypeStrategies.otcNullableNumericX2,
                                 SqlFunctionCategory.Numeric);
             opTab.register(cppFunc);
 

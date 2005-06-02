@@ -51,7 +51,8 @@ public class SqlCastFunction extends SqlFunction
 
     public SqlCastFunction()
     {
-        super("CAST", SqlKind.Cast, null, UnknownParamInference.useFirstKnown,
+        super("CAST", SqlKind.Cast, null,
+            SqlTypeStrategies.otiFirstKnown,
             null, SqlFunctionCategory.System);
     }
 

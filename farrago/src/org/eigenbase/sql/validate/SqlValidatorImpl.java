@@ -1086,8 +1086,8 @@ public class SqlValidatorImpl implements SqlValidator
                 call.setOperator(resolvedConstructor);
             } else {
                 // fake a fully-qualified call to the default constructor
-                ReturnTypeInference returnTypeInference =
-                    new ReturnTypeInferenceImpl.FixedReturnTypeInference(type);
+                SqlReturnTypeInference returnTypeInference =
+                    new ExplicitReturnTypeInference(type);
                 call.setOperator(
                     new SqlFunction(
                         type.getSqlIdentifier(),
@@ -1126,8 +1126,8 @@ public class SqlValidatorImpl implements SqlValidator
             }
         }
 
-        AssignableOperandsTypeChecking typeChecking =
-            new AssignableOperandsTypeChecking(argTypes);
+        AssignableOperandTypeChecker typeChecking =
+            new AssignableOperandTypeChecker(argTypes);
         String signature =
             typeChecking.getAllowedSignatures(unresolvedFunction);
         throw newValidationError(
@@ -1216,7 +1216,7 @@ public class SqlValidatorImpl implements SqlValidator
             }
         } else if (node instanceof SqlCall) {
             SqlCall call = (SqlCall) node;
-            UnknownParamInference paramTypeInference =
+            SqlOperandTypeInference paramTypeInference =
                 call.getOperator().getUnknownParamTypeInference();
             SqlNode [] operands = call.getOperands();
             RelDataType [] operandTypes = new RelDataType[operands.length];

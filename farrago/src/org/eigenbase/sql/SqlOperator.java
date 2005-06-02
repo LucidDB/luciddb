@@ -99,13 +99,13 @@ public abstract class SqlOperator
     private final int rightPrec;
 
     /** used to get the return type of operator/function */
-    private final ReturnTypeInference returnTypeInference;
+    private final SqlReturnTypeInference returnTypeInference;
 
     /** used to inference unknown params */
-    private final UnknownParamInference unknownParamTypeInference;
+    private final SqlOperandTypeInference unknownParamTypeInference;
 
     /** used to validate operands */
-    protected final OperandsTypeChecking operandsCheckingRule;
+    protected final SqlOperandTypeChecker operandsCheckingRule;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -120,9 +120,9 @@ public abstract class SqlOperator
         SqlKind kind,
         int leftPrecedence,
         int rightPrecedence,
-        ReturnTypeInference typeInference,
-        UnknownParamInference paramTypeInference,
-        OperandsTypeChecking operandsCheckingRule)
+        SqlReturnTypeInference typeInference,
+        SqlOperandTypeInference paramTypeInference,
+        SqlOperandTypeChecker operandsCheckingRule)
     {
         Util.pre(kind != null, "kind != null");
         this.name = name;
@@ -142,9 +142,9 @@ public abstract class SqlOperator
         SqlKind kind,
         int prec,
         boolean isLeftAssoc,
-        ReturnTypeInference typeInference,
-        UnknownParamInference paramTypeInference,
-        OperandsTypeChecking operandsCheckingRule)
+        SqlReturnTypeInference typeInference,
+        SqlOperandTypeInference paramTypeInference,
+        SqlOperandTypeChecker operandsCheckingRule)
     {
         this(name, kind, (2 * prec) + (isLeftAssoc ? 0 : 1),
             (2 * prec) + (isLeftAssoc ? 1 : 0), typeInference,
@@ -153,7 +153,7 @@ public abstract class SqlOperator
 
     //~ Methods ---------------------------------------------------------------
 
-    public OperandsTypeChecking getOperandsCheckingRule()
+    public SqlOperandTypeChecker getOperandsCheckingRule()
     {
         return this.operandsCheckingRule;
     }
@@ -404,7 +404,7 @@ public abstract class SqlOperator
      * the validator and scope provided.
      *
      * <p>Particular operators can affect the behavior of this method in two
-     * ways. If they have a {@link ReturnTypeInference},
+     * ways. If they have a {@link SqlReturnTypeInference},
      * it is used (prefered since it enables code reuse);
      * otherwise, operators with unusual type inference schemes
      * should override
@@ -433,7 +433,7 @@ public abstract class SqlOperator
      * Deduces the type of the return of a call to this operator.
      * We have already checked that the number and types of arguments are as
      * required.
-     * If no {@link ReturnTypeInference} object was set, you must override this
+     * If no {@link SqlReturnTypeInference} object was set, you must override this
      * method.
      *
      * <p>This method can be called by the {@link SqlValidator validator}
@@ -482,7 +482,7 @@ public abstract class SqlOperator
 
     protected void checkArgCount(
         SqlValidator validator,
-        OperandsTypeChecking argType,
+        SqlOperandTypeChecker argType,
         SqlCall call)
     {
         OperandsCountDescriptor od =
@@ -573,7 +573,7 @@ public abstract class SqlOperator
         return original.replaceAll(ANONYMOUS_REPLACE, name);
     }
 
-    public UnknownParamInference getUnknownParamTypeInference()
+    public SqlOperandTypeInference getUnknownParamTypeInference()
     {
         return unknownParamTypeInference;
     }

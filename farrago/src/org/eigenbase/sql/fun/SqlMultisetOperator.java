@@ -46,7 +46,7 @@ public class SqlMultisetOperator extends SqlSpecialOperator
     {
         // Precedence of 100 because nothing can pull parentheses apart.
         super("MULTISET", kind, 100, false,
-            ReturnTypeInferenceImpl.useFirstArgType,
+            SqlTypeStrategies.rtiFirstArgType,
             null, null);
         assert(kind.isA(SqlKind.MultisetQueryConstructor) ||
                kind.isA(SqlKind.MultisetValueConstructor));

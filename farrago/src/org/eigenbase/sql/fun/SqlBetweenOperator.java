@@ -129,7 +129,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
                 getTypeArray(validator,
                              scope,
                              (SqlCall) callOperands.getUnderlyingObject()));
-        return ReturnTypeInferenceImpl.useNullableBoolean.getType(
+        return SqlTypeStrategies.rtiNullableBoolean.getType(
             validator, scope, typeFactory,
             newCallOperands);
     }
@@ -144,15 +144,15 @@ public class SqlBetweenOperator extends SqlInfixOperator
     {
         StringBuffer ret = new StringBuffer();
         ret.append(
-            OperandsTypeChecking.typeNullableNumericNumericNumeric
+            SqlTypeStrategies.otcNullableNumericX3
                 .getAllowedSignatures(this));
         ret.append(NL);
         ret.append(
-            OperandsTypeChecking.typeNullableBinariesBinariesBinaries
+            SqlTypeStrategies.otcNullableBinaryX3
                 .getAllowedSignatures(this));
         ret.append(NL);
         ret.append(
-            OperandsTypeChecking.typeNullableVarcharVarcharVarchar
+            SqlTypeStrategies.otcNullableVarcharX3
                 .getAllowedSignatures(this));
         return replaceAnonymous(
             ret.toString(),
@@ -165,15 +165,15 @@ public class SqlBetweenOperator extends SqlInfixOperator
         SqlValidatorScope scope,
         boolean throwOnFailure)
     {
-        OperandsTypeChecking [] rules =
-            new OperandsTypeChecking [] {
-                OperandsTypeChecking.typeNullableNumeric,
-                OperandsTypeChecking.typeNullableBinariesBinaries,
-                OperandsTypeChecking.typeNullableVarchar
+        SqlOperandTypeChecker [] rules =
+            new SqlOperandTypeChecker [] {
+                SqlTypeStrategies.otcNullableNumeric,
+                SqlTypeStrategies.otcNullableBinaryX2,
+                SqlTypeStrategies.otcNullableVarchar
             };
         int failCount = 0;
         for (int i = 0; i < rules.length; i++) {
-            OperandsTypeChecking rule = rules[i];
+            SqlOperandTypeChecker rule = rules[i];
             boolean ok;
             ok = rule.check(call, validator, scope,
                 call.operands[VALUE_OPERAND], 0, false);

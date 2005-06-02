@@ -69,11 +69,11 @@ public class SqlLikeOperator extends SqlSpecialOperator
         // LIKE is right-associative, because that makes it easier to capture
         // dangling ESCAPE clauses: "a like b like c escape d" becomes
         // "a like (b like c escape d)".
-        super(name, kind, 15, false, ReturnTypeInferenceImpl.useNullableBoolean,
-            UnknownParamInference.useFirstKnown,
+        super(name, kind, 15, false, SqlTypeStrategies.rtiNullableBoolean,
+            SqlTypeStrategies.otiFirstKnown,
 
         /** this is not correct in general */
-        OperandsTypeChecking.typeNullableStringStringString);
+        SqlTypeStrategies.otcNullableStringX3);
         this.negated = negated;
     }
 
@@ -97,13 +97,13 @@ public class SqlLikeOperator extends SqlSpecialOperator
     {
         switch (call.operands.length) {
         case 2:
-            if (!OperandsTypeChecking.typeNullableStringStringOfSameType.
+            if (!SqlTypeStrategies.otcNullableStringSameX2.
                 check(validator, scope, call, throwOnFailure)) {
                 return false;
             }
             break;
         case 3:
-            if (!OperandsTypeChecking.typeNullableStringStringStringOfSameType.
+            if (!SqlTypeStrategies.otcNullableStringSameX3.
                 check(validator, scope, call, throwOnFailure)) {
                 return false;
             }

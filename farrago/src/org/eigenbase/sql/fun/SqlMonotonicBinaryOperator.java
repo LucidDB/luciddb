@@ -48,9 +48,9 @@ public class SqlMonotonicBinaryOperator extends SqlBinaryOperator
         SqlKind kind,
         int prec,
         boolean isLeftAssoc,
-        ReturnTypeInference typeInference,
-        UnknownParamInference paramTypeInference,
-        OperandsTypeChecking argTypes)
+        SqlReturnTypeInference typeInference,
+        SqlOperandTypeInference paramTypeInference,
+        SqlOperandTypeChecker argTypes)
     {
         super(
             name, kind, prec, isLeftAssoc, typeInference, paramTypeInference,

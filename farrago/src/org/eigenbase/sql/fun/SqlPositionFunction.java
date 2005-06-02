@@ -43,8 +43,8 @@ public class SqlPositionFunction extends SqlFunction
     public SqlPositionFunction()
     {
         super("POSITION", SqlKind.Function,
-            ReturnTypeInferenceImpl.useNullableInteger, null,
-            OperandsTypeChecking.typeNullableStringString,
+            SqlTypeStrategies.rtiNullableInteger, null,
+            SqlTypeStrategies.otcNullableStringX2,
             SqlFunctionCategory.Numeric);
     }
     

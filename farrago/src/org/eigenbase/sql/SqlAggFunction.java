@@ -22,9 +22,7 @@
 
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.type.OperandsTypeChecking;
-import org.eigenbase.sql.type.ReturnTypeInference;
-import org.eigenbase.sql.type.UnknownParamInference;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.rel.Aggregation;
 import openjava.mop.OJClass;
 
@@ -37,9 +35,9 @@ public abstract class SqlAggFunction extends SqlFunction implements Aggregation
     public SqlAggFunction(
         String name,
         SqlKind kind,
-        ReturnTypeInference typeInference,
-        UnknownParamInference paramTypeInference,
-        OperandsTypeChecking paramTypes,
+        SqlReturnTypeInference typeInference,
+        SqlOperandTypeInference paramTypeInference,
+        SqlOperandTypeChecker paramTypes,
         SqlFunctionCategory funcType)
     {
         super(name, kind, typeInference, paramTypeInference, paramTypes,

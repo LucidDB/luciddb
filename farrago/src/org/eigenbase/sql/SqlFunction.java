@@ -25,9 +25,7 @@ package org.eigenbase.sql;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.type.OperandsTypeChecking;
-import org.eigenbase.sql.type.ReturnTypeInference;
-import org.eigenbase.sql.type.UnknownParamInference;
+import org.eigenbase.sql.type.*;
 
 
 /**
@@ -64,9 +62,9 @@ public class SqlFunction extends SqlOperator
     public SqlFunction(
         String name,
         SqlKind kind,
-        ReturnTypeInference typeInference,
-        UnknownParamInference paramTypeInference,
-        OperandsTypeChecking paramTypes,
+        SqlReturnTypeInference typeInference,
+        SqlOperandTypeInference paramTypeInference,
+        SqlOperandTypeChecker paramTypes,
         SqlFunctionCategory funcType)
     {
         super(name, kind, 100, 100, typeInference, paramTypeInference,
@@ -98,9 +96,9 @@ public class SqlFunction extends SqlOperator
      */
     public SqlFunction(
         SqlIdentifier sqlIdentifier,
-        ReturnTypeInference typeInference,
-        UnknownParamInference paramTypeInference,
-        OperandsTypeChecking paramTypeChecking,
+        SqlReturnTypeInference typeInference,
+        SqlOperandTypeInference paramTypeInference,
+        SqlOperandTypeChecker paramTypeChecking,
         RelDataType [] paramTypes,
         SqlFunctionCategory funcType)
     {

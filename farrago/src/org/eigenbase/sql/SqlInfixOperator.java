@@ -23,9 +23,7 @@
 
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.type.OperandsTypeChecking;
-import org.eigenbase.sql.type.ReturnTypeInference;
-import org.eigenbase.sql.type.UnknownParamInference;
+import org.eigenbase.sql.type.*;
 
 
 /**
@@ -52,9 +50,9 @@ public class SqlInfixOperator extends SqlSpecialOperator
         String [] names,
         SqlKind kind,
         int precedence,
-        ReturnTypeInference typeInference,
-        UnknownParamInference paramTypeInference,
-        OperandsTypeChecking argTypeInference)
+        SqlReturnTypeInference typeInference,
+        SqlOperandTypeInference paramTypeInference,
+        SqlOperandTypeChecker argTypeInference)
     {
         super(names[0], kind, precedence, true, typeInference,
             paramTypeInference, argTypeInference);

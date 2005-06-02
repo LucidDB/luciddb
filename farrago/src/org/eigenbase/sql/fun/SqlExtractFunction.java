@@ -45,8 +45,8 @@ public class SqlExtractFunction extends SqlFunction
     public SqlExtractFunction()
     {
         super("EXTRACT", SqlKind.Function,
-            ReturnTypeInferenceImpl.useNullableDouble, null,
-            OperandsTypeChecking.typeNullableIntervalInterval,
+            SqlTypeStrategies.rtiNullableDouble, null,
+            SqlTypeStrategies.otcNullableIntervalX2,
             SqlFunctionCategory.System);
     }
     

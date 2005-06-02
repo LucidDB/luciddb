@@ -48,7 +48,7 @@ public class SqlMultisetMemberOfOperator extends SqlBinaryOperator
     {
         //TODO check if precedence is correct
         super("MEMBER OF", SqlKind.Other, 15, true,
-            ReturnTypeInferenceImpl.useNullableBoolean,
+            SqlTypeStrategies.rtiNullableBoolean,
             null, null);
     }
 
@@ -63,7 +63,7 @@ public class SqlMultisetMemberOfOperator extends SqlBinaryOperator
         SqlValidatorScope scope,
         boolean throwOnFailure)
     {
-        if (!OperandsTypeChecking.typeNullableMultiset.check(
+        if (!SqlTypeStrategies.otcNullableMultiset.check(
                 call, validator, scope,
                 call.operands[1], 0, throwOnFailure))
         {

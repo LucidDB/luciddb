@@ -2,9 +2,8 @@
 // $Id$
 // Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
+// Copyright (C) 2005-2005 Disruptive Tech
 // Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,36 +21,40 @@
 */
 package org.eigenbase.sql.type;
 
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.*;
 
 /**
- * ExplicitParamInferences implements {@link UnknownParamInference}
- * by explicity supplying a type for each parameter.
+ * Strategy to transform one type to another. The transformation is
+ * dependent on the implemented strategy object and in the general case is
+ * a function of the type and the other operands
  *
- * @author John V. Sichi
+ * Can not be used by itself. Must be used in an object of type
+ * {@link TransformCascade}
+ *
+ * <p>This class is an example of the
+ * {@link org.eigenbase.util.Glossary#StrategyPattern strategy pattern}.
+ * </p>
+ *
+ * @author Wael Chatila
  * @version $Id$
  */
-public class ExplicitParamInference implements UnknownParamInference
+public interface SqlTypeTransform
 {
-    private final RelDataType [] paramTypes;
-
-    public ExplicitParamInference(RelDataType [] paramTypes)
-    {
-        this.paramTypes = paramTypes;
-    }
-
-    public void inferOperandTypes(
+    /**
+     * @param typeToTransform The type subject of transformation. The return
+     * type is (in the general case) a function of
+     * <ul><li>The typeToTransform</li><li>The other operand types</li></ul>
+     * {@link SqlReturnTypeInference}  object.
+     * @return A new type depending on the operands types
+     */
+    public RelDataType getType(
         SqlValidator validator,
         SqlValidatorScope scope,
-        SqlCall call,
-        RelDataType returnType,
-        RelDataType [] operandTypes)
-    {
-        System.arraycopy(paramTypes, 0, operandTypes, 0, paramTypes.length);
-    }
+        RelDataTypeFactory typeFactory,
+        CallOperands callOperands,
+        RelDataType typeToTransform);
 }
 
-// End ExplicitParamInference.java
+// End SqlTypeTransform.java

@@ -45,7 +45,7 @@ public class SqlUnnestOperator extends SqlFunctionalOperator
         super(
             "UNNEST", SqlKind.Unnest,
             100, true, null, null,
-            OperandsTypeChecking.typeNullableMultisetOrRecordTypeMultiset);
+            SqlTypeStrategies.otcNullableMultisetOrRecordTypeMultiset);
     }
 
     protected RelDataType getType(

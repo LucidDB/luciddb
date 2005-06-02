@@ -2,9 +2,9 @@
 // $Id$
 // Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
+// Copyright (C) 2004-2005 Disruptive Tech
 // Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Portions Copyright (C) 2004-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -20,42 +20,38 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package org.eigenbase.sql.fun;
+package org.eigenbase.sql.type;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.test.SqlOperatorTests;
-import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.reltype.*;
 
 /**
- * Definition of the "FLOOR" builtin SQL function.
+ * ExplicitOperandTypeInferences implements {@link SqlOperandTypeInference}
+ * by explicity supplying a type for each parameter.
  *
- * @author jack
- * @since May 28, 2004
+ * @author John V. Sichi
  * @version $Id$
- **/
-public class SqlFloorFunction extends SqlFunction
+ */
+public class ExplicitOperandTypeInference implements SqlOperandTypeInference
 {
-    public SqlFloorFunction()
-    {
-        super("FLOOR", SqlKind.Function,
-            SqlTypeStrategies.rtiFirstArgType,
-            null,
-            SqlTypeStrategies.otcNumeric,
-            SqlFunctionCategory.Numeric);
+    private final RelDataType [] paramTypes;
 
+    public ExplicitOperandTypeInference(RelDataType [] paramTypes)
+    {
+        this.paramTypes = paramTypes;
     }
 
-    public void test(SqlTester tester)
+    public void inferOperandTypes(
+        SqlValidator validator,
+        SqlValidatorScope scope,
+        SqlCall call,
+        RelDataType returnType,
+        RelDataType [] operandTypes)
     {
-        SqlOperatorTests.testFloorFunc(tester);
+        System.arraycopy(paramTypes, 0, operandTypes, 0, paramTypes.length);
     }
-
-    public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
-    {
-        SqlNode node = (SqlNode)call.operands[0];
-        return scope.isMonotonic(node);
-    }
-
 }
+
+// End ExplicitOperandTypeInference.java

@@ -123,7 +123,7 @@ public class SqlCaseOperator extends SqlOperator
     public SqlCaseOperator()
     {
         super("CASE", SqlKind.Case, 1, true, null,
-            UnknownParamInference.useReturnType, null);
+            SqlTypeStrategies.otiReturnType, null);
     }
 
     //~ Methods ---------------------------------------------------------------

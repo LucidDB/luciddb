@@ -30,8 +30,7 @@ import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.UnknownParamInference;
-import org.eigenbase.sql.type.CallOperands;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.util.Util;
 
 
@@ -52,7 +51,7 @@ public class SqlRowOperator extends SqlSpecialOperator
     {
         // Precedence of 100 because nothing can pull parentheses apart.
         super("ROW", SqlKind.Row, 100, false, null,
-            UnknownParamInference.useReturnType, null);
+            SqlTypeStrategies.otiReturnType, null);
     }
 
     //~ Methods ---------------------------------------------------------------

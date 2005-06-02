@@ -2,9 +2,8 @@
 // $Id$
 // Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2002-2005 Disruptive Tech
+// Copyright (C) 2005-2005 Disruptive Tech
 // Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,32 +21,34 @@
 */
 package org.eigenbase.sql.type;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.*;
 
 /**
- * Strategy interface to infer the type of an operator call from the type of the
- * operands.
- *
- * <p>This interface is an example of the
- * {@link org.eigenbase.util.Glossary#StrategyPattern strategy pattern}.
- * This makes sense because many operators have similar, straightforward
- * strategies, such as to take the type of the first operand.</p>
+ * Returns the type of position ordinal (zero based)
  *
  * @author Wael Chatila
- * @since Sept 8, 2004
  * @version $Id$
  */
-public interface ReturnTypeInference
+public class OrdinalReturnTypeInference
+    implements SqlReturnTypeInference
 {
-    RelDataType getType(
+    private final int ordinal;
+
+    public OrdinalReturnTypeInference(int ordinal)
+    {
+        this.ordinal = ordinal;
+    }
+
+    public RelDataType getType(
         SqlValidator validator,
         SqlValidatorScope scope,
         RelDataTypeFactory typeFactory,
-        CallOperands callOperands);
+        CallOperands callOperands)
+    {
+        return callOperands.getType(ordinal);
+    }
 }
 
-// End ReturnTypeInference.java
-
+// End OrdinalReturnTypeInference.java

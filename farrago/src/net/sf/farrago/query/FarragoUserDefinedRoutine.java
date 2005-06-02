@@ -80,9 +80,9 @@ public class FarragoUserDefinedRoutine
     {
         super(
             FarragoCatalogUtil.getQualifiedName(routine),
-            new ReturnTypeInferenceImpl.FixedReturnTypeInference(returnType),
-            new ExplicitParamInference(paramTypes),
-            new AssignableOperandsTypeChecking(paramTypes),
+            new ExplicitReturnTypeInference(returnType),
+            new ExplicitOperandTypeInference(paramTypes),
+            new AssignableOperandTypeChecker(paramTypes),
             paramTypes,
             routine.getType() == ProcedureTypeEnum.PROCEDURE
             ? SqlFunctionCategory.UserDefinedProcedure
@@ -110,7 +110,7 @@ public class FarragoUserDefinedRoutine
     // out the correct hook method
     public void checkArgCount(
         SqlValidator validator,
-        OperandsTypeChecking argType,
+        SqlOperandTypeChecker argType,
         SqlCall call)
     {
         if (!hasDefinition()) {

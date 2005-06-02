@@ -36,8 +36,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.test.SqlOperatorIterator;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.type.OperandsTypeChecking;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.util.Util;
 import com.disruptivetech.farrago.calc.CalcRexImplementorTable;
 import com.disruptivetech.farrago.calc.CalcRexImplementorTableImpl;
@@ -198,7 +197,7 @@ public class FarragoCalcSystemTest extends FarragoTestCase
         while (it.hasNext()) {
             Integer n = (Integer) it.next();
             SqlNode [] operands = new SqlNode[n.intValue()];
-            OperandsTypeChecking allowedTypes =
+            SqlOperandTypeChecker allowedTypes =
                 op.getOperandsCheckingRule();
             SqlTypeName[][] rules = findRules(allowedTypes);
 
@@ -251,21 +250,15 @@ public class FarragoCalcSystemTest extends FarragoTestCase
     }
 
     // REVIEW jvs 17-Mar-2005:  This whole thing is really hokey.
-    private static SqlTypeName [][] findRules(OperandsTypeChecking otc)
+    private static SqlTypeName [][] findRules(SqlOperandTypeChecker otc)
     {
         SqlTypeName[][] rules;
-        if (otc instanceof
-            OperandsTypeChecking.CompositeOperandsTypeChecking)
-        {
-            OperandsTypeChecking rule =
-                ((OperandsTypeChecking.CompositeOperandsTypeChecking)
-                    otc).getRules()[0];
+        if (otc instanceof CompositeOperandTypeChecker) {
+            SqlOperandTypeChecker rule =
+                ((CompositeOperandTypeChecker) otc).getRules()[0];
             return findRules(rule);
-        } else if (otc instanceof
-            OperandsTypeChecking.SimpleOperandsTypeChecking)
-        {
-            return ((OperandsTypeChecking.SimpleOperandsTypeChecking)
-                otc).getTypes();
+        } else if (otc instanceof ExplicitOperandTypeChecker) {
+            return ((ExplicitOperandTypeChecker) otc).getTypes();
         } else {
             throw Util.needToImplement(otc);
         }

@@ -43,7 +43,7 @@ public class SqlOverlayFunction extends SqlFunction
     public SqlOverlayFunction()
     {
         super("OVERLAY", SqlKind.Function,
-            ReturnTypeInferenceImpl.useNullableDyadicStringSumPrecision,
+            SqlTypeStrategies.rtiNullableDyadicStringSumPrecision,
             null, null,
             SqlFunctionCategory.String);
     }
@@ -61,10 +61,10 @@ public class SqlOverlayFunction extends SqlFunction
     {
         switch (call.operands.length) {
         case 3:
-            return OperandsTypeChecking.typeNullableStringStringNotNullableInt
+            return SqlTypeStrategies.otcNullableStringX2NotNullInt
                 .check(validator, scope, call, throwOnFailure);
         case 4:
-            return OperandsTypeChecking.typeNullableStringStringNotNullableIntInt
+            return SqlTypeStrategies.otcNullableStringX2NotNullIntX2
                 .check(validator, scope, call, throwOnFailure);
         default:
             throw Util.needToImplement(this);

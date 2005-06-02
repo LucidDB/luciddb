@@ -29,9 +29,7 @@ import org.eigenbase.sql.SqlAggFunction;
 import org.eigenbase.sql.SqlFunction;
 import org.eigenbase.sql.SqlFunctionCategory;
 import org.eigenbase.sql.SqlKind;
-import org.eigenbase.sql.type.OperandsTypeChecking;
-import org.eigenbase.sql.type.ReturnTypeInference;
-import org.eigenbase.sql.type.ReturnTypeInferenceImpl;
+import org.eigenbase.sql.type.*;
 
 /**
  * <code>Count</code> is an aggregator which returns the number of rows
@@ -46,8 +44,8 @@ public class SqlCountAggFunction extends SqlAggFunction
     public SqlCountAggFunction()
     {
         super(
-            "COUNT", SqlKind.Function, ReturnTypeInferenceImpl.useFirstArgType,
-            null, OperandsTypeChecking.typeNumeric,
+            "COUNT", SqlKind.Function, SqlTypeStrategies.rtiFirstArgType,
+            null, SqlTypeStrategies.otcNumeric,
             SqlFunctionCategory.Numeric);
     }
 

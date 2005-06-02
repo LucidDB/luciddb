@@ -27,9 +27,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.OperandsTypeChecking;
-import org.eigenbase.sql.type.ReturnTypeInferenceImpl;
-import org.eigenbase.sql.type.SqlTypeUtil;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.EnumeratedValues;
@@ -48,12 +46,12 @@ public class SqlTrimFunction extends SqlFunction
     public SqlTrimFunction()
     {
         super("TRIM", SqlKind.Trim,
-            new ReturnTypeInferenceImpl.TransformCascade(
-                ReturnTypeInferenceImpl.useThirdArgType,
-                ReturnTypeInferenceImpl.toNullable
+            new SqlTypeTransformCascade(
+                SqlTypeStrategies.rtiThirdArgType,
+                SqlTypeTransforms.toNullable
             ),
             null,
-            OperandsTypeChecking.typeNullableStringStringOfSameType,
+            SqlTypeStrategies.otcNullableStringSameX2,
             SqlFunctionCategory.String);
     }
 
@@ -115,7 +113,7 @@ public class SqlTrimFunction extends SqlFunction
         boolean throwOnFailure)
     {
         for (int i = 1; i < 3; i++) {
-            if (!OperandsTypeChecking.typeNullableString.check(call, validator,
+            if (!SqlTypeStrategies.otcNullableString.check(call, validator,
                         scope, call.operands[i], 0, throwOnFailure)) {
                 if (throwOnFailure) {
                     throw call.newValidationSignatureError(validator, scope);

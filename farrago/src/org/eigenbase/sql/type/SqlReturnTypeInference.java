@@ -20,42 +20,34 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package org.eigenbase.sql.fun;
+package org.eigenbase.sql.type;
 
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.test.SqlOperatorTests;
-import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.*;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 
 /**
- * Definition of the "FLOOR" builtin SQL function.
+ * Strategy interface to infer the type of an operator call from the type of the
+ * operands.
  *
- * @author jack
- * @since May 28, 2004
+ * <p>This interface is an example of the
+ * {@link org.eigenbase.util.Glossary#StrategyPattern strategy pattern}.
+ * This makes sense because many operators have similar, straightforward
+ * strategies, such as to take the type of the first operand.</p>
+ *
+ * @author Wael Chatila
+ * @since Sept 8, 2004
  * @version $Id$
- **/
-public class SqlFloorFunction extends SqlFunction
+ */
+public interface SqlReturnTypeInference
 {
-    public SqlFloorFunction()
-    {
-        super("FLOOR", SqlKind.Function,
-            SqlTypeStrategies.rtiFirstArgType,
-            null,
-            SqlTypeStrategies.otcNumeric,
-            SqlFunctionCategory.Numeric);
-
-    }
-
-    public void test(SqlTester tester)
-    {
-        SqlOperatorTests.testFloorFunc(tester);
-    }
-
-    public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
-    {
-        SqlNode node = (SqlNode)call.operands[0];
-        return scope.isMonotonic(node);
-    }
-
+    RelDataType getType(
+        SqlValidator validator,
+        SqlValidatorScope scope,
+        RelDataTypeFactory typeFactory,
+        CallOperands callOperands);
 }
+
+// End SqlReturnTypeInference.java
+

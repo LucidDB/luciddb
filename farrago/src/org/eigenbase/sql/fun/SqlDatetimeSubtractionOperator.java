@@ -48,9 +48,9 @@ public class SqlDatetimeSubtractionOperator extends SqlSpecialOperator
     {
         super(
             "-", SqlKind.Minus, 20, true,
-            ReturnTypeInferenceImpl.useThirdArgType,
-            UnknownParamInference.useFirstKnown,
-            OperandsTypeChecking.typeMinusDateOperator);
+            SqlTypeStrategies.rtiThirdArgType,
+            SqlTypeStrategies.otiFirstKnown,
+            SqlTypeStrategies.otcMinusDateOperator);
     }
     
     public void test(SqlTester tester)

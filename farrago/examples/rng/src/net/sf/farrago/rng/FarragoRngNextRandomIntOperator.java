@@ -46,9 +46,9 @@ public class FarragoRngNextRandomIntOperator extends SqlFunction
         super(
             "NEXT_RANDOM_INT",
             SqlKind.Other,
-            ReturnTypeInferenceImpl.useInteger, 
+            SqlTypeStrategies.rtiInteger, 
             null,
-            new OperandsTypeChecking.SimpleOperandsTypeChecking(
+            new ExplicitOperandTypeChecker(
                 new SqlTypeName [][] {
                     SqlTypeName.intTypes, 
                     SqlTypeName.charTypes,

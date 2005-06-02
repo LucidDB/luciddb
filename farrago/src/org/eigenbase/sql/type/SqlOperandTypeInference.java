@@ -20,42 +20,39 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package org.eigenbase.sql.fun;
+package org.eigenbase.sql.type;
 
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.test.SqlOperatorTests;
-import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
 
 /**
- * Definition of the "FLOOR" builtin SQL function.
+ * Strategy to infer unknown types of the operands of an operator call.
  *
- * @author jack
- * @since May 28, 2004
+ * @author Wael Chatila
+ * @since Sept 8, 2004
  * @version $Id$
  **/
-public class SqlFloorFunction extends SqlFunction
+public interface SqlOperandTypeInference
 {
-    public SqlFloorFunction()
-    {
-        super("FLOOR", SqlKind.Function,
-            SqlTypeStrategies.rtiFirstArgType,
-            null,
-            SqlTypeStrategies.otcNumeric,
-            SqlFunctionCategory.Numeric);
-
-    }
-
-    public void test(SqlTester tester)
-    {
-        SqlOperatorTests.testFloorFunc(tester);
-    }
-
-    public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
-    {
-        SqlNode node = (SqlNode)call.operands[0];
-        return scope.isMonotonic(node);
-    }
-
+    /**
+     * Infers any unknown operand types.
+     *
+     * @param validator the validator context
+     * @param scope the the validator scope context
+     * @param call the call being analyzed
+     * @param returnType the type known or inferred for the
+     * result of the call
+     * @param operandTypes receives the inferred types for all operands
+     */
+    public void inferOperandTypes(
+        SqlValidator validator,
+        SqlValidatorScope scope,
+        SqlCall call,
+        RelDataType returnType,
+        RelDataType [] operandTypes);
 }
+
+// End SqlOperandTypeInference.java

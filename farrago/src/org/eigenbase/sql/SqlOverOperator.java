@@ -25,8 +25,7 @@ package org.eigenbase.sql;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.type.OperandsTypeChecking;
-import org.eigenbase.sql.type.ReturnTypeInferenceImpl;
+import org.eigenbase.sql.type.*;
 
 /**
  * An operator describing a window function specification.
@@ -48,8 +47,8 @@ public class SqlOverOperator extends SqlBinaryOperator
     public SqlOverOperator()
     {
         super("OVER", SqlKind.Over, 10, true,
-            ReturnTypeInferenceImpl.useFirstArgType, null,
-            OperandsTypeChecking.typeAnyAny);
+            SqlTypeStrategies.rtiFirstArgType, null,
+            SqlTypeStrategies.otcAnyX2);
     }
 
     public void validateCall(

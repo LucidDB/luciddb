@@ -43,8 +43,8 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
 
     public SqlOverlapsOperator() {
         super("OVERLAPS", SqlKind.Overlaps, 15, true,
-            ReturnTypeInferenceImpl.useNullableBoolean,
-            UnknownParamInference.useFirstKnown, null);
+            SqlTypeStrategies.rtiNullableBoolean,
+            SqlTypeStrategies.otiFirstKnown, null);
     }
 
     public void test(SqlTester tester)
@@ -113,11 +113,11 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
         SqlValidator validator,
         SqlValidatorScope scope,
         boolean throwOnFailure) {
-        if (!OperandsTypeChecking.typeNullableDatetime.check(
+        if (!SqlTypeStrategies.otcNullableDatetime.check(
             call, validator, scope, call.operands[0], 0, throwOnFailure)) {
             return false;
         }
-        if (!OperandsTypeChecking.typeNullableDatetime.check(
+        if (!SqlTypeStrategies.otcNullableDatetime.check(
             call, validator, scope, call.operands[2], 0, throwOnFailure)) {
             return false;
         }

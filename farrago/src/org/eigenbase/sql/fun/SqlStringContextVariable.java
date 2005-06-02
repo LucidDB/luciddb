@@ -44,8 +44,8 @@ public abstract class SqlStringContextVariable extends SqlFunction
     protected SqlStringContextVariable(String name)
     {
         super(
-            name, SqlKind.Function, ReturnTypeInferenceImpl.useVarchar2000,
-            null, OperandsTypeChecking.typeEmpty,
+            name, SqlKind.Function, SqlTypeStrategies.rtiVarchar2000,
+            null, SqlTypeStrategies.otcEmpty,
             SqlFunctionCategory.System);
     }
 

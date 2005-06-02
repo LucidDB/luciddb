@@ -28,7 +28,7 @@ import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.reltype.*;
 
 /**
- * AssignableOperandsTypeChecking implements {@link OperandsTypeChecking} by
+ * AssignableOperandTypeChecker implements {@link SqlOperandTypeChecker} by
  * verifying that the type of each argument is assignable to a
  * predefined set of parameter types (under the SQL definition of
  * "assignable").
@@ -36,7 +36,7 @@ import org.eigenbase.reltype.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class AssignableOperandsTypeChecking extends OperandsTypeChecking
+public class AssignableOperandTypeChecker implements SqlOperandTypeChecker
 {
     private final RelDataType [] paramTypes;
 
@@ -46,18 +46,18 @@ public class AssignableOperandsTypeChecking extends OperandsTypeChecking
      * @param paramTypes parameter types for operands; index in
      * this array corresponds to operand number
      */
-    public AssignableOperandsTypeChecking(RelDataType [] paramTypes)
+    public AssignableOperandTypeChecker(RelDataType [] paramTypes)
     {
         this.paramTypes = paramTypes;
     }
 
-    // implement OperandsTypeChecking
+    // implement SqlOperandTypeChecker
     public int getArgCount()
     {
         return paramTypes.length;
     }
 
-    // implement OperandsTypeChecking
+    // implement SqlOperandTypeChecker
     public boolean check(
         SqlCall call,
         SqlValidator validator,
@@ -69,7 +69,7 @@ public class AssignableOperandsTypeChecking extends OperandsTypeChecking
         return check(validator, scope, call, throwOnFailure);
     }
 
-    // implement OperandsTypeChecking
+    // implement SqlOperandTypeChecker
     public boolean check(
         SqlValidator validator,
         SqlValidatorScope scope,
@@ -89,7 +89,7 @@ public class AssignableOperandsTypeChecking extends OperandsTypeChecking
         return true;
     }
 
-    // implement OperandsTypeChecking
+    // implement SqlOperandTypeChecker
     public String getAllowedSignatures(SqlOperator op)
     {
         StringBuffer sb = new StringBuffer();
@@ -108,4 +108,4 @@ public class AssignableOperandsTypeChecking extends OperandsTypeChecking
     }
 }
 
-// End AssignableOperandsTypeChecking.java
+// End AssignableOperandTypeChecker.java
