@@ -31,6 +31,7 @@ import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.util.SqlVisitor;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.Moniker;
 import org.eigenbase.util.Util;
 
 /**
@@ -137,9 +138,9 @@ public class SqlCall extends SqlNode
      * @param scope Validation scope
      * @param pp SqlParserPos indicating the cursor position at which
      * competion hints are requested for
-     * @return a string array of valid options
+     * @return a {@link Moniker} array of valid options
      */
-    public String[] findValidOptions(
+    public Moniker[] findValidOptions(
         SqlValidator validator,
         SqlValidatorScope scope,
         SqlParserPos pp)
@@ -154,7 +155,7 @@ public class SqlCall extends SqlNode
                 }
             }
         }
-        return Util.emptyStringArray;
+        return Util.emptyMonikerArray;
     }
 
     public void accept(SqlVisitor visitor)

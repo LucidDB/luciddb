@@ -76,7 +76,7 @@ public interface SqlValidatorCatalogReader
      * @return the list of all object (schema and table) names under
      *         the above criteria
      */
-    String [] getAllSchemaObjectNames(String [] names);
+    Moniker [] getAllSchemaObjectNames(String [] names);
 }
 
 // End SqlValidatorCatalogReader.java

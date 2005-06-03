@@ -42,6 +42,9 @@ import net.sf.farrago.util.*;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.SqlValidatorException;
+import org.eigenbase.sql.validate.Moniker;
+import org.eigenbase.sql.validate.MonikerImpl;
+import org.eigenbase.sql.validate.MonikerType;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.util.*;
 
@@ -207,12 +210,12 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
     }
 
     // implement FarragoSessionStmtValidator
-    public String[] getAllSchemaObjectNames(String[] names)
+    public Moniker[] getAllSchemaObjectNames(String[] names)
     {
         // use default catalog.  If not set, don't do anything
         CwmCatalog catalog = repos.getCatalog(sessionVariables.catalogName);
         if (catalog == null) {
-            return Util.emptyStringArray;
+            return Util.emptyMonikerArray;
         }
 
         // look for both schema and object names
@@ -231,7 +234,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
                     FemLocalTable.class);
                 schemaNames.addAll(tableNames);
             }
-            return (String[]) schemaNames.toArray(Util.emptyStringArray);
+            return (Moniker[]) schemaNames.toArray(Util.emptyMonikerArray);
         }
         // looking for table names under the specified schema
         else if (names.length == 2) {
@@ -241,15 +244,15 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
                 List tableNames = getAllObjectNamesByType(
                     schema.getOwnedElement(),
                     FemLocalTable.class);
-                return (String []) tableNames.toArray(Util.emptyStringArray);
+                return (Moniker []) tableNames.toArray(Util.emptyMonikerArray);
             }
             else {
-                return Util.emptyStringArray;
+                return Util.emptyMonikerArray;
             }
         }
         // currently not supporting the likes of SALES.EMPS.$DUMMY
         else {
-            return Util.emptyStringArray;
+            return Util.emptyMonikerArray;
         }
     }
 
@@ -261,7 +264,14 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         while (iter.hasNext()) {
             CwmModelElement element = (CwmModelElement) iter.next();
             if (type.isInstance(element)) {
-                list.add(element.getName());
+                // it only supports schema and table type right now
+                if (element instanceof FemLocalSchema) {
+                    list.add(new MonikerImpl(
+                        element.getName(), MonikerType.Schema));
+                } else if (element instanceof FemLocalTable) {
+                    list.add(new MonikerImpl(
+                        element.getName(), MonikerType.Table));
+                }
             }
         }
         return list;

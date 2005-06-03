@@ -27,6 +27,7 @@ import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.type.SqlTypeFactoryImpl;
 import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.Moniker;
 import org.eigenbase.test.SqlValidatorTestCase;
 import org.eigenbase.test.MockCatalogReader;
 import org.eigenbase.util.TestUtil;
@@ -447,9 +448,9 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
 
         SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);
 
-        String [] results = advisor.getCompletionHints(
+        Moniker [] results = advisor.getCompletionHints(
             sap.sql, sap.pos);
-        assertEquals(results, expectedResults);
+        assertEquals(convertCompletionHints(results), expectedResults);
     }
 
     /**
@@ -484,8 +485,8 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         SqlAdvisor advisor = new SqlAdvisor(validator);
 
         SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);
-        String [] results = advisor.getCompletionHints(sap.sql, sap.cursor);
-        assertEquals(results, expectedResults);
+        Moniker [] results = advisor.getCompletionHints(sap.sql, sap.cursor);
+        assertEquals(convertCompletionHints(results), expectedResults);
     }
 
     protected void assertEquals(
@@ -503,6 +504,15 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
             + uniqueResults.values() + "\nExpected:\n" + expectedResults);
         }
         return;
+    }
+
+    private String[] convertCompletionHints(Moniker[] results)
+    {
+        String [] strHints = new String[results.length];
+        for (int i = 0; i < results.length; i++) {
+            strHints[i] = results[i].toString();
+        }
+        return strHints;
     }
 
     public Tester getTester() {

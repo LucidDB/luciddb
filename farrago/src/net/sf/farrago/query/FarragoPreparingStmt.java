@@ -865,7 +865,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     }
 
     // implement SqlValidator.CatalogReader
-    public String [] getAllSchemaObjectNames(String [] names)
+    public Moniker [] getAllSchemaObjectNames(String [] names)
     {
         return stmtValidator.getAllSchemaObjectNames(names);
     }

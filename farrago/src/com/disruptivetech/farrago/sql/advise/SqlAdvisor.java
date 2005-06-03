@@ -74,7 +74,7 @@ public class SqlAdvisor
      * @param cursor to indicate the 0-based cursor position in the query at
      * which completion hints need to be retrieved.
      */
-    public String[] getCompletionHints(String sql, int cursor)
+    public Moniker[] getCompletionHints(String sql, int cursor)
         throws SqlParseException
     {
         String simpleSql = simplifySql(sql, cursor);
@@ -102,11 +102,11 @@ public class SqlAdvisor
      * setting pp to 'Line 1, Column 31' returns all the possible table names
      * in 'sales' schema
      *
-     * @return an array of string hints (sql identifiers) that can fill in at
+     * @return an array of hints ({@link Moniker}) that can fill in at
      * the indicated position
      *
      */
-    public String[] getCompletionHints(String sql, SqlParserPos pp)
+    public Moniker[] getCompletionHints(String sql, SqlParserPos pp)
         throws SqlParseException
     {
         SqlParser parser = new SqlParser(sql);

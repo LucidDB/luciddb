@@ -281,11 +281,11 @@ public class SqlValidatorImpl implements SqlValidator
      * setting pp to 'Line 1, Column 31' returns all the possible table names
      * in 'sales' schema
      *
-     * @return an array of string hints (sql identifiers) that can fill in at
+     * @return an array of {@link Moniker} (sql identifiers) that can fill in at
      * the indicated position
      *
      */
-    public String[] lookupHints(SqlNode topNode, SqlParserPos pp)
+    public Moniker[] lookupHints(SqlNode topNode, SqlParserPos pp)
     {
         SqlValidatorScope scope = new EmptyScope(this);
         try {
@@ -346,11 +346,11 @@ public class SqlValidatorImpl implements SqlValidator
      * @param pp indicates the position in the sql statement we want to get
      * completion hints for
      *
-     * @return an array list of strings (sql identifiers) that can fill in at
-     * the indicated position
+     * @return an array list of {@link Moniker} (sql identifiers) that can fill 
+     * in at the indicated position
      *
      */
-    String[] lookupSelectHints(SqlSelect select, SqlParserPos pp)
+    Moniker[] lookupSelectHints(SqlSelect select, SqlParserPos pp)
     {
         SqlIdentifier dummyId =  (SqlIdentifier) sqlids.get(pp.toString());
         SqlValidatorScope dummyScope = (SqlValidatorScope)
@@ -364,7 +364,7 @@ public class SqlValidatorImpl implements SqlValidator
         }
     }
 
-    private String[] lookupFromHints(SqlNode node,
+    private Moniker[] lookupFromHints(SqlNode node,
         SqlValidatorScope scope, SqlParserPos pp)
     {
         final SqlValidatorNamespace ns = getNamespace(node);
@@ -385,12 +385,12 @@ public class SqlValidatorImpl implements SqlValidator
         }
     }
 
-    private String[] lookupJoinHints(SqlJoin join, SqlValidatorScope scope, SqlParserPos pp)
+    private Moniker[] lookupJoinHints(SqlJoin join, SqlValidatorScope scope, SqlParserPos pp)
     {
         SqlNode left = join.getLeft();
         SqlNode right = join.getRight();
         SqlNode condition = join.getCondition();
-        String [] result = lookupFromHints(left, scope, pp);
+        Moniker [] result = lookupFromHints(left, scope, pp);
         if (result.length > 0) {
             return result;
         }
@@ -405,7 +405,7 @@ public class SqlValidatorImpl implements SqlValidator
             return condition.findValidOptions(this, joinScope, pp);
         default:
         // not supporting lookup hints for other types such as 'Using' yet
-            return Util.emptyStringArray;
+            return Util.emptyMonikerArray;
         }
     }
 
@@ -2355,9 +2355,9 @@ public class SqlValidatorImpl implements SqlValidator
             {
             }
 
-            public String[] lookupHints(SqlParserPos pp)
+            public Moniker[] lookupHints(SqlParserPos pp)
             {
-                return Util.emptyStringArray;
+                return Util.emptyMonikerArray;
             }
 
             public SqlNode getNode()

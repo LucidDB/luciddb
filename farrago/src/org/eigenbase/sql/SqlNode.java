@@ -27,6 +27,7 @@ import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.util.SqlVisitor;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.Moniker;
 import org.eigenbase.util.*;
 
 import java.io.PrintWriter;
@@ -197,14 +198,14 @@ public abstract class SqlNode implements Cloneable
      * @param scope Validation scope
      * @param pp SqlParserPos indicating the cursor position at which
      * competion hints are requested for
-     * @return a string array of valid options
+     * @return a {@link Moniker} array of valid options
      */
-    public String[] findValidOptions(
+    public Moniker[] findValidOptions(
         SqlValidator validator,
         SqlValidatorScope scope,
         SqlParserPos pp)
     {
-        return Util.emptyStringArray;
+        return Util.emptyMonikerArray;
     }
 
     /**
@@ -213,13 +214,13 @@ public abstract class SqlNode implements Cloneable
      *
      * @param validator Validator
      * @param scope Validation scope
-     * @return a string array of valid options
+     * @return a {@link Moniker} array of valid options
      */
-    public String[] findValidOptions(
+    public Moniker[] findValidOptions(
         SqlValidator validator,
         SqlValidatorScope scope)
     {
-        return Util.emptyStringArray;
+        return Util.emptyMonikerArray;
     }
 
     /**

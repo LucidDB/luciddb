@@ -77,7 +77,7 @@ public interface SqlValidatorNamespace
     /**
      * Looks up hints from this namespace.
      */
-    String[] lookupHints(SqlParserPos pp);
+    Moniker[] lookupHints(SqlParserPos pp);
 
     SqlNode getNode();
 

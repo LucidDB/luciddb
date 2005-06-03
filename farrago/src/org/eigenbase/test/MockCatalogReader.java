@@ -26,6 +26,9 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.validate.SqlValidatorCatalogReader;
 import org.eigenbase.sql.validate.SqlValidatorTable;
+import org.eigenbase.sql.validate.Moniker;
+import org.eigenbase.sql.validate.MonikerImpl;
+import org.eigenbase.sql.validate.MonikerType;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.Util;
@@ -171,7 +174,7 @@ public class MockCatalogReader implements SqlValidatorCatalogReader
         }
     }
 
-    public String [] getAllSchemaObjectNames(String [] names)
+    public Moniker [] getAllSchemaObjectNames(String [] names)
     {
         if (names.length == 1) {
             // looking for both schema and object names
@@ -180,18 +183,28 @@ public class MockCatalogReader implements SqlValidatorCatalogReader
             ArrayList result = new ArrayList();
             while (i.hasNext()) {
                 MockSchema schema = (MockSchema) i.next();
-                result.add(schema.name);
-                result.addAll(schema.tableNames);
+                result.add(new MonikerImpl(schema.name, MonikerType.Schema));
+                Iterator j = schema.tableNames.iterator();
+                while (j.hasNext()) {
+                    result.add(new MonikerImpl(
+                        (String)j.next(), MonikerType.Table));
+                }
             }
-            return (String [])result.toArray(Util.emptyStringArray);
+            return (Moniker [])result.toArray(Util.emptyMonikerArray);
         }
         else if (names.length == 2) {
             // looking for table names under the schema
             MockSchema schema = (MockSchema) schemas.get(names[0]);
-            return (String [])schema.tableNames.toArray(Util.emptyStringArray);
+            ArrayList result = new ArrayList();
+            Iterator j = schema.tableNames.iterator();
+            while (j.hasNext()) {
+                result.add(new MonikerImpl(
+                    (String)j.next(), MonikerType.Table));
+            }
+            return (Moniker [])result.toArray(Util.emptyMonikerArray);
         }
         else {
-            return Util.emptyStringArray;
+            return Util.emptyMonikerArray;
         }
     }
 

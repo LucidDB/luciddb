@@ -39,6 +39,7 @@ import net.sf.farrago.util.*;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.validate.Moniker;
 
 
 /**
@@ -251,10 +252,10 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
       * partially qualified object name in the format of 'schema.object', or an 
       * unqualified name in the format of 'object'
       *
-      * @return the list of all object (schema and table) names under the above
-      *  criteria
+      * @return the list of all {@link Moniker} object (schema and table) names 
+      * under the above criteria
       */
-    public String [] getAllSchemaObjectNames(String [] names);
+    public Moniker [] getAllSchemaObjectNames(String [] names);
 
     /**
      * Sets the parser position to use for context in error messages.

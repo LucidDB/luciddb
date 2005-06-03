@@ -42,6 +42,7 @@ import openjava.ptree.StatementList;
 
 import org.eigenbase.runtime.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.Moniker;
 import org.eigenbase.sql.util.SqlBasicVisitor;
 
 /**
@@ -60,6 +61,8 @@ public class Util extends Toolbox
         System.getProperty("file.separator");
     public static final Object [] emptyObjectArray = new Object[0];
     public static final String [] emptyStringArray = new String[0];
+    public static final Moniker [] emptyMonikerArray = new Moniker[0];
+
     private static boolean driversLoaded = false;
 
     /**

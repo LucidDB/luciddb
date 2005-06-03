@@ -1727,7 +1727,7 @@ public class SqlToRelConverter
             return null;
         }
 
-        public String [] getAllSchemaObjectNames(String [] names)
+        public Moniker [] getAllSchemaObjectNames(String [] names)
         {
             throw new UnsupportedOperationException();
         }

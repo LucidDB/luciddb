@@ -58,9 +58,9 @@ abstract class AbstractNamespace implements SqlValidatorNamespace
         this.validator = validator;
     }
 
-    public String[] lookupHints(SqlParserPos pp)
+    public Moniker[] lookupHints(SqlParserPos pp)
     {
-        return Util.emptyStringArray;
+        return Util.emptyMonikerArray;
     }
 
     public void validate()
