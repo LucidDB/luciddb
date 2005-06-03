@@ -25,7 +25,6 @@ package net.sf.farrago.jdbc.engine;
 import java.sql.*;
 import java.util.*;
 
-import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.jdbc.FarragoConnection;
 import net.sf.farrago.jdbc.FarragoMedDataWrapperInfo;
@@ -38,6 +37,7 @@ import net.sf.farrago.fem.med.FemDataWrapper;
 import net.sf.farrago.catalog.*;
 
 import org.eigenbase.sql.SqlIdentifier;
+import org.eigenbase.sql.parser.SqlParserPos;
 
 /**
  * FarragoJdbcEngineConnection implements the {@link java.sql.Connection}
@@ -460,7 +460,8 @@ public class FarragoJdbcEngineConnection
         throws SQLException
     {
         FarragoDbSession session = (FarragoDbSession)getSession();
-        SqlIdentifier wrapperSqlIdent = new SqlIdentifier(wrapperName, null);
+        SqlIdentifier wrapperSqlIdent =
+            new SqlIdentifier(wrapperName, SqlParserPos.ZERO);
         
         FemDataWrapper wrapper = (FemDataWrapper)
             FarragoCatalogUtil.getModelElementByName(

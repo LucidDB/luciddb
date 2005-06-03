@@ -392,7 +392,8 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         String dataServerName =
             session.getPersonality().getDefaultLocalDataServerName(
                 this);
-        return findDataServer(new SqlIdentifier(dataServerName, null));
+        return findDataServer(
+            new SqlIdentifier(dataServerName, SqlParserPos.ZERO));
     }
 
     // implement FarragoSessionStmtValidator
@@ -444,7 +445,8 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
                 0,
                 nQualifiers);
             simpleName = invocationName.names[nQualifiers];
-            SqlIdentifier schemaId = new SqlIdentifier(schemaNames, null);
+            SqlIdentifier schemaId =
+                new SqlIdentifier(schemaNames, SqlParserPos.ZERO);
             FemLocalSchema schema = findSchema(schemaId);
             routines = schema.getOwnedElement();
         } else {

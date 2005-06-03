@@ -26,6 +26,7 @@ package org.eigenbase.sql.type;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.Util;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.validate.SqlValidatorUtil;
@@ -812,8 +813,8 @@ public abstract class SqlTypeUtil
         // TODO jvs 28-Dec-2004:  support row types, user-defined types,
         // interval types, multiset types, etc
         assert(typeName != null);
-        SqlIdentifier typeIdentifier = new SqlIdentifier(
-            typeName.getName(), null);
+        SqlIdentifier typeIdentifier =
+            new SqlIdentifier(typeName.getName(), SqlParserPos.ZERO);
 
         String charSetName = null;
 
@@ -831,21 +832,21 @@ public abstract class SqlTypeUtil
                 type.getPrecision(),
                 type.getScale(),
                 charSetName,
-                null);
+                SqlParserPos.ZERO);
         } else if (typeName.allowsPrec()) {
             return new SqlDataTypeSpec(
                 typeIdentifier,
                 type.getPrecision(),
                 0,
                 charSetName,
-                null);
+                SqlParserPos.ZERO);
         } else {
             return new SqlDataTypeSpec(
                 typeIdentifier,
                 0,
                 0,
                 charSetName,
-                null);
+                SqlParserPos.ZERO);
         }
     }
 

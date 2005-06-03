@@ -37,6 +37,7 @@ import org.eigenbase.rex.RexVisitor;
 import org.eigenbase.sql.SqlOperator;
 import org.eigenbase.sql.SqlSyntax;
 import org.eigenbase.sql.SqlIdentifier;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.util.Util;
 
@@ -266,7 +267,7 @@ class InternalTranslator
             return null;
         }
         List list = rexBuilder.getOpTab().lookupOperatorOverloads(
-            new SqlIdentifier(sqlName.toUpperCase(), null),
+            new SqlIdentifier(sqlName.toUpperCase(), SqlParserPos.ZERO),
             null,
             SqlSyntax.Binary);
         if (list.isEmpty()) {

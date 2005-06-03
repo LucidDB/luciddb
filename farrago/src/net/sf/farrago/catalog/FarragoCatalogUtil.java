@@ -33,6 +33,7 @@ import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.util.*;
 
 import javax.jmi.reflect.*;
@@ -413,7 +414,7 @@ public abstract class FarragoCatalogUtil
         }
         Collections.reverse(names);
         String [] nameArray = (String []) names.toArray(Util.emptyStringArray);
-        return new SqlIdentifier(nameArray, null);
+        return new SqlIdentifier(nameArray, SqlParserPos.ZERO);
     }
 
     /**

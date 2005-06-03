@@ -635,7 +635,7 @@ public class SqlValidatorImpl implements SqlValidator
             }
             final SqlNodeList selectList =
                 new SqlNodeList(SqlParserPos.ZERO);
-            selectList.add(new SqlIdentifier("*", null));
+            selectList.add(new SqlIdentifier("*", SqlParserPos.ZERO));
             SqlSelect wrapperNode =
                 SqlStdOperatorTable.selectOperator.createCall(null,
                     selectList, query, null, null, null, null, orderList,
@@ -646,7 +646,7 @@ public class SqlValidatorImpl implements SqlValidator
             SqlCall call = (SqlCall) node;
             final SqlNodeList selectList =
                 new SqlNodeList(SqlParserPos.ZERO);
-            selectList.add(new SqlIdentifier("*", null));
+            selectList.add(new SqlIdentifier("*", SqlParserPos.ZERO));
             SqlSelect wrapperNode =
                 SqlStdOperatorTable.selectOperator.createCall(null,
                     selectList, call.getOperands()[0], null, null, null, null,
@@ -661,7 +661,7 @@ public class SqlValidatorImpl implements SqlValidator
             SqlDelete call = (SqlDelete) node;
             final SqlNodeList selectList =
                 new SqlNodeList(SqlParserPos.ZERO);
-            selectList.add(new SqlIdentifier("*", null));
+            selectList.add(new SqlIdentifier("*", SqlParserPos.ZERO));
             SqlNode sourceTable = call.getTargetTable();
             if (call.getAlias() != null) {
                 sourceTable = SqlValidatorUtil.addAlias(
@@ -676,7 +676,7 @@ public class SqlValidatorImpl implements SqlValidator
             SqlUpdate call = (SqlUpdate) node;
             final SqlNodeList selectList =
                 new SqlNodeList(SqlParserPos.ZERO);
-            selectList.add(new SqlIdentifier("*", null));
+            selectList.add(new SqlIdentifier("*", SqlParserPos.ZERO));
             Iterator iter =
                 call.getSourceExpressionList().getList().iterator();
             int ordinal = 0;

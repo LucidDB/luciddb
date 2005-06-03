@@ -1818,7 +1818,7 @@ SqlNode StringLiteral(boolean strict) :
             return (SqlLiteral) frags.get(0); // just the head fragment
         } else {
             SqlNode[] rands = (SqlNode[]) frags.toArray(new SqlNode[nfrags]);
-            SqlParserPos pos2 = SqlParserUtil.combinePos(rands);
+            SqlParserPos pos2 = SqlParserPos.sum(rands);
             return opTab.literalChainOperator.createCall(rands, pos2);
         }
     }
@@ -1850,7 +1850,7 @@ SqlNode StringLiteral(boolean strict) :
             return (SqlLiteral) frags.get(0); // just the head fragment
         } else {
             SqlNode[] rands = (SqlNode[]) frags.toArray(new SqlNode[nfrags]);
-            SqlParserPos pos2 = SqlParserUtil.combinePos(rands);
+            SqlParserPos pos2 = SqlParserPos.sum(rands);
             return opTab.literalChainOperator.createCall(rands, pos2);
         }
     }

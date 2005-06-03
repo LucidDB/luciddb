@@ -220,17 +220,19 @@ public class FarragoCalcSystemTest extends FarragoTestCase
                 }
                 SqlDataTypeSpec dt =
                     new SqlDataTypeSpec(
-                        new SqlIdentifier(typeName.getName(), null),
+                        new SqlIdentifier(
+                            typeName.getName(), 
+                            SqlParserPos.ZERO),
                         precision,
                         0,
                         null,
-                        null);
+                        SqlParserPos.ZERO);
 
                 operands[i] =
                     opTab.castFunc.createCall(
-                        SqlLiteral.createNull(null),
+                        SqlLiteral.createNull(SqlParserPos.ZERO),
                         dt,
-                        null);
+                        SqlParserPos.ZERO);
             }
 
             if (operands.length == 0) {

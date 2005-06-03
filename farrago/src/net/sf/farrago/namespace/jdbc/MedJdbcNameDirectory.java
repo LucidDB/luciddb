@@ -92,9 +92,10 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
             opTab.selectOperator.createCall(
                 null,
                 new SqlNodeList(
-                    Collections.singletonList(new SqlIdentifier("*", null)),
-                    null),
-                new SqlIdentifier(foreignName, null),
+                    Collections.singletonList(
+                        new SqlIdentifier("*", SqlParserPos.ZERO)),
+                    SqlParserPos.ZERO),
+                new SqlIdentifier(foreignName, SqlParserPos.ZERO),
                 null,
                 null,
                 null,

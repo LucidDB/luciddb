@@ -46,20 +46,23 @@ SqlIdentifier CompoundIdentifier2() :
 {
     List list = new ArrayList();
     String p;
+    SqlParserPos pos;
 }
 {
     p = Identifier()
     {
         list.add(p);
+        pos = getPos();
     }
     [
         <DOT> p = Identifier()
         {
             list.add(p);
+            pos = pos.plus(getPos());
         }
     ]
     {
-        return new SqlIdentifier(SqlParserUtil.toStringArray(list),null);
+        return new SqlIdentifier(SqlParserUtil.toStringArray(list), pos);
     }
 }
 
@@ -67,26 +70,30 @@ SqlIdentifier CompoundIdentifier3() :
 {
     List list = new ArrayList();
     String p;
+    SqlParserPos pos;
 }
 {
     p = Identifier()
     {
         list.add(p);
+        pos = getPos();
     }
     [
         <DOT> p = Identifier()
         {
             list.add(p);
+            pos = pos.plus(getPos());
         }
         [
             <DOT> p = Identifier()
             {
                 list.add(p);
+                pos = pos.plus(getPos());
             }
         ]
     ]
     {
-        return new SqlIdentifier(SqlParserUtil.toStringArray(list),null);
+        return new SqlIdentifier(SqlParserUtil.toStringArray(list), pos);
     }
 }
 
@@ -2099,7 +2106,7 @@ SqlIdentifier GrantElement() :
 {
     (<INSERT> | <UPDATE> | <SELECT> | <DELETE> | <EXECUTE> | <USAGE>) 
     {
-        SqlIdentifier privId = new SqlIdentifier(token.image,  null);
+        SqlIdentifier privId = new SqlIdentifier(token.image,  getPos());
         return privId;
     }
 }
@@ -2135,13 +2142,14 @@ DdlStmt GrantStmt() :
     List granteeList;
     List privList;
     SqlIdentifier grantor = null;
+    SqlParserPos pos1, pos2;
 }
 {
     <GRANT> (
-        <ALL> <PRIVILEGES>
+        <ALL> pos1 = getPos() <PRIVILEGES> pos2 = getPos()
         {
             // TODO: externalize "ALL"
-            SqlIdentifier allPrivId = new SqlIdentifier("ALL", null);
+            SqlIdentifier allPrivId = new SqlIdentifier("ALL", pos1.plus(pos2));
             privList = startList(allPrivId);
         }
         |

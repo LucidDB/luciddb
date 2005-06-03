@@ -382,17 +382,20 @@ public class DdlValidator extends FarragoCompoundAllocation
                     qualifiedName.names[0],
                     qualifiedName.names[1]
                 },
-                null);
+                SqlParserPos.ZERO);
         } else if (qualifiedName.names.length == 2) {
             schemaElement.setName(qualifiedName.names[1]);
-            schemaName = new SqlIdentifier(qualifiedName.names[0], null);
+            schemaName = new SqlIdentifier(
+                qualifiedName.names[0],
+                SqlParserPos.ZERO);
         } else {
             schemaElement.setName(qualifiedName.names[0]);
             if (stmtValidator.getSessionVariables().schemaName == null) {
                 throw FarragoResource.instance().newValidatorNoDefaultSchema();
             }
             schemaName = new SqlIdentifier(
-                stmtValidator.getSessionVariables().schemaName, null);
+                stmtValidator.getSessionVariables().schemaName,
+                SqlParserPos.ZERO);
         }
         CwmSchema schema = stmtValidator.findSchema(schemaName);
         schema.getOwnedElement().add(schemaElement);
@@ -816,7 +819,7 @@ public class DdlValidator extends FarragoCompoundAllocation
                     element.getSearchedSchemaCatalogName(),
                     element.getSearchedSchemaName()
                 },
-                null);
+                SqlParserPos.ZERO);
             list.add(id);
         }
         sessionVariables.schemaSearchPath =

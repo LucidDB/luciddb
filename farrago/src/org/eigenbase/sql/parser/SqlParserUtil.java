@@ -764,8 +764,7 @@ outer:
                         // surrounding precedences obey the relation 2 < 3 and
                         // 4 >= 3, so we can reduce (b * c) to a single node.
                         SqlNode rightExp = (SqlNode) list.get(i + 1);
-                        SqlParserPos callPos = combinePos(
-                            currentPos,
+                        SqlParserPos callPos = currentPos.plusAll(
                             new SqlNode[] {leftExp, rightExp});
                         final SqlCall newExp =
                             current.createCall(leftExp, rightExp, callPos);
@@ -868,58 +867,6 @@ outer:
             assert list.size() < count;
         }
         return (SqlNode) list.get(start);
-    }
-
-    public static SqlParserPos combinePos(
-        SqlParserPos currentPos,
-        SqlNode[] nodes)
-    {
-        int line = currentPos.getLineNum();
-        int column = currentPos.getColumnNum();
-        int endLine = currentPos.getEndLineNum();
-        int endColumn = currentPos.getEndColumnNum();
-        return combinePos(nodes, line, column, endLine, endColumn);
-    }
-
-    public static SqlParserPos combinePos(
-        SqlNode[] nodes)
-    {
-        return combinePos(nodes, -1, -1, Integer.MAX_VALUE, Integer.MAX_VALUE);
-    }
-
-    public static SqlParserPos combinePos(
-        SqlNode[] nodes,
-        int line,
-        int column,
-        int endLine,
-        int endColumn)
-    {
-        for (int i = 0; i < nodes.length; i++) {
-            SqlNode node = nodes[i];
-            SqlParserPos pos = node.getParserPosition();
-            if (pos.getLineNum() < line ||
-                pos.getLineNum() == line &&
-                pos.getColumnNum() < column) {
-                line = pos.getLineNum();
-                column = pos.getColumnNum();
-            }
-            if (pos.getEndLineNum() > endLine ||
-                pos.getEndLineNum() == endColumn &&
-                pos.getEndColumnNum() > endColumn) {
-                endLine = pos.getLineNum();
-                endColumn = pos.getColumnNum();
-            }
-        }
-        return new SqlParserPos(line, column, endLine, endColumn);
-    }
-
-    public static SqlParserPos combine(SqlParserPos pos0, SqlParserPos pos1)
-    {
-        return new SqlParserPos(
-            pos0.getLineNum(),
-            pos0.getColumnNum(),
-            pos1.getEndLineNum(),
-            pos1.getEndColumnNum());
     }
 
     //~ Inner Classes ---------------------------------------------------------
