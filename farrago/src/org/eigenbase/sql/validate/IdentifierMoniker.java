@@ -23,10 +23,11 @@
 package org.eigenbase.sql.validate;
 
 import org.eigenbase.sql.SqlIdentifier;
+import org.eigenbase.util.Util;
 
 /**
  * An implementation of {@link Moniker} that encapsulates the normalized name
- * information of a SqlIdentifier
+ * information of a {@link SqlIdentifier}.
  *
  * @author tleung
  * @since May 24, 2005
@@ -34,21 +35,36 @@ import org.eigenbase.sql.SqlIdentifier;
  **/
 public class IdentifierMoniker implements Moniker
 {   
-    SqlIdentifier id;
+    private final SqlIdentifier id;
 
-    public IdentifierMoniker(SqlIdentifier id) {
+    /**
+     * Creates an IdentifierMoniker.
+     */
+    public IdentifierMoniker(SqlIdentifier id)
+    {
+        Util.pre(id != null, "id != null");
         this.id = id;
     }
 
-    public MonikerType getType() {
+    public MonikerType getType()
+    {
         return MonikerType.Column;
     }
 
-    public String[] getFullyQualifiedNames() {
+    public String[] getFullyQualifiedNames()
+    {
         return id.names;
     }
 
-    public String toString() {
+    public SqlIdentifier toIdentifier()
+    {
+        return id;
+    }
+
+    public String toString()
+    {
         return id.toString();
     }
 }
+
+// End IdentifierMoniker.java

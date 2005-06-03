@@ -22,6 +22,8 @@
 
 package org.eigenbase.sql.validate;
 
+import org.eigenbase.sql.SqlIdentifier;
+
 /**
  * An interface of an object identifier that represents a SqlIdentifier
  *
@@ -31,7 +33,20 @@ package org.eigenbase.sql.validate;
  **/
 public interface Moniker
 {
+    /**
+     * Returns the type of object referred to by this moniker. Never null.
+     */
     MonikerType getType();
+
+    /**
+     * Returns the array of component names.
+     */
     String[] getFullyQualifiedNames();
-    String toString();
+
+    /**
+     * Creates a {@link SqlIdentifier} containing the fully-qualified name.
+     */
+    SqlIdentifier toIdentifier();
 }
+
+// End Moniker.java
