@@ -108,7 +108,7 @@ require version '${required.ant.version}'."/>
 
   <!-- Same as ExtModelUML, but with diagrams deleted -->
   <property name="ExtModelUMLSansDiagrams.xmi"
-    location="${farrago.xmi.dir}/ExtModelUMLSansDiagrams.xmi"/>
+    location="${farrago.xmi.dir}/${ExtModelFileName}SansDiagrams.xmi"/>
 
   <!-- File for user-defined extension model. -->
 
