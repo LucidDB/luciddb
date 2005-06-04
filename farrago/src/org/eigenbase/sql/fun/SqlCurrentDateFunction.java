@@ -44,7 +44,8 @@ public class SqlCurrentDateFunction extends SqlFunction
     {
         super(
             "CURRENT_DATE",
-            SqlKind.Function, SqlTypeStrategies.rtiDate, null, null,
+            SqlKind.Function, SqlTypeStrategies.rtiDate, null,
+            SqlTypeStrategies.otcEmpty,
             SqlFunctionCategory.TimeDate);
     }
     
@@ -58,22 +59,6 @@ public class SqlCurrentDateFunction extends SqlFunction
         return SqlSyntax.FunctionId;
     }
             
-    protected boolean checkArgTypes(
-        SqlCall call, SqlValidator validator,
-        SqlValidatorScope scope, boolean throwOnFailure)
-    {
-        Util.discard(call);
-        Util.discard(validator);
-        Util.discard(scope);
-        Util.discard(throwOnFailure);
-        return true;
-    }
-
-    public OperandsCountDescriptor getOperandsCountDescriptor()
-    {
-        return OperandsCountDescriptor.niladicCountDescriptor;
-    }
-
     public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
     {
         return true;

@@ -45,7 +45,7 @@ import java.util.*;
  * @version $Id$
  */
 public class ExplicitOperandTypeChecker
-    implements SqlOperandTypeChecker
+    implements SqlSingleOperandTypeChecker
 {
     protected SqlTypeName[][] types;
 
@@ -80,19 +80,19 @@ public class ExplicitOperandTypeChecker
         this.types = typeses;
     }
 
-    public boolean check(
+    public boolean checkOperand(
         SqlCall call,
         SqlValidator validator,
         SqlValidatorScope scope,
         SqlNode node,
-        int ruleOrdinal,
+        int iFormalOperand,
         boolean throwOnFailure)
     {
         RelDataType actualType = null;
 
         // for each operand, iterate over its allowed types...
-        for (int j = 0; j < types[ruleOrdinal].length; j++) {
-            SqlTypeName expectedTypeName = types[ruleOrdinal][j];
+        for (int j = 0; j < types[iFormalOperand].length; j++) {
+            SqlTypeName expectedTypeName = types[iFormalOperand][j];
             if (SqlTypeName.Any.equals(expectedTypeName)) {
                 // If the argument type is defined as any type, we don't need
                 // to check
@@ -114,26 +114,31 @@ public class ExplicitOperandTypeChecker
         return false;
     }
 
-    public boolean check(
+    public boolean checkCall(
         SqlValidator validator,
         SqlValidatorScope scope,
         SqlCall call,
         boolean throwOnFailure)
     {
-        assert (getArgCount() == call.operands.length);
-
+        if (types.length != call.operands.length) {
+            // assume this is an inapplicable sub-rule of a composite rule
+            return false;
+        }
+        
         for (int i = 0; i < call.operands.length; i++) {
             SqlNode operand = call.operands[i];
-            if (!check(call, validator, scope, operand, i, throwOnFailure)) {
+            if (!checkOperand(
+                    call, validator, scope, operand, i, throwOnFailure))
+            {
                 return false;
             }
         }
         return true;
     }
 
-    public int getArgCount()
+    public SqlOperandCountRange getOperandCountRange()
     {
-        return types.length;
+        return new SqlOperandCountRange(types.length);
     }
 
     public SqlTypeName [][] getTypes()
@@ -145,7 +150,12 @@ public class ExplicitOperandTypeChecker
     {
         StringBuffer buf = new StringBuffer();
         ArrayList list = new ArrayList();
-        getAllowedSignatures(0, list, buf, op);
+        if (types.length == 0) {
+            buf.append(op.getAnonymousSignature(list));
+            buf.append(SqlOperator.NL);
+        } else {
+            getAllowedSignatures(0, list, buf, op);
+        }
         return buf.toString().trim();
     }
 

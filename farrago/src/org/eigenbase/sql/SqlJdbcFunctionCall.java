@@ -31,7 +31,7 @@ import org.eigenbase.sql.fun.SqlTrimFunction;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.CallOperands;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.Util;
@@ -343,7 +343,13 @@ public class SqlJdbcFunctionCall extends SqlFunction
 
     public SqlJdbcFunctionCall(String name)
     {
-        super("{fn "+name+"}", SqlKind.JdbcFn, null, null, null, null);
+        super(
+            "{fn "+name+"}",
+            SqlKind.JdbcFn,
+            null,
+            null,
+            SqlTypeStrategies.otcVariadic,
+            null);
         jdbcName = name;
         lookupMakeCallObj = JdbcToInternalLookupTable.instance.lookup(name);
         lookupCall = null;
@@ -364,15 +370,6 @@ public class SqlJdbcFunctionCall extends SqlFunction
         SqlOperatorTests.testJdbcFn(tester);
     }
 
-    protected boolean checkArgTypes(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope, boolean throwOnFailure)
-    {
-        // no op, arg checking is done in getType
-        return true;
-    }
-
     public SqlCall getLookupCall()
     {
         if (null == lookupCall) {
@@ -385,11 +382,6 @@ public class SqlJdbcFunctionCall extends SqlFunction
     public String getAllowedSignatures()
     {
         return lookupMakeCallObj.operator.getAllowedSignatures(getName());
-    }
-
-    public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()
-    {
-        return OperandsCountDescriptor.variadicCountDescriptor;
     }
 
     protected RelDataType getType(

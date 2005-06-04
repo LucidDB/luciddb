@@ -88,13 +88,15 @@ public class SqlSubstringFunction extends SqlFunction {
     {
         int n = call.operands.length;
         assert ((3 == n) || (2 == n));
-        if (!SqlTypeStrategies.otcNullableString.check(call, validator,
+        if (!SqlTypeStrategies.otcNullableString.checkOperand(call, validator,
             scope, call.operands[0], 0, throwOnFailure)) {
             return false;
         }
         if (2 == n) {
-            if (!SqlTypeStrategies.otcNullableNumeric.check(call, validator,
-                scope, call.operands[1], 0, throwOnFailure)) {
+            if (!SqlTypeStrategies.otcNullableNumeric.checkOperand(
+                    call, validator,
+                    scope, call.operands[1], 0, throwOnFailure))
+            {
                 return false;
             }
         } else {
@@ -104,12 +106,16 @@ public class SqlSubstringFunction extends SqlFunction {
                 validator.deriveType(scope, call.operands[2]);
 
             if (SqlTypeUtil.inCharFamily(t1)) {
-                if (!SqlTypeStrategies.otcNullableString.check(call, validator,
-                    scope, call.operands[1], 0, throwOnFailure)) {
+                if (!SqlTypeStrategies.otcNullableString.checkOperand(
+                        call, validator,
+                        scope, call.operands[1], 0, throwOnFailure))
+                {
                     return false;
                 }
-                if (!SqlTypeStrategies.otcNullableString.check(call, validator,
-                    scope, call.operands[2], 0, throwOnFailure)) {
+                if (!SqlTypeStrategies.otcNullableString.checkOperand(
+                        call, validator,
+                        scope, call.operands[2], 0, throwOnFailure))
+                {
                     return false;
                 }
 
@@ -118,12 +124,16 @@ public class SqlSubstringFunction extends SqlFunction {
                     return false;
                 }
             } else {
-                if (!SqlTypeStrategies.otcNullableNumeric.check(call, validator,
-                    scope, call.operands[1], 0, throwOnFailure)) {
+                if (!SqlTypeStrategies.otcNullableNumeric.checkOperand(
+                        call, validator,
+                        scope, call.operands[1], 0, throwOnFailure))
+                {
                     return false;
                 }
-                if (!SqlTypeStrategies.otcNullableNumeric.check(call, validator,
-                    scope, call.operands[2], 0, throwOnFailure)) {
+                if (!SqlTypeStrategies.otcNullableNumeric.checkOperand(
+                        call, validator,
+                        scope, call.operands[2], 0, throwOnFailure))
+                {
                     return false;
                 }
             }
@@ -138,9 +148,9 @@ public class SqlSubstringFunction extends SqlFunction {
         return true;
     }
 
-    public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()
+    public SqlOperandCountRange getOperandCountRange()
     {
-        return new SqlOperator.OperandsCountDescriptor(2, 3);
+        return SqlOperandCountRange.TwoOrThree;
     }
 
     public void unparse(

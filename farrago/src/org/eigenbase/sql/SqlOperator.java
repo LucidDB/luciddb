@@ -98,13 +98,13 @@ public abstract class SqlOperator
      */
     private final int rightPrec;
 
-    /** used to get the return type of operator/function */
+    /** used to infer the return type of a call to this operator */
     private final SqlReturnTypeInference returnTypeInference;
 
-    /** used to inference unknown params */
+    /** used to infer types of unknown operands */
     private final SqlOperandTypeInference unknownParamTypeInference;
 
-    /** used to validate operands */
+    /** used to validate operand types */
     protected final SqlOperandTypeChecker operandsCheckingRule;
 
     //~ Constructors ----------------------------------------------------------
@@ -158,10 +158,10 @@ public abstract class SqlOperator
         return this.operandsCheckingRule;
     }
 
-    public OperandsCountDescriptor getOperandsCountDescriptor()
+    public SqlOperandCountRange getOperandCountRange()
     {
         if (null != operandsCheckingRule) {
-            return new OperandsCountDescriptor(operandsCheckingRule.getArgCount());
+            return operandsCheckingRule.getOperandCountRange();
         }
 
         // If you see this error you need to overide this method
@@ -415,6 +415,9 @@ public abstract class SqlOperator
         SqlValidatorScope scope,
         SqlCall call)
     {
+        // Let subclasses know what's up.
+        preValidateCall(validator, scope, call);
+        
         // Check that there's the right number of arguments.
         checkArgCount(validator, operandsCheckingRule, call);
 
@@ -427,6 +430,24 @@ public abstract class SqlOperator
             validator, scope, validator.getTypeFactory(), callOperands);
         validator.setValidatedNodeType(call, ret);
         return ret;
+    }
+
+    /**
+     * Receives notification that validation of a call to this operator
+     * is beginning.  Subclasses can supply custom behavior;
+     * default implementation does nothing.
+     *
+     * @param validator invoking validator
+     *
+     * @param scope validation scope
+     *
+     * @param call the call being validated
+     */
+    protected void preValidateCall(
+        SqlValidator validator,
+        SqlValidatorScope scope,
+        SqlCall call)
+    {
     }
 
     /**
@@ -459,10 +480,11 @@ public abstract class SqlOperator
         throw Util.needToImplement(this);
     }
 
+    // TODO jvs 2-June-2005: Change all operators to always supply a
+    // SqlOperandTypeChecker and eliminate this inheritance-based override
+    // mechanism.
     /**
      * Makes sure that the number and types of arguments are allowable.
-     * Operators (such as "ROW" and "AS") which do not check their arguments
-     * can override this method.
      */
     protected boolean checkArgTypes(
         SqlCall call,
@@ -477,18 +499,19 @@ public abstract class SqlOperator
             throw Util.needToImplement(this);
         }
 
-        return operandsCheckingRule.check(validator, scope, call, throwOnFailure);
+        return operandsCheckingRule.checkCall(
+            validator, scope, call, throwOnFailure);
     }
 
-    protected void checkArgCount(
+    private void checkArgCount(
         SqlValidator validator,
         SqlOperandTypeChecker argType,
         SqlCall call)
     {
-        OperandsCountDescriptor od =
-            call.getOperator().getOperandsCountDescriptor();
+        SqlOperandCountRange od =
+            call.getOperator().getOperandCountRange();
         if (!od.isVariadic()
-                && !od.getPossibleNumOfOperands().contains(
+                && !od.getAllowedList().contains(
                     new Integer(call.operands.length))) {
             throw validator.newValidationError(call,
                 EigenbaseResource.instance().newWrongNumOfArguments());
@@ -511,8 +534,9 @@ public abstract class SqlOperator
      */
     public String getAllowedSignatures(String opNameToUse)
     {
-        assert (null != operandsCheckingRule) : "If you see this, assign operandsCheckingRule a value "
-        + "or override this function";
+        assert (null != operandsCheckingRule)
+            : "If you see this, assign operandsCheckingRule a value "
+            + "or override this function";
         return replaceAnonymous(
             operandsCheckingRule.getAllowedSignatures(this),
             opNameToUse).trim();
@@ -580,13 +604,14 @@ public abstract class SqlOperator
 
     /**
      * Returns whether this operator is an aggregate function.
+     * By default, subclass type is used (an instance of SqlAggFunction
+     * is assumed to be an aggregator; anything else is not).
      *
-     * <p>TODO: use aggs registered in the fun table; we currently look for
-     *   SUM and COUNT
+     * @return whether this operator is an aggregator
      */
     public boolean isAggregator()
     {
-        return "SUM".equals(name) || "COUNT".equals(name);
+        return (this instanceof SqlAggFunction);
     }
 
     /**
@@ -609,90 +634,10 @@ public abstract class SqlOperator
      * Method to check if call to this function is monotonic.  Default
      * implementation is to return false.
      */
-    public boolean isMonotonic(SqlCall call, SqlValidatorScope scope) {
+    public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
+    {
         return false; 
     }
-
-    //~ Inner Classes ---------------------------------------------------------
-
-    /**
-     * A class that describes how many operands a operator can take
-     */
-    public static class OperandsCountDescriptor
-    {
-        public static final OperandsCountDescriptor variadicCountDescriptor =
-                    new OperandsCountDescriptor();
-        public static final OperandsCountDescriptor niladicCountDescriptor =
-                    new OperandsCountDescriptor(0);
-        public static final OperandsCountDescriptor One =
-                    new OperandsCountDescriptor(1);
-        public static final OperandsCountDescriptor Two =
-                    new OperandsCountDescriptor(2);
-        public static final OperandsCountDescriptor Three =
-                    new OperandsCountDescriptor(3);
-        public static final OperandsCountDescriptor Four =
-                    new OperandsCountDescriptor(4);
-
-        List possibleList;
-        boolean isVariadic;
-
-        /**
-         * This constructor should only be called internally from this class
-         * and only when creating a variadic count descriptor
-         */
-        private OperandsCountDescriptor()
-        {
-            possibleList = null;
-            isVariadic = true;
-        }
-
-        private OperandsCountDescriptor(Integer[] possibleCounts)
-        {
-            possibleList = Collections.unmodifiableList(Arrays.asList(
-                possibleCounts));
-            isVariadic = false;
-        }
-
-        public OperandsCountDescriptor(int count)
-        {
-            this(new Integer[]{ new Integer(count) });
-            isVariadic = false;
-        }
-
-        public OperandsCountDescriptor(
-            int count1,
-            int count2)
-        {
-            this(new Integer[]{ new Integer(count1), new Integer(count2) });
-        }
-
-        public OperandsCountDescriptor(
-            int count1,
-            int count2,
-            int count3)
-        {
-            this(new Integer[]{ new Integer(count1),
-                                new Integer(count2),
-                                new Integer(count3) });
-        }
-
-        /**
-         * Returns a unmodifiable list with items containing how many operands
-         * a operator can accept
-         * @pre isVariadic == false
-         */
-        public List getPossibleNumOfOperands()
-        {
-            Util.pre(!isVariadic, "!isVariadic");
-            return possibleList;
-        }
-
-        public boolean isVariadic()
-        {
-            return isVariadic;
-        }
-    }
-
 }
 
 

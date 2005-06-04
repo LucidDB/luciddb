@@ -85,17 +85,9 @@ public class SqlCastFunction extends SqlFunction
         return null;
     }
 
-    public OperandsCountDescriptor getOperandsCountDescriptor()
+    public SqlOperandCountRange getOperandCountRange()
     {
-        return OperandsCountDescriptor.Two;
-    }
-
-    protected void checkNumberOfArg(SqlCall call)
-    {
-        if (2 != call.operands.length) {
-            throw Util.newInternal("todo: Wrong number of arguments to "
-                + call);
-        }
+        return SqlOperandCountRange.Two;
     }
 
     /**

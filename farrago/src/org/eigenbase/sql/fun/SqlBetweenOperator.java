@@ -140,6 +140,9 @@ public class SqlBetweenOperator extends SqlInfixOperator
         return "{1} {0} {2} AND {3}";
     }
 
+    // REVIEW jvs 2-June-2005:  shouldn't BETWEEN allow any
+    // ordered-comparable type?
+
     public String getAllowedSignatures(String name)
     {
         StringBuffer ret = new StringBuffer();
@@ -165,21 +168,21 @@ public class SqlBetweenOperator extends SqlInfixOperator
         SqlValidatorScope scope,
         boolean throwOnFailure)
     {
-        SqlOperandTypeChecker [] rules =
-            new SqlOperandTypeChecker [] {
+        SqlSingleOperandTypeChecker [] rules =
+            new SqlSingleOperandTypeChecker [] {
                 SqlTypeStrategies.otcNullableNumeric,
                 SqlTypeStrategies.otcNullableBinaryX2,
                 SqlTypeStrategies.otcNullableVarchar
             };
         int failCount = 0;
         for (int i = 0; i < rules.length; i++) {
-            SqlOperandTypeChecker rule = rules[i];
+            SqlSingleOperandTypeChecker rule = rules[i];
             boolean ok;
-            ok = rule.check(call, validator, scope,
+            ok = rule.checkOperand(call, validator, scope,
                 call.operands[VALUE_OPERAND], 0, false);
-            ok = ok && rule.check(call, validator, scope,
+            ok = ok && rule.checkOperand(call, validator, scope,
                 call.operands[LOWER_OPERAND], 0, false);
-            ok = ok && rule.check(call, validator, scope,
+            ok = ok && rule.checkOperand(call, validator, scope,
                 call.operands[UPPER_OPERAND], 0, false);
             if (!ok) {
                 failCount++;
@@ -195,10 +198,10 @@ public class SqlBetweenOperator extends SqlInfixOperator
         return true;
     }
 
-    public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()
+    public SqlOperandCountRange getOperandCountRange()
     {
         //exp1 [ASYMMETRIC|SYMMETRIC] BETWEEN exp4 AND exp4
-        return new OperandsCountDescriptor(4);
+        return SqlOperandCountRange.Four;
     }
 
     public void unparse(

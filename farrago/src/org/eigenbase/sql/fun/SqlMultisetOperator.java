@@ -47,7 +47,8 @@ public class SqlMultisetOperator extends SqlSpecialOperator
         // Precedence of 100 because nothing can pull parentheses apart.
         super("MULTISET", kind, 100, false,
             SqlTypeStrategies.rtiFirstArgType,
-            null, null);
+            null,
+            SqlTypeStrategies.otcVariadic);
         assert(kind.isA(SqlKind.MultisetQueryConstructor) ||
                kind.isA(SqlKind.MultisetValueConstructor));
 
@@ -59,12 +60,6 @@ public class SqlMultisetOperator extends SqlSpecialOperator
     public SqlSyntax getSyntax()
     {
         return SqlSyntax.Special;
-    }
-
-    // implement SqlOperator
-    public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()
-    {
-        return OperandsCountDescriptor.variadicCountDescriptor;
     }
 
     protected RelDataType getType(

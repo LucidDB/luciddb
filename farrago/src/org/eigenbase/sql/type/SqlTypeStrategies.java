@@ -54,14 +54,44 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy for a function which takes no
      * arguments.
      */
-    public static final SqlOperandTypeChecker otcEmpty =
+    public static final SqlSingleOperandTypeChecker
+        otcEmpty =
         new ExplicitOperandTypeChecker(new SqlTypeName[][] {});
 
+    /**
+     * Parameter type-checking strategy for an operator with
+     * no restrictions on number or type of operands.
+     */
+    public static final SqlOperandTypeChecker
+        otcVariadic =
+        new SqlOperandTypeChecker()
+        {
+            public boolean checkCall(
+                SqlValidator validator,
+                SqlValidatorScope scope,
+                SqlCall call,
+                boolean throwOnFailure)
+            {
+                return true;
+            }
+
+            public SqlOperandCountRange getOperandCountRange()
+            {
+                return SqlOperandCountRange.Variadic;
+            }
+
+            public String getAllowedSignatures(SqlOperator op)
+            {
+                return "";
+            }
+        };
+        
     /**
      * Parameter type-checking strategy
      * type must be nullable boolean, nullable boolean.
      */
-    public static final SqlOperandTypeChecker otcNullableBoolX2 =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableBoolX2 =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.booleanNullableTypes, SqlTypeName.booleanNullableTypes
         });
@@ -70,7 +100,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * type must be numeric.
      */
-    public static final SqlOperandTypeChecker otcNumeric =
+    public static final SqlSingleOperandTypeChecker
+        otcNumeric =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.numericTypes });
 
@@ -78,7 +109,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * type must be a literal. NULL literal allowed
      */
-    public static final SqlOperandTypeChecker otcNullableLit =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableLit =
         new LiteralOperandTypeChecker(true);
 
     /**
@@ -87,32 +119,34 @@ public abstract class SqlTypeStrategies
      * <code>CAST(NULL as ...)</code> is considered to be a NULL literal but not
      * <code>CAST(CAST(NULL as ...) AS ...)</code>
      */
-    public static final SqlOperandTypeChecker otcNotNullLit =
+    public static final SqlSingleOperandTypeChecker
+        otcNotNullLit =
         new LiteralOperandTypeChecker(false);
 
     /**
      * Parameter type-checking strategy
      * type must be a positive integer literal. Null literal not allowed
      */
-    public static final SqlOperandTypeChecker otcPositiveIntLit =
+    public static final SqlSingleOperandTypeChecker
+        otcPositiveIntLit =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.intTypes
         })
         {
-            public boolean check(
+            public boolean checkOperand(
                 SqlCall call,
                 SqlValidator validator,
                 SqlValidatorScope scope,
                 SqlNode node,
-                int ruleOrdinal, boolean throwOnFailure)
+                int iFormalOperand, boolean throwOnFailure)
             {
-                if (!otcNotNullLit.check(call, validator, scope, node,
-                    ruleOrdinal, throwOnFailure)) {
+                if (!otcNotNullLit.checkOperand(call, validator, scope, node,
+                    iFormalOperand, throwOnFailure)) {
                     return false;
                 }
 
-                if (!super.check(call, validator, scope, node,
-                    ruleOrdinal, throwOnFailure)) {
+                if (!super.checkOperand(call, validator, scope, node,
+                    iFormalOperand, throwOnFailure)) {
                     return false;
                 }
 
@@ -134,7 +168,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * type must be numeric, numeric.
      */
-    public static final SqlOperandTypeChecker otcNumericX2 =
+    public static final SqlSingleOperandTypeChecker
+        otcNumericX2 =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.numericTypes, SqlTypeName.numericTypes
         });
@@ -143,7 +178,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * type must be integer.
      */
-    public static final SqlOperandTypeChecker otcInt =
+    public static final SqlSingleOperandTypeChecker
+        otcInt =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.intTypes
         });
@@ -152,7 +188,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * type must be integer, integer.
      */
-    public static final SqlOperandTypeChecker otcIntX2 =
+    public static final SqlSingleOperandTypeChecker
+        otcIntX2 =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.intTypes, SqlTypeName.intTypes
         });
@@ -161,7 +198,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * type must be nullable integer, nullable integer. (exact types)
      */
-    public static final SqlOperandTypeChecker otcNullableIntX2 =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableIntX2 =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.intNullableTypes, SqlTypeName.intNullableTypes
         });
@@ -170,7 +208,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * type must be nullable aType, nullable sameFamily
      */
-    public static final SqlOperandTypeChecker otcNullableSameX2 =
+    public static final SqlOperandTypeChecker
+        otcNullableSameX2 =
         new SameOperandTypeChecker(
             new SqlTypeName [][] {
                 { SqlTypeName.Any },
@@ -181,7 +220,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * type must be nullable aType, nullable sameFamily, nullable sameFamily
      */
-    public static final SqlOperandTypeChecker otcNullableSameX3 =
+    public static final SqlOperandTypeChecker
+        otcNullableSameX3 =
         new SameOperandTypeChecker(
             new SqlTypeName [][] {
                 { SqlTypeName.Any },
@@ -193,7 +233,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy where types must allow
      * ordered comparisons.
      */
-    public static final SqlOperandTypeChecker otcComparableOrdered =
+    public static final SqlOperandTypeChecker
+        otcComparableOrdered =
         new ComparableOperandTypeChecker(
             RelDataTypeComparability.All);
 
@@ -201,7 +242,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy where types must allow
      * unordered comparisons.
      */
-    public static final SqlOperandTypeChecker otcComparableUnordered =
+    public static final SqlOperandTypeChecker
+        otcComparableUnordered =
         new ComparableOperandTypeChecker(
             RelDataTypeComparability.Unordered);
 
@@ -209,7 +251,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * type must be nullable numeric, nullable numeric.
      */
-    public static final SqlOperandTypeChecker otcNullableNumericX2 =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableNumericX2 =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.numericNullableTypes, SqlTypeName.numericNullableTypes
         });
@@ -218,7 +261,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * type must be nullable numeric, nullable numeric, nullabl numeric.
      */
-    public static final SqlOperandTypeChecker otcNullableNumericX3 =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableNumericX3 =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.numericNullableTypes, SqlTypeName.numericNullableTypes,
             SqlTypeName.numericNullableTypes
@@ -228,7 +272,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * type must be nullable binary, nullable binary.
      */
-    public static final SqlOperandTypeChecker otcNullableBinaryX2 =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableBinaryX2 =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.binaryNullableTypes, SqlTypeName.binaryNullableTypes
         });
@@ -237,7 +282,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * type must be nullable binary, nullable binary, nullable binary.
      */
-    public static final SqlOperandTypeChecker otcNullableBinaryX3 =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableBinaryX3 =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.binaryNullableTypes,
             SqlTypeName.binaryNullableTypes,
@@ -248,7 +294,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * type must be null | charstring | bitstring | hexstring
      */
-    public static final SqlOperandTypeChecker otcNullableString =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableString =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.stringNullableTypes
         });
@@ -257,7 +304,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * types must be null | charstring | bitstring | hexstring
      */
-    public static final SqlOperandTypeChecker otcNullableStringX2 =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableStringX2 =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.stringNullableTypes, SqlTypeName.stringNullableTypes
         });
@@ -266,7 +314,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * type must be a varchar literal.
      */
-    public static final SqlOperandTypeChecker otcVarcharLit =
+    public static final SqlSingleOperandTypeChecker
+        otcVarcharLit =
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.AND, 
             new SqlOperandTypeChecker[] {
@@ -279,7 +328,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * type must be a nullable varchar literal.
      */
-    public static final SqlOperandTypeChecker otcNullableVarcharLit =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableVarcharLit =
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.AND, 
             new SqlOperandTypeChecker[] {
@@ -293,23 +343,23 @@ public abstract class SqlTypeStrategies
      * nullable varchar literal.  the expression <code>CAST(NULL AS
      * TYPE)</code> is considered a NULL literal.
      */
-    public static final SqlOperandTypeChecker
+    public static final SqlSingleOperandTypeChecker
         otcNullableVarcharNotNullVarcharLit =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.charNullableTypes, SqlTypeName.charTypes
         }) {
-            public boolean check(
+            public boolean checkCall(
                 SqlValidator validator,
                 SqlValidatorScope scope,
                 SqlCall call, boolean throwOnFailure)
             {
                 //checking if char types
-                if (!super.check(validator, scope, call, throwOnFailure)) {
+                if (!super.checkCall(validator, scope, call, throwOnFailure)) {
                     return false;
                 }
 
                 // check that the 2nd argument is a literal
-                return otcNotNullLit.check(call,validator, scope,
+                return otcNotNullLit.checkOperand(call,validator, scope,
                     call.operands[1],0, throwOnFailure);
             }
         };
@@ -319,7 +369,7 @@ public abstract class SqlTypeStrategies
      * types must be null | charstring | bitstring | hexstring
      * AND types must be identical to eachother
      */
-    public static final SqlOperandTypeChecker
+    public static final SqlSingleOperandTypeChecker
         otcNullableStringSameX2 =
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.AND, 
@@ -336,7 +386,7 @@ public abstract class SqlTypeStrategies
      * types must be null | charstring | bitstring | hexstring
      * AND types must be identical to eachother
      */
-    public static final SqlOperandTypeChecker
+    public static final SqlSingleOperandTypeChecker
         otcNullableStringSameX3 =
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.AND, 
@@ -353,7 +403,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * types must be null | charstring | bitstring | hexstring
      */
-    public static final SqlOperandTypeChecker otcNullableStringX3 =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableStringX3 =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.stringNullableTypes, SqlTypeName.stringNullableTypes,
             SqlTypeName.stringNullableTypes
@@ -365,7 +416,8 @@ public abstract class SqlTypeStrategies
      * null | charstring | bitstring | hexstring
      * null | int
      */
-    public static final SqlOperandTypeChecker otcNullableStringInt =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableStringInt =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.stringNullableTypes, SqlTypeName.intNullableTypes
         });
@@ -377,7 +429,8 @@ public abstract class SqlTypeStrategies
      * null | int
      * null | int
      */
-    public static final SqlOperandTypeChecker otcNullableStringIntX2 =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableStringIntX2 =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.stringTypes, SqlTypeName.intNullableTypes,
             SqlTypeName.intNullableTypes
@@ -388,7 +441,8 @@ public abstract class SqlTypeStrategies
      * 2 first types must be null | charstring | bitstring | hexstring
      * 3 type must be integer
      */
-    public static final SqlOperandTypeChecker otcNullableStringX2NotNullInt =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableStringX2NotNullInt =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.stringTypes, SqlTypeName.stringTypes,
             SqlTypeName.intTypes
@@ -399,7 +453,7 @@ public abstract class SqlTypeStrategies
      * 2 first types must be null | charstring | bitstring | hexstring
      * 3&4 type must be integer
      */
-    public static final SqlOperandTypeChecker
+    public static final SqlSingleOperandTypeChecker
         otcNullableStringX2NotNullIntX2 =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.stringTypes, SqlTypeName.stringTypes,
@@ -411,7 +465,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * type must be nullable numeric
      */
-    public static final SqlOperandTypeChecker otcNullableNumeric =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableNumeric =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.numericNullableTypes
         });
@@ -420,7 +475,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * types must be varchar, int, int
      */
-    public static final SqlOperandTypeChecker otcVarcharIntX2 =
+    public static final SqlSingleOperandTypeChecker
+        otcVarcharIntX2 =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.charTypes, SqlTypeName.intTypes, SqlTypeName.intTypes
         });
@@ -429,7 +485,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * types must be [nullable] varchar, [nullable] int, [nullable] int
      */
-    public static final SqlOperandTypeChecker otcNullableVarcharIntX2 =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableVarcharIntX2 =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.charNullableTypes, SqlTypeName.intNullableTypes,
             SqlTypeName.intNullableTypes
@@ -439,7 +496,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * types must be not nullable varchar, not nullable int
      */
-    public static final SqlOperandTypeChecker otcVarcharInt =
+    public static final SqlSingleOperandTypeChecker
+        otcVarcharInt =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.charTypes, SqlTypeName.intTypes
         });
@@ -448,7 +506,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * types must be [nullable] varchar, [nullable] varchar,
      */
-    public static final SqlOperandTypeChecker otcNullableVarcharX2 =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableVarcharX2 =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.charNullableTypes, SqlTypeName.charNullableTypes
         });
@@ -457,7 +516,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * types must be [nullable] varchar, [nullable] varchar, [nullable] varchar
      */
-    public static final SqlOperandTypeChecker otcNullableVarcharX3 =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableVarcharX3 =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.charNullableTypes, SqlTypeName.charNullableTypes,
             SqlTypeName.charNullableTypes
@@ -467,7 +527,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * types must be nullable boolean
      */
-    public static final SqlOperandTypeChecker otcNullableBool =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableBool =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.booleanNullableTypes
         });
@@ -476,7 +537,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * types can be any,any
      */
-    public static final SqlOperandTypeChecker otcAnyX2 =
+    public static final SqlSingleOperandTypeChecker
+        otcAnyX2 =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             { SqlTypeName.Any },
             { SqlTypeName.Any }
@@ -486,7 +548,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * types can be any
      */
-    public static final SqlOperandTypeChecker otcAny =
+    public static final SqlSingleOperandTypeChecker
+        otcAny =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             { SqlTypeName.Any }
         });
@@ -495,7 +558,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * types must be varchar,varchar
      */
-    public static final SqlOperandTypeChecker otcVarcharX2 =
+    public static final SqlSingleOperandTypeChecker
+        otcVarcharX2 =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.charTypes, SqlTypeName.charTypes
         });
@@ -504,7 +568,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * types must be nullable varchar
      */
-    public static final SqlOperandTypeChecker otcNullableVarchar =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableVarchar =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.charNullableTypes
         });
@@ -515,7 +580,7 @@ public abstract class SqlTypeStrategies
      * positive integer literal
      * OR varchar literal
      */
-    public static final SqlOperandTypeChecker
+    public static final SqlSingleOperandTypeChecker
         otcPositiveIntOrVarcharLit =
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.OR,
@@ -531,7 +596,8 @@ public abstract class SqlTypeStrategies
      * TIME WITH TIME ZONE, TIMESTAMP WITH TIMEZONE
      * NOTE: timezone types not yet implemented
      */
-    public static final SqlOperandTypeChecker otcNullableDatetime =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableDatetime =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.datetimeNullableTypes
         });
@@ -540,7 +606,8 @@ public abstract class SqlTypeStrategies
      *  Parameter type checking for the datetime type but
      * not nullable.
      */
-    public static final SqlOperandTypeChecker otcDatetime =
+    public static final SqlSingleOperandTypeChecker
+        otcDatetime =
         new ExplicitOperandTypeChecker(new SqlTypeName[][]{
             SqlTypeName.datetimeTypes
         });
@@ -549,7 +616,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * type must a nullable time interval, nullable time interval
      */
-    public static final SqlOperandTypeChecker otcNullableDatetimeX2 =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableDatetimeX2 =
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.AND, 
             new SqlOperandTypeChecker[] {
@@ -564,7 +632,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * type must a nullable time interval
      */
-    public static final SqlOperandTypeChecker otcNullableInterval =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableInterval =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.timeIntervalNullableTypes
         });
@@ -573,7 +642,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * type must a nullable time interval, nullable time interval
      */
-    public static final SqlOperandTypeChecker otcNullableIntervalX2 =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableIntervalX2 =
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.AND, 
             new SqlOperandTypeChecker[] {
@@ -584,19 +654,22 @@ public abstract class SqlTypeStrategies
                 otcNullableSameX2
             });
 
-    public static final SqlOperandTypeChecker otcNullableNumericInterval =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableNumericInterval =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.numericNullableTypes,
             SqlTypeName.timeIntervalNullableTypes
         });
 
-    public static final SqlOperandTypeChecker otcNullableIntervalNumeric =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableIntervalNumeric =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.timeIntervalNullableTypes,
             SqlTypeName.numericNullableTypes
         });
 
-    public static final SqlOperandTypeChecker otcNullableDatetimeInterval =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableDatetimeInterval =
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.AND, 
             new SqlOperandTypeChecker[] {
@@ -607,7 +680,8 @@ public abstract class SqlTypeStrategies
     /**
      * Type checking strategy for the "+" operator
      */
-    public static final SqlOperandTypeChecker otcPlusOperator =
+    public static final SqlSingleOperandTypeChecker
+        otcPlusOperator =
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.OR,
             new SqlOperandTypeChecker[] {
@@ -620,7 +694,8 @@ public abstract class SqlTypeStrategies
     /**
      * Type checking strategy for the "*" operator
      */
-    public static final SqlOperandTypeChecker otcMultiplyOperator =
+    public static final SqlSingleOperandTypeChecker
+        otcMultiplyOperator =
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.OR,
             new SqlOperandTypeChecker[] {
@@ -632,7 +707,8 @@ public abstract class SqlTypeStrategies
     /**
      * Type checking strategy for the "/" operator
      */
-    public static final SqlOperandTypeChecker otcDivisionOperator =
+    public static final SqlSingleOperandTypeChecker
+        otcDivisionOperator =
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.OR,
             new SqlOperandTypeChecker[] {
@@ -640,7 +716,8 @@ public abstract class SqlTypeStrategies
                   otcNullableIntervalNumeric
             });
 
-    public static final SqlOperandTypeChecker otcMinusOperator =
+    public static final SqlSingleOperandTypeChecker
+        otcMinusOperator =
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.OR,
             new SqlOperandTypeChecker[] {
@@ -649,21 +726,22 @@ public abstract class SqlTypeStrategies
 //todo                , otcNullableDatetimeInterval
             });
 
-    public static final SqlOperandTypeChecker otcMinusDateOperator =
+    public static final SqlSingleOperandTypeChecker
+        otcMinusDateOperator =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.datetimeNullableTypes,
             SqlTypeName.datetimeNullableTypes,
             SqlTypeName.timeIntervalNullableTypes
         }) {
-            public boolean check(
+            public boolean checkCall(
                 SqlValidator validator,
                 SqlValidatorScope scope,
                 SqlCall call,
                 boolean throwOnFailure) {
-                if (!super.check(validator, scope, call, throwOnFailure)) {
+                if (!super.checkCall(validator, scope, call, throwOnFailure)) {
                     return false;
                 }
-                if (!otcNullableSameX2.check(
+                if (!otcNullableSameX2.checkCall(
                         validator, scope, call, throwOnFailure))
                 {
                     return false;
@@ -672,7 +750,8 @@ public abstract class SqlTypeStrategies
             }
         };
 
-    public static final SqlOperandTypeChecker otcNullableNumericOrInterval =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableNumericOrInterval =
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.OR,
             new SqlOperandTypeChecker[] {
@@ -684,7 +763,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy where types can be nullable and must be
      * comparable to each other with unordered comparisons allowed.
      */
-    public static final SqlOperandTypeChecker otcNullableComparableUnordered =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableComparableUnordered =
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.AND, 
             new SqlOperandTypeChecker [] {
@@ -695,7 +775,8 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy where types can be nullable and must be
      * comparable to each other with ordered comparisons allowed.
      */
-    public static final SqlOperandTypeChecker otcNullableComparableOrdered =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableComparableOrdered =
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.AND, 
             new SqlOperandTypeChecker [] {
@@ -706,22 +787,24 @@ public abstract class SqlTypeStrategies
      * Parameter type-checking strategy
      * type must a nullable multiset
      */
-    public static final SqlOperandTypeChecker otcNullableMultiset =
+    public static final SqlSingleOperandTypeChecker
+        otcNullableMultiset =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.multisetNullableTypes
         });
 
-    public static final SqlOperandTypeChecker otcNullableRecordMultiset =
-        new SqlOperandTypeChecker() {
-            public boolean check(
+    public static final SqlSingleOperandTypeChecker
+        otcNullableRecordMultiset =
+        new SqlSingleOperandTypeChecker() {
+            public boolean checkOperand(
                 SqlCall call,
                 SqlValidator validator,
                 SqlValidatorScope scope,
                 SqlNode node,
-                int ruleOrdinal,
+                int iFormalOperand,
                 boolean throwOnFailure)
             {
-                assert(0 == ruleOrdinal);
+                assert(0 == iFormalOperand);
                 RelDataType type = validator.deriveType(scope, node);
                 boolean validationError = false;
                 if (!type.isStruct()) {
@@ -740,13 +823,13 @@ public abstract class SqlTypeStrategies
                 return !validationError;
             }
 
-            public boolean check(
+            public boolean checkCall(
                 SqlValidator validator,
                 SqlValidatorScope scope,
                 SqlCall call,
                 boolean throwOnFailure)
             {
-                return check(call,
+                return checkOperand(call,
                              validator,
                              scope,
                              call.operands[0],
@@ -754,9 +837,9 @@ public abstract class SqlTypeStrategies
                              throwOnFailure);
             }
 
-            public int getArgCount()
+            public SqlOperandCountRange getOperandCountRange()
             {
-                return 1;
+                return SqlOperandCountRange.One;
             }
 
             public String getAllowedSignatures(SqlOperator op)
@@ -765,7 +848,7 @@ public abstract class SqlTypeStrategies
             }
         };
 
-    public static final SqlOperandTypeChecker
+    public static final SqlSingleOperandTypeChecker
         otcNullableMultisetOrRecordTypeMultiset =
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.OR,
@@ -779,14 +862,16 @@ public abstract class SqlTypeStrategies
      * and the two types must have the same element type
      * @see {@link MultisetSqlType#getComponentType}
      */
-    public static final SqlOperandTypeChecker otcNullableMultisetX2 =
+    public static final SqlOperandTypeChecker
+        otcNullableMultisetX2 =
         new MultisetOperandTypeChecker();
 
     /**
      * Parameter type-checking strategy for a set operator (UNION, INTERSECT,
      * EXCEPT).
      */
-    public static final SqlOperandTypeChecker otcSetop =
+    public static final SqlOperandTypeChecker
+        otcSetop =
         new SetopOperandTypeChecker();
     
     // ----------------------------------------------------------------------
@@ -797,7 +882,8 @@ public abstract class SqlTypeStrategies
      * Type-inference strategy whereby the result type of a call is the type of
      * the first operand.
      */
-    public static final SqlReturnTypeInference rtiFirstArgType =
+    public static final SqlReturnTypeInference
+        rtiFirstArgType =
         new OrdinalReturnTypeInference(0);
 
     /**
@@ -805,14 +891,17 @@ public abstract class SqlTypeStrategies
      * the first operand. If any of the other operands are nullable the returned
      * type will also be nullable.
      */
-    public static final SqlReturnTypeInference rtiNullableFirstArgType =
+    public static final SqlReturnTypeInference
+        rtiNullableFirstArgType =
         new SqlTypeTransformCascade(
             rtiFirstArgType, SqlTypeTransforms.toNullable);
 
-    public static final SqlReturnTypeInference rtiFirstInterval =
+    public static final SqlReturnTypeInference
+        rtiFirstInterval =
         new MatchReturnTypeInference(0, SqlTypeName.timeIntervalTypes);
 
-    public static final SqlReturnTypeInference rtiNullableFirstInterval =
+    public static final SqlReturnTypeInference
+        rtiNullableFirstInterval =
         new SqlTypeTransformCascade(
             rtiFirstInterval, SqlTypeTransforms.toNullable);
 
@@ -825,7 +914,8 @@ public abstract class SqlTypeStrategies
      * type will also be nullable.
      * First Arg must be of string type.
      */
-    public static final SqlReturnTypeInference rtiNullableVaryingFirstArgType =
+    public static final SqlReturnTypeInference
+        rtiNullableVaryingFirstArgType =
         new SqlTypeTransformCascade(
             rtiFirstArgType,
             SqlTypeTransforms.toNullable,
@@ -835,84 +925,94 @@ public abstract class SqlTypeStrategies
      * Type-inference strategy whereby the result type of a call is the type of
      * the second operand.
      */
-    public static final SqlReturnTypeInference rtiSecondArgType =
+    public static final SqlReturnTypeInference
+        rtiSecondArgType =
         new OrdinalReturnTypeInference(1);
 
     /**
      * Type-inference strategy whereby the result type of a call is the type of
      * the third operand.
      */
-    public static final SqlReturnTypeInference rtiThirdArgType =
+    public static final SqlReturnTypeInference
+        rtiThirdArgType =
         new OrdinalReturnTypeInference(2);
-
-
 
     /**
      * Type-inference strategy whereby the result type of a call is Boolean.
      */
-    public static final SqlReturnTypeInference rtiBoolean =
+    public static final SqlReturnTypeInference
+        rtiBoolean =
         new ExplicitReturnTypeInference(SqlTypeName.Boolean);
 
     /**
      * Type-inference strategy whereby the result type of a call is Boolean,
      * with nulls allowed if any of the operands allow nulls.
      */
-    public static final SqlReturnTypeInference rtiNullableBoolean =
+    public static final SqlReturnTypeInference
+        rtiNullableBoolean =
         new SqlTypeTransformCascade(
             rtiBoolean, SqlTypeTransforms.toNullable);
 
     /**
      * Type-inference strategy whereby the result type of a call is Date.
      */
-    public static final SqlReturnTypeInference rtiDate =
+    public static final SqlReturnTypeInference
+        rtiDate =
         new ExplicitReturnTypeInference(SqlTypeName.Date);
 
     /**
      * Type-inference strategy whereby the result type of a call is Time(0).
      */
-    public static final SqlReturnTypeInference rtiTime =
+    public static final SqlReturnTypeInference
+        rtiTime =
         new ExplicitReturnTypeInference(SqlTypeName.Time, 0);
 
     /**
      * Type-inference strategy whereby the result type of a call is nullable
      * Time(0).
      */
-     public static final SqlReturnTypeInference rtiNullableTime =
+     public static final SqlReturnTypeInference
+         rtiNullableTime =
         new SqlTypeTransformCascade(
             rtiTime, SqlTypeTransforms.toNullable);
 
     /**
      * Type-inference strategy whereby the result type of a call is Double.
      */
-    public static final SqlReturnTypeInference rtiDouble =
+    public static final SqlReturnTypeInference
+        rtiDouble =
         new ExplicitReturnTypeInference(SqlTypeName.Double);
 
     /**
      * Type-inference strategy whereby the result type of a call is Double
      * with nulls allowed if any of the operands allow nulls.
      */
-    public static final SqlReturnTypeInference rtiNullableDouble =
+    public static final SqlReturnTypeInference
+        rtiNullableDouble =
         new SqlTypeTransformCascade(
             rtiDouble, SqlTypeTransforms.toNullable);
 
     /**
      * Type-inference strategy whereby the result type of a call is an Integer.
      */
-    public static final SqlReturnTypeInference rtiInteger =
+    public static final SqlReturnTypeInference
+        rtiInteger =
         new ExplicitReturnTypeInference(SqlTypeName.Integer);
 
     /**
      * Type-inference strategy whereby the result type of a call is an Integer
      * with nulls allowed if any of the operands allow nulls.
      */
-    public static final SqlReturnTypeInference rtiNullableInteger =
+    public static final SqlReturnTypeInference
+        rtiNullableInteger =
         new SqlTypeTransformCascade(
             rtiInteger, SqlTypeTransforms.toNullable);
 
     /**
      * Type-inference strategy which always returns "VARCHAR(2000)".
      */
-    public static final SqlReturnTypeInference rtiVarchar2000 =
+    public static final SqlReturnTypeInference
+        rtiVarchar2000 =
         new ExplicitReturnTypeInference(SqlTypeName.Varchar, 2000);
 
     /**
@@ -926,7 +1026,8 @@ public abstract class SqlTypeStrategies
      * <p>For example, the expression <code>(500000000000 + 3.0e-3)</code> has
      * the operands INTEGER and DOUBLE. Its biggest type is double.
      */
-    public static final SqlReturnTypeInference rtiLeastRestrictive =
+    public static final SqlReturnTypeInference
+        rtiLeastRestrictive =
         new SqlReturnTypeInference() {
             public RelDataType getType(
                 SqlValidator validator,
@@ -950,7 +1051,8 @@ public abstract class SqlTypeStrategies
     /**
      * Same as {@link #rtiLeastRestrictive} but with INTERVAL as well.
      */
-    public static final SqlReturnTypeInference rtiBiggest =
+    public static final SqlReturnTypeInference
+        rtiBiggest =
         new SqlTypeTransformCascade(
             rtiLeastRestrictive, SqlTypeTransforms.toLeastRestrictiveInterval);
 
@@ -958,13 +1060,15 @@ public abstract class SqlTypeStrategies
      * Type-inference strategy similar to {@link #rtiBiggest}, except that the
      * result is nullable if any of the arguments is nullable.
      */
-    public static final SqlReturnTypeInference rtiNullableBiggest =
+    public static final SqlReturnTypeInference
+        rtiNullableBiggest =
         new SqlTypeTransformCascade(
             rtiLeastRestrictive,
             SqlTypeTransforms.toLeastRestrictiveInterval,
             SqlTypeTransforms.toNullable);
 
-    public static final SqlReturnTypeInference rtiNullableProduct =
+    public static final SqlReturnTypeInference
+        rtiNullableProduct =
         new SqlReturnTypeInferenceChain(
             rtiNullableFirstInterval, rtiNullableBiggest);
 
@@ -980,7 +1084,8 @@ public abstract class SqlTypeStrategies
      * @pre input types must be of the same string type
      * @pre types must be comparable without casting
      */
-    public static final SqlReturnTypeInference rtiDyadicStringSumPrecision =
+    public static final SqlReturnTypeInference
+        rtiDyadicStringSumPrecision =
         new SqlReturnTypeInference()
         {
             /**
@@ -1071,7 +1176,8 @@ public abstract class SqlTypeStrategies
      * as a {@link org.eigenbase.sql.validate.SqlValidatorNamespace}, and
      * therefore the result type of the call is the type of that namespace.
      */
-    public static final SqlReturnTypeInference rtiScope =
+    public static final SqlReturnTypeInference
+        rtiScope =
         new SqlReturnTypeInference()
         {
             public RelDataType getType(
@@ -1096,7 +1202,8 @@ public abstract class SqlTypeStrategies
      * Returns the same type as the multiset carries. The multiset type returned
      * is the least restrictive of the call's multiset operands
      */
-    public static final SqlReturnTypeInference rtiMultiset =
+    public static final SqlReturnTypeInference
+        rtiMultiset =
         new SqlReturnTypeInference()
         {
             public RelDataType getType(
@@ -1124,14 +1231,16 @@ public abstract class SqlTypeStrategies
      * Same as {@link #rtiMultiset} but returns with nullablity
      * if any of the operands is nullable
      */
-    public static final SqlReturnTypeInference rtiNullableMultiset =
+    public static final SqlReturnTypeInference
+        rtiNullableMultiset =
         new SqlTypeTransformCascade(
             rtiMultiset, SqlTypeTransforms.toNullable);
 
     /**
      * Returns the element type of a multiset
      */
-    public static final SqlReturnTypeInference rtiNullableMultisetElementType =
+    public static final SqlReturnTypeInference
+        rtiNullableMultisetElementType =
         new SqlTypeTransformCascade(
             rtiMultiset, SqlTypeTransforms.toMultisetElementType);
     
@@ -1143,7 +1252,8 @@ public abstract class SqlTypeStrategies
      * Operand type-inference strategy where an unknown operand
      * type is derived from the first operand with a known type.
      */
-    public static final SqlOperandTypeInference otiFirstKnown =
+    public static final SqlOperandTypeInference
+        otiFirstKnown =
         new SqlOperandTypeInference()
         {
             public void inferOperandTypes(
@@ -1175,7 +1285,8 @@ public abstract class SqlTypeStrategies
      * a record, it must have the same number of fields as the number
      * of operands.
      */
-    public static final SqlOperandTypeInference otiReturnType =
+    public static final SqlOperandTypeInference
+        otiReturnType =
         new SqlOperandTypeInference()
         {
             public void inferOperandTypes(
@@ -1199,7 +1310,8 @@ public abstract class SqlTypeStrategies
      * Operand type-inference strategy where an unknown operand
      * type is assumed to be boolean.
      */
-    public static final SqlOperandTypeInference otiBoolean =
+    public static final SqlOperandTypeInference
+        otiBoolean =
         new SqlOperandTypeInference()
         {
             public void inferOperandTypes(

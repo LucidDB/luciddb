@@ -57,9 +57,11 @@ public class SqlTrimFunction extends SqlFunction
 
     //~ Methods ---------------------------------------------------------------
 
-    public OperandsCountDescriptor getOperandsCountDescriptor()
+    public SqlOperandCountRange getOperandCountRange()
     {
-        return new OperandsCountDescriptor(3);
+        // REVIEW jvs 2-June-2005:  shouldn't this be TwoOrThree?
+        // Also, inconsistent with with otc above!
+        return SqlOperandCountRange.Three;
     }
 
     public void unparse(
@@ -113,8 +115,10 @@ public class SqlTrimFunction extends SqlFunction
         boolean throwOnFailure)
     {
         for (int i = 1; i < 3; i++) {
-            if (!SqlTypeStrategies.otcNullableString.check(call, validator,
-                        scope, call.operands[i], 0, throwOnFailure)) {
+            if (!SqlTypeStrategies.otcNullableString.checkOperand(
+                    call, validator,
+                    scope, call.operands[i], 0, throwOnFailure))
+            {
                 if (throwOnFailure) {
                     throw call.newValidationSignatureError(validator, scope);
                 }

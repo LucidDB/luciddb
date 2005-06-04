@@ -51,7 +51,8 @@ public class SqlRowOperator extends SqlSpecialOperator
     {
         // Precedence of 100 because nothing can pull parentheses apart.
         super("ROW", SqlKind.Row, 100, false, null,
-            SqlTypeStrategies.otiReturnType, null);
+            SqlTypeStrategies.otiReturnType,
+            SqlTypeStrategies.otcVariadic);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -61,12 +62,6 @@ public class SqlRowOperator extends SqlSpecialOperator
     {
         // Function syntax would work too.
         return SqlSyntax.Special;
-    }
-
-    // implement SqlOperator
-    public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()
-    {
-        return OperandsCountDescriptor.variadicCountDescriptor;
     }
 
     protected RelDataType getType(
@@ -86,25 +81,6 @@ public class SqlRowOperator extends SqlSpecialOperator
         return typeFactory.createStructType(argTypes, fieldNames);
     }
 
-
-    protected boolean checkArgTypes(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        boolean throwOnFailure)
-    {
-        // any arguments are fine
-        Util.discard(call);
-        Util.discard(validator);
-        Util.discard(scope);
-        Util.discard(throwOnFailure);
-        return true;
-    }
-
-    protected void checkNumberOfArg(SqlCall call)
-    {
-        // any number of arguments is fine
-    }
 
     public void test(SqlTester tester)
     {

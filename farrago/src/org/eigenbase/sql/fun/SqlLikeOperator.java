@@ -84,9 +84,9 @@ public class SqlLikeOperator extends SqlSpecialOperator
         return negated;
     }
 
-    public OperandsCountDescriptor getOperandsCountDescriptor()
+    public SqlOperandCountRange getOperandCountRange()
     {
-        return new OperandsCountDescriptor(2, 3);
+        return SqlOperandCountRange.TwoOrThree;
     }
 
     protected boolean checkArgTypes(
@@ -98,13 +98,13 @@ public class SqlLikeOperator extends SqlSpecialOperator
         switch (call.operands.length) {
         case 2:
             if (!SqlTypeStrategies.otcNullableStringSameX2.
-                check(validator, scope, call, throwOnFailure)) {
+                checkCall(validator, scope, call, throwOnFailure)) {
                 return false;
             }
             break;
         case 3:
             if (!SqlTypeStrategies.otcNullableStringSameX3.
-                check(validator, scope, call, throwOnFailure)) {
+                checkCall(validator, scope, call, throwOnFailure)) {
                 return false;
             }
 

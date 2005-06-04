@@ -1117,8 +1117,7 @@ public class SqlValidatorImpl implements SqlValidator
                 && (fun.getSyntax() != SqlSyntax.FunctionId))
             {
                 final Integer expectedArgCount = (Integer)
-                    fun.getOperandsCountDescriptor()
-                    .getPossibleNumOfOperands().get(0);
+                    fun.getOperandCountRange().getAllowedList().get(0);
                 throw newValidationError(call,
                     EigenbaseResource.instance().newInvalidArgCount(
                         call.getOperator().getName(),

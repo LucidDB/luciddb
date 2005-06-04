@@ -52,7 +52,7 @@ public class ComparableOperandTypeChecker
         this.requiredComparability = requiredComparability;
     }
 
-    public boolean check(
+    public boolean checkCall(
         SqlValidator validator,
         SqlValidatorScope scope,
         SqlCall call, boolean throwOnFailure)

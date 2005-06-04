@@ -70,8 +70,8 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
         writer.print(")");
     }
 
-    public OperandsCountDescriptor getOperandsCountDescriptor() {
-        return OperandsCountDescriptor.Four;
+    public SqlOperandCountRange getOperandCountRange() {
+        return SqlOperandCountRange.Four;
     }
 
     protected String getSignatureTemplate(int operandsCount) {
@@ -113,11 +113,11 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
         SqlValidator validator,
         SqlValidatorScope scope,
         boolean throwOnFailure) {
-        if (!SqlTypeStrategies.otcNullableDatetime.check(
+        if (!SqlTypeStrategies.otcNullableDatetime.checkOperand(
             call, validator, scope, call.operands[0], 0, throwOnFailure)) {
             return false;
         }
-        if (!SqlTypeStrategies.otcNullableDatetime.check(
+        if (!SqlTypeStrategies.otcNullableDatetime.checkOperand(
             call, validator, scope, call.operands[2], 0, throwOnFailure)) {
             return false;
         }

@@ -63,7 +63,7 @@ public class SqlMultisetMemberOfOperator extends SqlBinaryOperator
         SqlValidatorScope scope,
         boolean throwOnFailure)
     {
-        if (!SqlTypeStrategies.otcNullableMultiset.check(
+        if (!SqlTypeStrategies.otcNullableMultiset.checkOperand(
                 call, validator, scope,
                 call.operands[1], 0, throwOnFailure))
         {
@@ -89,9 +89,9 @@ public class SqlMultisetMemberOfOperator extends SqlBinaryOperator
         return true;
     }
 
-    public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()
+    public SqlOperandCountRange getOperandCountRange()
     {
-        return new SqlOperator.OperandsCountDescriptor(2);
+        return SqlOperandCountRange.Two;
     }
 }
 

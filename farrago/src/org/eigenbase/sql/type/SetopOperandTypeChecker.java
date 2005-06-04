@@ -41,19 +41,7 @@ import java.util.*;
  */
 public class SetopOperandTypeChecker implements SqlOperandTypeChecker
 {
-    public boolean check(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlNode node,
-        int ruleOrdinal,
-        boolean throwOnFailure)
-    {
-        assert ruleOrdinal == 0;
-        return check(validator, scope, call, throwOnFailure);
-    }
-
-    public boolean check(
+    public boolean checkCall(
         SqlValidator validator,
         SqlValidatorScope scope,
         SqlCall call,
@@ -118,9 +106,9 @@ public class SetopOperandTypeChecker implements SqlOperandTypeChecker
         return true;
     }
 
-    public int getArgCount()
+    public SqlOperandCountRange getOperandCountRange()
     {
-        return 2;
+        return SqlOperandCountRange.Two;
     }
 
     public String getAllowedSignatures(SqlOperator op)

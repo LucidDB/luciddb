@@ -268,9 +268,9 @@ public class SqlCaseOperator extends SqlOperator
     }
 
 
-    public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()
+    public SqlOperandCountRange getOperandCountRange()
     {
-        return OperandsCountDescriptor.variadicCountDescriptor;
+        return SqlOperandCountRange.Variadic;
     }
 
     public SqlSyntax getSyntax()

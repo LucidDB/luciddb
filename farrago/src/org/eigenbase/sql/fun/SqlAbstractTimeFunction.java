@@ -41,46 +41,25 @@ import java.util.*;
  */
 public abstract class SqlAbstractTimeFunction extends SqlFunction
 {
+    private static final SqlOperandTypeChecker otcCustom =
+        new CompositeOperandTypeChecker(
+            CompositeOperandTypeChecker.OR, 
+            new SqlOperandTypeChecker[] {
+                SqlTypeStrategies.otcPositiveIntLit,
+                SqlTypeStrategies.otcEmpty
+            });
+
     private final SqlTypeName typeName;
 
     protected SqlAbstractTimeFunction(String name, SqlTypeName typeName) {
-        super(name, SqlKind.Function, null, null, null,
+        super(name, SqlKind.Function, null, null, otcCustom,
             SqlFunctionCategory.TimeDate);
         this.typeName = typeName;
     }
     
-    // no argTypeInference, so must override these methods.
-    // Probably need a niladic version of that.
-    public OperandsCountDescriptor getOperandsCountDescriptor()
-    {
-        return new OperandsCountDescriptor(0, 1);
-    }
-
     public SqlSyntax getSyntax()
     {
         return SqlSyntax.FunctionId;
-    }
-
-    protected boolean checkArgTypes(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope, boolean throwOnFailure)
-    {
-        if (null != operandsCheckingRule) {
-            return super.checkArgTypes(
-                call, validator, scope, throwOnFailure);
-        } else if (1==call.operands.length) {
-            if (!SqlTypeStrategies.otcPositiveIntLit.check(
-                    validator,  scope, call, false)) {
-                if (throwOnFailure) {
-                    throw EigenbaseResource.instance().
-                        newArgumentMustBePositiveInteger(
-                            call.getOperator().getName());
-                }
-                return false;
-            }
-        }
-        return true;
     }
 
     protected RelDataType getType(
@@ -89,9 +68,7 @@ public abstract class SqlAbstractTimeFunction extends SqlFunction
         RelDataTypeFactory typeFactory,
         CallOperands callOperands)
     {
-        // REVIEW jvs 20-Feb-2005:  SqlTypeName says Time and Timestamp
-        // don't take precision, but they should (according to the
-        // standard). Also, need to take care of time zones.
+        // REVIEW jvs 20-Feb-2005: Need to take care of time zones.
         int precision = 0;
         if (callOperands.size() == 1) {
             RelDataType type = callOperands.getType(0);
@@ -104,7 +81,8 @@ public abstract class SqlAbstractTimeFunction extends SqlFunction
     }
     
     // All of the time functions are monotonic.
-    public boolean isMonotonic(SqlCall call, SqlValidatorScope scope) {
+    public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
+    {
         return true;
     }
 }

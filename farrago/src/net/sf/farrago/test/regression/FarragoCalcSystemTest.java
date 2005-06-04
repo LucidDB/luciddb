@@ -189,7 +189,7 @@ public class FarragoCalcSystemTest extends FarragoTestCase
         }
 
         List argCountList =
-            op.getOperandsCountDescriptor().getPossibleNumOfOperands();
+            op.getOperandCountRange().getAllowedList();
         assert (argCountList.size() > 0);
         Iterator it = argCountList.iterator();
 

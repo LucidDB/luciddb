@@ -41,32 +41,21 @@ import java.util.*;
  */
 public class MultisetOperandTypeChecker implements SqlOperandTypeChecker
 {
-    public boolean check(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlNode node,
-        int ruleOrdinal,
-        boolean throwOnFailure)
-    {
-        throw Util.needToImplement(this);
-    }
-
-    public boolean check(
+    public boolean checkCall(
         SqlValidator validator,
         SqlValidatorScope scope,
         SqlCall call,
         boolean throwOnFailure)
     {
         SqlNode op0 = call.operands[0];
-        if(!SqlTypeStrategies.otcNullableMultiset.check(
+        if(!SqlTypeStrategies.otcNullableMultiset.checkOperand(
                call, validator, scope,
                op0, 0, throwOnFailure)) {
             return false;
         }
 
         SqlNode op1 = call.operands[1];
-        if (!SqlTypeStrategies.otcNullableMultiset.check(
+        if (!SqlTypeStrategies.otcNullableMultiset.checkOperand(
                 call, validator, scope,
                 op1, 0, throwOnFailure)) {
             return false;
@@ -91,9 +80,9 @@ public class MultisetOperandTypeChecker implements SqlOperandTypeChecker
         return true;
     }
 
-    public int getArgCount()
+    public SqlOperandCountRange getOperandCountRange()
     {
-        return 2;
+        return SqlOperandCountRange.Two;
     }
 
     public String getAllowedSignatures(SqlOperator op)

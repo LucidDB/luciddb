@@ -1886,19 +1886,19 @@ Error: From line 1, column 8 to line 1, column 16: No match found for function s
 0: jdbc:farrago:> values localtime(1,2);
 Error: From line 1, column 8 to line 1, column 16: No match found for function signature LOCALTIME(<NUMERIC>, <NUMERIC>) (state=,code=0)
 0: jdbc:farrago:> values localtime(-1);
-Error: Argument to function 'LOCALTIME' must be a positive integer literal (state=,code=0)
+Error: Argument to function 'LOCALTIME' must be a literal (state=,code=0)
 0: jdbc:farrago:> values localtimestamp();
 Error: From line 1, column 8 to line 1, column 21: No match found for function signature LOCALTIMESTAMP() (state=,code=0)
 0: jdbc:farrago:> values localtimestamp(1,2);
 Error: From line 1, column 8 to line 1, column 21: No match found for function signature LOCALTIMESTAMP(<NUMERIC>, <NUMERIC>) (state=,code=0)
 0: jdbc:farrago:> values localtimestamp(-3);
-Error: Argument to function 'LOCALTIMESTAMP' must be a positive integer literal (state=,code=0)
+Error: Argument to function 'LOCALTIMESTAMP' must be a literal (state=,code=0)
 0: jdbc:farrago:> values current_time(2,3);
 Error: From line 1, column 8 to line 1, column 19: No match found for function signature CURRENT_TIME(<NUMERIC>, <NUMERIC>) (state=,code=0)
 0: jdbc:farrago:> values current_timestamp(-1);
-Error: Argument to function 'CURRENT_TIMESTAMP' must be a positive integer literal (state=,code=0)
+Error: Argument to function 'CURRENT_TIMESTAMP' must be a literal (state=,code=0)
 0: jdbc:farrago:> values current_time(-20);
-Error: Argument to function 'CURRENT_TIME' must be a positive integer literal (state=,code=0)
+Error: Argument to function 'CURRENT_TIME' must be a literal (state=,code=0)
 0: jdbc:farrago:> values current_date(2);
 Error: From line 1, column 8 to line 1, column 19: No match found for function signature CURRENT_DATE(<NUMERIC>) (state=,code=0)
 0: jdbc:farrago:> values log(1,2,3);

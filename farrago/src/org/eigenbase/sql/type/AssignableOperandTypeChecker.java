@@ -52,25 +52,13 @@ public class AssignableOperandTypeChecker implements SqlOperandTypeChecker
     }
 
     // implement SqlOperandTypeChecker
-    public int getArgCount()
+    public SqlOperandCountRange getOperandCountRange()
     {
-        return paramTypes.length;
+        return new SqlOperandCountRange(paramTypes.length);
     }
 
     // implement SqlOperandTypeChecker
-    public boolean check(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlNode node,
-        int ruleOrdinal,
-        boolean throwOnFailure)
-    {
-        return check(validator, scope, call, throwOnFailure);
-    }
-
-    // implement SqlOperandTypeChecker
-    public boolean check(
+    public boolean checkCall(
         SqlValidator validator,
         SqlValidatorScope scope,
         SqlCall call,

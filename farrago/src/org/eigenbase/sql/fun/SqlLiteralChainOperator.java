@@ -55,14 +55,8 @@ public class SqlLiteralChainOperator extends SqlInternalOperator {
         super("$LiteralChain", SqlKind.LiteralChain, 40, true,
             // precedence tighter than the * and || operators
             SqlTypeStrategies.rtiFirstArgType,
-            SqlTypeStrategies.otiFirstKnown, null);
-    }
-
-    // REVIEW mb 8/8/04: Can't use SqlOperator.OperandsTypeChecking here;
-    // it doesn't handle variadicCountDescriptor operators well.
-    public OperandsCountDescriptor getOperandsCountDescriptor()
-    {
-        return OperandsCountDescriptor.variadicCountDescriptor;
+            SqlTypeStrategies.otiFirstKnown,
+            SqlTypeStrategies.otcVariadic);
     }
 
     // all operands must be the same type

@@ -47,7 +47,7 @@ public class SameOperandTypeChecker extends ExplicitOperandTypeChecker
         nOperands = explicitTypes.length;
     }
     
-    public boolean check(
+    public boolean checkCall(
         SqlValidator validator,
         SqlValidatorScope scope,
         SqlCall call, boolean throwOnFailure)

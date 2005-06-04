@@ -25,46 +25,52 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.*;
 
 /**
- * Strategy interface to check for allowed operand types of an operator call.
- *
- * <p>This interface is an example of the
- * {@link org.eigenbase.util.Glossary#StrategyPattern strategy pattern}.</p>
+ * SqlSingleOperandTypeChecker is an extension of
+ * {@link SqlOperandTypeChecker} for implementations which are cabable
+ * of checking the type of a single operand in isolation.  This isn't
+ * meaningful for all type-checking rules (e.g. SameOperandTypeChecker
+ * requires two operands to have matching types, so checking one in
+ * isolation is meaningless).
  *
  * @author Wael Chatila
  * @version $Id$
  */
-public interface SqlOperandTypeChecker
+public interface SqlSingleOperandTypeChecker extends SqlOperandTypeChecker
 {
     /**
-     * Checks the types of all operands to an operator call.
+     * Checks the type of a single operand against a particular ordinal
+     * position within a formal operator signature.  Note that the actual
+     * ordinal position of the operand being checked may be
+     * <em>different</em> from the position of the formal operand.
+     * For example, when validating the actual call C(X, Y, Z), the strategy
+     * for validating the operand Z might involve checking its type
+     * against the formal signature OP(W).  In this case, iFormalOperand
+     * would be zero, even though the position of Z within call C is two.
+     *
+     * @param call call being checked; this is only provided for context
+     * when throwing an exception; the implementation should <em>NOT</em>
+     * examine the operands of the call as part of the check
      *
      * @param validator validator requesting the check
      *
      * @param scope validation scope
      *
-     * @param call call to be checked
+     * @param operand the actual operand to be checked
+     *
+     * @param iFormalOperand the 0-based formal operand ordinal
      *
      * @param throwOnFailure whether to throw an exception if check
      * fails (otherwise returns false in that case)
      *
      * @return whether check succeeded
      */
-    public boolean checkCall(
+    public boolean checkOperand(
+        SqlCall call,
         SqlValidator validator,
         SqlValidatorScope scope,
-        SqlCall call,
+        SqlNode operand,
+        int iFormalOperand,
         boolean throwOnFailure);
-    
-    /**
-     * @return range of operand counts allowed in a call
-     */
-    public SqlOperandCountRange getOperandCountRange();
-
-    /**
-     * @return a string describing the allowed formal signatures of a
-     * call, e.g.  "SUBSTR(VARCHAR, INTEGER, INTEGER)".
-     */
-    public String getAllowedSignatures(SqlOperator op);
 }
 
-// End SqlOperandTypeChecker.java
+// End SqlSingleOperandTypeChecker.java

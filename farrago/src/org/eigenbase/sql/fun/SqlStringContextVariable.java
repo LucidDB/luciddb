@@ -49,11 +49,6 @@ public abstract class SqlStringContextVariable extends SqlFunction
             SqlFunctionCategory.System);
     }
 
-    public OperandsCountDescriptor getOperandsCountDescriptor()
-    {
-        return OperandsCountDescriptor.niladicCountDescriptor;
-    }
-
     public SqlSyntax getSyntax()
     {
         return SqlSyntax.FunctionId;

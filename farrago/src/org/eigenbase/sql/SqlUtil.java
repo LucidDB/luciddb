@@ -395,10 +395,10 @@ public abstract class SqlUtil
         Iterator iter = routines.iterator();
         while (iter.hasNext()) {
             SqlFunction function = (SqlFunction) iter.next();
-            SqlOperator.OperandsCountDescriptor od =
-                function.getOperandsCountDescriptor();
+            SqlOperandCountRange od =
+                function.getOperandCountRange();
             if (!od.isVariadic()
-                && !od.getPossibleNumOfOperands().contains(
+                && !od.getAllowedList().contains(
                     new Integer(argTypes.length)))
             {
                 iter.remove();

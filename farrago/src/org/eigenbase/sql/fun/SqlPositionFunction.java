@@ -91,7 +91,7 @@ public class SqlPositionFunction extends SqlFunction
             return false;
         }
 
-        return operandsCheckingRule.check(
+        return operandsCheckingRule.checkCall(
             validator, scope, call, throwOnFailure);
     }
 

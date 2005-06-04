@@ -106,18 +106,16 @@ public class FarragoUserDefinedRoutine
     }
 
     // override SqlOperator
-    // TODO jvs 16-Mar-2005:  it's arbitrary to override this; figure
-    // out the correct hook method
-    public void checkArgCount(
+    protected void preValidateCall(
         SqlValidator validator,
-        SqlOperandTypeChecker argType,
+        SqlValidatorScope scope,
         SqlCall call)
     {
         if (!hasDefinition()) {
             throw FarragoResource.instance().newValidatorConstructorUndefined(
                 getAllowedSignatures(getName()));
         }
-        super.checkArgCount(validator, argType, call);
+        super.preValidateCall(validator, scope, call);
     }
     
     public RelDataType getReturnType()
