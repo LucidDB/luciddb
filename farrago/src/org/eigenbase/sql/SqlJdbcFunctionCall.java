@@ -384,42 +384,40 @@ public class SqlJdbcFunctionCall extends SqlFunction
         return lookupMakeCallObj.operator.getAllowedSignatures(getName());
     }
 
-    protected RelDataType getType(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        RelDataTypeFactory typeFactory,
-        CallOperands callOperands)
+    public RelDataType inferReturnType(
+        SqlOperatorBinding opBinding)
     {
+        // only expected to come here if validator called this method
+        SqlCallBinding callBinding = (SqlCallBinding) opBinding;
+        
         if (null == lookupMakeCallObj) {
-            // only expected to come here if validator called this method
-            throw validator.newValidationError(
-                (SqlCall) callOperands.getUnderlyingObject(),
-                    EigenbaseResource.instance().newFunctionUndefined(
-                        getName()));
+            throw callBinding.newValidationError(
+                EigenbaseResource.instance().newFunctionUndefined(
+                    getName()));
         }
 
-        if (!lookupMakeCallObj.checkNumberOfArg(callOperands.size())) {
-            // only expected to come here if validator called this method
-            throw validator.newValidationError(
-                (SqlCall) callOperands.getUnderlyingObject(),
-                    EigenbaseResource.instance().newWrongNumberOfParam(
+        if (!lookupMakeCallObj.checkNumberOfArg(
+                opBinding.getOperandCount()))
+        {
+            throw callBinding.newValidationError(
+                EigenbaseResource.instance().newWrongNumberOfParam(
                     getName(),
                     new Integer(thisOperands.length),
                     getArgCountMismatchMsg()));
         }
 
-        if (!lookupMakeCallObj.operator.checkArgTypes(
-                    getLookupCall(),
-                    validator,
-                    scope,
-                    false)) {
-            // only expected to come here if validator called this method
-            SqlCall call = (SqlCall) callOperands.getUnderlyingObject();
-            throw call.newValidationSignatureError(validator, scope);
+        if (!lookupMakeCallObj.operator.checkOperandTypes(
+                    new SqlCallBinding(
+                        callBinding.getValidator(),
+                        callBinding.getScope(), 
+                        getLookupCall()),
+                    false))
+        {
+            throw callBinding.newValidationSignatureError();
         }
-        return lookupMakeCallObj.operator.getType(
-            validator,
-            scope,
+        return lookupMakeCallObj.operator.validateOperands(
+            callBinding.getValidator(),
+            callBinding.getScope(),
             getLookupCall());
     }
 

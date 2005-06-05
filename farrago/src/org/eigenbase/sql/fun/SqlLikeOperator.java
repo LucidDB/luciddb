@@ -89,22 +89,20 @@ public class SqlLikeOperator extends SqlSpecialOperator
         return SqlOperandCountRange.TwoOrThree;
     }
 
-    protected boolean checkArgTypes(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
-        switch (call.operands.length) {
+        switch (callBinding.getOperandCount()) {
         case 2:
             if (!SqlTypeStrategies.otcNullableStringSameX2.
-                checkCall(validator, scope, call, throwOnFailure)) {
+                checkOperandTypes(callBinding, throwOnFailure)) {
                 return false;
             }
             break;
         case 3:
             if (!SqlTypeStrategies.otcNullableStringSameX3.
-                checkCall(validator, scope, call, throwOnFailure)) {
+                checkOperandTypes(callBinding, throwOnFailure)) {
                 return false;
             }
 
@@ -112,11 +110,14 @@ public class SqlLikeOperator extends SqlSpecialOperator
             //enforce the escape character length to be 1
             break;
         default:
-            throw Util.newInternal("unexpected number of args to " + call);
+            throw Util.newInternal(
+                "unexpected number of args to " + callBinding.getCall());
         }
 
         if (!SqlTypeUtil.isCharTypeComparable(
-            validator, scope, call.operands, throwOnFailure)) {
+            callBinding.getValidator(),
+            callBinding.getScope(),
+            callBinding.getCall().operands, throwOnFailure)) {
             return false;
         }
         return true;

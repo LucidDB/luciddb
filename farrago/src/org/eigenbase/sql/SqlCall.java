@@ -207,18 +207,6 @@ public class SqlCall extends SqlNode
 
     }
 
-    public RuntimeException newValidationSignatureError(
-        SqlValidator validator,
-        SqlValidatorScope scope)
-    {
-        return validator.newValidationError(
-            this,
-            EigenbaseResource.instance().newCanNotApplyOp2Type(
-                operator.getName(),
-                getCallSignature(validator, scope),
-                operator.getAllowedSignatures()));
-    }
-
     public boolean isMonotonic(SqlValidatorScope scope)
     {
         // Delegate to operator.

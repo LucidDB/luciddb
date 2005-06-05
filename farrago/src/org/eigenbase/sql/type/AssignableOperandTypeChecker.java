@@ -58,17 +58,17 @@ public class AssignableOperandTypeChecker implements SqlOperandTypeChecker
     }
 
     // implement SqlOperandTypeChecker
-    public boolean checkCall(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlCall call,
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
-        for (int i = 0; i < call.operands.length; ++i) {
-            RelDataType argType = validator.deriveType(scope, call.operands[i]);
+        for (int i = 0; i < callBinding.getOperandCount(); ++i) {
+            RelDataType argType = callBinding.getValidator().deriveType(
+                callBinding.getScope(),
+                callBinding.getCall().operands[i]);
             if (!SqlTypeUtil.canAssignFrom(paramTypes[i], argType)) {
                 if (throwOnFailure) {
-                    throw call.newValidationSignatureError(validator, scope);
+                    throw callBinding.newValidationSignatureError();
                 } else {
                     return false;
                 }

@@ -61,19 +61,19 @@ public class SqlLiteralChainOperator extends SqlInternalOperator {
 
     // all operands must be the same type
     private boolean argTypesValid(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope)
+        SqlCallBinding callBinding)
     {
-        if (call.operands.length < 2) {
+        if (callBinding.getOperandCount() < 2) {
             return true; // nothing to compare
         }
-        SqlNode operand = call.operands[0];
-        RelDataType firstType = validator.deriveType(scope, operand);
-        for (int i = 1; i < call.operands.length; i++) {
-            operand = call.operands[i];
+        SqlNode operand = callBinding.getCall().operands[0];
+        RelDataType firstType = callBinding.getValidator().deriveType(
+            callBinding.getScope(), operand);
+        for (int i = 1; i < callBinding.getCall().operands.length; i++) {
+            operand = callBinding.getCall().operands[i];
             RelDataType otherType =
-                validator.deriveType(scope, operand);
+                callBinding.getValidator().deriveType(
+                    callBinding.getScope(), operand);
             if (!SqlTypeUtil.sameNamedType(firstType, otherType)) {
                 return false;
             }
@@ -81,15 +81,13 @@ public class SqlLiteralChainOperator extends SqlInternalOperator {
         return true;
     }
 
-    protected boolean checkArgTypes(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
-        if (!argTypesValid(call, validator, scope)) {
+        if (!argTypesValid(callBinding)) {
             if (throwOnFailure) {
-                throw call.newValidationSignatureError(validator, scope);
+                throw callBinding.newValidationSignatureError();
             }
             return false;
         }
@@ -101,26 +99,23 @@ public class SqlLiteralChainOperator extends SqlInternalOperator {
     // total size.
     // REVIEW mb 8/8/04: Possibly this can be achieved by combining
     // the strategy useFirstArgType with a new transformer.
-    protected RelDataType getType(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        RelDataTypeFactory typeFactory,
-        CallOperands callOperands)
+    public RelDataType inferReturnType(
+        SqlOperatorBinding opBinding)
     {
         // Here we know all the operands have the same type,
         // which has a size (precision), but not a scale.
-        RelDataType ret = callOperands.getType(0);
+        RelDataType ret = opBinding.getOperandType(0);
         SqlTypeName typeName = ret.getSqlTypeName();
         assert(typeName.allowsPrecNoScale()) :
             "LiteralChain has impossible operand type " + typeName;
         int size = 0;
-        RelDataType[] types = callOperands.collectTypes();
+        RelDataType[] types = opBinding.collectOperandTypes();
         for (int i = 0; i < types.length; i++) {
             RelDataType type = types[i];
             size += type.getPrecision();
             assert(type.getSqlTypeName().equals(typeName));
         }
-        return typeFactory.createSqlType(typeName, size);
+        return opBinding.getTypeFactory().createSqlType(typeName, size);
     }
 
     public String getAllowedSignatures(String opName)

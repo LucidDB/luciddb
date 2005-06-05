@@ -62,38 +62,38 @@ public class SqlMultisetOperator extends SqlSpecialOperator
         return SqlSyntax.Special;
     }
 
-    protected RelDataType getType(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        RelDataTypeFactory typeFactory,
-        CallOperands callOperands)
+    public RelDataType inferReturnType(
+        SqlOperatorBinding opBinding)
     {
-        RelDataType type = getComponentType(typeFactory,  callOperands.collectTypes());
+        RelDataType type = getComponentType(
+            opBinding.getTypeFactory(),  opBinding.collectOperandTypes());
         if (null == type) {
             return null;
         }
-        return SqlTypeUtil.createMultisetType(typeFactory, type, false);
+        return SqlTypeUtil.createMultisetType(
+            opBinding.getTypeFactory(), type, false);
     }
 
     private RelDataType getComponentType(RelDataTypeFactory typeFactory,
         RelDataType[] argTypes)
     {
-        return SqlTypeUtil.getNullableBiggest(typeFactory, argTypes);
+        return typeFactory.leastRestrictive(argTypes);
     }
 
-    protected boolean checkArgTypes(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
         final RelDataType[] argTypes =
-            SqlTypeUtil.collectTypes(validator, scope, call.operands);
+            SqlTypeUtil.deriveAndCollectTypes(
+                callBinding.getValidator(),
+                callBinding.getScope(),
+                callBinding.getCall().operands);
         final RelDataType componentType = getComponentType(
-            validator.getTypeFactory(), argTypes);
+            callBinding.getTypeFactory(), argTypes);
         if (null == componentType) {
             if (throwOnFailure) {
-                throw validator.newValidationError(call,
+                throw callBinding.newValidationError(
                     EigenbaseResource.instance().newNeedSameTypeParameter());
             }
             return false;

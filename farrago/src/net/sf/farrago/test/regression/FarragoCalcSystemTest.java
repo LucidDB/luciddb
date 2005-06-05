@@ -198,7 +198,7 @@ public class FarragoCalcSystemTest extends FarragoTestCase
             Integer n = (Integer) it.next();
             SqlNode [] operands = new SqlNode[n.intValue()];
             SqlOperandTypeChecker allowedTypes =
-                op.getOperandsCheckingRule();
+                op.getOperandTypeChecker();
             SqlTypeName[][] rules = findRules(allowedTypes);
 
             if (null == allowedTypes) {

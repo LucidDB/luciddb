@@ -47,18 +47,18 @@ public class SameOperandTypeChecker extends ExplicitOperandTypeChecker
         nOperands = explicitTypes.length;
     }
     
-    public boolean checkCall(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlCall call, boolean throwOnFailure)
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding, boolean throwOnFailure)
     {
         RelDataType [] types = new RelDataType[nOperands];
         for (int i = 0; i < nOperands; ++i) {
             types[i] =
-                validator.deriveType(scope, call.operands[i]);
+                callBinding.getValidator().deriveType(
+                    callBinding.getScope(),
+                    callBinding.getCall().operands[i]);
         }
         RelDataType nullType =
-            validator.getTypeFactory().createSqlType(SqlTypeName.Null);
+            callBinding.getTypeFactory().createSqlType(SqlTypeName.Null);
         int prev = -1;
         for (int i = 0; i < nOperands; ++i) {
             if (types[i] == nullType) {
@@ -83,8 +83,7 @@ public class SameOperandTypeChecker extends ExplicitOperandTypeChecker
                 if (!throwOnFailure) {
                     return false;
                 }
-                throw validator.newValidationError(
-                    call,
+                throw callBinding.newValidationError(
                     EigenbaseResource.instance().newNeedSameTypeParameter());
             }
         }

@@ -2,9 +2,8 @@
 // $Id$
 // Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
+// Copyright (C) 2005-2005 Disruptive Tech
 // Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -20,36 +19,42 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package org.eigenbase.sql.type;
+package org.eigenbase.sql;
 
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.reltype.*;
 
 /**
- * ExplicitOperandTypeInferences implements {@link SqlOperandTypeInference}
- * by explicity supplying a type for each parameter.
+ * <code>ExplicitOperatorBinding</code> implements {@link SqlOperatorBinding}
+ * via an underlying array of known operand types.
  *
- * @author John V. Sichi
+ * @author Wael Chatila
  * @version $Id$
  */
-public class ExplicitOperandTypeInference implements SqlOperandTypeInference
+public class ExplicitOperatorBinding extends SqlOperatorBinding
 {
-    private final RelDataType [] paramTypes;
+    private final RelDataType[] types;
 
-    public ExplicitOperandTypeInference(RelDataType [] paramTypes)
+    public ExplicitOperatorBinding(
+        SqlOperatorBinding delegate,
+        RelDataType[] types)
     {
-        this.paramTypes = paramTypes;
+        super(
+            delegate.getTypeFactory(),
+            delegate.getOperator());
+        this.types = types;
     }
 
-    public void inferOperandTypes(
-        SqlCallBinding callBinding,
-        RelDataType returnType,
-        RelDataType [] operandTypes)
+    // implement SqlOperatorBinding
+    public int getOperandCount()
     {
-        System.arraycopy(paramTypes, 0, operandTypes, 0, paramTypes.length);
+        return types.length;
+    }
+
+    // implement SqlOperatorBinding
+    public RelDataType getOperandType(int ordinal)
+    {
+        return types[ordinal];
     }
 }
 
-// End ExplicitOperandTypeInference.java
+// End ExplicitOperatorBinding.java

@@ -672,7 +672,8 @@ public class SqlToRelConverter
         SqlFunction constructor,
         RexNode [] exprs)
     {
-        RelDataType type = constructor.getType(typeFactory, exprs);
+        RelDataType type = rexBuilder.deriveReturnType(
+            constructor, typeFactory, exprs);
 
         int n = type.getFieldList().size();
         RexNode [] initializationExprs = new RexNode[n];
@@ -1003,7 +1004,7 @@ public class SqlToRelConverter
                             leftRel.getRowType().getFieldOrdinal(
                                 correlNode.getField().getName());
                         assert(leftRel.getRowType().getField(
-                            correlNode.getField().getName()).getType()==
+                            correlNode.getField().getName()).getType() ==
                             correlNode.getType());
                         if (pos != -1) {
                             correlations.add(new

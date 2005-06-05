@@ -313,7 +313,9 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      */
     public static final SqlBinaryOperator minusOperator =
         new SqlMonotonicBinaryOperator("-", SqlKind.Minus, 20, true,
-            SqlTypeStrategies.rtiNullableBiggest,
+            // FIXME jvs 4-June-2005:  this is incorrect; minus
+            // has to take precision into account
+            SqlTypeStrategies.rtiLeastRestrictive,
             SqlTypeStrategies.otiFirstKnown,
             SqlTypeStrategies.otcMinusOperator)
         {
@@ -370,7 +372,9 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
 
     public static final SqlBinaryOperator plusOperator =
         new SqlMonotonicBinaryOperator("+", SqlKind.Plus, 20, true,
-            SqlTypeStrategies.rtiNullableBiggest,
+            // FIXME jvs 4-June-2005:  this is incorrect; plus
+            // has to take precision into account
+            SqlTypeStrategies.rtiLeastRestrictive,
             SqlTypeStrategies.otiFirstKnown,
             SqlTypeStrategies.otcPlusOperator)
         {
@@ -929,8 +933,10 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         };
 
     public static final SqlFunction modFunc =
+        // FIXME jvs 4-June-2005:  this is incorrect; mod
+        // has to take precision into account
         new SqlFunction("MOD", SqlKind.Function,
-            SqlTypeStrategies.rtiNullableBiggest, null,
+            SqlTypeStrategies.rtiLeastRestrictive, null,
             SqlTypeStrategies.otcNullableIntX2,
             SqlFunctionCategory.Numeric)
         {

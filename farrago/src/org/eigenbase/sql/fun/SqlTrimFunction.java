@@ -108,19 +108,21 @@ public class SqlTrimFunction extends SqlFunction
         return super.createCall(operands, pos);
     }
 
-    protected boolean checkArgTypes(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
+        SqlCall call = callBinding.getCall();
+        SqlValidator validator = callBinding.getValidator();
+        SqlValidatorScope scope  = callBinding.getScope();
+        
         for (int i = 1; i < 3; i++) {
-            if (!SqlTypeStrategies.otcNullableString.checkOperand(
-                    call, validator,
-                    scope, call.operands[i], 0, throwOnFailure))
+            if (!SqlTypeStrategies.otcNullableString.checkSingleOperandType(
+                    callBinding,
+                    call.operands[i], 0, throwOnFailure))
             {
                 if (throwOnFailure) {
-                    throw call.newValidationSignatureError(validator, scope);
+                    throw callBinding.newValidationSignatureError();
                 }
                 return false;
             }

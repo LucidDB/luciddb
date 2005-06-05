@@ -28,7 +28,7 @@ import org.eigenbase.sql.validate.*;
 /**
  * Strategy to transform one type to another. The transformation is
  * dependent on the implemented strategy object and in the general case is
- * a function of the type and the other operands
+ * a function of the type and the other operands.
  *
  * Can not be used by itself. Must be used in an object of type
  * {@link TransformCascade}
@@ -43,17 +43,16 @@ import org.eigenbase.sql.validate.*;
 public interface SqlTypeTransform
 {
     /**
-     * @param typeToTransform The type subject of transformation. The return
-     * type is (in the general case) a function of
-     * <ul><li>The typeToTransform</li><li>The other operand types</li></ul>
-     * {@link SqlReturnTypeInference}  object.
-     * @return A new type depending on the operands types
+     * Transforms a type.
+     *
+     * @param opBinding call context in which transformation is being performed
+     *
+     * @param typeToTransform type to be transformed
+     *
+     * @return transformed type
      */
-    public RelDataType getType(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        RelDataTypeFactory typeFactory,
-        CallOperands callOperands,
+    public RelDataType transformType(
+        SqlOperatorBinding opBinding,
         RelDataType typeToTransform);
 }
 

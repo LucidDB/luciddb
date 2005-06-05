@@ -80,10 +80,8 @@ public class ExplicitOperandTypeChecker
         this.types = typeses;
     }
 
-    public boolean checkOperand(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
+    public boolean checkSingleOperandType(
+        SqlCallBinding callBinding,
         SqlNode node,
         int iFormalOperand,
         boolean throwOnFailure)
@@ -99,7 +97,9 @@ public class ExplicitOperandTypeChecker
                 return true;
             } else {
                 if( null == actualType) {
-                    actualType = validator.deriveType(scope, node);
+                    actualType = callBinding.getValidator().deriveType(
+                        callBinding.getScope(),
+                        node);
                 }
 
                 if (expectedTypeName.equals(actualType.getSqlTypeName())) {
@@ -109,26 +109,24 @@ public class ExplicitOperandTypeChecker
         }
 
         if (throwOnFailure) {
-            throw call.newValidationSignatureError(validator, scope);
+            throw callBinding.newValidationSignatureError();
         }
         return false;
     }
 
-    public boolean checkCall(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlCall call,
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
-        if (types.length != call.operands.length) {
+        if (types.length != callBinding.getOperandCount()) {
             // assume this is an inapplicable sub-rule of a composite rule
             return false;
         }
         
-        for (int i = 0; i < call.operands.length; i++) {
-            SqlNode operand = call.operands[i];
-            if (!checkOperand(
-                    call, validator, scope, operand, i, throwOnFailure))
+        for (int i = 0; i < callBinding.getOperandCount(); i++) {
+            SqlNode operand = callBinding.getCall().operands[i];
+            if (!checkSingleOperandType(
+                    callBinding, operand, i, throwOnFailure))
             {
                 return false;
             }

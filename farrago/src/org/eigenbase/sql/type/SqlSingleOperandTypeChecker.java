@@ -47,13 +47,9 @@ public interface SqlSingleOperandTypeChecker extends SqlOperandTypeChecker
      * against the formal signature OP(W).  In this case, iFormalOperand
      * would be zero, even though the position of Z within call C is two.
      *
-     * @param call call being checked; this is only provided for context
-     * when throwing an exception; the implementation should <em>NOT</em>
-     * examine the operands of the call as part of the check
-     *
-     * @param validator validator requesting the check
-     *
-     * @param scope validation scope
+     * @param call description of the call being checked; this is only provided
+     * for context when throwing an exception; the implementation should
+     * <em>NOT</em> examine the operands of the call as part of the check
      *
      * @param operand the actual operand to be checked
      *
@@ -64,10 +60,8 @@ public interface SqlSingleOperandTypeChecker extends SqlOperandTypeChecker
      *
      * @return whether check succeeded
      */
-    public boolean checkOperand(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
+    public boolean checkSingleOperandType(
+        SqlCallBinding callBinding,
         SqlNode operand,
         int iFormalOperand,
         boolean throwOnFailure);

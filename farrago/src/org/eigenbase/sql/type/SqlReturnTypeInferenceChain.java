@@ -69,16 +69,13 @@ public class SqlReturnTypeInferenceChain
         this(new SqlReturnTypeInference[] { rule1, rule2 });
     }
 
-    public RelDataType getType(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        RelDataTypeFactory typeFactory,
-        CallOperands callOperands)
+    public RelDataType inferReturnType(
+        SqlOperatorBinding opBinding)
     {
         RelDataType ret = null;
         for (int i = 0; i < rules.length; i++) {
             SqlReturnTypeInference rule = rules[i];
-            ret = rule.getType(validator, scope, typeFactory, callOperands);
+            ret = rule.inferReturnType(opBinding);
             if (null!=ret) {
                 break;
             }

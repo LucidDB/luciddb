@@ -159,7 +159,7 @@ public abstract class ProjectRelBase extends SingleRel
         if (!isBoxed()) {
             return exps[0].getType();
         }
-        final RelDataType [] types = SqlTypeUtil.collectTypes(exps);
+        final RelDataType [] types = RexUtil.collectTypes(exps);
         if (((flags & Flags.AnonFields) == Flags.AnonFields) && false) {
             return getCluster().getTypeFactory().createJoinType(types);
         } else {

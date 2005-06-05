@@ -62,11 +62,13 @@ public class SqlSetOperator extends SqlBinaryOperator
         SqlKind kind,
         int prec,
         boolean all,
-        SqlReturnTypeInference typeInference,
-        SqlOperandTypeInference paramTypeInference,
-        SqlOperandTypeChecker argTypes)
+        SqlReturnTypeInference returnTypeInference,
+        SqlOperandTypeInference operandTypeInference,
+        SqlOperandTypeChecker operandTypeChecker)
     {
-        super(name, kind, prec, true, typeInference, paramTypeInference, argTypes);
+        super(
+            name, kind, prec, true, returnTypeInference,
+            operandTypeInference, operandTypeChecker);
         this.all = all;
     }
 

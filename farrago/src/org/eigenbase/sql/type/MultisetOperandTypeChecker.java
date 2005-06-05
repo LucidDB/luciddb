@@ -41,33 +41,34 @@ import java.util.*;
  */
 public class MultisetOperandTypeChecker implements SqlOperandTypeChecker
 {
-    public boolean checkCall(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlCall call,
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
+        SqlCall call = callBinding.getCall();
         SqlNode op0 = call.operands[0];
-        if(!SqlTypeStrategies.otcNullableMultiset.checkOperand(
-               call, validator, scope,
+        if(!SqlTypeStrategies.otcNullableMultiset.checkSingleOperandType(
+               callBinding, 
                op0, 0, throwOnFailure)) {
             return false;
         }
 
         SqlNode op1 = call.operands[1];
-        if (!SqlTypeStrategies.otcNullableMultiset.checkOperand(
-                call, validator, scope,
+        if (!SqlTypeStrategies.otcNullableMultiset.checkSingleOperandType(
+                callBinding,
                 op1, 0, throwOnFailure)) {
             return false;
         }
 
         RelDataType[] argTypes = new RelDataType[2];
-        argTypes[0] = validator.deriveType(scope, op0).getComponentType();
-        argTypes[1] = validator.deriveType(scope, op1).getComponentType();
+        argTypes[0] = callBinding.getValidator().deriveType(
+            callBinding.getScope(), op0).getComponentType();
+        argTypes[1] = callBinding.getValidator().deriveType(
+            callBinding.getScope(), op1).getComponentType();
         //TODO this wont work if element types are of ROW types and there is a
         //mismatch.
-        RelDataType biggest = SqlTypeUtil.getNullableBiggest(
-            validator.getTypeFactory(), argTypes);
+        RelDataType biggest = callBinding.getTypeFactory().leastRestrictive(
+            argTypes);
         if (null==biggest) {
             if (throwOnFailure) {
                 throw EigenbaseResource.instance().newTypeNotComparable(

@@ -51,24 +51,24 @@ public class SqlFunction extends SqlOperator
      *
      * @param kind kind of operator implemented by function
      *
-     * @param typeInference strategy to use for return type inference
+     * @param returnTypeInference strategy to use for return type inference
      *
-     * @param paramTypeInference strategy to use for parameter type inference
+     * @param operandTypeInference strategy to use for parameter type inference
      *
-     * @param paramTypes strategy to use for parameter type checking
+     * @param operandTypeChecker strategy to use for parameter type checking
      *
      * @param funcType categorization for function
      */
     public SqlFunction(
         String name,
         SqlKind kind,
-        SqlReturnTypeInference typeInference,
-        SqlOperandTypeInference paramTypeInference,
-        SqlOperandTypeChecker paramTypes,
+        SqlReturnTypeInference returnTypeInference,
+        SqlOperandTypeInference operandTypeInference,
+        SqlOperandTypeChecker operandTypeChecker,
         SqlFunctionCategory funcType)
     {
-        super(name, kind, 100, 100, typeInference, paramTypeInference,
-            paramTypes);
+        super(name, kind, 100, 100, returnTypeInference, operandTypeInference,
+            operandTypeChecker);
         this.functionType = funcType;
 
         // NOTE jvs 18-Jan-2005:  we leave sqlIdentifier as null to indicate
@@ -84,11 +84,11 @@ public class SqlFunction extends SqlOperator
      *
      * @param sqlIdentifier possibly qualified identifier for function
      *
-     * @param typeInference strategy to use for return type inference
+     * @param returnTypeInference strategy to use for return type inference
      *
-     * @param paramTypeInference strategy to use for parameter type inference
+     * @param operandTypeInference strategy to use for parameter type inference
      *
-     * @param paramTypeChecking strategy to use for parameter type checking
+     * @param operandTypeChecker strategy to use for parameter type checking
      *
      * @param paramTypes array of parameter types
      *
@@ -96,9 +96,9 @@ public class SqlFunction extends SqlOperator
      */
     public SqlFunction(
         SqlIdentifier sqlIdentifier,
-        SqlReturnTypeInference typeInference,
-        SqlOperandTypeInference paramTypeInference,
-        SqlOperandTypeChecker paramTypeChecking,
+        SqlReturnTypeInference returnTypeInference,
+        SqlOperandTypeInference operandTypeInference,
+        SqlOperandTypeChecker operandTypeChecker,
         RelDataType [] paramTypes,
         SqlFunctionCategory funcType)
     {
@@ -107,9 +107,9 @@ public class SqlFunction extends SqlOperator
             SqlKind.Function,
             100,
             100,
-            typeInference,
-            paramTypeInference,
-            paramTypeChecking);
+            returnTypeInference,
+            operandTypeInference,
+            operandTypeChecker);
         this.sqlIdentifier = sqlIdentifier;
         this.functionType = funcType;
         this.paramTypes = paramTypes;

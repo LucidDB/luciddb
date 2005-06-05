@@ -126,10 +126,8 @@ public class CompositeOperandTypeChecker
         }
     }
 
-    public boolean checkOperand(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
+    public boolean checkSingleOperandType(
+        SqlCallBinding callBinding,
         SqlNode node,
         int iFormalOperand,
         boolean throwOnFailure)
@@ -139,10 +137,8 @@ public class CompositeOperandTypeChecker
         if (composition == SEQUENCE) {
             SqlSingleOperandTypeChecker singleRule =
                 (SqlSingleOperandTypeChecker) allowedRules[iFormalOperand];
-            return singleRule.checkOperand(
-                call,
-                validator,
-                scope,
+            return singleRule.checkSingleOperandType(
+                callBinding,
                 node,
                 0,
                 throwOnFailure);
@@ -156,8 +152,9 @@ public class CompositeOperandTypeChecker
         for (int i = 0; i < allowedRules.length; i++) {
             SqlSingleOperandTypeChecker rule =
                 (SqlSingleOperandTypeChecker) allowedRules[i];
-            if (!rule.checkOperand(call, validator, scope, node,
-                    iFormalOperand, throwOnAndFailure)) {
+            if (!rule.checkSingleOperandType(callBinding, node,
+                    iFormalOperand, throwOnAndFailure))
+            {
                 typeErrorCount++;
             }
         }
@@ -179,21 +176,19 @@ public class CompositeOperandTypeChecker
             for (int i = 0; i < allowedRules.length; i++) {
                 SqlSingleOperandTypeChecker rule =
                     (SqlSingleOperandTypeChecker) allowedRules[i];
-                rule.checkOperand(call, validator, scope, node,
+                rule.checkSingleOperandType(callBinding, node,
                     iFormalOperand, true);
             }
             //if no exception thrown, just throw a generic validation
             //signature error
-            throw call.newValidationSignatureError(validator, scope);
+            throw callBinding.newValidationSignatureError();
         }
 
         return ret;
     }
 
-    public boolean checkCall(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlCall call,
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
         int typeErrorCount = 0;
@@ -204,21 +199,19 @@ public class CompositeOperandTypeChecker
             if (composition == SEQUENCE) {
                 SqlSingleOperandTypeChecker singleRule =
                     (SqlSingleOperandTypeChecker) rule;
-                if (i >= call.operands.length) {
+                if (i >= callBinding.getOperandCount()) {
                     break;
                 }
-                if (!singleRule.checkOperand(
-                        call,
-                        validator,
-                        scope,
-                        call.operands[i],
+                if (!singleRule.checkSingleOperandType(
+                        callBinding,
+                        callBinding.getCall().operands[i],
                         0,
                         false))
                 {
                     typeErrorCount++;
                 }
             } else {
-                if (!rule.checkCall(validator, scope, call, false)) {
+                if (!rule.checkOperandTypes(callBinding, false)) {
                     typeErrorCount++;
                 }
             }
@@ -238,12 +231,12 @@ public class CompositeOperandTypeChecker
                 //the loop again
                 if (composition == OR) {
                     for (int i = 0; i < allowedRules.length; i++) {
-                        allowedRules[i].checkCall(validator, scope, call, true);
+                        allowedRules[i].checkOperandTypes(callBinding, true);
                     }
                 }
                 //if no exception thrown, just throw a generic validation
                 //signature error
-                throw call.newValidationSignatureError(validator, scope);
+                throw callBinding.newValidationSignatureError();
             }
             return false;
         }

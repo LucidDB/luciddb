@@ -223,7 +223,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
 
             SqlFunction jplusFunc =
                 new SqlFunction("JPLUS", SqlKind.Function,
-                    SqlTypeStrategies.rtiNullableBiggest,
+                    SqlTypeStrategies.rtiLeastRestrictive,
                     SqlTypeStrategies.otiFirstKnown,
                     SqlTypeStrategies.otcNullableNumericX2,
                     SqlFunctionCategory.Numeric);
@@ -239,16 +239,13 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
                     SqlTypeStrategies.otcNullableNumericX2,
                     SqlFunctionCategory.Numeric)
                 {
-                    protected RelDataType getType(
-                        SqlValidator validator,
-                        SqlValidatorScope scope,
-                        RelDataTypeFactory typeFactory,
-                        CallOperands callOperands)
+                    public RelDataType inferReturnType(
+                        SqlOperatorBinding opBinding)
                     {
-                        assert (callOperands.size() == 2);
+                        assert (opBinding.getOperandCount() == 2);
                         String [] names = new String [] { "first", "second" };
-                        return typeFactory.createStructType(
-                            callOperands.collectTypes(), names);
+                        return opBinding.getTypeFactory().createStructType(
+                            opBinding.collectOperandTypes(), names);
                     }
                 };
             opTab.register(jrowFunc);
@@ -373,7 +370,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
 
             SqlFunction cppFunc =
                 new SqlFunction("CPLUS", SqlKind.Function,
-                                SqlTypeStrategies.rtiNullableBiggest,
+                                SqlTypeStrategies.rtiLeastRestrictive,
                                 SqlTypeStrategies.otiFirstKnown,
                                 SqlTypeStrategies.otcNullableNumericX2,
                                 SqlFunctionCategory.Numeric);

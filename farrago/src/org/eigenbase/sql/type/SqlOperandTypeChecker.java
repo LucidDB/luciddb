@@ -38,21 +38,15 @@ public interface SqlOperandTypeChecker
     /**
      * Checks the types of all operands to an operator call.
      *
-     * @param validator validator requesting the check
-     *
-     * @param scope validation scope
-     *
-     * @param call call to be checked
+     * @param callBinding description of the call to be checked
      *
      * @param throwOnFailure whether to throw an exception if check
      * fails (otherwise returns false in that case)
      *
      * @return whether check succeeded
      */
-    public boolean checkCall(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlCall call,
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
         boolean throwOnFailure);
     
     /**

@@ -40,17 +40,13 @@ public interface SqlOperandTypeInference
     /**
      * Infers any unknown operand types.
      *
-     * @param validator the validator context
-     * @param scope the the validator scope context
-     * @param call the call being analyzed
+     * @param callBinding description of the call being analyzed
      * @param returnType the type known or inferred for the
      * result of the call
      * @param operandTypes receives the inferred types for all operands
      */
     public void inferOperandTypes(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlCall call,
+        SqlCallBinding callBinding,
         RelDataType returnType,
         RelDataType [] operandTypes);
 }

@@ -800,7 +800,8 @@ public class SqlValidatorImpl implements SqlValidator
             // like "LOCALTIME".
             SqlCall call = SqlUtil.makeCall(opTab, id);
             if (call != null) {
-                return call.getOperator().getType(this, scope, call);
+                return call.getOperator().validateOperands(
+                    this, scope, call);
             }
 
             type = null;
@@ -825,7 +826,8 @@ public class SqlValidatorImpl implements SqlValidator
                                 name));
                     }
                 } else {
-                    RelDataType fieldType = SqlValidatorUtil.lookupField(type, name);
+                    RelDataType fieldType = SqlValidatorUtil.lookupField(
+                        type, name);
                     if (fieldType == null) {
                         throw newValidationError(
                             id,
@@ -868,7 +870,8 @@ public class SqlValidatorImpl implements SqlValidator
             if (operand.isA(SqlKind.As)) {
                 RelDataType nodeType = deriveType(scope, operands[0]);
                 setValidatedNodeTypeImpl(operands[0], nodeType);
-                type = call.getOperator().getType(this, scope, call);
+                type = call.getOperator().validateOperands(
+                    this, scope, call);
                 return type;
             }
 
@@ -891,16 +894,20 @@ public class SqlValidatorImpl implements SqlValidator
             }
 
             if (call.getOperator() instanceof SqlCaseOperator) {
-                return call.getOperator().getType(this, scope, call);
+                return call.getOperator().validateOperands(
+                    this, scope, call);
             }
             if (call.isA(SqlKind.Over)) {
-                return call.getOperator().getType(this, scope, call);
+                return call.getOperator().validateOperands(
+                    this, scope, call);
             }
 
             SqlValidatorScope subScope = scope;
             if (scope instanceof AggregatingScope &&
-                call.getOperator().isAggregator()) {
-                subScope = ((AggregatingScope) scope).getScopeAboveAggregation();
+                call.getOperator().isAggregator())
+            {
+                subScope =
+                    ((AggregatingScope) scope).getScopeAboveAggregation();
             }
             if ((call.getOperator() instanceof SqlFunction)
                     || (call.getOperator() instanceof SqlSpecialOperator)
@@ -957,7 +964,8 @@ public class SqlValidatorImpl implements SqlValidator
                     call.setOperator(function);
                     operator = function;
                 }
-                return operator.getType(this, scope, call);
+                return operator.validateOperands(
+                    this, scope, call);
             }
             if (call.getOperator() instanceof SqlBinaryOperator
                 || call.getOperator() instanceof SqlPostfixOperator
@@ -969,7 +977,8 @@ public class SqlValidatorImpl implements SqlValidator
                     setValidatedNodeTypeImpl(operands[i], nodeType);
                     argTypes[i] = nodeType;
                 }
-                type = call.getOperator().getType(this, scope, call);
+                type = call.getOperator().validateOperands(
+                    this, scope, call);
 
                 // Validate and determine coercibility and resulting collation
                 // name of binary operator if needed.
@@ -1074,10 +1083,11 @@ public class SqlValidatorImpl implements SqlValidator
             SqlCall testCall = resolvedConstructor.createCall(
                 call.getOperands(),
                 call.getParserPosition());
-            RelDataType returnType = resolvedConstructor.getType(
-                this,
-                scope,
-                testCall);
+            RelDataType returnType =
+                resolvedConstructor.validateOperands(
+                    this,
+                    scope,
+                    testCall);
             assert(type == returnType);
         }
 
@@ -1145,7 +1155,8 @@ public class SqlValidatorImpl implements SqlValidator
             scope = newScope;
         }
         if (node instanceof SqlDynamicParam
-            || SqlUtil.isNullLiteral(node, false)) {
+            || SqlUtil.isNullLiteral(node, false))
+        {
             if (inferredType.equals(unknownType)) {
                 throw newValidationError(node,
                     EigenbaseResource.instance().newNullIllegal());
@@ -1186,7 +1197,8 @@ public class SqlValidatorImpl implements SqlValidator
                 inferUnknownTypes(type, scope, child);
             }
         } else if (node instanceof SqlCase) {
-            //REVIEW wael: can this be done in a paramtypeinference strategy object?
+            // REVIEW wael: can this be done in a paramtypeinference strategy
+            // object?
             SqlCase caseCall = (SqlCase) node;
             RelDataType returnType = deriveType(scope, node);
 
@@ -1215,16 +1227,17 @@ public class SqlValidatorImpl implements SqlValidator
             }
         } else if (node instanceof SqlCall) {
             SqlCall call = (SqlCall) node;
-            SqlOperandTypeInference paramTypeInference =
-                call.getOperator().getUnknownParamTypeInference();
+            SqlOperandTypeInference operandTypeInference =
+                call.getOperator().getOperandTypeInference();
             SqlNode [] operands = call.getOperands();
             RelDataType [] operandTypes = new RelDataType[operands.length];
-            if (paramTypeInference == null) {
-                // TODO:  eventually should assert(paramTypeInference != null)
+            if (operandTypeInference == null) {
+                // TODO:  eventually should assert(operandTypeInference != null)
                 // instead; for now just eat it
                 Arrays.fill(operandTypes, unknownType);
             } else {
-                paramTypeInference.inferOperandTypes(this, scope, call,
+                operandTypeInference.inferOperandTypes(
+                    new SqlCallBinding(this, scope, call),
                     inferredType, operandTypes);
             }
             for (int i = 0; i < operands.length; ++i) {
@@ -2184,7 +2197,7 @@ public class SqlValidatorImpl implements SqlValidator
                 }
 
                 final RelDataType type =
-                    SqlTypeUtil.getNullableBiggest(typeFactory, types);
+                    typeFactory.leastRestrictive(types);
 
                 if (null == type) {
                     throw newValidationError(node,
@@ -2414,10 +2427,6 @@ public class SqlValidatorImpl implements SqlValidator
             throw windowOrId.getKind().unexpected();
         }
     }
-
-    /**
-     * Combines windows
-     */
 
     /**
      * Validates a call to an operator.

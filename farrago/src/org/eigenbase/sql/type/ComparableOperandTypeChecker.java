@@ -52,30 +52,31 @@ public class ComparableOperandTypeChecker
         this.requiredComparability = requiredComparability;
     }
 
-    public boolean checkCall(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlCall call, boolean throwOnFailure)
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding, boolean throwOnFailure)
     {
-        assert (call.operands.length == 2);
+        assert (callBinding.getOperandCount() == 2);
+        SqlCall call = callBinding.getCall();
         RelDataType type1 =
-            validator.deriveType(scope, call.operands[0]);
+            callBinding.getValidator().deriveType(
+                callBinding.getScope(),
+                call.operands[0]);
         RelDataType type2 =
-            validator.deriveType(scope, call.operands[1]);
+            callBinding.getValidator().deriveType(
+                callBinding.getScope(),
+                call.operands[1]);
         boolean b = true;
-        if (!checkType(validator, scope, call, throwOnFailure, type1)) {
+        if (!checkType(callBinding, throwOnFailure, type1)) {
             b = false;
         }
-        if (!checkType(validator, scope, call, throwOnFailure, type2)) {
+        if (!checkType(callBinding, throwOnFailure, type2)) {
             b = false;
         }
         return b;
     }
 
     private boolean checkType(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlCall call,
+        SqlCallBinding callBinding,
         boolean throwOnFailure,
         RelDataType type)
     {
@@ -83,8 +84,7 @@ public class ComparableOperandTypeChecker
             requiredComparability.getOrdinal())
         {
             if (throwOnFailure) {
-                throw call.newValidationSignatureError(
-                    validator, scope);
+                throw callBinding.newValidationSignatureError();
             } else {
                 return false;
             }

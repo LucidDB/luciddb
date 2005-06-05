@@ -48,10 +48,8 @@ public class LiteralOperandTypeChecker implements SqlSingleOperandTypeChecker
         this.allowNull = allowNull;
     }
     
-    public boolean checkOperand(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
+    public boolean checkSingleOperandType(
+        SqlCallBinding callBinding,
         SqlNode node,
         int iFormalOperand,
         boolean throwOnFailure)
@@ -64,14 +62,14 @@ public class LiteralOperandTypeChecker implements SqlSingleOperandTypeChecker
             }
             if (throwOnFailure) {
                 throw EigenbaseResource.instance().newArgumentMustNotBeNull(
-                    call.getOperator().getName());
+                    callBinding.getOperator().getName());
             }
             return false;
         }
         if (!SqlUtil.isLiteral(node)) {
             if (throwOnFailure) {
                 throw EigenbaseResource.instance().newArgumentMustBeLiteral(
-                    call.getOperator().getName());
+                    callBinding.getOperator().getName());
             }
             return false;
         }
@@ -79,15 +77,13 @@ public class LiteralOperandTypeChecker implements SqlSingleOperandTypeChecker
         return true;
     }
 
-    public boolean checkCall(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlCall call,
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
-        Util.pre(null != call, "null != call");
-        return checkOperand(call, validator, scope,
-            call.operands[0], 0, throwOnFailure);
+        return checkSingleOperandType(
+            callBinding,
+            callBinding.getCall().operands[0], 0, throwOnFailure);
     }
 
     public SqlOperandCountRange getOperandCountRange()

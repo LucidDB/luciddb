@@ -64,23 +64,20 @@ public class SqlRowOperator extends SqlSpecialOperator
         return SqlSyntax.Special;
     }
 
-    protected RelDataType getType(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        RelDataTypeFactory typeFactory,
-        CallOperands callOperands)
+    public RelDataType inferReturnType(
+        SqlOperatorBinding opBinding)
     {
         // The type of a ROW(e1,e2) expression is a record with the types
         // {e1type,e2type}.  According to the standard, field names are
         // implementation-defined.
-        RelDataType[] argTypes = callOperands.collectTypes();
+        RelDataType[] argTypes = opBinding.collectOperandTypes();
         final String [] fieldNames = new String[argTypes.length];
         for (int i = 0; i < fieldNames.length; i++) {
             fieldNames[i] = SqlUtil.deriveAliasFromOrdinal(i);
         }
-        return typeFactory.createStructType(argTypes, fieldNames);
+        return opBinding.getTypeFactory().createStructType(
+            argTypes, fieldNames);
     }
-
 
     public void test(SqlTester tester)
     {

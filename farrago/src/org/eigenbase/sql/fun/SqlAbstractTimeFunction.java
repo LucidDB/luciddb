@@ -62,22 +62,19 @@ public abstract class SqlAbstractTimeFunction extends SqlFunction
         return SqlSyntax.FunctionId;
     }
 
-    protected RelDataType getType(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        RelDataTypeFactory typeFactory,
-        CallOperands callOperands)
+    public RelDataType inferReturnType(
+        SqlOperatorBinding opBinding)
     {
         // REVIEW jvs 20-Feb-2005: Need to take care of time zones.
         int precision = 0;
-        if (callOperands.size() == 1) {
-            RelDataType type = callOperands.getType(0);
+        if (opBinding.getOperandCount() == 1) {
+            RelDataType type = opBinding.getOperandType(0);
             if (SqlTypeUtil.isNumeric(type)) {
-                precision = callOperands.getIntLiteral(0);
+                precision = opBinding.getIntLiteralOperand(0);
             }
         }
         assert(precision >= 0);
-        return typeFactory.createSqlType(typeName, precision);
+        return opBinding.getTypeFactory().createSqlType(typeName, precision);
     }
     
     // All of the time functions are monotonic.

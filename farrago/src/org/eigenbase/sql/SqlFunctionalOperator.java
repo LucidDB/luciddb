@@ -46,12 +46,12 @@ public class SqlFunctionalOperator extends SqlSpecialOperator
         SqlKind kind,
         int pred,
         boolean isLeftAssoc,
-        SqlReturnTypeInference typeInference,
-        SqlOperandTypeInference paramTypeInference,
-        SqlOperandTypeChecker argTypeInference)
+        SqlReturnTypeInference returnTypeInference,
+        SqlOperandTypeInference operandTypeInference,
+        SqlOperandTypeChecker operandTypeChecker)
     {
-        super(name, kind, pred, isLeftAssoc, typeInference,
-            paramTypeInference, argTypeInference);
+        super(name, kind, pred, isLeftAssoc, returnTypeInference,
+            operandTypeInference, operandTypeChecker);
     }
     
     public void unparse(

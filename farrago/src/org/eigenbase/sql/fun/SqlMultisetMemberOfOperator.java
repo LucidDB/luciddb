@@ -57,29 +57,29 @@ public class SqlMultisetMemberOfOperator extends SqlBinaryOperator
         SqlOperatorTests.testMemberOfOperator(tester);
     }
 
-    protected boolean checkArgTypes(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
-        if (!SqlTypeStrategies.otcNullableMultiset.checkOperand(
-                call, validator, scope,
-                call.operands[1], 0, throwOnFailure))
+        if (!SqlTypeStrategies.otcNullableMultiset.checkSingleOperandType(
+                callBinding,
+                callBinding.getCall().operands[1], 0, throwOnFailure))
         {
             return false;
         }
 
         MultisetSqlType mt = (MultisetSqlType)
-            validator.deriveType(scope, call.operands[1]);
+            callBinding.getValidator().deriveType(
+                callBinding.getScope(), callBinding.getCall().operands[1]);
 
-        RelDataType t0 = validator.deriveType(
-            scope, call.operands[0]);
+        RelDataType t0 = callBinding.getValidator().deriveType(
+            callBinding.getScope(),
+            callBinding.getCall().operands[0]);
         RelDataType t1 = mt.getComponentType();
 
         if (t0.getFamily() != t1.getFamily()) {
             if (throwOnFailure) {
-                throw validator.newValidationError(call,
+                throw callBinding.newValidationError(
                     EigenbaseResource.instance().
                     newTypeNotComparableNear(
                         t0.toString(), t1.toString()));

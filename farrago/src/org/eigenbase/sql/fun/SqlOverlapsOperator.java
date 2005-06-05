@@ -108,17 +108,19 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
         return replaceAnonymous(ret.toString(), name);
     }
 
-    protected boolean checkArgTypes(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        boolean throwOnFailure) {
-        if (!SqlTypeStrategies.otcNullableDatetime.checkOperand(
-            call, validator, scope, call.operands[0], 0, throwOnFailure)) {
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
+        boolean throwOnFailure)
+    {
+        SqlCall call = callBinding.getCall();
+        SqlValidator validator = callBinding.getValidator();
+        SqlValidatorScope scope = callBinding.getScope();
+        if (!SqlTypeStrategies.otcNullableDatetime.checkSingleOperandType(
+            callBinding, call.operands[0], 0, throwOnFailure)) {
             return false;
         }
-        if (!SqlTypeStrategies.otcNullableDatetime.checkOperand(
-            call, validator, scope, call.operands[2], 0, throwOnFailure)) {
+        if (!SqlTypeStrategies.otcNullableDatetime.checkSingleOperandType(
+            callBinding, call.operands[2], 0, throwOnFailure)) {
             return false;
         }
 
@@ -130,7 +132,7 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
         // t0 must be comparable with t2
         if (!SqlTypeUtil.sameNamedType(t0, t2)) {
             if (throwOnFailure) {
-                throw call.newValidationSignatureError(validator, scope);
+                throw callBinding.newValidationSignatureError();
             }
             return false;
         }
@@ -140,13 +142,13 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
             // then t1 must be comparable with t0
             if (!SqlTypeUtil.sameNamedType(t0, t1)) {
                 if (throwOnFailure) {
-                    throw call.newValidationSignatureError(validator, scope);
+                    throw callBinding.newValidationSignatureError();
                 }
                 return false;
             }
         } else if (!SqlTypeUtil.isInterval(t1)) {
             if (throwOnFailure) {
-                throw call.newValidationSignatureError(validator, scope);
+                throw callBinding.newValidationSignatureError();
             }
             return false;
         }
@@ -156,13 +158,13 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
             // then t3 must be comparable with t2
             if (!SqlTypeUtil.sameNamedType(t2, t3)) {
                 if (throwOnFailure) {
-                    throw call.newValidationSignatureError(validator, scope);
+                    throw callBinding.newValidationSignatureError();
                 }
                 return false;
             }
         } else if (!SqlTypeUtil.isInterval(t3)) {
             if (throwOnFailure) {
-                throw call.newValidationSignatureError(validator, scope);
+                throw callBinding.newValidationSignatureError();
             }
             return false;
         }

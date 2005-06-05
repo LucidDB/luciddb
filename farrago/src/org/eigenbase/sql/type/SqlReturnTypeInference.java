@@ -24,6 +24,7 @@ package org.eigenbase.sql.type;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
 
@@ -42,11 +43,15 @@ import org.eigenbase.sql.validate.SqlValidator;
  */
 public interface SqlReturnTypeInference
 {
-    RelDataType getType(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        RelDataTypeFactory typeFactory,
-        CallOperands callOperands);
+    /**
+     * Infers the return type of a call to an {@link SqlOperator}.
+     *
+     * @param opBinding description of operator binding
+     *
+     * @return inferred type
+     */
+    public RelDataType inferReturnType(
+        SqlOperatorBinding opBinding);
 }
 
 // End SqlReturnTypeInference.java

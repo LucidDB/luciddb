@@ -103,13 +103,14 @@ public class SqlBetweenOperator extends SqlInfixOperator
         return negated;
     }
 
-    private RelDataType [] getTypeArray(
+    private RelDataType [] collectOperandTypes(
         SqlValidator validator,
         SqlValidatorScope scope,
         SqlCall call)
     {
         RelDataType [] argTypes =
-            SqlTypeUtil.collectTypes(validator, scope, call.operands);
+            SqlTypeUtil.deriveAndCollectTypes(
+                validator, scope, call.operands);
         RelDataType [] newArgTypes = {
             argTypes[VALUE_OPERAND],
             argTypes[LOWER_OPERAND],
@@ -118,20 +119,19 @@ public class SqlBetweenOperator extends SqlInfixOperator
         return newArgTypes;
     }
 
-    protected RelDataType getType(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        RelDataTypeFactory typeFactory,
-        CallOperands callOperands)
+    public RelDataType inferReturnType(
+        SqlOperatorBinding opBinding)
     {
-        CallOperands.RelDataTypesCallOperands newCallOperands =
-            new CallOperands.RelDataTypesCallOperands(
-                getTypeArray(validator,
-                             scope,
-                             (SqlCall) callOperands.getUnderlyingObject()));
-        return SqlTypeStrategies.rtiNullableBoolean.getType(
-            validator, scope, typeFactory,
-            newCallOperands);
+        SqlCallBinding callBinding =(SqlCallBinding) opBinding;
+        ExplicitOperatorBinding newOpBinding =
+            new ExplicitOperatorBinding(
+                opBinding,
+                collectOperandTypes(
+                    callBinding.getValidator(),
+                    callBinding.getScope(),
+                    callBinding.getCall()));
+        return SqlTypeStrategies.rtiNullableBoolean.inferReturnType(
+            newOpBinding);
     }
 
     protected String getSignatureTemplate(final int operandsCount)
@@ -162,12 +162,12 @@ public class SqlBetweenOperator extends SqlInfixOperator
             name);
     }
 
-    protected boolean checkArgTypes(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
+        SqlCall call = callBinding.getCall();
+        
         SqlSingleOperandTypeChecker [] rules =
             new SqlSingleOperandTypeChecker [] {
                 SqlTypeStrategies.otcNullableNumeric,
@@ -178,11 +178,11 @@ public class SqlBetweenOperator extends SqlInfixOperator
         for (int i = 0; i < rules.length; i++) {
             SqlSingleOperandTypeChecker rule = rules[i];
             boolean ok;
-            ok = rule.checkOperand(call, validator, scope,
+            ok = rule.checkSingleOperandType(callBinding, 
                 call.operands[VALUE_OPERAND], 0, false);
-            ok = ok && rule.checkOperand(call, validator, scope,
+            ok = ok && rule.checkSingleOperandType(callBinding, 
                 call.operands[LOWER_OPERAND], 0, false);
-            ok = ok && rule.checkOperand(call, validator, scope,
+            ok = ok && rule.checkSingleOperandType(callBinding, 
                 call.operands[UPPER_OPERAND], 0, false);
             if (!ok) {
                 failCount++;
@@ -191,7 +191,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
 
         if (failCount >= 3) {
             if (throwOnFailure){
-                throw call.newValidationSignatureError(validator, scope);
+                throw callBinding.newValidationSignatureError();
             }
             return false;
         }

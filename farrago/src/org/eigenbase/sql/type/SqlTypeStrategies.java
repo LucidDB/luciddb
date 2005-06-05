@@ -66,10 +66,8 @@ public abstract class SqlTypeStrategies
         otcVariadic =
         new SqlOperandTypeChecker()
         {
-            public boolean checkCall(
-                SqlValidator validator,
-                SqlValidatorScope scope,
-                SqlCall call,
+            public boolean checkOperandTypes(
+                SqlCallBinding callBinding,
                 boolean throwOnFailure)
             {
                 return true;
@@ -133,20 +131,20 @@ public abstract class SqlTypeStrategies
             SqlTypeName.intTypes
         })
         {
-            public boolean checkOperand(
-                SqlCall call,
-                SqlValidator validator,
-                SqlValidatorScope scope,
+            public boolean checkSingleOperandType(
+                SqlCallBinding callBinding,
                 SqlNode node,
                 int iFormalOperand, boolean throwOnFailure)
             {
-                if (!otcNotNullLit.checkOperand(call, validator, scope, node,
-                    iFormalOperand, throwOnFailure)) {
+                if (!otcNotNullLit.checkSingleOperandType(callBinding, node,
+                    iFormalOperand, throwOnFailure))
+                {
                     return false;
                 }
 
-                if (!super.checkOperand(call, validator, scope, node,
-                    iFormalOperand, throwOnFailure)) {
+                if (!super.checkSingleOperandType(callBinding, node,
+                    iFormalOperand, throwOnFailure))
+                {
                     return false;
                 }
 
@@ -156,7 +154,7 @@ public abstract class SqlTypeStrategies
                     if (throwOnFailure) {
                         throw EigenbaseResource.instance()
                             .newArgumentMustBePositiveInteger(
-                                call.getOperator().getName());
+                                callBinding.getOperator().getName());
                     }
                     return false;
                 }
@@ -347,20 +345,19 @@ public abstract class SqlTypeStrategies
         otcNullableVarcharNotNullVarcharLit =
         new ExplicitOperandTypeChecker(new SqlTypeName [][] {
             SqlTypeName.charNullableTypes, SqlTypeName.charTypes
-        }) {
-            public boolean checkCall(
-                SqlValidator validator,
-                SqlValidatorScope scope,
-                SqlCall call, boolean throwOnFailure)
+        })
+        {
+            public boolean checkOperandTypes(
+                SqlCallBinding callBinding, boolean throwOnFailure)
             {
                 //checking if char types
-                if (!super.checkCall(validator, scope, call, throwOnFailure)) {
+                if (!super.checkOperandTypes(callBinding, throwOnFailure)) {
                     return false;
                 }
 
                 // check that the 2nd argument is a literal
-                return otcNotNullLit.checkOperand(call,validator, scope,
-                    call.operands[1],0, throwOnFailure);
+                return otcNotNullLit.checkSingleOperandType(callBinding,
+                    callBinding.getCall().operands[1], 0, throwOnFailure);
             }
         };
 
@@ -733,16 +730,15 @@ public abstract class SqlTypeStrategies
             SqlTypeName.datetimeNullableTypes,
             SqlTypeName.timeIntervalNullableTypes
         }) {
-            public boolean checkCall(
-                SqlValidator validator,
-                SqlValidatorScope scope,
-                SqlCall call,
-                boolean throwOnFailure) {
-                if (!super.checkCall(validator, scope, call, throwOnFailure)) {
+            public boolean checkOperandTypes(
+                SqlCallBinding callBinding,
+                boolean throwOnFailure)
+            {
+                if (!super.checkOperandTypes(callBinding, throwOnFailure)) {
                     return false;
                 }
-                if (!otcNullableSameX2.checkCall(
-                        validator, scope, call, throwOnFailure))
+                if (!otcNullableSameX2.checkOperandTypes(
+                        callBinding, throwOnFailure))
                 {
                     return false;
                 }
@@ -795,17 +791,17 @@ public abstract class SqlTypeStrategies
 
     public static final SqlSingleOperandTypeChecker
         otcNullableRecordMultiset =
-        new SqlSingleOperandTypeChecker() {
-            public boolean checkOperand(
-                SqlCall call,
-                SqlValidator validator,
-                SqlValidatorScope scope,
+        new SqlSingleOperandTypeChecker()
+        {
+            public boolean checkSingleOperandType(
+                SqlCallBinding callBinding,
                 SqlNode node,
                 int iFormalOperand,
                 boolean throwOnFailure)
             {
                 assert(0 == iFormalOperand);
-                RelDataType type = validator.deriveType(scope, node);
+                RelDataType type = callBinding.getValidator().deriveType(
+                    callBinding.getScope(), node);
                 boolean validationError = false;
                 if (!type.isStruct()) {
                     validationError = true;
@@ -818,23 +814,20 @@ public abstract class SqlTypeStrategies
                 }
 
                 if (validationError && throwOnFailure) {
-                    throw call.newValidationSignatureError(validator, scope);
+                    throw callBinding.newValidationSignatureError();
                 }
                 return !validationError;
             }
 
-            public boolean checkCall(
-                SqlValidator validator,
-                SqlValidatorScope scope,
-                SqlCall call,
+            public boolean checkOperandTypes(
+                SqlCallBinding callBinding,
                 boolean throwOnFailure)
             {
-                return checkOperand(call,
-                             validator,
-                             scope,
-                             call.operands[0],
-                             0,
-                             throwOnFailure);
+                return checkSingleOperandType(
+                    callBinding,
+                    callBinding.getCall().operands[0],
+                    0,
+                    throwOnFailure);
             }
 
             public SqlOperandCountRange getOperandCountRange()
@@ -1022,55 +1015,24 @@ public abstract class SqlTypeStrategies
      * These rules are used in union, except, intercept, case and other places.
      *
      * @sql.99 Part 2 Section 9.3
-     *
-     * <p>For example, the expression <code>(500000000000 + 3.0e-3)</code> has
-     * the operands INTEGER and DOUBLE. Its biggest type is double.
      */
     public static final SqlReturnTypeInference
         rtiLeastRestrictive =
         new SqlReturnTypeInference() {
-            public RelDataType getType(
-                SqlValidator validator,
-                SqlValidatorScope scope,
-                RelDataTypeFactory typeFactory,
-                CallOperands callOperands)
+            public RelDataType inferReturnType(
+                SqlOperatorBinding opBinding)
             {
-                // REVIEW jvs 1-Mar-2004: I changed this to
-                // leastRestrictive since that's its purpose (and at least
-                // for Farrago, works better than the old getBiggest code).
-                // But this type inference rule isn't general enough for
-                // numeric types, which use different rules depending on
-                // the operator (e.g. sum length is based on the max of
-                // the arg precisions, while product length is based on
-                // the sum of the arg precisions).
-                return typeFactory.leastRestrictive(
-                            callOperands.collectTypes());
+                return opBinding.getTypeFactory().leastRestrictive(
+                    opBinding.collectOperandTypes());
             }
         };
 
-    /**
-     * Same as {@link #rtiLeastRestrictive} but with INTERVAL as well.
-     */
-    public static final SqlReturnTypeInference
-        rtiBiggest =
-        new SqlTypeTransformCascade(
-            rtiLeastRestrictive, SqlTypeTransforms.toLeastRestrictiveInterval);
-
-    /**
-     * Type-inference strategy similar to {@link #rtiBiggest}, except that the
-     * result is nullable if any of the arguments is nullable.
-     */
-    public static final SqlReturnTypeInference
-        rtiNullableBiggest =
-        new SqlTypeTransformCascade(
-            rtiLeastRestrictive,
-            SqlTypeTransforms.toLeastRestrictiveInterval,
-            SqlTypeTransforms.toNullable);
-
+    // FIXME jvs 4-June-2005:  this is incorrect; multiply/divide
+    // have to take precision and scale into account
     public static final SqlReturnTypeInference
         rtiNullableProduct =
         new SqlReturnTypeInferenceChain(
-            rtiNullableFirstInterval, rtiNullableBiggest);
+            rtiNullableFirstInterval, rtiLeastRestrictive);
 
     /**
      * Type-inference strategy where by the
@@ -1091,56 +1053,57 @@ public abstract class SqlTypeStrategies
             /**
              * @pre SqlTypeUtil.sameNamedType(argTypes[0], (argTypes[1]))
              */
-            public RelDataType getType(
-                SqlValidator validator,
-                SqlValidatorScope scope,
-                RelDataTypeFactory typeFactory,
-                CallOperands callOperands)
+            public RelDataType inferReturnType(
+                SqlOperatorBinding opBinding)
             {
-                if (!(SqlTypeUtil.inCharFamily(callOperands.getType(0))
-                        && SqlTypeUtil.inCharFamily(callOperands.getType(1))))
+                if (!(SqlTypeUtil.inCharFamily(opBinding.getOperandType(0))
+                        && SqlTypeUtil.inCharFamily(
+                            opBinding.getOperandType(1))))
                 {
                     Util.pre(
                         SqlTypeUtil.sameNamedType(
-                            callOperands.getType(0), callOperands.getType(1)),
+                            opBinding.getOperandType(0),
+                            opBinding.getOperandType(1)),
                         "SqlTypeUtil.sameNamedType(argTypes[0], argTypes[1])");
                 }
                 SqlCollation pickedCollation = null;
-                if (SqlTypeUtil.inCharFamily(callOperands.getType(0))) {
+                if (SqlTypeUtil.inCharFamily(opBinding.getOperandType(0))) {
                     if (!SqlTypeUtil.isCharTypeComparable(
-                            callOperands.collectTypes(), 0, 1)) {
+                            opBinding.collectOperandTypes(), 0, 1)) {
                         throw EigenbaseResource.instance()
                             .newTypeNotComparable(
-                                callOperands.getType(0).toString(),
-                                callOperands.getType(1).toString());
+                                opBinding.getOperandType(0).toString(),
+                                opBinding.getOperandType(1).toString());
                     }
 
                     pickedCollation =
                         SqlCollation.getCoercibilityDyadicOperator(
-                            callOperands.getType(0).getCollation(),
-                            callOperands.getType(1).getCollation());
+                            opBinding.getOperandType(0).getCollation(),
+                            opBinding.getOperandType(1).getCollation());
                     assert (null != pickedCollation);
                 }
 
                 RelDataType ret;
-                ret = typeFactory.createSqlType(
-                        callOperands.getType(0).getSqlTypeName(),
-                        callOperands.getType(0).getPrecision()
-                        + callOperands.getType(1).getPrecision());
+                ret = opBinding.getTypeFactory().createSqlType(
+                        opBinding.getOperandType(0).getSqlTypeName(),
+                        opBinding.getOperandType(0).getPrecision()
+                        + opBinding.getOperandType(1).getPrecision());
                 if (null != pickedCollation) {
                     RelDataType pickedType;
-                    if (callOperands.getType(0).getCollation().equals(
+                    if (opBinding.getOperandType(0).getCollation().equals(
                             pickedCollation))
                     {
-                        pickedType = callOperands.getType(0);
-                    } else if (callOperands.getType(1).getCollation().equals(
-                                   pickedCollation))
+                        pickedType = opBinding.getOperandType(0);
+                    } else if (opBinding.getOperandType(
+                                   1).getCollation().equals(
+                                       pickedCollation))
                     {
-                        pickedType = callOperands.getType(1);
+                        pickedType = opBinding.getOperandType(1);
                     } else {
                         throw Util.newInternal("should never come here");
                     }
-                    ret = typeFactory.createTypeWithCharsetAndCollation(
+                    ret = opBinding.getTypeFactory().
+                        createTypeWithCharsetAndCollation(
                             ret,
                             pickedType.getCharset(),
                             pickedType.getCollation());
@@ -1180,21 +1143,12 @@ public abstract class SqlTypeStrategies
         rtiScope =
         new SqlReturnTypeInference()
         {
-            public RelDataType getType(
-                SqlValidator validator,
-                SqlValidatorScope scope,
-                RelDataTypeFactory typeFactory,
-                CallOperands callOperands)
+            public RelDataType inferReturnType(
+                SqlOperatorBinding opBinding)
             {
-                return validator.getNamespace(
-                    (SqlNode) callOperands.getUnderlyingObject()).getRowType();
-            }
-
-            public RelDataType getType(
-                RelDataTypeFactory typeFactory,
-                RelDataType [] argTypes)
-            {
-                throw new UnsupportedOperationException();
+                SqlCallBinding callBinding = (SqlCallBinding) opBinding;
+                return callBinding.getValidator().getNamespace(
+                    callBinding.getCall()).getRowType();
             }
         };
 
@@ -1206,24 +1160,22 @@ public abstract class SqlTypeStrategies
         rtiMultiset =
         new SqlReturnTypeInference()
         {
-            public RelDataType getType(
-                SqlValidator validator,
-                SqlValidatorScope scope,
-                RelDataTypeFactory typeFactory,
-                CallOperands callOperands)
+            public RelDataType inferReturnType(
+                SqlOperatorBinding opBinding)
             {
                 RelDataType[] argElementTypes =
-                    new RelDataType[callOperands.size()];
-                for (int i = 0; i < callOperands.size(); i++) {
+                    new RelDataType[opBinding.getOperandCount()];
+                for (int i = 0; i < opBinding.getOperandCount(); i++) {
                     argElementTypes[i] =
-                        callOperands.getType(i).getComponentType();
+                        opBinding.getOperandType(i).getComponentType();
                 }
 
-                CallOperands.RelDataTypesCallOperands types = new
-                    CallOperands.RelDataTypesCallOperands(argElementTypes);
-                RelDataType biggestElementType = rtiBiggest.
-                    getType(validator, scope,typeFactory, types);
-                return  typeFactory.createMultisetType(biggestElementType, -1);
+                ExplicitOperatorBinding newBinding = new
+                    ExplicitOperatorBinding(opBinding, argElementTypes);
+                RelDataType biggestElementType =
+                    rtiLeastRestrictive.inferReturnType(newBinding);
+                return  opBinding.getTypeFactory().createMultisetType(
+                    biggestElementType, -1);
             }
         };
 
@@ -1257,17 +1209,17 @@ public abstract class SqlTypeStrategies
         new SqlOperandTypeInference()
         {
             public void inferOperandTypes(
-                SqlValidator validator,
-                SqlValidatorScope scope,
-                SqlCall call,
+                SqlCallBinding callBinding,
                 RelDataType returnType,
                 RelDataType [] operandTypes)
             {
-                SqlNode [] operands = call.getOperands();
-                final RelDataType unknownType = validator.getUnknownType();
+                SqlNode [] operands = callBinding.getCall().getOperands();
+                final RelDataType unknownType =
+                    callBinding.getValidator().getUnknownType();
                 RelDataType knownType = unknownType;
                 for (int i = 0; i < operands.length; ++i) {
-                    knownType = validator.deriveType(scope, operands[i]);
+                    knownType = callBinding.getValidator().deriveType(
+                        callBinding.getScope(), operands[i]);
                     if (!knownType.equals(unknownType)) {
                         break;
                     }
@@ -1290,9 +1242,7 @@ public abstract class SqlTypeStrategies
         new SqlOperandTypeInference()
         {
             public void inferOperandTypes(
-                SqlValidator validator,
-                SqlValidatorScope scope,
-                SqlCall call,
+                SqlCallBinding callBinding,
                 RelDataType returnType,
                 RelDataType [] operandTypes)
             {
@@ -1315,13 +1265,11 @@ public abstract class SqlTypeStrategies
         new SqlOperandTypeInference()
         {
             public void inferOperandTypes(
-                SqlValidator validator,
-                SqlValidatorScope scope,
-                SqlCall call,
+                SqlCallBinding callBinding,
                 RelDataType returnType,
                 RelDataType [] operandTypes)
             {
-                RelDataTypeFactory typeFactory = validator.getTypeFactory();
+                RelDataTypeFactory typeFactory = callBinding.getTypeFactory();
                 for (int i = 0; i < operandTypes.length; ++i) {
                     operandTypes[i] =
                         typeFactory.createSqlType(SqlTypeName.Boolean);

@@ -45,17 +45,16 @@ public class SqlInfixOperator extends SqlSpecialOperator
 
     //~ Constructors ----------------------------------------------------------
 
-    // @pre paramTypes != null
     protected SqlInfixOperator(
         String [] names,
         SqlKind kind,
         int precedence,
-        SqlReturnTypeInference typeInference,
-        SqlOperandTypeInference paramTypeInference,
-        SqlOperandTypeChecker argTypeInference)
+        SqlReturnTypeInference returnTypeInference,
+        SqlOperandTypeInference operandTypeInference,
+        SqlOperandTypeChecker operandTypeChecker)
     {
-        super(names[0], kind, precedence, true, typeInference,
-            paramTypeInference, argTypeInference);
+        super(names[0], kind, precedence, true, returnTypeInference,
+            operandTypeInference, operandTypeChecker);
         assert names.length > 1;
         this.names = names;
     }

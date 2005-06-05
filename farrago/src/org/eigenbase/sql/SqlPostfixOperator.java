@@ -38,12 +38,12 @@ public class SqlPostfixOperator extends SqlOperator
         String name,
         SqlKind kind,
         int precedence,
-        SqlReturnTypeInference typeInference,
-        SqlOperandTypeInference paramTypeInference,
-        SqlOperandTypeChecker argInference)
+        SqlReturnTypeInference returnTypeInference,
+        SqlOperandTypeInference operandTypeInference,
+        SqlOperandTypeChecker operandTypeChecker)
     {
-        super(name, kind, precedence * 2, 1, typeInference,
-            paramTypeInference, argInference);
+        super(name, kind, precedence * 2, 1, returnTypeInference,
+            operandTypeInference, operandTypeChecker);
     }
 
     //~ Methods ---------------------------------------------------------------
