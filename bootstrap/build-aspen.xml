@@ -157,6 +157,7 @@ saffron.opt.allowInfiniteCostConverters=true
 		<exec dir="${build.home}/aspen" executable="bash" failonerror="true">
 			<arg value="${build.home}/aspen/initBuild.sh"/>
 			<arg value="${build.home}/farrago"/>
+                        <arg value="--with-tests"/>
 			<env key="ANT_HOME" file="${build.home}/thirdparty/ant"/>
 			<env key="PATH" path="${env.PATH}:${build.home}/thirdparty/ant/bin/ant"/>
 		</exec>
