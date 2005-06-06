@@ -144,6 +144,9 @@ make clean
 make
 
 if ! $skip_tests ; then
+    # Set up Fennel runtime environment
+    . fennelenv.sh `pwd`
+
     make check
 fi
 
