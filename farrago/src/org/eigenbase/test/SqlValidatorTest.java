@@ -301,18 +301,18 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "String literal continued on same line", 1, 14);
     }
 
-    public void testArthimeticOperators() {
+    public void testArithmeticOperators() {
         checkExp("pow(2,3)");
         checkExp("aBs(-2.3e-2)");
         checkExp("MOD(5             ,\t\f\r\n2)");
         checkExp("ln(5.43  )");
         checkExp("log(- -.2  )");
 
-        checkExpFails("mod(5.1, 3)", "(?s).*Cannot apply.*");
-        checkExpFails("mod(2,5.1)", "(?s).*Cannot apply.*");
+        checkExp("mod(5.1, 3)");
+        checkExp("mod(2,5.1)");
     }
 
-    public void testArthimeticOperatorsTypes() {
+    public void testArithmeticOperatorsTypes() {
         checkExpType("pow(2,3)", "DOUBLE");
         checkExpType("aBs(-2.3e-2)", "DOUBLE");
         checkExpType("aBs(5000000000)", "BIGINT");
@@ -323,7 +323,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("log(- -.2  )", "DOUBLE");
     }
 
-    public void testArthimeticOperatorsFails() {
+    public void testArithmeticOperatorsFails() {
         checkExpFails("pow(2,'abc')",
             "(?s).*Cannot apply 'POW' to arguments of type 'POW.<INTEGER>, <CHAR.3.>.*");
         checkExpFails("pow(true,1)",
@@ -461,10 +461,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     public void testConcatFails() {
         checkExpFails("'a'||x'ff'",
             "(?s).*Cannot apply '\\|\\|' to arguments of type '<CHAR.1.> \\|\\| <BINARY.1.>'"
-            + ".*Supported form.s.: '<CHAR> \\|\\| <CHAR>'"
-            + ".*'<VARCHAR> \\|\\| <VARCHAR>'"
-            + ".*'<BINARY> \\|\\| <BINARY>'"
-            + ".*'<VARBINARY> \\|\\| <VARBINARY>'.*");
+            + ".*Supported form.s.: '<STRING> \\|\\| <STRING>.*'");
     }
 
     public void testBetween() {
@@ -589,7 +586,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExp("overlay('ABCdef' placing 'abc' from 1)");
         checkExp("overlay('ABCdef' placing 'abc' from 1 for 3)");
         checkExpFails("overlay('ABCdef' placing 'abc' from '1' for 3)",
-            "(?s).*OVERLAY\\(<CHAR> PLACING <CHAR> FROM <INTEGER>\\).*");
+            "(?s).*OVERLAY\\(<STRING> PLACING <STRING> FROM <INTEGER>\\).*");
         checkExpType("overlay('ABCdef' placing 'abc' from 1 for 3)",
             "CHAR(9)");
 

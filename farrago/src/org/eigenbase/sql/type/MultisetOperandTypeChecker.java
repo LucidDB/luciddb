@@ -47,14 +47,14 @@ public class MultisetOperandTypeChecker implements SqlOperandTypeChecker
     {
         SqlCall call = callBinding.getCall();
         SqlNode op0 = call.operands[0];
-        if(!SqlTypeStrategies.otcNullableMultiset.checkSingleOperandType(
+        if(!SqlTypeStrategies.otcMultiset.checkSingleOperandType(
                callBinding, 
                op0, 0, throwOnFailure)) {
             return false;
         }
 
         SqlNode op1 = call.operands[1];
-        if (!SqlTypeStrategies.otcNullableMultiset.checkSingleOperandType(
+        if (!SqlTypeStrategies.otcMultiset.checkSingleOperandType(
                 callBinding,
                 op1, 0, throwOnFailure)) {
             return false;
@@ -86,9 +86,9 @@ public class MultisetOperandTypeChecker implements SqlOperandTypeChecker
         return SqlOperandCountRange.Two;
     }
 
-    public String getAllowedSignatures(SqlOperator op)
+    public String getAllowedSignatures(SqlOperator op, String opName)
     {
-        return "<MULTISET> "+op.getName()+" <MULTISET>";
+        return "<MULTISET> " + opName + " <MULTISET>";
     }
 }
 

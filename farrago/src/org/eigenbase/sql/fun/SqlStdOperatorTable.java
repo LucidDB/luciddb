@@ -135,7 +135,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlBinaryOperator("AND", SqlKind.And, 14, true,
             SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiBoolean,
-            SqlTypeStrategies.otcNullableBoolX2)
+            SqlTypeStrategies.otcBoolX2)
         {
             public void test(SqlTester tester)
             {
@@ -157,7 +157,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlBinaryOperator("||", SqlKind.Other, 30, true,
             SqlTypeStrategies.rtiNullableVaryingDyadicStringSumPrecision,
             null,
-            SqlTypeStrategies.otcNullableStringSameX2)
+            SqlTypeStrategies.otcStringSameX2)
         {
             public void test(SqlTester tester)
             {
@@ -194,7 +194,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlBinaryOperator("=", SqlKind.Equals, 15, true,
             SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiFirstKnown,
-            SqlTypeStrategies.otcNullableComparableUnordered)
+            SqlTypeStrategies.otcComparableUnorderedX2)
         {
             public void test(SqlTester tester)
             {
@@ -209,7 +209,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlBinaryOperator(">", SqlKind.GreaterThan, 15, true,
             SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiFirstKnown,
-            SqlTypeStrategies.otcNullableComparableOrdered)
+            SqlTypeStrategies.otcComparableOrderedX2)
         {
             public void test(SqlTester tester)
             {
@@ -224,7 +224,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlBinaryOperator("IS DISTINCT FROM", SqlKind.Other, 15, true,
             SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiFirstKnown,
-            SqlTypeStrategies.otcNullableComparableUnordered)
+            SqlTypeStrategies.otcComparableUnorderedX2)
         {
             public void test(SqlTester tester)
             {
@@ -240,7 +240,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlBinaryOperator("IS NOT DISTINCT FROM", SqlKind.Other, 15, true,
             SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiFirstKnown,
-            SqlTypeStrategies.otcNullableComparableUnordered)
+            SqlTypeStrategies.otcComparableUnorderedX2)
         {
             public void test(SqlTester tester)
             {
@@ -255,7 +255,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlBinaryOperator(">=", SqlKind.GreaterThanOrEqual, 15, true,
             SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiFirstKnown,
-            SqlTypeStrategies.otcNullableComparableOrdered)
+            SqlTypeStrategies.otcComparableOrderedX2)
         {
             public void test(SqlTester tester)
             {
@@ -285,7 +285,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlBinaryOperator("<", SqlKind.LessThan, 15, true,
             SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiFirstKnown,
-            SqlTypeStrategies.otcNullableComparableOrdered)
+            SqlTypeStrategies.otcComparableOrderedX2)
         {
             public void test(SqlTester tester)
             {
@@ -300,7 +300,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlBinaryOperator("<=", SqlKind.LessThanOrEqual, 15, true,
             SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiFirstKnown,
-            SqlTypeStrategies.otcNullableComparableOrdered)
+            SqlTypeStrategies.otcComparableOrderedX2)
         {
             public void test(SqlTester tester)
             {
@@ -347,7 +347,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlBinaryOperator("<>", SqlKind.NotEquals, 15, true,
             SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiFirstKnown,
-            SqlTypeStrategies.otcNullableComparableUnordered)
+            SqlTypeStrategies.otcComparableUnorderedX2)
         {
             public void test(SqlTester tester)
             {
@@ -362,7 +362,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlBinaryOperator("OR", SqlKind.Or, 13, true,
             SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiBoolean,
-            SqlTypeStrategies.otcNullableBoolX2)
+            SqlTypeStrategies.otcBoolX2)
         {
             public void test(SqlTester tester)
             {
@@ -413,7 +413,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlBinaryOperator("SUBMULTISET OF", SqlKind.Other, 15, true,
             SqlTypeStrategies.rtiNullableBoolean,
             null,
-            SqlTypeStrategies.otcNullableMultisetX2)
+            SqlTypeStrategies.otcMultisetX2)
         {
             public void test(SqlTester tester)
             {
@@ -460,7 +460,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlPostfixOperator("IS NOT TRUE", SqlKind.Other, 15,
             SqlTypeStrategies.rtiBoolean,
             SqlTypeStrategies.otiBoolean,
-            SqlTypeStrategies.otcNullableBool)
+            SqlTypeStrategies.otcBool)
         {
             public void test(SqlTester tester)
             {
@@ -472,7 +472,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlPostfixOperator("IS TRUE", SqlKind.IsTrue, 15,
             SqlTypeStrategies.rtiBoolean,
             SqlTypeStrategies.otiBoolean,
-            SqlTypeStrategies.otcNullableBool)
+            SqlTypeStrategies.otcBool)
         {
             public void test(SqlTester tester)
             {
@@ -484,7 +484,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlPostfixOperator("IS NOT FALSE", SqlKind.Other, 15,
             SqlTypeStrategies.rtiBoolean,
             SqlTypeStrategies.otiBoolean,
-            SqlTypeStrategies.otcNullableBool)
+            SqlTypeStrategies.otcBool)
         {
             public void test(SqlTester tester)
             {
@@ -496,7 +496,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlPostfixOperator("IS FALSE", SqlKind.IsFalse, 15,
             SqlTypeStrategies.rtiBoolean,
             SqlTypeStrategies.otiBoolean,
-            SqlTypeStrategies.otcNullableBool)
+            SqlTypeStrategies.otcBool)
         {
             public void test(SqlTester tester)
             {
@@ -508,7 +508,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlPostfixOperator("IS NOT UNKNOWN", SqlKind.Other, 15,
             SqlTypeStrategies.rtiBoolean,
             SqlTypeStrategies.otiBoolean,
-            SqlTypeStrategies.otcNullableBool)
+            SqlTypeStrategies.otcBool)
         {
             public void test(SqlTester tester)
             {
@@ -520,7 +520,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlPostfixOperator("IS UNKNOWN", SqlKind.IsNull, 15,
             SqlTypeStrategies.rtiBoolean,
             SqlTypeStrategies.otiBoolean,
-            SqlTypeStrategies.otcNullableBool)
+            SqlTypeStrategies.otcBool)
         {
             public void test(SqlTester tester)
             {
@@ -532,7 +532,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlPostfixOperator("IS A SET", SqlKind.Other, 15,
             SqlTypeStrategies.rtiBoolean,
             null,
-            SqlTypeStrategies.otcNullableMultiset)
+            SqlTypeStrategies.otcMultiset)
         {
             public void test(SqlTester tester)
             {
@@ -558,7 +558,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlPrefixOperator("NOT", SqlKind.Not, 15,
             SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiBoolean,
-            SqlTypeStrategies.otcNullableBool)
+            SqlTypeStrategies.otcBool)
         {
             public void test(SqlTester tester)
             {
@@ -570,7 +570,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlPrefixOperator("-", SqlKind.MinusPrefix, 20,
             SqlTypeStrategies.rtiFirstArgType,
             SqlTypeStrategies.otiReturnType,
-            SqlTypeStrategies.otcNullableNumericOrInterval)
+            SqlTypeStrategies.otcNumericOrInterval)
         {
             public void test(SqlTester tester)
             {
@@ -582,7 +582,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlPrefixOperator("+", SqlKind.PlusPrefix, 20,
             SqlTypeStrategies.rtiFirstArgType,
             SqlTypeStrategies.otiReturnType,
-            SqlTypeStrategies.otcNullableNumericOrInterval)
+            SqlTypeStrategies.otcNumericOrInterval)
         {
             public void test(SqlTester tester)
             {
@@ -857,7 +857,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     public static final SqlFunction charLengthFunc =
         new SqlFunction("CHAR_LENGTH", SqlKind.Function,
             SqlTypeStrategies.rtiNullableInteger, null,
-            SqlTypeStrategies.otcNullableVarchar,
+            SqlTypeStrategies.otcCharString,
             SqlFunctionCategory.Numeric)
         {
             public void test(SqlTester tester)
@@ -869,7 +869,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     public static final SqlFunction characterLengthFunc =
         new SqlFunction("CHARACTER_LENGTH", SqlKind.Function,
             SqlTypeStrategies.rtiNullableInteger, null,
-            SqlTypeStrategies.otcNullableVarchar,
+            SqlTypeStrategies.otcCharString,
             SqlFunctionCategory.Numeric)
         {
             public void test(SqlTester tester)
@@ -881,7 +881,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     public static final SqlFunction upperFunc =
         new SqlFunction("UPPER", SqlKind.Function,
             SqlTypeStrategies.rtiNullableFirstArgType, null,
-            SqlTypeStrategies.otcNullableVarchar,
+            SqlTypeStrategies.otcCharString,
             SqlFunctionCategory.String)
         {
             public void test(SqlTester tester)
@@ -893,7 +893,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     public static final SqlFunction lowerFunc =
         new SqlFunction("LOWER", SqlKind.Function,
             SqlTypeStrategies.rtiNullableFirstArgType, null,
-            SqlTypeStrategies.otcNullableVarchar,
+            SqlTypeStrategies.otcCharString,
             SqlFunctionCategory.String)
         {
             public void test(SqlTester tester)
@@ -905,7 +905,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     public static final SqlFunction initcapFunc =
         new SqlFunction("INITCAP", SqlKind.Function,
             SqlTypeStrategies.rtiNullableFirstArgType, null,
-            SqlTypeStrategies.otcNullableVarchar,
+            SqlTypeStrategies.otcCharString,
             SqlFunctionCategory.String)
         {
             public void test(SqlTester tester)
@@ -937,7 +937,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         // has to take precision into account
         new SqlFunction("MOD", SqlKind.Function,
             SqlTypeStrategies.rtiLeastRestrictive, null,
-            SqlTypeStrategies.otcNullableIntX2,
+            SqlTypeStrategies.otcNumericX2,
             SqlFunctionCategory.Numeric)
         {
             public void test(SqlTester tester)
@@ -971,7 +971,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     public static final SqlFunction absFunc =
         new SqlFunction("ABS", SqlKind.Function,
             SqlTypeStrategies.rtiFirstArgType, null,
-            SqlTypeStrategies.otcNullableNumericOrInterval,
+            SqlTypeStrategies.otcNumericOrInterval,
             SqlFunctionCategory.Numeric)
         {
             public void test(SqlTester tester)
@@ -993,7 +993,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     public static final SqlFunction floorFunc =
         new SqlMonotonicUnaryFunction("FLOOR", SqlKind.Function,
             SqlTypeStrategies.rtiFirstArgType, null,
-            SqlTypeStrategies.otcNullableNumericOrInterval,
+            SqlTypeStrategies.otcNumericOrInterval,
             SqlFunctionCategory.Numeric)
         {
             public void test(SqlTester tester)
@@ -1006,7 +1006,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     public static final SqlFunction ceilFunc =
         new SqlMonotonicUnaryFunction("CEIL", SqlKind.Function,
             SqlTypeStrategies.rtiFirstArgType, null,
-            SqlTypeStrategies.otcNullableNumericOrInterval,
+            SqlTypeStrategies.otcNumericOrInterval,
             SqlFunctionCategory.Numeric)
         {
             public void test(SqlTester tester)
@@ -1147,7 +1147,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      public static final SqlFunction elementFunc =
         new SqlFunction("ELEMENT", SqlKind.Function,
             SqlTypeStrategies.rtiNullableMultisetElementType, null,
-            SqlTypeStrategies.otcNullableMultiset,
+            SqlTypeStrategies.otcMultiset,
             SqlFunctionCategory.System)
         {
             public void test(SqlTester tester)
@@ -1163,7 +1163,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      public static final SqlFunction cardinalityFunc =
         new SqlFunction("CARDINALITY", SqlKind.Function,
             SqlTypeStrategies.rtiNullableInteger, null,
-            SqlTypeStrategies.otcNullableMultiset,
+            SqlTypeStrategies.otcMultiset,
             SqlFunctionCategory.System)
         {
             public void test(SqlTester tester)
@@ -1194,7 +1194,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      public static final SqlFunction fusionFunc =
         new SqlFunction("FUSION", SqlKind.Function,
             SqlTypeStrategies.rtiFirstArgType, null,
-            SqlTypeStrategies.otcNullableMultiset,
+            SqlTypeStrategies.otcMultiset,
             SqlFunctionCategory.System)
         {
             public void test(SqlTester tester)

@@ -203,7 +203,7 @@ public class SqlCall extends SqlNode
             }
             signatureList.add(argType.toString());
         }
-        return operator.getSignature(signatureList);
+        return SqlUtil.getOperatorSignature(operator, signatureList);
 
     }
 

@@ -61,7 +61,7 @@ public class SqlMultisetMemberOfOperator extends SqlBinaryOperator
         SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
-        if (!SqlTypeStrategies.otcNullableMultiset.checkSingleOperandType(
+        if (!SqlTypeStrategies.otcMultiset.checkSingleOperandType(
                 callBinding,
                 callBinding.getCall().operands[1], 0, throwOnFailure))
         {

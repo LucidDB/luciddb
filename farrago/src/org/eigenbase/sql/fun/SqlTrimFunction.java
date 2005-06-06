@@ -51,7 +51,7 @@ public class SqlTrimFunction extends SqlFunction
                 SqlTypeTransforms.toNullable
             ),
             null,
-            SqlTypeStrategies.otcNullableStringSameX2,
+            SqlTypeStrategies.otcStringSameX2,
             SqlFunctionCategory.String);
     }
 
@@ -81,7 +81,7 @@ public class SqlTrimFunction extends SqlFunction
         writer.print(")");
     }
 
-    protected String getSignatureTemplate(final int operandsCount)
+    public String getSignatureTemplate(final int operandsCount)
     {
         switch (operandsCount) {
         case 2:
@@ -117,7 +117,7 @@ public class SqlTrimFunction extends SqlFunction
         SqlValidatorScope scope  = callBinding.getScope();
         
         for (int i = 1; i < 3; i++) {
-            if (!SqlTypeStrategies.otcNullableString.checkSingleOperandType(
+            if (!SqlTypeStrategies.otcString.checkSingleOperandType(
                     callBinding,
                     call.operands[i], 0, throwOnFailure))
             {

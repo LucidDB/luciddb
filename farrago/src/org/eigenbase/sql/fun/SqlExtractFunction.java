@@ -46,7 +46,7 @@ public class SqlExtractFunction extends SqlFunction
     {
         super("EXTRACT", SqlKind.Function,
             SqlTypeStrategies.rtiNullableDouble, null,
-            SqlTypeStrategies.otcNullableIntervalX2,
+            SqlTypeStrategies.otcIntervalSameX2,
             SqlFunctionCategory.System);
     }
     
@@ -55,7 +55,7 @@ public class SqlExtractFunction extends SqlFunction
         SqlOperatorTests.testExtractFunc(tester);
     }
 
-    protected String getSignatureTemplate(int operandsCount)
+    public String getSignatureTemplate(int operandsCount)
     {
         Util.discard(operandsCount);
         return "{0}({1} FROM {2})";

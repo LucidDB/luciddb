@@ -46,7 +46,7 @@ public abstract class SqlAbstractTimeFunction extends SqlFunction
             CompositeOperandTypeChecker.OR, 
             new SqlOperandTypeChecker[] {
                 SqlTypeStrategies.otcPositiveIntLit,
-                SqlTypeStrategies.otcEmpty
+                SqlTypeStrategies.otcNiladic
             });
 
     private final SqlTypeName typeName;

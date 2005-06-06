@@ -53,7 +53,7 @@ public class SqlPrefixOperator extends SqlOperator
         return SqlSyntax.Prefix;
     }
 
-    protected String getSignatureTemplate(final int operandsCount)
+    public String getSignatureTemplate(final int operandsCount)
     {
         Util.discard(operandsCount);
         return "{0}{1}";

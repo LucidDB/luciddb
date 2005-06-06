@@ -74,7 +74,7 @@ public class SqlCastFunction extends SqlFunction
         return ret;
     }
 
-    protected String getSignatureTemplate(final int operandsCount)
+    public String getSignatureTemplate(final int operandsCount)
     {
         switch (operandsCount) {
         case 2:

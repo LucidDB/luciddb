@@ -50,7 +50,7 @@ public class SqlThrowOperator extends SqlInternalOperator
         super("$throw", SqlKind.Other, 1, true,
             SqlTypeStrategies.rtiBoolean,
             null,
-            SqlTypeStrategies.otcNullableVarchar);
+            SqlTypeStrategies.otcCharString);
     }
 
     public void unparse(

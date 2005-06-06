@@ -48,7 +48,7 @@ public class SqlSubstringFunction extends SqlFunction {
             SqlFunctionCategory.String);
     }
 
-    protected String getSignatureTemplate(final int operandsCount)
+    public String getSignatureTemplate(final int operandsCount)
     {
         switch (operandsCount) {
         case 2:
@@ -60,7 +60,7 @@ public class SqlSubstringFunction extends SqlFunction {
         return null;
     }
 
-    public String getAllowedSignatures(String name)
+    public String getAllowedSignatures(String opName)
     {
         StringBuffer ret = new StringBuffer();
         for (int i = 0; i < SqlTypeName.stringTypes.length;i++) {
@@ -70,14 +70,12 @@ public class SqlSubstringFunction extends SqlFunction {
             ArrayList list = new ArrayList();
             list.add(SqlTypeName.stringTypes[i]);
             list.add(SqlTypeName.Integer);
-            ret.append(this.getAnonymousSignature(list));
+            ret.append(SqlUtil.getAliasedSignature(this, opName, list));
             ret.append(NL);
             list.add(SqlTypeName.Integer);
-            ret.append(this.getAnonymousSignature(list));
+            ret.append(SqlUtil.getAliasedSignature(this, opName, list));
         }
-        return replaceAnonymous(
-            ret.toString(),
-            name);
+        return ret.toString();
     }
 
     public boolean checkOperandTypes(
@@ -90,14 +88,14 @@ public class SqlSubstringFunction extends SqlFunction {
         
         int n = call.operands.length;
         assert ((3 == n) || (2 == n));
-        if (!SqlTypeStrategies.otcNullableString.checkSingleOperandType(
+        if (!SqlTypeStrategies.otcString.checkSingleOperandType(
                 callBinding,
                 call.operands[0], 0, throwOnFailure))
         {
             return false;
         }
         if (2 == n) {
-            if (!SqlTypeStrategies.otcNullableNumeric.checkSingleOperandType(
+            if (!SqlTypeStrategies.otcNumeric.checkSingleOperandType(
                     callBinding,
                     call.operands[1], 0, throwOnFailure))
             {
@@ -110,13 +108,13 @@ public class SqlSubstringFunction extends SqlFunction {
                 validator.deriveType(scope, call.operands[2]);
 
             if (SqlTypeUtil.inCharFamily(t1)) {
-                if (!SqlTypeStrategies.otcNullableString.checkSingleOperandType(
+                if (!SqlTypeStrategies.otcString.checkSingleOperandType(
                         callBinding,
                         call.operands[1], 0, throwOnFailure))
                 {
                     return false;
                 }
-                if (!SqlTypeStrategies.otcNullableString.checkSingleOperandType(
+                if (!SqlTypeStrategies.otcString.checkSingleOperandType(
                         callBinding,
                         call.operands[2], 0, throwOnFailure))
                 {
@@ -128,13 +126,13 @@ public class SqlSubstringFunction extends SqlFunction {
                     return false;
                 }
             } else {
-                if (!SqlTypeStrategies.otcNullableNumeric.checkSingleOperandType(
+                if (!SqlTypeStrategies.otcNumeric.checkSingleOperandType(
                         callBinding,
                         call.operands[1], 0, throwOnFailure))
                 {
                     return false;
                 }
-                if (!SqlTypeStrategies.otcNullableNumeric.checkSingleOperandType(
+                if (!SqlTypeStrategies.otcNumeric.checkSingleOperandType(
                         callBinding,
                         call.operands[2], 0, throwOnFailure))
                 {

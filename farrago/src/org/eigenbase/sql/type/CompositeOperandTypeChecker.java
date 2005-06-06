@@ -47,9 +47,11 @@ import java.util.*;
  * CompositeOperandsTypeChecking newCompositeRule =
  *  new CompositeOperandsTypeChecking(
  *    Composition.AND,
- *    new SqlOperandTypeChecker[]{literalRule, numericRule});
+ *    new SqlOperandTypeChecker[]{numericRule, literalRule});
  *
  * </code></pre></blockquote>
+ *
+ *<p>
  *
  * Finally, creating a signature expecting a string for the first
  * operand and a numeric for the second operand can be done by:
@@ -62,8 +64,11 @@ import java.util.*;
  *
  * </code></pre></blockquote>
  *
+ *<p>
+ *
  * For SEQUENCE composition, the rules must be instances of
- * SqlSingleOperandTypeChecker.
+ * SqlSingleOperandTypeChecker, and signature generation is not supported.
+ * For AND composition, only the first rule is used for signature generation.
  *
  * @author Wael Chatila
  * @version $Id$
@@ -71,8 +76,8 @@ import java.util.*;
 public class CompositeOperandTypeChecker
     implements SqlSingleOperandTypeChecker
 {
-    private SqlOperandTypeChecker[] allowedRules;
-    private Composition composition;
+    private final SqlOperandTypeChecker[] allowedRules;
+    private final Composition composition;
 
     public CompositeOperandTypeChecker(
         Composition composition,
@@ -89,7 +94,7 @@ public class CompositeOperandTypeChecker
         return allowedRules;
     }
 
-    public String getAllowedSignatures(SqlOperator op)
+    public String getAllowedSignatures(SqlOperator op, String opName)
     {
         if (composition == SEQUENCE) {
             throw Util.needToImplement("must override getAllowedSignatures");
@@ -100,7 +105,10 @@ public class CompositeOperandTypeChecker
             if (i > 0) {
                 ret.append(SqlOperator.NL);
             }
-            ret.append(rule.getAllowedSignatures(op));
+            ret.append(rule.getAllowedSignatures(op, opName));
+            if (composition == AND) {
+                break;
+            }
         }
         return ret.toString();
     }

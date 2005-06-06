@@ -331,6 +331,10 @@
     <text>Illegal use of ''NULL''</text>
 </exception>
 
+<exception id="130080" name="DynamicParamIllegal" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Illegal use of dynamic parameter</text>
+</exception>
+
 <!-- End of last error section ============================================ -->
 
 </resourceBundle>

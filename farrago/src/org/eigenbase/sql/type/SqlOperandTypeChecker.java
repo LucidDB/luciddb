@@ -55,10 +55,16 @@ public interface SqlOperandTypeChecker
     public SqlOperandCountRange getOperandCountRange();
 
     /**
-     * @return a string describing the allowed formal signatures of a
+     * Returns a string describing the allowed formal signatures of a
      * call, e.g.  "SUBSTR(VARCHAR, INTEGER, INTEGER)".
+     *
+     * @param op the operator being checked
+     *
+     * @param opName name to use for the operator in case of aliasing
+     *
+     * @return generated string
      */
-    public String getAllowedSignatures(SqlOperator op);
+    public String getAllowedSignatures(SqlOperator op, String opName);
 }
 
 // End SqlOperandTypeChecker.java

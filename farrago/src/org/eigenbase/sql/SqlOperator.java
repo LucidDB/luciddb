@@ -34,7 +34,6 @@ import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.Util;
 
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -75,23 +74,6 @@ public abstract class SqlOperator
     //~ Static fields/initializers --------------------------------------------
 
     public static final String NL = System.getProperty("line.separator");
-
-    /**
-     * A call signature gets built with this string. It can then be replaced
-     * with a operator or a function name. This still works in the case the
-     * operator or function name has the same character sequence(s) as this
-     * string.  In the case a user defines a type with a name with a match to
-     * this string there could be a potential problem. To avoid this, all types
-     * are outputted WITH CAPITAL letters, and this string must therefore
-     * consist of at least one lowercase letter.
-     *
-     *<p>
-     *
-     * REVIEW jvs 2-Dec-2004:  what about user-defined types with quoted
-     * names?  They could be all-lowercase.  Do we really have to use such
-     * a hokey mechanism?
-     */
-    private static final String ANONYMOUS_REPLACE = "xyzzy";
 
     //~ Instance fields -------------------------------------------------------
 
@@ -221,21 +203,6 @@ public abstract class SqlOperator
     public int getRightPrec()
     {
         return rightPrec;
-    }
-
-    /**
-     * Returns a template describing how the operator signature is to be built.
-     * E.g for the binary + operator the template looks like "{1} {0} {2}"
-     * {0} is the operator, subsequent numbers are operands.
-     * If null is returned, the default template will be used which
-     * is opname(operand0, operand1, ...)
-     *
-     * @param operandsCount is used with functions that can take a variable
-     * number of operands.
-     */
-    protected String getSignatureTemplate(final int operandsCount)
-    {
-        return null;
     }
 
     /**
@@ -431,7 +398,7 @@ public abstract class SqlOperator
         // Let subclasses know what's up.
         preValidateCall(validator, scope, call);
         
-        // Check that there's the right number of arguments.
+        // Check the number of operands
         checkOperandCount(validator, operandTypeChecker, call);
 
         SqlCallBinding opBinding =
@@ -467,7 +434,7 @@ public abstract class SqlOperator
 
     /**
      * Infers the return type of an invocation of this operator; only
-     * called after the number and types of arguments have already been
+     * called after the number and types of operands have already been
      * validated.  Subclasses must either override this method or
      * supply an instance of {@link SqlReturnTypeInference} to
      * the constructor.
@@ -505,8 +472,7 @@ public abstract class SqlOperator
         SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
-        // Check that all of the arguments are of the right type, or are at
-        // least assignable to the right type.
+        // Check that all of the operands are of the right type.
         if (null == operandTypeChecker) {
             // If you see this you must either give operandTypeChecker a value
             // or override this method.
@@ -535,7 +501,23 @@ public abstract class SqlOperator
     }
 
     /**
-     * Returns a string describing the expected argument types of a call, e.g.
+     * Returns a template describing how the operator signature is to be built.
+     * E.g for the binary + operator the template looks like "{1} {0} {2}"
+     * {0} is the operator, subsequent numbers are operands.
+     *
+     * @param operandsCount is used with functions that can take a variable
+     * number of operands
+     *
+     * @return signature template, or null to indicate that a default
+     * template will suffice
+     */
+    public String getSignatureTemplate(final int operandsCount)
+    {
+        return null;
+    }
+
+    /**
+     * Returns a string describing the expected operand types of a call, e.g.
      * "SUBSTR(VARCHAR, INTEGER, INTEGER)".
      */
     public String getAllowedSignatures()
@@ -544,73 +526,17 @@ public abstract class SqlOperator
     }
 
     /**
-     * Returns a string describing the expected argument types of a call, e.g.
-     * "SUBSTRING(VARCHAR, INTEGER, INTEGER)" where the name SUBSTRING can
-     * be replaced by a specifed name.
+     * Returns a string describing the expected operand types of a call, e.g.
+     * "SUBSTRING(VARCHAR, INTEGER, INTEGER)" where the name (SUBSTRING in this
+     * example) can be replaced by a specifed name.
      */
     public String getAllowedSignatures(String opNameToUse)
     {
         assert (operandTypeChecker != null)
             : "If you see this, assign operandTypeChecker a value "
             + "or override this function";
-        return replaceAnonymous(
-            operandTypeChecker.getAllowedSignatures(this),
-            opNameToUse).trim();
-    }
-
-    /**
-     * Returns the same as {@link #getAnonymousSignature} with the exception
-     * that {@link this.name} is the function/operator signature string
-     * @param list
-     * @return
-     */
-    public String getSignature(final ArrayList list)
-    {
-        return replaceAnonymous(
-            getAnonymousSignature(list),
-            name);
-    }
-
-    /**
-     * Returns a string of all allowed types, permutated with an anonymous
-     * string represented by {@link #ANONYMOUS_REPLACE}.
-     */
-    public String getAnonymousSignature(final ArrayList typeList)
-    {
-        StringBuffer ret = new StringBuffer();
-        String template = getSignatureTemplate(typeList.size());
-        if (null == template) {
-            ret.append("'");
-            ret.append(ANONYMOUS_REPLACE);
-            ret.append("(");
-            for (int i = 0; i < typeList.size(); i++) {
-                if (i > 0) {
-                    ret.append(", ");
-                }
-                ret.append("<" + typeList.get(i).toString().toUpperCase() + ">");
-            }
-            ret.append(")'");
-        } else {
-            Object [] values = new Object[typeList.size() + 1];
-            values[0] = ANONYMOUS_REPLACE;
-            ret.append("'");
-            for (int i = 0; i < typeList.size(); i++) {
-                values[i + 1] = "<" +
-                    typeList.get(i).toString().toUpperCase() + ">";
-            }
-            ret.append(MessageFormat.format(template, values));
-            ret.append("'");
-            assert (typeList.size() + 1) == values.length;
-        }
-
-        return ret.toString();
-    }
-
-    protected String replaceAnonymous(
-        String original,
-        String name)
-    {
-        return original.replaceAll(ANONYMOUS_REPLACE, name);
+        return
+            operandTypeChecker.getAllowedSignatures(this, opNameToUse).trim();
     }
 
     public SqlOperandTypeInference getOperandTypeInference()

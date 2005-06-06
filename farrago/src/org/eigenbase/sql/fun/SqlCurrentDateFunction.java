@@ -45,7 +45,7 @@ public class SqlCurrentDateFunction extends SqlFunction
         super(
             "CURRENT_DATE",
             SqlKind.Function, SqlTypeStrategies.rtiDate, null,
-            SqlTypeStrategies.otcEmpty,
+            SqlTypeStrategies.otcNiladic,
             SqlFunctionCategory.TimeDate);
     }
     

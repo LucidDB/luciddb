@@ -23,8 +23,7 @@
 
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.*;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.parser.SqlParserUtil;
@@ -73,6 +72,15 @@ public class SqlBetweenOperator extends SqlInfixOperator
     /** Ordinal of the 'symmetric' operand. */
     public static final int SYMFLAG_OPERAND = 3;
 
+    /**
+     * Custom operand-type checking strategy.
+     */
+    private static final SqlOperandTypeChecker
+        otcCustom =
+        new ComparableOperandTypeChecker(
+            3,
+            RelDataTypeComparability.All);
+    
     //~ Instance fields -------------------------------------------------------
 
     /** todo: Use a wrapper 'class SqlTempCall(SqlOperator,SqlParserPos)
@@ -91,7 +99,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
         boolean negated)
     {
         super(negated ? notBetweenNames : betweenNames, SqlKind.Between, 15,
-            null, null, null);
+            null, null, otcCustom);
         this.flag = flag;
         this.negated = negated;
     }
@@ -134,68 +142,10 @@ public class SqlBetweenOperator extends SqlInfixOperator
             newOpBinding);
     }
 
-    protected String getSignatureTemplate(final int operandsCount)
+    public String getSignatureTemplate(final int operandsCount)
     {
         Util.discard(operandsCount);
         return "{1} {0} {2} AND {3}";
-    }
-
-    // REVIEW jvs 2-June-2005:  shouldn't BETWEEN allow any
-    // ordered-comparable type?
-
-    public String getAllowedSignatures(String name)
-    {
-        StringBuffer ret = new StringBuffer();
-        ret.append(
-            SqlTypeStrategies.otcNullableNumericX3
-                .getAllowedSignatures(this));
-        ret.append(NL);
-        ret.append(
-            SqlTypeStrategies.otcNullableBinaryX3
-                .getAllowedSignatures(this));
-        ret.append(NL);
-        ret.append(
-            SqlTypeStrategies.otcNullableVarcharX3
-                .getAllowedSignatures(this));
-        return replaceAnonymous(
-            ret.toString(),
-            name);
-    }
-
-    public boolean checkOperandTypes(
-        SqlCallBinding callBinding,
-        boolean throwOnFailure)
-    {
-        SqlCall call = callBinding.getCall();
-        
-        SqlSingleOperandTypeChecker [] rules =
-            new SqlSingleOperandTypeChecker [] {
-                SqlTypeStrategies.otcNullableNumeric,
-                SqlTypeStrategies.otcNullableBinaryX2,
-                SqlTypeStrategies.otcNullableVarchar
-            };
-        int failCount = 0;
-        for (int i = 0; i < rules.length; i++) {
-            SqlSingleOperandTypeChecker rule = rules[i];
-            boolean ok;
-            ok = rule.checkSingleOperandType(callBinding, 
-                call.operands[VALUE_OPERAND], 0, false);
-            ok = ok && rule.checkSingleOperandType(callBinding, 
-                call.operands[LOWER_OPERAND], 0, false);
-            ok = ok && rule.checkSingleOperandType(callBinding, 
-                call.operands[UPPER_OPERAND], 0, false);
-            if (!ok) {
-                failCount++;
-            }
-        }
-
-        if (failCount >= 3) {
-            if (throwOnFailure){
-                throw callBinding.newValidationSignatureError();
-            }
-            return false;
-        }
-        return true;
     }
 
     public SqlOperandCountRange getOperandCountRange()

@@ -31,8 +31,12 @@ import java.util.*;
 
 /**
  * SqlTypeStrategies defines singleton instances of strategy objects for
- * operand type checking (member prefix otc), operand type inference (member
- * prefix oti), and operator return type inference (member prefix rti).
+ * operand type checking (member prefix <code>otc</code>), operand type
+ * inference (member prefix <code>oti</code>), and operator return type
+ * inference (member prefix <code>rti</code>).  For otc members, the convention
+ * <code>otcSometypeX2</code> means two operands of type <code>Sometype</code>.
+ * The convention <code>otcSometypeLit</code> means a literal operand of type
+ * <code>Sometype</code>.
  *
  *<p>
  *
@@ -51,15 +55,15 @@ public abstract class SqlTypeStrategies
     // ----------------------------------------------------------------------
     
     /**
-     * Parameter type-checking strategy for a function which takes no
-     * arguments.
+     * Operand type-checking strategy for an operator which takes no
+     * operands.
      */
     public static final SqlSingleOperandTypeChecker
-        otcEmpty =
-        new ExplicitOperandTypeChecker(new SqlTypeName[][] {});
+        otcNiladic =
+        new FamilyOperandTypeChecker(new SqlTypeFamily [] {});
 
     /**
-     * Parameter type-checking strategy for an operator with
+     * Operand type-checking strategy for an operator with
      * no restrictions on number or type of operands.
      */
     public static final SqlOperandTypeChecker
@@ -78,57 +82,97 @@ public abstract class SqlTypeStrategies
                 return SqlOperandCountRange.Variadic;
             }
 
-            public String getAllowedSignatures(SqlOperator op)
+            public String getAllowedSignatures(SqlOperator op, String opName)
             {
-                return "";
+                return opName + "(...)";
             }
         };
         
-    /**
-     * Parameter type-checking strategy
-     * type must be nullable boolean, nullable boolean.
-     */
     public static final SqlSingleOperandTypeChecker
-        otcNullableBoolX2 =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.booleanNullableTypes, SqlTypeName.booleanNullableTypes
+        otcBool =
+        new FamilyOperandTypeChecker(new SqlTypeFamily [] {
+            SqlTypeFamily.Boolean
+        });
+
+    public static final SqlSingleOperandTypeChecker
+        otcBoolX2 =
+        new FamilyOperandTypeChecker(new SqlTypeFamily [] {
+            SqlTypeFamily.Boolean,
+            SqlTypeFamily.Boolean
+        });
+
+    public static final SqlSingleOperandTypeChecker
+        otcNumeric =
+        new FamilyOperandTypeChecker(new SqlTypeFamily [] {
+            SqlTypeFamily.Numeric });
+
+    public static final SqlSingleOperandTypeChecker
+        otcNumericX2 =
+        new FamilyOperandTypeChecker(new SqlTypeFamily [] {
+            SqlTypeFamily.Numeric,
+            SqlTypeFamily.Numeric
+        });
+
+    public static final SqlSingleOperandTypeChecker
+        otcBinary =
+        new FamilyOperandTypeChecker(new SqlTypeFamily [] {
+            SqlTypeFamily.Binary
+        });
+
+    public static final SqlSingleOperandTypeChecker
+        otcString =
+        new FamilyOperandTypeChecker(new SqlTypeFamily [] {
+            SqlTypeFamily.String
+        });
+
+    public static final SqlSingleOperandTypeChecker
+        otcCharString =
+        new FamilyOperandTypeChecker(new SqlTypeFamily [] {
+            SqlTypeFamily.Character
+        });
+
+    public static final SqlSingleOperandTypeChecker
+        otcDatetime =
+        new FamilyOperandTypeChecker(new SqlTypeFamily [] {
+            SqlTypeFamily.Datetime
+        });
+    
+    public static final SqlSingleOperandTypeChecker
+        otcInterval =
+        new FamilyOperandTypeChecker(new SqlTypeFamily [] {
+            SqlTypeFamily.DatetimeInterval
+        });
+
+    public static final SqlSingleOperandTypeChecker
+        otcMultiset =
+        new FamilyOperandTypeChecker(new SqlTypeFamily [] {
+            SqlTypeFamily.Multiset
         });
 
     /**
-     * Parameter type-checking strategy
-     * type must be numeric.
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcNumeric =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.numericTypes });
-
-    /**
-     * Parameter type-checking strategy
-     * type must be a literal. NULL literal allowed
+     * Operand type-checking strategy where
+     * type must be a literal or NULL.
      */
     public static final SqlSingleOperandTypeChecker
         otcNullableLit =
         new LiteralOperandTypeChecker(true);
 
     /**
-     * Parameter type-checking strategy
-     * type must be a literal, but NOT a NULL literal.
-     * <code>CAST(NULL as ...)</code> is considered to be a NULL literal but not
-     * <code>CAST(CAST(NULL as ...) AS ...)</code>
+     * Operand type-checking strategy
+     * type must be a non-NULL literal.
      */
     public static final SqlSingleOperandTypeChecker
         otcNotNullLit =
         new LiteralOperandTypeChecker(false);
 
     /**
-     * Parameter type-checking strategy
-     * type must be a positive integer literal. Null literal not allowed
+     * Operand type-checking strategy
+     * type must be a positive integer non-NULL literal.
      */
     public static final SqlSingleOperandTypeChecker
         otcPositiveIntLit =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.intTypes
+        new FamilyOperandTypeChecker(new SqlTypeFamily [] {
+            SqlTypeFamily.Integer
         })
         {
             public boolean checkSingleOperandType(
@@ -163,450 +207,103 @@ public abstract class SqlTypeStrategies
         };
 
     /**
-     * Parameter type-checking strategy
-     * type must be numeric, numeric.
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcNumericX2 =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.numericTypes, SqlTypeName.numericTypes
-        });
-
-    /**
-     * Parameter type-checking strategy
-     * type must be integer.
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcInt =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.intTypes
-        });
-
-    /**
-     * Parameter type-checking strategy
-     * type must be integer, integer.
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcIntX2 =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.intTypes, SqlTypeName.intTypes
-        });
-
-    /**
-     * Parameter type-checking strategy
-     * type must be nullable integer, nullable integer. (exact types)
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcNullableIntX2 =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.intNullableTypes, SqlTypeName.intNullableTypes
-        });
-
-    /**
-     * Parameter type-checking strategy
-     * type must be nullable aType, nullable sameFamily
+     * Operand type-checking strategy where two operands
+     * must both be in the same type family.
      */
     public static final SqlOperandTypeChecker
-        otcNullableSameX2 =
-        new SameOperandTypeChecker(
-            new SqlTypeName [][] {
-                { SqlTypeName.Any },
-                { SqlTypeName.Any }
-            });
+        otcSameX2 =
+        new SameOperandTypeChecker(2);
 
     /**
-     * Parameter type-checking strategy
-     * type must be nullable aType, nullable sameFamily, nullable sameFamily
+     * Operand type-checking strategy where three operands
+     * must all be in the same type family.
      */
     public static final SqlOperandTypeChecker
-        otcNullableSameX3 =
-        new SameOperandTypeChecker(
-            new SqlTypeName [][] {
-                { SqlTypeName.Any },
-                { SqlTypeName.Any },
-                { SqlTypeName.Any }
-            });
+        otcSameX3 =
+        new SameOperandTypeChecker(3);
 
     /**
-     * Parameter type-checking strategy where types must allow
+     * Operand type-checking strategy where operand types must allow
      * ordered comparisons.
      */
     public static final SqlOperandTypeChecker
-        otcComparableOrdered =
+        otcComparableOrderedX2 =
         new ComparableOperandTypeChecker(
+            2,
             RelDataTypeComparability.All);
 
     /**
-     * Parameter type-checking strategy where types must allow
+     * Operand type-checking strategy where operand types must allow
      * unordered comparisons.
      */
     public static final SqlOperandTypeChecker
-        otcComparableUnordered =
+        otcComparableUnorderedX2 =
         new ComparableOperandTypeChecker(
+            2,
             RelDataTypeComparability.Unordered);
 
     /**
-     * Parameter type-checking strategy
-     * type must be nullable numeric, nullable numeric.
+     * Operand type-checking strategy where two operands
+     * must both be in the same string type family.
      */
     public static final SqlSingleOperandTypeChecker
-        otcNullableNumericX2 =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.numericNullableTypes, SqlTypeName.numericNullableTypes
-        });
-
-    /**
-     * Parameter type-checking strategy
-     * type must be nullable numeric, nullable numeric, nullabl numeric.
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcNullableNumericX3 =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.numericNullableTypes, SqlTypeName.numericNullableTypes,
-            SqlTypeName.numericNullableTypes
-        });
-
-    /**
-     * Parameter type-checking strategy
-     * type must be nullable binary, nullable binary.
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcNullableBinaryX2 =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.binaryNullableTypes, SqlTypeName.binaryNullableTypes
-        });
-
-    /**
-     * Parameter type-checking strategy
-     * type must be nullable binary, nullable binary, nullable binary.
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcNullableBinaryX3 =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.binaryNullableTypes,
-            SqlTypeName.binaryNullableTypes,
-            SqlTypeName.binaryNullableTypes
-        });
-
-    /**
-     * Parameter type-checking strategy
-     * type must be null | charstring | bitstring | hexstring
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcNullableString =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.stringNullableTypes
-        });
-
-    /**
-     * Parameter type-checking strategy
-     * types must be null | charstring | bitstring | hexstring
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcNullableStringX2 =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.stringNullableTypes, SqlTypeName.stringNullableTypes
-        });
-
-    /**
-     * Parameter type-checking strategy
-     * type must be a varchar literal.
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcVarcharLit =
+        otcStringSameX2 =
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.AND, 
             new SqlOperandTypeChecker[] {
-                new ExplicitOperandTypeChecker(
-                    new SqlTypeName[][]{SqlTypeName.charTypes}),
-                otcNotNullLit
-            });
-
-    /**
-     * Parameter type-checking strategy
-     * type must be a nullable varchar literal.
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcNullableVarcharLit =
-        new CompositeOperandTypeChecker(
-            CompositeOperandTypeChecker.AND, 
-            new SqlOperandTypeChecker[] {
-                new ExplicitOperandTypeChecker(
-                    new SqlTypeName[][]{SqlTypeName.charNullableTypes}),
-                otcNullableLit
-            });
-
-    /**
-     * Parameter type-checking strategy type must be nullable varchar, NOT
-     * nullable varchar literal.  the expression <code>CAST(NULL AS
-     * TYPE)</code> is considered a NULL literal.
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcNullableVarcharNotNullVarcharLit =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.charNullableTypes, SqlTypeName.charTypes
-        })
-        {
-            public boolean checkOperandTypes(
-                SqlCallBinding callBinding, boolean throwOnFailure)
-            {
-                //checking if char types
-                if (!super.checkOperandTypes(callBinding, throwOnFailure)) {
-                    return false;
-                }
-
-                // check that the 2nd argument is a literal
-                return otcNotNullLit.checkSingleOperandType(callBinding,
-                    callBinding.getCall().operands[1], 0, throwOnFailure);
-            }
-        };
-
-    /**
-     * Parameter type-checking strategy
-     * types must be null | charstring | bitstring | hexstring
-     * AND types must be identical to eachother
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcNullableStringSameX2 =
-        new CompositeOperandTypeChecker(
-            CompositeOperandTypeChecker.AND, 
-            new SqlOperandTypeChecker[] {
-                new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-                    SqlTypeName.stringNullableTypes,
-                    SqlTypeName.stringNullableTypes
+                new FamilyOperandTypeChecker(new SqlTypeFamily [] {
+                    SqlTypeFamily.String,
+                    SqlTypeFamily.String
                 }),
-                otcNullableSameX2
+                otcSameX2
             });
 
     /**
-     * Parameter type-checking strategy
-     * types must be null | charstring | bitstring | hexstring
-     * AND types must be identical to eachother
+     * Operand type-checking strategy where three operands
+     * must all be in the same string type family.
      */
     public static final SqlSingleOperandTypeChecker
-        otcNullableStringSameX3 =
+        otcStringSameX3 =
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.AND, 
             new SqlOperandTypeChecker[] {
-                new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-                    SqlTypeName.stringNullableTypes,
-                    SqlTypeName.stringNullableTypes,
-                    SqlTypeName.stringNullableTypes
+                new FamilyOperandTypeChecker(new SqlTypeFamily [] {
+                    SqlTypeFamily.String,
+                    SqlTypeFamily.String,
+                    SqlTypeFamily.String
+
                 }),
-                otcNullableSameX3
+                otcSameX3
             });
 
-    /**
-     * Parameter type-checking strategy
-     * types must be null | charstring | bitstring | hexstring
-     */
     public static final SqlSingleOperandTypeChecker
-        otcNullableStringX3 =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.stringNullableTypes, SqlTypeName.stringNullableTypes,
-            SqlTypeName.stringNullableTypes
+        otcStringX2Int =
+        new FamilyOperandTypeChecker(new SqlTypeFamily [] {
+            SqlTypeFamily.String,
+            SqlTypeFamily.String,
+            SqlTypeFamily.Integer
         });
 
-    /**
-     * Parameter type-checking strategy
-     * types must be
-     * null | charstring | bitstring | hexstring
-     * null | int
-     */
     public static final SqlSingleOperandTypeChecker
-        otcNullableStringInt =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.stringNullableTypes, SqlTypeName.intNullableTypes
+        otcStringX2IntX2 =
+        new FamilyOperandTypeChecker(new SqlTypeFamily [] {
+            SqlTypeFamily.String,
+            SqlTypeFamily.String,
+            SqlTypeFamily.Integer,
+            SqlTypeFamily.Integer
         });
 
-    /**
-     * Parameter type-checking strategy
-     * types must be
-     * null | charstring | bitstring | hexstring
-     * null | int
-     * null | int
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcNullableStringIntX2 =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.stringTypes, SqlTypeName.intNullableTypes,
-            SqlTypeName.intNullableTypes
-        });
-
-    /**
-     * Parameter type-checking strategy
-     * 2 first types must be null | charstring | bitstring | hexstring
-     * 3 type must be integer
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcNullableStringX2NotNullInt =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.stringTypes, SqlTypeName.stringTypes,
-            SqlTypeName.intTypes
-        });
-
-    /**
-     * Parameter type-checking strategy
-     * 2 first types must be null | charstring | bitstring | hexstring
-     * 3&4 type must be integer
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcNullableStringX2NotNullIntX2 =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.stringTypes, SqlTypeName.stringTypes,
-            SqlTypeName.intTypes,
-            SqlTypeName.intTypes
-        });
-
-    /**
-     * Parameter type-checking strategy
-     * type must be nullable numeric
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcNullableNumeric =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.numericNullableTypes
-        });
-
-    /**
-     * Parameter type-checking strategy
-     * types must be varchar, int, int
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcVarcharIntX2 =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.charTypes, SqlTypeName.intTypes, SqlTypeName.intTypes
-        });
-
-    /**
-     * Parameter type-checking strategy
-     * types must be [nullable] varchar, [nullable] int, [nullable] int
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcNullableVarcharIntX2 =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.charNullableTypes, SqlTypeName.intNullableTypes,
-            SqlTypeName.intNullableTypes
-        });
-
-    /**
-     * Parameter type-checking strategy
-     * types must be not nullable varchar, not nullable int
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcVarcharInt =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.charTypes, SqlTypeName.intTypes
-        });
-
-    /**
-     * Parameter type-checking strategy
-     * types must be [nullable] varchar, [nullable] varchar,
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcNullableVarcharX2 =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.charNullableTypes, SqlTypeName.charNullableTypes
-        });
-
-    /**
-     * Parameter type-checking strategy
-     * types must be [nullable] varchar, [nullable] varchar, [nullable] varchar
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcNullableVarcharX3 =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.charNullableTypes, SqlTypeName.charNullableTypes,
-            SqlTypeName.charNullableTypes
-        });
-
-    /**
-     * Parameter type-checking strategy
-     * types must be nullable boolean
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcNullableBool =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.booleanNullableTypes
-        });
-
-    /**
-     * Parameter type-checking strategy
-     * types can be any,any
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcAnyX2 =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            { SqlTypeName.Any },
-            { SqlTypeName.Any }
-        });
-
-    /**
-     * Parameter type-checking strategy
-     * types can be any
-     */
     public static final SqlSingleOperandTypeChecker
         otcAny =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            { SqlTypeName.Any }
+        new FamilyOperandTypeChecker(new SqlTypeFamily [] {
+            SqlTypeFamily.Any
         });
 
-    /**
-     * Parameter type-checking strategy
-     * types must be varchar,varchar
-     */
     public static final SqlSingleOperandTypeChecker
-        otcVarcharX2 =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.charTypes, SqlTypeName.charTypes
-        });
-
-    /**
-     * Parameter type-checking strategy
-     * types must be nullable varchar
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcNullableVarchar =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.charNullableTypes
-        });
-
-    /**
-     * Parameter type-checking strategy
-     * type must be
-     * positive integer literal
-     * OR varchar literal
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcPositiveIntOrVarcharLit =
-        new CompositeOperandTypeChecker(
-            CompositeOperandTypeChecker.OR,
-            new SqlOperandTypeChecker [] {
-                otcPositiveIntLit, otcVarcharLit
-        });
-
-
-    /**
-     * Parameter type-checking strategy
-     * type must a nullable datetime type
-     * A datetime type is either a TIME, DATE or TIMESTAMP,
-     * TIME WITH TIME ZONE, TIMESTAMP WITH TIMEZONE
-     * NOTE: timezone types not yet implemented
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcNullableDatetime =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.datetimeNullableTypes
-        });
-    
-    /**
-     *  Parameter type checking for the datetime type but
-     * not nullable.
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcDatetime =
-        new ExplicitOperandTypeChecker(new SqlTypeName[][]{
-            SqlTypeName.datetimeTypes
+        otcAnyX2 =
+        new FamilyOperandTypeChecker(new SqlTypeFamily [] {
+            SqlTypeFamily.Any ,
+            SqlTypeFamily.Any
         });
 
     /**
@@ -614,76 +311,46 @@ public abstract class SqlTypeStrategies
      * type must a nullable time interval, nullable time interval
      */
     public static final SqlSingleOperandTypeChecker
-        otcNullableDatetimeX2 =
+        otcIntervalSameX2 =
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.AND, 
             new SqlOperandTypeChecker[] {
-                new ExplicitOperandTypeChecker(
-                    new SqlTypeName[][]{
-                        SqlTypeName.datetimeNullableTypes,
-                        SqlTypeName.datetimeNullableTypes}),
-                otcNullableSameX2
-            });
-
-    /**
-     * Parameter type-checking strategy
-     * type must a nullable time interval
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcNullableInterval =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.timeIntervalNullableTypes
-        });
-
-    /**
-     * Parameter type-checking strategy
-     * type must a nullable time interval, nullable time interval
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcNullableIntervalX2 =
-        new CompositeOperandTypeChecker(
-            CompositeOperandTypeChecker.AND, 
-            new SqlOperandTypeChecker[] {
-                new ExplicitOperandTypeChecker(
-                    new SqlTypeName[][]{
-                        SqlTypeName.timeIntervalNullableTypes,
-                        SqlTypeName.timeIntervalNullableTypes}),
-                otcNullableSameX2
+                new FamilyOperandTypeChecker(
+                    new SqlTypeFamily [] {
+                        SqlTypeFamily.DatetimeInterval,
+                        SqlTypeFamily.DatetimeInterval
+                    }),
+                otcSameX2
             });
 
     public static final SqlSingleOperandTypeChecker
-        otcNullableNumericInterval =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.numericNullableTypes,
-            SqlTypeName.timeIntervalNullableTypes
+        otcNumericInterval =
+        new FamilyOperandTypeChecker(new SqlTypeFamily [] {
+            SqlTypeFamily.Numeric,
+            SqlTypeFamily.DatetimeInterval
         });
 
     public static final SqlSingleOperandTypeChecker
-        otcNullableIntervalNumeric =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.timeIntervalNullableTypes,
-            SqlTypeName.numericNullableTypes
+        otcIntervalNumeric =
+        new FamilyOperandTypeChecker(new SqlTypeFamily [] {
+            SqlTypeFamily.DatetimeInterval,
+            SqlTypeFamily.Numeric
         });
 
     public static final SqlSingleOperandTypeChecker
-        otcNullableDatetimeInterval =
-        new CompositeOperandTypeChecker(
-            CompositeOperandTypeChecker.AND, 
-            new SqlOperandTypeChecker[] {
-                 otcNullableDatetime,
-                 otcNullableInterval
-            });
+        otcDatetimeInterval =
+        new FamilyOperandTypeChecker(new SqlTypeFamily [] {
+            SqlTypeFamily.Datetime,
+            SqlTypeFamily.DatetimeInterval
+        });
 
-    /**
-     * Type checking strategy for the "+" operator
-     */
     public static final SqlSingleOperandTypeChecker
         otcPlusOperator =
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.OR,
             new SqlOperandTypeChecker[] {
-                  otcNullableNumericX2,
-                  otcNullableIntervalX2
+                  otcNumericX2,
+                  otcIntervalSameX2
                   //todo datetime+interval checking missing
                   //todo interval+datetime checking missing
             });
@@ -696,9 +363,9 @@ public abstract class SqlTypeStrategies
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.OR,
             new SqlOperandTypeChecker[] {
-                  otcNullableNumericX2,
-                  otcNullableIntervalNumeric,
-                  otcNullableNumericInterval
+                  otcNumericX2,
+                  otcIntervalNumeric,
+                  otcNumericInterval
             });
 
     /**
@@ -709,8 +376,8 @@ public abstract class SqlTypeStrategies
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.OR,
             new SqlOperandTypeChecker[] {
-                  otcNullableNumericX2,
-                  otcNullableIntervalNumeric
+                  otcNumericX2,
+                  otcIntervalNumeric
             });
 
     public static final SqlSingleOperandTypeChecker
@@ -718,17 +385,17 @@ public abstract class SqlTypeStrategies
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.OR,
             new SqlOperandTypeChecker[] {
-                  otcNullableNumericX2,
-                  otcNullableIntervalX2
-//todo                , otcNullableDatetimeInterval
+                  otcNumericX2,
+                  otcIntervalSameX2,
+                  otcDatetimeInterval // TODO:  compatibility check
             });
 
     public static final SqlSingleOperandTypeChecker
         otcMinusDateOperator =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.datetimeNullableTypes,
-            SqlTypeName.datetimeNullableTypes,
-            SqlTypeName.timeIntervalNullableTypes
+        new FamilyOperandTypeChecker(new SqlTypeFamily [] {
+            SqlTypeFamily.Datetime,
+            SqlTypeFamily.Datetime,
+            SqlTypeFamily.DatetimeInterval
         }) {
             public boolean checkOperandTypes(
                 SqlCallBinding callBinding,
@@ -737,7 +404,7 @@ public abstract class SqlTypeStrategies
                 if (!super.checkOperandTypes(callBinding, throwOnFailure)) {
                     return false;
                 }
-                if (!otcNullableSameX2.checkOperandTypes(
+                if (!otcSameX2.checkOperandTypes(
                         callBinding, throwOnFailure))
                 {
                     return false;
@@ -747,50 +414,16 @@ public abstract class SqlTypeStrategies
         };
 
     public static final SqlSingleOperandTypeChecker
-        otcNullableNumericOrInterval =
+        otcNumericOrInterval =
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.OR,
             new SqlOperandTypeChecker[] {
-                  otcNullableNumeric,
-                  otcNullableInterval
+                  otcNumeric,
+                  otcInterval
             });
 
-    /**
-     * Parameter type-checking strategy where types can be nullable and must be
-     * comparable to each other with unordered comparisons allowed.
-     */
     public static final SqlSingleOperandTypeChecker
-        otcNullableComparableUnordered =
-        new CompositeOperandTypeChecker(
-            CompositeOperandTypeChecker.AND, 
-            new SqlOperandTypeChecker [] {
-                otcNullableSameX2, otcComparableUnordered
-        });
-    
-    /**
-     * Parameter type-checking strategy where types can be nullable and must be
-     * comparable to each other with ordered comparisons allowed.
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcNullableComparableOrdered =
-        new CompositeOperandTypeChecker(
-            CompositeOperandTypeChecker.AND, 
-            new SqlOperandTypeChecker [] {
-                otcNullableSameX2, otcComparableOrdered
-        });
-    
-    /**
-     * Parameter type-checking strategy
-     * type must a nullable multiset
-     */
-    public static final SqlSingleOperandTypeChecker
-        otcNullableMultiset =
-        new ExplicitOperandTypeChecker(new SqlTypeName [][] {
-            SqlTypeName.multisetNullableTypes
-        });
-
-    public static final SqlSingleOperandTypeChecker
-        otcNullableRecordMultiset =
+        otcRecordMultiset =
         new SqlSingleOperandTypeChecker()
         {
             public boolean checkSingleOperandType(
@@ -835,32 +468,25 @@ public abstract class SqlTypeStrategies
                 return SqlOperandCountRange.One;
             }
 
-            public String getAllowedSignatures(SqlOperator op)
+            public String getAllowedSignatures(SqlOperator op, String opName)
             {
                 return "UNNEST(<MULTISET>)";
             }
         };
 
     public static final SqlSingleOperandTypeChecker
-        otcNullableMultisetOrRecordTypeMultiset =
+        otcMultisetOrRecordTypeMultiset =
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.OR,
             new SqlOperandTypeChecker[]{
-                otcNullableMultiset,otcNullableRecordMultiset});
+                otcMultiset,otcRecordMultiset});
 
-    /**
-     * Parameter type-checking strategy
-     * types must be
-     * [nullable] Multiset, [nullable] Multiset
-     * and the two types must have the same element type
-     * @see {@link MultisetSqlType#getComponentType}
-     */
     public static final SqlOperandTypeChecker
-        otcNullableMultisetX2 =
+        otcMultisetX2 =
         new MultisetOperandTypeChecker();
 
     /**
-     * Parameter type-checking strategy for a set operator (UNION, INTERSECT,
+     * Operand type-checking strategy for a set operator (UNION, INTERSECT,
      * EXCEPT).
      */
     public static final SqlOperandTypeChecker

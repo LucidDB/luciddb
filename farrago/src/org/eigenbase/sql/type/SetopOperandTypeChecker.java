@@ -111,9 +111,9 @@ public class SetopOperandTypeChecker implements SqlOperandTypeChecker
         return SqlOperandCountRange.Two;
     }
 
-    public String getAllowedSignatures(SqlOperator op)
+    public String getAllowedSignatures(SqlOperator op, String opName)
     {
-        return "<UNION>"; // todo: Wael, please review.
+        return "{0} " + opName + " {1}"; // todo: Wael, please review.
     }
 }
 

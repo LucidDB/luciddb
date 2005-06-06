@@ -44,8 +44,8 @@ public class SqlOverlayFunction extends SqlFunction
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.OR, 
             new SqlOperandTypeChecker[] {
-                SqlTypeStrategies.otcNullableStringX2NotNullInt,
-                SqlTypeStrategies.otcNullableStringX2NotNullIntX2
+                SqlTypeStrategies.otcStringX2Int,
+                SqlTypeStrategies.otcStringX2IntX2
             });
     
     public SqlOverlayFunction()
@@ -76,7 +76,7 @@ public class SqlOverlayFunction extends SqlFunction
         writer.print(")");
     }
 
-    protected String getSignatureTemplate(final int operandsCount)
+    public String getSignatureTemplate(final int operandsCount)
     {
         switch (operandsCount) {
         case 3:

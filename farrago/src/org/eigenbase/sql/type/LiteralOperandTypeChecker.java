@@ -91,7 +91,7 @@ public class LiteralOperandTypeChecker implements SqlSingleOperandTypeChecker
         return SqlOperandCountRange.One;
     }
 
-    public String getAllowedSignatures(SqlOperator op)
+    public String getAllowedSignatures(SqlOperator op, String opName)
     {
         return "<LITERAL>";
     }

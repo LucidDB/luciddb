@@ -71,9 +71,7 @@ public class SqlLikeOperator extends SqlSpecialOperator
         // "a like (b like c escape d)".
         super(name, kind, 15, false, SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiFirstKnown,
-
-        /** this is not correct in general */
-        SqlTypeStrategies.otcNullableStringX3);
+            SqlTypeStrategies.otcStringSameX3);
         this.negated = negated;
     }
 
@@ -95,13 +93,13 @@ public class SqlLikeOperator extends SqlSpecialOperator
     {
         switch (callBinding.getOperandCount()) {
         case 2:
-            if (!SqlTypeStrategies.otcNullableStringSameX2.
+            if (!SqlTypeStrategies.otcStringSameX2.
                 checkOperandTypes(callBinding, throwOnFailure)) {
                 return false;
             }
             break;
         case 3:
-            if (!SqlTypeStrategies.otcNullableStringSameX3.
+            if (!SqlTypeStrategies.otcStringSameX3.
                 checkOperandTypes(callBinding, throwOnFailure)) {
                 return false;
             }

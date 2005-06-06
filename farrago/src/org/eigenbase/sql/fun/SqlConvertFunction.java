@@ -61,7 +61,7 @@ public abstract class SqlConvertFunction extends SqlFunction
         writer.print(")");
     }
 
-    protected String getSignatureTemplate(final int operandsCount)
+    public String getSignatureTemplate(final int operandsCount)
     {
         switch (operandsCount) {
         case 2:

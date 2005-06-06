@@ -156,7 +156,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
         throws SQLException
     {
         PreparedStatement stmt = connection.prepareStatement(
-            "select name, cplus(1, jplus(2, cplus(3, 4))) from sales.emps where name like ?");
+            "select name, cplus(1, jplus(2, cplus(3, 4))) from sales.emps where name like cast(? as varchar(128))");
         try {
             stmt.setString(1, "F%");
 
@@ -183,7 +183,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
         throws SQLException
     {
         PreparedStatement stmt = connection.prepareStatement(
-            "values cplus(1, jplus(100, cplus(50, ?)))");
+            "values cplus(1, jplus(100, cplus(50, cast(? as int))))");
         try {
             stmt.setInt(1, 13);
 
@@ -225,7 +225,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
                 new SqlFunction("JPLUS", SqlKind.Function,
                     SqlTypeStrategies.rtiLeastRestrictive,
                     SqlTypeStrategies.otiFirstKnown,
-                    SqlTypeStrategies.otcNullableNumericX2,
+                    SqlTypeStrategies.otcNumericX2,
                     SqlFunctionCategory.Numeric);
             opTab.register(jplusFunc);
 
@@ -236,7 +236,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
             SqlFunction jrowFunc =
                 new SqlFunction("JROW", SqlKind.Function, null,
                     SqlTypeStrategies.otiFirstKnown,
-                    SqlTypeStrategies.otcNullableNumericX2,
+                    SqlTypeStrategies.otcNumericX2,
                     SqlFunctionCategory.Numeric)
                 {
                     public RelDataType inferReturnType(
@@ -372,7 +372,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
                 new SqlFunction("CPLUS", SqlKind.Function,
                                 SqlTypeStrategies.rtiLeastRestrictive,
                                 SqlTypeStrategies.otiFirstKnown,
-                                SqlTypeStrategies.otcNullableNumericX2,
+                                SqlTypeStrategies.otcNumericX2,
                                 SqlFunctionCategory.Numeric);
             opTab.register(cppFunc);
 

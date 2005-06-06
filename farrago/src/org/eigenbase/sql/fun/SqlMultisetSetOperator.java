@@ -50,7 +50,7 @@ public class SqlMultisetSetOperator extends SqlBinaryOperator
         super(name, SqlKind.Other, prec, true,
             SqlTypeStrategies.rtiNullableMultiset,
             SqlTypeStrategies.otiFirstKnown,
-            SqlTypeStrategies.otcNullableMultisetX2);
+            SqlTypeStrategies.otcMultisetX2);
         this.all = all;
     }
 }

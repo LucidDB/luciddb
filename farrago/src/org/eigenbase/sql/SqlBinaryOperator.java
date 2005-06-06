@@ -54,7 +54,7 @@ public class SqlBinaryOperator extends SqlOperator
         return SqlSyntax.Binary;
     }
 
-    protected String getSignatureTemplate(final int operandsCount)
+    public String getSignatureTemplate(final int operandsCount)
     {
         Util.discard(operandsCount);
 

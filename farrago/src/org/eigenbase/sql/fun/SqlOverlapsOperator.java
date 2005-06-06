@@ -74,7 +74,8 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
         return SqlOperandCountRange.Four;
     }
 
-    protected String getSignatureTemplate(int operandsCount) {
+    public String getSignatureTemplate(int operandsCount)
+    {
         if (4 == operandsCount) {
             return "({1}, {2}) {0} ({3}, {4})";
         }
@@ -82,15 +83,15 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
         return null;
     }
 
-    public String getAllowedSignatures(String name)
+    public String getAllowedSignatures(String opName)
     {
         final String d = "DATETIME";
         final String i = "INTERVAL";
         String[] typeNames = {
-            d, d
-            ,d, i
-            ,i, d
-            ,i, i
+            d, d,
+            d, i,
+            i, d,
+            i, i
         };
 
         StringBuffer ret = new StringBuffer();
@@ -103,9 +104,9 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
             list.add(typeNames[y]);
             list.add(d);
             list.add(typeNames[y+1]);
-            ret.append(this.getAnonymousSignature(list));
+            ret.append(SqlUtil.getAliasedSignature(this, opName, list));
         }
-        return replaceAnonymous(ret.toString(), name);
+        return ret.toString();
     }
 
     public boolean checkOperandTypes(
@@ -115,11 +116,11 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
         SqlCall call = callBinding.getCall();
         SqlValidator validator = callBinding.getValidator();
         SqlValidatorScope scope = callBinding.getScope();
-        if (!SqlTypeStrategies.otcNullableDatetime.checkSingleOperandType(
+        if (!SqlTypeStrategies.otcDatetime.checkSingleOperandType(
             callBinding, call.operands[0], 0, throwOnFailure)) {
             return false;
         }
-        if (!SqlTypeStrategies.otcNullableDatetime.checkSingleOperandType(
+        if (!SqlTypeStrategies.otcDatetime.checkSingleOperandType(
             callBinding, call.operands[2], 0, throwOnFailure)) {
             return false;
         }

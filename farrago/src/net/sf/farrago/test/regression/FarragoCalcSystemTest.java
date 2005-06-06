@@ -21,10 +21,7 @@
 */
 package net.sf.farrago.test.regression;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -199,7 +196,7 @@ public class FarragoCalcSystemTest extends FarragoTestCase
             SqlNode [] operands = new SqlNode[n.intValue()];
             SqlOperandTypeChecker allowedTypes =
                 op.getOperandTypeChecker();
-            SqlTypeName[][] rules = findRules(allowedTypes);
+            SqlTypeFamily [] families = findRules(allowedTypes);
 
             if (null == allowedTypes) {
                 throw Util.needToImplement("Need to add to exclude list"
@@ -207,10 +204,9 @@ public class FarragoCalcSystemTest extends FarragoTestCase
             }
 
             for (int i = 0; i < n.intValue(); i++) {
-                SqlTypeName typeName = rules[i][0];
-                if (typeName.equals(SqlTypeName.Null)) {
-                    typeName = rules[i][1];
-                } else if (typeName.equals(SqlTypeName.Any)) {
+                SqlTypeName typeName = (SqlTypeName)
+                    families[i].getTypeNames().iterator().next();
+                if (typeName.equals(SqlTypeName.Any)) {
                     typeName = SqlTypeName.Boolean;
                 }
 
@@ -252,17 +248,21 @@ public class FarragoCalcSystemTest extends FarragoTestCase
     }
 
     // REVIEW jvs 17-Mar-2005:  This whole thing is really hokey.
-    private static SqlTypeName [][] findRules(SqlOperandTypeChecker otc)
+    private static SqlTypeFamily [] findRules(SqlOperandTypeChecker otc)
     {
-        SqlTypeName[][] rules;
         if (otc instanceof CompositeOperandTypeChecker) {
             SqlOperandTypeChecker rule =
                 ((CompositeOperandTypeChecker) otc).getRules()[0];
             return findRules(rule);
-        } else if (otc instanceof ExplicitOperandTypeChecker) {
-            return ((ExplicitOperandTypeChecker) otc).getTypes();
+        } else if (otc instanceof FamilyOperandTypeChecker) {
+            return ((FamilyOperandTypeChecker) otc).getFamilies();
         } else {
-            throw Util.needToImplement(otc);
+            Integer nOperands = (Integer)
+                otc.getOperandCountRange().getAllowedList().get(0);
+            SqlTypeFamily [] families =
+                new SqlTypeFamily[nOperands.intValue()];
+            Arrays.fill(families, SqlTypeFamily.Boolean);
+            return families;
         }
     }
 

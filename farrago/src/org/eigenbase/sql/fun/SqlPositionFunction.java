@@ -44,7 +44,7 @@ public class SqlPositionFunction extends SqlFunction
     {
         super("POSITION", SqlKind.Function,
             SqlTypeStrategies.rtiNullableInteger, null,
-            SqlTypeStrategies.otcNullableStringX2,
+            SqlTypeStrategies.otcStringSameX2,
             SqlFunctionCategory.Numeric);
     }
     
@@ -62,7 +62,7 @@ public class SqlPositionFunction extends SqlFunction
         writer.print(")");
     }
 
-    protected String getSignatureTemplate(final int operandsCount)
+    public String getSignatureTemplate(final int operandsCount)
     {
         switch (operandsCount) {
         case 2:

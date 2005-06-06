@@ -37,40 +37,36 @@ import java.util.*;
  * @version $Id$
  */
 public class ComparableOperandTypeChecker
-    extends ExplicitOperandTypeChecker
+    extends SameOperandTypeChecker
 {
     private final RelDataTypeComparability requiredComparability;
         
     public ComparableOperandTypeChecker(
+        int nOperands,
         RelDataTypeComparability requiredComparability)
     {
-        super(
-            new SqlTypeName [][] {
-                { SqlTypeName.Any },
-                { SqlTypeName.Any }
-            });
+        super(nOperands);
         this.requiredComparability = requiredComparability;
     }
 
     public boolean checkOperandTypes(
         SqlCallBinding callBinding, boolean throwOnFailure)
     {
-        assert (callBinding.getOperandCount() == 2);
-        SqlCall call = callBinding.getCall();
-        RelDataType type1 =
-            callBinding.getValidator().deriveType(
-                callBinding.getScope(),
-                call.operands[0]);
-        RelDataType type2 =
-            callBinding.getValidator().deriveType(
-                callBinding.getScope(),
-                call.operands[1]);
         boolean b = true;
-        if (!checkType(callBinding, throwOnFailure, type1)) {
-            b = false;
+        for (int i = 0; i < nOperands; ++i) {
+            RelDataType type =
+                callBinding.getValidator().deriveType(
+                    callBinding.getScope(),
+                    callBinding.getCall().operands[i]);
+            if (!checkType(callBinding, throwOnFailure, type)) {
+                b = false;
+            }
         }
-        if (!checkType(callBinding, throwOnFailure, type2)) {
-            b = false;
+        if (b) {
+            b = super.checkOperandTypes(callBinding, false);
+            if (!b && throwOnFailure) {
+                throw callBinding.newValidationSignatureError();
+            }
         }
         return b;
     }
@@ -91,6 +87,14 @@ public class ComparableOperandTypeChecker
         } else {
             return true;
         }
+    }
+
+    // implement SqlOperandTypeChecker
+    public String getAllowedSignatures(SqlOperator op, String opName)
+    {
+        String [] array = new String[nOperands];
+        Arrays.fill(array, "COMPARABLE_TYPE");
+        return SqlUtil.getAliasedSignature(op, opName, Arrays.asList(array));
     }
 }
 

@@ -53,7 +53,7 @@ public class SqlPostfixOperator extends SqlOperator
         return SqlSyntax.Postfix;
     }
 
-    protected String getSignatureTemplate(final int operandsCount)
+    public String getSignatureTemplate(final int operandsCount)
     {
         Util.discard(operandsCount);
         return "{1} {0}";

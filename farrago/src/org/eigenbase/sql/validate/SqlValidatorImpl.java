@@ -864,7 +864,6 @@ public class SqlValidatorImpl implements SqlValidator
 
         if (operand instanceof SqlCall) {
             SqlCall call = (SqlCall) operand;
-            checkForIllegalNull(call);
             SqlNode[] operands = call.getOperands();
             // special case for AS:  never try to derive type for alias
             if (operand.isA(SqlKind.As)) {
@@ -1138,7 +1137,8 @@ public class SqlValidatorImpl implements SqlValidator
         AssignableOperandTypeChecker typeChecking =
             new AssignableOperandTypeChecker(argTypes);
         String signature =
-            typeChecking.getAllowedSignatures(unresolvedFunction);
+            typeChecking.getAllowedSignatures(
+                unresolvedFunction, unresolvedFunction.getName());
         throw newValidationError(
             call,
             EigenbaseResource.instance().newValidatorUnknownFunction(
@@ -1154,12 +1154,16 @@ public class SqlValidatorImpl implements SqlValidator
         if (newScope != null) {
             scope = newScope;
         }
-        if (node instanceof SqlDynamicParam
-            || SqlUtil.isNullLiteral(node, false))
-        {
+        boolean isNullLiteral = SqlUtil.isNullLiteral(node, false);
+        if ((node instanceof SqlDynamicParam) || isNullLiteral) {
             if (inferredType.equals(unknownType)) {
-                throw newValidationError(node,
-                    EigenbaseResource.instance().newNullIllegal());
+                if (isNullLiteral) {
+                    throw newValidationError(node,
+                        EigenbaseResource.instance().newNullIllegal());
+                } else {
+                    throw newValidationError(node,
+                        EigenbaseResource.instance().newDynamicParamIllegal());
+                }
             }
 
             // REVIEW:  should dynamic parameter types always be nullable?
@@ -1242,27 +1246,6 @@ public class SqlValidatorImpl implements SqlValidator
             }
             for (int i = 0; i < operands.length; ++i) {
                 inferUnknownTypes(operandTypes[i], scope, operands[i]);
-            }
-
-            checkForIllegalNull(call);
-        }
-    }
-
-    // TODO jvs 17-Jan-2005:  this should probably become part
-    // the operand-checking interface instead for proper extensibility
-    protected void checkForIllegalNull(SqlCall call)
-    {
-        if (call.isA(SqlKind.Case)
-            || call.isA(SqlKind.Cast)
-            || call.isA(SqlKind.Row)
-            || call.isA(SqlKind.Select)) {
-            return;
-        }
-        for (int i = 0; i < call.operands.length; i++) {
-            final SqlNode operand = call.operands[i];
-            if (SqlUtil.isNullLiteral(operand, false)) {
-                throw newValidationError(operand,
-                    EigenbaseResource.instance().newNullIllegal());
             }
         }
     }
@@ -1969,11 +1952,11 @@ public class SqlValidatorImpl implements SqlValidator
             return;
         }
         final SqlValidatorScope havingScope = getSelectScope(select);
-        having.validate(this, havingScope);
         inferUnknownTypes(
             booleanType,
             havingScope,
             having);
+        having.validate(this, havingScope);
         final RelDataType type = deriveType(havingScope, having);
         if (!SqlTypeUtil.inBooleanFamily(type)) {
             throw newValidationError(having,
@@ -2147,10 +2130,6 @@ public class SqlValidatorImpl implements SqlValidator
 
         final SqlNode [] operands = node.getOperands();
         for (int i = 0; i < operands.length; i++) {
-            SqlNode operand = operands[i];
-            operand.validate(this, scope);
-        }
-        for (int i = 0; i < operands.length; i++) {
             if (!operands[i].isA(SqlKind.Row)) {
                 throw Util.needToImplement(
                     "Values function where operands are scalars");
@@ -2166,6 +2145,10 @@ public class SqlValidatorImpl implements SqlValidator
                 targetRowType,
                 scope,
                 rowConstructor);
+        }
+        for (int i = 0; i < operands.length; i++) {
+            SqlNode operand = operands[i];
+            operand.validate(this, scope);
         }
 
         // validate that all row types have the same number of columns

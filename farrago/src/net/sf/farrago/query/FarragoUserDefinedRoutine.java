@@ -113,7 +113,7 @@ public class FarragoUserDefinedRoutine
     {
         if (!hasDefinition()) {
             throw FarragoResource.instance().newValidatorConstructorUndefined(
-                getAllowedSignatures(getName()));
+                getAllowedSignatures());
         }
         super.preValidateCall(validator, scope, call);
     }
