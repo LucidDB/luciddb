@@ -962,6 +962,7 @@ public class SqlToRelConverter
                 ProjectRel.Flags.Boxed);
 
             UncollectRel uncollectRel = new UncollectRel(cluster, childRel);
+	    leaves.add(uncollectRel);
             bb.setRoot(uncollectRel);
             return;
         default:
@@ -1573,7 +1574,16 @@ public class SqlToRelConverter
                 for (int jOperand = 0; jOperand < projectList.size(); jOperand++) {
                     SqlNode operand = (SqlNode) projectList.get(jOperand);
                     selectList[jOperand] = convertExpression(bb, operand);
-                    fieldNames[jOperand] = validator.deriveAlias(operand, jOperand);
+
+                    // REVIEW angel 5-June-2005: Use deriveAliasFromOrdinal instead
+                    // of deriveAlias to match field names from SqlRowOperator.
+                    // Otherwise,  get error
+                    // Type 'RecordType(INTEGER EMPNO)' has no field 'EXPR$0'
+                    // when doing
+                    // select*from unnest(select multiset[empno] from sales.emps);
+
+                    fieldNames[jOperand] = SqlUtil.deriveAliasFromOrdinal(jOperand);
+                    // fieldNames[jOperand] = validator.deriveAlias(operand, jOperand);
                 }
                 joinList.set(iRel, new ProjectRel(
                     cluster, new OneRowRel(cluster), selectList,

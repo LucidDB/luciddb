@@ -386,9 +386,9 @@ public class SqlToRelConverterTest extends TestCase
             "    TableAccessRel(table=[[EMP]])" + NL + 
             "    CollectRel" + NL + 
             "      UnionRel(all=[true])" + NL + 
-            "        ProjectRel(DEPTNO=[$cor0.DEPTNO])" + NL + 
+            "        ProjectRel(EXPR$0=[$cor0.DEPTNO])" + NL + 
             "          OneRowRel" + NL + 
-            "        ProjectRel(SAL=[$cor1.SAL])" + NL + 
+            "        ProjectRel(EXPR$0=[$cor1.SAL])" + NL + 
             "          OneRowRel" + NL);
     }
 
@@ -439,7 +439,7 @@ public class SqlToRelConverterTest extends TestCase
             "          TableAccessRel(table=[[DEPT]])" + NL + 
             "          CollectRel" + NL + 
             "            UnionRel(all=[true])" + NL + 
-            "              ProjectRel(DEPTNO=[$cor0.DEPTNO])" + NL + 
+            "              ProjectRel(EXPR$0=[$cor0.DEPTNO])" + NL + 
             "                OneRowRel" + NL);
     }
 
