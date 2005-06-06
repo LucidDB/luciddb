@@ -24,11 +24,12 @@
 # an existing one after syncing changes from source control.
 
 usage() {
-    echo "Usage:  initBuild.sh --with[out]-fennel [--append-init-properties] [--with[out]-optimization] [--with[out]-debug] [--skip-thirdparty] [--with[out]-tests]"
+    echo "Usage:  initBuild.sh --with[out]-fennel [--append-init-properties] [--with[out]-optimization] [--with[out]-debug] [--skip-fennel[-thirdparty]-build] [--with[out]-tests]"
 }
 
 fennel_flag_missing=true
-fennel_disabled=
+fennel_disabled=missing
+fennel_skip_build=false
 append_init_build_props=false
 skip_tests=true
 
@@ -37,14 +38,19 @@ shopt -sq extglob
 
 while [ -n "$1" ]; do
     case $1 in
-        --with-fennel) fennel_disabled=false; fennel_flag_missing=false;;
-        --without-fennel) fennel_disabled=true; fennel_flag_missing=false;;
+        --with-fennel) fennel_disabled=false;;
+        --without-fennel) fennel_disabled=true;;
         --append-init-properties) append_init_build_props=true;;
         --with?(out)-optimization) OPT_FLAG="$1";;
         --with?(out)-debug) DEBUG_FLAG="$1";;
-        --skip-thirdparty) THIRDPARTY_FLAG="$1";;
-        --with-tests) skip_tests=false; TEST_FLAG="$1";;
-        --without-tests) skip_tests=true; TEST_FLAG="$1";;
+        --skip-fennel-build) fennel_skip_build=true;;
+        --skip-fennel-thirdparty-build) FENNEL_BUILD_FLAG="$1";;
+        --with-tests)
+            skip_tests=false;
+            TEST_FLAG="$1";;
+        --without-tests)
+            skip_tests=true;
+            TEST_FLAG="$1";;
 
         *) usage; exit -1;;
     esac
@@ -54,7 +60,7 @@ done
 shopt -uq extglob
 
 # Check required options
-if $fennel_flag_missing; then
+if [ $fennel_disabled == "missing" ] ; then
     usage
     exit -1;
 fi
@@ -89,11 +95,17 @@ cd ../thirdparty
 make farrago optional
 
 if $fennel_disabled ; then
-    echo Skipping Fennel build
+    echo Fennel disabled.
 else
     cd ../fennel
-    ./initBuild.sh --with-farrago $OPT_FLAG $DEBUG_FLAG $THIRDPARTY_FLAG $TEST_FLAG
+    if $fennel_skip_build; then
+        echo Fennel enabled. Skipping Fennel build.
+    else
+        ./initBuild.sh --with-farrago $OPT_FLAG $DEBUG_FLAG \
+            $FENNEL_BUILD_FLAG $TEST_FLAG
+    fi
 
+    echo "Sourcing Fennel Runtime Environment" 
     # Set up Fennel runtime environment
     . fennelenv.sh `pwd`
 fi
