@@ -25,19 +25,19 @@ package org.eigenbase.sql.validate;
 import org.eigenbase.util.EnumeratedValues;
 
 /**
- * An enumeration of moniker types. used in {@link Moniker}
+ * An enumeration of moniker types. used in {@link SqlMoniker}
  *
  * @author tleung
  * @since May 24, 2005
  * @version $Id$
  **/
-public class MonikerType extends EnumeratedValues.BasicValue {
-    public static final MonikerType Column = new MonikerType("Column", 0);
-    public static final MonikerType Table = new MonikerType("Table", 1);
-    public static final MonikerType View = new MonikerType("View", 2);
-    public static final MonikerType Schema = new MonikerType("Schema", 3);
-    public static final MonikerType Repository = new MonikerType("Repository", 4);
-    public MonikerType(String name, int ordinal) {
+public class SqlMonikerType extends EnumeratedValues.BasicValue {
+    public static final SqlMonikerType Column = new SqlMonikerType("Column", 0);
+    public static final SqlMonikerType Table = new SqlMonikerType("Table", 1);
+    public static final SqlMonikerType View = new SqlMonikerType("View", 2);
+    public static final SqlMonikerType Schema = new SqlMonikerType("Schema", 3);
+    public static final SqlMonikerType Repository = new SqlMonikerType("Repository", 4);
+    public SqlMonikerType(String name, int ordinal) {
         super(name, ordinal, name);
     }
 }

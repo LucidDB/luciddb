@@ -26,29 +26,29 @@ import org.eigenbase.sql.SqlIdentifier;
 import org.eigenbase.util.Util;
 
 /**
- * An implementation of {@link Moniker} that encapsulates the normalized name
+ * An implementation of {@link SqlMoniker} that encapsulates the normalized name
  * information of a {@link SqlIdentifier}.
  *
  * @author tleung
  * @since May 24, 2005
  * @version $Id$
  **/
-public class IdentifierMoniker implements Moniker
+public class SqlIdentifierMoniker implements SqlMoniker
 {   
     private final SqlIdentifier id;
 
     /**
-     * Creates an IdentifierMoniker.
+     * Creates an SqlIdentifierMoniker.
      */
-    public IdentifierMoniker(SqlIdentifier id)
+    public SqlIdentifierMoniker(SqlIdentifier id)
     {
         Util.pre(id != null, "id != null");
         this.id = id;
     }
 
-    public MonikerType getType()
+    public SqlMonikerType getType()
     {
-        return MonikerType.Column;
+        return SqlMonikerType.Column;
     }
 
     public String[] getFullyQualifiedNames()
@@ -67,4 +67,4 @@ public class IdentifierMoniker implements Moniker
     }
 }
 
-// End IdentifierMoniker.java
+// End SqlIdentifierMoniker.java

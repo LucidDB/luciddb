@@ -31,12 +31,12 @@ import org.eigenbase.sql.SqlIdentifier;
  * @since May 24, 2005
  * @version $Id$
  **/
-public interface Moniker
+public interface SqlMoniker
 {
     /**
      * Returns the type of object referred to by this moniker. Never null.
      */
-    MonikerType getType();
+    SqlMonikerType getType();
 
     /**
      * Returns the array of component names.
@@ -49,4 +49,4 @@ public interface Moniker
     SqlIdentifier toIdentifier();
 }
 
-// End Moniker.java
+// End SqlMoniker.java

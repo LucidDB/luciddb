@@ -27,21 +27,21 @@ import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.util.Util;
 
 /**
- * A generic implementation of {@link Moniker}.
+ * A generic implementation of {@link SqlMoniker}.
  *
  * @author tleung
  * @since May 31, 2005
  * @version $Id$
  **/
-public class MonikerImpl implements Moniker
+public class SqlMonikerImpl implements SqlMoniker
 {   
     private final String[] names;
-    private final MonikerType type;
+    private final SqlMonikerType type;
 
     /**
      * Creates a moniker with an array of names.
      */
-    public MonikerImpl(String[] names, MonikerType type)
+    public SqlMonikerImpl(String[] names, SqlMonikerType type)
     {
         Util.pre(names != null, "names != null");
         Util.pre(type != null, "type != null");
@@ -55,12 +55,12 @@ public class MonikerImpl implements Moniker
     /**
      * Creates a moniker with a single name.
      */
-    public MonikerImpl(String name, MonikerType type)
+    public SqlMonikerImpl(String name, SqlMonikerType type)
     {
         this(new String[] {name}, type);
     }
 
-    public MonikerType getType()
+    public SqlMonikerType getType()
     {
         return type;
     }
@@ -87,4 +87,4 @@ public class MonikerImpl implements Moniker
     }
 }
 
-// End MonikerImpl.java
+// End SqlMonikerImpl.java
