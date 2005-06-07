@@ -607,7 +607,7 @@ public class SqlToOpenjavaConverter
             return null;
         }
 
-        public Moniker [] getAllSchemaObjectNames(String [] names)
+        public SqlMoniker [] getAllSchemaObjectNames(String [] names)
         {
             throw new UnsupportedOperationException();
         }
