@@ -272,20 +272,20 @@ public class SqlValidatorImpl implements SqlValidator
      *
      * @param topNode top of expression tree in which to lookup completion hints
      *
-     * @param pp indicates the position in the sql statement we want to get
+     * @param pos indicates the position in the sql statement we want to get
      * completion hints for. For example,
      * "select a.ename, b.deptno from sales.emp a join sales.dept b
      * "on a.deptno=b.deptno where empno=1";
-     * setting pp to 'Line 1, Column 17' returns all the possible column names
+     * setting pos to 'Line 1, Column 17' returns all the possible column names
      * that can be selected from sales.dept table
-     * setting pp to 'Line 1, Column 31' returns all the possible table names
+     * setting pos to 'Line 1, Column 31' returns all the possible table names
      * in 'sales' schema
      *
-     * @return an array of {@link Moniker} (sql identifiers) that can fill in at
+     * @return an array of {@link SqlMoniker} (sql identifiers) that can fill in at
      * the indicated position
      *
      */
-    public Moniker[] lookupHints(SqlNode topNode, SqlParserPos pp)
+    public SqlMoniker[] lookupHints(SqlNode topNode, SqlParserPos pos)
     {
         SqlValidatorScope scope = new EmptyScope(this);
         try {
@@ -297,7 +297,7 @@ public class SqlValidatorImpl implements SqlValidator
             if (namespace == null) {
                 throw Util.newInternal("Not a query: " + outermostNode);
             }
-            return namespace.lookupHints(pp);
+            return namespace.lookupHints(pos);
         }
         finally {
             outermostNode = null;
@@ -311,7 +311,7 @@ public class SqlValidatorImpl implements SqlValidator
      *
      * @param topNode top of expression tree in which to lookup the qualfied
      * name for the SqlIdentifier
-     * @param pp indicates the position of the {@link SqlIdentifier} in the sql
+     * @param pos indicates the position of the {@link SqlIdentifier} in the sql
      * statement we want to get the qualified name for
      *
      * @return a string of the fully qualified name of the {@link SqlIdentifier}
@@ -319,20 +319,20 @@ public class SqlValidatorImpl implements SqlValidator
      * return an empty string
      *
      */
-    public Moniker lookupQualifiedName(SqlNode topNode, SqlParserPos pp)
+    public SqlMoniker lookupQualifiedName(SqlNode topNode, SqlParserPos pos)
     {
         SqlIdentifier id = null;
-        Object o = sqlids.get(pp.toString());
+        Object o = sqlids.get(pos.toString());
         if (o != null) {
             id = (SqlIdentifier) o;
         }
         SqlValidatorScope scope = null;
-        o = idscopes.get(pp.toString());
+        o = idscopes.get(pos.toString());
         if (o != null) {
             scope = (SqlValidatorScope) o;
         }
         if (id != null && scope != null) {
-            return new IdentifierMoniker(scope.fullyQualify(id));
+            return new SqlIdentifierMoniker(scope.fullyQualify(id));
         } else {
             return null;
         }
@@ -343,34 +343,34 @@ public class SqlValidatorImpl implements SqlValidator
      * that has been parsed into an expression tree
      *
      * @param select the Select node of the parsed expression tree
-     * @param pp indicates the position in the sql statement we want to get
+     * @param pos indicates the position in the sql statement we want to get
      * completion hints for
      *
-     * @return an array list of {@link Moniker} (sql identifiers) that can fill 
+     * @return an array list of {@link SqlMoniker} (sql identifiers) that can fill 
      * in at the indicated position
      *
      */
-    Moniker[] lookupSelectHints(SqlSelect select, SqlParserPos pp)
+    SqlMoniker[] lookupSelectHints(SqlSelect select, SqlParserPos pos)
     {
-        SqlIdentifier dummyId =  (SqlIdentifier) sqlids.get(pp.toString());
+        SqlIdentifier dummyId =  (SqlIdentifier) sqlids.get(pos.toString());
         SqlValidatorScope dummyScope = (SqlValidatorScope)
-            idscopes.get(pp.toString());
+            idscopes.get(pos.toString());
         if (dummyId == null || dummyScope == null) {
             SqlNode fromNode = select.getFrom();
             final SqlValidatorScope fromScope = getFromScope(select);
-            return lookupFromHints(fromNode, fromScope, pp);
+            return lookupFromHints(fromNode, fromScope, pos);
         } else {
             return dummyId.findValidOptions(this, dummyScope);
         }
     }
 
-    private Moniker[] lookupFromHints(SqlNode node,
-        SqlValidatorScope scope, SqlParserPos pp)
+    private SqlMoniker[] lookupFromHints(SqlNode node,
+        SqlValidatorScope scope, SqlParserPos pos)
     {
         final SqlValidatorNamespace ns = getNamespace(node);
         if (ns instanceof IdentifierNamespace) {
             IdentifierNamespace idns = (IdentifierNamespace)ns;
-            if (pp.toString().equals(
+            if (pos.toString().equals(
                     idns.getId().getParserPosition().toString()))
             {
                 return catalogReader.getAllSchemaObjectNames(
@@ -379,22 +379,22 @@ public class SqlValidatorImpl implements SqlValidator
         }
         switch (node.getKind().getOrdinal()) {
         case SqlKind.JoinORDINAL:
-            return lookupJoinHints((SqlJoin) node, scope, pp);
+            return lookupJoinHints((SqlJoin) node, scope, pos);
         default:
-            return getNamespace(node).lookupHints(pp);
+            return getNamespace(node).lookupHints(pos);
         }
     }
 
-    private Moniker[] lookupJoinHints(SqlJoin join, SqlValidatorScope scope, SqlParserPos pp)
+    private SqlMoniker[] lookupJoinHints(SqlJoin join, SqlValidatorScope scope, SqlParserPos pos)
     {
         SqlNode left = join.getLeft();
         SqlNode right = join.getRight();
         SqlNode condition = join.getCondition();
-        Moniker [] result = lookupFromHints(left, scope, pp);
+        SqlMoniker [] result = lookupFromHints(left, scope, pos);
         if (result.length > 0) {
             return result;
         }
-        result = lookupFromHints(right, scope, pp);
+        result = lookupFromHints(right, scope, pos);
         if (result.length > 0) {
             return result;
         }
@@ -402,10 +402,10 @@ public class SqlValidatorImpl implements SqlValidator
         final SqlValidatorScope joinScope = (SqlValidatorScope) scopes.get(join);
         switch (conditionType.getOrdinal()) {
         case SqlJoinOperator.ConditionType.On_ORDINAL:
-            return condition.findValidOptions(this, joinScope, pp);
+            return condition.findValidOptions(this, joinScope, pos);
         default:
         // not supporting lookup hints for other types such as 'Using' yet
-            return Util.emptyMonikerArray;
+            return Util.emptySqlMonikerArray;
         }
     }
 
@@ -2350,9 +2350,9 @@ public class SqlValidatorImpl implements SqlValidator
             {
             }
 
-            public Moniker[] lookupHints(SqlParserPos pp)
+            public SqlMoniker[] lookupHints(SqlParserPos pos)
             {
-                return Util.emptyMonikerArray;
+                return Util.emptySqlMonikerArray;
             }
 
             public SqlNode getNode()

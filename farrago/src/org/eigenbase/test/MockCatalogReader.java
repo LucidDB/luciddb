@@ -26,9 +26,9 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.validate.SqlValidatorCatalogReader;
 import org.eigenbase.sql.validate.SqlValidatorTable;
-import org.eigenbase.sql.validate.Moniker;
-import org.eigenbase.sql.validate.MonikerImpl;
-import org.eigenbase.sql.validate.MonikerType;
+import org.eigenbase.sql.validate.SqlMoniker;
+import org.eigenbase.sql.validate.SqlMonikerImpl;
+import org.eigenbase.sql.validate.SqlMonikerType;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.Util;
@@ -174,7 +174,7 @@ public class MockCatalogReader implements SqlValidatorCatalogReader
         }
     }
 
-    public Moniker [] getAllSchemaObjectNames(String [] names)
+    public SqlMoniker [] getAllSchemaObjectNames(String [] names)
     {
         if (names.length == 1) {
             // looking for both schema and object names
@@ -183,14 +183,14 @@ public class MockCatalogReader implements SqlValidatorCatalogReader
             ArrayList result = new ArrayList();
             while (i.hasNext()) {
                 MockSchema schema = (MockSchema) i.next();
-                result.add(new MonikerImpl(schema.name, MonikerType.Schema));
+                result.add(new SqlMonikerImpl(schema.name, SqlMonikerType.Schema));
                 Iterator j = schema.tableNames.iterator();
                 while (j.hasNext()) {
-                    result.add(new MonikerImpl(
-                        (String)j.next(), MonikerType.Table));
+                    result.add(new SqlMonikerImpl(
+                        (String)j.next(), SqlMonikerType.Table));
                 }
             }
-            return (Moniker [])result.toArray(Util.emptyMonikerArray);
+            return (SqlMoniker [])result.toArray(Util.emptySqlMonikerArray);
         }
         else if (names.length == 2) {
             // looking for table names under the schema
@@ -198,13 +198,13 @@ public class MockCatalogReader implements SqlValidatorCatalogReader
             ArrayList result = new ArrayList();
             Iterator j = schema.tableNames.iterator();
             while (j.hasNext()) {
-                result.add(new MonikerImpl(
-                    (String)j.next(), MonikerType.Table));
+                result.add(new SqlMonikerImpl(
+                    (String)j.next(), SqlMonikerType.Table));
             }
-            return (Moniker [])result.toArray(Util.emptyMonikerArray);
+            return (SqlMoniker [])result.toArray(Util.emptySqlMonikerArray);
         }
         else {
-            return Util.emptyMonikerArray;
+            return Util.emptySqlMonikerArray;
         }
     }
 

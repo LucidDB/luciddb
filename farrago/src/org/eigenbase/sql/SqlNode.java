@@ -27,7 +27,7 @@ import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.util.SqlVisitor;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.Moniker;
+import org.eigenbase.sql.validate.SqlMoniker;
 import org.eigenbase.util.*;
 
 import java.io.PrintWriter;
@@ -192,21 +192,21 @@ public abstract class SqlNode implements Cloneable
 
     /**
      * Lists all the valid alternatives for this node if the parse position
-     * of the node matches that of pp.  Only implemented now for
+     * of the node matches that of pos.  Only implemented now for
      * SqlCall and SqlOperator.
      *
      * @param validator Validator
      * @param scope Validation scope
-     * @param pp SqlParserPos indicating the cursor position at which
+     * @param pos SqlParserPos indicating the cursor position at which
      * competion hints are requested for
-     * @return a {@link Moniker} array of valid options
+     * @return a {@link SqlMoniker} array of valid options
      */
-    public Moniker[] findValidOptions(
+    public SqlMoniker[] findValidOptions(
         SqlValidator validator,
         SqlValidatorScope scope,
-        SqlParserPos pp)
+        SqlParserPos pos)
     {
-        return Util.emptyMonikerArray;
+        return Util.emptySqlMonikerArray;
     }
 
     /**
@@ -215,13 +215,13 @@ public abstract class SqlNode implements Cloneable
      *
      * @param validator Validator
      * @param scope Validation scope
-     * @return a {@link Moniker} array of valid options
+     * @return a {@link SqlMoniker} array of valid options
      */
-    public Moniker[] findValidOptions(
+    public SqlMoniker[] findValidOptions(
         SqlValidator validator,
         SqlValidatorScope scope)
     {
-        return Util.emptyMonikerArray;
+        return Util.emptySqlMonikerArray;
     }
 
     /**

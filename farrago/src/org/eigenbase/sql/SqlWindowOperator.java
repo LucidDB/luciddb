@@ -27,7 +27,7 @@ import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.type.SqlTypeFamily;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.Moniker;
+import org.eigenbase.sql.validate.SqlMoniker;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.Util;
 import org.eigenbase.resource.EigenbaseResource;
@@ -323,7 +323,7 @@ public class SqlWindowOperator extends SqlOperator {
         List columnNames = new ArrayList();
         scope.findAllColumnNames(null,columnNames);
         for (int i = 0; i < columnNames.size(); i++) {
-            Moniker columnName = (Moniker) columnNames.get(i);
+            SqlMoniker columnName = (SqlMoniker) columnNames.get(i);
             SqlIdentifier columnId = columnName.toIdentifier();
             if (scope.isMonotonic(columnId)) {
                 return true;

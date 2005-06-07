@@ -83,7 +83,7 @@ public interface SqlValidatorScope
     String findQualifyingTableName(String columnName, SqlNode ctx);
 
     /**
-     * Collects the {@link Moniker}s of all possible columns in this scope.
+     * Collects the {@link SqlMoniker}s of all possible columns in this scope.
      *
      * @param parentObjName if not null, used to resolve a namespace
      * from which to query the column names
@@ -92,7 +92,7 @@ public interface SqlValidatorScope
     void findAllColumnNames(String parentObjName, List result);
 
     /**
-     * Collects the {@link Moniker}s of all possible tables in this scope.
+     * Collects the {@link SqlMoniker}s of all possible tables in this scope.
      *
      * @param result an array list of strings to add the result to
      */

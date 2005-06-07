@@ -23,7 +23,7 @@ package com.disruptivetech.farrago.sql.advise;
 
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlIdentifier;
-import org.eigenbase.sql.validate.Moniker;
+import org.eigenbase.sql.validate.SqlMoniker;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.validate.SqlValidatorImpl;
 import org.eigenbase.sql.parser.SqlParseException;
@@ -74,7 +74,7 @@ public class SqlAdvisor
      * @param cursor to indicate the 0-based cursor position in the query at
      * which completion hints need to be retrieved.
      */
-    public Moniker[] getCompletionHints(String sql, int cursor)
+    public SqlMoniker[] getCompletionHints(String sql, int cursor)
         throws SqlParseException
     {
         String simpleSql = simplifySql(sql, cursor);
@@ -83,8 +83,8 @@ public class SqlAdvisor
         if (idxAdj >=0 ) {
             idx = idxAdj;
         }
-        SqlParserPos pp = new SqlParserPos(1, idx+1);
-        return getCompletionHints(simpleSql, pp);
+        SqlParserPos pos = new SqlParserPos(1, idx+1);
+        return getCompletionHints(simpleSql, pos);
     }
 
     /**
@@ -93,20 +93,20 @@ public class SqlAdvisor
      *
      * @param sql A syntatically correct sql statement for which to retrieve
      * completion hints
-     * @param pp to indicate the line and column position in the query at which
+     * @param pos to indicate the line and column position in the query at which
      * completion hints need to be retrieved.  For example,
      * "select a.ename, b.deptno from sales.emp a join sales.dept b
      * "on a.deptno=b.deptno where empno=1";
-     * setting pp to 'Line 1, Column 17' returns all the possible column names
+     * setting pos to 'Line 1, Column 17' returns all the possible column names
      * that can be selected from sales.dept table
-     * setting pp to 'Line 1, Column 31' returns all the possible table names
+     * setting pos to 'Line 1, Column 31' returns all the possible table names
      * in 'sales' schema
      *
-     * @return an array of hints ({@link Moniker}) that can fill in at
+     * @return an array of hints ({@link SqlMoniker}) that can fill in at
      * the indicated position
      *
      */
-    public Moniker[] getCompletionHints(String sql, SqlParserPos pp)
+    public SqlMoniker[] getCompletionHints(String sql, SqlParserPos pos)
         throws SqlParseException
     {
         SqlParser parser = new SqlParser(sql);
@@ -120,7 +120,7 @@ public class SqlAdvisor
             // requested completion hints
         }
         // XXX new interface?
-        return ((SqlValidatorImpl) validator).lookupHints(sqlNode, pp);
+        return ((SqlValidatorImpl) validator).lookupHints(sqlNode, pos);
     }
 
     /**
@@ -133,12 +133,12 @@ public class SqlAdvisor
      * that represents a SQL identifier for which its fully qualified name is
      * to be returned.
      *
-     * @return a {@link Moniker} that contains the fully qualified name of the
+     * @return a {@link SqlMoniker} that contains the fully qualified name of the
      * specified SQL identifier, returns null if none is found or the SQL
      * statement is invalid.
      *
      */
-    public Moniker getQualifiedName(String sql, int cursor)
+    public SqlMoniker getQualifiedName(String sql, int cursor)
     {
         SqlParser parser = new SqlParser(sql);
         SqlNode sqlNode;
@@ -148,8 +148,8 @@ public class SqlAdvisor
         } catch (Exception e) {
             return null;
         }
-        SqlParserPos pp = new SqlParserPos(1, cursor+1);
-        return ((SqlValidatorImpl) validator).lookupQualifiedName(sqlNode, pp);
+        SqlParserPos pos = new SqlParserPos(1, cursor+1);
+        return ((SqlValidatorImpl) validator).lookupQualifiedName(sqlNode, pos);
     }
 
     /**

@@ -31,7 +31,7 @@ import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.util.SqlVisitor;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.Moniker;
+import org.eigenbase.sql.validate.SqlMoniker;
 import org.eigenbase.util.Util;
 
 /**
@@ -132,30 +132,30 @@ public class SqlCall extends SqlNode
 
     /**
      * Find out all the valid alternatives for the operand of this node's
-     * operator that matches the parse position indicated by pp
+     * operator that matches the parse position indicated by pos
      *
      * @param validator Validator
      * @param scope Validation scope
-     * @param pp SqlParserPos indicating the cursor position at which
+     * @param pos SqlParserPos indicating the cursor position at which
      * competion hints are requested for
-     * @return a {@link Moniker} array of valid options
+     * @return a {@link SqlMoniker} array of valid options
      */
-    public Moniker[] findValidOptions(
+    public SqlMoniker[] findValidOptions(
         SqlValidator validator,
         SqlValidatorScope scope,
-        SqlParserPos pp)
+        SqlParserPos pos)
     {
         final SqlNode[] operands = getOperands();
         for (int i = 0; i < operands.length; i++) {
             if (operands[i] instanceof SqlIdentifier) {
                 SqlIdentifier id = (SqlIdentifier) operands[i];
-                String ppstring = id.getParserPosition().toString();
-                if (ppstring.equals(pp.toString())) {
+                String posstring = id.getParserPosition().toString();
+                if (posstring.equals(pos.toString())) {
                     return id.findValidOptions(validator, scope);
                 }
             }
         }
-        return Util.emptyMonikerArray;
+        return Util.emptySqlMonikerArray;
     }
 
     public void accept(SqlVisitor visitor)

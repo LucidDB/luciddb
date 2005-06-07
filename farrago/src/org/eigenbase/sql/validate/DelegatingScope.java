@@ -92,7 +92,7 @@ abstract class DelegatingScope implements SqlValidatorScope
         final RelDataTypeField [] fields = rowType.getFields();
         for (int i = 0; i < fields.length; i++) {
             RelDataTypeField field = fields[i];
-            colNames.add(new MonikerImpl(field.getName(), MonikerType.Column));
+            colNames.add(new SqlMonikerImpl(field.getName(), SqlMonikerType.Column));
         }
     }
 
@@ -102,7 +102,7 @@ abstract class DelegatingScope implements SqlValidatorScope
         if (table == null) return;
         String [] qnames = table.getQualifiedName();
         if (qnames != null) {
-            tableNames.add(new MonikerImpl(qnames, MonikerType.Table));
+            tableNames.add(new SqlMonikerImpl(qnames, SqlMonikerType.Table));
         }
     }
 
