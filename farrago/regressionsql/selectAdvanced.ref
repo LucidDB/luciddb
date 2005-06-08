@@ -244,4 +244,12 @@ Error: Cast function cannot convert value of type INTEGER to type VARBINARY(1) (
 0: jdbc:farrago:> --select emps.name,depts.name from sales.emps LEFT OUTER JOIN sales.depts ON depts.deptno=emps.deptno order by 1;
 0: jdbc:farrago:> --select emps.name,depts.name from sales.emps FULL OUTER JOIN sales.depts ON depts.deptno=emps.deptno order by 1;
 0: jdbc:farrago:> 
+0: jdbc:farrago:> values (1) union values (2) order by 1;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
+| 2       |
++---------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit
