@@ -126,7 +126,7 @@ JAVACODE SqlDateLiteral parseDateLiteral(
 {
     String dateStr = SqlParserUtil.strip(s, "'");
     Calendar cal = SqlParserUtil.parseDateFormat(
-        dateStr, SqlParserUtil.DateFormatStr);
+        dateStr, SqlParserUtil.DateFormatStr, null);
     if (null==cal) {
         EigenbaseResource res = EigenbaseResource.instance();
         String msg = res.getIllegalLiteral("DATE", s, pos.toString(),
@@ -142,7 +142,7 @@ JAVACODE SqlTimeLiteral parseTimeLiteral(
     String dateStr = SqlParserUtil.strip(s, "'");
     SqlParserUtil.PrecisionTime pt =
     SqlParserUtil.parsePrecisionDateTimeLiteral(
-        dateStr, SqlParserUtil.TimeFormatStr);
+        dateStr, SqlParserUtil.TimeFormatStr, null);
     if (null == pt) {
         EigenbaseResource res = EigenbaseResource.instance();
         String msg = res.getIllegalLiteral("TIME", s, pos.toString(),
@@ -158,7 +158,7 @@ JAVACODE SqlTimestampLiteral parseTimestampLiteral(
     String dateStr = SqlParserUtil.strip(s, "'");
     SqlParserUtil.PrecisionTime pt =
     SqlParserUtil.parsePrecisionDateTimeLiteral(
-        dateStr, SqlParserUtil.TimestampFormatStr);
+        dateStr, SqlParserUtil.TimestampFormatStr, null);
     if (null == pt) {
         EigenbaseResource res = EigenbaseResource.instance();
         String msg = res.getIllegalLiteral("TIMESTAMP", s, pos.toString(),

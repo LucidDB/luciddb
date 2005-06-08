@@ -48,6 +48,17 @@ public class SqlTimestampLiteral extends SqlAbstractDateTimeLiteral
             SqlParserUtil.TimestampFormatStr, pos);
     }
 
+    public SqlTimestampLiteral(
+        Calendar cal,
+        int precision,
+        boolean hasTimeZone,
+        String format,
+        SqlParserPos pos)
+    {
+        super(cal, hasTimeZone, SqlTypeName.Timestamp, precision,
+            format, pos);
+    }
+
     /**
      * Converts this literal to a {@link java.sql.Timestamp} object.
      */
