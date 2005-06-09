@@ -27,6 +27,7 @@ import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.type.SqlTypeFactoryImpl;
 import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidatorWithHints;
 import org.eigenbase.sql.validate.SqlMoniker;
 import org.eigenbase.test.SqlValidatorTestCase;
 import org.eigenbase.test.MockCatalogReader;
@@ -443,7 +444,8 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         List expectedResults)
         throws Exception
     {
-        SqlValidator validator = tester.getValidator();
+        SqlValidatorWithHints validator = 
+            (SqlValidatorWithHints) tester.getValidator();
         SqlAdvisor advisor = new SqlAdvisor(validator);
 
         SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);
@@ -463,7 +465,8 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
      */
     protected void assertSimplify(String sql, String expected)
     {
-        SqlValidator validator = tester.getValidator();
+        SqlValidatorWithHints validator = 
+            (SqlValidatorWithHints) tester.getValidator();
         SqlAdvisor advisor = new SqlAdvisor(validator);
 
         SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);
@@ -481,7 +484,8 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         List expectedResults)
         throws Exception
     {
-        SqlValidator validator = tester.getValidator();
+        SqlValidatorWithHints validator = 
+            (SqlValidatorWithHints) tester.getValidator();
         SqlAdvisor advisor = new SqlAdvisor(validator);
 
         SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);

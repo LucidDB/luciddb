@@ -24,8 +24,7 @@ package com.disruptivetech.farrago.sql.advise;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlIdentifier;
 import org.eigenbase.sql.validate.SqlMoniker;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.SqlValidatorImpl;
+import org.eigenbase.sql.validate.SqlValidatorWithHints;
 import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql.parser.SqlParserPos;
@@ -49,7 +48,7 @@ public class SqlAdvisor
     // Flags indicating precision/scale combinations
 
     //~ Instance fields -------------------------------------------------------
-    private final SqlValidator validator;
+    private final SqlValidatorWithHints validator;
     private final String hintToken = "_suggest_";
 
     //~ Constructors ----------------------------------------------------------
@@ -57,7 +56,7 @@ public class SqlAdvisor
      * Creates a SqlAdvisor with a validator instance
      */
     public SqlAdvisor(
-        SqlValidator validator)
+        SqlValidatorWithHints validator)
     {
         this.validator = validator;
     }
@@ -119,8 +118,7 @@ public class SqlAdvisor
             // we are doing a best effort here to try to come up with the
             // requested completion hints
         }
-        // XXX new interface?
-        return ((SqlValidatorImpl) validator).lookupHints(sqlNode, pos);
+        return validator.lookupHints(sqlNode, pos);
     }
 
     /**
@@ -149,7 +147,7 @@ public class SqlAdvisor
             return null;
         }
         SqlParserPos pos = new SqlParserPos(1, cursor+1);
-        return ((SqlValidatorImpl) validator).lookupQualifiedName(sqlNode, pos);
+        return validator.lookupQualifiedName(sqlNode, pos);
     }
 
     /**

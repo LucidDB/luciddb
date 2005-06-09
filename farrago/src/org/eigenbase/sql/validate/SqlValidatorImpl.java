@@ -48,7 +48,7 @@ import java.util.logging.Logger;
  * @version $Id$
  * @since Mar 3, 2005
  */
-public class SqlValidatorImpl implements SqlValidator
+public class SqlValidatorImpl implements SqlValidatorWithHints
 {
     //~ Static fields/initializers --------------------------------------------
 
