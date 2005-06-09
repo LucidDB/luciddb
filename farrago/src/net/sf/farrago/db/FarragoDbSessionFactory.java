@@ -101,7 +101,10 @@ public class FarragoDbSessionFactory implements FarragoSessionFactory
         FarragoAllocationOwner owner,
         boolean userRepos)
     {
-        return new FarragoRepos(owner, new FarragoModelLoader(), userRepos);
+        final FarragoMdrReposImpl repos = new FarragoMdrReposImpl(
+            owner, new FarragoModelLoader(), userRepos);
+        repos.init();
+        return repos;
     }
 
     // implement FarragoSessionFactory
