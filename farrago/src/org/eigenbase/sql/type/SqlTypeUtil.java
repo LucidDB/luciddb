@@ -363,6 +363,8 @@ public abstract class SqlTypeUtil
         switch (typeName.getOrdinal()) {
         case SqlTypeName.Varchar_ordinal:
         case SqlTypeName.Varbinary_ordinal:
+        // TODO angel 8-June-2005: Multiset should be LOB
+        case SqlTypeName.Multiset_ordinal:
             return true;
         default:
             return false;

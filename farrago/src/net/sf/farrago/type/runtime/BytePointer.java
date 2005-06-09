@@ -128,8 +128,8 @@ public class BytePointer extends ByteArrayInputStream
             return;
         }
         this.buf = buf;
-        this.pos = Math.max(0, pos);
-        this.count = Math.min(end, buf.length);
+        this.pos = pos;
+        this.count = end;
     }
 
     // implement AssignableValue
