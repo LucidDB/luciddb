@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/selectAdvanced.sql#5 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/selectAdvanced.sql#6 $
 0: jdbc:farrago:> -- Full vertical system testing of advanced select statements
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -251,5 +251,15 @@ Error: Cast function cannot convert value of type INTEGER to type VARBINARY(1) (
 | 1       |
 | 2       |
 +---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from sales.depts union all values (40,'Foodfights') order by 1;
++---------+-------------+
+| DEPTNO  |    NAME     |
++---------+-------------+
+| 10      | Sales       |
+| 20      | Marketing   |
+| 30      | Accounts    |
+| 40      | Foodfights  |
++---------+-------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

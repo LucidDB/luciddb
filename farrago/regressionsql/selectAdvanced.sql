@@ -92,3 +92,5 @@ select emps.name,depts.name from sales.emps INNER JOIN sales.depts ON depts.dept
 --select emps.name,depts.name from sales.emps FULL OUTER JOIN sales.depts ON depts.deptno=emps.deptno order by 1;
 
 values (1) union values (2) order by 1;
+
+select * from sales.depts union all values (40,'Foodfights') order by 1;

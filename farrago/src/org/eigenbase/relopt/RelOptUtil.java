@@ -315,10 +315,16 @@ public abstract class RelOptUtil
 
     public static boolean areRowTypesEqual(
         RelDataType rowType1,
-        RelDataType rowType2)
+        RelDataType rowType2,
+        boolean compareNames)
     {
         if (rowType1 == rowType2) {
             return true;
+        }
+        if (compareNames) {
+            // if types are not identity-equal, then either the names or
+            // the types must be different
+            return false;
         }
         int n = rowType1.getFieldList().size();
         if (rowType2.getFieldList().size() != n) {
@@ -507,18 +513,24 @@ public abstract class RelOptUtil
      *
      * @param castRowType row type after cast
      *
+     * @param rename if true, use field names from castRowType; if false,
+     * preserve field names from rel
+     *
      * @return conversion rel
      */
     public static RelNode createCastRel(
         RelNode rel,
-        RelDataType castRowType)
+        RelDataType castRowType,
+        boolean rename)
     {
         RelDataType rowType = rel.getRowType();
-        if (areRowTypesEqual(rowType, castRowType)) {
+        if (areRowTypesEqual(rowType, castRowType, rename)) {
             // nothing to do
             return rel;
         }
-        String [] fieldNames = RelOptUtil.getFieldNames(rowType);
+        String [] fieldNames =
+            rename ? RelOptUtil.getFieldNames(castRowType)
+            : RelOptUtil.getFieldNames(rowType);
         RexNode [] castExps =
             RexUtil.generateCastExpressions(rel.getCluster().getRexBuilder(),
                 castRowType, rowType);

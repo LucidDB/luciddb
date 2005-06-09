@@ -80,7 +80,8 @@ class FtrsTableModificationRule extends RelOptRule
         // is accomplished by the usage of CoerceInputsRule.
         if (!RelOptUtil.areRowTypesEqual(
                     inputRel.getRowType(),
-                    tableModification.getExpectedInputRowType(0))) {
+                    tableModification.getExpectedInputRowType(0),
+                    false)) {
             return;
         }
 
