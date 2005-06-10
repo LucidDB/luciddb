@@ -829,19 +829,19 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                         type = resolvedNs.getRowType();
                     }
 
-                    RelDataType colType = null;
-                    if (scope instanceof ListScope) {
-                        // See if there's a column with the name we seek in
-                        // precisely one of the namespaces in this scope.
-                        colType = ((ListScope) scope).resolveColumn(name, id);
-                    }
-
                     // Give precedence to namespace found, unless there
                     // are no more identifier components.
-                    if ((type == null)
-                        || ((id.names.length == 1) && (colType != null)))
-                    {
-                        type = colType;
+                    if ((type == null) || (id.names.length == 1)) {
+                        RelDataType colType = null;
+                        if (scope instanceof ListScope) {
+                            // See if there's a column with the name we seek in
+                            // precisely one of the namespaces in this scope.
+                            colType = ((ListScope) scope).resolveColumn(
+                                name, id);
+                        }
+                        if (colType != null) {
+                            type = colType;
+                        }
                     }
                     
                     if (type == null) {
