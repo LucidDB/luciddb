@@ -808,18 +808,42 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             for (int i = 0; i < id.names.length; i++) {
                 String name = id.names[i];
                 if (i == 0) {
-                    // REVIEW jvs 23-Dec-2003:  what if a table and column have
-                    // the same name?
-                    final SqlValidatorNamespace resolvedNs =
+                    // REVIEW jvs 9-June-2005: The name resolution rules used
+                    // here are supposed to match SQL:2003 Part 2 Section 6.6
+                    // (identifier chain), but we don't currently have enough
+                    // information to get everything right.  In particular,
+                    // routine parameters are currently looked
+                    // up via resolve; we could do a better job
+                    // if they were looked up via resolveColumn.
+
+                    // TODO jvs 9-June-2005:  Support schema-qualified
+                    // table names here.  This was illegal in SQL-92, but
+                    // became legal in SQL:1999.  (SQL:2003 Part 2 Section
+                    // 6.6 Syntax Rule 8.b.vi)
+
+                    SqlValidatorNamespace resolvedNs =
                         scope.resolve(name, null, null);
+
                     if (resolvedNs != null) {
-                        // There's a table with the name we seek.
+                        // There's a namespace with the name we seek.
                         type = resolvedNs.getRowType();
-                    } else if (scope instanceof ListScope) {
-                        // See if there's a column with the name we seek in
-                        // precisely one of the tables in this scope.
-                        type = ((ListScope) scope).resolveColumn(name, id);
                     }
+
+                    RelDataType colType = null;
+                    if (scope instanceof ListScope) {
+                        // See if there's a column with the name we seek in
+                        // precisely one of the namespaces in this scope.
+                        colType = ((ListScope) scope).resolveColumn(name, id);
+                    }
+
+                    // Give precedence to namespace found, unless there
+                    // are no more identifier components.
+                    if ((type == null)
+                        || ((id.names.length == 1) && (colType != null)))
+                    {
+                        type = colType;
+                    }
+                    
                     if (type == null) {
                         throw newValidationError(id,
                             EigenbaseResource.instance().newUnknownIdentifier(
