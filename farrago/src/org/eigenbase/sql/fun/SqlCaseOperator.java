@@ -151,13 +151,11 @@ public class SqlCaseOperator extends SqlOperator
         }
     }
 
-    protected boolean checkArgTypes(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
-        SqlCase caseCall = (SqlCase) call;
+        SqlCase caseCall = (SqlCase) callBinding.getCall();
         SqlNodeList whenList = caseCall.getWhenOperands();
         SqlNodeList thenList = caseCall.getThenOperands();
         assert (whenList.size() == thenList.size());
@@ -167,10 +165,12 @@ public class SqlCaseOperator extends SqlOperator
             SqlNode node = whenList.get(i);
 
             //should throw validation error if something wrong...
-            RelDataType type = validator.deriveType(scope, node);
+            RelDataType type = callBinding.getValidator().deriveType(
+                callBinding.getScope(), node);
             if (!SqlTypeUtil.inBooleanFamily(type)) {
                 if (throwOnFailure) {
-                    throw validator.newValidationError(node,
+                    throw callBinding.getValidator().newValidationError(
+                        node,
                         EigenbaseResource.instance().newExpectedBoolean());
                 }
                 return false;
@@ -200,57 +200,56 @@ public class SqlCaseOperator extends SqlOperator
         return true;
     }
 
-    protected RelDataType getType(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        RelDataTypeFactory typeFactory,
-        CallOperands callOperands)
+    public RelDataType inferReturnType(
+        SqlOperatorBinding opBinding)
     {
-        if (null==validator) {
-            return getTypeFromRexs(typeFactory, callOperands.collectTypes());
+        // REVIEW jvs 4-June-2005:  can't these be unified?
+        if (!(opBinding instanceof SqlCallBinding)) {
+            return inferTypeFromOperands(
+                opBinding.getTypeFactory(), opBinding.collectOperandTypes());
         }
-        return getTypeFromValidator(callOperands, validator, scope, typeFactory);
+        return inferTypeFromValidator(
+            (SqlCallBinding) opBinding);
     }
 
-    private RelDataType getTypeFromValidator(
-        CallOperands callOperands,
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        RelDataTypeFactory typeFactory)
+    private RelDataType inferTypeFromValidator(
+        SqlCallBinding callBinding)
     {
-        SqlCase caseCall = (SqlCase) callOperands.getUnderlyingObject();
+        SqlCase caseCall = (SqlCase) callBinding.getCall();
         SqlNodeList thenList = caseCall.getThenOperands();
         ArrayList nullList = new ArrayList();
         RelDataType [] argTypes = new RelDataType[thenList.size() + 1];
         for (int i = 0; i < thenList.size(); i++) {
             SqlNode node = thenList.get(i);
-            argTypes[i] = validator.deriveType(scope, node);
+            argTypes[i] = callBinding.getValidator().deriveType(
+                callBinding.getScope(), node);
             if (SqlUtil.isNullLiteral(node, false)) {
                 nullList.add(node);
             }
         }
         SqlNode elseOp = caseCall.getElseOperand();
         argTypes[argTypes.length - 1] =
-            validator.deriveType(
-                scope,
+            callBinding.getValidator().deriveType(
+                callBinding.getScope(),
                 caseCall.getElseOperand());
         if (SqlUtil.isNullLiteral(elseOp, false)) {
             nullList.add(elseOp);
         }
 
-        RelDataType ret = SqlTypeUtil.getNullableBiggest(typeFactory, argTypes);
+        RelDataType ret = callBinding.getTypeFactory().leastRestrictive(
+            argTypes);
         if (null == ret) {
-            throw validator.newValidationError(caseCall,
-                    EigenbaseResource.instance().newIllegalMixingOfTypes());
+            throw callBinding.newValidationError(
+                EigenbaseResource.instance().newIllegalMixingOfTypes());
         }
         for (int i = 0; i < nullList.size(); i++) {
             SqlNode node = (SqlNode) nullList.get(i);
-            validator.setValidatedNodeType(node, ret);
+            callBinding.getValidator().setValidatedNodeType(node, ret);
         }
         return ret;
     }
 
-    private RelDataType getTypeFromRexs(
+    private RelDataType inferTypeFromOperands(
         RelDataTypeFactory typeFactory,
         RelDataType [] argTypes)
     {
@@ -264,13 +263,13 @@ public class SqlCaseOperator extends SqlOperator
         }
 
         thenTypes[thenTypes.length - 1] = argTypes[argTypes.length - 1];
-        return SqlTypeUtil.getNullableBiggest(typeFactory, thenTypes);
+        return typeFactory.leastRestrictive(thenTypes);
     }
 
 
-    public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()
+    public SqlOperandCountRange getOperandCountRange()
     {
-        return OperandsCountDescriptor.variadicCountDescriptor;
+        return SqlOperandCountRange.Variadic;
     }
 
     public SqlSyntax getSyntax()

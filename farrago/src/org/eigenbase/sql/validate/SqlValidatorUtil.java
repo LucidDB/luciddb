@@ -157,7 +157,7 @@ public class SqlValidatorUtil
     /**
      * Factory method for {@link SqlValidator}.
      */
-    public static SqlValidator newValidator(SqlStdOperatorTable opTab,
+    public static SqlValidatorWithHints newValidator(SqlStdOperatorTable opTab,
         SqlValidatorCatalogReader catalogReader,
         RelDataTypeFactory typeFactory)
     {

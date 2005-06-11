@@ -48,13 +48,14 @@ public class SqlMonotonicBinaryOperator extends SqlBinaryOperator
         SqlKind kind,
         int prec,
         boolean isLeftAssoc,
-        SqlReturnTypeInference typeInference,
-        SqlOperandTypeInference paramTypeInference,
-        SqlOperandTypeChecker argTypes)
+        SqlReturnTypeInference returnTypeInference,
+        SqlOperandTypeInference operandTypeInference,
+        SqlOperandTypeChecker operandTypeChecker)
     {
         super(
-            name, kind, prec, isLeftAssoc, typeInference, paramTypeInference,
-            argTypes);
+            name, kind, prec, isLeftAssoc, returnTypeInference,
+            operandTypeInference,
+            operandTypeChecker);
     }
     
     public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)

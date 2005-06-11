@@ -26,7 +26,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.*;
 
 /**
- * Returns the type of position ordinal (zero based)
+ * Returns the type of the operand at a particular 0-based ordinal position.
  *
  * @author Wael Chatila
  * @version $Id$
@@ -41,13 +41,10 @@ public class OrdinalReturnTypeInference
         this.ordinal = ordinal;
     }
 
-    public RelDataType getType(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        RelDataTypeFactory typeFactory,
-        CallOperands callOperands)
+    public RelDataType inferReturnType(
+        SqlOperatorBinding opBinding)
     {
-        return callOperands.getType(ordinal);
+        return opBinding.getOperandType(ordinal);
     }
 }
 

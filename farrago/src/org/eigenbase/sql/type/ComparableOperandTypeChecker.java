@@ -37,45 +37,42 @@ import java.util.*;
  * @version $Id$
  */
 public class ComparableOperandTypeChecker
-    extends ExplicitOperandTypeChecker
+    extends SameOperandTypeChecker
 {
     private final RelDataTypeComparability requiredComparability;
         
     public ComparableOperandTypeChecker(
+        int nOperands,
         RelDataTypeComparability requiredComparability)
     {
-        super(
-            new SqlTypeName [][] {
-                { SqlTypeName.Any },
-                { SqlTypeName.Any }
-            });
+        super(nOperands);
         this.requiredComparability = requiredComparability;
     }
 
-    public boolean check(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlCall call, boolean throwOnFailure)
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding, boolean throwOnFailure)
     {
-        assert (call.operands.length == 2);
-        RelDataType type1 =
-            validator.deriveType(scope, call.operands[0]);
-        RelDataType type2 =
-            validator.deriveType(scope, call.operands[1]);
         boolean b = true;
-        if (!checkType(validator, scope, call, throwOnFailure, type1)) {
-            b = false;
+        for (int i = 0; i < nOperands; ++i) {
+            RelDataType type =
+                callBinding.getValidator().deriveType(
+                    callBinding.getScope(),
+                    callBinding.getCall().operands[i]);
+            if (!checkType(callBinding, throwOnFailure, type)) {
+                b = false;
+            }
         }
-        if (!checkType(validator, scope, call, throwOnFailure, type2)) {
-            b = false;
+        if (b) {
+            b = super.checkOperandTypes(callBinding, false);
+            if (!b && throwOnFailure) {
+                throw callBinding.newValidationSignatureError();
+            }
         }
         return b;
     }
 
     private boolean checkType(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlCall call,
+        SqlCallBinding callBinding,
         boolean throwOnFailure,
         RelDataType type)
     {
@@ -83,14 +80,21 @@ public class ComparableOperandTypeChecker
             requiredComparability.getOrdinal())
         {
             if (throwOnFailure) {
-                throw call.newValidationSignatureError(
-                    validator, scope);
+                throw callBinding.newValidationSignatureError();
             } else {
                 return false;
             }
         } else {
             return true;
         }
+    }
+
+    // implement SqlOperandTypeChecker
+    public String getAllowedSignatures(SqlOperator op, String opName)
+    {
+        String [] array = new String[nOperands];
+        Arrays.fill(array, "COMPARABLE_TYPE");
+        return SqlUtil.getAliasedSignature(op, opName, Arrays.asList(array));
     }
 }
 

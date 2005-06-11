@@ -36,44 +36,35 @@ import org.eigenbase.sql.validate.*;
 public interface SqlOperandTypeChecker
 {
     /**
-     * Checks if a node is of correct type.
+     * Checks the types of all operands to an operator call.
      *
-     * Note that <code>ruleOrdinal</code> is <emp>not</emp> an index in any
-     * call.operands[] array. It's used to specify which
-     * signature the node should correspond too.
-     * <p>For example, if we have typeStringInt, a check can be made to see
-     * if a <code>node</code> is of type int by calling.
+     * @param callBinding description of the call to be checked
      *
-     * @param call
-     * @param validator
-     * @param scope
-     * @param node
-     * @param ruleOrdinal
+     * @param throwOnFailure whether to throw an exception if check
+     * fails (otherwise returns false in that case)
+     *
+     * @return whether check succeeded
      */
-    public boolean check(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlNode node,
-        int ruleOrdinal,
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
         boolean throwOnFailure);
-
-    public boolean check(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlCall call,
-        boolean throwOnFailure);
+    
+    /**
+     * @return range of operand counts allowed in a call
+     */
+    public SqlOperandCountRange getOperandCountRange();
 
     /**
-     * @return the argument count.
+     * Returns a string describing the allowed formal signatures of a
+     * call, e.g.  "SUBSTR(VARCHAR, INTEGER, INTEGER)".
+     *
+     * @param op the operator being checked
+     *
+     * @param opName name to use for the operator in case of aliasing
+     *
+     * @return generated string
      */
-    public int getArgCount();
-
-    /**
-     * @return a string describing the expected argument types of a call, e.g.
-     * "SUBSTR(VARCHAR, INTEGER, INTEGER)".
-     */
-    public String getAllowedSignatures(SqlOperator op);
+    public String getAllowedSignatures(SqlOperator op, String opName);
 }
 
 // End SqlOperandTypeChecker.java

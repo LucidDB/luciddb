@@ -40,59 +40,22 @@ import java.util.*;
  */
 public class SqlOverlayFunction extends SqlFunction
 {
+    private static final SqlOperandTypeChecker otcCustom =
+        new CompositeOperandTypeChecker(
+            CompositeOperandTypeChecker.OR, 
+            new SqlOperandTypeChecker[] {
+                SqlTypeStrategies.otcStringX2Int,
+                SqlTypeStrategies.otcStringX2IntX2
+            });
+    
     public SqlOverlayFunction()
     {
         super("OVERLAY", SqlKind.Function,
             SqlTypeStrategies.rtiNullableDyadicStringSumPrecision,
-            null, null,
+            null, otcCustom,
             SqlFunctionCategory.String);
     }
     
-    public OperandsCountDescriptor getOperandsCountDescriptor()
-    {
-        return new OperandsCountDescriptor(3, 4);
-    }
-
-    protected boolean checkArgTypes(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        boolean throwOnFailure)
-    {
-        switch (call.operands.length) {
-        case 3:
-            return SqlTypeStrategies.otcNullableStringX2NotNullInt
-                .check(validator, scope, call, throwOnFailure);
-        case 4:
-            return SqlTypeStrategies.otcNullableStringX2NotNullIntX2
-                .check(validator, scope, call, throwOnFailure);
-        default:
-            throw Util.needToImplement(this);
-        }
-    }
-
-    public String getAllowedSignatures(String name)
-    {
-        StringBuffer ret = new StringBuffer();
-        for (int i = 0; i < SqlTypeName.stringTypes.length;
-             i++) {
-            if (i > 0) {
-                ret.append(NL);
-            }
-            ArrayList list = new ArrayList();
-            list.add(SqlTypeName.stringTypes[i]);
-            list.add(SqlTypeName.stringTypes[i]); //adding same twice
-            list.add(SqlTypeName.Integer);
-            ret.append(this.getAnonymousSignature(list));
-            ret.append(NL);
-            list.add(SqlTypeName.Integer);
-            ret.append(this.getAnonymousSignature(list));
-        }
-        return replaceAnonymous(
-            ret.toString(),
-            name);
-    }
-
     public void unparse(
         SqlWriter writer,
         SqlNode [] operands,
@@ -113,7 +76,7 @@ public class SqlOverlayFunction extends SqlFunction
         writer.print(")");
     }
 
-    protected String getSignatureTemplate(final int operandsCount)
+    public String getSignatureTemplate(final int operandsCount)
     {
         switch (operandsCount) {
         case 3:

@@ -23,8 +23,7 @@
 
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.*;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.parser.SqlParserUtil;
@@ -73,6 +72,15 @@ public class SqlBetweenOperator extends SqlInfixOperator
     /** Ordinal of the 'symmetric' operand. */
     public static final int SYMFLAG_OPERAND = 3;
 
+    /**
+     * Custom operand-type checking strategy.
+     */
+    private static final SqlOperandTypeChecker
+        otcCustom =
+        new ComparableOperandTypeChecker(
+            3,
+            RelDataTypeComparability.All);
+    
     //~ Instance fields -------------------------------------------------------
 
     /** todo: Use a wrapper 'class SqlTempCall(SqlOperator,SqlParserPos)
@@ -91,7 +99,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
         boolean negated)
     {
         super(negated ? notBetweenNames : betweenNames, SqlKind.Between, 15,
-            null, null, null);
+            null, null, otcCustom);
         this.flag = flag;
         this.negated = negated;
     }
@@ -103,13 +111,14 @@ public class SqlBetweenOperator extends SqlInfixOperator
         return negated;
     }
 
-    private RelDataType [] getTypeArray(
+    private RelDataType [] collectOperandTypes(
         SqlValidator validator,
         SqlValidatorScope scope,
         SqlCall call)
     {
         RelDataType [] argTypes =
-            SqlTypeUtil.collectTypes(validator, scope, call.operands);
+            SqlTypeUtil.deriveAndCollectTypes(
+                validator, scope, call.operands);
         RelDataType [] newArgTypes = {
             argTypes[VALUE_OPERAND],
             argTypes[LOWER_OPERAND],
@@ -118,87 +127,31 @@ public class SqlBetweenOperator extends SqlInfixOperator
         return newArgTypes;
     }
 
-    protected RelDataType getType(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        RelDataTypeFactory typeFactory,
-        CallOperands callOperands)
+    public RelDataType inferReturnType(
+        SqlOperatorBinding opBinding)
     {
-        CallOperands.RelDataTypesCallOperands newCallOperands =
-            new CallOperands.RelDataTypesCallOperands(
-                getTypeArray(validator,
-                             scope,
-                             (SqlCall) callOperands.getUnderlyingObject()));
-        return SqlTypeStrategies.rtiNullableBoolean.getType(
-            validator, scope, typeFactory,
-            newCallOperands);
+        SqlCallBinding callBinding =(SqlCallBinding) opBinding;
+        ExplicitOperatorBinding newOpBinding =
+            new ExplicitOperatorBinding(
+                opBinding,
+                collectOperandTypes(
+                    callBinding.getValidator(),
+                    callBinding.getScope(),
+                    callBinding.getCall()));
+        return SqlTypeStrategies.rtiNullableBoolean.inferReturnType(
+            newOpBinding);
     }
 
-    protected String getSignatureTemplate(final int operandsCount)
+    public String getSignatureTemplate(final int operandsCount)
     {
         Util.discard(operandsCount);
         return "{1} {0} {2} AND {3}";
     }
 
-    public String getAllowedSignatures(String name)
-    {
-        StringBuffer ret = new StringBuffer();
-        ret.append(
-            SqlTypeStrategies.otcNullableNumericX3
-                .getAllowedSignatures(this));
-        ret.append(NL);
-        ret.append(
-            SqlTypeStrategies.otcNullableBinaryX3
-                .getAllowedSignatures(this));
-        ret.append(NL);
-        ret.append(
-            SqlTypeStrategies.otcNullableVarcharX3
-                .getAllowedSignatures(this));
-        return replaceAnonymous(
-            ret.toString(),
-            name);
-    }
-
-    protected boolean checkArgTypes(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        boolean throwOnFailure)
-    {
-        SqlOperandTypeChecker [] rules =
-            new SqlOperandTypeChecker [] {
-                SqlTypeStrategies.otcNullableNumeric,
-                SqlTypeStrategies.otcNullableBinaryX2,
-                SqlTypeStrategies.otcNullableVarchar
-            };
-        int failCount = 0;
-        for (int i = 0; i < rules.length; i++) {
-            SqlOperandTypeChecker rule = rules[i];
-            boolean ok;
-            ok = rule.check(call, validator, scope,
-                call.operands[VALUE_OPERAND], 0, false);
-            ok = ok && rule.check(call, validator, scope,
-                call.operands[LOWER_OPERAND], 0, false);
-            ok = ok && rule.check(call, validator, scope,
-                call.operands[UPPER_OPERAND], 0, false);
-            if (!ok) {
-                failCount++;
-            }
-        }
-
-        if (failCount >= 3) {
-            if (throwOnFailure){
-                throw call.newValidationSignatureError(validator, scope);
-            }
-            return false;
-        }
-        return true;
-    }
-
-    public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()
+    public SqlOperandCountRange getOperandCountRange()
     {
         //exp1 [ASYMMETRIC|SYMMETRIC] BETWEEN exp4 AND exp4
-        return new OperandsCountDescriptor(4);
+        return SqlOperandCountRange.Four;
     }
 
     public void unparse(

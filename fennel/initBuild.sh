@@ -1,54 +1,42 @@
 #!/bin/bash
 # $Id$
 
-usagemsg="Usage:  initBuild.sh [--with[out]-farrago] [--with[out]-icu] [--with[out]-optimization] [--with[out]-debug] [--skip-thirdparty]";
+usage() {
+    echo "Usage:  initBuild.sh [--with[out]-farrago] [--with[out]-icu] [--with[out]-optimization] [--with[out]-debug] [--skip-thirdparty-build] [--with[out]-tests]"
+}
 
-if [ "$1" == "--with-farrago" -o "$1" == "--without-farrago" ] ; then
-    FARRAGO_FLAG=$1
-    shift
-fi
+build_thirdparty=true
+skip_tests=true
+ICU_FLAG=
+OPT_FLAG=--without-optimization
 
-if [ "$1" == "--with-icu" -o "$1" == "--without-icu" ] ; then
-    # override default
-    ICU_FLAG=$1
-    shift
-else
-    # use default
-    ICU_FLAG=
-fi
+# extended globbing for case statement
+shopt -sq extglob
 
-if [ "$1" == "--with-optimization" -o "$1" == "--without-optimization" ] ; then
-    OPT_FLAG=$1
+while [ -n "$1" ]; do
+    case $1 in
+        --with?(out)-farrago) FARRAGO_FLAG="$1";;
+        --with?(out)-icu) ICU_FLAG="$1";;
+        --with?(out)-optimization) OPT_FLAG="$1";;
+        --with?(out)-debug) DEBUG_FLAG="$1";;
+        --skip?(-fennel)-thirdparty-build) build_thirdparty=false;;
+        --with-tests) skip_tests=false;;
+        --without-tests) skip_tests=true;;
+        *) usage; exit -1;;
+    esac
     shift
-else
-    # default to unoptimized build
-    OPT_FLAG="--without-optimization"
-fi
+done
 
-if [ "$1" == "--with-debug" -o "$1" == "--without-debug" ] ; then
-    DEBUG_FLAG=$1
-    shift
-else
-    # By default, debug is opposite of optimization
-    if [ $OPT_FLAG == "--with-optimization" ]; then
+# By default, debug is opposite of optimization
+if [ -z "$DEBUG_FLAG" ]; then
+    if [ "$OPT_FLAG" == "--with-optimization" ]; then
         DEBUG_FLAG="--without-debug"
     else
         DEBUG_FLAG="--with-debug"
     fi
 fi
 
-if [ "$1" == "--skip-thirdparty" ] ; then
-    build_thirdparty=false
-    shift
-else
-    build_thirdparty=true
-    shift
-fi
-
-if [ -n "$1" ] ; then
-    echo $usagemsg;
-    exit -1;
-fi
+shopt -uq extglob
 
 set -e
 set -v
@@ -112,8 +100,8 @@ if $cygwin ; then
     MINGW32_TARGET="--target=mingw32"
     if [ "$ICU_FLAG" == "--with-icu" ] ; then
         # an explicit call for ICU
-    	echo "Error: ICU library not supported on Cygwin / Mingw"
-	exit -1;
+        echo "Error: ICU library not supported on Cygwin / Mingw"
+        exit -1;
     fi
     export JAVA_HOME=`cygpath -u $JAVA_HOME`
 fi
@@ -154,3 +142,12 @@ fi
 # Build Fennel itself
 make clean
 make
+
+if ! $skip_tests ; then
+    # Set up Fennel runtime environment
+    . fennelenv.sh `pwd`
+
+    make check
+fi
+
+

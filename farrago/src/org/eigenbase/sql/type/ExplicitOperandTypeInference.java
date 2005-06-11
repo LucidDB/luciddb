@@ -44,9 +44,7 @@ public class ExplicitOperandTypeInference implements SqlOperandTypeInference
     }
 
     public void inferOperandTypes(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlCall call,
+        SqlCallBinding callBinding,
         RelDataType returnType,
         RelDataType [] operandTypes)
     {

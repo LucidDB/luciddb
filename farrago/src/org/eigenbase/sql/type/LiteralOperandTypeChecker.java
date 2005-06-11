@@ -39,7 +39,7 @@ import java.util.*;
  * @author Wael Chatila
  * @version $Id$
  */
-public class LiteralOperandTypeChecker implements SqlOperandTypeChecker
+public class LiteralOperandTypeChecker implements SqlSingleOperandTypeChecker
 {
     private boolean allowNull;
     
@@ -48,15 +48,13 @@ public class LiteralOperandTypeChecker implements SqlOperandTypeChecker
         this.allowNull = allowNull;
     }
     
-    public boolean check(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
+    public boolean checkSingleOperandType(
+        SqlCallBinding callBinding,
         SqlNode node,
-        int ruleOrdinal,
+        int iFormalOperand,
         boolean throwOnFailure)
     {
-        Util.discard(ruleOrdinal);
+        Util.discard(iFormalOperand);
 
         if (SqlUtil.isNullLiteral(node, true)) {
             if (allowNull) {
@@ -64,14 +62,14 @@ public class LiteralOperandTypeChecker implements SqlOperandTypeChecker
             }
             if (throwOnFailure) {
                 throw EigenbaseResource.instance().newArgumentMustNotBeNull(
-                    call.getOperator().getName());
+                    callBinding.getOperator().getName());
             }
             return false;
         }
         if (!SqlUtil.isLiteral(node)) {
             if (throwOnFailure) {
                 throw EigenbaseResource.instance().newArgumentMustBeLiteral(
-                    call.getOperator().getName());
+                    callBinding.getOperator().getName());
             }
             return false;
         }
@@ -79,23 +77,21 @@ public class LiteralOperandTypeChecker implements SqlOperandTypeChecker
         return true;
     }
 
-    public boolean check(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlCall call,
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
-        Util.pre(null != call, "null != call");
-        return check(call, validator, scope,
-            call.operands[0], 0, throwOnFailure);
+        return checkSingleOperandType(
+            callBinding,
+            callBinding.getCall().operands[0], 0, throwOnFailure);
     }
 
-    public int getArgCount()
+    public SqlOperandCountRange getOperandCountRange()
     {
-        return 1;
+        return SqlOperandCountRange.One;
     }
 
-    public String getAllowedSignatures(SqlOperator op)
+    public String getAllowedSignatures(SqlOperator op, String opName)
     {
         return "<LITERAL>";
     }

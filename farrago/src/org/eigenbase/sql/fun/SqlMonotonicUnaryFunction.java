@@ -44,13 +44,14 @@ public abstract class SqlMonotonicUnaryFunction extends SqlFunction
     protected SqlMonotonicUnaryFunction(
         String name,
         SqlKind kind,
-        SqlReturnTypeInference typeInference,
-        SqlOperandTypeInference paramTypeInference,
-        SqlOperandTypeChecker paramTypes,
+        SqlReturnTypeInference returnTypeInference,
+        SqlOperandTypeInference operandTypeInference,
+        SqlOperandTypeChecker operandTypeChecker,
         SqlFunctionCategory funcType)
     {
         super(
-            name, kind, typeInference, paramTypeInference, paramTypes,
+            name, kind, returnTypeInference,
+            operandTypeInference, operandTypeChecker,
             funcType);
     }
     

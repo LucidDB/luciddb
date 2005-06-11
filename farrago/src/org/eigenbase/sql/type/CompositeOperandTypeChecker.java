@@ -30,8 +30,8 @@ import java.util.*;
 
 /**
  * This class allows multiple existing {@link SqlOperandTypeChecker} rules
- * to be combined into one rule.<p> For example, giving an operand the
- * signature of both a string or a numeric could be done by:
+ * to be combined into one rule.  For example, allowing an operand to
+ * be either string or numeric could be done by:
  * <blockquote><pre><code>
  *
  * CompositeOperandsTypeChecking newCompositeRule =
@@ -40,24 +40,44 @@ import java.util.*;
  *    new SqlOperandTypeChecker[]{stringRule, numericRule});
  *
  * </code></pre></blockquote>
- * Simmilary a rule that would only allow a numeric literal can be done by:
+ *
+ * Similary a rule that would only allow a numeric literal can be done by:
  * <blockquote><pre><code>
  *
  * CompositeOperandsTypeChecking newCompositeRule =
  *  new CompositeOperandsTypeChecking(
  *    Composition.AND,
- *    new SqlOperandTypeChecker[]{literalRule, numericRule});
+ *    new SqlOperandTypeChecker[]{numericRule, literalRule});
  *
  * </code></pre></blockquote>
+ *
+ *<p>
+ *
+ * Finally, creating a signature expecting a string for the first
+ * operand and a numeric for the second operand can be done by:
+ * <blockquote><pre><code>
+ *
+ * CompositeOperandsTypeChecking newCompositeRule =
+ *  new CompositeOperandsTypeChecking(
+ *    Composition.SEQUENCE,
+ *    new SqlOperandTypeChecker[]{stringRule, numericRule});
+ *
+ * </code></pre></blockquote>
+ *
+ *<p>
+ *
+ * For SEQUENCE composition, the rules must be instances of
+ * SqlSingleOperandTypeChecker, and signature generation is not supported.
+ * For AND composition, only the first rule is used for signature generation.
  *
  * @author Wael Chatila
  * @version $Id$
  */
 public class CompositeOperandTypeChecker
-    implements SqlOperandTypeChecker
+    implements SqlSingleOperandTypeChecker
 {
-    private SqlOperandTypeChecker[] allowedRules;
-    private Composition composition;
+    private final SqlOperandTypeChecker[] allowedRules;
+    private final Composition composition;
 
     public CompositeOperandTypeChecker(
         Composition composition,
@@ -65,11 +85,6 @@ public class CompositeOperandTypeChecker
     {
         Util.pre(null != allowedRules, "null != allowedRules");
         Util.pre(allowedRules.length > 1, "Not a composite type");
-        int firstArgsLength = allowedRules[0].getArgCount();
-        for (int i = 1; i < allowedRules.length; i++) {
-            Util.pre(allowedRules[i].getArgCount() == firstArgsLength,
-                "All must have the same operand length");
-        }
         this.allowedRules = allowedRules;
         this.composition = composition;
     }
@@ -79,44 +94,75 @@ public class CompositeOperandTypeChecker
         return allowedRules;
     }
 
-    public String getAllowedSignatures(SqlOperator op)
+    public String getAllowedSignatures(SqlOperator op, String opName)
     {
+        if (composition == SEQUENCE) {
+            throw Util.needToImplement("must override getAllowedSignatures");
+        }
         StringBuffer ret = new StringBuffer();
         for (int i = 0; i < allowedRules.length; i++) {
             SqlOperandTypeChecker rule = allowedRules[i];
             if (i > 0) {
                 ret.append(SqlOperator.NL);
             }
-            ret.append(rule.getAllowedSignatures(op));
+            ret.append(rule.getAllowedSignatures(op, opName));
+            if (composition == AND) {
+                break;
+            }
         }
         return ret.toString();
     }
 
-    public int getArgCount()
+    public SqlOperandCountRange getOperandCountRange()
     {
-        // Check made in constructor to verify that all rules have the same
-        // number of arguments. Take and return the first one.
-        return allowedRules[0].getArgCount();
+        if (composition == SEQUENCE) {
+            return new SqlOperandCountRange(allowedRules.length);
+        } else {
+            // TODO jvs 2-June-2005:  technically, this is only correct
+            // for OR, not AND; probably not a big deal
+            Set set = new TreeSet();
+            for (int i = 0; i < allowedRules.length; i++) {
+                SqlOperandTypeChecker rule = allowedRules[i];
+                SqlOperandCountRange range = rule.getOperandCountRange();
+                if (range.isVariadic()) {
+                    return SqlOperandCountRange.Variadic;
+                }
+                set.addAll(range.getAllowedList());
+            }
+            return new SqlOperandCountRange(
+                new ArrayList(set));
+        }
     }
 
-    public boolean check(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
+    public boolean checkSingleOperandType(
+        SqlCallBinding callBinding,
         SqlNode node,
-        int ruleOrdinal,
+        int iFormalOperand,
         boolean throwOnFailure)
     {
         Util.pre(allowedRules.length >= 1, "allowedRules.length>=1");
+
+        if (composition == SEQUENCE) {
+            SqlSingleOperandTypeChecker singleRule =
+                (SqlSingleOperandTypeChecker) allowedRules[iFormalOperand];
+            return singleRule.checkSingleOperandType(
+                callBinding,
+                node,
+                0,
+                throwOnFailure);
+        }
+        
         int typeErrorCount = 0;
 
         boolean throwOnAndFailure =
             (composition == AND) && throwOnFailure;
 
         for (int i = 0; i < allowedRules.length; i++) {
-            SqlOperandTypeChecker rule = allowedRules[i];
-            if (!rule.check(call, validator, scope, node,
-                    ruleOrdinal, throwOnAndFailure)) {
+            SqlSingleOperandTypeChecker rule =
+                (SqlSingleOperandTypeChecker) allowedRules[i];
+            if (!rule.checkSingleOperandType(callBinding, node,
+                    iFormalOperand, throwOnAndFailure))
+            {
                 typeErrorCount++;
             }
         }
@@ -136,24 +182,21 @@ public class CompositeOperandTypeChecker
             //describing in more detail what the problem was, hence doing
             //the loop again
             for (int i = 0; i < allowedRules.length; i++) {
-                SqlOperandTypeChecker rule = allowedRules[i];
-                if (!rule.check(call, validator, scope, node,
-                        ruleOrdinal, true)) {
-                    typeErrorCount++;
-                }
+                SqlSingleOperandTypeChecker rule =
+                    (SqlSingleOperandTypeChecker) allowedRules[i];
+                rule.checkSingleOperandType(callBinding, node,
+                    iFormalOperand, true);
             }
             //if no exception thrown, just throw a generic validation
             //signature error
-            throw call.newValidationSignatureError(validator, scope);
+            throw callBinding.newValidationSignatureError();
         }
 
         return ret;
     }
 
-    public boolean check(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlCall call,
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
         int typeErrorCount = 0;
@@ -161,13 +204,29 @@ public class CompositeOperandTypeChecker
         for (int i = 0; i < allowedRules.length; i++) {
             SqlOperandTypeChecker rule = allowedRules[i];
 
-            if (!rule.check(validator, scope, call, false)) {
-                typeErrorCount++;
+            if (composition == SEQUENCE) {
+                SqlSingleOperandTypeChecker singleRule =
+                    (SqlSingleOperandTypeChecker) rule;
+                if (i >= callBinding.getOperandCount()) {
+                    break;
+                }
+                if (!singleRule.checkSingleOperandType(
+                        callBinding,
+                        callBinding.getCall().operands[i],
+                        0,
+                        false))
+                {
+                    typeErrorCount++;
+                }
+            } else {
+                if (!rule.checkOperandTypes(callBinding, false)) {
+                    typeErrorCount++;
+                }
             }
         }
 
         boolean failed = true;
-        if (composition == AND) {
+        if ((composition == AND) || (composition == SEQUENCE)) {
             failed = typeErrorCount>0;
         } else if (composition == OR) {
             failed = (typeErrorCount == allowedRules.length);
@@ -175,7 +234,17 @@ public class CompositeOperandTypeChecker
 
         if (failed) {
             if (throwOnFailure) {
-                throw call.newValidationSignatureError(validator, scope);
+                //in the case of a composite OR we want to throw an error
+                //describing in more detail what the problem was, hence doing
+                //the loop again
+                if (composition == OR) {
+                    for (int i = 0; i < allowedRules.length; i++) {
+                        allowedRules[i].checkOperandTypes(callBinding, true);
+                    }
+                }
+                //if no exception thrown, just throw a generic validation
+                //signature error
+                throw callBinding.newValidationSignatureError();
             }
             return false;
         }
@@ -193,9 +262,10 @@ public class CompositeOperandTypeChecker
     
     public static final Composition AND = new Composition("AND", 0);
     public static final Composition OR = new Composition("OR", 1);
+    public static final Composition SEQUENCE = new Composition("SEQUENCE", 2);
 
     public static final EnumeratedValues enumeration =
-        new EnumeratedValues(new Composition [] { AND, OR });
+        new EnumeratedValues(new Composition [] { AND, OR, SEQUENCE });
 
 }
 

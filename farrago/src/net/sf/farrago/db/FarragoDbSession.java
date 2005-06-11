@@ -57,7 +57,7 @@ import org.eigenbase.jmi.*;
  * context.
  *
  * @author John V. Sichi
- * @version $Id$
+ * @version $Id: //open/dev/farrago/src/net/sf/farrago/db/FarragoDbSession.java#27
  */
 public class FarragoDbSession extends FarragoCompoundAllocation
     implements FarragoSession,
@@ -261,6 +261,13 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             getSessionIndexMap());
     }
 
+    // implement FarragoSession
+    public FarragoSessionPrivilegeChecker newPrivilegeChecker()
+    {
+        // Instantiate a new privilege checker
+        return new FarragoDbSessionPrivilegeCheker(this);
+    }
+    
     // implement FarragoSession
     public FarragoSession cloneSession(
         FarragoSessionVariables inheritedVariables)

@@ -672,7 +672,8 @@ public class SqlToRelConverter
         SqlFunction constructor,
         RexNode [] exprs)
     {
-        RelDataType type = constructor.getType(typeFactory, exprs);
+        RelDataType type = rexBuilder.deriveReturnType(
+            constructor, typeFactory, exprs);
 
         int n = type.getFieldList().size();
         RexNode [] initializationExprs = new RexNode[n];
@@ -961,6 +962,7 @@ public class SqlToRelConverter
                 ProjectRel.Flags.Boxed);
 
             UncollectRel uncollectRel = new UncollectRel(cluster, childRel);
+	    leaves.add(uncollectRel);
             bb.setRoot(uncollectRel);
             return;
         default:
@@ -1003,7 +1005,7 @@ public class SqlToRelConverter
                             leftRel.getRowType().getFieldOrdinal(
                                 correlNode.getField().getName());
                         assert(leftRel.getRowType().getField(
-                            correlNode.getField().getName()).getType()==
+                            correlNode.getField().getName()).getType() ==
                             correlNode.getType());
                         if (pos != -1) {
                             correlations.add(new
@@ -1572,7 +1574,16 @@ public class SqlToRelConverter
                 for (int jOperand = 0; jOperand < projectList.size(); jOperand++) {
                     SqlNode operand = (SqlNode) projectList.get(jOperand);
                     selectList[jOperand] = convertExpression(bb, operand);
-                    fieldNames[jOperand] = validator.deriveAlias(operand, jOperand);
+
+                    // REVIEW angel 5-June-2005: Use deriveAliasFromOrdinal instead
+                    // of deriveAlias to match field names from SqlRowOperator.
+                    // Otherwise,  get error
+                    // Type 'RecordType(INTEGER EMPNO)' has no field 'EXPR$0'
+                    // when doing
+                    // select*from unnest(select multiset[empno] from sales.emps);
+
+                    fieldNames[jOperand] = SqlUtil.deriveAliasFromOrdinal(jOperand);
+                    // fieldNames[jOperand] = validator.deriveAlias(operand, jOperand);
                 }
                 joinList.set(iRel, new ProjectRel(
                     cluster, new OneRowRel(cluster), selectList,
@@ -1727,7 +1738,7 @@ public class SqlToRelConverter
             return null;
         }
 
-        public Moniker [] getAllSchemaObjectNames(String [] names)
+        public SqlMoniker [] getAllSchemaObjectNames(String [] names)
         {
             throw new UnsupportedOperationException();
         }

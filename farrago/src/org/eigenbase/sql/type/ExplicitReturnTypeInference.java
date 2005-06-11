@@ -75,14 +75,11 @@ public class ExplicitReturnTypeInference
         this.scale = scale;
     }
 
-    public RelDataType getType(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        RelDataTypeFactory typeFactory,
-        CallOperands callOperands)
+    public RelDataType inferReturnType(
+        SqlOperatorBinding opBinding)
     {
         if (type == null) {
-            type = createType(typeFactory);
+            type = createType(opBinding.getTypeFactory());
         }
         return type;
     }

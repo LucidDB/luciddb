@@ -41,32 +41,19 @@ import java.util.*;
  */
 public class SetopOperandTypeChecker implements SqlOperandTypeChecker
 {
-    public boolean check(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlNode node,
-        int ruleOrdinal,
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
-        assert ruleOrdinal == 0;
-        return check(validator, scope, call, throwOnFailure);
-    }
-
-    public boolean check(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlCall call,
-        boolean throwOnFailure)
-    {
-        assert call.operands.length == 2 : "setops are binary (for now)";
-        RelDataType[] argTypes = new RelDataType[call.operands.length];
+        assert (callBinding.getOperandCount() == 2)
+            : "setops are binary (for now)";
+        RelDataType[] argTypes = new RelDataType[callBinding.getOperandCount()];
         int colCount = -1;
         for (int i = 0; i < argTypes.length; i++) {
-            final SqlNode operand = call.operands[i];
+            final SqlNode operand = callBinding.getCall().operands[i];
             final RelDataType argType =
                 argTypes[i] =
-                validator.getValidatedNodeType(operand);
+                callBinding.getValidator().getValidatedNodeType(operand);
             Util.permAssert(argType.isStruct(),
                 "setop arg must be a struct");
             if (i == 0) {
@@ -77,11 +64,11 @@ public class SetopOperandTypeChecker implements SqlOperandTypeChecker
             final RelDataTypeField[] fields = argType.getFields();
             if (fields.length != colCount) {
                 if (throwOnFailure) {
-                    throw validator.newValidationError(
+                    throw callBinding.getValidator().newValidationError(
                         operand,
                         EigenbaseResource.instance()
                         .newColumnCountMismatchInSetop(
-                            call.getOperator().getName()));
+                            callBinding.getOperator().getName()));
                 } else {
                     return false;
                 }
@@ -91,23 +78,24 @@ public class SetopOperandTypeChecker implements SqlOperandTypeChecker
         // The columns must be pairwise union compatible. For each column
         // ordinal, form a 'slice' containing the types of the ordinal'th
         // column j.
-        RelDataType[] colTypes = new RelDataType[call.operands.length];
+        RelDataType[] colTypes = new RelDataType[callBinding.getOperandCount()];
         for (int i = 0; i < colCount; i++) {
             for (int j = 0; j < argTypes.length; j++) {
                 final RelDataTypeField field = argTypes[j].getFields()[i];
                 colTypes[j] = field.getType();
             }
             final RelDataType type =
-                validator.getTypeFactory().leastRestrictive(colTypes);
+                callBinding.getTypeFactory().leastRestrictive(colTypes);
             if (type == null) {
                 if (throwOnFailure) {
-                    SqlNode field = SqlUtil.getSelectListItem(call.operands[0], i);
-                    throw validator.newValidationError(
+                    SqlNode field = SqlUtil.getSelectListItem(
+                        callBinding.getCall().operands[0], i);
+                    throw callBinding.getValidator().newValidationError(
                         field,
                         EigenbaseResource.instance()
                         .newColumnTypeMismatchInSetop(
                             new Integer(i + 1), // 1-based
-                            call.getOperator().getName()));
+                            callBinding.getOperator().getName()));
                 } else {
                     return false;
                 }
@@ -118,14 +106,14 @@ public class SetopOperandTypeChecker implements SqlOperandTypeChecker
         return true;
     }
 
-    public int getArgCount()
+    public SqlOperandCountRange getOperandCountRange()
     {
-        return 2;
+        return SqlOperandCountRange.Two;
     }
 
-    public String getAllowedSignatures(SqlOperator op)
+    public String getAllowedSignatures(SqlOperator op, String opName)
     {
-        return "<UNION>"; // todo: Wael, please review.
+        return "{0} " + opName + " {1}"; // todo: Wael, please review.
     }
 }
 

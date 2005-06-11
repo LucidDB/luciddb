@@ -174,8 +174,28 @@ public class RexBuilder
         SqlOperator op,
         RexNode [] exprs)
     {
-        final RelDataType type = op.getType(typeFactory, exprs);
+        final RelDataType type = deriveReturnType(op, typeFactory, exprs);
         return new RexCall(type, op, exprs);
+    }
+
+    /**
+     * Derives the return type of a call to an operator.
+     *
+     * @param op the operator being called
+     *
+     * @param typeFactory factory for return type
+     *
+     * @param exprs actual operands
+     *
+     * @return derived type
+     */
+    public RelDataType deriveReturnType(
+        SqlOperator op,
+        RelDataTypeFactory typeFactory,
+        RexNode [] exprs)
+    {
+        return op.inferReturnType(
+            new RexCallBinding(typeFactory, op, exprs));
     }
 
     private RelDataType [] getTypes(RexNode [] exprs)

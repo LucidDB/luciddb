@@ -41,44 +41,34 @@ import java.util.*;
  */
 public class MultisetOperandTypeChecker implements SqlOperandTypeChecker
 {
-    public boolean check(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlNode node,
-        int ruleOrdinal,
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
-        throw Util.needToImplement(this);
-    }
-
-    public boolean check(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlCall call,
-        boolean throwOnFailure)
-    {
+        SqlCall call = callBinding.getCall();
         SqlNode op0 = call.operands[0];
-        if(!SqlTypeStrategies.otcNullableMultiset.check(
-               call, validator, scope,
+        if(!SqlTypeStrategies.otcMultiset.checkSingleOperandType(
+               callBinding, 
                op0, 0, throwOnFailure)) {
             return false;
         }
 
         SqlNode op1 = call.operands[1];
-        if (!SqlTypeStrategies.otcNullableMultiset.check(
-                call, validator, scope,
+        if (!SqlTypeStrategies.otcMultiset.checkSingleOperandType(
+                callBinding,
                 op1, 0, throwOnFailure)) {
             return false;
         }
 
         RelDataType[] argTypes = new RelDataType[2];
-        argTypes[0] = validator.deriveType(scope, op0).getComponentType();
-        argTypes[1] = validator.deriveType(scope, op1).getComponentType();
+        argTypes[0] = callBinding.getValidator().deriveType(
+            callBinding.getScope(), op0).getComponentType();
+        argTypes[1] = callBinding.getValidator().deriveType(
+            callBinding.getScope(), op1).getComponentType();
         //TODO this wont work if element types are of ROW types and there is a
         //mismatch.
-        RelDataType biggest = SqlTypeUtil.getNullableBiggest(
-            validator.getTypeFactory(), argTypes);
+        RelDataType biggest = callBinding.getTypeFactory().leastRestrictive(
+            argTypes);
         if (null==biggest) {
             if (throwOnFailure) {
                 throw EigenbaseResource.instance().newTypeNotComparable(
@@ -91,14 +81,14 @@ public class MultisetOperandTypeChecker implements SqlOperandTypeChecker
         return true;
     }
 
-    public int getArgCount()
+    public SqlOperandCountRange getOperandCountRange()
     {
-        return 2;
+        return SqlOperandCountRange.Two;
     }
 
-    public String getAllowedSignatures(SqlOperator op)
+    public String getAllowedSignatures(SqlOperator op, String opName)
     {
-        return "<MULTISET> "+op.getName()+" <MULTISET>";
+        return "<MULTISET> " + opName + " <MULTISET>";
     }
 }
 

@@ -36,34 +36,39 @@ import java.util.*;
  * @author Wael Chatila
  * @version $Id$
  */
-public class SameOperandTypeChecker extends ExplicitOperandTypeChecker
+public class SameOperandTypeChecker implements SqlOperandTypeChecker
 {
-    private final int nOperands;
+    protected final int nOperands;
 
     public SameOperandTypeChecker(
-        SqlTypeName [][] explicitTypes)
+        int nOperands)
     {
-        super(explicitTypes);
-        nOperands = explicitTypes.length;
+        this.nOperands = nOperands;
     }
-    
-    public boolean check(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlCall call, boolean throwOnFailure)
+
+    // implement SqlOperandTypeChecker
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding, boolean throwOnFailure)
     {
         RelDataType [] types = new RelDataType[nOperands];
         for (int i = 0; i < nOperands; ++i) {
+            SqlNode operand = callBinding.getCall().operands[i];
+            if (SqlUtil.isNullLiteral(operand, false)) {
+                if (throwOnFailure) {
+                    throw callBinding.getValidator().newValidationError(
+                        operand,
+                        EigenbaseResource.instance().newNullIllegal());
+                } else {
+                    return false;
+                }
+            }
             types[i] =
-                validator.deriveType(scope, call.operands[i]);
+                callBinding.getValidator().deriveType(
+                    callBinding.getScope(),
+                    operand);
         }
-        RelDataType nullType =
-            validator.getTypeFactory().createSqlType(SqlTypeName.Null);
         int prev = -1;
         for (int i = 0; i < nOperands; ++i) {
-            if (types[i] == nullType) {
-                continue;
-            }
             if (prev == -1) {
                 prev = i;
             } else {
@@ -83,12 +88,28 @@ public class SameOperandTypeChecker extends ExplicitOperandTypeChecker
                 if (!throwOnFailure) {
                     return false;
                 }
-                throw validator.newValidationError(
-                    call,
+                // REVIEW jvs 5-June-2005:  Why don't we use
+                // newValidationSignatureError() here?  It gives more
+                // specific diagnostics.
+                throw callBinding.newValidationError(
                     EigenbaseResource.instance().newNeedSameTypeParameter());
             }
         }
         return true;
+    }
+    
+    // implement SqlOperandTypeChecker
+    public SqlOperandCountRange getOperandCountRange()
+    {
+        return new SqlOperandCountRange(nOperands);
+    }
+
+    // implement SqlOperandTypeChecker
+    public String getAllowedSignatures(SqlOperator op, String opName)
+    {
+        String [] array = new String[nOperands];
+        Arrays.fill(array, "EQUIVALENT_TYPE");
+        return SqlUtil.getAliasedSignature(op, opName, Arrays.asList(array));
     }
 }
 

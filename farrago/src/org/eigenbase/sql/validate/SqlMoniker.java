@@ -22,48 +22,31 @@
 
 package org.eigenbase.sql.validate;
 
+import org.eigenbase.sql.SqlIdentifier;
+
 /**
- * A generic implementation of {@link Moniker} 
+ * An interface of an object identifier that represents a SqlIdentifier
  *
  * @author tleung
- * @since May 31, 2005
+ * @since May 24, 2005
  * @version $Id$
  **/
-public class MonikerImpl implements Moniker
-{   
-    String[] names;
-    MonikerType type;
+public interface SqlMoniker
+{
+    /**
+     * Returns the type of object referred to by this moniker. Never null.
+     */
+    SqlMonikerType getType();
 
-    public MonikerImpl(String[] names, MonikerType type) {
-        this.names = names;
-        this.type = type;
-    }
-    
-    public MonikerImpl(String name, MonikerType type) {
-        this.names = new String[] {name};
-        this.type = type;
-    }
+    /**
+     * Returns the array of component names.
+     */
+    String[] getFullyQualifiedNames();
 
-    public MonikerType getType() {
-        return type;
-    }
-
-    public String[] getFullyQualifiedNames() {
-        return names;
-    }
-
-    public String getShortName() {
-        return names[names.length-1];
-    }
-
-    public String toString() {
-        StringBuffer result = new StringBuffer();;
-        for (int i = 0; i < names.length; i++) {
-            result.append(names[i]);
-            if (i < names.length-1) {
-                result.append(".");
-            }
-        }
-        return result.toString();
-    }
+    /**
+     * Creates a {@link SqlIdentifier} containing the fully-qualified name.
+     */
+    SqlIdentifier toIdentifier();
 }
+
+// End SqlMoniker.java

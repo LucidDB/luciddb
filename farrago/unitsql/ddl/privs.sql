@@ -1,6 +1,16 @@
 -- $Id$
 -- Test DDL on privileges
 
+-- Create a security manager and login as this user to perform all grant 
+-- tests. 
+-- TODO: grant all appropriate system privilege for this user once
+-- these privs are available.
+
+create user SECMAN authorization 'Unknown';
+create user SECMAN_2 authorization 'Unknown';
+
+!connect jdbc:farrago: SECMAN net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver
+
 -- Test 1:
 -- 
 create schema privstest;

@@ -19,6 +19,7 @@ farragoDir=$(dirname $0)/../../farrago
 /usr/bin/find $farragoDir/src -name \*.java |
 grep -v -F \
 'farrago/src/net/sf/farrago/FarragoMetadataFactory.java
+farrago/src/net/sf/farrago/FarragoMetadataFactoryImpl.java
 farrago/src/net/sf/farrago/parser/impl/
 farrago/src/net/sf/farrago/resource/FarragoResource.java
 farrago/src/net/sf/farrago/resource/FarragoResource_en_US.java

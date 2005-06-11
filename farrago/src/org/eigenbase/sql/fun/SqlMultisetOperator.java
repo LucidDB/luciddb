@@ -47,7 +47,8 @@ public class SqlMultisetOperator extends SqlSpecialOperator
         // Precedence of 100 because nothing can pull parentheses apart.
         super("MULTISET", kind, 100, false,
             SqlTypeStrategies.rtiFirstArgType,
-            null, null);
+            null,
+            SqlTypeStrategies.otcVariadic);
         assert(kind.isA(SqlKind.MultisetQueryConstructor) ||
                kind.isA(SqlKind.MultisetValueConstructor));
 
@@ -61,44 +62,38 @@ public class SqlMultisetOperator extends SqlSpecialOperator
         return SqlSyntax.Special;
     }
 
-    // implement SqlOperator
-    public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()
+    public RelDataType inferReturnType(
+        SqlOperatorBinding opBinding)
     {
-        return OperandsCountDescriptor.variadicCountDescriptor;
-    }
-
-    protected RelDataType getType(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        RelDataTypeFactory typeFactory,
-        CallOperands callOperands)
-    {
-        RelDataType type = getComponentType(typeFactory,  callOperands.collectTypes());
+        RelDataType type = getComponentType(
+            opBinding.getTypeFactory(),  opBinding.collectOperandTypes());
         if (null == type) {
             return null;
         }
-        return SqlTypeUtil.createMultisetType(typeFactory, type, false);
+        return SqlTypeUtil.createMultisetType(
+            opBinding.getTypeFactory(), type, false);
     }
 
     private RelDataType getComponentType(RelDataTypeFactory typeFactory,
         RelDataType[] argTypes)
     {
-        return SqlTypeUtil.getNullableBiggest(typeFactory, argTypes);
+        return typeFactory.leastRestrictive(argTypes);
     }
 
-    protected boolean checkArgTypes(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
         final RelDataType[] argTypes =
-            SqlTypeUtil.collectTypes(validator, scope, call.operands);
+            SqlTypeUtil.deriveAndCollectTypes(
+                callBinding.getValidator(),
+                callBinding.getScope(),
+                callBinding.getCall().operands);
         final RelDataType componentType = getComponentType(
-            validator.getTypeFactory(), argTypes);
+            callBinding.getTypeFactory(), argTypes);
         if (null == componentType) {
             if (throwOnFailure) {
-                throw validator.newValidationError(call,
+                throw callBinding.newValidationError(
                     EigenbaseResource.instance().newNeedSameTypeParameter());
             }
             return false;

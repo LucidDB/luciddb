@@ -30,7 +30,6 @@ import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.validate.SqlValidatorUtil;
-import org.eigenbase.rex.RexNode;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.rel.RelNode;
 
@@ -117,7 +116,9 @@ public abstract class SqlTypeUtil
         Util.pre(null != operands, "null!=operands");
         Util.pre(2 <= operands.length, "2<=operands.length");
 
-        if (!isCharTypeComparable(collectTypes(validator, scope, operands))) {
+        if (!isCharTypeComparable(
+                deriveAndCollectTypes(validator, scope, operands)))
+        {
             if (throwOnFailure) {
                 String msg = "";
                 for (int i = 0; i < operands.length; i++) {
@@ -134,9 +135,10 @@ public abstract class SqlTypeUtil
     }
 
     /**
-     * Iterates over all operands and collects their type.
+     * Iterates over all operands, derives their types, and collects them
+     * into an array.
      */
-    public static RelDataType [] collectTypes(
+    public static RelDataType [] deriveAndCollectTypes(
         SqlValidator validator,
         SqlValidatorScope scope,
         SqlNode [] operands)
@@ -148,15 +150,13 @@ public abstract class SqlTypeUtil
         return types;
     }
 
-    public static RelDataType [] collectTypes(RexNode [] exprs)
-    {
-        RelDataType [] types = new RelDataType[exprs.length];
-        for (int i = 0; i < types.length; i++) {
-            types[i] = exprs[i].getType();
-        }
-        return types;
-    }
-
+    /**
+     * Collects the row types of an array of relational expressions.
+     *
+     * @param rels array of relational expressions
+     *
+     * @return array of row types
+     */
     public static RelDataType [] collectTypes(RelNode [] rels)
     {
         RelDataType [] types = new RelDataType[rels.length];
@@ -190,7 +190,7 @@ public abstract class SqlTypeUtil
     }
 
     /**
-     * Recreates a given RelDataType with nullablility iff any of the param
+     * Recreates a given RelDataType with nullability iff any of the param
      * argTypes are nullable.
      */
     public final static RelDataType makeNullableIfOperandsAre(
@@ -363,6 +363,8 @@ public abstract class SqlTypeUtil
         switch (typeName.getOrdinal()) {
         case SqlTypeName.Varchar_ordinal:
         case SqlTypeName.Varbinary_ordinal:
+        // TODO angel 8-June-2005: Multiset should be LOB
+        case SqlTypeName.Multiset_ordinal:
             return true;
         default:
             return false;
@@ -525,20 +527,6 @@ public abstract class SqlTypeUtil
         default:
             return false;
         }
-    }
-
-    /**
-     * Calls {@link SqlTypeStrategies.rtiNullableBiggest} by wrapping
-     * the argTypes parameter in a {@link CallOperands.RelDataTypesCallOperands}
-     * object
-     */
-    public static RelDataType getNullableBiggest(RelDataTypeFactory typeFactory,
-        RelDataType[] argTypes)
-    {
-        CallOperands.RelDataTypesCallOperands types =
-            new CallOperands.RelDataTypesCallOperands(argTypes);
-        return SqlTypeStrategies.rtiNullableBiggest.getType(
-                 null, null, typeFactory, types);
     }
 
     /**

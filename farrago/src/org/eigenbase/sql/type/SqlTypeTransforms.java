@@ -29,6 +29,13 @@ import org.eigenbase.sql.validate.*;
  * SqlTypeTransforms defines a number of reusable instances of
  * {@link SqlTypeTransform}.
  *
+ *<p>
+ *
+ * NOTE: avoid anonymous inner classes here except for unique,
+ * non-generalizable strategies; anything else belongs in a reusable top-level
+ * class.  If you find yourself copying and pasting an existing strategy's
+ * anonymous inner class, you're making a mistake.
+ *
  * @author Wael Chatila
  * @version $Id$
  */
@@ -42,50 +49,17 @@ public abstract class SqlTypeTransforms
     public static final SqlTypeTransform toNullable =
         new SqlTypeTransform()
         {
-            public RelDataType getType(
-                SqlValidator validator,
-                SqlValidatorScope scope,
-                RelDataTypeFactory typeFactory,
-                CallOperands callOperands,
+            public RelDataType transformType(
+                SqlOperatorBinding opBinding,
                 RelDataType typeToTransform)
             {
                 return SqlTypeUtil.makeNullableIfOperandsAre(
-                    typeFactory,
-                    callOperands.collectTypes(),
+                    opBinding.getTypeFactory(),
+                    opBinding.collectOperandTypes(),
                     typeToTransform);
             }
         };
 
-    /**
-     * Parameter type-inference transform strategy where a derived INTERVAL type
-     * is transformed into the same type but possible with a different
-     * {@link org.eigenbase.sql.SqlIntervalQualifier}.
-     * If the type to transform is not of a INTERVAL type, this transformation
-     * does nothing.
-     * @see {@link IntervalSqlType}
-     */
-    public static final SqlTypeTransform toLeastRestrictiveInterval =
-        new SqlTypeTransform()
-        {
-            public RelDataType getType(
-                SqlValidator validator,
-                SqlValidatorScope scope,
-                RelDataTypeFactory typeFactory,
-                CallOperands callOperands,
-                RelDataType typeToTransform)
-            {
-                if (typeToTransform instanceof IntervalSqlType) {
-                    IntervalSqlType it =
-                       (IntervalSqlType) typeToTransform;
-                    for (int i = 0; i < callOperands.size(); i++) {
-                        it = it.combine((IntervalSqlType)
-                                            callOperands.getType(i));
-                    }
-                    return it;
-                }
-                return typeToTransform;
-            }
-        };
     /**
      * Type-inference strategy whereby the result type of a call is VARYING
      * the type given.
@@ -97,11 +71,8 @@ public abstract class SqlTypeTransforms
     public static final SqlTypeTransform toVarying =
         new SqlTypeTransform()
         {
-            public RelDataType getType(
-                SqlValidator validator,
-                SqlValidatorScope scope,
-                RelDataTypeFactory fac,
-                CallOperands callOperands,
+            public RelDataType transformType(
+                SqlOperatorBinding opBinding,
                 RelDataType typeToTransform)
             {
                 switch (typeToTransform.getSqlTypeName().getOrdinal()) {
@@ -113,16 +84,17 @@ public abstract class SqlTypeTransforms
                 SqlTypeName retTypeName = toVar(typeToTransform);
 
                 RelDataType ret =
-                    fac.createSqlType(
+                    opBinding.getTypeFactory().createSqlType(
                         retTypeName,
                         typeToTransform.getPrecision());
                 if (SqlTypeUtil.inCharFamily(typeToTransform)) {
-                    ret = fac.createTypeWithCharsetAndCollation(
+                    ret = opBinding.getTypeFactory().
+                        createTypeWithCharsetAndCollation(
                             ret,
                             typeToTransform.getCharset(),
                             typeToTransform.getCollation());
                 }
-                return fac.createTypeWithNullability(
+                return opBinding.getTypeFactory().createTypeWithNullability(
                     ret,
                     typeToTransform.isNullable());
             }
@@ -150,11 +122,8 @@ public abstract class SqlTypeTransforms
     public static final SqlTypeTransform toMultisetElementType =
         new SqlTypeTransform()
         {
-            public RelDataType getType(
-                SqlValidator validator,
-                SqlValidatorScope scope,
-                RelDataTypeFactory typeFactory,
-                CallOperands callOperands,
+            public RelDataType transformType(
+                SqlOperatorBinding opBinding,
                 RelDataType typeToTransform)
             {
                 return typeToTransform.getComponentType();

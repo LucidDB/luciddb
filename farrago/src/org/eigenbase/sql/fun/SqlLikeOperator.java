@@ -71,9 +71,7 @@ public class SqlLikeOperator extends SqlSpecialOperator
         // "a like (b like c escape d)".
         super(name, kind, 15, false, SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiFirstKnown,
-
-        /** this is not correct in general */
-        SqlTypeStrategies.otcNullableStringX3);
+            SqlTypeStrategies.otcStringSameX3);
         this.negated = negated;
     }
 
@@ -84,27 +82,25 @@ public class SqlLikeOperator extends SqlSpecialOperator
         return negated;
     }
 
-    public OperandsCountDescriptor getOperandsCountDescriptor()
+    public SqlOperandCountRange getOperandCountRange()
     {
-        return new OperandsCountDescriptor(2, 3);
+        return SqlOperandCountRange.TwoOrThree;
     }
 
-    protected boolean checkArgTypes(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
-        switch (call.operands.length) {
+        switch (callBinding.getOperandCount()) {
         case 2:
-            if (!SqlTypeStrategies.otcNullableStringSameX2.
-                check(validator, scope, call, throwOnFailure)) {
+            if (!SqlTypeStrategies.otcStringSameX2.
+                checkOperandTypes(callBinding, throwOnFailure)) {
                 return false;
             }
             break;
         case 3:
-            if (!SqlTypeStrategies.otcNullableStringSameX3.
-                check(validator, scope, call, throwOnFailure)) {
+            if (!SqlTypeStrategies.otcStringSameX3.
+                checkOperandTypes(callBinding, throwOnFailure)) {
                 return false;
             }
 
@@ -112,11 +108,14 @@ public class SqlLikeOperator extends SqlSpecialOperator
             //enforce the escape character length to be 1
             break;
         default:
-            throw Util.newInternal("unexpected number of args to " + call);
+            throw Util.newInternal(
+                "unexpected number of args to " + callBinding.getCall());
         }
 
         if (!SqlTypeUtil.isCharTypeComparable(
-            validator, scope, call.operands, throwOnFailure)) {
+            callBinding.getValidator(),
+            callBinding.getScope(),
+            callBinding.getCall().operands, throwOnFailure)) {
             return false;
         }
         return true;

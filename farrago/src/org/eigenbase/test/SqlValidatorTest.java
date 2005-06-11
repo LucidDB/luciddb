@@ -301,18 +301,18 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "String literal continued on same line", 1, 14);
     }
 
-    public void testArthimeticOperators() {
+    public void testArithmeticOperators() {
         checkExp("pow(2,3)");
         checkExp("aBs(-2.3e-2)");
         checkExp("MOD(5             ,\t\f\r\n2)");
         checkExp("ln(5.43  )");
         checkExp("log(- -.2  )");
 
-        checkExpFails("mod(5.1, 3)", "(?s).*Cannot apply.*");
-        checkExpFails("mod(2,5.1)", "(?s).*Cannot apply.*");
+        checkExp("mod(5.1, 3)");
+        checkExp("mod(2,5.1)");
     }
 
-    public void testArthimeticOperatorsTypes() {
+    public void testArithmeticOperatorsTypes() {
         checkExpType("pow(2,3)", "DOUBLE");
         checkExpType("aBs(-2.3e-2)", "DOUBLE");
         checkExpType("aBs(5000000000)", "BIGINT");
@@ -323,7 +323,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("log(- -.2  )", "DOUBLE");
     }
 
-    public void testArthimeticOperatorsFails() {
+    public void testArithmeticOperatorsFails() {
         checkExpFails("pow(2,'abc')",
             "(?s).*Cannot apply 'POW' to arguments of type 'POW.<INTEGER>, <CHAR.3.>.*");
         checkExpFails("pow(true,1)",
@@ -461,10 +461,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     public void testConcatFails() {
         checkExpFails("'a'||x'ff'",
             "(?s).*Cannot apply '\\|\\|' to arguments of type '<CHAR.1.> \\|\\| <BINARY.1.>'"
-            + ".*Supported form.s.: '<CHAR> \\|\\| <CHAR>'"
-            + ".*'<VARCHAR> \\|\\| <VARCHAR>'"
-            + ".*'<BINARY> \\|\\| <BINARY>'"
-            + ".*'<VARBINARY> \\|\\| <VARBINARY>'.*");
+            + ".*Supported form.s.: '<STRING> \\|\\| <STRING>.*'");
     }
 
     public void testBetween() {
@@ -589,7 +586,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExp("overlay('ABCdef' placing 'abc' from 1)");
         checkExp("overlay('ABCdef' placing 'abc' from 1 for 3)");
         checkExpFails("overlay('ABCdef' placing 'abc' from '1' for 3)",
-            "(?s).*OVERLAY\\(<CHAR> PLACING <CHAR> FROM <INTEGER>\\).*");
+            "(?s).*OVERLAY\\(<STRING> PLACING <STRING> FROM <INTEGER>\\).*");
         checkExpType("overlay('ABCdef' placing 'abc' from 1 for 3)",
             "CHAR(9)");
 
@@ -713,27 +710,27 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExp("LOCALTIME(3)");
         checkExp("LOCALTIME"); //    fix sqlcontext later.
         checkExpFails("LOCALTIME(1+2)",
-            "Argument to function 'LOCALTIME' must be a positive integer literal");
+            "Argument to function 'LOCALTIME' must be a literal");
         checkWholeExpFails("LOCALTIME()",
             "No match found for function signature LOCALTIME..");
         checkExpType("LOCALTIME", "TIME(0)"); //  NOT NULL, with TZ ?
         checkExpFails("LOCALTIME(-1)",
-            "Argument to function 'LOCALTIME' must be a positive integer literal"); // i guess -s1 is an expression?
+            "Argument to function 'LOCALTIME' must be a literal"); // i guess -s1 is an expression?
         checkExpFails("LOCALTIME('foo')",
-            "Argument to function 'LOCALTIME' must be a positive integer literal");
+            "(?s).*Cannot apply.*");
 
         // LOCALTIMESTAMP
         checkExp("LOCALTIMESTAMP(3)");
         checkExp("LOCALTIMESTAMP"); //    fix sqlcontext later.
         checkExpFails("LOCALTIMESTAMP(1+2)",
-            "Argument to function 'LOCALTIMESTAMP' must be a positive integer literal");
+            "Argument to function 'LOCALTIMESTAMP' must be a literal");
         checkWholeExpFails("LOCALTIMESTAMP()",
             "No match found for function signature LOCALTIMESTAMP..");
         checkExpType("LOCALTIMESTAMP", "TIMESTAMP(0)"); //  NOT NULL, with TZ ?
         checkExpFails("LOCALTIMESTAMP(-1)",
-            "Argument to function 'LOCALTIMESTAMP' must be a positive integer literal"); // i guess -s1 is an expression?
+            "Argument to function 'LOCALTIMESTAMP' must be a literal"); // i guess -s1 is an expression?
         checkExpFails("LOCALTIMESTAMP('foo')",
-            "Argument to function 'LOCALTIMESTAMP' must be a positive integer literal");
+            "(?s).*Cannot apply.*");
 
         // CURRENT_DATE
         checkWholeExpFails("CURRENT_DATE(3)",
@@ -752,28 +749,28 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExp("current_time(3)");
         checkExp("current_time"); //    fix sqlcontext later.
         checkExpFails("current_time(1+2)",
-            "Argument to function 'CURRENT_TIME' must be a positive integer literal");
+            "Argument to function 'CURRENT_TIME' must be a literal");
         checkWholeExpFails("current_time()",
             "No match found for function signature CURRENT_TIME..");
         checkExpType("current_time", "TIME(0)"); //  NOT NULL, with TZ ?
         checkExpFails("current_time(-1)",
-            "Argument to function 'CURRENT_TIME' must be a positive integer literal");
+            "Argument to function 'CURRENT_TIME' must be a literal");
         checkExpFails("current_time('foo')",
-            "Argument to function 'CURRENT_TIME' must be a positive integer literal");
+            "(?s).*Cannot apply.*");
 
         // current_timestamp
         checkExp("CURRENT_TIMESTAMP(3)");
         checkExp("CURRENT_TIMESTAMP"); //    fix sqlcontext later.
         checkExpFails("CURRENT_TIMESTAMP(1+2)",
-            "Argument to function 'CURRENT_TIMESTAMP' must be a positive integer literal");
+            "Argument to function 'CURRENT_TIMESTAMP' must be a literal");
         checkWholeExpFails("CURRENT_TIMESTAMP()",
             "No match found for function signature CURRENT_TIMESTAMP..");
         checkExpType("CURRENT_TIMESTAMP", "TIMESTAMP(0)"); //  NOT NULL, with TZ ?
         checkExpType("CURRENT_TIMESTAMP(2)", "TIMESTAMP(2)"); //  NOT NULL, with TZ ?
         checkExpFails("CURRENT_TIMESTAMP(-1)",
-            "Argument to function 'CURRENT_TIMESTAMP' must be a positive integer literal");
+            "Argument to function 'CURRENT_TIMESTAMP' must be a literal");
         checkExpFails("CURRENT_TIMESTAMP('foo')",
-            "Argument to function 'CURRENT_TIMESTAMP' must be a positive integer literal");
+            "(?s).*Cannot apply.*");
 
         // Date literals
         checkExp("DATE '2004-12-01'");

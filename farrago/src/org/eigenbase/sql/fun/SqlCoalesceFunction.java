@@ -70,10 +70,10 @@ public class SqlCoalesceFunction extends SqlFunction
     }
 
     // REVIEW jvs 1-Jan-2005:  should this be here?  It's
-    // not entirely accurate,
-    public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()
+    // not entirely accurate.
+    public SqlOperandCountRange getOperandCountRange()
     {
-        return new OperandsCountDescriptor(2);
+        return SqlOperandCountRange.Two;
     }
 
     public void test(SqlTester tester)

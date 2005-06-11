@@ -22,16 +22,22 @@
 
 package org.eigenbase.sql.validate;
 
+import org.eigenbase.util.EnumeratedValues;
+
 /**
- * An interface of an object identifier that represents a SqlIdentifier
+ * An enumeration of moniker types. used in {@link SqlMoniker}
  *
  * @author tleung
  * @since May 24, 2005
  * @version $Id$
  **/
-public interface Moniker
-{
-    MonikerType getType();
-    String[] getFullyQualifiedNames();
-    String toString();
+public class SqlMonikerType extends EnumeratedValues.BasicValue {
+    public static final SqlMonikerType Column = new SqlMonikerType("Column", 0);
+    public static final SqlMonikerType Table = new SqlMonikerType("Table", 1);
+    public static final SqlMonikerType View = new SqlMonikerType("View", 2);
+    public static final SqlMonikerType Schema = new SqlMonikerType("Schema", 3);
+    public static final SqlMonikerType Repository = new SqlMonikerType("Repository", 4);
+    public SqlMonikerType(String name, int ordinal) {
+        super(name, ordinal, name);
+    }
 }

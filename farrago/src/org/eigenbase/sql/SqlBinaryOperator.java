@@ -38,13 +38,13 @@ public class SqlBinaryOperator extends SqlOperator
         SqlKind kind,
         int prec,
         boolean isLeftAssoc,
-        SqlReturnTypeInference typeInference,
-        SqlOperandTypeInference paramTypeInference,
-        SqlOperandTypeChecker argTypes)
+        SqlReturnTypeInference returnTypeInference,
+        SqlOperandTypeInference operandTypeInference,
+        SqlOperandTypeChecker operandTypeChecker)
     {
         super(name, kind, (2 * prec) + (isLeftAssoc ? 0 : 1),
-            (2 * prec) + (isLeftAssoc ? 1 : 0), typeInference,
-            paramTypeInference, argTypes);
+            (2 * prec) + (isLeftAssoc ? 1 : 0), returnTypeInference,
+            operandTypeInference, operandTypeChecker);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -54,7 +54,7 @@ public class SqlBinaryOperator extends SqlOperator
         return SqlSyntax.Binary;
     }
 
-    protected String getSignatureTemplate(final int operandsCount)
+    public String getSignatureTemplate(final int operandsCount)
     {
         Util.discard(operandsCount);
 

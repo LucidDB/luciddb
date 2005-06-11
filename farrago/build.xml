@@ -611,6 +611,8 @@ require version '${required.ant.version}'."/>
     <delete file="${ExtModelUMLSansDiagrams.xmi}"/>
     <delete
       file="${farrago.src.dir}/net/sf/farrago/FarragoMetadataFactory.java"/>
+    <delete
+      file="${farrago.src.dir}/net/sf/farrago/FarragoMetadataFactoryImpl.java"/>
     <delete dir="${farrago.catalog.src.dir}"/>
   </target>
 
@@ -951,8 +953,11 @@ require version '${required.ant.version}'."/>
       classpathref="farrago.run.classpath">
       <arg
         value="${farrago.src.dir}/net/sf/farrago/FarragoMetadataFactory.java"/>
+      <arg
+        value="${farrago.src.dir}/net/sf/farrago/FarragoMetadataFactoryImpl.java"/>
       <arg value="net.sf.farrago"/>
       <arg value="FarragoMetadataFactory"/>
+      <arg value="FarragoMetadataFactoryImpl"/>
       <arg value="net.sf.farrago.FarragoPackage"/>
       <arg value="FarragoCatalog"/>
     </farrago.javaExec>

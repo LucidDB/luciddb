@@ -128,6 +128,15 @@ public final class SqlParserUtil
     }
 
     /**
+     * Checks if the date/time format is valid
+     * @param pattern {@link SimpleDateFormat} pattern
+     */
+    public static void checkDateFormat(String pattern)
+    {
+        SimpleDateFormat df = new SimpleDateFormat(pattern);
+    }
+
+    /**
      * Parses a string using {@link SimpleDateFormat} and a given pattern
      *
      * @param s string to be parsed
@@ -139,11 +148,14 @@ public final class SqlParserUtil
     private static Calendar parseDateFormat(
         String s,
         String pattern,
+        TimeZone tz,
         ParsePosition pp)
     {
         Util.pre(pattern != null, "pattern != null");
         SimpleDateFormat df = new SimpleDateFormat(pattern);
-        TimeZone tz = new SimpleTimeZone(0, "GMT+00:00");
+        if (tz == null) {
+            tz = new SimpleTimeZone(0, "GMT+00:00");
+        }
         Calendar ret = Calendar.getInstance(tz);
         df.setCalendar(ret);
         df.setLenient(false);
@@ -166,11 +178,12 @@ public final class SqlParserUtil
      */
     public static Calendar parseDateFormat(
         String s,
-        String pattern)
+        String pattern,
+        TimeZone tz)
     {
         Util.pre(pattern != null, "pattern != null");
         ParsePosition pp = new ParsePosition(0);
-        Calendar ret = parseDateFormat(s, pattern, pp);
+        Calendar ret = parseDateFormat(s, pattern, tz, pp);
         if (pp.getIndex() != s.length()) {
             // Didn't consume entire string - not good
             return null;
@@ -180,10 +193,11 @@ public final class SqlParserUtil
 
     public static PrecisionTime parsePrecisionDateTimeLiteral(
         String s,
-        String pattern)
+        String pattern,
+        TimeZone tz)
     {
         ParsePosition pp = new ParsePosition(0);
-        Calendar cal = parseDateFormat(s, pattern, pp);
+        Calendar cal = parseDateFormat(s, pattern, tz, pp);
         if (cal == null) {
             return null; // Invalid date/time format
         }

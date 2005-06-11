@@ -60,9 +60,9 @@ public class SqlNullifFunction extends SqlFunction
             thenList, operands[0], pos);
     }
 
-    public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()
+    public SqlOperandCountRange getOperandCountRange()
     {
-        return new OperandsCountDescriptor(2);
+        return SqlOperandCountRange.Two;
     }
 
     public void test(SqlTester tester)

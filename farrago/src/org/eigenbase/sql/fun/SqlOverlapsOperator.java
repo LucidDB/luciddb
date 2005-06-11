@@ -70,11 +70,12 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
         writer.print(")");
     }
 
-    public OperandsCountDescriptor getOperandsCountDescriptor() {
-        return OperandsCountDescriptor.Four;
+    public SqlOperandCountRange getOperandCountRange() {
+        return SqlOperandCountRange.Four;
     }
 
-    protected String getSignatureTemplate(int operandsCount) {
+    public String getSignatureTemplate(int operandsCount)
+    {
         if (4 == operandsCount) {
             return "({1}, {2}) {0} ({3}, {4})";
         }
@@ -82,15 +83,15 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
         return null;
     }
 
-    public String getAllowedSignatures(String name)
+    public String getAllowedSignatures(String opName)
     {
         final String d = "DATETIME";
         final String i = "INTERVAL";
         String[] typeNames = {
-            d, d
-            ,d, i
-            ,i, d
-            ,i, i
+            d, d,
+            d, i,
+            i, d,
+            i, i
         };
 
         StringBuffer ret = new StringBuffer();
@@ -103,22 +104,24 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
             list.add(typeNames[y]);
             list.add(d);
             list.add(typeNames[y+1]);
-            ret.append(this.getAnonymousSignature(list));
+            ret.append(SqlUtil.getAliasedSignature(this, opName, list));
         }
-        return replaceAnonymous(ret.toString(), name);
+        return ret.toString();
     }
 
-    protected boolean checkArgTypes(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        boolean throwOnFailure) {
-        if (!SqlTypeStrategies.otcNullableDatetime.check(
-            call, validator, scope, call.operands[0], 0, throwOnFailure)) {
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
+        boolean throwOnFailure)
+    {
+        SqlCall call = callBinding.getCall();
+        SqlValidator validator = callBinding.getValidator();
+        SqlValidatorScope scope = callBinding.getScope();
+        if (!SqlTypeStrategies.otcDatetime.checkSingleOperandType(
+            callBinding, call.operands[0], 0, throwOnFailure)) {
             return false;
         }
-        if (!SqlTypeStrategies.otcNullableDatetime.check(
-            call, validator, scope, call.operands[2], 0, throwOnFailure)) {
+        if (!SqlTypeStrategies.otcDatetime.checkSingleOperandType(
+            callBinding, call.operands[2], 0, throwOnFailure)) {
             return false;
         }
 
@@ -130,7 +133,7 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
         // t0 must be comparable with t2
         if (!SqlTypeUtil.sameNamedType(t0, t2)) {
             if (throwOnFailure) {
-                throw call.newValidationSignatureError(validator, scope);
+                throw callBinding.newValidationSignatureError();
             }
             return false;
         }
@@ -140,13 +143,13 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
             // then t1 must be comparable with t0
             if (!SqlTypeUtil.sameNamedType(t0, t1)) {
                 if (throwOnFailure) {
-                    throw call.newValidationSignatureError(validator, scope);
+                    throw callBinding.newValidationSignatureError();
                 }
                 return false;
             }
         } else if (!SqlTypeUtil.isInterval(t1)) {
             if (throwOnFailure) {
-                throw call.newValidationSignatureError(validator, scope);
+                throw callBinding.newValidationSignatureError();
             }
             return false;
         }
@@ -156,13 +159,13 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
             // then t3 must be comparable with t2
             if (!SqlTypeUtil.sameNamedType(t2, t3)) {
                 if (throwOnFailure) {
-                    throw call.newValidationSignatureError(validator, scope);
+                    throw callBinding.newValidationSignatureError();
                 }
                 return false;
             }
         } else if (!SqlTypeUtil.isInterval(t3)) {
             if (throwOnFailure) {
-                throw call.newValidationSignatureError(validator, scope);
+                throw callBinding.newValidationSignatureError();
             }
             return false;
         }

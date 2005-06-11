@@ -155,6 +155,10 @@ DdlStmt DdlStmtEof() :
                 modelElement = DataServerDefinition()
                 |
                 modelElement = ExtensionModelDefinition()
+                |
+                modelElement = UserDefinition()
+                |
+                modelElement = RoleDefinition()                
             )
             {
                 ddlStmt = new DdlCreateStmt(modelElement);
@@ -246,7 +250,12 @@ DdlStmt DdlStmtEof() :
             )
         )
         |
-        ddlStmt = GrantStmt()
+        <GRANT>
+        (
+            ddlStmt = GrantRoleStmt()
+            |
+            ddlStmt = GrantPrivStmt()
+        )
         |
         <CHECKPOINT>
         {
@@ -613,6 +622,82 @@ FemLocalIndex IndexDefinition(CwmTable table) :
             indexColumn.setOrdinal(iOrdinal++);
         }
         return index;
+    }
+}
+
+FemUser UserDefinition() :
+{
+    FemUser user;
+    SqlIdentifier userName;
+    SqlNode expr;
+    CwmNamespace defaultNamespace;
+}
+{
+    <USER>
+    {
+        user = getRepos().newFemUser();
+    }
+    userName = SimpleIdentifier()
+    {
+        // set the repos name attribute
+        user.setName(userName.getSimple());
+    }
+    <AUTHORIZATION> expr = Expression(EXPR_ACCEPT_NONQUERY)
+    {
+        // TODO: Finalize the syntax for JAAS integration
+        // user.setAuthenticationMethod = 
+        // TODO: validate and save the authentication method
+        // TODO: Grant PUBLIC to user
+    }
+    [<DEFAULT_KW>
+        (
+            <CATALOG> defaultNamespace = CatalogReference()
+            |
+            <SCHEMA> defaultNamespace = SchemaReference()
+        )
+        {
+            // TODO: Add default namespace relationship to user in the data model
+            // TODO: set up the relationship between defaultNamespace and user
+        }
+    ]
+    {
+        return user;
+    }
+}
+
+FemRole RoleDefinition() :
+{
+    // TODO: remove this class, not required
+    // DdlCreateRoleStmt stmt = new DdlCreateRoleStmt();    
+    FemRole role;
+    SqlIdentifier roleName;
+    SqlIdentifier grantor;
+}
+{
+    <ROLE>
+    {
+        role = getRepos().newFemRole();
+    }
+    roleName = SimpleIdentifier()
+    {
+        // set the repos name attribute
+        role.setName(roleName.getSimple());
+    }
+    [ <WITH> <ADMIN> grantor = SimpleIdentifier() {
+            // Create a grant and make the grantor specified in this statement
+            // as the grantee of that grant.
+            FemGrant grant = FarragoCatalogUtil.newElementGrant(
+                getRepos(),
+                farragoParser.getStmtValidator().getSession().getSessionVariables().currentUserName,
+                grantor.getSimple(), 
+                role);
+            // TODO: add this enum to the model and enable the call below
+            // grantGrant.setAction();
+            grant.setWithGrantOption(true);
+        }
+    ]
+    {
+        return role;
     }
 }
 
@@ -1217,7 +1302,7 @@ FemDataWrapper DataWrapperDefinition() :
         wrapper.setName(wrapperName.getSimple());
         wrapper.setNamespace(
             getRepos().getCatalog(
-                FarragoRepos.SYSBOOT_CATALOG_NAME));
+                FarragoCatalogInit.SYSBOOT_CATALOG_NAME));
         wrapper.setForeign(isForeign);
     }
     <LIBRARY> libraryFile = QuotedString()
@@ -1277,7 +1362,7 @@ FemDataServer DataServerDefinition() :
         server.setName(serverName.getSimple());
         server.setNamespace(
             getRepos().getCatalog(
-                FarragoRepos.SYSBOOT_CATALOG_NAME));
+                FarragoCatalogInit.SYSBOOT_CATALOG_NAME));
     }
     [
         <TYPE> serverType = QuotedString()
@@ -2133,19 +2218,42 @@ List GrantElementList() :
     }
 }
 
-
-
-DdlStmt GrantStmt() :
+//
+// This method is common between the two grant statements
+// (i.e. GRANT privilege and GRANT ROLE).
+// 
+void GrantOptions(DdlGrantStmt stmt) :
 {
-    DdlGrantStmt stmt = new DdlGrantStmt();
+    SqlIdentifier grantor;
+}
+{
+
+    [
+        <WITH> <GRANT> <OPTION>
+        {
+            stmt.setGrantOption(true);
+        }
+    ]
+    [
+        <GRANTED> <BY>
+        (
+            <CURRENT_ROLE> {stmt.setCurrentRoleOption(true);}
+            |
+            <CURRENT_USER> {stmt.setCurrentUserOption(true);}
+        )
+    ]
+}
+
+DdlStmt GrantPrivStmt() :
+{
+    DdlGrantPrivStmt stmt = new DdlGrantPrivStmt();
     CwmModelElement grantedObject;
     List granteeList;
     List privList;
-    SqlIdentifier grantor = null;
     SqlParserPos pos1, pos2;
 }
 {
-    <GRANT> (
+    (
         <ALL> pos1 = getPos() <PRIVILEGES> pos2 = getPos()
         {
             // TODO: externalize "ALL"
@@ -2177,27 +2285,31 @@ DdlStmt GrantStmt() :
             stmt.setHierarchyOption(true);
         }
     ]
-    [
-        <WITH> <GRANT> <OPTION>
-        {
-            stmt.setGrantOption(true);
-        }
-    ]
-    [
-        <GRANTED> <BY>
-        (
-            <CURRENT_ROLE> {stmt.setCurrentUserOption(true);}
-            |
-            <CURRENT_USER> {stmt.setCurrentRoleOption(true);}
-            |
-            grantor = SimpleIdentifier()
-            {
-                stmt.setGrantor(grantor);
-            }
-        )
-    ]
+    GrantOptions(stmt)
     {
         return stmt;
+    }
+}
+    
+
+DdlStmt GrantRoleStmt() :
+{
+    DdlGrantRoleStmt stmt = new DdlGrantRoleStmt();    
+    List roleList;
+    List granteeList;    
+}
+{
+    <ROLE> roleList = SimpleIdentifierCommaList()
+    {
+        stmt.setRoleList(roleList);
+    }
+    <TO> granteeList = SimpleIdentifierCommaList()
+    {
+        stmt.setGranteeList(granteeList);
+    }
+    GrantOptions(stmt)
+    {
+        return stmt;            
     }
 }
     

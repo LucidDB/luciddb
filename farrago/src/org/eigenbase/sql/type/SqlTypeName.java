@@ -144,15 +144,64 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
         new SqlTypeName("ROW", Row_ordinal, PrecNoScaleNo);
 
     /**
-     * List of all allowable {@link SqlTypeName} values.
+     * Array of all allowable {@link SqlTypeName} values.
      */
-    public static final EnumeratedValues enumeration =
-        new EnumeratedValues(new SqlTypeName [] {
+    public static final SqlTypeName [] allTypes =
+        new SqlTypeName [] {
             Boolean, Integer, Varchar, Date, Time, Timestamp, Null, Decimal,
             Any, Char, Binary, Varbinary, Tinyint, Smallint, Bigint, Real,
             Double, Symbol, IntervalYearMonth, IntervalDayTime,
             Float, Multiset, Distinct, Structured, Row
-        });
+        };
+
+    // categorizations used by SqlTypeFamily definitions
+    
+    public static final SqlTypeName [] booleanTypes = {
+        Boolean
+    };
+
+    public static final SqlTypeName [] binaryTypes = {
+        Binary, Varbinary
+    };
+
+    public static final SqlTypeName [] intTypes = {
+        Tinyint, Smallint, Integer, Bigint
+    };
+
+    public static final SqlTypeName[] exactTypes =
+        combine(intTypes, new SqlTypeName[]{ Decimal } );
+
+    public static final SqlTypeName[] approxTypes = {
+        Float, Real, Double
+    };
+
+    public static final SqlTypeName [] numericTypes =
+        combine(exactTypes, approxTypes);
+
+    public static final SqlTypeName [] charTypes = {
+        Char, Varchar
+    };
+
+    public static final SqlTypeName [] stringTypes =
+        combine(charTypes, binaryTypes);
+
+    public static final SqlTypeName [] datetimeTypes = {
+        Date, Time, Timestamp
+    };
+
+    public static final SqlTypeName [] timeIntervalTypes = {
+        IntervalDayTime, IntervalYearMonth
+    };
+
+    public static final SqlTypeName [] multisetTypes = {
+        Multiset
+    };
+    
+    /**
+     * Enumeration of all allowable {@link SqlTypeName} values.
+     */
+    public static final EnumeratedValues enumeration =
+        new EnumeratedValues(allTypes);
 
     static
     {
@@ -197,71 +246,7 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
      * Bitwise-or of flags indicating allowable precision/scale combinations.
      */
     private final int signatures;
-
-    public static final SqlTypeName [] booleanTypes = {
-        Boolean
-    };
-    public static final SqlTypeName [] booleanNullableTypes =
-        makeNullable(booleanTypes);
-
-    public static final SqlTypeName [] binaryTypes = {
-        Binary, Varbinary
-    };
-    public static final SqlTypeName [] binaryNullableTypes =
-        makeNullable(binaryTypes);
-
-    public static final SqlTypeName [] intTypes = {
-        Tinyint, Smallint, Integer, Bigint
-    };
-    public static final SqlTypeName [] intNullableTypes =
-        makeNullable(intTypes);
-
-    public static final SqlTypeName[] exactTypes =
-        combine(intTypes, new SqlTypeName[]{ Decimal } );
-    public static final SqlTypeName[] exactNullableTypes =
-        makeNullable(exactTypes);
-
-    public static final SqlTypeName[] approxTypes = {
-        Float, Real, Double
-    };
-    public static final SqlTypeName[] approxNullableTypes =
-        makeNullable(approxTypes);
-
-    public static final SqlTypeName [] numericTypes =
-        combine(exactTypes, approxTypes);
-    public static final SqlTypeName [] numericNullableTypes =
-        makeNullable(numericTypes);
-
-    public static final SqlTypeName [] charTypes = {
-        Char, Varchar
-    };
-    public static final SqlTypeName [] charNullableTypes =
-        makeNullable(charTypes);
-
-    public static final SqlTypeName [] stringTypes =
-        combine(charTypes, binaryTypes);
-    public static final SqlTypeName [] stringNullableTypes =
-        makeNullable(stringTypes);
-
-    public static final SqlTypeName [] datetimeTypes = {
-        Date, Time, Timestamp
-    };
-    public static final SqlTypeName [] datetimeNullableTypes =
-        makeNullable(datetimeTypes);
-
-    public static final SqlTypeName [] timeIntervalTypes = {
-        IntervalDayTime, IntervalYearMonth
-    };
-    public static final SqlTypeName [] timeIntervalNullableTypes =
-        makeNullable(timeIntervalTypes);
-
-    public static final SqlTypeName [] multisetTypes = {
-        Multiset
-    };
-    public static final SqlTypeName [] multisetNullableTypes =
-        makeNullable(multisetTypes);
-
-
+    
 
     //~ Constructors ----------------------------------------------------------
 
@@ -430,12 +415,9 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
         }
     }
 
-    private static SqlTypeName[] makeNullable(SqlTypeName[] array) {
-        return combine(new SqlTypeName[]{SqlTypeName.Null},array);
-    }
-
     private static SqlTypeName[] combine(SqlTypeName[] array0,
-        SqlTypeName[] array1) {
+        SqlTypeName[] array1)
+    {
         SqlTypeName[] ret = new SqlTypeName[array0.length+array1.length];
         System.arraycopy(array0,0,ret,0,array0.length);
         System.arraycopy(array1,0,ret,array0.length,array1.length);

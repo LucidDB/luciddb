@@ -179,8 +179,6 @@ public class IterCalcRel extends ProjectRelBase implements JavaRel
             condBody = whileBody;
         }
 
-        // TODO:  if projection is identity, just return the underlying row
-        // instead
         RelDataTypeField [] fields = outputRowType.getFields();
         for (int i = 0; i < exps.length; i++) {
             String javaFieldName = Util.toJavaId(

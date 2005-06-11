@@ -241,6 +241,22 @@ public class RexUtil
         }
         return orderKeys;
     }
+    
+    /**
+     * Collects the types of an array of row expressions.
+     *
+     * @param exprs array of row expressions
+     *
+     * @return array of types
+     */
+    public static RelDataType [] collectTypes(RexNode [] exprs)
+    {
+        RelDataType [] types = new RelDataType[exprs.length];
+        for (int i = 0; i < types.length; i++) {
+            types[i] = exprs[i].getType();
+        }
+        return types;
+    }
 }
 
 

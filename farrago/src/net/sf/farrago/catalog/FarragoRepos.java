@@ -22,38 +22,20 @@
 */
 package net.sf.farrago.catalog;
 
-import java.io.*;
-import java.sql.*;
-import java.util.*;
-import java.util.logging.*;
+import net.sf.farrago.FarragoPackage;
+import net.sf.farrago.FarragoMetadataFactory;
+import net.sf.farrago.cwm.core.CwmModelElement;
+import net.sf.farrago.cwm.core.CwmTaggedValue;
+import net.sf.farrago.cwm.relational.CwmCatalog;
+import net.sf.farrago.fem.config.FemFarragoConfig;
+import net.sf.farrago.util.FarragoAllocation;
+import net.sf.farrago.util.FarragoTransientTxnContext;
+import org.eigenbase.jmi.JmiModelGraph;
+import org.eigenbase.jmi.JmiModelView;
+import org.netbeans.api.mdr.MDRepository;
 
-import javax.jmi.reflect.*;
-import javax.jmi.model.*;
-
-import net.sf.farrago.*;
-import net.sf.farrago.cwm.*;
-import net.sf.farrago.cwm.CwmPackage;
-import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.datatypes.*;
-import net.sf.farrago.cwm.keysindexes.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.cwm.relational.enumerations.*;
-import net.sf.farrago.fem.*;
-import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.fem.config.*;
-import net.sf.farrago.fem.fennel.*;
-import net.sf.farrago.fem.med.*;
-import net.sf.farrago.resource.*;
-import net.sf.farrago.trace.*;
-import net.sf.farrago.util.*;
-
-import org.eigenbase.util.SaffronProperties;
-import org.eigenbase.jmi.*;
-
-import org.netbeans.api.mdr.*;
-import org.netbeans.mdr.*;
-
-import java.util.logging.Logger;
+import javax.jmi.reflect.RefClass;
+import java.util.List;
 
 /**
  * FarragoRepos represents a loaded instance of an MDR repository containing
@@ -62,281 +44,58 @@ import java.util.logging.Logger;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoRepos extends FarragoMetadataFactory
-    implements FarragoAllocation,
-        FarragoTransientTxnContext
+public interface FarragoRepos extends FarragoAllocation,
+    FarragoTransientTxnContext,
+    FarragoMetadataFactory
 {
-    //~ Static fields/initializers --------------------------------------------
-
-    private static final Logger tracer = FarragoTrace.getReposTracer();
-
-    /** TODO:  look this up from repository */
-    private static final int maxNameLength = 128;
-
-    /**
-     * Reserved name for the system boot catalog.
-     */
-    public static final String SYSBOOT_CATALOG_NAME = "SYS_BOOT";
-
-    /**
-     * Reserved name for the local catalog.
-     */
-    public static final String LOCALDB_CATALOG_NAME = "LOCALDB";
-
-    //~ Instance fields -------------------------------------------------------
-
-    /** Root package in transient repository. */
-    private final FarragoPackage transientFarragoPackage;
-
-    /** Fennel package in repository. */
-    private final FennelPackage fennelPackage;
-
-    /** The loader for the underlying MDR repository. */
-    private FarragoModelLoader modelLoader;
-
-    /** The underlying MDR repository. */
-    private final MDRepository mdrRepository;
-
-    /** MofId for current instance of FemFarragoConfig. */
-    private final String currentConfigMofId;
-
-    private final boolean isFennelEnabled;
-
-    private final FarragoCompoundAllocation allocations;
-
-    private Map localizedClassNames;
-
-    private List resourceBundles;
-
-    private String memStorageId;
-
-    private JmiModelGraph modelGraph;
-
-    private JmiModelView modelView;
-
-    //~ Constructors ----------------------------------------------------------
-
-    /**
-     * Opens a Farrago repository.
-     */
-    public FarragoRepos(
-        FarragoAllocationOwner owner,
-        FarragoModelLoader modelLoader,
-        boolean userRepos)
-    {
-        owner.addAllocation(this);
-        tracer.fine("Loading catalog");
-        allocations = new FarragoCompoundAllocation();
-        if (FarragoProperties.instance().homeDir.get() == null) {
-            throw FarragoResource.instance().newMissingHomeProperty(
-                FarragoProperties.instance().homeDir.getPath());
-        }
-        this.modelLoader = modelLoader;
-
-        MdrUtil.integrateTracing(FarragoTrace.getMdrTracer());
-
-        if (!userRepos) {
-            File reposFile = modelLoader.getSystemReposFile();
-            try {
-                new FarragoFileLockAllocation(allocations, reposFile, true);
-            } catch (IOException ex) {
-                throw FarragoResource.instance().newCatalogFileLockFailed(
-                    reposFile.toString());
-            }
-        }
-
-        if (FarragoReposUtil.isReloadNeeded()) {
-            try {
-                FarragoReposUtil.reloadRepository();
-            } catch (Exception ex) {
-                throw FarragoResource.instance().newCatalogReloadFailed(ex);
-            }
-        }
-
-        FarragoPackage farragoPackage =
-            modelLoader.loadModel("FarragoCatalog", userRepos);
-        if (farragoPackage == null) {
-            throw FarragoResource.instance().newCatalogUninitialized();
-        }
-
-        super.setRootPackage(farragoPackage);
-
-        mdrRepository = modelLoader.getMdrRepos();
-
-        // Create special in-memory storage for transient objects
-        try {
-            NBMDRepositoryImpl nbRepos = (NBMDRepositoryImpl) mdrRepository;
-            Map props = new HashMap();
-            memStorageId =
-                nbRepos.mountStorage(
-                    FarragoTransientStorageFactory.class.getName(),
-                    props);
-            beginReposTxn(true);
-            boolean rollback = true;
-            try {
-                RefPackage memExtent =
-                    nbRepos.createExtent(
-                        "TransientCatalog",
-                        getFarragoPackage().refMetaObject(),
-                        null,
-                        memStorageId);
-                transientFarragoPackage = (FarragoPackage) memExtent;
-                rollback = false;
-            } finally {
-                endReposTxn(rollback);
-            }
-            FarragoTransientStorage.ignoreCommit = true;
-            fennelPackage = transientFarragoPackage.getFem().getFennel();
-        } catch (Throwable ex) {
-            throw FarragoResource.instance().newCatalogInitTransientFailed(ex);
-        }
-
-        // Load configuration
-        Collection configs =
-            getConfigPackage().getFemFarragoConfig().refAllOfClass();
-
-        // TODO: multiple named configurations.  For now, build should have
-        // imported exactly one configuration named Current.
-        assert (configs.size() == 1);
-        FemFarragoConfig defaultConfig =
-            (FemFarragoConfig) configs.iterator().next();
-        assert (defaultConfig.getName().equals("Current"));
-        currentConfigMofId = defaultConfig.refMofId();
-        isFennelEnabled = !defaultConfig.isFennelDisabled();
-
-        localizedClassNames = new HashMap();
-        resourceBundles = new ArrayList();
-
-        modelGraph = new JmiModelGraph(farragoPackage);
-        modelView = new JmiModelView(modelGraph);
-
-        tracer.info("Catalog successfully loaded");
-    }
-
     //~ Methods ---------------------------------------------------------------
-
-    protected static String getLocalizedClassKey(RefClass refClass)
-    {
-        String className =
-            refClass.refMetaObject().refGetValue("name").toString();
-        return "Uml" + className;
-    }
-
-    private Map stringToMap(String propString)
-    {
-        // TODO:  find something industrial strength
-        StringTokenizer st = new StringTokenizer(propString, "=;", true);
-        Map map = new HashMap();
-        while (st.hasMoreTokens()) {
-            String name = st.nextToken();
-            if (name.equals(";")) {
-                continue;
-            }
-            if (name.equals("=")) {
-                throw new IllegalArgumentException(propString);
-            }
-            String eq = st.nextToken();
-            if (!eq.equals("=")) {
-                throw new IllegalArgumentException(propString);
-            }
-            String value = st.nextToken();
-            if (value.equals(";")) {
-                value = "";
-            }
-            map.put(
-                "org.netbeans.mdr.persistence.jdbcimpl."
-                + name,
-                value);
-        }
-        return map;
-    }
 
     /**
      * @return MDRepository storing this Farrago repository
      */
-    public MDRepository getMdrRepos()
-    {
-        return mdrRepository;
-    }
+    public MDRepository getMdrRepos();
 
     /**
      * @return model graph for repository metamodel
      */
-    public JmiModelGraph getModelGraph()
-    {
-        return modelGraph;
-    }
+    public JmiModelGraph getModelGraph();
 
     /**
      * @return model view for repository metamodel
      */
-    public JmiModelView getModelView()
-    {
-        return modelView;
-    }
+    public JmiModelView getModelView();
 
     /**
      * @return root package for transient metadata
      */
-    public FarragoPackage getTransientFarragoPackage()
-    {
-        return transientFarragoPackage;
-    }
-
-    // override FarragoMetadataFactory
-    public FennelPackage getFennelPackage()
-    {
-        // NOTE jvs 5-May-2004:  return the package corresponding to
-        // in-memory storage
-        return fennelPackage;
-    }
+    public FarragoPackage getTransientFarragoPackage();
 
     /**
      * @return CwmCatalog representing this FarragoRepos
      */
-    public CwmCatalog getSelfAsCatalog()
-    {
-        // TODO:  variable
-        return getCatalog(LOCALDB_CATALOG_NAME);
-    }
+    public CwmCatalog getSelfAsCatalog();
 
     /**
      * @return maximum identifier length in characters
      */
-    public int getIdentifierPrecision()
-    {
-        return maxNameLength;
-    }
+    public int getIdentifierPrecision();
 
-    public FemFarragoConfig getCurrentConfig()
-    {
-        // TODO:  prevent updates
-        return (FemFarragoConfig) mdrRepository.getByMofId(currentConfigMofId);
-    }
+    public FemFarragoConfig getCurrentConfig();
 
     /**
      * @return the name of the default Charset for this repository
      */
-    public String getDefaultCharsetName()
-    {
-        return SaffronProperties.instance().defaultCharset.get();
-    }
+    public String getDefaultCharsetName();
 
     /**
      * @return the name of the default Collation for this repository
      */
-    public String getDefaultCollationName()
-    {
-        return SaffronProperties.instance().defaultCollation.get();
-    }
+    public String getDefaultCollationName();
 
     /**
      * @return true iff Fennel support should be used
      */
-    public boolean isFennelEnabled()
-    {
-        return isFennelEnabled;
-    }
+    public boolean isFennelEnabled();
 
     /**
      * Formats the fully-qualified localized name for an existing object,
@@ -346,10 +105,7 @@ public class FarragoRepos extends FarragoMetadataFactory
      * @return localized name
      */
     public String getLocalizedObjectName(
-        CwmModelElement modelElement)
-    {
-        return getLocalizedObjectName(modelElement, modelElement.refClass());
-    }
+        CwmModelElement modelElement);
 
     /**
      * Formats the localized name for an unqualified typeless object.
@@ -358,10 +114,7 @@ public class FarragoRepos extends FarragoMetadataFactory
      * @return localized name
      */
     public String getLocalizedObjectName(
-        String name)
-    {
-        return getLocalizedObjectName(null, name, null);
-    }
+        String name);
 
     /**
      * Formats the fully-qualified localized name for an existing object.
@@ -375,18 +128,7 @@ public class FarragoRepos extends FarragoMetadataFactory
      */
     public String getLocalizedObjectName(
         CwmModelElement modelElement,
-        RefClass refClass)
-    {
-        String qualifierName = null;
-        CwmNamespace namespace = modelElement.getNamespace();
-        if (namespace != null) {
-            qualifierName = namespace.getName();
-        }
-        return getLocalizedObjectName(
-            qualifierName,
-            modelElement.getName(),
-            refClass);
-    }
+        RefClass refClass);
 
     /**
      * Formats the fully-qualified localized name for an object that may not
@@ -403,25 +145,7 @@ public class FarragoRepos extends FarragoMetadataFactory
     public String getLocalizedObjectName(
         String qualifierName,
         String objectName,
-        RefClass refClass)
-    {
-        StringBuffer sb = new StringBuffer();
-
-        // TODO:  escaping
-        if (refClass != null) {
-            sb.append(getLocalizedClassName(refClass));
-            sb.append(" ");
-        }
-        if (qualifierName != null) {
-            sb.append("\"");
-            sb.append(qualifierName);
-            sb.append("\".");
-        }
-        sb.append("\"");
-        sb.append(objectName);
-        sb.append("\"");
-        return sb.toString();
-    }
+        RefClass refClass);
 
     /**
      * Looks up the localized name for a class of metadata.
@@ -430,19 +154,7 @@ public class FarragoRepos extends FarragoMetadataFactory
      *
      * @return localized name,  e.g. "table"
      */
-    public String getLocalizedClassName(RefClass refClass)
-    {
-        String umlKey = getLocalizedClassKey(refClass);
-        String name = (String) localizedClassNames.get(umlKey);
-        if (name != null) {
-            return name;
-        } else {
-            // NOTE jvs 12-Jan-2005:  we intentionally return something
-            // nasty so that if it shows up in user-level error messages,
-            // someone nice will maybe log a bug and get it fixed
-            return "NOT_YET_LOCALIZED_" + umlKey;
-        }
-    }
+    public String getLocalizedClassName(RefClass refClass);
 
     /**
      * Looks up a catalog by name.
@@ -451,13 +163,7 @@ public class FarragoRepos extends FarragoMetadataFactory
      *
      * @return catalog definition, or null if not found
      */
-    public CwmCatalog getCatalog(String catalogName)
-    {
-        Collection catalogs =
-            getRelationalPackage().getCwmCatalog().refAllOfType();
-        return (CwmCatalog) FarragoCatalogUtil.getModelElementByName(
-            catalogs, catalogName);
-    }
+    public CwmCatalog getCatalog(String catalogName);
 
     /**
      * Gets an element's tag.
@@ -469,19 +175,7 @@ public class FarragoRepos extends FarragoMetadataFactory
      */
     public CwmTaggedValue getTag(
         CwmModelElement element,
-        String tagName)
-    {
-        Collection tags =
-            getCorePackage().getTaggedElement().getTaggedValue(element);
-        Iterator iter = tags.iterator();
-        while (iter.hasNext()) {
-            CwmTaggedValue tag = (CwmTaggedValue) iter.next();
-            if (tag.getTag().equals(tagName)) {
-                return tag;
-            }
-        }
-        return null;
-    }
+        String tagName);
 
     /**
      * Tags an element.
@@ -494,16 +188,7 @@ public class FarragoRepos extends FarragoMetadataFactory
     public void setTagValue(
         CwmModelElement element,
         String tagName,
-        String tagValue)
-    {
-        CwmTaggedValue tag = getTag(element, tagName);
-        if (tag == null) {
-            tag = newCwmTaggedValue();
-            tag.setTag(tagName);
-            getCorePackage().getTaggedElement().add(element, tag);
-        }
-        tag.setValue(tagValue);
-    }
+        String tagValue);
 
     /**
      * Gets a value tagged to an element.
@@ -515,38 +200,7 @@ public class FarragoRepos extends FarragoMetadataFactory
      */
     public String getTagValue(
         CwmModelElement element,
-        String tagName)
-    {
-        CwmTaggedValue tag = getTag(element, tagName);
-        if (tag == null) {
-            return null;
-        } else {
-            return tag.getValue();
-        }
-    }
-
-    // implement FarragoAllocation
-    public void closeAllocation()
-    {
-        allocations.closeAllocation();
-        if (modelLoader == null) {
-            return;
-        }
-        tracer.fine("Closing catalog");
-        NBMDRepositoryImpl nbRepos = (NBMDRepositoryImpl) mdrRepository;
-        if (memStorageId != null) {
-            mdrRepository.beginTrans(true);
-            FarragoTransientStorage.ignoreCommit = false;
-            if (transientFarragoPackage != null) {
-                transientFarragoPackage.refDelete();
-            }
-            mdrRepository.endTrans();
-            memStorageId = null;
-        }
-        modelLoader.close();
-        modelLoader = null;
-        tracer.info("Catalog successfully closed");
-    }
+        String tagName);
 
     /**
      * Defines localization for this repository.
@@ -554,245 +208,21 @@ public class FarragoRepos extends FarragoMetadataFactory
      * @param bundles list of ResourceBundle instances to add for
      * localization.
      */
-    public void addResourceBundles(List bundles)
-    {
-        resourceBundles.addAll(bundles);
-        Iterator iter = bundles.iterator();
-        while (iter.hasNext()) {
-            ResourceBundle resourceBundle = (ResourceBundle) iter.next();
-            Enumeration e = resourceBundle.getKeys();
-            while (e.hasMoreElements()) {
-                // NOTE jvs 12-Apr-2005:  This early binding won't
-                // work once we have sessions with different locales, but
-                // I'll leave that for someone wiser in the ways of i18n.
-                String key = (String) e.nextElement();
-                if (key.startsWith("Uml")) {
-                    localizedClassNames.put(
-                        key,
-                        resourceBundle.getString(key));
-                }
-            }
-        }
-    }
-
-    private void defineTypeAlias(
-        String aliasName,
-        CwmSqlsimpleType type)
-    {
-        CwmTypeAlias typeAlias = newCwmTypeAlias();
-        typeAlias.setName(aliasName);
-        typeAlias.setType(type);
-    }
-
-    /**
-     * Creates objects owned by the system.  This is only done once during
-     * database creation.
-     */
-    public void createSystemObjects()
-    {
-        tracer.info("Creating system-owned catalog objects");
-        boolean rollback = true;
-        try {
-            beginReposTxn(true);
-            initCatalog();
-            rollback = false;
-        } finally {
-            endReposTxn(rollback);
-        }
-        tracer.info("Creation of system-owned catalog objects committed");
-    }
-
-    // implement FarragoTransientTxnContext
-    public void beginTransientTxn()
-    {
-        tracer.fine("Begin transient repository transaction");
-        mdrRepository.beginTrans(true);
-    }
-
-    // implement FarragoTransientTxnContext
-    public void endTransientTxn()
-    {
-        tracer.fine("End transient repository transaction");
-        mdrRepository.endTrans(false);
-    }
+    public void addResourceBundles(List bundles);
 
     /**
      * Begins a metadata transaction on the repository.
      *
      * @param writable true for read/write; false for read-only
      */
-    public void beginReposTxn(boolean writable)
-    {
-        if (writable) {
-            tracer.fine("Begin read/write repository transaction");
-        } else {
-            tracer.fine("Begin read-only repository transaction");
-        }
-        mdrRepository.beginTrans(writable);
-    }
+    public void beginReposTxn(boolean writable);
 
     /**
      * Ends a metadata transaction on the repository.
      *
      * @param rollback true to rollback; false to commit
      */
-    public void endReposTxn(boolean rollback)
-    {
-        if (rollback) {
-            tracer.fine("Rollback repository transaction");
-        } else {
-            tracer.fine("Commit repository transaction");
-        }
-        mdrRepository.endTrans(rollback);
-    }
-
-    private void initCatalog()
-    {
-        createSystemCatalogs();
-        createSystemTypes();
-    }
-
-    private void createSystemCatalogs()
-    {
-        // TODO:  default character set and collation name
-        CwmCatalog catalog;
-
-        catalog = newCwmCatalog();
-        catalog.setName(SYSBOOT_CATALOG_NAME);
-        initializeCatalog(catalog);
-
-        catalog = newCwmCatalog();
-        catalog.setName(LOCALDB_CATALOG_NAME);
-        initializeCatalog(catalog);
-    }
-
-    public void initializeCatalog(CwmCatalog catalog)
-    {
-        catalog.setDefaultCharacterSetName(getDefaultCharsetName());
-        catalog.setDefaultCollationName(getDefaultCollationName());
-    }
-
-    private void createSystemTypes()
-    {
-        CwmSqlsimpleType simpleType;
-
-        // This is where all the builtin types are defined.  To add a new
-        // builtin type, you have to:
-        // (1) add a definition here
-        // (2) add mappings in FarragoTypeFactoryImpl and maybe
-        // SqlTypeName/SqlTypeFamily
-        // (3) add Fennel mappings in
-        // FennelRelUtil.convertSqlTypeNumberToFennelTypeOrdinal
-        // (4) since I've already done all the easy cases, you'll probably
-        // need lots of extra fancy semantics elsewhere
-        simpleType = newCwmSqlsimpleType();
-        simpleType.setName("BOOLEAN");
-        simpleType.setTypeNumber(new Integer(Types.BOOLEAN));
-
-        simpleType = newCwmSqlsimpleType();
-        simpleType.setName("TINYINT");
-        simpleType.setTypeNumber(new Integer(Types.TINYINT));
-        simpleType.setNumericPrecision(new Integer(8));
-        simpleType.setNumericPrecisionRadix(new Integer(2));
-        simpleType.setNumericScale(new Integer(0));
-
-        simpleType = newCwmSqlsimpleType();
-        simpleType.setName("SMALLINT");
-        simpleType.setTypeNumber(new Integer(Types.SMALLINT));
-        simpleType.setNumericPrecision(new Integer(16));
-        simpleType.setNumericPrecisionRadix(new Integer(2));
-        simpleType.setNumericScale(new Integer(0));
-
-        simpleType = newCwmSqlsimpleType();
-        simpleType.setName("INTEGER");
-        simpleType.setTypeNumber(new Integer(Types.INTEGER));
-        simpleType.setNumericPrecision(new Integer(32));
-        simpleType.setNumericPrecisionRadix(new Integer(2));
-        simpleType.setNumericScale(new Integer(0));
-        defineTypeAlias("INT", simpleType);
-
-        simpleType = newCwmSqlsimpleType();
-        simpleType.setName("BIGINT");
-        simpleType.setTypeNumber(new Integer(Types.BIGINT));
-        simpleType.setNumericPrecision(new Integer(64));
-        simpleType.setNumericPrecisionRadix(new Integer(2));
-        simpleType.setNumericScale(new Integer(0));
-
-        simpleType = newCwmSqlsimpleType();
-        simpleType.setName("REAL");
-        simpleType.setTypeNumber(new Integer(Types.REAL));
-        simpleType.setNumericPrecision(new Integer(23));
-        simpleType.setNumericPrecisionRadix(new Integer(2));
-
-        simpleType = newCwmSqlsimpleType();
-        simpleType.setName("DOUBLE");
-        simpleType.setTypeNumber(new Integer(Types.DOUBLE));
-        simpleType.setNumericPrecision(new Integer(52));
-        simpleType.setNumericPrecisionRadix(new Integer(2));
-        defineTypeAlias("DOUBLE PRECISION", simpleType);
-        defineTypeAlias("FLOAT", simpleType);
-
-        simpleType = newCwmSqlsimpleType();
-        simpleType.setName("VARCHAR");
-        simpleType.setTypeNumber(new Integer(Types.VARCHAR));
-
-        // NOTE: this is an upper bound based on usage of 2-byte length
-        // indicators in stored tuples; there are further limits based on page
-        // size (imposed during table creation)
-        simpleType.setCharacterMaximumLength(new Integer(65535));
-        defineTypeAlias("CHARACTER VARYING", simpleType);
-
-        simpleType = newCwmSqlsimpleType();
-        simpleType.setName("VARBINARY");
-        simpleType.setTypeNumber(new Integer(Types.VARBINARY));
-        simpleType.setCharacterMaximumLength(new Integer(65535));
-
-        simpleType = newCwmSqlsimpleType();
-        simpleType.setName("CHAR");
-        simpleType.setTypeNumber(new Integer(Types.CHAR));
-        simpleType.setCharacterMaximumLength(new Integer(65535));
-        defineTypeAlias("CHARACTER", simpleType);
-
-        simpleType = newCwmSqlsimpleType();
-        simpleType.setName("BINARY");
-        simpleType.setTypeNumber(new Integer(Types.BINARY));
-        simpleType.setCharacterMaximumLength(new Integer(65535));
-
-        simpleType = newCwmSqlsimpleType();
-        simpleType.setName("DATE");
-        simpleType.setTypeNumber(new Integer(Types.DATE));
-        simpleType.setDateTimePrecision(new Integer(0));
-
-        // TODO jvs 26-July-2004: Support fractional precision for TIME and
-        // TIMESTAMP.  Currently, most of the support is there for up to
-        // milliseconds, but JDBC getString conversion is missing (see comments
-        // in SqlDateTimeWithoutTZ).  SQL99 says default precision for
-        // TIMESTAMP is microseconds, so some more work is required to
-        // support that.  Default precision for TIME is seconds,
-        // which is already the case.
-        simpleType = newCwmSqlsimpleType();
-        simpleType.setName("TIME");
-        simpleType.setTypeNumber(new Integer(Types.TIME));
-        simpleType.setDateTimePrecision(new Integer(0));
-
-        simpleType = newCwmSqlsimpleType();
-        simpleType.setName("TIMESTAMP");
-        simpleType.setTypeNumber(new Integer(Types.TIMESTAMP));
-        simpleType.setDateTimePrecision(new Integer(0));
-
-        simpleType = newCwmSqlsimpleType();
-        simpleType.setName("DECIMAL");
-        simpleType.setTypeNumber(new Integer(Types.DECIMAL));
-        simpleType.setNumericPrecision(new Integer(39));
-        simpleType.setNumericPrecisionRadix(new Integer(10));
-        defineTypeAlias("DEC", simpleType);
-
-        FemSqlcollectionType collectType;
-        collectType = newFemSqlmultisetType();
-        collectType.setName("MULTISET");
-        // a multiset has the same type# as an array for now
-        collectType.setTypeNumber(new Integer(Types.ARRAY));
-    }
+    public void endReposTxn(boolean rollback);
 }
 
 

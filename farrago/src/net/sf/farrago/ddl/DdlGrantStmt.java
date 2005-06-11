@@ -43,18 +43,13 @@ import net.sf.farrago.resource.*;
  * @author Quoc Tai Tran
  * @version $Id$
  */
-public class DdlGrantStmt extends DdlStmt
+public abstract class DdlGrantStmt extends DdlStmt
 {
-    private CwmModelElement grantedObject;
-    private List privList;
-    private SqlIdentifier grantor;
-    private boolean grantOption;
-    private boolean hierarchyOption;
-    boolean currentRoleOption;
-    boolean currentUserOption;
-    private List granteeList;    
-    private MultiMap privilegeMap; //TODO: to be moved to session level
-    
+
+    protected boolean grantOption;
+    protected boolean currentRoleOption;
+    protected boolean currentUserOption;
+    protected List granteeList;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -73,115 +68,11 @@ public class DdlGrantStmt extends DdlStmt
     public void visit(DdlVisitor visitor)
     {
         visitor.visit(this);
-    }
-
-    // implement FarragoSessionDdlStmt
-    // TODO: Modeling of grant dependencies,  so that we can revoke cascade.
-    public void preValidate(FarragoSessionDdlValidator ddlValidator)
-    {
-        FarragoRepos repos =  ddlValidator.getRepos();
-
-        FemAuthId grantorAuthId;
-        if (grantor == null || currentUserOption == true) {
-            // The grantor is not specified, then use the current
-            // session' user named as our grantor name
-            String grantorName = ddlValidator.getInvokingSession().
-                getSessionVariables().sessionUserName;
-            grantorAuthId = findAuthIdByName(repos, grantorName);
-        }
-        // TODO: retrieve the current role from the session and set that to
-        // be the grantor
-        // else if (currentRoleOption == true) {
-        // }
-        else {
-            // TODO: grantor is specified, then check that grantor can be
-            // impersonated by the session ID. Check standard to be sure!
-            grantorAuthId = findAuthIdByName(repos, grantor.getSimple());
-        }
-        
-        // TODO: ensure grantor is the owner or someone with the GRANT OPTION
-        // privilege
-
-        // initialized the privilege lookup table. 
-        privilegeMap = initGrantValidationLookupMap(repos);
-        
-        Iterator iter = granteeList.iterator();
-        while(iter.hasNext()) {
-
-            // process the next grantee
-            SqlIdentifier id = (SqlIdentifier) iter.next();
-
-            // Find the repository element id for the grantee,  create one if
-            // it does not exist
-            FemAuthId granteeAuthId = findAuthIdByName(repos,
-                id.getSimple());
-
-            // for each privilege in the list,  we instantiate a repository
-            // element. Note that this makes it easier to revoke the privs on
-            // the individual basis.
-            Iterator iterPriv = privList.iterator();
-            while (iterPriv.hasNext()) {
-                SqlIdentifier privId = (SqlIdentifier) iterPriv.next();
-
-                // make sure that the privilege is appropriate for the object
-                // type. 
-                List legalList = privilegeMap.getMulti(grantedObject.refClass());
-
-                if (!legalList.contains(privId.getSimple().toUpperCase()))
-                {
-                    // throw an exception, we see an illegal privilege
-                    throw FarragoResource.instance().newValidatorInvalidGrant(
-                        privId.getSimple(),grantedObject.getName());
-                }
-                
-                // TODO: to check that the grantor must be the owner. Need model change.
-                
-                
-                // TODO: to check that if not an owner, then the grantor must
-                // have the GRANT option on the privilege specified.
-                
-                // create a privilege object and set its properties
-                FemGrant grant = repos.newFemGrant();
-                
-                // set the privilege name (i.e. action) and properties
-                grant.setAction(privId.getSimple());
-                grant.setWithGrantOption(grantOption);
-
-                // TODO: to grant.setHierarchyOption(hierarchyOption);
-
-                // associate the privilege with the 
-                grant.setGrantor(grantorAuthId);
-                grant.setGrantee(granteeAuthId);
-                grant.setElement(grantedObject);
-            }
-        }
-    }
-
-    
-    public void setPrivList(List privList)
-    {
-        this.privList = privList;
-    }
-
-    public void setGrantedObject(CwmModelElement grantedObject)
-    {
-        this.grantedObject = grantedObject;
-    }
+    }    
 
     public void setGranteeList(List granteeList)
     {
         this.granteeList = granteeList;
-    }
-
-
-    public void setGrantor(SqlIdentifier grantor)
-    {
-        this.grantor = grantor;
-    }
-
-    public void setHierarchyOption(boolean hierarchyOption)
-    {
-        this.hierarchyOption = hierarchyOption;
     }
 
     public void setGrantOption(boolean grantOption)
@@ -199,64 +90,30 @@ public class DdlGrantStmt extends DdlStmt
         this.currentUserOption = currentUserOption;
     }
 
-    private FemAuthId findAuthIdByName(
-        FarragoRepos repos, String authName)
-    {
-        Collection authIdCollection =
-            repos.getSecurityPackage().getFemAuthId().
-            refAllOfType();
-        FemAuthId femAuthId =
-            (FemAuthId)
-            FarragoCatalogUtil.getModelElementByName(
-                authIdCollection, authName);
-
-        if (femAuthId == null) {
-            // need to create a new auth id instance for metadata repository
-            femAuthId = repos.newFemUser();
-            femAuthId.setName(authName);
-        }
-        return femAuthId;
-    }
-
     
-    private MultiMap initGrantValidationLookupMap (FarragoRepos repos)
+    public FemAuthId determineGrantor(FarragoSessionDdlValidator ddlValidator)
     {
-        // TODO: This routine is temporary. We need to have an extensible way
-        // of handling new kind of privileges. Plus we must be move to session level so that
-        // we don't have to initialize it on the per GRANT request basis.
+        FemAuthId grantorAuthId;
+        
+        if (currentRoleOption == true) {
+            // TODO: retrieve the current role from the session and set that to
+            // be the grantor
+            grantorAuthId = null;
+        } else {
+            // Either
+            // (a) CURRENT_USER is specified in the GRANTED BY clause or
+            // (b) the GRANTED BY clause is missing,
+            // then we use current session user as the grantor.
 
-        // TODO: we want to dynamically load any type of privileges associate
-        // with each access controlled object types e.g. TABLE, VIEW,  PROCEDURE etc.
-
-        // Populate the privilege validation table. The key is the object type
-        // such as TABLE,  SEQUENCE etc. and the value of the entry will be a
-        // list of privileges legal for an object type. 
-        String[] tabPrivs = {"SELECT", "INSERT",  "DELETE",  "UPDATE"};
-        String[] seqPrivs = {"SELECT"};
-        String[] procPrivs = {"EXECUTE"};        
-
-        MultiMap pMap = new MultiMap();
-
-        // Table prvileges
-        for (int i = 0; i < tabPrivs.length; i++)
-        {   
-            pMap.putMulti(repos.getMedPackage().getFemLocalTable(), tabPrivs[i]);
+            String grantorName = ddlValidator.getInvokingSession().
+                getSessionVariables().currentUserName;
+            grantorAuthId = FarragoCatalogUtil.getAuthIdByName(
+                ddlValidator.getRepos(), grantorName);
         }
-
-        // Sequence prvileges. TODO
-//         for (int i = 0; i < tabPrivs.length; i++)
-//         {   
-//             pMap.putMulti(FemSequence, tabPrivs[i]);
-//         }
-
-        // Procedure prvileges
-        for (int i = 0; i < procPrivs.length; i++)
-        {   
-            pMap.putMulti(repos.getSql2003Package().getFemRoutine(), procPrivs[i]);
-        }
-
-        return pMap;
-    }
+        assert(grantorAuthId != null);
+        
+        return grantorAuthId;
+    }   
 }
 
 // End DdlGrantStmt.java

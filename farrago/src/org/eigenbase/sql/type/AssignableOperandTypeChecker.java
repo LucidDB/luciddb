@@ -52,35 +52,23 @@ public class AssignableOperandTypeChecker implements SqlOperandTypeChecker
     }
 
     // implement SqlOperandTypeChecker
-    public int getArgCount()
+    public SqlOperandCountRange getOperandCountRange()
     {
-        return paramTypes.length;
+        return new SqlOperandCountRange(paramTypes.length);
     }
 
     // implement SqlOperandTypeChecker
-    public boolean check(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlNode node,
-        int ruleOrdinal,
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
-        return check(validator, scope, call, throwOnFailure);
-    }
-
-    // implement SqlOperandTypeChecker
-    public boolean check(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlCall call,
-        boolean throwOnFailure)
-    {
-        for (int i = 0; i < call.operands.length; ++i) {
-            RelDataType argType = validator.deriveType(scope, call.operands[i]);
+        for (int i = 0; i < callBinding.getOperandCount(); ++i) {
+            RelDataType argType = callBinding.getValidator().deriveType(
+                callBinding.getScope(),
+                callBinding.getCall().operands[i]);
             if (!SqlTypeUtil.canAssignFrom(paramTypes[i], argType)) {
                 if (throwOnFailure) {
-                    throw call.newValidationSignatureError(validator, scope);
+                    throw callBinding.newValidationSignatureError();
                 } else {
                     return false;
                 }
@@ -90,10 +78,10 @@ public class AssignableOperandTypeChecker implements SqlOperandTypeChecker
     }
 
     // implement SqlOperandTypeChecker
-    public String getAllowedSignatures(SqlOperator op)
+    public String getAllowedSignatures(SqlOperator op, String opName)
     {
         StringBuffer sb = new StringBuffer();
-        sb.append(op.getName());
+        sb.append(opName);
         sb.append("(");
         for (int i = 0; i < paramTypes.length; ++i) {
             if (i > 0) {

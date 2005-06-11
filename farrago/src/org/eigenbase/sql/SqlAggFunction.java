@@ -35,12 +35,14 @@ public abstract class SqlAggFunction extends SqlFunction implements Aggregation
     public SqlAggFunction(
         String name,
         SqlKind kind,
-        SqlReturnTypeInference typeInference,
-        SqlOperandTypeInference paramTypeInference,
-        SqlOperandTypeChecker paramTypes,
+        SqlReturnTypeInference returnTypeInference,
+        SqlOperandTypeInference operandTypeInference,
+        SqlOperandTypeChecker operandTypeChecker,
         SqlFunctionCategory funcType)
     {
-        super(name, kind, typeInference, paramTypeInference, paramTypes,
+        super(
+            name, kind, returnTypeInference,
+            operandTypeInference, operandTypeChecker,
             funcType);
     }
 

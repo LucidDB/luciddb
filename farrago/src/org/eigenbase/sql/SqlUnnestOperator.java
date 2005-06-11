@@ -45,16 +45,13 @@ public class SqlUnnestOperator extends SqlFunctionalOperator
         super(
             "UNNEST", SqlKind.Unnest,
             100, true, null, null,
-            SqlTypeStrategies.otcNullableMultisetOrRecordTypeMultiset);
+            SqlTypeStrategies.otcMultisetOrRecordTypeMultiset);
     }
 
-    protected RelDataType getType(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        RelDataTypeFactory typeFactory,
-        CallOperands callOperands)
+    public RelDataType inferReturnType(
+        SqlOperatorBinding opBinding)
     {
-        RelDataType type = callOperands.getType(0);
+        RelDataType type = opBinding.getOperandType(0);
         if (type.isStruct()) {
             type = type.getFields()[0].getType();
         }

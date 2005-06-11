@@ -90,18 +90,14 @@ public class SqlTypeTransformCascade implements SqlReturnTypeInference
         this(rule, new SqlTypeTransform [] { transform0, transform1 });
     }
 
-    public RelDataType getType(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        RelDataTypeFactory typeFactory,
-        CallOperands callOperands)
+    public RelDataType inferReturnType(
+        SqlOperatorBinding opBinding)
     {
         RelDataType ret =
-            rule.getType(validator, scope, typeFactory, callOperands);
+            rule.inferReturnType(opBinding);
         for (int i = 0; i < transforms.length; i++) {
             SqlTypeTransform transform = transforms[i];
-            ret = transform.getType(
-                validator, scope, typeFactory, callOperands, ret);
+            ret = transform.transformType(opBinding, ret);
         }
         return ret;
     }

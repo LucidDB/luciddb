@@ -19,25 +19,24 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.util.EnumeratedValues;
+import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.parser.SqlParserPos;
 
 /**
- * An enumeration of moniker types. used in {@link Moniker}
+ * Extends {@link SqlValidator} to allow discovery of useful data such as
+ * fully qualified names of sql objects, alternative valid sql objects that 
+ * can be used in the SQL statement (dubbed as hints) 
  *
  * @author tleung
- * @since May 24, 2005
+ * @since Jul 7, 2005
  * @version $Id$
- **/
-public class MonikerType extends EnumeratedValues.BasicValue {
-    public static final MonikerType Column = new MonikerType("Column", 0);
-    public static final MonikerType Table = new MonikerType("Table", 1);
-    public static final MonikerType View = new MonikerType("View", 2);
-    public static final MonikerType Schema = new MonikerType("Schema", 3);
-    public static final MonikerType Repository = new MonikerType("Repository", 4);
-    public MonikerType(String name, int ordinal) {
-        super(name, ordinal, name);
-    }
+ */
+public interface SqlValidatorWithHints extends SqlValidator
+{
+    public SqlMoniker[] lookupHints(SqlNode topNode, SqlParserPos pos);
+    public SqlMoniker lookupQualifiedName(SqlNode topNode, SqlParserPos pos);
 }
+
+// End SqlValidatorWithHints.java

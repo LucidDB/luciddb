@@ -90,3 +90,15 @@ select emps.name,depts.name from sales.emps INNER JOIN sales.depts ON depts.dept
 --select emps.name,depts.name from sales.emps RIGHT OUTER JOIN sales.depts ON depts.deptno=emps.deptno order by 1;
 --select emps.name,depts.name from sales.emps LEFT OUTER JOIN sales.depts ON depts.deptno=emps.deptno order by 1;
 --select emps.name,depts.name from sales.emps FULL OUTER JOIN sales.depts ON depts.deptno=emps.deptno order by 1;
+
+values (1) union values (2) order by 1;
+
+select * from sales.depts union all values (40,'Foodfights') order by 1;
+
+-- from dtbug 263:  test with identical table+column name
+create schema s;
+create table s.b (b boolean, i int primary key);
+insert into s.b values (true, 1);
+select not b from s.b;
+select b or true from s.b;
+select b and true from s.b;

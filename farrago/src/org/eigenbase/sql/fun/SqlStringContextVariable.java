@@ -45,13 +45,8 @@ public abstract class SqlStringContextVariable extends SqlFunction
     {
         super(
             name, SqlKind.Function, SqlTypeStrategies.rtiVarchar2000,
-            null, SqlTypeStrategies.otcEmpty,
+            null, SqlTypeStrategies.otcNiladic,
             SqlFunctionCategory.System);
-    }
-
-    public OperandsCountDescriptor getOperandsCountDescriptor()
-    {
-        return OperandsCountDescriptor.niladicCountDescriptor;
     }
 
     public SqlSyntax getSyntax()

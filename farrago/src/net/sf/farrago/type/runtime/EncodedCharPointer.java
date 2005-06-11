@@ -75,6 +75,20 @@ public abstract class EncodedCharPointer extends BytePointer
     {
         return toString();
     }
+
+    public static class EncodedCharPointerWithCharset extends EncodedCharPointer
+    {
+        protected final String charSet;
+
+        public EncodedCharPointerWithCharset(String charSet)
+        {
+            this.charSet = charSet;
+        }
+
+        protected String getCharsetName() {
+            return charSet;
+        }
+    }    
 }
 
 

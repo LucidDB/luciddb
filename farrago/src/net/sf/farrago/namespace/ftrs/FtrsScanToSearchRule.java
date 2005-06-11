@@ -192,7 +192,8 @@ class FtrsScanToSearchRule extends RelOptRule
                     typeFactory.createCwmElementType(filterColumn)
                 },
                 new String [] { "filterColumn" });
-        RelNode castRel = RelOptUtil.createCastRel(nullFilterRel, lhsRowType);
+        RelNode castRel = RelOptUtil.createCastRel(
+            nullFilterRel, lhsRowType, false);
 
         RelNode keyInput =
             mergeTraitsAndConvert(

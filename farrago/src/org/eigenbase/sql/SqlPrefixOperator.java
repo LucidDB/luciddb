@@ -38,12 +38,12 @@ public class SqlPrefixOperator extends SqlOperator
         String name,
         SqlKind kind,
         int precedence,
-        SqlReturnTypeInference typeInference,
-        SqlOperandTypeInference paramTypeInference,
-        SqlOperandTypeChecker argInference)
+        SqlReturnTypeInference returnTypeInference,
+        SqlOperandTypeInference operandTypeInference,
+        SqlOperandTypeChecker operandTypeChecker)
     {
-        super(name, kind, 0, precedence * 2, typeInference,
-            paramTypeInference, argInference);
+        super(name, kind, 0, precedence * 2, returnTypeInference,
+            operandTypeInference, operandTypeChecker);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -53,7 +53,7 @@ public class SqlPrefixOperator extends SqlOperator
         return SqlSyntax.Prefix;
     }
 
-    protected String getSignatureTemplate(final int operandsCount)
+    public String getSignatureTemplate(final int operandsCount)
     {
         Util.discard(operandsCount);
         return "{0}{1}";

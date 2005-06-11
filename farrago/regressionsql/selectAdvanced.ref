@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/selectAdvanced.sql#5 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/selectAdvanced.sql#7 $
 0: jdbc:farrago:> -- Full vertical system testing of advanced select statements
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -141,75 +141,8 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- fails
 0: jdbc:farrago:> values cast(null as boolean) + cast(null as integer);
-Error: From line 1, column 28 to line 1, column 52: Cannot apply '+' to arguments of type '<BOOLEAN> + <INTEGER>'. Supported form(s): '<TINYINT> + <TINYINT>'
-'<TINYINT> + <SMALLINT>'
-'<TINYINT> + <INTEGER>'
-'<TINYINT> + <BIGINT>'
-'<TINYINT> + <DECIMAL>'
-'<TINYINT> + <FLOAT>'
-'<TINYINT> + <REAL>'
-'<TINYINT> + <DOUBLE>'
-'<SMALLINT> + <TINYINT>'
-'<SMALLINT> + <SMALLINT>'
-'<SMALLINT> + <INTEGER>'
-'<SMALLINT> + <BIGINT>'
-'<SMALLINT> + <DECIMAL>'
-'<SMALLINT> + <FLOAT>'
-'<SMALLINT> + <REAL>'
-'<SMALLINT> + <DOUBLE>'
-'<INTEGER> + <TINYINT>'
-'<INTEGER> + <SMALLINT>'
-'<INTEGER> + <INTEGER>'
-'<INTEGER> + <BIGINT>'
-'<INTEGER> + <DECIMAL>'
-'<INTEGER> + <FLOAT>'
-'<INTEGER> + <REAL>'
-'<INTEGER> + <DOUBLE>'
-'<BIGINT> + <TINYINT>'
-'<BIGINT> + <SMALLINT>'
-'<BIGINT> + <INTEGER>'
-'<BIGINT> + <BIGINT>'
-'<BIGINT> + <DECIMAL>'
-'<BIGINT> + <FLOAT>'
-'<BIGINT> + <REAL>'
-'<BIGINT> + <DOUBLE>'
-'<DECIMAL> + <TINYINT>'
-'<DECIMAL> + <SMALLINT>'
-'<DECIMAL> + <INTEGER>'
-'<DECIMAL> + <BIGINT>'
-'<DECIMAL> + <DECIMAL>'
-'<DECIMAL> + <FLOAT>'
-'<DECIMAL> + <REAL>'
-'<DECIMAL> + <DOUBLE>'
-'<FLOAT> + <TINYINT>'
-'<FLOAT> + <SMALLINT>'
-'<FLOAT> + <INTEGER>'
-'<FLOAT> + <BIGINT>'
-'<FLOAT> + <DECIMAL>'
-'<FLOAT> + <FLOAT>'
-'<FLOAT> + <REAL>'
-'<FLOAT> + <DOUBLE>'
-'<REAL> + <TINYINT>'
-'<REAL> + <SMALLINT>'
-'<REAL> + <INTEGER>'
-'<REAL> + <BIGINT>'
-'<REAL> + <DECIMAL>'
-'<REAL> + <FLOAT>'
-'<REAL> + <REAL>'
-'<REAL> + <DOUBLE>'
-'<DOUBLE> + <TINYINT>'
-'<DOUBLE> + <SMALLINT>'
-'<DOUBLE> + <INTEGER>'
-'<DOUBLE> + <BIGINT>'
-'<DOUBLE> + <DECIMAL>'
-'<DOUBLE> + <FLOAT>'
-'<DOUBLE> + <REAL>'
-'<DOUBLE> + <DOUBLE>'
-'<INTERVALDAYTIME> + <INTERVALDAYTIME>'
-'<INTERVALDAYTIME> + <INTERVALYEARMONTH>'
-'<INTERVALYEARMONTH> + <INTERVALDAYTIME>'
-'<INTERVALYEARMONTH> + <INTERVALYEARMONTH>'
-'<ANY> + <ANY>' (state=,code=0)
+Error: From line 1, column 28 to line 1, column 52: Cannot apply '+' to arguments of type '<BOOLEAN> + <INTEGER>'. Supported form(s): '<NUMERIC> + <NUMERIC>'
+'<DATETIME_INTERVAL> + <DATETIME_INTERVAL>' (state=,code=0)
 0: jdbc:farrago:> -- fails
 0: jdbc:farrago:> values cast(null as boolean) and 1;
 Error: From line 1, column 28 to line 1, column 34: Cannot apply 'AND' to arguments of type '<BOOLEAN> AND <INTEGER>'. Supported form(s): '<BOOLEAN> AND <BOOLEAN>' (state=,code=0)
@@ -310,5 +243,46 @@ Error: Cast function cannot convert value of type INTEGER to type VARBINARY(1) (
 0: jdbc:farrago:> --select emps.name,depts.name from sales.emps RIGHT OUTER JOIN sales.depts ON depts.deptno=emps.deptno order by 1;
 0: jdbc:farrago:> --select emps.name,depts.name from sales.emps LEFT OUTER JOIN sales.depts ON depts.deptno=emps.deptno order by 1;
 0: jdbc:farrago:> --select emps.name,depts.name from sales.emps FULL OUTER JOIN sales.depts ON depts.deptno=emps.deptno order by 1;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values (1) union values (2) order by 1;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
+| 2       |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from sales.depts union all values (40,'Foodfights') order by 1;
++---------+-------------+
+| DEPTNO  |    NAME     |
++---------+-------------+
+| 10      | Sales       |
+| 20      | Marketing   |
+| 30      | Accounts    |
+| 40      | Foodfights  |
++---------+-------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- from dtbug 263:  test with identical table+column name
+0: jdbc:farrago:> create schema s;
+0: jdbc:farrago:> create table s.b (b boolean, i int primary key);
+0: jdbc:farrago:> insert into s.b values (true, 1);
+0: jdbc:farrago:> select not b from s.b;
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> select b or true from s.b;
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> select b and true from s.b;
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

@@ -24,11 +24,13 @@ package net.sf.farrago.catalog;
 
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.security.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.datatypes.*;
 import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
+
 
 import net.sf.farrago.util.*;
 
@@ -40,6 +42,8 @@ import javax.jmi.reflect.*;
 import java.util.*;
 import java.lang.reflect.*;
 
+import java.sql.Timestamp;
+
 /**
  * Static utilities for accessing the Farrago catalog.
  *
@@ -48,6 +52,21 @@ import java.lang.reflect.*;
  */
 public abstract class FarragoCatalogUtil
 {
+    /**
+     * Sets default attributes for a new catalog instance.
+     *
+     * @param repos repository in which catalog is stored
+     *
+     * @param catalog catalog to initialize
+     */
+    public static void initializeCatalog(
+        FarragoRepos repos,
+        CwmCatalog catalog)
+    {
+        catalog.setDefaultCharacterSetName(repos.getDefaultCharsetName());
+        catalog.setDefaultCollationName(repos.getDefaultCollationName());
+    }
+    
     /**
      * Calculates the number of parameters expected by a routine.
      * For functions, this is different from the number of parameters
@@ -491,6 +510,183 @@ public abstract class FarragoCatalogUtil
     {
         return FarragoProperties.instance().expandProperties(femJar.getUrl());
     }
+
+    /**
+     * Finds the FemAuthId for a specified Authorization name.
+     *
+     * @param repos repository storing the Authorization Id
+     *
+     * @param authName the input name used for this lookup
+     *
+     * @return repository element represents the authorization
+     * identifier
+     */
+    public static FemAuthId getAuthIdByName(
+        FarragoRepos repos, String authName)
+    {
+        Collection authIdCollection =
+            repos.getSecurityPackage().getFemAuthId().
+            refAllOfType();
+        FemAuthId femAuthId = (FemAuthId)
+            FarragoCatalogUtil.getModelElementByName(
+                authIdCollection, authName);
+
+        return femAuthId;
+    }
+
+    /**
+     * Creates a new grant on a ROLE with specified role name and associate it
+     * to the grantor and grantee auth ids respectively. By default, the admin
+     * option is set to false. The caller will have to set it on the grant
+     * object returned.
+     *
+     * @param repos repository containing the objects
+     *
+     * @param grantorName the creator of this grant
+     *
+     * @param granteeName the receipient of this grant
+     *
+     * @param roleName the role name of the authorization id to be granted by
+     * this new grant
+     *
+     * @return new grant object
+     */
+    public static FemGrant newRoleGrant(
+        FarragoRepos repos, String grantorName, String granteeName,
+        String roleName)
+    {
+        FemAuthId grantorAuthId;
+        FemAuthId granteeAuthId;
+        FemAuthId grantedRole;
+        
+        // create a creation grant and set its properties
+        FemGrant grant;
+
+        // Find the authId by name for grantor and grantee
+        grantorAuthId = FarragoCatalogUtil.getAuthIdByName(repos, grantorName);
+        granteeAuthId = FarragoCatalogUtil.getAuthIdByName(repos, granteeName);
+
+        // Find the Fem role by name
+        grantedRole = FarragoCatalogUtil.getAuthIdByName(repos, roleName); 
+        if (grantedRole == null)
+        {
+            // TODO: throw res.instance().newRoleNameInvalid(roleName);
+        }
+        
+        grant = newElementGrant(
+            repos, grantorAuthId,  granteeAuthId, grantedRole);
+        
+        // set properties specific for a grant of a role
+        grant.setAction(PrivilegedActionEnum.INHERIT_ROLE.toString());
+        grant.setWithGrantOption(false);
+
+        return grant;
+    }
+
+    /**
+     * Creates a grant on a specified repos element, with AuthId's
+     * specified as strings.
+     *
+     * @param repos repository storing the objects
+     *
+     * @param grantorName the creator of this grant
+     *
+     * @param granteeName the recipient of this grant
+     *
+     * @param grantedObject element being granted 
+     *
+     * @return grant a grant object
+     */
+    public static FemGrant newElementGrant(
+        FarragoRepos repos, String grantorName, String granteeName,
+        CwmModelElement grantedObject)
+    {
+        FemAuthId grantorAuthId;
+        FemAuthId granteeAuthId;
+        
+        // Find the authId by name for grantor and grantee
+        grantorAuthId = FarragoCatalogUtil.getAuthIdByName(repos, grantorName);
+        granteeAuthId = FarragoCatalogUtil.getAuthIdByName(repos, granteeName);
+
+        return newElementGrant(
+            repos, grantorAuthId,  granteeAuthId, grantedObject);
+    }
+    
+    /**
+     * Create a new grant for an element, with AuthId's specified
+     * as repository objects.
+     *
+     * @param repos repository storing the objects
+     *
+     * @param grantorAuthId the creator of this grant
+     *
+     * @param granteeAuthId the receipient of this grant
+     *
+     * @param grantedObject element being granted
+     *
+     * @return new grant object
+     */
+    public static FemGrant newElementGrant(
+        FarragoRepos repos, FemAuthId grantorAuthId, FemAuthId granteeAuthId,
+        CwmModelElement grantedObject)
+    {
+        FemAuthId grantedRole;
+        
+        // create a privilege object and set its properties
+        FemGrant grant = repos.newFemGrant();        
+        
+        // TODO: to grant.setHierarchyOption(hierarchyOption);
+        
+        // associate the grant with the grantor and grantee
+        grant.setGrantor(grantorAuthId);
+        grant.setGrantee(granteeAuthId);
+        grant.setElement(grantedObject);
+
+        return grant;
+    }
+
+    /**
+     * Creates a new creation grant.
+     *
+     * @param repos repository storing the objects
+     *
+     * @param grantorName the name of the creator of the grant
+     *
+     * @param granteeName the name of the grantee of the grant
+     *
+     * @param grantedObject element being created
+     *
+     * @return new grant object
+     */
+    public static FemCreationGrant newCreationGrant(
+        FarragoRepos repos, String grantorName, String granteeName,
+        CwmModelElement grantedObject)
+    {
+        FemAuthId grantorAuthId;
+        FemAuthId granteeAuthId;
+        
+        // create a creation grant and set its properties
+        FemCreationGrant grant = repos.newFemCreationGrant();
+
+        // Find the authId by name for grantor and grantee
+        grantorAuthId = FarragoCatalogUtil.getAuthIdByName(repos, grantorName);
+        granteeAuthId = FarragoCatalogUtil.getAuthIdByName(repos, granteeName);
+        
+        // set the privilege name (i.e. action) and properties.
+        grant.setAction(PrivilegedActionEnum.CREATION.toString());
+        grant.setWithGrantOption(false);
+
+        // TODO: set creation grant attributes
+        Timestamp ts = new java.sql.Timestamp(System.currentTimeMillis());
+        grant.setCreationDate(ts.toString());
+        grant.setModificationDate(grant.getCreationDate());
+        
+        // associate the grant with the grantor and grantee respectively
+        grant.setGrantor(grantorAuthId);
+        grant.setGrantee(granteeAuthId);
+        grant.setElement(grantedObject);
+        return grant;
+    }    
 }
 
 // End FarragoCatalogUtil.java

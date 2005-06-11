@@ -44,7 +44,7 @@ public class SqlPositionFunction extends SqlFunction
     {
         super("POSITION", SqlKind.Function,
             SqlTypeStrategies.rtiNullableInteger, null,
-            SqlTypeStrategies.otcNullableStringX2,
+            SqlTypeStrategies.otcStringSameX2,
             SqlFunctionCategory.Numeric);
     }
     
@@ -62,7 +62,7 @@ public class SqlPositionFunction extends SqlFunction
         writer.print(")");
     }
 
-    protected String getSignatureTemplate(final int operandsCount)
+    public String getSignatureTemplate(final int operandsCount)
     {
         switch (operandsCount) {
         case 2:
@@ -72,12 +72,13 @@ public class SqlPositionFunction extends SqlFunction
         return null;
     }
 
-    protected boolean checkArgTypes(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
+        SqlValidator validator = callBinding.getValidator();
+        SqlCall call = callBinding.getCall();
+        
         //check that the two operands are of same type.
         RelDataType type0 =
             validator.getValidatedNodeType(call.operands[0]);
@@ -85,14 +86,13 @@ public class SqlPositionFunction extends SqlFunction
             validator.getValidatedNodeType(call.operands[1]);
         if (!SqlTypeUtil.inSameFamily(type0, type1)) {
             if (throwOnFailure) {
-                throw call.newValidationSignatureError(
-                    validator, scope);
+                throw callBinding.newValidationSignatureError();
             }
             return false;
         }
 
-        return operandsCheckingRule.check(
-            validator, scope, call, throwOnFailure);
+        return getOperandTypeChecker().checkOperandTypes(
+            callBinding, throwOnFailure);
     }
 
     public void test(SqlTester tester)

@@ -22,8 +22,6 @@
 */
 package net.sf.farrago.type.runtime;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.math.*;
 
 import net.sf.farrago.resource.*;
@@ -109,7 +107,7 @@ public abstract class NullablePrimitive implements NullableValue,
             String s = (String) obj;
             Number n;
             try {
-                n = new BigDecimal(s);
+                n = new BigDecimal(s.trim());
             } catch (NumberFormatException ex) {
                 throw FarragoResource.instance().newAssignFromFailed(
                     s,
@@ -137,6 +135,32 @@ public abstract class NullablePrimitive implements NullableValue,
     {
         /** Wrapped primitive */
         public boolean value;
+
+        // implement AssignableValue for String
+        public void assignFrom(Object obj)
+        {
+            if (obj == null) {
+                setNull(true);
+            } else if (obj instanceof String) {
+                String s = (String) obj;
+                s = s.trim();
+                if (s.equalsIgnoreCase("true")) {
+                    value = true;
+                }
+                else if (s.equalsIgnoreCase("false")) {
+                    value = false;
+                }
+                else if (s.equalsIgnoreCase("unknown")) {
+                    setNull(true);
+                }
+                else {
+                    super.assignFrom(obj);
+                }
+            }
+            else {
+                super.assignFrom(obj);
+            }
+        }
 
         // implement NullablePrimitive
         protected void setNumber(Number number)

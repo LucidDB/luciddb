@@ -95,7 +95,7 @@ public abstract class IterRules
             RelNode [] inputs = unionRel.getInputs();
             for (int i = 0; i < inputs.length; ++i) {
                 RelDataType inputType = inputs[i].getRowType();
-                if (!RelOptUtil.areRowTypesEqual(inputType, unionType)) {
+                if (!RelOptUtil.areRowTypesEqual(inputType, unionType, true)) {
                     return null;
                 }
             }

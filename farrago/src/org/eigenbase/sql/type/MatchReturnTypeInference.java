@@ -72,13 +72,11 @@ public class MatchReturnTypeInference
         this.typeNames = typeNames;
     }
 
-    public RelDataType getType(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        RelDataTypeFactory typeFactory,
-        CallOperands callOperands) {
-        for (int i = start; i < callOperands.size(); i++) {
-            RelDataType argType = callOperands.getType(i);
+    public RelDataType inferReturnType(
+        SqlOperatorBinding opBinding)
+    {
+        for (int i = start; i < opBinding.getOperandCount(); i++) {
+            RelDataType argType = opBinding.getOperandType(i);
             if (SqlTypeUtil.isOfSameTypeName(typeNames, argType)) {
                 return argType;
             }

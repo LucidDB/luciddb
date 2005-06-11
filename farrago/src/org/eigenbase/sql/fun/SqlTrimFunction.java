@@ -51,15 +51,17 @@ public class SqlTrimFunction extends SqlFunction
                 SqlTypeTransforms.toNullable
             ),
             null,
-            SqlTypeStrategies.otcNullableStringSameX2,
+            SqlTypeStrategies.otcStringSameX2,
             SqlFunctionCategory.String);
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    public OperandsCountDescriptor getOperandsCountDescriptor()
+    public SqlOperandCountRange getOperandCountRange()
     {
-        return new OperandsCountDescriptor(3);
+        // REVIEW jvs 2-June-2005:  shouldn't this be TwoOrThree?
+        // Also, inconsistent with with otc above!
+        return SqlOperandCountRange.Three;
     }
 
     public void unparse(
@@ -79,7 +81,7 @@ public class SqlTrimFunction extends SqlFunction
         writer.print(")");
     }
 
-    protected String getSignatureTemplate(final int operandsCount)
+    public String getSignatureTemplate(final int operandsCount)
     {
         switch (operandsCount) {
         case 2:
@@ -106,17 +108,21 @@ public class SqlTrimFunction extends SqlFunction
         return super.createCall(operands, pos);
     }
 
-    protected boolean checkArgTypes(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
+        SqlCall call = callBinding.getCall();
+        SqlValidator validator = callBinding.getValidator();
+        SqlValidatorScope scope  = callBinding.getScope();
+        
         for (int i = 1; i < 3; i++) {
-            if (!SqlTypeStrategies.otcNullableString.check(call, validator,
-                        scope, call.operands[i], 0, throwOnFailure)) {
+            if (!SqlTypeStrategies.otcString.checkSingleOperandType(
+                    callBinding,
+                    call.operands[i], 0, throwOnFailure))
+            {
                 if (throwOnFailure) {
-                    throw call.newValidationSignatureError(validator, scope);
+                    throw callBinding.newValidationSignatureError();
                 }
                 return false;
             }
