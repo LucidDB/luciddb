@@ -1,0 +1,168 @@
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/ddl/auth.sql#1 $
+0: jdbc:farrago:> -- Test DDL on Authorization: 
+0: jdbc:farrago:> -- User, Role, Inheritance structure
+0: jdbc:farrago:> -- ???
+0: jdbc:farrago:> -- ???
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -------------------------------------------------------------------------
+0: jdbc:farrago:> -- Basic setup
+0: jdbc:farrago:> -- set catalog 'local_db'; TODO: Why does this not work?
+0: jdbc:farrago:> create schema authtest;
+0: jdbc:farrago:> set schema 'authtest';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- Create a security manager and login as this user to perform all grant 
+0: jdbc:farrago:> -- tests. 
+0: jdbc:farrago:> -- TODO: grant all appropriate system privilege for this user once
+0: jdbc:farrago:> -- these privs are available.
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create user SECMAN authorization 'Unknown';
+0: jdbc:farrago:> create user SECMAN_2 authorization 'Unknown';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !connect jdbc:farrago: SECMAN net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver
+1: jdbc:farrago:> 
+1: jdbc:farrago:> -------------------------------------------------------------------------
+1: jdbc:farrago:> -- Test 1: Create User U1
+1: jdbc:farrago:> -- 
+1: jdbc:farrago:> 
+1: jdbc:farrago:> Create user U1 AUTHORIZATION 'Unknown';
+1: jdbc:farrago:> 
+1: jdbc:farrago:> -- Create Role 1 at  level 1
+1: jdbc:farrago:> Create Role R1_L1;
+1: jdbc:farrago:> 
+1: jdbc:farrago:> -- Grant the role R1_L1 directly to U1
+1: jdbc:farrago:> Grant Role R1_L1 to U1;
+1: jdbc:farrago:> 
+1: jdbc:farrago:> -- Alter user to make Role R1_L1 the default
+1: jdbc:farrago:> -- Alter user default role R1_L1;
+1: jdbc:farrago:> 
+1: jdbc:farrago:> -- Check system catalog for the objects created
+1: jdbc:farrago:> set catalog 'sys_boot';
+1: jdbc:farrago:> select "name" from sys_fem."Security"."AuthId";
++-----------+
+|   name    |
++-----------+
+| PUBLIC    |
+| R1_L1     |
+| _SYSTEM   |
+| SECMAN    |
+| SECMAN_2  |
+| U1        |
++-----------+
+1: jdbc:farrago:> select "name" from sys_fem."Security"."Role";
++---------+
+|  name   |
++---------+
+| PUBLIC  |
+| R1_L1   |
++---------+
+1: jdbc:farrago:> select "name" from sys_fem."Security"."User";
++-----------+
+|   name    |
++-----------+
+| _SYSTEM   |
+| SECMAN    |
+| SECMAN_2  |
+| U1        |
++-----------+
+1: jdbc:farrago:> 
+1: jdbc:farrago:> -- TODO: John to debug this exception
+1: jdbc:farrago:> -- select "action" from sys_fem."Security"."CreationGrant";
+1: jdbc:farrago:> 
+1: jdbc:farrago:> -------------------------------------------------------------------------
+1: jdbc:farrago:> -- Test 2: user, roles at two different levels hierarchies
+1: jdbc:farrago:> -- 
+1: jdbc:farrago:> -- U2 -> R2_L1 -> R1_L2 -> R1_L3
+1: jdbc:farrago:> -- 
+1: jdbc:farrago:> -- U4 -> ( R1_L1, R2_L1, R3_L1, R4_L1)
+1: jdbc:farrago:> -- 
+1: jdbc:farrago:> 
+1: jdbc:farrago:> Create user U2 AUTHORIZATION 'Unknown';
+1: jdbc:farrago:> Create user U3 AUTHORIZATION 'Unknown';
+1: jdbc:farrago:> Create user U4 AUTHORIZATION 'Unknown';
+1: jdbc:farrago:> Create user U5 AUTHORIZATION 'Unknown';
+1: jdbc:farrago:> Create user U6 AUTHORIZATION 'Unknown';
+1: jdbc:farrago:> Create user U7 AUTHORIZATION 'Unknown';
+1: jdbc:farrago:> 
+1: jdbc:farrago:> -- Create Role 2, 3 and 4 at level 1
+1: jdbc:farrago:> Create Role R2_L1 WITH ADMIN SECMAN_2;
+1: jdbc:farrago:> Create Role R3_L1 WITH ADMIN SECMAN_2;
+1: jdbc:farrago:> Create Role R4_L1 WITH ADMIN SECMAN_2;
+1: jdbc:farrago:> 
+1: jdbc:farrago:> -- Grant the role R2_L1 directly to U2
+1: jdbc:farrago:> Grant Role R2_L1 to U2;
+1: jdbc:farrago:> 
+1: jdbc:farrago:> -- Grant  R2_L1 -> R1_L2 -> R1_L3
+1: jdbc:farrago:> Create Role R1_L2;
+1: jdbc:farrago:> Create Role R1_L3;
+1: jdbc:farrago:> Grant Role R1_L2 to R2_L1 WITH GRANT OPTION;
+1: jdbc:farrago:> Grant Role R1_L3 to R1_L2;
+1: jdbc:farrago:> 
+1: jdbc:farrago:> -- Grant all level 1 roles to U3 i.e. U3 -> ( R1_L1, R2_L1, R3_L1) 
+1: jdbc:farrago:> grant role R1_L1, R2_L1, R3_L1 to U3;
+1: jdbc:farrago:> 
+1: jdbc:farrago:> -- Grant to user U5, U6, U7 the roles (R3_L1, R4_L1, R1_L3)
+1: jdbc:farrago:> Grant role R3_L1, R4_L1, R1_L3 to U5, U6, U7;
+1: jdbc:farrago:> 
+1: jdbc:farrago:> -- Alter user to make Role R1_L1 the default
+1: jdbc:farrago:> -- Alter user default role R1_L1;R1_L1, R2_L1, R3_L1
+1: jdbc:farrago:> 
+1: jdbc:farrago:> set catalog 'sys_boot';
+1: jdbc:farrago:> select "name" from sys_fem."Security"."AuthId";
++-----------+
+|   name    |
++-----------+
+| PUBLIC    |
+| R1_L1     |
+| R2_L1     |
+| R3_L1     |
+| R4_L1     |
+| R1_L2     |
+| R1_L3     |
+| _SYSTEM   |
+| SECMAN    |
+| SECMAN_2  |
+| U1        |
+| U2        |
+| U3        |
+| U4        |
+| U5        |
+| U6        |
+| U7        |
++-----------+
+1: jdbc:farrago:> select "name" from sys_fem."Security"."Role";
++---------+
+|  name   |
++---------+
+| PUBLIC  |
+| R1_L1   |
+| R2_L1   |
+| R3_L1   |
+| R4_L1   |
+| R1_L2   |
+| R1_L3   |
++---------+
+1: jdbc:farrago:> select "name" from sys_fem."Security"."User";
++-----------+
+|   name    |
++-----------+
+| _SYSTEM   |
+| SECMAN    |
+| SECMAN_2  |
+| U1        |
+| U2        |
+| U3        |
+| U4        |
+| U5        |
+| U6        |
+| U7        |
++-----------+
+1: jdbc:farrago:> 
+1: jdbc:farrago:> -- TODO: John to debug this exception
+1: jdbc:farrago:> -- select "action" from sys_fem."Security"."CreationGrant";
+1: jdbc:farrago:> 
+1: jdbc:farrago:> -------------------------------------------------------------------------
+1: jdbc:farrago:> -- Test 3:
+1: jdbc:farrago:> -- 
+1: jdbc:farrago:> 
+1: jdbc:farrago:> 
+1: jdbc:farrago:> !quit

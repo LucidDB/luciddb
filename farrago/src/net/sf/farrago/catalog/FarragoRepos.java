@@ -43,6 +43,7 @@ import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fem.config.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.security.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
@@ -83,11 +84,24 @@ public class FarragoRepos extends FarragoMetadataFactory
      */
     public static final String LOCALDB_CATALOG_NAME = "LOCALDB";
 
+    
+    /**
+     * Reserved name for the public role.
+     */
+    public static final String SECURITY_PUBLIC_ROLE_NAME = "PUBLIC";
+
+    /**
+     * Reserved name for the system internal authorization user.
+     */
+    public static final String SECURITY_SYSUSER_NAME = "_SYSTEM";
+
+    
     //~ Instance fields -------------------------------------------------------
 
     /** Root package in transient repository. */
     private final FarragoPackage transientFarragoPackage;
 
+    
     /** Fennel package in repository. */
     private final FennelPackage fennelPackage;
 
@@ -664,6 +678,36 @@ public class FarragoRepos extends FarragoMetadataFactory
         catalog = newCwmCatalog();
         catalog.setName(LOCALDB_CATALOG_NAME);
         initializeCatalog(catalog);
+
+        // Create the System Internal User 
+        FemUser systemUser = newFemUser();
+        systemUser.setName(SECURITY_SYSUSER_NAME);
+        
+        // Create the built-in role PUBLIC
+        FemRole publicRole = newFemRole();
+        publicRole.setName(SECURITY_PUBLIC_ROLE_NAME);
+
+        // Create a creation grant for sys user and public role
+        Timestamp ts = new java.sql.Timestamp(System.currentTimeMillis());
+        
+        FemCreationGrant grantUser = newFemCreationGrant();
+        grantUser.setAction(PrivilegedActionEnum.CREATION.toString());
+        grantUser.setWithGrantOption(false);
+        grantUser.setCreationDate(ts.toString());
+        grantUser.setModificationDate(grantUser.getCreationDate());
+        grantUser.setGrantor(systemUser); // TODO: can we set to something?
+        grantUser.setGrantee(systemUser); // TODO: can we set to something?
+        grantUser.setElement(systemUser);
+        
+        FemCreationGrant grantPublicRole = newFemCreationGrant();
+        grantPublicRole.setAction(PrivilegedActionEnum.CREATION.toString());
+        grantPublicRole.setWithGrantOption(false);
+        grantPublicRole.setCreationDate(ts.toString());
+        grantPublicRole.setModificationDate(grantPublicRole.getCreationDate());
+        grantPublicRole.setGrantor(systemUser); // TODO: can we set to something?
+        grantPublicRole.setGrantee(systemUser); // TODO: can we set to something?
+        grantPublicRole.setElement(publicRole);
+        
     }
 
     public void initializeCatalog(CwmCatalog catalog)

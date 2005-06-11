@@ -69,6 +69,17 @@ public interface FarragoSession extends FarragoAllocation
     public FarragoSessionStmtValidator newStmtValidator();
 
     /**
+     * Creates a new privilege checker for a session. This checker ensures
+     * that the session user does have the right privileges on the objects
+     * which it requests to operate on.
+     *
+     * One privilege checker should be created for each statement
+     *
+     * @return new privieges checker
+     */
+     public FarragoSessionPrivilegeChecker newPrivilegeChecker();
+
+    /**
      * @return JDBC URL used to establish this session
      */
     public String getUrl();

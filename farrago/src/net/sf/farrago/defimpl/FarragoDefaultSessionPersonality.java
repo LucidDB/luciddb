@@ -144,9 +144,11 @@ public class FarragoDefaultSessionPersonality
         // superinterfaces which we only want to invoke when one of
         // the more specific handlers doesn't satisfied the request.
         DdlMedHandler medHandler = new DdlMedHandler(ddlValidator);
+        DdlSecurityHandler securityHandler = new DdlSecurityHandler(ddlValidator);
         handlerList.add(medHandler);
         handlerList.add(new DdlRoutineHandler(ddlValidator));
         handlerList.add(new DdlRelationalHandler(medHandler));
+        handlerList.add(securityHandler);
 
         // Define drop rules
         FarragoRepos repos =
