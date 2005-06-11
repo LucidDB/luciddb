@@ -43,7 +43,7 @@ import net.sf.farrago.resource.*;
  * @author Quoc Tai Tran
  * @version $Id$
  */
-public class DdlGrantStmt extends DdlStmt
+public abstract class DdlGrantStmt extends DdlStmt
 {
 
     protected boolean grantOption;
@@ -99,8 +99,7 @@ public class DdlGrantStmt extends DdlStmt
             // TODO: retrieve the current role from the session and set that to
             // be the grantor
             grantorAuthId = null;
-        }
-        else {
+        } else {
             // Either
             // (a) CURRENT_USER is specified in the GRANTED BY clause or
             // (b) the GRANTED BY clause is missing,
@@ -108,7 +107,8 @@ public class DdlGrantStmt extends DdlStmt
 
             String grantorName = ddlValidator.getInvokingSession().
                 getSessionVariables().currentUserName;
-            grantorAuthId = FarragoCatalogUtil.getAuthIdByName(ddlValidator.getRepos(), grantorName);
+            grantorAuthId = FarragoCatalogUtil.getAuthIdByName(
+                ddlValidator.getRepos(), grantorName);
         }
         assert(grantorAuthId != null);
         

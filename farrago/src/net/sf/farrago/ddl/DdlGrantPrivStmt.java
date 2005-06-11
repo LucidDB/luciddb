@@ -81,7 +81,8 @@ public class DdlGrantPrivStmt extends DdlGrantStmt
 
         // TODO: 
         // Generate a lurql query to ensure that the grantor
-        // (a) Has GRANT OPTION on all the privileges specified in this grant. or
+        // (a) Has GRANT OPTION on all the privileges specified in this
+        // grant. or
         // (b) Is the creator the owner of the object? 
         // all at once at this point before we proceed with granting.
 
@@ -90,7 +91,6 @@ public class DdlGrantPrivStmt extends DdlGrantStmt
         
         Iterator iter = granteeList.iterator();
         while(iter.hasNext()) {
-
             // process the next grantee
             SqlIdentifier id = (SqlIdentifier) iter.next();
 
@@ -108,10 +108,10 @@ public class DdlGrantPrivStmt extends DdlGrantStmt
 
                 // make sure that the privilege is appropriate for the object
                 // type. 
-                List legalList = privilegeMap.getMulti(grantedObject.refClass());
+                List legalList = privilegeMap.getMulti(
+                    grantedObject.refClass());
 
-                if (!legalList.contains(privId.getSimple().toUpperCase()))
-                {
+                if (!legalList.contains(privId.getSimple().toUpperCase())) {
                     // throw an exception, we see an illegal privilege
                     throw FarragoResource.instance().newValidatorInvalidGrant(
                         privId.getSimple(),grantedObject.getName());
@@ -181,11 +181,13 @@ public class DdlGrantPrivStmt extends DdlGrantStmt
     private MultiMap initGrantValidationLookupMap (FarragoRepos repos)
     {
         // TODO: This routine is temporary. We need to have an extensible way
-        // of handling new kind of privileges. Plus we must be move to session level so that
-        // we don't have to initialize it on the per GRANT request basis.
+        // of handling new kind of privileges. Plus we must be move to session
+        // level so that we don't have to initialize it on the per GRANT
+        // request basis.
 
         // TODO: we want to dynamically load any type of privileges associate
-        // with each access controlled object types e.g. TABLE, VIEW,  PROCEDURE etc.
+        // with each access controlled object types e.g. TABLE, VIEW, PROCEDURE
+        // etc.
 
         // Populate the privilege validation table. The key is the object type
         // such as TABLE,  SEQUENCE etc. and the value of the entry will be a
@@ -199,7 +201,8 @@ public class DdlGrantPrivStmt extends DdlGrantStmt
         // Table prvileges
         for (int i = 0; i < tabPrivs.length; i++)
         {   
-            pMap.putMulti(repos.getMedPackage().getFemLocalTable(), tabPrivs[i]);
+            pMap.putMulti(
+                repos.getMedPackage().getFemLocalTable(), tabPrivs[i]);
         }
 
         // Sequence prvileges. TODO

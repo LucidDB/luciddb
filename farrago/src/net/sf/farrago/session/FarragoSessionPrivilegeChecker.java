@@ -37,7 +37,7 @@ import net.sf.farrago.resource.*;
 
 /**
  * This interface specifies the privilege check service methods. The caller
- * submit request for access on each individual object along with the action to
+ * submits request for access on each individual object along with the action to
  * be performed.
  *
  * @author Tai Tran
@@ -48,20 +48,22 @@ public interface FarragoSessionPrivilegeChecker
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * submit a request access to an object catalog object
+     * Submits a request for access to a catalog object.
      * 
      * @param obj object to be accessed
      *
      * @param authId the authorization id of the requester
      *
      * @param action the action to be performed on the object 'obj'
-     *
      */
-    public void requestAccess(CwmModelElement obj,  FemAuthId authId,  String action);
+    public void requestAccess(
+        CwmModelElement obj,
+        FemAuthId authId,
+        String action);
 
     /**
-     * check access for all requests have been submitted 
-     * 
+     * Checks access for all requests that have been submitted,
+     * and clears the request list.
      */
     public void checkAccess();   
 

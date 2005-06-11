@@ -70,14 +70,17 @@ public interface FarragoSession extends FarragoAllocation
 
     /**
      * Creates a new privilege checker for a session. This checker ensures
-     * that the session user does have the right privileges on the objects
+     * that the session user has the right privileges on the objects
      * which it requests to operate on.
      *
-     * One privilege checker should be created for each statement
+     *<p>
      *
-     * @return new privieges checker
+     * Because privilege checkers are stateful, one privilege checker should be
+     * created for each statement.
+     *
+     * @return new privilege checker
      */
-     public FarragoSessionPrivilegeChecker newPrivilegeChecker();
+    public FarragoSessionPrivilegeChecker newPrivilegeChecker();
 
     /**
      * @return JDBC URL used to establish this session

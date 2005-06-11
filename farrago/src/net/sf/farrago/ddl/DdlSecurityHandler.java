@@ -21,6 +21,9 @@
 */
 package net.sf.farrago.ddl;
 
+// TODO jvs 10-June-2005: Tai, looks like you copied and pasted these imports.
+// I doubt they're all necessary.
+
 import org.eigenbase.util.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
@@ -67,7 +70,6 @@ public class DdlSecurityHandler extends DdlHandler
     public void validateDefinition(FemUser femUser)
     {
         try {
-            
             // ensure that the user does not exist. We assume that the
             // repository service can enforce unique name constraint, so we
             // don't have to check that the name already exist.
@@ -76,12 +78,17 @@ public class DdlSecurityHandler extends DdlHandler
             // create a new creation grant on the object where the creator will
             // be the grantee i.e. FemCreationGrant. grantor is _SYSTEM, and
             // granted object is the femUer itself.
-            FemCreationGrant creationGrant = FarragoCatalogUtil.newCreationGrant(repos, "_SYSTEM",
-                validator.getInvokingSession().getSessionVariables().currentUserName, femUser);
+            FemCreationGrant creationGrant =
+                FarragoCatalogUtil.newCreationGrant(
+                    repos, "_SYSTEM",
+                    validator.getInvokingSession().getSessionVariables()
+                    .currentUserName,
+                    femUser);
             
             // let the user inherit PUBLIC role. TODO: externalize the PUBLIC
             // role string,  can't hard code.
-            FemGrant grantPublic = FarragoCatalogUtil.newRoleGrant(repos, "_SYSTEM", femUser.getName(), "PUBLIC");
+            FemGrant grantPublic = FarragoCatalogUtil.newRoleGrant(
+                repos, "_SYSTEM", femUser.getName(), "PUBLIC");
             
         } catch (Throwable ex) {
             throw res.newValidatorDefinitionInvalid(
@@ -101,8 +108,12 @@ public class DdlSecurityHandler extends DdlHandler
             // create a new creation grant on the object where the creator will
             // be the grantee i.e. FemCreationGrant. grantor is _SYSTEM, and
             // granted object is the femRole itself.
-            FemCreationGrant creationGrant = FarragoCatalogUtil.newCreationGrant(repos, "_SYSTEM",
-                validator.getInvokingSession().getSessionVariables().currentUserName, femRole);
+            FemCreationGrant creationGrant =
+                FarragoCatalogUtil.newCreationGrant(
+                    repos, "_SYSTEM",
+                    validator.getInvokingSession().getSessionVariables()
+                    .currentUserName,
+                    femRole);
             
         } catch (Throwable ex) {
             throw res.newValidatorDefinitionInvalid(
@@ -128,8 +139,6 @@ public class DdlSecurityHandler extends DdlHandler
     {
         // TODO: implement drop handler
     }
-
-
 }
 
 // End DdlSecurityHandler.java

@@ -36,15 +36,24 @@ import org.eigenbase.util.*;
 import net.sf.farrago.resource.*;
 
 /**
- * Provides a service to check privileges on object(s). A caller provides to
- * each request the followings: The catalog object, the authorization ID and
- * the action to be performed
+ * Implements the {@link FarragoSessionPrivilegeChecker} interface
+ * in the context of a {@link FarragoDbSession}.
+ *
+ *<p>
  *
  * An instance of this class must be created per statement i.e. it can't be
- * shared between statements. 
+ * shared between statements.
+ *
+ *<p>
+ *
+ * REVIEW jvs 10-June-2005:  I don't think we need (a) below.  It's
+ * fine to state the expected usage, but we're defining a general-purpose
+ * API, so there's no need to constrain the caller in this way.
+ *
+ *<p>
  *
  * TODO:
- * (a) Check that all requests come from the same statement handle
+ * (a) Check that all requests come from the same statement handle.
  * (b) Do cache of underlying graph. It can be slow to keep reading.
  *
  * @author Tai Tran
@@ -52,7 +61,6 @@ import net.sf.farrago.resource.*;
  */
 class FarragoDbSessionPrivilegeCheker implements FarragoSessionPrivilegeChecker
 {
-    
     private DoubleKeyMap requestsMap;
 
     // constructor

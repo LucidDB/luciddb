@@ -78,26 +78,25 @@ public class DdlGrantRoleStmt extends DdlGrantStmt
         
         Iterator iter = granteeList.iterator();
         while(iter.hasNext()) {
-
             // process the next grantee
             SqlIdentifier granteeId = (SqlIdentifier) iter.next();
 
             // Find the repository element id for the grantee,  create one if
             // it does not exist
-            FemAuthId granteeAuthId = FarragoCatalogUtil.getAuthIdByName(repos, granteeId.getSimple());
+            FemAuthId granteeAuthId = FarragoCatalogUtil.getAuthIdByName(
+                repos, granteeId.getSimple());
 
             // for each role in the list, we instantiate a repository
             // element. Note that this makes it easier to revoke the privs on
             // the individual basis.
             Iterator iterRole = roleList.iterator();
             while (iterRole.hasNext()) {
-                
                 SqlIdentifier roleId = (SqlIdentifier) iterRole.next();
-                
                 
                 // create a privilege object and set its properties
                 FemGrant grant = FarragoCatalogUtil.newRoleGrant(
-                    repos, grantorAuthId.getName(), granteeId.getSimple(), roleId.getSimple());                
+                    repos, grantorAuthId.getName(), granteeId.getSimple(),
+                    roleId.getSimple());                
                 
                 // set the privilege name (i.e. action) and properties
                 grant.setWithGrantOption(grantOption);

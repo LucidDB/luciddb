@@ -496,32 +496,31 @@ public abstract class FarragoCatalogUtil
     }
 
     /**
-     * returns a Fem AuthId of a specified Authorization name
+     * Finds the FemAuthId for a specified Authorization name.
      *
      * @param repos repository storing the Authorization Id
      *
-     * @param authName The input name used for this lookup
+     * @param authName the input name used for this lookup
      *
-     * @return FemAuthId repository element represents the authorization identifier
+     * @return repository element represents the authorization
+     * identifier
      */
-    
     public static FemAuthId getAuthIdByName(
         FarragoRepos repos, String authName)
     {
-        // TODO: review that this is the most efficient way to lookup.
-        
         Collection authIdCollection =
             repos.getSecurityPackage().getFemAuthId().
             refAllOfType();
-        FemAuthId femAuthId = (FemAuthId) FarragoCatalogUtil.getModelElementByName(
+        FemAuthId femAuthId = (FemAuthId)
+            FarragoCatalogUtil.getModelElementByName(
                 authIdCollection, authName);
 
         return femAuthId;
     }
 
     /**
-     * create a new grant on a ROLE with specified role name and associate it to
-     * the grantor and grantee auth ids respectively. By default,  the admin
+     * Creates a new grant on a ROLE with specified role name and associate it
+     * to the grantor and grantee auth ids respectively. By default, the admin
      * option is set to false. The caller will have to set it on the grant
      * object returned.
      *
@@ -534,13 +533,12 @@ public abstract class FarragoCatalogUtil
      * @param roleName the role name of the authorization id to be granted by
      * this new grant
      *
-     * @return grant a grant object
+     * @return new grant object
      */
-    
-    public static FemGrant newRoleGrant(FarragoRepos repos, String grantorName, String granteeName,
+    public static FemGrant newRoleGrant(
+        FarragoRepos repos, String grantorName, String granteeName,
         String roleName)
     {
-
         FemAuthId grantorAuthId;
         FemAuthId granteeAuthId;
         FemAuthId grantedRole;
@@ -559,7 +557,8 @@ public abstract class FarragoCatalogUtil
             // TODO: throw res.instance().newRoleNameInvalid(roleName);
         }
         
-        grant = newElementGrant(repos, grantorAuthId,  granteeAuthId, grantedRole);
+        grant = newElementGrant(
+            repos, grantorAuthId,  granteeAuthId, grantedRole);
         
         // set properties specific for a grant of a role
         grant.setAction(PrivilegedActionEnum.INHERIT_ROLE.toString());
@@ -569,23 +568,23 @@ public abstract class FarragoCatalogUtil
     }
 
     /**
-     * create a element grant on a specified repos element.
+     * Creates a grant on a specified repos element, with AuthId's
+     * specified as strings.
      *
      * @param repos repository storing the objects
      *
      * @param grantorName the creator of this grant
      *
-     * @param granteeName the receipient of this grant
+     * @param granteeName the recipient of this grant
      *
      * @param grantedObject element being granted 
      *
      * @return grant a grant object
      */
-    
-    public static FemGrant newElementGrant(FarragoRepos repos, String grantorName, String granteeName,
+    public static FemGrant newElementGrant(
+        FarragoRepos repos, String grantorName, String granteeName,
         CwmModelElement grantedObject)
     {
-
         FemAuthId grantorAuthId;
         FemAuthId granteeAuthId;
         
@@ -593,11 +592,13 @@ public abstract class FarragoCatalogUtil
         grantorAuthId = FarragoCatalogUtil.getAuthIdByName(repos, grantorName);
         granteeAuthId = FarragoCatalogUtil.getAuthIdByName(repos, granteeName);
 
-        return newElementGrant(repos, grantorAuthId,  granteeAuthId, grantedObject);
+        return newElementGrant(
+            repos, grantorAuthId,  granteeAuthId, grantedObject);
     }
     
     /**
-     * create a new grant for an element specified as 'grantedObject'.
+     * Create a new grant for an element, with AuthId's specified
+     * as repository objects.
      *
      * @param repos repository storing the objects
      *
@@ -607,10 +608,10 @@ public abstract class FarragoCatalogUtil
      *
      * @param grantedObject element being granted
      *
-     * @return grant a grant object
+     * @return new grant object
      */
-    
-    public static FemGrant newElementGrant(FarragoRepos repos, FemAuthId grantorAuthId, FemAuthId granteeAuthId,
+    public static FemGrant newElementGrant(
+        FarragoRepos repos, FemAuthId grantorAuthId, FemAuthId granteeAuthId,
         CwmModelElement grantedObject)
     {
         FemAuthId grantedRole;
@@ -629,7 +630,7 @@ public abstract class FarragoCatalogUtil
     }
 
     /**
-     * create a new creation grant for the specified names of grantor and grantee.
+     * Creates a new creation grant.
      *
      * @param repos repository storing the objects
      *
@@ -637,15 +638,14 @@ public abstract class FarragoCatalogUtil
      *
      * @param granteeName the name of the grantee of the grant
      *
-     * @param grantedObject
+     * @param grantedObject element being created
      *
-     * @return void
+     * @return new grant object
      */
-    
     public static FemCreationGrant newCreationGrant(
-        FarragoRepos repos, String grantorName, String granteeName,  CwmModelElement grantedObject)
+        FarragoRepos repos, String grantorName, String granteeName,
+        CwmModelElement grantedObject)
     {
-        
         FemAuthId grantorAuthId;
         FemAuthId granteeAuthId;
         
@@ -660,7 +660,7 @@ public abstract class FarragoCatalogUtil
         grant.setAction(PrivilegedActionEnum.CREATION.toString());
         grant.setWithGrantOption(false);
 
-        // TOD:set creation grant attributes
+        // TODO: set creation grant attributes
         Timestamp ts = new java.sql.Timestamp(System.currentTimeMillis());
         grant.setCreationDate(ts.toString());
         grant.setModificationDate(grant.getCreationDate());

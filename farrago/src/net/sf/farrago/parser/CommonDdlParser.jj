@@ -2212,9 +2212,10 @@ List GrantElementList() :
 }
 
 //
-// This method is common between the two grant statements (i.e. GRANT PRIVILEGE and GRANT ROLE).
+// This method is common between the two grant statements
+// (i.e. GRANT privilege and GRANT ROLE).
 // 
-void grantOptions(DdlGrantStmt stmt) :
+void GrantOptions(DdlGrantStmt stmt) :
 {
     SqlIdentifier grantor;
 }
@@ -2276,7 +2277,7 @@ DdlStmt GrantPrivStmt() :
             stmt.setHierarchyOption(true);
         }
     ]
-    grantOptions(stmt)
+    GrantOptions(stmt)
     {
         return stmt;
     }
@@ -2298,7 +2299,7 @@ DdlStmt GrantRoleStmt() :
     {
         stmt.setGranteeList(granteeList);
     }
-    grantOptions(stmt)
+    GrantOptions(stmt)
     {
         return stmt;            
     }
