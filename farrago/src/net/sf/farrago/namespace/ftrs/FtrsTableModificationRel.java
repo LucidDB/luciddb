@@ -44,7 +44,7 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsTableModificationRel extends TableModificationRel
+class FtrsTableModificationRel extends TableModificationRelBase
     implements FennelPullRel
 {
     //~ Instance fields -------------------------------------------------------
@@ -90,20 +90,20 @@ class FtrsTableModificationRel extends TableModificationRel
     // implement FennelRel
     public FarragoTypeFactory getFarragoTypeFactory()
     {
-        return (FarragoTypeFactory) cluster.typeFactory;
+        return (FarragoTypeFactory) getCluster().getTypeFactory();
     }
 
     // implement Cloneable
     public Object clone()
     {
         FtrsTableModificationRel clone = new FtrsTableModificationRel(
-            cluster,
+            getCluster(),
             ftrsTable,
             getConnection(),
-            RelOptUtil.clone(child),
+            RelOptUtil.clone(getChild()),
             getOperation(),
             getUpdateColumnList());
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 
@@ -117,7 +117,7 @@ class FtrsTableModificationRel extends TableModificationRel
     // implement FennelRel
     public Object implementFennelChild(FennelRelImplementor implementor)
     {
-        return implementor.visitChild(this, 0, child);
+        return implementor.visitChild(this, 0, getChild());
     }
 
     private List getUpdateCwmColumnList()
@@ -139,7 +139,7 @@ class FtrsTableModificationRel extends TableModificationRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FemExecutionStreamDef input =
-            implementor.visitFennelChild((FennelRel) child);
+            implementor.visitFennelChild((FennelRel) getChild());
         FarragoTypeFactory typeFactory = getFarragoTypeFactory();
         if (!(ftrsTable.getCwmColumnSet() instanceof CwmTable)) {
             // e.g. view update
@@ -299,7 +299,7 @@ class FtrsTableModificationRel extends TableModificationRel
                 FennelRelUtil.createTupleDescriptorFromRowType(
                     repos,
                     getFarragoTypeFactory(),
-                    child.getRowType()));
+                    getChild().getRowType()));
 
             buffer.getInput().add(input);
 

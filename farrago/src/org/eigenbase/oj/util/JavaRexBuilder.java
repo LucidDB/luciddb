@@ -74,7 +74,7 @@ public class JavaRexBuilder extends RexBuilder
         if (exp instanceof JavaRowExpression) {
             JavaRowExpression jexp = (JavaRowExpression) exp;
             final FieldAccess fieldAccess =
-                new FieldAccess(jexp.expression, fieldName);
+                new FieldAccess(jexp.getExpression(), fieldName);
             return makeJava(jexp.env, fieldAccess);
         } else {
             return super.makeFieldAccess(exp, fieldName);
@@ -132,7 +132,7 @@ public class JavaRexBuilder extends RexBuilder
             JavaRowExpression java = (JavaRowExpression) exp;
             final OJClass ojClass = OJUtil.typeToOJClass(type, typeFactory);
             final CastExpression castExpr =
-                new CastExpression(ojClass, java.expression);
+                new CastExpression(ojClass, java.getExpression());
             return new JavaRowExpression(java.env, type, castExpr);
         }
         return super.makeCast(type, exp);

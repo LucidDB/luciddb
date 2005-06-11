@@ -46,4 +46,32 @@
 | 30      | Accounts   |
 +---------+------------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> select*from unnest(values(multiset[1]));
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select*from unnest(values(multiset(select*from sales.emps)));
++--------+--------+---------+---------+----------------+--------+------+-------------+----------+----------+
+| EMPNO  |  NAME  | DEPTNO  | GENDER  |      CITY      | EMPID  | AGE  | PUBLIC_KEY  | SLACKER  | MANAGER  |
++--------+--------+---------+---------+----------------+--------+------+-------------+----------+----------+
+| 100    | Fred   | 10      |         |                | 30     | 25   | 41626320    | true     | false    |
+| 110    | Eric   | 20      | M       | San Francisco  | 3      | 80   | 416263      |          | false    |
+| 120    | Wilma  | 20      | F       |                | 1      | 50   |             |          | true     |
+| 110    | John   | 40      | M       | Vancouver      | 2      |      | 58797A      | false    | true     |
++--------+--------+---------+---------+----------------+--------+------+-------------+----------+----------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- FIXME: Need to implement RelStructuredTypeFlattener.visit(RexFieldAccess)
+0: jdbc:farrago:> --        for RexCorrelVariable
+0: jdbc:farrago:> select*from unnest(select multiset[empno] from sales.emps);
+Error: java.lang.UnsupportedOperationException: class org.eigenbase.rex.RexCorrelVariable: $cor0 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- FIXME: Need to implement RelStructuredTypeFlattener.visit(RexFieldAccess)
+0: jdbc:farrago:> --        for RexCorrelVariable
+0: jdbc:farrago:> select*from unnest(select multiset[(empno, name)] from sales.emps);
+Error: java.lang.UnsupportedOperationException: class org.eigenbase.rex.RexCorrelVariable: $cor0 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

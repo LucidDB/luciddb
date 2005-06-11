@@ -270,7 +270,7 @@ public class RelStructuredTypeFlattener
             rel.getCluster(),
             rel.getTable(),
             rel.getConnection(),
-            getNewForOldRel(rel.child),
+            getNewForOldRel(rel.getChild()),
             rel.getOperation(),
             rel.getUpdateColumnList(),
             true);
@@ -279,7 +279,7 @@ public class RelStructuredTypeFlattener
 
     public void rewriteRel(AggregateRel rel)
     {
-        RelDataType inputType = rel.child.getRowType();
+        RelDataType inputType = rel.getChild().getRowType();
         Iterator fields = inputType.getFieldList().iterator();
         while (fields.hasNext()) {
             RelDataTypeField field = (RelDataTypeField) fields.next();
@@ -298,9 +298,9 @@ public class RelStructuredTypeFlattener
         RelFieldCollation [] newCollations =
             new RelFieldCollation[oldCollations.length];
         for (int i = 0; i < oldCollations.length; ++i) {
-            int oldInput = oldCollations[i].iField;
+            int oldInput = oldCollations[i].getFieldIndex();
             RelDataType sortFieldType = 
-                rel.child.getRowType().getFields()[oldInput].getType();
+                rel.getChild().getRowType().getFields()[oldInput].getType();
             if (sortFieldType.isStruct()) {
                 // TODO jvs 10-Feb-2005
                 throw Util.needToImplement("sorting on structured types");
@@ -310,7 +310,7 @@ public class RelStructuredTypeFlattener
         }
         SortRel newRel = new SortRel(
             rel.getCluster(),
-            getNewForOldRel(rel.child),
+            getNewForOldRel(rel.getChild()),
             newCollations);
         setNewForOldRel(rel, newRel);
     }
@@ -319,8 +319,8 @@ public class RelStructuredTypeFlattener
     {
         FilterRel newRel = new FilterRel(
             rel.getCluster(),
-            getNewForOldRel(rel.child),
-            flattenFieldAccesses(rel.condition));
+            getNewForOldRel(rel.getChild()),
+            flattenFieldAccesses(rel.getCondition()));
         setNewForOldRel(rel, newRel);
     }
 
@@ -344,14 +344,14 @@ public class RelStructuredTypeFlattener
             CorrelatorRel.Correlation c = (CorrelatorRel.Correlation)
                 oldCorrelations.next();
             RelDataType corrFieldType =
-                rel.getLeft().getRowType().getFields()[c.offset].getType();
+                rel.getLeft().getRowType().getFields()[c.getOffset()].getType();
             if (corrFieldType.isStruct()) {
                 throw Util.needToImplement("correlation on structured type");
             }
             newCorrelations.add(
                 new CorrelatorRel.Correlation(
-                    c.id,
-                    getNewForOldInput(c.offset)));
+                    c.getId(),
+                    getNewForOldInput(c.getOffset())));
         }
         CorrelatorRel newRel = new CorrelatorRel(
             rel.getCluster(), 
@@ -359,11 +359,6 @@ public class RelStructuredTypeFlattener
             getNewForOldRel(rel.getRight()),
             newCorrelations);
         setNewForOldRel(rel, newRel);
-    }
-
-    public void rewriteRel(DistinctRel rel)
-    {
-        rewriteGeneric(rel);
     }
 
     public void rewriteRel(CollectRel rel)
@@ -411,7 +406,7 @@ public class RelStructuredTypeFlattener
             (String []) flattenedFieldNames.toArray(Util.emptyStringArray);
         ProjectRel newRel = new ProjectRel(
             rel.getCluster(),
-            getNewForOldRel(rel.child),
+            getNewForOldRel(rel.getChild()),
             newExps,
             newFieldNames,
             rel.getFlags());
@@ -441,7 +436,7 @@ public class RelStructuredTypeFlattener
             if (exp.getType().isStruct()) {
                 if (exp instanceof RexInputRef) {
                     RexInputRef inputRef = (RexInputRef) exp;
-                    int newOffset = getNewForOldInput(inputRef.index);
+                    int newOffset = getNewForOldInput(inputRef.getIndex());
                     // expand to range
                     RelDataType flattenedType = SqlTypeUtil.flattenRecordType(
                         rexBuilder.getTypeFactory(),
@@ -544,19 +539,12 @@ public class RelStructuredTypeFlattener
             return false;
         }
         RexCall call = (RexCall) rexNode;
-        return call.getOperator().name.equalsIgnoreCase("row")
+        return call.getOperator().getName().equalsIgnoreCase("row")
             || (call.isA(RexKind.NewSpecification));
     }
 
     public void rewriteRel(TableAccessRel rel)
     {
-        // TODO jvs 10-Feb-2005:  reintroduce AbstractTableAccessRel
-        // and get rid of this
-        if (!rel.getClass().equals(TableAccessRel.class)) {
-            setNewForOldRel(rel, rel);
-            return;
-        }
-        
         RelNode newRel = rel.getTable().toRel(
             rel.getCluster(),
             rel.getConnection());
@@ -596,7 +584,7 @@ public class RelStructuredTypeFlattener
         public RexNode visit(RexInputRef input)
         {
             RexInputRef newInput = new RexInputRef(
-                getNewForOldInput(input.index),
+                getNewForOldInput(input.getIndex()),
                 removeDistinct(input.getType()));
             return newInput;
         }
@@ -625,7 +613,7 @@ public class RelStructuredTypeFlattener
                     refExp.getType(), ordinal);
                 if (refExp instanceof RexInputRef) {
                     RexInputRef inputRef = (RexInputRef) refExp;
-                    iInput += getNewForOldInput(inputRef.index);
+                    iInput += getNewForOldInput(inputRef.getIndex());
                     return new RexInputRef(iInput, fieldType);
                 } else if (refExp.isA(RexKind.Cast)) {
                     // REVIEW jvs 27-Feb-2005:  what about a cast between
@@ -686,11 +674,11 @@ public class RelStructuredTypeFlattener
                 new ArrayList());
             int n = flattenedExps.size() / 2;
             boolean negate = false;
-            if (op.kind.isA(SqlKind.NotEquals)) {
+            if (op.getKind().isA(SqlKind.NotEquals)) {
                 negate = true;
                 op = opTab.equalsOperator;
             }
-            if ((n > 1) && !op.kind.isA(SqlKind.Equals)) {
+            if ((n > 1) && !op.getKind().isA(SqlKind.Equals)) {
                 throw Util.needToImplement(
                     "inequality comparison for row types");
             }

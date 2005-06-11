@@ -23,34 +23,57 @@
 
 package org.eigenbase.rel;
 
+import org.eigenbase.relopt.*;
 
 /**
- * todo:
+ * <code>MinusRel</code> returns the rows of its first input minus any
+ * matching rows from its other inputs.  If "all" is true, then multiset
+ * subtraction is performed; otherwise, set subtraction is performed
+ * (implying no duplicates in the results).
  *
  * @author jhyde
  * @version $Id$
  *
  * @since 23 September, 2001
  */
-public class MinusRel extends UnionRel
+public final class MinusRel extends SetOpRel
 {
     //~ Constructors ----------------------------------------------------------
-
+    
     public MinusRel(
-        org.eigenbase.relopt.RelOptCluster cluster,
-        RelNode left,
-        RelNode right)
-    {
-        super(cluster, new RelNode [] { left, right }, false);
-    }
-
-    public MinusRel(
-        org.eigenbase.relopt.RelOptCluster cluster,
-        RelNode left,
-        RelNode right,
+        RelOptCluster cluster,
+        RelNode [] inputs,
         boolean all)
     {
-        super(cluster, new RelNode [] { left, right }, all);
+        super(
+            cluster,
+            new RelTraitSet(CallingConvention.NONE),
+            inputs,
+            all);
+    }
+    
+    // implement RelNode
+    public double getRows()
+    {
+        // REVIEW jvs 30-May-2005:  I just pulled this out of a hat.
+        double dRows = inputs[0].getRows();
+        for (int i = 1; i < inputs.length; i++) {
+            dRows -= 0.5*inputs[i].getRows();
+        }
+        if (dRows < 0) {
+            dRows = 0;
+        }
+        return dRows;
+    }
+
+    public Object clone()
+    {
+        MinusRel clone = new MinusRel(
+            getCluster(),
+            RelOptUtil.clone(inputs),
+            all);
+        clone.inheritTraitsFrom(this);
+        return clone;
     }
 }
 

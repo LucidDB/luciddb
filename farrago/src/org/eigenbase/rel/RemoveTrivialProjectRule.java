@@ -55,7 +55,7 @@ public class RemoveTrivialProjectRule extends RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
         ProjectRel project = (ProjectRel) call.rels[0];
-        RelNode child = project.child;
+        RelNode child = project.getChild();
         final RelDataType childRowType = child.getRowType();
         if (!childRowType.isStruct()) {
             return;
@@ -69,7 +69,7 @@ public class RemoveTrivialProjectRule extends RelOptRule
                     childRowType)) {
             return;
         }
-        child = call.planner.register(child, project);
+        child = call.getPlanner().register(child, project);
         child = convert(
                 child,
                 project.getTraits());
@@ -93,7 +93,7 @@ public class RemoveTrivialProjectRule extends RelOptRule
             RexNode exp = exps[i];
             if (exp instanceof RexInputRef) {
                 RexInputRef var = (RexInputRef) exp;
-                if (var.index != i) {
+                if (var.getIndex() != i) {
                     return false;
                 }
                 if (!fields[i].getName().equals(childFields[i].getName())) {

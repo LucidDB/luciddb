@@ -29,10 +29,11 @@ import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.CorrelatorRel;
 import net.sf.farrago.query.FennelPullRel;
 
-import java.util.ArrayList;
+import java.util.*;
 
 /**
- * FennelCorrelateRule is a rule to implement two correlated join streams
+ * FennelCorrelateRule is a rule to implement the join of two correlated
+ * streams.
  *
  * @author Wael Chatila 
  * @since Feb 1, 2005
@@ -82,7 +83,7 @@ public class FennelCorrelatorRule extends RelOptRule {
                 correlatorRel.getCluster(),
                 fennelLeftInput,
                 fennelRightInput,
-                (ArrayList) correlatorRel.getCorrelations().clone());
+                correlatorRel.cloneCorrelations());
         call.transformTo(fennelPullCorrelatorRel);
     }
 }

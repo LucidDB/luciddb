@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/timestamp.sql#4 $ 
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/timestamp.sql#5 $ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test timestamp literal
 0: jdbc:farrago:> -- we don'tsupport time w/ timezone in this release.
@@ -136,7 +136,7 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast fro
 0: jdbc:farrago:> insert into t_timestamp values(1234,null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'INTEGER' to 'TIMESTAMP' (state=,code=0)
 0: jdbc:farrago:> insert into t_timestamp values(1e400,null);
-Error: At line 1, column 31: Numeric literal '1E400' out of range (state=,code=0)
+Error: From line 1, column 32 to line 1, column 36: Numeric literal '1E400' out of range (state=,code=0)
 0: jdbc:farrago:> insert into t_timestamp values(-1.2345678901234e-200,null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'DOUBLE' to 'TIMESTAMP' (state=,code=0)
 0: jdbc:farrago:> insert into t_timestamp values(-1234.03,null);

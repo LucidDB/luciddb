@@ -92,7 +92,7 @@ public abstract class FennelMultipleRel
     // implement FennelRel
     public FarragoTypeFactory getFarragoTypeFactory()
     {
-        return (FarragoTypeFactory) cluster.typeFactory;
+        return (FarragoTypeFactory) getCluster().getTypeFactory();
     }
 
     // implement RelNode
@@ -125,7 +125,7 @@ public abstract class FennelMultipleRel
         }
         final RelDataType[] types = 
             (RelDataType[]) typeList.toArray(new RelDataType[typeList.size()]);
-        return cluster.typeFactory.createJoinType(types);
+        return getCluster().getTypeFactory().createJoinType(types);
     }
 
     // default implementation for FennelRel

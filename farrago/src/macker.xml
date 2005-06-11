@@ -42,6 +42,7 @@
     <pattern name="FarragoPackage">
       <include class="net.sf.farrago.FarragoPackage" />
       <include class="net.sf.farrago.FarragoMetadataFactory" />
+      <include class="net.sf.farrago.FarragoMetadataFactoryImpl" />
     </pattern>
     <pattern name="trace" class="net.sf.farrago.trace.*" />
     <pattern name="util" class="net.sf.farrago.util.*" />

@@ -317,7 +317,7 @@ public class VolcanoPlannerTest extends TestCase
                 (RelOptListener.RuleEvent) event;
             assertSame(
                 expectedRuleClass,
-                ruleEvent.getRuleCall().rule.getClass());
+                ruleEvent.getRuleCall().getRule().getClass());
         }
     }
 
@@ -371,9 +371,9 @@ public class VolcanoPlannerTest extends TestCase
         // implement RelNode
         protected RelDataType deriveRowType()
         {
-            return cluster.typeFactory.createStructType(
+            return getCluster().getTypeFactory().createStructType(
                 new RelDataType [] {
-                    cluster.typeFactory.createJavaType(Void.TYPE)
+                    getCluster().getTypeFactory().createJavaType(Void.TYPE)
                 },
                 new String [] { "this" });
         }
@@ -406,7 +406,7 @@ public class VolcanoPlannerTest extends TestCase
         // implement RelNode
         protected RelDataType deriveRowType()
         {
-            return child.getRowType();
+            return getChild().getRowType();
         }
     }
 
@@ -422,8 +422,8 @@ public class VolcanoPlannerTest extends TestCase
         // implement RelNode
         public Object clone()
         {
-            NoneSingleRel clone = new NoneSingleRel(cluster, child);
-            clone.traits = cloneTraits();
+            NoneSingleRel clone = new NoneSingleRel(getCluster(), getChild());
+            clone.inheritTraitsFrom(this);
             return clone;
         }
     }
@@ -472,8 +472,8 @@ public class VolcanoPlannerTest extends TestCase
         // implement RelNode
         public Object clone()
         {
-            PhysSingleRel clone = new PhysSingleRel(cluster, child);
-            clone.traits = cloneTraits();
+            PhysSingleRel clone = new PhysSingleRel(getCluster(), getChild());
+            clone.inheritTraitsFrom(this);
             return clone;
         }
     }
@@ -493,8 +493,8 @@ public class VolcanoPlannerTest extends TestCase
         public Object clone()
         {
             PhysToIteratorConverter clone =
-                new PhysToIteratorConverter(cluster, child);
-            clone.traits = cloneTraits();
+                new PhysToIteratorConverter(getCluster(), getChild());
+            clone.inheritTraitsFrom(this);
             return clone;
         }
     }

@@ -49,7 +49,7 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class MedMockFennelRel extends TableAccessRel implements FennelPullRel
+class MedMockFennelRel extends TableAccessRelBase implements FennelPullRel
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -97,8 +97,8 @@ class MedMockFennelRel extends TableAccessRel implements FennelPullRel
     public Object clone()
     {
         MedMockFennelRel clone =
-            new MedMockFennelRel(columnSet, cluster, connection);
-        clone.traits = cloneTraits();
+            new MedMockFennelRel(columnSet, getCluster(), connection);
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 }

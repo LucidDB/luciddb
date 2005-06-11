@@ -20,33 +20,36 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package org.eigenbase.sql;
+package org.eigenbase.sql.type;
+
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.reltype.*;
 
 /**
- * SqlNewOperator represents an SQL <code>new specification</code> such as
- * <code>NEW UDT(1, 2)</code>.  When used in an SqlCall, SqlNewOperator takes a
- * single operand, which is an invocation of the constructor method; but when
- * used in a RexCall, the operands are the initial values to be used
- * for the new instance.
+ * ExplicitOperandTypeInferences implements {@link SqlOperandTypeInference}
+ * by explicity supplying a type for each parameter.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class SqlNewOperator extends SqlPrefixOperator
+public class ExplicitOperandTypeInference implements SqlOperandTypeInference
 {
-    public SqlNewOperator()
+    private final RelDataType [] paramTypes;
+
+    public ExplicitOperandTypeInference(RelDataType [] paramTypes)
     {
-        super("NEW", SqlKind.NewSpecification, 0, null, null, null);
+        this.paramTypes = paramTypes;
     }
-    
-    // override SqlOperator
-    public SqlNode rewriteCall(
-        SqlCall call)
+
+    public void inferOperandTypes(
+        SqlCallBinding callBinding,
+        RelDataType returnType,
+        RelDataType [] operandTypes)
     {
-        // New specification is purely syntactic, so we rewrite it as a
-        // direct call to the constructor method.
-        return call.getOperands()[0];
+        System.arraycopy(paramTypes, 0, operandTypes, 0, paramTypes.length);
     }
 }
 
-// End SqlNewOperator.java
+// End ExplicitOperandTypeInference.java

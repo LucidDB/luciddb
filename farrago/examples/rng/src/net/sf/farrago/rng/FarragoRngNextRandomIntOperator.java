@@ -46,13 +46,13 @@ public class FarragoRngNextRandomIntOperator extends SqlFunction
         super(
             "NEXT_RANDOM_INT",
             SqlKind.Other,
-            ReturnTypeInferenceImpl.useInteger, 
+            SqlTypeStrategies.rtiInteger, 
             null,
-            new OperandsTypeChecking.SimpleOperandsTypeChecking(
-                new SqlTypeName [][] {
-                    SqlTypeName.intTypes, 
-                    SqlTypeName.charTypes,
-                    SqlTypeName.charTypes
+            new FamilyOperandTypeChecker(
+                new SqlTypeFamily [] {
+                    SqlTypeFamily.Integer,
+                    SqlTypeFamily.Character,
+                    SqlTypeFamily.Character
                 }), 
             SqlFunctionCategory.System);
     }
@@ -98,7 +98,7 @@ public class FarragoRngNextRandomIntOperator extends SqlFunction
         int leftPrec,
         int rightPrec)
     {
-        writer.print(name);
+        writer.print(getName());
         writer.print("(");
         SqlLiteral ceiling = (SqlLiteral) operands[0];
         if (ceiling.intValue() == -1) {

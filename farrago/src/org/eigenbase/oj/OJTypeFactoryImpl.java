@@ -115,7 +115,7 @@ public class OJTypeFactoryImpl extends SqlTypeFactoryImpl
             return ((OJScalarType) type).ojClass;
         } else if (type instanceof JavaType) {
             JavaType scalarType = (JavaType) type;
-            return OJClass.forClass(scalarType.clazz);
+            return OJClass.forClass(scalarType.getJavaClass());
         } else if (type instanceof RelRecordType) {
             RelRecordType recordType = (RelRecordType) type;
             OJClass projectClass =

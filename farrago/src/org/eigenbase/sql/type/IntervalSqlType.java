@@ -24,6 +24,7 @@ package org.eigenbase.sql.type;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.util.*;
 
 /**
@@ -60,7 +61,7 @@ public class IntervalSqlType extends AbstractSqlType
         sb.append("INTERVAL ");
         sb.append(intervalQualifier.toString());
     }
-        
+
     // implement RelDataType
     public SqlIntervalQualifier getIntervalQualifier()
     {
@@ -76,8 +77,8 @@ public class IntervalSqlType extends AbstractSqlType
      * <code>INTERVAL DAY TO SECOND</code>
      */
     public IntervalSqlType combine(IntervalSqlType that) {
-        assert(this.intervalQualifier.isYearMonth()==
-            that.intervalQualifier.isYearMonth());
+        assert this.intervalQualifier.isYearMonth() ==
+            that.intervalQualifier.isYearMonth();
         boolean  nullable = isNullable || that.isNullable;
         SqlIntervalQualifier.TimeUnit thisStart =
             this.intervalQualifier.getStartUnit();
@@ -88,29 +89,28 @@ public class IntervalSqlType extends AbstractSqlType
         SqlIntervalQualifier.TimeUnit thatEnd =
             that.intervalQualifier.getEndUnit();
 
-        assert(null!=thisStart);
-        assert(null!=thatStart);
+        assert null != thisStart;
+        assert null != thatStart;
 
         int secondPrec = intervalQualifier.getStartPrecision();
         int fracPrec = Math.max(
             this.intervalQualifier.getFractionalSecondPrecision(),
             that.intervalQualifier.getFractionalSecondPrecision());
 
-        if (thisStart.getOrdinal() > thatStart.
-            getOrdinal()) {
+        if (thisStart.getOrdinal() > thatStart.getOrdinal()) {
             thisEnd = thisStart;
             thisStart = thatStart;
             secondPrec = that.intervalQualifier.getStartPrecision();
         } else if (thisStart.getOrdinal() == thatStart.getOrdinal()) {
             secondPrec = Math.max(secondPrec,
                 that.intervalQualifier.getStartPrecision());
-        } else  if ((null == thisEnd) || (thisEnd.getOrdinal() < thatStart.
-                        getOrdinal())) {
+        } else if ((null == thisEnd) ||
+            (thisEnd.getOrdinal() < thatStart.getOrdinal())) {
             thisEnd = thatStart;
         }
 
-        if (null!=thatEnd) {
-            if ((null==thisEnd) ||
+        if (null != thatEnd) {
+            if ((null == thisEnd) ||
                 (thisEnd.getOrdinal() < thatEnd.getOrdinal())) {
                 thisEnd = thatEnd;
             }
@@ -118,7 +118,8 @@ public class IntervalSqlType extends AbstractSqlType
 
         return new IntervalSqlType(
             new SqlIntervalQualifier(
-                thisStart, secondPrec, thisEnd, fracPrec, null), nullable);
+                thisStart, secondPrec, thisEnd, fracPrec, SqlParserPos.ZERO),
+            nullable);
     }
 
     // implement RelDataType

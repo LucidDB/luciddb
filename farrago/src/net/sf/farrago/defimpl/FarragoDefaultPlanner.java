@@ -107,8 +107,18 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
         planner.addRule(new RemoveDistinctRule());
         planner.addRule(new UnionToDistinctRule());
         planner.addRule(new UnionEliminatorRule());
-        planner.addRule(new CoerceInputsRule(UnionRel.class));
-        planner.addRule(new CoerceInputsRule(TableModificationRel.class));
+        // for set operations, we coerce names to match so that
+        // Java implementations can pass row objects through without
+        // copying
+        planner.addRule(
+            new CoerceInputsRule(UnionRel.class, true));
+        planner.addRule(
+            new CoerceInputsRule(IntersectRel.class, true));
+        planner.addRule(
+            new CoerceInputsRule(MinusRel.class, true));
+        // for DML, name coercion isn't helpful
+        planner.addRule(
+            new CoerceInputsRule(TableModificationRel.class, false));
         planner.addRule(new SwapJoinRule());
         planner.addRule(new RemoveTrivialProjectRule());
         planner.addRule(new FarragoMultisetSplitterRule());
@@ -169,7 +179,7 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
     // override VolcanoPlanner
     public JavaRelImplementor getJavaRelImplementor(RelNode rel)
     {
-        return stmt.getRelImplementor(rel.getCluster().rexBuilder);
+        return stmt.getRelImplementor(rel.getCluster().getRexBuilder());
     }
 }
 

@@ -106,16 +106,20 @@ public class SqlDelete extends SqlCall
         int rightPrec)
     {
         writer.print("DELETE FROM ");
-        getTargetTable().unparse(writer, operator.leftPrec, operator.rightPrec);
+        getTargetTable().unparse(
+            writer, getOperator().getLeftPrec(), getOperator().getRightPrec());
         if (getAlias() != null) {
             writer.print(" AS ");
-            getAlias().unparse(writer, operator.leftPrec, operator.rightPrec);
+            getAlias().unparse(
+                writer, getOperator().getLeftPrec(),
+                getOperator().getRightPrec());
         }
         if (getCondition() != null) {
             writer.println();
             writer.print("WHERE ");
-            getCondition().unparse(writer, operator.leftPrec,
-                operator.rightPrec);
+            getCondition().unparse(
+                writer, getOperator().getLeftPrec(),
+                getOperator().getRightPrec());
         }
     }
 

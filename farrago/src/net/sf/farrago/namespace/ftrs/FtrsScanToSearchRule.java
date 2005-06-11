@@ -89,7 +89,7 @@ class FtrsScanToSearchRule extends RelOptRule
         // TODO: General framework for converting filters into ranges.  Build
         // on the rex expression pattern-matching framework?  Or maybe ANTLR
         // tree matching?  Need canonical form, compound keys, inequalities.
-        RexNode filterExp = filter.condition;
+        RexNode filterExp = filter.getCondition();
 
         RexNode extraFilter = null;
 
@@ -116,7 +116,7 @@ class FtrsScanToSearchRule extends RelOptRule
         }
         RexInputRef fieldAccess = (RexInputRef) left;
         FemAbstractColumn filterColumn =
-            scan.getColumnForFieldAccess(fieldAccess.index);
+            scan.getColumnForFieldAccess(fieldAccess.getIndex());
         assert (filterColumn != null);
 
         if (scan.index.isClustered()) {
@@ -192,7 +192,8 @@ class FtrsScanToSearchRule extends RelOptRule
                     typeFactory.createCwmElementType(filterColumn)
                 },
                 new String [] { "filterColumn" });
-        RelNode castRel = RelOptUtil.createCastRel(nullFilterRel, lhsRowType);
+        RelNode castRel = RelOptUtil.createCastRel(
+            nullFilterRel, lhsRowType, false);
 
         RelNode keyInput =
             mergeTraitsAndConvert(

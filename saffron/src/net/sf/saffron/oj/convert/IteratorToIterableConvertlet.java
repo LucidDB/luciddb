@@ -54,7 +54,8 @@ public class IteratorToIterableConvertlet extends JavaConvertlet
         // Generate
         //   new saffron.runtime.BufferedIterator(<<child>>)
         Expression exp =
-            implementor.visitJavaChild(converter, 0, (JavaRel) converter.child);
+            implementor.visitJavaChild(
+                converter, 0, (JavaRel) converter.getChild());
         return new AllocationExpression(
             OJClass.forClass(BufferedIterator.class),
             new ExpressionList(exp));

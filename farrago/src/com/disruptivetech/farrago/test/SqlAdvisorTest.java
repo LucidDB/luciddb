@@ -24,10 +24,14 @@ package com.disruptivetech.farrago.test;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.type.SqlTypeFactoryImpl;
 import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidatorWithHints;
+import org.eigenbase.sql.validate.SqlMoniker;
 import org.eigenbase.test.SqlValidatorTestCase;
 import org.eigenbase.test.MockCatalogReader;
+import org.eigenbase.util.TestUtil;
 
 import com.disruptivetech.farrago.sql.advise.SqlAdvisor;
 import com.disruptivetech.farrago.sql.advise.SqlAdvisorValidator;
@@ -336,7 +340,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
 
         sql = "select t.x from (select 1 as x, 2 as y from sales.emp) as t where t.^";
         assertComplete(sql, expected); // select list
-        
+
         sql = "select t. from (select 1 as x, 2 as y from (select x from sales.emp)) as t where ^";
         assertComplete(sql, expected);
 
@@ -440,16 +444,15 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         List expectedResults)
         throws Exception
     {
-        SqlValidator validator = tester.getValidator();
+        SqlValidatorWithHints validator = 
+            (SqlValidatorWithHints) tester.getValidator();
         SqlAdvisor advisor = new SqlAdvisor(validator);
 
-        StringBuffer sqlSansCaret = new StringBuffer();
-        int cursor = checkCaret(sql, sqlSansCaret);
-        SqlParserPos pos = new SqlParserPos(1, cursor+1);
+        SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);
 
-        String [] results = advisor.getCompletionHints(
-            sqlSansCaret.toString(), pos);
-        assertEquals(results, expectedResults);
+        SqlMoniker [] results = advisor.getCompletionHints(
+            sap.sql, sap.pos);
+        assertEquals(convertCompletionHints(results), expectedResults);
     }
 
     /**
@@ -462,13 +465,12 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
      */
     protected void assertSimplify(String sql, String expected)
     {
-        SqlValidator validator = tester.getValidator();
+        SqlValidatorWithHints validator = 
+            (SqlValidatorWithHints) tester.getValidator();
         SqlAdvisor advisor = new SqlAdvisor(validator);
 
-        StringBuffer sqlSansCaret = new StringBuffer();
-        int cursor = checkCaret(sql, sqlSansCaret);
-
-        String actual = advisor.simplifySql(sqlSansCaret.toString(), cursor);
+        SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);
+        String actual = advisor.simplifySql(sap.sql, sap.cursor);
         assertEquals(actual, expected);
     }
 
@@ -482,15 +484,13 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         List expectedResults)
         throws Exception
     {
-        SqlValidator validator = tester.getValidator();
+        SqlValidatorWithHints validator = 
+            (SqlValidatorWithHints) tester.getValidator();
         SqlAdvisor advisor = new SqlAdvisor(validator);
 
-        StringBuffer sqlSansCaret = new StringBuffer();
-        int cursor = checkCaret(sql, sqlSansCaret);
-
-        String [] results = advisor.getCompletionHints(
-            sqlSansCaret.toString(), cursor);
-        assertEquals(results, expectedResults);
+        SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);
+        SqlMoniker [] results = advisor.getCompletionHints(sap.sql, sap.cursor);
+        assertEquals(convertCompletionHints(results), expectedResults);
     }
 
     protected void assertEquals(
@@ -510,18 +510,13 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         return;
     }
 
-    private int checkCaret(String sql, StringBuffer sqlSansCaret)
+    private String[] convertCompletionHints(SqlMoniker[] results)
     {
-        int cursor = sql.indexOf('^');
-        if (cursor < 0) {
-            fail("Invalid test SQL: should contain '^'");
+        String [] strHints = new String[results.length];
+        for (int i = 0; i < results.length; i++) {
+            strHints[i] = results[i].toString();
         }
-        if (sql.indexOf('^', cursor + 1) >= 0) {
-            fail("Invalid test SQL: contains more than one '^'");
-        }
-        sqlSansCaret.append(sql.substring(0, cursor));
-        sqlSansCaret.append(sql.substring(cursor + 1));
-        return cursor;
+        return strHints;
     }
 
     public Tester getTester() {

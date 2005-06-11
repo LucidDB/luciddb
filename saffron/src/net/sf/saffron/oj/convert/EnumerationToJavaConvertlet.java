@@ -57,7 +57,8 @@ public class EnumerationToJavaConvertlet extends JavaConvertlet
         Variable variable_enum = implementor.newVariable();
         StatementList forBody = new StatementList();
         Expression exp =
-            implementor.visitJavaChild(converter, 0, (JavaRel) converter.child);
+            implementor.visitJavaChild(
+                converter, 0, (JavaRel) converter.getChild());
         stmtList.add(
             new ForStatement(
                 TypeName.forOJClass(Util.clazzEnumeration),

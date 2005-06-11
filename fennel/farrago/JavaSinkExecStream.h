@@ -27,7 +27,6 @@
 #include "fennel/farrago/CmdInterpreter.h"
 
 #include <jni.h>
-#include <boost/scoped_ptr.hpp>
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -52,7 +51,13 @@ class JavaSinkExecStream : public SingleInputExecStream
 {
     CmdInterpreter::StreamGraphHandle *pStreamGraphHandle;
     int javaFennelPipeIterId;
-    jobject javaFennelPipeIter;
+    jobject javaFennelPipeIter;         // our java peer, a FennelPipeIterator
+    jmethodID methFennelPipeIterator_write; // its method 'write(ByteBuffer, int byteCount)'
+    jmethodID methFennelPipeIterator_getByteBuffer; // its method 'getByteBuffer(int size)'
+    jmethodID methByteBuffer_array;     // java method ByteBuffer.array()
+
+    /// copies into a java ByteBuffer
+    void stuffByteBuffer(jobject byteBuffer, PConstBuffer src, uint size);
 
 public:
     explicit JavaSinkExecStream();

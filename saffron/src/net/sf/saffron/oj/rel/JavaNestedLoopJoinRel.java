@@ -25,8 +25,7 @@ import openjava.ptree.*;
 
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.util.OJUtil;
-import org.eigenbase.rel.JoinRel;
-import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
@@ -44,7 +43,7 @@ import org.eigenbase.util.Util;
  * Implements the {@link JoinRel} relational expression using the
  * nested-loop algorithm, with output as Java code.
  */
-public class JavaNestedLoopJoinRel extends JoinRel implements JavaLoopRel,
+public class JavaNestedLoopJoinRel extends JoinRelBase implements JavaLoopRel,
     JavaSelfRel
 {
     public JavaNestedLoopJoinRel(
@@ -63,13 +62,13 @@ public class JavaNestedLoopJoinRel extends JoinRel implements JavaLoopRel,
     public Object clone()
     {
         JavaNestedLoopJoinRel clone = new JavaNestedLoopJoinRel(
-            cluster,
+            getCluster(),
             RelOptUtil.clone(left),
             RelOptUtil.clone(right),
             RexUtil.clone(condition),
             joinType,
             variablesStopped);
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 
@@ -145,7 +144,7 @@ public class JavaNestedLoopJoinRel extends JoinRel implements JavaLoopRel,
             args.add(
                 implementor.translate(
                     this,
-                    cluster.rexBuilder.makeInputRef(
+                    getCluster().getRexBuilder().makeInputRef(
                         field.getType(),
                         i)));
         }

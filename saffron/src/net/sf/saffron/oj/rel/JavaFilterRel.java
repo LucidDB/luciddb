@@ -25,8 +25,7 @@ import openjava.ptree.ParseTree;
 import openjava.ptree.StatementList;
 
 import org.eigenbase.oj.rel.*;
-import org.eigenbase.rel.FilterRel;
-import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptUtil;
@@ -39,7 +38,7 @@ import org.eigenbase.util.Util;
 /**
  * Implements the {@link FilterRel} relational expression in Java code.
  */
-public class JavaFilterRel extends FilterRel implements JavaLoopRel
+public class JavaFilterRel extends FilterRelBase implements JavaLoopRel
 {
     public JavaFilterRel(
         RelOptCluster cluster,
@@ -54,17 +53,17 @@ public class JavaFilterRel extends FilterRel implements JavaLoopRel
     public Object clone()
     {
         JavaFilterRel clone = new JavaFilterRel(
-            cluster,
-            RelOptUtil.clone(child),
-            RexUtil.clone(condition));
-        clone.traits = cloneTraits();
+            getCluster(),
+            RelOptUtil.clone(getChild()),
+            RexUtil.clone(getCondition()));
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 
     // implement RelNode
     public ParseTree implement(JavaRelImplementor implementor)
     {
-        return implementor.visitJavaChild(this, 0, (JavaRel) child);
+        return implementor.visitJavaChild(this, 0, (JavaRel) getChild());
     }
 
     public void implementJavaParent(
@@ -74,9 +73,9 @@ public class JavaFilterRel extends FilterRel implements JavaLoopRel
         assert ordinal == 0;
         StatementList stmtList = implementor.getStatementList();
         StatementList ifBody = new StatementList();
-        Expression condition2 = implementor.translate(this, condition);
+        Expression condition2 = implementor.translate(this, getCondition());
         stmtList.add(new IfStatement(condition2, ifBody));
-        implementor.bind(this, child);
+        implementor.bind(this, getChild());
         implementor.generateParentBody(this, ifBody);
     }
 }

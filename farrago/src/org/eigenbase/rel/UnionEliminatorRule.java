@@ -30,7 +30,7 @@ import org.eigenbase.relopt.RelOptUtil;
 
 /**
  * <code>UnionEliminatorRule</code> checks to see if its possible to
- * optimize a Union call by eliminating the Union operator all together
+ * optimize a Union call by eliminating the Union operator altogether
  * in the case the call consists of only one input.
  *
  * @author Wael Chatila
@@ -55,10 +55,7 @@ public class UnionEliminatorRule extends RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
         UnionRel union = (UnionRel) call.rels[0];
-        if (union.getClass() != UnionRel.class) {
-            return;
-        }
-        if (1 != union.inputs.length) {
+        if (union.inputs.length != 1) {
             return;
         }
         if (union.isDistinct()) {

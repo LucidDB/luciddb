@@ -43,7 +43,9 @@ public class CoerceInputsRule extends RelOptRule
 {
     //~ Instance fields -------------------------------------------------------
 
-    private Class consumerRelClass;
+    private final Class consumerRelClass;
+
+    private final boolean coerceNames;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -52,11 +54,17 @@ public class CoerceInputsRule extends RelOptRule
      *
      * @param consumerRelClass the RelNode class which will consume
      * the inputs
+     *
+     * @param coerceNames if true, coerce names and types; if false,
+     * coerce type only
      */
-    public CoerceInputsRule(Class consumerRelClass)
+    public CoerceInputsRule(
+        Class consumerRelClass,
+        boolean coerceNames)
     {
         super(new RelOptRuleOperand(consumerRelClass, null));
         this.consumerRelClass = consumerRelClass;
+        this.coerceNames = coerceNames;
         description = "CoerceInputsRule:" + consumerRelClass.getName();
     }
 
@@ -82,13 +90,15 @@ public class CoerceInputsRule extends RelOptRule
         for (int i = 0; i < inputs.length; ++i) {
             RelDataType expectedType = consumerRel.getExpectedInputRowType(i);
             RelNode input = inputs[i];
-            newInputs[i] = RelOptUtil.createCastRel(input, expectedType);
+            newInputs[i] = RelOptUtil.createCastRel(
+                input, expectedType, coerceNames);
             if (newInputs[i] != input) {
                 coerce = true;
             }
             assert (RelOptUtil.areRowTypesEqual(
                 newInputs[i].getRowType(),
-                expectedType));
+                expectedType,
+                coerceNames));
         }
         if (!coerce) {
             return;

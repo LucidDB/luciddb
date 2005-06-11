@@ -168,7 +168,7 @@ public class FarragoDatabase extends FarragoCompoundAllocation
             systemRepos = sessionFactory.newRepos(this, false);
             userRepos = systemRepos;
             if (init) {
-                systemRepos.createSystemObjects();
+                FarragoCatalogInit.createSystemObjects(systemRepos);
             }
 
             // REVIEW:  system/user configuration
@@ -211,7 +211,7 @@ public class FarragoDatabase extends FarragoCompoundAllocation
                 userRepos = sessionFactory.newRepos(this, true);
                 if (userRepos.getSelfAsCatalog() == null) {
                     // REVIEW:  request this explicitly?
-                    userRepos.createSystemObjects();
+                    FarragoCatalogInit.createSystemObjects(userRepos);
                 }
 
                 // During shutdown, we want to reverse this process, making

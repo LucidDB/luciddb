@@ -28,7 +28,7 @@ import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.reltype.*;
 
 /**
- * AssignableOperandsTypeChecking implements {@link OperandsTypeChecking} by
+ * AssignableOperandTypeChecker implements {@link SqlOperandTypeChecker} by
  * verifying that the type of each argument is assignable to a
  * predefined set of parameter types (under the SQL definition of
  * "assignable").
@@ -36,7 +36,7 @@ import org.eigenbase.reltype.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class AssignableOperandsTypeChecking extends OperandsTypeChecking
+public class AssignableOperandTypeChecker implements SqlOperandTypeChecker
 {
     private final RelDataType [] paramTypes;
 
@@ -46,41 +46,29 @@ public class AssignableOperandsTypeChecking extends OperandsTypeChecking
      * @param paramTypes parameter types for operands; index in
      * this array corresponds to operand number
      */
-    public AssignableOperandsTypeChecking(RelDataType [] paramTypes)
+    public AssignableOperandTypeChecker(RelDataType [] paramTypes)
     {
         this.paramTypes = paramTypes;
     }
 
-    // implement OperandsTypeChecking
-    public int getArgCount()
+    // implement SqlOperandTypeChecker
+    public SqlOperandCountRange getOperandCountRange()
     {
-        return paramTypes.length;
+        return new SqlOperandCountRange(paramTypes.length);
     }
 
-    // implement OperandsTypeChecking
-    public boolean check(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlNode node,
-        int ruleOrdinal,
+    // implement SqlOperandTypeChecker
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
-        return check(validator, scope, call, throwOnFailure);
-    }
-
-    // implement OperandsTypeChecking
-    public boolean check(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlCall call,
-        boolean throwOnFailure)
-    {
-        for (int i = 0; i < call.operands.length; ++i) {
-            RelDataType argType = validator.deriveType(scope, call.operands[i]);
+        for (int i = 0; i < callBinding.getOperandCount(); ++i) {
+            RelDataType argType = callBinding.getValidator().deriveType(
+                callBinding.getScope(),
+                callBinding.getCall().operands[i]);
             if (!SqlTypeUtil.canAssignFrom(paramTypes[i], argType)) {
                 if (throwOnFailure) {
-                    throw call.newValidationSignatureError(validator, scope);
+                    throw callBinding.newValidationSignatureError();
                 } else {
                     return false;
                 }
@@ -89,11 +77,11 @@ public class AssignableOperandsTypeChecking extends OperandsTypeChecking
         return true;
     }
 
-    // implement OperandsTypeChecking
-    public String getAllowedSignatures(SqlOperator op)
+    // implement SqlOperandTypeChecker
+    public String getAllowedSignatures(SqlOperator op, String opName)
     {
         StringBuffer sb = new StringBuffer();
-        sb.append(op.name);
+        sb.append(opName);
         sb.append("(");
         for (int i = 0; i < paramTypes.length; ++i) {
             if (i > 0) {
@@ -108,4 +96,4 @@ public class AssignableOperandsTypeChecking extends OperandsTypeChecking
     }
 }
 
-// End AssignableOperandsTypeChecking.java
+// End AssignableOperandTypeChecker.java

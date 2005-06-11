@@ -80,9 +80,9 @@ public class FarragoUserDefinedRoutine
     {
         super(
             FarragoCatalogUtil.getQualifiedName(routine),
-            new ReturnTypeInferenceImpl.FixedReturnTypeInference(returnType),
-            new ExplicitParamInference(paramTypes),
-            new AssignableOperandsTypeChecking(paramTypes),
+            new ExplicitReturnTypeInference(returnType),
+            new ExplicitOperandTypeInference(paramTypes),
+            new AssignableOperandTypeChecker(paramTypes),
             paramTypes,
             routine.getType() == ProcedureTypeEnum.PROCEDURE
             ? SqlFunctionCategory.UserDefinedProcedure
@@ -106,18 +106,16 @@ public class FarragoUserDefinedRoutine
     }
 
     // override SqlOperator
-    // TODO jvs 16-Mar-2005:  it's arbitrary to override this; figure
-    // out the correct hook method
-    public void checkArgCount(
+    protected void preValidateCall(
         SqlValidator validator,
-        OperandsTypeChecking argType,
+        SqlValidatorScope scope,
         SqlCall call)
     {
         if (!hasDefinition()) {
             throw FarragoResource.instance().newValidatorConstructorUndefined(
-                getAllowedSignatures(name));
+                getAllowedSignatures());
         }
-        super.checkArgCount(validator, argType, call);
+        super.preValidateCall(validator, scope, call);
     }
     
     public RelDataType getReturnType()

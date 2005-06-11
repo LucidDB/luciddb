@@ -175,7 +175,7 @@ public abstract class FennelRelUtil
         attrDesc.setNullable(type.isNullable());
     }
 
-    private static int convertSqlTypeNameToFennelTypeOrdinal(
+    public static int convertSqlTypeNameToFennelTypeOrdinal(
         SqlTypeName sqlType)
     {
         // TODO:  return values correspond to enum

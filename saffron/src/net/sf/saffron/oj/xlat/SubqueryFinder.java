@@ -31,7 +31,6 @@ import openjava.mop.Toolbox;
 import openjava.ptree.*;
 import openjava.ptree.util.ScopeHandler;
 
-import org.eigenbase.rel.DistinctRel;
 import org.eigenbase.rel.JoinRel;
 import org.eigenbase.rel.ProjectRel;
 import org.eigenbase.rel.RelNode;
@@ -122,7 +121,7 @@ class SubqueryFinder extends ScopeHandler
                         OJSyntheticClass.makeField(1));
             }
             RelNode rightDistinct =
-                new DistinctRel(queryInfo.cluster, rightRel);
+                RelOptUtil.createDistinctRel(rightRel);
             queryInfo.leaves.add(rightDistinct);
 
             // Join the sub-query from the 'in' to the tree built up from
@@ -181,7 +180,7 @@ class SubqueryFinder extends ScopeHandler
                     new RexNode [] { queryInfo.rexBuilder.makeLiteral(true) },
                     null, ProjectRel.Flags.None);
             RelNode rightDistinct =
-                new DistinctRel(queryInfo.cluster, rightProject);
+                RelOptUtil.createDistinctRel(rightProject);
             queryInfo.leaves.add(rightDistinct);
             JoinRel join =
                 new JoinRel(queryInfo.cluster, oldFrom, rightDistinct,

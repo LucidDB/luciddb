@@ -14,9 +14,9 @@
 	<property name="integration.build.home" location="./build"/>
 
 
-	<!-- by default we build "with fennel" -->
+	<!-- by default we build "with fennel" and "with tests" -->
 	<property name="farrago.init.arg" value="--with-fennel"/>
-
+        <property name="farrago.init.tests.arg" value="--with-tests"/>
 
 	<!-- perforce synchronization target -->
 	<target name="sync" description="Synchronize the Farrago project" unless="no-sync">
@@ -109,6 +109,7 @@
 		<exec dir="${build.home}/farrago" executable="bash" failonerror="true">
 			<arg value="${build.home}/farrago/initBuild.sh"/>
 			<arg value="${farrago.init.arg}"/>
+			<arg value="${farrago.init.tests.arg}"/>
 			<env key="ANT_HOME" file="${build.home}/thirdparty/ant"/>
 			<env key="PATH" path="${env.PATH}:${build.home}/thirdparty/ant/bin/ant"/>
 		</exec>		

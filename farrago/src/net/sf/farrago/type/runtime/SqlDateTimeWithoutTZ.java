@@ -62,8 +62,6 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
 
     //~ Instance fields -------------------------------------------------------
 
-    // ~ Instance fields ------------------------------------------------------
-
     /**
      * Calendar, which holds this object's time value. Its timezone is GMT,
      * unless you call {@link #setCal}.
@@ -101,6 +99,13 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
     {
         return long.class;
     }
+
+    /**
+     * Returns the Date/Time format to use
+      * @return String representing the default Date/Time format to use
+     */
+    protected abstract String getFormat();
+    protected abstract void parse(String date, String format, TimeZone tz);
 
     public abstract Object getData(long millisecond);
 
@@ -158,6 +163,10 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
             this.value = sqlDate.value;
             this.isNull = sqlDate.isNull;
             return;
+        } else if (date instanceof String) {
+            String dateStr = (String) date;
+            String format = getFormat();
+            parse(dateStr, format, null);
         } else {
             // REVIEW jvs 27-Aug-2004:  this is dangerous; should probably
             // require a specific interface instead
@@ -213,6 +222,14 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
         return dateFormat.format(new java.util.Date(value - timeZoneOffset));
     }
 
+    /**
+     * Returns a string in default format representing the datetime
+     */
+    public String toString()
+    {
+        return toString(getFormat());
+    }
+
     //~ Inner Classes ---------------------------------------------------------
 
     /**
@@ -220,41 +237,31 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
      */
     public static class SqlDate extends SqlDateTimeWithoutTZ
     {
-        public SqlDate()
+        public String getFormat()
         {
-            super();
+            return DateFormatStr;
         }
 
         /**
-         * Assigns date from a String
+         * Parses date from a String
          */
-        public void assignFrom(Object obj)
+        public void parse(String date, String format, TimeZone tz)
         {
-            if (!(obj instanceof String)) {
-                super.assignFrom(obj);
-                return;
+            if (format == null) {
+                format = getFormat();
             }
-            String date = (String) obj;
-
-            Calendar cal = SqlParserUtil.parseDateFormat(date, DateFormatStr);
+            Calendar cal = SqlParserUtil.parseDateFormat(date, format, tz);
             if (cal != null) {
                 java.util.Date parsedDate = cal.getTime();
                 assignFrom(parsedDate);
             } else {
                 String reason =
-                    EigenbaseResource.instance().getBadFormat(DateFormatStr);
+                    EigenbaseResource.instance().getBadFormat(format);
 
                 throw FarragoResource.instance().newAssignFromFailed(date,
                     "DATE", reason);
             }
-        }
 
-        /**
-         * Returns a string in default format representing the date
-         */
-        public String toString()
-        {
-            return toString(DateFormatStr);
         }
 
         /**
@@ -274,37 +281,31 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
      */
     public static class SqlTime extends SqlDateTimeWithoutTZ
     {
-        /**
-         * Assigns time from a String.
-         */
-        public void assignFrom(Object obj)
+        protected String getFormat()
         {
-            if (!(obj instanceof String)) {
-                super.assignFrom(obj);
-                return;
-            }
-            String date = (String) obj;
+            return TimeFormatStr;
+        }
 
+        /**
+         * Parses time from a String
+         */
+        public void parse(String date, String format, TimeZone tz)
+        {
+            if (format == null) {
+                format = getFormat();
+            }
             SqlParserUtil.PrecisionTime pt =
-                SqlParserUtil.parsePrecisionDateTimeLiteral(date, TimeFormatStr);
+                SqlParserUtil.parsePrecisionDateTimeLiteral(date, format, tz);
             if (pt != null) {
-                java.util.Date parsedDate = pt.cal.getTime();
+                java.util.Date parsedDate = pt.getCalendar().getTime();
                 assignFrom(parsedDate);
             } else {
                 String reason =
-                    EigenbaseResource.instance().getBadFormat(TimeFormatStr);
+                    EigenbaseResource.instance().getBadFormat(format);
 
                 throw FarragoResource.instance().newAssignFromFailed(date,
                     "TIME", reason);
             }
-        }
-
-        /**
-         * Returns a string in default format representing the time.
-         */
-        public String toString()
-        {
-            return toString(TimeFormatStr);
         }
 
         /**
@@ -327,38 +328,32 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
      */
     public static class SqlTimestamp extends SqlDateTimeWithoutTZ
     {
-        /**
-         * Assigns timestamp from a String.
-         */
-        public void assignFrom(Object obj)
-        {
-            if (!(obj instanceof String)) {
-                super.assignFrom(obj);
-                return;
-            }
-            String date = (String) obj;
 
+        protected String getFormat()
+        {
+            return TimestampFormatStr;
+        }
+
+        /**
+         * Parses timestamp from a String
+         */
+        public void parse(String date, String format, TimeZone tz)
+        {
+            if (format == null) {
+                format = getFormat();
+            }
             SqlParserUtil.PrecisionTime pt =
-                SqlParserUtil.parsePrecisionDateTimeLiteral(date,
-                    TimestampFormatStr);
+                SqlParserUtil.parsePrecisionDateTimeLiteral(date, format, tz);
             if (pt != null) {
-                java.util.Date parsedDate = pt.cal.getTime();
+                java.util.Date parsedDate = pt.getCalendar().getTime();
                 assignFrom(parsedDate);
             } else {
                 String reason =
-                    EigenbaseResource.instance().getBadFormat(TimestampFormatStr);
+                    EigenbaseResource.instance().getBadFormat(format);
 
                 throw FarragoResource.instance().newAssignFromFailed(date,
                     "TIMESTAMP", reason);
             }
-        }
-
-        /**
-         * Returns a string in default format representing the timestamp.
-         */
-        public String toString()
-        {
-            return toString(TimestampFormatStr);
         }
 
         /**

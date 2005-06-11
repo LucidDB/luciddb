@@ -71,104 +71,6 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         return instance;
     }
 
-    /**
-     * Base class for time functions such as "LOCALTIME", "LOCALTIME(n)".
-     */
-    private abstract static class SqlAbstractTimeFunction extends SqlFunction {
-        private final SqlTypeName typeName;
-
-        public SqlAbstractTimeFunction(String name, SqlTypeName typeName) {
-            super(name, SqlKind.Function, null, null, null,
-                    SqlFunctionCategory.TimeDate);
-            this.typeName = typeName;
-        }
-        // no argTypeInference, so must override these methods.
-        // Probably need a niladic version of that.
-        public OperandsCountDescriptor getOperandsCountDescriptor()
-        {
-            return new OperandsCountDescriptor(0, 1);
-        }
-
-        public SqlSyntax getSyntax()
-        {
-            return SqlSyntax.FunctionId;
-        }
-
-        protected boolean checkArgTypes(
-            SqlCall call,
-            SqlValidator validator,
-            SqlValidatorScope scope, boolean throwOnFailure)
-        {
-            if (null != operandsCheckingRule) {
-                return super.checkArgTypes(
-                    call, validator, scope, throwOnFailure);
-            } else if (1==call.operands.length) {
-                if (!OperandsTypeChecking.typePositiveIntegerLiteral.check(
-                        validator,  scope, call, false)) {
-                    if (throwOnFailure) {
-                        throw EigenbaseResource.instance().
-                            newArgumentMustBePositiveInteger(
-                                call.operator.name);
-                    }
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        protected RelDataType getType(
-            SqlValidator validator,
-            SqlValidatorScope scope,
-            RelDataTypeFactory typeFactory,
-            CallOperands callOperands)
-        {
-            // REVIEW jvs 20-Feb-2005:  SqlTypeName says Time and Timestamp
-            // don't take precision, but they should (according to the
-            // standard). Also, need to take care of time zones.
-            int precision = 0;
-            if (callOperands.size() == 1) {
-                RelDataType type = callOperands.getType(0);
-                if (SqlTypeUtil.isNumeric(type)) {
-                    precision = callOperands.getIntLiteral(0);
-                }
-            }
-            assert(precision >= 0);
-            return typeFactory.createSqlType(typeName, precision);
-        }
-        // All of the time functions are monotonic.
-        public boolean isMonotonic(SqlCall call, SqlValidatorScope scope) {
-            return true;
-        }
-
-    }
-
-    /**
-     * Abstract base class for functions such as "USER", "CURRENT_ROLE",
-     * and "CURRENT_PATH".
-     */
-    private static abstract class SqlStringContextVariable extends SqlFunction {
-        public SqlStringContextVariable(String name) {
-            super(
-                name, SqlKind.Function, ReturnTypeInferenceImpl.useVarchar2000,
-                null, OperandsTypeChecking.typeEmpty,
-                SqlFunctionCategory.System);
-        }
-
-        public OperandsCountDescriptor getOperandsCountDescriptor()
-        {
-            return OperandsCountDescriptor.niladicCountDescriptor;
-        }
-
-        public SqlSyntax getSyntax() {
-            return SqlSyntax.FunctionId;
-        }
-
-        // All of the string constants are monotonic.
-        public boolean isMonotonic(SqlCall call, SqlValidatorScope scope) {
-            return true;
-        }
-    }
-
     //~ OPERATORS AND FUNCTIONS -----------------------------------
 
     //-------------------------------------------------------------
@@ -179,57 +81,48 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     // EXCEPT -> -
     // INTERSECT -> *
     // which explains the different precedence values
-    public final SqlSetOperator unionOperator =
+    public static final SqlSetOperator unionOperator =
         new SqlSetOperator("UNION", SqlKind.Union, 7, false);
-    public final SqlSetOperator unionAllOperator =
+    
+    public static final SqlSetOperator unionAllOperator =
         new SqlSetOperator("UNION ALL", SqlKind.Union, 7, true);
-    public final SqlSetOperator exceptOperator =
+    
+    public static final SqlSetOperator exceptOperator =
         new SqlSetOperator("EXCEPT", SqlKind.Except, 7, false);
-    public final SqlSetOperator exceptAllOperator =
+    
+    public static final SqlSetOperator exceptAllOperator =
         new SqlSetOperator("EXCEPT ALL", SqlKind.Except, 7, true);
-    public final SqlSetOperator intersectOperator =
+    
+    public static final SqlSetOperator intersectOperator =
         new SqlSetOperator("INTERSECT", SqlKind.Intersect, 9, false);
-    public final SqlSetOperator intersectAllOperator =
+    
+    public static final SqlSetOperator intersectAllOperator =
         new SqlSetOperator("INTERSECT ALL", SqlKind.Intersect, 9, true);
 
+    
     /** The "MULTISET UNION" operator. */
-    public final SqlMultisetSetOperator multisetUnionOperator =
+    public static final SqlMultisetSetOperator multisetUnionOperator =
         new SqlMultisetSetOperator("MULTISET UNION", 7, false);
+    
     /** The "MULTISET UNION ALL" operator. */
-    public final SqlMultisetSetOperator multisetUnionAllOperator =
+    public static final SqlMultisetSetOperator multisetUnionAllOperator =
         new SqlMultisetSetOperator("MULTISET UNION ALL", 7, true);
+    
     /** The "MULTISET EXCEPT" operator. */
-    public final SqlMultisetSetOperator multisetExceptOperator =
+    public static final SqlMultisetSetOperator multisetExceptOperator =
         new SqlMultisetSetOperator("MULTISET EXCEPT", 7, false);
+    
     /** The "MULTISET EXCEPT ALL" operator. */
-    public final SqlMultisetSetOperator multisetExceptAllOperator =
+    public static final SqlMultisetSetOperator multisetExceptAllOperator =
         new SqlMultisetSetOperator("MULTISET EXCEPT ALL", 7, true);
+    
     /** The "MULTISET INTERSECT" operator. */
-    public final SqlMultisetSetOperator multisetIntersectOperator =
+    public static final SqlMultisetSetOperator multisetIntersectOperator =
         new SqlMultisetSetOperator("MULTISET INTERSECT", 9, false);
+    
     /** The "MULTISET INTERSECT ALL" operator. */
-    public final SqlMultisetSetOperator multisetIntersectAllOperator =
+    public static final SqlMultisetSetOperator multisetIntersectAllOperator =
         new SqlMultisetSetOperator("MULTISET INTERSECT ALL", 9, true);
-
-    /**
-     * An operator which performs set operations on multisets, such as
-     * "MULTISET UNION ALL". Not to be confused with {@link SqlMultisetOperator}.
-     *
-     * <p>todo: Represent the ALL keyword to MULTISET UNION ALL etc. as a
-     * hidden operand. Then we can obsolete this class.
-     */
-    public static class SqlMultisetSetOperator extends SqlBinaryOperator {
-        private final boolean all;
-
-        public SqlMultisetSetOperator(String name, int prec, boolean all)
-        {
-            super(name, SqlKind.Other, prec, true,
-                ReturnTypeInferenceImpl.useNullableMultiset,
-                UnknownParamInference.useFirstKnown,
-                OperandsTypeChecking.typeNullableMultisetMultiset);
-            this.all = all;
-        }
-    }
 
     //-------------------------------------------------------------
     //                   BINARY OPERATORS
@@ -238,11 +131,12 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     /**
      * Logical <code>AND</code> operator.
      */
-    public final SqlBinaryOperator andOperator =
+    public static final SqlBinaryOperator andOperator =
         new SqlBinaryOperator("AND", SqlKind.And, 14, true,
-            ReturnTypeInferenceImpl.useNullableBoolean,
-            UnknownParamInference.useBoolean,
-            OperandsTypeChecking.typeNullableBoolBool) {
+            SqlTypeStrategies.rtiNullableBoolean,
+            SqlTypeStrategies.otiBoolean,
+            SqlTypeStrategies.otcBoolX2)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testAndOperator(tester);
@@ -253,45 +147,18 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * <code>AS</code> operator associates an expression in the SELECT
      * clause with an alias.
      */
-    public final SqlBinaryOperator asOperator =
-        new SqlBinaryOperator("AS", SqlKind.As, 10, true,
-            ReturnTypeInferenceImpl.useFirstArgType,
-            UnknownParamInference.useReturnType,
-            OperandsTypeChecking.typeAnyAny)
-        {
-            public void validateCall(
-                SqlCall call,
-                SqlValidator validator,
-                SqlValidatorScope scope,
-                SqlValidatorScope operandScope)
-            {
-                // The base method validates all operands. We override because
-                // we don't want to validate the identifier.
-                final SqlNode [] operands = call.operands;
-                assert operands.length == 2;
-                assert operands[1] instanceof SqlIdentifier;
-                operands[0].validate(validator, scope);
-                SqlIdentifier id = (SqlIdentifier) operands[1];
-                if (!id.isSimple()) {
-                    throw validator.newValidationError(id,
-                        EigenbaseResource.instance()
-                        .newAliasMustBeSimpleIdentifier());
-                }
-            }
-
-            public void acceptCall(SqlVisitor visitor, SqlCall call) {
-                // Do not visit operands[1] -- it is not an expression.
-                visitor.visitChild(call, 0, call.operands[0]);
-            }
-        };
-
+    public static final SqlBinaryOperator asOperator =
+        new SqlAsOperator();
+    
     /**
      * String concatenation operator, '<code>||</code>'.
      */
-    public final SqlBinaryOperator concatOperator =
+    public static final SqlBinaryOperator concatOperator =
         new SqlBinaryOperator("||", SqlKind.Other, 30, true,
-            ReturnTypeInferenceImpl.useNullableVaryingDyadicStringSumPrecision, null,
-            OperandsTypeChecking.typeNullableStringStringOfSameType) {
+            SqlTypeStrategies.rtiNullableVaryingDyadicStringSumPrecision,
+            null,
+            SqlTypeStrategies.otcStringSameX2)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testConcatOperator(tester);
@@ -301,11 +168,12 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     /**
      * Arithmetic division operator, '<code>/</code>'.
      */
-    public final SqlBinaryOperator divideOperator =
+    public static final SqlBinaryOperator divideOperator =
         new SqlBinaryOperator("/", SqlKind.Divide, 30, true,
-            ReturnTypeInferenceImpl.useNullableMutliplyDivison,
-            UnknownParamInference.useFirstKnown,
-            OperandsTypeChecking.typeDivisionOperator) {
+            SqlTypeStrategies.rtiNullableProduct,
+            SqlTypeStrategies.otiFirstKnown,
+            SqlTypeStrategies.otcDivisionOperator)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testDivideOperator(tester);
@@ -315,17 +183,19 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     /**
      * Dot operator, '<code>.</code>', used for referencing fields of records.
      */
-    public final SqlBinaryOperator dotOperator =
+    public static final SqlBinaryOperator dotOperator =
         new SqlBinaryOperator(".", SqlKind.Dot, 40, true, null, null,
-            OperandsTypeChecking.typeAnyAny);
+            SqlTypeStrategies.otcAnyX2);
 
     /**
      * Logical equals operator, '<code>=</code>'.
      */
-    public final SqlBinaryOperator equalsOperator =
+    public static final SqlBinaryOperator equalsOperator =
         new SqlBinaryOperator("=", SqlKind.Equals, 15, true,
-            ReturnTypeInferenceImpl.useNullableBoolean, UnknownParamInference.useFirstKnown,
-            OperandsTypeChecking.typeNullableComparableUnordered) {
+            SqlTypeStrategies.rtiNullableBoolean,
+            SqlTypeStrategies.otiFirstKnown,
+            SqlTypeStrategies.otcComparableUnorderedX2)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testEqualsOperator(tester);
@@ -335,10 +205,12 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     /**
      * Logical greater-than operator, '<code>&gt;</code>'.
      */
-    public final SqlBinaryOperator greaterThanOperator =
+    public static final SqlBinaryOperator greaterThanOperator =
         new SqlBinaryOperator(">", SqlKind.GreaterThan, 15, true,
-            ReturnTypeInferenceImpl.useNullableBoolean, UnknownParamInference.useFirstKnown,
-            OperandsTypeChecking.typeNullableComparableOrdered) {
+            SqlTypeStrategies.rtiNullableBoolean,
+            SqlTypeStrategies.otiFirstKnown,
+            SqlTypeStrategies.otcComparableOrderedX2)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testGreaterThanOperator(tester);
@@ -348,10 +220,12 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     /**
      * <code>IS DISTINCT FROM</code> operator.
      */
-    public final SqlBinaryOperator isDistinctFromOperator =
+    public static final SqlBinaryOperator isDistinctFromOperator =
         new SqlBinaryOperator("IS DISTINCT FROM", SqlKind.Other, 15, true,
-            ReturnTypeInferenceImpl.useNullableBoolean, UnknownParamInference.useFirstKnown,
-            OperandsTypeChecking.typeNullableComparableUnordered) {
+            SqlTypeStrategies.rtiNullableBoolean,
+            SqlTypeStrategies.otiFirstKnown,
+            SqlTypeStrategies.otcComparableUnorderedX2)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testIsDistinctFromOperator(tester);
@@ -362,10 +236,12 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * <code>IS NOT DISTINCT FROM</code> operator. Is equivalent to
      * <code>NOT(x IS DISTINCT FROM y)</code>
      */
-    public final SqlBinaryOperator isNotDistinctFromOperator =
+    public static final SqlBinaryOperator isNotDistinctFromOperator =
         new SqlBinaryOperator("IS NOT DISTINCT FROM", SqlKind.Other, 15, true,
-            ReturnTypeInferenceImpl.useNullableBoolean, UnknownParamInference.useFirstKnown,
-            OperandsTypeChecking.typeNullableComparableUnordered) {
+            SqlTypeStrategies.rtiNullableBoolean,
+            SqlTypeStrategies.otiFirstKnown,
+            SqlTypeStrategies.otcComparableUnorderedX2)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testIsNotDistinctFromOperator(tester);
@@ -375,10 +251,12 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     /**
      * Logical greater-than-or-equal operator, '<code>&gt;=</code>'.
      */
-    public final SqlBinaryOperator greaterThanOrEqualOperator =
+    public static final SqlBinaryOperator greaterThanOrEqualOperator =
         new SqlBinaryOperator(">=", SqlKind.GreaterThanOrEqual, 15, true,
-            ReturnTypeInferenceImpl.useNullableBoolean, UnknownParamInference.useFirstKnown,
-            OperandsTypeChecking.typeNullableComparableOrdered) {
+            SqlTypeStrategies.rtiNullableBoolean,
+            SqlTypeStrategies.otiFirstKnown,
+            SqlTypeStrategies.otcComparableOrderedX2)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testGreaterThanOrEqualOperator(tester);
@@ -389,24 +267,26 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * <code>IN</code> operator tests for a value's membership in a subquery
      * or a list of values.
      */
-    public final SqlBinaryOperator inOperator =
-        new SqlBinaryOperator("IN", SqlKind.In, 15, true, ReturnTypeInferenceImpl.useNullableBoolean,
-            UnknownParamInference.useFirstKnown, null) {
+    public static final SqlBinaryOperator inOperator =
+        new SqlBinaryOperator("IN", SqlKind.In, 15, true,
+            SqlTypeStrategies.rtiNullableBoolean,
+            SqlTypeStrategies.otiFirstKnown, null)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testInOperator(tester);
             }
         };
 
-
-
     /**
      * Logical less-than operator, '<code>&lt;</code>'.
      */
-    public final SqlBinaryOperator lessThanOperator =
+    public static final SqlBinaryOperator lessThanOperator =
         new SqlBinaryOperator("<", SqlKind.LessThan, 15, true,
-            ReturnTypeInferenceImpl.useNullableBoolean, UnknownParamInference.useFirstKnown,
-            OperandsTypeChecking.typeNullableComparableOrdered) {
+            SqlTypeStrategies.rtiNullableBoolean,
+            SqlTypeStrategies.otiFirstKnown,
+            SqlTypeStrategies.otcComparableOrderedX2)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testLessThanOperator(tester);
@@ -416,10 +296,12 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     /**
      * Logical less-than-or-equal operator, '<code>&lt;=</code>'.
      */
-    public final SqlBinaryOperator lessThanOrEqualOperator =
+    public static final SqlBinaryOperator lessThanOrEqualOperator =
         new SqlBinaryOperator("<=", SqlKind.LessThanOrEqual, 15, true,
-            ReturnTypeInferenceImpl.useNullableBoolean, UnknownParamInference.useFirstKnown,
-            OperandsTypeChecking.typeNullableComparableOrdered) {
+            SqlTypeStrategies.rtiNullableBoolean,
+            SqlTypeStrategies.otiFirstKnown,
+            SqlTypeStrategies.otcComparableOrderedX2)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testLessThanOrEqualOperator(tester);
@@ -429,72 +311,44 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     /**
      * Arithmetic minus operator, '<code>-</code>'.
      */
-    public final SqlBinaryOperator minusOperator =
-        new SqlBinaryOperator("-", SqlKind.Minus, 20, true,
-            ReturnTypeInferenceImpl.useNullableBiggest,
-            UnknownParamInference.useFirstKnown,
-            OperandsTypeChecking.typeMinusOperator) {
+    public static final SqlBinaryOperator minusOperator =
+        new SqlMonotonicBinaryOperator("-", SqlKind.Minus, 20, true,
+            // FIXME jvs 4-June-2005:  this is incorrect; minus
+            // has to take precision into account
+            SqlTypeStrategies.rtiLeastRestrictive,
+            SqlTypeStrategies.otiFirstKnown,
+            SqlTypeStrategies.otcMinusOperator)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testMinusOperator(tester);
-            }
-
-            public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
-            {
-                SqlValidator val = scope.getValidator();
-                // Check for (c - m) where c is a constant
-                if (val.isConstant(call.operands[0])) {
-                    SqlNode node = (SqlNode)call.operands[1];
-                    return scope.isMonotonic(node);
-                }
-                // Check for (m - c) where c is a constant
-                if (val.isConstant(call.operands[1])) {
-                    SqlNode node = (SqlNode)call.operands[0];
-                    return scope.isMonotonic(node);
-                }
-
-                return super.isMonotonic(call, scope);
             }
         };
 
     /**
      * Arithmetic multiplication operator, '<code>*</code>'.
      */
-    public final SqlBinaryOperator multiplyOperator =
-        new SqlBinaryOperator("*", SqlKind.Times, 30, true,
-            ReturnTypeInferenceImpl.useNullableMutliplyDivison,
-            UnknownParamInference.useFirstKnown,
-            OperandsTypeChecking.typeMultiplyOperator) {
+    public static final SqlBinaryOperator multiplyOperator =
+        new SqlMonotonicBinaryOperator("*", SqlKind.Times, 30, true,
+            SqlTypeStrategies.rtiNullableProduct,
+            SqlTypeStrategies.otiFirstKnown,
+            SqlTypeStrategies.otcMultiplyOperator)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testMultiplyOperator(tester);
-            }
-
-            public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
-            {
-                SqlValidator val = scope.getValidator();
-                // First check for (m * c) where c is a constant
-                if (val.isConstant(call.operands[1])) {
-                    SqlNode node = (SqlNode)call.operands[0];
-                    return scope.isMonotonic(node);
-                }
-                // Check the converse (c * m)
-                if (val.isConstant(call.operands[0])) {
-                    SqlNode node = (SqlNode)call.operands[1];
-                    return scope.isMonotonic(node);
-                }
-
-                return super.isMonotonic(call, scope);
             }
         };
 
     /**
      * Logical not-equals operator, '<code>&lt;&gt;</code>'.
      */
-    public final SqlBinaryOperator notEqualsOperator =
+    public static final SqlBinaryOperator notEqualsOperator =
         new SqlBinaryOperator("<>", SqlKind.NotEquals, 15, true,
-            ReturnTypeInferenceImpl.useNullableBoolean, UnknownParamInference.useFirstKnown,
-            OperandsTypeChecking.typeNullableComparableUnordered) {
+            SqlTypeStrategies.rtiNullableBoolean,
+            SqlTypeStrategies.otiFirstKnown,
+            SqlTypeStrategies.otcComparableUnorderedX2)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testNotEqualsOperator(tester);
@@ -504,99 +358,41 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     /**
      * Logical <code>OR</code> operator.
      */
-    public final SqlBinaryOperator orOperator =
+    public static final SqlBinaryOperator orOperator =
         new SqlBinaryOperator("OR", SqlKind.Or, 13, true,
-            ReturnTypeInferenceImpl.useNullableBoolean,
-            UnknownParamInference.useBoolean,
-            OperandsTypeChecking.typeNullableBoolBool) {
-
+            SqlTypeStrategies.rtiNullableBoolean,
+            SqlTypeStrategies.otiBoolean,
+            SqlTypeStrategies.otcBoolX2)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testOrOperator(tester);
             }
         };
 
-    public final SqlBinaryOperator plusOperator =
-        new SqlBinaryOperator("+", SqlKind.Plus, 20, true,
-            ReturnTypeInferenceImpl.useNullableBiggest,
-            UnknownParamInference.useFirstKnown,
-            OperandsTypeChecking.typePlusOperator) {
+    public static final SqlBinaryOperator plusOperator =
+        new SqlMonotonicBinaryOperator("+", SqlKind.Plus, 20, true,
+            // FIXME jvs 4-June-2005:  this is incorrect; plus
+            // has to take precision into account
+            SqlTypeStrategies.rtiLeastRestrictive,
+            SqlTypeStrategies.otiFirstKnown,
+            SqlTypeStrategies.otcPlusOperator)
+        {
 
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testPlusOperator(tester);
             }
-
-            public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
-            {
-                SqlValidator val = scope.getValidator();
-                // First check for (m + c) where c is a constant
-                if (val.isConstant(call.operands[1])) {
-                    SqlNode node = (SqlNode)call.operands[0];
-                    return scope.isMonotonic(node);
-                }
-                // Check the converse (c + m)
-                if (val.isConstant(call.operands[0])) {
-                    SqlNode node = (SqlNode)call.operands[1];
-                    return scope.isMonotonic(node);
-                }
-
-                return super.isMonotonic(call, scope);
-            }
-
         };
 
     /**
-     * Multiset Member of. Checks to see if a element belongs to a multiset.<br>
+     * Multiset MEMBER OF. Checks to see if a element belongs to a multiset.<br>
      * Example:<br>
      * <code>'green' MEMBER OF MULTISET['red','almost green','blue']</code>
      * returns <code>false</code>.
      */
-    public final SqlBinaryOperator memberOfOperator =
-            //TODO check if precedence is correct
-            new SqlBinaryOperator("MEMBER OF", SqlKind.Other, 15, true,
-                ReturnTypeInferenceImpl.useNullableBoolean,
-                null, null) {
-                public void test(SqlTester tester)
-                {
-                    SqlOperatorTests.testMemberOfOperator(tester);
-                }
-
-                protected boolean checkArgTypes(
-                    SqlCall call,
-                    SqlValidator validator,
-                    SqlValidatorScope scope,
-                    boolean throwOnFailure) {
-
-                    if (!OperandsTypeChecking.typeNullableMultiset.check(
-                        call, validator, scope,
-                        call.operands[1], 0, throwOnFailure)) {
-                        return false;
-                    }
-
-                    MultisetSqlType mt = (MultisetSqlType)
-                        validator.deriveType(scope, call.operands[1]);
-
-                    RelDataType t0 = validator.deriveType(scope, call.operands[0]);
-                    RelDataType t1 = mt.getComponentType();
-
-                    if (t0.getFamily() != t1.getFamily()) {
-                        if (throwOnFailure) {
-                            throw validator.newValidationError(call,
-                                EigenbaseResource.instance().
-                                newTypeNotComparableNear(
-                                    t0.toString(), t1.toString()));
-                        }
-                        return false;
-                    }
-                    return true;
-                }
-
-                public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor() {
-                    return new SqlOperator.OperandsCountDescriptor(2);
-                }
-
-            };
+    public static final SqlBinaryOperator memberOfOperator =
+        new SqlMultisetMemberOfOperator();
 
     /**
      * Submultiset. Checks to see if an multiset is a sub-set of another
@@ -612,108 +408,132 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * </code>
      * returns <code>true</code> (<b>NB</b> multisets is order independant)
      */
-    public final SqlBinaryOperator submultisetOfOperator =
-            //TODO check if precedence is correct
-            new SqlBinaryOperator("SUBMULTISET OF", SqlKind.Other, 15, true,
-                ReturnTypeInferenceImpl.useNullableBoolean,
-                null,
-                OperandsTypeChecking.typeNullableMultisetMultiset) {
-                public void test(SqlTester tester)
-                {
-                    //todo
-                }
-            };
-
+    public static final SqlBinaryOperator submultisetOfOperator =
+        //TODO check if precedence is correct
+        new SqlBinaryOperator("SUBMULTISET OF", SqlKind.Other, 15, true,
+            SqlTypeStrategies.rtiNullableBoolean,
+            null,
+            SqlTypeStrategies.otcMultisetX2)
+        {
+            public void test(SqlTester tester)
+            {
+                //todo
+            }
+        };
 
     //-------------------------------------------------------------
     //                   POSTFIX OPERATORS
     //-------------------------------------------------------------
-    public final SqlPostfixOperator descendingOperator =
+    public static final SqlPostfixOperator descendingOperator =
         new SqlPostfixOperator("DESC", SqlKind.Descending, 10, null,
-            UnknownParamInference.useReturnType, OperandsTypeChecking.typeAny) {
+            SqlTypeStrategies.otiReturnType, SqlTypeStrategies.otcAny)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testDescendingOperator(tester);
             }
         };
 
-    public final SqlPostfixOperator isNotNullOperator =
-        new SqlPostfixOperator("IS NOT NULL", SqlKind.Other, 15, ReturnTypeInferenceImpl.useBoolean,
-            UnknownParamInference.useBoolean, OperandsTypeChecking.typeAny) {
+    public static final SqlPostfixOperator isNotNullOperator =
+        new SqlPostfixOperator("IS NOT NULL", SqlKind.Other, 15,
+            SqlTypeStrategies.rtiBoolean,
+            SqlTypeStrategies.otiBoolean, SqlTypeStrategies.otcAny)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testIsNotNullOperator(tester);
             }
         };
 
-    public final SqlPostfixOperator isNullOperator =
-        new SqlPostfixOperator("IS NULL", SqlKind.IsNull, 15, ReturnTypeInferenceImpl.useBoolean,
-            UnknownParamInference.useBoolean, OperandsTypeChecking.typeAny) {
+    public static final SqlPostfixOperator isNullOperator =
+        new SqlPostfixOperator("IS NULL", SqlKind.IsNull, 15,
+            SqlTypeStrategies.rtiBoolean,
+            SqlTypeStrategies.otiBoolean, SqlTypeStrategies.otcAny)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testIsNullOperator(tester);
             }
         };
 
-    public final SqlPostfixOperator isNotTrueOperator =
-        new SqlPostfixOperator("IS NOT TRUE", SqlKind.Other, 15, ReturnTypeInferenceImpl.useBoolean,
-            UnknownParamInference.useBoolean, OperandsTypeChecking.typeNullableBool) {
+    public static final SqlPostfixOperator isNotTrueOperator =
+        new SqlPostfixOperator("IS NOT TRUE", SqlKind.Other, 15,
+            SqlTypeStrategies.rtiBoolean,
+            SqlTypeStrategies.otiBoolean,
+            SqlTypeStrategies.otcBool)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testIsNotTrueOperator(tester);
             }
         };
 
-    public final SqlPostfixOperator isTrueOperator =
-        new SqlPostfixOperator("IS TRUE", SqlKind.IsTrue, 15, ReturnTypeInferenceImpl.useBoolean,
-            UnknownParamInference.useBoolean, OperandsTypeChecking.typeNullableBool) {
+    public static final SqlPostfixOperator isTrueOperator =
+        new SqlPostfixOperator("IS TRUE", SqlKind.IsTrue, 15,
+            SqlTypeStrategies.rtiBoolean,
+            SqlTypeStrategies.otiBoolean,
+            SqlTypeStrategies.otcBool)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testIsTrueOperator(tester);
             }
         };
 
-    public final SqlPostfixOperator isNotFalseOperator =
-        new SqlPostfixOperator("IS NOT FALSE", SqlKind.Other, 15, ReturnTypeInferenceImpl.useBoolean,
-            UnknownParamInference.useBoolean, OperandsTypeChecking.typeNullableBool) {
+    public static final SqlPostfixOperator isNotFalseOperator =
+        new SqlPostfixOperator("IS NOT FALSE", SqlKind.Other, 15,
+            SqlTypeStrategies.rtiBoolean,
+            SqlTypeStrategies.otiBoolean,
+            SqlTypeStrategies.otcBool)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testIsNotFalseOperator(tester);
             }
         };
 
-    public final SqlPostfixOperator isFalseOperator =
-        new SqlPostfixOperator("IS FALSE", SqlKind.IsFalse, 15, ReturnTypeInferenceImpl.useBoolean,
-            UnknownParamInference.useBoolean, OperandsTypeChecking.typeNullableBool) {
+    public static final SqlPostfixOperator isFalseOperator =
+        new SqlPostfixOperator("IS FALSE", SqlKind.IsFalse, 15,
+            SqlTypeStrategies.rtiBoolean,
+            SqlTypeStrategies.otiBoolean,
+            SqlTypeStrategies.otcBool)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testIsFalseOperator(tester);
             }
         };
 
-    public final SqlPostfixOperator isNotUnknownOperator =
+    public static final SqlPostfixOperator isNotUnknownOperator =
         new SqlPostfixOperator("IS NOT UNKNOWN", SqlKind.Other, 15,
-            ReturnTypeInferenceImpl.useBoolean, UnknownParamInference.useBoolean, OperandsTypeChecking.typeNullableBool) {
+            SqlTypeStrategies.rtiBoolean,
+            SqlTypeStrategies.otiBoolean,
+            SqlTypeStrategies.otcBool)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testIsNotUnknownOperator(tester);
             }
         };
 
-    public final SqlPostfixOperator isUnknownOperator =
-        new SqlPostfixOperator("IS UNKNOWN", SqlKind.IsNull, 15, ReturnTypeInferenceImpl.useBoolean,
-            UnknownParamInference.useBoolean, OperandsTypeChecking.typeNullableBool) {
+    public static final SqlPostfixOperator isUnknownOperator =
+        new SqlPostfixOperator("IS UNKNOWN", SqlKind.IsNull, 15,
+            SqlTypeStrategies.rtiBoolean,
+            SqlTypeStrategies.otiBoolean,
+            SqlTypeStrategies.otcBool)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testIsUnknownOperator(tester);
             }
         };
 
-    public final SqlPostfixOperator isASetOperator =
+    public static final SqlPostfixOperator isASetOperator =
         new SqlPostfixOperator("IS A SET", SqlKind.Other, 15,
-            ReturnTypeInferenceImpl.useBoolean,
+            SqlTypeStrategies.rtiBoolean,
             null,
-            OperandsTypeChecking.typeNullableMultiset) {
+            SqlTypeStrategies.otcMultiset)
+        {
             public void test(SqlTester tester)
             {
                 //todo
@@ -723,55 +543,57 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     //-------------------------------------------------------------
     //                   PREFIX OPERATORS
     //-------------------------------------------------------------
-    public final SqlPrefixOperator existsOperator =
-        new SqlPrefixOperator("EXISTS", SqlKind.Exists, 20, ReturnTypeInferenceImpl.useBoolean, null,
-            OperandsTypeChecking.typeAny) {
+    public static final SqlPrefixOperator existsOperator =
+        new SqlPrefixOperator("EXISTS", SqlKind.Exists, 20,
+            SqlTypeStrategies.rtiBoolean, null,
+            SqlTypeStrategies.otcAny)
+        {
             public void test(SqlTester tester)
             {
-                testExistsOperator(tester);
+                // TODO:
             }
         };
 
-    private static void testExistsOperator(SqlTester tester)
-    {
-        Util.discard(tester);
-        // TODO:
-    }
-
-    public final SqlPrefixOperator notOperator =
-        new SqlPrefixOperator("NOT", SqlKind.Not, 15, ReturnTypeInferenceImpl.useNullableBoolean,
-            UnknownParamInference.useBoolean, OperandsTypeChecking.typeNullableBool) {
+    public static final SqlPrefixOperator notOperator =
+        new SqlPrefixOperator("NOT", SqlKind.Not, 15,
+            SqlTypeStrategies.rtiNullableBoolean,
+            SqlTypeStrategies.otiBoolean,
+            SqlTypeStrategies.otcBool)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testNotOperator(tester);
             }
         };
 
-    public final SqlPrefixOperator prefixMinusOperator =
+    public static final SqlPrefixOperator prefixMinusOperator =
         new SqlPrefixOperator("-", SqlKind.MinusPrefix, 20,
-            ReturnTypeInferenceImpl.useFirstArgType,
-            UnknownParamInference.useReturnType,
-            OperandsTypeChecking.typeNullableNumericOrInterval) {
+            SqlTypeStrategies.rtiFirstArgType,
+            SqlTypeStrategies.otiReturnType,
+            SqlTypeStrategies.otcNumericOrInterval)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testPrefixMinusOperator(tester);
             }
         };
 
-    public final SqlPrefixOperator prefixPlusOperator =
+    public static final SqlPrefixOperator prefixPlusOperator =
         new SqlPrefixOperator("+", SqlKind.PlusPrefix, 20,
-            ReturnTypeInferenceImpl.useFirstArgType,
-            UnknownParamInference.useReturnType,
-            OperandsTypeChecking.typeNullableNumericOrInterval) {
+            SqlTypeStrategies.rtiFirstArgType,
+            SqlTypeStrategies.otiReturnType,
+            SqlTypeStrategies.otcNumericOrInterval)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testPrefixPlusOperator(tester);
             }
         };
 
-    public final SqlPrefixOperator explicitTableOperator =
+    public static final SqlPrefixOperator explicitTableOperator =
         new SqlPrefixOperator("TABLE", SqlKind.ExplicitTable, 1, null, null,
-            null) {
+            null)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testExplicitTableOperator(tester);
@@ -785,69 +607,47 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     /**
      * <code>SUM</code> aggregate function.
      */
-    public final SqlAggFunction sumOperator = new SqlSumAggFunction(null);
+    public static final SqlAggFunction sumOperator =
+        new SqlSumAggFunction(null);
     /**
      * <code>COUNT</code> aggregate function.
      */
-    public final SqlAggFunction countOperator = new SqlCountAggFunction();
+    public static final SqlAggFunction countOperator =
+        new SqlCountAggFunction();
     /**
      * <code>SUM</code> aggregate function.
      */
-    public final SqlAggFunction minOperator =
+    public static final SqlAggFunction minOperator =
         new SqlMinMaxAggFunction(new RelDataType[0], true,
             SqlMinMaxAggFunction.MINMAX_COMPARABLE);
     /**
      * <code>SUM</code> aggregate function.
      */
-    public final SqlAggFunction maxOperator =
+    public static final SqlAggFunction maxOperator =
         new SqlMinMaxAggFunction(new RelDataType[0], false,
             SqlMinMaxAggFunction.MINMAX_COMPARABLE);
 
     //-------------------------------------------------------------
     //                   SPECIAL OPERATORS
     //-------------------------------------------------------------
-    public final SqlRowOperator rowConstructor = new SqlRowOperator();
+    public final SqlRowOperator rowConstructor =
+        new SqlRowOperator();
 
     /**
-     * A special operator for the substraction of two DATETIMEs.
-     * The format of DATETIME substraction is: <br>
-     * <code>"(" &lt;datetime&gt; "-" &lt;datetime&gt; ")" <interval qualifier></code>
-     * This special operator is special since it needs to hold the additional
-     * interval qualifier specification.
+     * A special operator for the subtraction of two DATETIMEs.  The format of
+     * DATETIME substraction is: <br> <code>"(" &lt;datetime&gt; "-"
+     * &lt;datetime&gt; ")" <interval qualifier></code>.  This operator
+     * is special since it needs to hold the additional interval qualifier
+     * specification.
      */
-    public final SqlOperator minusDateOperator =
-            new SqlSpecialOperator("-", SqlKind.Minus, 20, true,
-                ReturnTypeInferenceImpl.useThirdArgType,
-                UnknownParamInference.useFirstKnown,
-                OperandsTypeChecking.typeMinusDateOperator) {
-                public void test(SqlTester tester)
-                {
-                    SqlOperatorTests.testMinusDateOperator(tester);
-                }
-
-                public SqlSyntax getSyntax() {
-                    return SqlSyntax.Special;
-                }
-
-                public void unparse(
-                    SqlWriter writer,
-                    SqlNode[] operands,
-                    int leftPrec,
-                    int rightPrec) {
-                    writer.print("(");
-                    operands[0].unparse(writer, leftPrec, rightPrec);
-                    writer.print(" - ");
-                    operands[1].unparse(writer, leftPrec, rightPrec);
-                    writer.print(") ");
-                    operands[2].unparse(writer, leftPrec, rightPrec);
-                }
-            };
+    public static final SqlOperator minusDateOperator =
+        new SqlDatetimeSubtractionOperator();
 
     /**
      * The MULTISET Value Constructor.
      * e.g. "<code>MULTISET[1,2,3]</code>".
      */
-    public final SqlMultisetOperator multisetValueConstructor =
+    public static final SqlMultisetOperator multisetValueConstructor =
         new SqlMultisetOperator(SqlKind.MultisetValueConstructor);
 
     /**
@@ -855,140 +655,90 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * e.g. "<code>SELECT dname, MULTISET(SELECT * FROM
      * emp WHERE deptno = dept.deptno) FROM dept</code>".
      */
-    public final SqlMultisetOperator multisetQueryConstructor =
+    public static final SqlMultisetOperator multisetQueryConstructor =
         new SqlMultisetOperator(SqlKind.MultisetQueryConstructor);
 
-    public final SqlSpecialOperator unnestOperator =
-        new SqlSpecialOperator ("UNNEST", SqlKind.Unnest,
-            100, true, null, null,
-            OperandsTypeChecking.typeNullableMultisetOrRecordTypeMultiset) {
+    /**
+     * The <code>UNNEST<code> operator.
+     */
+    public static final SqlSpecialOperator unnestOperator =
+        new SqlUnnestOperator();
 
-            protected RelDataType getType(
-                SqlValidator validator,
-                SqlValidatorScope scope,
-                RelDataTypeFactory typeFactory,
-                CallOperands callOperands)
-            {
-                RelDataType type = callOperands.getType(0);
-                if (type.isStruct()) {
-                    type = type.getFields()[0].getType();
-                }
-                MultisetSqlType t = (MultisetSqlType) type;
-                return t.getComponentType();
-            }
-
-            public void unparse(
-                SqlWriter writer,
-                SqlNode[] operands,
-                int leftPrec,
-                int rightPrec) {
-                writer.print(name);
-                writer.print("(");
-                operands[0].unparse(writer,0,0);
-                writer.print(")");
-            }
-        };
-
-    public final SqlSpecialOperator lateralOperator =
-        new SqlSpecialOperator ("LATERAL", SqlKind.Lateral,
+    /**
+     * The <code>LATERAL<code> operator.
+     */
+    public static final SqlSpecialOperator lateralOperator =
+        new SqlFunctionalOperator ("LATERAL", SqlKind.Lateral,
             100, true,
-            ReturnTypeInferenceImpl.useFirstArgType,
+            SqlTypeStrategies.rtiFirstArgType,
             null,
-            OperandsTypeChecking.typeAny) {
+            SqlTypeStrategies.otcAny);
 
-            public void unparse(
-                SqlWriter writer,
-                SqlNode[] operands,
-                int leftPrec,
-                int rightPrec) {
-                writer.print(name);
-                writer.print("(");
-                operands[0].unparse(writer,0,0);
-                writer.print(")");
-            }
-        };
-
-    public final SqlOverlapsOperator overlapsOperator =
+    public static final SqlOverlapsOperator overlapsOperator =
         new SqlOverlapsOperator();
 
-    public final SqlSpecialOperator valuesOperator =
-        new SqlSpecialOperator("VALUES", SqlKind.Values) {
-            public void unparse(
-                SqlWriter writer,
-                SqlNode [] operands,
-                int leftPrec,
-                int rightPrec)
-            {
-                writer.print("VALUES ");
-                for (int i = 0; i < operands.length; i++) {
-                    if (i > 0) {
-                        writer.print(", ");
-                    }
-                    SqlNode operand = operands[i];
-                    operand.unparse(writer, 0, 0);
-                }
-            }
+    public static final SqlSpecialOperator valuesOperator =
+        new SqlValuesOperator();
 
-            public void test(SqlTester tester)
-            {
-                SqlOperatorTests.testValuesOperator(tester);
-            }
-        };
-
-    public final SqlInternalOperator literalChainOperator =
+    public static final SqlInternalOperator literalChainOperator =
         new SqlLiteralChainOperator();
-    public final SqlInternalOperator throwOperator =
+    
+    public static final SqlInternalOperator throwOperator =
         new SqlThrowOperator();
-    public final SqlBetweenOperator betweenOperator =
+    
+    public static final SqlBetweenOperator betweenOperator =
         new SqlBetweenOperator(
             SqlBetweenOperator.Flag.Asymmetric,
             false);
 
-    public final SqlBetweenOperator symmetricBetweenOperator =
+    public static final SqlBetweenOperator symmetricBetweenOperator =
         new SqlBetweenOperator(
             SqlBetweenOperator.Flag.Symmetric,
             false);
 
-    public final SqlBetweenOperator notBetweenOperator =
+    public static final SqlBetweenOperator notBetweenOperator =
         new SqlBetweenOperator(
             SqlBetweenOperator.Flag.Asymmetric,
             true);
 
-    public final SqlBetweenOperator symmetricNotBetweenOperator =
+    public static final SqlBetweenOperator symmetricNotBetweenOperator =
         new SqlBetweenOperator(
             SqlBetweenOperator.Flag.Symmetric,
             true);
 
-    public final SqlSpecialOperator notLikeOperator =
-        new SqlLikeOperator("NOT LIKE", SqlKind.Like, true) {
+    public static final SqlSpecialOperator notLikeOperator =
+        new SqlLikeOperator("NOT LIKE", SqlKind.Like, true)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testNotLikeOperator(tester);
             }
         };
 
-    public final SqlSpecialOperator likeOperator =
-        new SqlLikeOperator("LIKE", SqlKind.Like, false) {
+    public static final SqlSpecialOperator likeOperator =
+        new SqlLikeOperator("LIKE", SqlKind.Like, false)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testLikeOperator(tester);
             }
         };
 
-    public final SqlSpecialOperator notSimilarOperator =
-        new SqlLikeOperator("NOT SIMILAR TO", SqlKind.Similar, true) {
+    public static final SqlSpecialOperator notSimilarOperator =
+        new SqlLikeOperator("NOT SIMILAR TO", SqlKind.Similar, true)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testNotSimilarToOperator(tester);
             }
         };
 
-    public final SqlSpecialOperator similarOperator =
-        new SqlLikeOperator("SIMILAR TO", SqlKind.Similar, false) {
+    public static final SqlSpecialOperator similarOperator =
+        new SqlLikeOperator("SIMILAR TO", SqlKind.Similar, false)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testSimilarToOperator(tester);
-
             }
         };
 
@@ -996,8 +746,9 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * Internal operator used to represent the ESCAPE clause of a LIKE or
      * SIMILAR TO expression.
      */
-    public final SqlSpecialOperator escapeOperator =
-        new SqlSpecialOperator("Escape", SqlKind.Escape, 15) {
+    public static final SqlSpecialOperator escapeOperator =
+        new SqlSpecialOperator("Escape", SqlKind.Escape, 15)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testEscapeOperator(tester);
@@ -1007,31 +758,43 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     /**
      * The standard SELECT operator.
      */
-    public SqlSelectOperator selectOperator = new SqlSelectOperator();
+    public static final SqlSelectOperator selectOperator =
+        new SqlSelectOperator();
 
-    public final SqlCaseOperator caseOperator = new SqlCaseOperator();
-    public final SqlJoinOperator joinOperator = new SqlJoinOperator();
-    public final SqlSpecialOperator insertOperator =
+    public static final SqlCaseOperator caseOperator =
+        new SqlCaseOperator();
+    
+    public static final SqlJoinOperator joinOperator =
+        new SqlJoinOperator();
+    
+    public static final SqlSpecialOperator insertOperator =
         new SqlSpecialOperator("INSERT", SqlKind.Insert);
-    public final SqlSpecialOperator deleteOperator =
+    
+    public static final SqlSpecialOperator deleteOperator =
         new SqlSpecialOperator("DELETE", SqlKind.Delete);
-    public final SqlSpecialOperator updateOperator =
+    
+    public static final SqlSpecialOperator updateOperator =
         new SqlSpecialOperator("UPDATE", SqlKind.Update);
-    public final SqlSpecialOperator explainOperator =
+    
+    public static final SqlSpecialOperator explainOperator =
         new SqlSpecialOperator("EXPLAIN", SqlKind.Explain);
-    public final SqlOrderByOperator orderByOperator = new SqlOrderByOperator();
+    
+    public static final SqlOrderByOperator orderByOperator =
+        new SqlOrderByOperator();
 
-    public final SqlOperator procedureCallOperator =
+    public static final SqlOperator procedureCallOperator =
         new SqlProcedureCallOperator();
 
-    public final SqlOperator newOperator = new SqlNewOperator();
+    public static final SqlOperator newOperator =
+        new SqlNewOperator();
 
     /**
      * The WINDOW clause of a SELECT statment.
      *
      * @see #overOperator
      */
-    public final SqlWindowOperator windowOperator = new SqlWindowOperator();
+    public static final SqlWindowOperator windowOperator =
+        new SqlWindowOperator();
 
     /**
      * The <code>OVER</code> operator, which applies an aggregate functions to
@@ -1043,7 +806,8 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      *     or window in-line specification (@link SqlWindowOperator})</li>
      * </ul>
      */
-    public final SqlBinaryOperator overOperator = new SqlOverOperator();
+    public static final SqlBinaryOperator overOperator =
+        new SqlOverOperator();
 
 
     //-------------------------------------------------------------
@@ -1057,274 +821,93 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * of the result is the minimum of the length of the input
      * and that length. Otherwise it is the length of the input.<p>
      */
-    public final SqlFunction substringFunc = new SqlSubstringFunction();
+    public static final SqlFunction substringFunc =
+        new SqlSubstringFunction();
 
-    public final SqlFunction convertFunc =
-        new SqlFunction("CONVERT", SqlKind.Function, null, null, null,
-            SqlFunctionCategory.String) {
-            public void unparse(
-                SqlWriter writer,
-                SqlNode [] operands,
-                int leftPrec,
-                int rightPrec)
-            {
-                writer.print(name);
-                writer.print("(");
-                operands[0].unparse(writer, leftPrec, rightPrec);
-                writer.print(" USING ");
-                operands[1].unparse(writer, leftPrec, rightPrec);
-                writer.print(")");
-            }
-
-            protected String getSignatureTemplate(final int operandsCount)
-            {
-                switch (operandsCount) {
-                case 2:
-                    return "{0}({1} USING {2})";
-                }
-                assert (false);
-                return null;
-            }
-
+    public static final SqlFunction convertFunc =
+        new SqlConvertFunction("CONVERT")
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testConvertFunc(tester);
             }
         };
 
-    public final SqlFunction translateFunc =
-        new SqlFunction("TRANSLATE", SqlKind.Function, null, null, null,
-            SqlFunctionCategory.String) {
-            public void unparse(
-                SqlWriter writer,
-                SqlNode [] operands,
-                int leftPrec,
-                int rightPrec)
-            {
-                writer.print(name);
-                writer.print("(");
-                operands[0].unparse(writer, leftPrec, rightPrec);
-                writer.print(" USING ");
-                operands[1].unparse(writer, leftPrec, rightPrec);
-                writer.print(")");
-            }
-
-            protected String getSignatureTemplate(final int operandsCount)
-            {
-                switch (operandsCount) {
-                case 2:
-                    return "{0}({1} USING {2})";
-                }
-                assert (false);
-                return null;
-            }
-
+    public static final SqlFunction translateFunc =
+        new SqlConvertFunction("TRANSLATE")
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testTranslateFunc(tester);
             }
         };
 
-    public final SqlFunction overlayFunc =
-        new SqlFunction("OVERLAY", SqlKind.Function,
-            ReturnTypeInferenceImpl.useNullableDyadicStringSumPrecision, null, null,
-            SqlFunctionCategory.String) {
-            public OperandsCountDescriptor getOperandsCountDescriptor()
-            {
-                return new OperandsCountDescriptor(3, 4);
-            }
-
-            protected boolean checkArgTypes(
-                SqlCall call,
-                SqlValidator validator,
-                SqlValidatorScope scope,
-                boolean throwOnFailure)
-            {
-                switch (call.operands.length) {
-                case 3:
-                    return OperandsTypeChecking.typeNullableStringStringNotNullableInt
-                        .check(validator, scope, call, throwOnFailure);
-                case 4:
-                    return OperandsTypeChecking.typeNullableStringStringNotNullableIntInt
-                        .check(validator, scope, call, throwOnFailure);
-                default:
-                    throw Util.needToImplement(this);
-                }
-            }
-
-            public String getAllowedSignatures(String name)
-            {
-                StringBuffer ret = new StringBuffer();
-                for (int i = 0; i < SqlTypeName.stringTypes.length;
-                        i++) {
-                    if (i > 0) {
-                        ret.append(NL);
-                    }
-                    ArrayList list = new ArrayList();
-                    list.add(SqlTypeName.stringTypes[i]);
-                    list.add(SqlTypeName.stringTypes[i]); //adding same twice
-                    list.add(SqlTypeName.Integer);
-                    ret.append(this.getAnonymousSignature(list));
-                    ret.append(NL);
-                    list.add(SqlTypeName.Integer);
-                    ret.append(this.getAnonymousSignature(list));
-                }
-                return replaceAnonymous(
-                    ret.toString(),
-                    name);
-            }
-
-            public void unparse(
-                SqlWriter writer,
-                SqlNode [] operands,
-                int leftPrec,
-                int rightPrec)
-            {
-                writer.print(name);
-                writer.print("(");
-                operands[0].unparse(writer, leftPrec, rightPrec);
-                writer.print(" PLACING ");
-                operands[1].unparse(writer, leftPrec, rightPrec);
-                writer.print(" FROM ");
-                operands[2].unparse(writer, leftPrec, rightPrec);
-                if (4 == operands.length) {
-                    writer.print(" FOR ");
-                    operands[3].unparse(writer, leftPrec, rightPrec);
-                }
-                writer.print(")");
-            }
-
-            protected String getSignatureTemplate(final int operandsCount)
-            {
-                switch (operandsCount) {
-                case 3:
-                    return "{0}({1} PLACING {2} FROM {3})";
-                case 4:
-                    return "{0}({1} PLACING {2} FROM {3} FOR {4})";
-                }
-                assert (false);
-                return null;
-            }
-
-            public void test(SqlTester tester)
-            {
-                SqlOperatorTests.testOverlayFunc(tester);
-            }
-        };
+    public static final SqlFunction overlayFunc =
+        new SqlOverlayFunction();
 
     /**
      * The "TRIM" function.
      * */
-    public final SqlFunction trimFunc = new SqlTrimFunction();
+    public static final SqlFunction trimFunc =
+        new SqlTrimFunction();
 
-    /**
-     * Represents Position function
-     */
-    public final SqlFunction positionFunc =
-        new SqlFunction("POSITION", SqlKind.Function,
-            ReturnTypeInferenceImpl.useNullableInteger, null,
-            OperandsTypeChecking.typeNullableStringString,
-            SqlFunctionCategory.Numeric) {
-            public void unparse(
-                SqlWriter writer,
-                SqlNode [] operands,
-                int leftPrec,
-                int rightPrec)
-            {
-                writer.print(name);
-                writer.print("(");
-                operands[0].unparse(writer, leftPrec, rightPrec);
-                writer.print(" IN ");
-                operands[1].unparse(writer, leftPrec, rightPrec);
-                writer.print(")");
-            }
+    public static final SqlFunction positionFunc =
+        new SqlPositionFunction();
 
-            protected String getSignatureTemplate(final int operandsCount)
-            {
-                switch (operandsCount) {
-                case 2:
-                    return "{0}({1} IN {2})";
-                }
-                assert (false);
-                return null;
-            }
-
-            protected boolean checkArgTypes(
-                SqlCall call,
-                SqlValidator validator,
-                SqlValidatorScope scope,
-                boolean throwOnFailure)
-            {
-                //check that the two operands are of same type.
-                RelDataType type0 =
-                    validator.getValidatedNodeType(call.operands[0]);
-                RelDataType type1 =
-                    validator.getValidatedNodeType(call.operands[1]);
-                if (!SqlTypeUtil.inSameFamily(type0, type1)) {
-                    if (throwOnFailure) {
-                        throw call.newValidationSignatureError(validator, scope);
-                    }
-                    return false;
-                }
-
-                return operandsCheckingRule.check(validator, scope, call, throwOnFailure);
-            }
-
-            public void test(SqlTester tester)
-            {
-                SqlOperatorTests.testPositionFunc(tester);
-            }
-        };
-
-    public final SqlFunction charLengthFunc =
+    public static final SqlFunction charLengthFunc =
         new SqlFunction("CHAR_LENGTH", SqlKind.Function,
-            ReturnTypeInferenceImpl.useNullableInteger, null,
-            OperandsTypeChecking.typeNullableVarchar,
-            SqlFunctionCategory.Numeric) {
+            SqlTypeStrategies.rtiNullableInteger, null,
+            SqlTypeStrategies.otcCharString,
+            SqlFunctionCategory.Numeric)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testCharLengthFunc(tester);
             }
         };
 
-    public final SqlFunction characterLengthFunc =
+    public static final SqlFunction characterLengthFunc =
         new SqlFunction("CHARACTER_LENGTH", SqlKind.Function,
-            ReturnTypeInferenceImpl.useNullableInteger, null,
-            OperandsTypeChecking.typeNullableVarchar,
-            SqlFunctionCategory.Numeric) {
+            SqlTypeStrategies.rtiNullableInteger, null,
+            SqlTypeStrategies.otcCharString,
+            SqlFunctionCategory.Numeric)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testCharacterLengthFunc(tester);
             }
         };
 
-    public final SqlFunction upperFunc =
+    public static final SqlFunction upperFunc =
         new SqlFunction("UPPER", SqlKind.Function,
-            ReturnTypeInferenceImpl.useNullableFirstArgType, null,
-            OperandsTypeChecking.typeNullableVarchar,
-            SqlFunctionCategory.String) {
+            SqlTypeStrategies.rtiNullableFirstArgType, null,
+            SqlTypeStrategies.otcCharString,
+            SqlFunctionCategory.String)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testUpperFunc(tester);
             }
         };
 
-    public final SqlFunction lowerFunc =
+    public static final SqlFunction lowerFunc =
         new SqlFunction("LOWER", SqlKind.Function,
-            ReturnTypeInferenceImpl.useNullableFirstArgType, null,
-            OperandsTypeChecking.typeNullableVarchar,
-            SqlFunctionCategory.String) {
+            SqlTypeStrategies.rtiNullableFirstArgType, null,
+            SqlTypeStrategies.otcCharString,
+            SqlFunctionCategory.String)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testLowerFunc(tester);
             }
         };
 
-    public final SqlFunction initcapFunc =
+    public static final SqlFunction initcapFunc =
         new SqlFunction("INITCAP", SqlKind.Function,
-            ReturnTypeInferenceImpl.useNullableFirstArgType, null,
-            OperandsTypeChecking.typeNullableVarchar,
-            SqlFunctionCategory.String) {
+            SqlTypeStrategies.rtiNullableFirstArgType, null,
+            SqlTypeStrategies.otcCharString,
+            SqlFunctionCategory.String)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testInitcapFunc(tester);
@@ -1332,301 +915,209 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         };
 
     /**
-     * Uses SqlOperatorTable.useDouble for its return type since we dont know
+     * Uses SqlOperatorTable.useDouble for its return type since we don't know
      * what the result type will be by just looking at the operand types.
      * For example POW(int, int) can return a non integer if the second operand
      * is negative.
      */
-    public final SqlFunction powFunc =
+    public static final SqlFunction powFunc =
         new SqlFunction("POW", SqlKind.Function,
-            ReturnTypeInferenceImpl.useNullableDouble, null,
-            OperandsTypeChecking.typeNumericNumeric,
-            SqlFunctionCategory.Numeric) {
+            SqlTypeStrategies.rtiNullableDouble, null,
+            SqlTypeStrategies.otcNumericX2,
+            SqlFunctionCategory.Numeric)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testPowFunc(tester);
             }
         };
 
-    public final SqlFunction modFunc =
+    public static final SqlFunction modFunc =
+        // FIXME jvs 4-June-2005:  this is incorrect; mod
+        // has to take precision into account
         new SqlFunction("MOD", SqlKind.Function,
-            ReturnTypeInferenceImpl.useNullableBiggest, null,
-            OperandsTypeChecking.typeNullableIntegerInteger,
-            SqlFunctionCategory.Numeric) {
+            SqlTypeStrategies.rtiLeastRestrictive, null,
+            SqlTypeStrategies.otcNumericX2,
+            SqlFunctionCategory.Numeric)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testModFunc(tester);
             }
         };
 
-    public final SqlFunction lnFunc =
+    public static final SqlFunction lnFunc =
         new SqlFunction("LN", SqlKind.Function,
-            ReturnTypeInferenceImpl.useNullableDouble, null,
-            OperandsTypeChecking.typeNumeric, SqlFunctionCategory.Numeric) {
+            SqlTypeStrategies.rtiNullableDouble, null,
+            SqlTypeStrategies.otcNumeric, SqlFunctionCategory.Numeric)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testLnFunc(tester);
             }
         };
 
-    public final SqlFunction logFunc =
+    public static final SqlFunction logFunc =
         new SqlFunction("LOG", SqlKind.Function,
-            ReturnTypeInferenceImpl.useNullableDouble, null,
-            OperandsTypeChecking.typeNumeric, SqlFunctionCategory.Numeric) {
+            SqlTypeStrategies.rtiNullableDouble, null,
+            SqlTypeStrategies.otcNumeric, SqlFunctionCategory.Numeric)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testLogFunc(tester);
             }
         };
 
-    public final SqlFunction absFunc =
+    public static final SqlFunction absFunc =
         new SqlFunction("ABS", SqlKind.Function,
-            ReturnTypeInferenceImpl.useFirstArgType, null,
-            OperandsTypeChecking.typeNullableNumericOrInterval,
-            SqlFunctionCategory.Numeric) {
+            SqlTypeStrategies.rtiFirstArgType, null,
+            SqlTypeStrategies.otcNumericOrInterval,
+            SqlFunctionCategory.Numeric)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testAbsFunc(tester);
             }
         };
 
-    public final SqlFunction nullIfFunc =
-        new SqlFunction("NULLIF", SqlKind.Function, null, null, null,
-            SqlFunctionCategory.System)
-        {
-            // override SqlOperator
-            public SqlNode rewriteCall(SqlCall call)
-            {
-                SqlNode [] operands = call.getOperands();
-                SqlParserPos pos = call.getParserPosition();
-
-                if (2 != operands.length) {
-                    //todo put this in the validator
-                    throw EigenbaseResource.instance().newValidatorContext(
-                        new Integer(pos.getLineNum()),
-                        new Integer(pos.getColumnNum()),
-                        EigenbaseResource.instance().newInvalidArgCount(
-                            name,
-                            new Integer(2)));
-                }
-
-                SqlNodeList whenList = new SqlNodeList(pos);
-                SqlNodeList thenList = new SqlNodeList(pos);
-                whenList.add(operands[1]);
-                thenList.add(SqlLiteral.createNull(null));
-                return caseOperator.createCall(operands[0], whenList,
-                    thenList, operands[0], pos);
-            }
-
-            public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()
-            {
-                return new OperandsCountDescriptor(2);
-            }
-
-            public void test(SqlTester tester)
-            {
-                SqlOperatorTests.testNullifFunc(tester);
-            }
-        };
+    public static final SqlFunction nullIfFunc =
+        new SqlNullifFunction();
 
     /**
      * The COALESCE builtin function.
      */
-    public final SqlFunction coalesceFunc =
-        new SqlFunction("COALESCE", SqlKind.Function, null, null, null,
-            SqlFunctionCategory.System)
-        {
-            // override SqlOperator
-            public SqlNode rewriteCall(SqlCall call)
-            {
-                SqlNode [] operands = call.getOperands();
-                SqlParserPos pos = call.getParserPosition();
-
-                SqlNodeList whenList = new SqlNodeList(pos);
-                SqlNodeList thenList = new SqlNodeList(pos);
-
-                //todo optimize when know operand is not null.
-
-                int i;
-                for (i = 0; ((i + 1) < operands.length); ++i) {
-                    whenList.add(
-                        isNotNullOperator.createCall(operands[i], pos));
-                    thenList.add(operands[i]);
-                }
-                return caseOperator.createCall(null, whenList, thenList,
-                    operands[i], pos);
-            }
-
-            // REVIEW jvs 1-Jan-2005:  should this be here?  It's
-            // not entirely accurate,
-            public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()
-            {
-                return new OperandsCountDescriptor(2);
-            }
-
-            public void test(SqlTester tester)
-            {
-                SqlOperatorTests.testCoalesceFunc(tester);
-            }
-        };
+    public static final SqlFunction coalesceFunc =
+        new SqlCoalesceFunction();
 
     /** The <code>FLOOR</code> function. */
-    public final SqlFunction floorFunc =
-        new SqlFunction("FLOOR", SqlKind.Function,
-            ReturnTypeInferenceImpl.useFirstArgType, null,
-            OperandsTypeChecking.typeNullableNumericOrInterval,
-            SqlFunctionCategory.Numeric) {
+    public static final SqlFunction floorFunc =
+        new SqlMonotonicUnaryFunction("FLOOR", SqlKind.Function,
+            SqlTypeStrategies.rtiFirstArgType, null,
+            SqlTypeStrategies.otcNumericOrInterval,
+            SqlFunctionCategory.Numeric)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testFloorFunc(tester);
             }
-
-            public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
-            {
-                SqlNode node = (SqlNode)call.operands[0];
-                return scope.isMonotonic(node);
-            }
         };
 
     /** The <code>CEIL</code> function. */
-    public final SqlFunction ceilFunc =
-        new SqlFunction("CEIL", SqlKind.Function,
-            ReturnTypeInferenceImpl.useFirstArgType, null,
-            OperandsTypeChecking.typeNullableNumericOrInterval,
-            SqlFunctionCategory.Numeric) {
+    public static final SqlFunction ceilFunc =
+        new SqlMonotonicUnaryFunction("CEIL", SqlKind.Function,
+            SqlTypeStrategies.rtiFirstArgType, null,
+            SqlTypeStrategies.otcNumericOrInterval,
+            SqlFunctionCategory.Numeric)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testCeilFunc(tester);
             }
-
-            public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
+        };
+    
+    /** The <code>USER</code> function. */
+    public static final SqlFunction userFunc =
+        new SqlStringContextVariable("USER")
+        {
+            public void test(SqlTester tester)
             {
-                SqlNode node = (SqlNode)call.operands[0];
-                return scope.isMonotonic(node);
+                SqlOperatorTests.testUserFunc(tester);
             }
         };
-    /** The <code>USER</code> function. */
-    public final SqlFunction userFunc = new SqlStringContextVariable("USER") {
-        public void test(SqlTester tester)
-        {
-            SqlOperatorTests.testUserFunc(tester);
-        }
-    };
 
     /** The <code>CURRENT_USER</code> function. */
-    public final SqlFunction currentUserFunc = new SqlStringContextVariable(
-            "CURRENT_USER") {
-        public void test(SqlTester tester)
+    public static final SqlFunction currentUserFunc =
+        new SqlStringContextVariable("CURRENT_USER")
         {
-            SqlOperatorTests.testCurrentUserFunc(tester);
-        }
-    };
+            public void test(SqlTester tester)
+            {
+                SqlOperatorTests.testCurrentUserFunc(tester);
+            }
+        };
 
     /** The <code>SESSION_USER</code> function. */
-    public final SqlFunction sessionUserFunc = new SqlStringContextVariable(
-            "SESSION_USER") {
-        public void test(SqlTester tester)
+    public static final SqlFunction sessionUserFunc =
+        new SqlStringContextVariable("SESSION_USER")
         {
-            SqlOperatorTests.testSessionUserFunc(tester);
-        }
-    };
+            public void test(SqlTester tester)
+            {
+                SqlOperatorTests.testSessionUserFunc(tester);
+            }
+        };
 
     /** The <code>SYSTEM_USER</code> function. */
-    public final SqlFunction systemUserFunc = new SqlStringContextVariable(
-            "SYSTEM_USER") {
-        public void test(SqlTester tester)
+    public static final SqlFunction systemUserFunc =
+        new SqlStringContextVariable("SYSTEM_USER")
         {
-            SqlOperatorTests.testSystemUserFunc(tester);
-        }
-    };
+            public void test(SqlTester tester)
+            {
+                SqlOperatorTests.testSystemUserFunc(tester);
+            }
+        };
 
     /** The <code>CURRENT_PATH</code> function. */
-    public final SqlFunction currentPathFunc = new SqlStringContextVariable(
-            "CURRENT_PATH") {
-        public void test(SqlTester tester)
+    public static final SqlFunction currentPathFunc =
+        new SqlStringContextVariable("CURRENT_PATH")
         {
-            SqlOperatorTests.testCurrentPathFunc(tester);
-        }
-    };
+            public void test(SqlTester tester)
+            {
+                SqlOperatorTests.testCurrentPathFunc(tester);
+            }
+        };
 
     /** The <code>CURRENT_ROLE</code> function. */
-    public final SqlFunction currentRoleFunc = new SqlStringContextVariable(
-            "CURRENT_ROLE") {
-        public void test(SqlTester tester)
+    public static final SqlFunction currentRoleFunc =
+        new SqlStringContextVariable("CURRENT_ROLE")
         {
-            SqlOperatorTests.testCurrentRoleFunc(tester);
-        }
-    };
+            public void test(SqlTester tester)
+            {
+                SqlOperatorTests.testCurrentRoleFunc(tester);
+            }
+        };
 
     /** The <code>LOCALTIME [(<i>precision</i>)]</code> function. */
-    public final SqlFunction localTimeFunc = new SqlAbstractTimeFunction(
-            "LOCALTIME", SqlTypeName.Time) {
-        public void test(SqlTester tester)
+    public static final SqlFunction localTimeFunc =
+        new SqlAbstractTimeFunction("LOCALTIME", SqlTypeName.Time)
         {
-            SqlOperatorTests.testLocalTimeFunc(tester);
-        }
-    };
+            public void test(SqlTester tester)
+            {
+                SqlOperatorTests.testLocalTimeFunc(tester);
+            }
+        };
 
     /** The <code>LOCALTIMESTAMP [(<i>precision</i>)]</code> function. */
-    public final SqlFunction localTimestampFunc = new SqlAbstractTimeFunction(
-            "LOCALTIMESTAMP", SqlTypeName.Timestamp) {
-        public void test(SqlTester tester)
+    public static final SqlFunction localTimestampFunc =
+        new SqlAbstractTimeFunction("LOCALTIMESTAMP", SqlTypeName.Timestamp)
         {
-            SqlOperatorTests.testLocalTimestampFunc(tester);
-        }
-    };
+            public void test(SqlTester tester)
+            {
+                SqlOperatorTests.testLocalTimestampFunc(tester);
+            }
+        };
 
     /** The <code>CURRENT_TIME [(<i>precision</i>)]</code> function. */
-    public final SqlFunction currentTimeFunc = new SqlAbstractTimeFunction(
-            "CURRENT_TIME", SqlTypeName.Time) {
-        public void test(SqlTester tester)
+    public static final SqlFunction currentTimeFunc =
+        new SqlAbstractTimeFunction("CURRENT_TIME", SqlTypeName.Time)
         {
-            SqlOperatorTests.testCurrentTimeFunc(tester);
-        }
-    };
+            public void test(SqlTester tester)
+            {
+                SqlOperatorTests.testCurrentTimeFunc(tester);
+            }
+        };
 
     /** The <code>CURRENT_TIMESTAMP [(<i>precision</i>)]</code> function. */
-    public final SqlFunction currentTimestampFunc = new SqlAbstractTimeFunction(
-            "CURRENT_TIMESTAMP", SqlTypeName.Timestamp) {
-        public void test(SqlTester tester)
+    public static final SqlFunction currentTimestampFunc =
+        new SqlAbstractTimeFunction("CURRENT_TIMESTAMP", SqlTypeName.Timestamp)
         {
-            SqlOperatorTests.testCurrentTimestampFunc(tester);
-        }
-    };
+            public void test(SqlTester tester)
+            {
+                SqlOperatorTests.testCurrentTimestampFunc(tester);
+            }
+        };
 
     /** The <code>CURRENT_DATE</code> function. */
-    public final SqlFunction currentDateFunc = new SqlFunction("CURRENT_DATE",
-            SqlKind.Function, ReturnTypeInferenceImpl.useDate, null, null,
-            SqlFunctionCategory.TimeDate) {
-        public void test(SqlTester tester)
-        {
-            SqlOperatorTests.testCurrentDateFunc(tester);
-        }
-        public SqlSyntax getSyntax()
-        {
-            return SqlSyntax.FunctionId;
-        }
-
-        protected boolean checkArgTypes(SqlCall call, SqlValidator validator,
-                SqlValidatorScope scope, boolean throwOnFailure)
-        {
-            Util.discard(call);
-            Util.discard(validator);
-            Util.discard(scope);
-            Util.discard(throwOnFailure);
-            return true;
-        }
-
-        public OperandsCountDescriptor getOperandsCountDescriptor()
-        {
-            return OperandsCountDescriptor.niladicCountDescriptor;
-        }
-
-        public boolean isMonotonic(SqlCall call, SqlValidatorScope scope) {
-            return true;
-        }
-
-    };
+    public static final SqlFunction currentDateFunc =
+        new SqlCurrentDateFunction();
 
     /**
      * The SQL <code>CAST</code> operator.
@@ -1637,55 +1128,28 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * <code>CAST</code> with the expression <code>1 + 2</code> as its only
      * operand.
      */
-    public final SqlFunction castFunc = new SqlCastFunction();
+    public static final SqlFunction castFunc =
+        new SqlCastFunction();
 
     /**
-     * The SQL <code>EXTRACT</code> operator.
-     * Extracts a specified field value from a DATETIME or an INTERVAL.
-     * E.g.<br>
-     * <code>EXTRACT(HOUR FROM INTERVAL '364 23:59:59')</code> returns <code>23</code>
+     * The SQL <code>EXTRACT</code> operator.  Extracts a specified field value
+     * from a DATETIME or an INTERVAL.  E.g.<br> <code>EXTRACT(HOUR FROM
+     * INTERVAL '364 23:59:59')</code> returns <code>23</code>
      */
-    public final SqlFunction extractFunc =
-        new SqlFunction("EXTRACT", SqlKind.Function,
-            ReturnTypeInferenceImpl.useNullableDouble, null,
-            OperandsTypeChecking.typeNullableIntervalInterval,
-            SqlFunctionCategory.System) {
-            public void test(SqlTester tester)
-            {
-                SqlOperatorTests.testExtractFunc(tester);
-            }
-
-            protected String getSignatureTemplate(int operandsCount) {
-                Util.discard(operandsCount);
-                return "{0}({1} FROM {2})";
-            }
-
-            public void unparse(
-                SqlWriter writer,
-                SqlNode[] operands,
-                int leftPrec,
-                int rightPrec) {
-                writer.print(name);
-                writer.print("(");
-                operands[0].unparse(writer, leftPrec, rightPrec);
-                writer.print(" FROM ");
-                operands[1].unparse(writer, leftPrec, rightPrec);
-                writer.print(")");
-            }
-
-
-        };
+    public static final SqlFunction extractFunc =
+        new SqlExtractFunction();
 
     /**
-     * The ELEMENT SQL operator, used to convert a multiset with only one item
+     * The ELEMENT operator, used to convert a multiset with only one item
      * to a "regular" type. Example
      * ... log(ELEMENT(MULTISET[1])) ...
      */
-     public final SqlFunction elementFunc =
+     public static final SqlFunction elementFunc =
         new SqlFunction("ELEMENT", SqlKind.Function,
-            ReturnTypeInferenceImpl.useNullableMultisetElementType, null,
-            OperandsTypeChecking.typeNullableMultiset,
-            SqlFunctionCategory.System) {
+            SqlTypeStrategies.rtiNullableMultisetElementType, null,
+            SqlTypeStrategies.otcMultiset,
+            SqlFunctionCategory.System)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testElementFunc(tester);
@@ -1693,13 +1157,15 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         };
 
     /**
-     * The CARDINALITY SQL operator, used to retreive the number of elements in
+     * The CARDINALITY operator, used to retrieve the number of elements in
      * a MULTISET
      */
-     public final SqlFunction cardinalityFunc =
+     public static final SqlFunction cardinalityFunc =
         new SqlFunction("CARDINALITY", SqlKind.Function,
-            ReturnTypeInferenceImpl.useNullableInteger, null,
-            OperandsTypeChecking.typeNullableMultiset, SqlFunctionCategory.System) {
+            SqlTypeStrategies.rtiNullableInteger, null,
+            SqlTypeStrategies.otcMultiset,
+            SqlFunctionCategory.System)
+        {
             public void test(SqlTester tester)
             {
                 SqlOperatorTests.testCardinalityFunc(tester);
@@ -1708,33 +1174,35 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
 
 
     /**
-     * The COLLECT SQL operator. Multiset aggregator function.
+     * The COLLECT operator. Multiset aggregator function.
      */
-     public final SqlFunction collectFunc =
+     public static final SqlFunction collectFunc =
         new SqlFunction("COLLECT", SqlKind.Function,
-            ReturnTypeInferenceImpl.useFirstArgType, null,
-            OperandsTypeChecking.typeAny, SqlFunctionCategory.System) {
+            SqlTypeStrategies.rtiFirstArgType, null,
+            SqlTypeStrategies.otcAny, SqlFunctionCategory.System)
+        {
             public void test(SqlTester tester)
             {
-//                SqlOperatorTests.testCollect(tester);
+                // TODO:
+                // SqlOperatorTests.testCollect(tester);
             }
         };
 
     /**
-     * The FUSION SQL operator. Multiset aggregator function.
+     * The FUSION operator. Multiset aggregator function.
      */
-     public final SqlFunction fusionFunc =
+     public static final SqlFunction fusionFunc =
         new SqlFunction("FUSION", SqlKind.Function,
-            ReturnTypeInferenceImpl.useFirstArgType, null,
-            OperandsTypeChecking.typeNullableMultiset, SqlFunctionCategory.System) {
+            SqlTypeStrategies.rtiFirstArgType, null,
+            SqlTypeStrategies.otcMultiset,
+            SqlFunctionCategory.System)
+        {
             public void test(SqlTester tester)
             {
-//                SqlOperatorTests.testFusion(tester);
+                // TODO:
+                // SqlOperatorTests.testFusion(tester);
             }
         };
 }
 
-
 // End SqlStdOperatorTable.java
-
-

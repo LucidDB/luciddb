@@ -110,7 +110,7 @@ public class ConverterTest extends TestCase
         final StringWriter sw = new StringWriter();
         final RelOptPlanWriter planWriter =
             new RelOptPlanWriter(new PrintWriter(sw));
-        planWriter.withIdPrefix = false;
+        planWriter.setIdPrefix(false);
         rel.explain(planWriter);
         planWriter.flush();
         String actual = sw.toString();
@@ -369,11 +369,11 @@ public class ConverterTest extends TestCase
     public void testQueryInSelect()
     {
         check("select \"gender\", (select \"name\" from \"depts\" where \"deptno\" = \"e\".\"deptno\") from \"emps\" as \"e\"",
-            "ProjectRel(gender=[$3], EXPR$1=[$6])" + NL +
-            "  CorrelatorRel(condition=[true], joinType=[left])" + NL +
-            "    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])" + NL +
-            "    ProjectRel(name=[$1])" + NL +
-            "      FilterRel(condition=[=($0, $cor0.deptno)])" + NL +
+            "ProjectRel(gender=[$3], EXPR$1=[$6])" + NL + 
+            "  CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset2]])" + NL + 
+            "    ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])" + NL + 
+            "    ProjectRel(name=[$1])" + NL + 
+            "      FilterRel(condition=[=($0, $cor0.deptno)])" + NL + 
             "        ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])" + NL);
     }
 

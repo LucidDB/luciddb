@@ -108,7 +108,7 @@ require version '${required.ant.version}'."/>
 
   <!-- Same as ExtModelUML, but with diagrams deleted -->
   <property name="ExtModelUMLSansDiagrams.xmi"
-    location="${farrago.xmi.dir}/ExtModelUMLSansDiagrams.xmi"/>
+    location="${farrago.xmi.dir}/${ExtModelFileName}SansDiagrams.xmi"/>
 
   <!-- File for user-defined extension model. -->
 
@@ -611,6 +611,8 @@ require version '${required.ant.version}'."/>
     <delete file="${ExtModelUMLSansDiagrams.xmi}"/>
     <delete
       file="${farrago.src.dir}/net/sf/farrago/FarragoMetadataFactory.java"/>
+    <delete
+      file="${farrago.src.dir}/net/sf/farrago/FarragoMetadataFactoryImpl.java"/>
     <delete dir="${farrago.catalog.src.dir}"/>
   </target>
 
@@ -700,6 +702,7 @@ require version '${required.ant.version}'."/>
       destdir="${farrago.classes.dir}"
       classpathref="farrago.3p.classpath">
       <include name="**/EigenbaseException.java" />
+      <include name="**/EigenbaseContextException.java" />
       <include name="**/SqlValidatorException.java" />
     </farrago.javaCompile>
     <taskdef name="resgen" classname="org.eigenbase.resgen.ResourceGenTask">
@@ -831,6 +834,7 @@ require version '${required.ant.version}'."/>
   </target>
 
   <target name="test">
+    <antcall target="cleanExamples"/>
     <antcall target="createCatalog"/>
     <antcall target="buildExamples"/>
     <antcall target="junit"/>
@@ -949,8 +953,11 @@ require version '${required.ant.version}'."/>
       classpathref="farrago.run.classpath">
       <arg
         value="${farrago.src.dir}/net/sf/farrago/FarragoMetadataFactory.java"/>
+      <arg
+        value="${farrago.src.dir}/net/sf/farrago/FarragoMetadataFactoryImpl.java"/>
       <arg value="net.sf.farrago"/>
       <arg value="FarragoMetadataFactory"/>
+      <arg value="FarragoMetadataFactoryImpl"/>
       <arg value="net.sf.farrago.FarragoPackage"/>
       <arg value="FarragoCatalog"/>
     </farrago.javaExec>
@@ -1207,6 +1214,13 @@ require version '${required.ant.version}'."/>
   <target name="buildExamples" depends="compile">
     <ant antfile="examples/plannerviz/build.xml" inheritAll="false"/>
     <ant antfile="examples/rng/build.xml" target="createPlugin" 
+      inheritAll="false"/>
+  </target>
+
+  <target name="cleanExamples">
+    <ant antfile="examples/plannerviz/build.xml" target="clean" 
+      inheritAll="false"/>
+    <ant antfile="examples/rng/build.xml" target="clean" 
       inheritAll="false"/>
   </target>
 

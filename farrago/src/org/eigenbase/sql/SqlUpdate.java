@@ -131,14 +131,19 @@ public class SqlUpdate extends SqlCall
         int rightPrec)
     {
         writer.print("UPDATE ");
-        getTargetTable().unparse(writer, operator.leftPrec, operator.rightPrec);
+        getTargetTable().unparse(
+            writer, getOperator().getLeftPrec(), getOperator().getRightPrec());
         if (getTargetColumnList() != null) {
-            getTargetColumnList().unparse(writer, operator.leftPrec,
-                operator.rightPrec);
+            getTargetColumnList().unparse(
+                writer, getOperator().getLeftPrec(),
+                getOperator().getRightPrec());
         }
         if (getAlias() != null) {
             writer.print(" AS ");
-            getAlias().unparse(writer, operator.leftPrec, operator.rightPrec);
+            getAlias().unparse(
+                writer,
+                getOperator().getLeftPrec(),
+                getOperator().getRightPrec());
         }
         writer.print("SET ");
         Iterator targetColumnIter = getTargetColumnList().getList().iterator();
@@ -147,10 +152,15 @@ public class SqlUpdate extends SqlCall
         while (targetColumnIter.hasNext()) {
             writer.println();
             SqlIdentifier id = (SqlIdentifier) targetColumnIter.next();
-            id.unparse(writer, operator.leftPrec, operator.rightPrec);
+            id.unparse(
+                writer, getOperator().getLeftPrec(),
+                getOperator().getRightPrec());
             writer.print(" = ");
             SqlNode sourceExp = (SqlNode) sourceExpressionIter.next();
-            sourceExp.unparse(writer, operator.leftPrec, operator.rightPrec);
+            sourceExp.unparse(
+                writer,
+                getOperator().getLeftPrec(),
+                getOperator().getRightPrec());
             if (targetColumnIter.hasNext()) {
                 writer.print(",");
             }
@@ -158,8 +168,10 @@ public class SqlUpdate extends SqlCall
         if (getCondition() != null) {
             writer.println();
             writer.print("WHERE ");
-            getCondition().unparse(writer, operator.leftPrec,
-                operator.rightPrec);
+            getCondition().unparse(
+                writer,
+                getOperator().getLeftPrec(),
+                getOperator().getRightPrec());
         }
     }
 

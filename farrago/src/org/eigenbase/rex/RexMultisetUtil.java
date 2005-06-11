@@ -114,7 +114,7 @@ public class RexMultisetUtil
      * types are of multiset types
      */
     public static boolean isMultisetCast(RexCall call) {
-        if (!call.op.equals(opTab.castFunc)) {
+        if (!call.getOperator().equals(opTab.castFunc)) {
             return false;
         }
         return call.getType().getSqlTypeName() == SqlTypeName.Multiset;
@@ -127,7 +127,8 @@ public class RexMultisetUtil
     public static RexCall findFirstMultiset(final RexNode node, boolean deep)
     {
         if (node instanceof RexFieldAccess) {
-            return findFirstMultiset(((RexFieldAccess) node).expr, deep);
+            return findFirstMultiset(
+                ((RexFieldAccess) node).getReferenceExpr(), deep);
         }
 
         if (!(node instanceof RexCall)) {
@@ -141,7 +142,7 @@ public class RexMultisetUtil
             SqlOperator op = (SqlOperator) it.next();
             firstOne = RexUtil.findOperatorCall(op, call);
             if (null != firstOne) {
-                if (firstOne.op.equals(opTab.castFunc) &&
+                if (firstOne.getOperator().equals(opTab.castFunc) &&
                     !isMultisetCast(firstOne)) {
                     firstOne = null;
                     continue;
@@ -162,15 +163,17 @@ public class RexMultisetUtil
      * totalCount >= multisetCount always holds true.
      */
     private static class RexCallMultisetOperatorCounter extends RexShuttle {
-        public int totalCount = 0;
-        public int multisetCount = 0;
+        int totalCount = 0;
+        int multisetCount = 0;
 
         public RexNode visit(RexCall call)
         {
             totalCount++;
             doSuper:
-            if (multisetOperators.contains(call.op)) {
-                if (call.op.equals(opTab.castFunc) && !isMultisetCast(call)) {
+            if (multisetOperators.contains(call.getOperator())) {
+                if (call.getOperator().equals(opTab.castFunc)
+                    && !isMultisetCast(call))
+                {
                     break doSuper;
                 }
                 multisetCount++;

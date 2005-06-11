@@ -59,9 +59,10 @@ public class VectorToJavaConvertlet extends JavaConvertlet
         Variable variable_enum = implementor.newVariable();
         StatementList forBody = new StatementList();
         Expression exp =
-            implementor.visitJavaChild(converter, 0, (JavaRel) converter.child);
+            implementor.visitJavaChild(
+                converter, 0, (JavaRel) converter.getChild());
         OJClass rowType = OJUtil.typeToOJClass(
-            converter.child.getRowType(),
+            converter.getChild().getRowType(),
             implementor.getTypeFactory());
         stmtList.add(
             new ForStatement(

@@ -42,7 +42,7 @@ public class SqlDynamicParam extends SqlNode
 {
     //~ Instance fields -------------------------------------------------------
 
-    public final int index;
+    private final int index;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -59,6 +59,11 @@ public class SqlDynamicParam extends SqlNode
     public SqlKind getKind()
     {
         return SqlKind.DynamicParam;
+    }
+
+    public int getIndex()
+    {
+        return index;
     }
 
     public void unparse(

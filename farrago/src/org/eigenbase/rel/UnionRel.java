@@ -23,16 +23,8 @@
 
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptPlanWriter;
-import org.eigenbase.relopt.RelOptUtil;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.reltype.RelDataType;
-
-
-// TODO jvs 25-Sept-2003: Factor out base class SetOpRel and make IntersectRel
-// and MinusRel extend that rather than UnionRel.
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 
 /**
  * <code>UnionRel</code> returns the union of the rows of its inputs,
@@ -43,13 +35,8 @@ import org.eigenbase.reltype.RelDataType;
  *
  * @since 23 September, 2001
  */
-public class UnionRel extends AbstractRelNode
+public final class UnionRel extends UnionRelBase
 {
-    //~ Instance fields -------------------------------------------------------
-
-    protected RelNode [] inputs;
-    protected boolean all;
-
     //~ Constructors ----------------------------------------------------------
 
     public UnionRel(
@@ -57,81 +44,19 @@ public class UnionRel extends AbstractRelNode
         RelNode [] inputs,
         boolean all)
     {
-        this(cluster, new RelTraitSet(CallingConvention.NONE), inputs, all);
-    }
-
-    protected UnionRel(
-        RelOptCluster cluster,
-        RelTraitSet traits,
-        RelNode [] inputs,
-        boolean all)
-    {
-        super(cluster, traits);
-        this.inputs = inputs;
-        this.all = all;
+        super(cluster, new RelTraitSet(CallingConvention.NONE), inputs, all);
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    public boolean isDistinct()
-    {
-        return !all;
-    }
-
-    public RelNode [] getInputs()
-    {
-        return inputs;
-    }
-
-    // implement RelNode
-    public double getRows()
-    {
-        double dRows = 0;
-        for (int i = 0; i < inputs.length; i++) {
-            dRows += inputs[i].getRows();
-        }
-        if (!all) {
-            dRows *= 0.5;
-        }
-        return dRows;
-    }
-
     public Object clone()
     {
-        return new UnionRel(
-            cluster,
-            cloneTraits(),
+        UnionRel clone = new UnionRel(
+            getCluster(),
             RelOptUtil.clone(inputs),
             all);
-    }
-
-    public void explain(RelOptPlanWriter pw)
-    {
-        String [] terms = new String[inputs.length + 1];
-        for (int i = 0; i < inputs.length; i++) {
-            terms[i] = "input#" + i;
-        }
-        terms[inputs.length] = "all";
-        pw.explain(
-            this,
-            terms,
-            new Object [] { Boolean.valueOf(all) });
-    }
-
-    public void replaceInput(
-        int ordinalInParent,
-        RelNode p)
-    {
-        inputs[ordinalInParent] = p;
-    }
-
-    protected RelDataType deriveRowType()
-    {
-        RelDataType [] types = new RelDataType[inputs.length];
-        for (int i = 0; i < inputs.length; i++) {
-            types[i] = inputs[i].getRowType();
-        }
-        return cluster.typeFactory.leastRestrictive(types);
+        clone.inheritTraitsFrom(this);
+        return clone;
     }
 }
 

@@ -37,6 +37,7 @@ import org.eigenbase.rex.RexVisitor;
 import org.eigenbase.sql.SqlOperator;
 import org.eigenbase.sql.SqlSyntax;
 import org.eigenbase.sql.SqlIdentifier;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.util.Util;
 
@@ -265,8 +266,8 @@ class InternalTranslator
         if (sqlName == null) {
             return null;
         }
-        List list = rexBuilder.opTab.lookupOperatorOverloads(
-            new SqlIdentifier(sqlName.toUpperCase(), null),
+        List list = rexBuilder.getOpTab().lookupOperatorOverloads(
+            new SqlIdentifier(sqlName.toUpperCase(), SqlParserPos.ZERO),
             null,
             SqlSyntax.Binary);
         if (list.isEmpty()) {
@@ -319,7 +320,7 @@ class InternalTranslator
     private SqlOperator translateFun(String name)
     {
         if (name.equals("equals")) {
-            return rexBuilder.opTab.equalsOperator;
+            return rexBuilder.getOpTab().equalsOperator;
         }
         throw Util.needToImplement(this);
     }
@@ -401,7 +402,7 @@ class InternalTranslator
                 + "(varName!=null), the input must not be null";
                 DeferredLookup lookup = new DeferredLookup(qi, offset, false);
                 String correlName =
-                    qi.cluster.query.createCorrelUnresolved(lookup);
+                    qi.cluster.getQuery().createCorrelUnresolved(lookup);
                 return new QueryInfo.CorrelLookupResult(correlName);
             } else {
                 return qi.lookup(

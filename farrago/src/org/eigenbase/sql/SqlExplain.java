@@ -100,7 +100,8 @@ public class SqlExplain extends SqlCall
         }
         writer.print("FOR");
         writer.println();
-        getExplicandum().unparse(writer, operator.leftPrec, operator.rightPrec);
+        getExplicandum().unparse(
+            writer, getOperator().getLeftPrec(), getOperator().getRightPrec());
     }
 
 }

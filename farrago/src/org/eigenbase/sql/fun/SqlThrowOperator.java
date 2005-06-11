@@ -25,8 +25,7 @@ import org.eigenbase.sql.SqlInternalOperator;
 import org.eigenbase.sql.SqlKind;
 import org.eigenbase.sql.SqlWriter;
 import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.type.ReturnTypeInferenceImpl;
-import org.eigenbase.sql.type.OperandsTypeChecking;
+import org.eigenbase.sql.type.*;
 
 /**
  * An internal operator that throws an exception. <br>
@@ -49,9 +48,9 @@ public class SqlThrowOperator extends SqlInternalOperator
     public SqlThrowOperator()
     {
         super("$throw", SqlKind.Other, 1, true,
-            ReturnTypeInferenceImpl.useBoolean,
+            SqlTypeStrategies.rtiBoolean,
             null,
-            OperandsTypeChecking.typeNullableVarchar);
+            SqlTypeStrategies.otcCharString);
     }
 
     public void unparse(
@@ -60,7 +59,7 @@ public class SqlThrowOperator extends SqlInternalOperator
         int leftPrec,
         int rightPrec)
     {
-        writer.print(name);
+        writer.print(getName());
         writer.print("(");
         operands[0].unparse(writer, 0, 0);
         writer.print(")");

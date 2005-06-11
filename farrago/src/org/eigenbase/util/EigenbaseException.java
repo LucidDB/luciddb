@@ -32,6 +32,8 @@ import java.util.logging.*;
 /**
  * Base class for all exceptions originating from Farrago.
  *
+ * @see EigenbaseContextException
+ *
  * @author John V. Sichi
  * @version $Id$
  */
@@ -41,14 +43,6 @@ public class EigenbaseException extends RuntimeException
 
     private static Logger tracer =
         Logger.getLogger(EigenbaseException.class.getName());
-
-    private int posLine;
-
-    private int posColumn;
-
-    private int endPosLine;
-
-    private int endPosColumn;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -68,71 +62,6 @@ public class EigenbaseException extends RuntimeException
         // better context.  Need to extend MonRG for this.
         tracer.throwing("EigenbaseException", "constructor", this);
         tracer.severe(toString());
-    }
-
-    /**
-     * Sets a textual position at which this exception was detected.
-     *
-     * @param 1-based line number
-     *
-     * @param 1-based column number
-     */
-    public void setPosition(int posLine, int posColumn)
-    {
-        this.posLine = posLine;
-        this.posColumn = posColumn;
-        this.endPosLine = posLine;
-        this.endPosColumn = posColumn;
-    }
-
-    /**
-     * Sets a textual range at which this exception was detected.
-     *
-     * @param 1-based start line number
-     * @param 1-based start column number
-     * @param 1-based end line number
-     * @param 1-based end column number
-     */
-    public void setPosition(int startPosLine, int startPosColumn,
-                            int endPosLine, int endPosColumn)
-    {
-        this.posLine = startPosLine;
-        this.posColumn = startPosColumn;
-        this.endPosLine = endPosLine;
-        this.endPosColumn = endPosColumn;
-    }
-
-
-    /**
-     * @return 1-based line number, or 0 for missing position information
-     */
-    public int getPosLine()
-    {
-        return posLine;
-    }
-
-    /**
-     * @return 1-based column number, or 0 for missing position information
-     */
-    public int getPosColumn()
-    {
-        return posColumn;
-    }
-    
-    /**
-     * @return 1-based ending line number, or 0 for missing position information
-     */
-    public int getEndPosLine()
-    {
-        return endPosLine;
-    }
-
-    /**
-     * @return 1-based ending column number, or 0 for missing position information
-     */
-    public int getEndPosColumn()
-    {
-        return endPosColumn;
     }
 }
 

@@ -21,15 +21,15 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-package org.eigenbase.sql;
+package org.eigenbase.sql.fun;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.*;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
@@ -72,6 +72,15 @@ public class SqlBetweenOperator extends SqlInfixOperator
     /** Ordinal of the 'symmetric' operand. */
     public static final int SYMFLAG_OPERAND = 3;
 
+    /**
+     * Custom operand-type checking strategy.
+     */
+    private static final SqlOperandTypeChecker
+        otcCustom =
+        new ComparableOperandTypeChecker(
+            3,
+            RelDataTypeComparability.All);
+    
     //~ Instance fields -------------------------------------------------------
 
     /** todo: Use a wrapper 'class SqlTempCall(SqlOperator,SqlParserPos)
@@ -81,7 +90,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
     private final Flag flag;
 
     /** If true the call represents 'NOT BETWEEN'. */
-    public final boolean negated;
+    private final boolean negated;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -90,20 +99,26 @@ public class SqlBetweenOperator extends SqlInfixOperator
         boolean negated)
     {
         super(negated ? notBetweenNames : betweenNames, SqlKind.Between, 15,
-            null, null, null);
+            null, null, otcCustom);
         this.flag = flag;
         this.negated = negated;
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    private RelDataType [] getTypeArray(
+    public boolean isNegated()
+    {
+        return negated;
+    }
+
+    private RelDataType [] collectOperandTypes(
         SqlValidator validator,
         SqlValidatorScope scope,
         SqlCall call)
     {
         RelDataType [] argTypes =
-            SqlTypeUtil.collectTypes(validator, scope, call.operands);
+            SqlTypeUtil.deriveAndCollectTypes(
+                validator, scope, call.operands);
         RelDataType [] newArgTypes = {
             argTypes[VALUE_OPERAND],
             argTypes[LOWER_OPERAND],
@@ -112,87 +127,31 @@ public class SqlBetweenOperator extends SqlInfixOperator
         return newArgTypes;
     }
 
-    protected RelDataType getType(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        RelDataTypeFactory typeFactory,
-        CallOperands callOperands)
+    public RelDataType inferReturnType(
+        SqlOperatorBinding opBinding)
     {
-        CallOperands.RelDataTypesCallOperands newCallOperands =
-            new CallOperands.RelDataTypesCallOperands(
-                getTypeArray(validator,
-                             scope,
-                             (SqlCall) callOperands.getUnderlyingObject()));
-        return ReturnTypeInferenceImpl.useNullableBoolean.getType(
-            validator, scope, typeFactory,
-            newCallOperands);
+        SqlCallBinding callBinding =(SqlCallBinding) opBinding;
+        ExplicitOperatorBinding newOpBinding =
+            new ExplicitOperatorBinding(
+                opBinding,
+                collectOperandTypes(
+                    callBinding.getValidator(),
+                    callBinding.getScope(),
+                    callBinding.getCall()));
+        return SqlTypeStrategies.rtiNullableBoolean.inferReturnType(
+            newOpBinding);
     }
 
-    protected String getSignatureTemplate(final int operandsCount)
+    public String getSignatureTemplate(final int operandsCount)
     {
         Util.discard(operandsCount);
         return "{1} {0} {2} AND {3}";
     }
 
-    public String getAllowedSignatures(String name)
-    {
-        StringBuffer ret = new StringBuffer();
-        ret.append(
-            OperandsTypeChecking.typeNullableNumericNumericNumeric
-                .getAllowedSignatures(this));
-        ret.append(NL);
-        ret.append(
-            OperandsTypeChecking.typeNullableBinariesBinariesBinaries
-                .getAllowedSignatures(this));
-        ret.append(NL);
-        ret.append(
-            OperandsTypeChecking.typeNullableVarcharVarcharVarchar
-                .getAllowedSignatures(this));
-        return replaceAnonymous(
-            ret.toString(),
-            name);
-    }
-
-    protected boolean checkArgTypes(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        boolean throwOnFailure)
-    {
-        OperandsTypeChecking [] rules =
-            new OperandsTypeChecking [] {
-                OperandsTypeChecking.typeNullableNumeric,
-                OperandsTypeChecking.typeNullableBinariesBinaries,
-                OperandsTypeChecking.typeNullableVarchar
-            };
-        int failCount = 0;
-        for (int i = 0; i < rules.length; i++) {
-            OperandsTypeChecking rule = rules[i];
-            boolean ok;
-            ok = rule.check(call, validator, scope,
-                call.operands[VALUE_OPERAND], 0, false);
-            ok = ok && rule.check(call, validator, scope,
-                call.operands[LOWER_OPERAND], 0, false);
-            ok = ok && rule.check(call, validator, scope,
-                call.operands[UPPER_OPERAND], 0, false);
-            if (!ok) {
-                failCount++;
-            }
-        }
-
-        if (failCount >= 3) {
-            if (throwOnFailure){
-                throw call.newValidationSignatureError(validator, scope);
-            }
-            return false;
-        }
-        return true;
-    }
-
-    public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()
+    public SqlOperandCountRange getOperandCountRange()
     {
         //exp1 [ASYMMETRIC|SYMMETRIC] BETWEEN exp4 AND exp4
-        return new OperandsCountDescriptor(4);
+        return SqlOperandCountRange.Four;
     }
 
     public void unparse(
@@ -201,15 +160,15 @@ public class SqlBetweenOperator extends SqlInfixOperator
         int leftPrec,
         int rightPrec)
     {
-        operands[VALUE_OPERAND].unparse(writer, this.leftPrec, 0);
+        operands[VALUE_OPERAND].unparse(writer, getLeftPrec(), 0);
         writer.print(" ");
-        writer.print(name);
+        writer.print(getName());
         writer.print(" ");
         operands[SYMFLAG_OPERAND].unparse(writer, 0, 0);
         writer.print(" ");
         operands[LOWER_OPERAND].unparse(writer, 0, 0);
         writer.print(" AND ");
-        operands[UPPER_OPERAND].unparse(writer, 0, this.rightPrec);
+        operands[UPPER_OPERAND].unparse(writer, 0, getRightPrec());
     }
 
     public int reduceExpr(
@@ -218,7 +177,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
     {
         final SqlParserUtil.ToTreeListItem betweenNode =
             (SqlParserUtil.ToTreeListItem) list.get(opOrdinal);
-        SqlOperator op = betweenNode.op;
+        SqlOperator op = betweenNode.getOperator();
         assert op == this;
 
         // Break the expression up into expressions. For example, a simple
@@ -236,7 +195,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
             SqlParserUtil.toTreeEx(list, opOrdinal + 1, 0, SqlKind.And);
         if (((opOrdinal + 2) >= list.size())
                 || !(list.get(opOrdinal + 2) instanceof SqlParserUtil.ToTreeListItem)
-                || (((SqlParserUtil.ToTreeListItem) list.get(opOrdinal + 2)).op.kind != SqlKind.And)) {
+                || (((SqlParserUtil.ToTreeListItem) list.get(opOrdinal + 2)).getOperator().getKind() != SqlKind.And)) {
             throw EigenbaseResource.instance().newBetweenWithoutAnd(
                 new Integer(pos.getLineNum()),
                 new Integer(pos.getColumnNum()));
@@ -251,15 +210,20 @@ public class SqlBetweenOperator extends SqlInfixOperator
         //   (a BETWEEN b AND c + d) OR e
         // because OR has lower precedence than BETWEEN.
         SqlNode exp2 =
-            SqlParserUtil.toTreeEx(list, opOrdinal + 3, rightPrec, SqlKind.Other);
+            SqlParserUtil.toTreeEx(
+                list, opOrdinal + 3, getRightPrec(), SqlKind.Other);
 
         // Create the call.
         SqlNode exp0 = (SqlNode) list.get(opOrdinal - 1);
         SqlCall newExp =
             createCall(
                 new SqlNode [] {
-                    exp0, exp1, exp2, SqlLiteral.createSymbol(flag, null) },
-                betweenNode.pos);
+                    exp0,
+                    exp1,
+                    exp2,
+                    SqlLiteral.createSymbol(flag, SqlParserPos.ZERO)
+                },
+                betweenNode.getPos());
 
         // Replace all of the matched nodes with the single reduced node.
         SqlParserUtil.replaceSublist(list, opOrdinal - 1, opOrdinal + 4, newExp);

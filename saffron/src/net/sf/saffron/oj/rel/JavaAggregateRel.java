@@ -26,8 +26,7 @@ import openjava.ptree.*;
 
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.util.OJUtil;
-import org.eigenbase.rel.AggregateRel;
-import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
@@ -88,7 +87,7 @@ import org.eigenbase.util.Util;
  * </li>
  * </ul>
  */
-public class JavaAggregateRel extends AggregateRel implements JavaLoopRel
+public class JavaAggregateRel extends AggregateRelBase implements JavaLoopRel
 {
     Variable var_h;
 
@@ -107,14 +106,15 @@ public class JavaAggregateRel extends AggregateRel implements JavaLoopRel
     public Object clone()
     {
         JavaAggregateRel clone =
-            new JavaAggregateRel(cluster, child, groupCount, aggCalls);
-        clone.traits = cloneTraits();
+            new JavaAggregateRel(
+                getCluster(), getChild(), groupCount, aggCalls);
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        double dRows = child.getRows();
+        double dRows = getChild().getRows();
         double 
         // reflects memory cost also
         dCpu = Util.nLogN(dRows) + (aggCalls.length * 4);
@@ -156,7 +156,8 @@ public class JavaAggregateRel extends AggregateRel implements JavaLoopRel
                 new AllocationExpression(
                     new TypeName("java.util.HashMap"),
                     null)));
-        Expression o = implementor.visitJavaChild(this, 0, (JavaRel) child);
+        Expression o = implementor.visitJavaChild(
+            this, 0, (JavaRel) getChild());
         assert (o == null);
         stmtList.add(
             new VariableDeclaration(

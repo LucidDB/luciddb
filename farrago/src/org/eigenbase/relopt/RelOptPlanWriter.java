@@ -38,7 +38,7 @@ public class RelOptPlanWriter extends java.io.PrintWriter
 {
     //~ Instance fields -------------------------------------------------------
 
-    public boolean withIdPrefix = true;
+    private boolean withIdPrefix = true;
 
     /** Recursion detection. */
     HashSet active = new HashSet();
@@ -63,6 +63,11 @@ public class RelOptPlanWriter extends java.io.PrintWriter
 
     //~ Methods ---------------------------------------------------------------
 
+    public void setIdPrefix(boolean b)
+    {
+        withIdPrefix = b;
+    }
+    
     /**
      * @pre rel != null
      * @pre terms.length == rel.getChildExps().length + values.length

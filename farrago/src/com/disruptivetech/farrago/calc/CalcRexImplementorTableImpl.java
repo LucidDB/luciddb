@@ -326,7 +326,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 translator.rexBuilder.makeCast(int8, call.operands[i]);
 
             RexNode newCall;
-            if (opTab.castFunc.equals(call.op)) {
+            if (opTab.castFunc.equals(call.getOperator())) {
                 newCall =
                     translator.rexBuilder.makeCast(
                         call.getType(),
@@ -336,7 +336,8 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 System.arraycopy(call.operands, 0, args, 0,
                     call.operands.length);
                 args[i] = castCall1;
-                newCall = translator.rexBuilder.makeCall(call.op, args);
+                newCall = translator.rexBuilder.makeCall(
+                    call.getOperator(), args);
             }
 
             if (castBack) {
@@ -375,7 +376,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 translator.rexBuilder.makeCast(db, call.operands[i]);
 
             RexNode newCall;
-            if (opTab.castFunc.equals(call.op)) {
+            if (opTab.castFunc.equals(call.getOperator())) {
                 newCall =
                     translator.rexBuilder.makeCast(
                         call.getType(),
@@ -385,7 +386,8 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 System.arraycopy(call.operands, 0, args, 0,
                     call.operands.length);
                 args[i] = castCall1;
-                newCall = translator.rexBuilder.makeCall(call.op, args);
+                newCall = translator.rexBuilder.makeCall(
+                    call.getOperator(), args);
             }
 
             if (castBack) {
@@ -1092,7 +1094,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         private int getRestrictiveness(
             CalcProgramBuilder.RegisterDescriptor rd)
         {
-            switch (rd.getType().ordinal) {
+            switch (rd.getType().getOrdinal()) {
             case CalcProgramBuilder.OpType.Uint1_ordinal:
                 return 10;
             case CalcProgramBuilder.OpType.Int1_ordinal:
@@ -1341,8 +1343,8 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             regList.add(resultOfCall);
             regList.add(translator.implementNode(call.operands[2])); //str to trim from
             regList.add(translator.implementNode(call.operands[1])); //trim char
-            regList.add(translator.builder.newInt4Literal(flag.left));
-            regList.add(translator.builder.newInt4Literal(flag.right));
+            regList.add(translator.builder.newInt4Literal(flag.getLeft()));
+            regList.add(translator.builder.newInt4Literal(flag.getRight()));
 
             return regList;
         }
@@ -1370,7 +1372,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             regList.add(resultRegister);
 
             if ((!(call.operands[0] instanceof RexCall)
-                || !((RexCall) call.operands[0]).op.equals(
+                || !((RexCall) call.operands[0]).getOperator().equals(
                     opTab.concatOperator))) {
                 regList.add(translator.implementNode(call.operands[0]));
             } else {

@@ -22,12 +22,14 @@
 package com.disruptivetech.farrago.sql.advise;
 
 import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.SqlValidatorImpl;
+import org.eigenbase.sql.SqlIdentifier;
+import org.eigenbase.sql.validate.SqlMoniker;
+import org.eigenbase.sql.validate.SqlValidatorWithHints;
 import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.util.EigenbaseException;
+import org.eigenbase.util.EigenbaseContextException;
+
 import java.util.List;
 import java.util.ArrayList;
 
@@ -46,7 +48,7 @@ public class SqlAdvisor
     // Flags indicating precision/scale combinations
 
     //~ Instance fields -------------------------------------------------------
-    private final SqlValidator validator;
+    private final SqlValidatorWithHints validator;
     private final String hintToken = "_suggest_";
 
     //~ Constructors ----------------------------------------------------------
@@ -54,7 +56,7 @@ public class SqlAdvisor
      * Creates a SqlAdvisor with a validator instance
      */
     public SqlAdvisor(
-        SqlValidator validator)
+        SqlValidatorWithHints validator)
     {
         this.validator = validator;
     }
@@ -71,7 +73,7 @@ public class SqlAdvisor
      * @param cursor to indicate the 0-based cursor position in the query at
      * which completion hints need to be retrieved.
      */
-    public String[] getCompletionHints(String sql, int cursor)
+    public SqlMoniker[] getCompletionHints(String sql, int cursor)
         throws SqlParseException
     {
         String simpleSql = simplifySql(sql, cursor);
@@ -80,8 +82,8 @@ public class SqlAdvisor
         if (idxAdj >=0 ) {
             idx = idxAdj;
         }
-        SqlParserPos pp = new SqlParserPos(1, idx+1);
-        return getCompletionHints(simpleSql, pp);
+        SqlParserPos pos = new SqlParserPos(1, idx+1);
+        return getCompletionHints(simpleSql, pos);
     }
 
     /**
@@ -90,20 +92,20 @@ public class SqlAdvisor
      *
      * @param sql A syntatically correct sql statement for which to retrieve
      * completion hints
-     * @param pp to indicate the line and column position in the query at which
+     * @param pos to indicate the line and column position in the query at which
      * completion hints need to be retrieved.  For example,
      * "select a.ename, b.deptno from sales.emp a join sales.dept b
      * "on a.deptno=b.deptno where empno=1";
-     * setting pp to 'Line 1, Column 17' returns all the possible column names
+     * setting pos to 'Line 1, Column 17' returns all the possible column names
      * that can be selected from sales.dept table
-     * setting pp to 'Line 1, Column 31' returns all the possible table names
+     * setting pos to 'Line 1, Column 31' returns all the possible table names
      * in 'sales' schema
      *
-     * @return an array of string hints (sql identifiers) that can fill in at
+     * @return an array of hints ({@link SqlMoniker}) that can fill in at
      * the indicated position
      *
      */
-    public String[] getCompletionHints(String sql, SqlParserPos pp)
+    public SqlMoniker[] getCompletionHints(String sql, SqlParserPos pos)
         throws SqlParseException
     {
         SqlParser parser = new SqlParser(sql);
@@ -116,8 +118,7 @@ public class SqlAdvisor
             // we are doing a best effort here to try to come up with the
             // requested completion hints
         }
-        // XXX new interface?
-        return ((SqlValidatorImpl) validator).lookupHints(sqlNode, pp);
+        return validator.lookupHints(sqlNode, pos);
     }
 
     /**
@@ -126,16 +127,16 @@ public class SqlAdvisor
      *
      * @param sql A syntatically correct sql statement for which to retrieve
      * a fully qualified SQL identifier name
-     * @param cursor to indicate the 0-based cursor position in the query 
+     * @param cursor to indicate the 0-based cursor position in the query
      * that represents a SQL identifier for which its fully qualified name is
      * to be returned.
      *
-     * @return a string that is the fully qualified name of the specified SQL
-     * identifier, returns an empty string if none is found or the SQL statement
-     * is invalid.
+     * @return a {@link SqlMoniker} that contains the fully qualified name of the
+     * specified SQL identifier, returns null if none is found or the SQL
+     * statement is invalid.
      *
      */
-    public String getQualifiedName(String sql, int cursor)
+    public SqlMoniker getQualifiedName(String sql, int cursor)
     {
         SqlParser parser = new SqlParser(sql);
         SqlNode sqlNode;
@@ -143,15 +144,15 @@ public class SqlAdvisor
             sqlNode = parser.parseQuery();
             validator.validate(sqlNode);
         } catch (Exception e) {
-            return "";
+            return null;
         }
-        SqlParserPos pp = new SqlParserPos(1, cursor+1);
-        return ((SqlValidatorImpl) validator).lookupQualifiedName(sqlNode, pp);
+        SqlParserPos pos = new SqlParserPos(1, cursor+1);
+        return validator.lookupQualifiedName(sqlNode, pos);
     }
 
     /**
-     * Attempts to complete and validate a given partially completed 
-     * sql statement.  return whether it's valid.  
+     * Attempts to complete and validate a given partially completed
+     * sql statement.  return whether it's valid.
      *
      * @param sql A partial or syntatically incorrect sql statement to validate
      */
@@ -191,7 +192,7 @@ public class SqlAdvisor
         try {
             sqlNode = parser.parseQuery();
         } catch (SqlParseException e) {
-            // parser error does not contain a range info yet.  we set 
+            // parser error does not contain a range info yet.  we set
             // the error to entire line for now
             ValidateErrorInfo errInfo =
                 new ValidateErrorInfo(
@@ -208,10 +209,10 @@ public class SqlAdvisor
         }
         try {
             validator.validate(sqlNode);
-        } catch (EigenbaseException e) {
-            ValidateErrorInfo errInfo = 
+        } catch (EigenbaseContextException e) {
+            ValidateErrorInfo errInfo =
                 new ValidateErrorInfo(e);
-            
+
             // validator only returns 1 exception now
             ArrayList errorList = new ArrayList();
             errorList.add(errInfo);
@@ -229,7 +230,7 @@ public class SqlAdvisor
             ArrayList errorList = new ArrayList();
             errorList.add(errInfo);
             return errorList;
-        } 
+        }
         return null;
     }
 
@@ -275,21 +276,6 @@ public class SqlAdvisor
     }
 
     /**
-     * Parser does not like the '$suggest$' token used in SqlSimpleParser.
-     * Convert it to a 'dummy' token for Parser and Validator. The validator
-     * would not really try to interpret this token in context.
-     *
-     * @param sql The sql containing '$suggest$' token
-     *
-     * @return a new sql with $suggest$ token replaced by dummy
-     *
-     */
-    private String prepareSqlForParser(String sql)
-    {
-        return sql.replaceAll("\\$suggest\\$", "dummy");
-    }
-
-    /** 
      *  An inner class that represents error message text and position info
      *  of a validator or parser exception
      */
@@ -318,22 +304,20 @@ public class SqlAdvisor
             this.endColumnNum = endColumnNum;
             this.errorMsg = errorMsg;
         }
-        
+
         /**
         *  Creates a new ValidateErrorInfo with an EigenbaseException
         */
         public ValidateErrorInfo(
-            EigenbaseException e)
+            EigenbaseContextException e)
         {
             this.startLineNum = e.getPosLine();
             this.startColumnNum = e.getPosColumn();
             this.endLineNum = e.getEndPosLine();
-            // and assumes the error spans 5 chars before range info is
-            // populated for Validator and Parser exceptions
-            this.endColumnNum = e.getEndPosColumn() + 4;
+            this.endColumnNum = e.getEndPosColumn();
             this.errorMsg = e.getCause().getMessage();
         }
-        
+
         /**
         *  Creates a new ValidateErrorInfo with a SqlParserPos
         *  and an error string
@@ -353,39 +337,39 @@ public class SqlAdvisor
          *  @return 1-based starting line number
          */
         public int getStartLineNum()
-        {   
+        {
             return startLineNum;
         }
-        
+
         /**
          *  @return 1-based starting column number
          */
         public int getStartColumnNum()
-        {   
+        {
             return startColumnNum;
         }
-        
+
         /**
          *  @return 1-based end line number
          */
         public int getEndLineNum()
-        {   
+        {
             return endLineNum;
         }
-        
+
         /**
          *  @return 1-based end column number
          */
         public int getEndColumnNum()
-        {   
+        {
             return endColumnNum;
         }
-        
+
         /**
          *  @return error message
          */
         public String getMessage()
-        {   
+        {
             return errorMsg;
         }
     }

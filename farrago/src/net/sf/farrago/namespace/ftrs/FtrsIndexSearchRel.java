@@ -99,7 +99,7 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
     public double getRows()
     {
         // TODO:  this is only true when isUniqueKey
-        return child.getRows();
+        return getChild().getRows();
     }
 
     // implement Cloneable
@@ -107,12 +107,12 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
     {
         FtrsIndexSearchRel clone = new FtrsIndexSearchRel(
             scanRel,
-            RelOptUtil.clone(child),
+            RelOptUtil.clone(getChild()),
             isUniqueKey,
             isOuter,
             inputKeyProj,
             inputJoinProj);
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 
@@ -131,9 +131,9 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
         if (inputJoinProj != null) {
             // We're implementing a join, so make up an appropriate join type.
             final RelDataTypeField [] childFields =
-                child.getRowType().getFields();
+                getChild().getRowType().getFields();
             RelDataType leftType =
-                getCluster().typeFactory.createStructType(
+                getCluster().getTypeFactory().createStructType(
                     new RelDataTypeFactory.FieldInfo() {
                         public int getFieldCount()
                         {
@@ -162,7 +162,7 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
                         true);
             }
 
-            return getCluster().typeFactory.createJoinType(
+            return getCluster().getTypeFactory().createJoinType(
                 new RelDataType [] { leftType, rightType });
         } else {
             assert (!isOuter);
@@ -227,7 +227,7 @@ class FtrsIndexSearchRel extends FennelPullSingleRel
                 FennelRelUtil.createTupleProjection(repos, inputJoinProj));
         }
         searchStream.getInput().add(
-            implementor.visitFennelChild((FennelRel) child));
+            implementor.visitFennelChild((FennelRel) getChild()));
 
         return searchStream;
     }

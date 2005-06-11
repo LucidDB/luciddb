@@ -28,6 +28,7 @@ import org.eigenbase.sql.util.SqlVisitor;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.validate.SqlValidatorNamespace;
+import org.eigenbase.sql.validate.SqlMoniker;
 import org.eigenbase.util.Util;
 import java.util.ArrayList;
 
@@ -151,9 +152,9 @@ public class SqlIdentifier extends SqlNode
      *
      * @param validator Validator
      * @param scope Validation scope
-     * @return a string array of valid options
+     * @return an {@link SqlMoniker} array of valid options
      */
-    public String[] findValidOptions(SqlValidator validator,
+    public SqlMoniker[] findValidOptions(SqlValidator validator,
         SqlValidatorScope scope)
     {
         String tableName;
@@ -169,7 +170,7 @@ public class SqlIdentifier extends SqlNode
         // if the identifer has more than 1 part, use the tableName to limit
         // the choices of valid column names
         scope.findAllColumnNames(tableName, result);
-        return (String [])result.toArray(Util.emptyStringArray);
+        return (SqlMoniker [])result.toArray(Util.emptySqlMonikerArray);
     }
 
     public void validateExpr(SqlValidator validator, SqlValidatorScope scope)

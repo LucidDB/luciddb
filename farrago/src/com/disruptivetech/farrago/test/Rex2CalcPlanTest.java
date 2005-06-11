@@ -152,11 +152,11 @@ public class Rex2CalcPlanTest extends FarragoTestCase
 
         ProjectRel project = (ProjectRel) rootRel;
         FilterRel filter = (FilterRel) project.getInput(0);
-        RexNode condition = filter.condition;
+        RexNode condition = filter.getCondition();
         if (nullSemantics) {
             condition =
                 rexBuilder.makeCall(
-                    SqlStdOperatorTable.instance().isTrueOperator,
+                    SqlStdOperatorTable.isTrueOperator,
                     condition);
             condition =
                 new RexTransformer(condition, rexBuilder)

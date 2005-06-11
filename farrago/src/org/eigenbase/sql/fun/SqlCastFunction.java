@@ -51,30 +51,30 @@ public class SqlCastFunction extends SqlFunction
 
     public SqlCastFunction()
     {
-        super("CAST", SqlKind.Cast, null, UnknownParamInference.useFirstKnown,
+        super("CAST", SqlKind.Cast, null,
+            SqlTypeStrategies.otiFirstKnown,
             null, SqlFunctionCategory.System);
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    protected RelDataType getType(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        RelDataTypeFactory typeFactory,
-        CallOperands callOperands)
+    public RelDataType inferReturnType(
+        SqlOperatorBinding opBinding)
     {
-        assert(callOperands.size() == 2);
-        RelDataType ret = callOperands.getType(1);
-        RelDataType firstType = callOperands.getType(0);
-        ret = typeFactory.createTypeWithNullability(ret, firstType.isNullable());
-        if (null != validator) {
-            SqlCall call = (SqlCall) callOperands.getUnderlyingObject();
-            validator.setValidatedNodeType(call.operands[0], ret);
+        assert(opBinding.getOperandCount() == 2);
+        RelDataType ret = opBinding.getOperandType(1);
+        RelDataType firstType = opBinding.getOperandType(0);
+        ret = opBinding.getTypeFactory().createTypeWithNullability(
+            ret, firstType.isNullable());
+        if (opBinding instanceof SqlCallBinding) {
+            SqlCallBinding callBinding = (SqlCallBinding) opBinding;
+            callBinding.getValidator().setValidatedNodeType(
+                callBinding.getCall().operands[0], ret);
         }
         return ret;
     }
 
-    protected String getSignatureTemplate(final int operandsCount)
+    public String getSignatureTemplate(final int operandsCount)
     {
         switch (operandsCount) {
         case 2:
@@ -84,17 +84,9 @@ public class SqlCastFunction extends SqlFunction
         return null;
     }
 
-    public OperandsCountDescriptor getOperandsCountDescriptor()
+    public SqlOperandCountRange getOperandCountRange()
     {
-        return OperandsCountDescriptor.Two;
-    }
-
-    protected void checkNumberOfArg(SqlCall call)
-    {
-        if (2 != call.operands.length) {
-            throw Util.newInternal("todo: Wrong number of arguments to "
-                + call);
-        }
+        return SqlOperandCountRange.Two;
     }
 
     /**
@@ -102,18 +94,20 @@ public class SqlCastFunction extends SqlFunction
      * Operators (such as "ROW" and "AS") which do not check their arguments
      * can override this method.
      */
-    protected boolean checkArgTypes(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
-        if (SqlUtil.isNullLiteral(call.operands[0], false)) {
+        if (SqlUtil.isNullLiteral(callBinding.getCall().operands[0], false)) {
             return true;
         }
         RelDataType validatedNodeType =
-            validator.getValidatedNodeType(call.operands[0]);
-        RelDataType returnType = validator.deriveType(scope, call.operands[1]);
+            callBinding.getValidator().getValidatedNodeType(
+                callBinding.getCall().operands[0]);
+        RelDataType returnType =
+            callBinding.getValidator().deriveType(
+                callBinding.getScope(),
+                callBinding.getCall().operands[1]);
         if (!SqlTypeUtil.canCastFrom(returnType, validatedNodeType, true)) {
             if (throwOnFailure) {
                 throw EigenbaseResource.instance().newCannotCastValue(
@@ -136,7 +130,7 @@ public class SqlCastFunction extends SqlFunction
         int leftPrec,
         int rightPrec)
     {
-        writer.print(name);
+        writer.print(getName());
         writer.print('(');
         for (int i = 0; i < operands.length; i++) {
             SqlNode operand = operands[i];

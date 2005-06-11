@@ -24,8 +24,7 @@ import openjava.ptree.ParseTree;
 import openjava.ptree.StatementList;
 
 import org.eigenbase.oj.rel.*;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.UnionRel;
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
@@ -38,7 +37,7 @@ import org.eigenbase.util.Util;
  * <code>JavaUnionAllRel</code> implements a {@link UnionRel} inline, without
  * eliminating duplicates.
  */
-public class JavaUnionAllRel extends UnionRel implements JavaLoopRel
+public class JavaUnionAllRel extends UnionRelBase implements JavaLoopRel
 {
     public JavaUnionAllRel(
         RelOptCluster cluster,
@@ -50,8 +49,8 @@ public class JavaUnionAllRel extends UnionRel implements JavaLoopRel
     // implement RelNode
     public Object clone()
     {
-        JavaUnionAllRel clone = new JavaUnionAllRel(cluster, inputs);
-        clone.traits = cloneTraits();
+        JavaUnionAllRel clone = new JavaUnionAllRel(getCluster(), inputs);
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 

@@ -54,7 +54,7 @@ public abstract class AbstractRelNode implements RelNode
     //~ Instance fields -------------------------------------------------------
 
     /** cached type of this relational expression */
-    public RelDataType rowType;
+    protected RelDataType rowType;
 
     /**
      * A short description of this relational expression's type, inputs, and
@@ -64,7 +64,7 @@ public abstract class AbstractRelNode implements RelNode
      * {@link #toString}.
      */
     protected String digest;
-    protected RelOptCluster cluster;
+    private RelOptCluster cluster;
 
     /** unique id of this object -- for debugging */
     protected int id;
@@ -103,14 +103,14 @@ public abstract class AbstractRelNode implements RelNode
 
     /**
      * Clones this RelNode.  Traits of the RelNode must be explicitly cloned
-     * as the RelNode may have traits of which it has now knowledge.
+     * as the RelNode may have traits of which it has no knowledge.
      * Example implementation:
      *
      * <pre>
      *     public Object clone()
      *     {
      *         MyRelNode clone = new MyRelNode(...);
-     *         clone.traits = this.cloneTraits();
+     *         clone.inheritTraitsFrom(this);
      *         return clone;
      *     }
      * </pre>
@@ -152,9 +152,14 @@ public abstract class AbstractRelNode implements RelNode
      *
      * @return a clone of this RelNode's traits.
      */
-    protected RelTraitSet cloneTraits()
+    public RelTraitSet cloneTraits()
     {
-        return (RelTraitSet)traits.clone();
+        return RelOptUtil.clone(traits);
+    }
+
+    public void inheritTraitsFrom(AbstractRelNode rel)
+    {
+        traits = rel.cloneTraits();
     }
 
     public void setCorrelVariable(String correlVariable)
@@ -194,7 +199,7 @@ public abstract class AbstractRelNode implements RelNode
 
     public RelOptQuery getQuery()
     {
-        return cluster.query;
+        return cluster.getQuery();
     }
 
     /**

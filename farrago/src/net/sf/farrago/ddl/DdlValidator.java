@@ -382,17 +382,20 @@ public class DdlValidator extends FarragoCompoundAllocation
                     qualifiedName.names[0],
                     qualifiedName.names[1]
                 },
-                null);
+                SqlParserPos.ZERO);
         } else if (qualifiedName.names.length == 2) {
             schemaElement.setName(qualifiedName.names[1]);
-            schemaName = new SqlIdentifier(qualifiedName.names[0], null);
+            schemaName = new SqlIdentifier(
+                qualifiedName.names[0],
+                SqlParserPos.ZERO);
         } else {
             schemaElement.setName(qualifiedName.names[0]);
             if (stmtValidator.getSessionVariables().schemaName == null) {
                 throw FarragoResource.instance().newValidatorNoDefaultSchema();
             }
             schemaName = new SqlIdentifier(
-                stmtValidator.getSessionVariables().schemaName, null);
+                stmtValidator.getSessionVariables().schemaName,
+                SqlParserPos.ZERO);
         }
         CwmSchema schema = stmtValidator.findSchema(schemaName);
         schema.getOwnedElement().add(schemaElement);
@@ -772,7 +775,7 @@ public class DdlValidator extends FarragoCompoundAllocation
             dependency = getRepos().newCwmDependency();
             dependency.setName(client.getName() + "$DEP");
             dependency.setKind("GenericDependency");
-            
+
             // NOTE: The client owns the dependency, so their lifetimes are
             // coeval.  We don't use the DependencyClient association at all
             // because it causes weird problems.  That's why we have to
@@ -816,7 +819,7 @@ public class DdlValidator extends FarragoCompoundAllocation
                     element.getSearchedSchemaCatalogName(),
                     element.getSearchedSchemaName()
                 },
-                null);
+                SqlParserPos.ZERO);
             list.add(id);
         }
         sessionVariables.schemaSearchPath =
@@ -831,11 +834,13 @@ public class DdlValidator extends FarragoCompoundAllocation
         SqlParserPos parserContext = getParserPos(refObj);
         assert(parserContext != null);
         String msg = parserContext.toString();
-        EigenbaseException contextExcn =
+        EigenbaseContextException contextExcn =
             FarragoResource.instance().newValidatorPositionContext(msg, ex);
         contextExcn.setPosition(
             parserContext.getLineNum(),
-            parserContext.getColumnNum());
+            parserContext.getColumnNum(),
+            parserContext.getEndLineNum(),
+            parserContext.getEndColumnNum());
         return contextExcn;
     }
 

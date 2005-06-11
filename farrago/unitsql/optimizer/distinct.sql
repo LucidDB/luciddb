@@ -16,6 +16,9 @@ select distinct gender from emps order by 1;
 -- compound key
 select distinct empno,gender from emps order by 1;
 
+-- redundant distinct
+select distinct * from (select distinct gender from emps) order by 1;
+
 
 -- verify plans
 !set outputformat csv
@@ -31,3 +34,6 @@ select distinct empno,gender from emps;
 
 explain plan for
 select distinct empno,gender from emps order by 1;
+
+explain plan for
+select distinct * from (select distinct gender from emps) order by 1;

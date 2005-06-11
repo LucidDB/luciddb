@@ -38,10 +38,8 @@ import org.eigenbase.sql.type.SqlTypeUtil;
 
 
 /**
- * <code>ProjectRelBase</code> is an abstract base class for RelNodes which
- * perform projection.  RelNodes which combine projection with other
- * operations should subclass ProjectRelBase rather than ProjectRel (which
- * represents pure projection).
+ * <code>ProjectRelBase</code> is an abstract base class for implementations
+ * of {@link ProjectRel}.
  */
 public abstract class ProjectRelBase extends SingleRel
 {
@@ -113,8 +111,8 @@ public abstract class ProjectRelBase extends SingleRel
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        double dRows = child.getRows();
-        double dCpu = child.getRows() * exps.length;
+        double dRows = getChild().getRows();
+        double dCpu = getChild().getRows() * exps.length;
         double dIo = 0;
         return planner.makeCost(dRows, dCpu, dIo);
     }
@@ -148,7 +146,8 @@ public abstract class ProjectRelBase extends SingleRel
         String fieldName)
     {
         if (!isBoxed()) {
-            return implementor.implementFieldAccess((JavaRel) child, fieldName);
+            return implementor.implementFieldAccess(
+                (JavaRel) getChild(), fieldName);
         }
         RelDataType type = getRowType();
         int field = type.getFieldOrdinal(fieldName);
@@ -160,11 +159,11 @@ public abstract class ProjectRelBase extends SingleRel
         if (!isBoxed()) {
             return exps[0].getType();
         }
-        final RelDataType [] types = SqlTypeUtil.collectTypes(exps);
+        final RelDataType [] types = RexUtil.collectTypes(exps);
         if (((flags & Flags.AnonFields) == Flags.AnonFields) && false) {
-            return cluster.typeFactory.createJoinType(types);
+            return getCluster().getTypeFactory().createJoinType(types);
         } else {
-            return cluster.typeFactory.createStructType(
+            return getCluster().getTypeFactory().createStructType(
                 new RelDataTypeFactory.FieldInfo() {
                     public int getFieldCount()
                     {

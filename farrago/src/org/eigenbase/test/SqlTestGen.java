@@ -131,7 +131,10 @@ public class SqlTestGen
                     String sql,
                     String expectedMsgPattern,
                     int expectedLine,
-                    int expectedColumn) {
+                    int expectedColumn,
+                    int expectedEndLine,
+                    int expectedEndColumn)
+                {
                     if (expectedMsgPattern == null) {
                         // This SQL statement is supposed to succeed. Generate
                         // it to the file, so we can see what output it

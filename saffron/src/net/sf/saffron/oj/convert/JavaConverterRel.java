@@ -81,8 +81,8 @@ public class JavaConverterRel extends ConverterRel implements JavaRel,
     public Object clone()
     {
         JavaConverterRel clone =
-            new JavaConverterRel(cluster, child, convertlet);
-        clone.traits = cloneTraits();
+            new JavaConverterRel(getCluster(), getChild(), convertlet);
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 

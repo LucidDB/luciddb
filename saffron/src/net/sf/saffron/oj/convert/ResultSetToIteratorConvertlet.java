@@ -52,12 +52,13 @@ public class ResultSetToIteratorConvertlet extends JavaConvertlet
         ConverterRel converter)
     {
         Object o =
-            implementor.visitJavaChild(converter, 0, (JavaRel) converter.child);
+            implementor.visitJavaChild(
+                converter, 0, (JavaRel) converter.getChild());
         StatementList methodBody = new StatementList();
         Variable varResultSet = new Variable("resultSet");
         OJClass rowClass = OJUtil.typeToOJClass(
-            converter.rowType, implementor.getTypeFactory());
-        if (converter.rowType.isStruct()) {
+            converter.getRowType(), implementor.getTypeFactory());
+        if (converter.getRowType().isStruct()) {
             Variable varRow = implementor.newVariable();
             methodBody.add(
                 new VariableDeclaration(

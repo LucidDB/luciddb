@@ -45,7 +45,7 @@ public class RelEnvironment extends Environment
 
     public RelEnvironment(RelNode rel)
     {
-        super(rel.getCluster().env);
+        super(rel.getCluster().getEnv());
         this.rel = rel;
     }
 

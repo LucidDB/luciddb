@@ -50,7 +50,7 @@ class AggFinder extends SqlBasicVisitor
 
     public void visit(SqlCall call)
     {
-        if (call.operator.isAggregator()) {
+        if (call.getOperator().isAggregator()) {
             throw new Util.FoundOne(call);
         }
         if (call.isA(SqlKind.Query)) {

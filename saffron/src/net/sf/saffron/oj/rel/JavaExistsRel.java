@@ -23,7 +23,7 @@ import openjava.ptree.ParseTree;
 import openjava.ptree.StatementList;
 
 import org.eigenbase.oj.rel.*;
-import org.eigenbase.rel.DistinctRel;
+import org.eigenbase.rel.SingleRel;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
@@ -34,10 +34,10 @@ import org.eigenbase.util.Util;
 
 
 /**
- * <code>JavaExistsRel</code> implements {@link DistinctRel} inline for the
+ * <code>JavaExistsRel</code> implements DISTINCT inline for the
  * special case that the input relation has zero columns.
  */
-public class JavaExistsRel extends DistinctRel implements JavaLoopRel
+public class JavaExistsRel extends SingleRel implements JavaLoopRel
 {
     public JavaExistsRel(
         RelOptCluster cluster,
@@ -48,10 +48,17 @@ public class JavaExistsRel extends DistinctRel implements JavaLoopRel
     }
 
     // implement RelNode
+    public boolean isDistinct()
+    {
+        return true;
+    }
+
+    // implement RelNode
     public Object clone()
     {
-        JavaExistsRel clone = new JavaExistsRel(cluster, child);
-        clone.traits = cloneTraits();
+        JavaExistsRel clone = new JavaExistsRel(getCluster(), getChild());
+        clone.inheritTraitsFrom(this);
+
         return clone;
     }
 
@@ -72,7 +79,7 @@ public class JavaExistsRel extends DistinctRel implements JavaLoopRel
     {
         // Generate
         //     <<parent>>
-        return implementor.visitJavaChild(this, 0, (JavaRel) child);
+        return implementor.visitJavaChild(this, 0, (JavaRel) getChild());
     }
 
     public void implementJavaParent(

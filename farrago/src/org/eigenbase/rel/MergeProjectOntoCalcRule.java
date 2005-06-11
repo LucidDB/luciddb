@@ -46,7 +46,7 @@ public class MergeProjectOntoCalcRule extends RelOptRule
 {
     //~ Static fields/initializers --------------------------------------------
 
-    public static MergeProjectOntoCalcRule instance =
+    public static final MergeProjectOntoCalcRule instance =
         new MergeProjectOntoCalcRule();
 
     //~ Constructors ----------------------------------------------------------
@@ -84,16 +84,16 @@ public class MergeProjectOntoCalcRule extends RelOptRule
             new RexShuttle() {
                 public RexNode visit(RexInputRef input)
                 {
-                    return calc.projectExprs[input.index];
+                    return calc.projectExprs[input.getIndex()];
                 }
             };
         for (int i = 0; i < projectExprs.length; i++) {
             projectExprs[i] = shuttle.visit(project.exps[i]);
         }
         final CalcRel newCalc =
-            new CalcRel(calc.cluster, RelOptUtil.clone(calc.traits),
-                calc.child, project.getRowType(), projectExprs,
-                calc.conditionExpr);
+            new CalcRel(calc.getCluster(), RelOptUtil.clone(calc.traits),
+                calc.getChild(), project.getRowType(), projectExprs,
+                calc.getCondition());
         call.transformTo(newCalc);
     }
 }

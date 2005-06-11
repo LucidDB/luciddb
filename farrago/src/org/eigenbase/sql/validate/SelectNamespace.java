@@ -56,8 +56,8 @@ public class SelectNamespace extends AbstractNamespace
         return rowType;
     }
 
-    public String[] lookupHints(SqlParserPos pp) {
-        return validator.lookupSelectHints(select, pp);
+    public SqlMoniker[] lookupHints(SqlParserPos pos) {
+        return validator.lookupSelectHints(select, pos);
     }
 }
 

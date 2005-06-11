@@ -20,14 +20,12 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-package org.eigenbase.sql.fun;
+package org.eigenbase.sql;
 
 import org.eigenbase.resource.EigenbaseResource;
-import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.type.OperandsTypeChecking;
-import org.eigenbase.sql.type.ReturnTypeInferenceImpl;
+import org.eigenbase.sql.type.*;
 
 /**
  * An operator describing a window function specification.
@@ -49,8 +47,8 @@ public class SqlOverOperator extends SqlBinaryOperator
     public SqlOverOperator()
     {
         super("OVER", SqlKind.Over, 10, true,
-            ReturnTypeInferenceImpl.useFirstArgType, null,
-            OperandsTypeChecking.typeAnyAny);
+            SqlTypeStrategies.rtiFirstArgType, null,
+            SqlTypeStrategies.otcAnyX2);
     }
 
     public void validateCall(
@@ -59,11 +57,11 @@ public class SqlOverOperator extends SqlBinaryOperator
         SqlValidatorScope scope,
         SqlValidatorScope operandScope)
     {
-        assert call.operator == this;
+        assert call.getOperator() == this;
         final SqlNode[] operands = call.getOperands();
         assert operands.length == 2;
         SqlCall aggCall = (SqlCall) operands[0];
-        if (!aggCall.operator.isAggregator()) {
+        if (!aggCall.getOperator().isAggregator()) {
             throw validator.newValidationError(aggCall,
                 EigenbaseResource.instance().newOverNonAggregate());
         }

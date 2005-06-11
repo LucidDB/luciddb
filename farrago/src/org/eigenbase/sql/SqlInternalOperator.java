@@ -23,10 +23,7 @@
 
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.type.UnknownParamInference;
-import org.eigenbase.sql.type.ReturnTypeInference;
-import org.eigenbase.sql.type.OperandsTypeChecking;
-
+import org.eigenbase.sql.type.*;
 
 /**
  * Generic operator for nodes with internal syntax.
@@ -55,12 +52,12 @@ public abstract class SqlInternalOperator extends SqlSpecialOperator
         SqlKind kind,
         int pred,
         boolean isLeftAssoc,
-        ReturnTypeInference typeInference,
-        UnknownParamInference paramTypeInference,
-        OperandsTypeChecking argTypeInference)
+        SqlReturnTypeInference returnTypeInference,
+        SqlOperandTypeInference operandTypeInference,
+        SqlOperandTypeChecker operandTypeChecker)
     {
-        super(name, kind, pred, isLeftAssoc, typeInference,
-            paramTypeInference, argTypeInference);
+        super(name, kind, pred, isLeftAssoc, returnTypeInference,
+            operandTypeInference, operandTypeChecker);
     }
 
     //~ Methods ---------------------------------------------------------------

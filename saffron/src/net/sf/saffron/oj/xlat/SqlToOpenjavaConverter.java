@@ -157,11 +157,11 @@ public class SqlToOpenjavaConverter
             if (node instanceof SqlCall) {
                 SqlCall call = (SqlCall) node;
                 operands = call.getOperands();
-                if (call.operator instanceof SqlBinaryOperator) {
+                if (call.getOperator() instanceof SqlBinaryOperator) {
                     final SqlBinaryOperator binop =
-                        (SqlBinaryOperator) call.operator;
+                        (SqlBinaryOperator) call.getOperator();
                     final Integer integer =
-                        (Integer) mapBinarySqlToOj.get(binop.name);
+                        (Integer) mapBinarySqlToOj.get(binop.getName());
                     if (integer == null) {
                         throw new UnsupportedOperationException(
                             "unknown binary operator " + binop);
@@ -171,11 +171,11 @@ public class SqlToOpenjavaConverter
                         convertExpression(scope, operands[0]),
                         op,
                         convertExpression(scope, operands[1]));
-                } else if (call.operator instanceof SqlFunction) {
+                } else if (call.getOperator() instanceof SqlFunction) {
                     throw new UnsupportedOperationException("todo:" + node);
-                } else if (call.operator instanceof SqlPrefixOperator) {
+                } else if (call.getOperator() instanceof SqlPrefixOperator) {
                     throw new UnsupportedOperationException("todo:" + node);
-                } else if (call.operator instanceof SqlPostfixOperator) {
+                } else if (call.getOperator() instanceof SqlPostfixOperator) {
                     throw new UnsupportedOperationException("todo:" + node);
                 } else {
                     throw new UnsupportedOperationException("todo:" + node);
@@ -312,7 +312,7 @@ public class SqlToOpenjavaConverter
     private Expression convertLiteral(final SqlLiteral literal)
     {
         final Object value = literal.getValue();
-        switch (literal.typeName.ordinal) {
+        switch (literal.getTypeName().getOrdinal()) {
         case SqlTypeName.Decimal_ordinal:
         case SqlTypeName.Double_ordinal:
             BigDecimal bd = (BigDecimal) value;
@@ -337,7 +337,7 @@ public class SqlToOpenjavaConverter
         case SqlTypeName.Null_ordinal:
             return Literal.constantNull();
         default:
-            throw literal.typeName.unexpected();
+            throw literal.getTypeName().unexpected();
         }
     }
 
@@ -607,7 +607,7 @@ public class SqlToOpenjavaConverter
             return null;
         }
 
-        public String [] getAllSchemaObjectNames(String [] names)
+        public SqlMoniker [] getAllSchemaObjectNames(String [] names)
         {
             throw new UnsupportedOperationException();
         }

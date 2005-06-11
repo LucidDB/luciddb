@@ -25,8 +25,7 @@ package org.eigenbase.sql.fun;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.OperandsTypeChecking;
-import org.eigenbase.sql.type.ReturnTypeInferenceImpl;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 
 /**
@@ -41,9 +40,9 @@ public class SqlFloorFunction extends SqlFunction
     public SqlFloorFunction()
     {
         super("FLOOR", SqlKind.Function,
-            ReturnTypeInferenceImpl.useFirstArgType,
+            SqlTypeStrategies.rtiFirstArgType,
             null,
-            OperandsTypeChecking.typeNumeric,
+            SqlTypeStrategies.otcNumeric,
             SqlFunctionCategory.Numeric);
 
     }

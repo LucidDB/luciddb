@@ -23,16 +23,29 @@
 package org.eigenbase.sql.type;
 
 import java.sql.*;
+import java.util.*;
 
 import org.eigenbase.util.*;
 import org.eigenbase.reltype.*;
 
 
 /**
- * SqlTypeFamily is a complete disjoint partitioning of SQL types into
- * families, where two types are memberss of the same family iff
- * instances of the two types can be the operands of an SQL equality
- * predicate such as <code>WHERE v1 = v2</code>.
+ * SqlTypeFamily provides SQL type categorization.
+ *
+ *<p>
+ *
+ * The <em>primary</em> family categorization is a complete disjoint
+ * partitioning of SQL types into families, where two types are members of the
+ * same primary family iff instances of the two types can be the operands of an
+ * SQL equality predicate such as <code>WHERE v1 = v2</code>.
+ * Primary families are returned by RelDataType.getFamily().
+ *
+ *<p>
+ *
+ * There is also a <em>secondary</em> family categorization which overlaps
+ * with the primary categorization.  It is used in type strategies for
+ * more specific or more general categorization than the primary families.
+ * Secondary families are never returned by RelDataType.getFamily().
  *
  * @author John V. Sichi
  * @version $Id$
@@ -43,6 +56,7 @@ public class SqlTypeFamily
 {
     //~ Static fields/initializers --------------------------------------------
 
+    // Enumeration ordinals
     public static final int Character_ordinal = 0;
     public static final int Binary_ordinal = 1;
     public static final int Numeric_ordinal = 2;
@@ -52,30 +66,108 @@ public class SqlTypeFamily
     public static final int Boolean_ordinal = 6;
     public static final int IntervalYearMonth_ordinal = 7;
     public static final int IntervalDayTime_ordinal = 8;
+    public static final int String_ordinal = 9;
+    public static final int ApproximateNumeric_ordinal = 10;
+    public static final int ExactNumeric_ordinal = 11;
+    public static final int Integer_ordinal = 12;
+    public static final int Datetime_ordinal = 13;
+    public static final int DatetimeInterval_ordinal = 14;
+    public static final int Multiset_ordinal = 15;
+    public static final int Any_ordinal = 16;
+
+    // Primary families.
     
     public static final SqlTypeFamily Character =
-        new SqlTypeFamily("CHARACTER", Character_ordinal);
+        new SqlTypeFamily(
+            "CHARACTER", Character_ordinal, SqlTypeName.charTypes);
+    
     public static final SqlTypeFamily Binary =
-        new SqlTypeFamily("BINARY", Binary_ordinal);
+        new SqlTypeFamily(
+            "BINARY", Binary_ordinal, SqlTypeName.binaryTypes);
+    
     public static final SqlTypeFamily Numeric =
-        new SqlTypeFamily("NUMERIC", Numeric_ordinal);
+        new SqlTypeFamily(
+            "NUMERIC", Numeric_ordinal, SqlTypeName.numericTypes);
+    
     public static final SqlTypeFamily Date =
-        new SqlTypeFamily("DATE", Date_ordinal);
+        new SqlTypeFamily(
+            "DATE", Date_ordinal, new SqlTypeName [] { SqlTypeName.Date} );
+    
     public static final SqlTypeFamily Time =
-        new SqlTypeFamily("TIME", Time_ordinal);
+        new SqlTypeFamily(
+            "TIME", Time_ordinal, new SqlTypeName [] { SqlTypeName.Time} );
+    
     public static final SqlTypeFamily Timestamp =
-        new SqlTypeFamily("TIMESTAMP", Timestamp_ordinal);
+        new SqlTypeFamily(
+            "TIMESTAMP", Timestamp_ordinal,
+            new SqlTypeName [] { SqlTypeName.Timestamp} );
+    
     public static final SqlTypeFamily Boolean =
-        new SqlTypeFamily("BOOLEAN", Boolean_ordinal);
+        new SqlTypeFamily(
+            "BOOLEAN", Boolean_ordinal, SqlTypeName.booleanTypes);
+    
     public static final SqlTypeFamily IntervalYearMonth =
-        new SqlTypeFamily("INTERVAL_YEAR_MONTH", IntervalYearMonth_ordinal);
+        new SqlTypeFamily(
+            "INTERVAL_YEAR_MONTH", IntervalYearMonth_ordinal,
+            new SqlTypeName [] { SqlTypeName.IntervalYearMonth });
+    
     public static final SqlTypeFamily IntervalDayTime =
-        new SqlTypeFamily("INTERVAL_DAY_TIME", IntervalDayTime_ordinal);
+        new SqlTypeFamily(
+            "INTERVAL_DAY_TIME", IntervalDayTime_ordinal,
+            new SqlTypeName [] { SqlTypeName.IntervalDayTime });
+
+    
+    // Secondary families.
+    
+    public static final SqlTypeFamily String =
+        new SqlTypeFamily(
+            "STRING", String_ordinal, SqlTypeName.stringTypes);
+    
+    public static final SqlTypeFamily ApproximateNumeric =
+        new SqlTypeFamily(
+            "APPROXIMATE_NUMERIC", ApproximateNumeric_ordinal,
+            SqlTypeName.approxTypes);
+    
+    public static final SqlTypeFamily ExactNumeric =
+        new SqlTypeFamily(
+            "EXACT_NUMERIC", ExactNumeric_ordinal,
+            SqlTypeName.exactTypes);
+    
+    public static final SqlTypeFamily Integer =
+        new SqlTypeFamily(
+            "INTEGER", Integer_ordinal, SqlTypeName.intTypes);
+    
+    public static final SqlTypeFamily Datetime =
+        new SqlTypeFamily(
+            "DATETIME", Datetime_ordinal, SqlTypeName.datetimeTypes);
+    
+    public static final SqlTypeFamily DatetimeInterval =
+        new SqlTypeFamily(
+            "DATETIME_INTERVAL", DatetimeInterval_ordinal,
+            SqlTypeName.timeIntervalTypes);
+
+    public static final SqlTypeFamily Multiset =
+        new SqlTypeFamily(
+            "MULTISET", Multiset_ordinal,
+            SqlTypeName.multisetTypes);
+
+    public static final SqlTypeFamily Any =
+        new SqlTypeFamily(
+            "ANY", Any_ordinal,
+            SqlTypeName.allTypes);
+
+    
+    // array of all families
     private static final SqlTypeFamily [] values =
         new SqlTypeFamily [] {
             Character, Binary, Numeric, Date, Time, Timestamp, Boolean,
-            IntervalYearMonth, IntervalDayTime
+            IntervalYearMonth, IntervalDayTime,
+            String, ApproximateNumeric, ExactNumeric,
+            Integer, Datetime, DatetimeInterval,
+            Multiset,
+            Any
         };
+    
     private static SqlTypeFamily [] jdbcTypeToFamily;
 
     private static SqlTypeFamily [] sqlTypeToFamily;
@@ -143,13 +235,21 @@ public class SqlTypeFamily
     public static final EnumeratedValues enumeration =
         new EnumeratedValues(values);
 
+    /**
+     * List of {@linkSqlTypeName}s included in this family.
+     */
+    private List typeNames;
+
     //~ Constructors ----------------------------------------------------------
 
     private SqlTypeFamily(
         String name,
-        int ordinal)
+        int ordinal,
+        SqlTypeName [] typeNames)
     {
         super(name, ordinal, null);
+        this.typeNames = Collections.unmodifiableList(
+            Arrays.asList(typeNames));
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -162,7 +262,7 @@ public class SqlTypeFamily
     }
 
     /**
-     * Gets the family containing a SqlTypeName.
+     * Gets the primary family containing a SqlTypeName.
      *
      * @param sqlTypeName the type of interest
      *
@@ -174,7 +274,7 @@ public class SqlTypeFamily
     }
 
     /**
-     * Gets the family containing a JDBC type.
+     * Gets the primary family containing a JDBC type.
      *
      * @param jdbcType the JDBC type of interest
      *
@@ -183,6 +283,14 @@ public class SqlTypeFamily
     public static SqlTypeFamily getFamilyForJdbcType(int jdbcType)
     {
         return jdbcTypeToFamily[jdbcType - SqlTypeName.MIN_JDBC_TYPE];
+    }
+
+    /**
+     * @return collection of {@link SqlTypeName}s included in this family
+     */
+    public Collection getTypeNames()
+    {
+        return typeNames;
     }
 }
 

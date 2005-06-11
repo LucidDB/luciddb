@@ -130,7 +130,7 @@ public class SqlIntervalQualifier extends SqlNode
     public String toString()
     {
         StringBuffer ret = new StringBuffer();
-        ret.append(startUnit.name.toUpperCase());
+        ret.append(startUnit.getName().toUpperCase());
         if (startUnit.equals(TimeUnit.Second)) {
             if (0 != fractionalSecondPrecision) {
                 ret.append("(");
@@ -153,7 +153,7 @@ public class SqlIntervalQualifier extends SqlNode
 
             if (null != endUnit) {
                 ret.append(" TO ");
-                ret.append(endUnit.name.toUpperCase());
+                ret.append(endUnit.getName().toUpperCase());
             }
 
             if (0 != fractionalSecondPrecision) {

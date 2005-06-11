@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/real.sql#4 $ 
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/real.sql#5 $ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test real literal
 0: jdbc:farrago:> values 0.0;
@@ -98,9 +98,9 @@
 | 1.2345678901234E-200  |
 +-----------------------+
 0: jdbc:farrago:> values 1e400;
-Error: At line 1, column 1: Numeric literal '1E400' out of range (state=,code=0)
+Error: From line 1, column 8 to line 1, column 12: Numeric literal '1E400' out of range (state=,code=0)
 0: jdbc:farrago:> values -1e400;
-Error: At line 1, column 8: Numeric literal '1E400' out of range (state=,code=0)
+Error: From line 1, column 9 to line 1, column 13: Numeric literal '1E400' out of range (state=,code=0)
 0: jdbc:farrago:> values 1e-400;
 Error: Numerical result out of range (at line:col 5:9 to 5:14, characters 44 to 49) (state=,code=0)
 0: jdbc:farrago:> values -1e-400;
@@ -149,7 +149,7 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast fro
 0: jdbc:farrago:> insert into t_real values(timestamp '2004-12-01 12:01:01',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIMESTAMP(0)' to 'REAL' (state=,code=0)
 0: jdbc:farrago:> insert into t_real values(1e400,null);
-Error: At line 1, column 26: Numeric literal '1E400' out of range (state=,code=0)
+Error: From line 1, column 27 to line 1, column 31: Numeric literal '1E400' out of range (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- insert the right value
 0: jdbc:farrago:> insert into t_real values(1234.999,null);

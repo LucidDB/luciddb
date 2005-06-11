@@ -37,7 +37,7 @@ public class RexDynamicParam extends RexVariable
 {
     //~ Instance fields -------------------------------------------------------
 
-    public final int index;
+    private final int index;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -66,6 +66,11 @@ public class RexDynamicParam extends RexVariable
     public RexKind getKind()
     {
         return RexKind.DynamicParam;
+    }
+
+    public int getIndex()
+    {
+        return index;
     }
 
     public void accept(RexVisitor visitor)

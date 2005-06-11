@@ -80,7 +80,7 @@ Error: SET statement requires character string value expression (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- set an identifier as schema name:  should fail (surprise!)
 0: jdbc:farrago:> set schema sales;
-Error: At line 1, column 8: Unknown identifier 'SALES' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 14: Unknown identifier 'SALES' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- set a schema name which evaluates to a non-identifier:  should fail
 0: jdbc:farrago:> set schema '1';
@@ -110,7 +110,7 @@ Error: Invalid schema name "sales, marketing" in SET SCHEMA statement (state=,co
 0: jdbc:farrago:> set schema '"sales"';
 0: jdbc:farrago:> -- but lookup should fail
 0: jdbc:farrago:> select * from depts where 1=0;
-Error: At line 1, column 15: Table 'DEPTS' not found (state=,code=0)
+Error: From line 1, column 15 to line 1, column 19: Table 'DEPTS' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- see what happens when we drop the current schema
 0: jdbc:farrago:> create schema n;
@@ -122,7 +122,7 @@ Error: At line 1, column 15: Table 'DEPTS' not found (state=,code=0)
 0: jdbc:farrago:> drop schema n cascade;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from nt;
-Error: At line 1, column 15: Table 'NT' not found (state=,code=0)
+Error: From line 1, column 15 to line 1, column 16: Table 'NT' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create table nt2(i int not null primary key);
 Error: DDL validation error near line 1, column 14: Reference to unknown schema "LOCALDB"."N" (state=,code=0)

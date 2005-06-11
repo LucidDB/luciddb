@@ -315,10 +315,16 @@ public abstract class RelOptUtil
 
     public static boolean areRowTypesEqual(
         RelDataType rowType1,
-        RelDataType rowType2)
+        RelDataType rowType2,
+        boolean compareNames)
     {
         if (rowType1 == rowType2) {
             return true;
+        }
+        if (compareNames) {
+            // if types are not identity-equal, then either the names or
+            // the types must be different
+            return false;
         }
         int n = rowType1.getFieldList().size();
         if (rowType2.getFieldList().size() != n) {
@@ -363,8 +369,8 @@ public abstract class RelOptUtil
                 conditionExp = conditions[i];
             } else {
                 conditionExp =
-                    cluster.rexBuilder.makeCall(
-                        cluster.rexBuilder.opTab.andOperator,
+                    cluster.getRexBuilder().makeCall(
+                        cluster.getRexBuilder().getOpTab().andOperator,
                         conditionExp,
                         conditions[i]);
             }
@@ -379,9 +385,11 @@ public abstract class RelOptUtil
             final RelDataTypeField [] fields = rowType.getFields();
             final RexNode [] expressions = new RexNode[fields.length + 1];
             String [] fieldNames = new String[fields.length + 1];
-            final RexNode ref = cluster.rexBuilder.makeRangeReference(rowType, 0);
+            final RexNode ref = cluster.getRexBuilder().makeRangeReference(
+                rowType, 0);
             for (int j = 0; j < fields.length; j++) {
-                expressions[j] = cluster.rexBuilder.makeFieldAccess(ref, j);
+                expressions[j] = cluster.getRexBuilder().makeFieldAccess(
+                    ref, j);
                 fieldNames[j] = fields[j].getName();
             }
             expressions[fields.length] = extraExpr;
@@ -419,7 +427,7 @@ public abstract class RelOptUtil
         RelDataTypeField [] inputFields = inputType.getFields();
         RelDataTypeField [] outputFields = outputType.getFields();
 
-        final RexBuilder rexBuilder = rel.getCluster().rexBuilder;
+        final RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
         for (int i = 0; i < n; ++i) {
             assert (inputFields[i].getType().equals(outputFields[i].getType()));
             renameNames[i] = outputFields[i].getName();
@@ -455,7 +463,7 @@ public abstract class RelOptUtil
         Integer [] fieldOrdinals)
     {
         RexNode condition = null;
-        RexBuilder rexBuilder = rel.getCluster().rexBuilder;
+        RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
         RelDataType rowType = rel.getRowType();
         int n;
         if (fieldOrdinals != null) {
@@ -477,13 +485,13 @@ public abstract class RelOptUtil
             }
             RexNode newCondition =
                 rexBuilder.makeCall(
-                    rexBuilder.opTab.isNotNullOperator,
+                    rexBuilder.getOpTab().isNotNullOperator,
                     rexBuilder.makeInputRef(type, iField));
             if (condition == null) {
                 condition = newCondition;
             } else {
                 condition =
-                    rexBuilder.makeCall(rexBuilder.opTab.andOperator,
+                    rexBuilder.makeCall(rexBuilder.getOpTab().andOperator,
                         condition, newCondition);
             }
         }
@@ -505,20 +513,26 @@ public abstract class RelOptUtil
      *
      * @param castRowType row type after cast
      *
+     * @param rename if true, use field names from castRowType; if false,
+     * preserve field names from rel
+     *
      * @return conversion rel
      */
     public static RelNode createCastRel(
         RelNode rel,
-        RelDataType castRowType)
+        RelDataType castRowType,
+        boolean rename)
     {
         RelDataType rowType = rel.getRowType();
-        if (areRowTypesEqual(rowType, castRowType)) {
+        if (areRowTypesEqual(rowType, castRowType, rename)) {
             // nothing to do
             return rel;
         }
-        String [] fieldNames = RelOptUtil.getFieldNames(rowType);
+        String [] fieldNames =
+            rename ? RelOptUtil.getFieldNames(castRowType)
+            : RelOptUtil.getFieldNames(rowType);
         RexNode [] castExps =
-            RexUtil.generateCastExpressions(rel.getCluster().rexBuilder,
+            RexUtil.generateCastExpressions(rel.getCluster().getRexBuilder(),
                 castRowType, rowType);
         return new ProjectRel(
             rel.getCluster(),
@@ -526,6 +540,24 @@ public abstract class RelOptUtil
             castExps,
             fieldNames,
             ProjectRel.Flags.Boxed);
+    }
+
+    /**
+     * Creates an AggregateRel which removes all duplicates from the result of
+     * an underlying rel.
+     *
+     * @param rel underlying rel
+     *
+     * @return rel implementing DISTINCT
+     */
+    public static RelNode createDistinctRel(
+        RelNode rel)
+    {
+        return new AggregateRel(
+            rel.getCluster(),
+            rel,
+            rel.getRowType().getFieldList().size(),
+            new AggregateRel.Call[0]);
     }
 
     public static boolean analyzeSimpleEquiJoin(
@@ -549,33 +581,37 @@ public abstract class RelOptUtil
         final int leftFieldCount =
             joinRel.getLeft().getRowType().getFieldList().size();
         RexInputRef leftFieldAccess = (RexInputRef) leftComparand;
-        if (!(leftFieldAccess.index < leftFieldCount)) {
+        if (!(leftFieldAccess.getIndex() < leftFieldCount)) {
             // left field must access left side of join
             return false;
         }
 
         RexInputRef rightFieldAccess = (RexInputRef) rightComparand;
-        if (!(rightFieldAccess.index >= leftFieldCount)) {
+        if (!(rightFieldAccess.getIndex() >= leftFieldCount)) {
             // right field must access right side of join
             return false;
         }
 
-        joinFieldOrdinals[0] = leftFieldAccess.index;
-        joinFieldOrdinals[1] = rightFieldAccess.index - leftFieldCount;
+        joinFieldOrdinals[0] = leftFieldAccess.getIndex();
+        joinFieldOrdinals[1] = rightFieldAccess.getIndex() - leftFieldCount;
         return true;
     }
 
     public static void registerAbstractRels(RelOptPlanner planner)
     {
         AggregateRel.register(planner);
-        DistinctRel.register(planner);
         FilterRel.register(planner);
         JoinRel.register(planner);
+        CorrelatorRel.register(planner);
         OneRowRel.register(planner);
         ProjectRel.register(planner);
         TableAccessRel.register(planner);
         UnionRel.register(planner);
+        IntersectRel.register(planner);
+        MinusRel.register(planner);
         CalcRel.register(planner);
+        CollectRel.register(planner);
+        UncollectRel.register(planner);
         planner.addRule(FilterToCalcRule.instance);
         planner.addRule(ProjectToCalcRule.instance);
         planner.addRule(MergeFilterOntoCalcRule.instance);
@@ -604,7 +640,7 @@ public abstract class RelOptUtil
         } else {
             planWriter = new RelOptPlanWriter(pw);
         }
-        planWriter.withIdPrefix = false;
+        planWriter.setIdPrefix(false);
         rel.explain(planWriter);
         pw.flush();
         return sw.toString();
@@ -707,7 +743,7 @@ public abstract class RelOptUtil
                 if (i > 0) {
                     assert(null != ret);
                     ret = rexBuilder.makeCall(
-                        SqlStdOperatorTable.instance().andOperator,
+                        SqlStdOperatorTable.andOperator,
                         ret,
                         newCall);
                 } else {

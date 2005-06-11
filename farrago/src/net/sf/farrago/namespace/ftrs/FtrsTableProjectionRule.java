@@ -102,11 +102,11 @@ class FtrsTableProjectionRule extends RelOptRule
             String projFieldName = projFields[i].getName();
             fieldNames[i] = projFieldName;
             String origFieldName =
-                rowType.getFields()[fieldAccess.index].getName();
+                rowType.getFields()[fieldAccess.getIndex()].getName();
             if (!projFieldName.equals(origFieldName)) {
                 needRename = true;
             }
-            projectedColumns[i] = new Integer(fieldAccess.index);
+            projectedColumns[i] = new Integer(fieldAccess.getIndex());
         }
 
         // Generate a potential scan for each available index covering the
@@ -144,7 +144,7 @@ class FtrsTableProjectionRule extends RelOptRule
             if (needRename) {
                 // Replace calling convention with FENNEL_PULL_CONVENTION
                 RelTraitSet traits =
-                    (RelTraitSet)origProject.getTraits().clone();
+                    RelOptUtil.clone(origProject.getTraits());
                 traits.setTrait(
                     CallingConventionTraitDef.instance,
                     FennelPullRel.FENNEL_PULL_CONVENTION);

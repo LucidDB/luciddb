@@ -23,9 +23,7 @@
 
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.type.OperandsTypeChecking;
-import org.eigenbase.sql.type.ReturnTypeInference;
-import org.eigenbase.sql.type.UnknownParamInference;
+import org.eigenbase.sql.type.*;
 
 
 /**
@@ -47,17 +45,16 @@ public class SqlInfixOperator extends SqlSpecialOperator
 
     //~ Constructors ----------------------------------------------------------
 
-    // @pre paramTypes != null
-    SqlInfixOperator(
+    protected SqlInfixOperator(
         String [] names,
         SqlKind kind,
         int precedence,
-        ReturnTypeInference typeInference,
-        UnknownParamInference paramTypeInference,
-        OperandsTypeChecking argTypeInference)
+        SqlReturnTypeInference returnTypeInference,
+        SqlOperandTypeInference operandTypeInference,
+        SqlOperandTypeChecker operandTypeChecker)
     {
-        super(names[0], kind, precedence, true, typeInference,
-            paramTypeInference, argTypeInference);
+        super(names[0], kind, precedence, true, returnTypeInference,
+            operandTypeInference, operandTypeChecker);
         assert names.length > 1;
         this.names = names;
     }
@@ -86,7 +83,7 @@ public class SqlInfixOperator extends SqlSpecialOperator
                     writer.print(names[i - 1]);
                 }
             }
-            operands[i].unparse(writer, leftPrec, this.leftPrec);
+            operands[i].unparse(writer, leftPrec, getLeftPrec());
         }
     }
 

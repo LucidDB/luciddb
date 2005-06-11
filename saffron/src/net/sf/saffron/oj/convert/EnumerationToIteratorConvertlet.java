@@ -54,7 +54,8 @@ public class EnumerationToIteratorConvertlet extends JavaConvertlet
         // Generate
         //   new saffron.runtime.EnumerationIterator(<<child>>)
         Expression exp =
-            implementor.visitJavaChild(converter, 0, (JavaRel) converter.child);
+            implementor.visitJavaChild(
+                converter, 0, (JavaRel) converter.getChild());
         return new AllocationExpression(
             OJClass.forClass(EnumerationIterator.class),
             new ExpressionList(exp));

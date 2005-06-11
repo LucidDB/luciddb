@@ -54,7 +54,7 @@ public class RexInputRef extends RexVariable
 {
     //~ Instance fields -------------------------------------------------------
 
-    public final int index;
+    private final int index;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -75,6 +75,11 @@ public class RexInputRef extends RexVariable
 
     //~ Methods ---------------------------------------------------------------
 
+    public int getIndex()
+    {
+        return index;
+    }
+    
     public Object clone()
     {
         return new RexInputRef(index, type);

@@ -129,7 +129,7 @@ public class SqlSelect extends SqlCall
             fromClause = tableId;
         } else {
             fromClause =
-                SqlStdOperatorTable.instance().joinOperator.createCall(
+                SqlStdOperatorTable.joinOperator.createCall(
                     fromClause,tableId, null);
         }
         operands[FROM_OPERAND] = fromClause;

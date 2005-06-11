@@ -65,9 +65,9 @@ public class SqlOrderByOperator extends SqlSpecialOperator
         int rightPrec)
     {
         assert (operands.length == 2);
-        operands[QUERY_OPERAND].unparse(writer, this.leftPrec, this.rightPrec);
+        operands[QUERY_OPERAND].unparse(writer, getLeftPrec(), getRightPrec());
         writer.print(' ');
-        writer.print(name);
+        writer.print(getName());
         writer.print(' ');
         operands[ORDER_OPERAND].unparse(writer, 0, 0);
     }

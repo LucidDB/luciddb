@@ -106,7 +106,7 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
         } else if (type instanceof JavaType) {
             JavaType javaType = (JavaType) type;
             newType = new JavaType(
-                javaType.clazz,
+                javaType.getJavaClass(),
                 javaType.isNullable(),
                 charset,
                 collation);
@@ -188,22 +188,14 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
 
     private RelDataType leastRestrictiveSqlType(RelDataType [] types)
     {
-        RelDataType resultType = types[0];
+        RelDataType resultType = null;
+        boolean anyNullable = false;
 
-        if (resultType.getSqlTypeName() == SqlTypeName.Row) {
-            return leastRestrictiveStructuredType(types);
-        }
-
-        boolean anyNullable = resultType.isNullable();
-
-        for (int i = 1; i < types.length; ++i) {
-            RelDataTypeFamily resultFamily = resultType.getFamily();
+        for (int i = 0; i < types.length; ++i) {
             RelDataType type = types[i];
             RelDataTypeFamily family = type.getFamily();
 
             SqlTypeName typeName = type.getSqlTypeName();
-            SqlTypeName resultTypeName = resultType.getSqlTypeName();
-
             if (typeName == null) {
                 return null;
             }
@@ -212,11 +204,25 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
                 anyNullable = true;
             }
 
+            if (typeName == SqlTypeName.Null) {
+                continue;
+            }
+
+            if (resultType == null) {
+                resultType = type;
+                if (resultType.getSqlTypeName() == SqlTypeName.Row) {
+                    return leastRestrictiveStructuredType(types);
+                }
+            }
+
+            RelDataTypeFamily resultFamily = resultType.getFamily();
+            SqlTypeName resultTypeName = resultType.getSqlTypeName();
+            
+            if (resultFamily != family) {
+                return null;
+            }
             if (SqlTypeUtil.inCharOrBinaryFamilies(type)) {
                 // TODO:  character set, collation
-                if (resultFamily != family) {
-                    return null;
-                }
                 int precision =
                     Math.max(
                         resultType.getPrecision(),
@@ -266,9 +272,19 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
                     return null;
                 }
             } else if (SqlTypeUtil.isApproximateNumeric(type)) {
-                if (type !=resultType) {
+                if (type != resultType) {
                     resultType = createDoublePrecisionType();
                 }
+            } else if (SqlTypeUtil.isInterval(type)) {
+                // TODO jvs 4-June-2005:  This shouldn't be necessary;
+                // move logic into IntervalSqlType.combine
+                Object type1 = resultType;
+                resultType =
+                    ((IntervalSqlType) resultType).combine(
+                        (IntervalSqlType) type);
+                resultType =
+                    ((IntervalSqlType) resultType).combine(
+                        (IntervalSqlType) type1);
             } else {
                 // TODO:  datetime precision details; for now we let
                 // leastRestrictiveByCast handle it

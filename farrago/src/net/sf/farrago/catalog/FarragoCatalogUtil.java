@@ -35,6 +35,7 @@ import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.util.*;
 
 import javax.jmi.reflect.*;
@@ -51,6 +52,21 @@ import java.sql.Timestamp;
  */
 public abstract class FarragoCatalogUtil
 {
+    /**
+     * Sets default attributes for a new catalog instance.
+     *
+     * @param repos repository in which catalog is stored
+     *
+     * @param catalog catalog to initialize
+     */
+    public static void initializeCatalog(
+        FarragoRepos repos,
+        CwmCatalog catalog)
+    {
+        catalog.setDefaultCharacterSetName(repos.getDefaultCharsetName());
+        catalog.setDefaultCollationName(repos.getDefaultCollationName());
+    }
+    
     /**
      * Calculates the number of parameters expected by a routine.
      * For functions, this is different from the number of parameters
@@ -417,7 +433,7 @@ public abstract class FarragoCatalogUtil
         }
         Collections.reverse(names);
         String [] nameArray = (String []) names.toArray(Util.emptyStringArray);
-        return new SqlIdentifier(nameArray, null);
+        return new SqlIdentifier(nameArray, SqlParserPos.ZERO);
     }
 
     /**

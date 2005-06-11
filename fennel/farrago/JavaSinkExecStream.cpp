@@ -25,6 +25,7 @@
 #include "fennel/farrago/JavaSinkExecStream.h"
 #include "fennel/farrago/JniUtil.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
+#include <iostream>
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -38,15 +39,33 @@ JavaSinkExecStream::JavaSinkExecStream()
 void JavaSinkExecStream::prepare(JavaSinkExecStreamParams const &params)
 {
     SingleInputExecStream::prepare(params);
-    
     pStreamGraphHandle = params.pStreamGraphHandle;
     javaFennelPipeIterId = params.javaFennelPipeIterId;
+
+    JniEnvAutoRef pEnv;
+    jclass classFennelPipeIter = pEnv->FindClass(
+        "net/sf/farrago/runtime/FennelPipeIterator");
+    assert(classFennelPipeIter);
+    methFennelPipeIterator_write = pEnv->GetMethodID(
+        classFennelPipeIter, "write", "(Ljava/nio/ByteBuffer;I)V");
+    assert(methFennelPipeIterator_write);
+    methFennelPipeIterator_getByteBuffer = pEnv->GetMethodID(
+        classFennelPipeIter, "getByteBuffer", "(I)Ljava/nio/ByteBuffer;");
+    assert(methFennelPipeIterator_getByteBuffer);
+
+    jclass classByteBuffer = pEnv->FindClass("java/nio/ByteBuffer");
+    assert(classByteBuffer);
+    methByteBuffer_array =
+        pEnv->GetMethodID(classByteBuffer, "array", "()[B");
+    assert(methByteBuffer_array);
 }
 
 void JavaSinkExecStream::open(bool restart)
 {
+    FENNEL_TRACE(TRACE_FINE, "open");
     SingleInputExecStream::open(restart);
 
+    // Find our FennelPipeIterator peer
     JniEnvAutoRef pEnv;
     jlong hJavaFennelPipeIter = pEnv->CallLongMethod(
         pStreamGraphHandle->javaRuntimeContext,
@@ -65,11 +84,13 @@ ExecStreamResult JavaSinkExecStream::execute(ExecStreamQuantum const &)
         // Nothing to read, so don't send anything to Java. FennelPipeIter
         // would interpret a 0-length buffer as end-of-stream, which is not the
         // case.
+        FENNEL_TRACE(TRACE_FINE, "no input");
         return EXECRC_BUF_UNDERFLOW;
     case EXECBUF_EOS:
         // Need to signal end-of-stream to Java. Do this by sending a buffer of
         // length 0. There should be 0 bytes available, so the code below
         // should do this naturally.
+        FENNEL_TRACE(TRACE_FINE, "input EOS");
         assert(inAccessor.getConsumptionAvailable() == 0);
         break;
     default:
@@ -77,31 +98,53 @@ ExecStreamResult JavaSinkExecStream::execute(ExecStreamQuantum const &)
         break;
     }
 
-
     JniEnvAutoRef pEnv;
     PConstBuffer pInBufStart = inAccessor.getConsumptionStart();
     PConstBuffer pInBufEnd = inAccessor.getConsumptionEnd();
-    uint cbInAvail = pInBufEnd - pInBufStart;
+    uint nbytes = pInBufEnd - pInBufStart;
 
-    // Wrap the contents in a ByteBuffer. Since this is a local ref, it will be
-    // automatically deleted when the next method call returns.
-    //
+    // Get an output ByteBuffer. Since this is a local ref, it will be automatically
+    // deleted when the next method call returns.
     // REVIEW: Could give the ByteBuffer a longer lifecycle.
-    jobject javaByteBuf = pEnv->NewDirectByteBuffer(
-        (void *) pInBufStart, cbInAvail);
+    jobject javaByteBuf = pEnv->CallObjectMethod(
+        javaFennelPipeIter, methFennelPipeIterator_getByteBuffer, nbytes);
+    assert(javaByteBuf);
+
+    // copy the data, allowing upstream XO to produce more output
+    stuffByteBuffer(javaByteBuf, pInBufStart, nbytes);
 
     // Send to the iterator, calling the method
     //   void FennelIterPipe.write(ByteBuffer, int byteCount)
-    pEnv->CallVoidMethod(
-        javaFennelPipeIter,
-        JniUtil::methFennelPipeIterWrite,
-        javaByteBuf,
-        cbInAvail);
-
-    // Have consumed all of our input.
-    inAccessor.consumeData(inAccessor.getConsumptionEnd());
-    return EXECRC_BUF_UNDERFLOW;
+    FENNEL_TRACE(TRACE_FINE, "call FennelPipeIter.write" << nbytes << " bytes");
+    pEnv->CallVoidMethod(javaFennelPipeIter, methFennelPipeIterator_write,
+                         javaByteBuf, nbytes);
+    FENNEL_TRACE(TRACE_FINE, "FennelPipeIter.write returned");
+    if (nbytes > 0) {
+        inAccessor.consumeData(pInBufEnd);
+        return EXECRC_BUF_UNDERFLOW;
+    } else
+        return EXECRC_EOS;
 }
+
+void JavaSinkExecStream::stuffByteBuffer(jobject byteBuffer, PConstBuffer src, uint size)
+{
+    // TODO: lookup methods in constructor.
+    // TODO: ByteBuffer with a longer life, permanently pinned.
+    JniEnvAutoRef pEnv;
+
+    // pin the byte array
+    jbyteArray bufBacking = 
+        static_cast<jbyteArray>(
+            pEnv->CallObjectMethod(byteBuffer, methByteBuffer_array));
+    jboolean copied;
+    jbyte* dst = pEnv->GetByteArrayElements(bufBacking, &copied);
+
+    // copy the data
+    memcpy(dst, src, size);
+    // unpin
+    pEnv->ReleaseByteArrayElements(bufBacking, dst, 0);
+}
+
 
 void JavaSinkExecStream::closeImpl()
 {

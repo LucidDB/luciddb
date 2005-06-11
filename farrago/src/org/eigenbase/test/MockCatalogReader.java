@@ -23,8 +23,12 @@
 package org.eigenbase.test;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.validate.SqlValidatorCatalogReader;
 import org.eigenbase.sql.validate.SqlValidatorTable;
+import org.eigenbase.sql.validate.SqlMoniker;
+import org.eigenbase.sql.validate.SqlMonikerImpl;
+import org.eigenbase.sql.validate.SqlMonikerType;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.Util;
@@ -66,7 +70,7 @@ public class MockCatalogReader implements SqlValidatorCatalogReader
         // factory
         addressType = new ObjectSqlType(
             SqlTypeName.Structured,
-            new SqlIdentifier("ADDRESS", null),
+            new SqlIdentifier("ADDRESS", SqlParserPos.ZERO),
             false,
             new RelDataTypeField [] {
                 new RelDataTypeFieldImpl("STREET", 0, varchar20Type),
@@ -170,7 +174,7 @@ public class MockCatalogReader implements SqlValidatorCatalogReader
         }
     }
 
-    public String [] getAllSchemaObjectNames(String [] names)
+    public SqlMoniker [] getAllSchemaObjectNames(String [] names)
     {
         if (names.length == 1) {
             // looking for both schema and object names
@@ -179,18 +183,28 @@ public class MockCatalogReader implements SqlValidatorCatalogReader
             ArrayList result = new ArrayList();
             while (i.hasNext()) {
                 MockSchema schema = (MockSchema) i.next();
-                result.add(schema.name);
-                result.addAll(schema.tableNames);
+                result.add(new SqlMonikerImpl(schema.name, SqlMonikerType.Schema));
+                Iterator j = schema.tableNames.iterator();
+                while (j.hasNext()) {
+                    result.add(new SqlMonikerImpl(
+                        (String)j.next(), SqlMonikerType.Table));
+                }
             }
-            return (String [])result.toArray(Util.emptyStringArray);
+            return (SqlMoniker [])result.toArray(Util.emptySqlMonikerArray);
         }
         else if (names.length == 2) {
             // looking for table names under the schema
             MockSchema schema = (MockSchema) schemas.get(names[0]);
-            return (String [])schema.tableNames.toArray(Util.emptyStringArray);
+            ArrayList result = new ArrayList();
+            Iterator j = schema.tableNames.iterator();
+            while (j.hasNext()) {
+                result.add(new SqlMonikerImpl(
+                    (String)j.next(), SqlMonikerType.Table));
+            }
+            return (SqlMoniker [])result.toArray(Util.emptySqlMonikerArray);
         }
         else {
-            return Util.emptyStringArray;
+            return Util.emptySqlMonikerArray;
         }
     }
 

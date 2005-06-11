@@ -27,9 +27,7 @@ import org.eigenbase.sql.SqlAggFunction;
 import org.eigenbase.sql.SqlFunction;
 import org.eigenbase.sql.SqlFunctionCategory;
 import org.eigenbase.sql.SqlKind;
-import org.eigenbase.sql.type.OperandsTypeChecking;
-import org.eigenbase.sql.type.ReturnTypeInference;
-import org.eigenbase.sql.type.ReturnTypeInferenceImpl;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 
@@ -44,14 +42,14 @@ import org.eigenbase.reltype.RelDataTypeFactory;
  */
 public class SqlSumAggFunction extends SqlAggFunction
 {
-    public final RelDataType type;
+    private final RelDataType type;
 
     public SqlSumAggFunction(RelDataType type)
     {
         super(
             "SUM", SqlKind.Function,
-            ReturnTypeInferenceImpl.useFirstArgType, null,
-            OperandsTypeChecking.typeNumeric,
+            SqlTypeStrategies.rtiFirstArgType, null,
+            SqlTypeStrategies.otcNumeric,
             SqlFunctionCategory.Numeric);
         this.type = type;
     }
@@ -59,6 +57,11 @@ public class SqlSumAggFunction extends SqlAggFunction
     public RelDataType[] getParameterTypes(RelDataTypeFactory typeFactory)
     {
         return new RelDataType [] { type };
+    }
+
+    public RelDataType getType()
+    {
+        return type;
     }
 
     public RelDataType getReturnType(RelDataTypeFactory typeFactory)

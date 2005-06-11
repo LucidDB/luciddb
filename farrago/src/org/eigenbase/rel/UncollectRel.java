@@ -35,7 +35,7 @@ import org.eigenbase.reltype.RelDataType;
  * @since Dec 12, 2004
  * @version $Id$
  */
-public class UncollectRel extends SingleRel {
+public final class UncollectRel extends SingleRel {
 
     public UncollectRel(
         RelOptCluster cluster, RelNode child)
@@ -46,8 +46,8 @@ public class UncollectRel extends SingleRel {
     // override Object (public, does not throw CloneNotSupportedException)
     public Object clone() {
         UncollectRel clone =
-            new UncollectRel(cluster, RelOptUtil.clone(child));
-        clone.traits = cloneTraits();
+            new UncollectRel(getCluster(), RelOptUtil.clone(getChild()));
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 
@@ -58,7 +58,7 @@ public class UncollectRel extends SingleRel {
 
     public static RelDataType deriveUncollectRowType(SingleRel rel)
     {
-        RelDataType inputType = rel.child.getRowType();
+        RelDataType inputType = rel.getChild().getRowType();
         assert(inputType.isStruct());
         assert(1 == inputType.getFields().length);
         RelDataType ret =

@@ -377,9 +377,9 @@ public class EnumeratedValues implements Cloneable
      */
     public static class BasicValue implements Value
     {
-        public final String description;
-        public final String name;
-        public final int ordinal;
+        private final String description;
+        private final String name;
+        private final int ordinal;
 
         /**
          * @pre name != null

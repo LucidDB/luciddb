@@ -82,8 +82,8 @@ public class IteratorToFennelConverter extends ConverterRel
     public Object clone()
     {
         IteratorToFennelConverter clone =
-            new IteratorToFennelConverter(cluster, child);
-        clone.traits = cloneTraits();
+            new IteratorToFennelConverter(getCluster(), getChild());
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 
@@ -276,7 +276,7 @@ public class IteratorToFennelConverter extends ConverterRel
             throw cannotImplement();
         }
 
-        RelDataType rowType = child.getRowType();
+        RelDataType rowType = getChild().getRowType();
 
         // Cheeky! We happen to know it's a FarragoRelImplementor (for now).
         JavaRelImplementor javaRelImplementor =
@@ -285,7 +285,7 @@ public class IteratorToFennelConverter extends ConverterRel
         // Generate code for children, producing the iterator expression
         // whose results are to be converted.
         Expression childExp =
-            javaRelImplementor.visitJavaChild(this, 0, (JavaRel) child);
+            javaRelImplementor.visitJavaChild(this, 0, (JavaRel) getChild());
 
         FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(this);
         Expression newTupleWriterExp =

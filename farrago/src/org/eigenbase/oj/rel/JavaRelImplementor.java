@@ -196,10 +196,12 @@ public class JavaRelImplementor implements RelImplementor
     {
         if (expression instanceof RexInputRef) {
             RexInputRef variable = (RexInputRef) expression;
-            if (rel instanceof JoinRel && false) {
-                return (JavaRel) findInputRel(rel, variable.index);
+            // REVIEW jvs 30-May-2005:  What's up with this?  The "&& false"
+            // should have at least a comment!
+            if (rel instanceof JoinRelBase && false) {
+                return (JavaRel) findInputRel(rel, variable.getIndex());
             } else {
-                return (JavaRel) rel.getInput(variable.index);
+                return (JavaRel) rel.getInput(variable.getIndex());
             }
         } else if (expression instanceof RexFieldAccess) {
             RexFieldAccess fieldAccess = (RexFieldAccess) expression;
@@ -733,7 +735,7 @@ public class JavaRelImplementor implements RelImplementor
         JavaRel rel)
     {
         OJAggImplementor aggImplementor =
-            implementorTable.get(call.aggregation);
+            implementorTable.get(call.getAggregation());
         return aggImplementor.implementStart(this, rel, call);
     }
 
@@ -742,7 +744,7 @@ public class JavaRelImplementor implements RelImplementor
         JavaRel rel)
     {
         OJAggImplementor aggImplementor =
-            implementorTable.get(call.aggregation);
+            implementorTable.get(call.getAggregation());
         return aggImplementor.implementStartAndNext(this, rel, call);
     }
 
@@ -752,7 +754,7 @@ public class JavaRelImplementor implements RelImplementor
         Expression accumulator)
     {
         OJAggImplementor aggImplementor =
-            implementorTable.get(call.aggregation);
+            implementorTable.get(call.getAggregation());
         aggImplementor.implementNext(this, rel, accumulator, call);
     }
 
@@ -766,7 +768,7 @@ public class JavaRelImplementor implements RelImplementor
         Expression accumulator)
     {
         OJAggImplementor aggImplementor =
-            implementorTable.get(call.aggregation);
+            implementorTable.get(call.getAggregation());
         return aggImplementor.implementResult(this, accumulator, call);
     }
 

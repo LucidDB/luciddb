@@ -78,8 +78,12 @@
     <text>Invalid number of arguments to function ''{0}''. Was expecting {1,number,#} arguments</text>
 </exception>
 
-<exception id="120003" name="ValidatorContext">
+<exception id="120003" name="ValidatorContextPoint" className="org.eigenbase.util.EigenbaseContextException">
     <text>At line {0,number,#}, column {1,number,#}</text>
+</exception>
+
+<exception id="120004" name="ValidatorContext" className="org.eigenbase.util.EigenbaseContextException">
+    <text>From line {0,number,#}, column {1,number,#} to line {2,number,#}, column {3,number,#}</text>
 </exception>
 
 <exception id="120010" name="CannotCastValue">
@@ -325,6 +329,10 @@
 
 <exception id="130070" name="NullIllegal" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Illegal use of ''NULL''</text>
+</exception>
+
+<exception id="130080" name="DynamicParamIllegal" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Illegal use of dynamic parameter</text>
 </exception>
 
 <!-- End of last error section ============================================ -->

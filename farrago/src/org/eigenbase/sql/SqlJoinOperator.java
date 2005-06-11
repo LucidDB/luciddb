@@ -62,7 +62,7 @@ public class SqlJoinOperator extends SqlOperator
     {
         assert (operands[SqlJoin.IS_NATURAL_OPERAND] instanceof SqlLiteral);
         final SqlLiteral isNatural = (SqlLiteral) operands[SqlJoin.IS_NATURAL_OPERAND];
-        assert (isNatural.typeName == SqlTypeName.Boolean);
+        assert (isNatural.getTypeName() == SqlTypeName.Boolean);
         assert operands[SqlJoin.CONDITION_TYPE_OPERAND] != null : "precondition: operands[CONDITION_TYPE_OPERAND] != null";
         assert operands[SqlJoin.CONDITION_TYPE_OPERAND] instanceof SqlLiteral
             && SqlLiteral.symbolValue(operands[SqlJoin.CONDITION_TYPE_OPERAND]) instanceof ConditionType;
@@ -95,7 +95,7 @@ public class SqlJoinOperator extends SqlOperator
         int rightPrec)
     {
         final SqlNode left = operands[SqlJoin.LEFT_OPERAND];
-        left.unparse(writer, leftPrec, this.leftPrec);
+        left.unparse(writer, leftPrec, getLeftPrec());
         writer.print(' ');
         if (SqlLiteral.booleanValue(operands[SqlJoin.IS_NATURAL_OPERAND])) {
             writer.print("NATURAL ");
@@ -125,7 +125,7 @@ public class SqlJoinOperator extends SqlOperator
             throw joinType.unexpected();
         }
         final SqlNode right = operands[SqlJoin.RIGHT_OPERAND];
-        right.unparse(writer, this.rightPrec, rightPrec);
+        right.unparse(writer, getRightPrec(), rightPrec);
         final SqlNode condition = operands[SqlJoin.CONDITION_OPERAND];
         if (condition != null) {
             final SqlJoinOperator.ConditionType conditionType = (ConditionType)

@@ -407,9 +407,11 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             {
                 public void visit(SqlCall call)
                 {
-                    if (call.operator instanceof FarragoUserDefinedRoutine) {
+                    if (call.getOperator()
+                        instanceof FarragoUserDefinedRoutine)
+                    {
                         FarragoUserDefinedRoutine function =
-                            (FarragoUserDefinedRoutine) call.operator;
+                            (FarragoUserDefinedRoutine) call.getOperator();
                         addDependency(function.getFemRoutine());
                     }
                     super.visit(call);
@@ -863,7 +865,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     }
 
     // implement SqlValidator.CatalogReader
-    public String [] getAllSchemaObjectNames(String [] names)
+    public SqlMoniker [] getAllSchemaObjectNames(String [] names)
     {
         return stmtValidator.getAllSchemaObjectNames(names);
     }

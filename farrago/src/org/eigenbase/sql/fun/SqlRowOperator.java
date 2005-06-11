@@ -30,8 +30,7 @@ import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.UnknownParamInference;
-import org.eigenbase.sql.type.CallOperands;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.util.Util;
 
 
@@ -52,7 +51,8 @@ public class SqlRowOperator extends SqlSpecialOperator
     {
         // Precedence of 100 because nothing can pull parentheses apart.
         super("ROW", SqlKind.Row, 100, false, null,
-            UnknownParamInference.useReturnType, null);
+            SqlTypeStrategies.otiReturnType,
+            SqlTypeStrategies.otcVariadic);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -64,47 +64,19 @@ public class SqlRowOperator extends SqlSpecialOperator
         return SqlSyntax.Special;
     }
 
-    // implement SqlOperator
-    public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()
-    {
-        return OperandsCountDescriptor.variadicCountDescriptor;
-    }
-
-    protected RelDataType getType(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        RelDataTypeFactory typeFactory,
-        CallOperands callOperands)
+    public RelDataType inferReturnType(
+        SqlOperatorBinding opBinding)
     {
         // The type of a ROW(e1,e2) expression is a record with the types
         // {e1type,e2type}.  According to the standard, field names are
         // implementation-defined.
-        RelDataType[] argTypes = callOperands.collectTypes();
+        RelDataType[] argTypes = opBinding.collectOperandTypes();
         final String [] fieldNames = new String[argTypes.length];
         for (int i = 0; i < fieldNames.length; i++) {
             fieldNames[i] = SqlUtil.deriveAliasFromOrdinal(i);
         }
-        return typeFactory.createStructType(argTypes, fieldNames);
-    }
-
-
-    protected boolean checkArgTypes(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        boolean throwOnFailure)
-    {
-        // any arguments are fine
-        Util.discard(call);
-        Util.discard(validator);
-        Util.discard(scope);
-        Util.discard(throwOnFailure);
-        return true;
-    }
-
-    protected void checkNumberOfArg(SqlCall call)
-    {
-        // any number of arguments is fine
+        return opBinding.getTypeFactory().createStructType(
+            argTypes, fieldNames);
     }
 
     public void test(SqlTester tester)

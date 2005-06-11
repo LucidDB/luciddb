@@ -104,13 +104,16 @@ public class SqlInsert extends SqlCall
         int rightPrec)
     {
         writer.print("INSERT INTO ");
-        getTargetTable().unparse(writer, operator.leftPrec, operator.rightPrec);
+        getTargetTable().unparse(
+            writer, getOperator().getLeftPrec(), getOperator().getRightPrec());
         if (getTargetColumnList() != null) {
-            getTargetColumnList().unparse(writer, operator.leftPrec,
-                operator.rightPrec);
+            getTargetColumnList().unparse(
+                writer, getOperator().getLeftPrec(),
+                getOperator().getRightPrec());
         }
         writer.println();
-        getSource().unparse(writer, operator.leftPrec, operator.rightPrec);
+        getSource().unparse(
+            writer, getOperator().getLeftPrec(), getOperator().getRightPrec());
     }
 
     public void validate(SqlValidator validator, SqlValidatorScope scope)

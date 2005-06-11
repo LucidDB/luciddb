@@ -40,7 +40,6 @@ import org.eigenbase.runtime.CalcIterator;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.util.Util;
 
-
 /**
  * <code>IterCalcRel</code> is an iterator implementation of a combination of
  * {@link ProjectRel} above an optional {@link FilterRel}.  It takes an
@@ -58,7 +57,7 @@ public class IterCalcRel extends ProjectRelBase implements JavaRel
 {
     //~ Instance fields -------------------------------------------------------
 
-    public final RexNode condition;
+    private final RexNode condition;
     private RexNode [] childExps;
 
     //~ Constructors ----------------------------------------------------------
@@ -92,8 +91,13 @@ public class IterCalcRel extends ProjectRelBase implements JavaRel
         return childExps;
     }
 
+    public RexNode getCondition()
+    {
+        return condition;
+    }
+
     // TODO jvs 10-May-2004: need a computeSelfCost which takes condition into
-    // account; maybe inherit from a new CalcRelBase?
+    // account; maybe inherit from CalcRelBase?
     public void explain(RelOptPlanWriter pw)
     {
         if (condition == null) {
@@ -109,13 +113,13 @@ public class IterCalcRel extends ProjectRelBase implements JavaRel
     public Object clone()
     {
         IterCalcRel clone = new IterCalcRel(
-            cluster,
-            RelOptUtil.clone(child),
+            getCluster(),
+            RelOptUtil.clone(getChild()),
             RexUtil.clone(exps),
             (condition == null) ? null : RexUtil.clone(condition),
             Util.clone(fieldNames),
             getFlags());
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 
@@ -164,8 +168,8 @@ public class IterCalcRel extends ProjectRelBase implements JavaRel
         if (condition != null) {
             condBody = new StatementList();
             RexNode rexIsTrue =
-                rel.getCluster().rexBuilder.makeCall(
-                    SqlStdOperatorTable.instance().isTrueOperator,
+                rel.getCluster().getRexBuilder().makeCall(
+                    SqlStdOperatorTable.isTrueOperator,
                     new RexNode [] { condition });
             Expression conditionExp =
                 implementor.translateViaStatements(rel, rexIsTrue, whileBody,
@@ -175,8 +179,6 @@ public class IterCalcRel extends ProjectRelBase implements JavaRel
             condBody = whileBody;
         }
 
-        // TODO:  if projection is identity, just return the underlying row
-        // instead
         RelDataTypeField [] fields = outputRowType.getFields();
         for (int i = 0; i < exps.length; i++) {
             String javaFieldName = Util.toJavaId(
@@ -225,12 +227,12 @@ public class IterCalcRel extends ProjectRelBase implements JavaRel
     public ParseTree implement(JavaRelImplementor implementor)
     {
         Expression childExp =
-            implementor.visitJavaChild(this, 0, (JavaRel) child);
+            implementor.visitJavaChild(this, 0, (JavaRel) getChild());
         RelDataType outputRowType = getRowType();
-        RelDataType inputRowType = child.getRowType();
+        RelDataType inputRowType = getChild().getRowType();
 
         Variable varInputRow = implementor.newVariable();
-        implementor.bind(child, varInputRow);
+        implementor.bind(getChild(), varInputRow);
 
         return implementAbstract(implementor, this, childExp, varInputRow,
             inputRowType, outputRowType, condition, exps);

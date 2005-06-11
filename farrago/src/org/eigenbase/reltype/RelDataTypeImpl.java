@@ -26,6 +26,7 @@ import java.nio.charset.*;
 import java.util.*;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
@@ -182,7 +183,7 @@ public abstract class RelDataTypeImpl
         if (typeName == null) {
             return null;
         }
-        return new SqlIdentifier(typeName.getName(), null);
+        return new SqlIdentifier(typeName.getName(), SqlParserPos.ZERO);
     }
 
     // implement RelDataType

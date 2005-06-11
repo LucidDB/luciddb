@@ -34,6 +34,7 @@ import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.Util;
 
 import java.nio.charset.Charset;
+import java.util.TimeZone;
 
 
 /**
@@ -69,6 +70,8 @@ public class SqlDataTypeSpec extends SqlNode
     private final int precision;
     private RelDataType type;
     private final String charSetName;
+    private final String format;
+    private final TimeZone timezone;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -85,6 +88,27 @@ public class SqlDataTypeSpec extends SqlNode
         this.scale = scale;
         this.precision = precision;
         this.charSetName = charSetName;
+        this.format = null;
+        this.timezone = null;
+    }
+
+    public SqlDataTypeSpec(
+        final SqlIdentifier typeName,
+        int precision,
+        int scale,
+        String charSetName,
+        String format,
+        TimeZone timezone,
+        SqlParserPos pos)
+    {
+        super(pos);
+        this.collectionsTypeName = null;
+        this.typeName = typeName;
+        this.scale = scale;
+        this.precision = precision;
+        this.charSetName = charSetName;
+        this.format = format;
+        this.timezone = timezone;
     }
 
     public SqlDataTypeSpec(
@@ -101,6 +125,8 @@ public class SqlDataTypeSpec extends SqlNode
         this.scale = scale;
         this.precision = precision;
         this.charSetName = charSetName;
+        this.format = null;
+        this.timezone = null;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -133,6 +159,16 @@ public class SqlDataTypeSpec extends SqlNode
     public String getCharSetName()
     {
         return charSetName;
+    }
+
+    public String getFormat()
+    {
+        return format;
+    }
+
+    public TimeZone getTimezone()
+    {
+        return timezone;
     }
 
     /**
@@ -233,6 +269,8 @@ public class SqlDataTypeSpec extends SqlNode
                 this.typeName.equalsDeep(that.typeName) &&
                 this.precision == that.precision &&
                 this.scale == that.scale &&
+                this.format == that.format &&
+                this.timezone == that.timezone &&
                 Util.equal(this.charSetName, that.charSetName);
         }
         return false;
@@ -251,8 +289,27 @@ public class SqlDataTypeSpec extends SqlNode
                 EigenbaseResource.instance().newUnknownDatatypeName(name));
         }
 
-        SqlTypeName sqlTypeName = SqlTypeName.get(name);
+        if (null != collectionsTypeName) {
+            final String collectionName = collectionsTypeName.getSimple();
+            if (!SqlTypeName.containsName(collectionName)) {
+                throw validator.newValidationError(this,
+                    EigenbaseResource.instance().newUnknownDatatypeName(
+                        collectionName));
+            }
+        }
+
         RelDataTypeFactory typeFactory = validator.getTypeFactory();
+        return deriveType(typeFactory);
+    }
+
+    /**
+     * Does not throw an error if the type is not built-in.
+     */
+    public RelDataType deriveType(RelDataTypeFactory typeFactory)
+    {
+        String name = typeName.getSimple();
+
+        SqlTypeName sqlTypeName = SqlTypeName.get(name);
 
         // TODO jvs 13-Dec-2004:  these assertions should be real
         // validation errors instead; need to share code with DDL
@@ -290,11 +347,6 @@ public class SqlDataTypeSpec extends SqlNode
 
         if (null != collectionsTypeName) {
             final String collectionName = collectionsTypeName.getSimple();
-            if (!SqlTypeName.containsName(collectionName)) {
-                throw validator.newValidationError(this,
-                    EigenbaseResource.instance().newUnknownDatatypeName(
-                        collectionName));
-            }
 
             SqlTypeName collectionsSqlTypeName =
                 SqlTypeName.get(collectionName);

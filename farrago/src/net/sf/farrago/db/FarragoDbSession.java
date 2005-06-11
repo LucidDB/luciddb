@@ -1,5 +1,5 @@
 /*
-// $Id: //open/dev/farrago/src/net/sf/farrago/db/FarragoDbSession.java#27
+// $Id$
 // Farrago is an extensible data management system.
 // Copyright (C) 2005-2005 The Eigenbase Project
 // Copyright (C) 2003-2005 Disruptive Tech

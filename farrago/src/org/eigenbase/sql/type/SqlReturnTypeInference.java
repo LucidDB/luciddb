@@ -2,9 +2,9 @@
 // $Id$
 // Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
+// Copyright (C) 2002-2005 Disruptive Tech
 // Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2004-2005 John V. Sichi
+// Portions Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -22,36 +22,37 @@
 */
 package org.eigenbase.sql.type;
 
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.reltype.*;
 
 /**
- * ExplicitParamInferences implements {@link UnknownParamInference}
- * by explicity supplying a type for each parameter.
+ * Strategy interface to infer the type of an operator call from the type of the
+ * operands.
  *
- * @author John V. Sichi
+ * <p>This interface is an example of the
+ * {@link org.eigenbase.util.Glossary#StrategyPattern strategy pattern}.
+ * This makes sense because many operators have similar, straightforward
+ * strategies, such as to take the type of the first operand.</p>
+ *
+ * @author Wael Chatila
+ * @since Sept 8, 2004
  * @version $Id$
  */
-public class ExplicitParamInference implements UnknownParamInference
+public interface SqlReturnTypeInference
 {
-    private final RelDataType [] paramTypes;
-
-    public ExplicitParamInference(RelDataType [] paramTypes)
-    {
-        this.paramTypes = paramTypes;
-    }
-
-    public void inferOperandTypes(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        SqlCall call,
-        RelDataType returnType,
-        RelDataType [] operandTypes)
-    {
-        System.arraycopy(paramTypes, 0, operandTypes, 0, paramTypes.length);
-    }
+    /**
+     * Infers the return type of a call to an {@link SqlOperator}.
+     *
+     * @param opBinding description of operator binding
+     *
+     * @return inferred type
+     */
+    public RelDataType inferReturnType(
+        SqlOperatorBinding opBinding);
 }
 
-// End ExplicitParamInference.java
+// End SqlReturnTypeInference.java
+

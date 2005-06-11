@@ -41,7 +41,7 @@ public class SqlWriter
 
     //~ Instance fields -------------------------------------------------------
 
-    public final SqlDialect dialect;
+    private final SqlDialect dialect;
     SqlSelect query;
     Stack queryStack = new Stack();
     private PrintWriter pw;
@@ -58,6 +58,11 @@ public class SqlWriter
 
     //~ Methods ---------------------------------------------------------------
 
+    public SqlDialect getDialect()
+    {
+        return dialect;
+    }
+    
     public void popQuery(SqlSelect query)
     {
         assert (query == this.query);

@@ -67,7 +67,7 @@ class AggChecker extends SqlBasicVisitor
             return;
         }
         // Is it a call to a parentheses-free function?
-        SqlCall call = SqlUtil.makeCall(validator.opTab, id);
+        SqlCall call = SqlUtil.makeCall(validator.getOperatorTable(), id);
         if (call != null) {
             call.accept(this);
             return;
@@ -86,7 +86,7 @@ class AggChecker extends SqlBasicVisitor
     }
 
     public void visit(SqlCall call) {
-        if (call.operator.isAggregator()) {
+        if (call.getOperator().isAggregator()) {
             // For example, 'sum(sal)' in 'SELECT sum(sal) FROM emp GROUP
             // BY deptno'
             return;

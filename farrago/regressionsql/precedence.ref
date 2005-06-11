@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/precedence.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/precedence.sql#2 $
 0: jdbc:farrago:> -- Full vertical system testing of precedence tests 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -48,7 +48,7 @@
 | 20.0    |
 +---------+
 0: jdbc:farrago:> values (2.0*{fn pow(2.0, 2.0)}+3.0*{fn pow(2.0, 2.0)});
-Error: At line 1, column 13: Function '{fn POW}' is not defined (state=,code=0)
+Error: From line 1, column 13 to line 1, column 15: Function '{fn POW}' is not defined (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values (true is unknown is not unknown);
 +---------+

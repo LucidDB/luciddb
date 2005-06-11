@@ -65,7 +65,9 @@ public class FennelCollectRule extends RelOptRule {
 
         FennelPullCollectRel fennelCollectRel =
             new FennelPullCollectRel(
-                collectRel.getCluster(), fennelInput, collectRel.name);
+                collectRel.getCluster(),
+                fennelInput,
+                collectRel.getFieldName());
         call.transformTo(fennelCollectRel);
     }
 }

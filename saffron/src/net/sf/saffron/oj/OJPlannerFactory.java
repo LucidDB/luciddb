@@ -229,7 +229,7 @@ public class OJPlannerFactory
             final RelNode javaChild =
                 mergeTraitsAndConvert(
                     aggregate.getTraits(), CallingConvention.JAVA, 
-                    aggregate.child);
+                    aggregate.getChild());
             if (javaChild == null) {
                 return null;
             }
@@ -256,12 +256,12 @@ public class OJPlannerFactory
         public void onMatch(RelOptRuleCall call)
         {
             JavaDistinctRel distinct = (JavaDistinctRel) call.rels[0];
-            RelDataType rowType = distinct.child.getRowType();
+            RelDataType rowType = distinct.getChild().getRowType();
             if (rowType.getFieldList().size() == 0) {
                 call.transformTo(
                     new JavaExistsRel(
                         distinct.getCluster(),
-                        distinct.child));
+                        distinct.getChild()));
             }
         }
     }
@@ -270,17 +270,20 @@ public class OJPlannerFactory
     {
         public DistinctToJavaRule()
         {
-            super(DistinctRel.class, CallingConvention.NONE,
+            super(AggregateRel.class, CallingConvention.NONE,
                 CallingConvention.JAVA, "DistinctToJavaRule");
         }
 
         public RelNode convert(RelNode rel)
         {
-            final DistinctRel distinct = (DistinctRel) rel;
+            final AggregateRel distinct = (AggregateRel) rel;
+            if (!distinct.isDistinct()) {
+                return null;
+            }
             final RelNode javaChild =
                 mergeTraitsAndConvert(
                     distinct.getTraits(), CallingConvention.JAVA,
-                    distinct.child);
+                    distinct.getChild());
             if (javaChild == null) {
                 return null;
             }
@@ -303,14 +306,15 @@ public class OJPlannerFactory
             final FilterRel filter = (FilterRel) rel;
             final RelNode javaChild =
                 mergeTraitsAndConvert(
-                    filter.getTraits(), CallingConvention.JAVA, filter.child);
+                    filter.getTraits(), CallingConvention.JAVA,
+                    filter.getChild());
             if (javaChild == null) {
                 return null;
             }
             return new JavaFilterRel(
                 filter.getCluster(),
                 javaChild,
-                filter.condition);
+                filter.getCondition());
         }
     }
 
@@ -397,13 +401,10 @@ public class OJPlannerFactory
         public RelNode convert(RelNode rel)
         {
             final ProjectRel project = (ProjectRel) rel;
-            if (project instanceof JavaProjectRel) {
-                return null;
-            }
             final RelNode javaChild =
                 mergeTraitsAndConvert(
                     project.getTraits(), CallingConvention.JAVA,
-                    project.child);
+                    project.getChild());
             if (javaChild == null) {
                 return null;
             }
@@ -456,9 +457,6 @@ public class OJPlannerFactory
         public RelNode convert(RelNode rel)
         {
             final UnionRel union = (UnionRel) rel;
-            if (union.getClass() != UnionRel.class) {
-                return null; // require precise class, otherwise we loop
-            }
             if (union.isDistinct()) {
                 return null; // can only convert non-distinct Union
             }

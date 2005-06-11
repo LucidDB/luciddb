@@ -72,7 +72,7 @@ public class SwapJoinRule extends RelOptRule
         case JoinRel.JoinType.RIGHT:
             return null;
         }
-        final RexBuilder rexBuilder = join.cluster.rexBuilder;
+        final RexBuilder rexBuilder = join.getCluster().getRexBuilder();
         final RelDataType leftRowType = join.getLeft().getRowType();
         final RelDataType rightRowType = join.getRight().getRowType();
         final VariableReplacer variableReplacer =
@@ -123,9 +123,6 @@ public class SwapJoinRule extends RelOptRule
     public void onMatch(final RelOptRuleCall call)
     {
         JoinRel join = (JoinRel) call.rels[0];
-        if (join instanceof CorrelatorRel) {
-            return;
-        }
 
         final ProjectRel swapped = swap(join);
         if (swapped != null) {
@@ -139,7 +136,7 @@ public class SwapJoinRule extends RelOptRule
             // the same as 'b join a'.
             // If we didn't do this, the swap join rule would fire on the new
             // join, ad infinitum.
-            final RexBuilder rexBuilder = swapped.cluster.rexBuilder;
+            final RexBuilder rexBuilder = swapped.getCluster().getRexBuilder();
             final RelDataType newJoinRowType = newJoin.getRowType();
             final RelDataTypeField [] newJoinFields =
                 newJoinRowType.getFields();
@@ -162,7 +159,7 @@ public class SwapJoinRule extends RelOptRule
                     exps,
                     fieldNames,
                     ProjectRel.Flags.Boxed);
-            RelNode rel = call.planner.register(project, newJoin);
+            RelNode rel = call.getPlanner().register(project, newJoin);
             Util.discard(rel);
         }
     }
@@ -205,7 +202,7 @@ public class SwapJoinRule extends RelOptRule
                 return rex;
             } else if (rex instanceof RexInputRef) {
                 RexInputRef var = (RexInputRef) rex;
-                int index = var.index;
+                int index = var.getIndex();
                 if (index < leftFields.length) {
                     // Field came from left side of join. Move it to the right.
                     return rexBuilder.makeInputRef(
@@ -219,7 +216,8 @@ public class SwapJoinRule extends RelOptRule
                         rightFields[index].getType(),
                         index);
                 }
-                throw Util.newInternal("Bad field offset: index=" + var.index
+                throw Util.newInternal("Bad field offset: index="
+                    + var.getIndex()
                     + ", leftFieldCount=" + leftFields.length
                     + ", rightFieldCount=" + rightFields.length);
             } else {

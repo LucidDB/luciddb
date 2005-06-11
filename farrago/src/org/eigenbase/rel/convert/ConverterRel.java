@@ -56,7 +56,7 @@ public abstract class ConverterRel extends SingleRel
     //~ Instance fields -------------------------------------------------------
 
     protected RelTraitSet inTraits;
-    public final RelTraitDef traitDef;
+    protected final RelTraitDef traitDef;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -82,8 +82,8 @@ public abstract class ConverterRel extends SingleRel
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        double dRows = child.getRows();
-        double dCpu = child.getRows();
+        double dRows = getChild().getRows();
+        double dCpu = getChild().getRows();
         double dIo = 0;
         return planner.makeCost(dRows, dCpu, dIo);
     }
@@ -104,6 +104,11 @@ public abstract class ConverterRel extends SingleRel
     protected RelTraitSet getInputTraits()
     {
         return inTraits;
+    }
+
+    public RelTraitDef getTraitDef()
+    {
+        return traitDef;
     }
 
     /**

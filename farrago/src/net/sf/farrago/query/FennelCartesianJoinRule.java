@@ -65,9 +65,6 @@ public class FennelCartesianJoinRule extends RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
         JoinRel joinRel = (JoinRel) call.rels[0];
-        if (joinRel instanceof CorrelatorRel) {
-            return;
-        }
 
         RelNode leftRel = call.rels[1];
         RelNode rightRel = call.rels[2];
@@ -78,7 +75,7 @@ public class FennelCartesianJoinRule extends RelOptRule
         }
 
         if (!joinRel.getCondition().equals(
-                    joinRel.getCluster().rexBuilder.makeLiteral(true))) {
+                joinRel.getCluster().getRexBuilder().makeLiteral(true))) {
             // TODO: implement condition with a filter, or better: do that in a
             // separate logical transformation
             return;

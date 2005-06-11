@@ -29,7 +29,7 @@ import org.eigenbase.relopt.*;
  * Converts a relational expression to any given output convention.
  *
  * <p>
- * Unlike most {@link ConverterRel}s, and abstract converter is always
+ * Unlike most {@link ConverterRel}s, an abstract converter is always
  * abstract. You would typically create an <code>AbstractConverter</code>
  * when it is necessary to transform a relational expression immediately;
  * later, rules will transform it into relational expressions which can be
@@ -69,7 +69,8 @@ public class AbstractConverter extends ConverterRel
 
     public Object clone()
     {
-        return new AbstractConverter(cluster, child, traitDef, cloneTraits());
+        return new AbstractConverter(
+            getCluster(), getChild(), traitDef, cloneTraits());
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
@@ -128,13 +129,13 @@ public class AbstractConverter extends ConverterRel
 
         public void onMatch(RelOptRuleCall call)
         {
-            final VolcanoPlanner planner = (VolcanoPlanner) call.planner;
+            final VolcanoPlanner planner = (VolcanoPlanner) call.getPlanner();
             AbstractConverter converter = (AbstractConverter) call.rels[0];
             final RelSubset converterSubset = planner.getSubset(converter);
             if (!planner.getCost(converterSubset).isInfinite()) {
                 return;
             }
-            final RelNode child = converter.child;
+            final RelNode child = converter.getChild();
             RelNode converted =
                 planner.changeTraitsUsingConverters(child,
                     converter.traits);

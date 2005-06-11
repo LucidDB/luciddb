@@ -74,7 +74,8 @@ public class JavaToExistsConvertlet extends JavaConvertlet
         StatementList stmtList = new StatementList();
         implementor.pushStatementList(stmtList);
         Object o =
-            implementor.visitJavaChild(converter, 0, (JavaRel) converter.child);
+            implementor.visitJavaChild(
+                converter, 0, (JavaRel) converter.getChild());
         assert (o == null);
         implementor.popStatementList(stmtList);
 

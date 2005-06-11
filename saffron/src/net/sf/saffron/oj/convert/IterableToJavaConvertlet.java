@@ -69,7 +69,8 @@ public class IterableToJavaConvertlet extends JavaConvertlet
         StatementList whileBody = new StatementList();
         Variable variable_iter = implementor.newVariable();
         Expression exp =
-            implementor.visitJavaChild(converter, 0, (JavaRel) converter.child);
+            implementor.visitJavaChild(
+                converter, 0, (JavaRel) converter.getChild());
         stmtList.add(
             new VariableDeclaration(
                 new TypeName("java.util.Iterator"),
@@ -80,7 +81,7 @@ public class IterableToJavaConvertlet extends JavaConvertlet
                 new MethodCall(variable_iter, "hasNext", null),
                 whileBody));
         OJClass rowType = OJUtil.typeToOJClass(
-            converter.child.getRowType(),
+            converter.getChild().getRowType(),
             implementor.getTypeFactory());
         Variable variable_row =
             implementor.bind(

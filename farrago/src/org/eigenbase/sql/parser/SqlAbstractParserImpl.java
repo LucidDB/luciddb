@@ -311,7 +311,7 @@ public abstract class SqlAbstractParserImpl
     /**
      * Operator table containing the standard SQL operators and functions.
      */
-    public final SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
+    protected final SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
 
     protected int nDynamicParams;
 

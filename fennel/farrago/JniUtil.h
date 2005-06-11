@@ -178,10 +178,6 @@ public:
      */
     static jmethodID methGetIndexRoot;
 
-    /**
-     * Java method 'void FennelPipeIterator.write(ByteBuffer, int byteCount)'.
-     */
-    static jmethodID methFennelPipeIterWrite;
 
     /**
      * Initializes JNI debugging.

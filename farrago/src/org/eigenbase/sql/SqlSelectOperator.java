@@ -27,7 +27,7 @@ import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.ReturnTypeInferenceImpl;
+import org.eigenbase.sql.type.*;
 
 
 /**
@@ -71,7 +71,7 @@ public class SqlSelectOperator extends SqlOperator
     public SqlSelectOperator()
     {
         super("SELECT", SqlKind.Select, 1, true,
-            ReturnTypeInferenceImpl.useScope, null, null);
+            SqlTypeStrategies.rtiScope, null, null);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -158,8 +158,8 @@ public class SqlSelectOperator extends SqlOperator
         // sure that an unjoined nested select will be properly
         // parenthesized
         fromClause.unparse(writer,
-            SqlStdOperatorTable.instance().joinOperator.leftPrec - 1,
-            SqlStdOperatorTable.instance().joinOperator.rightPrec - 1);
+            SqlStdOperatorTable.joinOperator.getLeftPrec() - 1,
+            SqlStdOperatorTable.joinOperator.getRightPrec() - 1);
         SqlNode whereClause = operands[SqlSelect.WHERE_OPERAND];
         if (whereClause != null) {
             writer.println();

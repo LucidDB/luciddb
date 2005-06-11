@@ -52,10 +52,11 @@ public class VectorToArrayConvertlet extends JavaConvertlet
         ConverterRel converter)
     {
         OJClass clazz = OJUtil.typeToOJClass(
-            converter.child.getRowType(),
+            converter.getChild().getRowType(),
             implementor.getTypeFactory()); // "Rowtype"
         Expression expr =
-            implementor.visitJavaChild(converter, 0, (JavaRel) converter.child);
+            implementor.visitJavaChild(
+                converter, 0, (JavaRel) converter.getChild());
         return new MethodCall(
             TypeName.forOJClass(OJClass.forClass(SaffronUtil.class)),
             "copyInto",

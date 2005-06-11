@@ -27,9 +27,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.OperandsTypeChecking;
-import org.eigenbase.sql.type.ReturnTypeInferenceImpl;
-import org.eigenbase.sql.type.SqlTypeUtil;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.EnumeratedValues;
@@ -48,20 +46,22 @@ public class SqlTrimFunction extends SqlFunction
     public SqlTrimFunction()
     {
         super("TRIM", SqlKind.Trim,
-            new ReturnTypeInferenceImpl.TransformCascade(
-                ReturnTypeInferenceImpl.useThirdArgType,
-                ReturnTypeInferenceImpl.toNullable
+            new SqlTypeTransformCascade(
+                SqlTypeStrategies.rtiThirdArgType,
+                SqlTypeTransforms.toNullable
             ),
             null,
-            OperandsTypeChecking.typeNullableStringStringOfSameType,
+            SqlTypeStrategies.otcStringSameX2,
             SqlFunctionCategory.String);
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    public OperandsCountDescriptor getOperandsCountDescriptor()
+    public SqlOperandCountRange getOperandCountRange()
     {
-        return new OperandsCountDescriptor(3);
+        // REVIEW jvs 2-June-2005:  shouldn't this be TwoOrThree?
+        // Also, inconsistent with with otc above!
+        return SqlOperandCountRange.Three;
     }
 
     public void unparse(
@@ -70,7 +70,7 @@ public class SqlTrimFunction extends SqlFunction
         int leftPrec,
         int rightPrec)
     {
-        writer.print(name);
+        writer.print(getName());
         writer.print("(");
         assert operands[0] instanceof SqlLiteral;
         operands[0].unparse(writer, 0, 0);
@@ -81,7 +81,7 @@ public class SqlTrimFunction extends SqlFunction
         writer.print(")");
     }
 
-    protected String getSignatureTemplate(final int operandsCount)
+    public String getSignatureTemplate(final int operandsCount)
     {
         switch (operandsCount) {
         case 2:
@@ -108,17 +108,21 @@ public class SqlTrimFunction extends SqlFunction
         return super.createCall(operands, pos);
     }
 
-    protected boolean checkArgTypes(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope,
+    public boolean checkOperandTypes(
+        SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
+        SqlCall call = callBinding.getCall();
+        SqlValidator validator = callBinding.getValidator();
+        SqlValidatorScope scope  = callBinding.getScope();
+        
         for (int i = 1; i < 3; i++) {
-            if (!OperandsTypeChecking.typeNullableString.check(call, validator,
-                        scope, call.operands[i], 0, throwOnFailure)) {
+            if (!SqlTypeStrategies.otcString.checkSingleOperandType(
+                    callBinding,
+                    call.operands[i], 0, throwOnFailure))
+            {
                 if (throwOnFailure) {
-                    throw call.newValidationSignatureError(validator, scope);
+                    throw callBinding.newValidationSignatureError();
                 }
                 return false;
             }
@@ -145,8 +149,8 @@ public class SqlTrimFunction extends SqlFunction
      */
     public static class Flag extends EnumeratedValues.BasicValue
     {
-        public final int left;
-        public final int right;
+        private final int left;
+        private final int right;
 
         private Flag(String name,
             int left,
@@ -155,6 +159,16 @@ public class SqlTrimFunction extends SqlFunction
             super(name, ordinal, null);
             this.left = left;
             this.right = right;
+        }
+
+        public int getLeft()
+        {
+            return left;
+        }
+
+        public int getRight()
+        {
+            return right;
         }
 
         public static final int Both_ordinal = 0;

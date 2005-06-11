@@ -50,7 +50,8 @@ public class ArrayToExistsConvertlet extends JavaConvertlet
         ConverterRel converter)
     {
         Expression exp =
-            implementor.visitJavaChild(converter, 0, (JavaRel) converter.child);
+            implementor.visitJavaChild(
+                converter, 0, (JavaRel) converter.getChild());
         return new BinaryExpression(
             exp,
             BinaryExpression.GREATER,

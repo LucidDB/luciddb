@@ -112,7 +112,7 @@ public class OJQueryExpander extends QueryExpander
                     rel.getCluster(),
                     rel,
                     new RexNode [] {
-                        rel.getCluster().rexBuilder.makeInputRef(
+                        rel.getCluster().getRexBuilder().makeInputRef(
                             field0.getType(),
                             0)
                     },
@@ -188,7 +188,7 @@ public class OJQueryExpander extends QueryExpander
 
         // spit out java statement block
         JavaRelImplementor implementor =
-            new JavaRelImplementor(best.getCluster().rexBuilder);
+            new JavaRelImplementor(best.getCluster().getRexBuilder());
         Object o = implementor.implementRoot(best);
         return new Block((StatementList) o);
     }
@@ -254,9 +254,10 @@ public class OJQueryExpander extends QueryExpander
                     QueryInfo.createCluster(
                         queryInfo,
                         getEnvironment());
-                cluster.originalExpression =
-                    ((JavaRexBuilder) cluster.rexBuilder).makeJava(cluster.env,
-                        exp);
+                cluster.setOriginalExpression(
+                    ((JavaRexBuilder) cluster.getRexBuilder()).makeJava(
+                        cluster.getEnv(),
+                        exp));
                 switch (binaryExp.getOperator()) {
                 case BinaryExpression.UNION:
                     return new UnionRel(
@@ -264,9 +265,15 @@ public class OJQueryExpander extends QueryExpander
                         new RelNode [] { left, right },
                         false);
                 case BinaryExpression.EXCEPT:
-                    return new MinusRel(cluster, left, right);
+                    return new MinusRel(
+                        cluster, 
+                        new RelNode [] { left, right },
+                        false);
                 case BinaryExpression.INTERSECT:
-                    return new IntersectRel(cluster, left, right);
+                    return new IntersectRel(
+                        cluster, 
+                        new RelNode [] { left, right },
+                        false);
                 default:
                     throw Util.newInternal("bad case");
                 }
@@ -365,13 +372,13 @@ tryit:
                         queryInfo,
                         getEnvironment());
                 rexExp =
-                    ((JavaRexBuilder) cluster.rexBuilder).makeJava(
+                    ((JavaRexBuilder) cluster.getRexBuilder()).makeJava(
                         getEnvironment(),
                         exp);
-                cluster.originalExpression = rexExp;
+                cluster.setOriginalExpression(rexExp);
             }
             final RelDataType rowType =
-                OJUtil.ojToType(cluster.typeFactory, desiredRowType);
+                OJUtil.ojToType(cluster.getTypeFactory(), desiredRowType);
             RelNode rel = new ExpressionReaderRel(cluster, rexExp, rowType);
             if (queryInfo != null) {
                 queryInfo.leaves.add(rel);
@@ -386,7 +393,7 @@ tryit:
     {
         // spit out java statement block
         JavaRelImplementor implementor =
-            new JavaRelImplementor(rel.getCluster().rexBuilder);
+            new JavaRelImplementor(rel.getCluster().getRexBuilder());
         Object o = implementor.implementRoot(rel);
         return (Expression) o;
     }

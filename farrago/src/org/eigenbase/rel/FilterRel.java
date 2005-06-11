@@ -23,28 +23,16 @@
 
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptPlanWriter;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelOptUtil;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexUtil;
-
+import org.eigenbase.relopt.*;
+import org.eigenbase.rex.*;
 
 /**
  * A <code>FilterRel</code> is a relational expression which iterates over its
  * input, and returns elements for which <code>condition</code> evaluates to
  * <code>true</code>.
  */
-public class FilterRel extends SingleRel
+public final class FilterRel extends FilterRelBase
 {
-    //~ Instance fields -------------------------------------------------------
-
-    public RexNode condition;
-
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -61,66 +49,21 @@ public class FilterRel extends SingleRel
         RelNode child,
         RexNode condition)
     {
-        this(
+        super(
             cluster, new RelTraitSet(CallingConvention.NONE), child,
             condition);
     }
 
-    /**
-     * Creates a filter.
-     *
-     * @param cluster {@link RelOptCluster} this relational expression
-     *        belongs to
-     * @param traits the traits of this rel
-     * @param child input relational expression
-     * @param condition boolean expression which determines whether a row is
-     *        allowed to pass
-     */
-    protected FilterRel(
-        RelOptCluster cluster,
-        RelTraitSet traits,
-        RelNode child,
-        RexNode condition)
-    {
-        super(cluster, traits, child);
-        this.condition = condition;
-    }
-
     //~ Methods ---------------------------------------------------------------
-
-    public RexNode [] getChildExps()
-    {
-        return new RexNode [] { condition };
-    }
 
     public Object clone()
     {
-        return new FilterRel(
-            cluster,
-            cloneTraits(),
-            RelOptUtil.clone(child),
-            RexUtil.clone(condition));
-    }
-
-    public RelOptCost computeSelfCost(RelOptPlanner planner)
-    {
-        double dRows = getRows();
-        double dCpu = child.getRows();
-        double dIo = 0;
-        return planner.makeCost(dRows, dCpu, dIo);
-    }
-
-    // override RelNode
-    public double getRows()
-    {
-        return child.getRows() * RexUtil.getSelectivity(condition);
-    }
-
-    public void explain(RelOptPlanWriter pw)
-    {
-        pw.explain(
-            this,
-            new String [] { "child", "condition" });
+        FilterRel clone = new FilterRel(
+            getCluster(),
+            RelOptUtil.clone(getChild()),
+            RexUtil.clone(getCondition()));
+        clone.inheritTraitsFrom(this);
+        return clone;
     }
 }
 

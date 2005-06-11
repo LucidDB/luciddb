@@ -57,7 +57,7 @@ public class BasicSqlType extends AbstractSqlType
         Util.pre(
             typeName.allowsPrecScale(false, false),
             "typeName.allowsPrecScale(false,false), typeName="
-            + typeName.name);
+            + typeName.getName());
         this.precision = PRECISION_NOT_SPECIFIED;
         this.scale = SCALE_NOT_SPECIFIED;
         computeDigest();

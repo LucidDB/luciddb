@@ -30,7 +30,6 @@ import org.eigenbase.sql.type.SqlTypeName;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.sql.Date;
 
 /**
  * A SQL literal representing a DATE value,
@@ -44,6 +43,11 @@ public class SqlDateLiteral extends SqlAbstractDateTimeLiteral
     SqlDateLiteral(Calendar d, SqlParserPos pos)
     {
         super(d, false, SqlTypeName.Date, 0, SqlParserUtil.DateFormatStr, pos);
+    }
+
+    SqlDateLiteral(Calendar d, String format, SqlParserPos pos)
+    {
+        super(d, false, SqlTypeName.Date, 0, format, pos);
     }
 
     /**
@@ -74,7 +78,7 @@ public class SqlDateLiteral extends SqlAbstractDateTimeLiteral
 
     public RelDataType createSqlType(RelDataTypeFactory typeFactory)
     {
-        return typeFactory.createSqlType(typeName);
+        return typeFactory.createSqlType(getTypeName());
     }
 }
 

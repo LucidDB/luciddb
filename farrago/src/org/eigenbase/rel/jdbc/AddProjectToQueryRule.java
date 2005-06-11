@@ -74,14 +74,15 @@ class AddProjectToQueryRule extends RelOptRule
                 oldQuery.connection,
                 oldQuery.dialect,
                 (SqlSelect) oldQuery.sql.clone(),
-                oldQuery.dataSource);
+                oldQuery.getDataSource());
         SqlWriter writer = new SqlWriter(query.dialect, null);
         writer.pushQuery(query.sql);
         SqlNodeList list = new SqlNodeList(SqlParserPos.ZERO);
         for (int i = 0; i < project.getChildExps().length; i++) {
             RexNode exp = project.getChildExps()[i];
             list.add(
-                project.getCluster().rexToSqlTranslator.translate(writer, exp));
+                project.getCluster().getRexToSqlTranslator().translate(
+                    writer, exp));
         }
         query.sql.getOperands()[SqlSelect.SELECT_OPERAND] = list;
         writer.popQuery(query.sql);

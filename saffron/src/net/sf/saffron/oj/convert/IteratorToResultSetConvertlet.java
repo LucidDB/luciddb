@@ -52,7 +52,8 @@ public class IteratorToResultSetConvertlet extends JavaConvertlet
         ConverterRel converter)
     {
         Object o =
-            implementor.visitJavaChild(converter, 0, (JavaRel) converter.child);
+            implementor.visitJavaChild(
+                converter, 0, (JavaRel) converter.getChild());
         final RelDataType rowType = converter.getRowType();
         OJClass rowClass = OJUtil.typeToOJClass(
             rowType, implementor.getTypeFactory());

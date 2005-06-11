@@ -24,6 +24,7 @@
 package org.eigenbase.sql.parser;
 
 import org.eigenbase.resource.EigenbaseResource;
+import org.eigenbase.sql.SqlNode;
 
 
 /**
@@ -125,6 +126,71 @@ public class SqlParserPos
             new Integer(lineNumber),
             new Integer(columnNumber));
     }
+
+    /**
+     * Combines this parser position with another to create a position which
+     * spans from the first point in the first to the last point in the other.
+     */
+    public SqlParserPos plus(SqlParserPos pos)
+    {
+        return new SqlParserPos(
+            getLineNum(),
+            getColumnNum(),
+            pos.getEndLineNum(),
+            pos.getEndColumnNum());
+    }
+
+    /**
+     * Combines this parser position with an array of positions to create a
+     * position which spans from the first point in the first to the last point
+     * in the other.
+     */
+    public SqlParserPos plusAll(SqlNode[] nodes)
+    {
+        int line = getLineNum();
+        int column = getColumnNum();
+        int endLine = getEndLineNum();
+        int endColumn = getEndColumnNum();
+        return sum(nodes, line, column, endLine, endColumn);
+    }
+
+    /**
+     * Combines the parser positions of an array of nodes to create a
+     * position which spans from the beginning of the first to the end of the
+     * last.
+     */
+    public static SqlParserPos sum(
+        SqlNode[] nodes)
+    {
+        return sum(nodes, -1, -1, Integer.MAX_VALUE, Integer.MAX_VALUE);
+    }
+
+    private static SqlParserPos sum(
+        SqlNode[] nodes,
+        int line,
+        int column,
+        int endLine,
+        int endColumn)
+    {
+        for (int i = 0; i < nodes.length; i++) {
+            SqlNode node = nodes[i];
+            SqlParserPos pos = node.getParserPosition();
+            if (pos.getLineNum() < line ||
+                pos.getLineNum() == line &&
+                pos.getColumnNum() < column) {
+                line = pos.getLineNum();
+                column = pos.getColumnNum();
+            }
+            if (pos.getEndLineNum() > endLine ||
+                pos.getEndLineNum() == endColumn &&
+                pos.getEndColumnNum() > endColumn) {
+                endLine = pos.getLineNum();
+                endColumn = pos.getColumnNum();
+            }
+        }
+        return new SqlParserPos(line, column, endLine, endColumn);
+    }
+
 }
 
 

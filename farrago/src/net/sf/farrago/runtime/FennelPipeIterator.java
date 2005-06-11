@@ -24,6 +24,7 @@ package net.sf.farrago.runtime;
 import org.eigenbase.runtime.Interlock;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.logging.Logger;
 
 import net.sf.farrago.trace.FarragoTrace;
@@ -82,47 +83,77 @@ public class FennelPipeIterator extends FennelAbstractIterator
     protected int populateBuffer()
     {
         // Wait until the producer has finished populating the buffer.
-//        System.out.println("populateBuffer: 1");
+        tracer.fine("FennelPipeIterator.populateBuffer: wait");
         interlock.beginReading();
-//        System.out.println("populateBuffer: 2");
+        tracer.fine("FennelPipeIterator.populateBuffer: continue");
         return byteBuffer.limit();
     }
 
     protected void releaseBuffer()
     {
         // signal that the producer can start writing to the buffer
-//        System.out.println("endReading: 1");
+        tracer.fine("FennelPipeIterator.releaseBuffer");
         interlock.endReading();
-//        System.out.println("endReading: 2");
     }
 
+
     /**
-     * Writes the contents of a direct byte buffer into this iterator.
-     *
+     * Requests a direct ByteBuffer suitable for #write. The C++ caller may pin the
+     * backing array (JNI GetByteArrayElements), copy data, and then pass back the
+     * ByteBuffer by calling #write.
+     */
+    public ByteBuffer getByteBuffer(int size)
+    {
+        byte b[] = new byte[size];
+        ByteBuffer bb = ByteBuffer.wrap(b);
+        bb.order(ByteOrder.nativeOrder());
+        bb.clear();
+        return bb;
+    }
+
+
+    /**
+     * Writes the contents of a byte buffer into this iterator.
+     * To avoid an extra copy here, the buffer should be direct and expose
+     * its backing array (ie <code>byteBufer.hasArray() == true</code>).
+     * (Unfortunately the result of JNI NewDirectByteBuffer() need not have
+     * a backing array).
+     
      * <p>This method is called by the producer, typically from JNI.
      * When it is complete, the {@link #populateBuffer()} method will be able
      * to proceed.
      *
-     * <p>Note: the {@link ByteBuffer} must be direct.
-     * Also, the limit of the byte buffer is ignored; the
+     * <p>The limit of the byte buffer is ignored; the
      * <code>byteCount</code> parameter is used instead.
+
+     * @param byteBuffer the source
+     * @param byteCount 0 means end-of-stream
      */
     public void write(ByteBuffer byteBuffer, int byteCount) throws Throwable
     {
         try {
-            System.out.println("write: byteCount=" + byteCount);
             // Wait until the consumer has finished reading from the buffer.
+            tracer.fine("FennelPipeIterator.write: wait");
             interlock.beginWriting();
-//            System.out.println("write: 2");
+            tracer.fine("FennelPipeIterator.write: have buffer");
+
             byteBuffer.limit(byteCount);
-//            System.out.println("write: 3");
-            this.byteBuffer = byteBuffer;
-            this.bufferAsArray = byteBuffer.array();
+            if (byteBuffer.hasArray()) {
+                this.byteBuffer = byteBuffer;
+                this.bufferAsArray = byteBuffer.array();
+            } else {
+                // argh, have to wrap a copy of the new data
+                byte b[] = new byte[byteCount];
+                byteBuffer.rewind();
+                byteBuffer.get(b);
+                this.bufferAsArray = b;
+                this.byteBuffer = ByteBuffer.wrap(b);
+            }
+
             // Signal that the consumer can start reading. This will allow the
             // populateBuffer method to complete.
-//            System.out.println("write: 4");
+            tracer.fine("FennelPipeIterator.write: done");
             interlock.endWriting();
-//            System.out.println("write: 5");
         } catch (Throwable e) {
             tracer.throwing(null, null, e);
             throw e;

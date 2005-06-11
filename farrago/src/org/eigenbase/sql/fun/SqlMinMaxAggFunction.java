@@ -27,9 +27,7 @@ import org.eigenbase.sql.SqlAggFunction;
 import org.eigenbase.sql.SqlFunction;
 import org.eigenbase.sql.SqlFunctionCategory;
 import org.eigenbase.sql.SqlKind;
-import org.eigenbase.sql.type.OperandsTypeChecking;
-import org.eigenbase.sql.type.ReturnTypeInference;
-import org.eigenbase.sql.type.ReturnTypeInferenceImpl;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.util.Util;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
@@ -75,8 +73,8 @@ public class SqlMinMaxAggFunction extends SqlAggFunction
     public static final int MINMAX_COMPARATOR = 2;
 
     public final RelDataType [] argTypes;
-    public final boolean isMin;
-    public final int kind;
+    private final boolean isMin;
+    private final int kind;
 
     public SqlMinMaxAggFunction(
         RelDataType [] argTypes,
@@ -87,13 +85,23 @@ public class SqlMinMaxAggFunction extends SqlAggFunction
         super(
             isMin ? "MIN" : "MAX",
             SqlKind.Function,
-            ReturnTypeInferenceImpl.useFirstArgType,
+            SqlTypeStrategies.rtiFirstArgType,
             null,
-            OperandsTypeChecking.typeNumeric,
+            SqlTypeStrategies.otcNumeric,
             SqlFunctionCategory.Numeric);
         this.argTypes = argTypes;
         this.isMin = isMin;
         this.kind = kind;
+    }
+
+    public boolean isMin()
+    {
+        return isMin;
+    }
+
+    public int getMinMaxKind()
+    {
+        return kind;
     }
 
     public RelDataType[] getParameterTypes(RelDataTypeFactory typeFactory)

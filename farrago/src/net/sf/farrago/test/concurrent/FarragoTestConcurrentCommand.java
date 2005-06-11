@@ -81,11 +81,16 @@ public interface FarragoTestConcurrentCommand
      * which is a test error */
     public static class ShouldHaveFailedException extends RuntimeException
     {
-        public final String description;
+        private final String description;
 
         public ShouldHaveFailedException(String description)
         {
             this.description = description;
+        }
+
+        public String getDescription()
+        {
+            return description;
         }
     }
 }

@@ -55,7 +55,7 @@ public class LurqlPlanVertex
      * The alias assigned to this vertex in the parsed query, 
      * or null if none.
      */
-    public final String var;
+    private final String var;
 
     /**
      * Set of JmiClassVertex references corresponding to

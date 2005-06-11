@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/expressions/udfInvocation.sql#9 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/expressions/udfInvocation.sql#10 $
 0: jdbc:farrago:> -- Test queries with UDF invocations
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udftest;
@@ -186,7 +186,7 @@ Error: Object definition contains recursive cycle (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail due to datatype mismatch
 0: jdbc:farrago:> values celsius_to_fahrenheit('freezing');
-Error: At line 1, column 8: No match found for function signature CELSIUS_TO_FAHRENHEIT(<CHARACTER>) (state=,code=0)
+Error: From line 1, column 8 to line 1, column 28: No match found for function signature CELSIUS_TO_FAHRENHEIT(<CHARACTER>) (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values celsius_to_rankine(0);
 +---------+
@@ -561,7 +561,7 @@ Error: java.lang.NullPointerException: null (state=,code=0)
 0: jdbc:farrago:> set path 'udftest';
 0: jdbc:farrago:> -- should fail
 0: jdbc:farrago:> values important_constant();
-Error: At line 1, column 8: No match found for function signature IMPORTANT_CONSTANT() (state=,code=0)
+Error: From line 1, column 8 to line 1, column 25: No match found for function signature IMPORTANT_CONSTANT() (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set path 'v1';
 0: jdbc:farrago:> 
@@ -657,7 +657,7 @@ Error: At line 1, column 8: No match found for function signature IMPORTANT_CONS
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail
 0: jdbc:farrago:> values confusing(true);
-Error: At line 1, column 8: No match found for function signature CONFUSING(<BOOLEAN>) (state=,code=0)
+Error: From line 1, column 8 to line 1, column 16: No match found for function signature CONFUSING(<BOOLEAN>) (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

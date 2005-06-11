@@ -10,12 +10,12 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -61,7 +61,7 @@ import java.util.logging.*;
 public abstract class DdlHandler
 {
     protected static final Logger tracer = FarragoTrace.getDdlValidatorTracer();
-    
+
     protected final FarragoSessionDdlValidator validator;
 
     protected final FarragoRepos repos;
@@ -72,7 +72,7 @@ public abstract class DdlHandler
      * control.
      */
     protected final FarragoResource res;
-    
+
     public DdlHandler(FarragoSessionDdlValidator validator)
     {
         this.validator = validator;
@@ -100,7 +100,7 @@ public abstract class DdlHandler
             validateAttribute(attribute);
         }
     }
-    
+
     public void validateBaseColumnSet(FemBaseColumnSet columnSet)
     {
         validateAttributeSet(columnSet);
@@ -141,7 +141,7 @@ public abstract class DdlHandler
         if (attribute.getIsNullable() == null) {
             attribute.setIsNullable(NullableTypeEnum.COLUMN_NULLABLE);
         }
-        
+
         validateTypedElement(attribute, attribute.getOwner());
 
         String defaultExpression = attribute.getInitialValue().getBody();
@@ -153,7 +153,7 @@ public abstract class DdlHandler
                 throw validator.newPositionalError(
                     attribute,
                     res.newValidatorBadDefaultClause(
-                        repos.getLocalizedObjectName(attribute), 
+                        repos.getLocalizedObjectName(attribute),
                         ex));
             } finally {
                 validator.releaseReentrantSession(session);
@@ -168,7 +168,7 @@ public abstract class DdlHandler
         CwmSqldataType type =
             validator.getStmtValidator().findSqldataType(
                 dataType.getTypeName());
-        
+
         element.setType(type);
         if (dataType.getPrecision() > 0) {
             element.setPrecision(new Integer(dataType.getPrecision()));
@@ -180,7 +180,7 @@ public abstract class DdlHandler
             element.setCharacterSetName(dataType.getCharSetName());
         }
     }
-    
+
     public void validateTypedElement(
         FemAbstractTypedElement abstractElement,
         CwmNamespace cwmNamespace)
@@ -194,7 +194,7 @@ public abstract class DdlHandler
         if (dataType != null) {
             convertSqlToCatalogType(dataType, element);
         }
-        
+
         CwmSqldataType type = (CwmSqldataType) element.getType();
         SqlTypeName typeName = SqlTypeName.get(type.getName());
 
@@ -401,7 +401,7 @@ public abstract class DdlHandler
         if (column.getName() == null) {
             column.setName(field.getName());
         }
-        CwmSqldataType cwmType = 
+        CwmSqldataType cwmType =
             validator.getStmtValidator().findSqldataType(
                 type.getSqlIdentifier());
         column.setType(cwmType);
@@ -420,34 +420,48 @@ public abstract class DdlHandler
             column.setIsNullable(NullableTypeEnum.COLUMN_NO_NULLS);
         }
     }
-    
+
     public Throwable adjustExceptionParserPosition(
         CwmModelElement modelElement,
         Throwable ex)
     {
-        if (ex instanceof EigenbaseException) {
-            EigenbaseException contextExcn = (EigenbaseException) ex;
-            if (contextExcn.getPosLine() != 0) {
-                // We have context information for the query, and
-                // need to adjust the position to match the original
-                // DDL statement.
-                SqlParserPos offsetPos = validator.getParserOffset(
-                    modelElement);
-                int line = contextExcn.getPosLine();
-                int col = contextExcn.getPosColumn();
-                if (line == 1) {
-                    col += (offsetPos.getColumnNum() - 1);
-                }
-                line += (offsetPos.getLineNum() - 1);
-                ex = EigenbaseResource.instance().newValidatorContext(
-                    new Integer(line),
-                    new Integer(col),
-                    ex.getCause());
-            }
+        if (!(ex instanceof EigenbaseContextException)) {
+            return ex;
         }
-        return ex;
+        EigenbaseContextException contextExcn = (EigenbaseContextException) ex;
+        // We have context information for the query, and
+        // need to adjust the position to match the original
+        // DDL statement.
+        SqlParserPos offsetPos = validator.getParserOffset(modelElement);
+        int line = contextExcn.getPosLine();
+        int col = contextExcn.getPosColumn();
+        int endLine = contextExcn.getEndPosLine();
+        int endCol = contextExcn.getEndPosColumn();
+        if (line == 1) {
+            col += (offsetPos.getColumnNum() - 1);
+        }
+        line += (offsetPos.getLineNum() - 1);
+        if (endLine == 1) {
+            endCol += (offsetPos.getColumnNum() - 1);
+        }
+        endLine += (offsetPos.getLineNum() - 1);
+
+        EigenbaseContextException newEx =
+            line == endLine && col == endCol ?
+            EigenbaseResource.instance().newValidatorContextPoint(
+                new Integer(line),
+                new Integer(col),
+                ex.getCause()) :
+            EigenbaseResource.instance().newValidatorContext(
+                new Integer(line),
+                new Integer(col),
+                new Integer(endLine),
+                new Integer(endCol),
+                ex.getCause());
+        newEx.setPosition(line, col, endLine, endCol);
+        return newEx;
     }
-    
+
     private void validateDefaultClause(
         FemAbstractAttribute attribute,
         FarragoSession session,

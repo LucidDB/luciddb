@@ -77,7 +77,8 @@ public class SqlCharStringLiteral extends SqlAbstractStringLiteral
     {
         if (false) {
             String stringValue = ((NlsString) value).getValue();
-            writer.print(writer.dialect.quoteStringLiteral(stringValue));
+            writer.print(
+                writer.getDialect().quoteStringLiteral(stringValue));
         }
         assert value instanceof NlsString;
         writer.print(value.toString());

@@ -89,7 +89,7 @@ public class StringProperty extends Property
      */
     public void set(String value)
     {
-        properties.setProperty(path, value);
+        properties.setProperty(getPath(), value);
     }
 }
 

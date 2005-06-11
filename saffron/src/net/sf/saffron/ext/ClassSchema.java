@@ -80,7 +80,7 @@ public class ClassSchema implements RelOptSchema
                             getTarget(connectionExpr),
                             field.getName());
                     final JavaRexBuilder javaRexBuilder =
-                        (JavaRexBuilder) cluster.rexBuilder;
+                        (JavaRexBuilder) cluster.getRexBuilder();
                     final RexNode rex =
                         javaRexBuilder.makeJava(info.env, expr);
                     final ExpressionReaderRel exprReader =
@@ -97,7 +97,7 @@ public class ClassSchema implements RelOptSchema
 
                     // Create a project "$f0.name, $f0.empno, $f0.gender".
                     RexNode fieldAccess =
-                        cluster.rexBuilder.makeInputRef(
+                        cluster.getRexBuilder().makeInputRef(
                             exprReaderFields[0].getType(),
                             0);
                     final RelDataTypeField [] fields =
@@ -106,7 +106,8 @@ public class ClassSchema implements RelOptSchema
                     final RexNode [] exps = new RexNode[fields.length];
                     for (int i = 0; i < exps.length; i++) {
                         exps[i] =
-                            cluster.rexBuilder.makeFieldAccess(fieldAccess, i);
+                            cluster.getRexBuilder().makeFieldAccess(
+                                fieldAccess, i);
                         fieldNames[i] = fields[i].getName();
                     }
                     final ProjectRel project =

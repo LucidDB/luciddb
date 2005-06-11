@@ -64,7 +64,7 @@ class TableAccessToQueryRule extends RelOptRule
                 null,
                 new SqlIdentifier(
                     new String [] { table.getName() },
-                    null),
+                    SqlParserPos.ZERO),
                 null,
                 null,
                 null,

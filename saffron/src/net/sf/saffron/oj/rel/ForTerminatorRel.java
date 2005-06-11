@@ -65,12 +65,12 @@ public class ForTerminatorRel extends SingleRel implements TerminatorRel,
     public Object clone()
     {
         ForTerminatorRel clone = new ForTerminatorRel(
-            cluster,
-            RelOptUtil.clone(child),
+            getCluster(),
+            RelOptUtil.clone(getChild()),
             (Variable) Util.clone(variable),
             Util.clone(body),
             label);
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 
@@ -84,7 +84,8 @@ public class ForTerminatorRel extends SingleRel implements TerminatorRel,
         implementor.setExitStatement(new BreakStatement(label));
         StatementList stmtList = new StatementList();
         implementor.pushStatementList(stmtList);
-        Object o = implementor.visitJavaChild(this, 0, (JavaRel) child);
+        Object o = implementor.visitJavaChild(
+            this, 0, (JavaRel) getChild());
         assert (o == null);
         implementor.popStatementList(stmtList);
         return stmtList;
@@ -104,7 +105,7 @@ public class ForTerminatorRel extends SingleRel implements TerminatorRel,
         stmtList.add(
             new VariableDeclaration(
                 OJUtil.toTypeName(
-                    child.getRowType(),
+                    getChild().getRowType(),
                     implementor.getTypeFactory()),
                 variable.toString(),
                 exp));

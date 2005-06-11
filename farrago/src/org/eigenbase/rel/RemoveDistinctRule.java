@@ -28,8 +28,8 @@ import org.eigenbase.util.Util;
 
 
 /**
- * Rule to remove a {@link DistinctRel} if the underlying relational expression
- * is already distinct, otherwise replace it with an AggregateRel.
+ * Rule to remove an {@link AggregateRel} implementing DISTINCT if the
+ * underlying relational expression is already distinct.
  */
 public class RemoveDistinctRule extends RelOptRule
 {
@@ -38,7 +38,7 @@ public class RemoveDistinctRule extends RelOptRule
     public RemoveDistinctRule()
     {
         super(new RelOptRuleOperand(
-                DistinctRel.class,
+                AggregateRel.class,
                 new RelOptRuleOperand [] {
                     new RelOptRuleOperand(RelNode.class, null)
                 }));
@@ -48,16 +48,17 @@ public class RemoveDistinctRule extends RelOptRule
 
     public void onMatch(RelOptRuleCall call)
     {
-        DistinctRel distinct = (DistinctRel) call.rels[0];
-        Util.discard(distinct);
-        RelNode child = call.rels[1];
-        if (!child.isDistinct()) {
-            call.transformTo(
-                new AggregateRel(
-                    child.getCluster(),
-                    child,
-                    child.getRowType().getFieldList().size(),
-                    new AggregateRel.Call[0]));
+        AggregateRel distinct = (AggregateRel) call.rels[0];
+        if (!distinct.isDistinct()) {
+            return;
+        }
+        RelNode child = distinct.getChild();
+        if (child.isDistinct()) {
+            child = call.getPlanner().register(child, distinct);
+            child = convert(child, distinct.getTraits());
+            if (child != null) {
+                call.transformTo(child);
+            }
         }
     }
 }

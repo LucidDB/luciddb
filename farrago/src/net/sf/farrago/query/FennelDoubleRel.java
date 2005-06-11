@@ -94,7 +94,7 @@ abstract class FennelDoubleRel extends AbstractRelNode implements FennelRel
     // implement FennelRel
     public FarragoTypeFactory getFarragoTypeFactory()
     {
-        return (FarragoTypeFactory) cluster.typeFactory;
+        return (FarragoTypeFactory) getCluster().getTypeFactory();
     }
 
     // implement RelNode
@@ -114,7 +114,7 @@ abstract class FennelDoubleRel extends AbstractRelNode implements FennelRel
     {
         RelDataType leftType = left.getRowType();
         RelDataType rightType = right.getRowType();
-        return cluster.typeFactory.createJoinType(
+        return getCluster().getTypeFactory().createJoinType(
             new RelDataType [] { leftType, rightType });
     }
 

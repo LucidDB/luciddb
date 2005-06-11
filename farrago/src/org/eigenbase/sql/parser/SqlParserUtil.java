@@ -128,6 +128,15 @@ public final class SqlParserUtil
     }
 
     /**
+     * Checks if the date/time format is valid
+     * @param pattern {@link SimpleDateFormat} pattern
+     */
+    public static void checkDateFormat(String pattern)
+    {
+        SimpleDateFormat df = new SimpleDateFormat(pattern);
+    }
+
+    /**
      * Parses a string using {@link SimpleDateFormat} and a given pattern
      *
      * @param s string to be parsed
@@ -139,11 +148,14 @@ public final class SqlParserUtil
     private static Calendar parseDateFormat(
         String s,
         String pattern,
+        TimeZone tz,
         ParsePosition pp)
     {
         Util.pre(pattern != null, "pattern != null");
         SimpleDateFormat df = new SimpleDateFormat(pattern);
-        TimeZone tz = new SimpleTimeZone(0, "GMT+00:00");
+        if (tz == null) {
+            tz = new SimpleTimeZone(0, "GMT+00:00");
+        }
         Calendar ret = Calendar.getInstance(tz);
         df.setCalendar(ret);
         df.setLenient(false);
@@ -166,11 +178,12 @@ public final class SqlParserUtil
      */
     public static Calendar parseDateFormat(
         String s,
-        String pattern)
+        String pattern,
+        TimeZone tz)
     {
         Util.pre(pattern != null, "pattern != null");
         ParsePosition pp = new ParsePosition(0);
-        Calendar ret = parseDateFormat(s, pattern, pp);
+        Calendar ret = parseDateFormat(s, pattern, tz, pp);
         if (pp.getIndex() != s.length()) {
             // Didn't consume entire string - not good
             return null;
@@ -180,10 +193,11 @@ public final class SqlParserUtil
 
     public static PrecisionTime parsePrecisionDateTimeLiteral(
         String s,
-        String pattern)
+        String pattern,
+        TimeZone tz)
     {
         ParsePosition pp = new ParsePosition(0);
-        Calendar cal = parseDateFormat(s, pattern, pp);
+        Calendar cal = parseDateFormat(s, pattern, tz, pp);
         if (cal == null) {
             return null; // Invalid date/time format
         }
@@ -226,9 +240,7 @@ public final class SqlParserUtil
         }
 
         assert (pp.getIndex() == s.length());
-        PrecisionTime ret = new PrecisionTime();
-        ret.cal = cal;
-        ret.precision = p;
+        PrecisionTime ret = new PrecisionTime(cal, p);
         return ret;
     }
 
@@ -317,7 +329,7 @@ public final class SqlParserUtil
                 } else {
                     ps = withoutDayPattern;
                 }
-                
+
                 for (int iPattern = 0; iPattern < ps.length; iPattern++) {
                     String p = ps[iPattern];
                     Matcher m = Pattern.compile(p).matcher(value);
@@ -340,7 +352,7 @@ public final class SqlParserUtil
                         if (null==end && timeUnitsCount>1) {
                             return null;
                         } else if ((null!=end) &&
-                            ((end.ordinal-start.ordinal+1)!=timeUnitsCount)) {
+                            ((end.getOrdinal()-start.getOrdinal()+1)!=timeUnitsCount)) {
                             return null;
                         }
                         return ret;
@@ -445,16 +457,130 @@ public final class SqlParserUtil
         return s.substring(start, stop);
     }
 
+    /**
+     * Looks for one or two carets in a SQL string, and if present, converts
+     * them into a parser position.
+     *
+     * <p>Examples:<ul>
+     * <li>findPos("xxx^yyy") yields {"xxxyyy", position 3, line 1 column 4}
+     * <li>findPos("xxxyyy") yields {"xxxyyy", null}
+     * <li>findPos("xxx^yy^y") yields {"xxxyyy", position 3, line 4 column 4
+     *     through line 1 column 6}
+     * </ul>
+     */
+    public static StringAndPos findPos(String sql)
+    {
+        int firstCaret = sql.indexOf('^');
+        if (firstCaret < 0) {
+            return new StringAndPos(sql, -1, null);
+        }
+        int secondCaret = sql.indexOf('^', firstCaret + 1);
+        if (secondCaret < 0) {
+            String sqlSansCaret = sql.substring(0, firstCaret) +
+                sql.substring(firstCaret + 1);
+            int[] start = indexToLineCol(sql, firstCaret);
+            SqlParserPos pos = new SqlParserPos(start[0], start[1]);
+            return new StringAndPos(sqlSansCaret, firstCaret, pos);
+        } else {
+            String sqlSansCaret = sql.substring(0, firstCaret) +
+                sql.substring(firstCaret + 1, secondCaret) +
+                sql.substring(secondCaret + 1);
+            int[] start = indexToLineCol(sql, firstCaret);
+            int[] end = indexToLineCol(sql, secondCaret);
+            SqlParserPos pos =
+                new SqlParserPos(start[0], start[1], end[0], end[1]);
+            StringAndPos sap = new StringAndPos(sqlSansCaret, firstCaret, pos);
+            return sap;
+        }
+    }
+
+    /**
+     * Returns the (1-based) line and column corresponding to a particular
+     * (0-based) offset in a string.
+     *
+     * <p>Converse of {@link #lineColToIndex(String, int, int)}.
+     */
+    public static int[] indexToLineCol(String sql, int i)
+    {
+        int line = 0;
+        int j = 0;
+        while (true) {
+            int prevj = j;
+            j = sql.indexOf(Util.lineSeparator, j + 1);
+            if (j < 0 || j > i) {
+                return new int[] {line + 1, i - prevj + 1};
+            }
+            j += Util.lineSeparator.length();
+            ++line;
+        }
+    }
+
+    /**
+     * Finds the position (0-based) in a string which corresponds to a
+     * given line and column (1-based).
+     *
+     * <p>Converse of {@link #indexToLineCol(String, int)}.
+     */
+    public static int lineColToIndex(String sql, int line, int column)
+    {
+        --line;
+        --column;
+        int i = 0;
+        while (line-- > 0) {
+            i = sql.indexOf(Util.lineSeparator, i) +
+                Util.lineSeparator.length();
+        }
+        return i + column;
+    }
+
+    /**
+     * Converts a string to a string with one or two carets in it.
+     * For example, <code>addCarets("values (foo)", 1, 9, 1, 12)</code>
+     * yields "values (^foo^)".
+     */ 
+    public static String addCarets(
+        String sql, int line, int col, int endLine, int endCol)
+    {
+        String sqlWithCarets;
+        int cut = lineColToIndex(sql, line, col);
+        sqlWithCarets = sql.substring(0, cut) + "^" +
+            sql.substring(cut);
+        if (col != endCol ||
+            line != endLine) {
+            cut = lineColToIndex(sqlWithCarets,
+                endLine, endCol);
+            ++cut; // for caret
+            sqlWithCarets = sqlWithCarets.substring(0, cut) +
+                "^" + sqlWithCarets.substring(cut);
+        }
+        return sqlWithCarets;
+    }
+
     public static class ParsedCollation {
-        public final Charset charset;
-        public final Locale locale;
-        public final String strength;
+        private final Charset charset;
+        private final Locale locale;
+        private final String strength;
 
         public ParsedCollation(Charset charset, Locale locale, String strength)
         {
             this.charset = charset;
             this.locale = locale;
             this.strength = strength;
+        }
+
+        public Charset getCharset()
+        {
+            return charset;
+        }
+
+        public Locale getLocale()
+        {
+            return locale;
+        }
+
+        public String getStrength()
+        {
+            return strength;
         }
     }
 
@@ -596,13 +722,13 @@ outer:
                 SqlOperator current = ((ToTreeListItem) list.get(i)).op;
                 SqlParserPos currentPos = ((ToTreeListItem) list.get(i)).pos;
                 if ((stopperKind != SqlKind.Other)
-                        && (current.kind == stopperKind)) {
+                        && (current.getKind() == stopperKind)) {
                     break outer;
                 }
                 SqlOperator next;
                 int previousRight;
-                int left = current.leftPrec;
-                int right = current.rightPrec;
+                int left = current.getLeftPrec();
+                int right = current.getRightPrec();
                 if (left < minPrec) {
                     break outer;
                 }
@@ -613,15 +739,15 @@ outer:
                         previousRight = 0;
                     } else {
                         previous = ((ToTreeListItem) list.get(i - 2)).op;
-                        previousRight = previous.rightPrec;
+                        previousRight = previous.getRightPrec();
                     }
                     if (i == (count - 2)) {
                         next = null;
                         nextLeft = 0;
                     } else {
                         next = ((ToTreeListItem) list.get(i + 2)).op;
-                        nextLeft = next.leftPrec;
-                        if ((next.kind == stopperKind)
+                        nextLeft = next.getLeftPrec();
+                        if ((next.getKind() == stopperKind)
                                 && (stopperKind != SqlKind.Other)) {
                             // Suppose we're looking at 'AND' in
                             //    a BETWEEN b OR c AND d
@@ -652,8 +778,10 @@ outer:
                         // surrounding precedences obey the relation 2 < 3 and
                         // 4 >= 3, so we can reduce (b * c) to a single node.
                         SqlNode rightExp = (SqlNode) list.get(i + 1);
+                        SqlParserPos callPos = currentPos.plusAll(
+                            new SqlNode[] {leftExp, rightExp});
                         final SqlCall newExp =
-                            current.createCall(leftExp, rightExp, currentPos);
+                            current.createCall(leftExp, rightExp, callPos);
                         if (tracer.isLoggable(Level.FINE)) {
                             tracer.fine("Reduced infix: " + newExp);
                         }
@@ -669,7 +797,7 @@ outer:
                         previousRight = 0;
                     } else {
                         previous = ((ToTreeListItem) list.get(i - 2)).op;
-                        previousRight = previous.rightPrec;
+                        previousRight = previous.getRightPrec();
                     }
                     if (previousRight < left) {
                         // For example,
@@ -707,7 +835,7 @@ outer:
                         previousRight = 0;
                     } else {
                         previous = ((ToTreeListItem) list.get(i - 2)).op;
-                        previousRight = previous.rightPrec;
+                        previousRight = previous.getRightPrec();
                     }
                     int nextOrdinal = i + 2;
                     if (i == (count - 2)) {
@@ -721,9 +849,9 @@ outer:
                             Object listItem = list.get(nextOrdinal);
                             if (listItem instanceof ToTreeListItem) {
                                 next = ((ToTreeListItem) listItem).op;
-                                nextLeft = next.leftPrec;
+                                nextLeft = next.getLeftPrec();
                                 if ((stopperKind != SqlKind.Other)
-                                        && (next.kind == stopperKind)) {
+                                        && (next.getKind() == stopperKind)) {
                                     break outer;
                                 } else {
                                     break;
@@ -762,25 +890,67 @@ outer:
      */
     public static class PrecisionTime
     {
-        public Calendar cal;
-        public int precision;
+        private final Calendar cal;
+        private final int precision;
+
+        public PrecisionTime(Calendar cal, int precision)
+        {
+            this.cal = cal;
+            this.precision = precision;
+        }
+
+        public Calendar getCalendar()
+        {
+            return cal;
+        }
+
+        public int getPrecision()
+        {
+            return precision;
+        }
     }
 
     /**
      * Class that holds a {@link SqlOperator} and a {@link SqlParserPos}.
-     * Used by {@link #toTree} and the parser to associate a parsed operator
+     * Used by {@link SqlSpecialOperator#reduceExpr(int, List)} and the parser
+     * to associate a parsed operator
      * with a parser position.
      */
     public static class ToTreeListItem
     {
-        public SqlOperator op;
-        public SqlParserPos pos;
+        private final SqlOperator op;
+        private final SqlParserPos pos;
 
         public ToTreeListItem(
             SqlOperator op,
             SqlParserPos pos)
         {
             this.op = op;
+            this.pos = pos;
+        }
+
+        public SqlOperator getOperator()
+        {
+            return op;
+        }
+
+        public SqlParserPos getPos()
+        {
+            return pos;
+        }
+    }
+
+    /**
+     * Contains a string, the offset of a token within the string, and a
+     * parser position containing the beginning and end line number.
+     */
+    public static class StringAndPos {
+        public final String sql;
+        public final int cursor;
+        public final SqlParserPos pos;
+        StringAndPos(String sql, int cursor, SqlParserPos pos) {
+            this.sql = sql;
+            this.cursor = cursor;
             this.pos = pos;
         }
     }

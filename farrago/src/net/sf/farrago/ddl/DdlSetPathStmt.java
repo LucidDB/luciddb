@@ -65,7 +65,7 @@ public class DdlSetPathStmt extends DdlSetContextStmt
             schemaList = Collections.singletonList(parsedExpr);
         } else if (parsedExpr instanceof SqlCall) {
             SqlCall call = (SqlCall) parsedExpr;
-            if (call.operator.name.equalsIgnoreCase("row")) {
+            if (call.getOperator().getName().equalsIgnoreCase("row")) {
                 schemaList = Arrays.asList(call.getOperands());
             }
         }

@@ -41,13 +41,8 @@ import org.eigenbase.sql.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class DdlSetSystemParamStmt extends DdlStmt
+public class DdlSetSystemParamStmt extends DdlSetParamStmt
 {
-    //~ Instance fields -------------------------------------------------------
-
-    private final String paramName;
-    private final SqlLiteral paramValue;
-
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -61,90 +56,128 @@ public class DdlSetSystemParamStmt extends DdlStmt
         String paramName,
         SqlLiteral paramValue)
     {
-        super(null);
-        this.paramName = paramName;
-        this.paramValue = paramValue;
+        super(paramName, paramValue);
     }
 
     //~ Methods ---------------------------------------------------------------
-
-    /**
-     * @return name of the parameter set by this statement
-     */
-    public String getParamName()
-    {
-        return paramName;
-    }
 
     // override DdlStmt
     public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
         super.preValidate(ddlValidator);
 
-        FemFarragoConfig farragoConfig =
-            ddlValidator.getRepos().getCurrentConfig();
-        RefObject config = farragoConfig;
-
-        Object oldValue;
-
-        try {
-            oldValue = config.refGetValue(paramName);
-        } catch (InvalidNameException ex) {
-            // not a Farrago param, but maybe a Fennel param
-            try {
-                oldValue =
-                    farragoConfig.getFennelConfig().refGetValue(paramName);
-
-                // if we get here, it's a Fennel parameter
-                config = farragoConfig.getFennelConfig();
-            } catch (InvalidNameException ex2) {
-                throw FarragoResource.instance().newValidatorUnknownSysParam(
-                    ddlValidator.getRepos().getLocalizedObjectName(paramName));
-            }
-        }
-
-        String newValueAsString = paramValue.toValue();
-
-        // TODO:  use a generic type conversion facility.  Also, this assumes
-        // parameters are never optional.
-        Object newValue;
-        try {
-            if (oldValue instanceof RefEnum) {
-                Method method =
-                    oldValue.getClass().getMethod(
-                        "forName",
-                        new Class [] { String.class });
-                newValue =
-                    method.invoke(
-                        null,
-                        new Object [] { newValueAsString });
-            } else {
-                Constructor constructor =
-                    oldValue.getClass().getConstructor(
-                        new Class [] { String.class });
-                newValue =
-                    constructor.newInstance(
-                        new Object [] { newValueAsString });
-            }
-        } catch (Exception ex) {
-            throw FarragoResource.instance().newValidatorSysParamTypeMismatch(
-                paramValue.toString(),
-                ddlValidator.getRepos().getLocalizedObjectName(paramName));
-        }
-
-        try {
-            config.refSetValue(paramName, newValue);
-        } catch (InvalidNameException ex) {
-            // We know the parameter exists, so InvalidNameException in this
-            // context implies that it's immutable.
-            throw FarragoResource.instance().newValidatorImmutableSysParam(
-                ddlValidator.getRepos().getLocalizedObjectName(paramName));
-        } catch (TypeMismatchException ex) {
-            throw FarragoResource.instance().newValidatorSysParamTypeMismatch(
-                paramValue.toString(),
-                paramName);
-        }
+         FemFarragoConfig farragoConfig =
+             ddlValidator.getRepos().getCurrentConfig();
+         
+         preValidate(
+             ddlValidator, farragoConfig, farragoConfig.getFennelConfig());
     }
+
+    // implement DdlSetParamStmt
+    protected void handleInvalidName(
+        FarragoSessionDdlValidator ddlValidator, InvalidNameException thrown)
+    {
+        throw FarragoResource.instance().newValidatorUnknownSysParam(
+            ddlValidator.getRepos().getLocalizedObjectName(getParamName()));
+    }
+
+    // implement DdlSetParamStmt
+    protected void handleReflectionException(
+        FarragoSessionDdlValidator ddlValidator, Exception thrown)
+    {
+        throw FarragoResource.instance().newValidatorSysParamTypeMismatch(
+            getParamValue().toString(),
+            ddlValidator.getRepos().getLocalizedObjectName(getParamName()));
+    }
+
+    // implement DdlSetParamStmt
+    protected void handleImmutableParameter(
+        FarragoSessionDdlValidator ddlValidator, InvalidNameException thrown)
+    {
+        throw FarragoResource.instance().newValidatorImmutableSysParam(
+            ddlValidator.getRepos().getLocalizedObjectName(getParamName()));
+    }
+
+    // implement DdlSetParamStmt
+    protected void handleTypeMismatch(
+        FarragoSessionDdlValidator ddlValidator, TypeMismatchException thrown)
+    {
+        throw FarragoResource.instance().newValidatorSysParamTypeMismatch(
+            getParamValue().toString(), getParamName());
+    }
+    
+//     // override DdlStmt
+//     public void preValidate(FarragoSessionDdlValidator ddlValidator)
+//     {
+//         super.preValidate(ddlValidator);
+
+//         FemFarragoConfig farragoConfig =
+//             ddlValidator.getRepos().getCurrentConfig();
+//         RefObject config = farragoConfig;
+
+//         Object oldValue;
+
+//         String paramName = getParamName();
+//         SqlLiteral paramValue = getParamValue();
+
+//         try {
+//             oldValue = config.refGetValue(paramName);
+//         } catch (InvalidNameException ex) {
+//             // not a Farrago param, but maybe a Fennel param
+//             try {
+//                 oldValue =
+//                     farragoConfig.getFennelConfig().refGetValue(paramName);
+
+//                 // if we get here, it's a Fennel parameter
+//                 config = farragoConfig.getFennelConfig();
+//             } catch (InvalidNameException ex2) {
+//                 throw FarragoResource.instance().newValidatorUnknownSysParam(
+//                     ddlValidator.getRepos().getLocalizedObjectName(paramName));
+//             }
+//         }
+
+//         String newValueAsString = paramValue.toValue();
+
+//         // TODO:  use a generic type conversion facility.  Also, this assumes
+//         // parameters are never optional.
+//         Object newValue;
+//         try {
+//             if (oldValue instanceof RefEnum) {
+//                 Method method =
+//                     oldValue.getClass().getMethod(
+//                         "forName",
+//                         new Class [] { String.class });
+//                 newValue =
+//                     method.invoke(
+//                         null,
+//                         new Object [] { newValueAsString });
+//             } else {
+//                 Constructor constructor =
+//                     oldValue.getClass().getConstructor(
+//                         new Class [] { String.class });
+//                 newValue =
+//                     constructor.newInstance(
+//                         new Object [] { newValueAsString });
+//             }
+//         } catch (Exception ex) {
+//             throw FarragoResource.instance().newValidatorSysParamTypeMismatch(
+//                 paramValue.toString(),
+//                 ddlValidator.getRepos().getLocalizedObjectName(paramName));
+//         }
+
+//         try {
+//             config.refSetValue(paramName, newValue);
+//         } catch (InvalidNameException ex) {
+//             // We know the parameter exists, so InvalidNameException in this
+//             // context implies that it's immutable.
+//             throw FarragoResource.instance().newValidatorImmutableSysParam(
+//                 ddlValidator.getRepos().getLocalizedObjectName(paramName));
+//         } catch (TypeMismatchException ex) {
+//             throw FarragoResource.instance().newValidatorSysParamTypeMismatch(
+//                 paramValue.toString(),
+//                 paramName);
+//         }
+//    }
 
     // implement DdlStmt
     public void visit(DdlVisitor visitor)

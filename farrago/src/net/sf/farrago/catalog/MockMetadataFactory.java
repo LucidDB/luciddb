@@ -23,6 +23,7 @@ package net.sf.farrago.catalog;
 
 import net.sf.farrago.FarragoMetadataFactory;
 import net.sf.farrago.FarragoPackage;
+import net.sf.farrago.FarragoMetadataFactoryImpl;
 
 import javax.jmi.reflect.RefBaseObject;
 import javax.jmi.reflect.RefClass;
@@ -61,7 +62,7 @@ import org.eigenbase.xom.XMLOutput;
  * <li>All other types are presumed to be regular attributes.
  * </ul>
  */
-public class MockMetadataFactory extends FarragoMetadataFactory
+public class MockMetadataFactory extends FarragoMetadataFactoryImpl
 {
     private int nextId = 0;
 

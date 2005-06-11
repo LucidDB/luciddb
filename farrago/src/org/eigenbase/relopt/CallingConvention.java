@@ -162,18 +162,18 @@ public class CallingConvention implements RelTrait
     /**
      * Enumerated value's name.
      */
-    public final String name;
+    private final String name;
 
     /**
      * Enumerated value's ordinal.
      */
-    public final int ordinal;
+    private final int ordinal;
 
     /**
      * Interface that a relational expression of this calling convention
      * must implement. Must be a sub-interface of {@link RelNode}.
      */
-    public final Class interfaze;
+    private final Class interfaze;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -195,6 +195,11 @@ public class CallingConvention implements RelTrait
 
     //~ Methods ---------------------------------------------------------------
 
+    public Class getInterface()
+    {
+        return interfaze;
+    }
+    
     public static int generateOrdinal()
     {
         return maxOrdinal + 1;

@@ -37,12 +37,12 @@ import org.eigenbase.sql.type.*;
  *
  * @since 23 September, 2001
  */
-public class OneRowRel extends AbstractRelNode
+public final class OneRowRel extends OneRowRelBase
 {
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates an <code>OneRow</code>.
+     * Creates a <code>OneRowRel</code>.
      *
      * @param cluster {@link RelOptCluster} this relational expression
      *        belongs to
@@ -50,43 +50,6 @@ public class OneRowRel extends AbstractRelNode
     public OneRowRel(RelOptCluster cluster)
     {
         super(cluster, new RelTraitSet(CallingConvention.NONE));
-    }
-
-    /**
-     * Creates an <code>OneRow</code> with specific traits.
-     *
-     * @param cluster {@link RelOptCluster} this relational expression
-     *        belongs to
-     * @param traits for this rel
-     */
-    protected OneRowRel(RelOptCluster cluster, RelTraitSet traits)
-    {
-        super(cluster, traits);
-    }
-
-    //~ Methods ---------------------------------------------------------------
-
-    public Object clone()
-    {
-        return this;
-    }
-
-    public RelOptCost computeSelfCost(RelOptPlanner planner)
-    {
-        return planner.makeTinyCost();
-    }
-
-    protected RelDataType deriveRowType()
-    {
-        return deriveOneRowType(cluster.typeFactory);
-    }
-
-    public static RelDataType deriveOneRowType(RelDataTypeFactory typeFactory)
-    {
-        return typeFactory.createStructType(
-            new RelDataType [] { typeFactory.createSqlType(
-                    SqlTypeName.Integer) },
-            new String [] { "ZERO" });
     }
 }
 

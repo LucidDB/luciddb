@@ -46,20 +46,23 @@ SqlIdentifier CompoundIdentifier2() :
 {
     List list = new ArrayList();
     String p;
+    SqlParserPos pos;
 }
 {
     p = Identifier()
     {
         list.add(p);
+        pos = getPos();
     }
     [
         <DOT> p = Identifier()
         {
             list.add(p);
+            pos = pos.plus(getPos());
         }
     ]
     {
-        return new SqlIdentifier(SqlParserUtil.toStringArray(list),null);
+        return new SqlIdentifier(SqlParserUtil.toStringArray(list), pos);
     }
 }
 
@@ -67,26 +70,30 @@ SqlIdentifier CompoundIdentifier3() :
 {
     List list = new ArrayList();
     String p;
+    SqlParserPos pos;
 }
 {
     p = Identifier()
     {
         list.add(p);
+        pos = getPos();
     }
     [
         <DOT> p = Identifier()
         {
             list.add(p);
+            pos = pos.plus(getPos());
         }
         [
             <DOT> p = Identifier()
             {
                 list.add(p);
+                pos = pos.plus(getPos());
             }
         ]
     ]
     {
-        return new SqlIdentifier(SqlParserUtil.toStringArray(list),null);
+        return new SqlIdentifier(SqlParserUtil.toStringArray(list), pos);
     }
 }
 
@@ -1132,7 +1139,7 @@ CwmModelElement JarDrop() :
 {
     <JAR> qualifiedJarName = CompoundIdentifier3()
     <OPTIONS>
-    <LPAREN> deploymentState = NumericLiteral(SqlParserPos.ZERO) <RPAREN>
+    <LPAREN> deploymentState = NumericLiteral() <RPAREN>
     CascadeOption()
     {
         FemJar jar = (FemJar) farragoParser.getStmtValidator().findSchemaObject(
@@ -1295,7 +1302,7 @@ FemDataWrapper DataWrapperDefinition() :
         wrapper.setName(wrapperName.getSimple());
         wrapper.setNamespace(
             getRepos().getCatalog(
-                FarragoRepos.SYSBOOT_CATALOG_NAME));
+                FarragoCatalogInit.SYSBOOT_CATALOG_NAME));
         wrapper.setForeign(isForeign);
     }
     <LIBRARY> libraryFile = QuotedString()
@@ -1355,7 +1362,7 @@ FemDataServer DataServerDefinition() :
         server.setName(serverName.getSimple());
         server.setNamespace(
             getRepos().getCatalog(
-                FarragoRepos.SYSBOOT_CATALOG_NAME));
+                FarragoCatalogInit.SYSBOOT_CATALOG_NAME));
     }
     [
         <TYPE> serverType = QuotedString()
@@ -1797,7 +1804,7 @@ FemJar JarDefinition() :
         jar.setUrl(url);
     }
     <OPTIONS> <LPAREN>
-    deploymentState = NumericLiteral(SqlParserPos.ZERO) <RPAREN>
+    deploymentState = NumericLiteral() <RPAREN>
     {
         jar.setDeploymentState(deploymentState.intValue());
         return jar;
@@ -2184,7 +2191,7 @@ SqlIdentifier GrantElement() :
 {
     (<INSERT> | <UPDATE> | <SELECT> | <DELETE> | <EXECUTE> | <USAGE>) 
     {
-        SqlIdentifier privId = new SqlIdentifier(token.image,  null);
+        SqlIdentifier privId = new SqlIdentifier(token.image,  getPos());
         return privId;
     }
 }
@@ -2243,13 +2250,14 @@ DdlStmt GrantPrivStmt() :
     CwmModelElement grantedObject;
     List granteeList;
     List privList;
+    SqlParserPos pos1, pos2;
 }
 {
     (
-        <ALL> <PRIVILEGES>
+        <ALL> pos1 = getPos() <PRIVILEGES> pos2 = getPos()
         {
             // TODO: externalize "ALL"
-            SqlIdentifier allPrivId = new SqlIdentifier("ALL", null);
+            SqlIdentifier allPrivId = new SqlIdentifier("ALL", pos1.plus(pos2));
             privList = startList(allPrivId);
         }
         |

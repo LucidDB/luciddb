@@ -24,8 +24,7 @@ import openjava.ptree.*;
 
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.util.OJUtil;
-import org.eigenbase.rel.DistinctRel;
-import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
@@ -35,10 +34,10 @@ import org.eigenbase.util.Util;
 
 
 /**
- * <code>JavaDistinctRel</code> implements {@link DistinctRel} inline. See
+ * <code>JavaDistinctRel</code> implements DISTINCT inline. See
  * also {@link JavaAggregateRel}.
  */
-public class JavaDistinctRel extends DistinctRel implements JavaLoopRel
+public class JavaDistinctRel extends SingleRel implements JavaLoopRel
 {
     Variable var_h;
 
@@ -50,16 +49,22 @@ public class JavaDistinctRel extends DistinctRel implements JavaLoopRel
     }
 
     // implement RelNode
+    public boolean isDistinct()
+    {
+        return true;
+    }
+
+    // implement RelNode
     public Object clone()
     {
-        JavaDistinctRel clone = new JavaDistinctRel(cluster, child);
-        clone.traits = cloneTraits();
+        JavaDistinctRel clone = new JavaDistinctRel(getCluster(), getChild());
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        double dRows = child.getRows();
+        double dRows = getChild().getRows();
         double dCpu = Util.nLogN(dRows);
         double dIo = 0;
         return planner.makeCost(dRows, dCpu, dIo);
@@ -79,7 +84,8 @@ public class JavaDistinctRel extends DistinctRel implements JavaLoopRel
                 new AllocationExpression(
                     new TypeName("java.util.HashSet"),
                     null)));
-        return implementor.visitJavaChild(this, 0, (JavaRel) child);
+        return implementor.visitJavaChild(
+            this, 0, (JavaRel) getChild());
     }
 
     public void implementJavaParent(
@@ -102,11 +108,11 @@ public class JavaDistinctRel extends DistinctRel implements JavaLoopRel
                     new ExpressionList(
                         OJUtil.box(
                             OJUtil.typeToOJClass(
-                                child.getRowType(),
+                                getChild().getRowType(),
                                 implementor.getTypeFactory()),
                             implementor.translateInput(this, 0)))),
                 ifBody));
-        implementor.bind(this, child);
+        implementor.bind(this, getChild());
         implementor.generateParentBody(this, ifBody);
     }
 }

@@ -51,10 +51,11 @@ public class CollectionToArrayConvertlet extends JavaConvertlet
         ConverterRel converter)
     {
         OJClass clazz = OJUtil.typeToOJClass(
-            converter.child.getRowType(), // "Rowtype"
+            converter.getChild().getRowType(), // "Rowtype"
             implementor.getTypeFactory());
         Expression exp =
-            implementor.visitJavaChild(converter, 0, (JavaRel) converter.child);
+            implementor.visitJavaChild(
+                converter, 0, (JavaRel) converter.getChild());
         return clazz.isPrimitive()
         ? new MethodCall(
             TypeName.forOJClass(OJClass.forClass(SaffronUtil.class)),

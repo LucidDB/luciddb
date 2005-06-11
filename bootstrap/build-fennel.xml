@@ -14,8 +14,9 @@
 	<property name="integration.build.home" location="./build"/>
 
 
-	<!-- by default we build "with farrago" -->
+	<!-- by default we build "with farrago" and "with tests" -->
 	<property name="fennel.init.arg" value="--with-farrago"/>
+        <property name="fennel.init.tests.arg" value="--with-tests"/>
 
 	<!-- perforce synchronization target -->
 	<target name="sync" description="Synchronize the Fennel project" unless="no-sync">
@@ -108,6 +109,7 @@
 		<exec dir="${build.home}/fennel" executable="bash" failonerror="true">
 			<arg value="${build.home}/fennel/initBuild.sh"/>
 			<arg value="${fennel.init.arg}"/>
+			<arg value="${fennel.init.tests.arg}"/>
 		</exec>
 	</target>
 

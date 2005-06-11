@@ -23,36 +23,55 @@
 
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.RelOptCluster;
-
+import org.eigenbase.relopt.*;
 
 /**
- * todo:
+ * <code>IntersectRel</code> returns the intersection of the rows of its
+ * inputs.  If "all" is true, then multiset intersection is performed;
+ * otherwise, set intersection is performed (implying no duplicates in the
+ * results).
  *
  * @author jhyde
  * @version $Id$
  *
  * @since 23 September, 2001
  */
-public class IntersectRel extends UnionRel
+public final class IntersectRel extends SetOpRel
 {
     //~ Constructors ----------------------------------------------------------
 
     public IntersectRel(
         RelOptCluster cluster,
-        RelNode left,
-        RelNode right)
-    {
-        super(cluster, new RelNode [] { left, right }, false);
-    }
-
-    public IntersectRel(
-        RelOptCluster cluster,
-        RelNode left,
-        RelNode right,
+        RelNode [] inputs,
         boolean all)
     {
-        super(cluster, new RelNode [] { left, right }, all);
+        super(
+            cluster,
+            new RelTraitSet(CallingConvention.NONE),
+            inputs,
+            all);
+    }
+    
+    // implement RelNode
+    public double getRows()
+    {
+        // REVIEW jvs 30-May-2005:  I just pulled this out of a hat.
+        double dRows = Double.MAX_VALUE;
+        for (int i = 0; i < inputs.length; i++) {
+            dRows = Math.min(dRows, inputs[i].getRows());
+        }
+        dRows *= 0.25;
+        return dRows;
+    }
+
+    public Object clone()
+    {
+        IntersectRel clone = new IntersectRel(
+            getCluster(),
+            RelOptUtil.clone(inputs),
+            all);
+        clone.inheritTraitsFrom(this);
+        return clone;
     }
 }
 

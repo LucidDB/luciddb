@@ -80,7 +80,9 @@ JAVACODE SqlParserPos getPos()
 {
     return new SqlParserPos(
         token.beginLine,
-        token.beginColumn);
+        token.beginColumn,
+        token.endLine,
+        token.endColumn);
 }
 
 JAVACODE String getPositionString()
@@ -122,10 +124,9 @@ JAVACODE void checkNonQueryExpression(ExprContext exprContext)
 JAVACODE SqlDateLiteral parseDateLiteral(
     String s, SqlParserPos pos) throws ParseException
 {
-    pos = getPos();
     String dateStr = SqlParserUtil.strip(s, "'");
     Calendar cal = SqlParserUtil.parseDateFormat(
-        dateStr, SqlParserUtil.DateFormatStr);
+        dateStr, SqlParserUtil.DateFormatStr, null);
     if (null==cal) {
         EigenbaseResource res = EigenbaseResource.instance();
         String msg = res.getIllegalLiteral("DATE", s, pos.toString(),
@@ -138,35 +139,33 @@ JAVACODE SqlDateLiteral parseDateLiteral(
 JAVACODE SqlTimeLiteral parseTimeLiteral(
     String s, SqlParserPos pos) throws ParseException
 {
-    pos = getPos();
     String dateStr = SqlParserUtil.strip(s, "'");
     SqlParserUtil.PrecisionTime pt =
     SqlParserUtil.parsePrecisionDateTimeLiteral(
-        dateStr, SqlParserUtil.TimeFormatStr);
+        dateStr, SqlParserUtil.TimeFormatStr, null);
     if (null == pt) {
         EigenbaseResource res = EigenbaseResource.instance();
         String msg = res.getIllegalLiteral("TIME", s, pos.toString(),
             res.getBadFormat(SqlParserUtil.TimeFormatStr));
         throw new ParseException(msg);
     }
-    return SqlLiteral.createTime(pt.cal, pt.precision, pos);
+    return SqlLiteral.createTime(pt.getCalendar(), pt.getPrecision(), pos);
 }
 
 JAVACODE SqlTimestampLiteral parseTimestampLiteral(
     String s, SqlParserPos pos) throws ParseException
 {
-    pos = getPos();
     String dateStr = SqlParserUtil.strip(s, "'");
     SqlParserUtil.PrecisionTime pt =
     SqlParserUtil.parsePrecisionDateTimeLiteral(
-        dateStr, SqlParserUtil.TimestampFormatStr);
+        dateStr, SqlParserUtil.TimestampFormatStr, null);
     if (null == pt) {
         EigenbaseResource res = EigenbaseResource.instance();
         String msg = res.getIllegalLiteral("TIMESTAMP", s, pos.toString(),
             res.getBadFormat(SqlParserUtil.TimestampFormatStr));
         throw new ParseException(msg);
     }
-    return SqlLiteral.createTimestamp(pt.cal, pt.precision, pos);
+    return SqlLiteral.createTimestamp(pt.getCalendar(), pt.getPrecision(), pos);
 }
 
 JAVACODE SqlIntervalLiteral parseIntervalLiteral(
@@ -448,8 +447,8 @@ SqlNode SqlExplain() :
         return new SqlExplain(
             opTab.explainOperator,
             stmt,
-            SqlLiteral.createBoolean(withImplementation, null),
-            SqlLiteral.createBoolean(asXml, null),
+            SqlLiteral.createBoolean(withImplementation, SqlParserPos.ZERO),
+            SqlLiteral.createBoolean(asXml, SqlParserPos.ZERO),
             pos);
     }
 }
@@ -797,12 +796,14 @@ SqlNode FromClause() :
         LOOKAHEAD({true})
         <COMMA> { pos = getPos(); }
         e2 = TableRef() {
-            e = opTab.joinOperator.createCall(e,
+            e = opTab.joinOperator.createCall(
+                e,
                 SqlLiteral.createBoolean(false, pos),
-                SqlLiteral.createSymbol(SqlJoinOperator.JoinType.Comma, null),
+                SqlLiteral.createSymbol(SqlJoinOperator.JoinType.Comma,
+                    SqlParserPos.ZERO),
                 e2,
                 SqlLiteral.createSymbol(
-                    SqlJoinOperator.ConditionType.None, null),
+                    SqlJoinOperator.ConditionType.None, SqlParserPos.ZERO),
                 null,
                 pos);
         }
@@ -1170,14 +1171,12 @@ SqlNode WindowRange() :
     (
         <PRECEDING>
         {
-            pos = getPos();
-            return opTab.windowOperator.createPreceding(literal, pos);
+            return opTab.windowOperator.createPreceding(literal, getPos());
         }
         |
         <FOLLOWING>
         {
-            pos = getPos();
-            return opTab.windowOperator.createFollowing(literal, pos);
+            return opTab.windowOperator.createFollowing(literal, getPos());
         }
     )
 }
@@ -1678,22 +1677,21 @@ SqlNode AtomicRowExpression() :
 SqlNode Literal() :
 {
     SqlNode e;
-    SqlParserPos pos = getPos();
 }
 {
-    e = NumericLiteral(pos)
+    e = NumericLiteral()
     {
         return e;
     }
-    | e = StringLiteral(pos,false)
+    | e = StringLiteral(false)
     {
         return e;
     }
-    | e = SpecialLiteral(pos)
+    | e = SpecialLiteral()
     {
         return e;
     }
-    | e = DateTimeLiteral(pos)
+    | e = DateTimeLiteral()
     {
         return e;
     }
@@ -1713,22 +1711,21 @@ SqlLiteral StrictLiteral() :
 {
     SqlLiteral lit;
     SqlNode e;
-    SqlParserPos pos = getPos();
 }
 {
-    lit = NumericLiteral(pos)
+    lit = NumericLiteral()
     {
         return lit;
     }
-    | e = StringLiteral(pos,true)
+    | e = StringLiteral(true)
     {
         return (SqlLiteral) e;
     }
-    | lit = SpecialLiteral(pos)
+    | lit = SpecialLiteral()
     {
         return lit;
     }
-    | lit = DateTimeLiteral(pos)
+    | lit = DateTimeLiteral()
     {
         return lit;
     }
@@ -1740,38 +1737,38 @@ SqlLiteral StrictLiteral() :
 
 
 /** Parses a numeric literal */
-SqlLiteral NumericLiteral(SqlParserPos pos) :
+SqlLiteral NumericLiteral() :
 {
 }
 {
     <UNSIGNED_INTEGER_LITERAL>
     {
-        return SqlLiteral.createExactNumeric(token.image, pos);
+        return SqlLiteral.createExactNumeric(token.image, getPos());
     }
     |
     <DECIMAL_NUMERIC_LITERAL>
     {
-        return SqlLiteral.createExactNumeric(token.image, pos);
+        return SqlLiteral.createExactNumeric(token.image, getPos());
     }
     |
     <APPROX_NUMERIC_LITERAL>
     {
-        return SqlLiteral.createApproxNumeric(token.image, pos);
+        return SqlLiteral.createApproxNumeric(token.image, getPos());
     }
 }
 
 /** Parse a special literal keyword */
-SqlLiteral SpecialLiteral(SqlParserPos pos) :
+SqlLiteral SpecialLiteral() :
 {
 }
 {
-    <TRUE> { return SqlLiteral.createBoolean(true, pos); }
+    <TRUE> { return SqlLiteral.createBoolean(true, getPos()); }
     |
-    <FALSE> { return SqlLiteral.createBoolean(false, pos); }
+    <FALSE> { return SqlLiteral.createBoolean(false, getPos()); }
     |
-    <UNKNOWN> { return SqlLiteral.createUnknown(pos); }
+    <UNKNOWN> { return SqlLiteral.createUnknown(getPos()); }
     |
-    <NULL> { return SqlLiteral.createNull(pos); }
+    <NULL> { return SqlLiteral.createNull(getPos()); }
 }
 
 /**
@@ -1783,7 +1780,7 @@ SqlLiteral SpecialLiteral(SqlParserPos pos) :
  * @param strict when false, allow continued literals; when true, forbid them.
  * @return a literal expression. When strict, returns an SqlLiteral.
  */
-SqlNode StringLiteral(SqlParserPos pos, boolean strict) :
+SqlNode StringLiteral(boolean strict) :
 {
     String p;
     int nfrags = 0;
@@ -1799,7 +1796,7 @@ SqlNode StringLiteral(SqlParserPos pos, boolean strict) :
     <BINARY_STRING_LITERAL>
     {
         p = SqlParserUtil.trim(token.image, "xX'");
-        frags = startList(SqlLiteral.createBinaryString(p, pos));
+        frags = startList(SqlLiteral.createBinaryString(p, getPos()));
         nfrags++;
     }
     (
@@ -1821,7 +1818,8 @@ SqlNode StringLiteral(SqlParserPos pos, boolean strict) :
             return (SqlLiteral) frags.get(0); // just the head fragment
         } else {
             SqlNode[] rands = (SqlNode[]) frags.toArray(new SqlNode[nfrags]);
-            return opTab.literalChainOperator.createCall(rands, pos);
+            SqlParserPos pos2 = SqlParserPos.sum(rands);
+            return opTab.literalChainOperator.createCall(rands, pos2);
         }
     }
     |
@@ -1835,7 +1833,7 @@ SqlNode StringLiteral(SqlParserPos pos, boolean strict) :
     )
     {
         p = SqlParserUtil.parseString(token.image);
-        frags = startList(SqlLiteral.createCharString(p, charSet, pos));
+        frags = startList(SqlLiteral.createCharString(p, charSet, getPos()));
         nfrags++;
     }
     (
@@ -1852,7 +1850,8 @@ SqlNode StringLiteral(SqlParserPos pos, boolean strict) :
             return (SqlLiteral) frags.get(0); // just the head fragment
         } else {
             SqlNode[] rands = (SqlNode[]) frags.toArray(new SqlNode[nfrags]);
-            return opTab.literalChainOperator.createCall(rands, pos);
+            SqlParserPos pos2 = SqlParserPos.sum(rands);
+            return opTab.literalChainOperator.createCall(rands, pos2);
         }
     }
 }
@@ -1861,7 +1860,7 @@ SqlNode StringLiteral(SqlParserPos pos, boolean strict) :
 /**
  * Parses a date/time literal.
  */
-SqlLiteral DateTimeLiteral(SqlParserPos pos) :
+SqlLiteral DateTimeLiteral() :
 {
     String  p;
 }
@@ -1872,7 +1871,7 @@ SqlLiteral DateTimeLiteral(SqlParserPos pos) :
     }
     <RBRACE>
     {
-        return parseDateLiteral(p, pos);
+        return parseDateLiteral(p, getPos());
     }
     |
     <LBRACE_T> <QUOTED_STRING>
@@ -1881,7 +1880,7 @@ SqlLiteral DateTimeLiteral(SqlParserPos pos) :
     }
     <RBRACE>
     {
-        return parseTimeLiteral(p, pos);
+        return parseTimeLiteral(p, getPos());
     }
     |
     <LBRACE_TS> <QUOTED_STRING>
@@ -1890,22 +1889,22 @@ SqlLiteral DateTimeLiteral(SqlParserPos pos) :
     }
     <RBRACE>
     {
-        return parseTimestampLiteral(p, pos);
+        return parseTimestampLiteral(p, getPos());
     }
     |
     <DATE> <QUOTED_STRING>
     {
-        return parseDateLiteral(token.image, pos);
+        return parseDateLiteral(token.image, getPos());
     }
     |
     <TIME> <QUOTED_STRING>
     {
-        return parseTimeLiteral(token.image, pos);
+        return parseTimeLiteral(token.image, getPos());
     }
     |
     <TIMESTAMP> <QUOTED_STRING>
     {
-        return parseTimestampLiteral(token.image, pos);
+        return parseTimestampLiteral(token.image, getPos());
     }
 }
 
@@ -2245,86 +2244,105 @@ SqlIdentifier TypeName() :
         (
             <CHARACTER> | <CHAR>
             {
-                typeName = new SqlIdentifier(SqlTypeName.Char.name, pos);
+                typeName = new SqlIdentifier(
+                    SqlTypeName.Char.getName(), pos);
             }
         )
         [
             <VARYING>
             {
-                typeName = new SqlIdentifier(SqlTypeName.Varchar.name, pos);
+                typeName = new SqlIdentifier(
+                    SqlTypeName.Varchar.getName(), pos);
             }
         ]
         | <VARCHAR>
         {
-            typeName = new SqlIdentifier(SqlTypeName.Varchar.name, pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Varchar.getName(), pos);
         }
         | <DATE>
         {
-            typeName = new SqlIdentifier(SqlTypeName.Date.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Date.getName(),pos);
         }
         | <TIME>
         {
-            typeName = new SqlIdentifier(SqlTypeName.Time.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Time.getName(),pos);
         }
         | <TIMESTAMP>
         {
-            typeName = new SqlIdentifier(SqlTypeName.Timestamp.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Timestamp.getName(),pos);
         }
         | (<DECIMAL> | <DEC> | <NUMERIC>)
         {
-            typeName = new SqlIdentifier(SqlTypeName.Decimal.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Decimal.getName(),pos);
         }
         | <BOOLEAN>
         {
-            typeName = new SqlIdentifier(SqlTypeName.Boolean.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Boolean.getName(),pos);
         }
         | <INTEGER>
         {
-            typeName = new SqlIdentifier(SqlTypeName.Integer.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Integer.getName(),pos);
         }
         | <INT>
         {
-            typeName = new SqlIdentifier(SqlTypeName.Integer.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Integer.getName(),pos);
         }
         | (
             <BINARY>
             {
-                typeName = new SqlIdentifier(SqlTypeName.Binary.name,pos);
+                typeName = new SqlIdentifier(
+                    SqlTypeName.Binary.getName(),pos);
             }
         )
         [
             <VARYING>
             {
-                typeName = new SqlIdentifier(SqlTypeName.Varbinary.name, pos);
+                typeName = new SqlIdentifier(
+                    SqlTypeName.Varbinary.getName(), pos);
             }
         ]
         | <VARBINARY>
         {
-            typeName = new SqlIdentifier(SqlTypeName.Varbinary.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Varbinary.getName(),pos);
         }
         | <TINYINT>
         {
-            typeName = new SqlIdentifier(SqlTypeName.Tinyint.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Tinyint.getName(),pos);
         }
         | <SMALLINT>
         {
-            typeName = new SqlIdentifier(SqlTypeName.Smallint.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Smallint.getName(),pos);
         }
         | <BIGINT>
         {
-            typeName = new SqlIdentifier(SqlTypeName.Bigint.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Bigint.getName(),pos);
         }
         | <REAL>
         {
-            typeName = new SqlIdentifier(SqlTypeName.Real.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Real.getName(),pos);
         }
         | <DOUBLE> [ <PRECISION> ]
         {
-            typeName = new SqlIdentifier(SqlTypeName.Double.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Double.getName(),pos);
         }
         | <FLOAT>
         {
-            typeName = new SqlIdentifier(SqlTypeName.Float.name,pos);
+            typeName = new SqlIdentifier(
+                SqlTypeName.Float.getName(),pos);
         }
         |   typeName = CollectionsTypeName()
         |   typeName = CompoundIdentifier()
@@ -2342,7 +2360,8 @@ SqlIdentifier CollectionsTypeName() :
 {
     <MULTISET>
     {
-        typeName = new SqlIdentifier(SqlTypeName.Multiset.name,pos);
+        typeName = new SqlIdentifier(
+            SqlTypeName.Multiset.getName(),pos);
         return typeName;
     }
 }

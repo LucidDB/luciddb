@@ -34,7 +34,7 @@ import java.lang.reflect.Proxy;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.util.*;
-
+import java.text.*;
 
 /**
  * Contains utility functions related to SQL parsing, all static.
@@ -75,8 +75,9 @@ public abstract class SqlUtil
         } else {
             list.add(node2);
         }
-        return SqlStdOperatorTable.instance().andOperator.createCall(
-            (SqlNode []) list.toArray(new SqlNode[list.size()]), null);
+        return SqlStdOperatorTable.andOperator.createCall(
+            (SqlNode []) list.toArray(new SqlNode[list.size()]),
+            SqlParserPos.ZERO);
     }
 
     static ArrayList flatten(SqlNode node)
@@ -150,11 +151,12 @@ public abstract class SqlUtil
     {
         if (node instanceof SqlLiteral) {
             SqlLiteral literal = (SqlLiteral) node;
-            if (literal.typeName == SqlTypeName.Null) {
+            if (literal.getTypeName() == SqlTypeName.Null) {
                 assert (null == literal.getValue());
                 return true;
             } else {
-                // We don't regard UNKNOWN -- SqlLiteral(null,Boolean) -- as NULL.
+                // We don't regard UNKNOWN -- SqlLiteral(null,Boolean) -- as
+                // NULL.
                 return false;
             }
         }
@@ -224,12 +226,12 @@ public abstract class SqlUtil
             }
             SqlIdentifier id = function.getSqlIdentifier();
             if (id == null) {
-                writer.print(operator.name);
+                writer.print(operator.getName());
             } else {
                 id.unparse(writer, 0, 0);
             }
         } else {
-            writer.print(operator.name);
+            writer.print(operator.getName());
         }
         if (operands.length == 0 && !emptyParens) {
             // For example, the "LOCALTIME" function appears as "LOCALTIME"
@@ -256,15 +258,15 @@ public abstract class SqlUtil
     {
         SqlBinaryOperator binop = (SqlBinaryOperator) operator;
         assert operands.length == 2;
-        operands[0].unparse(writer,leftPrec,binop.leftPrec);
+        operands[0].unparse(writer,leftPrec,binop.getLeftPrec());
         if (binop.needsSpace()) {
             writer.print(' ');
-            writer.print(binop.name);
+            writer.print(binop.getName());
             writer.print(' ');
         } else {
-            writer.print(binop.name);
+            writer.print(binop.getName());
         }
-        operands[1].unparse(writer,binop.rightPrec,rightPrec);
+        operands[1].unparse(writer,binop.getRightPrec(),rightPrec);
     }
 
     /**
@@ -310,8 +312,8 @@ public abstract class SqlUtil
      *
      * @param argTypes argument types
      *
-     * @param isProcedure true if a procedure is being invoked, in
-     * which case the overload rules are simpler
+     * @param category whether a function or a procedure.
+     *       (If a procedure is being invoked, the overload rules are simpler.)
      *
      * @return matching routine, or null if none found
      *
@@ -394,10 +396,10 @@ public abstract class SqlUtil
         Iterator iter = routines.iterator();
         while (iter.hasNext()) {
             SqlFunction function = (SqlFunction) iter.next();
-            SqlOperator.OperandsCountDescriptor od =
-                function.getOperandsCountDescriptor();
+            SqlOperandCountRange od =
+                function.getOperandCountRange();
             if (!od.isVariadic()
-                && !od.getPossibleNumOfOperands().contains(
+                && !od.getAllowedList().contains(
                     new Integer(argTypes.length)))
             {
                 iter.remove();
@@ -549,6 +551,66 @@ public abstract class SqlUtil
         // Use a '$' so that queries can't easily reference the
         // generated name.
         return "EXPR$" + ordinal;
+    }
+
+    /**
+     * Constructs an operator signature from a type list.
+     *
+     * @param op operator
+     *
+     * @param typeList list of types to use for operands
+     *
+     * @return constructed signature
+     */
+    public static String getOperatorSignature(SqlOperator op, List list)
+    {
+        return getAliasedSignature(op, op.getName(), list);
+    }
+
+    /**
+     * Constructs an operator signature from a type list, substituting an
+     * alias for the operator name.
+     *
+     * @param op operator
+     *
+     * @param opName name to use for operator
+     *
+     * @param typeList list of types to use for operands
+     *
+     * @return constructed signature
+     */
+    public static String getAliasedSignature(
+        SqlOperator op,
+        String opName, List typeList)
+    {
+        StringBuffer ret = new StringBuffer();
+        String template = op.getSignatureTemplate(typeList.size());
+        if (null == template) {
+            ret.append("'");
+            ret.append(opName);
+            ret.append("(");
+            for (int i = 0; i < typeList.size(); i++) {
+                if (i > 0) {
+                    ret.append(", ");
+                }
+                ret.append(
+                    "<" + typeList.get(i).toString().toUpperCase() + ">");
+            }
+            ret.append(")'");
+        } else {
+            Object [] values = new Object[typeList.size() + 1];
+            values[0] = opName;
+            ret.append("'");
+            for (int i = 0; i < typeList.size(); i++) {
+                values[i + 1] = "<" +
+                    typeList.get(i).toString().toUpperCase() + ">";
+            }
+            ret.append(MessageFormat.format(template, values));
+            ret.append("'");
+            assert (typeList.size() + 1) == values.length;
+        }
+
+        return ret.toString();
     }
 
     //~ Inner Classes ---------------------------------------------------------

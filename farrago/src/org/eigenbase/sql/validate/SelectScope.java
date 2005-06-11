@@ -77,7 +77,7 @@ import org.eigenbase.sql.*;
  */
 public class SelectScope extends ListScope
 {
-    public final SqlSelect select;
+    private final SqlSelect select;
 
     /**
      * Creates a scope corresponding to a SELECT clause.

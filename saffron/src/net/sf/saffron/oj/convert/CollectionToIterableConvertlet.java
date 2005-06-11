@@ -52,7 +52,7 @@ public class CollectionToIterableConvertlet extends JavaConvertlet
         // (which is not of the same type, but it should work, because
         // they're just going to call 'iterator' on it)
         return implementor.visitJavaChild(converter, 0,
-            (JavaRel) converter.child);
+            (JavaRel) converter.getChild());
     }
 }
 

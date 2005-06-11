@@ -143,7 +143,7 @@ class RelSet
             subset = new RelSubset(cluster, this, traits);
             subsets.add(subset);
 
-            VolcanoPlanner planner = (VolcanoPlanner) cluster.planner;
+            VolcanoPlanner planner = (VolcanoPlanner) cluster.getPlanner();
             if (planner.listener != null) {
                 postEquivalenceEvent(planner, subset);
             }
@@ -172,7 +172,8 @@ class RelSet
         if (!rels.contains(rel)) {
             rels.add(rel);
 
-            VolcanoPlanner planner = (VolcanoPlanner) rel.getCluster().planner;
+            VolcanoPlanner planner = (VolcanoPlanner)
+                rel.getCluster().getPlanner();
             if (planner.listener != null) {
                 postEquivalenceEvent(planner, rel);
             }

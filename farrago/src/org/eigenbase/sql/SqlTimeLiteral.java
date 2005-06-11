@@ -25,7 +25,6 @@ import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.type.SqlTypeName;
 
-import java.sql.Time;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -43,8 +42,18 @@ public class SqlTimeLiteral extends SqlAbstractDateTimeLiteral
         boolean hasTZ,
         SqlParserPos pos)
     {
-        super(t, hasTZ, SqlTypeName.Time, precision, SqlParserUtil.TimeFormatStr,
-            pos);
+        super(t, hasTZ, SqlTypeName.Time, precision,
+            SqlParserUtil.TimeFormatStr, pos);
+    }
+
+    SqlTimeLiteral(
+        Calendar t,
+        int precision,
+        boolean hasTZ,
+        String format,
+        SqlParserPos pos)
+    {
+        super(t, hasTZ, SqlTypeName.Time, precision, format, pos);
     }
 
     public String toString()

@@ -108,7 +108,7 @@ public abstract class FennelAbstractIterator implements RestartableIterator
             ++newPosition;
         }
         byteBuffer.position(newPosition);
-        if (byteBuffer.hasRemaining()) {
+        if (!byteBuffer.hasRemaining()) {
             releaseBuffer();
         }
         return obj;

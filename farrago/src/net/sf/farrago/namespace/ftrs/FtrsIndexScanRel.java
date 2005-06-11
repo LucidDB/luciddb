@@ -50,7 +50,7 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
+class FtrsIndexScanRel extends TableAccessRelBase implements FennelPullRel
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -124,9 +124,9 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
     {
         FtrsIndexScanRel clone =
             new FtrsIndexScanRel(
-                cluster, ftrsTable, index, connection, projectedColumns,
+                getCluster(), ftrsTable, index, connection, projectedColumns,
                 isOrderPreserving);
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 
@@ -147,7 +147,7 @@ class FtrsIndexScanRel extends TableAccessRel implements FennelPullRel
             return flattenedRowType;
         } else {
             final RelDataTypeField [] fields = flattenedRowType.getFields();
-            return cluster.typeFactory.createStructType(
+            return getCluster().getTypeFactory().createStructType(
                 new RelDataTypeFactory.FieldInfo() {
                     public int getFieldCount()
                     {

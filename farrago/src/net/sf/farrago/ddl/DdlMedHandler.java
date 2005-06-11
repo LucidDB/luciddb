@@ -105,7 +105,7 @@ public class DdlMedHandler extends DdlHandler
         // since servers are in the same namespace with CWM catalogs,
         // need a special name uniquness check here
         validator.validateUniqueNames(
-            repos.getCatalog(FarragoRepos.SYSBOOT_CATALOG_NAME),
+            repos.getCatalog(FarragoCatalogInit.SYSBOOT_CATALOG_NAME),
             repos.getRelationalPackage().getCwmCatalog().refAllOfType(),
             false);
 
@@ -121,7 +121,7 @@ public class DdlMedHandler extends DdlHandler
         // REVIEW jvs 18-April-2004:  This uses default charset/collation
         // info from local catalog, but should really allow foreign
         // servers to override.
-        repos.initializeCatalog(femServer);
+        FarragoCatalogUtil.initializeCatalog(repos, femServer);
 
         // REVIEW jvs 18-April-2004:  Query the plugin for these?
         if (femServer.getType() == null) {

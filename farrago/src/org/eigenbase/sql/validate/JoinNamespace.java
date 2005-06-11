@@ -49,7 +49,7 @@ class JoinNamespace extends AbstractNamespace
         final RelDataType rightType =
             validator.getNamespace(join.getRight()).getRowType();
         final RelDataType[] types = {leftType, rightType};
-        return validator.typeFactory.createJoinType(types);
+        return validator.getTypeFactory().createJoinType(types);
     }
 
     public SqlNode getNode()

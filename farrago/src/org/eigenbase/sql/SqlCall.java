@@ -31,6 +31,7 @@ import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.util.SqlVisitor;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.SqlMoniker;
 import org.eigenbase.util.Util;
 
 /**
@@ -43,12 +44,12 @@ public class SqlCall extends SqlNode
 {
     //~ Instance fields -------------------------------------------------------
 
-    public SqlOperator operator;
+    private SqlOperator operator;
     public final SqlNode [] operands;
 
     //~ Constructors ----------------------------------------------------------
 
-    SqlCall(
+    protected SqlCall(
         SqlOperator operator,
         SqlNode [] operands,
         SqlParserPos pos)
@@ -62,12 +63,12 @@ public class SqlCall extends SqlNode
 
     public boolean isA(SqlKind kind)
     {
-        return operator.kind.isA(kind);
+        return operator.getKind().isA(kind);
     }
 
     public SqlKind getKind()
     {
-        return operator.kind;
+        return operator.getKind();
     }
 
     // REVIEW jvs 10-Sept-2003:  I added this to allow for some rewrite by
@@ -77,6 +78,16 @@ public class SqlCall extends SqlNode
         SqlNode operand)
     {
         operands[i] = operand;
+    }
+
+    public void setOperator(SqlOperator operator)
+    {
+        this.operator = operator;
+    }
+
+    public SqlOperator getOperator()
+    {
+        return operator;
     }
 
     public SqlNode [] getOperands()
@@ -96,8 +107,8 @@ public class SqlCall extends SqlNode
         int leftPrec,
         int rightPrec)
     {
-        if ((leftPrec > operator.leftPrec) ||
-            (operator.rightPrec <= rightPrec) ||
+        if ((leftPrec > operator.getLeftPrec()) ||
+            (operator.getRightPrec() <= rightPrec) ||
             (SqlWriter.alwaysUseParentheses && isA(SqlKind.Expression))) {
             writer.print('(');
             operator.unparse(writer, operands, 0, 0);
@@ -121,30 +132,30 @@ public class SqlCall extends SqlNode
 
     /**
      * Find out all the valid alternatives for the operand of this node's
-     * operator that matches the parse position indicated by pp
+     * operator that matches the parse position indicated by pos
      *
      * @param validator Validator
      * @param scope Validation scope
-     * @param pp SqlParserPos indicating the cursor position at which
+     * @param pos SqlParserPos indicating the cursor position at which
      * competion hints are requested for
-     * @return a string array of valid options
+     * @return a {@link SqlMoniker} array of valid options
      */
-    public String[] findValidOptions(
+    public SqlMoniker[] findValidOptions(
         SqlValidator validator,
         SqlValidatorScope scope,
-        SqlParserPos pp)
+        SqlParserPos pos)
     {
         final SqlNode[] operands = getOperands();
         for (int i = 0; i < operands.length; i++) {
             if (operands[i] instanceof SqlIdentifier) {
                 SqlIdentifier id = (SqlIdentifier) operands[i];
-                String ppstring = id.getParserPosition().toString();
-                if (ppstring.equals(pp.toString())) {
+                String posstring = id.getParserPosition().toString();
+                if (posstring.equals(pos.toString())) {
                     return id.findValidOptions(validator, scope);
                 }
             }
         }
-        return Util.emptyStringArray;
+        return Util.emptySqlMonikerArray;
     }
 
     public void accept(SqlVisitor visitor)
@@ -160,7 +171,7 @@ public class SqlCall extends SqlNode
         SqlCall that = (SqlCall) node;
         // Compare operators by name, not identity, because they may not
         // have been resolved yet.
-        if (!this.operator.name.equals(that.operator.name)) {
+        if (!this.operator.getName().equals(that.operator.getName())) {
             return false;
         }
         if (this.operands.length != that.operands.length) {
@@ -192,20 +203,8 @@ public class SqlCall extends SqlNode
             }
             signatureList.add(argType.toString());
         }
-        return operator.getSignature(signatureList);
+        return SqlUtil.getOperatorSignature(operator, signatureList);
 
-    }
-
-    public RuntimeException newValidationSignatureError(
-        SqlValidator validator,
-        SqlValidatorScope scope)
-    {
-        return validator.newValidationError(
-            this,
-            EigenbaseResource.instance().newCanNotApplyOp2Type(
-                operator.name,
-                getCallSignature(validator, scope),
-                operator.getAllowedSignatures()));
     }
 
     public boolean isMonotonic(SqlValidatorScope scope)

@@ -70,11 +70,13 @@ public class FennelPullCollectRel extends FennelSingleRel
             repos.newFemCollectTupleStreamDef();
 
         collectStreamDef.getInput().add(
-            implementor.visitFennelChild((FennelRel) child));
+            implementor.visitFennelChild((FennelRel) getChild()));
         FemTupleDescriptor outTupleDesc = repos.newFemTupleDescriptor();
         RelDataType type=
-            cluster.typeFactory.createSqlType(SqlTypeName.Varbinary, 4096);
-        type = cluster.typeFactory.createTypeWithNullability(type, true);
+            getCluster().getTypeFactory().createSqlType(
+                SqlTypeName.Varbinary, 4096);
+        type = getCluster().getTypeFactory().createTypeWithNullability(
+            type, true);
         FennelRelUtil.addTupleAttrDescriptor(repos, outTupleDesc, type);
         collectStreamDef.setOutputDesc(outTupleDesc);
         return collectStreamDef;
@@ -83,8 +85,9 @@ public class FennelPullCollectRel extends FennelSingleRel
     // override Object (public, does not throw CloneNotSupportedException)
     public Object clone() {
         FennelPullCollectRel clone =
-            new FennelPullCollectRel(cluster, RelOptUtil.clone(child),name);
-        clone.traits = cloneTraits();
+            new FennelPullCollectRel(
+                getCluster(), RelOptUtil.clone(getChild()),name);
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 }

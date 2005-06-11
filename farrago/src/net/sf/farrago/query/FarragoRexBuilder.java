@@ -72,7 +72,7 @@ class FarragoRexBuilder extends JavaRexBuilder
         SqlOperator op,
         RexNode [] exprs)
     {
-        if (op.kind.isA(SqlKind.Comparison)) {
+        if (op.getKind().isA(SqlKind.Comparison)) {
             return makeComparison(op, exprs);
         } else if (op instanceof FarragoUserDefinedRoutine) {
             return makeUdfInvocation(op, exprs);
@@ -131,7 +131,7 @@ class FarragoRexBuilder extends JavaRexBuilder
                 // we should be referencing the arg CAST result instead.
                 caseOperandList.add(
                     makeCall(
-                        opTab.isNullOperator,
+                        getOpTab().isNullOperator,
                         exprs[i]));
                 caseOperandList.add(
                     makeLiteral(
@@ -143,7 +143,7 @@ class FarragoRexBuilder extends JavaRexBuilder
             RexNode [] caseOperands = (RexNode [])
                 caseOperandList.toArray(new RexNode[0]);
             RexNode nullCase = makeCall(
-                opTab.caseOperator,
+                getOpTab().caseOperator,
                 caseOperands);
             returnNode = nullCase;
         }

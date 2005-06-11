@@ -23,13 +23,13 @@
 
 package org.eigenbase.sql.parser;
 
-import java.util.regex.Pattern;
-import junit.framework.TestCase;
 import junit.framework.AssertionFailedError;
-
+import junit.framework.TestCase;
 import org.eigenbase.sql.SqlNode;
-import org.eigenbase.util.Util;
-import org.eigenbase.util.TestUtil;
+import org.eigenbase.util.*;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 /**
@@ -46,8 +46,12 @@ public class SqlParserTest extends TestCase
     //~ Static fields/initializers --------------------------------------------
 
     protected static final String NL = System.getProperty("line.separator");
+    private final Pattern lineColPattern =
+        Pattern.compile("At line (.*), column (.*)");
     /** @deprecated */
     private static final boolean todo = false;
+    /** todo: set this to true, fix bugs, and obsolete. */
+    private static final boolean FailIfNoPosition = false;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -108,19 +112,109 @@ public class SqlParserTest extends TestCase
         String sql,
         String exceptionPattern)
     {
+        SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);
+        if (sap.pos == null) {
+            checkFails(
+                sap.sql,
+                exceptionPattern,
+                -1, -1, -1, -1);
+        } else {
+            checkFails(
+                sap.sql,
+                exceptionPattern,
+                sap.pos.getLineNum(), sap.pos.getColumnNum(),
+                sap.pos.getEndLineNum(), sap.pos.getEndColumnNum());
+        }
+    }
+
+    protected void checkFails(
+        String sql,
+        String expectedMsgPattern,
+        int expectedLine,
+        int expectedColumn,
+        int expectedEndLine,
+        int expectedEndColumn)
+    {
+        Throwable actualException = null;
+        int actualLine = -1;
+        int actualColumn = -1;
+        int actualEndLine = 100;
+        int actualEndColumn = 99;
         try {
             final SqlNode sqlNode = parseStmt(sql);
             Util.discard(sqlNode);
             fail("Expected query '" + sql + "' to throw exception matching '"
-                + exceptionPattern + "'");
-        } catch (Throwable e) {
-            final String message = e.toString();
-            if (!Pattern.matches(exceptionPattern, message)) {
-                e.printStackTrace();
-                fail("Expected query '" + sql
-                    + "' to throw exception matching '" + exceptionPattern
-                    + "', but it threw " + message);
+                + expectedMsgPattern + "'");
+        } catch (EigenbaseContextException ex) {
+            actualLine = ex.getPosLine();
+            actualColumn = ex.getPosColumn();
+            actualEndLine = ex.getEndPosLine();
+            actualEndColumn = ex.getEndPosColumn();
+            actualException = ex.getCause() == null ?
+                ex :
+                ex.getCause();
+        } catch (Throwable ex) {
+            final String message = ex.getMessage();
+            final Matcher matcher = lineColPattern.matcher(message);
+            if (message != null && matcher.matches()) {
+                actualException = ex.getCause();
+                actualLine = Integer.parseInt(matcher.group(1));
+                actualColumn = Integer.parseInt(matcher.group(2));
+            } else {
+                actualException = ex;
             }
+        }
+        final String message = actualException.toString();
+        if (!Pattern.matches(expectedMsgPattern, message)) {
+            actualException.printStackTrace();
+            fail("Expected query '" + sql
+                + "' to throw exception matching '" + expectedMsgPattern
+                + "', but it threw " + message);
+        }
+        String sqlWithCarets;
+        if (actualColumn <= 0 ||
+            actualLine <= 0 ||
+            actualEndColumn <= 0 ||
+            actualEndLine <= 0) {
+            if (FailIfNoPosition) {
+                assert false :
+                    "Error did not have position: " +
+                    " actualLine=" + actualLine +
+                    " actualColumn=" + actualColumn +
+                    " actualEndLine=" + actualEndLine +
+                    " actualEndColumn=" + actualEndColumn;
+            }
+            sqlWithCarets = sql;
+        } else {
+            sqlWithCarets = SqlParserUtil.addCarets(sql, actualLine, actualColumn, actualEndLine, actualEndColumn);
+        }
+        if (FailIfNoPosition &&
+            (expectedLine == -1 ||
+            expectedColumn == -1 ||
+            expectedEndLine == -1 ||
+            expectedEndColumn == -1)) {
+            assert false :
+                "todo: add carets to sql: " + sqlWithCarets;
+        }
+        String actualMessage = actualException.getMessage();
+        if (actualMessage == null ||
+            !actualMessage.matches(expectedMsgPattern)) {
+            actualException.printStackTrace();
+            fail("SqlValidationTest: Validator threw different " +
+                "exception than expected; query [" + sql +
+                "]; expected [" + expectedMsgPattern +
+                "]; actual [" + actualMessage +
+                "]; line [" + actualLine +
+                "]; column [" + actualColumn + "]");
+        } else if ((expectedLine != -1 &&
+            actualLine != expectedLine) ||
+            (expectedColumn != -1 &&
+            actualColumn != expectedColumn)) {
+            fail("SqlValidationTest: Validator threw expected " +
+                "exception [" + actualMessage +
+                "]; but at line [" + actualLine +
+                "]; column [" + actualColumn +
+                "]; sql [" + sqlWithCarets + "]");
         }
     }
 
@@ -317,7 +411,7 @@ public class SqlParserTest extends TestCase
             "(?s).*Encountered \"between <EOF>\" at line 1, column 10.*");
 
         checkFails("values a between symmetric 1",
-            ".*BETWEEN operator has no terminating AND; at line 1, column 18");
+            ".*BETWEEN operator has no terminating AND; at line 1, column 28");
 
         // precedence of BETWEEN is higher than AND and OR, but lower than '+'
         check("values a between b and c + 2 or d and e",

@@ -49,7 +49,7 @@ public abstract class RelOptRule
     protected String description;
 
     /** Root of operand tree. */
-    public final RelOptRuleOperand operand;
+    private final RelOptRuleOperand operand;
 
     /** Flattened list of operands. */
     public RelOptRuleOperand [] operands;
@@ -73,6 +73,16 @@ public abstract class RelOptRule
 
     //~ Methods ---------------------------------------------------------------
 
+    public RelOptRuleOperand getOperand()
+    {
+        return operand;
+    }
+
+    public RelOptRuleOperand [] getOperands()
+    {
+        return operands;
+    }
+    
     public int hashCode()
     {
         // Conventionally, hashCode() and equals() should use the same
@@ -182,7 +192,7 @@ public abstract class RelOptRule
             return rel;
         }
 
-        RelOptPlanner planner = rel.getCluster().planner;
+        RelOptPlanner planner = rel.getCluster().getPlanner();
         return planner.changeTraits(rel, outTraits);
     }
 

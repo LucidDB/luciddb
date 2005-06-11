@@ -46,7 +46,7 @@ public class MergeFilterOntoCalcRule extends RelOptRule
 {
     //~ Static fields/initializers --------------------------------------------
 
-    public static MergeFilterOntoCalcRule instance =
+    public static final MergeFilterOntoCalcRule instance =
         new MergeFilterOntoCalcRule();
 
     //~ Constructors ----------------------------------------------------------
@@ -85,19 +85,19 @@ public class MergeFilterOntoCalcRule extends RelOptRule
             new RexShuttle() {
                 public RexNode visit(RexInputRef input)
                 {
-                    return calc.projectExprs[input.index];
+                    return calc.projectExprs[input.getIndex()];
                 }
             };
-        RexNode newCondition = shuttle.visit(filter.condition);
-        if (calc.conditionExpr != null) {
+        RexNode newCondition = shuttle.visit(filter.getCondition());
+        if (calc.getCondition() != null) {
             SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
             newCondition =
-                calc.cluster.rexBuilder.makeCall(opTab.andOperator, 
-                    calc.conditionExpr, newCondition);
+                calc.getCluster().getRexBuilder().makeCall(opTab.andOperator, 
+                    calc.getCondition(), newCondition);
         }
         final CalcRel newCalc =
-            new CalcRel(calc.cluster, RelOptUtil.clone(calc.traits),
-                calc.child, calc.getRowType(), calc.projectExprs,
+            new CalcRel(calc.getCluster(), RelOptUtil.clone(calc.traits),
+                calc.getChild(), calc.getRowType(), calc.projectExprs,
                 newCondition);
         call.transformTo(newCalc);
     }

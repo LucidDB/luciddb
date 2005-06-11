@@ -26,8 +26,7 @@ import openjava.ptree.ParseTree;
 
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.util.OJUtil;
-import org.eigenbase.rel.ProjectRel;
-import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptUtil;
@@ -41,7 +40,7 @@ import org.eigenbase.util.Util;
  * Implements the {@link ProjectRel} relational
  * expression as Java code.
  */
-public class JavaProjectRel extends ProjectRel implements JavaLoopRel,
+public class JavaProjectRel extends ProjectRelBase implements JavaLoopRel,
     JavaSelfRel
 {
     public JavaProjectRel(
@@ -60,19 +59,19 @@ public class JavaProjectRel extends ProjectRel implements JavaLoopRel,
     public Object clone()
     {
         JavaProjectRel clone = new JavaProjectRel(
-            cluster,
-            RelOptUtil.clone(child),
+            getCluster(),
+            RelOptUtil.clone(getChild()),
             RexUtil.clone(exps),
             Util.clone(fieldNames),
             getFlags());
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 
     // implement RelNode
     public ParseTree implement(JavaRelImplementor implementor)
     {
-        return implementor.visitJavaChild(this, 0, (JavaRel) child);
+        return implementor.visitJavaChild(this, 0, (JavaRel) getChild());
     }
 
     public void implementJavaParent(

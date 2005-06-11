@@ -42,6 +42,7 @@ import openjava.ptree.StatementList;
 
 import org.eigenbase.runtime.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlMoniker;
 import org.eigenbase.sql.util.SqlBasicVisitor;
 
 /**
@@ -52,13 +53,16 @@ public class Util extends Toolbox
     //~ Static fields/initializers --------------------------------------------
 
     /** System-dependent newline character. */
-    public static String lineSeparator = System.getProperty("line.separator");
+    public static final String lineSeparator =
+        System.getProperty("line.separator");
 
     /** System-dependent file separator, for example, "/" or "\." */
-    public static String fileSeparator = System.getProperty("file.separator");
-    public static PrintWriter debugWriter;
+    public static final String fileSeparator =
+        System.getProperty("file.separator");
     public static final Object [] emptyObjectArray = new Object[0];
     public static final String [] emptyStringArray = new String[0];
+    public static final SqlMoniker [] emptySqlMonikerArray = new SqlMoniker[0];
+
     private static boolean driversLoaded = false;
 
     /**
@@ -981,8 +985,8 @@ public class Util extends Toolbox
             node.accept(visitor);
         } catch (FoundOne e){
             return new SqlNodeDescriptor((SqlNode) e.getNode(),
-                visitor.currentParent,
-                visitor.currentOffset);
+                visitor.getCurrentParent(),
+                visitor.getCurrentOffset());
         }
         return null;
     }

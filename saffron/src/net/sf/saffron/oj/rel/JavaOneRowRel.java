@@ -23,7 +23,7 @@ import openjava.ptree.*;
 
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.util.*;
-import org.eigenbase.rel.OneRowRel;
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
@@ -33,7 +33,7 @@ import org.eigenbase.util.Util;
 /**
  * <code>JavaOneRowRel</code> implements {@link OneRowRel} inline.
  */
-public class JavaOneRowRel extends OneRowRel implements JavaLoopRel,
+public class JavaOneRowRel extends OneRowRelBase implements JavaLoopRel,
     JavaSelfRel
 {
     public JavaOneRowRel(RelOptCluster cluster)
@@ -44,8 +44,8 @@ public class JavaOneRowRel extends OneRowRel implements JavaLoopRel,
     // implement RelNode
     public Object clone()
     {
-        JavaOneRowRel clone = new JavaOneRowRel(cluster);
-        clone.traits = cloneTraits();
+        JavaOneRowRel clone = new JavaOneRowRel(getCluster());
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 

@@ -52,7 +52,7 @@ public class FilterToCalcRule extends RelOptRule
 {
     //~ Static fields/initializers --------------------------------------------
 
-    public static FilterToCalcRule instance = new FilterToCalcRule();
+    public static final FilterToCalcRule instance = new FilterToCalcRule();
 
     //~ Constructors ----------------------------------------------------------
 
@@ -80,7 +80,7 @@ public class FilterToCalcRule extends RelOptRule
         final RelDataType rowType = rel.getRowType();
         final RelDataTypeField [] fields = rowType.getFields();
         RexNode [] exprs = new RexNode[fields.length];
-        final RexBuilder rexBuilder = filter.cluster.rexBuilder;
+        final RexBuilder rexBuilder = filter.getCluster().getRexBuilder();
         for (int i = 0; i < exprs.length; i++) {
             exprs[i] = rexBuilder.makeInputRef(
                     fields[i].getType(),
@@ -88,8 +88,9 @@ public class FilterToCalcRule extends RelOptRule
         }
         final CalcRel calc =
             new CalcRel(
-                filter.cluster, RelOptUtil.clone(filter.traits), rel, rowType,
-                exprs, filter.condition);
+                filter.getCluster(),
+                RelOptUtil.clone(filter.traits), rel, rowType,
+                exprs, filter.getCondition());
         call.transformTo(calc);
     }
 }

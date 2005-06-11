@@ -75,12 +75,12 @@ public class FennelPullCalcRel extends FennelCalcRel implements FennelPullRel
             : null;
 
         FennelPullCalcRel clone = new FennelPullCalcRel(
-            cluster,
-            RelOptUtil.clone(child),
+            getCluster(),
+            RelOptUtil.clone(getChild()),
             rowType,
             RexUtil.clone(getProjectExprs()),
             clonedConditionExpr);
-        clone.traits = cloneTraits();
+        clone.inheritTraitsFrom(this);
         return clone;
     }
 
@@ -91,12 +91,12 @@ public class FennelPullCalcRel extends FennelCalcRel implements FennelPullRel
             FennelRelUtil.getRepos(this).newFemCalcTupleStreamDef();
 
         calcStream.getInput().add(
-            implementor.visitFennelChild((FennelRel) child));
+            implementor.visitFennelChild((FennelRel) getChild()));
         calcStream.setFilter(getConditionExpr() != null);
         final RexToCalcTranslator translator =
-            new RexToCalcTranslator(cluster.rexBuilder);
+            new RexToCalcTranslator(getCluster().getRexBuilder());
         final String program = translator.getProgram(
-            child.getRowType(),
+            getChild().getRowType(),
             getProjectExprs(),
             getConditionExpr());
         calcStream.setProgram(program);

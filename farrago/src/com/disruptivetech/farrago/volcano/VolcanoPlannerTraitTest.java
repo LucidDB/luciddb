@@ -354,9 +354,9 @@ public class VolcanoPlannerTraitTest
         // implement RelNode
         protected RelDataType deriveRowType()
         {
-            return cluster.typeFactory.createStructType(
+            return getCluster().getTypeFactory().createStructType(
                 new RelDataType [] {
-                    cluster.typeFactory.createJavaType(Void.TYPE)
+                    getCluster().getTypeFactory().createJavaType(Void.TYPE)
                 },
                 new String [] { "this" });
         }
@@ -417,7 +417,7 @@ public class VolcanoPlannerTraitTest
         // implement RelNode
         protected RelDataType deriveRowType()
         {
-            return child.getRowType();
+            return getChild().getRowType();
         }
 
         // TODO: SWZ Implement clone?
@@ -435,8 +435,8 @@ public class VolcanoPlannerTraitTest
         // implement RelNode
         public Object clone()
         {
-            NoneSingleRel clone = new NoneSingleRel(cluster, child);
-            clone.traits = cloneTraits();
+            NoneSingleRel clone = new NoneSingleRel(getCluster(), getChild());
+            clone.inheritTraitsFrom(this);
             return clone;
         }
     }
@@ -458,7 +458,7 @@ public class VolcanoPlannerTraitTest
         public Object clone()
         {
             IterSingleRel clone = new IterSingleRel(getCluster(), getInput(0));
-            clone.traits = cloneTraits();
+            clone.inheritTraitsFrom(this);
             return clone;
         }
 
@@ -602,7 +602,7 @@ public class VolcanoPlannerTraitTest
         {
             AltTraitConverter clone =
                 new AltTraitConverter(getCluster(), getInput(0), toTrait);
-            clone.traits = cloneTraits();
+            clone.inheritTraitsFrom(this);
             return clone;
         }
     }
@@ -642,8 +642,8 @@ public class VolcanoPlannerTraitTest
         public Object clone()
         {
             PhysToIteratorConverter clone =
-                new PhysToIteratorConverter(cluster, child);
-            clone.traits = cloneTraits();
+                new PhysToIteratorConverter(getCluster(), getChild());
+            clone.inheritTraitsFrom(this);
             return clone;
         }
     }

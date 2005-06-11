@@ -379,7 +379,7 @@ public class RexToCalcTranslator implements RexVisitor
 
         // Stop -1. Figure out the input row type.
         this.aggOp = aggOp;
-        switch (aggOp.ordinal) {
+        switch (aggOp.getOrdinal()) {
         case AggOp.None_ordinal:
         case AggOp.Init_ordinal:
             break;
@@ -571,15 +571,15 @@ public class RexToCalcTranslator implements RexVisitor
             throw new AssertionError("Shouldn't call this function directly;"
                 + " use implementNode(RexNode) instead");
         }
-        SqlOperator op = call.op;
+        SqlOperator op = call.getOperator();
 
-        if (op.kind.isA(SqlKind.And) || (op.kind.isA(SqlKind.Or))) {
+        if (op.getKind().isA(SqlKind.And) || (op.getKind().isA(SqlKind.Or))) {
             //first operand of AND/OR
             CalcProgramBuilder.Register reg0 = implementNode(call.operands[0]);
             String shortCut = newLabel();
 
             //Check if we can make a short cut
-            if (op.kind.isA(SqlKind.And)) {
+            if (op.getKind().isA(SqlKind.And)) {
                 builder.addLabelJumpFalse(shortCut, reg0);
             } else {
                 builder.addLabelJumpTrue(shortCut, reg0);
@@ -597,7 +597,7 @@ public class RexToCalcTranslator implements RexVisitor
             builder.addLabelJump(restOfInstructions);
             builder.addLabel(shortCut);
 
-            if (op.kind.isA(SqlKind.And)) {
+            if (op.getKind().isA(SqlKind.And)) {
                 CalcProgramBuilder.move.add(builder, result, falseReg);
             } else {
                 CalcProgramBuilder.move.add(builder, result, trueReg);
@@ -621,12 +621,13 @@ public class RexToCalcTranslator implements RexVisitor
                 + " use implementNode(RexNode) instead");
         }
 
-        SqlOperator op = call.op;
+        SqlOperator op = call.getOperator();
 
         //check if and/or/xor should short circuit
         if (generateShortCircuit
-                && (op.kind.isA(SqlKind.And) || op.kind.isA(SqlKind.Or)) /* ||
-            op.kind.isA(SqlKind.Xor) */) {
+            && (op.getKind().isA(SqlKind.And)
+                || op.getKind().isA(SqlKind.Or)))
+        {
             implementShortCircuit(call);
             return;
         }
@@ -680,18 +681,18 @@ public class RexToCalcTranslator implements RexVisitor
             CalcProgramBuilder.Register zero = builder.newInt4Literal(0);
             CalcProgramBuilder.Register [] regs =
             { resultOfCall, strCmpResult, zero };
-            if (op.kind.isA(SqlKind.Equals)) {
+            if (op.getKind().isA(SqlKind.Equals)) {
                 CalcProgramBuilder.boolNativeEqual.add(builder, regs);
-            } else if (op.kind.isA(SqlKind.NotEquals)) {
+            } else if (op.getKind().isA(SqlKind.NotEquals)) {
                 CalcProgramBuilder.boolNativeNotEqual.add(builder, regs);
-            } else if (op.kind.isA(SqlKind.GreaterThan)) {
+            } else if (op.getKind().isA(SqlKind.GreaterThan)) {
                 CalcProgramBuilder.boolNativeGreaterThan.add(builder, regs);
-            } else if (op.kind.isA(SqlKind.LessThan)) {
+            } else if (op.getKind().isA(SqlKind.LessThan)) {
                 CalcProgramBuilder.boolNativeLessThan.add(builder, regs);
-            } else if (op.kind.isA(SqlKind.GreaterThanOrEqual)) {
+            } else if (op.getKind().isA(SqlKind.GreaterThanOrEqual)) {
                 CalcProgramBuilder.boolNativeGreaterOrEqualThan.add(builder,
                     regs);
-            } else if (op.kind.isA(SqlKind.LessThanOrEqual)) {
+            } else if (op.getKind().isA(SqlKind.LessThanOrEqual)) {
                 CalcProgramBuilder.boolNativeLessOrEqualThan.add(builder, regs);
             } else {
                 throw Util.newInternal("Unknown op " + op);
@@ -721,7 +722,7 @@ public class RexToCalcTranslator implements RexVisitor
                 // for the 'add' and 'drop' code.
                 CalcProgramBuilder.Register register =
                     builder.newLocal(getCalcRegisterDescriptor(call));
-                switch (aggOp.ordinal) {
+                switch (aggOp.getOrdinal()) {
                 case AggOp.None_ordinal:
                     throw Util.newInternal(
                         "Cannot generate calc program: Aggregate call " +
@@ -751,12 +752,14 @@ public class RexToCalcTranslator implements RexVisitor
 
     private boolean isStrCmp(RexCall call)
     {
-        SqlOperator op = call.op;
-        if (op.kind.isA(SqlKind.Equals) || op.kind.isA(SqlKind.NotEquals)
-                || op.kind.isA(SqlKind.GreaterThan)
-                || op.kind.isA(SqlKind.LessThan)
-                || op.kind.isA(SqlKind.GreaterThanOrEqual)
-                || op.kind.isA(SqlKind.LessThanOrEqual)) {
+        SqlOperator op = call.getOperator();
+        if (op.getKind().isA(SqlKind.Equals)
+            || op.getKind().isA(SqlKind.NotEquals)
+            || op.getKind().isA(SqlKind.GreaterThan)
+            || op.getKind().isA(SqlKind.LessThan)
+            || op.getKind().isA(SqlKind.GreaterThanOrEqual)
+            || op.getKind().isA(SqlKind.LessThanOrEqual))
+        {
             RelDataType t0 = call.operands[0].getType();
             RelDataType t1 = call.operands[1].getType();
 
@@ -769,7 +772,7 @@ public class RexToCalcTranslator implements RexVisitor
 
     private static boolean isOctetString(RelDataType t)
     {
-        switch (t.getSqlTypeName().ordinal) {
+        switch (t.getSqlTypeName().getOrdinal()) {
         case SqlTypeName.Varbinary_ordinal:
         case SqlTypeName.Binary_ordinal:
             return true;
@@ -922,7 +925,7 @@ public class RexToCalcTranslator implements RexVisitor
         Util.pre(programs.length == 3, "programs.length == 3");
         for (int i = 0; i < aggCalls.length; i++) {
             RexCall aggCall = aggCalls[i];
-            Util.pre(aggCall.op instanceof SqlAggFunction,
+            Util.pre(aggCall.getOperator() instanceof SqlAggFunction,
                 "aggCalls[i].op instanceof SqlAggFunction");
             for (int j = 0; j < aggCall.operands.length; j++) {
                 RexNode operand = aggCall.operands[j];
@@ -986,7 +989,7 @@ public class RexToCalcTranslator implements RexVisitor
 
         public void visitCall(RexCall call)
         {
-            final SqlOperator op = call.op;
+            final SqlOperator op = call.getOperator();
             CalcRexImplementor implementor =
                 translator.implementorTable.get(op);
             if ((implementor == null) || !implementor.canImplement(call)) {

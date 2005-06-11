@@ -31,7 +31,7 @@ import org.eigenbase.sql.fun.SqlTrimFunction;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.CallOperands;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.Util;
@@ -343,7 +343,13 @@ public class SqlJdbcFunctionCall extends SqlFunction
 
     public SqlJdbcFunctionCall(String name)
     {
-        super("{fn "+name+"}", SqlKind.JdbcFn, null, null, null, null);
+        super(
+            "{fn "+name+"}",
+            SqlKind.JdbcFn,
+            null,
+            null,
+            SqlTypeStrategies.otcVariadic,
+            null);
         jdbcName = name;
         lookupMakeCallObj = JdbcToInternalLookupTable.instance.lookup(name);
         lookupCall = null;
@@ -364,68 +370,54 @@ public class SqlJdbcFunctionCall extends SqlFunction
         SqlOperatorTests.testJdbcFn(tester);
     }
 
-    protected boolean checkArgTypes(
-        SqlCall call,
-        SqlValidator validator,
-        SqlValidatorScope scope, boolean throwOnFailure)
-    {
-        // no op, arg checking is done in getType
-        return true;
-    }
-
     public SqlCall getLookupCall()
     {
         if (null == lookupCall) {
-            lookupCall = lookupMakeCallObj.createCall(thisOperands, null);
+            lookupCall =
+                lookupMakeCallObj.createCall(thisOperands, SqlParserPos.ZERO);
         }
         return lookupCall;
     }
 
     public String getAllowedSignatures()
     {
-        return lookupMakeCallObj.operator.getAllowedSignatures(name);
+        return lookupMakeCallObj.operator.getAllowedSignatures(getName());
     }
 
-    public SqlOperator.OperandsCountDescriptor getOperandsCountDescriptor()
+    public RelDataType inferReturnType(
+        SqlOperatorBinding opBinding)
     {
-        return OperandsCountDescriptor.variadicCountDescriptor;
-    }
-
-    protected RelDataType getType(
-        SqlValidator validator,
-        SqlValidatorScope scope,
-        RelDataTypeFactory typeFactory,
-        CallOperands callOperands)
-    {
+        // only expected to come here if validator called this method
+        SqlCallBinding callBinding = (SqlCallBinding) opBinding;
+        
         if (null == lookupMakeCallObj) {
-            // only expected to come here if validator called this method
-            throw validator.newValidationError(
-                (SqlCall) callOperands.getUnderlyingObject(),
-                    EigenbaseResource.instance().newFunctionUndefined(name));
+            throw callBinding.newValidationError(
+                EigenbaseResource.instance().newFunctionUndefined(
+                    getName()));
         }
 
-        if (!lookupMakeCallObj.checkNumberOfArg(callOperands.size())) {
-            // only expected to come here if validator called this method
-            throw validator.newValidationError(
-                (SqlCall) callOperands.getUnderlyingObject(),
-                    EigenbaseResource.instance().newWrongNumberOfParam(
-                    name,
+        if (!lookupMakeCallObj.checkNumberOfArg(
+                opBinding.getOperandCount()))
+        {
+            throw callBinding.newValidationError(
+                EigenbaseResource.instance().newWrongNumberOfParam(
+                    getName(),
                     new Integer(thisOperands.length),
                     getArgCountMismatchMsg()));
         }
 
-        if (!lookupMakeCallObj.operator.checkArgTypes(
-                    getLookupCall(),
-                    validator,
-                    scope,
-                    false)) {
-            // only expected to come here if validator called this method
-            SqlCall call = (SqlCall) callOperands.getUnderlyingObject();
-            throw call.newValidationSignatureError(validator, scope);
+        if (!lookupMakeCallObj.operator.checkOperandTypes(
+                    new SqlCallBinding(
+                        callBinding.getValidator(),
+                        callBinding.getScope(), 
+                        getLookupCall()),
+                    false))
+        {
+            throw callBinding.newValidationSignatureError();
         }
-        return lookupMakeCallObj.operator.getType(
-            validator,
-            scope,
+        return lookupMakeCallObj.operator.validateOperands(
+            callBinding.getValidator(),
+            callBinding.getScope(),
             getLookupCall());
     }
 
