@@ -144,7 +144,8 @@ public class FarragoDefaultSessionPersonality
         // superinterfaces which we only want to invoke when one of
         // the more specific handlers doesn't satisfied the request.
         DdlMedHandler medHandler = new DdlMedHandler(ddlValidator);
-        DdlSecurityHandler securityHandler = new DdlSecurityHandler(ddlValidator);
+        DdlSecurityHandler securityHandler =
+            new DdlSecurityHandler(ddlValidator);
         handlerList.add(medHandler);
         handlerList.add(new DdlRoutineHandler(ddlValidator));
         handlerList.add(new DdlRelationalHandler(medHandler));
@@ -162,8 +163,7 @@ public class FarragoDefaultSessionPersonality
                 ReferentialRuleTypeEnum.IMPORTED_KEY_CASCADE));
 
         // Dependencies can never be dropped without CASCADE, but with
-        // CASCADE, they go away (a special case later on takes care of
-        // cascading to the dependent object as well).
+        // CASCADE, they go away.
         ddlValidator.defineDropRule(
             repos.getCorePackage().getDependencySupplier(),
             new FarragoSessionDdlDropRule("supplier", null,

@@ -242,8 +242,9 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
     /**
      * Creates a new dependency.
      *
-     * @param client element which depends on others
-     * (FIXME:  this should be a CwmModelElement, not a CwmNamespace)
+     * @param client element which depends on others; we require
+     * this to be a {@link CwmNamespace} so that it can own the
+     * {@link CwmDependency} created
      *
      * @param suppliers collection of elements on which client depends
      *

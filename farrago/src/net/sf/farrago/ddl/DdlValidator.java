@@ -673,6 +673,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         if (refObj instanceof CwmDependency) {
             CwmDependency dependency = (CwmDependency) refObj;
             dependency.getSupplier().clear();
+            dependency.getClient().clear();
         }
     }
 
@@ -777,10 +778,9 @@ public class DdlValidator extends FarragoCompoundAllocation
             dependency.setKind("GenericDependency");
 
             // NOTE: The client owns the dependency, so their lifetimes are
-            // coeval.  We don't use the DependencyClient association at all
-            // because it causes weird problems.  That's why we have to
-            // restrict clients to being namespaces.  Ugh.
+            // coeval.  That's why we restrict clients to being namespaces.
             client.getOwnedElement().add(dependency);
+            dependency.getClient().add(client);
         }
 
         Iterator iter = suppliers.iterator();
