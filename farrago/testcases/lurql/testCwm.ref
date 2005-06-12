@@ -53,8 +53,8 @@ EXECUTION RESULT:
 LocalSchema: SALES
 LocalTable: EMPS
 LocalTable: TEMPS
-View: EMPSVIEW
-View: TEMPSVIEW
+LocalView: EMPSVIEW
+LocalView: TEMPSVIEW
 
 ****
 
@@ -151,7 +151,7 @@ then (
 );
 
 EXECUTION RESULT:
-Catalog: LOCALDB
+LocalCatalog: LOCALDB
 LocalSchema: SALES
 LocalTable: TEMPS
 

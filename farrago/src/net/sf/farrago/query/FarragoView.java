@@ -23,6 +23,7 @@
 package net.sf.farrago.query;
 
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.sql2003.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
@@ -55,9 +56,9 @@ class FarragoView extends FarragoQueryNamedColumnSet
 
     //~ Methods ---------------------------------------------------------------
 
-    public CwmView getCwmView()
+    public FemLocalView getFemView()
     {
-        return (CwmView) getCwmColumnSet();
+        return (FemLocalView) getCwmColumnSet();
     }
 
     // implement RelOptTable
@@ -68,7 +69,7 @@ class FarragoView extends FarragoQueryNamedColumnSet
         // REVIEW:  cache view definition?
         RelNode rel =
             getPreparingStmt().expandView(
-                getCwmView().getQueryExpression().getBody());
+                getFemView().getQueryExpression().getBody());
         rel = RelOptUtil.createRenameRel(
             getRowType(),
             rel);

@@ -39,7 +39,7 @@ public class FarragoSessionResolvedObject
     //~ Instance fields -------------------------------------------------------
 
     public CwmCatalog catalog;
-    public FemLocalSchema schema;
+    public CwmSchema schema;
     public CwmModelElement object;
     public String catalogName;
     public String schemaName;

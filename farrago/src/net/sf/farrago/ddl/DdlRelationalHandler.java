@@ -230,7 +230,7 @@ public class DdlRelationalHandler extends DdlHandler
     }
     
     // implement FarragoSessionDdlHandler
-    public void validateDefinition(CwmView view)
+    public void validateDefinition(FemLocalView view)
     {
         FarragoSession session = validator.newReentrantSession();
 
@@ -250,7 +250,7 @@ public class DdlRelationalHandler extends DdlHandler
 
     private void validateViewImpl(
         FarragoSession session,
-        CwmView view)
+        FemLocalView view)
         throws Throwable
     {
         String sql = view.getQueryExpression().getBody();

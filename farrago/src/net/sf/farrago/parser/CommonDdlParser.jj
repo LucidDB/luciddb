@@ -507,9 +507,9 @@ FemLocalTable ScopedTableDefinition() :
     }
 }
 
-CwmView ViewDefinition() :
+FemLocalView ViewDefinition() :
 {
-    CwmView view;
+    FemLocalView view;
     SqlIdentifier qualifiedViewName;
     SqlNode query;
     List columnNameList;
@@ -518,7 +518,7 @@ CwmView ViewDefinition() :
 {
     <VIEW>
     {
-        view = getRepos().newCwmView();
+        view = getRepos().newFemLocalView();
     }
     qualifiedViewName = CompoundIdentifier3()
     {
@@ -717,17 +717,17 @@ CwmTable TableIdentifier() :
     }
 }
 
-CwmView ViewReference() :
+FemLocalView ViewReference() :
 {
     SqlIdentifier qualifiedViewName;
-    CwmView view;
+    FemLocalView view;
 }
 {
     <VIEW> qualifiedViewName = CompoundIdentifier3()
     {
-        view = (CwmView) farragoParser.getStmtValidator().findSchemaObject(
+        view = (FemLocalView) farragoParser.getStmtValidator().findSchemaObject(
             qualifiedViewName,
-            getRepos().getRelationalPackage().getCwmView());
+            getRepos().getSql2003Package().getFemLocalView());
         return view;
     }
 }

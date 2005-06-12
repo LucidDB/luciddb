@@ -918,6 +918,13 @@ column type family is {1} but default value type family is {2}</text>
 <text>creation grant</text>
 </message>
 
+<message id="510052" name="UmlLocalCatalog">
+<text>catalog</text>
+</message>
+
+<message id="510053" name="UmlLocalView">
+<text>view</text>
+</message>
 
 <!-- End of last error section ============================================ -->
 

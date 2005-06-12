@@ -714,7 +714,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                 stmtValidator.getDataWrapperCache().loadColumnSetFromCatalog(
                     table,
                     getFarragoTypeFactory());
-        } else if (columnSet instanceof CwmView) {
+        } else if (columnSet instanceof FemLocalView) {
             RelDataType rowType =
                 getFarragoTypeFactory().createStructTypeFromClassifier(
                     columnSet);

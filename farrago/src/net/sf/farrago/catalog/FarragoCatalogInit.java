@@ -97,13 +97,13 @@ public abstract class FarragoCatalogInit
 
     private static void createSystemCatalogs(FarragoRepos repos)
     {
-        CwmCatalog catalog;
+        FemLocalCatalog catalog;
 
-        catalog = repos.newCwmCatalog();
+        catalog = repos.newFemLocalCatalog();
         catalog.setName(SYSBOOT_CATALOG_NAME);
         FarragoCatalogUtil.initializeCatalog(repos, catalog);
 
-        catalog = repos.newCwmCatalog();
+        catalog = repos.newFemLocalCatalog();
         catalog.setName(LOCALDB_CATALOG_NAME);
         FarragoCatalogUtil.initializeCatalog(repos, catalog);
     }

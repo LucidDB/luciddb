@@ -142,7 +142,7 @@ create view table_types_view_internal(table_type,uml_class_name) as
     values 
         ('FOREIGN TABLE','ForeignTable'),
         ('TABLE','LocalTable'),
-        ('VIEW','View')
+        ('VIEW','LocalView')
 ;
 
 create view tables_view as

@@ -142,7 +142,7 @@
 . . . . . . . . >     values 
 . . . . . . . . >         ('FOREIGN TABLE','ForeignTable'),
 . . . . . . . . >         ('TABLE','LocalTable'),
-. . . . . . . . >         ('VIEW','View')
+. . . . . . . . >         ('VIEW','LocalView')
 . . . . . . . . > ;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create view tables_view as
