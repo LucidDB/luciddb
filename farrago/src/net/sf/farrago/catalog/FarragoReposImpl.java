@@ -22,7 +22,6 @@
 */
 package net.sf.farrago.catalog;
 
-import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
 
@@ -75,8 +74,6 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
 
     /**
      * Opens a Farrago repository.
-     *
-     * After the constructor is complete, the caller must call {@link #init}.
      */
     public FarragoReposImpl(
         FarragoAllocationOwner owner)
@@ -84,7 +81,12 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
         owner.addAllocation(this);
     }
 
-    public void init()
+    /**
+     * Initializes the model graph. The constructor of a concrete subclass must
+     * call this after the repository has been initialized, and
+     * {@link #getRootPackage()} is available.
+     */
+    protected void initGraph()
     {
         isFennelEnabled = !getDefaultConfig().isFennelDisabled();
         modelGraph = new JmiModelGraph(getRootPackage());
@@ -358,12 +360,7 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
         }
     }
 
-    /**
-     * Defines localization for this repository.
-     *
-     * @param bundles list of ResourceBundle instances to add for
-     * localization.
-     */
+    // implement FarragoRepos
     public void addResourceBundles(List bundles)
     {
         resourceBundles.addAll(bundles);
