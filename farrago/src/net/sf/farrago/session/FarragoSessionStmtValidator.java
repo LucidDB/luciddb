@@ -192,6 +192,20 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
         RefClass refClass);
 
     /**
+     * Looks up a top-level object (e.g. a catalog) by name, throwing
+     * a validation error if not found.
+     *
+     * @param unqualifiedName SqlIdentifier which returns true for isSimple()
+     *
+     * @param refClass class of object to find
+     *
+     * @return object found
+     */
+    public CwmModelElement findUnqualifiedObject(
+        SqlIdentifier unqualifiedName,
+        RefClass refClass);
+
+    /**
      * Looks up all matching routine overloads by invocation name.
      *
      * @param invocationName invocation name of routine to look up

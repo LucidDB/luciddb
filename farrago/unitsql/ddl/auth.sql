@@ -4,9 +4,19 @@
 -- ???
 -- ???
 
+-- REVIEW jvs 12-June-2005:  I put in this connect as _SYSTEM so that
+-- the creation grant for user SECMAN has a non-null grantee.  In
+-- "real life" this shouldn't be allowed.  And there needs to be a check
+-- for valid user creator.
+!closeall
+!connect jdbc:farrago: _SYSTEM net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver
+
+-- FIXME jvs 12-June-2005:  All queries in this script need ORDER BY
+
 -------------------------------------------------------------------------
 -- Basic setup
 -- set catalog 'local_db'; TODO: Why does this not work?
+-- JVS:  it doesn't work because the name is localdb, not local_db
 create schema authtest;
 set schema 'authtest';
 
@@ -18,6 +28,7 @@ set schema 'authtest';
 create user SECMAN authorization 'Unknown';
 create user SECMAN_2 authorization 'Unknown';
 
+!closeall
 !connect jdbc:farrago: SECMAN net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver
 
 -------------------------------------------------------------------------
@@ -41,8 +52,7 @@ select "name" from sys_fem."Security"."AuthId";
 select "name" from sys_fem."Security"."Role";
 select "name" from sys_fem."Security"."User";
 
--- TODO: John to debug this exception
--- select "action" from sys_fem."Security"."CreationGrant";
+select "action" from sys_fem."Security"."CreationGrant";
 
 -------------------------------------------------------------------------
 -- Test 2: user, roles at two different levels hierarchies
@@ -87,8 +97,7 @@ select "name" from sys_fem."Security"."AuthId";
 select "name" from sys_fem."Security"."Role";
 select "name" from sys_fem."Security"."User";
 
--- TODO: John to debug this exception
--- select "action" from sys_fem."Security"."CreationGrant";
+select "action" from sys_fem."Security"."CreationGrant";
 
 -------------------------------------------------------------------------
 -- Test 3:

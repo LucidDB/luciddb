@@ -152,7 +152,7 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
                     rhs);
             farragoImplementor.translateAssignment(
                 this,
-                field.getType(),
+                field,
                 new FieldAccess(
                     varTuple,
                     Util.toJavaId(

@@ -529,9 +529,9 @@ public class JavaRelImplementor implements RelImplementor
      * @param rel the relational expression which is the context for the lhs
      * and rhs expressions
      *
-     * @param lhsType type of the target expression
+     * @param lhsField target field
      *
-     * @param lhs the target expression (as OpenJava)
+     * @param lhs target field as OpenJava
      *
      * @param rhs the source expression (as RexNode)
      *
@@ -544,7 +544,7 @@ public class JavaRelImplementor implements RelImplementor
      */
     public void translateAssignment(
         JavaRel rel,
-        RelDataType lhsType,
+        RelDataTypeField lhsField,
         Expression lhs,
         RexNode rhs,
         StatementList stmtList,

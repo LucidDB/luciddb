@@ -51,6 +51,8 @@ public class FarragoOJRexRowImplementor extends FarragoOJRexImplementor
         for (int i = 0; i < operands.length; ++i) {
             final RelDataTypeField field = fields[i];
             translator.convertCastOrAssignment(
+                translator.getRepos().getLocalizedObjectName(
+                    fields[i].getName()),
                 fields[i].getType(),
                 call.operands[i].getType(),
                 translator.convertFieldAccess(variable, field),

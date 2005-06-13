@@ -190,6 +190,27 @@ public class FarragoDefaultSessionPersonality
             repos.getBehavioralPackage().getOperationMethod(),
             new FarragoSessionDdlDropRule("specification", null,
                 ReferentialRuleTypeEnum.IMPORTED_KEY_CASCADE));
+
+        // Grants should be dropped together with any of the grantor, grantee,
+        // or granted element
+        ddlValidator.defineDropRule(
+            repos.getSecurityPackage().getPrivilegeIsGrantedToGrantee(),
+            new FarragoSessionDdlDropRule(
+                "Grantee",
+                null,
+                ReferentialRuleTypeEnum.IMPORTED_KEY_CASCADE));
+        ddlValidator.defineDropRule(
+            repos.getSecurityPackage().getPrivilegeIsGrantedByGrantor(),
+            new FarragoSessionDdlDropRule(
+                "Grantor",
+                null,
+                ReferentialRuleTypeEnum.IMPORTED_KEY_CASCADE));
+        ddlValidator.defineDropRule(
+            repos.getSecurityPackage().getPrivilegeIsGrantedOnElement(),
+            new FarragoSessionDdlDropRule(
+                "Element",
+                null,
+                ReferentialRuleTypeEnum.IMPORTED_KEY_CASCADE));
     }
     
     // implement FarragoSessionPersonality

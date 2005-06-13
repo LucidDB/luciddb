@@ -188,7 +188,7 @@ public class IterCalcRel extends ProjectRelBase implements JavaRel
             RexNode rhs = exps[i];
             implementor.translateAssignment(
                 rel,
-                fields[i].getType(),
+                fields[i],
                 lhs,
                 rhs,
                 condBody,

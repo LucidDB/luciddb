@@ -22,6 +22,7 @@
 */
 package net.sf.farrago.ojrex;
 
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 
@@ -64,6 +65,7 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
 {
     //~ Instance fields -------------------------------------------------------
 
+    private FarragoRepos repos;
     private StatementList stmtList;
     private MemberDeclarationList memberList;
     private FarragoOJRexCastImplementor castImplementor;
@@ -73,6 +75,8 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
 
     /**
      * Creates a translator based on a {@link OJRexImplementorTable}.
+     *
+     * @param repos repository
      *
      * @param relImplementor implementation context
      *
@@ -87,6 +91,7 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
      * translation
      */
     public FarragoRexToOJTranslator(
+        FarragoRepos repos,
         JavaRelImplementor relImplementor,
         RelNode contextRel,
         OJRexImplementorTable implementorTable,
@@ -255,18 +260,26 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
     }
 
     public Expression convertCastOrAssignment(
+        String targetName, 
         RelDataType lhsType,
         RelDataType rhsType,
         Expression lhsExp,
         Expression rhsExp)
     {
-        return castImplementor.convertCastOrAssignment(this, lhsType, rhsType,
+        return castImplementor.convertCastOrAssignment(
+            this, targetName,
+            lhsType, rhsType,
             lhsExp, rhsExp);
     }
 
     public FarragoTypeFactory getFarragoTypeFactory()
     {
         return (FarragoTypeFactory) getTypeFactory();
+    }
+
+    public FarragoRepos getRepos()
+    {
+        return repos;
     }
 }
 

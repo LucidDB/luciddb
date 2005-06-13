@@ -532,7 +532,7 @@ column type family is {1} but default value type family is {2}</text>
 <!-- ====================================================================== -->
 
 <exception id="450000" name="NullNotAllowed">
-<text>NOT NULL field cannot be assigned null value</text>
+<text>Target {0} cannot be assigned null value</text>
 </exception>
 
 <exception id="450010" name="AssignFromFailed">

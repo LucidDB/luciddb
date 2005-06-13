@@ -145,8 +145,7 @@ public class DdlRoutineHandler extends DdlHandler
                     repos.getLocalizedObjectName(routine)));
         }
 
-        if (routine.getSpecification() != null) {
-            // This is a method.  For now, it can only be a constructor method.
+        if (FarragoCatalogUtil.isRoutineConstructor(routine)) {
             CwmClassifier classifier = routine.getSpecification().getOwner();
             if (!routine.getInvocationName().equals(classifier.getName())) {
                 throw validator.newPositionalError(

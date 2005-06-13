@@ -346,7 +346,7 @@ class MedMdrJoinRelImplementor
                 }
                 implementor.translateAssignment(
                     joinRel,
-                    fields[i].getType(),
+                    fields[i],
                     lhs,
                     rhs,
                     stmtList,

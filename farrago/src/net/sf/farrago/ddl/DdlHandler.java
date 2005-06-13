@@ -209,7 +209,7 @@ public abstract class DdlHandler
             boolean method = false;
             if (cwmNamespace instanceof FemRoutine) {
                 FemRoutine routine = (FemRoutine) cwmNamespace;
-                if (routine.getSpecification() != null) {
+                if (FarragoCatalogUtil.isRoutineMethod(routine)) {
                     if (routine.getSpecification().getOwner() == type) {
                         // This is a method of the type in question.  In this
                         // case, we don't create a dependency, because the

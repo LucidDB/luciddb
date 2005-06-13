@@ -449,8 +449,6 @@ public class DdlValidator extends FarragoCompoundAllocation
                 feature.setChangeability(ChangeableKindEnum.CK_CHANGEABLE);
             }
 
-            JmiUtil.assertConstraints(obj);
-
             if (action == VALIDATE_DELETION) {
                 clearDependencySuppliers(obj);
                 RefFeatured container = obj.refImmediateComposite();
@@ -468,6 +466,8 @@ public class DdlValidator extends FarragoCompoundAllocation
                     // top-level object
                     deletionList.add(obj);
                 }
+            } else {
+                JmiUtil.assertConstraints(obj);
             }
             if (!(obj instanceof CwmModelElement)) {
                 continue;
@@ -622,8 +622,11 @@ public class DdlValidator extends FarragoCompoundAllocation
             while (mapIter.hasNext()) {
                 Map.Entry mapEntry = (Map.Entry) mapIter.next();
                 RefObject obj =
-                    (RefObject) getRepos().getMdrRepos().getByMofId((String) mapEntry
-                            .getKey());
+                    (RefObject) getRepos().getMdrRepos().getByMofId(
+                        (String) mapEntry.getKey());
+                if (obj == null) {
+                    continue;
+                }
                 Object action = mapEntry.getValue();
 
                 // mark this object as already validated so it doesn't slip
@@ -948,13 +951,19 @@ public class DdlValidator extends FarragoCompoundAllocation
 
     private void scheduleModification(RefObject obj)
     {
-        if (!(obj instanceof CwmModelElement)) {
+        if (obj == null) {
             return;
         }
         if (validatedMap.containsKey(obj)) {
             return;
         }
         if (schedulingMap.containsKey(obj.refMofId())) {
+            return;
+        }
+        if (!(obj instanceof CwmModelElement)) {
+            // NOTE jvs 12-June-2005:  record it so that we can run
+            // integrity verification on it during executeStorage()
+            schedulingMap.put(obj.refMofId(), VALIDATE_MODIFICATION);
             return;
         }
         CwmModelElement element = (CwmModelElement) obj;

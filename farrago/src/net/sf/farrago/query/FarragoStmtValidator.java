@@ -371,19 +371,9 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
     // implement FarragoSessionStmtValidator
     public FemDataServer findDataServer(SqlIdentifier serverName)
     {
-        FemDataServer server =
-            (FemDataServer) FarragoCatalogUtil.getModelElementByName(
-                getRepos().getMedPackage().getFemDataServer().refAllOfType(),
-                serverName.getSimple());
-        if (server == null) {
-            throw newPositionalError(
-                FarragoResource.instance().newValidatorUnknownObject(
-                    getRepos().getLocalizedObjectName(
-                        null,
-                        serverName.getSimple(),
-                        getRepos().getMedPackage().getFemDataServer())));
-        }
-        return server;
+        return (FemDataServer) findUnqualifiedObject(
+            serverName,
+            getRepos().getMedPackage().getFemDataServer());
     }
 
     // implement FarragoSessionStmtValidator
@@ -422,6 +412,26 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
                     refClass)));
         }
 
+        return element;
+    }
+
+    // implement FarragoSessionStmtValidator
+    public CwmModelElement findUnqualifiedObject(
+        SqlIdentifier unqualifiedName,
+        RefClass refClass)
+    {
+        CwmModelElement element = 
+            FarragoCatalogUtil.getModelElementByName(
+                refClass.refAllOfType(),
+                unqualifiedName.getSimple());
+        if (element == null) {
+            throw newPositionalError(
+                FarragoResource.instance().newValidatorUnknownObject(
+                    getRepos().getLocalizedObjectName(
+                        null,
+                        unqualifiedName.getSimple(),
+                        refClass)));
+        }
         return element;
     }
 

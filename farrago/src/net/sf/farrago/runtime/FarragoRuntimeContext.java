@@ -549,24 +549,30 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
     /**
      * Called when a nullable value is cast to a NOT NULL type.
      *
+     * @param targetName target expression
+     *
      * @param nullableValue source value
      */
-    public void checkNotNull(NullableValue nullableValue)
+    public void checkNotNull(String targetName, NullableValue nullableValue)
     {
         if (nullableValue.isNull()) {
-            throw FarragoResource.instance().newNullNotAllowed();
+            throw FarragoResource.instance().newNullNotAllowed(
+                targetName);
         }
     }
 
     /**
-    * Called when a nullable value is cast to a NOT NULL type.
-    *
-    * @param obj source value
-    */
-    public void checkNotNull(Object obj)
+     * Called when a nullable value is cast to a NOT NULL type.
+     *
+     * @param targetName target expression
+     *
+     * @param obj source value
+     */
+    public void checkNotNull(String targetName, Object obj)
     {
         if (null == obj) {
-            throw FarragoResource.instance().newNullNotAllowed();
+            throw FarragoResource.instance().newNullNotAllowed(
+                targetName);
         }
     }
 
