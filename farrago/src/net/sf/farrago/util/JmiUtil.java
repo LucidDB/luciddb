@@ -423,7 +423,7 @@ public abstract class JmiUtil
     /**
      * Asserts that constraints are satisfied.  I tried using
      * refVerifyConstraints to achieve this, but it didn't work in MDR.
-     * For now, this just checks that mandatory attributes have
+     * For now, this just checks that mandatory features have
      * non-null values.
      *
      * @param obj the object to be verified
@@ -432,13 +432,14 @@ public abstract class JmiUtil
     {
         RefClass refClass = obj.refClass();
         Iterator featureIter =
-            getFeatures(refClass, Attribute.class, false).iterator();
+            getFeatures(refClass, StructuralFeature.class, false).iterator();
         while (featureIter.hasNext()) {
-            Attribute attr = (Attribute) featureIter.next();
-            if (attr.getMultiplicity().getLower() != 0) {
-                assert (obj.refGetValue(attr) != null) : "Missing value for mandatory attribute "
-                + ((ModelElement) refClass.refMetaObject()).getName() + "."
-                + attr.getName();
+            StructuralFeature feature = (StructuralFeature) featureIter.next();
+            if (feature.getMultiplicity().getLower() != 0) {
+                assert (obj.refGetValue(feature) != null)
+                    : "Missing value for mandatory feature "
+                    + ((ModelElement) refClass.refMetaObject()).getName() + "."
+                    + feature.getName();
             }
         }
     }

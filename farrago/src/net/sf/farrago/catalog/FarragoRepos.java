@@ -32,14 +32,17 @@ import net.sf.farrago.util.FarragoAllocation;
 import net.sf.farrago.util.FarragoTransientTxnContext;
 import org.eigenbase.jmi.JmiModelGraph;
 import org.eigenbase.jmi.JmiModelView;
+import org.eigenbase.sql.parser.SqlParserUtil;
 import org.netbeans.api.mdr.MDRepository;
 
 import javax.jmi.reflect.RefClass;
 import java.util.List;
+import java.util.ResourceBundle;
+import java.nio.charset.Charset;
+import java.text.CollationKey;
 
 /**
- * FarragoRepos represents a loaded instance of an MDR repository containing
- * Farrago metadata.
+ * FarragoRepos represents a loaded repository containing Farrago metadata.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -80,15 +83,22 @@ public interface FarragoRepos extends FarragoAllocation,
      */
     public int getIdentifierPrecision();
 
+    /**
+     * @return element describing the configuration parameters
+     */
     public FemFarragoConfig getCurrentConfig();
 
     /**
-     * @return the name of the default Charset for this repository
+     * @return the name of the default {@link Charset} for this repository
      */
     public String getDefaultCharsetName();
 
     /**
-     * @return the name of the default Collation for this repository
+     * @return the name of the default collation name for this repository.
+     * The value is of the form <i>charset$locale$strength</i>, as per
+     * {@link SqlParserUtil#parseCollation(String)}.
+     * The default is "ISO-8859-1$en_US".
+     *
      */
     public String getDefaultCollationName();
 
@@ -205,7 +215,7 @@ public interface FarragoRepos extends FarragoAllocation,
     /**
      * Defines localization for this repository.
      *
-     * @param bundles list of ResourceBundle instances to add for
+     * @param bundles list of {@link ResourceBundle} instances to add for
      * localization.
      */
     public void addResourceBundles(List bundles);

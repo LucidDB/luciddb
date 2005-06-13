@@ -86,9 +86,9 @@ public class FarragoUserDefinedRoutine
             paramTypes,
             routine.getType() == ProcedureTypeEnum.PROCEDURE
             ? SqlFunctionCategory.UserDefinedProcedure
-            : ((routine.getSpecification() == null) ?
-                SqlFunctionCategory.UserDefinedSpecificFunction
-                : SqlFunctionCategory.UserDefinedConstructor));
+            : (FarragoCatalogUtil.isRoutineConstructor(routine)
+                ? SqlFunctionCategory.UserDefinedConstructor
+                : SqlFunctionCategory.UserDefinedSpecificFunction));
         this.stmtValidator = stmtValidator;
         this.preparingStmt = preparingStmt;
         this.routine = routine;
@@ -353,6 +353,7 @@ public class FarragoUserDefinedRoutine
         for (int i = 0; i < operands.length; ++i) {
             args[i] = translateOperand(
                 farragoTranslator,
+                (FemRoutineParameter) routine.getParameter().get(i), 
                 operands[i],
                 javaParams[i],
                 getParamTypes()[i]);
@@ -383,6 +384,7 @@ public class FarragoUserDefinedRoutine
                     method.getReturnType());
         }
         return farragoTranslator.convertCastOrAssignment(
+            call.toString(), 
             returnType,
             actualReturnType,
             null,
@@ -397,6 +399,7 @@ public class FarragoUserDefinedRoutine
 
     private Expression translateOperand(
         FarragoRexToOJTranslator farragoTranslator,
+        FemRoutineParameter param,
         Expression argExpr,
         Class javaParamClass,
         RelDataType paramType)
@@ -407,6 +410,8 @@ public class FarragoUserDefinedRoutine
             // away NULL detection when the routine is declared as
             // RETURNS NULL ON NULL INPUT
             return farragoTranslator.convertCastOrAssignment(
+                preparingStmt.getRepos().getLocalizedObjectName(
+                    param.getName()),
                 stmtValidator.getTypeFactory().createTypeWithNullability(
                     paramType,
                     false),

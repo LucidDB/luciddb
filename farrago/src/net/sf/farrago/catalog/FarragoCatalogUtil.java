@@ -26,6 +26,7 @@ import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.behavioral.*;
 import net.sf.farrago.cwm.datatypes.*;
 import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
@@ -80,6 +81,56 @@ public abstract class FarragoCatalogUtil
             --nParams;
         }
         return nParams;
+    }
+
+    /**
+     * Determines whether a routine is a constructor method.
+     *
+     * @param routine routine in question
+     *
+     * @return true if routine is a constructor method
+     */
+    public static boolean isRoutineConstructor(FemRoutine routine)
+    {
+        // TODO:  once we support non-constructor methods
+        return isRoutineMethod(routine);
+    }
+
+    /**
+     * Determines whether a routine is a method.
+     *
+     * @param routine routine in question
+     *
+     * @return true if routine is a method
+     */
+    public static boolean isRoutineMethod(FemRoutine routine)
+    {
+        return routine.getSpecification().getOwner() != routine;
+    }
+
+    /**
+     * Sets the specification for a routine.
+     *
+     * @param repos repository storing the routine definition
+     *
+     * @param routine new routine
+     *
+     * @param typeDef owning type if a method, else null
+     */
+    public static void setRoutineSpecification(
+        FarragoRepos repos,
+        FemRoutine routine,
+        FemUserDefinedType typeDef)
+    {
+        CwmOperation operation = repos.newCwmOperation();
+        if (typeDef == null) {
+            operation.setOwner(routine);
+        } else {
+            operation.setOwner(typeDef);
+        }
+        operation.setName(routine.getName());
+        operation.setAbstract(false);
+        routine.setSpecification(operation);
     }
 
     /**

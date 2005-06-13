@@ -25,9 +25,7 @@ package net.sf.farrago.db;
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.ddl.*;
 import net.sf.farrago.fennel.*;
-import net.sf.farrago.parser.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.util.*;
@@ -101,10 +99,8 @@ public class FarragoDbSessionFactory implements FarragoSessionFactory
         FarragoAllocationOwner owner,
         boolean userRepos)
     {
-        final FarragoMdrReposImpl repos = new FarragoMdrReposImpl(
+        return new FarragoMdrReposImpl(
             owner, new FarragoModelLoader(), userRepos);
-        repos.init();
-        return repos;
     }
 
     // implement FarragoSessionFactory

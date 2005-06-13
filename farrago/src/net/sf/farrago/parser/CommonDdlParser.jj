@@ -154,11 +154,11 @@ DdlStmt DdlStmtEof() :
                 |
                 modelElement = DataServerDefinition()
                 |
-                modelElement = ExtensionModelDefinition()
-                |
                 modelElement = UserDefinition()
                 |
-                modelElement = RoleDefinition()                
+                modelElement = RoleDefinition()
+                |
+                modelElement = ExtensionModelDefinition()
             )
             {
                 ddlStmt = new DdlCreateStmt(modelElement);
@@ -195,6 +195,10 @@ DdlStmt DdlStmtEof() :
                 |
                 LOOKAHEAD(2)
                 modelElement = ForeignTableDrop()
+                |
+                modelElement = UserDrop()
+                |
+                modelElement = RoleDrop()
                 |
                 modelElement = ExtensionModelDrop()
             )
@@ -688,11 +692,12 @@ FemRole RoleDefinition() :
             // as the grantee of that grant.
             FemGrant grant = FarragoCatalogUtil.newElementGrant(
                 getRepos(),
-                farragoParser.getStmtValidator().getSession().getSessionVariables().currentUserName,
+                farragoParser.getStmtValidator().getSession()
+                .getSessionVariables().currentUserName,
                 grantor.getSimple(), 
                 role);
-            // TODO: add this enum to the model and enable the call below
-            // grantGrant.setAction();
+            // TODO: add an enum for this to the model
+            grant.setAction("ADMIN");
             grant.setWithGrantOption(true);
         }
     ]
@@ -1424,6 +1429,10 @@ FemRoutine FunctionDefinition() :
         | ExternalRoutineBody(function)
     )
     {
+        FarragoCatalogUtil.setRoutineSpecification(
+            getRepos(),
+            function,
+            null);
         return function;
     }
 }
@@ -1528,7 +1537,6 @@ FemRoutine ProcedureDefinition() :
     <PROCEDURE>
     {
         procedure = getRepos().newFemRoutine();
-        procedure.setType(ProcedureTypeEnum.PROCEDURE);
         procedure.setCalledOnNullInput(true);
     }
     qualifiedName = CompoundIdentifier3()
@@ -1549,6 +1557,11 @@ FemRoutine ProcedureDefinition() :
         ExternalRoutineBody(procedure)
     )
     {
+        FarragoCatalogUtil.setRoutineSpecification(
+            getRepos(),
+            procedure,
+            null);
+        procedure.setType(ProcedureTypeEnum.PROCEDURE);
         return procedure;
     }
 }
@@ -1932,11 +1945,10 @@ void MethodSpecification(FemUserDefinedType typeDef) :
         method.setInvocationName(method.getName());
         method.setCalledOnNullInput(true);
         // TODO jvs 25-Feb-2005:  mark as constructor
-        CwmOperation operation = getRepos().newCwmOperation();
-        operation.setOwner(typeDef);
-        operation.setName(method.getName());
-        operation.setAbstract(false);
-        method.setSpecification(operation);
+        FarragoCatalogUtil.setRoutineSpecification(
+            getRepos(),
+            method,
+            typeDef);
     }
     <LPAREN> [ RoutineParamList(method) ] <RPAREN>
     {
@@ -2184,9 +2196,34 @@ CwmModelElement ForeignTableDrop() :
     }
 }
 
-SqlIdentifier GrantElement() :
+CwmModelElement UserDrop() :
 {
-    
+    SqlIdentifier name;
+}
+{
+    <USER> name = SimpleIdentifier()
+    {
+        return farragoParser.getStmtValidator().findUnqualifiedObject(
+            name,
+            getRepos().getSecurityPackage().getFemUser());
+    }
+}
+
+CwmModelElement RoleDrop() :
+{
+    SqlIdentifier name;
+}
+{
+    <ROLE> name = SimpleIdentifier()
+    {
+        return farragoParser.getStmtValidator().findUnqualifiedObject(
+            name,
+            getRepos().getSecurityPackage().getFemRole());
+    }
+}
+
+SqlIdentifier PrivilegedAction() :
+{
 }
 {
     (<INSERT> | <UPDATE> | <SELECT> | <DELETE> | <EXECUTE> | <USAGE>) 
@@ -2197,18 +2234,18 @@ SqlIdentifier GrantElement() :
 }
 
 
-List GrantElementList() :
+List PrivilegedActionList() :
 {
     List privList = new ArrayList();
     SqlIdentifier privId;
 }
 {
-    privId = GrantElement()
+    privId = PrivilegedAction()
     {
         privList.add(privId);
     }
     (
-        <COMMA> privId = GrantElement()
+        <COMMA> privId = PrivilegedAction()
         {
             privList.add(privId);
         }
@@ -2261,7 +2298,7 @@ DdlStmt GrantPrivStmt() :
             privList = startList(allPrivId);
         }
         |
-        privList = GrantElementList()
+        privList = PrivilegedActionList()
     )
     {
         stmt.setPrivList(privList);

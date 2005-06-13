@@ -150,23 +150,19 @@ public class FarragoMdrReposImpl extends FarragoReposImpl
 
         // Load configuration
         currentConfigMofId = getDefaultConfig().refMofId();
-
+        initGraph();
         tracer.info("Catalog successfully loaded");
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    /**
-     * @return MDRepository storing this Farrago repository
-     */
+    // implement FarragoRepos
     public MDRepository getMdrRepos()
     {
         return mdrRepository;
     }
 
-    /**
-     * @return root package for transient metadata
-     */
+    // implement FarragoRepos
     public FarragoPackage getTransientFarragoPackage()
     {
         return transientFarragoPackage;
@@ -180,6 +176,7 @@ public class FarragoMdrReposImpl extends FarragoReposImpl
         return fennelPackage;
     }
 
+    // implement FarragoRepos
     public FemFarragoConfig getCurrentConfig()
     {
         // TODO:  prevent updates
@@ -222,11 +219,7 @@ public class FarragoMdrReposImpl extends FarragoReposImpl
         mdrRepository.endTrans(false);
     }
 
-    /**
-     * Begins a metadata transaction on the repository.
-     *
-     * @param writable true for read/write; false for read-only
-     */
+    // implement FarragoRepos
     public void beginReposTxn(boolean writable)
     {
         if (writable) {
@@ -237,11 +230,7 @@ public class FarragoMdrReposImpl extends FarragoReposImpl
         mdrRepository.beginTrans(writable);
     }
 
-    /**
-     * Ends a metadata transaction on the repository.
-     *
-     * @param rollback true to rollback; false to commit
-     */
+    // implement FarragoRepos
     public void endReposTxn(boolean rollback)
     {
         if (rollback) {

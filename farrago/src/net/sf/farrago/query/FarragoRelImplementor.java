@@ -226,7 +226,9 @@ public class FarragoRelImplementor extends JavaRelImplementor
         // this translator is not usable for actual code generation, but
         // it's sufficient for use in TranslationTester, which is
         // currently the only caller
-        return new FarragoRexToOJTranslator(this, rel, ojRexImplementorTable,
+        return new FarragoRexToOJTranslator(
+            preparingStmt.getRepos(),
+            this, rel, ojRexImplementorTable,
             null, null);
     }
 
@@ -238,7 +240,9 @@ public class FarragoRelImplementor extends JavaRelImplementor
         MemberDeclarationList memberList)
     {
         FarragoRexToOJTranslator translator =
-            new FarragoRexToOJTranslator(this, rel, ojRexImplementorTable,
+            new FarragoRexToOJTranslator(
+                preparingStmt.getRepos(),
+                this, rel, ojRexImplementorTable,
                 stmtList, memberList);
         return translator.translateRexNode(exp);
     }
@@ -246,18 +250,22 @@ public class FarragoRelImplementor extends JavaRelImplementor
     // override JavaRelImplementor
     public void translateAssignment(
         JavaRel rel,
-        RelDataType lhsType,
+        RelDataTypeField lhsField,
         Expression lhsExp,
         RexNode rhs,
         StatementList stmtList,
         MemberDeclarationList memberList)
     {
         FarragoRexToOJTranslator translator =
-            new FarragoRexToOJTranslator(this, rel, ojRexImplementorTable,
+            new FarragoRexToOJTranslator(
+                preparingStmt.getRepos(),
+                this, rel, ojRexImplementorTable,
                 stmtList, memberList);
         Expression rhsExp = translator.translateRexNode(rhs);
         translator.convertCastOrAssignment(
-            lhsType,
+            getPreparingStmt().getRepos().getLocalizedObjectName(
+                lhsField.getName()),
+            lhsField.getType(),
             rhs.getType(),
             lhsExp,
             rhsExp);

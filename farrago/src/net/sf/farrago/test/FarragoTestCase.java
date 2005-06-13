@@ -613,14 +613,27 @@ public abstract class FarragoTestCase extends DiffTestCase
         private void dropAuthIds()
             throws Exception
         {
-            List list = new ArrayList(
-                repos.getSecurityPackage().getFemAuthId()
-                .refAllOfClass());
-            Iterator iter = list.iterator();
+            List list = new ArrayList();
+            Iterator iter =
+                repos.getSecurityPackage().getFemAuthId().refAllOfType()
+                .iterator();
             while (iter.hasNext()) {
                 FemAuthId authId =
                     (FemAuthId) iter.next();
-                authId.refDelete();
+                if (authId.getName().equals("_SYSTEM")
+                    || authId.getName().equals("PUBLIC"))
+                {
+                    continue;
+                }
+                list.add(
+                    ((authId instanceof FemRole) ? "ROLE" : "USER")
+                    + " "
+                    + authId.getName());
+            }
+            iter = list.iterator();
+            while (iter.hasNext()) {
+                String obj = iter.next().toString();
+                stmt.execute("drop " + obj);
             }
         }
     }

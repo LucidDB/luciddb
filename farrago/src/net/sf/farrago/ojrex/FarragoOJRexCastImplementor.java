@@ -55,7 +55,10 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
         RelDataType lhsType = call.getType();
         RelDataType rhsType = call.operands[0].getType();
         Expression rhsExp = operands[0];
-        return convertCastOrAssignment(translator, lhsType, rhsType, null,
+        return convertCastOrAssignment(
+            translator,
+            call.toString(),
+            lhsType, rhsType, null,
             rhsExp);
     }
 
@@ -231,6 +234,7 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
 
     Expression convertCastOrAssignment(
         FarragoRexToOJTranslator translator,
+        String targetName,
         RelDataType lhsType,
         RelDataType rhsType,
         Expression lhsExp,
@@ -249,14 +253,15 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
                 rhsExp = variable;
             }
             
-            // TODO:  provide exception context
             translator.addStatement(
                 new ExpressionStatement(
                     new MethodCall(
                         translator.getRelImplementor()
                         .getConnectionVariable(),
                         "checkNotNull",
-                        new ExpressionList(rhsExp))));
+                        new ExpressionList(
+                            Literal.makeLiteral(targetName),
+                            rhsExp))));
         }
 
         // special case for source explicit null

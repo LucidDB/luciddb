@@ -35,6 +35,8 @@ import net.sf.farrago.fem.config.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
+import org.netbeans.api.mdr.events.*;
+
 /**
  * FarragoCatalogInit contains one-time persistent initialization procedures
  * for the Farrago catalog.
@@ -42,7 +44,7 @@ import net.sf.farrago.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class FarragoCatalogInit
+public class FarragoCatalogInit implements MDRPreChangeListener
 {
     //~ Static fields/initializers --------------------------------------------
 
@@ -67,6 +69,10 @@ public abstract class FarragoCatalogInit
      * Reserved name for the system internal authorization user.
      */
     public static final String SECURITY_SYSUSER_NAME = "_SYSTEM";
+
+    private final FarragoRepos repos;
+
+    private final Set objs;
     
     /**
      * Creates objects owned by the system.  This is only done once during
@@ -78,24 +84,80 @@ public abstract class FarragoCatalogInit
     {
         tracer.info("Creating system-owned catalog objects");
         boolean rollback = true;
+        FarragoCatalogInit init = null;
         try {
             repos.beginReposTxn(true);
-            initCatalog(repos);
+            init = new FarragoCatalogInit(repos);
+            init.initCatalog();
             rollback = false;
         } finally {
+            if (init != null) {
+                init.publishObjects(rollback);
+            }
             repos.endReposTxn(rollback);
         }
         tracer.info("Creation of system-owned catalog objects committed");
     }
-    
-    private static void initCatalog(FarragoRepos repos)
+
+    private FarragoCatalogInit(FarragoRepos repos)
     {
-        createSystemCatalogs(repos);
-        createSystemTypes(repos);
-        createSystemAuth(repos);
+        this.repos = repos;
+        objs = new HashSet();
+        // listen to MDR events during initialization so that we can
+        // consistently fill in generic information on all objects
+        repos.getMdrRepos().addListener(
+            this, AttributeEvent.EVENTMASK_ATTRIBUTE);
+    }
+    
+    // implement MDRChangeListener
+    public void change(MDRChangeEvent event)
+    {
+        // don't care
     }
 
-    private static void createSystemCatalogs(FarragoRepos repos)
+    // implement MDRPreChangeListener
+    public void changeCancelled(MDRChangeEvent event)
+    {
+        // don't care
+    }
+    
+    // implement MDRPreChangeListener
+    public void plannedChange(MDRChangeEvent event)
+    {
+        if (event instanceof AttributeEvent) {
+            objs.add(event.getSource());
+        }
+    }
+
+    private void publishObjects(boolean rollback)
+    {
+        repos.getMdrRepos().removeListener(this);
+        if (rollback) {
+            return;
+        }
+        // TODO jvs 12-June-2005:  other stuff like creation grants for
+        // all objects
+        Iterator iter = objs.iterator();
+        while (iter.hasNext()) {
+            Object obj = iter.next();
+            if (obj instanceof CwmModelElement) {
+                CwmModelElement modelElement =
+                    (CwmModelElement) obj;
+                // Set visibility so that DdlValidator doesn't try
+                // to re-validate these objects.
+                modelElement.setVisibility(VisibilityKindEnum.VK_PUBLIC);
+            }
+        }
+    }
+    
+    private void initCatalog()
+    {
+        createSystemCatalogs();
+        createSystemTypes();
+        createSystemAuth();
+    }
+
+    private void createSystemCatalogs()
     {
         FemLocalCatalog catalog;
 
@@ -108,7 +170,7 @@ public abstract class FarragoCatalogInit
         FarragoCatalogUtil.initializeCatalog(repos, catalog);
     }
 
-    private static void createSystemAuth(FarragoRepos repos)
+    private void createSystemAuth()
     {
         // Create the System Internal User 
         FemUser systemUser = repos.newFemUser();
@@ -142,8 +204,7 @@ public abstract class FarragoCatalogInit
         grantPublicRole.setElement(publicRole);
     }
 
-    private static void defineTypeAlias(
-        FarragoRepos repos,
+    private void defineTypeAlias(
         String aliasName,
         CwmSqlsimpleType type)
     {
@@ -152,7 +213,7 @@ public abstract class FarragoCatalogInit
         typeAlias.setType(type);
     }
     
-    private static void createSystemTypes(FarragoRepos repos)
+    private void createSystemTypes()
     {
         CwmSqlsimpleType simpleType;
 
@@ -189,7 +250,7 @@ public abstract class FarragoCatalogInit
         simpleType.setNumericPrecision(new Integer(32));
         simpleType.setNumericPrecisionRadix(new Integer(2));
         simpleType.setNumericScale(new Integer(0));
-        defineTypeAlias(repos, "INT", simpleType);
+        defineTypeAlias("INT", simpleType);
 
         simpleType = repos.newCwmSqlsimpleType();
         simpleType.setName("BIGINT");
@@ -209,8 +270,8 @@ public abstract class FarragoCatalogInit
         simpleType.setTypeNumber(new Integer(Types.DOUBLE));
         simpleType.setNumericPrecision(new Integer(52));
         simpleType.setNumericPrecisionRadix(new Integer(2));
-        defineTypeAlias(repos, "DOUBLE PRECISION", simpleType);
-        defineTypeAlias(repos, "FLOAT", simpleType);
+        defineTypeAlias("DOUBLE PRECISION", simpleType);
+        defineTypeAlias("FLOAT", simpleType);
 
         simpleType = repos.newCwmSqlsimpleType();
         simpleType.setName("VARCHAR");
@@ -220,7 +281,7 @@ public abstract class FarragoCatalogInit
         // indicators in stored tuples; there are further limits based on page
         // size (imposed during table creation)
         simpleType.setCharacterMaximumLength(new Integer(65535));
-        defineTypeAlias(repos, "CHARACTER VARYING", simpleType);
+        defineTypeAlias("CHARACTER VARYING", simpleType);
 
         simpleType = repos.newCwmSqlsimpleType();
         simpleType.setName("VARBINARY");
@@ -231,7 +292,7 @@ public abstract class FarragoCatalogInit
         simpleType.setName("CHAR");
         simpleType.setTypeNumber(new Integer(Types.CHAR));
         simpleType.setCharacterMaximumLength(new Integer(65535));
-        defineTypeAlias(repos, "CHARACTER", simpleType);
+        defineTypeAlias("CHARACTER", simpleType);
 
         simpleType = repos.newCwmSqlsimpleType();
         simpleType.setName("BINARY");
@@ -265,7 +326,7 @@ public abstract class FarragoCatalogInit
         simpleType.setTypeNumber(new Integer(Types.DECIMAL));
         simpleType.setNumericPrecision(new Integer(39));
         simpleType.setNumericPrecisionRadix(new Integer(10));
-        defineTypeAlias(repos, "DEC", simpleType);
+        defineTypeAlias("DEC", simpleType);
 
         FemSqlcollectionType collectType;
         collectType = repos.newFemSqlmultisetType();

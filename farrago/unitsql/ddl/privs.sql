@@ -1,6 +1,9 @@
 -- $Id$
 -- Test DDL on privileges
 
+-- REVIEW jvs 12-June-2005:  see comments at top of auth.sql
+!closeall
+!connect jdbc:farrago: _SYSTEM net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver
 -- Create a security manager and login as this user to perform all grant 
 -- tests. 
 -- TODO: grant all appropriate system privilege for this user once
@@ -9,6 +12,7 @@
 create user SECMAN authorization 'Unknown';
 create user SECMAN_2 authorization 'Unknown';
 
+!closeall
 !connect jdbc:farrago: SECMAN net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver
 
 -- Test 1:

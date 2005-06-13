@@ -306,7 +306,7 @@ Error: java.lang.NullPointerException: null (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- this should fail with an SQL exception for NULL detected
 0: jdbc:farrago:> values prim_int_to_hex_string(cast(null as integer));
-Error: NOT NULL field cannot be assigned null value (state=,code=0)
+Error: Target "I" cannot be assigned null value (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values obj_int_to_hex_string(255);
 +---------+

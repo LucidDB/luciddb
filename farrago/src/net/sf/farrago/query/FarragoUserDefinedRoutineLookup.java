@@ -173,7 +173,7 @@ public class FarragoUserDefinedRoutineLookup implements SqlOperatorTable
                 returnType, true);
         }
 
-        if (femRoutine.getSpecification() != null) {
+        if (FarragoCatalogUtil.isRoutineConstructor(femRoutine)) {
             // constructors always return NOT NULL
             returnType = typeFactory.createTypeWithNullability(
                 returnType, false);
