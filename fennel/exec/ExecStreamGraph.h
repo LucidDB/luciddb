@@ -175,6 +175,16 @@ public:
     virtual void mergeFrom(ExecStreamGraph& src) = 0;
 
     /**
+     * Adds a subgraph, taken (removed) from another graph.
+     * (Slower than mergeFrom(ExecStreamGraph&), which merges its entire source).
+     * Assumes the graphs are disjoint, and that both have been prepared.
+     * The two graphs are both open, or else both closed.
+     * @param src the source graph
+     * @param nodes identifies source nodes.
+     */
+    virtual void mergeFrom(ExecStreamGraph& src, std::vector<ExecStreamId>const& nodes) = 0;
+
+    /**
      * Finds a stream by name.
      *
      * @param name name of stream to find

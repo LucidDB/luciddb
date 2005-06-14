@@ -118,11 +118,19 @@ void ExecStreamGraphImpl::removeStream(ExecStreamId id)
     assert(pStream->id == id);
 
     streamMap.erase(pStream->getName());
+    removeFromStreamOutMap(pStream);
     sortedStreams.clear();              // invalidate list: recreated on demand
-    // erase from streamOutMap
-    int outCt = getOutputCount(id);
+    freeVertex(v);
+    // stream is now detached from any graph, and not usable.
+    pStream->pGraph = 0;
+    pStream->id = 0;
+}
+
+void ExecStreamGraphImpl::removeFromStreamOutMap(SharedExecStream p)
+{
+    int outCt = getOutputCount(p->getStreamId());
     if (outCt > 0) {
-        std::string name = pStream->getName();
+        std::string name = p->getName();
         // assumes map key pairs <name, index> sort lexicographically, so <name, *> is contiguous.
         EdgeMap::iterator startNameRange =
             streamOutMap.find(std::make_pair(name, 0));
@@ -130,11 +138,6 @@ void ExecStreamGraphImpl::removeStream(ExecStreamId id)
             streamOutMap.find(std::make_pair(name, outCt-1));
         streamOutMap.erase(startNameRange, endNameRange);
     }
-
-    freeVertex(v);
-    // stream is now detached from any graph, and not usable.
-    pStream->pGraph = 0;
-    pStream->id = 0;
 }
 
 // Deletes all edges and puts all vertices on the free list;
@@ -184,6 +187,15 @@ void ExecStreamGraphImpl::mergeFrom(ExecStreamGraph& src)
     assert(false);
 }
 
+void ExecStreamGraphImpl::mergeFrom(
+    ExecStreamGraph& src, std::vector<ExecStreamId>const& nodes)
+{
+    if (ExecStreamGraphImpl *p = dynamic_cast<ExecStreamGraphImpl*>(&src)) {
+        mergeFrom(*p, nodes);
+    }
+    assert(false);
+}
+
 void ExecStreamGraphImpl::mergeFrom(ExecStreamGraphImpl& src)
 {
     // Since the identity of the added graph SRC will be lost, at this time both
@@ -195,20 +207,17 @@ void ExecStreamGraphImpl::mergeFrom(ExecStreamGraphImpl& src)
     std::map<Vertex, Vertex> vmap;
 
     // copy the nodes (with attached streams)
-    int n,  nsrc = boost::num_vertices(src.graphRep); // debug
     VertexIterPair verts = boost::vertices(src.graphRep);
-    for (n = 0; verts.first != verts.second; ++n, ++verts.first) {
+    for (; verts.first != verts.second; ++verts.first) {
         Vertex vsrc = *verts.first;
         SharedExecStream pStream = src.getStreamFromVertex(vsrc);
         Vertex vnew = addVertex(pStream);
         vmap[vsrc] = vnew;
     }
-    assert(n == nsrc);                  // debug
 
     // copy the edges (with attached buffers, which stay bound to the adjacent streams)
-    nsrc = boost::num_edges(src.graphRep);
     EdgeIterPair edges = boost::edges(src.graphRep);
-    for (n = 0; edges.first != edges.second; ++n, ++edges.first) {
+    for (; edges.first != edges.second; ++edges.first) {
         Edge esrc = *edges.first;
         SharedExecStreamBufAccessor pBuf = src.getSharedBufAccessorFromEdge(esrc);
         std::pair<Edge, bool> x = boost::add_edge(
@@ -217,9 +226,63 @@ void ExecStreamGraphImpl::mergeFrom(ExecStreamGraphImpl& src)
             pBuf, graphRep);
         assert(x.second);
     }
-    assert(n == nsrc);                  // debug
     src.clear();
 }
+
+
+// merges a subgraph, viz the induced subgraph of a set of NODES of SRC
+void ExecStreamGraphImpl::mergeFrom(
+    ExecStreamGraphImpl& src, std::vector<ExecStreamId>const& nodes)
+{
+    // both graphs must be prepared, and must both be open or both be closed.
+    assert(isPrepared && src.isPrepared);
+    assert(isOpen == src.isOpen);
+
+    // map a source vertex ID to the ID of the copied target vertex 
+    std::map<Vertex, Vertex> vmap;
+
+    // Copy the nodes (with attached streams)
+    int nnodes = nodes.size();
+    for (int i = 0; i < nnodes; i++) {
+        Vertex vsrc = boost::vertices(src.graphRep).first[nodes[i]];
+        SharedExecStream pStream = src.getStreamFromVertex(vsrc);
+        Vertex vnew = addVertex(pStream);
+        vmap[vsrc] = vnew;
+    }
+
+    // Copy the internal edges (with attached buffers, which stay bound to the adjacent streams).
+    // It suffices to scan the outbound edges. The external edges are abandoned.
+    for (int i = 0; i < nnodes; i++) {
+        // Find all outbound edges E (U,V) in the source subgraph
+        Vertex u = boost::vertices(src.graphRep).first[nodes[i]];
+        for (OutEdgeIterPair edges = boost::out_edges(u, src.graphRep);
+             edges.first != edges.second;
+             ++edges.first)
+        {
+            // an edge e (u, v) in the source graph
+            Edge e = *edges.first;
+            assert(u == boost::source(e, src.graphRep));
+            Vertex v = boost::target(e, src.graphRep);
+            // V is in the subgraph iff v is a key in the map vmap[]
+            if (vmap.find(v) != vmap.end()) {
+                SharedExecStreamBufAccessor pBuf = src.getSharedBufAccessorFromEdge(e);
+                std::pair<Edge, bool> x = boost::add_edge(vmap[u], vmap[v], pBuf, graphRep);
+                assert(x.second);
+            }
+        }
+    }
+
+    // delete the copied subgraph from SRC
+    for (int i = 0; i < nnodes; i++) {
+        Vertex v = boost::vertices(src.graphRep).first[nodes[i]];
+        SharedExecStream pStream = getStreamFromVertex(v);
+        src.streamMap.erase(pStream->getName());
+        src.removeFromStreamOutMap(pStream);
+        src.freeVertex(v);
+    }
+    src.sortedStreams.clear();
+}
+
 
 SharedExecStream ExecStreamGraphImpl::findStream(
     std::string name)

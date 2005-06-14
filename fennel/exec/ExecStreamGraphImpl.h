@@ -138,6 +138,7 @@ protected:
     virtual void openStream(SharedExecStream pStream);
     virtual void bindStreamBufAccessors(SharedExecStream pStream);
     virtual void mergeFrom(ExecStreamGraphImpl& src);
+    virtual void mergeFrom(ExecStreamGraphImpl& src, std::vector<ExecStreamId>const& nodes);
 
     /** frees all nodes and edges: like removeStream() on all streams, but faster */
     virtual void clear();
@@ -150,6 +151,8 @@ protected:
     /** releases a Vertex to the free list */
     void freeVertex(Vertex);
 
+    /** removes a stream from streamOutMap */
+    void removeFromStreamOutMap(SharedExecStream);
 
 public:
     explicit ExecStreamGraphImpl();
@@ -176,6 +179,7 @@ public:
     virtual void addInputDataflow(
         ExecStreamId consumerId);
     virtual void mergeFrom(ExecStreamGraph& src);
+    virtual void mergeFrom(ExecStreamGraph& src, std::vector<ExecStreamId>const& nodes);
     virtual SharedExecStream findStream(
         std::string name);
     virtual SharedExecStream findLastStream(

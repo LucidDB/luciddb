@@ -142,8 +142,9 @@ void ExecStreamTestBase::testCaseTearDown()
         pScheduler->stop();
     }
     pGraph.reset();
-    pScheduler.reset();
     pGraphEmbryo.reset();
+    // do last, since an ExecStreamGraph hold a raw Scheduler ptr
+    pScheduler.reset(); 
     SegStorageTestBase::testCaseTearDown();
 }
 
