@@ -340,6 +340,11 @@ public class MockMetadataFactory extends FarragoMetadataFactoryImpl
      * Formats a JMI object as XML.
      */
     private static class JmiPrinter extends JmiVisitor {
+        // ~ Constants
+        private static final Pattern poundIntColonPattern =
+            Pattern.compile("#[0-9]*:");
+
+        // ~ Data members
         private final XMLOutput xmlOutput;
         private final Map printIds = new HashMap();
         private int printId = 0;
@@ -390,9 +395,15 @@ public class MockMetadataFactory extends FarragoMetadataFactoryImpl
                     // Convert
                     //   name=\"MockTableImplRel#274:536\"
                     // into
-                    // name=\"MockTableImplRel#274:536\"
-                    attrValue = Pattern.compile("#[0-9]*:")
+                    //   name=\"MockTableImplRel#274:536\"
+                    attrValue = poundIntColonPattern
                         .matcher((String) attrValue).replaceAll("#xxxx:");
+                } else if (attrName.equals("streamId")) {
+                    // Convert
+                    //   streamId=\"536\"
+                    // into
+                    //   streamId=\"xxxx\"
+                    attrValue = "xxxx";
                 }
                 xmlOutput.attribute(attrName, String.valueOf(attrValue));
             }
