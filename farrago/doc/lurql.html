@@ -68,13 +68,9 @@ As our example metamodel, we use the
 <a href="http://www.omg.org/technology/cwm">
 Common Warehouse Metamodel (CWM)</a>, which defines standard
 relational objects such as Schema, Table, View, and Column using UML
-concepts such as Namespace, Class, and Attribute as a base.  Here's a UML
-class diagram for the portion of the model referenced by the
-example queries:
-
-<p>
-
-<img src="lurqlDiagrams/cwmExampleMetamodel.png">
+concepts such as Namespace, Class, and Attribute as a base.  More
+details on Farrago's usage of this model are provided in the <a
+href="fem/index.html">Farrago model documentation</a>.
 
 <p>
 
@@ -88,13 +84,6 @@ columns, and their datatypes):
 <p>
 
 <img src="lurqlDiagrams/cwmExampleMetadata.png">
-
-<p>
-
-In CWM, a Catalog isa Package isa Namespace, so it can contain any
-kind of ModelElement (including Schema) via the ElementOwnership
-association.  Likewise, the same association can be used to link a Schema
-with a Table it contains.
 
 <h2>Simple Queries</h2>
 
@@ -361,7 +350,7 @@ from class Table where name='TEMPS' then (
 );
 
 EXECUTION RESULT:
-Catalog: LOCALDB
+LocalCatalog: LOCALDB
 LocalSchema: SALES
 LocalTable: TEMPS
 </code></pre>
