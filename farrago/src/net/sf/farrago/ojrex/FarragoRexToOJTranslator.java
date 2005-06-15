@@ -99,6 +99,7 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         MemberDeclarationList memberList)
     {
         super(relImplementor, contextRel, implementorTable);
+        this.repos = repos;
         this.stmtList = stmtList;
         this.memberList = memberList;
 
@@ -162,7 +163,7 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         if (type.getSqlTypeName() == SqlTypeName.Null) {
             return;
         }
-        
+
         // TODO jvs 22-May-2004:  Initialize once and only once.
         setTranslation(
             castImplementor.convertCastToAssignableValue(
@@ -260,7 +261,7 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
     }
 
     public Expression convertCastOrAssignment(
-        String targetName, 
+        String targetName,
         RelDataType lhsType,
         RelDataType rhsType,
         Expression lhsExp,

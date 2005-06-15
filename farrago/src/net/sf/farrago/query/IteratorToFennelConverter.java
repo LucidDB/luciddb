@@ -26,12 +26,9 @@ import java.lang.reflect.*;
 import java.nio.*;
 import java.util.*;
 
-import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.type.*;
-import net.sf.farrago.type.runtime.*;
-import net.sf.farrago.util.*;
 
 import openjava.mop.*;
 import openjava.ptree.*;
@@ -92,8 +89,8 @@ public class IteratorToFennelConverter extends ConverterRel
         JavaRelImplementor implementor,
         RelDataType rowType)
     {
-        FarragoTypeFactory factory = stmt.getFarragoTypeFactory();
-
+        FarragoTypeFactory factory =
+            (FarragoTypeFactory) implementor.getTypeFactory();
         OJClass ojClass = OJUtil.typeToOJClass(rowType, factory);
 
         FemTupleDescriptor tupleDesc =
@@ -307,11 +304,9 @@ public class IteratorToFennelConverter extends ConverterRel
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        FarragoRepos repos = FennelRelUtil.getRepos(this);
-
-        FemJavaTupleStreamDef streamDef = repos.newFemJavaTupleStreamDef();
+        FemJavaTupleStreamDef streamDef =
+            implementor.getMetadataFactory().newFemJavaTupleStreamDef();
         streamDef.setStreamId(getId());
-
         return streamDef;
     }
 
@@ -330,16 +325,31 @@ public class IteratorToFennelConverter extends ConverterRel
      */
     public static void register(RelOptPlanner planner)
     {
-        planner.addRule(
-            new ConverterRule(RelNode.class, CallingConvention.ITERATOR,
+        planner.addRule(new IteratorToFennelPullRule());
+    }
+
+    /**
+     * Rule which converts a {@link RelNode} of
+     * {@link FennelPullRel#FENNEL_PULL_CONVENTION fennel-pull calling convention}
+     * to {@link CallingConvention.ITERATOR iterator calling convention}
+     * by adding a {@link IteratorToFennelConverter}.
+     */
+    private static class IteratorToFennelPullRule extends ConverterRule
+    {
+        public IteratorToFennelPullRule()
+        {
+            super(
+                RelNode.class,
+                CallingConvention.ITERATOR,
                 FennelPullRel.FENNEL_PULL_CONVENTION,
-                "IteratorToFennelPullRule") {
-                public RelNode convert(RelNode rel)
-                {
-                    return new IteratorToFennelConverter(rel.getCluster(),
-                        rel);
-                }
-            });
+                "IteratorToFennelPullRule");
+        }
+
+        public RelNode convert(RelNode rel)
+        {
+            return new IteratorToFennelConverter(rel.getCluster(),
+                rel);
+        }
     }
 }
 

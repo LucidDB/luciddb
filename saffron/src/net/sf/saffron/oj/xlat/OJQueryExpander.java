@@ -188,7 +188,7 @@ public class OJQueryExpander extends QueryExpander
 
         // spit out java statement block
         JavaRelImplementor implementor =
-            new JavaRelImplementor(best.getCluster().getRexBuilder());
+            new JavaRelImplementor(best.getCluster().getRexBuilder(), null);
         Object o = implementor.implementRoot(best);
         return new Block((StatementList) o);
     }
@@ -287,7 +287,7 @@ public class OJQueryExpander extends QueryExpander
         if (!eager) {
             return null;
         }
-tryit: 
+tryit:
         if (exp instanceof MethodCall) {
             MethodCall call = (MethodCall) exp;
             String name = call.getName();
@@ -393,7 +393,7 @@ tryit:
     {
         // spit out java statement block
         JavaRelImplementor implementor =
-            new JavaRelImplementor(rel.getCluster().getRexBuilder());
+            new JavaRelImplementor(rel.getCluster().getRexBuilder(), null);
         Object o = implementor.implementRoot(rel);
         return (Expression) o;
     }

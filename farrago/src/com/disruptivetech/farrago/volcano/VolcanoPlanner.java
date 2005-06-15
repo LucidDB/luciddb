@@ -26,6 +26,7 @@ import java.util.*;
 import java.util.logging.Level;
 
 import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.oj.rex.OJRexImplementorTableImpl;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.ConverterRel;
 import org.eigenbase.rel.convert.ConverterRule;
@@ -497,7 +498,9 @@ public class VolcanoPlanner implements RelOptPlanner
 
     public JavaRelImplementor getJavaRelImplementor(RelNode rel)
     {
-        return new JavaRelImplementor(rel.getCluster().getRexBuilder());
+        return new JavaRelImplementor(
+            rel.getCluster().getRexBuilder(),
+            OJRexImplementorTableImpl.instance());
     }
 
     /**

@@ -34,6 +34,7 @@ import net.sf.farrago.runtime.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.FarragoMetadataFactory;
 
 import openjava.mop.*;
 import openjava.ptree.*;
@@ -101,18 +102,30 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
             (Expression) implementor.visitChild(this, 0, getChild());
 
         FennelRel fennelRel = (FennelRel) getChild();
-        FarragoRepos repos = FennelRelUtil.getRepos(fennelRel);
+        FennelRelImplementor fennelImplementor =
+            (FennelRelImplementor) implementor;
+        FarragoMetadataFactory repos = fennelImplementor.getMetadataFactory();
 
         final FarragoPreparingStmt stmt =
             FennelRelUtil.getPreparingStmt(fennelRel);
-        FarragoTypeFactory factory = stmt.getFarragoTypeFactory();
+        FarragoTypeFactory factory;
+        FennelDbHandle dbHandle;
+        Variable connectionVariable;
+        if (stmt == null) {
+            factory = (FarragoTypeFactory) getCluster().getTypeFactory();
+            dbHandle = null;
+            connectionVariable = new Variable("connection");
+        } else {
+            factory = stmt.getFarragoTypeFactory();
+            dbHandle = stmt.getFennelDbHandle();
+            connectionVariable = stmt.getConnectionVariable();
+        }
 
         final RelDataType rowType = getRowType();
         OJClass rowClass = OJUtil.typeToOJClass(rowType, factory);
 
         // Implement the child rel as an XO.
-        FemExecutionStreamDef rootStream = childToStreamDef(
-            (FennelRelImplementor) implementor);
+        FemExecutionStreamDef rootStream = childToStreamDef(fennelImplementor);
         String rootStreamName = rootStream.getName();
         int rootStreamId = getId();
 
@@ -124,7 +137,7 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
         FemTupleAccessor tupleAccessor =
             FennelRelUtil.getAccessorForTupleDescriptor(
                 repos,
-                stmt.getFennelDbHandle(),
+                dbHandle,
                 tupleDesc);
 
         // Generate
@@ -370,7 +383,7 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
         argList.add(Literal.makeLiteral(rootStreamId));
         argList.add(childrenExp);
         return new MethodCall(
-            stmt.getConnectionVariable(),
+            connectionVariable,
             "newFennelIterator",
             argList);
     }

@@ -31,6 +31,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.SqlOperatorTable;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql.type.SqlTypeFactoryImpl;
@@ -199,6 +200,11 @@ public class SqlToRelConverterTest extends TestCase
             RelDataTypeFactory typeFactory);
 
         RelOptPlanner createPlanner();
+
+        /**
+         * Returns the {@link SqlOperatorTable} to use.
+         */
+        SqlOperatorTable getOperatorTable();
     };
 
     /**
@@ -208,11 +214,10 @@ public class SqlToRelConverterTest extends TestCase
      */
     public static class TesterImpl implements Tester
     {
-        protected final RelOptPlanner planner;
+        private RelOptPlanner planner;
 
         protected TesterImpl()
         {
-            planner = createPlanner();
         }
 
         public RelNode convertSqlToRel(String sql)
@@ -224,8 +229,7 @@ public class SqlToRelConverterTest extends TestCase
             } catch (Exception e) {
                 throw Util.newInternal(e); // todo: better handling
             }
-            final RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl();
-
+            final RelDataTypeFactory typeFactory = createTypeFactory();
             final SqlValidatorCatalogReader catalogReader =
                 createCatalogReader(typeFactory);
             final SqlValidator validator =
@@ -239,12 +243,25 @@ public class SqlToRelConverterTest extends TestCase
                     validator,
                     relOptSchema,
                     OJSystem.env,
-                    planner,
+                    getPlanner(),
                     relOptConnection,
                     new JavaRexBuilder(typeFactory));
             final RelNode rel = converter.convertQuery(sqlQuery);
             Util.post(rel != null, "return != null");
             return rel;
+        }
+
+        protected RelDataTypeFactory createTypeFactory()
+        {
+            return new SqlTypeFactoryImpl();
+        }
+
+        protected final RelOptPlanner getPlanner()
+        {
+            if (planner == null) {
+                planner = createPlanner();
+            }
+            return planner;
         }
 
         public SqlNode parseQuery(String sql) throws Exception {
@@ -258,9 +275,14 @@ public class SqlToRelConverterTest extends TestCase
             RelDataTypeFactory typeFactory)
         {
             return SqlValidatorUtil.newValidator(
-                SqlStdOperatorTable.instance(),
+                getOperatorTable(),
                 new MockCatalogReader(typeFactory),
                 typeFactory);
+        }
+
+        public SqlOperatorTable getOperatorTable()
+        {
+            return SqlStdOperatorTable.instance();
         }
 
         public SqlValidatorCatalogReader createCatalogReader(
@@ -381,14 +403,14 @@ public class SqlToRelConverterTest extends TestCase
             "          OneRowRel" + NL);
 
         check("select 'abc',multiset[deptno,sal] from emp",
-            "ProjectRel(EXPR$0=[_ISO-8859-1'abc'], EXPR$1=[$8])" + NL + 
-            "  CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset7, var1=offset5]])" + NL + 
-            "    TableAccessRel(table=[[EMP]])" + NL + 
-            "    CollectRel" + NL + 
-            "      UnionRel(all=[true])" + NL + 
-            "        ProjectRel(EXPR$0=[$cor0.DEPTNO])" + NL + 
-            "          OneRowRel" + NL + 
-            "        ProjectRel(EXPR$0=[$cor1.SAL])" + NL + 
+            "ProjectRel(EXPR$0=[_ISO-8859-1'abc'], EXPR$1=[$8])" + NL +
+            "  CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset7, var1=offset5]])" + NL +
+            "    TableAccessRel(table=[[EMP]])" + NL +
+            "    CollectRel" + NL +
+            "      UnionRel(all=[true])" + NL +
+            "        ProjectRel(EXPR$0=[$cor0.DEPTNO])" + NL +
+            "          OneRowRel" + NL +
+            "        ProjectRel(EXPR$0=[$cor1.SAL])" + NL +
             "          OneRowRel" + NL);
     }
 
@@ -398,12 +420,12 @@ public class SqlToRelConverterTest extends TestCase
             "               as empset" +
             "      from dept",
 
-            "ProjectRel(DEPTNO=[$0], NAME=[$1], EMPSET=[$2])" + NL + 
-            "  CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset0]])" + NL + 
-            "    TableAccessRel(table=[[DEPT]])" + NL + 
-            "    CollectRel" + NL + 
-            "      ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])" + NL + 
-            "        FilterRel(condition=[=($7, $cor0.DEPTNO)])" + NL + 
+            "ProjectRel(DEPTNO=[$0], NAME=[$1], EMPSET=[$2])" + NL +
+            "  CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset0]])" + NL +
+            "    TableAccessRel(table=[[DEPT]])" + NL +
+            "    CollectRel" + NL +
+            "      ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])" + NL +
+            "        FilterRel(condition=[=($7, $cor0.DEPTNO)])" + NL +
             "          TableAccessRel(table=[[EMP]])" + NL);
     }
 
@@ -419,37 +441,37 @@ public class SqlToRelConverterTest extends TestCase
             "            TableAccessRel(table=[[DEPT]])" + NL);
 
         check("select*from emp where exists (select 1 from dept where emp.deptno=dept.deptno)",
-            "ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])" + NL + 
-            "  FilterRel(condition=[$9])" + NL + 
-            "    CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset7]])" + NL + 
-            "      TableAccessRel(table=[[EMP]])" + NL + 
-            "      ProjectRel(EXPR$0=[$0], $indicator=[true])" + NL + 
-            "        ProjectRel(EXPR$0=[1])" + NL + 
-            "          FilterRel(condition=[=($cor0.DEPTNO, $0)])" + NL + 
+            "ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])" + NL +
+            "  FilterRel(condition=[$9])" + NL +
+            "    CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset7]])" + NL +
+            "      TableAccessRel(table=[[EMP]])" + NL +
+            "      ProjectRel(EXPR$0=[$0], $indicator=[true])" + NL +
+            "        ProjectRel(EXPR$0=[1])" + NL +
+            "          FilterRel(condition=[=($cor0.DEPTNO, $0)])" + NL +
             "            TableAccessRel(table=[[DEPT]])" + NL);
     }
 
     public void testUnnestSelect() {
         check("select*from unnest(select multiset[deptno] from dept)",
-            "ProjectRel(EXPR$0=[$0])" + NL + 
-            "  UncollectRel" + NL + 
-            "    ProjectRel(EXPR$0=[$0])" + NL + 
-            "      ProjectRel(EXPR$0=[$2])" + NL + 
-            "        CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset0]])" + NL + 
-            "          TableAccessRel(table=[[DEPT]])" + NL + 
-            "          CollectRel" + NL + 
-            "            UnionRel(all=[true])" + NL + 
-            "              ProjectRel(EXPR$0=[$cor0.DEPTNO])" + NL + 
+            "ProjectRel(EXPR$0=[$0])" + NL +
+            "  UncollectRel" + NL +
+            "    ProjectRel(EXPR$0=[$0])" + NL +
+            "      ProjectRel(EXPR$0=[$2])" + NL +
+            "        CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset0]])" + NL +
+            "          TableAccessRel(table=[[DEPT]])" + NL +
+            "          CollectRel" + NL +
+            "            UnionRel(all=[true])" + NL +
+            "              ProjectRel(EXPR$0=[$cor0.DEPTNO])" + NL +
             "                OneRowRel" + NL);
     }
 
     public void testLateral() {
         check("select * from emp, LATERAL (select * from dept where emp.deptno=dept.deptno)",
-            "ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], DEPTNO0=[$8], NAME=[$9])" + NL + 
-            "  CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset7]])" + NL + 
-            "    TableAccessRel(table=[[EMP]])" + NL + 
-            "    ProjectRel(DEPTNO=[$0], NAME=[$1])" + NL + 
-            "      FilterRel(condition=[=($cor0.DEPTNO, $0)])" + NL + 
+            "ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], DEPTNO0=[$8], NAME=[$9])" + NL +
+            "  CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset7]])" + NL +
+            "    TableAccessRel(table=[[EMP]])" + NL +
+            "    ProjectRel(DEPTNO=[$0], NAME=[$1])" + NL +
+            "      FilterRel(condition=[=($cor0.DEPTNO, $0)])" + NL +
             "        TableAccessRel(table=[[DEPT]])" + NL);
     }
 

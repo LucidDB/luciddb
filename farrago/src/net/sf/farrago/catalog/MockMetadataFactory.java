@@ -30,6 +30,7 @@ import javax.jmi.reflect.RefClass;
 import javax.jmi.reflect.RefPackage;
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
@@ -98,7 +99,7 @@ public class MockMetadataFactory extends FarragoMetadataFactoryImpl
      *
      * <p>Note: The XML string isn't quite XMI.
      */
-    public String exportAsXml(RefBaseObject ref)
+    public static String exportAsXml(RefBaseObject ref)
     {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
@@ -109,11 +110,13 @@ public class MockMetadataFactory extends FarragoMetadataFactoryImpl
 
     /**
      * Implementation of a {@link RefBaseObject} via an
-     * {@link InvocationHandler} interface. Attributes are held in a
-     * {@link HashMap}.
+     * {@link InvocationHandler} interface.
+     *
+     * <p>Attributes are held in a {@link TreeMap}. (Not a {@link HashMap},
+     * because we want the attributes to be returned in a predictable order.)
      */
     protected class ElementImpl
-        extends HashMap
+        extends TreeMap
         implements InvocationHandler
     {
         protected final Class clazz;
@@ -178,7 +181,7 @@ public class MockMetadataFactory extends FarragoMetadataFactoryImpl
 
         protected String proxyRefMofId()
         {
-            return id + "";
+            return "x:" + id;
         }
 
         protected Object proxyCreate(
@@ -338,10 +341,32 @@ public class MockMetadataFactory extends FarragoMetadataFactoryImpl
      */
     private static class JmiPrinter extends JmiVisitor {
         private final XMLOutput xmlOutput;
+        private final Map printIds = new HashMap();
+        private int printId = 0;
 
         JmiPrinter(PrintWriter pw) {
             xmlOutput = new XMLOutput(pw);
             xmlOutput.setGlob(true);
+        }
+
+        void accept(Object o)
+        {
+            // Assign every object a synthetic id which is unique only during
+            // this visitation. After the first visit, just print a reference.
+            String id = (String) printIds.get(o);
+            if (id == null) {
+                // First visit.
+                id = Integer.toString(printId++);
+                printIds.put(o, id);
+                super.accept(o);
+            } else {
+                // Second or subsequent visit.
+                String tagName = getTagName(o);
+                xmlOutput.beginBeginTag(tagName);
+                xmlOutput.attribute("refid", id);
+                xmlOutput.endBeginTag(tagName);
+                xmlOutput.endTag(tagName);
+            }
         }
 
         protected void visit(
@@ -353,15 +378,22 @@ public class MockMetadataFactory extends FarragoMetadataFactoryImpl
             List refNames,
             List refValues)
         {
-            String className = o.getClass().getInterfaces()[0].getName();
-            int dot = className.lastIndexOf('.');
-            String tagName = (dot >= 0) ?
-                className.substring(dot + 1) :
-                className;
+            String tagName = getTagName(o);
             xmlOutput.beginBeginTag(tagName);
+            // Print the synthetic id which is generated during printing.
+            String id = (String) printIds.get(o);
+            xmlOutput.attribute("id", id);
             for (int i = 0; i < attrNames.size(); i++) {
                 String attrName = (String) attrNames.get(i);
                 Object attrValue = attrValues.get(i);
+                if (attrName.equals("name")) {
+                    // Convert
+                    //   name=\"MockTableImplRel#274:536\"
+                    // into
+                    // name=\"MockTableImplRel#274:536\"
+                    attrValue = Pattern.compile("#[0-9]*:")
+                        .matcher((String) attrValue).replaceAll("#xxxx:");
+                }
                 xmlOutput.attribute(attrName, String.valueOf(attrValue));
             }
             xmlOutput.endBeginTag(tagName);
@@ -386,6 +418,16 @@ public class MockMetadataFactory extends FarragoMetadataFactoryImpl
                 xmlOutput.endTag(collectionName);
             }
             xmlOutput.endTag(tagName);
+        }
+
+        private String getTagName(Object o)
+        {
+            String className = o.getClass().getInterfaces()[0].getName();
+            int dot = className.lastIndexOf('.');
+            String tagName = (dot >= 0) ?
+                className.substring(dot + 1) :
+                className;
+            return tagName;
         }
     }
 

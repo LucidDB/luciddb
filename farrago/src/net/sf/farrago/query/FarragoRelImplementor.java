@@ -26,8 +26,6 @@ import java.util.*;
 
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.ojrex.*;
-import net.sf.farrago.runtime.*;
-import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.FarragoMetadataFactory;
@@ -37,9 +35,7 @@ import openjava.ptree.*;
 
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.rex.*;
-import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
-import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
@@ -61,7 +57,6 @@ public class FarragoRelImplementor extends JavaRelImplementor
     FarragoPreparingStmt preparingStmt;
     OJClass ojAssignableValue;
     OJClass ojBytePointer;
-    OJRexImplementorTable ojRexImplementorTable;
     private Set streamDefSet;
 
     //~ Constructors ----------------------------------------------------------
@@ -70,35 +65,17 @@ public class FarragoRelImplementor extends JavaRelImplementor
         final FarragoPreparingStmt preparingStmt,
         RexBuilder rexBuilder)
     {
-        super(rexBuilder);
+        super(
+            rexBuilder,
+            new UdfAwareOJRexImplementorTable(
+                preparingStmt.getSession().getPersonality().getOJRexImplementorTable(
+                    preparingStmt)));
 
         this.preparingStmt = preparingStmt;
         ojAssignableValue = OJClass.forClass(AssignableValue.class);
         ojBytePointer = OJClass.forClass(BytePointer.class);
 
         streamDefSet = new HashSet();
-
-        // set up an operator implementor table which knows about UDF's
-        ojRexImplementorTable = new OJRexImplementorTable()
-            {
-                private final OJRexImplementorTable delegate =
-                    preparingStmt.getSession().getPersonality()
-                    .getOJRexImplementorTable(preparingStmt);
-
-                public OJRexImplementor get(SqlOperator op)
-                {
-                    if (op instanceof FarragoUserDefinedRoutine) {
-                        return (OJRexImplementor) op;
-                    } else {
-                        return delegate.get(op);
-                    }
-                }
-
-                public OJAggImplementor get(Aggregation aggregation)
-                {
-                    return delegate.get(aggregation);
-                }
-            };
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -228,7 +205,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
         // currently the only caller
         return new FarragoRexToOJTranslator(
             preparingStmt.getRepos(),
-            this, rel, ojRexImplementorTable,
+            this, rel, implementorTable,
             null, null);
     }
 
@@ -242,7 +219,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
         FarragoRexToOJTranslator translator =
             new FarragoRexToOJTranslator(
                 preparingStmt.getRepos(),
-                this, rel, ojRexImplementorTable,
+                this, rel, implementorTable,
                 stmtList, memberList);
         return translator.translateRexNode(exp);
     }
@@ -259,7 +236,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
         FarragoRexToOJTranslator translator =
             new FarragoRexToOJTranslator(
                 preparingStmt.getRepos(),
-                this, rel, ojRexImplementorTable,
+                this, rel, implementorTable, 
                 stmtList, memberList);
         Expression rhsExp = translator.translateRexNode(rhs);
         translator.convertCastOrAssignment(
@@ -277,6 +254,34 @@ public class FarragoRelImplementor extends JavaRelImplementor
         Expression exp = super.implementRoot(rel);
         preparingStmt.prepareForCompilation();
         return exp;
+    }
+
+    /**
+     * An operator implementor table which knows about UDF's.
+     */
+    private static class UdfAwareOJRexImplementorTable
+        implements OJRexImplementorTable
+    {
+        private final OJRexImplementorTable delegate;
+
+        public UdfAwareOJRexImplementorTable(OJRexImplementorTable delegate)
+        {
+            this.delegate = delegate;
+        }
+
+        public OJRexImplementor get(SqlOperator op)
+        {
+            if (op instanceof FarragoUserDefinedRoutine) {
+                return (OJRexImplementor) op;
+            } else {
+                return delegate.get(op);
+            }
+        }
+
+        public OJAggImplementor get(Aggregation aggregation)
+        {
+            return delegate.get(aggregation);
+        }
     }
 }
 

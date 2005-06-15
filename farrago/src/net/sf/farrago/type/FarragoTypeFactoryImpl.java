@@ -100,10 +100,10 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     {
         FemSqltypedElement element = FarragoCatalogUtil.toFemSqltypedElement(
             abstractElement);
-        
+
         CwmClassifier classifier = element.getType();
         RelDataType type = createCwmTypeImpl(classifier, element);
-        
+
         boolean isNullable = true;
         if (abstractElement instanceof CwmColumn) {
             isNullable = FarragoCatalogUtil.isColumnNullable(
@@ -236,7 +236,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             return RelDataTypeComparability.Unordered;
         }
     }
-    
+
     // implement FarragoTypeFactory
     public RelDataType createStructTypeFromClassifier(
         CwmClassifier classifier)
@@ -683,16 +683,25 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     private RelDataType addDefaultAttributes(RelDataType type)
     {
         if (SqlTypeUtil.inCharFamily(type)) {
-            String charsetName = repos.getDefaultCharsetName();
+            Charset charset = getDefaultCharset();
             SqlCollation collation = new SqlCollation(
                 SqlCollation.Coercibility.Coercible);
-            Charset charset = Charset.forName(charsetName);
             type = createTypeWithCharsetAndCollation(
                 type,
                 charset,
                 collation);
         }
         return type;
+    }
+
+    /**
+     * Returns the default {@link Charset} for string types.
+     */
+    protected Charset getDefaultCharset()
+    {
+        String charsetName = repos.getDefaultCharsetName();
+        Charset charset = Charset.forName(charsetName);
+        return charset;
     }
 }
 

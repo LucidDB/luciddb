@@ -88,13 +88,25 @@ public class JavaRelImplementor implements RelImplementor
     Statement exitStatement;
     private final RexBuilder rexBuilder;
     private int nextVariableId;
-    protected final OJRexImplementorTable implementorTable = null; // TODO:
+    protected final OJRexImplementorTable implementorTable;
 
     //~ Constructors ----------------------------------------------------------
 
-    public JavaRelImplementor(RexBuilder rexBuilder)
+    /**
+     * Creates a JavaRelImplementor
+     *
+     * @param rexBuilder Builder for {@link RexNode}s
+     * @param implementorTable Table of implementations of operators. Must not
+     *    be null
+     */
+    public JavaRelImplementor(
+        RexBuilder rexBuilder,
+        OJRexImplementorTable implementorTable)
     {
+        Util.pre(rexBuilder != null, "rexBuilder != null");
+        Util.pre(implementorTable != null, "implementorTable != null");
         this.rexBuilder = rexBuilder;
+        this.implementorTable = implementorTable;
         nextVariableId = 0;
     }
 
@@ -298,7 +310,7 @@ public class JavaRelImplementor implements RelImplementor
                 new LazyBind(
                     newVariable(),
                     statementList,
-                    getTypeFactory(), 
+                    getTypeFactory(),
                     rel.getRowType(),
                     new VariableInitializerThunk() {
                         public VariableInitializer getInitializer()
@@ -583,7 +595,7 @@ public class JavaRelImplementor implements RelImplementor
      */
     protected RexToOJTranslator newTranslator(RelNode rel)
     {
-        return new RexToOJTranslator(this, rel, null);
+        return new RexToOJTranslator(this, rel, implementorTable);
     }
 
     /**
@@ -901,7 +913,7 @@ public class JavaRelImplementor implements RelImplementor
         LazyBind(
             Variable variable,
             StatementList statementList,
-            RelDataTypeFactory typeFactory, 
+            RelDataTypeFactory typeFactory,
             RelDataType type,
             VariableInitializerThunk thunk)
         {
@@ -1019,8 +1031,9 @@ public class JavaRelImplementor implements RelImplementor
 
         /**
          * Thrown when we encounter an expression which cannot be translated.
-         * It is always handled by {@link #canTranslate}, and is not really an
-         * error.
+         * It is always handled by
+         * {@link TranslationTester#canTranslate(RexNode)}, and is not really
+         * an error.
          */
         private static class CannotTranslate extends Exception
         {
@@ -1030,6 +1043,5 @@ public class JavaRelImplementor implements RelImplementor
         }
     }
 }
-
 
 // End JavaRelImplementor.java

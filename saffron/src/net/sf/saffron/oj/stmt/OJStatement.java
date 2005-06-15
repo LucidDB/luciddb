@@ -43,7 +43,6 @@ import org.eigenbase.oj.stmt.*;
 import org.eigenbase.oj.util.JavaRexBuilder;
 import org.eigenbase.oj.util.OJUtil;
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
 import org.eigenbase.rex.RexBuilder;
 import org.eigenbase.runtime.*;
 import org.eigenbase.sql.*;
@@ -260,7 +259,7 @@ public class OJStatement extends OJPreparingStmt
     // implement OJPreparingStmt
     protected JavaRelImplementor getRelImplementor(RexBuilder rexBuilder)
     {
-        return new JavaRelImplementor(rexBuilder);
+        return new JavaRelImplementor(rexBuilder, null);
     }
 
     /**

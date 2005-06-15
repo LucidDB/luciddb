@@ -185,7 +185,7 @@ public class Rex2CalcPlanTest extends FarragoTestCase
         }
     }
 
-    static TestContext getTestContext()
+    public static TestContext getTestContext()
     {
         if (testContext == null) {
             testContext = new TestContext();
@@ -201,7 +201,7 @@ public class Rex2CalcPlanTest extends FarragoTestCase
      * <p>Lots of nasty stuff to set up the Openjava environment, should be
      * removed when we're not dependent upon Openjava.</p>
      */
-    static class TestContext
+    public static class TestContext
     {
         private FarragoSessionStmtValidator stmtValidator;
         private FarragoPreparingStmt stmt;

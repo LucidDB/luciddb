@@ -32,6 +32,7 @@ import net.sf.farrago.fennel.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.session.FarragoSessionPlanner;
 import net.sf.farrago.FarragoMetadataFactory;
+import net.sf.farrago.FarragoPackage;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
@@ -60,19 +61,58 @@ public abstract class FennelRelUtil
      * @return FemTupleAccessor for accessing tuples conforming to tupleDesc
      */
     public static FemTupleAccessor getAccessorForTupleDescriptor(
-        FarragoRepos repos,
+        FarragoMetadataFactory repos,
         FennelDbHandle fennelDbHandle,
         FemTupleDescriptor tupleDesc)
     {
+        if (fennelDbHandle == null) {
+            String tupleAccessorXmiString = "<xmiAccessor/>";
+            return tupleDescriptorToAccessor(repos, tupleDesc);
+        }
         String tupleAccessorXmiString =
             fennelDbHandle.getAccessorXmiForTupleDescriptorTraced(tupleDesc);
+        // TODO: Move FarragoRepos.getTransientFarragoPackage up to the base
+        //   class, FarragoMetadataFactory (which is generated, by the way).
+        FarragoPackage transientFarragoPackage;
+        if (repos instanceof FarragoRepos) {
+            FarragoRepos farragoRepos = (FarragoRepos) repos;
+            transientFarragoPackage = farragoRepos.getTransientFarragoPackage();
+        } else {
+            transientFarragoPackage = repos.getRootPackage();
+        }
         Collection c =
             JmiUtil.importFromXmiString(
-                repos.getTransientFarragoPackage(),
+                transientFarragoPackage,
                 tupleAccessorXmiString);
         assert (c.size() == 1);
         FemTupleAccessor accessor = (FemTupleAccessor) c.iterator().next();
         return accessor;
+    }
+
+    /**
+     * Converts a {@link FemTupleDescriptor} into a {@link FemTupleAccessor}
+     * without invoking native methods.
+     */
+    private static FemTupleAccessor tupleDescriptorToAccessor(
+        FarragoMetadataFactory repos,
+        FemTupleDescriptor tupleDesc)
+    {
+        FemTupleAccessor tupleAccessor = repos.newFemTupleAccessor();
+        tupleAccessor.setMinByteLength(-1);
+        tupleAccessor.setBitFieldOffset(-1);
+        java.util.List attrDescriptors = tupleDesc.getAttrDescriptor();
+        for (int i = 0; i < attrDescriptors.size(); i++) {
+            FemTupleAttrDescriptor attrDescriptor =
+                (FemTupleAttrDescriptor) attrDescriptors.get(i);
+            FemTupleAttrAccessor attrAccessor =
+                repos.newFemTupleAttrAccessor();
+            attrAccessor.setNullBitIndex(-1);
+            attrAccessor.setFixedOffset(-1);
+            attrAccessor.setEndIndirectOffset(-1);
+            attrAccessor.setBitValueIndex(-1);
+            tupleAccessor.getAttrAccessor().add(attrAccessor);
+        }
+        return tupleAccessor;
     }
 
     /**
@@ -84,7 +124,7 @@ public abstract class FennelRelUtil
      * @return generated tuple descriptor
      */
     public static FemTupleDescriptor createTupleDescriptorFromRowType(
-        FarragoRepos repos,
+        FarragoMetadataFactory repos,
         RelDataTypeFactory typeFactory,
         RelDataType rowType)
     {
@@ -161,7 +201,7 @@ public abstract class FennelRelUtil
     }
 
     public static void addTupleAttrDescriptor(
-        FarragoRepos repos,
+        FarragoMetadataFactory repos,
         FemTupleDescriptor tupleDesc,
         RelDataType type)
     {
@@ -225,9 +265,14 @@ public abstract class FennelRelUtil
     public static FarragoPreparingStmt getPreparingStmt(FennelRel rel)
     {
         RelOptCluster cluster = rel.getCluster();
-        FarragoSessionPlanner farragoPlanner =
-            (FarragoSessionPlanner) cluster.getPlanner();
-        return (FarragoPreparingStmt)farragoPlanner.getPreparingStmt();
+        RelOptPlanner planner = cluster.getPlanner();
+        if (planner instanceof FarragoSessionPlanner) {
+            FarragoSessionPlanner farragoPlanner =
+                (FarragoSessionPlanner) planner;
+            return (FarragoPreparingStmt)farragoPlanner.getPreparingStmt();
+        } else {
+            return null;
+        }
     }
 
     /**

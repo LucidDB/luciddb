@@ -209,7 +209,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
      * TestOJRexImplementorTable extends FarragoOJRexImplementorTable
      * and adds the JPLUS operator.
      */
-    private static class TestOJRexImplementorTable
+    public static class TestOJRexImplementorTable
         extends FarragoOJRexImplementorTable
     {
         public TestOJRexImplementorTable(SqlStdOperatorTable opTab)

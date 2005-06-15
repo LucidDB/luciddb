@@ -26,10 +26,7 @@ import org.eigenbase.relopt.RelOptTable;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.sql.SqlCall;
-import org.eigenbase.sql.SqlIdentifier;
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlNodeList;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.SqlTypeUtil;
@@ -157,11 +154,13 @@ public class SqlValidatorUtil
     /**
      * Factory method for {@link SqlValidator}.
      */
-    public static SqlValidatorWithHints newValidator(SqlStdOperatorTable opTab,
+    public static SqlValidatorWithHints newValidator(
+        SqlOperatorTable opTab,
         SqlValidatorCatalogReader catalogReader,
         RelDataTypeFactory typeFactory)
     {
-        return new SqlValidatorImpl(opTab,
+        return new SqlValidatorImpl(
+            opTab,
             catalogReader,
             typeFactory);
     }

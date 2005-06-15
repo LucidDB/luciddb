@@ -22,6 +22,7 @@
 package org.eigenbase.util;
 
 import junit.framework.ComparisonFailure;
+
 import java.util.regex.Pattern;
 
 /**
@@ -40,10 +41,18 @@ public abstract class TestUtil
         String expected,
         String actual)
     {
-        if ((expected == null) && (actual == null)) {
-            return;
+        if (actual == null) {
+            if (expected == null) {
+                return;
+            } else {
+                String message =
+                    "Expected:" + Util.lineSeparator +
+                    expected + Util.lineSeparator +
+                    "Actual: null";
+                throw new ComparisonFailure(message, expected, actual);
+            }
         }
-        if ((expected != null) && expected.equals(actual)) {
+        if (expected != null && expected.equals(actual)) {
             return;
         }
         String s = actual;
@@ -55,7 +64,7 @@ public abstract class TestUtil
         //
         //
         s = Util.replace(s, "\"", "\\\"");
-        final String lineBreak = "\" + NL + " + Util.lineSeparator + "\"";
+        final String lineBreak = "\" + NL +" + Util.lineSeparator + "\"";
         s = LineBreakPattern.matcher(s).replaceAll(lineBreak);
         s = TabPattern.matcher(s).replaceAll("\\\\t");
         s = "\"" + s + "\"";
