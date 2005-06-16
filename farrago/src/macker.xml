@@ -55,6 +55,7 @@
     <pattern name="namespace" class="net.sf.farrago.namespace.*" />
     <pattern name="namespace.util" class="net.sf.farrago.namespace.util.*" />
     <pattern name="fennel" class="net.sf.farrago.fennel.*" />
+    <pattern name="fennel.tuple" class="net.sf.farrago.fennel.tuple.*" />
     <pattern name="session" class="net.sf.farrago.session.*" />
     <pattern name="runtime" class="net.sf.farrago.runtime.*" />
     <pattern name="dynamic" class="net.sf.farrago.dynamic.*" />
@@ -110,6 +111,7 @@
       <include pattern="namespace"/>
       <include pattern="namespace.util"/>
       <include pattern="fennel"/>
+      <include pattern="fennel.tuple" />
       <include pattern="session"/>
       <include pattern="runtime"/>
       <include pattern="dynamic"/>
@@ -302,7 +304,23 @@
         </allow>
       </deny>
     </access-rule>
-
+    
+	<pattern name="fennel.tuple.deps"> 
+	  <include pattern="util" /> 
+	  <include pattern="fennel.tuple" />
+    </pattern> 
+ 
+    <access-rule> 
+      <message>tuple dependency violation</message> 
+      <deny> 
+        <from pattern="fennel.tuple" /> 
+        <to pattern="farrago" /> 
+        <allow> 
+          <to pattern="fennel.tuple.deps" /> 
+        </allow> 
+      </deny> 
+    </access-rule> 
+    
     <pattern name="namespace.deps">
       <include pattern="type.deps" />
       <include pattern="fennel.deps" />
@@ -472,6 +490,7 @@
     <pattern name="jdbc.deps">
       <include pattern="util.deps" />
       <include pattern="jdbc" />
+      <include pattern="fennel.tuple" />
     </pattern>
 
     <access-rule>
