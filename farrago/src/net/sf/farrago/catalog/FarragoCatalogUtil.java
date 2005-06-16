@@ -729,8 +729,8 @@ public abstract class FarragoCatalogUtil
 
         // TODO: set creation grant attributes
         Timestamp ts = new java.sql.Timestamp(System.currentTimeMillis());
-        grant.setCreationDate(ts.toString());
-        grant.setModificationDate(grant.getCreationDate());
+        grant.setCreationTimestamp(ts.toString());
+        grant.setModificationTimestamp(grant.getCreationTimestamp());
         
         // associate the grant with the grantor and grantee respectively
         grant.setGrantor(grantorAuthId);

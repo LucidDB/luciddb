@@ -72,7 +72,6 @@ public class DdlGrantPrivStmt extends DdlGrantStmt
     }
 
     // implement FarragoSessionDdlStmt
-    // TODO: Modeling of grant dependencies,  so that we can revoke cascade.
     public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
         FarragoRepos repos =  ddlValidator.getRepos();
