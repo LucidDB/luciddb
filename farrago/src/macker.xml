@@ -490,7 +490,6 @@
     <pattern name="jdbc.deps">
       <include pattern="util.deps" />
       <include pattern="jdbc" />
-      <include pattern="fennel.tuple" />
     </pattern>
 
     <access-rule>
@@ -804,6 +803,7 @@
       <include pattern="server.deps" />
       <include pattern="jdbc.client.deps" />
       <include pattern="defimpl.deps" />
+      <include pattern="fennel.tuple" />
       <include pattern="test" />
     </pattern>
 
