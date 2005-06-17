@@ -183,6 +183,7 @@ void ExecStreamGraphImpl::mergeFrom(ExecStreamGraph& src)
 {
     if (ExecStreamGraphImpl *p = dynamic_cast<ExecStreamGraphImpl*>(&src)) {
         mergeFrom(*p);
+        return;
     }
     assert(false);
 }
@@ -192,6 +193,7 @@ void ExecStreamGraphImpl::mergeFrom(
 {
     if (ExecStreamGraphImpl *p = dynamic_cast<ExecStreamGraphImpl*>(&src)) {
         mergeFrom(*p, nodes);
+        return;
     }
     assert(false);
 }
