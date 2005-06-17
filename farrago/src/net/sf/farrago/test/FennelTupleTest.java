@@ -79,7 +79,10 @@ public class FennelTupleTest extends TestCase
         //System.out.println("comparing " + before.length + " values ");
         assertTrue(before.length == after.length);
         for (int i = 0; i < before.length; ++i) {
-            if (before[i] == null && after[i] == null) {
+            Object objBefore = before[i];
+            Object objAfter = after[i];
+
+            if (objBefore == null && objAfter == null) {
                 continue;
             }
             /*
@@ -89,14 +92,19 @@ public class FennelTupleTest extends TestCase
              * If it's a string, just make sure the output starts with
              * the input.
              */
-            if ( before[i] instanceof String ) {
+            if ( objBefore instanceof String ) {
                 assertTrue(
-                    "string " + i + " should match",
-                    ((String) after[i]).startsWith((String) before[i]));
+                    "string " + i + " values should match,",
+                    ((String) objAfter).startsWith((String) objBefore));
             } else {
                 assertEquals(
-                    "object " + i + " should match",
-                    before[i], after[i]);
+                    "object " + i + " values should match,",
+                    objBefore, objAfter);
+                // integer promotion might cause false-positive above,
+                // so check classes, too
+                assertEquals(
+                    "object " + i + " classes should match,",
+                    objBefore.getClass(), objAfter.getClass());
             }
         }
         return true;
