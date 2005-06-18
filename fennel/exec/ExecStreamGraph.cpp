@@ -277,7 +277,7 @@ void ExecStreamGraphImpl::mergeFrom(
     // delete the copied subgraph from SRC
     for (int i = 0; i < nnodes; i++) {
         Vertex v = boost::vertices(src.graphRep).first[nodes[i]];
-        SharedExecStream pStream = getStreamFromVertex(v);
+        SharedExecStream pStream = src.getStreamFromVertex(v);
         src.streamMap.erase(pStream->getName());
         src.removeFromStreamOutMap(pStream);
         src.freeVertex(v);
