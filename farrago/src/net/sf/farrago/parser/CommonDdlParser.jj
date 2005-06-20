@@ -655,14 +655,16 @@ FemUser UserDefinition() :
     }
     [<DEFAULT_KW>
         (
-            <CATALOG> defaultNamespace = CatalogReference()
+            defaultNamespace = CatalogReference()
             |
-            <SCHEMA> defaultNamespace = SchemaReference()
+            defaultNamespace = SchemaReference()
         )
         {
-            // TODO: Add default namespace relationship to user in the data model
-            // TODO: set up the relationship between defaultNamespace and user
+            // Set the default namespace for the user. The session default will
+            // be this name space when the user logs on
+            user.setDefaultNamespace(defaultNamespace);
         }
+        
     ]
     {
         return user;
@@ -671,8 +673,6 @@ FemUser UserDefinition() :
 
 FemRole RoleDefinition() :
 {
-    // TODO: remove this class, not required
-    // DdlCreateRoleStmt stmt = new DdlCreateRoleStmt();    
     FemRole role;
     SqlIdentifier roleName;
     SqlIdentifier grantor;
@@ -688,16 +688,16 @@ FemRole RoleDefinition() :
         role.setName(roleName.getSimple());
     }
     [ <WITH> <ADMIN> grantor = SimpleIdentifier() {
-            // Create a grant and make the grantor specified in this statement
-            // as the grantee of that grant.
+            // Create a grant to represent an inheritant of this role and make the
+            // grantor specified in this statement as the grantee of that grant.
             FemGrant grant = FarragoCatalogUtil.newElementGrant(
                 getRepos(),
                 farragoParser.getStmtValidator().getSession()
                 .getSessionVariables().currentUserName,
                 grantor.getSimple(), 
                 role);
-            // TODO: add an enum for this to the model
-            grant.setAction("ADMIN");
+            // set grant properties to reflect inheritant with admin capability
+            grant.setAction(PrivilegedActionEnum.INHERIT_ROLE.toString());
             grant.setWithGrantOption(true);
         }
     ]
@@ -2307,7 +2307,7 @@ DdlStmt GrantPrivStmt() :
         [ <TABLE> ] grantedObject = TableIdentifier()
         |
         grantedObject = SpecificRoutineReference()
-        // TODO: <SEQUENCE> grantedObject = SequenceIdentifier()
+        // TODO: (qtt) <SEQUENCE> grantedObject = SequenceIdentifier()
     )
     {
         stmt.setGrantedObject(grantedObject);

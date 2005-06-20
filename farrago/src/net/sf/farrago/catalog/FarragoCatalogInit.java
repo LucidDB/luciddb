@@ -186,8 +186,8 @@ public class FarragoCatalogInit implements MDRPreChangeListener
         FemCreationGrant grantUser = repos.newFemCreationGrant();
         grantUser.setAction(PrivilegedActionEnum.CREATION.toString());
         grantUser.setWithGrantOption(false);
-        grantUser.setCreationDate(ts.toString());
-        grantUser.setModificationDate(grantUser.getCreationDate());
+        grantUser.setCreationTimestamp(ts.toString());
+        grantUser.setModificationTimestamp(grantUser.getCreationTimestamp());
         // TODO: can we set to something?
         grantUser.setGrantor(systemUser);
         grantUser.setGrantee(systemUser);
@@ -196,8 +196,9 @@ public class FarragoCatalogInit implements MDRPreChangeListener
         FemCreationGrant grantPublicRole = repos.newFemCreationGrant();
         grantPublicRole.setAction(PrivilegedActionEnum.CREATION.toString());
         grantPublicRole.setWithGrantOption(false);
-        grantPublicRole.setCreationDate(ts.toString());
-        grantPublicRole.setModificationDate(grantPublicRole.getCreationDate());
+        grantPublicRole.setCreationTimestamp(ts.toString());
+        grantPublicRole.setModificationTimestamp(
+            grantPublicRole.getCreationTimestamp());
         // TODO: can we set to something?
         grantPublicRole.setGrantor(systemUser);
         grantPublicRole.setGrantee(systemUser);
