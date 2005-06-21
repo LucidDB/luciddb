@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $id: //open/dt/dev/farrago/unitsql/ddl/udf.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udf.sql#1 $
 0: jdbc:farrago:> -- Test DDL for collection types
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema collectionsTest;
@@ -43,5 +43,8 @@ Error: DDL validation error near line 1, column 14: Target schema "LOCALDB"."COL
 0: jdbc:farrago:> -- todo insert empty multiset
 0: jdbc:farrago:> -- todo insert null into NON NULL
 0: jdbc:farrago:> -- todo create table definition with default types;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- View of table with multiset
+0: jdbc:farrago:> -- create view multisetView as select * from multisetTable_i;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit
