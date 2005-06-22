@@ -114,7 +114,12 @@ public class FactoryGen
             modelLoader = new FarragoModelLoader();
             FarragoPackage farragoPackage =
                 modelLoader.loadModel(sourceExtentName, false);
-            generatePackage(pw, farragoPackage, "rootPackage");
+            Class sourcePackageInterface = Class.forName(
+                sourcePackageJavaMetaclassName);
+            RefPackage rootPackage = findPackage(
+                farragoPackage, 
+                sourcePackageInterface);
+            generatePackage(pw, rootPackage, "rootPackage");
 
             pw.println("}");
         } finally {
@@ -125,6 +130,22 @@ public class FactoryGen
                 modelLoader.close();
             }
         }
+    }
+
+    private static RefPackage findPackage(RefPackage refPackage, Class iface)
+    {
+        if (iface.isInstance(refPackage)) {
+            return refPackage;
+        }
+        Iterator iter = refPackage.refAllPackages().iterator();
+        while (iter.hasNext()) {
+            RefPackage p = (RefPackage) iter.next();
+            RefPackage f = findPackage(p, iface);
+            if (f != null) {
+                return f;
+            }
+        }
+        return null;
     }
 
     private static void generatePackage(

@@ -275,6 +275,12 @@ public abstract class FarragoReposUtil
         public XMIReferenceProvider.XMIReference getReference(RefObject obj)
         {
             RefObject parent = obj;
+            if (obj instanceof Tag) {
+                Collection c = ((Tag) obj).getElements();
+                if (c.size() == 1) {
+                    parent = (RefObject) c.iterator().next();
+                }
+            }
             List nameList = new ArrayList();
             do {
                 String name = (String) parent.refGetValue("name");

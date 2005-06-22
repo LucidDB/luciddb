@@ -32,6 +32,7 @@
 <!ENTITY FarragoProps
 "
 -Dnet.sf.farrago.home=${farrago.dir}
+-Dnet.sf.farrago.catalog=${project.catalog.dir}
 -Djava.util.logging.config.file=${FarragoTrace.properties}
 ">
 
@@ -88,31 +89,6 @@
 require version '${required.ant.version}'."/>
 
   <!-- Files -->
-
-  <!-- File for user-defined extension model. -->
-  <!-- XMI file containing Farrago extension model -->
-  <property name="ExtModel.xmi"
-    location="${farrago.xmi.dir}/ExtModel.xmi"/>
-
-  <!-- XMI file containing renumbered user-defined extension model -->
-  <property name="ExtModelTransformed.xmi"
-    location="${farrago.xmi.dir}/ExtModelTransformed.xmi"/>
-
-  <!-- User-defined extension model file name without path -->
-  <basename property="ExtModelFileName" file="${ext.model.file}" 
-    suffix=".zuml"/>
-
-  <!-- XMI file containing UML representation of user-defined extension model -->
-  <property name="ExtModelUML.xmi"
-    location="${farrago.xmi.dir}/${ExtModelFileName}.xmi"/>
-
-  <!-- Same as ExtModelUML, but with diagrams deleted -->
-  <property name="ExtModelUMLSansDiagrams.xmi"
-    location="${farrago.xmi.dir}/${ExtModelFileName}SansDiagrams.xmi"/>
-
-  <!-- File for user-defined extension model. -->
-
-
 
   <!-- Template developer configuration file. -->
   <property name="FarragoConfTemplate.xmi"
@@ -375,7 +351,8 @@ require version '${required.ant.version}'."/>
   <!-- cleans for non-catalog-generated code -->
   <target name="clean" depends="cleanTestLogs">
     <delete includeEmptyDirs="true" quiet="true">
-      <fileset dir="${farrago.classes.dir}" includes="**/*.class,**/*.properties"/>
+      <fileset dir="${farrago.classes.dir}" 
+        includes="**/*.class,**/*.properties"/>
       <fileset dir="${plugin.classes.dir}" includes="**/*.class"/>
       <fileset dir="${farrago.plugin.dir}" includes="**/*.jar"/>
       <fileset dir="${farrago.classes.dir}"
@@ -457,7 +434,7 @@ require version '${required.ant.version}'."/>
     <property name="ext.model.file" value=""/>
     <farrago.synthesizeMetamodel
       extMofBasename="ExtModel"
-      extPresent="${ext.model.file}"
+      extPresent=""
       xmiDir="${farrago.xmi.dir}"/>
     <farrago.mdrFork target="forked_importMetamodel"/>
     <farrago.javaCompile
@@ -605,10 +582,6 @@ require version '${required.ant.version}'."/>
     <delete file="${FarragoMetamodel.xmi}"/>
     <delete file="${FarragoMetamodelUnresolved.xmi}"/>
     <delete file="${farrago.xmi.dir}/FarragoCatalog.dtd"/>
-    <delete file="${ExtModel.xmi}"/>
-    <delete file="${ExtModelTransformed.xmi}"/>
-    <delete file="${ExtModelUML.xmi}"/>
-    <delete file="${ExtModelUMLSansDiagrams.xmi}"/>
     <delete
       file="${farrago.src.dir}/net/sf/farrago/FarragoMetadataFactory.java"/>
     <delete

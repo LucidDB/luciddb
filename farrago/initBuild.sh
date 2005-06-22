@@ -24,13 +24,12 @@
 # an existing one after syncing changes from source control.
 
 usage() {
-    echo "Usage:  initBuild.sh --with[out]-fennel [--append-init-properties] [--with[out]-optimization] [--with[out]-debug] [--skip-fennel[-thirdparty]-build] [--with[out]-tests]"
+    echo "Usage:  initBuild.sh --with[out]-fennel [--with[out]-optimization] [--with[out]-debug] [--skip-fennel[-thirdparty]-build] [--with[out]-tests]"
 }
 
 fennel_flag_missing=true
 fennel_disabled=missing
 fennel_skip_build=false
-append_init_build_props=false
 skip_tests=true
 
 # extended globbing for case statement
@@ -40,7 +39,6 @@ while [ -n "$1" ]; do
     case $1 in
         --with-fennel) fennel_disabled=false;;
         --without-fennel) fennel_disabled=true;;
-        --append-init-properties) append_init_build_props=true;;
         --with?(out)-optimization) OPT_FLAG="$1";;
         --with?(out)-debug) DEBUG_FLAG="$1";;
         --skip-fennel-build) fennel_skip_build=true;;
@@ -65,13 +63,7 @@ if [ $fennel_disabled == "missing" ] ; then
     exit -1;
 fi
 
-if $append_init_build_props; then
-    touch initBuild.properties
-    shift
-else
-    # default is remove this file
-    rm -f initBuild.properties
-fi
+rm -f initBuild.properties
 
 # Set up Farrago custom build properties file
 cat >> initBuild.properties <<EOF
