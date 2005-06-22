@@ -84,7 +84,7 @@ else
     if [ -z `echo $test | grep '\.'` ]; then
         test=net.sf.farrago.test.$test
     fi
-    command="ant -Djunit.class=$test -Dfileset.unitsql='' $target"
+    command="ant -Djunit.class=$test -Dfileset.unitsql='' -Dfileset.unitlurql='' $target"
 fi
 
 if $once; then
