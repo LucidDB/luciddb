@@ -36,6 +36,7 @@
 <!ENTITY FarragoProps
 "
 -Dnet.sf.farrago.home=${farrago.dir}
+-Dnet.sf.farrago.catalog=${project.catalog.dir}
 -Djava.util.logging.config.file=${FarragoTrace.properties}
 ">
 
@@ -102,6 +103,9 @@
 
   <!-- directory in which catalog data is stored -->
   <property name="farrago.catalog.dir" location="${farrago.dir}/catalog"/>
+
+  <!-- overridable alias for farrago.catalog.dir -->
+  <property name="project.catalog.dir" location="${farrago.catalog.dir}"/>
 
   <!-- Alias for farrago.catalog.dir to match runtime properties convention -->
   <property name="FARRAGO_CATALOG_DIR" location="${farrago.catalog.dir}"/>

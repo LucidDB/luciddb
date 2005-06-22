@@ -1,4 +1,4 @@
--- $id: //open/dt/dev/farrago/unitsql/ddl/udf.sql#1 $
+-- $Id$
 -- Test DDL for collection types
 
 create schema collectionsTest;
@@ -42,3 +42,6 @@ create table multisetTable_ic(i integer primary key, ii integer multiset, c char
 -- todo insert empty multiset
 -- todo insert null into NON NULL
 -- todo create table definition with default types;
+
+-- View of table with multiset
+-- create view multisetView as select * from multisetTable_i;
