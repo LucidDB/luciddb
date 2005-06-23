@@ -21,7 +21,7 @@ BUILD_OPTS="${BUILD_OPTS} <stlport-anachronisms>off"
 BJAM_OPTS="--stagedir=${BOOST_DIR}"
 
 # exclude the Boost libraries we don't want
-BJAM_OPTS="${BJAM_OPTS} --without-filesystem"
+#BJAM_OPTS="${BJAM_OPTS} --without-filesystem"
 BJAM_OPTS="${BJAM_OPTS} --without-test"
 BJAM_OPTS="${BJAM_OPTS} --without-signals"
 BJAM_OPTS="${BJAM_OPTS} --without-python"
