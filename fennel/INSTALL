@@ -1,47 +1,64 @@
-So far, Fennel development has been targeted to Linux x86 and
-Cygwin+Mingw, so the code is unlikely to build or run without
-modification on any other platform.  If you are building for Mingw,
-read INSTALL.mingw also before attempting the instructions below.
+======================================================================
+PLATFORMS
+
+So far, Fennel development has been targeted to Linux x86 and Mingw
+(with a Cygwin build environment), so the code is unlikely to build or
+run without modification on any other platform.  If you are building
+for Mingw, read INSTALL.mingw also before attempting the instructions
+below.
 
 ======================================================================
-SIMPLE CONFIGURATION
+DEPENDENCIES
 
 The Fennel build is based on GNU autotools.  Versions known to work
-are automake v1.7.6 and above; autoconf v2.57 and above; libtool v1.5
-and above; and make v3.79.1 and above.
+are automake-1.8.3; autoconf-2.59; libtool-1.5.6; and make-3.80.
 
 Fennel itself relies on the Boost library from http://www.boost.org
-(at least v1.31), and STLport from http://www.stlport.com (at least
+(at least v1.32), and STLport from http://www.stlport.com (at least
 v4.6.2).  Optionally, Fennel can use the ICU library from
 http://oss.software.ibm.com/icu for i18n support (this doesn't work
 with mingw yet).
 
+Source archives for all of the above dependencies are included in the
+thirdparty directory of the full Eigenbase source distribution, as
+well as in the perforce.eigenbase.org Perforce server which hosts the
+Fennel source code.  If you have a Fennel-only source distribution,
+you'll need to either get the full Eigenbase source distribution or
+download the dependencies yourself.
+
+To build and install the autotools versions known to work, cd to the
+thirdparty directory, run "make autotools", and follow the directions
+given.
+
+The next section on automated configuration assumes that you have
+the thirdparty directory available.  If not, use the subsequent
+section on manual configuration.
+
+======================================================================
+AUTOMATED CONFIGURATION
+
 The simplest way to configure and build Fennel is to run:
 
-./initBuild.sh [--with-farrago|--without-farrago]
+./initBuild.sh 
 
-This script will execute all of the steps laid out below, but assumes
-the presence of the dev/thirdparty directory from the Perforce source
-control sever that Fennel resides on (see README).  Map
-//open/dev/thirdparty to a directory called thirdparty with the same
-parent directory as Fennel.  The initBuild.sh script will change to
+This script will execute all of the steps laid out below, assuming
+the presence of the thirdparty directory with the same parent
+directory as fennel.  The initBuild.sh script will change to
 ../thirdparty, extract the copies of Boost, STLport, and ICU archived
 there and build them.
 
-If you wish to obtain your own copies of thirdparty components, or don't
-want to maintain the required directory structure, the following are
-step-by-step instructions for configuring and building Fennel without
-using initBuild.sh.
+Run with the --help option to get a full list of flags supported
+by the script.
 
 ======================================================================
-CONFIGURE
+MANUAL CONFIGURATION
 
-To configure, run:
+If for some reason you can't use the automated configuration script above:
 
 autoreconf --force --install (not needed if building from a tarball)
 ./configure --with-boost=$BOOST_DIR --with-stlport=$STLPORT_DIR \
     [--with-icu=$ICU_DIR] \
-    [--with-farrago] [--with-optimization]
+    [--with-farrago] [--with-optimization] [--with-debug]
 
 (If you are building with support for the companion project Farrago,
 you must have JAVA_HOME defined.  See http://farrago.sourceforge.net
@@ -62,9 +79,6 @@ left behind by a failed run.  The safest thing to do is to delete
 everything and restart from a clean source tree; at the very least, rm
 -rf the autom4te.cache directory.
 
-======================================================================
-THIRD-PARTY LIBS
-
 configure generates scripts in the build subdirectory which will build
 the third-party libraries for you; run them as follows (if you
 experience errors with buildStlportLibs.sh, read the comments at the
@@ -76,10 +90,7 @@ buildBoostLibs.sh
 # optional
 buildICULibs.sh
 
-======================================================================
-MAIN BUILD
-
-Once those scripts complete, you can build fennel itself:
+Finally, build Fennel itself:
 
 cd ..
 make
@@ -102,14 +113,5 @@ all unit tests.
 DEBUG
 
 To debug, run gdb on an executable in the test/.libs directory.  (gdb
-doesn't work on the wrappers in the test directory.)  On Cygwin, gdb
-encounters spurious segfaults from pthreads (the location is
-KERNEL32!IsBadWritePtr).  You can continue past these, or if there are
-too many, use this gdb command:
-
-handle SIGSEGV nostop noprint
-
-Of course, if you're trying to track down a real segfault, that's not
-very helpful, but the Cygwin build probably isn't very useful for much
-anyway.  Mingw debugging does not have this problem.
+doesn't work on the wrappers in the test directory.)
 ======================================================================

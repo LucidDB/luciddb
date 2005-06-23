@@ -151,6 +151,9 @@ cp COPYING $RELEASE_DIR
 if [ -e dist/VERSION ]; then
     cp dist/VERSION $RELEASE_DIR
 fi
+if [ -e dist/README ]; then
+    cp dist/README $RELEASE_DIR
+fi
 cp dist/farrago.jar $LIB_DIR
 cp dist/plugin/*.jar $LIB_DIR/plugin
 
