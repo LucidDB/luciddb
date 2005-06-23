@@ -1,0 +1,36 @@
+Eigenbase Release 0.5
+
+----------------------------------------------------------------------
+HOME PAGE
+
+http://www.eigenbase.org
+
+----------------------------------------------------------------------
+INSTALLATION
+
+From the install directory, run install.sh (or install.bat on Windows).
+
+----------------------------------------------------------------------
+RUNNING
+
+From the bin directory, run farragoServer to start the server.  Run
+sqllineClient from another shell to access it, or use any JDBC client
+program.  From sqlline, enter !help for a list of commands
+(!tables gives a list of available tables to query).
+
+----------------------------------------------------------------------
+LICENSE
+
+Copyright (C) 1999-2005 The Eigenbase Project and others
+
+This distribution of Eigenbase is licensed under the GNU General Public
+License; see file COPYING for details.  To obtain the source code
+from which this distribution was built, please visit 
+http://www.eigenbase.org/download.html.
+
+------------------------------------------------------------
+ACKNOWLEDGEMENTS
+
+The project is hosted on Sourceforge
+
+http://sourceforge.net/projects/eigenbase

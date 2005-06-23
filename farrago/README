@@ -1,9 +1,9 @@
-Farrago Developer Release
+Farrago Release 0.5
 
 ----------------------------------------------------------------------
 HOME PAGE
 
-http://farrago.sf.net
+http://farrago.sourceforge.net
 
 ----------------------------------------------------------------------
 BUILD
@@ -13,10 +13,14 @@ See doc/developerJumpStart.html
 ----------------------------------------------------------------------
 LICENSE
 
-See file COPYING for details.
+Copyright (C) 2003-2005 The Eigenbase Project and others
+
+This distribution of Farrago is licensed under the GNU General Public
+License; see file COPYING for details.
 
 ------------------------------------------------------------
 ACKNOWLEDGEMENTS
 
-The project is currently hosted on Sourceforge
+The project is hosted on Sourceforge
+
 http://sourceforge.net/projects/farrago

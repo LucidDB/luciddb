@@ -95,6 +95,7 @@ rm -f $SRC_RELEASE/thirdparty/icu-2.8.patch.tgz
 cp -R $OPEN_DIR/fennel $SRC_RELEASE
 cp -R $OPEN_DIR/farrago $SRC_RELEASE
 cp $DIST_DIR/VERSION $SRC_RELEASE
+cp $DIST_DIR/README.src $SRC_RELEASE/README
 tar cjvf $SRC_RELEASE.$ARCHIVE_SUFFIX $SRC_RELEASE
 rm -rf $SRC_RELEASE
 
@@ -114,6 +115,7 @@ fi
 # Build full binary release
 rm -f $DIST_DIR/$BINARY_RELEASE.$ARCHIVE_SUFFIX
 cp -f $DIST_DIR/VERSION $OPEN_DIR/farrago/dist
+cp -f $DIST_DIR/README.bin $OPEN_DIR/farrago/dist/README
 cat > $OPEN_DIR/farrago/dist/FarragoRelease.properties <<EOF
 package.name=eigenbase
 product.name=Eigenbase Data Management System
@@ -126,7 +128,7 @@ jdbc.url.base=jdbc:farrago:
 jdbc.url.port.default=5433
 EOF
 cd $OPEN_DIR/farrago
-./initBuild.sh --with-fennel --with-optimization
+./initBuild.sh --with-fennel --with-optimization --with-tests
 ./distBuild.sh --skip-init-build
 mv dist/farrago.$ARCHIVE_SUFFIX $DIST_DIR/$BINARY_RELEASE.$ARCHIVE_SUFFIX
 
