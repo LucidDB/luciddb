@@ -30,9 +30,6 @@
 #include "fennel/common/FileStatsTarget.h"
 #include "fennel/ftrs/BTreeExecStream.h"
 
-// DEPRECATED
-#include "fennel/xo/BTreeTupleStream.h"
-
 #include <boost/utility.hpp>
 
 FENNEL_BEGIN_NAMESPACE
@@ -77,15 +74,11 @@ public:
         SharedLogicalTxn pTxn;
         SharedFtrsTableWriterFactory pFtrsTableWriterFactory;
 
-        // DEPRECATED
-        SharedTableWriterFactory pTableWriterFactory;
-
         virtual ~TxnHandle();           // make class polymorphic
     };
 
     struct StreamGraphHandle
-        : public BTreeRootMap,  // DEPRECATED
-            public BTreeOwnerRootMap
+        : public BTreeOwnerRootMap
     {
         SharedExecStreamFactory pExecStreamFactory;
         SharedExecStreamGraph pExecStreamGraph;
@@ -97,24 +90,8 @@ public:
 
         // implement BTreeOwnerRootMap
         virtual PageId getRoot(PageOwnerId pageOwnerId);
-        
-        // DEPRECATED
-        SharedExecutionStreamFactory pStreamFactory;
-        virtual SharedExecutionStreamGraph getGraph();
     };
 
-    // DEPRECATED
-    struct TupleStreamGraphHandle : public StreamGraphHandle
-    {
-    private:
-        SharedTupleStreamGraph pGraph;
-    public:
-        ~TupleStreamGraphHandle();
-        void setTupleStreamGraph(SharedTupleStreamGraph pGraph);
-        SharedExecutionStreamGraph getGraph();
-        SharedTupleStreamGraph getTupleStreamGraph();
-    };
-    
 protected:
     /**
      * Handle to be returned by current command, or 0 if none.  Have to do it
@@ -140,9 +117,6 @@ protected:
     void setSvptHandle(
         SharedProxySvptHandle,SavepointId);
 
-    // DEPRECATED
-    void setStreamHandle(SharedProxyStreamHandle,ExecutionStream *);
-    
     void getBTreeForIndexCmd(ProxyIndexCmd &,PageId,BTreeDescriptor &);
 
     // Per-command overrides for FemVisitor; add new commands here
@@ -175,9 +149,6 @@ public:
     static inline TxnHandle &getTxnHandleFromLong(jlong);
     static inline jobject getObjectFromLong(jlong jHandle);
 
-    // DEPRECATED
-    static inline ExecutionStream &getStreamFromLong(jlong);
-    
     /**
      * Reads the Java representation of a TupleDescriptor.
      *
@@ -214,12 +185,6 @@ inline CmdInterpreter::StreamGraphHandle &
 CmdInterpreter::getStreamGraphHandleFromLong(jlong jHandle)
 {
     return *reinterpret_cast<StreamGraphHandle *>(jHandle);
-}
-
-// DEPRECATED
-inline ExecutionStream &CmdInterpreter::getStreamFromLong(jlong jHandle)
-{
-    return *reinterpret_cast<ExecutionStream *>(jHandle);
 }
 
 inline ExecStream &CmdInterpreter::getExecStreamFromLong(jlong jHandle)

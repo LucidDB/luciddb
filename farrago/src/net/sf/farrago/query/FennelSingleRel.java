@@ -48,10 +48,26 @@ public abstract class FennelSingleRel extends SingleRel implements FennelRel
      */
     protected FennelSingleRel(
         RelOptCluster cluster,
-        RelTraitSet traits,
         RelNode child)
     {
-        super(cluster, traits, child);
+        super(
+            cluster, new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION), child);
+    }
+
+    /**
+     * Creates a new FennelSingleRel object with specific traits.
+     *
+     * @param cluster RelOptCluster for this rel
+     * @param traits traits for this rel
+     * @param child input rel
+     */
+    protected FennelSingleRel(
+        RelOptCluster cluster,
+        RelTraitSet traits, 
+        RelNode child)
+    {
+        super(
+            cluster, traits, child);
     }
 
     //~ Methods ---------------------------------------------------------------

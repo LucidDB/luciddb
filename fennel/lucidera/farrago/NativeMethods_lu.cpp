@@ -27,10 +27,6 @@
 #include "fennel/segment/SegmentFactory.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
 
-// DEPRECATED
-#include "fennel/lucidera/sorter/ExternalSortStream.h"
-#include "fennel/farrago/ExecutionStreamFactory.h"
-
 #ifdef __MINGW32__
 #include <windows.h>
 #endif
@@ -38,18 +34,13 @@
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 class ExecStreamSubFactory_lu
-    : public ExecutionStreamSubFactory, // DEPRECATED
-        public ExecStreamSubFactory,
+    : public ExecStreamSubFactory,
         public FemVisitor
 {
     ExecStreamFactory *pExecStreamFactory;
     ExecStreamEmbryo *pEmbryo;
     
     bool created;
-    
-    // DEPRECATED
-    ExecutionStreamFactory *pStreamFactory;
-    ExecutionStreamParts *pParts;
     
     // implement FemVisitor
     virtual void visit(ProxySortingStreamDef &streamDef)
@@ -58,30 +49,6 @@ class ExecStreamSubFactory_lu
             // can't handle it
             created = false;
             return;
-        }
-
-        if (pStreamFactory) {
-            // DEPRECATED
-            SharedDatabase pDatabase = pStreamFactory->getDatabase();
-        
-            ExternalSortStream *pStream =
-                &(ExternalSortStream::newExternalSortStream());
-
-            ExternalSortStreamParams *pParams = new ExternalSortStreamParams();
-
-            // ExternalSortStream requires a private ScratchSegment
-            pParams->scratchAccessor =
-                pDatabase->getSegmentFactory()->newScratchSegment(
-                    pDatabase->getCache());
-        
-            pStreamFactory->readTupleStreamParams(*pParams,streamDef);
-            pParams->distinctness = streamDef.getDistinctness();
-            pParams->pTempSegment = pDatabase->getTempSegment();
-            pParams->storeFinalRun = false;
-            CmdInterpreter::readTupleProjection(
-                pParams->keyProj,
-                streamDef.getKeyProj());
-            pParts->setParts(pStream,pParams);
         }
 
         if (pExecStreamFactory) {
@@ -116,25 +83,6 @@ class ExecStreamSubFactory_lu
         created = false;
     }
 
-    // DEPRECATED
-    // implement ExecutionStreamSubFactory
-    virtual bool createStream(
-        ExecutionStreamFactory &factory,
-        ProxyExecutionStreamDef &streamDef,
-        ExecutionStreamParts &parts)
-    {
-        pStreamFactory = &factory;
-        pExecStreamFactory = NULL;
-        pParts = &parts;
-        pEmbryo = NULL;
-        created = true;
-        
-        // dispatch based on polymorphic stream type
-        FemVisitor::visitTbl.accept(*this,streamDef);
-        
-        return created;
-    }
-    
     // implement ExecStreamSubFactory
     virtual bool createStream(
         ExecStreamFactory &factory,
@@ -144,10 +92,6 @@ class ExecStreamSubFactory_lu
         pExecStreamFactory = &factory;
         pEmbryo = &embryo;
         created = true;
-        
-        // DEPRECATED
-        pStreamFactory = NULL;
-        pParts = NULL;
         
         // dispatch based on polymorphic stream type
         FemVisitor::visitTbl.accept(*this, streamDef);
@@ -182,12 +126,6 @@ Java_com_lucidera_farrago_fennel_LucidEraJni_registerStreamFactory(
     try {
         CmdInterpreter::StreamGraphHandle &streamGraphHandle =
             CmdInterpreter::getStreamGraphHandleFromLong(hStreamGraph);
-        if (streamGraphHandle.pStreamFactory) {
-            // DEPRECATED
-            streamGraphHandle.pStreamFactory->addSubFactory(
-                SharedExecutionStreamSubFactory(
-                    new ExecStreamSubFactory_lu()));
-        }
         if (streamGraphHandle.pExecStreamFactory) {
             streamGraphHandle.pExecStreamFactory->addSubFactory(
                 SharedExecStreamSubFactory(

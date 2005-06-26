@@ -34,9 +34,6 @@
 #include "fennel/exec/ExecStreamScheduler.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 
-// DEPRECATED
-#include "fennel/farrago/ExecutionStreamFactory.h"
-
 #include <sstream>
 
 #ifdef __MINGW32__
@@ -102,42 +99,22 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamFetch(
 {
     JniEnvRef pEnv(pEnvInit);
     try {
-        if (JniUtil::isUsingOldScheduler()) {
-            // DEPRECATED
-            ExecutionStream &stream =
-                CmdInterpreter::getStreamFromLong(hStream);
-            uint cbActual;
-            ByteInputStream &inputResultStream =
-                stream.getProducerResultStream();
-            PConstBuffer pBuffer = inputResultStream.getReadPointer(
-                1,&cbActual);
-            if (pBuffer) {
-                assert(uint(pEnv->GetArrayLength(byteArray)) >= cbActual);
-                pEnv->SetByteArrayRegion(
-                    byteArray,0,cbActual,(jbyte *)(pBuffer));
-                inputResultStream.consumeReadPointer(cbActual);
-                return cbActual;
-            } else {
-                return 0;
-            }
-        } else {
-            ExecStream &stream =
-                CmdInterpreter::getExecStreamFromLong(hStream);
-            ExecStreamScheduler *scheduler = stream.getGraph().getScheduler();
-            assert(scheduler);
-            ExecStreamBufAccessor &bufAccessor = scheduler->readStream(stream);
-            if (bufAccessor.getState() == EXECBUF_EOS) {
-                return 0;
-            }
-            assert(bufAccessor.isConsumptionPossible());
-            uint cbActual = bufAccessor.getConsumptionAvailable();
-            PConstBuffer pBuffer = bufAccessor.getConsumptionStart();
-            assert(uint(pEnv->GetArrayLength(byteArray)) >= cbActual);
-            pEnv->SetByteArrayRegion(
-                byteArray,0,cbActual,(jbyte *)(pBuffer));
-            bufAccessor.consumeData(pBuffer + cbActual);
-            return cbActual;
+        ExecStream &stream =
+            CmdInterpreter::getExecStreamFromLong(hStream);
+        ExecStreamScheduler *scheduler = stream.getGraph().getScheduler();
+        assert(scheduler);
+        ExecStreamBufAccessor &bufAccessor = scheduler->readStream(stream);
+        if (bufAccessor.getState() == EXECBUF_EOS) {
+            return 0;
         }
+        assert(bufAccessor.isConsumptionPossible());
+        uint cbActual = bufAccessor.getConsumptionAvailable();
+        PConstBuffer pBuffer = bufAccessor.getConsumptionStart();
+        assert(uint(pEnv->GetArrayLength(byteArray)) >= cbActual);
+        pEnv->SetByteArrayRegion(
+            byteArray,0,cbActual,(jbyte *)(pBuffer));
+        bufAccessor.consumeData(pBuffer + cbActual);
+        return cbActual;
     } catch (std::exception &ex) {
         pEnv.handleExcn(ex);
         return 0;
@@ -150,16 +127,9 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamRestart(
 {
     JniEnvRef pEnv(pEnvInit);
     try {
-        if (JniUtil::isUsingOldScheduler()) {
-            // DEPRECATED
-            ExecutionStream &stream =
-                CmdInterpreter::getStreamFromLong(hStream);
-            stream.open(true);
-        } else {
-            ExecStream &stream =
-                CmdInterpreter::getExecStreamFromLong(hStream);
-            stream.open(true);
-        }
+        ExecStream &stream =
+            CmdInterpreter::getExecStreamFromLong(hStream);
+        stream.open(true);
     } catch (std::exception &ex) {
         pEnv.handleExcn(ex);
     }
@@ -177,16 +147,10 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphOpen(
         CmdInterpreter::TxnHandle &txnHandle =
             CmdInterpreter::getTxnHandleFromLong(hTxn);
         streamGraphHandle.javaRuntimeContext = hJavaStreamMap;
-        if (JniUtil::isUsingOldScheduler()) {
-            // DEPRECATED
-            streamGraphHandle.getGraph()->setTxn(txnHandle.pTxn);
-            streamGraphHandle.getGraph()->open();
-        } else {
-            streamGraphHandle.pExecStreamGraph->setTxn(txnHandle.pTxn);
-            streamGraphHandle.pExecStreamGraph->open();
-            if (streamGraphHandle.pScheduler.unique()) {
-                streamGraphHandle.pScheduler->start();
-            }
+        streamGraphHandle.pExecStreamGraph->setTxn(txnHandle.pTxn);
+        streamGraphHandle.pExecStreamGraph->open();
+        if (streamGraphHandle.pScheduler.unique()) {
+            streamGraphHandle.pScheduler->start();
         }
         // TODO:  finally?
         streamGraphHandle.javaRuntimeContext = NULL;
@@ -205,10 +169,6 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphClose(
             CmdInterpreter::getStreamGraphHandleFromLong(hStreamGraph);
         switch (action) {
         case net_sf_farrago_fennel_FennelStorage_CLOSE_RESULT:
-            if (streamGraphHandle.getGraph()) {
-                // DEPRECATED
-                streamGraphHandle.getGraph()->close();
-            }
             if (streamGraphHandle.pScheduler.unique()) {
                 streamGraphHandle.pScheduler->stop();
             }

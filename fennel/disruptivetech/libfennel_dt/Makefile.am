@@ -17,7 +17,6 @@ libfennel_dt_xo_la_LIBADD=\
 	$(top_builddir)/disruptivetech/xo/libxo.la \
 	libfennel_dt_calc.la \
 	-L$(top_builddir)/libfennel \
-	-lfennel_xo \
 	-lfennel_exec \
 	-lfennel_segment \
 	-lfennel_tuple \

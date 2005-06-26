@@ -38,7 +38,7 @@ import org.eigenbase.reltype.RelDataType;
  * @author John V. Sichi
  * @version $Id$
  */
-class FennelCartesianProductRel extends FennelPullDoubleRel
+class FennelCartesianProductRel extends FennelDoubleRel
 {
     int joinType;
     //~ Constructors ----------------------------------------------------------

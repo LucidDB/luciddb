@@ -36,7 +36,6 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-bool JniUtil::usingOldScheduler = false;
 JavaVM *JniUtil::pVm = NULL;
 jmethodID JniUtil::methGetClassName = 0;
 jmethodID JniUtil::methHasNext = 0;
@@ -49,16 +48,6 @@ jmethodID JniUtil::methGetIndexRoot = 0;
 jmethodID JniUtil::methToString = 0;
 
 AtomicCounter JniUtil::handleCount;
-
-void JniUtil::requestOldScheduler()
-{
-    usingOldScheduler = true;
-}
-    
-bool JniUtil::isUsingOldScheduler()
-{
-    return usingOldScheduler;
-}
 
 #ifndef __MINGW32__
 static void debugger_signalHandler(int signum)

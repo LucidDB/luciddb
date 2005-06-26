@@ -66,7 +66,7 @@ class FtrsTableProjectionRule extends RelOptRule
     // implement RelOptRule
     public CallingConvention getOutConvention()
     {
-        return FennelPullRel.FENNEL_PULL_CONVENTION;
+        return FennelRel.FENNEL_EXEC_CONVENTION;
     }
 
     // implement RelOptRule
@@ -142,12 +142,12 @@ class FtrsTableProjectionRule extends RelOptRule
                     origScan.isOrderPreserving);
 
             if (needRename) {
-                // Replace calling convention with FENNEL_PULL_CONVENTION
+                // Replace calling convention with FENNEL_EXEC_CONVENTION
                 RelTraitSet traits =
                     RelOptUtil.clone(origProject.getTraits());
                 traits.setTrait(
                     CallingConventionTraitDef.instance,
-                    FennelPullRel.FENNEL_PULL_CONVENTION);
+                    FennelRel.FENNEL_EXEC_CONVENTION);
 
                 projectedScan =
                     new FennelRenameRel(

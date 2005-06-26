@@ -21,7 +21,7 @@
 
 package com.disruptivetech.farrago.rel;
 
-import net.sf.farrago.query.FennelPullRel;
+import net.sf.farrago.query.FennelRel;
 import org.eigenbase.rel.CalcRel;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.WindowedAggregateRel;
@@ -204,7 +204,7 @@ public abstract class FennelWindowRule extends RelOptRule
     // implement RelOptRule
     public CallingConvention getOutConvention()
     {
-        return FennelPullRel.FENNEL_PULL_CONVENTION;
+        return FennelRel.FENNEL_EXEC_CONVENTION;
     }
 
     protected void doThing(
@@ -219,7 +219,7 @@ public abstract class FennelWindowRule extends RelOptRule
             : winAggRel.getTraits();
         RelNode fennelInput =
             mergeTraitsAndConvert(
-                traits, FennelPullRel.FENNEL_PULL_CONVENTION,
+                traits, FennelRel.FENNEL_EXEC_CONVENTION,
                 child);
         if (fennelInput == null) {
             return;

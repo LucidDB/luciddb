@@ -42,26 +42,18 @@ import org.eigenbase.util.*;
  */
 public class FennelRenameRule extends RelOptRule
 {
-    //~ Instance fields -------------------------------------------------------
-
-    private CallingConvention convention;
-
     //~ Constructors ----------------------------------------------------------
 
     /**
      * Creates a new FennelRenameRule object.
      */
-    public FennelRenameRule(
-        CallingConvention convention,
-        String description)
+    public FennelRenameRule()
     {
         super(new RelOptRuleOperand(
                 ProjectRel.class,
                 new RelOptRuleOperand [] {
                     new RelOptRuleOperand(RelNode.class, null)
                 }));
-        this.convention = convention;
-        this.description = description;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -69,7 +61,7 @@ public class FennelRenameRule extends RelOptRule
     // implement RelOptRule
     public CallingConvention getOutConvention()
     {
-        return convention;
+        return FennelRel.FENNEL_EXEC_CONVENTION;
     }
 
     // implement RelOptRule
@@ -116,7 +108,8 @@ public class FennelRenameRule extends RelOptRule
         }
 
         RelNode fennelInput =
-            mergeTraitsAndConvert(project.getTraits(), convention, inputRel);
+            mergeTraitsAndConvert(project.getTraits(),
+                FennelRel.FENNEL_EXEC_CONVENTION, inputRel);
         if (fennelInput == null) {
             return;
         }

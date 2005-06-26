@@ -27,6 +27,7 @@ import net.sf.farrago.fem.fennel.FemExecutionStreamDef;
 import org.eigenbase.rel.RelFieldCollation;
 import org.eigenbase.rel.RelNode;
 
+import org.eigenbase.relopt.*;
 
 /**
  * FennelRel defines the interface which must be implemented by any
@@ -38,6 +39,17 @@ import org.eigenbase.rel.RelNode;
  */
 public interface FennelRel extends RelNode
 {
+    //~ Static fields/initializers --------------------------------------------
+
+    /**
+     * Calling convention which transfers data as rows in Fennel tuple
+     * format (implementations must conform to the fennel::ExecStream
+     * interface).
+     */
+    public static final CallingConvention FENNEL_EXEC_CONVENTION =
+        new CallingConvention("FENNEL_EXEC",
+            CallingConvention.generateOrdinal(), FennelRel.class);
+    
     //~ Methods ---------------------------------------------------------------
 
     // TODO jvs 8-May-2004:  get rid of method getPreparingStmt();

@@ -66,7 +66,7 @@ class FtrsIndexJoinRule extends RelOptRule
     // implement RelOptRule
     public CallingConvention getOutConvention()
     {
-        return FennelPullRel.FENNEL_PULL_CONVENTION;
+        return FennelRel.FENNEL_EXEC_CONVENTION;
     }
 
     // implement RelOptRule
@@ -212,7 +212,7 @@ class FtrsIndexJoinRule extends RelOptRule
 
         RelNode fennelInput =
             mergeTraitsAndConvert(
-                joinRel.getTraits(), FennelPullRel.FENNEL_PULL_CONVENTION,
+                joinRel.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
                 castRel);
 
         // tell the index search to propagate everything from its input as join

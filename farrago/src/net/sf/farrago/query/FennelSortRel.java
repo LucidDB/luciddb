@@ -40,7 +40,7 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FennelSortRel extends FennelPullSingleRel
+public class FennelSortRel extends FennelSingleRel
 {
     //~ Instance fields -------------------------------------------------------
 

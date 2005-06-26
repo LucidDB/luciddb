@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/optimizer/unionEliminator.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/optimizer/unionEliminator.sql#1 $
 0: jdbc:farrago:> -- Test optimization rule to elimnate the use of UNION 
 0: jdbc:farrago:> -- when a UNION call only has one input
 0: jdbc:farrago:> 
@@ -10,11 +10,11 @@
 | IterCalcRel(EXPR$0=[$1])                             |
 |   FennelToIteratorConverter                          |
 |     FennelCartesianProductRel(leftouterjoin=[true])  |
-|       FennelPullCalcRel(EXPR$0=[true])               |
-|         FennelPullOneRowRel                          |
+|       FennelCalcRel(EXPR$0=[true])                   |
+|         FennelOneRowRel                              |
 |       FennelPullCollectRel                           |
-|         FennelPullCalcRel(EXPR$0=[622])              |
-|           FennelPullOneRowRel                        |
+|         FennelCalcRel(EXPR$0=[622])                  |
+|           FennelOneRowRel                            |
 +------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

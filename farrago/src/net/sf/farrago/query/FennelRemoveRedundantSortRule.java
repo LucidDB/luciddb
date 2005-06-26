@@ -36,7 +36,7 @@ import org.eigenbase.relopt.RelOptRuleOperand;
 /**
  * FennelRemoveRedundantSortRule removes instances of SortRel which are
  * already satisfied by the physical ordering produced by an underlying
- * FennelPullRel.
+ * FennelRel.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -50,7 +50,7 @@ public class FennelRemoveRedundantSortRule extends RelOptRule
         super(new RelOptRuleOperand(
                 FennelSortRel.class,
                 new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(FennelPullRel.class, null)
+                    new RelOptRuleOperand(FennelRel.class, null)
                 }));
     }
 
@@ -59,7 +59,7 @@ public class FennelRemoveRedundantSortRule extends RelOptRule
     // implement RelOptRule
     public CallingConvention getOutConvention()
     {
-        return FennelPullRel.FENNEL_PULL_CONVENTION;
+        return FennelRel.FENNEL_EXEC_CONVENTION;
     }
 
     // implement RelOptRule
@@ -75,7 +75,7 @@ public class FennelRemoveRedundantSortRule extends RelOptRule
         if (inputRel instanceof FennelSortRel) {
             RelNode newRel =
                 mergeTraitsAndConvert(
-                    sortRel.getTraits(), FennelPullRel.FENNEL_PULL_CONVENTION,
+                    sortRel.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
                     inputRel);
             if (newRel == null) {
                 return;

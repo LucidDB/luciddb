@@ -52,7 +52,7 @@ import org.eigenbase.sql.type.*;
 
 /**
  * FennelToIteratorConverter is a Converter from the
- * {@link FennelPullRel#FENNEL_PULL_CONVENTION fennel-pull calling convention}
+ * {@link FennelRel#FENNEL_EXEC_CONVENTION Fennel calling convention}
  * to the {@link CallingConvention#ITERATOR iterator calling convention}.
  *
  * @author John V. Sichi
@@ -93,7 +93,7 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
     public ParseTree implement(JavaRelImplementor implementor)
     {
         assert (getChild().getConvention().equals(
-                    FennelPullRel.FENNEL_PULL_CONVENTION))
+                    FennelRel.FENNEL_EXEC_CONVENTION))
             : getChild().getClass().getName();
 
         // Give children a chance to generate code.  Most FennelRels don't
@@ -411,7 +411,7 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
     {
         planner.addRule(
             new ConverterRule(RelNode.class,
-                FennelPullRel.FENNEL_PULL_CONVENTION,
+                FennelRel.FENNEL_EXEC_CONVENTION,
                 CallingConvention.ITERATOR, "FennelToIteratorRule") {
                 public RelNode convert(RelNode rel)
                 {

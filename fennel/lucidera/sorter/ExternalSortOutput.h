@@ -71,16 +71,6 @@ public:
      */
     void setSubStream(ExternalSortSubStream &subStream);
 
-    // TODO jvs 10-Nov-2004:  eliminate this overload
-    /**
-     * Fetches tuples and writes them to a result stream.
-     *
-     * @param resultOutputStream receives marshalled tuple data
-     *
-     * @return result (EXTSORT_SUCCESS or EXTSORT_ENDOFDATA)
-     */
-    ExternalSortRC fetch(ByteOutputStream &resultOutputStream);
-    
     /**
      * Fetches tuples and writes them to a buffer.
      *

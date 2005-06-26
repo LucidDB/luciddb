@@ -74,7 +74,6 @@ LDADD = \
 	-l$(TEST_LIB) \
 	-lfennel_dt_calc \
 	-lfennel_dt_xo \
-	-lfennel_xo \
 	-lfennel_db \
 	-lfennel_btree \
 	-lfennel_exec \

@@ -45,13 +45,12 @@ import org.eigenbase.sql.type.SqlTypeName;
  * @version $Id$
  */
 public class FennelPullCollectRel extends FennelSingleRel
-                                  implements FennelPullRel
 {
     final String name;
 
     public FennelPullCollectRel(
         RelOptCluster cluster, RelNode child, String name) {
-        super(cluster, new RelTraitSet(FENNEL_PULL_CONVENTION), child);
+        super(cluster, new RelTraitSet(FENNEL_EXEC_CONVENTION), child);
         this.name = name;
     }
 

@@ -25,7 +25,7 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-class ExternalSortStreamImpl;
+class ExternalSortExecStreamImpl;
 class ExternalSortRunLoader;
 
 /**
@@ -39,7 +39,7 @@ class ExternalSortTask
     /**
      * The stream on behalf of which this task is working.
      */
-    ExternalSortStreamImpl &sortStream;
+    ExternalSortExecStreamImpl &sortStream;
 
     /**
      * The pre-loaded run to be sorted and stored by this task.
@@ -48,7 +48,7 @@ class ExternalSortTask
     
 public:
     explicit ExternalSortTask(
-        ExternalSortStreamImpl &sortStreamInit,
+        ExternalSortExecStreamImpl &sortStreamInit,
         ExternalSortRunLoader &runLoaderInit)
         : sortStream(sortStreamInit),
           runLoader(runLoaderInit)

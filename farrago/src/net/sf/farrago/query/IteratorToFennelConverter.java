@@ -47,13 +47,13 @@ import org.eigenbase.util.*;
 /**
  * IteratorToFennelConverter is a Converter from the
  * {@link CallingConvention#ITERATOR iterator calling convention} to the
- * {@link FennelPullRel#FENNEL_PULL_CONVENTION fennel calling convention}.
+ * {@link FennelRel#FENNEL_EXEC_CONVENTION fennel calling convention}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class IteratorToFennelConverter extends ConverterRel
-    implements FennelPullRel
+    implements FennelRel
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -70,7 +70,7 @@ public class IteratorToFennelConverter extends ConverterRel
     {
         super(
             cluster, CallingConventionTraitDef.instance,
-            new RelTraitSet(FENNEL_PULL_CONVENTION), child);
+            new RelTraitSet(FENNEL_EXEC_CONVENTION), child);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -330,7 +330,7 @@ public class IteratorToFennelConverter extends ConverterRel
 
     /**
      * Rule which converts a {@link RelNode} of
-     * {@link FennelPullRel#FENNEL_PULL_CONVENTION fennel-pull calling convention}
+     * {@link FennelRel#FENNEL_EXEC_CONVENTION Fennel calling convention}
      * to {@link CallingConvention.ITERATOR iterator calling convention}
      * by adding a {@link IteratorToFennelConverter}.
      */
@@ -341,7 +341,7 @@ public class IteratorToFennelConverter extends ConverterRel
             super(
                 RelNode.class,
                 CallingConvention.ITERATOR,
-                FennelPullRel.FENNEL_PULL_CONVENTION,
+                FennelRel.FENNEL_EXEC_CONVENTION,
                 "IteratorToFennelPullRule");
         }
 

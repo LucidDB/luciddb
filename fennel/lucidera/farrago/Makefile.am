@@ -15,7 +15,6 @@ libfarrago_lu_la_LIBADD = \
 	-L$(top_builddir)/lucidera/libfennel_lu \
 	-lfennel_lu_sorter \
 	-lfarrago \
-	-lfennel_xo \
 	-lfennel_db \
 	-lfennel_btree \
 	-lfennel_exec \

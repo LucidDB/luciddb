@@ -45,7 +45,7 @@ import org.eigenbase.util.*;
  * @version $Id$
  */
 class FtrsTableModificationRel extends TableModificationRelBase
-    implements FennelPullRel
+    implements FennelRel
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -72,7 +72,7 @@ class FtrsTableModificationRel extends TableModificationRelBase
         Operation operation,
         List updateColumnList)
     {
-        super(cluster, new RelTraitSet(FennelPullRel.FENNEL_PULL_CONVENTION),
+        super(cluster, new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION),
             ftrsTable, connection, child, operation, updateColumnList, true);
         this.ftrsTable = ftrsTable;
         assert ftrsTable.getPreparingStmt() ==

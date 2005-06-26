@@ -63,7 +63,7 @@ public abstract class FennelMultipleRel
         RelOptCluster cluster,
         RelNode[] inputs)
     {
-        super(cluster, new RelTraitSet(FennelPullRel.FENNEL_PULL_CONVENTION));
+        super(cluster, new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION));
         this.inputs = inputs;
         assert inputs != null;
         for (int i = 0; i < inputs.length; i++) {

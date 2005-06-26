@@ -41,12 +41,6 @@
 #include "fennel/farrago/ExecStreamFactory.h"
 #include "fennel/ftrs/FtrsTableWriterFactory.h"
 
-// DEPRECATED
-#include "fennel/xo/TableWriterFactory.h"
-#include "fennel/xo/TupleStreamGraph.h"
-#include "fennel/farrago/ExecutionStreamFactory.h"
-#include "fennel/farrago/ExecutionStreamBuilder.h"
-
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 int64_t CmdInterpreter::executeCommand(
@@ -99,12 +93,6 @@ void CmdInterpreter::setStreamGraphHandle(
     resultHandle = reinterpret_cast<int64_t>(pHandle);
 }
 
-void CmdInterpreter::setStreamHandle(
-    SharedProxyStreamHandle,ExecutionStream *pStream)
-{
-    resultHandle = reinterpret_cast<int64_t>(pStream);
-}
-
 void CmdInterpreter::setExecStreamHandle(
     SharedProxyStreamHandle,ExecStream *pStream)
 {
@@ -142,11 +130,6 @@ CmdInterpreter::TxnHandle::~TxnHandle()
 }
     
 CmdInterpreter::StreamGraphHandle::~StreamGraphHandle()
-{
-    --JniUtil::handleCount;
-}
-    
-CmdInterpreter::TupleStreamGraphHandle::~TupleStreamGraphHandle()
 {
     --JniUtil::handleCount;
 }
@@ -290,14 +273,6 @@ void CmdInterpreter::visit(ProxyCmdBeginTxn &cmd)
     // will have their own
     SegmentAccessor scratchAccessor;
     
-    // DEPRECATED
-    pTxnHandle->pTableWriterFactory = SharedTableWriterFactory(
-        new TableWriterFactory(
-            pDb,
-            pDb->getCache(),
-            pDb->getTypeFactory(),
-            scratchAccessor));
-    
     pTxnHandle->pFtrsTableWriterFactory = SharedFtrsTableWriterFactory(
         new FtrsTableWriterFactory(
             pDb,
@@ -357,42 +332,22 @@ void CmdInterpreter::visit(ProxyCmdRollback &cmd)
 void CmdInterpreter::visit(ProxyCmdCreateExecutionStreamGraph &cmd)
 {
     TxnHandle *pTxnHandle = getTxnHandle(cmd.getTxnHandle());
-    if (JniUtil::isUsingOldScheduler()) {
-        // DEPRECATED
-        SharedTupleStreamGraph pGraph =
-            TupleStreamGraph::newTupleStreamGraph();
-        pGraph->setTxn(pTxnHandle->pTxn);
-        std::auto_ptr<TupleStreamGraphHandle> pStreamGraphHandle(
-            new TupleStreamGraphHandle());
-        ++JniUtil::handleCount;
-        pStreamGraphHandle->pTxnHandle = pTxnHandle;
-        pStreamGraphHandle->setTupleStreamGraph(pGraph);
-        pStreamGraphHandle->pStreamFactory.reset(
-            new ExecutionStreamFactory(
-                pTxnHandle->pDb,
-                pTxnHandle->pTableWriterFactory,
-                pStreamGraphHandle.get()));
-        setStreamGraphHandle(
-            cmd.getResultHandle(),
-            pStreamGraphHandle.release());
-    } else {
-        SharedExecStreamGraph pGraph =
-            ExecStreamGraph::newExecStreamGraph();
-        pGraph->setTxn(pTxnHandle->pTxn);
-        std::auto_ptr<StreamGraphHandle> pStreamGraphHandle(
-            new StreamGraphHandle());
-        ++JniUtil::handleCount;
-        pStreamGraphHandle->pTxnHandle = pTxnHandle;
-        pStreamGraphHandle->pExecStreamGraph = pGraph;
-        pStreamGraphHandle->pExecStreamFactory.reset(
-            new ExecStreamFactory(
-                pTxnHandle->pDb,
-                pTxnHandle->pFtrsTableWriterFactory,
-                pStreamGraphHandle.get()));
-        setStreamGraphHandle(
-            cmd.getResultHandle(),
-            pStreamGraphHandle.release());
-    }
+    SharedExecStreamGraph pGraph =
+        ExecStreamGraph::newExecStreamGraph();
+    pGraph->setTxn(pTxnHandle->pTxn);
+    std::auto_ptr<StreamGraphHandle> pStreamGraphHandle(
+        new StreamGraphHandle());
+    ++JniUtil::handleCount;
+    pStreamGraphHandle->pTxnHandle = pTxnHandle;
+    pStreamGraphHandle->pExecStreamGraph = pGraph;
+    pStreamGraphHandle->pExecStreamFactory.reset(
+        new ExecStreamFactory(
+            pTxnHandle->pDb,
+            pTxnHandle->pFtrsTableWriterFactory,
+            pStreamGraphHandle.get()));
+    setStreamGraphHandle(
+        cmd.getResultHandle(),
+        pStreamGraphHandle.release());
 }
 
 void CmdInterpreter::visit(ProxyCmdPrepareExecutionStreamGraph &cmd)
@@ -400,56 +355,36 @@ void CmdInterpreter::visit(ProxyCmdPrepareExecutionStreamGraph &cmd)
     StreamGraphHandle *pStreamGraphHandle = getStreamGraphHandle(
         cmd.getStreamGraphHandle());
     TxnHandle *pTxnHandle = pStreamGraphHandle->pTxnHandle;
-    if (JniUtil::isUsingOldScheduler()) {
-        // DEPRECATED
-        ExecutionStreamBuilder streamBuilder(
-            pTxnHandle->pDb,
-            *(pStreamGraphHandle->pStreamFactory),
-            pStreamGraphHandle->getGraph());
-        streamBuilder.buildStreamGraph(cmd);
-        pStreamGraphHandle->pStreamFactory.reset();
-    } else {
-        // NOTE:  sequence is important here
-        SharedExecStreamScheduler pScheduler(
-            new DfsTreeExecStreamScheduler(
-                &(pTxnHandle->pDb->getTraceTarget()),
-                "xo.scheduler"));
-        ExecStreamGraphEmbryo graphEmbryo(
-            pStreamGraphHandle->pExecStreamGraph,
-            pScheduler,
-            pTxnHandle->pDb->getCache(),
-            pTxnHandle->pDb->getSegmentFactory(), 
-            pStreamGraphHandle->pExecStreamFactory->shouldEnforceCacheQuotas());
-        pStreamGraphHandle->pExecStreamFactory->setGraphEmbryo(graphEmbryo);
-        ExecStreamBuilder streamBuilder(
-            graphEmbryo, 
-            *(pStreamGraphHandle->pExecStreamFactory));
-        streamBuilder.buildStreamGraph(cmd, true);
-        pStreamGraphHandle->pExecStreamFactory.reset();
-        pStreamGraphHandle->pScheduler = pScheduler;
-    }
+    // NOTE:  sequence is important here
+    SharedExecStreamScheduler pScheduler(
+        new DfsTreeExecStreamScheduler(
+            &(pTxnHandle->pDb->getTraceTarget()),
+            "xo.scheduler"));
+    ExecStreamGraphEmbryo graphEmbryo(
+        pStreamGraphHandle->pExecStreamGraph,
+        pScheduler,
+        pTxnHandle->pDb->getCache(),
+        pTxnHandle->pDb->getSegmentFactory(), 
+        pStreamGraphHandle->pExecStreamFactory->shouldEnforceCacheQuotas());
+    pStreamGraphHandle->pExecStreamFactory->setGraphEmbryo(graphEmbryo);
+    ExecStreamBuilder streamBuilder(
+        graphEmbryo, 
+        *(pStreamGraphHandle->pExecStreamFactory));
+    streamBuilder.buildStreamGraph(cmd, true);
+    pStreamGraphHandle->pExecStreamFactory.reset();
+    pStreamGraphHandle->pScheduler = pScheduler;
 }
 
 void CmdInterpreter::visit(ProxyCmdCreateStreamHandle &cmd)
 {
     StreamGraphHandle *pStreamGraphHandle = getStreamGraphHandle(
         cmd.getStreamGraphHandle());
-    if (JniUtil::isUsingOldScheduler()) {
-        // DEPRECATED
-        SharedExecutionStream pStream =
-            pStreamGraphHandle->getGraph()->findLastStream(
-                cmd.getStreamName());
-        setStreamHandle(
-            cmd.getResultHandle(),
-            pStream.get());
-    } else {
-        SharedExecStream pStream =
-            pStreamGraphHandle->pExecStreamGraph->findLastStream(
-                cmd.getStreamName(), 0);
-        setExecStreamHandle(
-            cmd.getResultHandle(),
-            pStream.get());
-    }
+    SharedExecStream pStream =
+        pStreamGraphHandle->pExecStreamGraph->findLastStream(
+            cmd.getStreamName(), 0);
+    setExecStreamHandle(
+        cmd.getResultHandle(),
+        pStream.get());
 }
 
 PageId CmdInterpreter::StreamGraphHandle::getRoot(PageOwnerId pageOwnerId)
@@ -459,28 +394,6 @@ PageId CmdInterpreter::StreamGraphHandle::getRoot(PageOwnerId pageOwnerId)
     x = pEnv->CallLongMethod(
         javaRuntimeContext,JniUtil::methGetIndexRoot,x);
     return PageId(x);
-}
-
-void CmdInterpreter::TupleStreamGraphHandle::setTupleStreamGraph(
-    SharedTupleStreamGraph pGraphIn)
-{
-    pGraph = pGraphIn;
-}
-
-SharedExecutionStreamGraph CmdInterpreter::StreamGraphHandle::getGraph()
-{
-    return SharedExecutionStreamGraph();
-}
-
-SharedExecutionStreamGraph CmdInterpreter::TupleStreamGraphHandle::getGraph()
-{
-    return pGraph;
-}
-
-SharedTupleStreamGraph 
-CmdInterpreter::TupleStreamGraphHandle::getTupleStreamGraph()
-{
-    return pGraph;
 }
 
 void CmdInterpreter::readTupleDescriptor(

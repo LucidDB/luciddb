@@ -7,7 +7,6 @@ libfennel_lu_sorter_la_SOURCES=
 libfennel_lu_sorter_la_LIBADD=\
 	$(top_builddir)/lucidera/sorter/libsorter.la \
 	-L$(top_builddir)/libfennel \
-	-lfennel_xo \
 	-lfennel_exec \
 	-lfennel_segment \
 	-lfennel_tuple \
