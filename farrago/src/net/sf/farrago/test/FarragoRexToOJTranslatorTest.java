@@ -30,18 +30,15 @@ import junit.framework.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.jdbc.engine.*;
-import net.sf.farrago.ojrex.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.util.*;
 
 import openjava.ptree.*;
 
-import org.eigenbase.oj.*;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.rel.*;
-import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
@@ -283,6 +280,25 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
     {
         // NOTE:  choose nullable
         testTranslation("-age");
+    }
+
+    public void testPrimitiveGreaterBoolean()
+        throws Exception
+    {
+        // NOTE: choose one null, one not null
+        testTranslation("manager > slacker");
+    }
+
+    public void testPrefixMinusCastNullTinyint()
+        throws Exception
+    {
+        testTranslation("-cast(null as tinyint)");
+    }
+
+    public void testPlusCastNullSmallint()
+        throws Exception
+    {
+        testTranslation("cast(null as tinyint) + cast (null as smallint)");
     }
 
     public void testVarcharEquals()

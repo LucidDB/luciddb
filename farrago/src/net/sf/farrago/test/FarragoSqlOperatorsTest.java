@@ -28,16 +28,20 @@ import net.sf.farrago.test.regression.FarragoCalcSystemTest;
 import org.eigenbase.sql.SqlOperator;
 import org.eigenbase.sql.SqlOperatorTable;
 import org.eigenbase.sql.SqlSyntax;
+import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.test.AbstractSqlTester;
 import org.eigenbase.sql.test.SqlOperatorIterator;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.Util;
+import org.eigenbase.reltype.RelDataType;
 
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.sql.ResultSetMetaData;
 
 
 /**
@@ -53,7 +57,6 @@ public class FarragoSqlOperatorsTest extends FarragoTestCase
 {
     private static final SqlStdOperatorTable opTab =
         SqlStdOperatorTable.instance();
-    private static final boolean bug260fixed = false;
 
     //~ Instance fields -------------------------------------------------------
 
@@ -130,13 +133,52 @@ public class FarragoSqlOperatorsTest extends FarragoTestCase
      */
     private class FarragoSqlTester extends AbstractSqlTester
     {
+        /**
+         * Checks that query really contains a call to the operator we
+         * are looking at
+         */
+        private void checkQuery(String query)
+        {
+            if (operator.getSyntax() != SqlSyntax.Internal) {
+                String queryCmp = query.toUpperCase();
+                String opNameCmp = operator.getName().toUpperCase();
+                if (queryCmp.indexOf(opNameCmp) < 0) {
+                    fail("Not exercising operator <" + operator + "> "
+                        + "with the query <" + query + ">");
+                }
+            }
+        }
+
         public void checkFails(
             String expression,
             String expectedError)
         {
-            if (bug260fixed) {
-                // todo: implement this
-                throw Util.needToImplement(this);
+            String query = buildQuery(expression);
+            Throwable actualException = null;
+
+            checkQuery(query);
+
+            try {
+                resultSet = stmt.executeQuery(query);
+            } catch (Throwable ex) {
+                actualException = ex;
+            }
+
+            if (null == actualException) {
+                fail("FarragoSqlTester: Expected query to throw " +
+                    "exception, but it did not; query [" + expression +
+                    "]; expected [" + expectedError + "]");
+            } else {
+                String actualMessage = actualException.getMessage();
+                if (actualMessage == null ||
+                    !actualMessage.matches(expectedError)) {
+                    actualException.printStackTrace();
+                    fail("FarragoSqlTester: Query threw different " +
+                        "exception than expected; query [" + expression +
+                        "]; expected [" + expectedError +
+                        "]; actual [" + actualMessage +
+                        "]");
+                }
             }
         }
 
@@ -144,9 +186,32 @@ public class FarragoSqlOperatorsTest extends FarragoTestCase
             String expression,
             String type)
         {
-            if (bug260fixed) {
-                // todo: implement this
-                throw Util.needToImplement(this);
+            String query = buildQuery(expression);
+
+            try {
+                checkQuery(query);
+                resultSet = stmt.executeQuery(query);
+
+                /* Check type */
+                ResultSetMetaData md = resultSet.getMetaData();
+                int count = md.getColumnCount();
+                assertEquals(count, 1);
+                String columnType = md.getColumnTypeName(1);
+                if (type.indexOf('(') > 0) {
+                    columnType += "(" + md.getPrecision(1) + ")";
+                }
+                if (md.isNullable(1) == ResultSetMetaData.columnNoNulls) {
+                    columnType += " NOT NULL";
+                }
+                assertEquals(type, columnType);
+
+            }  catch (Throwable e) {
+                RuntimeException newException =
+                    new RuntimeException("Exception occured while testing "
+                        + operator + ". " + "Exception msg = "
+                        + e.getMessage());
+                newException.setStackTrace(e.getStackTrace());
+                throw newException;
             }
         }
 
@@ -156,17 +221,7 @@ public class FarragoSqlOperatorsTest extends FarragoTestCase
             SqlTypeName resultType)
         {
             try {
-                if (operator.getSyntax() != SqlSyntax.Internal) {
-                    // check that query really contains a call to the operator we
-                    // are looking at
-                    String queryCmp = query.toUpperCase();
-                    String opNameCmp = operator.getName().toUpperCase();
-                    if (queryCmp.indexOf(opNameCmp) < 0) {
-                        fail("Not exercising operator <" + operator + "> "
-                            + "with the query <" + query + ">");
-                    }
-                }
-
+                checkQuery(query);
                 resultSet = stmt.executeQuery(query);
                 if (result instanceof Pattern) {
                     compareResultSetWithPattern((Pattern) result);
@@ -175,6 +230,18 @@ public class FarragoSqlOperatorsTest extends FarragoTestCase
                     refSet.add(result);
                     compareResultSet(refSet);
                 }
+
+                if (resultType != null) {
+                    /* Check result type */
+                    ResultSetMetaData md = resultSet.getMetaData();
+
+                    /* Assumes there is only one column */
+                    int count = md.getColumnCount();
+                    assertEquals(count, 1);
+                    String columnType = md.getColumnTypeName(1);
+                    assertEquals(resultType.toString(), columnType);
+                }
+
                 stmt.close();
                 stmt = connection.createStatement();
             } catch (Throwable e) {

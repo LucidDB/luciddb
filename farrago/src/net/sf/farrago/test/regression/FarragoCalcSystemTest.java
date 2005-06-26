@@ -126,6 +126,7 @@ public class FarragoCalcSystemTest extends FarragoTestCase
         exclude.add(opTab.dotOperator);
         exclude.add(opTab.joinOperator);
         exclude.add(opTab.rowConstructor);
+        exclude.add(opTab.newOperator);
         exclude.add(opTab.nullIfFunc);
         exclude.add(opTab.castFunc);
         exclude.add(opTab.coalesceFunc);
@@ -163,11 +164,7 @@ public class FarragoCalcSystemTest extends FarragoTestCase
                 continue;
             }
             addTestsForOp(op, suite, VirtualMachine.Fennel);
-            if (false) {
-                // todo: Enable automated tests for java operators (Bug 260
-                //  is logged for this)
-                addTestsForOp(op, suite, VirtualMachine.Java);
-            }
+            addTestsForOp(op, suite, VirtualMachine.Java);
         }
 
         return wrappedSuite(suite);

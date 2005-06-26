@@ -81,7 +81,7 @@ public class SqlRowOperator extends SqlSpecialOperator
 
     public void test(SqlTester tester)
     {
-        SqlOperatorTests.testRow();
+        SqlOperatorTests.testRow(tester);
     }
 
     public void unparse(

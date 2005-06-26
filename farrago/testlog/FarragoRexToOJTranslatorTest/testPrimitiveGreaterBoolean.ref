@@ -1,0 +1,11 @@
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+if (ID$8$SLACKER.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.setNull( false );
+    oj_var0.value = (ID$9$MANAGER ? 1 : 0) > (ID$8$SLACKER.value ? 1 : 0);
+}
+
+return oj_var0;

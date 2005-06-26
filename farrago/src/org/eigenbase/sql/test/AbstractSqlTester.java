@@ -85,7 +85,7 @@ public abstract class AbstractSqlTester implements SqlTester
         String result)
     {
         String sql = buildQuery(expression);
-        check(sql, result, SqlTypeName.Boolean);
+        check(sql, result, SqlTypeName.Varchar);
     }
 
     public void checkNull(String expression)
@@ -93,7 +93,7 @@ public abstract class AbstractSqlTester implements SqlTester
         String sql = buildQuery(expression);
 
         //any SqlTypeName should do
-        check(sql, null, SqlTypeName.Boolean);
+        check(sql, null, null);
     }
 
     public void checkScalar(

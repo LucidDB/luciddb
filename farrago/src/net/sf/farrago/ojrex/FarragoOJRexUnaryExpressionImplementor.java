@@ -26,9 +26,11 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 
 import openjava.ptree.*;
+import openjava.mop.OJClass;
 
 import org.eigenbase.rex.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.type.SqlTypeName;
 
 /**
  * FarragoOJRexUnaryExpressionImplementor implements Farrago specifics of
@@ -108,11 +110,20 @@ public class FarragoOJRexUnaryExpressionImplementor
         RexCall call,
         Expression [] operands)
     {
-        RelDataType type = call.operands[0].getType();
+        RelDataType returnType = call.getType();
 
         FarragoTypeFactory factory = translator.getFarragoTypeFactory();
-        return new UnaryExpression(operands[0],
+        Expression expr = new UnaryExpression(operands[0],
                                    ojUnaryExpressionOrdinal);
+        if ((returnType.getSqlTypeName() != SqlTypeName.Boolean) &&
+            (factory.getClassForPrimitive(returnType) != null)) {
+            // Cast to correct primitive return type so compiler is happy
+            return new CastExpression(
+                OJClass.forClass(factory.getClassForPrimitive(returnType)),
+                expr);
+        } else {
+            return expr;
+        }
     }
 }
 

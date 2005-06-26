@@ -132,7 +132,7 @@ public class SqlOperatorTests
         tester.checkBoolean("x''\n'ab' = x'ab'", Boolean.TRUE);
     }
 
-    public static void testRow()
+    public static void testRow(SqlTester tester)
     {
         // todo:
     }
@@ -180,6 +180,10 @@ public class SqlOperatorTests
         tester.checkBoolean("-1>1", Boolean.FALSE);
         tester.checkBoolean("1>1", Boolean.FALSE);
         tester.checkBoolean("2>1", Boolean.TRUE);
+        tester.checkBoolean("true>false", Boolean.TRUE);
+        tester.checkBoolean("true>true", Boolean.FALSE);
+        tester.checkBoolean("false>false", Boolean.FALSE);
+        tester.checkBoolean("false>true", Boolean.FALSE);
         tester.checkNull("3.0>cast(null as double)");
     }
 
@@ -211,6 +215,10 @@ public class SqlOperatorTests
         tester.checkBoolean("-1>=1", Boolean.FALSE);
         tester.checkBoolean("1>=1", Boolean.TRUE);
         tester.checkBoolean("2>=1", Boolean.TRUE);
+        tester.checkBoolean("true>=false", Boolean.TRUE);
+        tester.checkBoolean("true>=true", Boolean.TRUE);
+        tester.checkBoolean("false>=false", Boolean.TRUE);
+        tester.checkBoolean("false>=true", Boolean.FALSE);
         tester.checkNull("cast(null as real)>=999");
     }
 
@@ -232,7 +240,12 @@ public class SqlOperatorTests
         tester.checkBoolean("-1<1", Boolean.TRUE);
         tester.checkBoolean("1<1", Boolean.FALSE);
         tester.checkBoolean("2<1", Boolean.FALSE);
+        tester.checkBoolean("true<false", Boolean.FALSE);
+        tester.checkBoolean("true<true", Boolean.FALSE);
+        tester.checkBoolean("false<false", Boolean.FALSE);
+        tester.checkBoolean("false<true", Boolean.TRUE);
         tester.checkNull("123<cast(null as bigint)");
+        tester.checkNull("cast(null as tinyint)<123");
     }
 
     public static void testLessThanOrEqualOperator(SqlTester tester)
@@ -241,7 +254,12 @@ public class SqlOperatorTests
         tester.checkBoolean("1<=1", Boolean.TRUE);
         tester.checkBoolean("-1<=1", Boolean.TRUE);
         tester.checkBoolean("2<=1", Boolean.FALSE);
+        tester.checkBoolean("true<=false", Boolean.FALSE);
+        tester.checkBoolean("true<=true", Boolean.TRUE);
+        tester.checkBoolean("false<=false", Boolean.TRUE);
+        tester.checkBoolean("false<=true", Boolean.TRUE);
         tester.checkNull("cast(null as integer)<=3");
+        tester.checkNull("3<=cast(null as smallint)");
     }
 
     public static void testMinusOperator(SqlTester tester)
@@ -251,6 +269,7 @@ public class SqlOperatorTests
         tester.checkScalarApprox("2.0-1", "1.0");
         tester.checkScalarExact("1-2", "-1");
         tester.checkNull("1e1-cast(null as double)");
+        tester.checkNull("cast(null as tinyint) - cast(null as smallint)");
     }
 
     public static void testMinusDateOperator(SqlTester tester)
@@ -266,6 +285,7 @@ public class SqlOperatorTests
         tester.checkScalarExact("2*0", "0");
         tester.checkScalarApprox("2.0*3", "6.0");
         tester.checkNull("2e-3*cast(null as integer)");
+        tester.checkNull("cast(null as tinyint) * cast(4 as smallint)");
     }
 
     public static void testNotEqualsOperator(SqlTester tester)
@@ -375,6 +395,7 @@ public class SqlOperatorTests
         tester.checkScalarExact("-1", "-1");
         tester.checkScalarApprox("-1.0", "-1.0");
         tester.checkNull("-cast(null as integer)");
+        tester.checkNull("-cast(null as tinyint)");
     }
 
     public static void testPrefixPlusOperator(SqlTester tester)
@@ -382,6 +403,7 @@ public class SqlOperatorTests
         tester.checkScalarExact("+1", "1");
         tester.checkScalarApprox("+1.0", "1.0");
         tester.checkNull("+cast(null as integer)");
+        tester.checkNull("+cast(null as tinyint)");
     }
 
     public static void testExplicitTableOperator(SqlTester tester)
@@ -599,35 +621,35 @@ public class SqlOperatorTests
 
     public static void testUserFunc(SqlTester tester)
     {
-        tester.checkScalar("USER", null, "VARCHAR(30) NOT NULL");
+        tester.checkScalar("USER", null, "VARCHAR(2000) NOT NULL");
     }
 
     public static void testCurrentUserFunc(SqlTester tester)
     {
-        tester.checkScalar("CURRENT_USER", null, "VARCHAR(30) NOT NULL");
+        tester.checkScalar("CURRENT_USER", null, "VARCHAR(2000) NOT NULL");
     }
 
     public static void testSessionUserFunc(SqlTester tester)
     {
-        tester.checkScalar("SESSION_USER", null, "VARCHAR(30) NOT NULL");
+        tester.checkScalar("SESSION_USER", null, "VARCHAR(2000) NOT NULL");
     }
 
     public static void testSystemUserFunc(SqlTester tester)
     {
         String user = System.getProperty("user.name"); // e.g. "jhyde"
-        tester.checkScalar("SYSTEM_USER", user, "VARCHAR(30) NOT NULL");
+        tester.checkScalar("SYSTEM_USER", user, "VARCHAR(2000) NOT NULL");
     }
 
     public static void testCurrentPathFunc(SqlTester tester)
     {
-        tester.checkScalar("CURRENT_PATH", "", "VARCHAR(30) NOT NULL");
+        tester.checkScalar("CURRENT_PATH", "", "VARCHAR(2000) NOT NULL");
     }
 
     public static void testCurrentRoleFunc(SqlTester tester)
     {
         // We don't have roles yet, so the CURRENT_ROLE function returns
         // the empty string.
-        tester.checkScalar("CURRENT_ROLE", "", "VARCHAR(30) NOT NULL");
+        tester.checkScalar("CURRENT_ROLE", "", "VARCHAR(2000) NOT NULL");
     }
 
     public static void testLocalTimeFunc(SqlTester tester)
@@ -642,7 +664,7 @@ public class SqlOperatorTests
     {
         tester.checkScalar("LOCALTIMESTAMP", timestampPattern,
             "TIMESTAMP(0) NOT NULL");
-        tester.checkFails("LOCALTIMESTAMP()", "?");
+        tester.checkFails("LOCALTIMESTAMP()", ".*");
         tester.checkScalar("LOCALTIMESTAMP(1)", timestampPattern,
             "TIMESTAMP(1) NOT NULL");
     }
@@ -651,7 +673,7 @@ public class SqlOperatorTests
     {
         tester.checkScalar("CURRENT_TIME", timePattern,
             "TIME(0) NOT NULL");
-        tester.checkFails("CURRENT_TIME()", "?");
+        tester.checkFails("CURRENT_TIME()", ".*");
         tester.checkScalar("CURRENT_TIME(1)", timePattern,
             "TIME(1) NOT NULL");
     }
@@ -660,7 +682,7 @@ public class SqlOperatorTests
     {
         tester.checkScalar("CURRENT_TIMESTAMP", timestampPattern,
             "TIMESTAMP(0) NOT NULL");
-        tester.checkFails("CURRENT_TIMESTAMP()", "?");
+        tester.checkFails("CURRENT_TIMESTAMP()", ".*");
         tester.checkScalar("CURRENT_TIMESTAMP(1)", timestampPattern,
             "TIMESTAMP(1) NOT NULL");
     }

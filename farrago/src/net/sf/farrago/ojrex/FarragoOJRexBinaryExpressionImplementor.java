@@ -29,7 +29,6 @@ import openjava.mop.*;
 import openjava.ptree.*;
 
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
 
@@ -175,9 +174,46 @@ public class FarragoOJRexBinaryExpressionImplementor
         RelDataType type = call.operands[0].getType();
 
         FarragoTypeFactory factory = translator.getFarragoTypeFactory();
+
+        Expression [] valueOperands = new Expression[2];
+        for (int i = 0; i < 2; i++) {
+            valueOperands[i] = operands[i];
+        }
+
+        // Special handling for boolean operands with >, <, <=, and >=
+        // Use value of 1 for true, 0 for false, when doing these comparisons
+        switch (ojBinaryExpressionOrdinal) {
+        case BinaryExpression.GREATER:
+        case BinaryExpression.GREATEREQUAL:
+        case BinaryExpression.LESS:
+        case BinaryExpression.LESSEQUAL:
+            for (int i = 0; i < 2; i++) {
+                if (call.operands[i].getType().getSqlTypeName() ==
+                    SqlTypeName.Boolean)
+                {
+                    valueOperands[i] = new ConditionalExpression(
+                        operands[i],
+                        Literal.makeLiteral(1),
+                        Literal.makeLiteral(0));
+                }
+            }
+        }
+
         if (factory.getClassForPrimitive(type) != null) {
-            return new BinaryExpression(operands[0],
-                ojBinaryExpressionOrdinal, operands[1]);
+            RelDataType returnType = call.getType();
+            Expression expr = new BinaryExpression(valueOperands[0],
+                ojBinaryExpressionOrdinal, valueOperands[1]);
+
+            if ((returnType.getSqlTypeName() != SqlTypeName.Boolean) &&
+                (factory.getClassForPrimitive(returnType) != null)) {
+                // Cast to correct primitive return type so compiler is happy
+                return new CastExpression(
+                    OJClass.forClass(factory.getClassForPrimitive(returnType)),
+                    expr);
+            }
+            else {
+                return expr;
+            }
         }
         Expression comparisonResultExp;
         if (SqlTypeUtil.inCharFamily(type)) {
