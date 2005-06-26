@@ -13,6 +13,9 @@
 -- test getTables (default catalog)
 !tables
 
+-- test getTables with pattern
+!metadata getTables LOCALDB SALES %EMPS null
+
 -- test getTables (system catalog)
 set catalog 'sys_boot';
 !tables

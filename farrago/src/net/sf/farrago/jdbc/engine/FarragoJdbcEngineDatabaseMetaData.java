@@ -82,8 +82,9 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
     public String getUserName()
         throws SQLException
     {
-        // TODO
-        return "jackalope";
+        // REVIEW jvs 25-June-2005:  should this be the current user
+        // or the session user?
+        return connection.getSession().getSessionVariables().currentUserName;
     }
 
     // implement DatabaseMetaData
@@ -138,7 +139,9 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
             ""
             + props.productVersionMajor.get()
             + "."
-            + props.productVersionMinor.get();
+            + props.productVersionMinor.get()
+            + "."
+            + props.productVersionPoint.get();
     }
 
     // implement DatabaseMetaData
@@ -1433,28 +1436,27 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
                 return;
             }
             if (value.equals("%")) {
-                // TODO jvs 5-April-2004:  replace with IS NOT NULL once
-                // that is working
                 addConjunction();
                 sql.append(colName);
-                sql.append(" = ");
-                sql.append(colName);
+                sql.append(" IS NOT NULL");
                 return;
             }
-            if (value.indexOf('%') == -1) {
-                // NOTE jvs 5-April-2004:  technically, '_' is a wildcard
-                // symbol also, but it can wait for LIKE support since
-                // its non-wildcard usage is so common
+            if (!repos.isFennelEnabled()) {
+                // Without Fennel, we don't yet support LIKE, so just
+                // try our best by ignoring the pattern and treating it
+                // as an exact match.
                 addExact(colName, value);
                 return;
             }
-            if (false) {
-                // TODO jvs 5-April-2004:  turn this on once LIKE is working
-                addConjunction();
-                sql.append(colName);
-                sql.append(" like ? escape '\\'");
-                values.add(value);
+            if ((value.indexOf('%') == -1) && (value.indexOf('_') == -1)) {
+                // They didn't supply a pattern anyway.
+                addExact(colName, value);
+                return;
             }
+            addConjunction();
+            sql.append(colName);
+            sql.append(" like ? escape '\\'");
+            values.add(value);
         }
 
         void addExact(

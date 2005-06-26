@@ -32,7 +32,10 @@ given.
 
 The next section on automated configuration assumes that you have
 the thirdparty directory available.  If not, use the subsequent
-section on manual configuration.
+section on manual configuration.  
+
+If you are building Fennel as part of Farrago, use Farrago's build
+instructions instead of any of the instructions below.
 
 ======================================================================
 AUTOMATED CONFIGURATION

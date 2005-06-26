@@ -10,7 +10,7 @@ if [ ! -e "$MAIN_DIR/bin/classpath.gen" ]; then
     exit -1
 fi
 
-JAVA_ARGS="-ea -esa -cp `cat $MAIN_DIR/bin/classpath.gen` \
+JAVA_ARGS="-cp `cat $MAIN_DIR/bin/classpath.gen` \
   -Dnet.sf.farrago.home=$MAIN_DIR \
   -Djava.util.logging.config.file=$MAIN_DIR/trace/Trace.properties"
 

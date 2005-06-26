@@ -247,10 +247,6 @@
   <!-- classpath for running from iSQL -->
   <path id="isql.classpath">
     <pathelement location="${isql.dir}/isql-core.jar"/>
-    <pathelement location="${isql.dir}/xerces.jar"/>
-    <pathelement location="${isql.dir}/base64codec.jar"/>
-    <pathelement location="${isql.dir}/bsf.jar"/>
-    <pathelement location="${isql.dir}/jpython1.1.jar"/>
   </path>
   <property name="isql.classpath" refid="isql.classpath"/>
 

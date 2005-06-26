@@ -23,23 +23,25 @@ set -e
 set -v
 
 usage() {
-    echo "Usage:  buildEigenbaseRelease.sh <label> <major> <minor>"
+    echo "Usage:  buildEigenbaseRelease.sh <label> <major> <minor> <point>"
 }
 
 # Get parameters
-if [ "$#" != 3 ]; then
+if [ "$#" != 4 ]; then
     usage
     exit -1
 fi
 LABEL="$1"
 MAJOR="$2"
 MINOR="$3"
+POINT="$4"
 
 # Construct release names
-BINARY_RELEASE="eigenbase-$MAJOR.$MINOR"
-SRC_RELEASE="eigenbase-src-$MAJOR.$MINOR"
-FENNEL_RELEASE="fennel-$MAJOR.$MINOR"
-FARRAGO_RELEASE="farrago-$MAJOR.$MINOR"
+RELEASE_NUMBER="$MAJOR.$MINOR.$POINT"
+BINARY_RELEASE="eigenbase-$RELEASE_NUMBER"
+SRC_RELEASE="eigenbase-src-$RELEASE_NUMBER"
+FENNEL_RELEASE="fennel-$RELEASE_NUMBER"
+FARRAGO_RELEASE="farrago-$RELEASE_NUMBER"
 
 DIST_DIR=$(cd `dirname $0`; pwd)
 OPEN_DIR=$DIST_DIR/../..
@@ -121,6 +123,7 @@ package.name=eigenbase
 product.name=Eigenbase Data Management System
 product.version.major=$MAJOR
 product.version.minor=$MINOR
+product.version.point=$POINT
 jdbc.driver.name=FarragoJdbcDriver
 jdbc.driver.version.major=$MAJOR
 jdbc.driver.version.minor=$MINOR

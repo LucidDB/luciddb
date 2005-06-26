@@ -52,6 +52,15 @@
 | LOCALDB    | SALES        | TEMPSVIEW   | VIEW        |          |           |             |            |                            |                 |
 +------------+--------------+-------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test getTables with pattern
+0: jdbc:farrago:> !metadata getTables LOCALDB SALES %EMPS null
++------------+--------------+-------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | TABLE_TYPE  | REMARKS  | TYPE_CAT  | TYPE_SCHEM  | TYPE_NAME  | SELF_REFERENCING_COL_NAME  | REF_GENERATION  |
++------------+--------------+-------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
+| LOCALDB    | SALES        | EMPS        | TABLE       |          |           |             |            |                            |                 |
+| LOCALDB    | SALES        | TEMPS       | TABLE       |          |           |             |            |                            |                 |
++------------+--------------+-------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test getTables (system catalog)
 0: jdbc:farrago:> set catalog 'sys_boot';
 0: jdbc:farrago:> !tables
@@ -250,7 +259,7 @@ doesMaxRowSizeIncludeBlobs                        false
 getCatalogSeparator                               .
 getCatalogTerm                                    catalog
 getDatabaseProductName                            Farrago
-getDatabaseProductVersion                         0.1
+getDatabaseProductVersion                         0.1.0
 getDefaultTransactionIsolation                    1
 getDriverMajorVersion                             0
 getDriverMinorVersion                             1
@@ -287,7 +296,7 @@ getStringFunctions                                CONCAT,INSERT,LCASE,LENGTH,LOC
 getSystemFunctions                                
 getTimeDateFunctions                              CURDATE,CURTIME,NOW
 getURL                                            jdbc:farrago:
-getUserName                                       jackalope
+getUserName                                       guest
 isCatalogAtStart                                  true
 isReadOnly                                        false
 nullPlusNonNullIsNull                             true

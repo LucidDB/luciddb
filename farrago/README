@@ -1,4 +1,4 @@
-Farrago Release 0.5
+Farrago Source Release 0.5.0
 
 ----------------------------------------------------------------------
 HOME PAGE
@@ -9,6 +9,22 @@ http://farrago.sourceforge.net
 BUILD
 
 See doc/developerJumpStart.html
+
+If instead of building you would like to obtain pre-packaged binaries,
+download the full Eigenbase binary release for your platform.
+
+------------------------------------------------------------
+RELEASE NOTES
+
+This initial source release is intended for use by developers who want
+to explore the Farrago codebase.  Farrago relies on a large number of
+third-party dependencies, so developers who want to build it should
+download a full Eigenbase source release.
+
+Developers should be aware that all internal interfaces (API's,
+SPI's, and class libraries) are still in a fluid state and subject to
+frequent review and change.  As interfaces solidify, they will be
+officially frozen in future releases.
 
 ----------------------------------------------------------------------
 LICENSE

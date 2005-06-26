@@ -51,7 +51,7 @@ public class IteratorResultSet implements ResultSet
     private final ColumnGetter columnGetter;
     private final Iterator iterator;
     private Object current;
-    private int row; // 0-based
+    private int row; // 1-based (starts on 0 to represent before first row)
     private TimeoutQueueIterator timeoutIter;
     protected boolean wasNull;
     private long timeoutMillis;
@@ -111,19 +111,21 @@ public class IteratorResultSet implements ResultSet
     public boolean isAfterLast()
         throws SQLException
     {
+        // TODO jvs 25-June-2005:  make this return true after
+        // next() returns false
         return false;
     }
 
     public Array getArray(int i)
         throws SQLException
     {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     public Array getArray(String colName)
         throws SQLException
     {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     public InputStream getAsciiStream(int columnIndex)
@@ -141,7 +143,9 @@ public class IteratorResultSet implements ResultSet
     public boolean isBeforeFirst()
         throws SQLException
     {
-        return false;
+        // REVIEW jvs 25-June-2005:  make this return false if there are
+        // no rows?
+        return row == 0;
     }
 
     public BigDecimal getBigDecimal(
@@ -193,7 +197,7 @@ public class IteratorResultSet implements ResultSet
     public Blob getBlob(String colName)
         throws SQLException
     {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     public boolean getBoolean(int columnIndex)
@@ -247,19 +251,19 @@ public class IteratorResultSet implements ResultSet
     public Clob getClob(int i)
         throws SQLException
     {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     public Clob getClob(String colName)
         throws SQLException
     {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     public int getConcurrency()
         throws SQLException
     {
-        return 0;
+        return CONCUR_READ_ONLY;
     }
 
     public String getCursorName()
@@ -285,7 +289,7 @@ public class IteratorResultSet implements ResultSet
         Calendar cal)
         throws SQLException
     {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     public Date getDate(
@@ -293,7 +297,7 @@ public class IteratorResultSet implements ResultSet
         Calendar cal)
         throws SQLException
     {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     public double getDouble(int columnIndex)
@@ -311,12 +315,15 @@ public class IteratorResultSet implements ResultSet
     public void setFetchDirection(int direction)
         throws SQLException
     {
+        if (direction != FETCH_FORWARD) {
+            throw newDirectionError();
+        }
     }
 
     public int getFetchDirection()
         throws SQLException
     {
-        return 0;
+        return FETCH_FORWARD;
     }
 
     public void setFetchSize(int rows)
@@ -333,7 +340,7 @@ public class IteratorResultSet implements ResultSet
     public boolean isFirst()
         throws SQLException
     {
-        return false;
+        return row == 1;
     }
 
     public float getFloat(int columnIndex)
@@ -407,7 +414,7 @@ public class IteratorResultSet implements ResultSet
         Map map)
         throws SQLException
     {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     public Object getObject(
@@ -415,25 +422,25 @@ public class IteratorResultSet implements ResultSet
         Map map)
         throws SQLException
     {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     public Ref getRef(int i)
         throws SQLException
     {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     public Ref getRef(String colName)
         throws SQLException
     {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     public int getRow()
         throws SQLException
     {
-        return row + 1;
+        return row;
     }
 
     public short getShort(int columnIndex)
@@ -483,7 +490,7 @@ public class IteratorResultSet implements ResultSet
         Calendar cal)
         throws SQLException
     {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     public Time getTime(
@@ -491,7 +498,7 @@ public class IteratorResultSet implements ResultSet
         Calendar cal)
         throws SQLException
     {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     public Timestamp getTimestamp(int columnIndex)
@@ -511,7 +518,7 @@ public class IteratorResultSet implements ResultSet
         Calendar cal)
         throws SQLException
     {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     public Timestamp getTimestamp(
@@ -519,13 +526,13 @@ public class IteratorResultSet implements ResultSet
         Calendar cal)
         throws SQLException
     {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     public int getType()
         throws SQLException
     {
-        return 0;
+        return TYPE_FORWARD_ONLY;
     }
 
     public URL getURL(int columnIndex)
@@ -561,22 +568,29 @@ public class IteratorResultSet implements ResultSet
     public boolean absolute(int row)
         throws SQLException
     {
+        if ((row < 1) || (getType() == TYPE_FORWARD_ONLY)) {
+            throw newDirectionError();
+        }
+        
         return relative(row - getRow());
     }
 
     public void afterLast()
         throws SQLException
     {
+        throw newDirectionError();
     }
 
     public void beforeFirst()
         throws SQLException
     {
+        throw newDirectionError();
     }
 
     public void cancelRowUpdates()
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void clearWarnings()
@@ -597,6 +611,7 @@ public class IteratorResultSet implements ResultSet
     public void deleteRow()
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public int findColumn(String columnName)
@@ -615,28 +630,31 @@ public class IteratorResultSet implements ResultSet
     public boolean first()
         throws SQLException
     {
-        return false;
+        throw newDirectionError();
     }
 
     public void insertRow()
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public boolean last()
         throws SQLException
     {
-        return false;
+        throw newDirectionError();
     }
 
     public void moveToCurrentRow()
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void moveToInsertRow()
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     // ------------------------------------------------------------------------
@@ -684,18 +702,19 @@ public class IteratorResultSet implements ResultSet
     public boolean previous()
         throws SQLException
     {
-        return false;
+        throw newDirectionError();
     }
 
     public void refreshRow()
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public boolean relative(int rows)
         throws SQLException
     {
-        if (rows < 0) {
+        if ((rows < 0) || (getType() == TYPE_FORWARD_ONLY)) {
             throw newDirectionError();
         }
         while (rows-- > 0) {
@@ -729,6 +748,7 @@ public class IteratorResultSet implements ResultSet
         Array x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateArray(
@@ -736,6 +756,7 @@ public class IteratorResultSet implements ResultSet
         Array x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateAsciiStream(
@@ -744,6 +765,7 @@ public class IteratorResultSet implements ResultSet
         int length)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateAsciiStream(
@@ -752,6 +774,7 @@ public class IteratorResultSet implements ResultSet
         int length)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateBigDecimal(
@@ -759,6 +782,7 @@ public class IteratorResultSet implements ResultSet
         BigDecimal x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateBigDecimal(
@@ -766,6 +790,7 @@ public class IteratorResultSet implements ResultSet
         BigDecimal x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateBinaryStream(
@@ -774,6 +799,7 @@ public class IteratorResultSet implements ResultSet
         int length)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateBinaryStream(
@@ -782,6 +808,7 @@ public class IteratorResultSet implements ResultSet
         int length)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateBlob(
@@ -789,6 +816,7 @@ public class IteratorResultSet implements ResultSet
         Blob x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateBlob(
@@ -796,6 +824,7 @@ public class IteratorResultSet implements ResultSet
         Blob x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateBoolean(
@@ -803,6 +832,7 @@ public class IteratorResultSet implements ResultSet
         boolean x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateBoolean(
@@ -810,6 +840,7 @@ public class IteratorResultSet implements ResultSet
         boolean x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateByte(
@@ -817,6 +848,7 @@ public class IteratorResultSet implements ResultSet
         byte x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateByte(
@@ -824,6 +856,7 @@ public class IteratorResultSet implements ResultSet
         byte x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateBytes(
@@ -831,6 +864,7 @@ public class IteratorResultSet implements ResultSet
         byte [] x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateBytes(
@@ -838,6 +872,7 @@ public class IteratorResultSet implements ResultSet
         byte [] x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateCharacterStream(
@@ -846,6 +881,7 @@ public class IteratorResultSet implements ResultSet
         int length)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateCharacterStream(
@@ -854,6 +890,7 @@ public class IteratorResultSet implements ResultSet
         int length)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateClob(
@@ -861,6 +898,7 @@ public class IteratorResultSet implements ResultSet
         Clob x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateClob(
@@ -868,6 +906,7 @@ public class IteratorResultSet implements ResultSet
         Clob x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateDate(
@@ -875,6 +914,7 @@ public class IteratorResultSet implements ResultSet
         Date x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateDate(
@@ -882,6 +922,7 @@ public class IteratorResultSet implements ResultSet
         Date x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateDouble(
@@ -889,6 +930,7 @@ public class IteratorResultSet implements ResultSet
         double x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateDouble(
@@ -896,6 +938,7 @@ public class IteratorResultSet implements ResultSet
         double x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateFloat(
@@ -903,6 +946,7 @@ public class IteratorResultSet implements ResultSet
         float x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateFloat(
@@ -910,6 +954,7 @@ public class IteratorResultSet implements ResultSet
         float x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateInt(
@@ -917,6 +962,7 @@ public class IteratorResultSet implements ResultSet
         int x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateInt(
@@ -924,6 +970,7 @@ public class IteratorResultSet implements ResultSet
         int x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateLong(
@@ -931,6 +978,7 @@ public class IteratorResultSet implements ResultSet
         long x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateLong(
@@ -938,16 +986,19 @@ public class IteratorResultSet implements ResultSet
         long x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateNull(int columnIndex)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateNull(String columnName)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateObject(
@@ -956,6 +1007,7 @@ public class IteratorResultSet implements ResultSet
         int scale)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateObject(
@@ -963,6 +1015,7 @@ public class IteratorResultSet implements ResultSet
         Object x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateObject(
@@ -971,6 +1024,7 @@ public class IteratorResultSet implements ResultSet
         int scale)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateObject(
@@ -978,6 +1032,7 @@ public class IteratorResultSet implements ResultSet
         Object x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateRef(
@@ -985,6 +1040,7 @@ public class IteratorResultSet implements ResultSet
         Ref x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateRef(
@@ -992,11 +1048,13 @@ public class IteratorResultSet implements ResultSet
         Ref x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateRow()
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateShort(
@@ -1004,6 +1062,7 @@ public class IteratorResultSet implements ResultSet
         short x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateShort(
@@ -1011,6 +1070,7 @@ public class IteratorResultSet implements ResultSet
         short x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateString(
@@ -1018,6 +1078,7 @@ public class IteratorResultSet implements ResultSet
         String x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateString(
@@ -1025,6 +1086,7 @@ public class IteratorResultSet implements ResultSet
         String x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateTime(
@@ -1032,6 +1094,7 @@ public class IteratorResultSet implements ResultSet
         Time x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateTime(
@@ -1039,6 +1102,7 @@ public class IteratorResultSet implements ResultSet
         Time x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateTimestamp(
@@ -1046,6 +1110,7 @@ public class IteratorResultSet implements ResultSet
         Timestamp x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public void updateTimestamp(
@@ -1053,6 +1118,7 @@ public class IteratorResultSet implements ResultSet
         Timestamp x)
         throws SQLException
     {
+        throw newUpdatabilityError();
     }
 
     public boolean wasNull()
@@ -1085,7 +1151,12 @@ public class IteratorResultSet implements ResultSet
 
     private SQLException newDirectionError()
     {
-        return new SQLException("cannot go backwards");
+        return new SQLException("ResultSet is TYPE_FORWARD_ONLY");
+    }
+
+    private SQLException newUpdatabilityError()
+    {
+        return new SQLException("ResultSet is CONCUR_READ_ONLY");
     }
 
     private SQLException newFetchError(Throwable e)

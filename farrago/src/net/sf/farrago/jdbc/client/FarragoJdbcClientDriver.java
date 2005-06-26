@@ -28,6 +28,8 @@ import java.util.*;
 import net.sf.farrago.jdbc.*;
 import net.sf.farrago.util.*;
 
+import org.objectweb.rmijdbc.RJConnectionInterface;
+
 /**
  * FarragoJdbcClientDriver implements the Farrago client side of
  * the {@link java.sql.Driver} interface.
@@ -75,7 +77,7 @@ public class FarragoJdbcClientDriver extends FarragoAbstractJdbcDriver
 
         Driver rmiDriver;
         try {
-            rmiDriver = new FarragoDriver();
+            rmiDriver = new CustomRJDriver();
         } catch (Exception ex) {
             throw new SQLException(ex.getMessage());
         }
@@ -96,6 +98,21 @@ public class FarragoJdbcClientDriver extends FarragoAbstractJdbcDriver
         // would deadlock in the case where client and server are
         // running in the same VM
         return rmiDriver.connect(urlRmi, info);
+    }
+
+    private static class CustomRJDriver extends org.objectweb.rmijdbc.Driver 
+        implements java.sql.Driver, java.io.Serializable 
+    {
+        CustomRJDriver() throws Exception
+        {
+            super();
+        }
+
+        public java.sql.Connection buildConnection(RJConnectionInterface c)
+            throws SQLException
+        {
+            return new FarragoRJConnection(c);
+        }
     }
 }
 

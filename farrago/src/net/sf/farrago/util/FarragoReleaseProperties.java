@@ -119,6 +119,12 @@ public class FarragoReleaseProperties extends Properties
         new IntegerProperty(this, "product.version.minor", 1);
 
     /**
+     * Point-release version number for the product.
+     */
+    public final IntegerProperty productVersionPoint =
+        new IntegerProperty(this, "product.version.point", 0);
+
+    /**
      * Name of the JDBC driver as reported via java.sql.DatabaseMetaData.
      */
     public final StringProperty jdbcDriverName =
