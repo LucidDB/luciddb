@@ -38,7 +38,11 @@
 #include "fennel/common/StatsTarget.h"
 #include "fennel/common/FennelResource.h"
 
+#include <boost/filesystem/operations.hpp>
+
 FENNEL_BEGIN_CPPFILE("$Id$");
+
+using namespace boost::filesystem;
 
 ParamName Database::paramDatabaseDir = "databaseDir";
 ParamName Database::paramResourceDir = "resourceDir";
@@ -254,6 +258,26 @@ void Database::deleteLogs()
 {
     FileSystem::remove(shadowDeviceName.c_str());
     FileSystem::remove(txnLogDeviceName.c_str());
+
+    // TODO jvs 25-June-2005:  here and in LogicalRecoveryLog, we should
+    // be using ConfigMap to determine where to store txn logs
+    // instead of current_path()
+    directory_iterator end_itr;
+    for (directory_iterator itr(current_path()); itr != end_itr; ++itr) {
+        std::string filename = itr->leaf();
+        // TODO jvs 25-June-2005:  encapsulate filename parsing in
+        // LogicalRecoveryLog
+        if (filename.length() < 4) {
+            continue;
+        }
+        if (filename.substr(0, 3) != "txn") {
+            continue;
+        }
+        if (filename.substr(filename.length() - 4, 4) != ".dat") {
+            continue;
+        }
+        FileSystem::remove(filename.c_str());
+    }
 }
 
 SharedSegment Database::createTxnLogSegment(
