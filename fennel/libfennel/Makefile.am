@@ -81,6 +81,10 @@ libfennel_db_la_SOURCES=
 libfennel_db_la_LIBADD=\
 	$(top_builddir)/db/libdb.la $(DB_DEPS)
 
+# REVIEW jvs 26-June-2005:  This is a Windows hack; need to clean it up
+libfennel_db_la_LDFLAGS=-Wl,-L$(top_builddir)/libfennel \
+	-Wl,-l$(BOOST_FILESYSTEMLIB) -Wl,-lfennel_common
+
 libfennel_ftrs_la_SOURCES=
 libfennel_ftrs_la_LIBADD=\
 	$(top_builddir)/ftrs/libftrs.la $(FTRS_DEPS)
