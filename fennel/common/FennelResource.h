@@ -4,8 +4,8 @@
 /**
  * This class was generated
  * by class mondrian.resource.ResourceGen
- * from /home/jvs/open/fennel/common/FennelResource.xml
- * on Thu Nov 04 19:35:39 PST 2004.
+ * from /home/jvs/open/dev/fennel/common/FennelResource.xml
+ * on Sat Nov 27 23:31:08 PST 2004.
  * It contains a list of messages, and methods to
  * retrieve and format those messages.
  **/
@@ -20,8 +20,8 @@
 #include "ResourceDefinition.h"
 #include "ResourceBundle.h"
 
-// begin includes specified by /home/jvs/open/fennel/common/FennelResource.xml
-// end includes specified by /home/jvs/open/fennel/common/FennelResource.xml
+// begin includes specified by /home/jvs/open/dev/fennel/common/FennelResource.xml
+// end includes specified by /home/jvs/open/dev/fennel/common/FennelResource.xml
 
 namespace fennel {
 
