@@ -19,9 +19,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
 
-set -e
-set -v
-
+if test "`p4 opened`" != ""; then
+    echo "You have Perforce files open for edit in this client; aborting."
+    exit -1
+fi
+  
 usage() {
     echo "Usage:  buildEigenbaseRelease.sh <label> <major> <minor> <point>"
 }
@@ -31,6 +33,10 @@ if [ "$#" != 4 ]; then
     usage
     exit -1
 fi
+
+set -e
+set -v
+
 LABEL="$1"
 MAJOR="$2"
 MINOR="$3"
