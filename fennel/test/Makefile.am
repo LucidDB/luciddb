@@ -101,4 +101,5 @@ check-local:
 	if [ "!" -d .testlog ]; then \
 		mkdir .testlog; \
 	fi && \
+	touch dummy.log && \
 	cp *.log .testlog/
