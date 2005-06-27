@@ -163,7 +163,11 @@ cp dist/farrago.jar $LIB_DIR
 cp dist/plugin/*.jar $LIB_DIR/plugin
 
 # copy other farrago artifacts
-cp dist/install/* $INSTALL_DIR
+if [ $cygwin = "true" ]; then
+    cp dist/install/install.bat $INSTALL_DIR
+else
+    cp dist/install/install.sh $INSTALL_DIR
+fi
 cp catalog/FarragoCatalog.* $CATALOG_DIR
 cp catalog/ReposStorage.properties $CATALOG_DIR
 cp catalog/*.dat $CATALOG_DIR

@@ -137,7 +137,7 @@ jdbc.url.base=jdbc:farrago:
 jdbc.url.port.default=5433
 EOF
 cd $OPEN_DIR/farrago
-./initBuild.sh --with-fennel --with-optimization --with-tests
+./initBuild.sh --with-fennel --with-optimization
 ./distBuild.sh --skip-init-build
 mv dist/farrago.$ARCHIVE_SUFFIX $DIST_DIR/$BINARY_RELEASE.$ARCHIVE_SUFFIX
 
