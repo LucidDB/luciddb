@@ -187,4 +187,5 @@ else
     tar cv * | bzip2 -c >../farrago.tar.bz2
 fi
 
+cd $FARRAGO_DIR
 rm -rf $TMP_DIR
