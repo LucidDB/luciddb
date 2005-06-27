@@ -114,6 +114,8 @@ cp csvjdbc/license.txt $LIB_DIR/csvjdbc.license.txt
 cp sqlline.jar $LIB_DIR
 cp sqlline/LICENSE $LIB_DIR/sqlline.license
 cp jline.jar $LIB_DIR
+cp jgrapht/jgrapht-*.jar $LIB_DIR
+cp jgrapht/license-LGPL.txt $LIB_DIR/jgrapht.license.txt
 cp hsqldb/doc/hypersonic_lic.txt $LIB_DIR/hsqldb.license.txt
 cp hsqldb/lib/hsqldb.jar $LIB_DIR
 cp -d stlport/lib/$SO_3P_PATTERN $LIB_DIR/fennel
