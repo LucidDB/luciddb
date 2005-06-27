@@ -71,6 +71,10 @@
         <include name="COPYING"/>
       </fileset>
     </jar>
+  </target>
+
+  <!-- TODO jvs 26-June-2005:  this isn't used yet -->
+  <target name="createPlannervizRelease">
     <copy 
       file="${farrago.dir}/examples/plannerviz/plugin/FarragoPlannerviz.jar" 
       todir="${dist.plugin.dir}"/>
@@ -81,5 +85,4 @@
       </fileset>
     </jar>
   </target>
-
 </project>
