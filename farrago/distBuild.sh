@@ -171,7 +171,7 @@ if [ $cygwin = "true" ]; then
     cp dist/bin/*.bat $BIN_DIR
 else
     cp dist/bin/* $BIN_DIR
-    rm $BIN_DIR/*.bat
+    rm -f $BIN_DIR/*.bat
 fi
 cp isql/FarragoServer.service $ISQL_DIR
 
