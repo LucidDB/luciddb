@@ -7,5 +7,5 @@ BIN_DIR=$(cd `dirname $0`; pwd)
 source $BIN_DIR/defineFarragoRuntime.sh
 
 ${JAVA_EXEC} ${JAVA_ARGS} -Disql.home=$MAIN_DIR/isql \
-    -cp $MAIN_DIR/isql/isql-core.jar \
+    -cp `cat $MAIN_DIR/bin/classpath.gen`:$MAIN_DIR/isql/isql-core.jar \
     org.isqlviewer.core.Launcher $*
