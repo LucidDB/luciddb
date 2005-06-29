@@ -503,6 +503,11 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         }
     }
 
+    public SqlValidatorScope getOverScope(SqlNode node)
+    {
+        return (SqlValidatorScope) scopes.get(node);
+    }
+
     /**
      * Returns the appropriate scope for validating a particular clause of
      * a SELECT statement.
@@ -1451,12 +1456,22 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 throw node.getKind().unexpected();
             }
             SqlCall call = (SqlCall) node;
+            final OverScope overScope = new OverScope(usingScope,call);
+            scopes.put(call, overScope);
             final SqlNode operand = call.operands[0];
             final SqlNode newOperand =
-                registerFrom(parentScope, usingScope, operand, alias);
+                registerFrom(parentScope, overScope, operand, alias);
             if (newOperand != operand) {
                 call.setOperand(0, newOperand);
             }
+
+            ArrayList tableNames = overScope.childrenNames;
+            for (int i = 0; i < tableNames.size(); i++) {
+                String tableName = (String) tableNames.get(i);
+                final SqlValidatorNamespace childSpace = overScope.getChild(tableName);
+                registerNamespace(usingScope,tableName, childSpace);
+            }
+
             return call;
 
         default:
@@ -1498,8 +1513,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             registerNamespace(usingScope, alias, selectNs);
             SelectScope selectScope = new SelectScope(parentScope, select);
             scopes.put(select, selectScope);
-            // Register the subqueries in the FROM clause first.
-            final SqlNode from = select.getFrom();
+            // Start by registering the WHERE clause
             whereScopes.put(select, selectScope);
             registerSubqueries(
                 selectScope,
@@ -1507,6 +1521,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             // Register FROM with the inherited scope 'parentScope', not
             // 'selectScope', otherwise tables in the FROM clause would be
             // able to see each other.
+            final SqlNode from = select.getFrom();
             final SqlNode newFrom = registerFrom(
                 parentScope,
                 selectScope,
@@ -1763,11 +1778,11 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         SqlJoinOperator.JoinType joinType = join.getJoinType();
         SqlJoinOperator.ConditionType conditionType =
             join.getConditionType();
-        validateFrom(left, unknownType, scope);
-        validateFrom(right, unknownType, scope);
+        final SqlValidatorScope joinScope = (SqlValidatorScope) scopes.get(join);
+        validateFrom(left, unknownType, joinScope);
+        validateFrom(right, unknownType, joinScope);
 
         // Validate condition.
-        final SqlValidatorScope joinScope = (SqlValidatorScope) scopes.get(join);
         switch (conditionType.getOrdinal()) {
         case SqlJoinOperator.ConditionType.None_ORDINAL:
             Util.permAssert(condition == null, "condition == null");
@@ -1897,13 +1912,48 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         if (windowList == null) {
             return;
         }
-        // todo: validate window clause
+
+        final SelectScope windowScope = (SelectScope)getFromScope(select);
+        Util.permAssert(windowScope != null, "windowScope != null");
+        
         // 1. ensure window names are simple
         // 2. ensure they are unique within this scope
-        // 3. validate window specifications
-        //   3a. a window can refer to a window in an outer scope, or a
-        //       previous window in this scope
-        // validateExpression(windowList);
+        Iterator iter = windowList.getList().iterator();
+        while (iter.hasNext()) {
+            final SqlWindow child = (SqlWindow) iter.next();
+
+            SqlIdentifier declName = child.getDeclName();
+            if (!declName.isSimple()){
+                throw this.newValidationError(declName,
+                    EigenbaseResource.instance()
+                    .newWindowNameMustBeSimple());
+            }
+
+            if (windowScope.existingWindowName(declName.toString())) {
+                throw this.newValidationError(declName,
+                    EigenbaseResource.instance()
+                    .newDuplicateWindowName());
+            } else {
+                windowScope.addWindowName(declName.toString());
+            }
+        }
+        // 7.10 rule 2
+        if (2 <= windowList.size()) {
+            SqlNode[] winArr = windowList.toArray();
+
+            for (int i=0; i < windowList.size() - 1; i++) {
+                for (int j=i+1; j < windowList.size(); j++) {
+                    if (winArr[i].equalsDeep(winArr[j])) {
+                        throw this.newValidationError(winArr[j],
+                            EigenbaseResource.instance()
+                            .newDupWindowSpec());
+                    }
+                }
+            }
+        }
+
+        // Hande off to validate window spec components
+        windowList.validate(this,windowScope);
     }
 
     private void validateOrderList(SqlSelect select)
@@ -2422,17 +2472,29 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
      * either an {@link SqlIdentifier identifier} referencing a window, or
      * an {@link SqlWindow inline window specification}.
      */
-    public void validateWindow(SqlNode windowOrId, SqlValidatorScope scope) {
+    public void validateWindow(
+        SqlNode windowOrId, 
+        SqlValidatorScope scope,
+        SqlCall call)
+    {
+        final SqlWindow targetWindow; 
         switch (windowOrId.getKind().getOrdinal()) {
         case SqlKind.IdentifierORDINAL:
-            final SqlWindow window = getWindowByName((SqlIdentifier) windowOrId, scope);
+            // Just verify the window exists in this query.  It will validate
+            // when the definition is processed
+            targetWindow = getWindowByName((SqlIdentifier) windowOrId, scope);
             break;
         case SqlKind.WindowORDINAL:
-            windowOrId.validate(this, scope);
+            targetWindow = (SqlWindow)windowOrId;
             break;
         default:
             throw windowOrId.getKind().unexpected();
         }
+
+        Util.pre(null == targetWindow.getWindowFunction(),"(null == targetWindow.getWindowFunction()");
+        targetWindow.setWindowFunction(call);
+        targetWindow.validate(this,scope);
+        targetWindow.setWindowFunction(null);
     }
 
     /**
@@ -2449,6 +2511,8 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 // group by a', then we should validate our arguments in
                 // the non-aggregating scope, where 'b' and 'c' are valid
                 // column references.
+                operandScope = aggScope.getScopeAboveAggregation();
+            } else if (call instanceof SqlWindow){
                 operandScope = aggScope.getScopeAboveAggregation();
             } else {
                 // Check whether expression is constant within the group.

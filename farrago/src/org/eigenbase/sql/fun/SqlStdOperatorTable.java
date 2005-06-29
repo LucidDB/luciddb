@@ -601,9 +601,9 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         };
 
 
-    // ------------------------------------------------------------------------
+    //-------------------------------------------------------------
     // AGGREGATE OPERATORS
-    //
+    //-------------------------------------------------------------
     /**
      * <code>SUM</code> aggregate function.
      */
@@ -626,6 +626,69 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     public static final SqlAggFunction maxOperator =
         new SqlMinMaxAggFunction(new RelDataType[0], false,
             SqlMinMaxAggFunction.MINMAX_COMPARABLE);
+
+    //-------------------------------------------------------------
+    // WINDOW Rank Functions
+    //-------------------------------------------------------------
+    /**
+     * <code>CUME_DIST</code> Window function.
+     */
+    public static final SqlRankFunction cumeDistFunc =
+        new SqlRankFunction("CUME_DIST")
+        {
+            public void test(SqlTester tester)
+            {
+                SqlOperatorTests.testCumeDistFunc(tester);
+            }
+        };
+
+    /**
+     * <code>DENSE_RANK</code> Window function.
+     */
+    public static final SqlRankFunction denseRankFunc =
+        new SqlRankFunction("DENSE_RANK")
+        {
+            public void test(SqlTester tester)
+            {
+                SqlOperatorTests.testDenseRankFunc(tester);
+            }
+        };
+
+    /**
+     * <code>PERCENT_RANK</code> Window function.
+     */
+    public static final SqlRankFunction percentRankFunc =
+        new SqlRankFunction("PERCENT_RANK")
+        {
+            public void test(SqlTester tester)
+            {
+                SqlOperatorTests.testPercentRankFunc(tester);
+            }
+        };
+
+    /**
+     * <code>RANK</code> Window function.
+     */
+    public static final SqlRankFunction rankFunc =
+        new SqlRankFunction("RANK")
+        {
+            public void test(SqlTester tester)
+            {
+                SqlOperatorTests.testRankFunc(tester);
+            }
+        };
+
+    /**
+     * <code>ROW_NUMBER</code> Window function.
+     */
+    public static final SqlRankFunction rowNumberFunc =
+        new SqlRankFunction("ROW_NUMBER")
+        {
+            public void test(SqlTester tester)
+            {
+                SqlOperatorTests.testRowNumberFunc(tester);
+            }
+        };
 
     //-------------------------------------------------------------
     //                   SPECIAL OPERATORS

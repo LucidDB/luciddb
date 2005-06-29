@@ -741,12 +741,44 @@ public class SqlOperatorTests
 
     public static void testCeilFunc(SqlTester tester)
     {
-        //To change body of created methods use File | Settings | File Templates.
+        Util.discard(tester);
+        // TODO:
     }
     
     public static void testFloorFunc(SqlTester tester)
     {
-        // Add in calls wwhne function is implemented
+        Util.discard(tester);
+        // TODO:
+    }
+
+    public static void testDenseRankFunc(SqlTester tester)
+    {
+        Util.discard(tester);
+        // TODO:
+    }
+
+    public static void testPercentRankFunc(SqlTester tester)
+    {
+        Util.discard(tester);
+        // TODO:
+    }
+
+    public static void testRankFunc(SqlTester tester)
+    {
+        Util.discard(tester);
+        // TODO:
+    }
+
+    public static void testCumeDistFunc(SqlTester tester)
+    {
+        Util.discard(tester);
+        // TODO:
+    }
+
+    public static void testRowNumberFunc(SqlTester tester)
+    {
+        Util.discard(tester);
+        // TODO:
     }
 }
 

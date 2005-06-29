@@ -24,6 +24,8 @@ package org.eigenbase.sql;
 
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.validate.SelectScope;
 import org.eigenbase.util.Util;
 import org.eigenbase.resource.EigenbaseResource;
 
@@ -74,19 +76,7 @@ public class SqlWindow extends SqlCall
      */
     public static final int UpperBound_OPERAND = 6;
 
-    /**
-     * Creates a window.
-    public SqlWindow(
-        SqlWindowOperator operator,
-        SqlNode[] operands,
-        SqlParserPos pos)
-    {
-        super(operator,operands,pos);
-        final SqlIdentifier declId = (SqlIdentifier) operands[DeclName_OPERAND];
-        Util.pre(declId == null || declId.isSimple(), "declId.isSimple()");
-        Util.pre(getPartitionList() != null, "getPartitionList() != null");
-    }
-     */
+    private SqlCall WindowFunction = null;
 
     /**
      * Creates a window.
@@ -114,16 +104,19 @@ public class SqlWindow extends SqlCall
     }
 
 
-    public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
+    public void unparse(SqlWriter writer, int leftPrec, int rightPrec)
+    {
         // Override, so we don't print extra parentheses.
         getOperator().unparse(writer, operands, 0, 0);
     }
 
-    public SqlIdentifier getDeclName() {
+    public SqlIdentifier getDeclName()
+    {
         return (SqlIdentifier) operands[DeclName_OPERAND];
     }
 
-    public void setDeclName(SqlIdentifier name) {
+    public void setDeclName(SqlIdentifier name)
+    {
         Util.pre(name.isSimple(), "name.isSimple()");
         operands[DeclName_OPERAND] = name;
     }
@@ -132,24 +125,39 @@ public class SqlWindow extends SqlCall
         return operands[LowerBound_OPERAND];
     }
 
-    public SqlNode getUpperBound() {
+    public SqlNode getUpperBound()
+    {
         return operands[UpperBound_OPERAND];
     }
 
-    public boolean isRows() {
+    public boolean isRows()
+    {
         return SqlLiteral.booleanValue(operands[IsRows_OPERAND]);
     }
 
-    public SqlNodeList getOrderList() {
+    public SqlNodeList getOrderList()
+    {
         return (SqlNodeList) operands[OrderList_OPERAND];
     }
 
-    public SqlNodeList getPartitionList() {
+    public SqlNodeList getPartitionList()
+    {
         return (SqlNodeList) operands[PartitionList_OPERAND];
     }
 
-    public SqlIdentifier getRefName() {
+    public SqlIdentifier getRefName()
+    {
         return (SqlIdentifier) operands[RefName_OPERAND];
+    }
+
+    public void setWindowFunction(SqlCall func)
+    {
+        WindowFunction = func;
+    }
+
+    public SqlCall getWindowFunction()
+    {
+        return WindowFunction;
     }
 
 
@@ -170,7 +178,31 @@ public class SqlWindow extends SqlCall
      *
      * @return A new window
      */
-    public SqlWindow overlay(SqlWindow that, SqlValidator validator) {
+    public SqlWindow overlay(SqlWindow that, SqlValidator validator)
+    {
+        // check 7.11 rule 10c
+        final SqlNodeList partitions = getPartitionList();
+        if (0 != partitions.size()) {
+            throw validator.newValidationError(partitions.get(0),
+                EigenbaseResource.instance().newPartitionNotAllowed());
+        }
+
+        // 7.11 rule 10d
+        final SqlNodeList baseOrder = getOrderList();
+        final SqlNodeList refOrder = that.getOrderList();
+        if (0 != baseOrder.size() && 0 != refOrder.size()) {
+            throw validator.newValidationError(baseOrder.get(0),
+                EigenbaseResource.instance().newOrderByOverlap());
+        }
+
+        // 711 rule 10e
+        final SqlNode lowerBound = that.getLowerBound(),
+                      upperBound = that.getUpperBound();
+        if (null != lowerBound || null != upperBound) {
+            throw validator.newValidationError(that.operands[IsRows_OPERAND],
+                EigenbaseResource.instance().newRefWindowWithFrame());
+        }
+
         final SqlNode[] newOperands = (SqlNode[]) operands.clone();
         // Clear the reference window, because the reference is now resolved.
         // The overlaying window may have its own reference, of course.
@@ -202,6 +234,49 @@ public class SqlWindow extends SqlCall
             }
         }
     }
+
+    /**
+     * Overridden method to specfically check only the right
+     * subtree of a window definition
+     *
+     * @param node The SqlWindow to compare to "this" window
+     * @return boolean true if all nodes in the subtree are equal
+     */
+    public boolean equalsDeep(SqlNode node)
+    {
+        if (!(node instanceof SqlWindow)) {
+            return false;
+        }
+        SqlCall that = (SqlCall) node;
+        // Compare operators by name, not identity, because they may not
+        // have been resolved yet.
+        if (!this.getOperator().getName().equals(that.getOperator().getName())) {
+            return false;
+        }
+        if (this.operands.length != that.operands.length) {
+            return false;
+        }
+        // This is the difference over super.equalsDeep.  It skips
+        // operands[0] the declared name fo this window.  We only want
+        // to check the window components.
+        for (int i = 1; i < this.operands.length; i++) {
+            if (null == this.operands[i] && null == that.operands[i]) {
+                continue;
+            }
+            if (null == this.operands[i] || null == that.operands[i]) {
+                return false;
+            }
+            if (!this.operands[i].equalsDeep(that.operands[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean isWindowFunctionName(String name) {
+        return (null == WindowFunction) ?  false : WindowFunction.isName(name);
+    }
+
 }
 
 // End SqlWindow.java

@@ -1503,6 +1503,12 @@ public class SqlParserTest extends TestCase
         checkExp("{   FN\t\r\n apa()}", "{fn APA() }");
         checkExp("{fn insert()}", "{fn INSERT() }");
     }
+    public void testWindowReference()
+    {
+        checkExp("sum(sal) over (w)","(SUM(`SAL`) OVER (`W`))");
+        // Only 1 window reference allowed
+        checkExpFails("sum(sal) over (w w1 partition by deptno)","(?s).*");
+    }
 
     public void _testOver()
     {

@@ -161,7 +161,7 @@ public interface SqlValidator
 
     void validateDynamicParam(SqlDynamicParam dynamicParam);
 
-    void validateWindow(SqlNode windowOrId, SqlValidatorScope scope);
+    void validateWindow(SqlNode windowOrId, SqlValidatorScope scope, SqlCall call);
 
     void validateCall(SqlCall call, SqlValidatorScope scope);
 

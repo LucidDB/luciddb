@@ -26,6 +26,7 @@ import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 
 /**
  * An operator describing a window function specification.
@@ -65,8 +66,7 @@ public class SqlOverOperator extends SqlBinaryOperator
             throw validator.newValidationError(aggCall,
                 EigenbaseResource.instance().newOverNonAggregate());
         }
-        final SqlNode windowOrRef = operands[1];
-        validator.validateWindow(windowOrRef, scope);
+        validator.validateWindow(operands[1], scope, aggCall);
     }
 }
 

@@ -212,6 +212,10 @@ public class SqlCall extends SqlNode
         // Delegate to operator.
         return operator.isMonotonic(this, scope);
     }
+
+    public boolean isName(String name) {
+        return operator.isName(name);
+    }
 }
 
 
