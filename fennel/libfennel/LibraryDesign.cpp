@@ -37,7 +37,7 @@ The diagram below specifies the layering of Fennel components:
 
 In general, higher-level components depend on lower-level components,
 but not vice versa (e.g. everything depends on common, and btree and
-xo both depend on tuple).  No lateral dependencies are allowed
+exec both depend on tuple).  No lateral dependencies are allowed
 (e.g. segment does not depend on tuple).  In this context, dependency
 means early binding; that is, the higher-level component references
 the lower-level component in order to satisfy #includes and/or the linker
@@ -50,7 +50,7 @@ example, the segment layer mostly "hides" the cache and device
 layers, so that higher layers depend on segment to pass on requests to
 cache and device.  But in some cases, they may bypass segment and
 access a device directly.  (TODO:  make synch wider, add STLport
-and boost, remove stream).  
+and boost, remove stream, change xo to exec).
 
 <p>
 

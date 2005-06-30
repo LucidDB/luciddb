@@ -32,9 +32,10 @@
   <fail unless="package.name"/>
   <fail unless="product.version.major"/>
   <fail unless="product.version.minor"/>
+  <fail unless="product.version.point"/>
   <property 
     name="release.spec" 
-    value="${package.name}-${product.version.major}.${product.version.minor}"/>
+    value="${package.name}-${product.version.major}.${product.version.minor}.${product.version.point}"/>
 
   <!-- Directories and filenames for distribution jar file. -->
   <property name="dist.dir" location="${farrago.dir}/dist"/>
@@ -70,6 +71,10 @@
         <include name="COPYING"/>
       </fileset>
     </jar>
+  </target>
+
+  <!-- TODO jvs 26-June-2005:  this isn't used yet -->
+  <target name="createPlannervizRelease">
     <copy 
       file="${farrago.dir}/examples/plannerviz/plugin/FarragoPlannerviz.jar" 
       todir="${dist.plugin.dir}"/>
@@ -80,5 +85,4 @@
       </fileset>
     </jar>
   </target>
-
 </project>

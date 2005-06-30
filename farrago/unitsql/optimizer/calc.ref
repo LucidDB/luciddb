@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/optimizer/calc.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/optimizer/calc.sql#5 $
 0: jdbc:farrago:> -- Test queries which instantiate the calculator (filter and/or project)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';
@@ -13,7 +13,7 @@
 |                                                                     column0                                                                     |
 +-------------------------------------------------------------------------------------------------------------------------------------------------+
 | FennelToIteratorConverter                                                                                                                       |
-|   FennelPullCalcRel(NAME=[$1], condition=[=(LOWER($1), _ISO-8859-1'wilma')])                                                                    |
+|   FennelCalcRel(NAME=[$1], condition=[=(LOWER($1), _ISO-8859-1'wilma')])                                                                        |
 |     FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
 +-------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
@@ -24,20 +24,20 @@
 |                                                                     column0                                                                     |
 +-------------------------------------------------------------------------------------------------------------------------------------------------+
 | FennelToIteratorConverter                                                                                                                       |
-|   FennelPullCalcRel(EXPR$0=[LOWER($1)], EXPR$1=[+($5, 1)], EXPR$2=[/($5, 1)], EXPR$3=[-($5, 1)], EMPID=[$5])                                    |
+|   FennelCalcRel(EXPR$0=[LOWER($1)], EXPR$1=[+($5, 1)], EXPR$2=[/($5, 1)], EXPR$3=[-($5, 1)], EMPID=[$5])                                        |
 |     FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
 +-------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- dtbug#32
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select 1 + 2 from (values (3));
-+----------------------------------------+
-|                column0                 |
-+----------------------------------------+
-| FennelToIteratorConverter              |
-|   FennelPullCalcRel(EXPR$0=[+(1, 2)])  |
-|     FennelPullOneRowRel                |
-+----------------------------------------+
++------------------------------------+
+|              column0               |
++------------------------------------+
+| FennelToIteratorConverter          |
+|   FennelCalcRel(EXPR$0=[+(1, 2)])  |
+|     FennelOneRowRel                |
++------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select 1 + 2 from (values (3));
 +---------+

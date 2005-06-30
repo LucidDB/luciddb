@@ -197,7 +197,7 @@ class FtrsScanToSearchRule extends RelOptRule
 
         RelNode keyInput =
             mergeTraitsAndConvert(
-                call.rels[0].getTraits(), FennelPullRel.FENNEL_PULL_CONVENTION,
+                call.rels[0].getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
                 castRel);
         assert (keyInput != null);
 

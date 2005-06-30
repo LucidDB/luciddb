@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/optimizer/multiset.sql#7 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/optimizer/multiset.sql#3 $
 0: jdbc:farrago:> -- Test multiset related queries
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';
@@ -48,33 +48,33 @@
 |         FennelCartesianProductRel(leftouterjoin=[true])                                                                                                            |
 |           FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])               |
 |           FennelPullCollectRel                                                                                                                                     |
-|             FennelPullCalcRel(EXPR$0=[_ISO-8859-1'abc'])                                                                                                           |
-|               FennelPullOneRowRel                                                                                                                                  |
+|             FennelCalcRel(EXPR$0=[_ISO-8859-1'abc'])                                                                                                               |
+|               FennelOneRowRel                                                                                                                                      |
 |         FennelSortRel(key=[[0]], discardDuplicates=[true])                                                                                                         |
 |           FennelPullUncollectRel                                                                                                                                   |
-|             FennelPullCalcRel(output$cor0=[$cor0])                                                                                                                 |
-|               FennelPullOneRowRel                                                                                                                                  |
+|             FennelCalcRel(output$cor0=[$cor0])                                                                                                                     |
+|               FennelOneRowRel                                                                                                                                      |
 +--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for values element(multiset[5]);
-+------------------------------------------------------------------------------------------------+
-|                                            column0                                             |
-+------------------------------------------------------------------------------------------------+
-| IterCalcRel($f0=[$2.EXPR$0])                                                                   |
-|   FennelToIteratorConverter                                                                    |
-|     FennelPullCorrelatorRel                                                                    |
-|       FennelPullCollectRel                                                                     |
-|         FennelPullCalcRel(EXPR$0=[5])                                                          |
-|           FennelPullOneRowRel                                                                  |
-|       IteratorToFennelConverter                                                                |
-|         IterCalcRel(rangeref=[null])                                                           |
-|           FennelToIteratorConverter                                                            |
-|             FennelPullCalcRel(EXPR$0=[$0], condition=[CASE(=($0, 1), true, $throw('21000'))])  |
-|               FennelSortRel(key=[[0]], discardDuplicates=[true])                               |
-|                 FennelPullUncollectRel                                                         |
-|                   FennelPullCalcRel(output$cor0=[$cor0])                                       |
-|                     FennelPullOneRowRel                                                        |
-+------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------+
+|                                          column0                                           |
++--------------------------------------------------------------------------------------------+
+| IterCalcRel($f0=[$2.EXPR$0])                                                               |
+|   FennelToIteratorConverter                                                                |
+|     FennelPullCorrelatorRel                                                                |
+|       FennelPullCollectRel                                                                 |
+|         FennelCalcRel(EXPR$0=[5])                                                          |
+|           FennelOneRowRel                                                                  |
+|       IteratorToFennelConverter                                                            |
+|         IterCalcRel(rangeref=[null])                                                       |
+|           FennelToIteratorConverter                                                        |
+|             FennelCalcRel(EXPR$0=[$0], condition=[CASE(=($0, 1), true, $throw('21000'))])  |
+|               FennelSortRel(key=[[0]], discardDuplicates=[true])                           |
+|                 FennelPullUncollectRel                                                     |
+|                   FennelCalcRel(output$cor0=[$cor0])                                       |
+|                     FennelOneRowRel                                                        |
++--------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for values multiset[1] multiset union multiset[2];
 +-------------------------------------------------------------+
@@ -85,50 +85,50 @@
 |     FennelPullCorrelatorRel                                 |
 |       FennelCartesianProductRel(leftouterjoin=[true])       |
 |         FennelPullCollectRel                                |
-|           FennelPullCalcRel(EXPR$0=[1])                     |
-|             FennelPullOneRowRel                             |
+|           FennelCalcRel(EXPR$0=[1])                         |
+|             FennelOneRowRel                                 |
 |         FennelPullCollectRel                                |
-|           FennelPullCalcRel(EXPR$0=[2])                     |
-|             FennelPullOneRowRel                             |
+|           FennelCalcRel(EXPR$0=[2])                         |
+|             FennelOneRowRel                                 |
 |       FennelPullCollectRel                                  |
 |         FennelSortRel(key=[[0]], discardDuplicates=[true])  |
 |           IteratorToFennelConverter                         |
 |             IterConcatenateRel(all=[true])                  |
 |               FennelToIteratorConverter                     |
 |                 FennelPullUncollectRel                      |
-|                   FennelPullCalcRel(output$cor0=[$cor0])    |
-|                     FennelPullOneRowRel                     |
+|                   FennelCalcRel(output$cor0=[$cor0])        |
+|                     FennelOneRowRel                         |
 |               FennelToIteratorConverter                     |
 |                 FennelPullUncollectRel                      |
-|                   FennelPullCalcRel(output$cor1=[$cor1])    |
-|                     FennelPullOneRowRel                     |
+|                   FennelCalcRel(output$cor1=[$cor1])        |
+|                     FennelOneRowRel                         |
 +-------------------------------------------------------------+
 0: jdbc:farrago:> explain plan for values multiset[1] multiset union all multiset[2];
-+---------------------------------------------------------+
-|                         column0                         |
-+---------------------------------------------------------+
-| IterCalcRel(EXPR$0=[$3])                                |
-|   FennelToIteratorConverter                             |
-|     FennelPullCorrelatorRel                             |
-|       FennelCartesianProductRel(leftouterjoin=[true])   |
-|         FennelPullCollectRel                            |
-|           FennelPullCalcRel(EXPR$0=[1])                 |
-|             FennelPullOneRowRel                         |
-|         FennelPullCollectRel                            |
-|           FennelPullCalcRel(EXPR$0=[2])                 |
-|             FennelPullOneRowRel                         |
-|       FennelPullCollectRel                              |
-|         IteratorToFennelConverter                       |
-|           IterConcatenateRel(all=[true])                |
-|             FennelToIteratorConverter                   |
-|               FennelPullUncollectRel                    |
-|                 FennelPullCalcRel(output$cor0=[$cor0])  |
-|                   FennelPullOneRowRel                   |
-|             FennelToIteratorConverter                   |
-|               FennelPullUncollectRel                    |
-|                 FennelPullCalcRel(output$cor1=[$cor1])  |
-|                   FennelPullOneRowRel                   |
-+---------------------------------------------------------+
++--------------------------------------------------------+
+|                        column0                         |
++--------------------------------------------------------+
+| IterCalcRel(EXPR$0=[$3])                               |
+|   FennelToIteratorConverter                            |
+|     FennelPullCorrelatorRel                            |
+|       FennelCartesianProductRel(leftouterjoin=[true])  |
+|         FennelPullCollectRel                           |
+|           FennelCalcRel(EXPR$0=[1])                    |
+|             FennelOneRowRel                            |
+|         FennelPullCollectRel                           |
+|           FennelCalcRel(EXPR$0=[2])                    |
+|             FennelOneRowRel                            |
+|       FennelPullCollectRel                             |
+|         IteratorToFennelConverter                      |
+|           IterConcatenateRel(all=[true])               |
+|             FennelToIteratorConverter                  |
+|               FennelPullUncollectRel                   |
+|                 FennelCalcRel(output$cor0=[$cor0])     |
+|                   FennelOneRowRel                      |
+|             FennelToIteratorConverter                  |
+|               FennelPullUncollectRel                   |
+|                 FennelCalcRel(output$cor1=[$cor1])     |
+|                   FennelOneRowRel                      |
++--------------------------------------------------------+
 0: jdbc:farrago:> explain plan for values multiset[1] multiset union distinct multiset[2];
 +-------------------------------------------------------------+
 |                           column0                           |
@@ -138,23 +138,23 @@
 |     FennelPullCorrelatorRel                                 |
 |       FennelCartesianProductRel(leftouterjoin=[true])       |
 |         FennelPullCollectRel                                |
-|           FennelPullCalcRel(EXPR$0=[1])                     |
-|             FennelPullOneRowRel                             |
+|           FennelCalcRel(EXPR$0=[1])                         |
+|             FennelOneRowRel                                 |
 |         FennelPullCollectRel                                |
-|           FennelPullCalcRel(EXPR$0=[2])                     |
-|             FennelPullOneRowRel                             |
+|           FennelCalcRel(EXPR$0=[2])                         |
+|             FennelOneRowRel                                 |
 |       FennelPullCollectRel                                  |
 |         FennelSortRel(key=[[0]], discardDuplicates=[true])  |
 |           IteratorToFennelConverter                         |
 |             IterConcatenateRel(all=[true])                  |
 |               FennelToIteratorConverter                     |
 |                 FennelPullUncollectRel                      |
-|                   FennelPullCalcRel(output$cor0=[$cor0])    |
-|                     FennelPullOneRowRel                     |
+|                   FennelCalcRel(output$cor0=[$cor0])        |
+|                     FennelOneRowRel                         |
 |               FennelToIteratorConverter                     |
 |                 FennelPullUncollectRel                      |
-|                   FennelPullCalcRel(output$cor1=[$cor1])    |
-|                     FennelPullOneRowRel                     |
+|                   FennelCalcRel(output$cor1=[$cor1])        |
+|                     FennelOneRowRel                         |
 +-------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- shouldnt fail but does due to current non-intersect support
@@ -175,21 +175,21 @@ Error: java.lang.AssertionError: Internal error: node could not be implemented: 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test cast from multiset to multiset
 0: jdbc:farrago:> explain plan for select * from unnest(cast(multiset['1'] as double multiset));
-+---------------------------------------------------------------+
-|                            column0                            |
-+---------------------------------------------------------------+
-| FennelToIteratorConverter                                     |
-|   FennelPullUncollectRel                                      |
-|     FennelPullCalcRel(EXPR$0=[$2])                            |
-|       FennelPullCorrelatorRel                                 |
-|         FennelPullCollectRel                                  |
-|           FennelPullCalcRel(EXPR$0=[_ISO-8859-1'1'])          |
-|             FennelPullOneRowRel                               |
-|         FennelPullCalcRel(EXPR$0=[CAST($0):DOUBLE NOT NULL])  |
-|           FennelPullUncollectRel                              |
-|             FennelPullCalcRel(output$cor0=[$cor0])            |
-|               FennelPullOneRowRel                             |
-+---------------------------------------------------------------+
++-----------------------------------------------------------+
+|                          column0                          |
++-----------------------------------------------------------+
+| FennelToIteratorConverter                                 |
+|   FennelPullUncollectRel                                  |
+|     FennelCalcRel(EXPR$0=[$2])                            |
+|       FennelPullCorrelatorRel                             |
+|         FennelPullCollectRel                              |
+|           FennelCalcRel(EXPR$0=[_ISO-8859-1'1'])          |
+|             FennelOneRowRel                               |
+|         FennelCalcRel(EXPR$0=[CAST($0):DOUBLE NOT NULL])  |
+|           FennelPullUncollectRel                          |
+|             FennelCalcRel(output$cor0=[$cor0])            |
+|               FennelOneRowRel                             |
++-----------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test IS A SET
 0: jdbc:farrago:> explain plan for values multiset[1] is a set;
@@ -200,35 +200,35 @@ Error: java.lang.AssertionError: Internal error: node could not be implemented: 
 |   FennelToIteratorConverter                                     |
 |     FennelPullCorrelatorRel                                     |
 |       FennelPullCollectRel                                      |
-|         FennelPullCalcRel(EXPR$0=[1])                           |
-|           FennelPullOneRowRel                                   |
-|       FennelPullCalcRel(case=[CASE(=($0, 0), true, false)])     |
+|         FennelCalcRel(EXPR$0=[1])                               |
+|           FennelOneRowRel                                       |
+|       FennelCalcRel(case=[CASE(=($0, 0), true, false)])         |
 |         FennelSortRel(key=[[0]], discardDuplicates=[true])      |
-|           FennelPullCalcRel(EXPR$0=[$0], condition=[>($0, 1)])  |
+|           FennelCalcRel(EXPR$0=[$0], condition=[>($0, 1)])      |
 |             FennelSortRel(key=[[0]], discardDuplicates=[true])  |
 |               FennelPullUncollectRel                            |
-|                 FennelPullCalcRel(output$cor0=[$cor0])          |
-|                   FennelPullOneRowRel                           |
+|                 FennelCalcRel(output$cor0=[$cor0])              |
+|                   FennelOneRowRel                               |
 +-----------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test MEMBER OF
 0: jdbc:farrago:> explain plan for values 632 MEMBER OF multiset[2];
-+-------------------------------------------------------------------+
-|                              column0                              |
-+-------------------------------------------------------------------+
-| IterCalcRel(EXPR$0=[$2])                                          |
-|   FennelToIteratorConverter                                       |
-|     FennelPullCorrelatorRel                                       |
-|       FennelPullCollectRel                                        |
-|         FennelPullCalcRel(EXPR$0=[2])                             |
-|           FennelPullOneRowRel                                     |
-|       FennelPullCalcRel(case=[CASE(>($0, 0), true, false)])       |
-|         FennelSortRel(key=[[0]], discardDuplicates=[true])        |
-|           FennelPullCalcRel(EXPR$0=[$0], condition=[=(632, $0)])  |
-|             FennelPullUncollectRel                                |
-|               FennelPullCalcRel(output$cor0=[$cor0])              |
-|                 FennelPullOneRowRel                               |
-+-------------------------------------------------------------------+
++---------------------------------------------------------------+
+|                            column0                            |
++---------------------------------------------------------------+
+| IterCalcRel(EXPR$0=[$2])                                      |
+|   FennelToIteratorConverter                                   |
+|     FennelPullCorrelatorRel                                   |
+|       FennelPullCollectRel                                    |
+|         FennelCalcRel(EXPR$0=[2])                             |
+|           FennelOneRowRel                                     |
+|       FennelCalcRel(case=[CASE(>($0, 0), true, false)])       |
+|         FennelSortRel(key=[[0]], discardDuplicates=[true])    |
+|           FennelCalcRel(EXPR$0=[$0], condition=[=(632, $0)])  |
+|             FennelPullUncollectRel                            |
+|               FennelCalcRel(output$cor0=[$cor0])              |
+|                 FennelOneRowRel                               |
++---------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- explain plan for select fusion(multiset[3]) from emps;

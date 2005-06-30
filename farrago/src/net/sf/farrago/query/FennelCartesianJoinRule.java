@@ -58,7 +58,7 @@ public class FennelCartesianJoinRule extends RelOptRule
     // implement RelOptRule
     public CallingConvention getOutConvention()
     {
-        return FennelPullRel.FENNEL_PULL_CONVENTION;
+        return FennelRel.FENNEL_EXEC_CONVENTION;
     }
 
     // implement RelOptRule
@@ -87,7 +87,7 @@ public class FennelCartesianJoinRule extends RelOptRule
 
         RelNode fennelLeft =
             mergeTraitsAndConvert(
-                joinRel.getTraits(), FennelPullRel.FENNEL_PULL_CONVENTION,
+                joinRel.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
                 leftRel);
         if (fennelLeft == null) {
             return;
@@ -95,7 +95,7 @@ public class FennelCartesianJoinRule extends RelOptRule
 
         RelNode fennelRight =
             mergeTraitsAndConvert(
-                joinRel.getTraits(), FennelPullRel.FENNEL_PULL_CONVENTION,
+                joinRel.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
                 rightRel);
         if (fennelRight == null) {
             return;

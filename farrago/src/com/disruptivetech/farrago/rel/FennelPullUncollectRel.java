@@ -46,10 +46,9 @@ import org.eigenbase.sql.type.SqlTypeName;
  * @version $Id$
  */
 public class FennelPullUncollectRel extends FennelSingleRel
-                                  implements FennelPullRel {
-
+{
     public FennelPullUncollectRel(RelOptCluster cluster, RelNode child) {
-        super(cluster, new RelTraitSet(FENNEL_PULL_CONVENTION), child);
+        super(cluster, new RelTraitSet(FENNEL_EXEC_CONVENTION), child);
     }
 
     protected RelDataType deriveRowType()

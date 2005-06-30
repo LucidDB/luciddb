@@ -55,6 +55,7 @@ public class FennelRenameRel extends FennelSingleRel
      * @param cluster RelOptCluster for this rel
      * @param child input rel whose fields are to be renamed
      * @param fieldNames new field names
+     * @param traits traits for this rel
      */
     public FennelRenameRel(
         RelOptCluster cluster,

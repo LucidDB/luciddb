@@ -21,21 +21,20 @@
 
 package com.disruptivetech.farrago.rel;
 
+import com.disruptivetech.farrago.calc.*;
+    
 import java.util.ArrayList;
 import java.util.Arrays;
 
 import net.sf.farrago.query.*;
+import net.sf.farrago.fem.fennel.*;
 
 import org.eigenbase.rel.CalcRel;
 import org.eigenbase.rel.RelFieldCollation;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptPlanWriter;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.*;
 import org.eigenbase.util.Util;
 
 
@@ -52,7 +51,7 @@ import org.eigenbase.util.Util;
  * @since Apr 8, 2004
  * @version $Id$
  */
-public abstract class FennelCalcRel extends FennelSingleRel
+public class FennelCalcRel extends FennelSingleRel
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -65,21 +64,19 @@ public abstract class FennelCalcRel extends FennelSingleRel
      * Creates a new FennelCalcRel object.
      *
      * @param cluster RelOptCluster for this rel
-     * @param traits the RelTraitSet for this rel
      * @param child rel producing rows to be Calced
      * @param rowType Row type
      * @param projectExprs Expressions returned by the calculator
      * @param conditionExpr Filter condition, may be null
      */
-    protected FennelCalcRel(
+    public FennelCalcRel(
         RelOptCluster cluster,
-        RelTraitSet traits,
         RelNode child,
         RelDataType rowType,
         RexNode [] projectExprs,
         RexNode conditionExpr)
     {
-        super(cluster, traits, child);
+        super(cluster, new RelTraitSet(FENNEL_EXEC_CONVENTION), child);
         Util.pre(rowType != null, "rowType != null");
         Util.pre(projectExprs != null, "projectExprs != null");
         this.projectExprs = projectExprs;
@@ -88,6 +85,24 @@ public abstract class FennelCalcRel extends FennelSingleRel
     }
 
     //~ Methods ---------------------------------------------------------------
+
+    // implement RelNode
+    public Object clone()
+    {
+        RexNode clonedConditionExpr =
+            getConditionExpr() != null
+            ? RexUtil.clone(getConditionExpr())
+            : null;
+
+        FennelCalcRel clone = new FennelCalcRel(
+            getCluster(),
+            RelOptUtil.clone(getChild()),
+            rowType,
+            RexUtil.clone(getProjectExprs()),
+            clonedConditionExpr);
+        clone.inheritTraitsFrom(this);
+        return clone;
+    }
 
     /**
      * @return expressions computed by this calculator
@@ -155,6 +170,25 @@ public abstract class FennelCalcRel extends FennelSingleRel
         //   select y from (select x, y from t order by x, y)
         // is not ordered
         return super.getCollations();
+    }
+
+    // implement FennelRel
+    public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
+    {
+        FemCalcTupleStreamDef calcStream =
+            implementor.getMetadataFactory().newFemCalcTupleStreamDef();
+
+        calcStream.getInput().add(
+            implementor.visitFennelChild((FennelRel) getChild()));
+        calcStream.setFilter(getConditionExpr() != null);
+        final RexToCalcTranslator translator =
+            new RexToCalcTranslator(getCluster().getRexBuilder());
+        final String program = translator.getProgram(
+            getChild().getRowType(),
+            getProjectExprs(),
+            getConditionExpr());
+        calcStream.setProgram(program);
+        return calcStream;
     }
 }
 

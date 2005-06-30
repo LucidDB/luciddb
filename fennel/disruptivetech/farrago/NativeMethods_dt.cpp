@@ -27,11 +27,6 @@
 #include "fennel/disruptivetech/xo/CorrelationJoinExecStream.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
 
-// DEPRECATED
-#include "fennel/farrago/ExecutionStreamFactory.h"
-#include "fennel/disruptivetech/xo/CalcTupleStream.h"
-
-
 #ifdef __MINGW32__
 #include <windows.h>
 #endif
@@ -39,38 +34,23 @@
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 class ExecStreamSubFactory_dt
-    : public ExecutionStreamSubFactory, // DEPRECATED
-        public ExecStreamSubFactory,
+    : public ExecStreamSubFactory,
         public FemVisitor
 {
     ExecStreamFactory *pExecStreamFactory;
     ExecStreamEmbryo *pEmbryo;
     bool created;
 
-    // DEPRECATED
-    ExecutionStreamFactory *pStreamFactory;
-    ExecutionStreamParts *pParts;
-    
     // implement FemVisitor
     virtual void visit(ProxyCalcTupleStreamDef &streamDef)
     {
-        if (pStreamFactory) {
-            // DEPRECATED
-            CalcTupleStream *pStream = new CalcTupleStream();
-            CalcTupleStreamParams *pParams = new CalcTupleStreamParams();
-            pStreamFactory->readTupleStreamParams(*pParams,streamDef);
-            pParams->program = streamDef.getProgram();
-            pParams->isFilter = streamDef.isFilter();
-            pParts->setParts(pStream,pParams);
-        } else {
-            CalcExecStreamParams params;
-            pExecStreamFactory->readTupleStreamParams(params, streamDef);
-            params.program = streamDef.getProgram();
-            params.isFilter = streamDef.isFilter();
-            pEmbryo->init(
-                new CalcExecStream(),
-                params);
-        }
+        CalcExecStreamParams params;
+        pExecStreamFactory->readTupleStreamParams(params, streamDef);
+        params.program = streamDef.getProgram();
+        params.isFilter = streamDef.isFilter();
+        pEmbryo->init(
+            new CalcExecStream(),
+            params);
     }
 
     virtual void visit(ProxyCorrelationJoinStreamDef &streamDef) 
@@ -108,25 +88,6 @@ class ExecStreamSubFactory_dt
         created = false;
     }
 
-    // DEPRECATED
-    // implement ExecutionStreamSubFactory
-    virtual bool createStream(
-        ExecutionStreamFactory &factory,
-        ProxyExecutionStreamDef &streamDef,
-        ExecutionStreamParts &parts)
-    {
-        pStreamFactory = &factory;
-        pExecStreamFactory = NULL;
-        pParts = &parts;
-        pEmbryo = NULL;
-        created = true;
-        
-        // dispatch based on polymorphic stream type
-        FemVisitor::visitTbl.accept(*this,streamDef);
-        
-        return created;
-    }
-    
     // implement ExecStreamSubFactory
     virtual bool createStream(
         ExecStreamFactory &factory,
@@ -136,10 +97,6 @@ class ExecStreamSubFactory_dt
         pExecStreamFactory = &factory;
         pEmbryo = &embryo;
         created = true;
-        
-        // DEPRECATED
-        pStreamFactory = NULL;
-        pParts = NULL;
         
         // dispatch based on polymorphic stream type
         FemVisitor::visitTbl.accept(*this, streamDef);
@@ -174,12 +131,6 @@ Java_com_disruptivetech_farrago_fennel_DisruptiveTechJni_registerStreamFactory(
     try {
         CmdInterpreter::StreamGraphHandle &streamGraphHandle =
             CmdInterpreter::getStreamGraphHandleFromLong(hStreamGraph);
-        if (streamGraphHandle.pStreamFactory) {
-            // DEPRECATED
-            streamGraphHandle.pStreamFactory->addSubFactory(
-                SharedExecutionStreamSubFactory(
-                    new ExecStreamSubFactory_dt()));
-        }
         if (streamGraphHandle.pExecStreamFactory) {
             streamGraphHandle.pExecStreamFactory->addSubFactory(
                 SharedExecStreamSubFactory(

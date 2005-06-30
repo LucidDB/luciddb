@@ -202,16 +202,6 @@ public:
      */
     bool isStarted();
 
-    // TODO jvs 10-Nov-2004:  eliminate this overload
-    /**
-     * Loads one run.
-     *
-     * @param tupleStream tuple stream from which to read run
-     *
-     * @return result of load
-     */
-    ExternalSortRC loadRun(TupleStream &tupleStream);
-
     /**
      * Loads data from buffer into a run.
      *

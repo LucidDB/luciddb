@@ -32,15 +32,12 @@ ExternalSortExecStream *ExternalSortExecStream::newExternalSortExecStream()
     return new ExternalSortExecStreamImpl();
 }
 
-// FIXME
-#if 0
 ExternalSortInfo::ExternalSortInfo()
 {
     nSortMemPages = 0;
     nSortMemPagesPerRun = 0;
     cbPage = 0;
 }
-#endif
 
 void ExternalSortExecStreamImpl::prepare(
     ExternalSortExecStreamParams const &params)
@@ -365,15 +362,12 @@ void ExternalSortExecStreamImpl::computeFirstResultParallel()
     resultsReady = true;
 }
 
-// FIXME
-#if 0
 void ExternalSortTask::execute()
 {
     sortStream.sortRun(runLoader);
     sortStream.storeRun(runLoader);
     sortStream.unreserveRunLoader(runLoader);
 }
-#endif
 
 void ExternalSortExecStreamImpl::sortRun(ExternalSortRunLoader &runLoader)
 {
@@ -407,6 +401,6 @@ void ExternalSortExecStreamImpl::unreserveRunLoader(
     runLoaderAvailable.notify_all();
 }
 
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/lucidera/sorter/ExternalSortExecStreamImpl.cpp#3 $");
 
 // End ExternalSortExecStreamImpl.cpp

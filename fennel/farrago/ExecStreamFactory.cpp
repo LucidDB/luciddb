@@ -23,7 +23,6 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/farrago/ExecStreamFactory.h"
-#include "fennel/farrago/ExecutionStreamFactory.h"
 #include "fennel/farrago/JavaSourceExecStream.h"
 #include "fennel/farrago/JavaSinkExecStream.h"
 #include "fennel/farrago/CmdInterpreter.h"

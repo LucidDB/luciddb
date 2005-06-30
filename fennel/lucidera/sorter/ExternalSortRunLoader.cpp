@@ -23,8 +23,6 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/lucidera/sorter/ExternalSortRunLoader.h"
 #include "fennel/lucidera/sorter/ExternalSortInfo.h"
-#include "fennel/xo/TupleStream.h"
-#include "fennel/common/ByteInputStream.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
@@ -169,63 +167,6 @@ void ExternalSortRunLoader::releaseResources()
     
     sortInfo.memSegmentAccessor.pSegment->deallocatePageRange(
         NULL_PAGE_ID,NULL_PAGE_ID);
-}
-
-ExternalSortRC ExternalSortRunLoader::loadRun(TupleStream &tupleStream)
-{
-    ByteInputStream &inputStream = tupleStream.getProducerResultStream();
-    for (;;) {
-        uint cbAvailable;
-        PConstBuffer pSrc = inputStream.getReadPointer(1,&cbAvailable);
-        if (!pSrc) {
-            break;
-        }
-        bool overflow = false;
-        uint cbCopy = 0;
-        while (cbCopy < cbAvailable) {
-            PConstBuffer pSrcTuple = pSrc + cbCopy;
-            uint cbTuple = tupleAccessor.getBufferByteCount(pSrcTuple);
-
-            // first make sure we have room for the key pointer
-            if (pIndexBuffer >= pIndexBufferEnd) {
-                if (!allocateIndexBuffer()) {
-                    overflow = true;
-                    break;
-                }
-            }
-
-            // now make sure we have enough room for the data
-            if (pDataBuffer + cbCopy + cbTuple > pDataBufferEnd) {
-                if (!cbCopy) {
-                    // first tuple:  try to allocate a new buffer
-                    if (!allocateDataBuffer()) {
-                        // since cbCopy is zero, we can return right now
-                        return EXTSORT_OVERFLOW;
-                    }
-                }
-                // copy whatever we've calculated so far;
-                // next time through the for loop, we'll allocate a fresh buffer
-                break;
-            }
-
-            *((PBuffer *) pIndexBuffer) = pDataBuffer + cbCopy;
-            pIndexBuffer += sizeof(PBuffer);
-            nTuplesLoaded++;
-            cbCopy += cbTuple;
-        }
-        memcpy(pDataBuffer,pSrc,cbCopy);
-        pDataBuffer += cbCopy;
-        inputStream.consumeReadPointer(cbCopy);
-        if (overflow) {
-            return EXTSORT_OVERFLOW;
-        }
-    }
-
-    if (nTuplesLoaded) {
-        return EXTSORT_SUCCESS;
-    } else {
-        return EXTSORT_ENDOFDATA;
-    }
 }
 
 ExternalSortRC ExternalSortRunLoader::loadRun(

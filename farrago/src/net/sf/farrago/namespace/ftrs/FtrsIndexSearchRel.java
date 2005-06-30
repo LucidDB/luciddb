@@ -46,7 +46,7 @@ import org.eigenbase.rex.RexNode;
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsIndexSearchRel extends FennelPullSingleRel
+class FtrsIndexSearchRel extends FennelSingleRel
 {
     //~ Instance fields -------------------------------------------------------
 

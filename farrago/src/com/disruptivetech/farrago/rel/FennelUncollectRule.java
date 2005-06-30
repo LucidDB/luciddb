@@ -26,7 +26,7 @@ import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.UncollectRel;
-import net.sf.farrago.query.FennelPullRel;
+import net.sf.farrago.query.FennelRel;
 
 /**
  * FennelUncollectRule is a rule to implement a call with the
@@ -49,7 +49,7 @@ public class FennelUncollectRule extends RelOptRule
     // implement RelOptRule
     public CallingConvention getOutConvention()
     {
-        return FennelPullRel.FENNEL_PULL_CONVENTION;
+        return FennelRel.FENNEL_EXEC_CONVENTION;
     }
 
     public void onMatch(RelOptRuleCall call) {
@@ -58,7 +58,7 @@ public class FennelUncollectRule extends RelOptRule
         RelNode fennelInput =
             mergeTraitsAndConvert(
                 uncollectRel.getTraits(),
-                FennelPullRel.FENNEL_PULL_CONVENTION,
+                FennelRel.FENNEL_EXEC_CONVENTION,
                 relInput);
         if (fennelInput == null) {
             return;

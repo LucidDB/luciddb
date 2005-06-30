@@ -55,46 +55,6 @@ void ExternalSortOutput::setSubStream(ExternalSortSubStream &subStream)
     pFetchArray = &(subStream.bindFetchArray());
 }
 
-ExternalSortRC ExternalSortOutput::fetch(
-    ByteOutputStream &resultOutputStream)
-{
-    uint cbRemaining;
-    PBuffer pOutBuf = resultOutputStream.getWritePointer(1,&cbRemaining);
-    PBuffer pNextTuple = pOutBuf;
-
-    for (;;) {
-        if (iCurrentTuple >= pFetchArray->nTuples) {
-            ExternalSortRC rc = pSubStream->fetch(EXTSORT_FETCH_ARRAY_SIZE);
-            if (rc == EXTSORT_ENDOFDATA) {
-                goto done;
-            }
-            iCurrentTuple = 0;
-        }
-
-        while (iCurrentTuple < pFetchArray->nTuples) {
-            PConstBuffer pSrcTuple = 
-                pFetchArray->ppTupleBuffers[iCurrentTuple];
-            uint cbTuple = tupleAccessor.getBufferByteCount(pSrcTuple);
-            if (cbTuple > cbRemaining) {
-                assert(pNextTuple > pOutBuf);
-                goto done;
-            }
-            memcpy(pNextTuple,pSrcTuple,cbTuple);
-            cbRemaining -= cbTuple;
-            pNextTuple += cbTuple;
-            iCurrentTuple++;
-        }
-    }
-    
- done:
-    if (pNextTuple == pOutBuf) {
-        return EXTSORT_ENDOFDATA;
-    } else {
-        resultOutputStream.consumeWritePointer(pNextTuple - pOutBuf);
-        return EXTSORT_SUCCESS;
-    }
-}
-
 ExecStreamResult ExternalSortOutput::fetch(
     ExecStreamBufAccessor &bufAccessor)
 {

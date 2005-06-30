@@ -19,9 +19,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
 
-set -e
-set -v
-
+if test "`p4 opened`" != ""; then
+    echo "You have Perforce files open for edit in this client; aborting."
+    exit -1
+fi
+  
 usage() {
     echo "Usage:  buildEigenbaseRelease.sh <label> <major> <minor> <point>"
 }
@@ -31,6 +33,10 @@ if [ "$#" != 4 ]; then
     usage
     exit -1
 fi
+
+set -e
+set -v
+
 LABEL="$1"
 MAJOR="$2"
 MINOR="$3"
@@ -98,6 +104,7 @@ cp -R $OPEN_DIR/fennel $SRC_RELEASE
 cp -R $OPEN_DIR/farrago $SRC_RELEASE
 cp $DIST_DIR/VERSION $SRC_RELEASE
 cp $DIST_DIR/README.src $SRC_RELEASE/README
+cp $OPEN_DIR/farrago/COPYING $SRC_RELEASE
 tar cjvf $SRC_RELEASE.$ARCHIVE_SUFFIX $SRC_RELEASE
 rm -rf $SRC_RELEASE
 
@@ -131,7 +138,7 @@ jdbc.url.base=jdbc:farrago:
 jdbc.url.port.default=5433
 EOF
 cd $OPEN_DIR/farrago
-./initBuild.sh --with-fennel --with-optimization --with-tests
+./initBuild.sh --with-fennel --with-optimization
 ./distBuild.sh --skip-init-build
 mv dist/farrago.$ARCHIVE_SUFFIX $DIST_DIR/$BINARY_RELEASE.$ARCHIVE_SUFFIX
 

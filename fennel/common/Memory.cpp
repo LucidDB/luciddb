@@ -35,6 +35,25 @@
 # include <pthread.h>
 #endif
 
+// NOTE jvs 26-June-2005:  I added this to squelch link errors with
+// the Boost filesystem library.  Yet another case where I have no
+// idea what's really going on.
+#ifdef __MINGW32__
+void *operator new [](unsigned sz) throw (std::bad_alloc)
+{
+    void *p = malloc(sz ? sz : 1);
+    if (!p) {
+        throw std::bad_alloc();
+    }
+    return p;
+}
+
+void operator delete [](void *p) throw ()
+{
+    free(p);
+}
+#endif
+
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 std::logic_error constructAssertion(

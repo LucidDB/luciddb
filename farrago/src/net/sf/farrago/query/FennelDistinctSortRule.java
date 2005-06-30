@@ -62,7 +62,7 @@ public class FennelDistinctSortRule extends RelOptRule
     // implement RelOptRule
     public CallingConvention getOutConvention()
     {
-        return FennelPullRel.FENNEL_PULL_CONVENTION;
+        return FennelRel.FENNEL_EXEC_CONVENTION;
     }
 
     // implement RelOptRule
@@ -80,7 +80,7 @@ public class FennelDistinctSortRule extends RelOptRule
 
         RelNode fennelInput =
             mergeTraitsAndConvert(
-                agg.getTraits(), FennelPullRel.FENNEL_PULL_CONVENTION,
+                agg.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
                 relInput);
         if (fennelInput == null) {
             return;

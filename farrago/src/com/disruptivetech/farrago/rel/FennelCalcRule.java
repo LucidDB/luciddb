@@ -72,7 +72,7 @@ public class FennelCalcRule extends RelOptRule
     // implement RelOptRule
     public CallingConvention getOutConvention()
     {
-        return FennelPullRel.FENNEL_PULL_CONVENTION;
+        return FennelRel.FENNEL_EXEC_CONVENTION;
     }
 
     // implement RelOptRule
@@ -82,7 +82,7 @@ public class FennelCalcRule extends RelOptRule
         RelNode relInput = call.rels[1];
         RelNode fennelInput =
             mergeTraitsAndConvert(
-                calc.getTraits(), FennelPullRel.FENNEL_PULL_CONVENTION,
+                calc.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
                 relInput);
         if (fennelInput == null) {
             return;
@@ -99,8 +99,8 @@ public class FennelCalcRule extends RelOptRule
             return;
         }
 
-        FennelPullCalcRel fennelCalcRel =
-            new FennelPullCalcRel(
+        FennelCalcRel fennelCalcRel =
+            new FennelCalcRel(
                 calc.getCluster(),
                 fennelInput,
                 calc.getRowType(),

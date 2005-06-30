@@ -39,7 +39,8 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-abstract class FennelDoubleRel extends AbstractRelNode implements FennelRel
+public abstract class FennelDoubleRel
+    extends AbstractRelNode implements FennelRel
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -57,11 +58,10 @@ abstract class FennelDoubleRel extends AbstractRelNode implements FennelRel
      */
     protected FennelDoubleRel(
         RelOptCluster cluster,
-        RelTraitSet traits,
         RelNode left,
         RelNode right)
     {
-        super(cluster, traits);
+        super(cluster, new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION));
         this.left = left;
         this.right = right;
     }

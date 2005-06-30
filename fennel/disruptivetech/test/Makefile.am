@@ -74,7 +74,6 @@ LDADD = \
 	-l$(TEST_LIB) \
 	-lfennel_dt_calc \
 	-lfennel_dt_xo \
-	-lfennel_xo \
 	-lfennel_db \
 	-lfennel_btree \
 	-lfennel_exec \
@@ -92,6 +91,7 @@ check-local:
 	if [ "!" -d .testlog ]; then \
 		mkdir .testlog; \
 	fi && \
+	touch dummy.log && \
 	cp *.log .testlog/
 
 DISABLED_TESTS= \

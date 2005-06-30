@@ -15,7 +15,6 @@ libfennel_tuple.la \
 libfennel_exec.la \
 libfennel_btree.la \
 libfennel_db.la \
-libfennel_xo.la \
 libfennel_ftrs.la
 
 SYNCH_DEPS = libfennel_common.la
@@ -82,9 +81,11 @@ libfennel_db_la_SOURCES=
 libfennel_db_la_LIBADD=\
 	$(top_builddir)/db/libdb.la $(DB_DEPS)
 
-libfennel_xo_la_SOURCES=
-libfennel_xo_la_LIBADD=\
-	$(top_builddir)/xo/libxo.la $(XO_DEPS)
+# REVIEW jvs 26-June-2005:  This is a Windows hack; need to clean it up
+if STATIC_TEST_LIBRARY
+libfennel_db_la_LDFLAGS=-Wl,-L$(top_builddir)/libfennel \
+	-Wl,-l$(BOOST_FILESYSTEMLIB) -Wl,-lfennel_common
+endif
 
 libfennel_ftrs_la_SOURCES=
 libfennel_ftrs_la_LIBADD=\

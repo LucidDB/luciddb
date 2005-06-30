@@ -16,7 +16,6 @@ libfarrago_dt_la_LIBADD = \
 	-lfennel_dt_xo \
 	-lfennel_dt_calc \
 	-lfarrago \
-	-lfennel_xo \
 	-lfennel_db \
 	-lfennel_btree \
 	-lfennel_exec \

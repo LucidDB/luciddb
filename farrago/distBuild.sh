@@ -114,6 +114,8 @@ cp csvjdbc/license.txt $LIB_DIR/csvjdbc.license.txt
 cp sqlline.jar $LIB_DIR
 cp sqlline/LICENSE $LIB_DIR/sqlline.license
 cp jline.jar $LIB_DIR
+cp jgrapht/jgrapht-*.jar $LIB_DIR
+cp jgrapht/license-LGPL.txt $LIB_DIR/jgrapht.license.txt
 cp hsqldb/doc/hypersonic_lic.txt $LIB_DIR/hsqldb.license.txt
 cp hsqldb/lib/hsqldb.jar $LIB_DIR
 cp -d stlport/lib/$SO_3P_PATTERN $LIB_DIR/fennel
@@ -161,7 +163,11 @@ cp dist/farrago.jar $LIB_DIR
 cp dist/plugin/*.jar $LIB_DIR/plugin
 
 # copy other farrago artifacts
-cp dist/install/* $INSTALL_DIR
+if [ $cygwin = "true" ]; then
+    cp dist/install/install.bat $INSTALL_DIR
+else
+    cp dist/install/install.sh $INSTALL_DIR
+fi
 cp catalog/FarragoCatalog.* $CATALOG_DIR
 cp catalog/ReposStorage.properties $CATALOG_DIR
 cp catalog/*.dat $CATALOG_DIR
@@ -169,7 +175,7 @@ if [ $cygwin = "true" ]; then
     cp dist/bin/*.bat $BIN_DIR
 else
     cp dist/bin/* $BIN_DIR
-    rm $BIN_DIR/*.bat
+    rm -f $BIN_DIR/*.bat
 fi
 cp isql/FarragoServer.service $ISQL_DIR
 
@@ -181,4 +187,5 @@ else
     tar cv * | bzip2 -c >../farrago.tar.bz2
 fi
 
+cd $FARRAGO_DIR
 rm -rf $TMP_DIR

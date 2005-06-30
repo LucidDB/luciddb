@@ -84,7 +84,6 @@ endif
 LDADD = -L$(top_builddir)/test -l$(TEST_LIB) \
     -L$(top_builddir)/libfennel \
 	-lfennel_ftrs \
-	-lfennel_xo \
 	-lfennel_db \
 	-lfennel_btree \
 	-lfennel_exec \
@@ -102,4 +101,5 @@ check-local:
 	if [ "!" -d .testlog ]; then \
 		mkdir .testlog; \
 	fi && \
+	touch dummy.log && \
 	cp *.log .testlog/

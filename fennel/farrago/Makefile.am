@@ -8,8 +8,6 @@ lib_LTLIBRARIES=libfarrago.la
 
 libfarrago_la_SOURCES=\
 CmdInterpreter.cpp \
-ExecutionStreamBuilder.cpp \
-ExecutionStreamFactory.cpp \
 ExecStreamBuilder.cpp \
 ExecStreamFactory.cpp \
 Fem.cpp \
@@ -17,7 +15,6 @@ JavaExcn.cpp \
 JavaSinkExecStream.cpp \
 JavaSourceExecStream.cpp \
 JavaTraceTarget.cpp \
-JavaTupleStream.cpp \
 JniProxy.cpp \
 JniPseudoUuid.cpp \
 JniUtil.cpp \
@@ -26,7 +23,6 @@ NativeMethods.cpp
 libfarrago_la_LIBADD = \
 	-L$(top_builddir)/libfennel \
 	-lfennel_ftrs \
-	-lfennel_xo \
 	-lfennel_db \
 	-lfennel_btree \
 	-lfennel_exec \

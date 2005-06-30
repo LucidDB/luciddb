@@ -46,7 +46,7 @@ public class FennelOneRowRule extends RelOptRule {
     // implement RelOptRule
     public CallingConvention getOutConvention()
     {
-        return FennelPullRel.FENNEL_PULL_CONVENTION;
+        return FennelRel.FENNEL_EXEC_CONVENTION;
     }
 
     public void onMatch(RelOptRuleCall call) {
@@ -55,8 +55,8 @@ public class FennelOneRowRule extends RelOptRule {
             return;
         }
 
-        FennelPullOneRowRel fennelOneRowRel =
-            new FennelPullOneRowRel(oneRowRel.getCluster());
+        FennelOneRowRel fennelOneRowRel =
+            new FennelOneRowRel(oneRowRel.getCluster());
         call.transformTo(fennelOneRowRel);
     }
 }

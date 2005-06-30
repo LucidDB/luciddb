@@ -44,12 +44,12 @@ import org.eigenbase.util.*;
 
 /**
  * MedMockFennelRel provides a mock implementation for
- * {@link TableAccessRel} with {@link FennelPullRel#FENNEL_PULL_CONVENTION}.
+ * {@link TableAccessRel} with {@link FennelRel#FENNEL_EXEC_CONVENTION}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class MedMockFennelRel extends TableAccessRelBase implements FennelPullRel
+class MedMockFennelRel extends TableAccessRelBase implements FennelRel
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -63,7 +63,7 @@ class MedMockFennelRel extends TableAccessRelBase implements FennelPullRel
         RelOptConnection connection)
     {
         super(
-            cluster, new RelTraitSet(FENNEL_PULL_CONVENTION), columnSet,
+            cluster, new RelTraitSet(FENNEL_EXEC_CONVENTION), columnSet,
             connection);
         this.columnSet = columnSet;
     }

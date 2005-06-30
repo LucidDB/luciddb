@@ -27,7 +27,7 @@ import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.rel.CollectRel;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.CorrelatorRel;
-import net.sf.farrago.query.FennelPullRel;
+import net.sf.farrago.query.FennelRel;
 
 import java.util.*;
 
@@ -53,7 +53,7 @@ public class FennelCorrelatorRule extends RelOptRule {
     // implement RelOptRule
     public CallingConvention getOutConvention()
     {
-        return FennelPullRel.FENNEL_PULL_CONVENTION;
+        return FennelRel.FENNEL_EXEC_CONVENTION;
     }
 
     public void onMatch(RelOptRuleCall call) {
@@ -62,7 +62,7 @@ public class FennelCorrelatorRule extends RelOptRule {
         RelNode fennelLeftInput =
             mergeTraitsAndConvert(
                 correlatorRel.getTraits(),
-                FennelPullRel.FENNEL_PULL_CONVENTION,
+                FennelRel.FENNEL_EXEC_CONVENTION,
                 relLeftInput);
         if (fennelLeftInput == null) {
             return;
@@ -72,7 +72,7 @@ public class FennelCorrelatorRule extends RelOptRule {
         RelNode fennelRightInput =
             mergeTraitsAndConvert(
                 correlatorRel.getTraits(),
-                FennelPullRel.FENNEL_PULL_CONVENTION,
+                FennelRel.FENNEL_EXEC_CONVENTION,
                 relRightInput);
         if (fennelRightInput == null) {
             return;

@@ -50,7 +50,7 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsIndexScanRel extends TableAccessRelBase implements FennelPullRel
+class FtrsIndexScanRel extends TableAccessRelBase implements FennelRel
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -91,7 +91,7 @@ class FtrsIndexScanRel extends TableAccessRelBase implements FennelPullRel
         boolean isOrderPreserving)
     {
         super(
-            cluster, new RelTraitSet(FENNEL_PULL_CONVENTION), ftrsTable,
+            cluster, new RelTraitSet(FENNEL_EXEC_CONVENTION), ftrsTable,
             connection);
         this.ftrsTable = ftrsTable;
         this.index = index;

@@ -41,7 +41,7 @@ import java.util.*;
  * @since Feb 1, 2005
  * @version $Id$
  */
-public class FennelPullCorrelatorRel extends FennelPullDoubleRel
+public class FennelPullCorrelatorRel extends FennelDoubleRel
 {
     //~ Instance fields -------------------------------------------------------
 

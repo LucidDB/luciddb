@@ -22,7 +22,6 @@ LDADD = \
 	-L$(top_builddir)/lucidera/libfennel_lu \
 	-l$(TEST_LIB) \
 	-lfennel_lu_sorter \
-	-lfennel_xo \
 	-lfennel_db \
 	-lfennel_btree \
 	-lfennel_exec \
@@ -40,5 +39,6 @@ check-local:
 	if [ "!" -d .testlog ]; then \
 		mkdir .testlog; \
 	fi && \
+	touch dummy.log && \
 	cp *.log .testlog/
 

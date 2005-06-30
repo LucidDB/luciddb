@@ -92,7 +92,7 @@ public class FennelWindowRel extends FennelSingleRel
         RexNode conditionExpr)
     {
         super(
-            cluster, new RelTraitSet(FennelPullRel.FENNEL_PULL_CONVENTION),
+            cluster, new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION),
             child);
         assert rowType != null : "precondition: rowType != null";
         assert outputExprs != null : "precondition: outputExprs != null";
@@ -105,7 +105,7 @@ public class FennelWindowRel extends FennelSingleRel
         }
         assert windows != null : "precondition: windows != null";
         assert windows.length > 0 : "precondition : windows.length > 0";
-        assert child.getConvention() == FennelPullRel.FENNEL_PULL_CONVENTION;
+        assert child.getConvention() == FennelRel.FENNEL_EXEC_CONVENTION;
         assert !RexOver.containsOver(inputExprs, null);
         assert !RexOver.containsOver(outputExprs, conditionExpr);
         this.rowType = rowType;
