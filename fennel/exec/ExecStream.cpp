@@ -23,6 +23,7 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/exec/ExecStream.h"
+#include "fennel/exec/ExecStreamGraph.h"
 #include "fennel/cache/CacheAccessor.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
@@ -64,6 +65,9 @@ void ExecStream::closeImpl()
 
 void ExecStream::prepare(ExecStreamParams const &params)
 {
+    if (pGraph) {
+        pDynamicParamManager = pGraph->getDynamicParamManager();
+    }
     if (params.enforceQuotas) {
         pQuotaAccessor = params.pCacheAccessor;
         pScratchQuotaAccessor = params.scratchAccessor.pCacheAccessor;
@@ -105,6 +109,9 @@ void ExecStream::open(bool restart)
 #endif
         isOpen = true;
         needsClose = true;
+    }
+    if (pGraph) {
+        pTxn = pGraph->getTxn();
     }
 }
 

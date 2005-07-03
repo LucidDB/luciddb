@@ -71,9 +71,9 @@ void FtrsTableWriterExecStream::getResourceRequirements(
 void FtrsTableWriterExecStream::open(bool restart)
 {
     ConduitExecStream::open(restart);
-    assert(pGraph->getTxn());
+    assert(pTxn);
     // REVIEW:  close/restart?
-    pGraph->getTxn()->addParticipant(pTableWriter);
+    pTxn->addParticipant(pTableWriter);
     nTuples = 0;
     pTableWriter->openIndexWriters();
     isDone = false;
@@ -152,7 +152,7 @@ void FtrsTableWriterExecStream::createSavepoint()
 {
     // block checkpoints while creating savepoint
     SXMutexSharedGuard actionMutexGuard(*pActionMutex);
-    svptId = pGraph->getTxn()->createSavepoint();
+    svptId = pTxn->createSavepoint();
 }
 
 void FtrsTableWriterExecStream::commitSavepoint()
@@ -166,7 +166,7 @@ void FtrsTableWriterExecStream::commitSavepoint()
     
     // block checkpoints while committing savepoint
     SXMutexSharedGuard actionMutexGuard(*pActionMutex);
-    pGraph->getTxn()->commitSavepoint(svptIdCopy);
+    pTxn->commitSavepoint(svptIdCopy);
 }
 
 void FtrsTableWriterExecStream::rollbackSavepoint()
@@ -180,8 +180,8 @@ void FtrsTableWriterExecStream::rollbackSavepoint()
     
     // block checkpoints while rolling back savepoint
     SXMutexSharedGuard actionMutexGuard(*pActionMutex);
-    pGraph->getTxn()->rollback(&svptIdCopy);
-    pGraph->getTxn()->commitSavepoint(svptIdCopy);
+    pTxn->rollback(&svptIdCopy);
+    pTxn->commitSavepoint(svptIdCopy);
 }
 
 FENNEL_END_CPPFILE("$Id$");

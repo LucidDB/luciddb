@@ -27,6 +27,8 @@
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/ExecStreamScheduler.h"
 #include "fennel/segment/Segment.h"
+#include "fennel/disruptivetech/calc/DynamicParam.h"
+
 
 #include <boost/bind.hpp>
 #include <boost/graph/topological_sort.hpp>
@@ -41,8 +43,9 @@ SharedExecStreamGraph ExecStreamGraph::newExecStreamGraph()
 }
 
 ExecStreamGraph::ExecStreamGraph()
+    :pScheduler(NULL),
+     pDynamicParamManager(new DynamicParamManager())
 {
-    pScheduler = NULL;
 }
 
 ExecStreamGraph::~ExecStreamGraph()

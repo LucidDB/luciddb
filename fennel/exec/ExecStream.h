@@ -76,6 +76,23 @@ protected:
     std::string name;
 
     /**
+     * The dynamic parameter manager available to this stream. (Obtained at
+     * prepare() time. Keep a shared pointer in case the stream is reassigned to
+     * another graph for execution; cf ExecStreamGraph::mergeFrom())
+     */
+    SharedDynamicParamManager pDynamicParamManager;
+
+
+    /**
+     * The transaction embracing the stream. Obtained at open() time; but not
+     * released at close() time, to allow TableWriters to replay a txn. Keep a
+     * shared pointer in case the stream is reassigned to another graph for
+     * execution; cf ExecStreamGraph::mergeFrom())
+     */
+    SharedLogicalTxn pTxn;
+
+
+    /**
      * Resource quantities currently allocated to this stream.
      */
     ExecStreamResourceQuantity resourceAllocation;

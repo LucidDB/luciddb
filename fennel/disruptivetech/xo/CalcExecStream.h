@@ -72,6 +72,7 @@ class CalcExecStream : public ConduitExecStream
      */
     SharedCalculator pCalc;
 
+
     /**
      * If this stream filters tuples, pFilterDatum refers to the boolean
      * TupleDatum containing the filter status; otherwise, pFilterDatum is

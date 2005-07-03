@@ -113,11 +113,11 @@ public:
 class DynamicParamExecStreamGenerator :  public MockProducerExecStreamGenerator
 {
     uint dynamicParamId;
-    DynamicParamManager &paramManager;
+    SharedDynamicParamManager paramManager;
 
 public:
     DynamicParamExecStreamGenerator(uint dynamicParamId_, 
-                                    DynamicParamManager &paramManager_) :
+                                    SharedDynamicParamManager paramManager_) :
         dynamicParamId(dynamicParamId_),
         paramManager(paramManager_)
     {
@@ -127,7 +127,7 @@ public:
     virtual int64_t generateValue(uint iRow, uint iCol)
     {
         int64_t value = *reinterpret_cast<int64_t const *>(
-            paramManager.getParam(dynamicParamId).getDatum().pData);
+            paramManager->getParam(dynamicParamId).getDatum().pData);
         return value;
     }
 };
