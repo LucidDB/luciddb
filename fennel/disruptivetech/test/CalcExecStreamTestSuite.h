@@ -23,7 +23,7 @@
 #ifndef Fennel_DT_Test_CalcExecStreamTestSuite_Included
 #define Fennel_DT_Test_CalcExecStreamTestSuite_Included
 
-#include "fennel/test/ExecStreamTestBase.h"
+#include "fennel/test/ExecStreamUnitTestBase.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
 #include <boost/test/test_tools.hpp>
 
@@ -34,7 +34,7 @@ using namespace fennel;
  * Derived classes can add tests and/or use a different scheduler
  * implementation.
  */
-class CalcExecStreamTestSuite : public ExecStreamTestBase
+class CalcExecStreamTestSuite : public ExecStreamUnitTestBase
 {
     TupleAttributeDescriptor uint64Desc;
 

@@ -21,7 +21,7 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/test/ExecStreamTestBase.h"
+#include "fennel/test/ExecStreamUnitTestBase.h"
 #include "fennel/lucidera/sorter/ExternalSortExecStream.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
 #include "fennel/exec/MockProducerExecStream.h"
@@ -32,7 +32,7 @@
 
 using namespace fennel;
 
-class ExternalSortExecStreamTest : public ExecStreamTestBase
+class ExternalSortExecStreamTest : public ExecStreamUnitTestBase
 {
     void testImpl(
         uint nRows,
