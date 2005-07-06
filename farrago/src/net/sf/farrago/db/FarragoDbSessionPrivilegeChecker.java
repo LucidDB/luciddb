@@ -59,12 +59,12 @@ import net.sf.farrago.resource.*;
  * @author Tai Tran
  * @version $Id$
  */
-class FarragoDbSessionPrivilegeCheker implements FarragoSessionPrivilegeChecker
+class FarragoDbSessionPrivilegeChecker implements FarragoSessionPrivilegeChecker
 {
     private DoubleKeyMap requestsMap;
 
     // constructor
-    public FarragoDbSessionPrivilegeCheker(FarragoSession session)
+    public FarragoDbSessionPrivilegeChecker(FarragoSession session)
     {
         requestsMap = new DoubleKeyMap();
     }
@@ -94,4 +94,4 @@ class FarragoDbSessionPrivilegeCheker implements FarragoSessionPrivilegeChecker
     }
 }
 
-// End FarragoDbSessionPrivilegeCheker.java
+// End FarragoDbSessionPrivilegeChecker.java
