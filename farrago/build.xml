@@ -1289,4 +1289,13 @@ require version '${required.ant.version}'."/>
     </mdr>
   </target>
 
+  <target name="propertiesJar" depends="compile" description="
+Create eigenbase-properties.jar, which is used by Mondrian.">
+    <jar jarfile="${open.dir}/thirdparty/eigenbase-properties.jar">
+      <fileset dir="${farrago.classes.dir}">
+        <include name="org/eigenbase/util/property/**/*.class"/>
+      </fileset>
+    </jar>
+  </target>
+
 </project>

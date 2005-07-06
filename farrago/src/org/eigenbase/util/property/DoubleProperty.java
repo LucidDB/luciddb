@@ -27,18 +27,18 @@ import java.util.Properties;
 
 
 /**
- * Definition and accessor for an integer property.
+ * Definition and accessor for a double-precision property.
  *
  * @author jhyde
- * @since May 4, 2004
+ * @since July 5, 2005
  * @version $Id$
  **/
-public class IntegerProperty extends Property
+public class DoubleProperty extends Property
 {
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates an Integer property.
+     * Creates a Double property.
      *
      * @param properties Properties object which holds values for this
      *    property.
@@ -46,23 +46,23 @@ public class IntegerProperty extends Property
      *    file, for example "com.acme.trace.Verbosity".
      * @param defaultValue Default value.
      */
-    public IntegerProperty(
+    public DoubleProperty(
         Properties properties,
         String path,
-        int defaultValue)
+        double defaultValue)
     {
-        super(properties, path, Integer.toString(defaultValue));
+        super(properties, path, Double.toString(defaultValue));
     }
 
     /**
-     * Creates an Integer property which has no default value.
+     * Creates a Double property which has no default value.
      *
      * @param properties Properties object which holds values for this
      *    property.
      * @param path Name by which this property is serialized to a properties
      *    file, for example "com.acme.trace.Verbosity".
      */
-    public IntegerProperty(
+    public DoubleProperty(
         Properties properties,
         String path)
     {
@@ -72,41 +72,33 @@ public class IntegerProperty extends Property
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Retrieves the value of this integer property.
+     * Retrieves the value of this double property.
      * If the property has no value, returns the default value.
-     * If there is no default value, returns 0.
+     * If there is no default value, returns 0.0.
      */
-    public int get()
+    public double get()
     {
         final String value = getInternal(null, false);
         if (value == null) {
             return 0;
         }
-        return Integer.parseInt(value);
+        return Double.parseDouble(value);
     }
 
     /**
-     * Retrieves the value of this integer property.
+     * Retrieves the value of this double property.
      * If the property has no value, returns the default value.
      * If there is no default value, returns the given default value.
      */
-    public int get(int defaultValue)
+    public double get(int defaultValue)
     {
         final String value = getInternal(null, false);
         if (value == null) {
             return defaultValue;
         }
-        return Integer.parseInt(value);
-    }
-
-    /**
-     * Sets the value of this integer property.
-     */
-    public void set(int value)
-    {
-        setString(Integer.toString(value));
+        return Double.parseDouble(value);
     }
 }
 
 
-// End IntegerProperty.java
+// End DoubleProperty.java

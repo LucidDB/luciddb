@@ -54,6 +54,21 @@ public class BooleanProperty extends Property
         super(properties, path, defaultValue ? "true" : "false");
     }
 
+    /**
+     * Creates a Boolean property which has no default value.
+     *
+     * @param properties Properties object which holds values for this
+     *    property.
+     * @param path Name by which this property is serialized to a properties
+     *    file, for example "com.acme.trace.Verbosity".
+     */
+    public BooleanProperty(
+        Properties properties,
+        String path)
+    {
+        super(properties, path, null);
+    }
+
     //~ Methods ---------------------------------------------------------------
 
     /**
@@ -66,11 +81,7 @@ public class BooleanProperty extends Property
      */
     public boolean get()
     {
-        final String value = getInternal(null, false);
-        if (value == null) {
-            return false;
-        }
-        return toBoolean(value);
+        return booleanValue();
     }
 
     /**
@@ -90,11 +101,6 @@ public class BooleanProperty extends Property
         return toBoolean(value);
     }
 
-    private static boolean toBoolean(final String value)
-    {
-        return value.equalsIgnoreCase("1") || value.equalsIgnoreCase("true")
-            || value.equalsIgnoreCase("yes");
-    }
 }
 
 

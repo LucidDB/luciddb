@@ -62,7 +62,7 @@ public class StringProperty extends Property
      */
     public String get()
     {
-        return getInternal(null, false);
+        return stringValue();
     }
 
     /**
