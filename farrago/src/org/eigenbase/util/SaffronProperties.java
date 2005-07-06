@@ -108,7 +108,7 @@ public class SaffronProperties extends Properties
      */
     public final StringProperty javaDir =
         new StringProperty(this, "saffron.java.dir", null) {
-            protected String getDefaultValue()
+            public String getDefaultValue()
             {
                 return classDir.get();
             }
