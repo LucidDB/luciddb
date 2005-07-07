@@ -119,10 +119,21 @@ public class SqlParser
 
     private SqlParseException convertException(ParseException ex)
     {
-        if (ex.getMessage().length() == 0) {
-            return new SqlParseException(ex);
+        SqlParserPos pos;
+        if (ex.currentToken == null) {
+            pos = null;
         } else {
-            return new SqlParseException(ex.getMessage());
+            final Token token = ex.currentToken.next;
+            pos = new SqlParserPos(
+                token.beginLine,
+                token.beginColumn,
+                token.endLine,
+                token.endColumn);
+        }
+        if (ex.getMessage().length() == 0) {
+            return new SqlParseException(ex, pos);
+        } else {
+            return new SqlParseException(ex.getMessage(), pos);
         }
     }
 }

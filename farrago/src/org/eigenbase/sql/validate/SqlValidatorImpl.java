@@ -346,7 +346,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
      * @param pos indicates the position in the sql statement we want to get
      * completion hints for
      *
-     * @return an array list of {@link SqlMoniker} (sql identifiers) that can fill 
+     * @return an array list of {@link SqlMoniker} (sql identifiers) that can fill
      * in at the indicated position
      *
      */
@@ -848,7 +848,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                             type = colType;
                         }
                     }
-                    
+
                     if (type == null) {
                         throw newValidationError(id,
                             EigenbaseResource.instance().newUnknownIdentifier(
@@ -1156,7 +1156,8 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             {
                 final Integer expectedArgCount = (Integer)
                     fun.getOperandCountRange().getAllowedList().get(0);
-                throw newValidationError(call,
+                throw newValidationError(
+                    call,
                     EigenbaseResource.instance().newInvalidArgCount(
                         call.getOperator().getName(),
                         expectedArgCount));
@@ -1915,7 +1916,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
 
         final SelectScope windowScope = (SelectScope)getFromScope(select);
         Util.permAssert(windowScope != null, "windowScope != null");
-        
+
         // 1. ensure window names are simple
         // 2. ensure they are unique within this scope
         Iterator iter = windowList.getList().iterator();
@@ -2309,6 +2310,16 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
     {
         Util.pre(node != null, "node != null");
         final SqlParserPos pos = node.getParserPosition();
+        return newContextException(pos, e);
+    }
+
+    /**
+     * Wraps an exception with context.
+     */
+    public static EigenbaseException newContextException(
+        final SqlParserPos pos,
+        SqlValidatorException e)
+    {
         int line = pos.getLineNum();
         int col = pos.getColumnNum();
         int endLine = pos.getEndLineNum();
@@ -2473,11 +2484,11 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
      * an {@link SqlWindow inline window specification}.
      */
     public void validateWindow(
-        SqlNode windowOrId, 
+        SqlNode windowOrId,
         SqlValidatorScope scope,
         SqlCall call)
     {
-        final SqlWindow targetWindow; 
+        final SqlWindow targetWindow;
         switch (windowOrId.getKind().getOrdinal()) {
         case SqlKind.IdentifierORDINAL:
             // Just verify the window exists in this query.  It will validate

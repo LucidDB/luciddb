@@ -138,8 +138,8 @@ public class SqlParserTest extends TestCase
         Throwable actualException = null;
         int actualLine = -1;
         int actualColumn = -1;
-        int actualEndLine = 100;
-        int actualEndColumn = 99;
+        int actualEndLine = -1;
+        int actualEndColumn = -1;
         try {
             final SqlNode sqlNode = parseStmt(sql);
             Util.discard(sqlNode);
@@ -153,6 +153,15 @@ public class SqlParserTest extends TestCase
             actualException = ex.getCause() == null ?
                 ex :
                 ex.getCause();
+        } catch (SqlParseException ex) {
+            final SqlParserPos pos = ex.getPos();
+            if (pos != null) {
+                actualLine = pos.getLineNum();
+                actualColumn = pos.getColumnNum();
+                actualEndLine = pos.getEndLineNum();
+                actualEndColumn = pos.getEndColumnNum();
+            }
+            actualException = ex;
         } catch (Throwable ex) {
             final String message = ex.getMessage();
             final Matcher matcher = lineColPattern.matcher(message);
@@ -186,7 +195,10 @@ public class SqlParserTest extends TestCase
             }
             sqlWithCarets = sql;
         } else {
-            sqlWithCarets = SqlParserUtil.addCarets(sql, actualLine, actualColumn, actualEndLine, actualEndColumn);
+            sqlWithCarets = SqlParserUtil.addCarets(
+                sql,
+                actualLine, actualColumn,
+                actualEndLine, actualEndColumn);
         }
         if (FailIfNoPosition &&
             (expectedLine == -1 ||
@@ -200,7 +212,7 @@ public class SqlParserTest extends TestCase
         if (actualMessage == null ||
             !actualMessage.matches(expectedMsgPattern)) {
             actualException.printStackTrace();
-            fail("SqlValidationTest: Validator threw different " +
+            fail("Validator threw different " +
                 "exception than expected; query [" + sql +
                 "]; expected [" + expectedMsgPattern +
                 "]; actual [" + actualMessage +
@@ -209,11 +221,21 @@ public class SqlParserTest extends TestCase
         } else if ((expectedLine != -1 &&
             actualLine != expectedLine) ||
             (expectedColumn != -1 &&
-            actualColumn != expectedColumn)) {
+            actualColumn != expectedColumn) ||
+            (expectedEndLine != -1 &&
+            actualEndLine != expectedEndLine) ||
+            (expectedEndColumn != -1 &&
+            actualEndColumn != expectedEndColumn)) {
             fail("SqlValidationTest: Validator threw expected " +
                 "exception [" + actualMessage +
                 "]; but at line [" + actualLine +
-                "]; column [" + actualColumn +
+                "], column [" + actualColumn +
+                "] thru line [" + actualEndLine +
+                "] column [" + actualEndColumn +
+                "]; rather than expected line [" + expectedLine +
+                "], column [" + expectedColumn +
+                "] thru line [" + expectedEndLine +
+                "] column [" + expectedEndColumn +
                 "]; sql [" + sqlWithCarets + "]");
         }
     }
@@ -404,14 +426,14 @@ public class SqlParserTest extends TestCase
         check("values a between c and d and e and f between g and h",
             "(VALUES (ROW((((`A` BETWEEN ASYMMETRIC `C` AND `D`) AND `E`) AND (`F` BETWEEN ASYMMETRIC `G` AND `H`)))))");
 
-        checkFails("values a between b or c",
-            ".*BETWEEN operator has no terminating AND; at line 1, column 18");
+        checkFails("values a between b or c^",
+            ".*BETWEEN operator has no terminating AND");
 
         checkFails("values a between",
             "(?s).*Encountered \"between <EOF>\" at line 1, column 10.*");
 
         checkFails("values a between symmetric 1",
-            ".*BETWEEN operator has no terminating AND; at line 1, column 28");
+            ".*BETWEEN operator has no terminating AND");
 
         // precedence of BETWEEN is higher than AND and OR, but lower than '+'
         check("values a between b and c + 2 or d and e",
@@ -1508,34 +1530,88 @@ public class SqlParserTest extends TestCase
         checkExp("sum(sal) over (w)","(SUM(`SAL`) OVER (`W`))");
         // Only 1 window reference allowed
         checkExpFails("sum(sal) over (w w1 partition by deptno)","(?s).*");
+
     }
 
-    public void _testOver()
+    public void testWindowSpec()
     {
-        checkExp("sum(sal) over ()", "x");
-        checkExp("sum(sal) over (partition by x, y)", "x");
-        checkExp("sum(sal) over (order by x desc, y asc)", "x");
-        checkExp("sum(sal) over (rows 5 preceding)", "x");
+        // todo: raise bug: ORDER BY should come first
+        boolean bugXxxFixed = false;
+        if (bugXxxFixed) {
+            checkFails("select count(z) over w as foo from Bids window w as (partition by y order by x partition by y)",
+                "xx");
+            check("select count(z) over w as foo from Bids window w as (order by x partition by y)",
+                "xx");
+        }
+
+        // AND is required in BETWEEN clause of window frame
+        checkFails("select sum(x) over (order by x range between unbounded preceding ^unbounded^ following)",
+            "(?s).*Encountered \"unbounded\".*");
+
+        // WINDOW keyword is not permissible.
+        checkFails("select sum(x) over ^window^ (order by x) from bids",
+            "(?s).*Encountered \"window\".*");
+    }
+
+    public void testAs()
+    {
+        // todo: raise bug: AS is optional for column aliases and and
+        //   correlation names. NOT high priority!
+        final boolean bugYyyFixed = false;
+        if (bugYyyFixed) {
+            // AS is optional for column aliases
+            check("select x y from t", "xx");
+            check("select x AS y from t", "xx");
+            check("select sum(x) y from t group by z", "xxx");
+
+            // Even after OVER
+            check("select count(z) over w foo from Bids window w as (order by x)",
+                "xx");
+
+            // AS is optional for table correlation names
+            check("select x from t as t1", "xx");
+            check("select x from t t1", "xx");
+        }
+
+        // AS is required in WINDOW declaration
+        checkFails("select sum(x) over w from bids window w ^(order by x)",
+            "(?s).*Encountered \"\\(\".*");
+
+        // Error if OVER and AS are in wrong order
+        checkFails("select count(*) as foo ^over^ w from Bids window w (order by x)",
+            "(?s).*Encountered \"over\".*");
+    }
+
+    public void testOver()
+    {
+        checkExp("sum(sal) over ()",
+            "(SUM(`SAL`) OVER ())");
+        checkExp("sum(sal) over (partition by x, y)",
+            "(SUM(`SAL`) OVER (PARTITION BY `X`, `Y`))");
+        checkExp("sum(sal) over (order by x desc, y asc)",
+            "(SUM(`SAL`) OVER (ORDER BY `X` DESC, `Y`))");
+        checkExp("sum(sal) over (rows 5 preceding)",
+            "(SUM(`SAL`) OVER (ROWS (5 PRECEDING)))");
         checkExp("sum(sal) over (range between interval '1' second preceding and interval '1' second following)",
-            "sum(sal) over (`emp` over (range between (interval '1' second preceding) and (interval '1' second following)))");
+            "(SUM(`SAL`) OVER (RANGE BETWEEN ((INTERVAL '1' SECOND) PRECEDING) AND ((INTERVAL '1' SECOND) FOLLOWING)))");
         checkExp("sum(sal) over (range between interval '1:03' hour preceding and interval '2' minute following)",
-            "sum(sal) over (`emp` over (range between (interval '1:03' hour preceding) and (interval '2' minute following)))");
+            "(SUM(`SAL`) OVER (RANGE BETWEEN ((INTERVAL '1:03' HOUR) PRECEDING) AND ((INTERVAL '2' MINUTE) FOLLOWING)))");
         checkExp("sum(sal) over (range between interval '5' day preceding and current row)",
-            "sum(sal) over (`emp` over (range between (interval '5' day preceding) and current row))");
+            "(SUM(`SAL`) OVER (RANGE BETWEEN ((INTERVAL '5' DAY) PRECEDING) AND CURRENT ROW))");
         checkExp("sum(sal) over (range interval '5' day preceding)",
-            "sum(sal) over (`emp` over (range (interval '5' day preceding)))");
+            "(SUM(`SAL`) OVER (RANGE ((INTERVAL '5' DAY) PRECEDING)))");
         checkExp("sum(sal) over (range between unbounded preceding and current row)",
-            "sum(sal) over (`emp` over (range between unbounded preceding and current row))");
+            "(SUM(`SAL`) OVER (RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW))");
         checkExp("sum(sal) over (range unbounded preceding)",
-            "sum(sal) over (`emp` over (range unbounded preceding))");
+            "(SUM(`SAL`) OVER (RANGE UNBOUNDED PRECEDING))");
         checkExp("sum(sal) over (range between current row and unbounded preceding)",
-            "sum(sal) over (`emp` over (range between current row and unbounded preceding))");
+            "(SUM(`SAL`) OVER (RANGE BETWEEN CURRENT ROW AND UNBOUNDED PRECEDING))");
         checkExp("sum(sal) over (range between current row and unbounded following)",
-            "sum(sal) over (`emp` over (range between current row and unbounded following))");
+            "(SUM(`SAL`) OVER (RANGE BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING))");
         checkExp("sum(sal) over (range between 6 preceding and interval '1:03' hour preceding)",
-            "sum(sal) over (`emp` over (range between (6 preceding) and (interval '1:03' hour preceding)))");
+            "(SUM(`SAL`) OVER (RANGE BETWEEN (6 PRECEDING) AND ((INTERVAL '1:03' HOUR) PRECEDING)))");
         checkExp("sum(sal) over (range between interval '1' second following and interval '5' day following)",
-            "sum(sal) over (`emp` over (range between (interval '1' second following) and (interval '5' day following)))");
+            "(SUM(`SAL`) OVER (RANGE BETWEEN ((INTERVAL '1' SECOND) FOLLOWING) AND ((INTERVAL '5' DAY) FOLLOWING)))");
     }
 
     public void testElementFunc() {
@@ -1755,8 +1831,22 @@ public class SqlParserTest extends TestCase
         checkExp("1 + new udt()", "(1 + (NEW `UDT`()))");
     }
 
-    public void testMultisetCast() {
+    public void testMultisetCast()
+    {
         checkExp("cast(multiset[1] as double multiset)", "CAST((MULTISET[1]) AS DOUBLE MULTISET)");
+    }
+
+    public void testAddCarets()
+    {
+        assertEquals(
+            "values (^foo^)",
+            SqlParserUtil.addCarets("values (foo)", 1, 9, 1, 12));
+        assertEquals(
+            "abc^def",
+            SqlParserUtil.addCarets("abcdef", 1, 4, 1, 4));
+        assertEquals(
+            "abcdef^",
+            SqlParserUtil.addCarets("abcdef", 1, 7, 1, 7));
     }
 }
 

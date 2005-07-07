@@ -1175,7 +1175,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkWinFuncExp("sum(sal) over (order by deptno, empno ^rang^e 2 preceding)",
             "RANGE clause cannot be used with compound ORDER BY clause");
         checkWinFuncExp("sum(sal) over ^(partition by deptno range 5 preceding^)",
-            "Window specification must contain a ORDER BY clause");
+            "Window specification must contain an ORDER BY clause");
         checkWinFuncExp("sum(sal) over ^w^1",
             "Window 'W1' not found");
         checkWinFuncExp("sum(sal) OVER (^w^1 " +
@@ -1207,7 +1207,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         // a)
         // missing window order clause.
         checkWinClauseExp("window w as (range 100 preceding)",
-            "Window specification must contain a ORDER BY clause");
+            "Window specification must contain an ORDER BY clause");
         // order by number
         checkWinClauseExp("window w as (order by sal range 100 preceding)", null);
         // order by date
@@ -1242,7 +1242,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
         // window defintion is empty when applied to unsorted table
         checkWinClauseExp("window w as ^(^)",
-            "Window specification must contain a ORDER BY clause");
+            "Window specification must contain an ORDER BY clause");
 
         // duplidate window name
         checkWinClauseExp("window w as (order by empno), ^w as (order by empno)",
@@ -1292,10 +1292,10 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         // assertExceptionIsThrown("select deptno as d, sal as s from emp window w as (partition by deptno order by sal), w2 as (w partition by deptno)", null);
         // checkWinClauseExp("window w as (partition by sal order by deptno), w2 as (w partition by sal)", null);
         // d)
-        // valid because existing window does not have a order by clause
+        // valid because existing window does not have an ORDER BY clause
         checkWinClauseExp("window w as (w2 range 2 preceding ), w2 as (order by sal)", null);
         checkWinClauseExp("window w as ^(partition by sal^), w2 as (w order by deptno)",
-            "Window specification must contain a ORDER BY clause");
+            "Window specification must contain an ORDER BY clause");
         checkWinClauseExp("window w as (w2 partition by ^sal^), w2 as (order by deptno)",
             "PARTITION BY not allowed with existing window reference");
         checkWinClauseExp("window w as (partition by sal order by deptno), w2 as (w order by ^deptn^o)",

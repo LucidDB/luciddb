@@ -44,8 +44,10 @@
     <text>not in format ''{0}''</text>
 </message>
 
-<exception id="100040" name="BetweenWithoutAnd">
-    <text>BETWEEN operator has no terminating AND; at line {0,number,#}, column {1,number,#}</text>
+<!-- This is a SqlValidatorException to remind us to add context,
+     even though it's created by the parser. -->
+<exception id="100040" name="BetweenWithoutAnd" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>BETWEEN operator has no terminating AND</text>
 </exception>
 
 <exception id="100050" name="IllegalIntervalLiteral">
@@ -293,7 +295,7 @@
 </exception>
 
 <exception id="120470" name="OverMissingOrderBy" className="org.eigenbase.sql.validate.SqlValidatorException">
-    <text>Window specification must contain a ORDER BY clause</text>
+    <text>Window specification must contain an ORDER BY clause</text>
 </exception>
 
 <exception id="120480" name="BadLowerBoundry" className="org.eigenbase.sql.validate.SqlValidatorException">

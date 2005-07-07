@@ -33,6 +33,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidatorImpl;
 import org.eigenbase.util.Util;
 import org.eigenbase.util.EnumeratedValues;
 
@@ -80,7 +81,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
         new ComparableOperandTypeChecker(
             3,
             RelDataTypeComparability.All);
-    
+
     //~ Instance fields -------------------------------------------------------
 
     /** todo: Use a wrapper 'class SqlTempCall(SqlOperator,SqlParserPos)
@@ -193,12 +194,27 @@ public class SqlBetweenOperator extends SqlInfixOperator
             ((SqlNode) list.get(opOrdinal + 1)).getParserPosition();
         SqlNode exp1 =
             SqlParserUtil.toTreeEx(list, opOrdinal + 1, 0, SqlKind.And);
-        if (((opOrdinal + 2) >= list.size())
-                || !(list.get(opOrdinal + 2) instanceof SqlParserUtil.ToTreeListItem)
-                || (((SqlParserUtil.ToTreeListItem) list.get(opOrdinal + 2)).getOperator().getKind() != SqlKind.And)) {
-            throw EigenbaseResource.instance().newBetweenWithoutAnd(
-                new Integer(pos.getLineNum()),
-                new Integer(pos.getColumnNum()));
+        if (opOrdinal + 2 >= list.size()) {
+            SqlParserPos lastPos = ((SqlNode) list.get(list.size() - 1)).getParserPosition();
+            final int line = lastPos.getEndLineNum();
+            final int col = lastPos.getEndColumnNum() + 1;
+            SqlParserPos errPos = new SqlParserPos(line, col, line, col);
+            throw SqlValidatorImpl.newContextException(
+                errPos,
+                EigenbaseResource.instance().newBetweenWithoutAnd());
+        }
+        final Object o = list.get(opOrdinal + 2);
+        if (!(o instanceof SqlParserUtil.ToTreeListItem)) {
+            SqlParserPos errPos = ((SqlNode) o).getParserPosition();
+            throw SqlValidatorImpl.newContextException(
+                errPos,
+                EigenbaseResource.instance().newBetweenWithoutAnd());
+        }
+        if (((SqlParserUtil.ToTreeListItem) o).getOperator().getKind() != SqlKind.And) {
+            SqlParserPos errPos = ((SqlParserUtil.ToTreeListItem) o).getPos();
+            throw SqlValidatorImpl.newContextException(
+                errPos,
+                EigenbaseResource.instance().newBetweenWithoutAnd());
         }
 
         // Create the expression after 'AND', but stopping if we encounter an

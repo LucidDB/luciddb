@@ -486,6 +486,10 @@ public final class SqlParserUtil
                 sql.substring(firstCaret + 1, secondCaret) +
                 sql.substring(secondCaret + 1);
             int[] start = indexToLineCol(sql, firstCaret);
+            // subtract 1 because first caret pushed the string out
+            --secondCaret;
+            // subtract 1 because the col position needs to be inclusive
+            --secondCaret;
             int[] end = indexToLineCol(sql, secondCaret);
             SqlParserPos pos =
                 new SqlParserPos(start[0], start[1], end[0], end[1]);
@@ -537,7 +541,7 @@ public final class SqlParserUtil
      * Converts a string to a string with one or two carets in it.
      * For example, <code>addCarets("values (foo)", 1, 9, 1, 12)</code>
      * yields "values (^foo^)".
-     */ 
+     */
     public static String addCarets(
         String sql, int line, int col, int endLine, int endCol)
     {
@@ -547,8 +551,7 @@ public final class SqlParserUtil
             sql.substring(cut);
         if (col != endCol ||
             line != endLine) {
-            cut = lineColToIndex(sqlWithCarets,
-                endLine, endCol);
+            cut = lineColToIndex(sqlWithCarets, endLine, endCol);
             ++cut; // for caret
             sqlWithCarets = sqlWithCarets.substring(0, cut) +
                 "^" + sqlWithCarets.substring(cut);
