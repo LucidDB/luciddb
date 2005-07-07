@@ -13,7 +13,7 @@ set JAVA_ARGS=-cp %LCP% -Dnet.sf.farrago.home="%MAIN_DIR%" -Djava.util.logging.c
 
 set SQLLINE_JAVA_ARGS=sqlline.SqlLine
 
-set JAVA_EXEC="%JAVA_HOME%\bin\java"
+set JAVA_EXEC=%JAVA_HOME%\bin\java
 
 set PATH=%PATH%;%MAIN_DIR%\lib\fennel
 
