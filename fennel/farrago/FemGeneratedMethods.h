@@ -31,6 +31,8 @@ jmethodID ProxyExecutionStreamDef::meth_getName = 0;
 jmethodID ProxyExecutionStreamDef::meth_getInput = 0;
 jmethodID ProxyExecutionStreamDef::meth_getOutputDesc = 0;
 jmethodID ProxyExecutionStreamDef::meth_getConsumer = 0;
+jmethodID ProxyGenericStreamDef::meth_getType = 0;
+jmethodID ProxyGenericStreamDef::meth_getContent = 0;
 jmethodID ProxyHandle::meth_getLongHandle = 0;
 jmethodID ProxyIndexAccessorDef::meth_getRootPageId = 0;
 jmethodID ProxyIndexAccessorDef::meth_getSegmentId = 0;
@@ -51,6 +53,9 @@ jmethodID ProxyIndexWriterDef::meth_getDistinctness = 0;
 jmethodID ProxyIndexWriterDef::meth_isUpdateInPlace = 0;
 jmethodID ProxyIndexWriterDef::meth_getTableWriter = 0;
 jmethodID ProxyJavaSinkStreamDef::meth_getStreamId = 0;
+jmethodID ProxyJavaTransformStreamDef::meth_getStreamId = 0;
+jmethodID ProxyJavaTransformStreamDef::meth_getJavaClassName = 0;
+jmethodID ProxyJavaTransformStreamDef::meth_getReserved = 0;
 jmethodID ProxyJavaTupleStreamDef::meth_getStreamId = 0;
 jmethodID ProxyKeyAccessorDef::meth_getKeyProj = 0;
 jmethodID ProxyMergeStreamDef::meth_isSequential = 0;
@@ -195,6 +200,11 @@ ProxyExecutionStreamDef::meth_getInput = pEnv->GetMethodID(jClass,"getInput","()
 ProxyExecutionStreamDef::meth_getOutputDesc = pEnv->GetMethodID(jClass,"getOutputDesc","()Lnet/sf/farrago/fem/fennel/FemTupleDescriptor;");
 ProxyExecutionStreamDef::meth_getConsumer = pEnv->GetMethodID(jClass,"getConsumer","()Ljava/util/Collection;");
 
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemGenericStreamDef");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyGenericStreamDef>));
+ProxyGenericStreamDef::meth_getType = pEnv->GetMethodID(jClass,"getType","()Ljava/lang/String;");
+ProxyGenericStreamDef::meth_getContent = pEnv->GetMethodID(jClass,"getContent","()Ljava/lang/String;");
+
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemHandle");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyHandle>));
 ProxyHandle::meth_getLongHandle = pEnv->GetMethodID(jClass,"getLongHandle","()J");
@@ -241,6 +251,12 @@ ProxyIndexWriterDef::meth_getTableWriter = pEnv->GetMethodID(jClass,"getTableWri
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemJavaSinkStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyJavaSinkStreamDef>));
 ProxyJavaSinkStreamDef::meth_getStreamId = pEnv->GetMethodID(jClass,"getStreamId","()I");
+
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemJavaTransformStreamDef");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyJavaTransformStreamDef>));
+ProxyJavaTransformStreamDef::meth_getStreamId = pEnv->GetMethodID(jClass,"getStreamId","()I");
+ProxyJavaTransformStreamDef::meth_getJavaClassName = pEnv->GetMethodID(jClass,"getJavaClassName","()Ljava/lang/String;");
+ProxyJavaTransformStreamDef::meth_getReserved = pEnv->GetMethodID(jClass,"getReserved","()Ljava/lang/String;");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemJavaTupleStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyJavaTupleStreamDef>));
@@ -561,6 +577,16 @@ p.jIter = JniUtil::getIter(p->pEnv,p->jObject);
 return p;
 }
 
+std::string ProxyGenericStreamDef::getType()
+{
+return constructString(pEnv->CallObjectMethod(jObject,meth_getType));
+}
+
+std::string ProxyGenericStreamDef::getContent()
+{
+return constructString(pEnv->CallObjectMethod(jObject,meth_getContent));
+}
+
 int64_t ProxyHandle::getLongHandle()
 {
 return pEnv->CallLongMethod(jObject,meth_getLongHandle);
@@ -693,6 +719,21 @@ return p;
 int32_t ProxyJavaSinkStreamDef::getStreamId()
 {
 return pEnv->CallIntMethod(jObject,meth_getStreamId);
+}
+
+int32_t ProxyJavaTransformStreamDef::getStreamId()
+{
+return pEnv->CallIntMethod(jObject,meth_getStreamId);
+}
+
+std::string ProxyJavaTransformStreamDef::getJavaClassName()
+{
+return constructString(pEnv->CallObjectMethod(jObject,meth_getJavaClassName));
+}
+
+std::string ProxyJavaTransformStreamDef::getReserved()
+{
+return constructString(pEnv->CallObjectMethod(jObject,meth_getReserved));
 }
 
 int32_t ProxyJavaTupleStreamDef::getStreamId()

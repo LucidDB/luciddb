@@ -75,6 +75,9 @@ typedef JniProxyIter<ProxyEndTxnCmd> SharedProxyEndTxnCmd;
 class ProxyExecutionStreamDef;
 typedef JniProxyIter<ProxyExecutionStreamDef> SharedProxyExecutionStreamDef;
 
+class ProxyGenericStreamDef;
+typedef JniProxyIter<ProxyGenericStreamDef> SharedProxyGenericStreamDef;
+
 class ProxyHandle;
 typedef JniProxyIter<ProxyHandle> SharedProxyHandle;
 
@@ -101,6 +104,9 @@ typedef JniProxyIter<ProxyIndexWriterDef> SharedProxyIndexWriterDef;
 
 class ProxyJavaSinkStreamDef;
 typedef JniProxyIter<ProxyJavaSinkStreamDef> SharedProxyJavaSinkStreamDef;
+
+class ProxyJavaTransformStreamDef;
+typedef JniProxyIter<ProxyJavaTransformStreamDef> SharedProxyJavaTransformStreamDef;
 
 class ProxyJavaTupleStreamDef;
 typedef JniProxyIter<ProxyJavaTupleStreamDef> SharedProxyJavaTupleStreamDef;
@@ -432,6 +438,16 @@ class ProxyDbHandle
 public:
 };
 
+class ProxyGenericStreamDef
+: virtual public JniProxy, virtual public ProxyTupleStreamDef
+{
+public:
+std::string getType();
+static jmethodID meth_getType;
+std::string getContent();
+static jmethodID meth_getContent;
+};
+
 class ProxyKeyAccessorDef
 : virtual public JniProxy
 {
@@ -510,6 +526,18 @@ class ProxyJavaSinkStreamDef
 public:
 int32_t getStreamId();
 static jmethodID meth_getStreamId;
+};
+
+class ProxyJavaTransformStreamDef
+: virtual public JniProxy, virtual public ProxyTupleStreamDef
+{
+public:
+int32_t getStreamId();
+static jmethodID meth_getStreamId;
+std::string getJavaClassName();
+static jmethodID meth_getJavaClassName;
+std::string getReserved();
+static jmethodID meth_getReserved;
 };
 
 class ProxyJavaTupleStreamDef
@@ -766,6 +794,8 @@ virtual void visit(ProxyEndTxnCmd &)
 { unhandledVisit(); }
 virtual void visit(ProxyExecutionStreamDef &)
 { unhandledVisit(); }
+virtual void visit(ProxyGenericStreamDef &)
+{ unhandledVisit(); }
 virtual void visit(ProxyHandle &)
 { unhandledVisit(); }
 virtual void visit(ProxyIndexAccessorDef &)
@@ -783,6 +813,8 @@ virtual void visit(ProxyIndexStreamDef &)
 virtual void visit(ProxyIndexWriterDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyJavaSinkStreamDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyJavaTransformStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyJavaTupleStreamDef &)
 { unhandledVisit(); }
