@@ -23,8 +23,8 @@
 
 package org.eigenbase.sql.test;
 
-import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.sql.SqlOperator;
 
 
 /**
@@ -39,12 +39,6 @@ import org.eigenbase.reltype.RelDataType;
  * <p>Specific implementations of <code>SqlTestser</code> might evaluate the
  * queries in different ways, for example, using a C++ versus Java calculator.
  * An implementation might even ignore certain calls altogether.
- *
- * <p>The main test harness which uses this interface is
- * {@link net.sf.farrago.test.FarragoSqlOperatorsTest}. It automatically calls
- * the {@link org.eigenbase.sql.SqlOperator#test} method for each
- * {@link org.eigenbase.sql.SqlOperator operator} defined in
- * {@link org.eigenbase.sql.SqlOperatorTable}.
  *
  * @author Wael Chatila
  * @since May 22, 2004
@@ -178,6 +172,12 @@ public interface SqlTester
         TypeChecker typeChecker,
         Object result,
         double delta);
+
+    /**
+     * Declares that this test is for a given operator.
+     * So we can check that all operators are tested.
+     */
+    void isFor(SqlOperator operator);
 
     interface TypeChecker {
         void checkType(RelDataType type);

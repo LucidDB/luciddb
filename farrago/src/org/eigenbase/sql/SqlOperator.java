@@ -28,6 +28,7 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.test.SqlTester;
+import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.util.SqlVisitor;
 import org.eigenbase.sql.validate.SqlValidatorScope;
@@ -234,7 +235,7 @@ public abstract class SqlOperator
      *
      * @param tester The tester to use.
      */
-    public void test(SqlTester tester)
+    public void test(SqlOperatorTests tester)
     {
     }
 
@@ -401,13 +402,13 @@ public abstract class SqlOperator
     {
         // Let subclasses know what's up.
         preValidateCall(validator, scope, call);
-        
+
         // Check the number of operands
         checkOperandCount(validator, operandTypeChecker, call);
 
         SqlCallBinding opBinding =
             new SqlCallBinding(validator,  scope, call);
-        
+
         checkOperandTypes(
             opBinding,
             true);
@@ -582,7 +583,7 @@ public abstract class SqlOperator
      */
     public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
     {
-        return false; 
+        return false;
     }
 }
 

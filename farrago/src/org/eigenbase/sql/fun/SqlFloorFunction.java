@@ -23,9 +23,7 @@
 package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.test.SqlOperatorTests;
-import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.type.SqlTypeStrategies;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 
 /**
@@ -45,11 +43,6 @@ public class SqlFloorFunction extends SqlFunction
             SqlTypeStrategies.otcNumeric,
             SqlFunctionCategory.Numeric);
 
-    }
-
-    public void test(SqlTester tester)
-    {
-        SqlOperatorTests.testFloorFunc(tester);
     }
 
     public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)

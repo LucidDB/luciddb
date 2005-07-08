@@ -24,15 +24,10 @@
 package org.eigenbase.sql.fun;
 
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.test.SqlOperatorTests;
-import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.util.Util;
+import org.eigenbase.sql.type.SqlTypeStrategies;
+import org.eigenbase.sql.type.SqlTypeUtil;
 
 
 /**
@@ -141,12 +136,6 @@ public class SqlCastFunction extends SqlFunction
         }
         writer.print(')');
     }
-
-    public void test(SqlTester tester)
-    {
-        SqlOperatorTests.testCast(tester);
-    }
 }
-
 
 // End SqlCastFunction.java

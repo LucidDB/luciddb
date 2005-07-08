@@ -23,8 +23,6 @@ package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.test.SqlOperatorTests;
-import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.util.Util;
 
 /**
@@ -63,11 +61,6 @@ public class SqlNullifFunction extends SqlFunction
     public SqlOperandCountRange getOperandCountRange()
     {
         return SqlOperandCountRange.Two;
-    }
-
-    public void test(SqlTester tester)
-    {
-        SqlOperatorTests.testNullifFunc(tester);
     }
 }
 

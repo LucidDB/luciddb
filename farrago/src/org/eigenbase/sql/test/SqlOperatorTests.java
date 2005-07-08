@@ -22,24 +22,69 @@
 */
 package org.eigenbase.sql.test;
 
-import org.eigenbase.util.Util;
+import junit.framework.TestCase;
 
 import java.util.regex.Pattern;
 
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.SqlJdbcFunctionCall;
+import org.eigenbase.sql.SqlOperator;
+
 /**
- * Holder for operator unit-tests.
+ * Contains unit tests for all operators. Each of the methods is named after an
+ * operator.
  *
- * <p>This class is not a JUnit test. Each of the methods is named after an
- * operator, and is called from that operator's
- * {@link org.eigenbase.sql.SqlOperator#test} method. There is a unit test
- * ({@link net.sf.farrago.test.FarragoSqlOperatorsTest})
- * which invokes the <code>test()</code> method of every operator.
+ * <p>The class is abstract. It contains a test for every operator, but does
+ * not provide a mechanism to execute the tests: parse, validate, and execute
+ * expressions on the operators. This is left to a {@link SqlTester} object
+ * which the derived class must provide.
+ *
+ * <p>Different implementations of {@link SqlTester} are possible, such as:<ul>
+ * <li>Execute against a real farrago database
+ * <li>Execute in pure java (parsing and validation can be done, but expression
+ *     evaluation is not possible)
+ * <li>Generate a SQL script.
+ * <li>Analyze which operators are adequately tested.
+ * </ul>
+ *
+ * <p>A typical method will be named after the operator it is testing
+ * (say <code>testSubstringFunc</code>).
+ * It first calls {@link SqlTester#isFor(SqlOperator)} to declare which
+ * operator it is testing.
+ *
+ * <blockqoute><pre><code>
+ * public void testSubstringFunc() {
+ *     getTester().isFor(SqlStdOperatorTable.substringFunc);
+ *     getTester().checkScalar("sin(0)", "0");
+ *     getTester().checkScalar("sin(1.5707)", "1");
+ * }</code></pre></blockqoute>
+ *
+ * The rest of the method contains calls to the various
+ * <code>checkXxx</code> methods in the {@link SqlTester} interface.
+ * For an operator to be adequately tested, there need to be tests for:<ul>
+ *
+ * <li>Parsing all of its the syntactic variants.
+ *
+ * <li>Deriving the type of in all combinations of arguments.<ul>
+ *
+ *     <li>Pay particular attention to nullability.
+ *     For example, the result of the "+" operator
+ *     is NOT NULL if and only if both of its arguments are NOT NULL.</li>
+ *
+ *     <li>Also pay attention to precsion/scale/length.
+ *     For example, the maximum length of the "||" operator is the sum of the
+ *     maximum lengths of its arguments.</li></ul></li>
+ *
+ * <li>Executing the function. Pay particular attention to corner cases such
+ *     as null arguments or null results.</li>
+ *
+ * </ul>
  *
  * @author Julian Hyde
  * @since October 1, 2004
  * @version $Id$
  */
-public class SqlOperatorTests
+public abstract class SqlOperatorTests extends TestCase
 {
     /**
      * Remove this constant when dtbug 315 has been fixed.
@@ -64,730 +109,831 @@ public class SqlOperatorTests
         "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]");
     public static final boolean todo = false;
 
-    public static void testBetween(SqlTester tester)
+    public SqlOperatorTests(String testName)
     {
-        tester.checkBoolean("2 between 1 and 3", Boolean.TRUE);
-        tester.checkBoolean("2 between 3 and 2", Boolean.FALSE);
-        tester.checkBoolean("2 between symmetric 3 and 2", Boolean.TRUE);
-        tester.checkBoolean("3 between 1 and 3", Boolean.TRUE);
-        tester.checkBoolean("4 between 1 and 3", Boolean.FALSE);
-        tester.checkBoolean("1 between 4 and -3", Boolean.FALSE);
-        tester.checkBoolean("1 between -1 and -3", Boolean.FALSE);
-        tester.checkBoolean("1 between -1 and 3", Boolean.TRUE);
-        tester.checkBoolean("1 between 1 and 1", Boolean.TRUE);
-        tester.checkBoolean("x'' between x'' and x''", Boolean.TRUE);
-        tester.checkNull("cast(null as integer) between -1 and 2");
-        tester.checkNull("1 between -1 and cast(null as integer)");
-        tester.checkNull(
+        super(testName);
+    }
+
+    /**
+     * Derived class must implement this method to provide a means to validate,
+     * execute various statements.
+     */
+    protected abstract SqlTester getTester();
+
+    public void testBetween()
+    {
+        getTester().isFor(SqlStdOperatorTable.betweenOperator);
+        getTester().checkBoolean("2 between 1 and 3", Boolean.TRUE);
+        getTester().checkBoolean("2 between 3 and 2", Boolean.FALSE);
+        getTester().checkBoolean("2 between symmetric 3 and 2", Boolean.TRUE);
+        getTester().checkBoolean("3 between 1 and 3", Boolean.TRUE);
+        getTester().checkBoolean("4 between 1 and 3", Boolean.FALSE);
+        getTester().checkBoolean("1 between 4 and -3", Boolean.FALSE);
+        getTester().checkBoolean("1 between -1 and -3", Boolean.FALSE);
+        getTester().checkBoolean("1 between -1 and 3", Boolean.TRUE);
+        getTester().checkBoolean("1 between 1 and 1", Boolean.TRUE);
+        getTester().checkBoolean("x'' between x'' and x''", Boolean.TRUE);
+        getTester().checkNull("cast(null as integer) between -1 and 2");
+        getTester().checkNull("1 between -1 and cast(null as integer)");
+        getTester().checkNull(
             "1 between cast(null as integer) and cast(null as integer)");
-        tester.checkNull("1 between cast(null as integer) and 1");
+        getTester().checkNull("1 between cast(null as integer) and 1");
     }
 
-    public static void testNotBetween(SqlTester tester)
+    public void testNotBetween()
     {
-        tester.checkBoolean("2 not between 1 and 3", Boolean.FALSE);
-        tester.checkBoolean("3 not between 1 and 3", Boolean.FALSE);
-        tester.checkBoolean("4 not between 1 and 3", Boolean.TRUE);
+        getTester().isFor(SqlStdOperatorTable.notBetweenOperator);
+        getTester().checkBoolean("2 not between 1 and 3", Boolean.FALSE);
+        getTester().checkBoolean("3 not between 1 and 3", Boolean.FALSE);
+        getTester().checkBoolean("4 not between 1 and 3", Boolean.TRUE);
     }
 
-    public static void testCast(SqlTester tester)
+    public void testCast()
     {
-        tester.checkScalarExact("cast(1.0 as integer)", "1");
-        tester.checkScalarApprox("cast(1 as double)", "todo:", 1, 0);
-        tester.checkScalarApprox("cast(1.0 as double)", "todo:", 1, 0);
-        tester.checkNull("cast(null as double)");
-        tester.checkNull("cast(null as date)");
+        getTester().isFor(SqlStdOperatorTable.castFunc);
+        getTester().checkScalarExact("cast(1.0 as integer)", "1");
+        getTester().checkScalarApprox("cast(1 as double)", "todo:", 1, 0);
+        getTester().checkScalarApprox("cast(1.0 as double)", "todo:", 1, 0);
+        getTester().checkNull("cast(null as double)");
+        getTester().checkNull("cast(null as date)");
     }
 
-    public static void testCase(SqlTester tester)
+    public void testCase()
     {
-        tester.checkScalarExact("case when 'a'='a' then 1 end", "1");
+        getTester().isFor(SqlStdOperatorTable.caseOperator);
+        getTester().checkScalarExact("case when 'a'='a' then 1 end", "1");
 
         // FIXME jvs 26-Jan-2004:  disabled because of calculator
         // assertion after I changed the type of string literals from
         // VARCHAR to CHAR (see dtbug 278)
         if (false) {
-            tester.checkString("case 2 when 1 then 'a' when 2 then 'b' end", "b", "CHAR(1) NOT NULL");
+            getTester().checkString("case 2 when 1 then 'a' when 2 then 'b' end", "b", "CHAR(1) NOT NULL");
         }
-        tester.checkScalarExact("case 'a' when 'a' then 1 end", "1");
-        tester.checkNull("case 'a' when 'b' then 1 end");
-        tester.checkScalarExact(
+        getTester().checkScalarExact("case 'a' when 'a' then 1 end", "1");
+        getTester().checkNull("case 'a' when 'b' then 1 end");
+        getTester().checkScalarExact(
             "case when 'a'=cast(null as varchar(1)) then 1 else 2 end", "2");
     }
 
-    public static void testJdbcFn(SqlTester tester)
+    public void testJdbcFn()
     {
-        // TODO:
+        getTester().isFor(new SqlJdbcFunctionCall("dummy"));
     }
 
-    public static void testSelect(SqlTester tester)
+    public void testSelect()
     {
-        tester.check("select * from (values(1))", AbstractSqlTester.IntegerTypeChecker, "1",
+        getTester().isFor(SqlStdOperatorTable.selectOperator);
+        getTester().check("select * from (values(1))",
+            AbstractSqlTester.IntegerTypeChecker,
+            "1",
             0);
     }
 
-    public static void testLiteralChain(SqlTester tester)
+    public void testLiteralChain()
     {
-        tester.checkString("'buttered'\n' toast'", "buttered toast", "CHAR(14) NOT NULL");
-        tester.checkString("'corned'\n' beef'\n' on'\n' rye'",
+        getTester().isFor(SqlStdOperatorTable.literalChainOperator);
+        getTester().checkString("'buttered'\n' toast'", "buttered toast", "CHAR(14) NOT NULL");
+        getTester().checkString("'corned'\n' beef'\n' on'\n' rye'",
             "corned beef on rye", "CHAR(18) NOT NULL");
-        tester.checkString("_latin1'Spaghetti'\n' all''Amatriciana'",
+        getTester().checkString("_latin1'Spaghetti'\n' all''Amatriciana'",
             "Spaghetti all'Amatriciana", "CHAR(25) NOT NULL");
-        tester.checkBoolean("x'1234'\n'abcd' = x'1234abcd'", Boolean.TRUE);
-        tester.checkBoolean("x'1234'\n'' = x'1234'", Boolean.TRUE);
-        tester.checkBoolean("x''\n'ab' = x'ab'", Boolean.TRUE);
+        getTester().checkBoolean("x'1234'\n'abcd' = x'1234abcd'", Boolean.TRUE);
+        getTester().checkBoolean("x'1234'\n'' = x'1234'", Boolean.TRUE);
+        getTester().checkBoolean("x''\n'ab' = x'ab'", Boolean.TRUE);
     }
 
-    public static void testRow(SqlTester tester)
+    public void testRow()
     {
-        // todo:
+        getTester().isFor(SqlStdOperatorTable.rowConstructor);
     }
 
-    public static void testAndOperator(SqlTester tester)
+    public void testAndOperator()
     {
-        tester.checkBoolean("true and false", Boolean.FALSE);
-        tester.checkBoolean("true and true", Boolean.TRUE);
-        tester.checkBoolean("cast(null as boolean) and false", Boolean.FALSE);
-        tester.checkBoolean("false and cast(null as boolean)", Boolean.FALSE);
-        tester.checkNull("cast(null as boolean) and true");
-        tester.checkBoolean("true and (not false)", Boolean.TRUE);
+        getTester().isFor(SqlStdOperatorTable.andOperator);
+        getTester().checkBoolean("true and false", Boolean.FALSE);
+        getTester().checkBoolean("true and true", Boolean.TRUE);
+        getTester().checkBoolean("cast(null as boolean) and false", Boolean.FALSE);
+        getTester().checkBoolean("false and cast(null as boolean)", Boolean.FALSE);
+        getTester().checkNull("cast(null as boolean) and true");
+        getTester().checkBoolean("true and (not false)", Boolean.TRUE);
     }
 
-    public static void testConcatOperator(SqlTester tester)
+    public void testConcatOperator()
     {
-        tester.checkString(" 'a'||'b' ", "ab", "todo: CHAR(2) NOT NULL");
+        getTester().isFor(SqlStdOperatorTable.concatOperator);
+        getTester().checkString(" 'a'||'b' ", "ab", "todo: CHAR(2) NOT NULL");
 
         if (false) {
             // not yet implemented
-            tester.checkString(" x'f'||x'f' ", "X'FF", "BINARY(1) NOT NULL");
-            tester.checkNull("x'ff' || cast(null as varbinary)");
+            getTester().checkString(" x'f'||x'f' ", "X'FF", "BINARY(1) NOT NULL");
+            getTester().checkNull("x'ff' || cast(null as varbinary)");
         }
     }
 
-    public static void testDivideOperator(SqlTester tester)
+    public void testDivideOperator()
     {
-        tester.checkScalarExact("10 / 5", "2");
-        tester.checkScalarExact("-10 / 5", "-2");
-        tester.checkScalarApprox("10.0 / 5", "todo:", 2.0, 0);
-        tester.checkNull("1e1 / cast(null as float)");
+        getTester().isFor(SqlStdOperatorTable.divideOperator);
+        getTester().checkScalarExact("10 / 5", "2");
+        getTester().checkScalarExact("-10 / 5", "-2");
+        getTester().checkScalarApprox("10.0 / 5", "todo:", 2.0, 0);
+        getTester().checkNull("1e1 / cast(null as float)");
     }
 
-    public static void testEqualsOperator(SqlTester tester)
+    public void testEqualsOperator()
     {
-        tester.checkBoolean("1=1", Boolean.TRUE);
-        tester.checkBoolean("'a'='b'", Boolean.FALSE);
-        tester.checkNull("cast(null as boolean)=cast(null as boolean)");
-        tester.checkNull("cast(null as integer)=1");
+        getTester().isFor(SqlStdOperatorTable.equalsOperator);
+        getTester().checkBoolean("1=1", Boolean.TRUE);
+        getTester().checkBoolean("'a'='b'", Boolean.FALSE);
+        getTester().checkNull("cast(null as boolean)=cast(null as boolean)");
+        getTester().checkNull("cast(null as integer)=1");
     }
 
-    public static void testGreaterThanOperator(SqlTester tester)
+    public void testGreaterThanOperator()
     {
-        tester.checkBoolean("1>2", Boolean.FALSE);
-        tester.checkBoolean("-1>1", Boolean.FALSE);
-        tester.checkBoolean("1>1", Boolean.FALSE);
-        tester.checkBoolean("2>1", Boolean.TRUE);
-        tester.checkBoolean("true>false", Boolean.TRUE);
-        tester.checkBoolean("true>true", Boolean.FALSE);
-        tester.checkBoolean("false>false", Boolean.FALSE);
-        tester.checkBoolean("false>true", Boolean.FALSE);
-        tester.checkNull("3.0>cast(null as double)");
+        getTester().isFor(SqlStdOperatorTable.greaterThanOperator);
+        getTester().checkBoolean("1>2", Boolean.FALSE);
+        getTester().checkBoolean("-1>1", Boolean.FALSE);
+        getTester().checkBoolean("1>1", Boolean.FALSE);
+        getTester().checkBoolean("2>1", Boolean.TRUE);
+        getTester().checkBoolean("true>false", Boolean.TRUE);
+        getTester().checkBoolean("true>true", Boolean.FALSE);
+        getTester().checkBoolean("false>false", Boolean.FALSE);
+        getTester().checkBoolean("false>true", Boolean.FALSE);
+        getTester().checkNull("3.0>cast(null as double)");
     }
 
-    public static void testIsDistinctFromOperator(SqlTester tester)
+    public void testIsDistinctFromOperator()
     {
-        tester.checkBoolean("1 is distinct from 1", Boolean.FALSE);
-        tester.checkBoolean("1 is distinct from 1.0", Boolean.FALSE);
-        tester.checkBoolean("1 is distinct from 2", Boolean.TRUE);
-        tester.checkBoolean("cast(null as integer) is distinct from 2", Boolean.TRUE);
-        tester.checkBoolean("cast(null as integer) is distinct from cast(null as integer)", Boolean.FALSE);
-//        tester.checkBoolean("row(1,1) is distinct from row(1,1)", Boolean.TRUE);
-//        tester.checkBoolean("row(1,1) is distinct from row(1,2)", Boolean.FALSE);
+        getTester().isFor(SqlStdOperatorTable.isDistinctFromOperator);
+        getTester().checkBoolean("1 is distinct from 1", Boolean.FALSE);
+        getTester().checkBoolean("1 is distinct from 1.0", Boolean.FALSE);
+        getTester().checkBoolean("1 is distinct from 2", Boolean.TRUE);
+        getTester().checkBoolean("cast(null as integer) is distinct from 2", Boolean.TRUE);
+        getTester().checkBoolean("cast(null as integer) is distinct from cast(null as integer)", Boolean.FALSE);
+//        getTester().checkBoolean("row(1,1) is distinct from row(1,1)", Boolean.TRUE);
+//        getTester().checkBoolean("row(1,1) is distinct from row(1,2)", Boolean.FALSE);
     }
 
-    public static void testIsNotDistinctFromOperator(SqlTester tester)
+    public void testIsNotDistinctFromOperator()
     {
-        tester.checkBoolean("1 is not distinct from 1", Boolean.TRUE);
-        tester.checkBoolean("1 is not distinct from 1.0", Boolean.TRUE);
-        tester.checkBoolean("1 is not distinct from 2", Boolean.FALSE);
-        tester.checkBoolean("cast(null as integer) is not distinct from 2", Boolean.FALSE);
-        tester.checkBoolean("cast(null as integer) is not distinct from cast(null as integer)", Boolean.TRUE);
-//        tester.checkBoolean("row(1,1) is not distinct from row(1,1)", Boolean.FALSE);
-//        tester.checkBoolean("row(1,1) is not distinct from row(1,2)", Boolean.TRUE);
+        getTester().isFor(SqlStdOperatorTable.isNotDistinctFromOperator);
+        getTester().checkBoolean("1 is not distinct from 1", Boolean.TRUE);
+        getTester().checkBoolean("1 is not distinct from 1.0", Boolean.TRUE);
+        getTester().checkBoolean("1 is not distinct from 2", Boolean.FALSE);
+        getTester().checkBoolean("cast(null as integer) is not distinct from 2", Boolean.FALSE);
+        getTester().checkBoolean("cast(null as integer) is not distinct from cast(null as integer)", Boolean.TRUE);
+//        getTester().checkBoolean("row(1,1) is not distinct from row(1,1)", Boolean.FALSE);
+//        getTester().checkBoolean("row(1,1) is not distinct from row(1,2)", Boolean.TRUE);
     }
 
-    public static void testGreaterThanOrEqualOperator(SqlTester tester)
+    public void testGreaterThanOrEqualOperator()
     {
-        tester.checkBoolean("1>=2", Boolean.FALSE);
-        tester.checkBoolean("-1>=1", Boolean.FALSE);
-        tester.checkBoolean("1>=1", Boolean.TRUE);
-        tester.checkBoolean("2>=1", Boolean.TRUE);
-        tester.checkBoolean("true>=false", Boolean.TRUE);
-        tester.checkBoolean("true>=true", Boolean.TRUE);
-        tester.checkBoolean("false>=false", Boolean.TRUE);
-        tester.checkBoolean("false>=true", Boolean.FALSE);
-        tester.checkNull("cast(null as real)>=999");
+        getTester().isFor(SqlStdOperatorTable.greaterThanOrEqualOperator);
+        getTester().checkBoolean("1>=2", Boolean.FALSE);
+        getTester().checkBoolean("-1>=1", Boolean.FALSE);
+        getTester().checkBoolean("1>=1", Boolean.TRUE);
+        getTester().checkBoolean("2>=1", Boolean.TRUE);
+        getTester().checkBoolean("true>=false", Boolean.TRUE);
+        getTester().checkBoolean("true>=true", Boolean.TRUE);
+        getTester().checkBoolean("false>=false", Boolean.TRUE);
+        getTester().checkBoolean("false>=true", Boolean.FALSE);
+        getTester().checkNull("cast(null as real)>=999");
     }
 
-    public static void testInOperator(SqlTester tester)
+    public void testInOperator()
     {
-        // TODO:
-        Util.discard(tester);
+        getTester().isFor(SqlStdOperatorTable.inOperator);
     }
 
-    public static void testOverlapsOperator(SqlTester tester)
+    public void testOverlapsOperator()
     {
-        //?todo
-        Util.discard(tester);
+        getTester().isFor(SqlStdOperatorTable.overlapsOperator);
     }
 
-    public static void testLessThanOperator(SqlTester tester)
+    public void testLessThanOperator()
     {
-        tester.checkBoolean("1<2", Boolean.TRUE);
-        tester.checkBoolean("-1<1", Boolean.TRUE);
-        tester.checkBoolean("1<1", Boolean.FALSE);
-        tester.checkBoolean("2<1", Boolean.FALSE);
-        tester.checkBoolean("true<false", Boolean.FALSE);
-        tester.checkBoolean("true<true", Boolean.FALSE);
-        tester.checkBoolean("false<false", Boolean.FALSE);
-        tester.checkBoolean("false<true", Boolean.TRUE);
-        tester.checkNull("123<cast(null as bigint)");
-        tester.checkNull("cast(null as tinyint)<123");
+        getTester().isFor(SqlStdOperatorTable.lessThanOperator);
+        getTester().checkBoolean("1<2", Boolean.TRUE);
+        getTester().checkBoolean("-1<1", Boolean.TRUE);
+        getTester().checkBoolean("1<1", Boolean.FALSE);
+        getTester().checkBoolean("2<1", Boolean.FALSE);
+        getTester().checkBoolean("true<false", Boolean.FALSE);
+        getTester().checkBoolean("true<true", Boolean.FALSE);
+        getTester().checkBoolean("false<false", Boolean.FALSE);
+        getTester().checkBoolean("false<true", Boolean.TRUE);
+        getTester().checkNull("123<cast(null as bigint)");
+        getTester().checkNull("cast(null as tinyint)<123");
     }
 
-    public static void testLessThanOrEqualOperator(SqlTester tester)
+    public void testLessThanOrEqualOperator()
     {
-        tester.checkBoolean("1<=2", Boolean.TRUE);
-        tester.checkBoolean("1<=1", Boolean.TRUE);
-        tester.checkBoolean("-1<=1", Boolean.TRUE);
-        tester.checkBoolean("2<=1", Boolean.FALSE);
-        tester.checkBoolean("true<=false", Boolean.FALSE);
-        tester.checkBoolean("true<=true", Boolean.TRUE);
-        tester.checkBoolean("false<=false", Boolean.TRUE);
-        tester.checkBoolean("false<=true", Boolean.TRUE);
-        tester.checkNull("cast(null as integer)<=3");
-        tester.checkNull("3<=cast(null as smallint)");
+        getTester().isFor(SqlStdOperatorTable.lessThanOrEqualOperator);
+        getTester().checkBoolean("1<=2", Boolean.TRUE);
+        getTester().checkBoolean("1<=1", Boolean.TRUE);
+        getTester().checkBoolean("-1<=1", Boolean.TRUE);
+        getTester().checkBoolean("2<=1", Boolean.FALSE);
+        getTester().checkBoolean("true<=false", Boolean.FALSE);
+        getTester().checkBoolean("true<=true", Boolean.TRUE);
+        getTester().checkBoolean("false<=false", Boolean.TRUE);
+        getTester().checkBoolean("false<=true", Boolean.TRUE);
+        getTester().checkNull("cast(null as integer)<=3");
+        getTester().checkNull("3<=cast(null as smallint)");
     }
 
-    public static void testMinusOperator(SqlTester tester)
+    public void testMinusOperator()
     {
-        tester.checkScalarExact("-2-1", "-3");
-        tester.checkScalarExact("2-1", "1");
-        tester.checkScalarApprox("2.0-1", "todo:", 1, 0);
-        tester.checkScalarExact("1-2", "-1");
-        tester.checkNull("1e1-cast(null as double)");
-        tester.checkNull("cast(null as tinyint) - cast(null as smallint)");
+        getTester().isFor(SqlStdOperatorTable.minusOperator);
+        getTester().checkScalarExact("-2-1", "-3");
+        getTester().checkScalarExact("2-1", "1");
+        getTester().checkScalarApprox("2.0-1", "todo:", 1, 0);
+        getTester().checkScalarExact("1-2", "-1");
+        getTester().checkNull("1e1-cast(null as double)");
+        getTester().checkNull("cast(null as tinyint) - cast(null as smallint)");
     }
 
-    public static void testMinusDateOperator(SqlTester tester)
+    public void testMinusDateOperator()
     {
+        getTester().isFor(SqlStdOperatorTable.minusDateOperator);
         //todo
     }
 
-    public static void testMultiplyOperator(SqlTester tester)
+    public void testMultiplyOperator()
     {
-        tester.checkScalarExact("2*3", "6");
-        tester.checkScalarExact("2*-3", "-6");
-        tester.checkScalarExact("+2*3", "6");
-        tester.checkScalarExact("2*0", "0");
-        tester.checkScalarApprox("2.0*3", "todo:", 6, 0);
-        tester.checkNull("2e-3*cast(null as integer)");
-        tester.checkNull("cast(null as tinyint) * cast(4 as smallint)");
+        getTester().isFor(SqlStdOperatorTable.multiplyOperator);
+        getTester().checkScalarExact("2*3", "6");
+        getTester().checkScalarExact("2*-3", "-6");
+        getTester().checkScalarExact("+2*3", "6");
+        getTester().checkScalarExact("2*0", "0");
+        getTester().checkScalarApprox("2.0*3", "todo:", 6, 0);
+        getTester().checkNull("2e-3*cast(null as integer)");
+        getTester().checkNull("cast(null as tinyint) * cast(4 as smallint)");
     }
 
-    public static void testNotEqualsOperator(SqlTester tester)
+    public void testNotEqualsOperator()
     {
-        tester.checkBoolean("1<>1", Boolean.FALSE);
-        tester.checkBoolean("'a'<>'A'", Boolean.TRUE);
-        tester.checkNull("'a'<>cast(null as varchar(1))");
+        getTester().isFor(SqlStdOperatorTable.notEqualsOperator);
+        getTester().checkBoolean("1<>1", Boolean.FALSE);
+        getTester().checkBoolean("'a'<>'A'", Boolean.TRUE);
+        getTester().checkNull("'a'<>cast(null as varchar(1))");
     }
 
-    public static void testOrOperator(SqlTester tester)
+    public void testOrOperator()
     {
-        tester.checkBoolean("true or false", Boolean.TRUE);
-        tester.checkBoolean("false or false", Boolean.FALSE);
-        tester.checkBoolean("true or cast(null as boolean)", Boolean.TRUE);
-        tester.checkNull("false or cast(null as boolean)");
+        getTester().isFor(SqlStdOperatorTable.orOperator);
+        getTester().checkBoolean("true or false", Boolean.TRUE);
+        getTester().checkBoolean("false or false", Boolean.FALSE);
+        getTester().checkBoolean("true or cast(null as boolean)", Boolean.TRUE);
+        getTester().checkNull("false or cast(null as boolean)");
     }
 
-    public static void testPlusOperator(SqlTester tester)
+    public void testPlusOperator()
     {
-        tester.checkScalarExact("1+2", "3");
-        tester.checkScalarExact("-1+2", "1");
-        tester.checkScalarApprox("1+2.0", "todo:", 3, 0);
-        tester.checkNull("cast(null as tinyint)+1");
-        tester.checkNull("1e-2+cast(null as double)");
+        getTester().isFor(SqlStdOperatorTable.plusOperator);
+        getTester().checkScalarExact("1+2", "3");
+        getTester().checkScalarExact("-1+2", "1");
+        getTester().checkScalarApprox("1+2.0", "todo:", 3, 0);
+        getTester().checkNull("cast(null as tinyint)+1");
+        getTester().checkNull("1e-2+cast(null as double)");
     }
 
-    public static void testDescendingOperator(SqlTester tester)
+    public void testDescendingOperator()
     {
-        Util.discard(tester);
-        // TODO:
+        getTester().isFor(SqlStdOperatorTable.descendingOperator);
     }
 
-    public static void testIsNotNullOperator(SqlTester tester)
+    public void testIsNotNullOperator()
     {
-        tester.checkBoolean("true is not null", Boolean.TRUE);
-        tester.checkBoolean("cast(null as boolean) is not null",
+        getTester().isFor(SqlStdOperatorTable.isNotNullOperator);
+        getTester().checkBoolean("true is not null", Boolean.TRUE);
+        getTester().checkBoolean("cast(null as boolean) is not null",
             Boolean.FALSE);
     }
 
-    public static void testIsNullOperator(SqlTester tester)
+    public void testIsNullOperator()
     {
-        tester.checkBoolean("true is null", Boolean.FALSE);
-        tester.checkBoolean("cast(null as boolean) is null",
+        getTester().isFor(SqlStdOperatorTable.isNullOperator);
+        getTester().checkBoolean("true is null", Boolean.FALSE);
+        getTester().checkBoolean("cast(null as boolean) is null",
             Boolean.TRUE);
     }
 
-    public static void testIsNotTrueOperator(SqlTester tester)
+    public void testIsNotTrueOperator()
     {
-        tester.checkBoolean("true is not true", Boolean.FALSE);
-        tester.checkBoolean("false is not true", Boolean.TRUE);
-        tester.checkBoolean("cast(null as boolean) is not true",
+        getTester().isFor(SqlStdOperatorTable.isNotTrueOperator);
+        getTester().checkBoolean("true is not true", Boolean.FALSE);
+        getTester().checkBoolean("false is not true", Boolean.TRUE);
+        getTester().checkBoolean("cast(null as boolean) is not true",
             Boolean.TRUE);
     }
 
-    public static void testIsTrueOperator(SqlTester tester)
+    public void testIsTrueOperator()
     {
-        tester.checkBoolean("true is true", Boolean.TRUE);
-        tester.checkBoolean("false is true", Boolean.FALSE);
-        tester.checkBoolean("cast(null as boolean) is true",
+        getTester().isFor(SqlStdOperatorTable.isTrueOperator);
+        getTester().checkBoolean("true is true", Boolean.TRUE);
+        getTester().checkBoolean("false is true", Boolean.FALSE);
+        getTester().checkBoolean("cast(null as boolean) is true",
             Boolean.FALSE);
     }
 
-    public static void testIsNotFalseOperator(SqlTester tester)
+    public void testIsNotFalseOperator()
     {
-        tester.checkBoolean("false is not false", Boolean.FALSE);
-        tester.checkBoolean("true is not false", Boolean.TRUE);
-        tester.checkBoolean("cast(null as boolean) is not false",
+        getTester().isFor(SqlStdOperatorTable.isNotFalseOperator);
+        getTester().checkBoolean("false is not false", Boolean.FALSE);
+        getTester().checkBoolean("true is not false", Boolean.TRUE);
+        getTester().checkBoolean("cast(null as boolean) is not false",
             Boolean.TRUE);
     }
 
-    public static void testIsFalseOperator(SqlTester tester)
+    public void testIsFalseOperator()
     {
-        tester.checkBoolean("false is false", Boolean.TRUE);
-        tester.checkBoolean("true is false", Boolean.FALSE);
-        tester.checkBoolean("cast(null as boolean) is false",
+        getTester().isFor(SqlStdOperatorTable.isFalseOperator);
+        getTester().checkBoolean("false is false", Boolean.TRUE);
+        getTester().checkBoolean("true is false", Boolean.FALSE);
+        getTester().checkBoolean("cast(null as boolean) is false",
             Boolean.FALSE);
     }
 
-    public static void testIsNotUnknownOperator(SqlTester tester)
+    public void testIsNotUnknownOperator()
     {
-        tester.checkBoolean("false is not unknown", Boolean.TRUE);
-        tester.checkBoolean("true is not unknown", Boolean.TRUE);
-        tester.checkBoolean("cast(null as boolean) is not unknown",
+        getTester().isFor(SqlStdOperatorTable.isNotUnknownOperator);
+        getTester().checkBoolean("false is not unknown", Boolean.TRUE);
+        getTester().checkBoolean("true is not unknown", Boolean.TRUE);
+        getTester().checkBoolean("cast(null as boolean) is not unknown",
             Boolean.FALSE);
-        tester.checkBoolean("unknown is not unknown", Boolean.FALSE);
+        getTester().checkBoolean("unknown is not unknown", Boolean.FALSE);
     }
 
-    public static void testIsUnknownOperator(SqlTester tester)
+    public void testIsUnknownOperator()
     {
-        tester.checkBoolean("false is unknown", Boolean.FALSE);
-        tester.checkBoolean("true is unknown", Boolean.FALSE);
-        tester.checkBoolean("cast(null as boolean) is unknown",
+        getTester().isFor(SqlStdOperatorTable.isUnknownOperator);
+        getTester().checkBoolean("false is unknown", Boolean.FALSE);
+        getTester().checkBoolean("true is unknown", Boolean.FALSE);
+        getTester().checkBoolean("cast(null as boolean) is unknown",
             Boolean.TRUE);
-        tester.checkBoolean("unknown is unknown", Boolean.TRUE);
+        getTester().checkBoolean("unknown is unknown", Boolean.TRUE);
     }
 
-    public static void testNotOperator(SqlTester tester)
+    public void testIsASetOperator()
     {
-        tester.checkBoolean("not true", Boolean.FALSE);
-        tester.checkBoolean("not false", Boolean.TRUE);
-        tester.checkBoolean("not unknown", null);
-        tester.checkNull("not cast(null as boolean)");
+        getTester().isFor(SqlStdOperatorTable.isASetOperator);
     }
 
-    public static void testPrefixMinusOperator(SqlTester tester)
+    public void testExistsOperator()
     {
-        tester.checkScalarExact("-1", "-1");
-        tester.checkScalarApprox("-1.0", "todo:", -1, 0);
-        tester.checkNull("-cast(null as integer)");
-        tester.checkNull("-cast(null as tinyint)");
+        getTester().isFor(SqlStdOperatorTable.existsOperator);
     }
 
-    public static void testPrefixPlusOperator(SqlTester tester)
+    public void testNotOperator()
     {
-        tester.checkScalarExact("+1", "1");
-        tester.checkScalarApprox("+1.0", "todo:", 1, 0);
-        tester.checkNull("+cast(null as integer)");
-        tester.checkNull("+cast(null as tinyint)");
+        getTester().isFor(SqlStdOperatorTable.notOperator);
+        getTester().checkBoolean("not true", Boolean.FALSE);
+        getTester().checkBoolean("not false", Boolean.TRUE);
+        getTester().checkBoolean("not unknown", null);
+        getTester().checkNull("not cast(null as boolean)");
     }
 
-    public static void testExplicitTableOperator(SqlTester tester)
+    public void testPrefixMinusOperator()
     {
-        Util.discard(tester);
-        // TODO:
+        getTester().isFor(SqlStdOperatorTable.prefixMinusOperator);
+        getTester().checkScalarExact("-1", "-1");
+        getTester().checkScalarApprox("-1.0", "todo:", -1, 0);
+        getTester().checkNull("-cast(null as integer)");
+        getTester().checkNull("-cast(null as tinyint)");
     }
 
-    public static void testValuesOperator(SqlTester tester)
+    public void testPrefixPlusOperator()
     {
-        tester.check("select 'abc' from (values(true))", new AbstractSqlTester.StringTypeChecker("CHAR(3) NOT NULL"), "abc",
+        getTester().isFor(SqlStdOperatorTable.prefixPlusOperator);
+        getTester().checkScalarExact("+1", "1");
+        getTester().checkScalarApprox("+1.0", "todo:", 1, 0);
+        getTester().checkNull("+cast(null as integer)");
+        getTester().checkNull("+cast(null as tinyint)");
+    }
+
+    public void testExplicitTableOperator()
+    {
+        getTester().isFor(SqlStdOperatorTable.explicitTableOperator);
+    }
+
+    public void testValuesOperator()
+    {
+        getTester().isFor(SqlStdOperatorTable.valuesOperator);
+        getTester().check(
+            "select 'abc' from (values(true))",
+            new AbstractSqlTester.StringTypeChecker("CHAR(3) NOT NULL"),
+            "abc",
             0);
     }
 
-    public static void testNotLikeOperator(SqlTester tester)
+    public void testNotLikeOperator()
     {
-        tester.checkBoolean("'abc' not like '_b_'", Boolean.FALSE);
+        getTester().isFor(SqlStdOperatorTable.notLikeOperator);
+        getTester().checkBoolean("'abc' not like '_b_'", Boolean.FALSE);
     }
 
-    public static void testLikeOperator(SqlTester tester)
+    public void testLikeOperator()
     {
-        tester.checkBoolean("''  like ''", Boolean.TRUE);
-        tester.checkBoolean("'a' like 'a'", Boolean.TRUE);
-        tester.checkBoolean("'a' like 'b'", Boolean.FALSE);
-        tester.checkBoolean("'a' like 'A'", Boolean.FALSE);
-        tester.checkBoolean("'a' like 'a_'", Boolean.FALSE);
-        tester.checkBoolean("'a' like '_a'", Boolean.FALSE);
-        tester.checkBoolean("'a' like '%a'", Boolean.TRUE);
-        tester.checkBoolean("'a' like '%a%'", Boolean.TRUE);
-        tester.checkBoolean("'a' like 'a%'", Boolean.TRUE);
-        tester.checkBoolean("'ab'   like 'a_'", Boolean.TRUE);
-        tester.checkBoolean("'abc'  like 'a_'", Boolean.FALSE);
-        tester.checkBoolean("'abcd' like 'a%'", Boolean.TRUE);
-        tester.checkBoolean("'ab'   like '_b'", Boolean.TRUE);
-        tester.checkBoolean("'abcd' like '_d'", Boolean.FALSE);
-        tester.checkBoolean("'abcd' like '%d'", Boolean.TRUE);
+        getTester().isFor(SqlStdOperatorTable.likeOperator);
+        getTester().checkBoolean("''  like ''", Boolean.TRUE);
+        getTester().checkBoolean("'a' like 'a'", Boolean.TRUE);
+        getTester().checkBoolean("'a' like 'b'", Boolean.FALSE);
+        getTester().checkBoolean("'a' like 'A'", Boolean.FALSE);
+        getTester().checkBoolean("'a' like 'a_'", Boolean.FALSE);
+        getTester().checkBoolean("'a' like '_a'", Boolean.FALSE);
+        getTester().checkBoolean("'a' like '%a'", Boolean.TRUE);
+        getTester().checkBoolean("'a' like '%a%'", Boolean.TRUE);
+        getTester().checkBoolean("'a' like 'a%'", Boolean.TRUE);
+        getTester().checkBoolean("'ab'   like 'a_'", Boolean.TRUE);
+        getTester().checkBoolean("'abc'  like 'a_'", Boolean.FALSE);
+        getTester().checkBoolean("'abcd' like 'a%'", Boolean.TRUE);
+        getTester().checkBoolean("'ab'   like '_b'", Boolean.TRUE);
+        getTester().checkBoolean("'abcd' like '_d'", Boolean.FALSE);
+        getTester().checkBoolean("'abcd' like '%d'", Boolean.TRUE);
     }
 
-    public static void testNotSimilarToOperator(SqlTester tester)
+    public void testNotSimilarToOperator()
     {
-        tester.checkBoolean("'ab' not similar to 'a_'", Boolean.FALSE);
+        getTester().isFor(SqlStdOperatorTable.notSimilarOperator);
+        getTester().checkBoolean("'ab' not similar to 'a_'", Boolean.FALSE);
     }
 
-    public static void testSimilarToOperator(SqlTester tester)
+    public void testSimilarToOperator()
     {
+        getTester().isFor(SqlStdOperatorTable.similarOperator);
         // like LIKE
-        tester.checkBoolean("''  similar to ''", Boolean.TRUE);
-        tester.checkBoolean("'a' similar to 'a'", Boolean.TRUE);
-        tester.checkBoolean("'a' similar to 'b'", Boolean.FALSE);
-        tester.checkBoolean("'a' similar to 'A'", Boolean.FALSE);
-        tester.checkBoolean("'a' similar to 'a_'", Boolean.FALSE);
-        tester.checkBoolean("'a' similar to '_a'", Boolean.FALSE);
-        tester.checkBoolean("'a' similar to '%a'", Boolean.TRUE);
-        tester.checkBoolean("'a' similar to '%a%'", Boolean.TRUE);
-        tester.checkBoolean("'a' similar to 'a%'", Boolean.TRUE);
-        tester.checkBoolean("'ab'   similar to 'a_'", Boolean.TRUE);
-        tester.checkBoolean("'abc'  similar to 'a_'", Boolean.FALSE);
-        tester.checkBoolean("'abcd' similar to 'a%'", Boolean.TRUE);
-        tester.checkBoolean("'ab'   similar to '_b'", Boolean.TRUE);
-        tester.checkBoolean("'abcd' similar to '_d'", Boolean.FALSE);
-        tester.checkBoolean("'abcd' similar to '%d'", Boolean.TRUE);
+        getTester().checkBoolean("''  similar to ''", Boolean.TRUE);
+        getTester().checkBoolean("'a' similar to 'a'", Boolean.TRUE);
+        getTester().checkBoolean("'a' similar to 'b'", Boolean.FALSE);
+        getTester().checkBoolean("'a' similar to 'A'", Boolean.FALSE);
+        getTester().checkBoolean("'a' similar to 'a_'", Boolean.FALSE);
+        getTester().checkBoolean("'a' similar to '_a'", Boolean.FALSE);
+        getTester().checkBoolean("'a' similar to '%a'", Boolean.TRUE);
+        getTester().checkBoolean("'a' similar to '%a%'", Boolean.TRUE);
+        getTester().checkBoolean("'a' similar to 'a%'", Boolean.TRUE);
+        getTester().checkBoolean("'ab'   similar to 'a_'", Boolean.TRUE);
+        getTester().checkBoolean("'abc'  similar to 'a_'", Boolean.FALSE);
+        getTester().checkBoolean("'abcd' similar to 'a%'", Boolean.TRUE);
+        getTester().checkBoolean("'ab'   similar to '_b'", Boolean.TRUE);
+        getTester().checkBoolean("'abcd' similar to '_d'", Boolean.FALSE);
+        getTester().checkBoolean("'abcd' similar to '%d'", Boolean.TRUE);
 
         // simple regular expressions
         // ab*c+d matches acd, abcd, acccd, abcccd but not abd, aabc
-        tester.checkBoolean("'acd'    similar to 'ab*c+d'", Boolean.TRUE);
-        tester.checkBoolean("'abcd'   similar to 'ab*c+d'", Boolean.TRUE);
-        tester.checkBoolean("'acccd'  similar to 'ab*c+d'", Boolean.TRUE);
-        tester.checkBoolean("'abcccd' similar to 'ab*c+d'", Boolean.TRUE);
-        tester.checkBoolean("'abd'    similar to 'ab*c+d'", Boolean.FALSE);
-        tester.checkBoolean("'aabc'   similar to 'ab*c+d'", Boolean.FALSE);
+        getTester().checkBoolean("'acd'    similar to 'ab*c+d'", Boolean.TRUE);
+        getTester().checkBoolean("'abcd'   similar to 'ab*c+d'", Boolean.TRUE);
+        getTester().checkBoolean("'acccd'  similar to 'ab*c+d'", Boolean.TRUE);
+        getTester().checkBoolean("'abcccd' similar to 'ab*c+d'", Boolean.TRUE);
+        getTester().checkBoolean("'abd'    similar to 'ab*c+d'", Boolean.FALSE);
+        getTester().checkBoolean("'aabc'   similar to 'ab*c+d'", Boolean.FALSE);
 
         // compound regular expressions
         // x(ab|c)*y matches xy, xccy, xababcy but not xbcy
-        tester.checkBoolean("'xy'      similar to 'x(ab|c)*y'", Boolean.TRUE);
-        tester.checkBoolean("'xccy'    similar to 'x(ab|c)*y'", Boolean.TRUE);
-        tester.checkBoolean("'xababcy' similar to 'x(ab|c)*y'", Boolean.TRUE);
-        tester.checkBoolean("'xbcy'    similar to 'x(ab|c)*y'", Boolean.FALSE);
+        getTester().checkBoolean("'xy'      similar to 'x(ab|c)*y'", Boolean.TRUE);
+        getTester().checkBoolean("'xccy'    similar to 'x(ab|c)*y'", Boolean.TRUE);
+        getTester().checkBoolean("'xababcy' similar to 'x(ab|c)*y'", Boolean.TRUE);
+        getTester().checkBoolean("'xbcy'    similar to 'x(ab|c)*y'", Boolean.FALSE);
 
         // x(ab|c)+y matches xccy, xababcy but not xy, xbcy
-        tester.checkBoolean("'xy'      similar to 'x(ab|c)+y'", Boolean.FALSE);
-        tester.checkBoolean("'xccy'    similar to 'x(ab|c)+y'", Boolean.TRUE);
-        tester.checkBoolean("'xababcy' similar to 'x(ab|c)+y'", Boolean.TRUE);
-        tester.checkBoolean("'xbcy'    similar to 'x(ab|c)+y'", Boolean.FALSE);
+        getTester().checkBoolean("'xy'      similar to 'x(ab|c)+y'", Boolean.FALSE);
+        getTester().checkBoolean("'xccy'    similar to 'x(ab|c)+y'", Boolean.TRUE);
+        getTester().checkBoolean("'xababcy' similar to 'x(ab|c)+y'", Boolean.TRUE);
+        getTester().checkBoolean("'xbcy'    similar to 'x(ab|c)+y'", Boolean.FALSE);
     }
 
-    public static void testEscapeOperator(SqlTester tester)
+    public void testEscapeOperator()
     {
-        Util.discard(tester);
-        // TODO:
+        getTester().isFor(SqlStdOperatorTable.escapeOperator);
     }
 
-    public static void testConvertFunc(SqlTester tester)
+    public void testConvertFunc()
     {
-        Util.discard(tester);
-        //todo: implement when convert exist in the calculator
+        getTester().isFor(SqlStdOperatorTable.convertFunc);
     }
 
-    public static void testTranslateFunc(SqlTester tester)
+    public void testTranslateFunc()
     {
-        Util.discard(tester);
-        //todo: implement when translate exist in the calculator
+        getTester().isFor(SqlStdOperatorTable.translateFunc);
     }
 
-    public static void testOverlayFunc(SqlTester tester)
+    public void testOverlayFunc()
     {
-        tester.checkString("overlay('ABCdef' placing 'abc' from 1)",
+        getTester().isFor(SqlStdOperatorTable.overlayFunc);
+        getTester().checkString("overlay('ABCdef' placing 'abc' from 1)",
             "abcdef", "todo: CHAR(9) NOT NULL");
-        tester.checkString("overlay('ABCdef' placing 'abc' from 1 for 2)",
+        getTester().checkString("overlay('ABCdef' placing 'abc' from 1 for 2)",
             "abcCdef", "todo: CHAR(9) NOT NULL");
-        tester.checkNull(
+        getTester().checkNull(
             "overlay('ABCdef' placing 'abc' from 1 for cast(null as integer))");
-        tester.checkNull(
+        getTester().checkNull(
             "overlay(cast(null as varchar(1)) placing 'abc' from 1)");
 
         if (false) {
             // hex strings not yet implemented in calc
-            tester.checkNull("overlay(x'abc' placing x'abc' from cast(null as integer))");
+            getTester().checkNull("overlay(x'abc' placing x'abc' from cast(null as integer))");
         }
     }
 
-    public static void testPositionFunc(SqlTester tester)
+    public void testPositionFunc()
     {
-        tester.checkScalarExact("position('b' in 'abc')", "2");
-        tester.checkScalarExact("position('' in 'abc')", "1");
+        getTester().isFor(SqlStdOperatorTable.positionFunc);
+        getTester().checkScalarExact("position('b' in 'abc')", "2");
+        getTester().checkScalarExact("position('' in 'abc')", "1");
 
-        tester.checkNull("position(cast(null as varchar(1)) in '0010')");
-        tester.checkNull("position('a' in cast(null as varchar(1)))");
+        getTester().checkNull("position(cast(null as varchar(1)) in '0010')");
+        getTester().checkNull("position('a' in cast(null as varchar(1)))");
     }
 
-    public static void testCharLengthFunc(SqlTester tester)
+    public void testCharLengthFunc()
     {
-        tester.checkScalarExact("char_length('abc')", "3");
-        tester.checkNull("char_length(cast(null as varchar(1)))");
+        getTester().isFor(SqlStdOperatorTable.charLengthFunc);
+        getTester().checkScalarExact("char_length('abc')", "3");
+        getTester().checkNull("char_length(cast(null as varchar(1)))");
     }
 
-    public static void testCharacterLengthFunc(SqlTester tester)
+    public void testCharacterLengthFunc()
     {
-        tester.checkScalarExact("CHARACTER_LENGTH('abc')", "3");
-        tester.checkNull("CHARACTER_LENGTH(cast(null as varchar(1)))");
+        getTester().isFor(SqlStdOperatorTable.characterLengthFunc);
+        getTester().checkScalarExact("CHARACTER_LENGTH('abc')", "3");
+        getTester().checkNull("CHARACTER_LENGTH(cast(null as varchar(1)))");
     }
 
-    public static void testUpperFunc(SqlTester tester)
+    public void testUpperFunc()
     {
-        tester.checkString("upper('a')", "A", "todo: CHAR(1) NOT NULL");
-        tester.checkString("upper('A')", "A", "todo: CHAR(1) NOT NULL");
-        tester.checkString("upper('1')", "1", "todo: CHAR(1) NOT NULL");
-        tester.checkNull("upper(cast(null as varchar(1)))");
+        getTester().isFor(SqlStdOperatorTable.upperFunc);
+        getTester().checkString("upper('a')", "A", "todo: CHAR(1) NOT NULL");
+        getTester().checkString("upper('A')", "A", "todo: CHAR(1) NOT NULL");
+        getTester().checkString("upper('1')", "1", "todo: CHAR(1) NOT NULL");
+        getTester().checkNull("upper(cast(null as varchar(1)))");
     }
 
-    public static void testLowerFunc(SqlTester tester)
+    public void testLowerFunc()
     {
+        getTester().isFor(SqlStdOperatorTable.lowerFunc);
         // SQL:2003 6.29.8 The type of lower is the type of its argument
-        tester.checkString("lower('A')", "a", "todo: CHAR(1) NOT NULL");
-        tester.checkString("lower('a')", "a", "todo: CHAR(1) NOT NULL");
-        tester.checkString("lower('1')", "1", "todo: CHAR(1) NOT NULL");
-        tester.checkNull("lower(cast(null as varchar(1)))");
+        getTester().checkString("lower('A')", "a", "todo: CHAR(1) NOT NULL");
+        getTester().checkString("lower('a')", "a", "todo: CHAR(1) NOT NULL");
+        getTester().checkString("lower('1')", "1", "todo: CHAR(1) NOT NULL");
+        getTester().checkNull("lower(cast(null as varchar(1)))");
     }
 
-    public static void testInitcapFunc(SqlTester tester)
+    public void testInitcapFunc()
     {
-        Util.discard(tester);
-        //not yet supported
-        //                    tester.checkString("initcap('aA')", "'Aa'");
-        //                    tester.checkString("initcap('Aa')", "'Aa'");
-        //                    tester.checkString("initcap('1a')", "'1a'");
-        //                    tester.checkString("initcap('ab cd Ef 12')", "'Ab Cd Ef 12'");
-        //                    tester.checkNull("initcap(cast(null as varchar(1)))");
+        getTester().isFor(SqlStdOperatorTable.initcapFunc);
+        if (false) {
+            //not yet supported
+            getTester().checkString("initcap('aA')", "'Aa'", "todo:");
+            getTester().checkString("initcap('Aa')", "'Aa'", "todo:");
+            getTester().checkString("initcap('1a')", "'1a'", "todo:");
+            getTester().checkString("initcap('ab cd Ef 12')", "'Ab Cd Ef 12'", "todo:");
+            getTester().checkNull("initcap(cast(null as varchar(1)))");
+        }
     }
 
-    public static void testPowFunc(SqlTester tester)
+    public void testPowFunc()
     {
-        tester.checkScalarApprox("pow(2,-2)", "todo:", 0.25, 0);
-        tester.checkNull("pow(cast(null as integer),2)");
-        tester.checkNull("pow(2,cast(null as double))");
+        getTester().isFor(SqlStdOperatorTable.powFunc);
+        getTester().checkScalarApprox("pow(2,-2)", "todo:", 0.25, 0);
+        getTester().checkNull("pow(cast(null as integer),2)");
+        getTester().checkNull("pow(2,cast(null as double))");
     }
 
-    public static void testModFunc(SqlTester tester)
+    public void testModFunc()
     {
-        tester.checkScalarExact("mod(4,2)", "0");
-        tester.checkNull("mod(cast(null as integer),2)");
-        tester.checkNull("mod(4,cast(null as tinyint))");
+        getTester().isFor(SqlStdOperatorTable.modFunc);
+        getTester().checkScalarExact("mod(4,2)", "0");
+        getTester().checkNull("mod(cast(null as integer),2)");
+        getTester().checkNull("mod(4,cast(null as tinyint))");
     }
 
-    public static void testLnFunc(SqlTester tester)
+    public void testLnFunc()
     {
-        tester.checkScalarApprox("ln(2.71828)", "DOUBLE NOT NULL", 1, 0.000001);
-        tester.checkScalarApprox("ln(2.71828)", "DOUBLE NOT NULL", 0.999999327, 0.0000001);
-        tester.checkNull("ln(cast(null as tinyint))");
+        getTester().isFor(SqlStdOperatorTable.lnFunc);
+        getTester().checkScalarApprox("ln(2.71828)", "DOUBLE NOT NULL", 1, 0.000001);
+        getTester().checkScalarApprox("ln(2.71828)", "DOUBLE NOT NULL", 0.999999327, 0.0000001);
+        getTester().checkNull("ln(cast(null as tinyint))");
     }
 
-    public static void testLogFunc(SqlTester tester)
+    public void testLogFunc()
     {
-        tester.checkScalarApprox("log(10)", "todo:", 1.0, 0);
-        tester.checkNull("log(cast(null as real))");
+        getTester().isFor(SqlStdOperatorTable.logFunc);
+        getTester().checkScalarApprox("log(10)", "todo:", 1.0, 0);
+        getTester().checkNull("log(cast(null as real))");
     }
 
-    public static void testAbsFunc(SqlTester tester)
+    public void testAbsFunc()
     {
-        tester.checkScalarExact("abs(-1)", "1");
-        tester.checkNull("abs(cast(null as double))");
+        getTester().isFor(SqlStdOperatorTable.absFunc);
+        getTester().checkScalarExact("abs(-1)", "1");
+        getTester().checkNull("abs(cast(null as double))");
     }
 
-    public static void testNullifFunc(SqlTester tester)
+    public void testNullifFunc()
     {
-        tester.checkNull("nullif(1,1)");
-        tester.checkString("nullif('a','bc')", "a", "todo: VARCHAR(2) NOT NULL");
-        tester.checkString("nullif('a',cast(null as varchar(1)))", "a", "todo: VARCHAR(1) NOT NULL");
-        tester.checkNull("nullif(cast(null as varchar(1)),'a')");
+        getTester().isFor(SqlStdOperatorTable.nullIfFunc);
+        getTester().checkNull("nullif(1,1)");
+        getTester().checkString("nullif('a','bc')", "a", "todo: VARCHAR(2) NOT NULL");
+        getTester().checkString("nullif('a',cast(null as varchar(1)))", "a", "todo: VARCHAR(1) NOT NULL");
+        getTester().checkNull("nullif(cast(null as varchar(1)),'a')");
     }
 
-    public static void testCoalesceFunc(SqlTester tester)
+    public void testCoalesceFunc()
     {
-        tester.checkString("coalesce('a','b')", "a", "CHAR(1) NOT NULL");
-        tester.checkScalarExact("coalesce(null,null,3)", "3");
+        getTester().isFor(SqlStdOperatorTable.coalesceFunc);
+        getTester().checkString("coalesce('a','b')", "a", "CHAR(1) NOT NULL");
+        getTester().checkScalarExact("coalesce(null,null,3)", "3");
     }
 
-    public static void testUserFunc(SqlTester tester)
+    public void testUserFunc()
     {
-        tester.checkString("USER", null, "VARCHAR(2000) NOT NULL");
+        getTester().isFor(SqlStdOperatorTable.userFunc);
+        getTester().checkString("USER", null, "VARCHAR(2000) NOT NULL");
     }
 
-    public static void testCurrentUserFunc(SqlTester tester)
+    public void testCurrentUserFunc()
     {
-        tester.checkString("CURRENT_USER", null, "VARCHAR(2000) NOT NULL");
+        getTester().isFor(SqlStdOperatorTable.currentUserFunc);
+        getTester().checkString("CURRENT_USER", null, "VARCHAR(2000) NOT NULL");
     }
 
-    public static void testSessionUserFunc(SqlTester tester)
+    public void testSessionUserFunc()
     {
-        tester.checkString("SESSION_USER", null, "VARCHAR(2000) NOT NULL");
+        getTester().isFor(SqlStdOperatorTable.sessionUserFunc);
+        getTester().checkString("SESSION_USER", null, "VARCHAR(2000) NOT NULL");
     }
 
-    public static void testSystemUserFunc(SqlTester tester)
+    public void testSystemUserFunc()
     {
+        getTester().isFor(SqlStdOperatorTable.systemUserFunc);
         String user = System.getProperty("user.name"); // e.g. "jhyde"
-        tester.checkString("SYSTEM_USER", user, "VARCHAR(2000) NOT NULL");
+        getTester().checkString("SYSTEM_USER", user, "VARCHAR(2000) NOT NULL");
     }
 
-    public static void testCurrentPathFunc(SqlTester tester)
+    public void testCurrentPathFunc()
     {
-        tester.checkString("CURRENT_PATH", "", "VARCHAR(2000) NOT NULL");
+        getTester().isFor(SqlStdOperatorTable.currentPathFunc);
+        getTester().checkString("CURRENT_PATH", "", "VARCHAR(2000) NOT NULL");
     }
 
-    public static void testCurrentRoleFunc(SqlTester tester)
+    public void testCurrentRoleFunc()
     {
+        getTester().isFor(SqlStdOperatorTable.currentRoleFunc);
         // We don't have roles yet, so the CURRENT_ROLE function returns
         // the empty string.
-        tester.checkString("CURRENT_ROLE", "", "VARCHAR(2000) NOT NULL");
+        getTester().checkString("CURRENT_ROLE", "", "VARCHAR(2000) NOT NULL");
     }
 
-    public static void testLocalTimeFunc(SqlTester tester)
+    public void testLocalTimeFunc()
     {
-        tester.checkScalar("LOCALTIME", timePattern, "TIME(0) NOT NULL");
-        //TODO: tester.checkFails("LOCALTIME()", "?", SqlTypeName.Time);
-        tester.checkScalar("LOCALTIME(1)", timePattern,
+        getTester().isFor(SqlStdOperatorTable.localTimeFunc);
+        getTester().checkScalar("LOCALTIME", timePattern, "TIME(0) NOT NULL");
+        //TODO: getTester().checkFails("LOCALTIME()", "?", SqlTypeName.Time);
+        getTester().checkScalar("LOCALTIME(1)", timePattern,
             "TIME(1) NOT NULL");
     }
 
-    public static void testLocalTimestampFunc(SqlTester tester)
+    public void testLocalTimestampFunc()
     {
-        tester.checkScalar("LOCALTIMESTAMP", timestampPattern,
+        getTester().isFor(SqlStdOperatorTable.localTimestampFunc);
+        getTester().checkScalar("LOCALTIMESTAMP", timestampPattern,
             "TIMESTAMP(0) NOT NULL");
-        tester.checkFails("LOCALTIMESTAMP()", ".*");
-        tester.checkScalar("LOCALTIMESTAMP(1)", timestampPattern,
+        getTester().checkFails("LOCALTIMESTAMP()", ".*");
+        getTester().checkScalar("LOCALTIMESTAMP(1)", timestampPattern,
             "TIMESTAMP(1) NOT NULL");
     }
 
-    public static void testCurrentTimeFunc(SqlTester tester)
+    public void testCurrentTimeFunc()
     {
-        tester.checkScalar("CURRENT_TIME", timePattern,
+        getTester().isFor(SqlStdOperatorTable.currentTimeFunc);
+        getTester().checkScalar("CURRENT_TIME", timePattern,
             "TIME(0) NOT NULL");
-        tester.checkFails("CURRENT_TIME()", ".*");
-        tester.checkScalar("CURRENT_TIME(1)", timePattern,
+        getTester().checkFails("CURRENT_TIME()", ".*");
+        getTester().checkScalar("CURRENT_TIME(1)", timePattern,
             "TIME(1) NOT NULL");
     }
 
-    public static void testCurrentTimestampFunc(SqlTester tester)
+    public void testCurrentTimestampFunc()
     {
-        tester.checkScalar("CURRENT_TIMESTAMP", timestampPattern,
+        getTester().isFor(SqlStdOperatorTable.currentTimestampFunc);
+        getTester().checkScalar("CURRENT_TIMESTAMP", timestampPattern,
             "TIMESTAMP(0) NOT NULL");
-        tester.checkFails("CURRENT_TIMESTAMP()", ".*");
-        tester.checkScalar("CURRENT_TIMESTAMP(1)", timestampPattern,
+        getTester().checkFails("CURRENT_TIMESTAMP()", ".*");
+        getTester().checkScalar("CURRENT_TIMESTAMP(1)", timestampPattern,
             "TIMESTAMP(1) NOT NULL");
     }
 
-    public static void testCurrentDateFunc(SqlTester tester)
+    public void testCurrentDateFunc()
     {
-        tester.checkScalar("CURRENT_DATE", datePattern, "DATE NOT NULL");
+        getTester().isFor(SqlStdOperatorTable.currentDateFunc);
+        getTester().checkScalar("CURRENT_DATE", datePattern, "DATE NOT NULL");
     }
 
-    public static void testSubstringFunction(SqlTester tester)
+    public void testSubstringFunction()
     {
-        tester.checkString("substring('abc' from 1 for 2)", "ab", "VARCHAR(3) NOT NULL");
-        tester.checkString("substring('abc' from 2)", "bc", "todo: VARCHAR(3) NOT NULL");
+        getTester().isFor(SqlStdOperatorTable.substringFunc);
+        getTester().checkString("substring('abc' from 1 for 2)", "ab", "VARCHAR(3) NOT NULL");
+        getTester().checkString("substring('abc' from 2)", "bc", "todo: VARCHAR(3) NOT NULL");
 
         //substring reg exp not yet supported
-        //                    tester.checkString("substring('foobar' from '%#\"o_b#\"%' for '#')", "oob");
-        tester.checkNull("substring(cast(null as varchar(1)),1,2)");
+        //                    getTester().checkString("substring('foobar' from '%#\"o_b#\"%' for '#')", "oob");
+        getTester().checkNull("substring(cast(null as varchar(1)),1,2)");
     }
 
-    public static void testTrimFunc(SqlTester tester)
+    public void testTrimFunc()
     {
+        getTester().isFor(SqlStdOperatorTable.trimFunc);
         // SQL:2003 6.29.11 Trimming a CHAR yields a VARCHAR
-        tester.checkString("trim('a' from 'aAa')", "A", "todo: VARCHAR(3) NOT NULL");
-        tester.checkString("trim(both 'a' from 'aAa')", "A", "todo: VARCHAR(3) NOT NULL");
-        tester.checkString("trim(leading 'a' from 'aAa')", "Aa", "todo: VARCHAR(3) NOT NULL");
-        tester.checkString("trim(trailing 'a' from 'aAa')", "aA", "todo: VARCHAR(3) NOT NULL");
-        tester.checkNull("trim(cast(null as varchar(1)) from 'a')");
-        tester.checkNull("trim('a' from cast(null as varchar(1)))");
+        getTester().checkString("trim('a' from 'aAa')", "A", "todo: VARCHAR(3) NOT NULL");
+        getTester().checkString("trim(both 'a' from 'aAa')", "A", "todo: VARCHAR(3) NOT NULL");
+        getTester().checkString("trim(leading 'a' from 'aAa')", "Aa", "todo: VARCHAR(3) NOT NULL");
+        getTester().checkString("trim(trailing 'a' from 'aAa')", "aA", "todo: VARCHAR(3) NOT NULL");
+        getTester().checkNull("trim(cast(null as varchar(1)) from 'a')");
+        getTester().checkNull("trim('a' from cast(null as varchar(1)))");
     }
 
-    public static void testWindow(SqlTester tester) {
-        tester.check("select sum(1) over (order by x) from (select 1 as x, 2 as y from (values (true)))",
-            new AbstractSqlTester.StringTypeChecker("INTEGER NOT NULL"), "1",
+    public void testWindow() {
+        getTester().isFor(SqlStdOperatorTable.windowOperator);
+        getTester().check(
+            "select sum(1) over (order by x) from (select 1 as x, 2 as y from (values (true)))",
+            new AbstractSqlTester.StringTypeChecker("INTEGER NOT NULL"),
+            "1",
             0);
     }
 
-    public static void testElementFunc(SqlTester tester)
+    public void testElementFunc()
     {
-//        tester.checkString("element(multiset['abc']))","abc");
-//        tester.checkNull("element(multiset[cast(null as integer)]))");
+        getTester().isFor(SqlStdOperatorTable.elementFunc);
+        if (todo) {
+            getTester().checkString("element(multiset['abc']))","abc", "todo:");
+            getTester().checkNull("element(multiset[cast(null as integer)]))");
+        }
     }
 
-    public static void testCardinalityFunc(SqlTester tester) {
-//        tester.checkScalarExact("cardinality(multiset[cast(null as integer),2]))","2");
+    public void testCardinalityFunc() {
+        getTester().isFor(SqlStdOperatorTable.cardinalityFunc);
+        if (todo) {
+            getTester().checkScalarExact("cardinality(multiset[cast(null as integer),2]))","2");
+        }
     }
 
-    public static void testMemberOfOperator(SqlTester tester) {
-//        tester.checkBoolean("1 member of multiset[1]",Boolean.TRUE);
-//        tester.checkBoolean("'2' member of multiset['1']",Boolean.FALSE);
-//        tester.checkBoolean("cast(null as double) member of multiset[cast(null as double)]",Boolean.TRUE);
-//        tester.checkBoolean("cast(null as double) member of multiset[1.1]",Boolean.FALSE);
-//        tester.checkBoolean("1.1 member of multiset[cast(null as double)]",Boolean.FALSE);
+    public void testMemberOfOperator() {
+        getTester().isFor(SqlStdOperatorTable.memberOfOperator);
+        if (todo) {
+            getTester().checkBoolean("1 member of multiset[1]",Boolean.TRUE);
+            getTester().checkBoolean("'2' member of multiset['1']",Boolean.FALSE);
+            getTester().checkBoolean("cast(null as double) member of multiset[cast(null as double)]",Boolean.TRUE);
+            getTester().checkBoolean("cast(null as double) member of multiset[1.1]",Boolean.FALSE);
+            getTester().checkBoolean("1.1 member of multiset[cast(null as double)]",Boolean.FALSE);
+        }
     }
 
-    public static void testExtractFunc(SqlTester tester) {
-        //todo
-    }
-
-    public static void testCeilFunc(SqlTester tester)
+    public void testCollectFunc()
     {
-        Util.discard(tester);
-        // TODO:
-    }
-    
-    public static void testFloorFunc(SqlTester tester)
-    {
-        Util.discard(tester);
-        // TODO:
+        getTester().isFor(SqlStdOperatorTable.collectFunc);
     }
 
-    public static void testDenseRankFunc(SqlTester tester)
+    public void testFusionFunc()
     {
-        Util.discard(tester);
-        // TODO:
+        getTester().isFor(SqlStdOperatorTable.fusionFunc);
     }
 
-    public static void testPercentRankFunc(SqlTester tester)
+    public void testExtractFunc()
     {
-        Util.discard(tester);
-        // TODO:
+        getTester().isFor(SqlStdOperatorTable.extractFunc);
     }
 
-    public static void testRankFunc(SqlTester tester)
+    public void testCeilFunc()
     {
-        Util.discard(tester);
-        // TODO:
+        getTester().isFor(SqlStdOperatorTable.ceilFunc);
     }
 
-    public static void testCumeDistFunc(SqlTester tester)
+    public void testFloorFunc()
     {
-        Util.discard(tester);
-        // TODO:
+        getTester().isFor(SqlStdOperatorTable.floorFunc);
     }
 
-    public static void testRowNumberFunc(SqlTester tester)
+    public void testDenseRankFunc()
     {
-        Util.discard(tester);
-        // TODO:
+        getTester().isFor(SqlStdOperatorTable.denseRankFunc);
+    }
+
+    public void testPercentRankFunc()
+    {
+        getTester().isFor(SqlStdOperatorTable.percentRankFunc);
+    }
+
+    public void testRankFunc()
+    {
+        getTester().isFor(SqlStdOperatorTable.rankFunc);
+    }
+
+    public void testCumeDistFunc()
+    {
+        getTester().isFor(SqlStdOperatorTable.cumeDistFunc);
+    }
+
+    public void testRowNumberFunc()
+    {
+        getTester().isFor(SqlStdOperatorTable.rowNumberFunc);
     }
 }
 

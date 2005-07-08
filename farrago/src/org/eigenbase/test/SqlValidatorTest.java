@@ -845,7 +845,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkFails("values ('1'),(2)",
             "Values passed to VALUES operator must have compatible types", 1, 1);
         if (todo) {
-            checkType("values (1),(2.0),(3)", "ROWTYPE(DOUBLE)");
+            checkQueryType("values (1),(2.0),(3)", "ROWTYPE(DOUBLE)");
         }
     }
 
@@ -1392,11 +1392,11 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testNestedFrom() {
-        checkType("values (true)", "BOOLEAN NOT NULL");
-        checkType("select * from (values(true))", "BOOLEAN NOT NULL");
-        checkType("select * from (select * from (values(true)))", "BOOLEAN NOT NULL");
-        checkType("select * from (select * from (select * from (values(true))))", "BOOLEAN NOT NULL");
-        checkType(
+        checkQueryType("values (true)", "BOOLEAN NOT NULL");
+        checkQueryType("select * from (values(true))", "BOOLEAN NOT NULL");
+        checkQueryType("select * from (select * from (values(true)))", "BOOLEAN NOT NULL");
+        checkQueryType("select * from (select * from (select * from (values(true))))", "BOOLEAN NOT NULL");
+        checkQueryType(
             "select * from (" +
             "  select * from (" +
             "    select * from (values(true))" +
@@ -1950,12 +1950,12 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testUnnest() {
-        checkType("select*from unnest(multiset[1])","INTEGER NOT NULL");
-        checkType("select*from unnest(multiset[1, 2])","INTEGER NOT NULL");
-        checkType("select*from unnest(multiset[1, 2.3])","DECIMAL(2, 1) NOT NULL");
-        checkType("select*from unnest(multiset[1, 2.3, 1])","DECIMAL(2, 1) NOT NULL");
-        checkType("select*from unnest(multiset['1','22','333'])","CHAR(3) NOT NULL");
-        checkType("select*from unnest(multiset['1','22','333','22'])","CHAR(3) NOT NULL");
+        checkQueryType("select*from unnest(multiset[1])","INTEGER NOT NULL");
+        checkQueryType("select*from unnest(multiset[1, 2])","INTEGER NOT NULL");
+        checkQueryType("select*from unnest(multiset[1, 2.3])","DECIMAL(2, 1) NOT NULL");
+        checkQueryType("select*from unnest(multiset[1, 2.3, 1])","DECIMAL(2, 1) NOT NULL");
+        checkQueryType("select*from unnest(multiset['1','22','333'])","CHAR(3) NOT NULL");
+        checkQueryType("select*from unnest(multiset['1','22','333','22'])","CHAR(3) NOT NULL");
         checkFails("select*from unnest(1)","(?s).*Cannot apply 'UNNEST' to arguments of type 'UNNEST.<INTEGER>.'.*");
 
         check("select*from unnest(multiset(select*from dept))");
@@ -1973,16 +1973,16 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     public void testStructuredTypes()
     {
-        checkType(
+        checkQueryType(
             "values new address()",
             "ObjectSqlType(ADDRESS) NOT NULL");
-        checkType(
+        checkQueryType(
             "select home_address from emp_address",
             "ObjectSqlType(ADDRESS) NOT NULL");
-        checkType(
+        checkQueryType(
             "select ea.home_address.zip from emp_address ea",
             "INTEGER NOT NULL");
-        checkType(
+        checkQueryType(
             "select ea.mailing_address.city from emp_address ea",
             "VARCHAR(20) NOT NULL");
     }

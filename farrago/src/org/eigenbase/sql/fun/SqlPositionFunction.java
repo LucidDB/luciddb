@@ -21,16 +21,12 @@
 */
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.reltype.*;
+import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
-import org.eigenbase.sql.util.*;
-import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.test.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
-
-import java.util.*;
+import org.eigenbase.sql.test.SqlOperatorTests;
+import org.eigenbase.sql.type.SqlTypeStrategies;
+import org.eigenbase.sql.type.SqlTypeUtil;
+import org.eigenbase.sql.validate.SqlValidator;
 
 /**
  * The <code>POSITION</code> function.
@@ -47,7 +43,7 @@ public class SqlPositionFunction extends SqlFunction
             SqlTypeStrategies.otcStringSameX2,
             SqlFunctionCategory.Numeric);
     }
-    
+
     public void unparse(
         SqlWriter writer,
         SqlNode [] operands,
@@ -78,7 +74,7 @@ public class SqlPositionFunction extends SqlFunction
     {
         SqlValidator validator = callBinding.getValidator();
         SqlCall call = callBinding.getCall();
-        
+
         //check that the two operands are of same type.
         RelDataType type0 =
             validator.getValidatedNodeType(call.operands[0]);
@@ -93,11 +89,6 @@ public class SqlPositionFunction extends SqlFunction
 
         return getOperandTypeChecker().checkOperandTypes(
             callBinding, throwOnFailure);
-    }
-
-    public void test(SqlTester tester)
-    {
-        SqlOperatorTests.testPositionFunc(tester);
     }
 }
 

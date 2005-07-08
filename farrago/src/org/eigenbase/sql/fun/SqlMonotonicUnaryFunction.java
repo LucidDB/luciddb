@@ -21,16 +21,11 @@
 */
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
-import org.eigenbase.sql.util.*;
-import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.test.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
-
-import java.util.*;
+import org.eigenbase.sql.type.SqlOperandTypeChecker;
+import org.eigenbase.sql.type.SqlOperandTypeInference;
+import org.eigenbase.sql.type.SqlReturnTypeInference;
+import org.eigenbase.sql.validate.SqlValidatorScope;
 
 /**
  * Base class for unary operators such as FLOOR/CEIL
@@ -39,7 +34,7 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class SqlMonotonicUnaryFunction extends SqlFunction
+public class SqlMonotonicUnaryFunction extends SqlFunction
 {
     protected SqlMonotonicUnaryFunction(
         String name,
@@ -54,7 +49,7 @@ public abstract class SqlMonotonicUnaryFunction extends SqlFunction
             operandTypeInference, operandTypeChecker,
             funcType);
     }
-    
+
     public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
     {
         SqlNode node = (SqlNode)call.operands[0];

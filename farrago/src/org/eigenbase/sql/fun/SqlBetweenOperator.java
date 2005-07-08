@@ -23,19 +23,18 @@
 
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.reltype.*;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeComparability;
 import org.eigenbase.resource.EigenbaseResource;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.parser.SqlParserUtil;
-import org.eigenbase.sql.test.SqlOperatorTests;
-import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.validate.SqlValidatorImpl;
-import org.eigenbase.util.Util;
+import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.util.EnumeratedValues;
+import org.eigenbase.util.Util;
 
 import java.util.List;
 
@@ -195,7 +194,8 @@ public class SqlBetweenOperator extends SqlInfixOperator
         SqlNode exp1 =
             SqlParserUtil.toTreeEx(list, opOrdinal + 1, 0, SqlKind.And);
         if (opOrdinal + 2 >= list.size()) {
-            SqlParserPos lastPos = ((SqlNode) list.get(list.size() - 1)).getParserPosition();
+            SqlParserPos lastPos =
+                ((SqlNode) list.get(list.size() - 1)).getParserPosition();
             final int line = lastPos.getEndLineNum();
             final int col = lastPos.getEndColumnNum() + 1;
             SqlParserPos errPos = new SqlParserPos(line, col, line, col);
@@ -246,15 +246,6 @@ public class SqlBetweenOperator extends SqlInfixOperator
 
         // Return the ordinal of the new current node.
         return opOrdinal - 1;
-    }
-
-    public void test(SqlTester tester)
-    {
-        if (negated) {
-            SqlOperatorTests.testNotBetween(tester);
-        } else {
-            SqlOperatorTests.testBetween(tester);
-        }
     }
 
     //~ Inner Classes ---------------------------------------------------------

@@ -21,16 +21,8 @@
 */
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
-import org.eigenbase.sql.util.*;
-import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.test.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
-
-import java.util.*;
+import org.eigenbase.sql.type.SqlTypeStrategies;
 
 /**
  * A special operator for the subtraction of two DATETIMEs.  The format of
@@ -51,11 +43,6 @@ public class SqlDatetimeSubtractionOperator extends SqlSpecialOperator
             SqlTypeStrategies.rtiThirdArgType,
             SqlTypeStrategies.otiFirstKnown,
             SqlTypeStrategies.otcMinusDateOperator);
-    }
-    
-    public void test(SqlTester tester)
-    {
-        SqlOperatorTests.testMinusDateOperator(tester);
     }
 
     public SqlSyntax getSyntax()

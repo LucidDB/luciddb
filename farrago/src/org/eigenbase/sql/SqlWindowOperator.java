@@ -21,23 +21,18 @@
 */
 package org.eigenbase.sql;
 
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.test.SqlOperatorTests;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.sql.type.SqlTypeFamily;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.validate.SqlMoniker;
+import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.Util;
-import org.eigenbase.resource.EigenbaseResource;
-import org.eigenbase.reltype.RelDataType;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * An operator describing a window specification.
@@ -241,7 +236,7 @@ public class SqlWindowOperator extends SqlOperator {
                 triggerFunction = true;
             }
         }
-        
+
         // 6.10 rule 6a Function RANk & DENSE_RANK require OBC
         if ( (null == orderList) && triggerFunction && !isTableSorted(scope)) {
             throw validator.newValidationError(call,
@@ -350,7 +345,7 @@ public class SqlWindowOperator extends SqlOperator {
             throw Util.newInternal("Unexpected node type");
         }
     }
-    
+
     private static void checkSpecialLiterals(
         SqlNode lowerBound,
         SqlNode upperBound,
@@ -426,10 +421,6 @@ public class SqlWindowOperator extends SqlOperator {
         return false;
     }
 
-    public void test(SqlTester tester) {
-        SqlOperatorTests.testWindow(tester);
-    }
-
     /**
      * An enumeration of types of bounds in a window: <code>CURRENT ROW</code>,
      * <code>UNBOUNDED PRECEDING</code>, and <code>UNBOUNDED FOLLOWING</code>.
@@ -438,9 +429,12 @@ public class SqlWindowOperator extends SqlOperator {
         private Bound(String name, int ordinal) {
             super(name, ordinal, null);
         }
-        public static final Bound CurrentRow = new Bound("CURRENT ROW", 0);
-        public static final Bound UnboundedPreceding = new Bound("UNBOUNDED PRECEDING", 1);
-        public static final Bound UnboundedFollowing = new Bound("UNBOUNDED FOLLOWING", 2);
+        public static final Bound CurrentRow =
+            new Bound("CURRENT ROW", 0);
+        public static final Bound UnboundedPreceding =
+            new Bound("UNBOUNDED PRECEDING", 1);
+        public static final Bound UnboundedFollowing =
+            new Bound("UNBOUNDED FOLLOWING", 2);
     }
 
     public SqlNode createCurrentRow(SqlParserPos pos) {

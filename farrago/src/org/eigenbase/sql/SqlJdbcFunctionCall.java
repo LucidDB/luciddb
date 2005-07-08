@@ -24,21 +24,16 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.fun.SqlTrimFunction;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.test.SqlOperatorTests;
-import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.type.SqlTypeStrategies;
 import org.eigenbase.util.Util;
 
+import java.sql.DatabaseMetaData;
 import java.util.HashMap;
-
-import java.sql.*;
 
 /**
  * A <code>SqlJdbcFunctionCall</code> is a node of a parse tree which
@@ -365,11 +360,6 @@ public class SqlJdbcFunctionCall extends SqlFunction
         return super.createCall(operands, pos);
     }
 
-    public void test(SqlTester tester)
-    {
-        SqlOperatorTests.testJdbcFn(tester);
-    }
-
     public SqlCall getLookupCall()
     {
         if (null == lookupCall) {
@@ -389,7 +379,7 @@ public class SqlJdbcFunctionCall extends SqlFunction
     {
         // only expected to come here if validator called this method
         SqlCallBinding callBinding = (SqlCallBinding) opBinding;
-        
+
         if (null == lookupMakeCallObj) {
             throw callBinding.newValidationError(
                 EigenbaseResource.instance().newFunctionUndefined(
@@ -409,7 +399,7 @@ public class SqlJdbcFunctionCall extends SqlFunction
         if (!lookupMakeCallObj.operator.checkOperandTypes(
                     new SqlCallBinding(
                         callBinding.getValidator(),
-                        callBinding.getScope(), 
+                        callBinding.getScope(),
                         getLookupCall()),
                     false))
         {

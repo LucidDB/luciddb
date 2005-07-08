@@ -2,8 +2,9 @@
 // $Id$
 // Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
+// Copyright (C) 2002-2005 Disruptive Tech
 // Copyright (C) 2005-2005 LucidEra, Inc.
+// Portions Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -19,38 +20,31 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package org.eigenbase.sql;
+package org.eigenbase.sql.test;
 
-
+import org.eigenbase.test.SqlValidatorTestCase;
 
 /**
- * The <code>VALUES</code> operator.
+ * Concrete subclass of {@link SqlOperatorTests} which checks against
  *
- * @author John V. Sichi
+ * @author Julian Hyde
+ * @since July 7, 2005
  * @version $Id$
  */
-public class SqlValuesOperator extends SqlSpecialOperator
+public class SqlOperatorTest extends SqlOperatorTests
 {
-    public SqlValuesOperator()
+    private SqlTester tester = (SqlTester) new SqlValidatorTestCase().getTester();
+
+    public SqlOperatorTest(String testName)
     {
-        super("VALUES", SqlKind.Values);
+        super(testName);
     }
 
-    public void unparse(
-        SqlWriter writer,
-        SqlNode [] operands,
-        int leftPrec,
-        int rightPrec)
+    protected SqlTester getTester()
     {
-        writer.print("VALUES ");
-        for (int i = 0; i < operands.length; i++) {
-            if (i > 0) {
-                writer.print(", ");
-            }
-            SqlNode operand = operands[i];
-            operand.unparse(writer, 0, 0);
-        }
+        return tester;
     }
+
 }
 
-// End SqlValuesOperator.java
+// End SqlOperatorTest.java

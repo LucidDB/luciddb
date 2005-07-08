@@ -33,20 +33,20 @@ import org.eigenbase.util.*;
 import java.util.*;
 
 /**
- * Abstract base for the <code>CONVERT</code> and <code>TRANSLATE</code>
+ * Common base for the <code>CONVERT</code> and <code>TRANSLATE</code>
  * functions.
  *
  * @author Wael Chatila
  * @version $Id$
  */
-public abstract class SqlConvertFunction extends SqlFunction
+public class SqlConvertFunction extends SqlFunction
 {
     protected SqlConvertFunction(String name)
     {
         super(name, SqlKind.Function, null, null, null,
             SqlFunctionCategory.String);
     }
-    
+
     public void unparse(
         SqlWriter writer,
         SqlNode [] operands,

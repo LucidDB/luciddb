@@ -29,7 +29,10 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.SqlCollation;
 import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.SqlOperator;
 import org.eigenbase.sql.test.SqlOperatorTests;
+import org.eigenbase.sql.test.SqlTester;
+import org.eigenbase.sql.test.AbstractSqlTester;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
@@ -77,22 +80,39 @@ public class SqlValidatorTestCase extends TestCase
      * <p>It contains a mock schema with <code>EMP</code> and <code>DEPT</code>
      * tables, which can run without having to start up Farrago.
      */
-    public interface Tester {
+    public interface Tester
+    {
         SqlNode parseQuery(String sql) throws SqlParseException;
+
         SqlValidator getValidator();
+
         /**
-         * Asserts either if a sql query is valid or not.
+         * Checks that a query is valid, or, if invalid, throws the right
+         * message at the right location.
+         *
+         * <p>If <code>expectedMsgPattern</code> is null, the query must succeed.
+         *
+         * <p>If <code>expectedMsgPattern</code> is not null, the query must
+         * fail, and give an error location of (expectedLine, expectedColumn)
+         * through (expectedEndLine, expectedEndColumn).
+         *
          * @param sql
-         * @param expectedMsgPattern If this parameter is null the query must be
-         *   valid for the test to pass;
-         *   If this parameter is not null the query must be malformed and the msg
-         * @param expectedEndLine
-         * @param expectedEndColumn
+         * @param expectedMsgPattern If this parameter is null the query must
+         *   be valid for the test to pass;
+         *   If this parameter is not null the query must be malformed and the
+         *   message given must match the pattern
+         * @param expectedLine First line of error
+         * @param expectedColumn First column of error
+         * @param expectedEndLine Last line of error
+         * @param expectedEndColumn Last column of error
          */
-        void assertExceptionIsThrown(String sql,
+        void assertExceptionIsThrown(
+            String sql,
             String expectedMsgPattern,
             int expectedLine,
-            int expectedColumn, int expectedEndLine, int expectedEndColumn);
+            int expectedColumn,
+            int expectedEndLine,
+            int expectedEndColumn);
 
         /**
          * Returns the data type of the first column of a SQL query.
@@ -112,9 +132,10 @@ public class SqlValidatorTestCase extends TestCase
 
         /**
          * Checks that the first column of a query has the expected type.
-         * For example, <code>checkType(VALUUES (1 + 2), "INTEGER")</code>.
+         * For example,
+         * <code>checkType(VALUES (1 + 2), "INTEGER NOT NULL")</code>.
          */
-        void checkType(
+        void checkQueryType(
             String sql,
             String expected);
     }
@@ -230,14 +251,24 @@ public class SqlValidatorTestCase extends TestCase
         String expected)
     {
         sql = "select " + sql + " from (values(true))";
-        checkType(sql, expected);
+        checkQueryType(sql, expected);
     }
 
-    public void checkType(
+    /**
+     * Checks that the first column returned by a query has the expected type.
+     * For example,
+     * <blockquote><code>
+     * checkQueryType("SELECT empno FROM Emp", "INTEGER NOT NULL");
+     * </code></blockquote>
+     *
+     * @param sql Query
+     * @param expected Expected type, including nullability
+     */
+    public void checkQueryType(
         String sql,
         String expected)
     {
-        tester.checkType(sql, expected);
+        tester.checkQueryType(sql, expected);
     }
 
     protected final void assertExceptionIsThrown(
@@ -269,8 +300,13 @@ public class SqlValidatorTestCase extends TestCase
     /**
      * Implementation of {@link org.eigenbase.test.SqlValidatorTestCase.Tester}
      * which talks to a mock catalog.
+     *
+     * <p>It is also a pure-Java implementation of the {@link SqlTester}
+     * used by {@link SqlOperatorTests}. It can parse and validate queries,
+     * but it does not invoke Farrago, so it is very fast but cannot execute
+     * functions.
      */
-    public class TesterImpl implements Tester
+    public class TesterImpl implements Tester, SqlTester
     {
         private final Pattern lineColPattern =
             Pattern.compile("At line (.*), column (.*)");
@@ -462,9 +498,7 @@ public class SqlValidatorTestCase extends TestCase
             return sqlNode;
         }
 
-        public void checkType(
-            String sql,
-            String expected)
+        public void checkQueryType(String sql, String expected)
         {
             RelDataType actualType = getResultType(sql);
             if (expected.startsWith("todo:")) {
@@ -475,6 +509,11 @@ public class SqlValidatorTestCase extends TestCase
             }
             String actual = getTypeString(actualType);
             assertEquals(expected, actual);
+        }
+
+        public void checkType(String expression, String type)
+        {
+            checkQueryType(buildQuery(expression), type);
         }
 
         private String getTypeString(RelDataType sqlType)
@@ -521,6 +560,109 @@ public class SqlValidatorTestCase extends TestCase
                 fail(NL + "Expected=" + expectedCharset.name() + NL +
                     "  actual=" + actualCharset.name());
             }
+        }
+
+        // SqlTester methods
+
+        public void isFor(SqlOperator operator)
+        {
+            // do nothing
+        }
+
+        private String buildQuery(String expression)
+        {
+            return "values (" + expression + ")";
+        }
+
+        public void checkScalar(
+            String expression,
+            Object result,
+            String resultType)
+        {
+            checkType(expression, resultType);
+            check(buildQuery(expression), AbstractSqlTester.AnyTypeChecker, result, 0);
+        }
+
+        public void checkScalarExact(
+            String expression,
+            String result)
+        {
+            String sql = buildQuery(expression);
+            check(sql, AbstractSqlTester.IntegerTypeChecker, result, 0);
+        }
+
+        public void checkScalarApprox(
+            String expression,
+            String expectedType,
+            double expectedResult,
+            double delta)
+        {
+            String sql = buildQuery(expression);
+            TypeChecker typeChecker =
+                expectedType.startsWith("todo:") &&
+                !SqlOperatorTests.bug315Fixed  ?
+                AbstractSqlTester.AnyTypeChecker :
+                new AbstractSqlTester.StringTypeChecker(expectedType);
+            check(sql, typeChecker, new Double(expectedResult), delta);
+        }
+
+        public void checkBoolean(
+            String expression,
+            Boolean result)
+        {
+            String sql = buildQuery(expression);
+            if (null == result) {
+                checkNull(expression);
+            } else {
+                check(
+                    sql,
+                    AbstractSqlTester.BooleanTypeChecker, result.toString(),
+                    0);
+            }
+        }
+
+        public void checkString(
+            String expression,
+            String result,
+            String expectedType)
+        {
+            String sql = buildQuery(expression);
+            TypeChecker typeChecker =
+                expectedType.startsWith("todo:") &&
+                !SqlOperatorTests.bug315Fixed ?
+                AbstractSqlTester.AnyTypeChecker :
+                new AbstractSqlTester.StringTypeChecker(expectedType);
+            check(sql, typeChecker, result, 0);
+        }
+
+        public void checkNull(String expression)
+        {
+            String sql = buildQuery(expression);
+            check(sql, AbstractSqlTester.AnyTypeChecker, null, 0);
+        }
+
+        public void check(
+            String query,
+            TypeChecker typeChecker,
+            Object result,
+            double delta)
+        {
+            // This implementation does NOT check the result!
+            // (It can't because we're pure Java.)
+            // All it does is check the return type.
+
+            // Parse and validate. There should be no errors.
+            RelDataType actualType = getResultType(query);
+
+            // Check result type.
+            typeChecker.checkType(actualType);
+        }
+
+        public void checkFails(String expression, String expectedError)
+        {
+            SqlValidatorTestCase.this.checkFails(
+                buildQuery(expression),
+                expectedError);
         }
     }
 

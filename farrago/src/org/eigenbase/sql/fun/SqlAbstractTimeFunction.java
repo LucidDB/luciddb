@@ -21,17 +21,10 @@
 */
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.resource.*;
-import org.eigenbase.reltype.*;
+import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
-import org.eigenbase.sql.util.*;
-import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.test.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
-
-import java.util.*;
+import org.eigenbase.sql.validate.SqlValidatorScope;
 
 /**
  * Base class for time functions such as "LOCALTIME", "LOCALTIME(n)".
@@ -39,11 +32,11 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class SqlAbstractTimeFunction extends SqlFunction
+public class SqlAbstractTimeFunction extends SqlFunction
 {
     private static final SqlOperandTypeChecker otcCustom =
         new CompositeOperandTypeChecker(
-            CompositeOperandTypeChecker.OR, 
+            CompositeOperandTypeChecker.OR,
             new SqlOperandTypeChecker[] {
                 SqlTypeStrategies.otcPositiveIntLit,
                 SqlTypeStrategies.otcNiladic
@@ -56,7 +49,7 @@ public abstract class SqlAbstractTimeFunction extends SqlFunction
             SqlFunctionCategory.TimeDate);
         this.typeName = typeName;
     }
-    
+
     public SqlSyntax getSyntax()
     {
         return SqlSyntax.FunctionId;
@@ -76,7 +69,7 @@ public abstract class SqlAbstractTimeFunction extends SqlFunction
         assert(precision >= 0);
         return opBinding.getTypeFactory().createSqlType(typeName, precision);
     }
-    
+
     // All of the time functions are monotonic.
     public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
     {

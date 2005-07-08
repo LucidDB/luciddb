@@ -22,15 +22,14 @@
 package org.eigenbase.sql.fun;
 
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.test.SqlOperatorTests;
-import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.SqlTypeStrategies;
+import org.eigenbase.sql.type.SqlTypeUtil;
+import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.util.BitString;
 import org.eigenbase.util.NlsString;
 
@@ -182,12 +181,6 @@ public class SqlLiteralChainOperator extends SqlInternalOperator {
             writer.print(collation.toString());
         }
     }
-
-    public void test(SqlTester tester)
-    {
-        SqlOperatorTests.testLiteralChain(tester);
-    }
-
 }
 
 // End SqlLiteralChainOperator.java

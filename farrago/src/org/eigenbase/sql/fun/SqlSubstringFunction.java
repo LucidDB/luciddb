@@ -25,11 +25,11 @@ package org.eigenbase.sql.fun;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.SqlTypeStrategies;
+import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.test.SqlOperatorTests;
-import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.SqlValidatorScope;
 
 import java.util.ArrayList;
 
@@ -85,7 +85,7 @@ public class SqlSubstringFunction extends SqlFunction {
         SqlCall call = callBinding.getCall();
         SqlValidator validator = callBinding.getValidator();
         SqlValidatorScope scope  = callBinding.getScope();
-        
+
         int n = call.operands.length;
         assert ((3 == n) || (2 == n));
         if (!SqlTypeStrategies.otcString.checkSingleOperandType(
@@ -173,12 +173,6 @@ public class SqlSubstringFunction extends SqlFunction {
         }
 
         writer.print(")");
-    }
-
-    public void test(SqlTester tester)
-    {
-        SqlOperatorTests.testSubstringFunction(tester);
-
     }
 }
 

@@ -21,16 +21,8 @@
 */
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
-import org.eigenbase.sql.util.*;
-import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.test.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
-
-import java.util.*;
+import org.eigenbase.sql.parser.SqlParserPos;
 
 /**
  * The <code>COALESCE</code> function.
@@ -45,7 +37,7 @@ public class SqlCoalesceFunction extends SqlFunction
         super("COALESCE", SqlKind.Function, null, null, null,
             SqlFunctionCategory.System);
     }
-    
+
     // override SqlOperator
     public SqlNode rewriteCall(SqlCall call)
     {
@@ -74,11 +66,6 @@ public class SqlCoalesceFunction extends SqlFunction
     public SqlOperandCountRange getOperandCountRange()
     {
         return SqlOperandCountRange.Two;
-    }
-
-    public void test(SqlTester tester)
-    {
-        SqlOperatorTests.testCoalesceFunc(tester);
     }
 }
 

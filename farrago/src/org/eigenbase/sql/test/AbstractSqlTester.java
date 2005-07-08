@@ -24,8 +24,10 @@
 package org.eigenbase.sql.test;
 
 import junit.framework.TestCase;
+import junit.framework.Assert;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.SqlOperator;
 
 
 /**
@@ -38,10 +40,11 @@ import org.eigenbase.sql.type.SqlTypeName;
  **/
 public abstract class AbstractSqlTester implements SqlTester
 {
+    // ~ Constants ------------------------------------------------------------
     public static final TypeChecker IntegerTypeChecker =
         new SqlTypeChecker(SqlTypeName.Integer);
 
-    private static final TypeChecker BooleanTypeChecker =
+    public static final TypeChecker BooleanTypeChecker =
         new SqlTypeChecker(SqlTypeName.Boolean);
 
     /**
@@ -53,11 +56,20 @@ public abstract class AbstractSqlTester implements SqlTester
         {
         }
     };
-    
+
+    // ~ Members --------------------------------------------------------------
+
+    private SqlOperator operator;
+
     //~ Methods ---------------------------------------------------------------
 
+    public void isFor(SqlOperator operator)
+    {
+        this.operator = operator;
+    }
+
     /**
-     * Converts a scalar expression into a SQL query.
+     * Helper method which converts a scalar expression into a SQL query.
      *
      * <p>By default, "expr" becomes "VALUES (expr)". Derived
      * classes may override.
@@ -135,6 +147,16 @@ public abstract class AbstractSqlTester implements SqlTester
     }
 
     /**
+     * Returns the operator this test is for.
+     * Throws if no operator has been set.
+     */
+    protected SqlOperator getFor()
+    {
+        Assert.assertNotNull("Must call isFor()", operator);
+        return operator;
+    }
+
+    /**
      * Checks that a type matches a given SQL type. Does not care about
      * nullability.
      */
@@ -142,15 +164,15 @@ public abstract class AbstractSqlTester implements SqlTester
     {
         private final SqlTypeName typeName;
 
-        SqlTypeChecker(SqlTypeName typeName) 
+        SqlTypeChecker(SqlTypeName typeName)
         {
             this.typeName = typeName;
         }
-        
+
         public void checkType(RelDataType type)
         {
             TestCase.assertEquals(
-                typeName.toString(), 
+                typeName.toString(),
                 type.toString());
         }
     }
@@ -159,7 +181,7 @@ public abstract class AbstractSqlTester implements SqlTester
     {
         private final String expected;
 
-        StringTypeChecker(String expected)
+        public StringTypeChecker(String expected)
         {
             this.expected = expected;
         }
