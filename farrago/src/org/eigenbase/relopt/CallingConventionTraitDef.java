@@ -33,14 +33,16 @@ import java.util.Iterator;
 import java.util.WeakHashMap;
 
 /**
- * CallingConventionTraitDef is a RelTraitDef that defines the calling 
- * convention trait.  A new set of conversion information is created
+ * CallingConventionTraitDef is a {@link RelTraitDef} that defines the
+ * calling-convention trait.  A new set of conversion information is created
  * for each planner that registers at least one {@link ConverterRule}
- * instance.  Conversion data is held in a WeakHashMap so that the JVM's
+ * instance.
+ *
+ * <p>Conversion data is held in a {@link WeakHashMap} so that the JVM's
  * garbage collector may reclaim the conversion data after the planner itself
  * has been garbage collected.  The conversion information consists of a
  * graph of converisons (from one calling convention to another) and a map
- * of graph arcs to ConverterRules.
+ * of graph arcs to {@link ConverterRule}s.
  *
  * @author Stephan Zuercher
  * @version $Id$
@@ -95,6 +97,24 @@ public class CallingConventionTraitDef extends RelTraitDef
         }
     }
 
+    public void deregisterConverterRule(
+        RelOptPlanner planner, ConverterRule converterRule)
+    {
+        if (converterRule.isGuaranteed()) {
+            ConversionData conversionData = getConversionData(planner);
+
+            final Graph conversionGraph = conversionData.conversionGraph;
+            final MultiMap mapArcToConverterRule =
+                conversionData.mapArcToConverterRule;
+
+            final Graph.Arc arc = conversionGraph.deleteArc(
+                (CallingConvention)converterRule.getInTraits().getTrait(this),
+                (CallingConvention)converterRule.getOutTraits().getTrait(this));
+            assert arc != null;
+
+            mapArcToConverterRule.removeMulti(arc, converterRule);
+        }
+    }
 
     // implement RelTraitDef
     public RelNode convert(
@@ -194,7 +214,7 @@ loop:
         return conversionData;
     }
 
-    
+
     private static final class ConversionData
     {
         final Graph conversionGraph = new Graph();
@@ -207,3 +227,5 @@ loop:
         final MultiMap mapArcToConverterRule = new MultiMap();
     }
 }
+
+// End CallingConventionTraitDef.java

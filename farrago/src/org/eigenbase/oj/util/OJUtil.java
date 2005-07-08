@@ -28,11 +28,10 @@ import openjava.ptree.*;
 import openjava.ptree.util.*;
 
 import org.eigenbase.oj.OJTypeFactory;
-import org.eigenbase.rel.RelNode;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.util.Util;
-
+import org.eigenbase.runtime.RestartableIterator;
 
 /**
  * Static utilities for manipulating OpenJava expressions.
@@ -40,6 +39,11 @@ import org.eigenbase.util.Util;
 public abstract class OJUtil
 {
     //~ Static fields/initializers --------------------------------------------
+
+    static
+    {
+        OJSystem.initConstants();
+    }
 
     public static final OJClass clazzVoid = OJClass.forClass(
         void.class);
@@ -100,11 +104,35 @@ public abstract class OJUtil
 
     public static final OJClass[] emptyArrayOfOJClass = new OJClass[]{};
 
-    static 
-    {
-        OJSystem.initConstants();
-    }
-    
+    public static final ModifierList modFinal = new ModifierList(
+        ModifierList.FINAL);
+
+    public static final OJClass clazzInteger = OJClass.forClass(
+        java.lang.Integer.class);
+
+    public static final TypeName tnInt = TypeName.forOJClass(
+        OJSystem.INT);
+
+    public static final OJClass clazzList = OJClass.forClass(
+        java.util.List.class);
+
+    public static final TypeName tnList = TypeName.forOJClass(clazzList);
+
+    public static final OJClass clazzArrays = OJClass.forClass(
+        java.util.Arrays.class);
+
+    public static final TypeName tnArrays = TypeName.forOJClass(clazzArrays);
+
+    public static final TypeName tnObject = TypeName.forOJClass(
+        OJSystem.OBJECT);
+
+    public static final OJClass clazzRestartableIterator = OJClass.forClass(
+        RestartableIterator.class);
+
+    public static TypeName tnRestartableIterator = TypeName.forOJClass(
+        clazzRestartableIterator);
+
+
     /**
      * Each thread's enclosing {@link OJClass}. Synthetic classes are declared
      * as inner classes of this.
@@ -149,7 +177,7 @@ public abstract class OJUtil
 
     public static OJClass typeToOJClass(
         OJClass declarer,
-        RelDataType rowType, 
+        RelDataType rowType,
         RelDataTypeFactory typeFactory)
     {
         OJTypeFactory ojTypeFactory = (OJTypeFactory) typeFactory;
@@ -205,7 +233,7 @@ public abstract class OJUtil
     {
         return TypeName.forOJClass(OJClass.forClass(clazz));
     }
-    
+
     public static String replaceDotWithDollar( String base, int i )
     {
 	return base.substring( 0, i ) + '$' + base.substring( i + 1 );
@@ -324,7 +352,7 @@ public abstract class OJUtil
             }
         } while (env != null);
     }
-    
+
     public static OJClass getType(Environment env, Expression exp)
     {
         try {

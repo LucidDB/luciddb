@@ -23,6 +23,8 @@
 
 package org.eigenbase.sql.test;
 
+import junit.framework.TestCase;
+import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.type.SqlTypeName;
 
 
@@ -36,6 +38,22 @@ import org.eigenbase.sql.type.SqlTypeName;
  **/
 public abstract class AbstractSqlTester implements SqlTester
 {
+    public static final TypeChecker IntegerTypeChecker =
+        new SqlTypeChecker(SqlTypeName.Integer);
+
+    private static final TypeChecker BooleanTypeChecker =
+        new SqlTypeChecker(SqlTypeName.Boolean);
+
+    /**
+     * Checker which allows any type.
+     */
+    public static final TypeChecker AnyTypeChecker = new TypeChecker()
+    {
+        public void checkType(RelDataType type)
+        {
+        }
+    };
+    
     //~ Methods ---------------------------------------------------------------
 
     /**
@@ -54,15 +72,22 @@ public abstract class AbstractSqlTester implements SqlTester
         String result)
     {
         String sql = buildQuery(expression);
-        check(sql, result, SqlTypeName.Integer);
+        check(sql, IntegerTypeChecker, result, 0);
     }
 
     public void checkScalarApprox(
         String expression,
-        String result)
+        String expectedType,
+        double expectedResult,
+        double delta)
     {
         String sql = buildQuery(expression);
-        check(sql, result, SqlTypeName.Double);
+        TypeChecker typeChecker =
+            expectedType.startsWith("todo:") &&
+            !SqlOperatorTests.bug315Fixed  ?
+            AnyTypeChecker :
+            new StringTypeChecker(expectedType);
+        check(sql, typeChecker, new Double(expectedResult), delta);
     }
 
     public void checkBoolean(
@@ -75,25 +100,29 @@ public abstract class AbstractSqlTester implements SqlTester
         } else {
             check(
                 sql,
-                result.toString(),
-                SqlTypeName.Boolean);
+                BooleanTypeChecker, result.toString(),
+                0);
         }
     }
 
     public void checkString(
         String expression,
-        String result)
+        String result,
+        String expectedType)
     {
         String sql = buildQuery(expression);
-        check(sql, result, SqlTypeName.Varchar);
+        TypeChecker typeChecker =
+            expectedType.startsWith("todo:") &&
+            !SqlOperatorTests.bug315Fixed ?
+            AnyTypeChecker :
+            new StringTypeChecker(expectedType);
+        check(sql, typeChecker, result, 0);
     }
 
     public void checkNull(String expression)
     {
         String sql = buildQuery(expression);
-
-        //any SqlTypeName should do
-        check(sql, null, null);
+        check(sql, AnyTypeChecker, null, 0);
     }
 
     public void checkScalar(
@@ -102,6 +131,48 @@ public abstract class AbstractSqlTester implements SqlTester
         String resultType)
     {
         checkType(expression, resultType);
-        check(buildQuery(expression), result, null);
+        check(buildQuery(expression), AnyTypeChecker, result, 0);
+    }
+
+    /**
+     * Checks that a type matches a given SQL type. Does not care about
+     * nullability.
+     */
+    private static class SqlTypeChecker implements TypeChecker
+    {
+        private final SqlTypeName typeName;
+
+        SqlTypeChecker(SqlTypeName typeName) 
+        {
+            this.typeName = typeName;
+        }
+        
+        public void checkType(RelDataType type)
+        {
+            TestCase.assertEquals(
+                typeName.toString(), 
+                type.toString());
+        }
+    }
+
+    public static class StringTypeChecker implements TypeChecker
+    {
+        private final String expected;
+
+        StringTypeChecker(String expected)
+        {
+            this.expected = expected;
+        }
+
+        public void checkType(RelDataType type)
+        {
+            String actual = type.toString();
+            if (!type.isNullable()) {
+                actual += " NOT NULL";
+            }
+            TestCase.assertEquals(expected, actual);
+        }
     }
 }
+
+// End AbstractSqlTester.java

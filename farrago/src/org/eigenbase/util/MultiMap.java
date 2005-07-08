@@ -91,6 +91,46 @@ public class MultiMap extends HashMap
     }
 
     /**
+     * Removes a value for this key.
+     */
+    public boolean removeMulti(
+        Object key,
+        Object value)
+    {
+        final Object o = get(key);
+        if (o == null) {
+            // key not found, so nothing changed
+            return false;
+        } else {
+            if (o instanceof ValueList) {
+                ValueList list = (ValueList) o;
+                if (list.remove(value)) {
+                    if (list.size() == 1) {
+                        // now just one value left, so forget the list, and
+                        // keep its only element
+                        put(key, list.get(0));
+                    }
+                    return true;
+                } else {
+                    // nothing changed
+                    return false;
+                }
+            } else {
+                if (o.equals(value)) {
+                    // have just removed the last value belonging to this key,
+                    // so remove the key.
+                    remove(key);
+                    return true;
+                } else {
+                    // the value they asked to remove was not the one present,
+                    // so nothing changed
+                    return false;
+                }
+            }
+        }
+    }
+
+    /**
      * Like entrySet().iterator(), but returns one Map.Entry per value
      * rather than one per key.
      */

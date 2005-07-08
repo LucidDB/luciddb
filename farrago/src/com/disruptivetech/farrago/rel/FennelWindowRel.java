@@ -198,7 +198,7 @@ public class FennelWindowRel extends FennelSingleRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         // Create a plan object.
-        final FarragoMetadataFactory repos = implementor.getMetadataFactory();
+        final FarragoMetadataFactory repos = implementor.getRepos();
         final FemWindowStreamDef windowStreamDef =
             repos.newFemWindowStreamDef();
         windowStreamDef.getInput().add(

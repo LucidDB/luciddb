@@ -66,33 +66,33 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testTypeOfAs() {
-        checkExpType("1 as c1", "INTEGER");
-        checkExpType("'hej' as c1", "CHAR(3)");
-        checkExpType("x'deadbeef' as c1", "BINARY(4)");
+        checkExpType("1 as c1", "INTEGER NOT NULL");
+        checkExpType("'hej' as c1", "CHAR(3) NOT NULL");
+        checkExpType("x'deadbeef' as c1", "BINARY(4) NOT NULL");
     }
 
     public void testTypesLiterals() {
-        checkExpType("'abc'", "CHAR(3)");
-        checkExpType("n'abc'", "CHAR(3)");
-        checkExpType("_iso_8859-2'abc'", "CHAR(3)");
-        checkExpType("'ab '" + NL + "' cd'", "CHAR(6)");
+        checkExpType("'abc'", "CHAR(3) NOT NULL");
+        checkExpType("n'abc'", "CHAR(3) NOT NULL");
+        checkExpType("_iso_8859-2'abc'", "CHAR(3) NOT NULL");
+        checkExpType("'ab '" + NL + "' cd'", "CHAR(6) NOT NULL");
         checkExpType("'ab'" + NL + "'cd'" + NL + "'ef'" + NL + "'gh'" + NL
-            + "'ij'" + NL + "'kl'", "CHAR(12)");
-        checkExpType("n'ab '" + NL + "' cd'", "CHAR(6)");
-        checkExpType("_iso_8859-2'ab '" + NL + "' cd'", "CHAR(6)");
+            + "'ij'" + NL + "'kl'", "CHAR(12) NOT NULL");
+        checkExpType("n'ab '" + NL + "' cd'", "CHAR(6) NOT NULL");
+        checkExpType("_iso_8859-2'ab '" + NL + "' cd'", "CHAR(6) NOT NULL");
 
         checkExpFails("^x'abc'^",
             "Binary literal string must contain an even number of hexits");
-        checkExpType("x'abcd'", "BINARY(2)");
-        checkExpType("x'abcd'" + NL + "'ff001122aabb'", "BINARY(8)");
+        checkExpType("x'abcd'", "BINARY(2) NOT NULL");
+        checkExpType("x'abcd'" + NL + "'ff001122aabb'", "BINARY(8) NOT NULL");
         checkExpType("x'aaaa'" + NL + "'bbbb'" + NL + "'0000'" + NL + "'1111'",
-            "BINARY(8)");
+            "BINARY(8) NOT NULL");
 
-        checkExpType("1234567890", "INTEGER");
-        checkExpType("123456.7890", "DECIMAL(10, 4)");
-        checkExpType("123456.7890e3", "DOUBLE");
-        checkExpType("true", "BOOLEAN");
-        checkExpType("false", "BOOLEAN");
+        checkExpType("1234567890", "INTEGER NOT NULL");
+        checkExpType("123456.7890", "DECIMAL(10, 4) NOT NULL");
+        checkExpType("123456.7890e3", "DOUBLE NOT NULL");
+        checkExpType("true", "BOOLEAN NOT NULL");
+        checkExpType("false", "BOOLEAN NOT NULL");
         checkExpType("unknown", "BOOLEAN");
     }
 
@@ -197,8 +197,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testPrefix() {
-        checkExpType("+interval '1' second","INTERVAL SECOND");
-        checkExpType("-interval '1' month","INTERVAL MONTH");
+        checkExpType("+interval '1' second","INTERVAL SECOND NOT NULL");
+        checkExpType("-interval '1' month","INTERVAL MONTH NOT NULL");
         checkFails("SELECT -'abc' from (values(true))",
             "(?s).*Cannot apply '-' to arguments of type '-<CHAR.3.>'.*");
         checkFails("SELECT +'abc' from (values(true))",
@@ -313,14 +313,15 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testArithmeticOperatorsTypes() {
-        checkExpType("pow(2,3)", "DOUBLE");
-        checkExpType("aBs(-2.3e-2)", "DOUBLE");
-        checkExpType("aBs(5000000000)", "BIGINT");
-        checkExpType("aBs(-interval '1-1' year to month)", "INTERVAL YEAR TO MONTH");
-        checkExpType("aBs(+interval '1:1' hour to minute)", "INTERVAL HOUR TO MINUTE");
-        checkExpType("MOD(5,2)", "INTEGER");
-        checkExpType("ln(5.43  )", "DOUBLE");
-        checkExpType("log(- -.2  )", "DOUBLE");
+        // todo: move these tests to SqlOperatorTests
+        checkExpType("pow(2,3)", "todo: DOUBLE");
+        checkExpType("aBs(-2.3e-2)", "todo: DOUBLE");
+        checkExpType("aBs(5000000000)", "todo: BIGINT");
+        checkExpType("aBs(-interval '1-1' year to month)", "todo: INTERVAL YEAR TO MONTH");
+        checkExpType("aBs(+interval '1:1' hour to minute)", "todo: INTERVAL HOUR TO MINUTE");
+        checkExpType("MOD(5,2)", "todo: INTEGER");
+        checkExpType("ln(5.43  )", "todo: DOUBLE");
+        checkExpType("log(- -.2  )", "todo: DOUBLE");
     }
 
     public void testArithmeticOperatorsFails() {
@@ -359,16 +360,16 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     public void testCaseExpressionTypes() {
         checkExpType("case 1 when 1 then 'one' else 'not one' end",
-            "CHAR(7)");
+            "CHAR(7) NOT NULL");
         checkExpType("case when 2<1 then 'impossible' end", "CHAR(10)");
         checkExpType("case 'one' when 'two' then 2.00 when 'one' then 1 else 3 end",
-            "DECIMAL(3, 2)");
+            "DECIMAL(3, 2) NOT NULL");
         checkExpType("case 'one' when 'two' then 2 when 'one' then 1.00 else 3 end",
-            "DECIMAL(3, 2)");
+            "DECIMAL(3, 2) NOT NULL");
         checkExpType("case 1 when 1 then 'one' when 2 then null else 'more' end",
             "CHAR(4)");
         checkExpType("case when TRUE then 'true' else 'false' end",
-            "CHAR(5)");
+            "CHAR(5) NOT NULL");
         checkExpType("CASE 1 WHEN 1 THEN cast(null as integer) END", "INTEGER");
         checkExpType("CASE 1 WHEN 1 THEN NULL WHEN 2 THEN cast(cast(null as tinyint) as integer) END",
             "INTEGER");
@@ -407,7 +408,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     public void testCoalesce() {
         checkExp("coalesce('a','b')");
-        checkExpType("coalesce('a','b','c')", "CHAR(1)");
+        checkExpType("coalesce('a','b','c')", "CHAR(1) NOT NULL");
     }
 
     public void testCoalesceFails() {
@@ -434,21 +435,22 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testStringCompareType() {
-        checkExpType("'a' = 'b'", "BOOLEAN");
-        checkExpType("'a' <> 'b'", "BOOLEAN");
-        checkExpType("'a' > 'b'", "BOOLEAN");
-        checkExpType("'a' < 'b'", "BOOLEAN");
-        checkExpType("'a' >= 'b'", "BOOLEAN");
-        checkExpType("'a' <= 'b'", "BOOLEAN");
+        checkExpType("'a' = 'b'", "todo: BOOLEAN"); // todo: should it be "BOOLEAN NOT NULL" since args are not null?
+        checkExpType("'a' <> 'b'", "todo: BOOLEAN");
+        checkExpType("'a' > 'b'", "todo: BOOLEAN");
+        checkExpType("'a' < 'b'", "todo: BOOLEAN");
+        checkExpType("'a' >= 'b'", "todo: BOOLEAN");
+        checkExpType("'a' <= 'b'", "todo: BOOLEAN");
+        checkExpType("CAST(NULL AS VARCHAR(33)) > 'foo'", "BOOLEAN");
     }
 
     public void testConcat() {
         checkExp("'a'||'b'");
         checkExp("x'12'||x'34'");
-        checkExpType("'a'||'b'", "VARCHAR(2)");
-        checkExpType("cast('a' as char(1))||cast('b' as char(2))", "VARCHAR(3)");
-        checkExpType("'a'||'b'||'c'", "VARCHAR(3)");
-        checkExpType("'a'||'b'||'cde'||'f'", "VARCHAR(6)");
+        checkExpType("'a'||'b'", "todo: VARCHAR(2)"); // should it be "VARCHAR(2) NOT NULL"?
+        checkExpType("cast('a' as char(1))||cast('b' as char(2))", "todo: VARCHAR(3)");
+        checkExpType("'a'||'b'||'c'", "todo: VARCHAR(3)");
+        checkExpType("'a'||'b'||'cde'||'f'", "todo: VARCHAR(6)");
         checkExp("_iso-8859-6'a'||_iso-8859-6'b'||_iso-8859-6'c'");
     }
 
@@ -533,14 +535,14 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExp("char_length('string')");
         checkExp("char_length(_shift_jis'string')");
         checkExp("character_length('string')");
-        checkExpType("char_length('string')", "INTEGER");
-        checkExpType("character_length('string')", "INTEGER");
+        checkExpType("char_length('string')", "INTEGER NOT NULL");
+        checkExpType("character_length('string')", "INTEGER NOT NULL");
     }
 
     public void testUpperLower() {
         checkExp("upper(_shift_jis'sadf')");
         checkExp("lower(n'sadf')");
-        checkExpType("lower('sadf')", "CHAR(4)");
+        checkExpType("lower('sadf')", "CHAR(4) NOT NULL");
         checkExpFails("upper(123)",
             "(?s).*Cannot apply 'UPPER' to arguments of type 'UPPER.<INTEGER>.'.*");
     }
@@ -549,7 +551,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExp("position('mouse' in 'house')");
         checkExp("position(x'11' in x'100110')");
         checkExp("position(x'abcd' in x'')");
-        checkExpType("position('mouse' in 'house')", "INTEGER");
+        checkExpType("position('mouse' in 'house')", "INTEGER NOT NULL");
         checkExpFails("position(x'1234' in '110')",
             "(?s).*Cannot apply 'POSITION' to arguments of type 'POSITION.<BINARY.2.> IN <CHAR.3.>.'.*");
     }
@@ -559,7 +561,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExp("trim(both 'mustache' FROM 'beard')");
         checkExp("trim(leading 'mustache' FROM 'beard')");
         checkExp("trim(trailing 'mustache' FROM 'beard')");
-        checkExpType("trim('mustache' FROM 'beard')", "CHAR(5)");
+        checkExpType("trim('mustache' FROM 'beard')", "todo: CHAR(5)");
 
         if (todo) {
             final SqlCollation.Coercibility expectedCoercibility = null;
@@ -588,7 +590,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpFails("overlay('ABCdef' placing 'abc' from '1' for 3)",
             "(?s).*OVERLAY\\(<STRING> PLACING <STRING> FROM <INTEGER>\\).*");
         checkExpType("overlay('ABCdef' placing 'abc' from 1 for 3)",
-            "CHAR(9)");
+            "todo: CHAR(9)");
 
         if (todo) {
             checkCollation("overlay('ABCdef' placing 'abc' collate latin1$sv from 1 for 3)",
@@ -602,11 +604,11 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExp("substring('a' FROM 'reg' FOR '\\')");
         checkExp("substring(x'ff' FROM 1  FOR 2)"); //binary string
 
-        checkExpType("substring('10' FROM 1  FOR 2)", "VARCHAR(2)");
-        checkExpType("substring('1000' FROM '1'  FOR 'w')", "VARCHAR(4)");
+        checkExpType("substring('10' FROM 1  FOR 2)", "VARCHAR(2) NOT NULL");
+        checkExpType("substring('1000' FROM '1'  FOR 'w')", "VARCHAR(4) NOT NULL");
         checkExpType("substring(cast(' 100 ' as CHAR(99)) FROM '1'  FOR 'w')",
-            "VARCHAR(99)");
-        checkExpType("substring(x'10456b' FROM 1  FOR 2)", "VARBINARY(3)");
+            "VARCHAR(99) NOT NULL");
+        checkExpType("substring(x'10456b' FROM 1  FOR 2)", "VARBINARY(3) NOT NULL");
 
         checkCharset(
             "substring('10' FROM 1  FOR 2)",
@@ -672,30 +674,30 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testCastTypeToType() {
-        checkExpType("cast(123 as varchar(3))", "VARCHAR(3)");
-        checkExpType("cast(123 as char(3))", "CHAR(3)");
-        checkExpType("cast('123' as integer)", "INTEGER");
-        checkExpType("cast('123' as double)", "DOUBLE");
-        checkExpType("cast('1.0' as real)", "REAL");
-        checkExpType("cast(1.0 as tinyint)", "TINYINT");
-        checkExpType("cast(1 as tinyint)", "TINYINT");
-        checkExpType("cast(1.0 as smallint)", "SMALLINT");
-        checkExpType("cast(1 as integer)", "INTEGER");
-        checkExpType("cast(1.0 as integer)", "INTEGER");
-        checkExpType("cast(1.0 as bigint)", "BIGINT");
-        checkExpType("cast(1 as bigint)", "BIGINT");
-        checkExpType("cast(1.0 as float)", "FLOAT");
-        checkExpType("cast(1 as float)", "FLOAT");
-        checkExpType("cast(1.0 as real)", "REAL");
-        checkExpType("cast(1 as real)", "REAL");
-        checkExpType("cast(1.0 as double)", "DOUBLE");
-        checkExpType("cast(1 as double)", "DOUBLE");
+        checkExpType("cast(123 as varchar(3))", "VARCHAR(3) NOT NULL");
+        checkExpType("cast(123 as char(3))", "CHAR(3) NOT NULL");
+        checkExpType("cast('123' as integer)", "INTEGER NOT NULL");
+        checkExpType("cast('123' as double)", "DOUBLE NOT NULL");
+        checkExpType("cast('1.0' as real)", "REAL NOT NULL");
+        checkExpType("cast(1.0 as tinyint)", "TINYINT NOT NULL");
+        checkExpType("cast(1 as tinyint)", "TINYINT NOT NULL");
+        checkExpType("cast(1.0 as smallint)", "SMALLINT NOT NULL");
+        checkExpType("cast(1 as integer)", "INTEGER NOT NULL");
+        checkExpType("cast(1.0 as integer)", "INTEGER NOT NULL");
+        checkExpType("cast(1.0 as bigint)", "BIGINT NOT NULL");
+        checkExpType("cast(1 as bigint)", "BIGINT NOT NULL");
+        checkExpType("cast(1.0 as float)", "FLOAT NOT NULL");
+        checkExpType("cast(1 as float)", "FLOAT NOT NULL");
+        checkExpType("cast(1.0 as real)", "REAL NOT NULL");
+        checkExpType("cast(1 as real)", "REAL NOT NULL");
+        checkExpType("cast(1.0 as double)", "DOUBLE NOT NULL");
+        checkExpType("cast(1 as double)", "DOUBLE NOT NULL");
         checkExpType("cast(null as boolean)", "BOOLEAN");
-        checkExpType("cast('abc' as varchar(1))", "VARCHAR(1)");
-        checkExpType("cast('abc' as char(1))", "CHAR(1)");
-        checkExpType("cast(x'ff' as binary(1))", "BINARY(1)");
-        checkExpType("cast(multiset[1] as double multiset)", "DOUBLE MULTISET");
-        checkExpType("cast(multiset['abc'] as integer multiset)", "INTEGER MULTISET");
+        checkExpType("cast('abc' as varchar(1))", "VARCHAR(1) NOT NULL");
+        checkExpType("cast('abc' as char(1))", "CHAR(1) NOT NULL");
+        checkExpType("cast(x'ff' as binary(1))", "BINARY(1) NOT NULL");
+        checkExpType("cast(multiset[1] as double multiset)", "DOUBLE NOT NULL MULTISET NOT NULL");
+        checkExpType("cast(multiset['abc'] as integer multiset)", "INTEGER NOT NULL MULTISET NOT NULL");
     }
 
     public void testCastFails() {
@@ -713,7 +715,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "Argument to function 'LOCALTIME' must be a literal");
         checkWholeExpFails("LOCALTIME()",
             "No match found for function signature LOCALTIME..");
-        checkExpType("LOCALTIME", "TIME(0)"); //  NOT NULL, with TZ ?
+        checkExpType("LOCALTIME", "TIME(0) NOT NULL"); //  with TZ ?
         checkExpFails("LOCALTIME(-1)",
             "Argument to function 'LOCALTIME' must be a literal"); // i guess -s1 is an expression?
         checkExpFails("LOCALTIME('foo')",
@@ -726,7 +728,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "Argument to function 'LOCALTIMESTAMP' must be a literal");
         checkWholeExpFails("LOCALTIMESTAMP()",
             "No match found for function signature LOCALTIMESTAMP..");
-        checkExpType("LOCALTIMESTAMP", "TIMESTAMP(0)"); //  NOT NULL, with TZ ?
+        checkExpType("LOCALTIMESTAMP", "TIMESTAMP(0) NOT NULL"); //  with TZ ?
         checkExpFails("LOCALTIMESTAMP(-1)",
             "Argument to function 'LOCALTIMESTAMP' must be a literal"); // i guess -s1 is an expression?
         checkExpFails("LOCALTIMESTAMP('foo')",
@@ -740,7 +742,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "No match found for function signature CURRENT_DATE..NUMERIC..");
         checkWholeExpFails("CURRENT_DATE()",
             "No match found for function signature CURRENT_DATE..");
-        checkExpType("CURRENT_DATE", "DATE"); //  NOT NULL, with TZ?
+        checkExpType("CURRENT_DATE", "DATE NOT NULL"); //  with TZ?
         checkWholeExpFails("CURRENT_DATE(-1)",
             "No match found for function signature CURRENT_DATE..NUMERIC.."); // i guess -s1 is an expression?
         checkExpFails("CURRENT_DATE('foo')", "(?s).*");
@@ -752,7 +754,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "Argument to function 'CURRENT_TIME' must be a literal");
         checkWholeExpFails("current_time()",
             "No match found for function signature CURRENT_TIME..");
-        checkExpType("current_time", "TIME(0)"); //  NOT NULL, with TZ ?
+        checkExpType("current_time", "TIME(0) NOT NULL"); //  with TZ ?
         checkExpFails("current_time(-1)",
             "Argument to function 'CURRENT_TIME' must be a literal");
         checkExpFails("current_time('foo')",
@@ -765,8 +767,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "Argument to function 'CURRENT_TIMESTAMP' must be a literal");
         checkWholeExpFails("CURRENT_TIMESTAMP()",
             "No match found for function signature CURRENT_TIMESTAMP..");
-        checkExpType("CURRENT_TIMESTAMP", "TIMESTAMP(0)"); //  NOT NULL, with TZ ?
-        checkExpType("CURRENT_TIMESTAMP(2)", "TIMESTAMP(2)"); //  NOT NULL, with TZ ?
+        checkExpType("CURRENT_TIMESTAMP", "TIMESTAMP(0) NOT NULL"); //  with TZ ?
+        checkExpType("CURRENT_TIMESTAMP(2)", "TIMESTAMP(2) NOT NULL"); //  with TZ ?
         checkExpFails("CURRENT_TIMESTAMP(-1)",
             "Argument to function 'CURRENT_TIMESTAMP' must be a literal");
         checkExpFails("CURRENT_TIMESTAMP('foo')",
@@ -848,22 +850,40 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testMultiset() {
-        checkExpType("multiset[1]","INTEGER MULTISET");
-        checkExpType("multiset[1,2.3]","DECIMAL(2, 1) MULTISET");
-        checkExpType("multiset[1,2.3, 4]","DECIMAL(2, 1) MULTISET");
-        checkExpType("multiset['1','22', '333','22']","CHAR(3) MULTISET");
+        checkExpType("multiset[1]","INTEGER NOT NULL MULTISET NOT NULL");
+        checkExpType("multiset[1, CAST(null AS DOUBLE)]", "DOUBLE MULTISET NOT NULL");
+        checkExpType("multiset[1,2.3]","DECIMAL(2, 1) NOT NULL MULTISET NOT NULL");
+        checkExpType("multiset[1,2.3, 4]","DECIMAL(2, 1) NOT NULL MULTISET NOT NULL");
+        // Don't care about the charset and collation, but it's difficult to
+        // avoid printing them as part of the type.
+        checkExpType(
+            "multiset['1','22', '333','22']",
+            "CHAR(3) CHARACTER SET \"ISO-8859-1\" COLLATE \"ISO-8859-1$en_US$primary\" NOT NULL MULTISET NOT NULL");
         checkExpFails("multiset[1, '2'^]", "Parameters must be of the same type"); // todo: fix pos
-        checkExpType("multiset[ROW(1,2)]","RecordType(INTEGER EXPR$0, INTEGER EXPR$1) MULTISET");
-        checkExpType("multiset[ROW(1,2),ROW(2,5)]","RecordType(INTEGER EXPR$0, INTEGER EXPR$1) MULTISET");
-        checkExpType("multiset[ROW(1,2),ROW(3.4,5.4)]","RecordType(DECIMAL(2, 1) EXPR$0, DECIMAL(2, 1) EXPR$1) MULTISET");
-
-        checkExpType("multiset(select*from emp)",
-                     "RecordType(INTEGER EMPNO, VARCHAR(20) ENAME, VARCHAR(10) JOB, INTEGER MGR, DATE HIREDATE, INTEGER SAL, INTEGER COMM, INTEGER DEPTNO) MULTISET");
+        checkExpType(
+            "multiset[ROW(1,2)]",
+            "RecordType(INTEGER NOT NULL EXPR$0, INTEGER NOT NULL EXPR$1) NOT NULL MULTISET NOT NULL");
+        checkExpType(
+            "multiset[ROW(1,2),ROW(2,5)]",
+            "RecordType(INTEGER NOT NULL EXPR$0, INTEGER NOT NULL EXPR$1) NOT NULL MULTISET NOT NULL");
+        checkExpType(
+            "multiset[ROW(1,2),ROW(3.4,5.4)]",
+            "RecordType(DECIMAL(2, 1) NOT NULL EXPR$0, DECIMAL(2, 1) NOT NULL EXPR$1) NOT NULL MULTISET NOT NULL");
+        checkExpType(
+            "multiset(select*from emp)",
+            "RecordType(INTEGER NOT NULL EMPNO," +
+            " VARCHAR(20) CHARACTER SET \"ISO-8859-1\" COLLATE \"ISO-8859-1$en_US$primary\" NOT NULL ENAME," +
+            " VARCHAR(10) CHARACTER SET \"ISO-8859-1\" COLLATE \"ISO-8859-1$en_US$primary\" NOT NULL JOB," +
+            " INTEGER NOT NULL MGR," +
+            " DATE NOT NULL HIREDATE," +
+            " INTEGER NOT NULL SAL," +
+            " INTEGER NOT NULL COMM," +
+            " INTEGER NOT NULL DEPTNO) NOT NULL MULTISET NOT NULL");
     }
 
     public void testMultisetSetOperators() {
         checkExp("multiset[1] multiset union multiset[1,2.3]");
-        checkExpType("multiset[1] multiset union multiset[1,2.3]", "DECIMAL(2, 1) MULTISET");
+        checkExpType("multiset[1] multiset union multiset[1,2.3]", "DECIMAL(2, 1) NOT NULL MULTISET NOT NULL");
         checkExp("multiset[1] multiset union all multiset[1,2.3]");
         checkExp("multiset[1] multiset except multiset[1,2.3]");
         checkExp("multiset[1] multiset except all multiset[1,2.3]");
@@ -879,23 +899,23 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testSubMultisetOf() {
-        checkExpType("multiset[1] submultiset of multiset[1,2.3]", "BOOLEAN");
-        checkExpType("multiset[1] submultiset of multiset[1]", "BOOLEAN");
+        checkExpType("multiset[1] submultiset of multiset[1,2.3]", "BOOLEAN NOT NULL");
+        checkExpType("multiset[1] submultiset of multiset[1]", "BOOLEAN NOT NULL");
 
         checkExpFails("multiset[1, '2'^] submultiset of multiset[1]", "Parameters must be of the same type"); // todo: fix pos
         checkExp("multiset[ROW(1,2)] submultiset of multiset[row(3,4)]");
     }
 
     public void testElement() {
-        checkExpType("element(multiset[1])", "INTEGER");
-        checkExpType("1.0+element(multiset[1])", "DECIMAL(2, 1)");
-        checkExpType("element(multiset['1'])", "CHAR(1)");
-        checkExpType("element(multiset[1e-2])", "DOUBLE");
-        checkExpType("element(multiset[multiset[cast(null as tinyint)]])", "TINYINT MULTISET");
+        checkExpType("element(multiset[1])", "INTEGER NOT NULL");
+        checkExpType("1.0+element(multiset[1])", "DECIMAL(2, 1) NOT NULL");
+        checkExpType("element(multiset['1'])", "CHAR(1) NOT NULL");
+        checkExpType("element(multiset[1e-2])", "DOUBLE NOT NULL");
+        checkExpType("element(multiset[multiset[cast(null as tinyint)]])", "TINYINT MULTISET NOT NULL");
     }
 
     public void testMemberOf() {
-        checkExpType("1 member of multiset[1]", "BOOLEAN");
+        checkExpType("1 member of multiset[1]", "BOOLEAN NOT NULL");
         checkWholeExpFails("1 member of multiset['1']", "Cannot compare values of types 'INTEGER', 'CHAR\\(1\\)'");
     }
 
@@ -906,8 +926,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testCardinality() {
-        checkExpType("cardinality(multiset[1])", "INTEGER");
-        checkExpType("cardinality(multiset['1'])", "INTEGER");
+        checkExpType("cardinality(multiset[1])", "INTEGER NOT NULL");
+        checkExpType("cardinality(multiset['1'])", "INTEGER NOT NULL");
         checkWholeExpFails("cardinality('a')", "Cannot apply 'CARDINALITY' to arguments of type 'CARDINALITY.<CHAR.1.>.'. Supported form.s.: 'CARDINALITY.<MULTISET>.'");
     }
 
@@ -942,38 +962,38 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testIntervalLiteral() {
-        checkExpType("INTERVAL '1' DAY", "INTERVAL DAY");
-        checkExpType("INTERVAL '1' DAY(4)", "INTERVAL DAY(4)");
-        checkExpType("INTERVAL '1' HOUR", "INTERVAL HOUR");
-        checkExpType("INTERVAL '1' MINUTE", "INTERVAL MINUTE");
-        checkExpType("INTERVAL '1' SECOND", "INTERVAL SECOND");
-        checkExpType("INTERVAL '1' SECOND(3)", "INTERVAL SECOND(3)");
-        checkExpType("INTERVAL '1' SECOND(3, 4)", "INTERVAL SECOND(3, 4)");
-        checkExpType("INTERVAL '1 2:3:4' DAY TO SECOND", "INTERVAL DAY TO SECOND");
-        checkExpType("INTERVAL '1 2:3:4' DAY(4) TO SECOND(4)", "INTERVAL DAY(4) TO SECOND(4)");
+        checkExpType("INTERVAL '1' DAY", "INTERVAL DAY NOT NULL");
+        checkExpType("INTERVAL '1' DAY(4)", "INTERVAL DAY(4) NOT NULL");
+        checkExpType("INTERVAL '1' HOUR", "INTERVAL HOUR NOT NULL");
+        checkExpType("INTERVAL '1' MINUTE", "INTERVAL MINUTE NOT NULL");
+        checkExpType("INTERVAL '1' SECOND", "INTERVAL SECOND NOT NULL");
+        checkExpType("INTERVAL '1' SECOND(3)", "INTERVAL SECOND(3) NOT NULL");
+        checkExpType("INTERVAL '1' SECOND(3, 4)", "INTERVAL SECOND(3, 4) NOT NULL");
+        checkExpType("INTERVAL '1 2:3:4' DAY TO SECOND", "INTERVAL DAY TO SECOND NOT NULL");
+        checkExpType("INTERVAL '1 2:3:4' DAY(4) TO SECOND(4)", "INTERVAL DAY(4) TO SECOND(4) NOT NULL");
 
-        checkExpType("INTERVAL '1' YEAR", "INTERVAL YEAR");
-        checkExpType("INTERVAL '1' MONTH", "INTERVAL MONTH");
-        checkExpType("INTERVAL '1-2' YEAR TO MONTH", "INTERVAL YEAR TO MONTH");
+        checkExpType("INTERVAL '1' YEAR", "INTERVAL YEAR NOT NULL");
+        checkExpType("INTERVAL '1' MONTH", "INTERVAL MONTH NOT NULL");
+        checkExpType("INTERVAL '1-2' YEAR TO MONTH", "INTERVAL YEAR TO MONTH NOT NULL");
     }
 
     public void testIntervalOperators() {
-        checkExpType("interval '1' day + interval '1' DAY(4)", "INTERVAL DAY(4)");
-        checkExpType("interval '1' day(5) + interval '1' DAY", "INTERVAL DAY(5)");
-        checkExpType("interval '1' day + interval '1' HOUR(10)", "INTERVAL DAY TO HOUR");
-        checkExpType("interval '1' day + interval '1' MINUTE", "INTERVAL DAY TO MINUTE");
-        checkExpType("interval '1' day + interval '1' second", "INTERVAL DAY TO SECOND");
+        checkExpType("interval '1' day + interval '1' DAY(4)", "INTERVAL DAY(4) NOT NULL");
+        checkExpType("interval '1' day(5) + interval '1' DAY", "INTERVAL DAY(5) NOT NULL");
+        checkExpType("interval '1' day + interval '1' HOUR(10)", "INTERVAL DAY TO HOUR NOT NULL");
+        checkExpType("interval '1' day + interval '1' MINUTE", "INTERVAL DAY TO MINUTE NOT NULL");
+        checkExpType("interval '1' day + interval '1' second", "INTERVAL DAY TO SECOND NOT NULL");
 
-        checkExpType("interval '1:2' hour to minute + interval '1' second", "INTERVAL HOUR TO SECOND");
-        checkExpType("interval '1:3' hour to minute + interval '1 1:2:3.4' day to second", "INTERVAL DAY TO SECOND");
-        checkExpType("interval '1:2' hour to minute + interval '1 1' day to hour", "INTERVAL DAY TO MINUTE");
-        checkExpType("interval '1:2' hour to minute + interval '1 1' day to hour", "INTERVAL DAY TO MINUTE");
-        checkExpType("interval '1 2' day to hour + interval '1:1' minute to second", "INTERVAL DAY TO SECOND");
+        checkExpType("interval '1:2' hour to minute + interval '1' second", "INTERVAL HOUR TO SECOND NOT NULL");
+        checkExpType("interval '1:3' hour to minute + interval '1 1:2:3.4' day to second", "INTERVAL DAY TO SECOND NOT NULL");
+        checkExpType("interval '1:2' hour to minute + interval '1 1' day to hour", "INTERVAL DAY TO MINUTE NOT NULL");
+        checkExpType("interval '1:2' hour to minute + interval '1 1' day to hour", "INTERVAL DAY TO MINUTE NOT NULL");
+        checkExpType("interval '1 2' day to hour + interval '1:1' minute to second", "INTERVAL DAY TO SECOND NOT NULL");
 
-        checkExpType("interval '1' year + interval '1' month", "INTERVAL YEAR TO MONTH");
-        checkExpType("interval '1' day - interval '1' hour", "INTERVAL DAY TO HOUR");
-        checkExpType("interval '1' year - interval '1' month", "INTERVAL YEAR TO MONTH");
-        checkExpType("interval '1' month - interval '1' year", "INTERVAL YEAR TO MONTH");
+        checkExpType("interval '1' year + interval '1' month", "INTERVAL YEAR TO MONTH NOT NULL");
+        checkExpType("interval '1' day - interval '1' hour", "INTERVAL DAY TO HOUR NOT NULL");
+        checkExpType("interval '1' year - interval '1' month", "INTERVAL YEAR TO MONTH NOT NULL");
+        checkExpType("interval '1' month - interval '1' year", "INTERVAL YEAR TO MONTH NOT NULL");
         checkExpFails("interval '1' year + interval '1' day",
             "(?s).*Cannot apply '\\+' to arguments of type '<INTERVAL YEAR> \\+ <INTERVAL DAY>'.*");
         checkExpFails("interval '1' month + interval '1' second",
@@ -988,12 +1008,12 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 //todo        checkExpFails("date '1234-12-12' + (INTERVAL '1' month + interval '1' day)","?");
 
         // multiply operator
-        checkExpType("interval '1' year * 2", "INTERVAL YEAR");
-        checkExpType("1.234*interval '1 1:2:3' day to second ", "INTERVAL DAY TO SECOND");
+        checkExpType("interval '1' year * 2", "INTERVAL YEAR NOT NULL");
+        checkExpType("1.234*interval '1 1:2:3' day to second ", "INTERVAL DAY TO SECOND NOT NULL");
 
         // division operator
-        checkExpType("interval '1' month / 0.1", "INTERVAL MONTH");
-        checkExpType("interval '1-2' year TO month / 0.1e-9", "INTERVAL YEAR TO MONTH");
+        checkExpType("interval '1' month / 0.1", "INTERVAL MONTH NOT NULL");
+        checkExpType("interval '1-2' year TO month / 0.1e-9", "INTERVAL YEAR TO MONTH NOT NULL");
         checkExpFails("1.234/interval '1 1:2:3' day to second ", "(?s).*Cannot apply '/' to arguments of type '<DECIMAL.4, 3.> / <INTERVAL DAY TO SECOND>'.*");
     }
 
@@ -1372,10 +1392,10 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testNestedFrom() {
-        checkType("values (true)", "BOOLEAN");
-        checkType("select * from (values(true))", "BOOLEAN");
-        checkType("select * from (select * from (values(true)))", "BOOLEAN");
-        checkType("select * from (select * from (select * from (values(true))))", "BOOLEAN");
+        checkType("values (true)", "BOOLEAN NOT NULL");
+        checkType("select * from (values(true))", "BOOLEAN NOT NULL");
+        checkType("select * from (select * from (values(true)))", "BOOLEAN NOT NULL");
+        checkType("select * from (select * from (select * from (values(true))))", "BOOLEAN NOT NULL");
         checkType(
             "select * from (" +
             "  select * from (" +
@@ -1383,7 +1403,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "    union" +
             "    select * from (values (false)))" +
             "  except" +
-            "  select * from (values(true)))", "BOOLEAN");
+            "  select * from (values(true)))", "BOOLEAN NOT NULL");
     }
 
     public void testAmbiguousColumn() {
@@ -1862,23 +1882,23 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testIntervalCompare(){
-        checkExpType("interval '1' hour = interval '1' day", "BOOLEAN");
-        checkExpType("interval '1' hour <> interval '1' hour", "BOOLEAN");
-        checkExpType("interval '1' hour < interval '1' second", "BOOLEAN");
-        checkExpType("interval '1' hour <= interval '1' minute", "BOOLEAN");
-        checkExpType("interval '1' minute > interval '1' second", "BOOLEAN");
-        checkExpType("interval '1' second >= interval '1' day", "BOOLEAN");
-        checkExpType("interval '1' year >= interval '1' year", "BOOLEAN");
-        checkExpType("interval '1' month = interval '1' year", "BOOLEAN");
-        checkExpType("interval '1' month <> interval '1' month", "BOOLEAN");
-        checkExpType("interval '1' year >= interval '1' month", "BOOLEAN");
+        checkExpType("interval '1' hour = interval '1' day", "BOOLEAN NOT NULL");
+        checkExpType("interval '1' hour <> interval '1' hour", "BOOLEAN NOT NULL");
+        checkExpType("interval '1' hour < interval '1' second", "BOOLEAN NOT NULL");
+        checkExpType("interval '1' hour <= interval '1' minute", "BOOLEAN NOT NULL");
+        checkExpType("interval '1' minute > interval '1' second", "BOOLEAN NOT NULL");
+        checkExpType("interval '1' second >= interval '1' day", "BOOLEAN NOT NULL");
+        checkExpType("interval '1' year >= interval '1' year", "BOOLEAN NOT NULL");
+        checkExpType("interval '1' month = interval '1' year", "BOOLEAN NOT NULL");
+        checkExpType("interval '1' month <> interval '1' month", "BOOLEAN NOT NULL");
+        checkExpType("interval '1' year >= interval '1' month", "BOOLEAN NOT NULL");
 
         checkExpFails("interval '1' second >= interval '1' year", "(?s).*Cannot apply '>=' to arguments of type '<INTERVAL SECOND> >= <INTERVAL YEAR>'.*");
         checkExpFails("interval '1' month = interval '1' day", "(?s).*Cannot apply '=' to arguments of type '<INTERVAL MONTH> = <INTERVAL DAY>'.*");
     }
 
     public void testOverlaps() {
-        checkExpType("(date '1-2-3', date '1-2-3') overlaps (date '1-2-3', date '1-2-3')","BOOLEAN");
+        checkExpType("(date '1-2-3', date '1-2-3') overlaps (date '1-2-3', date '1-2-3')","BOOLEAN NOT NULL");
         checkExp("(date '1-2-3', date '1-2-3') overlaps (date '1-2-3', interval '1' year)");
         checkExp("(time '1:2:3', interval '1' second) overlaps (time '23:59:59', time '1:2:3')");
         checkExp("(timestamp '1-2-3 4:5:6', timestamp '1-2-3 4:5:6' ) overlaps (timestamp '1-2-3 4:5:6', interval '1 2:3:4.5' day to second)");
@@ -1894,7 +1914,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     public void testExtract() {
         // The reason why extract returns double is because we can have
         // seconds fractions
-        checkExpType("extract(year from interval '1-2' year to month)","DOUBLE");
+        checkExpType("extract(year from interval '1-2' year to month)","DOUBLE NOT NULL");
         checkExp("extract(minute from interval '1.1' second)");
 
         checkExpFails("extract(minute from interval '11' month)","(?s).*Cannot apply.*");
@@ -1902,18 +1922,18 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testCastToInterval() {
-        checkExpType("cast(interval '1' month as interval year)", "INTERVAL YEAR");
-        checkExpType("cast(interval '1-1' year to month as interval month)", "INTERVAL MONTH");
-        checkExpType("cast(interval '1:1' hour to minute as interval day)", "INTERVAL DAY");
-        checkExpType("cast(interval '1:1' hour to minute as interval minute to second)", "INTERVAL MINUTE TO SECOND");
+        checkExpType("cast(interval '1' month as interval year)", "INTERVAL YEAR NOT NULL");
+        checkExpType("cast(interval '1-1' year to month as interval month)", "INTERVAL MONTH NOT NULL");
+        checkExpType("cast(interval '1:1' hour to minute as interval day)", "INTERVAL DAY NOT NULL");
+        checkExpType("cast(interval '1:1' hour to minute as interval minute to second)", "INTERVAL MINUTE TO SECOND NOT NULL");
 
         checkExpFails("cast(interval '1:1' hour to minute as interval month)", "Cast function cannot convert value of type INTERVAL HOUR TO MINUTE to type INTERVAL MONTH");
         checkExpFails("cast(interval '1-1' year to month as interval second)", "Cast function cannot convert value of type INTERVAL YEAR TO MONTH to type INTERVAL SECOND");
     }
 
     public void testMinusDateOperator() {
-        checkExpType("(CURRENT_DATE - CURRENT_DATE) HOUR", "INTERVAL HOUR");
-        checkExpType("(CURRENT_DATE - CURRENT_DATE) YEAR TO MONTH", "INTERVAL YEAR TO MONTH");
+        checkExpType("(CURRENT_DATE - CURRENT_DATE) HOUR", "INTERVAL HOUR NOT NULL");
+        checkExpType("(CURRENT_DATE - CURRENT_DATE) YEAR TO MONTH", "INTERVAL YEAR TO MONTH NOT NULL");
         checkExpFails("(CURRENT_DATE - LOCALTIME) YEAR TO MONTH", "(?s).*Parameters must be of the same type.*");
     }
 
@@ -1930,12 +1950,12 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testUnnest() {
-        checkType("select*from unnest(multiset[1])","INTEGER");
-        checkType("select*from unnest(multiset[1, 2])","INTEGER");
-        checkType("select*from unnest(multiset[1, 2.3])","DECIMAL(2, 1)");
-        checkType("select*from unnest(multiset[1, 2.3, 1])","DECIMAL(2, 1)");
-        checkType("select*from unnest(multiset['1','22','333'])","CHAR(3)");
-        checkType("select*from unnest(multiset['1','22','333','22'])","CHAR(3)");
+        checkType("select*from unnest(multiset[1])","INTEGER NOT NULL");
+        checkType("select*from unnest(multiset[1, 2])","INTEGER NOT NULL");
+        checkType("select*from unnest(multiset[1, 2.3])","DECIMAL(2, 1) NOT NULL");
+        checkType("select*from unnest(multiset[1, 2.3, 1])","DECIMAL(2, 1) NOT NULL");
+        checkType("select*from unnest(multiset['1','22','333'])","CHAR(3) NOT NULL");
+        checkType("select*from unnest(multiset['1','22','333','22'])","CHAR(3) NOT NULL");
         checkFails("select*from unnest(1)","(?s).*Cannot apply 'UNNEST' to arguments of type 'UNNEST.<INTEGER>.'.*");
 
         check("select*from unnest(multiset(select*from dept))");
@@ -1955,16 +1975,16 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     {
         checkType(
             "values new address()",
-            "ObjectSqlType(ADDRESS)");
+            "ObjectSqlType(ADDRESS) NOT NULL");
         checkType(
             "select home_address from emp_address",
-            "ObjectSqlType(ADDRESS)");
+            "ObjectSqlType(ADDRESS) NOT NULL");
         checkType(
             "select ea.home_address.zip from emp_address ea",
-            "INTEGER");
+            "INTEGER NOT NULL");
         checkType(
             "select ea.mailing_address.city from emp_address ea",
-            "VARCHAR(20)");
+            "VARCHAR(20) NOT NULL");
     }
 
     public void testLateral() {

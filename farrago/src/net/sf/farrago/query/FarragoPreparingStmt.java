@@ -69,6 +69,7 @@ import org.eigenbase.sql2rel.*;
 import org.eigenbase.util.*;
 
 import java.util.List;
+import java.lang.reflect.Modifier;
 
 /**
  * FarragoPreparingStmt subclasses OJPreparingStmt to implement the
@@ -247,6 +248,78 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             };
         implementingClassDecl = super.init(implementingArgs);
     }
+
+    /**
+     * Creates a new class declaration to be a container for generated code,
+     * a public static inner class of {@link #implementingClassDecl}.
+     *
+     * @param base Stem for class name. For example, "IterTransform" might
+     *    yield "IterTransform1".
+     * @param baseClasses Array of base classes. May be null.
+     * @param interfaces Array of interfaces. May be null.
+     * @pre base != null
+     * @return A new class declaration
+     */
+    public ClassDeclaration createClassDecl(
+        String base,
+        TypeName[] baseClasses,
+        TypeName[] interfaces)
+    {
+        Util.pre(base != null, "base != null");
+        String name = generateUniqueName(implementingClassDecl, base);
+        final ClassDeclaration classDecl = new ClassDeclaration(
+            new ModifierList(Modifier.PUBLIC | Modifier.STATIC),
+            name,
+            baseClasses,
+            interfaces,
+            new MemberDeclarationList(),
+            true);
+        implementingClassDecl.getBody().add(classDecl);
+        return classDecl;
+    }
+
+    /**
+     * Generates a unique name for a new member of a class.
+     */
+    private static String generateUniqueName(
+        ClassDeclaration classDecl,
+        String base)
+    {
+        for (int i = 1;; ++i) {
+            String candidate = base + String.valueOf(i);
+            if (!hasMember(classDecl, candidate)) {
+                return candidate;
+            }
+        }
+    }
+
+    /**
+     * Returns whether a class declaration has a member with a given name.
+     */
+    private static boolean hasMember(
+        ClassDeclaration classDecl,
+        String candidate)
+    {
+        final MemberDeclarationList declList = classDecl.getBody();
+        for (int j = 0; j < declList.size(); j++) {
+            MemberDeclaration memberDecl = (MemberDeclaration) declList.get(j);
+            if (memberDecl instanceof ClassDeclaration) {
+                String className = ((ClassDeclaration) memberDecl).getName();
+                if (className.equals(candidate)) {
+                    return true;
+                }
+            } else if (memberDecl instanceof FieldDeclaration) {
+                String fieldName = ((FieldDeclaration) memberDecl).getName();
+                if (fieldName.equals(candidate)) {
+                    return true;
+                }
+            } else {
+                // don't care about method names
+            }
+        }
+        return false;
+    }
+
 
     // implement FarragoSessionPreparingStmt
     public FarragoSessionExecutableStmt implement(
@@ -475,7 +548,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         if (dumpPlan) {
             planDumpTracer.fine(
                 RelOptUtil.dumpPlan(
-                    "Plan before flattening", 
+                    "Plan before flattening",
                     rootRel,
                     false));
         }
@@ -484,7 +557,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         if (dumpPlan) {
             planDumpTracer.fine(
                 RelOptUtil.dumpPlan(
-                    "Plan after flattening", 
+                    "Plan after flattening",
                     rootRel,
                     false));
         }
@@ -492,7 +565,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         if (dumpPlan) {
             planDumpTracer.fine(
                 RelOptUtil.dumpPlan(
-                    "Plan after optimization", 
+                    "Plan after optimization",
                     rootRel,
                     false));
         }

@@ -23,55 +23,85 @@
 
 package net.sf.farrago.fennel.tuple;
 
-import java.util.HashMap;
+import org.eigenbase.util.EnumeratedValues;
 
 /**
  * FennelStandardTypeDescriptor implements the
  * {@link FennelStandardTypeDescriptor} enumerations as kept in fennel.
  *
  * This must be kept in sync with any changes to fennel's
- * FennelStandardTypeDescriptor.h
+ * <code>FennelStandardTypeDescriptor.h</code>.
  *
  * @author Mike Bennett
  * @version $Id$
  */
-// NOTE: this would be *SO* much cleaner with jdk 1.5 Enum support!
 public final class FennelStandardTypeDescriptor
+    extends EnumeratedValues.BasicValue
 {
-    // NOTE: this is currently not used, but it may be needed for
-    // XMI parsing so I'm leaving it for now - mbennett 11jan05
-    private static final HashMap ordinals;
-
-    private static void addOrdinal(int ordinalType, String desc)
+    private FennelStandardTypeDescriptor(String name, int ordinal)
     {
-        ordinals.put(new Integer(ordinalType), desc);
+        super(name, ordinal, null);
     }
 
-    static {
-        ordinals = new HashMap(16);
-        addOrdinal(FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_8,     "s1");
-        addOrdinal(FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_8,    "u1");
-        addOrdinal(FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_16,    "s2");
-        addOrdinal(FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_16,   "u2");
-        addOrdinal(FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_32,    "s4");
-        addOrdinal(FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_32,   "u4");
-        addOrdinal(FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_64,    "s8");
-        addOrdinal(FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_64,   "u8");
-        addOrdinal(FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_BOOL,      "bo");
-        addOrdinal(FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_REAL,      "r");
-        addOrdinal(FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_DOUBLE,    "d");
-        addOrdinal(FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_CHAR,      "c");
-        addOrdinal(FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_VARCHAR,   "vc");
-        addOrdinal(FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_BINARY,    "b");
-        addOrdinal(FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_VARBINARY, "vb");
-    }
+    public static final FennelStandardTypeDescriptor INT_S =
+        new FennelStandardTypeDescriptor(
+            "s1", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_8);
+    public static final FennelStandardTypeDescriptor UINT_S =
+        new FennelStandardTypeDescriptor(
+            "u1", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_8);
+    public static final FennelStandardTypeDescriptor INT_16 =
+        new FennelStandardTypeDescriptor(
+            "s2", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_16);
+    public static final FennelStandardTypeDescriptor UINT_16 =
+        new FennelStandardTypeDescriptor(
+            "u2", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_16);
+    public static final FennelStandardTypeDescriptor INT_32 =
+        new FennelStandardTypeDescriptor(
+            "s4", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_32);
+    public static final FennelStandardTypeDescriptor UINT_32 =
+        new FennelStandardTypeDescriptor(
+            "u4", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_32);
+    public static final FennelStandardTypeDescriptor INT_64 =
+        new FennelStandardTypeDescriptor(
+            "s8", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_64);
+    public static final FennelStandardTypeDescriptor UINT_64 =
+        new FennelStandardTypeDescriptor(
+            "u8", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_64);
+    public static final FennelStandardTypeDescriptor BOOL =
+        new FennelStandardTypeDescriptor(
+            "bo", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_BOOL);
+    public static final FennelStandardTypeDescriptor REAL =
+        new FennelStandardTypeDescriptor(
+            "r", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_REAL);
+    public static final FennelStandardTypeDescriptor DOUBLE =
+        new FennelStandardTypeDescriptor(
+            "d", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_DOUBLE);
+    public static final FennelStandardTypeDescriptor CHAR =
+        new FennelStandardTypeDescriptor(
+            "c", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_CHAR);
+    public static final FennelStandardTypeDescriptor VARCHAR =
+        new FennelStandardTypeDescriptor(
+            "vc", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_VARCHAR);
+    public static final FennelStandardTypeDescriptor BINARY =
+        new FennelStandardTypeDescriptor(
+            "b", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_BINARY);
+    public static final FennelStandardTypeDescriptor VARBINARY =
+        new FennelStandardTypeDescriptor(
+            "vb", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_VARBINARY);
+
+    public static final EnumeratedValues enumeration = new EnumeratedValues(
+        new EnumeratedValues.Value[] {
+            INT_S, UINT_S, INT_16, UINT_16, INT_32, UINT_32, INT_64, UINT_64,
+            BOOL, REAL, DOUBLE, CHAR, VARCHAR, BINARY, VARBINARY,
+        }
+    );
 
     /**
-     * gets the string descriptor for an ordinal
+     * Returns the {@link FennelStandardTypeDescriptor} with a given ordinal.
      */
-    public static String getDescription(int st) 
+    public static FennelStandardTypeDescriptor forOrdinal(int ordinal)
     {
-        return (String) ordinals.get(new Integer(st));
+        return (FennelStandardTypeDescriptor) enumeration.getValue(ordinal);
     }
 
     /**
@@ -89,17 +119,17 @@ public final class FennelStandardTypeDescriptor
          * returns the ordinal representing this type.
          */
         public int getOrdinal()
-        { 
-            return ordinal; 
+        {
+            return ordinal;
         };
 
         /**
          * returns number of bits in marshalled representation, or 0 for a
          * non-bit type; currently only 0 or 1 is supported.
          */
-        public int getBitCount() 
-        { 
-            return bitCount; 
+        public int getBitCount()
+        {
+            return bitCount;
         };
 
         /**
@@ -108,11 +138,11 @@ public final class FennelStandardTypeDescriptor
          * precision; for bit types, this yields the size of the unmarshalled
          * representation.
          */
-        public int getFixedByteCount() 
-        { 
-            return fixedByteCount; 
+        public int getFixedByteCount()
+        {
+            return fixedByteCount;
         };
-        
+
         /**
          * Gets the number of bytes required to store the narrowest value with
          * this type, given a particular max byte count.  For a fixed-width
@@ -122,9 +152,9 @@ public final class FennelStandardTypeDescriptor
          *
          * @return number of bytes
          */
-        public int getMinByteCount(int maxWidth) 
-        { 
-            return maxWidth; 
+        public int getMinByteCount(int maxWidth)
+        {
+            return maxWidth;
         };
 
         /**
@@ -139,8 +169,8 @@ public final class FennelStandardTypeDescriptor
          * @return number of bytes
          */
         public int getAlignmentByteCount(int width)
-        { 
-            return width; 
+        {
+            return width;
         };
 
         /**
@@ -173,14 +203,14 @@ public final class FennelStandardTypeDescriptor
         public stdINT_8() { super(
             FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_8, 0, 1); };
         public FennelAttributeAccessor newAttributeAccessor()
-        { 
+        {
             return new FennelAttributeAccessor.FennelByteAccessor();
         };
         public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
             return (int) (d2.getByte() - d1.getByte());
         }
     }
-    
+
     /**
      * describes an unsigned byte.
      */
@@ -190,7 +220,7 @@ public final class FennelStandardTypeDescriptor
         public stdUINT_8() { super(
             FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_8, 0, 1); };
         public FennelAttributeAccessor newAttributeAccessor()
-        { 
+        {
             return new FennelAttributeAccessor.FennelByteAccessor();
         };
         public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
@@ -207,7 +237,7 @@ public final class FennelStandardTypeDescriptor
         public stdINT_16() { super(
             FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_16, 0, 2); };
         public FennelAttributeAccessor newAttributeAccessor()
-        { 
+        {
             return new FennelAttributeAccessor.FennelShortAccessor();
         };
         public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
@@ -226,7 +256,7 @@ public final class FennelStandardTypeDescriptor
             0,
             2); };
         public FennelAttributeAccessor newAttributeAccessor()
-        { 
+        {
             return new FennelAttributeAccessor.FennelShortAccessor();
         };
         public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
@@ -243,7 +273,7 @@ public final class FennelStandardTypeDescriptor
         public stdINT_32() { super(
             FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_32, 0, 4); };
         public FennelAttributeAccessor newAttributeAccessor()
-        { 
+        {
             return new FennelAttributeAccessor.FennelIntAccessor();
         };
         public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
@@ -262,7 +292,7 @@ public final class FennelStandardTypeDescriptor
             0,
             4); };
         public FennelAttributeAccessor newAttributeAccessor()
-        { 
+        {
             return new FennelAttributeAccessor.FennelIntAccessor();
         };
         public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
@@ -279,7 +309,7 @@ public final class FennelStandardTypeDescriptor
         public stdINT_64() { super(
             FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_64, 0, 8); };
         public FennelAttributeAccessor newAttributeAccessor()
-        { 
+        {
             return new FennelAttributeAccessor.FennelLongAccessor();
         };
         public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
@@ -298,7 +328,7 @@ public final class FennelStandardTypeDescriptor
             0,
             8); };
         public FennelAttributeAccessor newAttributeAccessor()
-        { 
+        {
             return new FennelAttributeAccessor.FennelLongAccessor();
         };
         public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
@@ -315,7 +345,7 @@ public final class FennelStandardTypeDescriptor
         public stdREAL() { super(
             FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_REAL, 0, 4); };
         public FennelAttributeAccessor newAttributeAccessor()
-        { 
+        {
             return new FennelAttributeAccessor.FennelIntAccessor();
         };
         public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
@@ -332,7 +362,7 @@ public final class FennelStandardTypeDescriptor
         public stdDOUBLE() { super(
             FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_DOUBLE, 0, 8); };
         public FennelAttributeAccessor newAttributeAccessor()
-        { 
+        {
             return new FennelAttributeAccessor.FennelLongAccessor();
         };
         public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
@@ -349,16 +379,16 @@ public final class FennelStandardTypeDescriptor
         public stdBOOL() { super(
             FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_BOOL, 1, 1); };
         public FennelAttributeAccessor newAttributeAccessor()
-        { 
+        {
             return new FennelAttributeAccessor.FennelBitAccessor();
         };
         public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
-            if (d2.getBoolean() == d1.getBoolean()) { 
+            if (d2.getBoolean() == d1.getBoolean()) {
                 return 0;
             }
             if (d2.getBoolean()) {
                 return 1;
-            } 
+            }
             return -1;
         }
     }
@@ -377,7 +407,7 @@ public final class FennelStandardTypeDescriptor
         public int getMinByteCount(int maxWidth) { return maxWidth; }
         public int getAlignmentByteCount(int width) { return 1; }
         public FennelAttributeAccessor newAttributeAccessor()
-        { 
+        {
             return new FennelAttributeAccessor.FennelFixedWidthAccessor();
         }
         public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
@@ -408,7 +438,7 @@ public final class FennelStandardTypeDescriptor
         public int getMinByteCount(int maxWidth) { return 0; }
         public int getAlignmentByteCount(int width) { return 1; }
         public FennelAttributeAccessor newAttributeAccessor()
-        { 
+        {
             return new FennelAttributeAccessor.FennelVarWidthAccessor();
         }
         public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
@@ -440,7 +470,7 @@ public final class FennelStandardTypeDescriptor
         public int getMinByteCount(int maxWidth) { return maxWidth; }
         public int getAlignmentByteCount(int width) { return 1; }
         public FennelAttributeAccessor newAttributeAccessor()
-        { 
+        {
             return new FennelAttributeAccessor.FennelFixedWidthAccessor();
         }
         public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
@@ -473,7 +503,7 @@ public final class FennelStandardTypeDescriptor
         public int getMinByteCount(int maxWidth) { return 0; }
         public int getAlignmentByteCount(int width) { return 1; }
         public FennelAttributeAccessor newAttributeAccessor()
-        { 
+        {
             return new FennelAttributeAccessor.FennelVarWidthAccessor();
         }
         public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {

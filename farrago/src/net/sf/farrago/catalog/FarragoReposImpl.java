@@ -35,6 +35,7 @@ import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.util.SaffronProperties;
+import org.eigenbase.util.Util;
 import org.eigenbase.jmi.*;
 
 import java.util.logging.Logger;
@@ -49,7 +50,6 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
     implements FarragoRepos
 {
     //~ Static fields/initializers --------------------------------------------
-
     private static final Logger tracer = FarragoTrace.getReposTracer();
 
     /** TODO:  look this up from repository */
@@ -380,6 +380,14 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
                 }
             }
         }
+    }
+
+    public Object getMetadataFactory(String prefix)
+    {
+        if (prefix.equals("Fem")) {
+            return (FarragoMetadataFactory) this;
+        }
+        throw Util.newInternal("Unknown metadata factory '" + prefix + "'");
     }
 }
 

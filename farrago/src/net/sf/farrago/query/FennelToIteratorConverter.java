@@ -27,7 +27,6 @@ import java.lang.reflect.*;
 import java.nio.*;
 import java.util.*;
 
-import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.runtime.*;
@@ -60,6 +59,24 @@ import org.eigenbase.sql.type.*;
  */
 public class FennelToIteratorConverter extends ConverterRel implements JavaRel
 {
+    /**
+     * The singleton rule which uses a {@link FennelToIteratorConverter} to
+     * convert a {@link RelNode}
+     * from {@link FennelRel#FENNEL_EXEC_CONVENTION} convention
+     * to {@link CallingConvention#ITERATOR} convention.
+     */
+    public static final ConverterRule Rule = new ConverterRule(
+        RelNode.class,
+        FennelRel.FENNEL_EXEC_CONVENTION,
+        CallingConvention.ITERATOR, "FennelToIteratorRule") {
+        public RelNode convert(RelNode rel)
+        {
+            return new FennelToIteratorConverter(
+                rel.getCluster(),
+                rel);
+        }
+    };
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -104,7 +121,7 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
         FennelRel fennelRel = (FennelRel) getChild();
         FennelRelImplementor fennelImplementor =
             (FennelRelImplementor) implementor;
-        FarragoMetadataFactory repos = fennelImplementor.getMetadataFactory();
+        FarragoMetadataFactory repos = fennelImplementor.getRepos();
 
         final FarragoPreparingStmt stmt =
             FennelRelUtil.getPreparingStmt(fennelRel);
@@ -125,7 +142,8 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
         OJClass rowClass = OJUtil.typeToOJClass(rowType, factory);
 
         // Implement the child rel as an XO.
-        FemExecutionStreamDef rootStream = childToStreamDef(fennelImplementor);
+        FemExecutionStreamDef rootStream =
+            fennelImplementor.visitFennelChild((FennelRel) getChild());
         String rootStreamName = rootStream.getName();
         int rootStreamId = getId();
 
@@ -389,37 +407,13 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
     }
 
     /**
-     * Converts the child relational expression (which is in Fennel
-     * convention) into a {@link FemExecutionStreamDef}.
-     *
-     * <p>Derived classes may override this method.
-     */
-    protected FemExecutionStreamDef childToStreamDef(
-        FennelRelImplementor implementor)
-    {
-        FemExecutionStreamDef rootStream =
-            implementor.visitFennelChild((FennelRel) getChild());
-        return rootStream;
-    }
-
-    /**
      * Registers this relational expression and rule(s) with the planner, as
      * per {@link AbstractRelNode#register}.
      * @param planner Planner
      */
     public static void register(RelOptPlanner planner)
     {
-        planner.addRule(
-            new ConverterRule(RelNode.class,
-                FennelRel.FENNEL_EXEC_CONVENTION,
-                CallingConvention.ITERATOR, "FennelToIteratorRule") {
-                public RelNode convert(RelNode rel)
-                {
-                    return new FennelToIteratorConverter(
-                        rel.getCluster(),
-                        rel);
-                }
-            });
+        planner.addRule(Rule);
     }
 }
 

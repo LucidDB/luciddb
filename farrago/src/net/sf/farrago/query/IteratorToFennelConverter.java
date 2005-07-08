@@ -25,10 +25,13 @@ package net.sf.farrago.query;
 import java.lang.reflect.*;
 import java.nio.*;
 import java.util.*;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.type.*;
+import net.sf.farrago.trace.FarragoTrace;
 
 import openjava.mop.*;
 import openjava.ptree.*;
@@ -55,6 +58,10 @@ import org.eigenbase.util.*;
 public class IteratorToFennelConverter extends ConverterRel
     implements FennelRel
 {
+    public static final IteratorToFennelPullRule Rule =
+        new IteratorToFennelPullRule();
+    protected static final Logger tracer = FarragoTrace.getPlanDumpTracer();
+
     //~ Instance fields -------------------------------------------------------
 
     //~ Constructors ----------------------------------------------------------
@@ -65,7 +72,8 @@ public class IteratorToFennelConverter extends ConverterRel
      * @param cluster RelOptCluster for this rel
      * @param child input rel producing rows to be converted to Fennel
      */
-    public IteratorToFennelConverter(RelOptCluster cluster,
+    public IteratorToFennelConverter(
+        RelOptCluster cluster,
         RelNode child)
     {
         super(
@@ -295,17 +303,26 @@ public class IteratorToFennelConverter extends ConverterRel
         exprList.add(Literal.makeLiteral(getId()));
         exprList.add(newTupleWriterExp);
         exprList.add(childExp);
-        return new MethodCall(
+        final MethodCall methodCall = new MethodCall(
             stmt.getConnectionVariable(),
             "newJavaTupleStream",
             exprList);
+
+        if (tracer.isLoggable(Level.FINE)) {
+            tracer.log(
+                Level.FINE,
+                "Parse tree for IteratorToFennelConverter",
+                new Object [] { methodCall });
+        }
+
+        return methodCall;
     }
 
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FemJavaTupleStreamDef streamDef =
-            implementor.getMetadataFactory().newFemJavaTupleStreamDef();
+            implementor.getRepos().newFemJavaTupleStreamDef();
         streamDef.setStreamId(getId());
         return streamDef;
     }
@@ -325,7 +342,7 @@ public class IteratorToFennelConverter extends ConverterRel
      */
     public static void register(RelOptPlanner planner)
     {
-        planner.addRule(new IteratorToFennelPullRule());
+        planner.addRule(Rule);
     }
 
     /**
@@ -336,7 +353,7 @@ public class IteratorToFennelConverter extends ConverterRel
      */
     private static class IteratorToFennelPullRule extends ConverterRule
     {
-        public IteratorToFennelPullRule()
+        private IteratorToFennelPullRule()
         {
             super(
                 RelNode.class,

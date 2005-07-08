@@ -23,15 +23,11 @@
 
 package org.eigenbase.relopt;
 
-import java.util.*;
-import java.util.logging.Logger;
-
 import org.eigenbase.oj.rel.JavaRelImplementor;
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.trace.EigenbaseTrace;
+
+import java.util.logging.Logger;
 
 
 /**
@@ -71,6 +67,14 @@ public interface RelOptPlanner
      *   {@link java.util.Collection#add}
      */
     public boolean addRule(RelOptRule rule);
+
+    /**
+     * Removes a rule.
+     *
+     * @return true if the rule was present, as per
+     *   {@link java.util.Collection#remove(Object)}
+     */
+    boolean removeRule(RelOptRule rule);
 
     /**
      * Changes a relational expression to an equivalent one with a different
@@ -161,7 +165,7 @@ public interface RelOptPlanner
     public JavaRelImplementor getJavaRelImplementor(RelNode rel);
 
     /**
-     * Adds a listener to this planner.  
+     * Adds a listener to this planner.
      *
      * @param newListener new listener to be notified of events
      */

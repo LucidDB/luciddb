@@ -36,7 +36,7 @@ import java.lang.ref.WeakReference;
  *   <li>
  *     if the set of all possible associated RelTraits is finite and fixed
  *     (e.g. all RelTraits for this RelTraitDef are known at compile time).
- *     For example, the CallingConvention trait meets this requirement, 
+ *     For example, the CallingConvention trait meets this requirement,
  *     because CallingConvention is effectively an enumeration.
  *   </li>
  *   <li>
@@ -44,7 +44,7 @@ import java.lang.ref.WeakReference;
  *     <ul>
  *       <li>
  *         {@link #canConvert(RelOptPlanner, RelTrait, RelTrait)} and
- *         {@link #convert(RelOptPlanner, RelNode, RelTrait, int, boolean)}
+ *         {@link #convert(RelOptPlanner, RelNode, RelTrait, boolean)}
  *         do not require planner-instance-specific information, <b>or</b>
  *       </li>
  *       <li>
@@ -160,6 +160,19 @@ public abstract class RelTraitDef
      * @param converterRule the registered converter rule
      */
     public void registerConverterRule(
+        RelOptPlanner planner, ConverterRule converterRule)
+    {
+    }
+
+    /**
+     * Provides notification that a particular {@link ConverterRule} has been
+     * deregistered from a {@link RelOptPlanner}.
+     * The default implementation does nothing.
+     *
+     * @param planner the planner registering the rule
+     * @param converterRule the registered converter rule
+     */
+    public void deregisterConverterRule(
         RelOptPlanner planner, ConverterRule converterRule)
     {
     }

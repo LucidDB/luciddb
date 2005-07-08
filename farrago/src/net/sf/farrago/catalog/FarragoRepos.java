@@ -39,7 +39,6 @@ import javax.jmi.reflect.RefClass;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.nio.charset.Charset;
-import java.text.CollationKey;
 
 /**
  * FarragoRepos represents a loaded repository containing Farrago metadata.
@@ -233,6 +232,15 @@ public interface FarragoRepos extends FarragoAllocation,
      * @param rollback true to rollback; false to commit
      */
     public void endReposTxn(boolean rollback);
+
+    /**
+     * Returns the metadata factory for a particular plugin.
+     * In particular, <code>getMetadataFactory("Fem")</code> returns this.
+     *
+     * @param prefix The name of the prefix which identifies the metadata
+     *   factory
+     */
+    Object getMetadataFactory(String prefix);
 }
 
 

@@ -26,22 +26,18 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import net.sf.farrago.test.regression.FarragoCalcSystemTest;
 import org.eigenbase.sql.SqlOperator;
-import org.eigenbase.sql.SqlOperatorTable;
 import org.eigenbase.sql.SqlSyntax;
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.test.AbstractSqlTester;
 import org.eigenbase.sql.test.SqlOperatorIterator;
+import org.eigenbase.sql.type.BasicSqlType;
 import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.util.Util;
-import org.eigenbase.reltype.RelDataType;
 
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.regex.Pattern;
-import java.sql.ResultSetMetaData;
 
 
 /**
@@ -55,8 +51,6 @@ import java.sql.ResultSetMetaData;
  */
 public class FarragoSqlOperatorsTest extends FarragoTestCase
 {
-    private static final SqlStdOperatorTable opTab =
-        SqlStdOperatorTable.instance();
 
     //~ Instance fields -------------------------------------------------------
 
@@ -217,30 +211,32 @@ public class FarragoSqlOperatorsTest extends FarragoTestCase
 
         public void check(
             String query,
+            TypeChecker typeChecker,
             Object result,
-            SqlTypeName resultType)
+            double delta)
         {
             try {
                 checkQuery(query);
                 resultSet = stmt.executeQuery(query);
                 if (result instanceof Pattern) {
                     compareResultSetWithPattern((Pattern) result);
+                } else if (delta != 0) {
+                    assertTrue(result instanceof Number);
+                    compareResultSetWithDelta(
+                        ((Number) result).doubleValue(), delta);
                 } else {
                     Set refSet = new HashSet();
-                    refSet.add(result);
+                    refSet.add(result == null ? null : result.toString());
                     compareResultSet(refSet);
                 }
 
-                if (resultType != null) {
-                    /* Check result type */
-                    ResultSetMetaData md = resultSet.getMetaData();
+                // Check result type
+                ResultSetMetaData md = resultSet.getMetaData();
+                int count = md.getColumnCount();
+                assertEquals("query must return one column", count, 1);
+                BasicSqlType type = getColumnType(md, 1);
 
-                    /* Assumes there is only one column */
-                    int count = md.getColumnCount();
-                    assertEquals(count, 1);
-                    String columnType = md.getColumnTypeName(1);
-                    assertEquals(resultType.toString(), columnType);
-                }
+                typeChecker.checkType(type);
 
                 stmt.close();
                 stmt = connection.createStatement();
@@ -251,6 +247,30 @@ public class FarragoSqlOperatorsTest extends FarragoTestCase
                         + e.getMessage());
                 newException.setStackTrace(e.getStackTrace());
                 throw newException;
+            }
+        }
+
+        private BasicSqlType getColumnType(ResultSetMetaData md, int column)
+            throws SQLException
+        {
+            String actualTypeName = md.getColumnTypeName(column);
+            int actualTypeOrdinal = md.getColumnType(column);
+            SqlTypeName actualSqlTypeName =
+                SqlTypeName.getNameForJdbcType(actualTypeOrdinal);
+            assertNotNull(actualSqlTypeName);
+            assertEquals(actualSqlTypeName.getName(), actualTypeName);
+            final int actualNullable = md.isNullable(column);
+            if (actualSqlTypeName.allowsNoPrecNoScale()) {
+                return new BasicSqlType(actualSqlTypeName);
+            } else if (actualSqlTypeName.allowsPrecNoScale()) {
+                return new BasicSqlType(
+                    actualSqlTypeName,
+                    md.getPrecision(column));
+            } else {
+                return new BasicSqlType(
+                    actualSqlTypeName,
+                    md.getPrecision(column),
+                    md.getScale(column));
             }
         }
     }

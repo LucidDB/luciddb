@@ -33,7 +33,7 @@ import java.util.NoSuchElementException;
  * A <code>ResultSetIterator</code> is an adapter which converts a {@link
  * ResultSet} to a {@link Iterator}.
  */
-public class ResultSetIterator implements Iterator
+public class ResultSetIterator implements RestartableIterator
 {
     //~ Instance fields -------------------------------------------------------
 
@@ -76,6 +76,19 @@ public class ResultSetIterator implements Iterator
     public void remove()
     {
         throw new UnsupportedOperationException();
+    }
+
+    public void restart()
+    {
+        try {
+            if (resultSet.first()) {
+                row = makeRow();
+            } else {
+                row = null;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
