@@ -440,6 +440,31 @@ public abstract class FarragoTestCase extends DiffTestCase
     }
 
     /**
+     * Compares the first column of a result set against a numeric result,
+     * within a given tolerance. The result set must return exactly one row.
+     *
+     * @param expected Expected result
+     * @param delta Tolerance
+     */
+    protected void compareResultSetWithDelta(
+        double expected,
+        double delta) throws Exception
+    {
+        if (!resultSet.next()) {
+            fail("Query returned 0 rows, expected 1");
+        }
+        double actual = resultSet.getDouble(1);
+        if (resultSet.next()) {
+            fail("Query returned 2 or more rows, expected 1");
+        }
+        if (actual < expected - delta || actual > expected + delta) {
+            fail("Query returned " + actual +
+                ", expected " + expected +
+                (delta == 0 ? "" : ("+/-" + delta)));
+        }
+    }
+
+    /**
      * Compares the first column of a result set against a String-valued
      * reference set, taking order into account.
      *

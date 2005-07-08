@@ -156,6 +156,9 @@ typedef boost::shared_ptr<FtrsTableWriterFactory> SharedFtrsTableWriterFactory;
 class Calculator;
 typedef boost::shared_ptr<Calculator> SharedCalculator;
 
+class DynamicParamManager;
+typedef boost::shared_ptr<DynamicParamManager> SharedDynamicParamManager;
+
 FENNEL_END_NAMESPACE
 
 #endif

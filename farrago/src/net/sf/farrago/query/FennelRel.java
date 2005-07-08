@@ -52,9 +52,6 @@ public interface FennelRel extends RelNode
     
     //~ Methods ---------------------------------------------------------------
 
-    // TODO jvs 8-May-2004:  get rid of method getPreparingStmt();
-    // instead, add a utility method for getting it from the cluster
-
     /**
      * Converts this relational expression to {@link FemExecutionStreamDef}
      * form. In the process, the relational expression will almost certainly

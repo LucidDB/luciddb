@@ -265,7 +265,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     public FarragoSessionPrivilegeChecker newPrivilegeChecker()
     {
         // Instantiate a new privilege checker
-        return new FarragoDbSessionPrivilegeCheker(this);
+        return new FarragoDbSessionPrivilegeChecker(this);
     }
     
     // implement FarragoSession

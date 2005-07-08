@@ -22,7 +22,7 @@
 package com.disruptivetech.farrago.rel;
 
 import com.disruptivetech.farrago.calc.*;
-    
+
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -176,7 +176,7 @@ public class FennelCalcRel extends FennelSingleRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FemCalcTupleStreamDef calcStream =
-            implementor.getMetadataFactory().newFemCalcTupleStreamDef();
+            implementor.getRepos().newFemCalcTupleStreamDef();
 
         calcStream.getInput().add(
             implementor.visitFennelChild((FennelRel) getChild()));

@@ -22,7 +22,7 @@
 package net.sf.farrago.query;
 
 import net.sf.farrago.fem.fennel.FemExecutionStreamDef;
-import net.sf.farrago.FarragoMetadataFactory;
+import net.sf.farrago.catalog.FarragoRepos;
 
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelImplementor;
@@ -52,9 +52,9 @@ public interface FennelRelImplementor extends RelImplementor
     /**
      * Registers a new stream definition.  Normally, it is not necessary
      * to call this method explicitly; it happens automatically as part
-     * of visitFennelChild.  However, this is not true for non-tree stream
-     * graphs.  For streams with multiple parents, this method must be called
-     * for streams not returned from visitFennelChild.
+     * of {@link #visitFennelChild}.  However, this is not true for non-tree
+     * stream graphs.  For streams with multiple parents, this method must be
+     * called for streams not returned from {@link #visitFennelChild}.
      *
      * @param streamDef new stream definition
      *
@@ -68,9 +68,9 @@ public interface FennelRelImplementor extends RelImplementor
         RelDataType rowType);
 
     /**
-     * Returns the metadata factory.
+     * Returns the repository.
      */
-    public FarragoMetadataFactory getMetadataFactory();
+    public FarragoRepos getRepos();
 }
 
 

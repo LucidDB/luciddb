@@ -24,6 +24,7 @@
 package org.eigenbase.sql.test;
 
 import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.reltype.RelDataType;
 
 
 /**
@@ -88,11 +89,18 @@ public interface SqlTester
      * <blockquote><pre>checkScalarApprox("1.0 + 2.1", "3.1");</pre></blockquote>
      *
      * @param expression Scalar expression
-     * @param result Expected result
+     * @param expectedType Type we expect the result to have, including
+     *   nullability, precision and scale, for example
+     *   <code>DECIMAL(2, 1) NOT NULL</code>.
+     * @param expectedResult Expected result
+     * @param delta Allowed margin of error between expected and actual result
      */
     void checkScalarApprox(
         String expression,
-        String result);
+        String expectedType,
+        double expectedResult,
+        double delta);
+
 
     /**
      * Tests that a scalar SQL expression returns the expected boolean result.
@@ -119,10 +127,10 @@ public interface SqlTester
      *
      * @param expression Scalar expression
      * @param result Expected result
+     * @param resultType
      */
-    void checkString(
-        String expression,
-        String result);
+    void checkString(String expression,
+        String result, String resultType);
 
     /**
      * Tests that a SQL expression returns the SQL NULL value. For example,
@@ -160,13 +168,20 @@ public interface SqlTester
      * the result must match that pattern.
      *
      * @param query SQL query
+     * @param typeChecker Checks whether the result is the expected type;
+     *     must not be null
      * @param result Expected result
-     * @param resultType Type of result
+     * @param delta The acceptable tolerance between the expected and actual
      */
     void check(
         String query,
+        TypeChecker typeChecker,
         Object result,
-        SqlTypeName resultType);
+        double delta);
+
+    interface TypeChecker {
+        void checkType(RelDataType type);
+    }
 
     /**
      * Tests that a scalar SQL expression fails.

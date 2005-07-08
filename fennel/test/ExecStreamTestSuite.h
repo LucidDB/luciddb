@@ -24,7 +24,7 @@
 #ifndef Fennel_Test_ExecStreamTestSuite_Included
 #define Fennel_Test_ExecStreamTestSuite_Included
 
-#include "fennel/test/ExecStreamTestBase.h"
+#include "fennel/test/ExecStreamUnitTestBase.h"
 #include <boost/test/test_tools.hpp>
 
 using namespace fennel;
@@ -35,7 +35,7 @@ using namespace fennel;
  * Derived classes can add tests and/or use a different scheduler
  * implementation.
  */
-class ExecStreamTestSuite : public ExecStreamTestBase
+class ExecStreamTestSuite : public ExecStreamUnitTestBase
 {
 protected:
     void verifyZeroedOutput(ExecStream &stream,uint nBytesExpected);

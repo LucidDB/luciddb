@@ -25,8 +25,6 @@
 #define Fennel_ExecStreamGraph_Included
 
 #include "fennel/common/ClosableObject.h"
-#include "fennel/disruptivetech/calc/DynamicParam.h"
-
 #include <vector>
 #include <boost/utility.hpp>
 
@@ -77,7 +75,7 @@ protected:
     /**
      * Manager that handles dynamic parameters for this graph
      */
-    DynamicParamManager dynamicParamManager;
+    SharedDynamicParamManager pDynamicParamManager;
         
     explicit ExecStreamGraph();
     
@@ -97,9 +95,9 @@ public:
     inline ExecStreamScheduler *getScheduler() const;
     
     /**
-     * @return reference to the DynamicParamManager
+     * @return reference to the DynamicParamManager for this graph.
      */
-    inline DynamicParamManager &getDynamicParamManager();
+    inline SharedDynamicParamManager getDynamicParamManager();
 
     /**
      * Sets the transaction within which this graph should execute.
@@ -322,9 +320,9 @@ inline ExecStreamScheduler *ExecStreamGraph::getScheduler() const
     return pScheduler;
 }
 
-inline DynamicParamManager &ExecStreamGraph::getDynamicParamManager()
+inline SharedDynamicParamManager ExecStreamGraph::getDynamicParamManager()
 {
-    return dynamicParamManager;
+    return pDynamicParamManager;
 }
 
 FENNEL_END_NAMESPACE

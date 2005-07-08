@@ -13,6 +13,7 @@ endif
 libfenneltest_la_SOURCES=\
 CacheTestBase.cpp \
 ExecStreamTestBase.cpp \
+ExecStreamUnitTestBase.cpp \
 ExecStreamTestSuite.cpp \
 PagingTestBase.cpp \
 TestBase.cpp \

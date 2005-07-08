@@ -25,6 +25,7 @@
 #define Fennel_SysCallExcn_Included
 
 #include "fennel/common/FennelExcn.h"
+#include "fennel/synch/SynchObj.h"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -51,6 +52,13 @@ public:
      * Returns the error code that caused this SysCallExcn.
      */
     int getErrorCode();
+
+    /**
+     * Mutex all calls to FennelResource as a temporary workaround, as
+     * FennelResource is currently not thread-safe. JK 6/30/2005
+     * TODO: Remove this.
+     */
+    static StrictMutex mutex;
 };
 
 FENNEL_END_NAMESPACE

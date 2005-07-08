@@ -44,8 +44,10 @@
     <text>not in format ''{0}''</text>
 </message>
 
-<exception id="100040" name="BetweenWithoutAnd">
-    <text>BETWEEN operator has no terminating AND; at line {0,number,#}, column {1,number,#}</text>
+<!-- This is a SqlValidatorException to remind us to add context,
+     even though it's created by the parser. -->
+<exception id="100040" name="BetweenWithoutAnd" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>BETWEEN operator has no terminating AND</text>
 </exception>
 
 <exception id="100050" name="IllegalIntervalLiteral">
@@ -293,7 +295,63 @@
 </exception>
 
 <exception id="120470" name="OverMissingOrderBy" className="org.eigenbase.sql.validate.SqlValidatorException">
-    <text>Window specification must contain a ORDER BY clause</text>
+    <text>Window specification must contain an ORDER BY clause</text>
+</exception>
+
+<exception id="120480" name="BadLowerBoundry" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>UNBOUNDED FOLLOWING cannot be specified for the lower frame boundry</text>
+</exception>
+
+<exception id="120485" name="BadUpperBoundry" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>UNBOUNDED PRECEDING cannot be specified for the upper frame boundry</text>
+</exception>
+
+<exception id="120490" name="CurrentRowPrecedingError" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Upper frame boundry cannot be PRECEDING when lower boundry is CURRENT ROW</text>
+</exception>
+
+<exception id="120500" name="CurrentRowFollowingError" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Upper frame boundry cannot be CURRENT ROW when lower boundry is FOLLOWING</text>
+</exception>
+
+<exception id="120510" name="FollowingBeforePrecedingError" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Upper frame boundry cannot be PRECEDING when lower boundry is FOLLOWING</text>
+</exception>
+
+<exception id="120520" name="WindowNameMustBeSimple" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Window name must be a simple identifier</text>
+</exception>
+
+<exception id="120530" name="DuplicateWindowName" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Duplicate window names not allowed</text>
+</exception>
+
+<exception id="120540" name="EmptyWindowSpec" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Empty window specification not allowed</text>
+</exception>
+
+<exception id="120550" name="DupWindowSpec" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Duplicate window specification not allowed in the same window clause</text>
+</exception>
+
+<exception id="120560" name="RankWithFrame" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>ROW/RANGE not allowed with RANK or DENSE_RANK functions</text>
+</exception>
+
+<exception id="120570" name="FuncNeedsOrderBy" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>RANK or DENSE_RANK functions require ORDER BY clause in window specification</text>
+</exception>
+
+<exception id="120580" name="PartitionNotAllowed" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>PARTITION BY not allowed with existing window reference</text>
+</exception>
+
+<exception id="120590" name="OrderByOverlap" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>ORDER BY not allowed in both base and referenced windows</text>
+</exception>
+
+<exception id="120600" name="RefWindowWithFrame" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Referenced window cannot have framing declarations</text>
 </exception>
 
 <!-- ====================================================================== -->

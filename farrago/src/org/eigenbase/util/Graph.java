@@ -96,6 +96,24 @@ public class Graph
         mutable = true;
         return arc;
     }
+    
+    /**
+     * Removes an arc between two vertices.
+     *
+     * @return The arc removed, or null
+     */
+    public Arc deleteArc(
+        Object from,
+        Object to)
+    {
+        final Arc arc = new Arc(from, to);
+        if (arcs.remove(arc)) {
+            mutable = true;
+            return arc;
+        } else {
+            return null;
+        }
+    }
 
     private void findPaths(
         Object from,

@@ -276,6 +276,7 @@ require version '${required.ant.version}'."/>
       classpathref="farrago.build.classpath">
       <include name="**/*.java" />
       <exclude name="**/namespace/jdbc/**/*.java" />
+      <exclude name="**/Jdk15Test.java" if="javasrc.14" />
     </farrago.javaCompile>
   </target>
 
@@ -1035,7 +1036,7 @@ require version '${required.ant.version}'."/>
     <javadoc
       private="true"
       destdir="${javadoc.dir}"
-      source="1.4"
+      source="${javasrc.version}"
       classpathref="farrago.run.classpath">
       <tag dir="src" includes="customJavadocTags.txt"/>
       <packageset dir="${farrago.catalog.src.dir}">
@@ -1197,6 +1198,25 @@ require version '${required.ant.version}'."/>
       inheritAll="false"/>
   </target>
 
+  <!-- Experimental stuff for JDK 1.5 -->
+  <!-- verifyrefs reports lots of bogus warnings -->
+  <!-- in customBuild.properties, set javasrc.version=1.5 -->
+  <!-- and java14rt.jar=/path//to/rt.jar -->
+
+  <target name="retroweave" depends="compile">
+    <taskdef name="retroweaver" 
+      classname="com.rc.retroweaver.ant.RetroWeaverTask">
+      <classpath>
+        <fileset dir="${retroweaver.dir}/lib" includes="**/*"/>
+        <pathelement location="${retroweaver.dir}/release/retroweaver.jar"/>
+      </classpath>
+    </taskdef>
+    <retroweaver srcdir="${farrago.classes.dir}"
+      verifyrefs="${farrago.retro.classpath}" />
+    <retroweaver srcdir="${plugin.classes.dir}"
+      verifyrefs="${farrago.retro.classpath}" />
+  </target>
+
   <!-- Below is all experimental stuff for the user repository -->
 
   <property name="JdbcStorage.prefix"
@@ -1267,6 +1287,15 @@ require version '${required.ant.version}'."/>
         file="${FarragoConf.xmi}"
         extent="FarragoCatalog"/>
     </mdr>
+  </target>
+
+  <target name="propertiesJar" depends="compile" description="
+Create eigenbase-properties.jar, which is used by Mondrian.">
+    <jar jarfile="${open.dir}/thirdparty/eigenbase-properties.jar">
+      <fileset dir="${farrago.classes.dir}">
+        <include name="org/eigenbase/util/property/**/*.class"/>
+      </fileset>
+    </jar>
   </target>
 
 </project>

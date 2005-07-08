@@ -24,11 +24,11 @@
 #define Fennel_DT_Test_CorrelationJoinExecStreamTestSuite_Included
 
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/test/ExecStreamTestBase.h"
+#include "fennel/test/ExecStreamUnitTestBase.h"
 #include <boost/test/test_tools.hpp>
 using namespace fennel;
 
-class CorrelationJoinExecStreamTestSuite : public ExecStreamTestBase
+class CorrelationJoinExecStreamTestSuite : public ExecStreamUnitTestBase
 {
     TupleAttributeDescriptor descAttrInt64;
     TupleDescriptor descInt64;

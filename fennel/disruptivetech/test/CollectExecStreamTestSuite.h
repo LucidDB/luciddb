@@ -23,7 +23,7 @@
 #ifndef Fennel_DT_Test_CollectExecStreamTestSuite_Included
 #define Fennel_DT_Test_CollectExecStreamTestSuite_Included
 
-#include "fennel/test/ExecStreamTestBase.h"
+#include "fennel/test/ExecStreamUnitTestBase.h"
 #include <boost/test/test_tools.hpp>
 using namespace fennel;
 
@@ -31,7 +31,7 @@ using namespace fennel;
  * Test Suite for the collect/uncollect xo's
  * @author Wael Chatila
  */
-class CollectExecStreamTestSuite : public ExecStreamTestBase
+class CollectExecStreamTestSuite : public ExecStreamUnitTestBase
 {
     TupleAttributeDescriptor descAttrInt64;
     TupleDescriptor descInt64;

@@ -70,6 +70,12 @@
   <!-- Java installation root -->
   <property name="javahome.dir" location="${env.JAVA_HOME}"/>
 
+  <!-- Java source version -->
+  <property name="javasrc.version" value="1.4"/>
+  <condition property="javasrc.14">
+    <equals arg1="${javasrc.version}" arg2="1.4"/>
+  </condition>
+
   <!-- import thirdparty library settings -->
   <property file="${thirdparty.dir}/build.properties"/>
 
@@ -236,13 +242,21 @@
   </path>
   <property name="farrago.3p.classpath" refid="farrago.3p.classpath"/>
 
-  <!-- classpath for execution. -->
+  <!-- classpath for execution -->
   <path id="farrago.run.classpath">
     <pathelement path="${farrago.3p.classpath}"/>
     <pathelement location="${farrago.classes.dir}"/>
     <pathelement location="${farrago.catalog.src.dir}"/>
   </path>
   <property name="farrago.run.classpath" refid="farrago.run.classpath"/>
+
+  <!-- classpath for retroweaving -->
+  <path id="farrago.retro.classpath">
+    <pathelement location="${java14rt.jar}"/>
+    <pathelement location="${retroweaver.dir}/release/retroweaver-rt.jar"/>
+    <pathelement path="${farrago.run.classpath}"/>
+  </path>
+  <property name="farrago.retro.classpath" refid="farrago.retro.classpath"/>
 
   <!-- classpath for running from iSQL -->
   <path id="isql.classpath">
@@ -307,7 +321,7 @@
 
   <!-- Customization for javac task -->
   <presetdef name="farrago.javaCompile">
-    <javac debug="on" deprecation="on" source="1.4"/>
+    <javac debug="on" deprecation="on" source="${javasrc.version}"/>
   </presetdef>
 
   <!-- Customization for java task -->

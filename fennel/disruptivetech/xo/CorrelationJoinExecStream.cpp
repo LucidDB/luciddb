@@ -22,6 +22,7 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/disruptivetech/xo/CorrelationJoinExecStream.h"
+#include "fennel/disruptivetech/calc/DynamicParam.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/ExecStreamGraph.h"
 #include "fennel/tuple/TuplePrinter.h"
@@ -63,9 +64,9 @@ void CorrelationJoinExecStream::open(bool restart)
     ConfluenceExecStream::open(restart);
     std::vector<Correlation>::iterator it = correlations.begin();
     for (/* empty */ ; it != correlations.end(); ++it) {
-        pGraph->getDynamicParamManager().createParam(
-                it->dynamicParamId,
-                pLeftBufAccessor->getTupleDesc()[it->leftAttributeOrdinal]);
+        pDynamicParamManager->createParam(
+            it->dynamicParamId,
+            pLeftBufAccessor->getTupleDesc()[it->leftAttributeOrdinal]);
     }
 }
 
@@ -73,7 +74,7 @@ void CorrelationJoinExecStream::close()
 {
     std::vector<Correlation>::iterator it = correlations.begin();
     for (/* empty */ ; it != correlations.end(); ++it) {
-        pGraph->getDynamicParamManager().removeParam(it->dynamicParamId);
+        pDynamicParamManager->removeParam(it->dynamicParamId);
     }
     ConfluenceExecStream::closeImpl();
 }
@@ -97,7 +98,7 @@ ExecStreamResult CorrelationJoinExecStream::execute(
             // updating the dynamic param(s) with the new left value(s)
             std::vector<Correlation>::iterator it = correlations.begin();
             for (/* empty */ ; it != correlations.end(); ++it) {
-                pGraph->getDynamicParamManager().setParam(
+                pDynamicParamManager->setParam(
                     it->dynamicParamId, outputData[it->leftAttributeOrdinal]);
             }
 

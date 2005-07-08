@@ -1098,10 +1098,12 @@ SqlWindow WindowSpecification() :
     SqlNodeList orderList;
     boolean isRows = false;
     SqlNode lowerBound = null, upperBound = null;
-    SqlParserPos pos;
+    SqlParserPos startPos;
+    SqlParserPos endPos;
+    SqlParserPos rowRangePos = new SqlParserPos(-1,-1);
 }
 {
-    <LPAREN>
+    <LPAREN> {startPos = getPos();}
     (
         id = SimpleIdentifier()
         |
@@ -1120,9 +1122,9 @@ SqlWindow WindowSpecification() :
     )
     [
         (
-            <ROWS> { isRows = true; }
+            <ROWS> { isRows = true;rowRangePos = getPos(); }
             |
-            <RANGE> { isRows = false; }
+            <RANGE> { isRows = false; rowRangePos = getPos();}
         )
         (
             <BETWEEN> lowerBound = WindowRange()
@@ -1133,37 +1135,39 @@ SqlWindow WindowSpecification() :
     ]
     <RPAREN>
     {
-        pos = getPos();
+        endPos = getPos();
         return opTab.windowOperator.createCall(
             null, id, partitionList, orderList,
-            isRows, lowerBound, upperBound, pos);
+            isRows, rowRangePos, lowerBound, upperBound, startPos.plus(endPos));
     }
 }
 
 SqlNode WindowRange() :
 {
     SqlLiteral literal;
-    SqlParserPos pos;
+    SqlParserPos pos=null;
+    SqlParserPos endPos;
 }
 {
-    <CURRENT> <ROW>
+    <CURRENT> {pos = getPos();} <ROW>
     {
-        pos = getPos();
-        return opTab.windowOperator.createCurrentRow(pos);
+        endPos = getPos();
+        return opTab.windowOperator.createCurrentRow(pos.plus(endPos));
     }
     |
     <UNBOUNDED>
+        { pos = getPos();}
     (
         <PRECEDING>
         {
-            pos = getPos();
-            return opTab.windowOperator.createUnboundedPreceding(pos);
+            endPos = getPos();
+            return opTab.windowOperator.createUnboundedPreceding(pos.plus(endPos));
         }
         |
         <FOLLOWING>
         {
-            pos = getPos();
-            return opTab.windowOperator.createUnboundedFollowing(pos);
+            endPos = getPos();
+            return opTab.windowOperator.createUnboundedFollowing(pos.plus(endPos));
         }
     )
     |
@@ -2778,10 +2782,12 @@ SqlIdentifier ReservedFunctionName() :
         | <CHARACTER_LENGTH>
         | <COALESCE>
         | <COLLECT>
+        | <CUME_DIST>
         | <COUNT>
         | <CURRENT_DATE>
         | <CURRENT_TIME>
         | <CURRENT_TIMESTAMP>
+        | <DENSE_RANK>
         | <ELEMENT>
         | <EXP>
         | <FUSION>
@@ -2794,7 +2800,10 @@ SqlIdentifier ReservedFunctionName() :
         | <MOD>
         | <NULLIF>
         | <OCTET_LENGTH>
+        | <PERCENT_RANK>
         | <POWER>
+        | <RANK>
+        | <ROW_NUMBER>
         | <SQRT>
         | <SUM>
         | <UPPER>

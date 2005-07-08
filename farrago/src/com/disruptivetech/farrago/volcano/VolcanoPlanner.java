@@ -191,8 +191,9 @@ public class VolcanoPlanner implements RelOptPlanner
 
         // Check that there isn't a rule with the same description.
         final String description = rule.toString();
-        assert (description != null);
-        assert (description.indexOf("$") < 0) : "Rule's description must not contain '$'";
+        assert description != null;
+        assert description.indexOf("$") < 0 :
+            "Rule's description must not contain '$': " + description;
         RelOptRule existingRule =
             (RelOptRule) mapDescToRule.put(description, rule);
         if (existingRule != null) {
@@ -259,7 +260,7 @@ public class VolcanoPlanner implements RelOptPlanner
 
             final RelTraitSet ruleTraits = converterRule.getInTraits();
 
-            for(Iterator iter = traitDefs.iterator(); iter.hasNext(); ) {
+            for (Iterator iter = traitDefs.iterator(); iter.hasNext(); ) {
                 RelTraitDef traitDef = (RelTraitDef)iter.next();
 
                 if (ruleTraits.getTrait(traitDef) == null) {
@@ -274,12 +275,50 @@ public class VolcanoPlanner implements RelOptPlanner
         return true;
     }
 
+    public boolean removeRule(RelOptRule rule)
+    {
+        if (!ruleSet.remove(rule)) {
+            // Rule was not present.
+            return false;
+        }
+        // Remove description.
+        final String description = rule.toString();
+        mapDescToRule.remove(description);
+        // Remove operands.
+        for (Iterator operandIter = allOperands.iterator();
+             operandIter.hasNext();) {
+            RelOptRuleOperand operand = (RelOptRuleOperand) operandIter.next();
+            if (operand.getRule().equals(rule)) {
+                operandIter.remove();
+            }
+        }
+        // Remove trait mappings. (In particular, entries from conversion
+        // graph.)
+        if (rule instanceof ConverterRule) {
+            ConverterRule converterRule = (ConverterRule) rule;
+
+            final RelTraitSet ruleTraits = converterRule.getInTraits();
+
+            for (Iterator iter = traitDefs.iterator(); iter.hasNext(); ) {
+                RelTraitDef traitDef = (RelTraitDef)iter.next();
+
+                if (ruleTraits.getTrait(traitDef) == null) {
+                    // Rule does not operate on this RelTraitDef.
+                    continue;
+                }
+
+                traitDef.deregisterConverterRule(this, converterRule);
+            }
+        }
+        return true;
+    }
+
     public boolean canConvert(RelTraitSet fromTraits, RelTraitSet toTraits)
     {
         assert(fromTraits.size() >= toTraits.size());
 
         boolean canConvert = true;
-        for(int i = 0; i < toTraits.size() && canConvert; i++) {
+        for (int i = 0; i < toTraits.size() && canConvert; i++) {
             RelTrait fromTrait = fromTraits.getTrait(i);
             RelTrait toTrait = toTraits.getTrait(i);
 
@@ -312,7 +351,7 @@ public class VolcanoPlanner implements RelOptPlanner
         // to changeTraitsUsingConverters should create a string of
         // AbstractConverter if none of the conversions is currently possible.
         RelNode converter = rel;
-        for(int i = 0; i < toTraits.size(); i++) {
+        for (int i = 0; i < toTraits.size(); i++) {
             RelTraitSet fromTraits = converter.getTraits();
 
             RelTrait fromTrait = fromTraits.getTrait(i);
@@ -567,7 +606,7 @@ public class VolcanoPlanner implements RelOptPlanner
         // will be left as is.  Finally, any null entries in toTraits are
         // ignored.
         RelNode converted = rel;
-        for(int i = 0; converted != null && i < toTraits.size(); i++) {
+        for (int i = 0; converted != null && i < toTraits.size(); i++) {
             RelTrait fromTrait = fromTraits.getTrait(i);
             RelTrait toTrait = toTraits.getTrait(i);
 

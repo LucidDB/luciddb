@@ -21,29 +21,25 @@
 */
 package net.sf.farrago.catalog;
 
-import net.sf.farrago.FarragoMetadataFactory;
-import net.sf.farrago.FarragoPackage;
-import net.sf.farrago.FarragoMetadataFactoryImpl;
+import org.eigenbase.util.Util;
+import org.eigenbase.xom.XMLOutput;
 
 import javax.jmi.reflect.RefBaseObject;
 import javax.jmi.reflect.RefClass;
 import javax.jmi.reflect.RefPackage;
+import java.io.PrintWriter;
 import java.lang.reflect.*;
 import java.util.*;
-import java.util.regex.Pattern;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-
-import org.eigenbase.util.Util;
-import org.eigenbase.xom.XMLOutput;
 
 /**
- * Mock implementation of {@link FarragoMetadataFactory} which implements
+ * Helps create a mock implementation of an MDR metadata factory interface.
+ * Mock implementation of metadata factories which implements
  * the MDR interfaces using dynamic proxies. Since this implementation
  * does not persist objects, or even require a repository instance, it is
  * ideal for testing purposes.
  *
- * <p>MockMetadataFactory uses dynamic proxies (see {@link Proxy}) to
+ * <p>The name of the class is misleading; it is not itself a metadata factory.
+ * MockMetadataFactory uses dynamic proxies (see {@link Proxy}) to
  * generate the necessary interfaces on the fly. Inside every proxy is
  * an instance of {@link ElementImpl}, which stores attributes in a
  * {@link HashMap} and implements the {@link InvocationHandler}
@@ -63,16 +59,15 @@ import org.eigenbase.xom.XMLOutput;
  * <li>All other types are presumed to be regular attributes.
  * </ul>
  */
-public class MockMetadataFactory extends FarragoMetadataFactoryImpl
+public abstract class MockMetadataFactory
 {
     private int nextId = 0;
+    private final RefPackageImpl rootPackageImpl;
 
     public MockMetadataFactory()
     {
         super();
-        RefPackageImpl rootPackageImpl =
-            new RefPackageImpl(FarragoPackage.class);
-        this.setRootPackage((FarragoPackage) rootPackageImpl.wrap());
+        this.rootPackageImpl = newRootPackage();
     }
 
     /**
@@ -94,18 +89,11 @@ public class MockMetadataFactory extends FarragoMetadataFactoryImpl
         }
     }
 
-    /**
-     * Converts an object and its sub-objects to an XML string.
-     *
-     * <p>Note: The XML string isn't quite XMI.
-     */
-    public static String exportAsXml(RefBaseObject ref)
+    protected abstract RefPackageImpl newRootPackage();
+
+    public RefPackage getRootPackage()
     {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        new JmiPrinter(pw).accept(ref);
-        pw.flush();
-        return sw.toString();
+        return (RefPackage) rootPackageImpl.wrap();
     }
 
     /**
@@ -251,7 +239,7 @@ public class MockMetadataFactory extends FarragoMetadataFactoryImpl
      */
     protected class RefPackageImpl extends ElementImpl
     {
-        RefPackageImpl(Class clazz)
+        public RefPackageImpl(Class clazz)
         {
             super(clazz);
             // For each method which returns a class, create an attribute.
@@ -276,21 +264,45 @@ public class MockMetadataFactory extends FarragoMetadataFactoryImpl
 
     /**
      * Abstract base class for an iterator over a JMI object and its children.
+     *
+     * <p>The current implementation isn't very elegant. It makes a lot of
+     * assumptions about how the JMI tree is represented. We should adopt a
+     * 'real' visitor pattern -- with an 'accept' method on each handler object
+     * -- if this class is ever made public.
      */
-    private static abstract class JmiVisitor {
-        void accept(Object o) {
-            // REVIEW: The current implementation isn't very elegant. It
-            //   makes a lot of assumptions about how the JMI tree is
-            //   represented. A 'real' visitor pattern -- with an 'accept'
-            //   method on each handler object -- would be better.
-
-            Class clazz = o.getClass();
+    static abstract class JmiVisitor
+    {
+        protected void accept(Object o)
+        {
             List attrNames = new ArrayList();
             List attrValues = new ArrayList();
             List collectionNames = new ArrayList();
             List collectionValues = new ArrayList();
             List refNames = new ArrayList();
             List refValues = new ArrayList();
+            extractProperties(
+                o,
+                attrNames, attrValues,
+                collectionNames, collectionValues,
+                refNames, refValues);
+            visit(
+                o,
+                attrNames, attrValues,
+                collectionNames, collectionValues,
+                refNames, refValues);
+        }
+
+        /**
+         * From a data object, builds lists of attributes, collections,
+         * and references.
+         */
+        protected void extractProperties(
+            Object o,
+            List attrNames, List attrValues,
+            List collectionNames, List collectionValues,
+            List refNames, List refValues)
+        {
+            Class clazz = o.getClass();
             Method[] methods = clazz.getMethods();
             for (int i = 0; i < methods.length; i++) {
                 Method method = methods[i];
@@ -322,8 +334,6 @@ public class MockMetadataFactory extends FarragoMetadataFactoryImpl
                     }
                 }
             }
-            visit(o, attrNames, attrValues, collectionNames, collectionValues,
-                refNames, refValues);
         }
 
         protected abstract void visit(
@@ -339,39 +349,15 @@ public class MockMetadataFactory extends FarragoMetadataFactoryImpl
     /**
      * Formats a JMI object as XML.
      */
-    private static class JmiPrinter extends JmiVisitor {
-        // ~ Constants
-        private static final Pattern poundIntColonPattern =
-            Pattern.compile("#[0-9]*:");
-
+    public static class JmiPrinter extends JmiVisitor
+    {
         // ~ Data members
-        private final XMLOutput xmlOutput;
-        private final Map printIds = new HashMap();
-        private int printId = 0;
+        protected final XMLOutput xmlOutput;
 
-        JmiPrinter(PrintWriter pw) {
+        protected JmiPrinter(PrintWriter pw)
+        {
             xmlOutput = new XMLOutput(pw);
             xmlOutput.setGlob(true);
-        }
-
-        void accept(Object o)
-        {
-            // Assign every object a synthetic id which is unique only during
-            // this visitation. After the first visit, just print a reference.
-            String id = (String) printIds.get(o);
-            if (id == null) {
-                // First visit.
-                id = Integer.toString(printId++);
-                printIds.put(o, id);
-                super.accept(o);
-            } else {
-                // Second or subsequent visit.
-                String tagName = getTagName(o);
-                xmlOutput.beginBeginTag(tagName);
-                xmlOutput.attribute("refid", id);
-                xmlOutput.endBeginTag(tagName);
-                xmlOutput.endTag(tagName);
-            }
         }
 
         protected void visit(
@@ -385,53 +371,54 @@ public class MockMetadataFactory extends FarragoMetadataFactoryImpl
         {
             String tagName = getTagName(o);
             xmlOutput.beginBeginTag(tagName);
-            // Print the synthetic id which is generated during printing.
-            String id = (String) printIds.get(o);
-            xmlOutput.attribute("id", id);
+            onElement(o);
             for (int i = 0; i < attrNames.size(); i++) {
                 String attrName = (String) attrNames.get(i);
                 Object attrValue = attrValues.get(i);
-                if (attrName.equals("name")) {
-                    // Convert
-                    //   name=\"MockTableImplRel#274:536\"
-                    // into
-                    //   name=\"MockTableImplRel#274:536\"
-                    attrValue = poundIntColonPattern
-                        .matcher((String) attrValue).replaceAll("#xxxx:");
-                } else if (attrName.equals("streamId")) {
-                    // Convert
-                    //   streamId=\"536\"
-                    // into
-                    //   streamId=\"xxxx\"
-                    attrValue = "xxxx";
-                }
-                xmlOutput.attribute(attrName, String.valueOf(attrValue));
+                onAttribute(attrName, attrValue);
             }
             xmlOutput.endBeginTag(tagName);
             for (int i = 0; i < refNames.size(); i++) {
                 String refName = (String) refNames.get(i);
                 RefBaseObject ref = (RefBaseObject) refValues.get(i);
-                if (ref == null) {
-                    continue;
-                }
-                xmlOutput.beginTag(refName, null);
-                accept(ref);
-                xmlOutput.endTag(refName);
+                onRef(refName, ref);
+                continue;
             }
             for (int i = 0; i < collectionNames.size(); i++) {
                 String collectionName = (String) collectionNames.get(i);
-                xmlOutput.beginTag(collectionName, null);
                 List list = (List) collectionValues.get(i);
-                for (int j = 0; j < list.size(); j++) {
-                    RefBaseObject ref = (RefBaseObject) list.get(j);
-                    accept(ref);
-                }
-                xmlOutput.endTag(collectionName);
+                onCollection(collectionName, list);
             }
             xmlOutput.endTag(tagName);
         }
 
-        private String getTagName(Object o)
+        protected void onCollection(String collectionName, List list)
+        {
+            xmlOutput.beginTag(collectionName, null);
+            for (int j = 0; j < list.size(); j++) {
+                RefBaseObject ref = (RefBaseObject) list.get(j);
+                accept(ref);
+            }
+            xmlOutput.endTag(collectionName);
+        }
+
+        protected void onRef(String refName, RefBaseObject ref)
+        {
+            xmlOutput.beginTag(refName, null);
+            accept(ref);
+            xmlOutput.endTag(refName);
+        }
+
+        protected void onAttribute(String attrName, Object attrValue)
+        {
+            xmlOutput.attribute(attrName, String.valueOf(attrValue));
+        }
+
+        protected void onElement(Object o)
+        {
+        }
+
+        protected String getTagName(Object o)
         {
             String className = o.getClass().getInterfaces()[0].getName();
             int dot = className.lastIndexOf('.');

@@ -37,13 +37,13 @@ import java.util.*;
 public class MockRelOptPlanner implements RelOptPlanner
 {
     private RelNode root;
-    
+
     // implement RelOptPlanner
     public void setRoot(RelNode rel)
     {
         this.root = rel;
     }
-    
+
     // implement RelOptPlanner
     public RelNode getRoot()
     {
@@ -58,6 +58,12 @@ public class MockRelOptPlanner implements RelOptPlanner
 
     // implement RelOptPlanner
     public boolean addRule(RelOptRule rule)
+    {
+        return false;
+    }
+
+    // implement RelOptPlanner
+    public boolean removeRule(RelOptRule rule)
     {
         return false;
     }
@@ -100,7 +106,7 @@ public class MockRelOptPlanner implements RelOptPlanner
     {
         return new MockRelOptCost();
     }
-    
+
     // implement RelOptPlanner
     public RelOptCost makeTinyCost()
     {

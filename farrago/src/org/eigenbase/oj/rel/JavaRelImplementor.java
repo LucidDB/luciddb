@@ -23,8 +23,8 @@
 
 package org.eigenbase.oj.rel;
 
-import java.util.HashMap;
-import java.util.Stack;
+import java.util.*;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -417,9 +417,23 @@ public class JavaRelImplementor implements RelImplementor
         return frame.getVariable();
     }
 
+    /**
+     * Generates a variable with a unique name.
+     */
     public Variable newVariable()
     {
-        return new Variable("oj_var" + generateVariableId());
+        return newVariable("oj_var");
+    }
+
+    /**
+     * Generates a variable with a unique name and a stem which indicates its
+     * purpose. For example, <code>newVariable("binding")</code> might generate
+     * a variable called <code>"binding_12"</code>.
+     */
+    public Variable newVariable(String base)
+    {
+        assert base != null;
+        return new Variable(base + generateVariableId());
     }
 
     private int generateVariableId()
@@ -798,6 +812,30 @@ public class JavaRelImplementor implements RelImplementor
     private interface Bind
     {
         Variable getVariable();
+    }
+
+    /**
+     * Returns a list of the relational expressions which are ancestors of the
+     * current one.
+     *
+     * @pre // rel must be on the implementation stack
+     */
+    public List getAncestorRels(RelNode rel)
+    {
+        final ArrayList ancestorList = new ArrayList();
+        Frame frame = (Frame) mapRel2Frame.get(rel);
+        Util.pre(frame != null,
+            "rel must be on the current implementation stack");
+        while (true) {
+            ancestorList.add(frame.rel);
+            final RelNode parentRel = frame.parent;
+            if (parentRel == null) {
+                break;
+            }
+            frame = (Frame) mapRel2Frame.get(parentRel);
+            Util.permAssert(frame != null, "ancestor rel must have frame");
+        }
+        return ancestorList;
     }
 
     //~ Inner Classes ---------------------------------------------------------

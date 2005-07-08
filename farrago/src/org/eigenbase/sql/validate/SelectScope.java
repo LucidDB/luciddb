@@ -23,6 +23,9 @@ package org.eigenbase.sql.validate;
 
 import org.eigenbase.sql.*;
 
+import java.util.ArrayList;
+import java.util.ListIterator;
+
 /**
  * The name-resolution scope of a SELECT clause. The objects visible are
  * those in the FROM clause, and objects inherited from the parent scope.
@@ -78,6 +81,7 @@ import org.eigenbase.sql.*;
 public class SelectScope extends ListScope
 {
     private final SqlSelect select;
+    protected final ArrayList windowNames = new ArrayList();
 
     /**
      * Creates a scope corresponding to a SELECT clause.
@@ -133,6 +137,34 @@ public class SelectScope extends ListScope
             }
         }
         return super.isMonotonic(expr);
+    }
+
+    public void addWindowName(String winName)
+    {
+        windowNames.add(winName);
+    }
+
+    public boolean existingWindowName(String winName)
+    {
+        String listName;
+        ListIterator entry = windowNames.listIterator();
+        while(entry.hasNext()) {
+            listName = (String)entry.next();
+            if (0 == listName.compareToIgnoreCase(winName)) {
+                return true;
+            }
+        }
+        // if the name wasn't found then check the parent(s)
+        SqlValidatorScope walker = parent;
+        while (null != walker && !(walker instanceof EmptyScope)) {
+            if (walker instanceof SelectScope) {
+                final SelectScope parentScope = (SelectScope) walker;
+                return parentScope.existingWindowName(winName);
+            }
+            walker = parent;
+        }
+
+        return false;
     }
 }
 

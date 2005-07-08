@@ -29,15 +29,18 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.SqlCollation;
 import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.type.SqlTypeFactoryImpl;
+import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.validate.SqlValidatorUtil;
-import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.EigenbaseContextException;
+import org.eigenbase.util.EnumeratedValues;
+import org.eigenbase.util.Util;
 
 import java.nio.charset.Charset;
 import java.util.regex.Matcher;
@@ -92,7 +95,9 @@ public class SqlValidatorTestCase extends TestCase
             int expectedColumn, int expectedEndLine, int expectedEndColumn);
 
         /**
-         * Returns the data type of a scalar SQL expression.
+         * Returns the data type of the first column of a SQL query.
+         * For example, <code>getResultType("VALUES (1, 'foo')")</code>
+         * returns <code>INTEGER</code>.
          */
         RelDataType getResultType(String sql);
 
@@ -105,6 +110,10 @@ public class SqlValidatorTestCase extends TestCase
             String sql,
             Charset expectedCharset);
 
+        /**
+         * Checks that the first column of a query has the expected type.
+         * For example, <code>checkType(VALUUES (1 + 2), "INTEGER")</code>.
+         */
         void checkType(
             String sql,
             String expected);
@@ -453,16 +462,36 @@ public class SqlValidatorTestCase extends TestCase
             return sqlNode;
         }
 
-        public void checkType(String sql,
+        public void checkType(
+            String sql,
             String expected)
         {
             RelDataType actualType = getResultType(sql);
-            String actual = actualType.toString();
-            // REVIEW (jhyde, 2004/8/4): Why not use assertEquals
-            if (!expected.equals(actual)) {
-                String msg =
-                    NL + "Expected=" + expected + NL + "   actual=" + actual;
-                fail(msg);
+            if (expected.startsWith("todo:")) {
+                Util.permAssert(
+                    !SqlOperatorTests.bug315Fixed,
+                    "After bug 315 is fixed, no type should start 'todo:'");
+                return; // don't check the type for now
+            }
+            String actual = getTypeString(actualType);
+            assertEquals(expected, actual);
+        }
+
+        private String getTypeString(RelDataType sqlType)
+        {
+            switch (sqlType.getSqlTypeName().getOrdinal()) {
+            case SqlTypeName.Varchar_ordinal:
+                String actual = "VARCHAR(" + sqlType.getPrecision() + ")";
+                return sqlType.isNullable() ?
+                    actual :
+                    actual + " NOT NULL";
+            case SqlTypeName.Char_ordinal:
+                actual = "CHAR(" + sqlType.getPrecision() + ")";
+                return sqlType.isNullable() ?
+                    actual :
+                    actual + " NOT NULL";
+            default:
+                return sqlType.getFullTypeString();
             }
         }
 

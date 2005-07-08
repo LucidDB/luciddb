@@ -38,21 +38,35 @@ public class IntegerProperty extends Property
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a Integer property.
+     * Creates an Integer property.
      *
      * @param properties Properties object which holds values for this
      *    property.
      * @param path Name by which this property is serialized to a properties
      *    file, for example "com.acme.trace.Verbosity".
-     * @param defaultValue Default value, null if there is no default.
+     * @param defaultValue Default value.
      */
     public IntegerProperty(
         Properties properties,
         String path,
         int defaultValue)
     {
-        super(properties, path,
-            Integer.toString(defaultValue));
+        super(properties, path, Integer.toString(defaultValue));
+    }
+
+    /**
+     * Creates an Integer property which has no default value.
+     *
+     * @param properties Properties object which holds values for this
+     *    property.
+     * @param path Name by which this property is serialized to a properties
+     *    file, for example "com.acme.trace.Verbosity".
+     */
+    public IntegerProperty(
+        Properties properties,
+        String path)
+    {
+        super(properties, path, null);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -83,6 +97,14 @@ public class IntegerProperty extends Property
             return defaultValue;
         }
         return Integer.parseInt(value);
+    }
+
+    /**
+     * Sets the value of this integer property.
+     */
+    public void set(int value)
+    {
+        setString(Integer.toString(value));
     }
 }
 

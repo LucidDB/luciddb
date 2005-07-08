@@ -27,18 +27,18 @@ package net.sf.farrago.fennel.tuple;
  * FennelStoredTypeDescriptor provides an abstraction to describe a type of
  * data element supported by the tuple library.
  *
- * <p> 
+ * <p>
  * StoredTypeDescriptors are created by FennelStoredTypeDescriptorFactory
- * objects. 
+ * objects.
  *
- * <p> 
+ * <p>
  * Each FennelStoredTypeDescriptor has a unique ordinal number assigned to
  * it, which should match across all implementations of tuple libraries
  * that would interact. How to maintain these ordinals in synch is
- * left as an exercise for the reader. 
+ * left as an exercise for the reader.
  *
- * <p> 
- * NOTE: this interface varies from the C++ implementation by requiring 
+ * <p>
+ * NOTE: this interface varies from the C++ implementation by requiring
  * the stored type to know how to create a FennelAttributeAccessor for itself.
  * This seems cleaner than trying to infer it within the standard
  * FennelTupleAccessor.
@@ -49,7 +49,8 @@ package net.sf.farrago.fennel.tuple;
 public interface FennelStoredTypeDescriptor
 {
     /**
-     * returns the ordinal representing this type.
+     * Returns the ordinal representing this type, a value of the
+     * {@link FennelStandardTypeDescriptorOrdinal} enumeration.
      */
     public int getOrdinal();
 
@@ -65,7 +66,7 @@ public interface FennelStoredTypeDescriptor
      * for bit types, this yields the size of the unmarshalled representation
      */
     public int getFixedByteCount();
-    
+
     /**
      * Gets the number of bytes required to store the narrowest value with this
      * type, given a particular max byte count.  For a fixed-width
@@ -100,7 +101,7 @@ public interface FennelStoredTypeDescriptor
     /**
      * Compares two tupledatums of this type.
      *
-     * @return zero if they match, a negative value if the first is less 
+     * @return zero if they match, a negative value if the first is less
      * than the second otherwise a positive value
      */
     public int compareValues(FennelTupleDatum datum1, FennelTupleDatum datum2);

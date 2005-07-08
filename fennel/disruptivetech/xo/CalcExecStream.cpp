@@ -35,7 +35,7 @@ void CalcExecStream::prepare(CalcExecStreamParams const &params)
     // Force instantiation of the calculator's instruction tables.
     (void) CalcInit::instance();
 
-    pCalc.reset(new Calculator(&pGraph->getDynamicParamManager()));
+    pCalc.reset(new Calculator(pDynamicParamManager.get()));
     if (isTracing()) {
         pCalc->initTraceSource(&(getTraceTarget()), "calc");
     }

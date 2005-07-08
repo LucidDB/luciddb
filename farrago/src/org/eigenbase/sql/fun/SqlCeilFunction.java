@@ -28,14 +28,12 @@ import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.type.*;
 
-// REVIEW jvs 12-May-2005:  I suggest you follow Intellij's recommendation
-// and edit your template to match all of the other classes in this package.
 /**
- * Created by IntelliJ IDEA.
- * User: jack
- * Date: Apr 13, 2005
- * Time: 2:17:54 PM
- * To change this template use File | Settings | File Templates.
+ * Support for the CEIL/CEILING builtin function.
+ *
+ * @author jack
+ * @since Apr 13, 2005
+ * @version $Id$
  */
 public class SqlCeilFunction extends SqlFunction
 {

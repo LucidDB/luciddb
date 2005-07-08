@@ -33,17 +33,26 @@ import org.eigenbase.sql.parser.impl.*;
  */
 public class SqlParseException extends ParseException
 {
-    public SqlParseException(ParseException ex)
+    private final SqlParserPos pos;
+
+    public SqlParseException(ParseException ex, SqlParserPos pos)
     {
         super(
             ex.currentToken,
             ex.expectedTokenSequences,
             ex.tokenImage);
+        this.pos = pos;
     }
 
-    public SqlParseException(String message)
+    public SqlParseException(String message, SqlParserPos pos)
     {
         super(message);
+        this.pos = pos;
+    }
+
+    public SqlParserPos getPos()
+    {
+        return pos;
     }
 }
 

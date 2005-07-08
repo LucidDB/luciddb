@@ -546,6 +546,9 @@ inline void ExecStreamBufAccessor::consumeData(PConstBuffer pEnd)
 inline void ExecStreamBufAccessor::validateTupleSize(
     TupleData const &tupleData)
 {
+    if (cbBuffer == 0) {
+        return;                         // no buffer yet
+    }
     if (!tupleProductionAccessor.isBufferSufficient(tupleData,  cbBuffer)) {
         uint cbTuple = tupleProductionAccessor.getByteCount(tupleData);
         throw TupleOverflowExcn(tupleDesc, tupleData, cbTuple, cbBuffer);
@@ -567,9 +570,8 @@ inline bool ExecStreamBufAccessor::produceTuple(TupleData const &tupleData)
         return true;
     } else {
         validateTupleSize(tupleData);
-        if (getState() != EXECBUF_OVERFLOW) {
+        if (getState() == EXECBUF_NONEMPTY)
             requestConsumption();
-        }
         return false;
     }
 }

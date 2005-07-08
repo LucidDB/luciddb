@@ -23,6 +23,7 @@
 #ifndef Fennel_DynamicParam_Included
 #define Fennel_DynamicParam_Included
 
+#include "fennel/common/SharedTypes.h"
 #include "fennel/tuple/TupleData.h"
 #include "fennel/tuple/TupleDescriptor.h"
 #include <map>

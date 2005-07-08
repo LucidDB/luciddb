@@ -24,6 +24,9 @@ package org.eigenbase.sql;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.test.SqlOperatorTests;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.sql.type.SqlTypeFamily;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
@@ -105,6 +108,7 @@ public class SqlWindowOperator extends SqlOperator {
         SqlNodeList partitionList,
         SqlNodeList orderList,
         boolean isRows,
+        SqlParserPos rowRangePos,
         SqlNode lowerBound,
         SqlNode upperBound,
         SqlParserPos pos)
@@ -112,7 +116,7 @@ public class SqlWindowOperator extends SqlOperator {
         return (SqlWindow) createCall(
             new SqlNode[] {
                 declName, refName, partitionList, orderList,
-                SqlLiteral.createBoolean(isRows, pos),
+                SqlLiteral.createBoolean(isRows, rowRangePos),
                 lowerBound, upperBound
             },
             pos);
@@ -188,6 +192,8 @@ public class SqlWindowOperator extends SqlOperator {
         SqlValidatorScope operandScope)
     {
         assert call.getOperator() == this;
+        final SqlWindow window = (SqlWindow) call;
+        final SqlCall windowFunc = window.getWindowFunction();
         SqlNode [] operands = call.operands;
         SqlIdentifier refName =
                 (SqlIdentifier) operands[SqlWindow.RefName_OPERAND];
@@ -199,9 +205,13 @@ public class SqlWindowOperator extends SqlOperator {
         SqlNodeList partitionList =
                 (SqlNodeList) operands[SqlWindow.PartitionList_OPERAND];
         if (null != partitionList) {
-            for (int i =0; i < partitionList.size(); i++) {
-                SqlNode partitionItem = partitionList.get(i);
-                partitionItem.validateExpr(validator,operandScope);
+            if (0 != partitionList.size()) {
+                for (int i =0; i < partitionList.size(); i++) {
+                    SqlNode partitionItem = partitionList.get(i);
+                    partitionItem.validateExpr(validator,operandScope);
+                }
+            } else {
+                partitionList = null;
             }
         }
 
@@ -219,34 +229,61 @@ public class SqlWindowOperator extends SqlOperator {
                 orderList = null;
             }
         }
-        // 03 standard calls rquires an ORDER BY clause. We relax this
-        // requirment if the table appears to be sorted already
-        if (orderList == null) {
-            if (!isTableSorted(scope)) {
-                throw validator.newValidationError(call,
-                    EigenbaseResource.instance().newOverMissingOrderBy());
-            }
-        }
 
         boolean isRows =
                 SqlLiteral.booleanValue(operands[SqlWindow.IsRows_OPERAND]);
         SqlNode lowerBound = operands[SqlWindow.LowerBound_OPERAND],
                 upperBound = operands[SqlWindow.UpperBound_OPERAND];
-        // see if we need to run any checks at all
+
+        boolean triggerFunction = false;
+        if (null != windowFunc) {
+            if (windowFunc.isName("RANK") || windowFunc.isName("DENSE_RANK")) {
+                triggerFunction = true;
+            }
+        }
+        
+        // 6.10 rule 6a Function RANk & DENSE_RANK require OBC
+        if ( (null == orderList) && triggerFunction && !isTableSorted(scope)) {
+            throw validator.newValidationError(call,
+                EigenbaseResource.instance().newFuncNeedsOrderBy());
+        }
+
+        // Run framing checks if there are any
         if (null != upperBound || null != lowerBound) {
+            // 6.10 Rule 6a
+            if (triggerFunction) {
+                throw validator.newValidationError(operands[SqlWindow.IsRows_OPERAND],
+                    EigenbaseResource.instance().newRankWithFrame());
+            }
             SqlTypeFamily orderTypeFam = null;
+            // SQL03 7.10 Rule 11a
             if (null != orderList) {
                 // if order by is a conpound list then range not allowed
                 if (orderList.size() > 1 && !isRows) {
-                    throw validator.newValidationError(call,
+                    throw validator.newValidationError(operands[SqlWindow.IsRows_OPERAND],
                         EigenbaseResource.instance().newCompoundOrderByProhibitsRange());
                 }
-                RelDataType orderType = validator.deriveType(scope,orderList.get(0));
+                // get the type family for the sort key for Frame Boundry Val.
+                RelDataType orderType = validator.deriveType(operandScope,orderList.get(0));
                 orderTypeFam = SqlTypeFamily.getFamilyForSqlType(orderType.getSqlTypeName());
+            } else {
+                // requires an ORDER BY clause if frame is logical(RANGE)
+                // We relax this requirment if the table appears to be
+                // sorted already
+                if (!isRows  && !isTableSorted(scope)) {
+                    throw validator.newValidationError(call,
+                        EigenbaseResource.instance().newOverMissingOrderBy());
+                }
             }
+
             // Let the bounds validate themselves
             validateFrameBoundry(lowerBound,isRows,orderTypeFam,validator,operandScope);
             validateFrameBoundry(upperBound,isRows,orderTypeFam,validator,operandScope);
+            // Validate across boundries. 7.10 Rule 8 a-d
+            checkSpecialLiterals(lowerBound,upperBound,validator);
+        } else if (null == orderList && !isTableSorted(scope)) {
+            throw validator.newValidationError(call,
+                EigenbaseResource.instance().newOverMissingOrderBy());
         }
     }
 
@@ -264,7 +301,7 @@ public class SqlWindowOperator extends SqlOperator {
         switch (bound.getKind().getOrdinal()) {
         case SqlKind.LiteralORDINAL:
             // is there really anything to validate here?
-            // this covers "unbounded preceding" & "unbounded following"
+            // this covers "CURRENT_ROW","unbounded preceding" & "unbounded following"
             break;
 
         case SqlKind.OtherORDINAL:
@@ -275,6 +312,7 @@ public class SqlWindowOperator extends SqlOperator {
                 throw validator.newValidationError(boundVal,
                     EigenbaseResource.instance().newRangeOrRowMustBeConstant());
             }
+            // SQL03 7.10 rule 11b
             // Physical ROWS must be a numeric constant.
             if (isRows && !(boundVal instanceof SqlNumericLiteral)) {
                 throw validator.newValidationError(boundVal,
@@ -312,6 +350,62 @@ public class SqlWindowOperator extends SqlOperator {
             throw Util.newInternal("Unexpected node type");
         }
     }
+    
+    private static void checkSpecialLiterals(
+        SqlNode lowerBound,
+        SqlNode upperBound,
+        SqlValidator validator)
+    {
+        Object lowerLitType = null;
+        Object upperLitType = null;
+        SqlOperator lowerOp = null;
+        SqlOperator upperOp = null;
+        if (null != lowerBound) {
+            if (lowerBound.getKind().getOrdinal() == SqlKind.LiteralORDINAL) {
+                lowerLitType = ((SqlLiteral)lowerBound).getValue();
+                if (Bound.UnboundedFollowing == lowerLitType) {
+                    throw validator.newValidationError(lowerBound,
+                        EigenbaseResource.instance().newBadLowerBoundry());
+                }
+            } else if (lowerBound instanceof SqlCall) {
+                lowerOp = ((SqlCall)lowerBound).getOperator();
+            }
+        }
+        if (null != upperBound) {
+            if (upperBound.getKind().getOrdinal() == SqlKind.LiteralORDINAL) {
+                upperLitType = ((SqlLiteral) upperBound).getValue();
+                if (Bound.UnboundedPreceding == upperLitType) {
+                    throw validator.newValidationError(upperBound,
+                        EigenbaseResource.instance().newBadUpperBoundry());
+                }
+            } else if (upperBound instanceof SqlCall) {
+                upperOp = ((SqlCall)upperBound).getOperator();
+            }
+        }
+
+        if (Bound.CurrentRow == lowerLitType) {
+            if (null != upperOp) {
+                if (upperOp.getName().equals("PRECEDING")) {
+                    throw validator.newValidationError(upperBound,
+                        EigenbaseResource.instance().newCurrentRowPrecedingError());
+                }
+            }
+        } else if (null != lowerOp) {
+            if (lowerOp.getName().equals("FOLLOWING")) {
+                if (null != upperOp) {
+                    if (upperOp.getName().equals("PRECEDING")) {
+                        throw validator.newValidationError(upperBound,
+                            EigenbaseResource.instance().newFollowingBeforePrecedingError());
+                    }
+                } else if (null != upperLitType) {
+                    if (Bound.CurrentRow == upperLitType) {
+                        throw validator.newValidationError(upperBound,
+                            EigenbaseResource.instance().newCurrentRowFollowingError());
+                    }
+                }
+            }
+        }
+     }
 
     /**
      * This method retrieves the list of columns for the current table

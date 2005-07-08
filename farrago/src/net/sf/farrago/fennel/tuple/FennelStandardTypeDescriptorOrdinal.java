@@ -23,19 +23,18 @@
 
 package net.sf.farrago.fennel.tuple;
 
-import java.util.*;
-
 /**
  * Tracks the ordinal numbers assigned to the standard types as kept in fennel.
- * <p> 
+ * <p>
  *
- * This module must be kept in sync with any changes to fennel's 
- * tuple/FennelStandardTypeDescriptor.h module!
+ * This module must be kept in sync with any changes to fennel's
+ * <code>tuple/FennelStandardTypeDescriptor.h<code> module!
+ *
+ * @see FennelStandardTypeDescriptor
  *
  * @author Mike Bennett
  * @version $Id$
  */
-// NOTE: this would be *SO* much cleaner with jdk 1.5 Enum support!
 public final class FennelStandardTypeDescriptorOrdinal
 {
     public static final int STANDARD_TYPE_MIN       = 1;
@@ -59,7 +58,7 @@ public final class FennelStandardTypeDescriptorOrdinal
     public static final int STANDARD_TYPE_END       = 16;
     public static final int EXTENSION_TYPE_MIN      = 1000;
 
-    private FennelStandardTypeDescriptorOrdinal() {};
+    private FennelStandardTypeDescriptorOrdinal() {}
 
     // NOTE: this set of ordinal checks isn't really needed but it might
     // be used elsewhere in the system.
@@ -67,7 +66,7 @@ public final class FennelStandardTypeDescriptorOrdinal
     /**
      * Indicates whether this ordinal represents a primitive type.
      */
-    static public boolean isNative(int st) 
+    static public boolean isNative(int st)
     {
         if (st < STANDARD_TYPE_DOUBLE) {
             return true;
@@ -80,7 +79,7 @@ public final class FennelStandardTypeDescriptorOrdinal
      */
     static public boolean isNativeNotBool(int st)
     {
-        if (st <= STANDARD_TYPE_DOUBLE && 
+        if (st <= STANDARD_TYPE_DOUBLE &&
             st != STANDARD_TYPE_BOOL) {
             return true;
         }
@@ -108,7 +107,7 @@ public final class FennelStandardTypeDescriptorOrdinal
         }
         return false;
     }
-    
+
     /**
      * Indicates whether this ordinal is an approximate numeric.
      */
@@ -120,7 +119,7 @@ public final class FennelStandardTypeDescriptorOrdinal
         }
         return false;
     }
-    
+
     /**
      * Indicates whether this ordinal represents an array.
      */
@@ -156,7 +155,7 @@ public final class FennelStandardTypeDescriptorOrdinal
         }
         return false;
     }
-    
+
     /**
      * Indicates whether this ordinal represents a text array.
      */

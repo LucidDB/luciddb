@@ -33,6 +33,8 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+StrictMutex SysCallExcn::mutex;
+
 SysCallExcn::SysCallExcn(std::string msgInit)
     : FennelExcn(msgInit)
 {
@@ -57,6 +59,8 @@ SysCallExcn::SysCallExcn(std::string msgInit)
     errCode = errno;
 #endif
     msg = oss.str();
+    // TODO: Remove this once FennelResource is thread-safe -JK 6/30/2005
+    StrictMutexGuard mutexGuard(mutex);
     msg = FennelResource::instance().sysCallFailed(msg);
 }
 

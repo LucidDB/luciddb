@@ -25,9 +25,6 @@
 #define Fennel_ExecStreamTestBase_Included
 
 #include "fennel/test/SegStorageTestBase.h"
-#include "fennel/exec/MockProducerExecStream.h"
-#include "fennel/test/ExecStreamGenerator.h"
-
 FENNEL_BEGIN_NAMESPACE
 
 class ExecStreamScheduler;
@@ -43,14 +40,16 @@ class ExecStreamTestBase : virtual public SegStorageTestBase
 {
 protected:
     SharedExecStreamScheduler pScheduler;
-    SharedExecStreamGraph pGraph;
-    SharedExecStreamGraphEmbryo pGraphEmbryo;
 
     /**
      * Creates a stream graph.
      */
     virtual SharedExecStreamGraph newStreamGraph();
 
+    /**
+     * Creates an embryo for a stream graph.
+     */
+    virtual SharedExecStreamGraphEmbryo newStreamGraphEmbryo(SharedExecStreamGraph);
 
     /**
      * Creates a scheduler.
@@ -58,114 +57,18 @@ protected:
     virtual ExecStreamScheduler *newScheduler();
 
     /**
-     * (Re)initializes the stream graph and its embryo.
+     * refines testCaseTearDown
      */
-    void initStreamGraph();
+    virtual void tearDown();
 
-    /**
-     * Defines and prepares a graph consisting of one source stream
-     * and one transform stream.
-     *
-     * @param sourceStreamEmbryo embryonic source stream which produces tuples
-     *
-     * @param transformStreamEmbryo embryonic transform stream which processes
-     * tuples produced by sourceStreamEmbryo
-     *
-     * @return output buffer stream
-     */
-    SharedExecStream prepareTransformGraph(
-        ExecStreamEmbryo &sourceStreamEmbryo,
-        ExecStreamEmbryo &transformStreamEmbryo);
-
-    /**
-     * Defines and prepares a graph consisting of one source stream
-     * and one or multiple transform streams.
-     *
-     * @param sourceStreamEmbryo embryonic source stream which produces tuples
-     *
-     * @param transformStreamEmbryo embryonic transforms streams which processes
-     * tuples produced by sourceStreamEmbryo or a child stream
-     *
-     * @return output buffer stream
-     */
-    SharedExecStream prepareTransformGraph(
-        ExecStreamEmbryo &sourceStreamEmbryo,
-        std::vector<ExecStreamEmbryo> &transforms);
-
-    /**
-     * Defines and prepares a graph consisting of two source streams
-     * and one confluence stream.
-     *
-     * @param sourceStreamEmbryo1 embryonic source stream which produces tuples
-     *
-     * @param sourceStreamEmbryo2 embryonic source stream which produces tuples
-     *
-     * @param confluenceStreamEmbryo embryonic confluence stream which processes
-     * tuples produced by the sourceStreamEmbryos
-     *
-     * @return output buffer stream
-     */
-    SharedExecStream prepareConfluenceGraph(
-        ExecStreamEmbryo &sourceStreamEmbryo1,
-        ExecStreamEmbryo &sourceStreamEmbryo2,
-        ExecStreamEmbryo &confluenceStreamEmbryo);
-
-    /**
-     * Executes the prepared stream graph and verifies that its output
-     * is an expected-size run of constant bytes.
-     *
-     * @param stream output stream from which to read
-     *
-     * @param nBytesExpected number of bytes which stream should produce
-     *
-     * @param byteExpected constant value expected for each byte
-     */
-    void verifyConstantOutput(
-        ExecStream &stream,
-        uint nBytesExpected,
-        uint byteExpected);
-    
-    /**
-     * Executes the prepared stream graph and verifies that its output
-     * matches that produced by a value generator.
-     *
-     * @param stream output stream from which to read
-     *
-     * @param nRowsExpected number of rows expected
-     *
-     * @param verifier generator for expected values
-     */
-    void verifyOutput(
-        ExecStream &stream,
-        uint nRowsExpected,
-        MockProducerExecStreamGenerator &verifier);
-
-    /**
-     * Executes the prepared stream graph and verifies that all output tuples
-     * matche an expected and given one
-     *
-     * @param stream output stream from which to read
-     *
-     * @param expectedTuple
-     *
-     * @param nRowsExpected
-     */
-    void verifyConstantOutput(
-        ExecStream &stream, 
-        const TupleData  &expectedTuple,
-        uint nRowsExpected);
-
-    
 public:
+    virtual ~ExecStreamTestBase() {}
+
     // override TestBase
     virtual void testCaseSetUp();
     virtual void testCaseTearDown();
 };
 
-
-
 FENNEL_END_NAMESPACE
-
 #endif
-
 // End ExecStreamTestBase.h

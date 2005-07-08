@@ -341,6 +341,10 @@ public abstract class SqlOperator
         return name.equals(other.name) && kind.equals(other.kind);
     }
 
+    public boolean isName(String testName) {
+        return name.equals(testName);
+    }
+
     // override Object
     public int hashCode()
     {

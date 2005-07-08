@@ -22,7 +22,6 @@
 */
 package org.eigenbase.sql.test;
 
-import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.Util;
 
 import java.util.regex.Pattern;
@@ -43,6 +42,11 @@ import java.util.regex.Pattern;
 public class SqlOperatorTests
 {
     /**
+     * Remove this constant when dtbug 315 has been fixed.
+     */
+    public static final boolean bug315Fixed = false;
+
+    /**
      * Regular expression for a SQL TIME(0) value.
      */
     public static final Pattern timePattern = Pattern.compile(
@@ -58,6 +62,7 @@ public class SqlOperatorTests
      */
     public static final Pattern datePattern = Pattern.compile(
         "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]");
+    public static final boolean todo = false;
 
     public static void testBetween(SqlTester tester)
     {
@@ -88,8 +93,8 @@ public class SqlOperatorTests
     public static void testCast(SqlTester tester)
     {
         tester.checkScalarExact("cast(1.0 as integer)", "1");
-        tester.checkScalarApprox("cast(1 as double)", "1.0");
-        tester.checkScalarApprox("cast(1.0 as double)", "1.0");
+        tester.checkScalarApprox("cast(1 as double)", "todo:", 1, 0);
+        tester.checkScalarApprox("cast(1.0 as double)", "todo:", 1, 0);
         tester.checkNull("cast(null as double)");
         tester.checkNull("cast(null as date)");
     }
@@ -102,7 +107,7 @@ public class SqlOperatorTests
         // assertion after I changed the type of string literals from
         // VARCHAR to CHAR (see dtbug 278)
         if (false) {
-            tester.checkString("case 2 when 1 then 'a' when 2 then 'b' end", "b");
+            tester.checkString("case 2 when 1 then 'a' when 2 then 'b' end", "b", "CHAR(1) NOT NULL");
         }
         tester.checkScalarExact("case 'a' when 'a' then 1 end", "1");
         tester.checkNull("case 'a' when 'b' then 1 end");
@@ -117,16 +122,17 @@ public class SqlOperatorTests
 
     public static void testSelect(SqlTester tester)
     {
-        tester.check("select * from values(1)", "1", SqlTypeName.Integer);
+        tester.check("select * from (values(1))", AbstractSqlTester.IntegerTypeChecker, "1",
+            0);
     }
 
     public static void testLiteralChain(SqlTester tester)
     {
-        tester.checkString("'buttered'\n' toast'", "buttered toast");
+        tester.checkString("'buttered'\n' toast'", "buttered toast", "CHAR(14) NOT NULL");
         tester.checkString("'corned'\n' beef'\n' on'\n' rye'",
-            "corned beef on rye");
+            "corned beef on rye", "CHAR(18) NOT NULL");
         tester.checkString("_latin1'Spaghetti'\n' all''Amatriciana'",
-            "Spaghetti all'Amatriciana");
+            "Spaghetti all'Amatriciana", "CHAR(25) NOT NULL");
         tester.checkBoolean("x'1234'\n'abcd' = x'1234abcd'", Boolean.TRUE);
         tester.checkBoolean("x'1234'\n'' = x'1234'", Boolean.TRUE);
         tester.checkBoolean("x''\n'ab' = x'ab'", Boolean.TRUE);
@@ -149,11 +155,11 @@ public class SqlOperatorTests
 
     public static void testConcatOperator(SqlTester tester)
     {
-        tester.checkString(" 'a'||'b' ", "ab");
+        tester.checkString(" 'a'||'b' ", "ab", "todo: CHAR(2) NOT NULL");
 
         if (false) {
             // not yet implemented
-            tester.checkString(" x'f'||x'f' ", "X'FF");
+            tester.checkString(" x'f'||x'f' ", "X'FF", "BINARY(1) NOT NULL");
             tester.checkNull("x'ff' || cast(null as varbinary)");
         }
     }
@@ -162,7 +168,7 @@ public class SqlOperatorTests
     {
         tester.checkScalarExact("10 / 5", "2");
         tester.checkScalarExact("-10 / 5", "-2");
-        tester.checkScalarApprox("10.0 / 5", "2.0");
+        tester.checkScalarApprox("10.0 / 5", "todo:", 2.0, 0);
         tester.checkNull("1e1 / cast(null as float)");
     }
 
@@ -266,7 +272,7 @@ public class SqlOperatorTests
     {
         tester.checkScalarExact("-2-1", "-3");
         tester.checkScalarExact("2-1", "1");
-        tester.checkScalarApprox("2.0-1", "1.0");
+        tester.checkScalarApprox("2.0-1", "todo:", 1, 0);
         tester.checkScalarExact("1-2", "-1");
         tester.checkNull("1e1-cast(null as double)");
         tester.checkNull("cast(null as tinyint) - cast(null as smallint)");
@@ -283,7 +289,7 @@ public class SqlOperatorTests
         tester.checkScalarExact("2*-3", "-6");
         tester.checkScalarExact("+2*3", "6");
         tester.checkScalarExact("2*0", "0");
-        tester.checkScalarApprox("2.0*3", "6.0");
+        tester.checkScalarApprox("2.0*3", "todo:", 6, 0);
         tester.checkNull("2e-3*cast(null as integer)");
         tester.checkNull("cast(null as tinyint) * cast(4 as smallint)");
     }
@@ -307,7 +313,7 @@ public class SqlOperatorTests
     {
         tester.checkScalarExact("1+2", "3");
         tester.checkScalarExact("-1+2", "1");
-        tester.checkScalarApprox("1+2.0", "3.0");
+        tester.checkScalarApprox("1+2.0", "todo:", 3, 0);
         tester.checkNull("cast(null as tinyint)+1");
         tester.checkNull("1e-2+cast(null as double)");
     }
@@ -393,7 +399,7 @@ public class SqlOperatorTests
     public static void testPrefixMinusOperator(SqlTester tester)
     {
         tester.checkScalarExact("-1", "-1");
-        tester.checkScalarApprox("-1.0", "-1.0");
+        tester.checkScalarApprox("-1.0", "todo:", -1, 0);
         tester.checkNull("-cast(null as integer)");
         tester.checkNull("-cast(null as tinyint)");
     }
@@ -401,7 +407,7 @@ public class SqlOperatorTests
     public static void testPrefixPlusOperator(SqlTester tester)
     {
         tester.checkScalarExact("+1", "1");
-        tester.checkScalarApprox("+1.0", "1.0");
+        tester.checkScalarApprox("+1.0", "todo:", 1, 0);
         tester.checkNull("+cast(null as integer)");
         tester.checkNull("+cast(null as tinyint)");
     }
@@ -414,8 +420,8 @@ public class SqlOperatorTests
 
     public static void testValuesOperator(SqlTester tester)
     {
-        tester.check("select 'abc' from values(true)", "abc",
-            SqlTypeName.Varchar);
+        tester.check("select 'abc' from (values(true))", new AbstractSqlTester.StringTypeChecker("CHAR(3) NOT NULL"), "abc",
+            0);
     }
 
     public static void testNotLikeOperator(SqlTester tester)
@@ -510,9 +516,9 @@ public class SqlOperatorTests
     public static void testOverlayFunc(SqlTester tester)
     {
         tester.checkString("overlay('ABCdef' placing 'abc' from 1)",
-            "abcdef");
+            "abcdef", "todo: CHAR(9) NOT NULL");
         tester.checkString("overlay('ABCdef' placing 'abc' from 1 for 2)",
-            "abcCdef");
+            "abcCdef", "todo: CHAR(9) NOT NULL");
         tester.checkNull(
             "overlay('ABCdef' placing 'abc' from 1 for cast(null as integer))");
         tester.checkNull(
@@ -547,17 +553,18 @@ public class SqlOperatorTests
 
     public static void testUpperFunc(SqlTester tester)
     {
-        tester.checkString("upper('a')", "A");
-        tester.checkString("upper('A')", "A");
-        tester.checkString("upper('1')", "1");
+        tester.checkString("upper('a')", "A", "todo: CHAR(1) NOT NULL");
+        tester.checkString("upper('A')", "A", "todo: CHAR(1) NOT NULL");
+        tester.checkString("upper('1')", "1", "todo: CHAR(1) NOT NULL");
         tester.checkNull("upper(cast(null as varchar(1)))");
     }
 
     public static void testLowerFunc(SqlTester tester)
     {
-        tester.checkString("lower('A')", "a");
-        tester.checkString("lower('a')", "a");
-        tester.checkString("lower('1')", "1");
+        // SQL:2003 6.29.8 The type of lower is the type of its argument
+        tester.checkString("lower('A')", "a", "todo: CHAR(1) NOT NULL");
+        tester.checkString("lower('a')", "a", "todo: CHAR(1) NOT NULL");
+        tester.checkString("lower('1')", "1", "todo: CHAR(1) NOT NULL");
         tester.checkNull("lower(cast(null as varchar(1)))");
     }
 
@@ -574,7 +581,7 @@ public class SqlOperatorTests
 
     public static void testPowFunc(SqlTester tester)
     {
-        tester.checkScalarApprox("pow(2,-2)", "0.25");
+        tester.checkScalarApprox("pow(2,-2)", "todo:", 0.25, 0);
         tester.checkNull("pow(cast(null as integer),2)");
         tester.checkNull("pow(2,cast(null as double))");
     }
@@ -588,14 +595,14 @@ public class SqlOperatorTests
 
     public static void testLnFunc(SqlTester tester)
     {
-        //todo not very platform independant
-        tester.checkScalarApprox("ln(2.71828)", "0.999999327347282");
+        tester.checkScalarApprox("ln(2.71828)", "DOUBLE NOT NULL", 1, 0.000001);
+        tester.checkScalarApprox("ln(2.71828)", "DOUBLE NOT NULL", 0.999999327, 0.0000001);
         tester.checkNull("ln(cast(null as tinyint))");
     }
 
     public static void testLogFunc(SqlTester tester)
     {
-        tester.checkScalarApprox("log(10)", "1.0");
+        tester.checkScalarApprox("log(10)", "todo:", 1.0, 0);
         tester.checkNull("log(cast(null as real))");
     }
 
@@ -608,48 +615,48 @@ public class SqlOperatorTests
     public static void testNullifFunc(SqlTester tester)
     {
         tester.checkNull("nullif(1,1)");
-        tester.checkString("nullif('a','b')", "a");
-        tester.checkString("nullif('a',cast(null as varchar(1)))", "a");
+        tester.checkString("nullif('a','bc')", "a", "todo: VARCHAR(2) NOT NULL");
+        tester.checkString("nullif('a',cast(null as varchar(1)))", "a", "todo: VARCHAR(1) NOT NULL");
         tester.checkNull("nullif(cast(null as varchar(1)),'a')");
     }
 
     public static void testCoalesceFunc(SqlTester tester)
     {
-        tester.checkString("coalesce('a','b')", "a");
+        tester.checkString("coalesce('a','b')", "a", "CHAR(1) NOT NULL");
         tester.checkScalarExact("coalesce(null,null,3)", "3");
     }
 
     public static void testUserFunc(SqlTester tester)
     {
-        tester.checkScalar("USER", null, "VARCHAR(2000) NOT NULL");
+        tester.checkString("USER", null, "VARCHAR(2000) NOT NULL");
     }
 
     public static void testCurrentUserFunc(SqlTester tester)
     {
-        tester.checkScalar("CURRENT_USER", null, "VARCHAR(2000) NOT NULL");
+        tester.checkString("CURRENT_USER", null, "VARCHAR(2000) NOT NULL");
     }
 
     public static void testSessionUserFunc(SqlTester tester)
     {
-        tester.checkScalar("SESSION_USER", null, "VARCHAR(2000) NOT NULL");
+        tester.checkString("SESSION_USER", null, "VARCHAR(2000) NOT NULL");
     }
 
     public static void testSystemUserFunc(SqlTester tester)
     {
         String user = System.getProperty("user.name"); // e.g. "jhyde"
-        tester.checkScalar("SYSTEM_USER", user, "VARCHAR(2000) NOT NULL");
+        tester.checkString("SYSTEM_USER", user, "VARCHAR(2000) NOT NULL");
     }
 
     public static void testCurrentPathFunc(SqlTester tester)
     {
-        tester.checkScalar("CURRENT_PATH", "", "VARCHAR(2000) NOT NULL");
+        tester.checkString("CURRENT_PATH", "", "VARCHAR(2000) NOT NULL");
     }
 
     public static void testCurrentRoleFunc(SqlTester tester)
     {
         // We don't have roles yet, so the CURRENT_ROLE function returns
         // the empty string.
-        tester.checkScalar("CURRENT_ROLE", "", "VARCHAR(2000) NOT NULL");
+        tester.checkString("CURRENT_ROLE", "", "VARCHAR(2000) NOT NULL");
     }
 
     public static void testLocalTimeFunc(SqlTester tester)
@@ -694,8 +701,8 @@ public class SqlOperatorTests
 
     public static void testSubstringFunction(SqlTester tester)
     {
-        tester.checkString("substring('abc' from 1 for 2)", "ab");
-        tester.checkString("substring('abc' from 2)", "bc");
+        tester.checkString("substring('abc' from 1 for 2)", "ab", "VARCHAR(3) NOT NULL");
+        tester.checkString("substring('abc' from 2)", "bc", "todo: VARCHAR(3) NOT NULL");
 
         //substring reg exp not yet supported
         //                    tester.checkString("substring('foobar' from '%#\"o_b#\"%' for '#')", "oob");
@@ -704,17 +711,19 @@ public class SqlOperatorTests
 
     public static void testTrimFunc(SqlTester tester)
     {
-        tester.checkString("trim('a' from 'aAa')", "A");
-        tester.checkString("trim(both 'a' from 'aAa')", "A");
-        tester.checkString("trim(leading 'a' from 'aAa')", "Aa");
-        tester.checkString("trim(trailing 'a' from 'aAa')", "aA");
+        // SQL:2003 6.29.11 Trimming a CHAR yields a VARCHAR
+        tester.checkString("trim('a' from 'aAa')", "A", "todo: VARCHAR(3) NOT NULL");
+        tester.checkString("trim(both 'a' from 'aAa')", "A", "todo: VARCHAR(3) NOT NULL");
+        tester.checkString("trim(leading 'a' from 'aAa')", "Aa", "todo: VARCHAR(3) NOT NULL");
+        tester.checkString("trim(trailing 'a' from 'aAa')", "aA", "todo: VARCHAR(3) NOT NULL");
         tester.checkNull("trim(cast(null as varchar(1)) from 'a')");
         tester.checkNull("trim('a' from cast(null as varchar(1)))");
     }
 
     public static void testWindow(SqlTester tester) {
-        tester.check("select sum(1) over () from values (true)", "1",
-                SqlTypeName.Integer);
+        tester.check("select sum(1) over (order by x) from (select 1 as x, 2 as y from (values (true)))",
+            new AbstractSqlTester.StringTypeChecker("INTEGER NOT NULL"), "1",
+            0);
     }
 
     public static void testElementFunc(SqlTester tester)
@@ -741,12 +750,44 @@ public class SqlOperatorTests
 
     public static void testCeilFunc(SqlTester tester)
     {
-        //To change body of created methods use File | Settings | File Templates.
+        Util.discard(tester);
+        // TODO:
     }
     
     public static void testFloorFunc(SqlTester tester)
     {
-        // Add in calls wwhne function is implemented
+        Util.discard(tester);
+        // TODO:
+    }
+
+    public static void testDenseRankFunc(SqlTester tester)
+    {
+        Util.discard(tester);
+        // TODO:
+    }
+
+    public static void testPercentRankFunc(SqlTester tester)
+    {
+        Util.discard(tester);
+        // TODO:
+    }
+
+    public static void testRankFunc(SqlTester tester)
+    {
+        Util.discard(tester);
+        // TODO:
+    }
+
+    public static void testCumeDistFunc(SqlTester tester)
+    {
+        Util.discard(tester);
+        // TODO:
+    }
+
+    public static void testRowNumberFunc(SqlTester tester)
+    {
+        Util.discard(tester);
+        // TODO:
     }
 }
 
