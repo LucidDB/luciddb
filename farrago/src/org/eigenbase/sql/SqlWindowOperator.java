@@ -258,7 +258,7 @@ public class SqlWindowOperator extends SqlOperator {
                     throw validator.newValidationError(operands[SqlWindow.IsRows_OPERAND],
                         EigenbaseResource.instance().newCompoundOrderByProhibitsRange());
                 }
-                // get the type family for the sort key for Frame Boundry Val.
+                // get the type family for the sort key for Frame Boundary Val.
                 RelDataType orderType = validator.deriveType(operandScope,orderList.get(0));
                 orderTypeFam = SqlTypeFamily.getFamilyForSqlType(orderType.getSqlTypeName());
             } else {
@@ -272,8 +272,8 @@ public class SqlWindowOperator extends SqlOperator {
             }
 
             // Let the bounds validate themselves
-            validateFrameBoundry(lowerBound,isRows,orderTypeFam,validator,operandScope);
-            validateFrameBoundry(upperBound,isRows,orderTypeFam,validator,operandScope);
+            validateFrameBoundary(lowerBound,isRows,orderTypeFam,validator,operandScope);
+            validateFrameBoundary(upperBound,isRows,orderTypeFam,validator,operandScope);
             // Validate across boundries. 7.10 Rule 8 a-d
             checkSpecialLiterals(lowerBound,upperBound,validator);
         } else if (null == orderList && !isTableSorted(scope)) {
@@ -282,7 +282,7 @@ public class SqlWindowOperator extends SqlOperator {
         }
     }
 
-    private void validateFrameBoundry(
+    private void validateFrameBoundary(
         SqlNode bound,
         boolean isRows,
         SqlTypeFamily orderTypeFam,
@@ -360,7 +360,7 @@ public class SqlWindowOperator extends SqlOperator {
                 lowerLitType = ((SqlLiteral)lowerBound).getValue();
                 if (Bound.UnboundedFollowing == lowerLitType) {
                     throw validator.newValidationError(lowerBound,
-                        EigenbaseResource.instance().newBadLowerBoundry());
+                        EigenbaseResource.instance().newBadLowerBoundary());
                 }
             } else if (lowerBound instanceof SqlCall) {
                 lowerOp = ((SqlCall)lowerBound).getOperator();
@@ -371,7 +371,7 @@ public class SqlWindowOperator extends SqlOperator {
                 upperLitType = ((SqlLiteral) upperBound).getValue();
                 if (Bound.UnboundedPreceding == upperLitType) {
                     throw validator.newValidationError(upperBound,
-                        EigenbaseResource.instance().newBadUpperBoundry());
+                        EigenbaseResource.instance().newBadUpperBoundary());
                 }
             } else if (upperBound instanceof SqlCall) {
                 upperOp = ((SqlCall)upperBound).getOperator();

@@ -1819,7 +1819,8 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         case SqlJoinOperator.JoinType.Right_ORDINAL:
         case SqlJoinOperator.JoinType.Full_ORDINAL:
             if (condition == null && !natural) {
-                throw newValidationError(join,
+                throw newValidationError(
+                    join,
                     EigenbaseResource.instance()
                     .newJoinRequiresCondition());
             }
@@ -1827,12 +1828,14 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         case SqlJoinOperator.JoinType.Comma_ORDINAL:
         case SqlJoinOperator.JoinType.Cross_ORDINAL:
             if (condition != null) {
-                throw newValidationError(condition,
+                throw newValidationError(
+                    join.operands[SqlJoin.CONDITION_TYPE_OPERAND],
                     EigenbaseResource.instance()
                     .newCrossJoinDisallowsCondition());
             }
             if (natural) {
-                throw newValidationError(join,
+                throw newValidationError(
+                    join.operands[SqlJoin.CONDITION_TYPE_OPERAND],
                     EigenbaseResource.instance()
                     .newCrossJoinDisallowsCondition());
             }

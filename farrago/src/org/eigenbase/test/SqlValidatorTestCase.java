@@ -172,6 +172,10 @@ public class SqlValidatorTestCase extends TestCase
     {
         SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);
         if (sap.pos == null) {
+            assertTrue(
+                "After bug 315 is fixed, all negative tests must " +
+                "contain an error location",
+                !SqlOperatorTests.bug315Fixed);
             tester.assertExceptionIsThrown(
                 sap.sql,
                 expected,
@@ -451,7 +455,11 @@ public class SqlValidatorTestCase extends TestCase
                     } else if ((expectedLine != -1 &&
                         actualLine != expectedLine) ||
                         (expectedColumn != -1 &&
-                        actualColumn != expectedColumn)) {
+                        actualColumn != expectedColumn) ||
+                        (expectedEndLine != -1 &&
+                        actualEndLine != expectedEndLine) ||
+                        (expectedEndColumn != -1 &&
+                        actualEndColumn != expectedEndColumn)) {
                         fail("SqlValidationTest: Validator threw expected " +
                             "exception [" + actualMessage +
                             "]; but at line [" + actualLine +
@@ -660,6 +668,13 @@ public class SqlValidatorTestCase extends TestCase
 
         public void checkFails(String expression, String expectedError)
         {
+            // After bug 315 is fixed, take this assert out: the other assert
+            // will be sufficient.
+            if (!SqlOperatorTests.bug315Fixed) {
+                assertTrue(
+                    "All negative tests must contain an error location",
+                    expression.indexOf('^') >= 0);
+            }
             SqlValidatorTestCase.this.checkFails(
                 buildQuery(expression),
                 expectedError);

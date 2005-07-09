@@ -26,6 +26,8 @@ package org.eigenbase.sql.parser;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.SqlNode;
 
+import java.util.Collection;
+
 
 /**
  * SqlParserPos represents the position of a parsed token within SQL statement
@@ -66,7 +68,7 @@ public class SqlParserPos
         this.endLineNumber = lineNumber;
         this.endColumnNumber = columnNumber;
     }
-    
+
     /**
     * Creates a new parser range.
     */
@@ -102,16 +104,16 @@ public class SqlParserPos
     }
 
     /**
-     * @return 1-based end line number (same as starting line number if the 
+     * @return 1-based end line number (same as starting line number if the
      * ParserPos is a point, not a range)
      */
     public int getEndLineNum()
     {
         return endLineNumber;
     }
-    
+
     /**
-     * @return 1-based end column number (same as starting column number if the 
+     * @return 1-based end column number (same as starting column number if the
      * ParserPos is a point, not a range)
      */
     public int getEndColumnNum()
@@ -154,6 +156,16 @@ public class SqlParserPos
         return sum(nodes, line, column, endLine, endColumn);
     }
 
+    /**
+     * Combines this parser position with a list of positions.
+     */
+    public SqlParserPos plusAll(Collection nodeList)
+    {
+        final SqlNode[] nodes =
+            (SqlNode[]) nodeList.toArray(new SqlNode[nodeList.size()]);
+        return plusAll(nodes);
+    }
+    
     /**
      * Combines the parser positions of an array of nodes to create a
      * position which spans from the beginning of the first to the end of the

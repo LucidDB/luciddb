@@ -814,8 +814,10 @@ outer:
                         // irrelevant.
                         SqlNode leftExp = (SqlNode) list.get(i - 1);
 
+                        SqlParserPos callPos = currentPos.plusAll(
+                            new SqlNode[] {leftExp});
                         final SqlCall newExp =
-                            current.createCall(leftExp, currentPos);
+                            current.createCall(leftExp, callPos);
                         if (tracer.isLoggable(Level.FINE)) {
                             tracer.fine("Reduced postfix: " + newExp);
                         }

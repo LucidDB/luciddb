@@ -1077,40 +1077,40 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
         // rule 6a
         // ORDER BY required with RANK & DENSE_RANK
-        checkWin("select rank() over ^(partition by deptno^) from emp",
+        checkWin("select rank() over ^(partition by deptno)^ from emp",
             "RANK or DENSE_RANK functions require ORDER BY clause in window specification");
-        checkWin("select dense_rank() over ^(partition by deptno^) from emp ",
+        checkWin("select dense_rank() over ^(partition by deptno)^ from emp ",
             "RANK or DENSE_RANK functions require ORDER BY clause in window specification");
         // The following fail but it is reported as window needing OBC due to test sequence so
         // not really failing due to 6a
-        //checkWin("select rank() over w from emp window w as ^(partition by deptno^)",
+        //checkWin("select rank() over w from emp window w as ^(partition by deptno)^",
         //    "RANK or DENSE_RANK functions require ORDER BY clause in window specification");
-        //checkWin("select dense_rank() over w from emp window w as ^(partition by deptno^)",
+        //checkWin("select dense_rank() over w from emp window w as ^(partition by deptno)^",
         //    "RANK or DENSE_RANK functions require ORDER BY clause in window specification");
 
         // rule 6b
         // Framing not allowed with RANK & DENSE_RANK functions
         // window framing defined in window clause
-        checkWin("select rank() over w from emp window w as (order by empno ^row^s 2 preceding )",
+        checkWin("select rank() over w from emp window w as (order by empno ^rows^ 2 preceding )",
             "ROW/RANGE not allowed with RANK or DENSE_RANK functions");
-        checkWin("select dense_rank() over w from emp window w as (order by empno ^row^s 2 preceding)",
+        checkWin("select dense_rank() over w from emp window w as (order by empno ^rows^ 2 preceding)",
             "ROW/RANGE not allowed with RANK or DENSE_RANK functions");
         checkWin("select percent_rank() over w from emp window w as (rows 2 preceding )", null);
         checkWin("select cume_dist() over w from emp window w as (rows 2 preceding)", null);
         // window framing defined in in-line window
-        checkWin("select rank() over (order by empno ^rang^e 2 preceding ) from emp ",
+        checkWin("select rank() over (order by empno ^range^ 2 preceding ) from emp ",
             "ROW/RANGE not allowed with RANK or DENSE_RANK functions");
-        checkWin("select dense_rank() over (order by empno ^row^s 2 preceding ) from emp ",
+        checkWin("select dense_rank() over (order by empno ^rows^ 2 preceding ) from emp ",
             "ROW/RANGE not allowed with RANK or DENSE_RANK functions");
         checkWin("select percent_rank() over (rows 2 preceding ) from emp", null);
         checkWin("select cume_dist() over (rows 2 preceding ) from emp ", null);
 
         // invalid column reference
-        checkWinFuncExpWithWinClause("sum(^invalidColum^n)",
+        checkWinFuncExpWithWinClause("sum(^invalidColumn^)",
             "Unknown identifier \'INVALIDCOLUMN\'");
 
         // invalid window functions
-        checkWinFuncExpWithWinClause("^invalidFu^n(sal)",
+        checkWinFuncExpWithWinClause("^invalidFun(sal)^",
             "No match found for function signature INVALIDFUN\\(<NUMERIC>\\)");
 
         // 6.10 rule 10. no distinct allowed aggreagate function
@@ -1118,16 +1118,16 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         // checkWinFuncExpWithWinClause(" sum(distinct sal) over w ", null);
 
         // 7.11 rule 10c
-        checkWin("select sum(sal) over (w partition by ^deptn^o)"+NL+
+        checkWin("select sum(sal) over (w partition by ^deptno^)"+NL+
             " from emp window w as (order by empno rows 2 preceding )",
             "PARTITION BY not allowed with existing window reference");
         // 7.11 rule 10d
-        checkWin("select sum(sal) over (w order by ^empn^o)"+NL+
+        checkWin("select sum(sal) over (w order by ^empno^)"+NL+
             " from emp window w as (order by empno rows 2 preceding )",
             "ORDER BY not allowed in both base and referenced windows");
         // 7.11 rule 10e
         checkWin("select sum(sal) over (w) "+NL+
-            " from emp window w as (order by empno ^row^s 2 preceding )",
+            " from emp window w as (order by empno ^rows^ 2 preceding )",
             "Referenced window cannot have framing declarations");
     }
 
@@ -1166,39 +1166,39 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
         // Failure mode tests
         checkWinFuncExp("sum(sal) over (order by deptno "+
-            "rows between ^UNBOUNDED FOLLOWIN^G and unbounded preceding)",
-            "UNBOUNDED FOLLOWING cannot be specified for the lower frame boundry");
+            "rows between ^UNBOUNDED FOLLOWING^ and unbounded preceding)",
+            "UNBOUNDED FOLLOWING cannot be specified for the lower frame boundary");
         checkWinFuncExp("sum(sal) over ("+
             "order by deptno "+
-            "rows between 2 preceding and ^UNBOUNDED PRECEDIN^G)",
-            "UNBOUNDED PRECEDING cannot be specified for the upper frame boundry");
+            "rows between 2 preceding and ^UNBOUNDED PRECEDING^)",
+            "UNBOUNDED PRECEDING cannot be specified for the upper frame boundary");
         checkWinFuncExp("sum(sal) over ("+
             "order by deptno "+
-            "rows between CURRENT ROW and 2 ^precedin^g)",
-            "Upper frame boundry cannot be PRECEDING when lower boundry is CURRENT ROW");
+            "rows between CURRENT ROW and 2 ^preceding^)",
+            "Upper frame boundary cannot be PRECEDING when lower boundary is CURRENT ROW");
         checkWinFuncExp("sum(sal) over ("+
             "order by deptno "+
-            "rows between 2 following and ^CURRENT RO^W)",
-            "Upper frame boundry cannot be CURRENT ROW when lower boundry is FOLLOWING");
+            "rows between 2 following and ^CURRENT ROW^)",
+            "Upper frame boundary cannot be CURRENT ROW when lower boundary is FOLLOWING");
         checkWinFuncExp("sum(sal) over ("+
             "order by deptno "+
-            "rows between 2 following and 2 ^precedin^g)",
-            "Upper frame boundry cannot be PRECEDING when lower boundry is FOLLOWING");
+            "rows between 2 following and 2 ^preceding^)",
+            "Upper frame boundary cannot be PRECEDING when lower boundary is FOLLOWING");
         checkWinFuncExp("sum(sal) over ("+
             "order by deptno "+
-            "RANGE BETWEEN INTERVAL '1' ^SECON^D PRECEDING AND INTERVAL '1' SECOND FOLLOWING)",
+            "RANGE BETWEEN INTERVAL '1' ^SECOND^ PRECEDING AND INTERVAL '1' SECOND FOLLOWING)",
             "Data Type mismatch between ORDER BY and RANGE clause");
         checkWinFuncExp("sum(sal) over ("+
             "order by empno "+
-            "RANGE BETWEEN INTERVAL '1' ^SECON^D PRECEDING AND INTERVAL '1' SECOND FOLLOWING)",
+            "RANGE BETWEEN INTERVAL '1' ^SECOND^ PRECEDING AND INTERVAL '1' SECOND FOLLOWING)",
             "Data Type mismatch between ORDER BY and RANGE clause");
-        checkWinFuncExp("sum(sal) over (order by deptno, empno ^rang^e 2 preceding)",
+        checkWinFuncExp("sum(sal) over (order by deptno, empno ^range^ 2 preceding)",
             "RANGE clause cannot be used with compound ORDER BY clause");
-        checkWinFuncExp("sum(sal) over ^(partition by deptno range 5 preceding^)",
+        checkWinFuncExp("sum(sal) over ^(partition by deptno range 5 preceding)^",
             "Window specification must contain an ORDER BY clause");
-        checkWinFuncExp("sum(sal) over ^w^1",
+        checkWinFuncExp("sum(sal) over ^w1^",
             "Window 'W1' not found");
-        checkWinFuncExp("sum(sal) OVER (^w^1 " +
+        checkWinFuncExp("sum(sal) OVER (^w1^ " +
             "partition by deptno " +
             "order by empno " +
             "rows 2 preceding )",
@@ -1257,27 +1257,27 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         // --   negative testings           --
         // -----------------------------------
         // reference undefined xyz column
-        checkWinClauseExp("window w as (partition by ^xy^z)",
+        checkWinClauseExp("window w as (partition by ^xyz^)",
             "Column 'XYZ' not found in any table");
 
         // window defintion is empty when applied to unsorted table
-        checkWinClauseExp("window w as ^(^)",
+        checkWinClauseExp("window w as ^( /* boo! */  )^",
             "Window specification must contain an ORDER BY clause");
 
         // duplidate window name
-        checkWinClauseExp("window w as (order by empno), ^w as (order by empno)",
+        checkWinClauseExp("window w as (order by empno), ^w^ as (order by empno)",
             "Duplicate window names not allowed");
-        checkWinClauseExp("window win1 as (order by empno), ^win^1 as (order by empno)",
+        checkWinClauseExp("window win1 as (order by empno), ^win1^ as (order by empno)",
             "Duplicate window names not allowed");
 
         // syntax rule 6
         checkFails("select min(sal) over (order by deptno) from emp group by deptno,sal", null);
-        checkFails("select min(sal) over (order by ^deptn^o) from emp group by sal",
+        checkFails("select min(sal) over (order by ^deptno^) from emp group by sal",
             "Expression 'DEPTNO' is not being grouped");
         checkFails("select min(sal) over "+NL+
             "(partition by comm order by deptno) from emp group by deptno,sal,comm",null);
         checkFails("select min(sal) over "+NL+
-            "(partition by ^com^m order by deptno) from emp group by deptno,sal",
+            "(partition by ^comm^ order by deptno) from emp group by deptno,sal",
             "Expression 'COMM' is not being grouped");
 
         // syntax rule 7
@@ -1287,26 +1287,26 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         // ---- window frame between tests ----
         // ------------------------------------
         // bound 1 shall not specify UNBOUNDED FOLLOWING
-        checkWinClauseExp("window w as (rows between ^unbounded followin^g and 5 following)",
-            "UNBOUNDED FOLLOWING cannot be specified for the lower frame boundry");
+        checkWinClauseExp("window w as (rows between ^unbounded following^ and 5 following)",
+            "UNBOUNDED FOLLOWING cannot be specified for the lower frame boundary");
 
         // bound 2 shall not specify UNBOUNDED PRECEDING
         checkWinClauseExp("window w as ("+
             "order by deptno "+
-            "rows between 2 preceding and ^UNBOUNDED PRECEDIN^G)",
-            "UNBOUNDED PRECEDING cannot be specified for the upper frame boundry");
+            "rows between 2 preceding and ^UNBOUNDED PRECEDING^)",
+            "UNBOUNDED PRECEDING cannot be specified for the upper frame boundary");
         checkWinClauseExp("window w as ("+
             "order by deptno "+
-            "rows between 2 following and 2 ^precedin^g)",
-            "Upper frame boundry cannot be PRECEDING when lower boundry is FOLLOWING");
+            "rows between 2 following and 2 ^preceding^)",
+            "Upper frame boundary cannot be PRECEDING when lower boundary is FOLLOWING");
         checkWinClauseExp("window w as ("+
             "order by deptno "+
-            "rows between CURRENT ROW and 2 ^precedin^g)",
-            "Upper frame boundry cannot be PRECEDING when lower boundry is CURRENT ROW");
+            "rows between CURRENT ROW and 2 ^preceding^)",
+            "Upper frame boundary cannot be PRECEDING when lower boundary is CURRENT ROW");
         checkWinClauseExp("window w as ("+
             "order by deptno "+
-            "rows between 2 following and ^CURRENT RO^W)",
-            "Upper frame boundry cannot be CURRENT ROW when lower boundry is FOLLOWING");
+            "rows between 2 following and ^CURRENT ROW^)",
+            "Upper frame boundary cannot be CURRENT ROW when lower boundary is FOLLOWING");
 
         // Sql '03 rule 10 c)
         // assertExceptionIsThrown("select deptno as d, sal as s from emp window w as (partition by deptno order by sal), w2 as (w partition by deptno)", null);
@@ -1314,14 +1314,14 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         // d)
         // valid because existing window does not have an ORDER BY clause
         checkWinClauseExp("window w as (w2 range 2 preceding ), w2 as (order by sal)", null);
-        checkWinClauseExp("window w as ^(partition by sal^), w2 as (w order by deptno)",
+        checkWinClauseExp("window w as ^(partition by sal)^, w2 as (w order by deptno)",
             "Window specification must contain an ORDER BY clause");
         checkWinClauseExp("window w as (w2 partition by ^sal^), w2 as (order by deptno)",
             "PARTITION BY not allowed with existing window reference");
-        checkWinClauseExp("window w as (partition by sal order by deptno), w2 as (w order by ^deptn^o)",
+        checkWinClauseExp("window w as (partition by sal order by deptno), w2 as (w order by ^deptno^)",
             "ORDER BY not allowed in both base and referenced windows");
         // e)
-        checkWinClauseExp("window w as (w2 order by deptno), w2 as (^rang^e 100 preceding)",
+        checkWinClauseExp("window w as (w2 order by deptno), w2 as (^range^ 100 preceding)",
             "Referenced window cannot have framing declarations");
 
 
@@ -1330,9 +1330,9 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
         // rule 13
         checkWinClauseExp("window w as (order by sal)",null);
-        checkWinClauseExp("window w as (order by ^non_exist_co^l)",
+        checkWinClauseExp("window w as (order by ^non_exist_col^)",
             "Column 'NON_EXIST_COL' not found in any table");
-        checkWinClauseExp("window w as (partition by ^non_exist_co^l order by sal)",
+        checkWinClauseExp("window w as (partition by ^non_exist_col^ order by sal)",
             "Column 'NON_EXIST_COL' not found in any table");
     }
 
@@ -1549,20 +1549,17 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testUnionTypeMismatchFails() {
-        // error here         v
-        checkFails("select 1, ^2 from emp union select deptno, name from dept",
+        checkFails("select 1, ^2^ from emp union select deptno, name from dept",
             "Type mismatch in column 2 of UNION");
     }
 
     public void testUnionTypeMismatchWithStarFails() {
-        // error here      v
-        checkFails("select ^* from dept union select 1, 2 from emp",
+        checkFails("select ^*^ from dept union select 1, 2 from emp",
             "Type mismatch in column 2 of UNION");
     }
 
     public void testUnionTypeMismatchWithValuesFails() {
-        // error here          v
-        checkFails("values (1, ^2, 3), (3, 4, 5), (6, 7, 8) union " + NL +
+        checkFails("values (1, ^2^, 3), (3, 4, 5), (6, 7, 8) union " + NL +
             "select deptno, name, deptno from dept",
             "Type mismatch in column 2 of UNION");
     }
@@ -1579,13 +1576,13 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testNaturalCrossJoinFails() {
-        checkFails("select * from emp natural cross join dept",
-            "Cannot specify condition \\(NATURAL keyword, or ON or USING clause\\) following CROSS JOIN", 1, 33);
+        checkFails("select * from emp natural cross ^join^ dept",
+            "Cannot specify condition \\(NATURAL keyword, or ON or USING clause\\) following CROSS JOIN");
     }
 
     public void testCrossJoinUsingFails() {
-        checkFails("select * from emp cross join dept using (deptno)",
-            "Cannot specify condition \\(NATURAL keyword, or ON or USING clause\\) following CROSS JOIN", 1, 48);
+        checkFails("select * from emp cross join dept ^using (deptno)^",
+            "Cannot specify condition \\(NATURAL keyword, or ON or USING clause\\) following CROSS JOIN");
     }
 
     public void testJoinUsing() {
@@ -1610,7 +1607,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     public void testCrossJoinOnFails() {
         checkFails("select * from emp cross join dept" + NL +
-            " on ^emp.deptno = dept.deptno",
+            " ^on emp.deptno = dept.deptno^",
             "Cannot specify condition \\(NATURAL keyword, or ON or USING clause\\) following CROSS JOIN");
     }
 

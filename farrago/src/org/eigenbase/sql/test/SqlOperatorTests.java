@@ -461,6 +461,7 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkBoolean("cast(null as boolean) is not unknown",
             Boolean.FALSE);
         getTester().checkBoolean("unknown is not unknown", Boolean.FALSE);
+        getTester().checkFails("^'abc' IS NOT UNKNOWN^", "(?s).*Cannot apply 'IS NOT UNKNOWN'.*");
     }
 
     public void testIsUnknownOperator()
@@ -471,6 +472,7 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkBoolean("cast(null as boolean) is unknown",
             Boolean.TRUE);
         getTester().checkBoolean("unknown is unknown", Boolean.TRUE);
+        getTester().checkFails("0 = 1 AND ^2 IS UNKNOWN^ AND 3 > 4", "(?s).*Cannot apply 'IS UNKNOWN'.*");
     }
 
     public void testIsASetOperator()
@@ -495,6 +497,9 @@ public abstract class SqlOperatorTests extends TestCase
     public void testPrefixMinusOperator()
     {
         getTester().isFor(SqlStdOperatorTable.prefixMinusOperator);
+        getTester().checkFails(
+            "'a' + ^- 'b'^ + 'c'",
+            "(?s)Cannot apply '-' to arguments of type '-<CHAR\\(1\\)>'.*");
         getTester().checkScalarExact("-1", "-1");
         getTester().checkScalarApprox("-1.0", "todo:", -1, 0);
         getTester().checkNull("-cast(null as integer)");
@@ -796,8 +801,12 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().isFor(SqlStdOperatorTable.localTimestampFunc);
         getTester().checkScalar("LOCALTIMESTAMP", timestampPattern,
             "TIMESTAMP(0) NOT NULL");
-        getTester().checkFails("LOCALTIMESTAMP()", ".*");
-        getTester().checkScalar("LOCALTIMESTAMP(1)", timestampPattern,
+        getTester().checkFails(
+            "^LOCALTIMESTAMP()^",
+            "No match found for function signature LOCALTIMESTAMP\\(\\)");
+        getTester().checkScalar(
+            "LOCALTIMESTAMP(1)",
+            timestampPattern,
             "TIMESTAMP(1) NOT NULL");
     }
 
@@ -806,7 +815,9 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().isFor(SqlStdOperatorTable.currentTimeFunc);
         getTester().checkScalar("CURRENT_TIME", timePattern,
             "TIME(0) NOT NULL");
-        getTester().checkFails("CURRENT_TIME()", ".*");
+        getTester().checkFails(
+            "^CURRENT_TIME()^",
+            "No match found for function signature CURRENT_TIME\\(\\)");
         getTester().checkScalar("CURRENT_TIME(1)", timePattern,
             "TIME(1) NOT NULL");
     }
@@ -816,7 +827,9 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().isFor(SqlStdOperatorTable.currentTimestampFunc);
         getTester().checkScalar("CURRENT_TIMESTAMP", timestampPattern,
             "TIMESTAMP(0) NOT NULL");
-        getTester().checkFails("CURRENT_TIMESTAMP()", ".*");
+        getTester().checkFails(
+            "^CURRENT_TIMESTAMP()^",
+            "No match found for function signature CURRENT_TIMESTAMP\\(\\)");
         getTester().checkScalar("CURRENT_TIMESTAMP(1)", timestampPattern,
             "TIMESTAMP(1) NOT NULL");
     }

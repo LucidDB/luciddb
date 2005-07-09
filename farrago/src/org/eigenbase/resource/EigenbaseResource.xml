@@ -287,7 +287,7 @@
 </exception>
 
 <exception id="120450" name="RangeOrRowMustBeConstant" className="org.eigenbase.sql.validate.SqlValidatorException">
-    <text>Window boundry must be constant</text>
+    <text>Window boundary must be constant</text>
 </exception>
 
 <exception id="120460" name="RowMustBeNumeric" className="org.eigenbase.sql.validate.SqlValidatorException">
@@ -298,24 +298,24 @@
     <text>Window specification must contain an ORDER BY clause</text>
 </exception>
 
-<exception id="120480" name="BadLowerBoundry" className="org.eigenbase.sql.validate.SqlValidatorException">
-    <text>UNBOUNDED FOLLOWING cannot be specified for the lower frame boundry</text>
+<exception id="120480" name="BadLowerBoundary" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>UNBOUNDED FOLLOWING cannot be specified for the lower frame boundary</text>
 </exception>
 
-<exception id="120485" name="BadUpperBoundry" className="org.eigenbase.sql.validate.SqlValidatorException">
-    <text>UNBOUNDED PRECEDING cannot be specified for the upper frame boundry</text>
+<exception id="120485" name="BadUpperBoundary" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>UNBOUNDED PRECEDING cannot be specified for the upper frame boundary</text>
 </exception>
 
 <exception id="120490" name="CurrentRowPrecedingError" className="org.eigenbase.sql.validate.SqlValidatorException">
-    <text>Upper frame boundry cannot be PRECEDING when lower boundry is CURRENT ROW</text>
+    <text>Upper frame boundary cannot be PRECEDING when lower boundary is CURRENT ROW</text>
 </exception>
 
 <exception id="120500" name="CurrentRowFollowingError" className="org.eigenbase.sql.validate.SqlValidatorException">
-    <text>Upper frame boundry cannot be CURRENT ROW when lower boundry is FOLLOWING</text>
+    <text>Upper frame boundary cannot be CURRENT ROW when lower boundary is FOLLOWING</text>
 </exception>
 
 <exception id="120510" name="FollowingBeforePrecedingError" className="org.eigenbase.sql.validate.SqlValidatorException">
-    <text>Upper frame boundry cannot be PRECEDING when lower boundry is FOLLOWING</text>
+    <text>Upper frame boundary cannot be PRECEDING when lower boundary is FOLLOWING</text>
 </exception>
 
 <exception id="120520" name="WindowNameMustBeSimple" className="org.eigenbase.sql.validate.SqlValidatorException">
