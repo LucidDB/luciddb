@@ -73,6 +73,25 @@ public class SqlValidatorTestCase extends TestCase
 
     protected static final String NL = System.getProperty("line.separator");
 
+    private static final Pattern lineColPattern =
+        Pattern.compile("At line ([0-9]+), column ([0-9]+)");
+
+    private static final Pattern lineColTwicePattern =
+        Pattern.compile("(?s)From line ([0-9]+), column ([0-9]+) to line ([0-9]+), column ([0-9]+): (.*)");
+
+    /**
+     * Whether to assert if a test doesn't specify the location of the error.
+     * <p/>
+     * todo: Set this to true, make all the tests succeed, then remove it.
+     */
+    private static final boolean FailIfNoPosition =
+        SqlOperatorTests.bug315Fixed;
+
+    private String buildQuery(String expression)
+    {
+        return "values (" + expression + ")";
+    }
+
     /**
      * Encapsulates differences between test environments, for example, which
      * SQL parser or validator to use.
@@ -101,18 +120,10 @@ public class SqlValidatorTestCase extends TestCase
          *   be valid for the test to pass;
          *   If this parameter is not null the query must be malformed and the
          *   message given must match the pattern
-         * @param expectedLine First line of error
-         * @param expectedColumn First column of error
-         * @param expectedEndLine Last line of error
-         * @param expectedEndColumn Last column of error
          */
         void assertExceptionIsThrown(
             String sql,
-            String expectedMsgPattern,
-            int expectedLine,
-            int expectedColumn,
-            int expectedEndLine,
-            int expectedEndColumn);
+            String expectedMsgPattern);
 
         /**
          * Returns the data type of the first column of a SQL query.
@@ -153,13 +164,12 @@ public class SqlValidatorTestCase extends TestCase
 
     public void check(String sql)
     {
-        tester.assertExceptionIsThrown(sql, null, -1, -1, -1, -1);
+        tester.assertExceptionIsThrown(sql, null);
     }
 
     public void checkExp(String sql)
     {
-        sql = "select " + sql + " from (values(true))";
-        tester.assertExceptionIsThrown(sql, null, -1, -1, -1, -1);
+        tester.assertExceptionIsThrown(buildQuery(sql), null);
     }
 
     /**
@@ -170,27 +180,13 @@ public class SqlValidatorTestCase extends TestCase
         String sql,
         String expected)
     {
-        SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);
-        if (sap.pos == null) {
-            assertTrue(
-                "After bug 315 is fixed, all negative tests must " +
-                "contain an error location",
-                !SqlOperatorTests.bug315Fixed);
-            tester.assertExceptionIsThrown(
-                sap.sql,
-                expected,
-                -1, -1, -1, -1);
-        } else {
-            tester.assertExceptionIsThrown(
-                sap.sql,
-                expected,
-                sap.pos.getLineNum(), sap.pos.getColumnNum(),
-                sap.pos.getEndLineNum(), sap.pos.getEndColumnNum());
-        }
+        tester.assertExceptionIsThrown(sql, expected);
     }
 
     /**
      * Asserts that a query throws an exception matching a given pattern.
+     *
+     * @deprecated Switch to {@link #checkFails(String, String)}
      */
     public void checkFails(
         String sql,
@@ -198,30 +194,17 @@ public class SqlValidatorTestCase extends TestCase
         int line,
         int column)
     {
-        tester.assertExceptionIsThrown(sql, expected, line, column, -1, -1);
+        tester.assertExceptionIsThrown(sql, expected);
     }
 
     /**
-     * Checks that a SQL expression gives a particular error, but without
-     * specifying the location of that error.
+     * Checks that a SQL expression gives a particular error.
      */
     public final void checkExpFails(
         String sql,
         String expected)
     {
-        SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);
-        if (sap.pos == null) {
-            tester.assertExceptionIsThrown(
-                "select " + sap.sql + " from (values(true))",
-                expected,
-                -1, -1, -1, -1);
-        } else {
-            tester.assertExceptionIsThrown(
-                "select " + sap.sql + " from (values(true))",
-                expected,
-                sap.pos.getLineNum(), sap.pos.getColumnNum() + 7,
-                sap.pos.getEndLineNum(), sap.pos.getEndColumnNum() + 7);
-        }
+        tester.assertExceptionIsThrown(buildQuery(sql), expected);
     }
 
     /**
@@ -236,26 +219,11 @@ public class SqlValidatorTestCase extends TestCase
         checkExpFails("^" + sql + "^", expected);
     }
 
-    /**
-     * @deprecated Use {@link #checkExpFails(String, String)}
-     */
-    public void checkExpFails(
-        String sql,
-        String expected,
-        int line,
-        int column)
-    {
-        sql = "select " + sql + " from (values(true))";
-        tester.assertExceptionIsThrown(sql, expected, line,
-            column == -1 ? -1 : column + 7, -1, -1);
-    }
-
     public void checkExpType(
         String sql,
         String expected)
     {
-        sql = "select " + sql + " from (values(true))";
-        checkQueryType(sql, expected);
+        checkQueryType(buildQuery(sql), expected);
     }
 
     /**
@@ -279,7 +247,7 @@ public class SqlValidatorTestCase extends TestCase
         String sql,
         String expectedMsgPattern)
     {
-        tester.assertExceptionIsThrown(sql, expectedMsgPattern, -1, -1, -1, -1);
+        tester.assertExceptionIsThrown(sql, expectedMsgPattern);
     }
 
     public void checkCharset(
@@ -302,6 +270,148 @@ public class SqlValidatorTestCase extends TestCase
     }
 
     /**
+     * Checks whether an exception matches the pattern and expected position
+     * expected.
+     *
+     * @param ex Exception thrown
+     * @param expectedMsgPattern Expected pattern
+     * @param sap Query and position in query
+     */
+    public static void checkEx(
+        Throwable ex,
+        String expectedMsgPattern,
+        SqlParserUtil.StringAndPos sap)
+    {
+        if (null == ex) {
+            if (expectedMsgPattern == null) {
+                // No error expected, and no error happened.
+                return;
+            } else {
+                throw new AssertionFailedError(
+                    "Expected query to throw exception, but it did not; " +
+                    "query [" + sap.sql +
+                    "]; expected [" + expectedMsgPattern + "]");
+            }
+        }
+        Throwable actualException = ex;
+        String actualMessage = actualException.getMessage();
+        int actualLine = -1;
+        int actualColumn = -1;
+        int actualEndLine = 100;
+        int actualEndColumn = 99;
+//        for (Throwable x = thrown;; x = x.getCause()) {
+//            System.out.println("class: " + x.getClass());
+//            x.printStackTrace(System.out);
+//            if (x.getCause() == x) {
+//                System.out.println("--- end ---");
+//                break;
+//            }
+//        }
+//        thrown.printStackTrace();
+//        if (thrown instanceof SQLException) {
+//            thrown = thrown.getCause();
+//        }
+        if (ex instanceof EigenbaseContextException) {
+            EigenbaseContextException ece = (EigenbaseContextException) ex;
+            actualLine = ece.getPosLine();
+            actualColumn = ece.getPosColumn();
+            actualEndLine = ece.getEndPosLine();
+            actualEndColumn = ece.getEndPosColumn();
+            if (ece.getCause() != null) {
+                actualException = ece.getCause();
+                actualMessage = actualException.getMessage();
+            }
+
+        } else {
+            final String message = ex.getMessage();
+            if (message != null) {
+                Matcher matcher = lineColTwicePattern.matcher(message);
+                if (matcher.matches()) {
+                    actualLine = Integer.parseInt(matcher.group(1));
+                    actualColumn = Integer.parseInt(matcher.group(2));
+                    actualEndLine = Integer.parseInt(matcher.group(3));
+                    actualEndColumn = Integer.parseInt(matcher.group(4));
+                    actualMessage = matcher.group(5);
+                } else {
+                    matcher = lineColPattern.matcher(message);
+                    if (matcher.matches()) {
+                        actualLine = Integer.parseInt(matcher.group(1));
+                        actualColumn = Integer.parseInt(matcher.group(2));
+                    }
+                }
+            }
+        }
+
+        if (null == expectedMsgPattern) {
+            if (null != actualException) {
+                actualException.printStackTrace();
+                fail("SqlValidationTest: Validator threw unexpected exception" +
+                    "; query [" + sap.sql +
+                    "]; exception [" + actualMessage +
+                    "]; pos [line " + actualLine +
+                    " col " + actualColumn +
+                    " thru line " + actualLine +
+                    " col " + actualColumn + "]");
+            }
+        } else if (null != expectedMsgPattern) {
+            if (null == actualException) {
+                fail("SqlValidationTest: Expected validator to throw " +
+                    "exception, but it did not; query [" + sap.sql +
+                    "]; expected [" + expectedMsgPattern + "]");
+            } else {
+                String sqlWithCarets;
+                if (actualColumn <= 0 ||
+                    actualLine <= 0 ||
+                    actualEndColumn <= 0 ||
+                    actualEndLine <= 0) {
+                    if (FailIfNoPosition) {
+                        throw new AssertionFailedError(
+                            "Error did not have position: " +
+                            " actual pos [line " + actualLine +
+                            " col " + actualColumn +
+                            " thru line " + actualEndLine +
+                            " col " + actualEndColumn + "]");
+                    }
+                    sqlWithCarets = sap.sql;
+                } else {
+                    sqlWithCarets =
+                        SqlParserUtil.addCarets(
+                            sap.sql, actualLine, actualColumn,
+                            actualEndLine, actualEndColumn);
+                }
+                if (FailIfNoPosition && sap.pos == null) {
+                    throw new AssertionFailedError(
+                        "todo: add carets to sql: " + sqlWithCarets);
+                }
+                if (actualMessage == null ||
+                    !actualMessage.matches(expectedMsgPattern)) {
+                    actualException.printStackTrace();
+                    fail("SqlValidationTest: Validator threw different " +
+                        "exception than expected; query [" + sap.sql +
+                        "]; expected [" + expectedMsgPattern +
+                        "]; actual [" + actualMessage +
+                        "]; pos [" + actualLine +
+                        ":" + actualColumn +
+                        "-" + actualEndLine +
+                        ":" + actualEndColumn + "]");
+                } else if (sap.pos != null &&
+                    (actualLine != sap.pos.getLineNum() ||
+                    actualColumn != sap.pos.getColumnNum() ||
+                    actualEndLine != sap.pos.getEndLineNum() ||
+                    actualEndColumn != sap.pos.getEndColumnNum())) {
+                    fail("SqlValidationTest: Validator threw expected " +
+                        "exception [" + actualMessage +
+                        "]; but at pos [line " + actualLine +
+                        " col " + actualColumn +
+                        " thru line " + actualEndLine +
+                        " col " + actualEndColumn +
+                        "]; sql [" + sqlWithCarets + "]");
+                }
+            }
+        }
+    }
+
+    /**
      * Implementation of {@link org.eigenbase.test.SqlValidatorTestCase.Tester}
      * which talks to a mock catalog.
      *
@@ -312,16 +422,6 @@ public class SqlValidatorTestCase extends TestCase
      */
     public class TesterImpl implements Tester, SqlTester
     {
-        private final Pattern lineColPattern =
-            Pattern.compile("At line (.*), column (.*)");
-
-        /**
-         * Whether to assert if a test doesn't specify the location of the
-         * error.
-         *
-         * todo: Set this to true, make all the tests succeed, then remove it.
-         */
-        private static final boolean FailIfNoPosition = false;
 
         public SqlValidator getValidator()
         {
@@ -331,28 +431,15 @@ public class SqlValidatorTestCase extends TestCase
                 typeFactory);
         }
 
-        /**
-         * Asserts either if a sql query is valid or not.
-         *
-         * @param sql
-         * @param expectedMsgPattern If this parameter is null the query must be
-         * valid for the test to pass;
-         * If this parameter is not null the query must be malformed and the msg
-         * @param expectedEndLine
-         * @param expectedEndColumn
-         */
         public void assertExceptionIsThrown(
             String sql,
-            String expectedMsgPattern,
-            int expectedLine,
-            int expectedColumn,
-            int expectedEndLine,
-            int expectedEndColumn)
+            String expectedMsgPattern)
         {
             SqlValidator validator;
             SqlNode sqlNode;
+            SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);
             try {
-                sqlNode = parseQuery(sql);
+                sqlNode = parseQuery(sap.sql);
                 validator = getValidator();
             } catch (SqlParseException ex) {
                 String errMessage = ex.getMessage();
@@ -361,7 +448,7 @@ public class SqlValidatorTestCase extends TestCase
                     !errMessage.matches(expectedMsgPattern)) {
                     ex.printStackTrace();
                     fail("SqlValidationTest: Parse Error while parsing query="
-                        + sql + "\n" + errMessage);
+                        + sap.sql + "\n" + errMessage);
                 }
                 return;
             } catch (Throwable e) {
@@ -371,104 +458,16 @@ public class SqlValidatorTestCase extends TestCase
                 return;
             }
 
-            Throwable actualException = null;
-            int actualLine = -1;
-            int actualColumn = -1;
-            int actualEndLine = 100;
-            int actualEndColumn = 99;
+            Throwable thrown = null;
             try {
                 validator.validate(sqlNode);
-            } catch (EigenbaseContextException ex) {
-                actualLine = ex.getPosLine();
-                actualColumn = ex.getPosColumn();
-                actualEndLine = ex.getEndPosLine();
-                actualEndColumn = ex.getEndPosColumn();
-                actualException = ex.getCause() == null ?
-                    ex :
-                    ex.getCause();
             } catch (Throwable ex) {
-                final String message = ex.getMessage();
-                final Matcher matcher = lineColPattern.matcher(message);
-                if (message != null && matcher.matches()) {
-                    actualException = ex.getCause();
-                    actualLine = Integer.parseInt(matcher.group(1));
-                    actualColumn = Integer.parseInt(matcher.group(2));
-                } else {
-                    actualException = ex;
-                }
+                thrown = ex;
             }
 
-            if (null == expectedMsgPattern) {
-                if ((null != actualException)) {
-                    actualException.printStackTrace();
-                    String actualMessage = actualException.getMessage();
-                    fail("SqlValidationTest: Validator threw unexpected exception" +
-                        "; query [" + sql +
-                        "]; exception [" + actualMessage +
-                        "]; line [" + actualLine +
-                        "]; column [" + actualColumn + "]");
-                }
-            } else if (null != expectedMsgPattern) {
-                if (null == actualException) {
-                    fail("SqlValidationTest: Expected validator to throw " +
-                        "exception, but it did not; query [" + sql +
-                        "]; expected [" + expectedMsgPattern + "]");
-                } else {
-                    String sqlWithCarets;
-                    if (actualColumn <= 0 ||
-                        actualLine <= 0 ||
-                        actualEndColumn <= 0 ||
-                        actualEndLine <= 0) {
-                        if (FailIfNoPosition) {
-                            assert false :
-                                "Error did not have position: " +
-                                " actualLine=" + actualLine +
-                                " actualColumn=" + actualColumn +
-                                " actualEndLine=" + actualEndLine +
-                                " actualEndColumn=" + actualEndColumn;
-                        }
-                        sqlWithCarets = sql;
-                    } else {
-                        sqlWithCarets =
-                            SqlParserUtil.addCarets(
-                                sql, actualLine, actualColumn, actualEndLine,
-                                actualEndColumn);
-                    }
-                    if (FailIfNoPosition &&
-                        (expectedLine == -1 ||
-                        expectedColumn == -1 ||
-                        expectedEndLine == -1 ||
-                        expectedEndColumn == -1)) {
-                        assert false :
-                            "todo: add carets to sql: " + sqlWithCarets;
-                    }
-                    String actualMessage = actualException.getMessage();
-                    if (actualMessage == null ||
-                        !actualMessage.matches(expectedMsgPattern)) {
-                        actualException.printStackTrace();
-                        fail("SqlValidationTest: Validator threw different " +
-                            "exception than expected; query [" + sql +
-                            "]; expected [" + expectedMsgPattern +
-                            "]; actual [" + actualMessage +
-                            "]; line [" + actualLine +
-                            "]; column [" + actualColumn + "]");
-                    } else if ((expectedLine != -1 &&
-                        actualLine != expectedLine) ||
-                        (expectedColumn != -1 &&
-                        actualColumn != expectedColumn) ||
-                        (expectedEndLine != -1 &&
-                        actualEndLine != expectedEndLine) ||
-                        (expectedEndColumn != -1 &&
-                        actualEndColumn != expectedEndColumn)) {
-                        fail("SqlValidationTest: Validator threw expected " +
-                            "exception [" + actualMessage +
-                            "]; but at line [" + actualLine +
-                            "]; column [" + actualColumn +
-                            "]; sql [" + sqlWithCarets + "]");
-                    }
-                }
-            }
+            checkEx(thrown, expectedMsgPattern, sap);
         }
+
 
         public RelDataType getResultType(String sql)
         {
@@ -546,8 +545,7 @@ public class SqlValidatorTestCase extends TestCase
             String expectedCollationName,
             SqlCollation.Coercibility expectedCoercibility)
         {
-            sql = "select " + sql + " from (values(true))";
-            RelDataType actualType = getResultType(sql);
+            RelDataType actualType = getResultType(buildQuery(sql));
             SqlCollation collation = actualType.getCollation();
 
             String actualName = collation.getCollationName();
@@ -560,8 +558,7 @@ public class SqlValidatorTestCase extends TestCase
         public void checkCharset(String sql,
             Charset expectedCharset)
         {
-            sql = "select " + sql + " from (values(true))";
-            RelDataType actualType = tester.getResultType(sql);
+            RelDataType actualType = tester.getResultType(buildQuery(sql));
             Charset actualCharset = actualType.getCharset();
 
             if (!expectedCharset.equals(actualCharset)) {
@@ -575,11 +572,6 @@ public class SqlValidatorTestCase extends TestCase
         public void isFor(SqlOperator operator)
         {
             // do nothing
-        }
-
-        private String buildQuery(String expression)
-        {
-            return "values (" + expression + ")";
         }
 
         public void checkScalar(

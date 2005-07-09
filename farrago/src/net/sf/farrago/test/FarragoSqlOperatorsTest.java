@@ -22,16 +22,16 @@
 */
 package net.sf.farrago.test;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import junit.framework.*;
 import net.sf.farrago.test.regression.FarragoCalcSystemTest;
 import org.eigenbase.sql.SqlOperator;
+import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.test.AbstractSqlTester;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.BasicSqlType;
 import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.test.SqlValidatorTestCase;
 
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -41,9 +41,10 @@ import java.util.regex.Pattern;
 
 
 /**
- * FarragoSqlOperatorsTest contains an implementation of
- * {@link AbstractSqlTester}. It uses the visitor pattern to visit every
- * {@link SqlOperator} for unit test purposes.
+ * FarragoSqlOperatorsTest runs operator tests defined in
+ * {@link SqlOperatorTests} against a Farrago database.
+ *
+ * <p>The entry point is the {@link #suite} method.
  *
  * @author Wael Chatila
  * @since May 25, 2004
@@ -61,6 +62,17 @@ public class FarragoSqlOperatorsTest
 
     //~ Methods ---------------------------------------------------------------
 
+    /**
+     * Entry point for JUnit.
+     */
+    public static TestSuite suite()
+    {
+        final TestSuite suite = new TestSuite();
+        suite.addTest(FarragoFennelVmOperatorTest.suite());
+        suite.addTest(FarragoJavaVmOperatorTest.suite());
+        suite.addTest(FarragoAutoVmOperatorTest.suite());
+        return suite;
+    }
 
     //~ Inner Classes ---------------------------------------------------------
 
@@ -70,6 +82,9 @@ public class FarragoSqlOperatorsTest
      */
     private static class FarragoSqlTester extends AbstractSqlTester
     {
+        /**
+         * Helper.
+         */
         private final MyFarragoTestCase farragoTest;
 
         /**
@@ -147,11 +162,16 @@ public class FarragoSqlOperatorsTest
         }
     }
 
-    public static class FarragoVmOperatorTest extends SqlOperatorTests
+    /**
+     * Base class for all tests which test operators against a particular
+     * virtual machine. Abstract so that Junit doesn't try to run it.
+     */
+    public static abstract class FarragoVmOperatorTestBase
+        extends SqlOperatorTests
     {
         private final FarragoSqlTester tester;
 
-        public FarragoVmOperatorTest(
+        public FarragoVmOperatorTestBase(
             String testName,
             FarragoCalcSystemTest.VirtualMachine vm) throws Exception
         {
@@ -165,40 +185,74 @@ public class FarragoSqlOperatorsTest
         }
     }
 
-    public static class FarragoJavaVmOperatorTest extends FarragoVmOperatorTest
+    /**
+     * Implementation of {@link SqlOperatorTests} which runs all tests in
+     * Farrago with a pure-Java calculator.
+     */
+    public static class FarragoJavaVmOperatorTest
+        extends FarragoVmOperatorTestBase
     {
         public FarragoJavaVmOperatorTest(String testName) throws Exception
         {
             super(testName, FarragoCalcSystemTest.VirtualMachine.Java);
         }
+
+        // implement TestCase
+        public static Test suite()
+        {
+            final Class clazz = FarragoJavaVmOperatorTest.class;
+            return FarragoTestCase.wrappedSuite(new TestSuite(clazz));
+        }
     }
 
-    public static class FarragoAutoVmOperatorTest extends FarragoVmOperatorTest
+    /**
+     * Implementation of {@link SqlOperatorTests} which runs all tests in
+     * Farrago with a hybrid calculator.
+     */
+    public static class FarragoAutoVmOperatorTest
+        extends FarragoVmOperatorTestBase
     {
         public FarragoAutoVmOperatorTest(String testName) throws Exception
         {
             super(testName, FarragoCalcSystemTest.VirtualMachine.Auto);
         }
+
+        // implement TestCase
+        public static Test suite()
+        {
+            final Class clazz = FarragoAutoVmOperatorTest.class;
+            return FarragoTestCase.wrappedSuite(new TestSuite(clazz));
+        }
     }
 
-    public static class FarragoFennelVmOperatorTest extends FarragoVmOperatorTest
+    /**
+     * Implementation of {@link SqlOperatorTests} which runs all tests in
+     * Farrago with a C++ calculator.
+     */
+    public static class FarragoFennelVmOperatorTest
+        extends FarragoVmOperatorTestBase
     {
         public FarragoFennelVmOperatorTest(String testName) throws Exception
         {
             super(testName, FarragoCalcSystemTest.VirtualMachine.Fennel);
         }
+
+        // implement TestCase
+        public static Test suite()
+        {
+            final Class clazz = FarragoFennelVmOperatorTest.class;
+            return FarragoTestCase.wrappedSuite(new TestSuite(clazz));
+        }
     }
 
-    // implement TestCase
-    public static Test suite()
-    {
-        final TestSuite suite = new TestSuite();
-        suite.addTestSuite(FarragoJavaVmOperatorTest.class);
-        suite.addTestSuite(FarragoAutoVmOperatorTest.class);
-        suite.addTestSuite(FarragoFennelVmOperatorTest.class);
-        return FarragoTestCase.wrappedSuite(suite);
-    }
-
+    /**
+     * Helper class. Extends {@link FarragoTestCase} for management of
+     * connections and statements.
+     *
+     * <p>Per that class, you must ensure that
+     * {@link #staticSetUp()}  and {@link #staticTearDown()} are called,
+     * and {@link #wrappedSuite(Class)} is a good way to do this.
+     */
     private static class MyFarragoTestCase extends FarragoTestCase
     {
 
@@ -215,30 +269,18 @@ public class FarragoSqlOperatorsTest
         {
             stmt.execute(vm.getAlterSystemCommand());
             String query = buildQuery(expression);
-            Throwable actualException = null;
+            SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(query);
+            Assert.assertNotNull(
+                "Negative tests must contain an error location", sap.pos);
 
+            Throwable thrown = null;
             try {
-                resultSet = stmt.executeQuery(query);
+                resultSet = stmt.executeQuery(sap.sql);
             } catch (Throwable ex) {
-                actualException = ex;
+                thrown = ex;
             }
 
-            if (null == actualException) {
-                Assert.fail("Expected query to throw " +
-                    "exception, but it did not; query [" + expression +
-                    "]; expected [" + expectedError + "]");
-            } else {
-                String actualMessage = actualException.getMessage();
-                if (actualMessage == null ||
-                    !actualMessage.matches(expectedError)) {
-                    actualException.printStackTrace();
-                    Assert.fail("Query threw different " +
-                        "exception than expected; query [" + expression +
-                        "]; expected [" + expectedError +
-                        "]; actual [" + actualMessage +
-                        "]");
-                }
-            }
+            SqlValidatorTestCase.checkEx(thrown, expectedError, sap);
         }
 
         void check(

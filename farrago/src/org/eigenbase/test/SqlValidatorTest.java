@@ -58,7 +58,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     //~ Methods ---------------------------------------------------------------
 
     public void testMultipleSameAsPass() {
-        checkExp("1 as again,2 as \"again\", 3 as AGAiN");
+        check("select 1 as again,2 as \"again\", 3 as AGAiN from (values (true))");
     }
 
     public void testMultipleDifferentAs() {
@@ -66,9 +66,10 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testTypeOfAs() {
-        checkExpType("1 as c1", "INTEGER NOT NULL");
-        checkExpType("'hej' as c1", "CHAR(3) NOT NULL");
-        checkExpType("x'deadbeef' as c1", "BINARY(4) NOT NULL");
+        checkQueryType("select 1 as c1 from (values (true))", "INTEGER NOT NULL");
+        checkQueryType("select 'hej' as c1 from (values (true))", "CHAR(3) NOT NULL");
+        checkQueryType("select x'deadbeef' as c1 from (values (true))", "BINARY(4) NOT NULL");
+        checkQueryType("select cast(null as boolean) as c1 from (values (true))", "BOOLEAN");
     }
 
     public void testTypesLiterals() {

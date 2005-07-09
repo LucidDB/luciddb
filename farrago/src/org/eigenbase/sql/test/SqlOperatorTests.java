@@ -120,6 +120,11 @@ public abstract class SqlOperatorTests extends TestCase
      */
     protected abstract SqlTester getTester();
 
+    protected void setUp() throws Exception
+    {
+        getTester().isFor(null);
+    }
+
     public void testBetween()
     {
         getTester().isFor(SqlStdOperatorTable.betweenOperator);

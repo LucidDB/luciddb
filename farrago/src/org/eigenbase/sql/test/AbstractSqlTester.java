@@ -25,6 +25,7 @@ package org.eigenbase.sql.test;
 
 import junit.framework.TestCase;
 import junit.framework.Assert;
+import junit.framework.AssertionFailedError;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.SqlOperator;
@@ -65,7 +66,9 @@ public abstract class AbstractSqlTester implements SqlTester
 
     public void isFor(SqlOperator operator)
     {
-        Assert.assertNull("isFor() called twice", operator);
+        if (operator != null && this.operator != null) {
+            throw new AssertionFailedError("isFor() called twice");
+        }
         this.operator = operator;
     }
 
@@ -178,6 +181,18 @@ public abstract class AbstractSqlTester implements SqlTester
         }
     }
 
+    /**
+     * Type checker which compares types to a specified string.
+     *
+     * <p>The string contains "NOT NULL" constraints, but does not contain
+     * collations and charsets. For example,<ul>
+     *   <li><code>INTEGER NOT NULL</code></li>
+     *   <li><code>BOOLEAN</code></li>
+     *   <li><code>DOUBLE NOT NULL MULTISET NOT NULL</code></li>
+     *   <li><code>CHAR(3) NOT NULL</code></li>
+     *   <li><code>RecordType(INTEGER X, VARCHAR(10) Y)</code></li>
+     * </ul>
+     */
     public static class StringTypeChecker implements TypeChecker
     {
         private final String expected;
