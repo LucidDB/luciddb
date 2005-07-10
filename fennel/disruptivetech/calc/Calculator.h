@@ -44,7 +44,7 @@ FENNEL_END_NAMESPACE
 #include "fennel/disruptivetech/calc/CalcTypedefs.h"
 #include "fennel/disruptivetech/calc/CalcMessage.h"
 #include "fennel/disruptivetech/calc/RegisterReference.h"
-#include "fennel/disruptivetech/calc/DynamicParam.h"
+#include "fennel/exec/DynamicParam.h"
 #include "fennel/common/TraceSource.h"
 
 FENNEL_BEGIN_NAMESPACE

@@ -26,8 +26,8 @@
 #include "fennel/exec/ExecStream.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/ExecStreamScheduler.h"
+#include "fennel/exec/DynamicParam.h"
 #include "fennel/segment/Segment.h"
-#include "fennel/disruptivetech/calc/DynamicParam.h"
 
 
 #include <boost/bind.hpp>

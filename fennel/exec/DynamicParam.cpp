@@ -1,8 +1,9 @@
 /*
 // $Id$
 // Fennel is a library of data storage and processing components.
-// Copyright (C) 2004-2005 Disruptive Tech
 // Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2004-2005 Disruptive Tech
+// Copyright (C) 2004-2005 LucidEra, Inc.
 // Portions Copyright (C) 1999-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -21,7 +22,7 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/disruptivetech/calc/DynamicParam.h"
+#include "fennel/exec/DynamicParam.h"
 #include "fennel/tuple/TupleAccessor.h"
 #include "fennel/tuple/TupleData.h"
 

@@ -5,7 +5,6 @@ noinst_LTLIBRARIES = libcalc.la
 CALC_LIB = calc
 
 libcalc_la_SOURCES=  \
-DynamicParam.cpp \
 BoolInstruction.cpp  \
 Calculator.cpp       \
 ExtDateTime.cpp \

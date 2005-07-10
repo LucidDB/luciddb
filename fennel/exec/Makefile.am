@@ -7,6 +7,7 @@ ConduitExecStream.cpp \
 ConfluenceExecStream.cpp \
 CopyExecStream.cpp \
 DfsTreeExecStreamScheduler.cpp \
+DynamicParam.cpp \
 ExecStream.cpp \
 ExecStreamGraph.cpp \
 ExecStreamGraphEmbryo.cpp \

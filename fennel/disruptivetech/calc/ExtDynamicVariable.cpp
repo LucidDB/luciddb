@@ -23,7 +23,7 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/disruptivetech/calc/ExtDynamicVariable.h"
 #include "fennel/disruptivetech/calc/ExtendedInstructionTable.h"
-#include "fennel/disruptivetech/calc/DynamicParam.h"
+#include "fennel/exec/DynamicParam.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
 
 FENNEL_BEGIN_NAMESPACE
