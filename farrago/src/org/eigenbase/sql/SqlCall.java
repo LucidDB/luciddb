@@ -213,8 +213,32 @@ public class SqlCall extends SqlNode
         return operator.isMonotonic(this, scope);
     }
 
+    /**
+     * Test operator name against supplied value
+     * @param name Test string
+     * @return true if operator name matches parameter
+     */
     public boolean isName(String name) {
         return operator.isName(name);
+    }
+
+    /**
+     * Test to see if it is the function COUNT(*)
+     *
+     * @return boolean true if function call to COUNT(*)
+     */
+    public boolean isCountStar() {
+        if (operator.isName("COUNT") && operands.length == 1) {
+            final SqlNode parm = operands[0];
+            if (parm instanceof SqlIdentifier) {
+                SqlIdentifier id = (SqlIdentifier) parm;
+                if (id.isStar() && id.names.length == 1) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }
 

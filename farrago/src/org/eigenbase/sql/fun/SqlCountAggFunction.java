@@ -29,6 +29,8 @@ import org.eigenbase.sql.SqlAggFunction;
 import org.eigenbase.sql.SqlFunction;
 import org.eigenbase.sql.SqlFunctionCategory;
 import org.eigenbase.sql.SqlKind;
+import org.eigenbase.sql.test.SqlTester;
+import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.type.*;
 
 /**
@@ -44,8 +46,8 @@ public class SqlCountAggFunction extends SqlAggFunction
     public SqlCountAggFunction()
     {
         super(
-            "COUNT", SqlKind.Function, SqlTypeStrategies.rtiFirstArgType,
-            null, SqlTypeStrategies.otcNumeric,
+            "COUNT", SqlKind.Function, SqlTypeStrategies.rtiInteger,
+            null, SqlTypeStrategies.otcAny,
             SqlFunctionCategory.Numeric);
     }
 
@@ -63,6 +65,7 @@ public class SqlCountAggFunction extends SqlAggFunction
     {
         return new OJClass[0];
     }
+
 }
 
 // End SqlCountAggFunction.java

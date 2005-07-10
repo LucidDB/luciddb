@@ -912,6 +912,12 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                     typeFactory, ns.getRowType(), false);
             }
 
+            // Check for COUNT(*) function.  If it is we don't
+            // want to try and derive the "*"
+            if (call.isCountStar()) {
+                return typeFactory.createSqlType(SqlTypeName.Integer);
+            }
+
             final SqlSyntax syntax = call.getOperator().getSyntax();
             switch (syntax.getOrdinal()) {
             case SqlSyntax.Prefix_ordinal:
@@ -944,6 +950,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 SqlOperator operator = call.getOperator();
 
                 RelDataType[] argTypes = new RelDataType[operands.length];
+
                 for (int i = 0; i < operands.length; ++i) {
                     RelDataType nodeType = deriveType(subScope, operands[i]);
                     setValidatedNodeTypeImpl(operands[i], nodeType);

@@ -2002,7 +2002,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         // complete
     }
 
-    public void testFusion() {
+    public void testFusion()
+    {
         checkFails("select fusion(deptno) from emp","(?s).*Cannot apply 'FUSION' to arguments of type 'FUSION.<INTEGER>.'.*");
         check("select fusion(multiset[3]) from emp");
         // todo. FUSION is an aggregate function. test that validator only
@@ -2010,8 +2011,21 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         // complete
     }
 
-    public void testNew() {
+    public void testCountFunction()
+    {
+        check("select count(*) from emp");
+        check("select count(ename) from emp");
+        check("select count(sal) from emp");
+        check("select count(1) from emp");
+        checkFails("select ^count(sal,ename)^ from emp",
+            "Invalid number of arguments to function 'COUNT'. Was expecting 1 arguments");
+    }
+
+    public void testNew()
+    {
         // (To debug invidual statements, paste them into this method.)
+        checkFails("select ^count(sal,ename)^ from emp",
+            "Invalid number of arguments to function 'COUNT'. Was expecting 1 arguments");
     }
 }
 
