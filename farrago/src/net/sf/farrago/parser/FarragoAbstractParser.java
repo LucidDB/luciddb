@@ -110,6 +110,12 @@ public abstract class FarragoAbstractParser implements FarragoSessionParser
             } else {
                 return parserImpl.SqlExpressionEof();
             }
+        } catch (EigenbaseContextException ex) {
+            Throwable actualEx = (ex.getCause() == null) ? ex : ex.getCause();
+            throw EigenbaseResource.instance().newParserError(
+                actualEx.getMessage(),
+                ex);
+
         } catch (Exception ex) {
             if (ex instanceof ParseException) {
                 ex = cleanupParseException((ParseException) ex);

@@ -169,6 +169,13 @@ public class SqlParserTest extends TestCase
                 actualException = ex.getCause();
                 actualLine = Integer.parseInt(matcher.group(1));
                 actualColumn = Integer.parseInt(matcher.group(2));
+            } else if (ex.getCause() instanceof EigenbaseContextException) {
+                EigenbaseContextException ceEx = (EigenbaseContextException) ex.getCause();
+                actualLine = ceEx.getPosLine();
+                actualColumn = ceEx.getPosColumn();
+                actualEndLine = ceEx.getEndPosLine();
+                actualEndColumn = ceEx.getEndPosColumn();
+                actualException = ex;
             } else {
                 actualException = ex;
             }
@@ -263,6 +270,10 @@ public class SqlParserTest extends TestCase
                     + "', but it threw " + message);
             }
         }
+    }
+
+    public void testNew()
+    {
     }
 
     public void _testDerivedColumnList()
@@ -1535,22 +1546,38 @@ public class SqlParserTest extends TestCase
 
     public void testWindowSpec()
     {
-        // todo: raise bug: ORDER BY should come first
-        boolean bugXxxFixed = false;
-        if (bugXxxFixed) {
-            checkFails("select count(z) over w as foo from Bids window w as (partition by y order by x partition by y)",
-                "xx");
-            check("select count(z) over w as foo from Bids window w as (order by x partition by y)",
-                "xx");
-        }
+        // Correct syntax
+        check("select count(z) over w as foo from Bids window w as (partition by y order by x rows between 2 preceding and 2 following)",
+            "SELECT (COUNT(`Z`) OVER `W`) AS `FOO`" + NL +
+            "FROM `BIDS`" + NL +
+            "WINDOW (PARTITION BY `Y`" + NL +
+            "ORDER BY `X`" + NL +
+            "ROWS BETWEEN (2 PRECEDING) AND (2 FOLLOWING))"
+            );
+
+        // Partition clause out of place. Found after ORDER BY
+        //checkFails("select count(z) over w as foo from Bids window w as (partition by y order by x ^partition^ by y)",
+        checkFails("select count(z) over w as foo "+NL+
+            "from Bids window w as (partition by y order by x partition by y)",
+            "(?s).*Encountered \"partition\".*");
+        //checkFails("select count(z) over w as foo from Bids window w as (order by x ^partition^ by y)",
+        checkFails("select count(z) over w as foo from Bids window w as (order by x partition by y)",
+            "(?s).*Encountered \"partition\".*");
 
         // AND is required in BETWEEN clause of window frame
-        checkFails("select sum(x) over (order by x range between unbounded preceding ^unbounded^ following)",
+        // checkFails("select sum(x) over (order by x range between unbounded preceding ^unbounded^ following)",
+        checkFails("select sum(x) over (order by x range between unbounded preceding unbounded following)",
             "(?s).*Encountered \"unbounded\".*");
 
         // WINDOW keyword is not permissible.
-        checkFails("select sum(x) over ^window^ (order by x) from bids",
+        // checkFails("select sum(x) over ^window^ (order by x) from bids",
+        checkFails("select sum(x) over window (order by x) from bids",
             "(?s).*Encountered \"window\".*");
+
+        // ORDER BY must be before Frame spec
+        //checkFails("select sum(x) over (rows 2 preceding ^order^ by x) from emp",
+        checkFails("select sum(x) over (rows 2 preceding order by x) from emp",
+            "(?s).*Encountered \"order\".*");
     }
 
     public void testAs()
@@ -1574,11 +1601,13 @@ public class SqlParserTest extends TestCase
         }
 
         // AS is required in WINDOW declaration
-        checkFails("select sum(x) over w from bids window w ^(order by x)",
+        // checkFails("select sum(x) over w from bids window w ^(order by x)",
+        checkFails("select sum(x) over w from bids window w (order by x)",
             "(?s).*Encountered \"\\(\".*");
 
         // Error if OVER and AS are in wrong order
-        checkFails("select count(*) as foo ^over^ w from Bids window w (order by x)",
+        // checkFails("select count(*) as foo ^over^ w from Bids window w (order by x)",
+        checkFails("select count(*) as foo over w from Bids window w (order by x)",
             "(?s).*Encountered \"over\".*");
     }
 
