@@ -27,6 +27,7 @@ import java.lang.reflect.*;
 import java.nio.*;
 import java.util.*;
 
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.runtime.*;
@@ -142,8 +143,7 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
         OJClass rowClass = OJUtil.typeToOJClass(rowType, factory);
 
         // Implement the child rel as an XO.
-        FemExecutionStreamDef rootStream =
-            fennelImplementor.visitFennelChild((FennelRel) getChild());
+        FemExecutionStreamDef rootStream = childToStreamDef(fennelImplementor);
         String rootStreamName = rootStream.getName();
         int rootStreamId = getId();
 
@@ -404,6 +404,20 @@ public class FennelToIteratorConverter extends ConverterRel implements JavaRel
             connectionVariable,
             "newFennelIterator",
             argList);
+    }
+
+    /**
+     * Converts the child relational expression (which is in Fennel
+     * convention) into a {@link FemExecutionStreamDef}.
+     *
+     * <p>Derived classes may override this method.
+     */
+    protected FemExecutionStreamDef childToStreamDef(
+        FennelRelImplementor implementor)
+    {
+        FemExecutionStreamDef rootStream =
+            implementor.visitFennelChild((FennelRel) getChild());
+        return rootStream;
     }
 
     /**
