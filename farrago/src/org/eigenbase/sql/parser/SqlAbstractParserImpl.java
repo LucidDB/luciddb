@@ -379,10 +379,10 @@ public abstract class SqlAbstractParserImpl
     /**
      * Metadata about the parser.
      *
-     * For example:
+     * For example:<ul>
      * <li>"KEY" is a keyword: it is meaningful in certain
      *     contexts, such as "CREATE FOREIGN KEY", but can be used as
-     *     an identifier, as in "CREATE TABLE t (key INTEGER)"
+     *     an identifier, as in <code>"CREATE TABLE t (key INTEGER)"</code>.
      * <li>"SELECT" is a reserved word. It can not be used as an
      *     identifier.
      * <li>"CURRENT_USER" is the name of a context variable. It cannot be
@@ -390,6 +390,7 @@ public abstract class SqlAbstractParserImpl
      * <li>"ABS" is the name of a reserved function. It cannot be
      *     used as an identifier.
      * <li>"DOMAIN" is a reserved word as specified by the SQL:92 standard.
+     * </ul>
      */
     public interface Metadata
     {
@@ -439,6 +440,9 @@ public abstract class SqlAbstractParserImpl
         List getTokens();
     }
 
+    /**
+     * Default implementation of the {@link Metadata} interface.
+     */
     public static class MetadataImpl implements Metadata
     {
         private final Set reservedFunctionNames = new HashSet();
