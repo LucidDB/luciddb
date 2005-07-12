@@ -62,6 +62,14 @@
     <text>Illegal overlaps expression; at {0}. Was expecting expression on the form "(DATETIME, EXPRESSION) OVERLAPS (DATETIME, EXPRESSION)"</text>
 </exception>
 
+<exception id="100080" name="IllegalNonQueryExpression">
+    <text>Non-query expression encountered in illegal context</text>
+</exception>
+
+<exception id="100090" name="IllegalQueryExpression">
+    <text>Query expression encountered in illegal context</text>
+</exception>
+
 
 <!-- ====================================================================== -->
 <!-- Eigenbase Validator resources 121,000 - 130,000 -->

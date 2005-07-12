@@ -64,6 +64,51 @@ import java.util.logging.Level;
 public class SqlParserImpl extends SqlAbstractParserImpl
 {
     private static final Logger tracer = EigenbaseTrace.getParserTracer();
+
+    public SqlParseException normalizeException(Exception ex)
+    {
+        try {
+            if (ex instanceof ParseException) {
+                ex = cleanupParseException((ParseException) ex);
+            }
+            return convertException(ex);
+        } catch (ParseException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    public boolean isNonReserved(String keyword)
+    {
+        ReInit(new java.io.StringReader(keyword));
+        try {
+            NonReservedKeyWord();
+            return true;
+        } catch (ParseException e) {
+            return false;
+        }
+    }
+    
+    public boolean isReservedFunctionName(String keyword)
+    {
+        ReInit(new java.io.StringReader(keyword));
+        try {
+            ReservedFunctionName();
+            return true;
+        } catch (ParseException e) {
+            return false;
+        }
+    }
+
+    public boolean isContextVariable(String keyword)
+    {
+        ReInit(new java.io.StringReader(keyword));
+        try {
+            ContextVariable();
+            return true;
+        } catch (ParseException e) {
+            return false;
+        }
+    }
 }
 
 PARSER_END(SqlParserImpl)

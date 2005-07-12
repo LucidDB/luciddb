@@ -199,20 +199,20 @@ public class SqlBetweenOperator extends SqlInfixOperator
             final int line = lastPos.getEndLineNum();
             final int col = lastPos.getEndColumnNum() + 1;
             SqlParserPos errPos = new SqlParserPos(line, col, line, col);
-            throw SqlValidatorImpl.newContextException(
+            throw SqlUtil.newContextException(
                 errPos,
                 EigenbaseResource.instance().newBetweenWithoutAnd());
         }
         final Object o = list.get(opOrdinal + 2);
         if (!(o instanceof SqlParserUtil.ToTreeListItem)) {
             SqlParserPos errPos = ((SqlNode) o).getParserPosition();
-            throw SqlValidatorImpl.newContextException(
+            throw SqlUtil.newContextException(
                 errPos,
                 EigenbaseResource.instance().newBetweenWithoutAnd());
         }
         if (((SqlParserUtil.ToTreeListItem) o).getOperator().getKind() != SqlKind.And) {
             SqlParserPos errPos = ((SqlParserUtil.ToTreeListItem) o).getPos();
-            throw SqlValidatorImpl.newContextException(
+            throw SqlUtil.newContextException(
                 errPos,
                 EigenbaseResource.instance().newBetweenWithoutAnd());
         }

@@ -94,32 +94,26 @@ JAVACODE String getPositionString()
 
 JAVACODE void checkQueryExpression(ExprContext exprContext)
 {
-    if ((exprContext == EXPR_ACCEPT_NONQUERY)
-        || (exprContext == EXPR_ACCEPT_SUBQUERY))
-    {
-        // REVIEW: I tried to use generateParseException(), but
-        // that results in bogus internal errors due to
-        // lookahead.
-        throw new ParseException(
-            "Query expression " + token.image
-            + " encountered in illegal context near "
-            + getPositionString());
+    if (exprContext == EXPR_ACCEPT_NONQUERY || 
+        exprContext == EXPR_ACCEPT_SUBQUERY) {
+        throw SqlUtil.newContextException(
+            getPos(),
+            EigenbaseResource.instance().newIllegalQueryExpression());
     }
 }
 
 JAVACODE void checkNonQueryExpression(ExprContext exprContext)
 {
     if (exprContext == EXPR_ACCEPT_QUERY) {
-        throw new ParseException(
-            "Non-query expression " + token.image
-            + " encountered in illegal context near "
-            + getPositionString());
+        throw SqlUtil.newContextException(
+            getPos(),
+            EigenbaseResource.instance().newIllegalNonQueryExpression());
     }
 }
 
 // The date/time parse utilities have to live here, instead of in the
-// SqlParserUtil class because ParseException is ambigous, and CommonParser has
-// to live in multiple packages.
+// SqlParserUtil class because ParseException is ambiguous, and
+// CommonParser has to live in multiple packages.
 
 JAVACODE SqlDateLiteral parseDateLiteral(
     String s, SqlParserPos pos) throws ParseException
@@ -183,6 +177,93 @@ JAVACODE SqlIntervalLiteral parseIntervalLiteral(
         throw new ParseException(msg);
     }
     return SqlLiteral.createInterval(sign, intervalStr, intervalQualifier, pos);
+}
+
+/**
+ * Converts a ParseException (local to this particular instantiation
+ * of the parser) into a SqlParseException (common to all parsers).
+ */
+JAVACODE SqlParseException convertException(Exception ex)
+{
+    if (ex instanceof SqlParseException) {
+        return (SqlParseException) ex;
+    }
+    SqlParserPos pos = null;
+    int[][] expectedTokenSequences = null;
+    String[] tokenImage = null;
+    if (ex instanceof ParseException) {
+        ParseException pex = (ParseException) ex;
+        expectedTokenSequences = pex.expectedTokenSequences;
+        tokenImage = pex.tokenImage;
+        if (pex.currentToken != null) {
+            final Token token = pex.currentToken.next;
+            pos = new SqlParserPos(
+                token.beginLine,
+                token.beginColumn,
+                token.endLine,
+                token.endColumn);
+        }
+    }
+//    if (ex.getMessage().length() == 0) {
+//        return new SqlParseException(ex, pos);
+//    } else {
+        return new SqlParseException(
+            ex.getMessage(), pos, expectedTokenSequences, tokenImage);
+//    }
+}
+
+/**
+ * Removes or transforms misleading information from a parse exception.
+ *
+ * @param e dirty excn
+ *
+ * @return clean excn
+ */
+JAVACODE ParseException cleanupParseException(ParseException ex)
+{
+    if (ex.expectedTokenSequences == null) {
+        return ex;
+    }
+    int iIdentifier = java.util.Arrays.asList(ex.tokenImage).indexOf("<IDENTIFIER>");
+
+    boolean id = false;
+    for (int i = 0; i < ex.expectedTokenSequences.length; ++i) {
+        if (ex.expectedTokenSequences[i][0] == iIdentifier) {
+            id = true;
+            break;
+        }
+    }
+
+    if (!id) {
+        return ex;
+    }
+
+    // Since <IDENTIFIER> was one of the possible productions,
+    // we know that the parser will also have included all
+    // of the non-reserved keywords (which are treated as
+    // identifiers in non-keyword contexts).  So, now we need
+    // to clean those out, since they're totally irrelevant.
+
+    List list = new ArrayList();
+    for (int i = 0; i < ex.expectedTokenSequences.length; ++i) {
+        int [] sequence = ex.expectedTokenSequences[i];
+        String token = SqlParserUtil.getTokenVal(ex.tokenImage[sequence[0]]);
+        if (token != null) {
+            if (isNonReserved(token)) {
+                continue;
+            }
+            if (isReservedFunctionName(token)) {
+                continue;
+            }
+            if (isContextVariable(token)) {
+                continue;
+            }
+        }
+        list.add(sequence);
+    }
+
+    ex.expectedTokenSequences = (int [][]) list.toArray(new int [0][]);
+    return ex;
 }
 
 /*****************************************
@@ -1811,7 +1892,7 @@ SqlLiteral SpecialLiteral() :
  * lines.  For a simple literal, the result is an SqlLiteral.  For a continued
  * literal, the result is an SqlCall expression, which concatenates 2 or more
  * string literals; the validator reduces this.
- * @param pos SqlParserPos at start.
+ *
  * @param strict when false, allow continued literals; when true, forbid them.
  * @return a literal expression. When strict, returns an SqlLiteral.
  */

@@ -10,12 +10,12 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -30,7 +30,6 @@ import net.sf.farrago.session.*;
 
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.relational.*;
 
 import java.io.*;
 
@@ -61,7 +60,7 @@ public abstract class FarragoAbstractParserImpl extends SqlAbstractParserImpl
     {
         return farragoParser.getStmtValidator().getRepos();
     }
-    
+
     /**
      * @return current parser position
      */
@@ -128,6 +127,66 @@ public abstract class FarragoAbstractParserImpl extends SqlAbstractParserImpl
         defaultExpression.setBody(defaultClause.toSqlString(null));
         defaultExpression.setLanguage("SQL");
         attribute.setInitialValue(defaultExpression);
+    }
+
+    /**
+     * Removes or transforms misleading information from a parse exception,
+     * and converts to {@link SqlParseException}.
+     *
+     * @param e dirty excn
+     * @return clean excn
+     */
+    public abstract SqlParseException normalizeException(Exception e);
+
+    /**
+     * Returns whether a keyword is a non-reserved word.
+     *
+     * @param keyword Keyword
+     * @return Whether the keyword is a non-reserved word.
+     */
+    public final boolean isNonReserved(String keyword)
+    {
+        ReInit(new StringReader(keyword));
+        try {
+            NonReservedKeyWord();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    /**
+     * Returns whether a keyword is the name of a reserved function.
+     *
+     * @param keyword Keyword
+     * @return Whether the keyword is the name of a reserved function.
+     */
+    public boolean isReservedFunctionName(String keyword)
+    {
+        ReInit(new StringReader(keyword));
+        try {
+            ReservedFunctionName();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Returns whether a keyword is the name of a context variable.
+     *
+     * @param keyword Keyword
+     * @return Whether the keyword is the name of a context variable.
+     */
+    public boolean isContextVariable(String keyword)
+    {
+        ReInit(new StringReader(keyword));
+        try {
+            ContextVariable();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
 

@@ -221,7 +221,7 @@ Error: From line 1, column 93 to line 1, column 109: No match found for function
 . . . . . . . . > contains sql
 . . . . . . . . > external name 'class java.lang.System.getProperty'
 . . . . . . . . > return 'undefined';
-Error: net.sf.farrago.parser.impl.ParseException: Encountered "return" at line 1, column 139.
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "return" at line 1, column 139.
 Was expecting one of:
     <EOF> 
     "EXTERNAL" ...

@@ -24,6 +24,9 @@ package org.eigenbase.sql.parser;
 
 import org.eigenbase.sql.parser.impl.*;
 
+import java.util.Collection;
+import java.util.TreeSet;
+
 /**
  * SqlParseException defines a checked exception corresponding
  * to {@link SqlParser}.
@@ -44,15 +47,35 @@ public class SqlParseException extends ParseException
         this.pos = pos;
     }
 
-    public SqlParseException(String message, SqlParserPos pos)
+    public SqlParseException(
+        String message,
+        SqlParserPos pos,
+        int[][] expectedTokenSequences,
+        String[] tokenImages)
     {
         super(message);
         this.pos = pos;
+        this.expectedTokenSequences = expectedTokenSequences;
+        this.tokenImage = tokenImages;
     }
 
     public SqlParserPos getPos()
     {
         return pos;
+    }
+
+    /**
+     * Returns a list of the token names which could have legally occurred at
+     * this point.
+     */
+    public Collection getExpectedTokenNames()
+    {
+        final TreeSet set = new TreeSet();
+        for (int i = 0; i < expectedTokenSequences.length; i++) {
+            int[] expectedTokenSequence = expectedTokenSequences[i];
+            set.add(tokenImage[expectedTokenSequence[0]]);
+        }
+        return set;
     }
 }
 

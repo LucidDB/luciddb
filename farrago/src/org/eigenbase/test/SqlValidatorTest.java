@@ -1565,12 +1565,6 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "Type mismatch in column 2 of UNION");
     }
 
-    public void testUnionOfNonQueryFails() {
-        checkFails("select 1 from emp union 2",
-            "Non-query expression 2 encountered in illegal context near" +
-            " line 1, column 25");
-    }
-
     public void _testInTooManyColumnsFails() {
         checkFails("select * from emp where deptno in (select deptno,deptno from dept)",
             "xyz");

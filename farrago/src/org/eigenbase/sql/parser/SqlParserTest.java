@@ -26,9 +26,10 @@ package org.eigenbase.sql.parser;
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 import org.eigenbase.sql.SqlNode;
-import org.eigenbase.util.*;
+import org.eigenbase.test.SqlValidatorTestCase;
+import org.eigenbase.util.TestUtil;
+import org.eigenbase.util.Util;
 
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
@@ -50,8 +51,6 @@ public class SqlParserTest extends TestCase
         Pattern.compile("At line (.*), column (.*)");
     /** @deprecated */
     private static final boolean todo = false;
-    /** todo: set this to true, fix bugs, and obsolete. */
-    private static final boolean FailIfNoPosition = false;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -110,141 +109,18 @@ public class SqlParserTest extends TestCase
 
     protected void checkFails(
         String sql,
-        String exceptionPattern)
+        String expectedMsgPattern)
     {
         SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);
-        if (sap.pos == null) {
-            checkFails(
-                sap.sql,
-                exceptionPattern,
-                -1, -1, -1, -1);
-        } else {
-            checkFails(
-                sap.sql,
-                exceptionPattern,
-                sap.pos.getLineNum(), sap.pos.getColumnNum(),
-                sap.pos.getEndLineNum(), sap.pos.getEndColumnNum());
-        }
-    }
-
-    protected void checkFails(
-        String sql,
-        String expectedMsgPattern,
-        int expectedLine,
-        int expectedColumn,
-        int expectedEndLine,
-        int expectedEndColumn)
-    {
-        Throwable actualException = null;
-        int actualLine = -1;
-        int actualColumn = -1;
-        int actualEndLine = -1;
-        int actualEndColumn = -1;
+        Throwable thrown = null;
         try {
-            final SqlNode sqlNode = parseStmt(sql);
+            final SqlNode sqlNode = parseStmt(sap.sql);
             Util.discard(sqlNode);
-            fail("Expected query '" + sql + "' to throw exception matching '"
-                + expectedMsgPattern + "'");
-        } catch (EigenbaseContextException ex) {
-            actualLine = ex.getPosLine();
-            actualColumn = ex.getPosColumn();
-            actualEndLine = ex.getEndPosLine();
-            actualEndColumn = ex.getEndPosColumn();
-            actualException = ex.getCause() == null ?
-                ex :
-                ex.getCause();
-        } catch (SqlParseException ex) {
-            final SqlParserPos pos = ex.getPos();
-            if (pos != null) {
-                actualLine = pos.getLineNum();
-                actualColumn = pos.getColumnNum();
-                actualEndLine = pos.getEndLineNum();
-                actualEndColumn = pos.getEndColumnNum();
-            }
-            actualException = ex;
         } catch (Throwable ex) {
-            final String message = ex.getMessage();
-            final Matcher matcher = lineColPattern.matcher(message);
-            if (message != null && matcher.matches()) {
-                actualException = ex.getCause();
-                actualLine = Integer.parseInt(matcher.group(1));
-                actualColumn = Integer.parseInt(matcher.group(2));
-            } else if (ex.getCause() instanceof EigenbaseContextException) {
-                EigenbaseContextException ceEx = (EigenbaseContextException) ex.getCause();
-                actualLine = ceEx.getPosLine();
-                actualColumn = ceEx.getPosColumn();
-                actualEndLine = ceEx.getEndPosLine();
-                actualEndColumn = ceEx.getEndPosColumn();
-                actualException = ex;
-            } else {
-                actualException = ex;
-            }
+            thrown = ex;
         }
-        final String message = actualException.toString();
-        if (!Pattern.matches(expectedMsgPattern, message)) {
-            actualException.printStackTrace();
-            fail("Expected query '" + sql
-                + "' to throw exception matching '" + expectedMsgPattern
-                + "', but it threw " + message);
-        }
-        String sqlWithCarets;
-        if (actualColumn <= 0 ||
-            actualLine <= 0 ||
-            actualEndColumn <= 0 ||
-            actualEndLine <= 0) {
-            if (FailIfNoPosition) {
-                assert false :
-                    "Error did not have position: " +
-                    " actualLine=" + actualLine +
-                    " actualColumn=" + actualColumn +
-                    " actualEndLine=" + actualEndLine +
-                    " actualEndColumn=" + actualEndColumn;
-            }
-            sqlWithCarets = sql;
-        } else {
-            sqlWithCarets = SqlParserUtil.addCarets(
-                sql,
-                actualLine, actualColumn,
-                actualEndLine, actualEndColumn);
-        }
-        if (FailIfNoPosition &&
-            (expectedLine == -1 ||
-            expectedColumn == -1 ||
-            expectedEndLine == -1 ||
-            expectedEndColumn == -1)) {
-            assert false :
-                "todo: add carets to sql: " + sqlWithCarets;
-        }
-        String actualMessage = actualException.getMessage();
-        if (actualMessage == null ||
-            !actualMessage.matches(expectedMsgPattern)) {
-            actualException.printStackTrace();
-            fail("Validator threw different " +
-                "exception than expected; query [" + sql +
-                "]; expected [" + expectedMsgPattern +
-                "]; actual [" + actualMessage +
-                "]; line [" + actualLine +
-                "]; column [" + actualColumn + "]");
-        } else if ((expectedLine != -1 &&
-            actualLine != expectedLine) ||
-            (expectedColumn != -1 &&
-            actualColumn != expectedColumn) ||
-            (expectedEndLine != -1 &&
-            actualEndLine != expectedEndLine) ||
-            (expectedEndColumn != -1 &&
-            actualEndColumn != expectedEndColumn)) {
-            fail("SqlValidationTest: Validator threw expected " +
-                "exception [" + actualMessage +
-                "]; but at line [" + actualLine +
-                "], column [" + actualColumn +
-                "] thru line [" + actualEndLine +
-                "] column [" + actualEndColumn +
-                "]; rather than expected line [" + expectedLine +
-                "], column [" + expectedColumn +
-                "] thru line [" + expectedEndLine +
-                "] column [" + expectedEndColumn +
-                "]; sql [" + sqlWithCarets + "]");
-        }
+
+        SqlValidatorTestCase.checkEx(thrown, expectedMsgPattern, sap);
     }
 
     protected void checkExpFails(String sql)
@@ -802,6 +678,32 @@ public class SqlParserTest extends TestCase
             + "FROM `A`))");
     }
 
+    public void testUnionOfNonQueryFails()
+    {
+        checkFails("select 1 from emp union ^2^ + 5",
+            "Non-query expression encountered in illegal context");
+    }
+
+    /**
+     * In modern SQL, a query can occur almost everywhere that an expression
+     * can. This test tests the few exceptions.
+     */ 
+    public void testQueryInIllegalContext()
+    {
+        checkFails("select case ^(^select * from emp) when 1 then 2 end from dept",
+            "Query expression encountered in illegal context");
+        checkFails("select case 1 when ^(^select * from emp) then 2 end from dept",
+            "Query expression encountered in illegal context");
+        checkFails("select case 1 when 2 then ^(^select * from emp) end from dept",
+            "Query expression encountered in illegal context");
+        checkFails("select case 1 when 2 then 3 else ^(^select * from emp) end from dept",
+            "Query expression encountered in illegal context");
+        checkFails("select 0, multiset[^(^select * from emp), 2] from dept",
+            "Query expression encountered in illegal context");
+        checkFails("select 0, multiset[1, ^(^select * from emp), 2, 3] from dept",
+            "Query expression encountered in illegal context");
+    }
+
     public void testExcept()
     {
         check("select * from a except select * from a",
@@ -1315,7 +1217,10 @@ public class SqlParserTest extends TestCase
         checkFails("select x'1' x'2' from t",
             "(?s).*Encountered .x.*2.* at line 1, column 13.*");
 
-        //checkFails("select x'1' '2' from t",?); validator error
+         // valid syntax, but should fail in the validator
+        check("select x'1' '2' from t",
+            "SELECT X'1' '2'" + NL +
+            "FROM `T`");
     }
 
     public void testStringLiteral()
@@ -1343,7 +1248,10 @@ public class SqlParserTest extends TestCase
         checkFails("select _unknown-charset'' from (values(true))",
             "(?s).*UNKNOWN-CHARSET.*");
 
-        // checkFails("select N'1' '2' from t", "?"); a validator error
+        // valid syntax, but should give a validator error
+        check("select N'1' '2' from t",
+            "SELECT _ISO-8859-1'1' '2'" + NL +
+            "FROM `T`");
     }
 
     public void testCaseExpression()
@@ -1556,27 +1464,22 @@ public class SqlParserTest extends TestCase
             );
 
         // Partition clause out of place. Found after ORDER BY
-        //checkFails("select count(z) over w as foo from Bids window w as (partition by y order by x ^partition^ by y)",
         checkFails("select count(z) over w as foo "+NL+
-            "from Bids window w as (partition by y order by x partition by y)",
+            "from Bids window w as (partition by y order by x ^partition^ by y)",
             "(?s).*Encountered \"partition\".*");
-        //checkFails("select count(z) over w as foo from Bids window w as (order by x ^partition^ by y)",
-        checkFails("select count(z) over w as foo from Bids window w as (order by x partition by y)",
+        checkFails("select count(z) over w as foo from Bids window w as (order by x ^partition^ by y)",
             "(?s).*Encountered \"partition\".*");
 
         // AND is required in BETWEEN clause of window frame
-        // checkFails("select sum(x) over (order by x range between unbounded preceding ^unbounded^ following)",
-        checkFails("select sum(x) over (order by x range between unbounded preceding unbounded following)",
+        checkFails("select sum(x) over (order by x range between unbounded preceding ^unbounded^ following)",
             "(?s).*Encountered \"unbounded\".*");
 
         // WINDOW keyword is not permissible.
-        // checkFails("select sum(x) over ^window^ (order by x) from bids",
-        checkFails("select sum(x) over window (order by x) from bids",
+        checkFails("select sum(x) over ^window^ (order by x) from bids",
             "(?s).*Encountered \"window\".*");
 
         // ORDER BY must be before Frame spec
-        //checkFails("select sum(x) over (rows 2 preceding ^order^ by x) from emp",
-        checkFails("select sum(x) over (rows 2 preceding order by x) from emp",
+        checkFails("select sum(x) over (rows 2 preceding ^order^ by x) from emp",
             "(?s).*Encountered \"order\".*");
     }
 
@@ -1601,13 +1504,11 @@ public class SqlParserTest extends TestCase
         }
 
         // AS is required in WINDOW declaration
-        // checkFails("select sum(x) over w from bids window w ^(order by x)",
-        checkFails("select sum(x) over w from bids window w (order by x)",
+        checkFails("select sum(x) over w from bids window w ^(order by x)",
             "(?s).*Encountered \"\\(\".*");
 
         // Error if OVER and AS are in wrong order
-        // checkFails("select count(*) as foo ^over^ w from Bids window w (order by x)",
-        checkFails("select count(*) as foo over w from Bids window w (order by x)",
+        checkFails("select count(*) as foo ^over^ w from Bids window w (order by x)",
             "(?s).*Encountered \"over\".*");
     }
 

@@ -76,6 +76,18 @@ public class FarragoParserImpl extends FarragoAbstractParserImpl
             token.beginLine,
             token.beginColumn);
     }
+
+    public SqlParseException normalizeException(Exception ex)
+    {
+        try {
+            if (ex instanceof ParseException) {
+                ex = cleanupParseException((ParseException) ex);
+            }
+            return convertException(ex);
+        } catch (ParseException e) {
+            throw new AssertionError(e);
+        }
+    }
 }
 
 PARSER_END(FarragoParserImpl)

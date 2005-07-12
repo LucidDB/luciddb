@@ -2320,34 +2320,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
     {
         Util.pre(node != null, "node != null");
         final SqlParserPos pos = node.getParserPosition();
-        return newContextException(pos, e);
-    }
-
-    /**
-     * Wraps an exception with context.
-     */
-    public static EigenbaseException newContextException(
-        final SqlParserPos pos,
-        SqlValidatorException e)
-    {
-        int line = pos.getLineNum();
-        int col = pos.getColumnNum();
-        int endLine = pos.getEndLineNum();
-        int endCol = pos.getEndColumnNum();
-        EigenbaseContextException contextExcn =
-            line == endLine && col == endCol ?
-            EigenbaseResource.instance().newValidatorContextPoint(
-                new Integer(line),
-                new Integer(col),
-                e) :
-            EigenbaseResource.instance().newValidatorContext(
-                new Integer(line),
-                new Integer(col),
-                new Integer(endLine),
-                new Integer(endCol),
-                e);
-        contextExcn.setPosition(line, col, endLine, endCol);
-        return contextExcn;
+        return SqlUtil.newContextException(pos, e);
     }
 
     private SqlWindow getWindowByName(

@@ -299,20 +299,34 @@ public class SqlValidatorTestCase extends TestCase
         int actualColumn = -1;
         int actualEndLine = 100;
         int actualEndColumn = 99;
-//        for (Throwable x = thrown;; x = x.getCause()) {
-//            System.out.println("class: " + x.getClass());
-//            x.printStackTrace(System.out);
-//            if (x.getCause() == x) {
-//                System.out.println("--- end ---");
-//                break;
-//            }
-//        }
-//        thrown.printStackTrace();
-//        if (thrown instanceof SQLException) {
-//            thrown = thrown.getCause();
-//        }
-        if (ex instanceof EigenbaseContextException) {
-            EigenbaseContextException ece = (EigenbaseContextException) ex;
+
+        // Search for an EigenbaseContextException somewhere in the stack.
+        EigenbaseContextException ece = null;
+        for (Throwable x = ex; x != null; x = x.getCause()) {
+            if (x instanceof EigenbaseContextException) {
+                ece = (EigenbaseContextException) x;
+                break;
+            }
+            if (x.getCause() == x) {
+                break;
+            }
+        }
+
+        // Search for a SqlParseException -- with its position set -- somewhere
+        // in the stack.
+        SqlParseException spe = null;
+        for (Throwable x = ex; x != null; x = x.getCause()) {
+            if (x instanceof SqlParseException &&
+                ((SqlParseException) x).getPos() != null) {
+                spe = (SqlParseException) x;
+                break;
+            }
+            if (x.getCause() == x) {
+                break;
+            }
+        }
+
+        if (ece != null) {
             actualLine = ece.getPosLine();
             actualColumn = ece.getPosColumn();
             actualEndLine = ece.getEndPosLine();
@@ -322,6 +336,15 @@ public class SqlValidatorTestCase extends TestCase
                 actualMessage = actualException.getMessage();
             }
 
+        } else if (spe != null) {
+            actualLine = spe.getPos().getLineNum();
+            actualColumn = spe.getPos().getColumnNum();
+            actualEndLine = spe.getPos().getEndLineNum();
+            actualEndColumn = spe.getPos().getEndColumnNum();
+            if (spe.getCause() != null) {
+                actualException = spe.getCause();
+                actualMessage = actualException.getMessage();
+            }
         } else {
             final String message = ex.getMessage();
             if (message != null) {

@@ -75,7 +75,7 @@ public class SqlParser
         try {
             return parser.SqlExpressionEof();
         } catch (ParseException ex) {
-            throw convertException(ex);
+            throw parser.normalizeException(ex);
         }
     }
 
@@ -96,7 +96,7 @@ public class SqlParser
         try {
             return parser.SqlQueryEof();
         } catch (ParseException ex) {
-            throw convertException(ex);
+            throw parser.normalizeException(ex);
         }
     }
 
@@ -113,29 +113,10 @@ public class SqlParser
         try {
             return parser.SqlStmtEof();
         } catch (ParseException ex) {
-            throw convertException(ex);
+            throw parser.normalizeException(ex);
         }
     }
 
-    private SqlParseException convertException(ParseException ex)
-    {
-        SqlParserPos pos;
-        if (ex.currentToken == null) {
-            pos = null;
-        } else {
-            final Token token = ex.currentToken.next;
-            pos = new SqlParserPos(
-                token.beginLine,
-                token.beginColumn,
-                token.endLine,
-                token.endColumn);
-        }
-        if (ex.getMessage().length() == 0) {
-            return new SqlParseException(ex, pos);
-        } else {
-            return new SqlParseException(ex.getMessage(), pos);
-        }
-    }
 }
 
 

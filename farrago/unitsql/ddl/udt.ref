@@ -210,7 +210,7 @@ Error: DDL validation error near line 1, column 41: Must define structured objec
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  at least one attribute required
 0: jdbc:farrago:> create type no_attributes as () final;
-Error: net.sf.farrago.parser.impl.ParseException: Encountered ")" at line 1, column 31.
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered ")" at line 1, column 31.
 Was expecting one of:
     <IDENTIFIER> ...
     <QUOTED_IDENTIFIER> ... (state=,code=0)
@@ -225,7 +225,7 @@ Error: DDL validation error near line 1, column 35: Reference to unknown datatyp
 0: jdbc:farrago:> create type bad_constraint as (
 . . . . . . . . >     x int not null
 . . . . . . . . > ) final;
-Error: net.sf.farrago.parser.impl.ParseException: Encountered "not" at line 1, column 43.
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "not" at line 1, column 43.
 Was expecting one of:
     "CHARACTER" ...
     "COLLATE" ...
@@ -605,7 +605,7 @@ Error: DDL validation error near line 1, column 21: User-defined ordering alread
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  already gone
 0: jdbc:farrago:> drop ordering for playing_card;
-Error: No user-defined ordering declared for structured object type "UDTTEST"."PLAYING_CARD" (state=,code=0)
+Error: org.eigenbase.sql.parser.SqlParseException: No user-defined ordering declared for structured object type "UDTTEST"."PLAYING_CARD" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- define a suit-independent ordering (like in war)
 0: jdbc:farrago:> create function map_card_to_card_rank(c playing_card)
