@@ -236,6 +236,16 @@ public:
     virtual void open() = 0;
 
     /**
+     * Translates a stream ID to a stream pointer.
+     *
+     * @param id ID of a stream in this graph
+     *
+     * @return shared pointer to the stream
+     */
+    virtual SharedExecStream getStream(ExecStreamId id) = 0;
+
+     
+    /**
      * Determines number of input flows consumed by a stream.
      *
      * @param streamId ID of stream
