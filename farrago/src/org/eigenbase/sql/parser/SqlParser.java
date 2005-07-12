@@ -23,20 +23,20 @@
 
 package org.eigenbase.sql.parser;
 
+import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.parser.impl.ParseException;
+import org.eigenbase.sql.parser.impl.SqlParserImpl;
+
 import java.io.Reader;
 import java.io.StringReader;
-
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.parser.impl.*;
 
 
 /**
  * A <code>SqlParser</code> parses a SQL statement.
  *
- * @author jhyde$
+ * @author jhyde
  * @version $Id$
- *
- * @since Mar 18, 2003$
+ * @since Mar 18, 2003
  */
 public class SqlParser
 {
@@ -117,6 +117,13 @@ public class SqlParser
         }
     }
 
+    /**
+     * Returns the underlying generated parser.
+     */ 
+    public SqlParserImpl getParserImpl()
+    {
+        return parser;
+    }
 }
 
 

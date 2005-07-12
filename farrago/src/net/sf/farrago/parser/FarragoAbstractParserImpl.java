@@ -77,13 +77,6 @@ public abstract class FarragoAbstractParserImpl extends SqlAbstractParserImpl
     public abstract Object FarragoSqlStmtEof() throws Exception;
 
     /**
-     * Reinitializes parser with new input.
-     *
-     * @param reader provides new input
-     */
-    public abstract void ReInit(Reader reader);
-
-    /**
      * Tests whether the current input is a non-reserved keyword.
      *
      * @return token if non-reserved
@@ -154,7 +147,7 @@ public abstract class FarragoAbstractParserImpl extends SqlAbstractParserImpl
             return false;
         }
     }
-    
+
     /**
      * Returns whether a keyword is the name of a reserved function.
      *

@@ -70,6 +70,8 @@ import net.sf.farrago.fem.sql2003.*;
  */
 public class FarragoParserImpl extends FarragoAbstractParserImpl
 {
+    private static Metadata metadata;
+
     public SqlParserPos getCurrentPosition()
     {
         return new SqlParserPos(
@@ -86,6 +88,17 @@ public class FarragoParserImpl extends FarragoAbstractParserImpl
             return convertException(ex);
         } catch (ParseException e) {
             throw new AssertionError(e);
+        }
+    }
+
+    public Metadata getMetadata()
+    {
+        synchronized (FarragoParserImpl.class) {
+            if (metadata == null) {
+                metadata = new MetadataImpl(
+                    new FarragoParserImpl(new java.io.StringReader("")));
+            }
+            return metadata;
         }
     }
 }

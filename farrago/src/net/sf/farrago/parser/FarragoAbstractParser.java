@@ -25,7 +25,6 @@ package net.sf.farrago.parser;
 import net.sf.farrago.session.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.parser.impl.*;
 
 import java.io.*;
 import java.util.*;
@@ -89,6 +88,14 @@ public abstract class FarragoAbstractParser implements FarragoSessionParser
     }
 
     protected abstract FarragoAbstractParserImpl newParserImpl(Reader reader);
+
+    // implement FarragoSessionParser
+    public String getJdbcKeywords()
+    {
+        SqlAbstractParserImpl.Metadata metadata =
+            newParserImpl(new StringReader("")).getMetadata();
+        return metadata.getJdbcKeywords();
+    }
 
     // implement FarragoSessionParser
     public Object parseSqlText(
@@ -188,30 +195,6 @@ public abstract class FarragoAbstractParser implements FarragoSessionParser
         }
         pw.close();
         return sw.toString();
-    }
-
-    protected static String constructReservedKeywordList(
-        String [] tokens,
-        FarragoAbstractParserImpl parserImpl)
-    {
-        StringBuffer sb = new StringBuffer();
-        boolean withComma = false;
-        for (int i = 0, size = tokens.length; i < size; i++) {
-            String tokenVal = SqlParserUtil.getTokenVal(tokens[i]);
-            if ((tokenVal != null)
-                && !SqlAbstractParserImpl.getSql92ReservedWords().contains(
-                    tokenVal)
-                && !parserImpl.isNonReserved(tokenVal))
-            {
-                if (withComma) {
-                    sb.append(",");
-                } else {
-                    withComma = true;
-                }
-                sb.append(tokenVal);
-            }
-        }
-        return sb.toString();
     }
 }
 

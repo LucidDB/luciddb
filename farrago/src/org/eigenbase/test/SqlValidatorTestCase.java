@@ -414,9 +414,10 @@ public class SqlValidatorTestCase extends TestCase
                         "]; expected [" + expectedMsgPattern +
                         "]; actual [" + actualMessage +
                         "]; pos [" + actualLine +
-                        ":" + actualColumn +
-                        "-" + actualEndLine +
-                        ":" + actualEndColumn + "]");
+                        " col " + actualColumn +
+                        " thru line " + actualEndLine +
+                        " col " + actualEndColumn +
+                        "]; sql [" + sqlWithCarets + "]");
                 } else if (sap.pos != null &&
                     (actualLine != sap.pos.getLineNum() ||
                     actualColumn != sap.pos.getColumnNum() ||

@@ -976,6 +976,25 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("INTERVAL '1' YEAR", "INTERVAL YEAR NOT NULL");
         checkExpType("INTERVAL '1' MONTH", "INTERVAL MONTH NOT NULL");
         checkExpType("INTERVAL '1-2' YEAR TO MONTH", "INTERVAL YEAR TO MONTH NOT NULL");
+
+        // FIXME Error message should contain quotes:
+        //    Illegal interval literal format '1:2' for INTERVAL DAY TO HOUR
+        // FIXME Position is wrong
+        checkExpFails("interval 'wael was here' ^HOUR^",
+            "(?s).*Illegal interval literal format wael was here for INTERVAL HOUR.*");
+        checkExpFails("interval '1' day to ^hour^",
+            "Illegal interval literal format 1 for INTERVAL DAY TO HOUR");
+        checkExpFails("interval '1 2' day to ^second^",
+            "Illegal interval literal format 1 2 for INTERVAL DAY TO SECOND");
+        checkExpFails("interval '1 2' hour to ^minute^",
+            "(?s).*Illegal interval literal format 1 2 for INTERVAL HOUR TO MINUTE.*");
+        checkExp("interval '1:2' minute to second");
+        checkExpFails("interval '-' ^day^",
+            "(?s).*Illegal interval literal format - for INTERVAL DAY.*");
+        checkExpFails("interval '1:x' hour to ^minute^",
+            "(?s).*Illegal interval literal format 1:x for INTERVAL HOUR TO MINUTE.*");
+        checkExpFails("interval '1:x:2' hour to ^second^",
+            "(?s).*Illegal interval literal format 1:x:2 for INTERVAL HOUR TO SECOND.*");
     }
 
     public void testIntervalOperators() {

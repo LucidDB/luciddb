@@ -225,45 +225,81 @@ JAVACODE ParseException cleanupParseException(ParseException ex)
         return ex;
     }
     int iIdentifier = java.util.Arrays.asList(ex.tokenImage).indexOf("<IDENTIFIER>");
-
+    
+    // Find all sequences in the error which contain identifier. For 
+    // example,
+    //       {<IDENTIFIER>}
+    //       {A}
+    //       {B, C}
+    //       {D, <IDENTIFIER>}
+    //       {D, A}
+    //       {D, B}
+    //
+    // would yield
+    //       {}
+    //       {D}
     boolean id = false;
+    ArrayList prefixList = new ArrayList();
     for (int i = 0; i < ex.expectedTokenSequences.length; ++i) {
-        if (ex.expectedTokenSequences[i][0] == iIdentifier) {
-            id = true;
-            break;
+        int[] seq = ex.expectedTokenSequences[i];
+        int j = seq.length - 1;
+        int i1 = seq[j];
+        if (i1 == iIdentifier) {
+            int[] prefix = new int[j];
+            System.arraycopy(seq, 0, prefix, 0, j);
+            prefixList.add(prefix);
         }
     }
-
-    if (!id) {
+    
+    if (prefixList.isEmpty()) {
         return ex;
     }
 
+    int[][] prefixes = (int[][]) 
+        prefixList.toArray(new int[prefixList.size()][]);
+    
     // Since <IDENTIFIER> was one of the possible productions,
     // we know that the parser will also have included all
     // of the non-reserved keywords (which are treated as
     // identifiers in non-keyword contexts).  So, now we need
     // to clean those out, since they're totally irrelevant.
-
+    
     List list = new ArrayList();
+    Metadata metadata = getMetadata();
     for (int i = 0; i < ex.expectedTokenSequences.length; ++i) {
-        int [] sequence = ex.expectedTokenSequences[i];
-        String token = SqlParserUtil.getTokenVal(ex.tokenImage[sequence[0]]);
-        if (token != null) {
-            if (isNonReserved(token)) {
-                continue;
-            }
-            if (isReservedFunctionName(token)) {
-                continue;
-            }
-            if (isContextVariable(token)) {
-                continue;
-            }
+        int [] seq = ex.expectedTokenSequences[i];
+        String tokenImage = ex.tokenImage[seq[seq.length - 1]];
+        String token = SqlParserUtil.getTokenVal(tokenImage);
+        if (token == null  || !metadata.isKeyword(token)) {
+            list.add(seq);
+            continue;
         }
-        list.add(sequence);
+        boolean match = matchesPrefix(seq, prefixes);
+        if (!match) {
+            list.add(seq);
+        }
     }
-
-    ex.expectedTokenSequences = (int [][]) list.toArray(new int [0][]);
+    
+    ex.expectedTokenSequences = 
+        (int [][]) list.toArray(new int [list.size()][]);
     return ex;
+}
+
+JAVACODE boolean matchesPrefix(int[] seq, int[][] prefixes)
+{
+    nextPrefix:
+    for (int j = 0; j < prefixes.length; j++) {
+        int[] prefix = prefixes[j];
+        if (seq.length == prefix.length + 1) {
+            for (int k = 0; k < prefix.length; k++) {
+                if (prefix[k] != seq[k]) {
+                    continue nextPrefix;
+                }
+            }
+            return true;
+        }
+    }
+    return false;
 }
 
 /*****************************************
@@ -3229,7 +3265,7 @@ TOKEN :
     | < CLASS_ORIGIN: "CLASS_ORIGIN" >
     | < CLOB: "CLOB" >
     | < CLOSE: "CLOSE" >
-    | < COALESCE: "COLAESCE" >
+    | < COALESCE: "COALESCE" >
     | < COBOL: "COBOL" >
     | < COLLATE: "COLLATE" >
     | < COLLATION: "COLLATION" >

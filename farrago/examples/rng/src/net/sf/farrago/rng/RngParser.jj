@@ -72,6 +72,8 @@ import net.sf.farrago.rng.*;
  */
 public class RngParser extends FarragoAbstractParserImpl
 {
+    private static Metadata metadata;
+
     public SqlParserPos getCurrentPosition()
     {
         return new SqlParserPos(
@@ -88,6 +90,17 @@ public class RngParser extends FarragoAbstractParserImpl
             return convertException(ex);
         } catch (ParseException e) {
             throw new AssertionError(e);
+        }
+    }
+
+    public Metadata getMetadata()
+    {
+        synchronized (RngParser.class) {
+            if (metadata == null) {
+                metadata = new MetadataImpl(
+                    new RngParser(new java.io.StringReader("")));
+            }
+            return metadata;
         }
     }
 

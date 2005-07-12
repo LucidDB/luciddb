@@ -65,6 +65,8 @@ public class SqlParserImpl extends SqlAbstractParserImpl
 {
     private static final Logger tracer = EigenbaseTrace.getParserTracer();
 
+    private static Metadata metadata;
+
     public SqlParseException normalizeException(Exception ex)
     {
         try {
@@ -77,36 +79,14 @@ public class SqlParserImpl extends SqlAbstractParserImpl
         }
     }
 
-    public boolean isNonReserved(String keyword)
+    public Metadata getMetadata()
     {
-        ReInit(new java.io.StringReader(keyword));
-        try {
-            NonReservedKeyWord();
-            return true;
-        } catch (ParseException e) {
-            return false;
-        }
-    }
-    
-    public boolean isReservedFunctionName(String keyword)
-    {
-        ReInit(new java.io.StringReader(keyword));
-        try {
-            ReservedFunctionName();
-            return true;
-        } catch (ParseException e) {
-            return false;
-        }
-    }
-
-    public boolean isContextVariable(String keyword)
-    {
-        ReInit(new java.io.StringReader(keyword));
-        try {
-            ContextVariable();
-            return true;
-        } catch (ParseException e) {
-            return false;
+        synchronized (SqlParserImpl.class) {
+            if (metadata == null) {
+                metadata = new MetadataImpl(
+                    new SqlParserImpl(new java.io.StringReader("")));
+            }
+            return metadata;
         }
     }
 }

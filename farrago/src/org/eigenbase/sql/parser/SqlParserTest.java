@@ -26,12 +26,10 @@ package org.eigenbase.sql.parser;
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.parser.impl.SqlParserImpl;
 import org.eigenbase.test.SqlValidatorTestCase;
 import org.eigenbase.util.TestUtil;
 import org.eigenbase.util.Util;
-
-import java.util.regex.Pattern;
-
 
 /**
  * A <code>SqlParserTest</code> is a unit-test for {@link SqlParser the SQL
@@ -47,8 +45,7 @@ public class SqlParserTest extends TestCase
     //~ Static fields/initializers --------------------------------------------
 
     protected static final String NL = System.getProperty("line.separator");
-    private final Pattern lineColPattern =
-        Pattern.compile("At line (.*), column (.*)");
+
     /** @deprecated */
     private static final boolean todo = false;
 
@@ -102,6 +99,10 @@ public class SqlParserTest extends TestCase
         return new SqlParser(sql).parseExpression();
     }
 
+    protected SqlParserImpl getParserImpl() {
+        return new SqlParser("").getParserImpl();
+    }
+
     protected void checkExpSame(String sql)
     {
         checkExp(sql, sql);
@@ -130,22 +131,18 @@ public class SqlParserTest extends TestCase
 
     protected void checkExpFails(
         String sql,
-        String exceptionPattern)
+        String expectedMsgPattern)
     {
+        SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);
+        Throwable thrown = null;
         try {
-            final SqlNode sqlNode = parseExpression(sql);
+            final SqlNode sqlNode = parseExpression(sap.sql);
             Util.discard(sqlNode);
-            fail("Expected expression '" + sql + "' to throw exception matching '"
-                + exceptionPattern + "'");
-        } catch (Throwable e) {
-            final String message = e.toString();
-            if (!Pattern.matches(exceptionPattern, message)) {
-                e.printStackTrace();
-                fail("Expected expression '" + sql
-                    + "' to throw exception matching '" + exceptionPattern
-                    + "', but it threw " + message);
-            }
+        } catch (Throwable ex) {
+            thrown = ex;
         }
+
+        SqlValidatorTestCase.checkEx(thrown, expectedMsgPattern, sap);
     }
 
     public void testNew()
@@ -687,7 +684,7 @@ public class SqlParserTest extends TestCase
     /**
      * In modern SQL, a query can occur almost everywhere that an expression
      * can. This test tests the few exceptions.
-     */ 
+     */
     public void testQueryInIllegalContext()
     {
         checkFails("select case ^(^select * from emp) when 1 then 2 end from dept",
@@ -1283,7 +1280,8 @@ public class SqlParserTest extends TestCase
     {
         checkExp("nullif(v1,v2)",
             "NULLIF(`V1`, `V2`)");
-        checkExpFails("nullif(1,2,3)", "(?s).*");
+        checkExpFails("1 ^+^ nullif + 3",
+            "(?s)Encountered \"\\+ nullif \\+\" at line 1, column 3.*");
     }
 
     public void testCoalesce()
@@ -1626,12 +1624,12 @@ public class SqlParserTest extends TestCase
         checkExp("interval '1 2:3:4' day to second","(INTERVAL '1 2:3:4' DAY TO SECOND)");
         checkExp("interval '1 2:3:4.5' day to second","(INTERVAL '1 2:3:4.5' DAY TO SECOND)");
 
-        checkExpFails("interval '1' day to hour");
-        checkExpFails("interval '1 2' day to second");
+        checkExp("interval '1' day to hour", "(INTERVAL '1' DAY TO HOUR)"); // ok in parser, not in validator
+        checkExp("interval '1 2' day to second", "(INTERVAL '1 2' DAY TO SECOND)"); // ok in parser, not in validator
 
         checkExp("interval '123' hour","(INTERVAL '123' HOUR)");
         checkExp("interval '1:2' hour to minute","(INTERVAL '1:2' HOUR TO MINUTE)");
-        checkExpFails("interval '1 2' hour to minute","(?s).*Illegal INTERVAL literal.*");
+        checkExp("interval '1 2' hour to minute","(INTERVAL '1 2' HOUR TO MINUTE)"); // ok in parser, not in validator
         checkExp("interval '1' hour","(INTERVAL '1' HOUR)");
         checkExp("interval '1:2:3' hour(2) to second","(INTERVAL '1:2:3' HOUR(2) TO SECOND)");
         checkExp("interval '1:22222:3.4567' hour(2) to second","(INTERVAL '1:22222:3.4567' HOUR(2) TO SECOND)");
@@ -1639,7 +1637,7 @@ public class SqlParserTest extends TestCase
         checkExp("interval '1' minute","(INTERVAL '1' MINUTE)");
         checkExp("interval '1:2' minute to second","(INTERVAL '1:2' MINUTE TO SECOND)");
         checkExp("interval '1:2.3' minute to second","(INTERVAL '1:2.3' MINUTE TO SECOND)");
-        checkExpFails("interval '1:2' minute to second");
+        checkExp("interval '1:2' minute to second", "(INTERVAL '1:2' MINUTE TO SECOND)");
 
         checkExp("interval '1' second","(INTERVAL '1' SECOND)");
         checkExp("interval '1' second(3)","(INTERVAL '1' SECOND(3))");
@@ -1652,11 +1650,11 @@ public class SqlParserTest extends TestCase
 
         checkExp("interval '1 2:3:4.567' day to second","(INTERVAL '1 2:3:4.567' DAY TO SECOND)");
 
-        checkExpFails("interval '-' day","(?s).*");
-        checkExpFails("interval '1 2:3:4.567' day to hour to second","(?s).*");
-        checkExpFails("interval '1:2' minute to second(2, 2)","(?s).*");
-        checkExpFails("interval '1:x' hour to minute","(?s).*");
-        checkExpFails("interval '1:x:2' hour to second","(?s).*");
+        checkExp("interval '-' day","(INTERVAL '-' DAY)");
+        checkExpFails("interval '1 2:3:4.567' day to hour ^to^ second","(?s)Encountered \"to\" at.*");
+        checkExpFails("interval '1:2' minute to second(2^,^ 2)","(?s)Encountered \",\" at.*");
+        checkExp("interval '1:x' hour to minute","(INTERVAL '1:x' HOUR TO MINUTE)");
+        checkExp("interval '1:x:2' hour to second","(INTERVAL '1:x:2' HOUR TO SECOND)");
     }
 
     public void testIntervalOperators() {
@@ -1666,8 +1664,8 @@ public class SqlParserTest extends TestCase
 
         checkExp("interval -'1' day","(INTERVAL -'1' DAY)");
         checkExp("interval '-1' day","(INTERVAL '-1' DAY)");
-        checkExpFails("interval 'wael was here'","(?s).*");
-        checkExpFails("interval 'wael was here' HOUR","(?s).*Illegal INTERVAL literal .wael was here..*");
+        checkExpFails("interval 'wael was here'","(?s)Encountered \"<EOF>\".*");
+        checkExp("interval 'wael was here' HOUR","(INTERVAL 'wael was here' HOUR)"); // ok in parser, not in validator
 
     }
 
@@ -1778,8 +1776,41 @@ public class SqlParserTest extends TestCase
             "abcdef^",
             SqlParserUtil.addCarets("abcdef", 1, 7, 1, 7));
     }
-}
 
+    public void testMetadata()
+    {
+        SqlAbstractParserImpl.Metadata metadata =
+            getParserImpl().getMetadata();
+
+        assertTrue(metadata.isReservedFunctionName("ABS"));
+        assertFalse(metadata.isReservedFunctionName("FOO"));
+
+        assertTrue(metadata.isContextVariableName("CURRENT_USER"));
+        assertFalse(metadata.isContextVariableName("ABS"));
+        assertFalse(metadata.isContextVariableName("FOO"));
+
+        assertTrue(metadata.isNonReservedKeyword("A"));
+        assertTrue(metadata.isNonReservedKeyword("KEY"));
+        assertFalse(metadata.isNonReservedKeyword("SELECT"));
+        assertFalse(metadata.isNonReservedKeyword("FOO"));
+        assertFalse(metadata.isNonReservedKeyword("ABS"));
+
+        assertTrue(metadata.isKeyword("ABS"));
+        assertTrue(metadata.isKeyword("CURRENT_USER"));
+        assertTrue(metadata.isKeyword("KEY"));
+        assertTrue(metadata.isKeyword("SELECT"));
+        assertTrue(metadata.isKeyword("HAVING"));
+        assertTrue(metadata.isKeyword("A"));
+        assertFalse(metadata.isKeyword("BAR"));
+
+        assertTrue(metadata.isReservedWord("SELECT"));
+        assertFalse(metadata.isReservedWord("KEY"));
+
+        String jdbcKeywords = metadata.getJdbcKeywords();
+        assertTrue(jdbcKeywords.indexOf(",COLLECT,") >= 0);
+        assertTrue(jdbcKeywords.indexOf(",SELECT,") < 0);
+    }
+}
 
 // End SqlParserTest.java
 

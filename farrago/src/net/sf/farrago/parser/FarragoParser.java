@@ -22,20 +22,9 @@
 */
 package net.sf.farrago.parser;
 
-import java.io.*;
-import java.util.*;
+import net.sf.farrago.parser.impl.FarragoParserImpl;
 
-import javax.jmi.reflect.*;
-
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.resource.*;
-import net.sf.farrago.session.*;
-import net.sf.farrago.util.*;
-import net.sf.farrago.parser.impl.*;
-
-import org.eigenbase.resource.*;
-import org.eigenbase.sql.*;
+import java.io.Reader;
 
 
 /**
@@ -49,15 +38,6 @@ public class FarragoParser extends FarragoAbstractParser
 {
     //~ Static fields/initializers --------------------------------------------
 
-    private static final String jdbcKeywords;
-
-    static
-    {
-        FarragoParserImpl parser = new FarragoParserImpl(new StringReader(""));
-        jdbcKeywords = constructReservedKeywordList(
-            FarragoParserImplConstants.tokenImage,
-            parser);
-    }
 
     //~ Constructors ----------------------------------------------------------
 
@@ -70,12 +50,6 @@ public class FarragoParser extends FarragoAbstractParser
 
     //~ Methods ---------------------------------------------------------------
 
-    // implement FarragoSessionParser
-    public String getJdbcKeywords()
-    {
-        return jdbcKeywords;
-    }
-    
     // implement FarragoAbstractParser
     protected FarragoAbstractParserImpl newParserImpl(Reader reader)
     {
