@@ -49,6 +49,8 @@ public class SqlParserTest extends TestCase
     /** @deprecated */
     private static final boolean todo = false;
 
+    public static final boolean bug317Fixed = false;
+
     //~ Constructors ----------------------------------------------------------
 
     public SqlParserTest(String name)
@@ -893,6 +895,96 @@ public class SqlParserTest extends TestCase
         check("select 1 from t--this is a comment" + NL
             + "where a>b-- this is comment" + NL,
             "SELECT 1" + NL + "FROM `T`" + NL + "WHERE (`A` > `B`)");
+    }
+
+    public void testMultilineComment()
+    {
+        // on single line
+        check("select 1 /* , 2 */, 3 from t",
+            "SELECT 1, 3" + NL +
+            "FROM `T`");
+
+        // on several lines
+        check("select /* 1," + NL +
+            " 2, " + NL +
+            " */ 3 from t",
+            "SELECT 3" + NL +
+            "FROM `T`");
+
+        // stuff inside comment
+        check("values ( /** 1, 2 + ** */ 3)",
+            "(VALUES (ROW(3)))");
+
+        // comment in string is preserved
+        check("values ('a string with /* a comment */ in it')",
+            "(VALUES (ROW('a string with /* a comment */ in it')))");
+
+        // SQL:2003, 5.2, syntax rule # 8 "There shall be no <separator>
+        // separating the <minus sign>s of a <simple comment introducer>".
+
+        check("values (- -1" + NL +
+            ")",
+            "(VALUES (ROW((- (- 1)))))");
+
+        check("values (--1+" + NL +
+            "2)",
+            "(VALUES (ROW(2)))");
+
+        // end of multiline commment without start
+        if (bug317Fixed)
+        checkFails("values (1 */ 2)", "xx");
+
+        // SQL:2003, 5.2, syntax rule #10 "Within a <bracket comment context>,
+        // any <solidus> immediately followed by an <asterisk> without any
+        // intervening <separator> shall be considered to be the <bracketed
+        // comment introducer> for a <separator> that is a <bracketed
+        // comment>".
+
+        // comment inside a comment
+        // Spec is unclear what should happen, but currently it crashes the
+        // parser, and that's bad
+        if (bug317Fixed)
+        check("values (1 + /* comment /* inner comment */ */ 2)", "xx");
+
+        // single-line comment inside multiline comment is illegal
+        //
+        // SQL-2003, 5.2: "Note 63 - Conforming programs should not place
+        // <simple comment> within a <bracketed comment> because if such a
+        // <simple comment> contains the sequence of characeters "*/" without
+        // a preceding "/*" in the same <simple comment>, it will prematurely
+        // terminate the containing <bracketed comment>.
+        if (bug317Fixed)
+        checkFails("values /* multiline contains -- singline */ " + NL +
+            " (1)", "xxx");
+
+        // non-terminated multiline comment inside singleline comment
+        if (bug317Fixed)
+        // Test should fail, and it does, but it should give "*/" as the
+        // erroneous token.
+        checkFails("values ( -- rest of line /* a comment  " + NL +
+            " 1, ^*/^ 2)", "Encountered \"/\\*\" at");
+
+        check("values (1 + /* comment -- rest of line" + NL +
+            " rest of comment */ 2)",
+            "(VALUES (ROW((1 + 2))))");
+
+        // multiline comment inside singleline comment
+        check("values -- rest of line /* a comment */ " + NL +
+            "(1)",
+            "(VALUES (ROW(1)))");
+
+        // non-terminated multiline comment inside singleline comment
+        check("values -- rest of line /* a comment  " + NL +
+            "(1)",
+            "(VALUES (ROW(1)))");
+
+        // even if comment abuts the tokens at either end, it becomes a space
+        check("values ('abc'/* a comment*/'def')",
+            "(VALUES (ROW('abc' 'def')))");
+
+        // comment which starts as soon as it has begun
+        check("values /**/ (1)",
+            "(VALUES (ROW(1)))");
     }
 
     // expressions
