@@ -62,7 +62,12 @@
   <property environment="env"/>
 
   <!-- runtime assertion control -->
-  <property name="assertions.jvmarg" value="-ea -esa"/>
+  <!-- REVIEW: SWZ: 7/14/2005: Increase default max heap to 128 MB to 
+       allow tests to complete without OutOfMemoryError.  Still investigating
+       whether there's a memory leak or not. If this change becomes
+       permanent it should be configured elsewhere. -->
+  <property name="assertions.jvmarg" value="-Xmx128m -ea -esa"/>
+
 
   <!-- forked ant verbosity control -->
   <property name="farrago.forkVerbosity" value="-e"/>
