@@ -2816,34 +2816,22 @@ SqlNode NamedFunctionCall() :
                 args = SqlParserUtil.emptyList;
                 pos = pos.plus(getPos());
             }
-            [ <OVER>
-                //~ only window aggregation function has window inline
-                //definition.
-                {
-                    overPos = getPos();
-                    over = true;
-                }
-                (
-                    id = SimpleIdentifier()
-                    | e = WindowSpecification()
-                )
-            ]
             | args = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_SUBQUERY)
             {
                 pos = pos.plus(getPos());
             }
-            [ <OVER>
-                {
-                    overPos = getPos();
-                    over = true;
-                    pos = pos.plus(overPos);
-                }
-                (
-                    id = SimpleIdentifier()
-                    | e = WindowSpecification()
-                )
-            ]
         )
+        [ <OVER>
+            {
+                overPos = getPos();
+                over = true;
+                pos = pos.plus(overPos);
+            }
+            (
+                id = SimpleIdentifier()
+                | e = WindowSpecification()
+            )
+        ]
         {
             function = createCall(
                 qualifiedName, SqlParserUtil.toNodeArray(args),

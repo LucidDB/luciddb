@@ -1553,6 +1553,13 @@ public class SqlParserTest extends TestCase
             "ROWS BETWEEN (2 PRECEDING) AND (2 FOLLOWING))"
             );
 
+        check("select count(*) over w from emp window w as (rows 2 preceding)",
+            "SELECT (COUNT(*) OVER `W`)" + NL +
+            "FROM `EMP`" + NL +
+            "WINDOW (ROWS (2 PRECEDING))"
+            );
+
+
         // Partition clause out of place. Found after ORDER BY
         checkFails("select count(z) over w as foo "+NL+
             "from Bids window w as (partition by y order by x ^partition^ by y)",
