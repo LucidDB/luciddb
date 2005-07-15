@@ -678,9 +678,15 @@ public class FarragoDatabase extends FarragoCompoundAllocation
         FarragoAllocationOwner owner,
         FarragoSessionAnalyzedSql analyzedSql)
     {
+        boolean useCache = stmt.mayCacheImplementation();
+        
         // It would be silly to cache EXPLAIN PLAN results, so deal with them
         // directly.
         if (sqlNode.isA(SqlKind.Explain)) {
+            useCache = false;
+        }
+
+        if (!useCache) {
             FarragoSessionExecutableStmt executableStmt =
                 stmt.prepare(sqlNode);
             owner.addAllocation(executableStmt);

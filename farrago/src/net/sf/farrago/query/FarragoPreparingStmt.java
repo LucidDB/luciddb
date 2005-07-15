@@ -172,6 +172,12 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     //~ Methods ---------------------------------------------------------------
 
     // implement FarragoSessionPreparingStmt
+    public boolean mayCacheImplementation() 
+    {
+        return true;
+    }
+
+
     public FarragoSessionStmtValidator getStmtValidator()
     {
         return stmtValidator;

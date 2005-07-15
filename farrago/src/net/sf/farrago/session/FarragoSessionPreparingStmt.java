@@ -105,6 +105,12 @@ public interface FarragoSessionPreparingStmt extends FarragoAllocation
         boolean logical);
 
     /**
+     * @return true if the implementation may be saved for resuse
+     */
+    public boolean mayCacheImplementation();
+
+
+    /**
      * @return generic stmt validator
      */
     public FarragoSessionStmtValidator getStmtValidator();
