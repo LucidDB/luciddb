@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/selectSimple.sql#6 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/selectSimple.sql#7 $
 0: jdbc:farrago:> -- Full vertical system testing of non advanced select statements
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -219,7 +219,7 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --Fails
 0: jdbc:farrago:> SELECT 0.5e1.1 from sales.emps;
-Error: net.sf.farrago.parser.impl.ParseException: Encountered ".1" at line 1, column 13.
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered ".1" at line 1, column 13.
 Was expecting one of:
     "AND" ...
     "AS" ...

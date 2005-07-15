@@ -45,9 +45,9 @@ Error: From line 1, column 8 to line 1, column 19: Cannot apply 'OR' to argument
 0: jdbc:farrago:> values '' or x'';
 Error: From line 1, column 8 to line 1, column 16: Cannot apply 'OR' to arguments of type '<CHAR(0)> OR <BINARY(0)>'. Supported form(s): '<BOOLEAN> OR <BOOLEAN>' (state=,code=0)
 0: jdbc:farrago:> values not 1;
-Error: From line 1, column 8 to line 1, column 10: Cannot apply 'NOT' to arguments of type 'NOT<INTEGER>'. Supported form(s): 'NOT<BOOLEAN>' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 12: Cannot apply 'NOT' to arguments of type 'NOT<INTEGER>'. Supported form(s): 'NOT<BOOLEAN>' (state=,code=0)
 0: jdbc:farrago:> values not '';
-Error: From line 1, column 8 to line 1, column 10: Cannot apply 'NOT' to arguments of type 'NOT<CHAR(0)>'. Supported form(s): 'NOT<BOOLEAN>' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 13: Cannot apply 'NOT' to arguments of type 'NOT<CHAR(0)>'. Supported form(s): 'NOT<BOOLEAN>' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values 'a'||1;
 Error: From line 1, column 8 to line 1, column 13: Cannot apply '||' to arguments of type '<CHAR(1)> || <INTEGER>'. Supported form(s): '<STRING> || <STRING>' (state=,code=0)
@@ -120,30 +120,30 @@ Error: From line 1, column 8 to line 1, column 14: Cannot apply '<=' to argument
 0: jdbc:farrago:> --how about underflow?
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values 1 is true;
-Error: From line 1, column 13 to line 1, column 16: Cannot apply 'IS TRUE' to arguments of type '<INTEGER> IS TRUE'. Supported form(s): '<BOOLEAN> IS TRUE' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 16: Cannot apply 'IS TRUE' to arguments of type '<INTEGER> IS TRUE'. Supported form(s): '<BOOLEAN> IS TRUE' (state=,code=0)
 0: jdbc:farrago:> values '' is not true;
-Error: From line 1, column 18 to line 1, column 21: Cannot apply 'IS NOT TRUE' to arguments of type '<CHAR(0)> IS NOT TRUE'. Supported form(s): '<BOOLEAN> IS NOT TRUE' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 21: Cannot apply 'IS NOT TRUE' to arguments of type '<CHAR(0)> IS NOT TRUE'. Supported form(s): '<BOOLEAN> IS NOT TRUE' (state=,code=0)
 0: jdbc:farrago:> values 1 is false;
-Error: From line 1, column 13 to line 1, column 17: Cannot apply 'IS FALSE' to arguments of type '<INTEGER> IS FALSE'. Supported form(s): '<BOOLEAN> IS FALSE' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 17: Cannot apply 'IS FALSE' to arguments of type '<INTEGER> IS FALSE'. Supported form(s): '<BOOLEAN> IS FALSE' (state=,code=0)
 0: jdbc:farrago:> values 0.01 is not false;
-Error: From line 1, column 20 to line 1, column 24: Cannot apply 'IS NOT FALSE' to arguments of type '<DECIMAL(3, 2)> IS NOT FALSE'. Supported form(s): '<BOOLEAN> IS NOT FALSE' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 24: Cannot apply 'IS NOT FALSE' to arguments of type '<DECIMAL(3, 2)> IS NOT FALSE'. Supported form(s): '<BOOLEAN> IS NOT FALSE' (state=,code=0)
 0: jdbc:farrago:> values x'' is unknown; 
-Error: From line 1, column 15 to line 1, column 21: Cannot apply 'IS UNKNOWN' to arguments of type '<BINARY(0)> IS UNKNOWN'. Supported form(s): '<BOOLEAN> IS UNKNOWN' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 21: Cannot apply 'IS UNKNOWN' to arguments of type '<BINARY(0)> IS UNKNOWN'. Supported form(s): '<BOOLEAN> IS UNKNOWN' (state=,code=0)
 0: jdbc:farrago:> values x'' is not unknown;
-Error: From line 1, column 19 to line 1, column 25: Cannot apply 'IS NOT UNKNOWN' to arguments of type '<BINARY(0)> IS NOT UNKNOWN'. Supported form(s): '<BOOLEAN> IS NOT UNKNOWN' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 25: Cannot apply 'IS NOT UNKNOWN' to arguments of type '<BINARY(0)> IS NOT UNKNOWN'. Supported form(s): '<BOOLEAN> IS NOT UNKNOWN' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --prefix
 0: jdbc:farrago:> values -x'';
-Error: At line 1, column 8: Cannot apply '-' to arguments of type '-<BINARY(0)>'. Supported form(s): '-<NUMERIC>'
+Error: From line 1, column 8 to line 1, column 11: Cannot apply '-' to arguments of type '-<BINARY(0)>'. Supported form(s): '-<NUMERIC>'
 '-<DATETIME_INTERVAL>' (state=,code=0)
 0: jdbc:farrago:> values -'2';
-Error: At line 1, column 8: Cannot apply '-' to arguments of type '-<CHAR(1)>'. Supported form(s): '-<NUMERIC>'
+Error: From line 1, column 8 to line 1, column 11: Cannot apply '-' to arguments of type '-<CHAR(1)>'. Supported form(s): '-<NUMERIC>'
 '-<DATETIME_INTERVAL>' (state=,code=0)
 0: jdbc:farrago:> values +x'';
-Error: At line 1, column 8: Cannot apply '+' to arguments of type '+<BINARY(0)>'. Supported form(s): '+<NUMERIC>'
+Error: From line 1, column 8 to line 1, column 11: Cannot apply '+' to arguments of type '+<BINARY(0)>'. Supported form(s): '+<NUMERIC>'
 '+<DATETIME_INTERVAL>' (state=,code=0)
 0: jdbc:farrago:> values +cast(null as date);
-Error: At line 1, column 8: Cannot apply '+' to arguments of type '+<DATE>'. Supported form(s): '+<NUMERIC>'
+Error: From line 1, column 8 to line 1, column 26: Cannot apply '+' to arguments of type '+<DATE>'. Supported form(s): '+<NUMERIC>'
 '+<DATETIME_INTERVAL>' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values x'' between x'' and 1;
@@ -171,50 +171,50 @@ Messages:
 0: jdbc:farrago:> values position(1 in 'superman');
 Error: From line 1, column 8 to line 1, column 15: Cannot apply 'POSITION' to arguments of type 'POSITION(<INTEGER> IN <CHAR(8)>)'. Supported form(s): 'POSITION(<STRING> IN <STRING>)' (state=,code=0)
 0: jdbc:farrago:> values character_length(1);
-Error: From line 1, column 8 to line 1, column 23: Cannot apply 'CHARACTER_LENGTH' to arguments of type 'CHARACTER_LENGTH(<INTEGER>)'. Supported form(s): 'CHARACTER_LENGTH(<CHARACTER>)' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 26: Cannot apply 'CHARACTER_LENGTH' to arguments of type 'CHARACTER_LENGTH(<INTEGER>)'. Supported form(s): 'CHARACTER_LENGTH(<CHARACTER>)' (state=,code=0)
 0: jdbc:farrago:> values char_length(x'');
-Error: From line 1, column 8 to line 1, column 18: Cannot apply 'CHAR_LENGTH' to arguments of type 'CHAR_LENGTH(<BINARY(0)>)'. Supported form(s): 'CHAR_LENGTH(<CHARACTER>)' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 23: Cannot apply 'CHAR_LENGTH' to arguments of type 'CHAR_LENGTH(<BINARY(0)>)'. Supported form(s): 'CHAR_LENGTH(<CHARACTER>)' (state=,code=0)
 0: jdbc:farrago:> values upper(0.02);
-Error: From line 1, column 8 to line 1, column 12: Cannot apply 'UPPER' to arguments of type 'UPPER(<DECIMAL(3, 2)>)'. Supported form(s): 'UPPER(<CHARACTER>)' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 18: Cannot apply 'UPPER' to arguments of type 'UPPER(<DECIMAL(3, 2)>)'. Supported form(s): 'UPPER(<CHARACTER>)' (state=,code=0)
 0: jdbc:farrago:> values lower(x'');
-Error: From line 1, column 8 to line 1, column 12: Cannot apply 'LOWER' to arguments of type 'LOWER(<BINARY(0)>)'. Supported form(s): 'LOWER(<CHARACTER>)' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 17: Cannot apply 'LOWER' to arguments of type 'LOWER(<BINARY(0)>)'. Supported form(s): 'LOWER(<CHARACTER>)' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --doesnt return the correct error message but keeping it active until its fixed
 0: jdbc:farrago:> --values initcap(cast(null as date));
 0: jdbc:farrago:> values initcap(1);
-Error: From line 1, column 8 to line 1, column 14: Cannot apply 'INITCAP' to arguments of type 'INITCAP(<INTEGER>)'. Supported form(s): 'INITCAP(<CHARACTER>)' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 17: Cannot apply 'INITCAP' to arguments of type 'INITCAP(<INTEGER>)'. Supported form(s): 'INITCAP(<CHARACTER>)' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values abs('');
-Error: From line 1, column 8 to line 1, column 10: Cannot apply 'ABS' to arguments of type 'ABS(<CHAR(0)>)'. Supported form(s): 'ABS(<NUMERIC>)'
+Error: From line 1, column 8 to line 1, column 14: Cannot apply 'ABS' to arguments of type 'ABS(<CHAR(0)>)'. Supported form(s): 'ABS(<NUMERIC>)'
 'ABS(<DATETIME_INTERVAL>)' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values nullif('',1);
-Error: From line 1, column 8 to line 1, column 13: Cannot apply '=' to arguments of type '<CHAR(0)> = <INTEGER>'. Supported form(s): '<COMPARABLE_TYPE> = <COMPARABLE_TYPE>' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 19: Cannot apply '=' to arguments of type '<CHAR(0)> = <INTEGER>'. Supported form(s): '<COMPARABLE_TYPE> = <COMPARABLE_TYPE>' (state=,code=0)
 0: jdbc:farrago:> values coalesce('a','b',1);
-Error: From line 1, column 8 to line 1, column 15: Illegal mixing of types in CASE or COALESCE statement (state=,code=0)
+Error: From line 1, column 8 to line 1, column 26: Illegal mixing of types in CASE or COALESCE statement (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values localtime();
-Error: From line 1, column 8 to line 1, column 16: No match found for function signature LOCALTIME() (state=,code=0)
+Error: From line 1, column 8 to line 1, column 18: No match found for function signature LOCALTIME() (state=,code=0)
 0: jdbc:farrago:> values localtime(1,2);
-Error: From line 1, column 8 to line 1, column 16: No match found for function signature LOCALTIME(<NUMERIC>, <NUMERIC>) (state=,code=0)
+Error: From line 1, column 8 to line 1, column 21: No match found for function signature LOCALTIME(<NUMERIC>, <NUMERIC>) (state=,code=0)
 0: jdbc:farrago:> values localtime(-1);
 Error: Argument to function 'LOCALTIME' must be a literal (state=,code=0)
 0: jdbc:farrago:> values localtimestamp();
-Error: From line 1, column 8 to line 1, column 21: No match found for function signature LOCALTIMESTAMP() (state=,code=0)
+Error: From line 1, column 8 to line 1, column 23: No match found for function signature LOCALTIMESTAMP() (state=,code=0)
 0: jdbc:farrago:> values localtimestamp(1,2);
-Error: From line 1, column 8 to line 1, column 21: No match found for function signature LOCALTIMESTAMP(<NUMERIC>, <NUMERIC>) (state=,code=0)
+Error: From line 1, column 8 to line 1, column 26: No match found for function signature LOCALTIMESTAMP(<NUMERIC>, <NUMERIC>) (state=,code=0)
 0: jdbc:farrago:> values localtimestamp(-3);
 Error: Argument to function 'LOCALTIMESTAMP' must be a literal (state=,code=0)
 0: jdbc:farrago:> values current_time(2,3);
-Error: From line 1, column 8 to line 1, column 19: No match found for function signature CURRENT_TIME(<NUMERIC>, <NUMERIC>) (state=,code=0)
+Error: From line 1, column 8 to line 1, column 24: No match found for function signature CURRENT_TIME(<NUMERIC>, <NUMERIC>) (state=,code=0)
 0: jdbc:farrago:> values current_timestamp(-1);
 Error: Argument to function 'CURRENT_TIMESTAMP' must be a literal (state=,code=0)
 0: jdbc:farrago:> values current_time(-20);
 Error: Argument to function 'CURRENT_TIME' must be a literal (state=,code=0)
 0: jdbc:farrago:> values current_date(2);
-Error: From line 1, column 8 to line 1, column 19: No match found for function signature CURRENT_DATE(<NUMERIC>) (state=,code=0)
+Error: From line 1, column 8 to line 1, column 22: No match found for function signature CURRENT_DATE(<NUMERIC>) (state=,code=0)
 0: jdbc:farrago:> values log(1,2,3);
-Error: From line 1, column 8 to line 1, column 10: Invalid number of arguments to function 'LOG'. Was expecting 1 arguments (state=,code=0)
+Error: From line 1, column 8 to line 1, column 17: Invalid number of arguments to function 'LOG'. Was expecting 1 arguments (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values (1),(2,3);
 Error: From line 1, column 1 to line 1, column 6: Values passed to VALUES operator must have compatible types (state=,code=0)

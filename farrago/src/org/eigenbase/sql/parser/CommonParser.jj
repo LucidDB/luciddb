@@ -270,7 +270,7 @@ JAVACODE ParseException cleanupParseException(ParseException ex)
         int [] seq = ex.expectedTokenSequences[i];
         String tokenImage = ex.tokenImage[seq[seq.length - 1]];
         String token = SqlParserUtil.getTokenVal(tokenImage);
-        if (token == null  || !metadata.isKeyword(token)) {
+        if (token == null  || !metadata.isNonReservedKeyword(token)) {
             list.add(seq);
             continue;
         }

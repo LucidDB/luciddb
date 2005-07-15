@@ -117,11 +117,11 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- these should fail
 0: jdbc:farrago:> values timestamp '2004-13-4 05:06:07';
-Error: net.sf.farrago.parser.impl.ParseException: Illegal TIMESTAMP literal '2004-13-4 05:06:07' at line 1, column 18: not in format 'yyyy-MM-dd HH:mm:ss' (state=,code=0)
+Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIMESTAMP literal '2004-13-4 05:06:07' at line 1, column 18: not in format 'yyyy-MM-dd HH:mm:ss' (state=,code=0)
 0: jdbc:farrago:> values timestamp '2004-04-6 05:06:67';
-Error: net.sf.farrago.parser.impl.ParseException: Illegal TIMESTAMP literal '2004-04-6 05:06:67' at line 1, column 18: not in format 'yyyy-MM-dd HH:mm:ss' (state=,code=0)
+Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIMESTAMP literal '2004-04-6 05:06:67' at line 1, column 18: not in format 'yyyy-MM-dd HH:mm:ss' (state=,code=0)
 0: jdbc:farrago:> values timestamp '2004-10-8 23.54.43.';
-Error: net.sf.farrago.parser.impl.ParseException: Illegal TIMESTAMP literal '2004-10-8 23.54.43.' at line 1, column 18: not in format 'yyyy-MM-dd HH:mm:ss' (state=,code=0)
+Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIMESTAMP literal '2004-10-8 23.54.43.' at line 1, column 18: not in format 'yyyy-MM-dd HH:mm:ss' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test datatype
 0: jdbc:farrago:> create schema test;

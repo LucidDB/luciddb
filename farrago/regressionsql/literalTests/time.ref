@@ -8,21 +8,21 @@
 | 12:01:01  |
 +-----------+
 0: jdbc:farrago:> values TIME '00:00';
-Error: net.sf.farrago.parser.impl.ParseException: Illegal TIME literal '00:00' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
+Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIME literal '00:00' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
 0: jdbc:farrago:> values TIME '01:00';
-Error: net.sf.farrago.parser.impl.ParseException: Illegal TIME literal '01:00' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
+Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIME literal '01:00' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
 0: jdbc:farrago:> values TIME '02:03 PST';
-Error: net.sf.farrago.parser.impl.ParseException: Illegal TIME literal '02:03 PST' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
+Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIME literal '02:03 PST' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
 0: jdbc:farrago:> values TIME '11:59 EDT';
-Error: net.sf.farrago.parser.impl.ParseException: Illegal TIME literal '11:59 EDT' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
+Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIME literal '11:59 EDT' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
 0: jdbc:farrago:> values TIME '12:00';
-Error: net.sf.farrago.parser.impl.ParseException: Illegal TIME literal '12:00' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
+Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIME literal '12:00' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
 0: jdbc:farrago:> values TIME '12:01';
-Error: net.sf.farrago.parser.impl.ParseException: Illegal TIME literal '12:01' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
+Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIME literal '12:01' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
 0: jdbc:farrago:> values TIME '23:59';
-Error: net.sf.farrago.parser.impl.ParseException: Illegal TIME literal '23:59' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
+Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIME literal '23:59' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
 0: jdbc:farrago:> values TIME '11:59:59.99 PM';
-Error: net.sf.farrago.parser.impl.ParseException: Illegal TIME literal '11:59:59.99 PM' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
+Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIME literal '11:59:59.99 PM' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- more ISO format tests that should work
 0: jdbc:farrago:> values time '3:4:5';
@@ -59,13 +59,13 @@ Error: net.sf.farrago.parser.impl.ParseException: Illegal TIME literal '11:59:59
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- these should fail
 0: jdbc:farrago:> values time '1003:1005:1002';
-Error: net.sf.farrago.parser.impl.ParseException: Illegal TIME literal '1003:1005:1002' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
+Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIME literal '1003:1005:1002' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
 0: jdbc:farrago:> values time '23.54.43..';
-Error: net.sf.farrago.parser.impl.ParseException: Illegal TIME literal '23.54.43..' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
+Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIME literal '23.54.43..' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
 0: jdbc:farrago:> values time '23.54.43.';
-Error: net.sf.farrago.parser.impl.ParseException: Illegal TIME literal '23.54.43.' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
+Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIME literal '23.54.43.' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
 0: jdbc:farrago:> values time '23.54.43.1,000';
-Error: net.sf.farrago.parser.impl.ParseException: Illegal TIME literal '23.54.43.1,000' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
+Error: org.eigenbase.sql.parser.SqlParseException: Illegal TIME literal '23.54.43.1,000' at line 1, column 13: not in format 'HH:mm:ss' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test datatype
 0: jdbc:farrago:> create schema test;

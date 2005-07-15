@@ -55,14 +55,32 @@ public abstract class TestUtil
         if (expected != null && expected.equals(actual)) {
             return;
         }
-        String s = actual;
+        String s = quoteForJava(actual);
 
-        // Convert [string with "quotes" split
-        // across lines]
-        // into ["string with \"quotes\" split" + NL +
-        // "across lines
-        //
-        //
+        String message =
+            "Expected:" + Util.lineSeparator + expected + Util.lineSeparator
+            + "Actual: " + Util.lineSeparator + actual + Util.lineSeparator
+            + "Actual java: " + Util.lineSeparator + s + Util.lineSeparator;
+        throw new ComparisonFailure(message, expected, actual);
+    }
+
+    /**
+     * Converts a string (which may contain quotes and newlines) into a
+     * java literal.
+     *
+     * <p>For example,
+     *
+     * <code><pre>string with "quotes" split
+     * across lines</pre></code>
+     *
+     * becomes
+     *
+     * <code><pre>"string with \"quotes\" split" + NL +
+     *  "across lines"</pre></code>
+     *
+     */
+    public static String quoteForJava(String s)
+    {
         s = Util.replace(s, "\"", "\\\"");
         final String lineBreak = "\" + NL +" + Util.lineSeparator + "\"";
         s = LineBreakPattern.matcher(s).replaceAll(lineBreak);
@@ -72,11 +90,26 @@ public abstract class TestUtil
         if (s.endsWith(spurious)) {
             s = s.substring(0, s.length() - spurious.length());
         }
-        String message =
-            "Expected:" + Util.lineSeparator + expected + Util.lineSeparator
-            + "Actual: " + Util.lineSeparator + actual + Util.lineSeparator
-            + "Actual java: " + Util.lineSeparator + s + Util.lineSeparator;
-        throw new ComparisonFailure(message, expected, actual);
+        return s;
+    }
+
+    /**
+     * Quotes a pattern.
+     */
+    public static String quotePattern(String s)
+    {
+        return s
+            .replaceAll("\\\\", "\\\\")
+            .replaceAll("\\.", "\\\\.")
+            .replaceAll("\\{", "\\\\{")
+            .replaceAll("\\}", "\\\\}")
+            .replaceAll("\\|", "\\\\||")
+            .replaceAll("\\?", "\\\\?")
+            .replaceAll("\\*", "\\\\*")
+            .replaceAll("\\(", "\\\\(")
+            .replaceAll("\\)", "\\\\)")
+            .replaceAll("\\[", "\\\\[")
+            .replaceAll("\\]", "\\\\]");
     }
 }
 

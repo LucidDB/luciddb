@@ -41,9 +41,7 @@ import org.eigenbase.sql.type.SqlTypeFactoryImpl;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.validate.SqlValidatorUtil;
-import org.eigenbase.util.EigenbaseContextException;
-import org.eigenbase.util.EnumeratedValues;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
 import java.nio.charset.Charset;
 import java.util.regex.Matcher;
@@ -409,9 +407,13 @@ public class SqlValidatorTestCase extends TestCase
                 if (actualMessage == null ||
                     !actualMessage.matches(expectedMsgPattern)) {
                     actualException.printStackTrace();
+                    final String expectedPatternJava =
+                        TestUtil.quoteForJava(
+                            TestUtil.quotePattern(expectedMsgPattern));
                     fail("SqlValidationTest: Validator threw different " +
                         "exception than expected; query [" + sap.sql +
-                        "]; expected [" + expectedMsgPattern +
+                        "]; expected pattern [" + expectedMsgPattern +
+                        "]; expected pattern as java [" + expectedPatternJava +
                         "]; actual [" + actualMessage +
                         "]; pos [" + actualLine +
                         " col " + actualColumn +

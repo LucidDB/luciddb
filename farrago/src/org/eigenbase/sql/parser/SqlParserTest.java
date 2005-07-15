@@ -147,8 +147,45 @@ public class SqlParserTest extends TestCase
         SqlValidatorTestCase.checkEx(thrown, expectedMsgPattern, sap);
     }
 
-    public void testNew()
+    /**
+     * Tests that when there is an error, non-reserved keywords such as
+     * "A", "ABSOLUTE" (which naturally arise whenver a production uses
+     * "&lt;IDENTIFIER&gt;") are removed, but reserved words such as "AND"
+     * remain.
+     */
+    public void testExceptionCleanup()
     {
+        checkFails("select 0.5e1^.1^ from sales.emps",
+            "(?s).*Encountered \".1\" at line 1, column 13." + NL +
+            "Was expecting one of:" + NL +
+            "    \"AND\" ..." + NL +
+            "    \"AS\" ..." + NL +
+            "    \"BETWEEN\" ..." + NL +
+            "    \"FROM\" ..." + NL +
+            "    \"IN\" ..." + NL +
+            "    \"IS\" ..." + NL +
+            "    \"LIKE\" ..." + NL +
+            "    \"MEMBER\" ..." + NL +
+            "    \"MULTISET\" ..." + NL +
+            "    \"NOT\" ..." + NL +
+            "    \"OR\" ..." + NL +
+            "    \"SIMILAR\" ..." + NL +
+            "    \"SUBMULTISET\" ..." + NL +
+            "    \",\" ..." + NL +
+            "    \"=\" ..." + NL +
+            "    \">\" ..." + NL +
+            "    \"<\" ..." + NL +
+            "    \"<=\" ..." + NL +
+            "    \">=\" ..." + NL +
+            "    \"<>\" ..." + NL +
+            "    \"\\+\" ..." + NL +
+            "    \"-\" ..." + NL +
+            "    \"\\*\" ..." + NL +
+            "    \"/\" ..." + NL +
+            "    \"\\|\\|\" ..." + NL +
+            "    <IDENTIFIER> ..." + NL +
+            "    <QUOTED_IDENTIFIER> ..." + NL +
+            ".*");
     }
 
     public void _testDerivedColumnList()
