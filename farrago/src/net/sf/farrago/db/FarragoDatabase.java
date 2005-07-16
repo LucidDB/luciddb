@@ -678,15 +678,9 @@ public class FarragoDatabase extends FarragoCompoundAllocation
         FarragoAllocationOwner owner,
         FarragoSessionAnalyzedSql analyzedSql)
     {
-        boolean useCache = stmt.mayCacheImplementation();
-        
         // It would be silly to cache EXPLAIN PLAN results, so deal with them
         // directly.
         if (sqlNode.isA(SqlKind.Explain)) {
-            useCache = false;
-        }
-
-        if (!useCache) {
             FarragoSessionExecutableStmt executableStmt =
                 stmt.prepare(sqlNode);
             owner.addAllocation(executableStmt);
@@ -735,44 +729,50 @@ public class FarragoDatabase extends FarragoCompoundAllocation
             return null;
         }
 
-        FarragoObjectCache.CachedObjectFactory stmtFactory =
-            new FarragoObjectCache.CachedObjectFactory() {
-                public void initializeEntry(
-                    Object key,
-                    FarragoObjectCache.UninitializedEntry entry)
-                {
-                    assert (key.equals(sql));
-                    FarragoSessionExecutableStmt executableStmt =
-                        stmt.prepare(validatedSqlNode);
-                    long memUsage =
-                        FarragoUtil.getStringMemoryUsage(sql)
-                        + executableStmt.getMemoryUsage();
-                    entry.initialize(executableStmt, memUsage);
-                }
-            };
-
-        FarragoObjectCache.Entry cacheEntry;
         FarragoSessionExecutableStmt executableStmt;
+        if (!stmt.mayCacheImplementation()) {
+            // no cache
+            executableStmt = stmt.prepare(validatedSqlNode);
+            owner.addAllocation(executableStmt);
 
-        do {
-            cacheEntry = codeCache.pin(sql, stmtFactory, false);
-            executableStmt =
-                (FarragoSessionExecutableStmt) cacheEntry.getValue();
+        } else { 
+            // use the cache
+            FarragoObjectCache.Entry cacheEntry;
+            FarragoObjectCache.CachedObjectFactory stmtFactory =
+                new FarragoObjectCache.CachedObjectFactory() {
+                    public void initializeEntry(
+                        Object key,
+                        FarragoObjectCache.UninitializedEntry entry)
+                    {
+                        assert (key.equals(sql));
+                        FarragoSessionExecutableStmt executableStmt =
+                            stmt.prepare(validatedSqlNode);
+                        long memUsage =
+                            FarragoUtil.getStringMemoryUsage(sql)
+                            + executableStmt.getMemoryUsage();
+                        entry.initialize(executableStmt, memUsage);
+                    }
+                };
 
-            if (isStale(
-                        stmt.getRepos(),
-                        executableStmt)) {
-                // TODO jvs 17-July-2004: Need DDL-vs-query concurrency control
-                // here.  FarragoRuntimeContext needs to acquire DDL-locks on
-                // referenced objects so that they cannot be modified/dropped
-                // for the duration of execution.
-                cacheEntry.closeAllocation();
-                codeCache.discard(sql);
-                cacheEntry = null;
-                executableStmt = null;
-            }
-        } while (executableStmt == null);
-        owner.addAllocation(cacheEntry);
+            do {
+                cacheEntry = codeCache.pin(sql, stmtFactory, false);
+                executableStmt =
+                    (FarragoSessionExecutableStmt) cacheEntry.getValue();
+
+                if (isStale(stmt.getRepos(), executableStmt)) {
+                    // TODO jvs 17-July-2004: Need DDL-vs-query concurrency control
+                    // here.  FarragoRuntimeContext needs to acquire DDL-locks on
+                    // referenced objects so that they cannot be modified/dropped
+                    // for the duration of execution.
+                    cacheEntry.closeAllocation();
+                    codeCache.discard(sql);
+                    cacheEntry = null;
+                    executableStmt = null;
+                }
+            } while (executableStmt == null);
+            owner.addAllocation(cacheEntry);
+        }
+
         return executableStmt;
     }
 
