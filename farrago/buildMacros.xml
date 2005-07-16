@@ -37,7 +37,7 @@
 "
 -Dnet.sf.farrago.home=${farrago.dir}
 -Dnet.sf.farrago.catalog=${project.catalog.dir}
--Djava.util.logging.config.file=${FarragoTrace.properties}
+-Djava.util.logging.config.file=${project.trace.propfile}
 ">
 
 ]>
@@ -118,8 +118,12 @@
   <!-- overridable alias for farrago.catalog.dir -->
   <property name="project.catalog.dir" location="${farrago.catalog.dir}"/>
 
-  <!-- Alias for farrago.catalog.dir to match runtime properties convention -->
-  <property name="FARRAGO_CATALOG_DIR" location="${farrago.catalog.dir}"/>
+  <!-- overridable alias for FarragoTrace.properties -->
+  <property name="project.trace.propfile" 
+    location="${FarragoTrace.properties}"/>
+
+  <!-- Alias for project.catalog.dir to match runtime properties convention -->
+  <property name="FARRAGO_CATALOG_DIR" location="${project.catalog.dir}"/>
 
   <!-- directory in which catalog sources are generated -->
   <property name="farrago.catalog.src.dir" 
@@ -311,7 +315,8 @@
   <macrodef name="farrago.mdrFork">
     <attribute name="target" default="unspecifiedTarget"/>
     <sequential>
-      <loadproperties srcFile="${farrago.ReposStorage.propfile}"/>
+      <loadproperties 
+        srcFile="${project.catalog.dir}/ReposStorage.properties"/>
       <farrago.antFork target="@{target}">
         <jvmargs>
           <sysproperty key="org.netbeans.mdr.Logger" value="256"/>

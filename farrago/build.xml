@@ -1145,7 +1145,7 @@ require version '${required.ant.version}'."/>
   <target name="testLeaksJmp" depends="all,cleanTestLogs" >
     <farrago.javaExec classpathref="farrago.run.classpath"
       classname="net.sf.farrago.test.TestLeaks">
-      <jvmarg line="-Xrunjmp:nomonitors"/>
+      <jvmarg line="-Xrunjmp:nomethods,nomonitors"/>
       <arg value="jmp"/>
     </farrago.javaExec>
   </target>

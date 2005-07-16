@@ -161,6 +161,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         // Save some global state for reentrancy
         needRestore = true;
         savedDeclarer = OJUtil.threadDeclarers.get();
+        OJSystem.env.pushThreadTempFrame();
 
         planner = getSession().getPersonality().newPlanner(this, true);
         getSession().getPersonality().definePlannerListeners(planner);
@@ -615,6 +616,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             // already closed or else never opened
             return;
         }
+        OJSystem.env.popThreadTempFrame();
         OJUtil.threadDeclarers.set(savedDeclarer);
 
         // TODO:  obtain locks to ensure that objects we intend to operate
