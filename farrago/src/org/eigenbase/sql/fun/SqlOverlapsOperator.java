@@ -22,13 +22,13 @@
 */
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.test.SqlOperatorTests;
-import org.eigenbase.sql.type.*;
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.test.SqlOperatorTests;
+import org.eigenbase.sql.type.SqlTypeStrategies;
+import org.eigenbase.sql.type.SqlTypeUtil;
+import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidatorScope;
 
 import java.util.ArrayList;
 
@@ -45,11 +45,6 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
         super("OVERLAPS", SqlKind.Overlaps, 15, true,
             SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiFirstKnown, null);
-    }
-
-    public void test(SqlTester tester)
-    {
-        SqlOperatorTests.testOverlapsOperator(tester);
     }
 
     public void unparse(

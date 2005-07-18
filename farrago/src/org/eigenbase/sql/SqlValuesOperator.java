@@ -21,16 +21,7 @@
 */
 package org.eigenbase.sql;
 
-import org.eigenbase.reltype.*;
-import org.eigenbase.sql.validate.*;
-import org.eigenbase.sql.util.*;
-import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.test.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
-import org.eigenbase.resource.*;
 
-import java.util.*;
 
 /**
  * The <code>VALUES</code> operator.
@@ -59,11 +50,6 @@ public class SqlValuesOperator extends SqlSpecialOperator
             SqlNode operand = operands[i];
             operand.unparse(writer, 0, 0);
         }
-    }
-
-    public void test(SqlTester tester)
-    {
-        SqlOperatorTests.testValuesOperator(tester);
     }
 }
 

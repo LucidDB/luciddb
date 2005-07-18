@@ -37,7 +37,7 @@
 "
 -Dnet.sf.farrago.home=${farrago.dir}
 -Dnet.sf.farrago.catalog=${project.catalog.dir}
--Djava.util.logging.config.file=${FarragoTrace.properties}
+-Djava.util.logging.config.file=${project.trace.propfile}
 ">
 
 ]>
@@ -62,7 +62,12 @@
   <property environment="env"/>
 
   <!-- runtime assertion control -->
-  <property name="assertions.jvmarg" value="-ea -esa"/>
+  <!-- REVIEW: SWZ: 7/14/2005: Increase default max heap to 128 MB to 
+       allow tests to complete without OutOfMemoryError.  Still investigating
+       whether there's a memory leak or not. If this change becomes
+       permanent it should be configured elsewhere. -->
+  <property name="assertions.jvmarg" value="-Xmx128m -ea -esa"/>
+
 
   <!-- forked ant verbosity control -->
   <property name="farrago.forkVerbosity" value="-e"/>
@@ -71,9 +76,19 @@
   <property name="javahome.dir" location="${env.JAVA_HOME}"/>
 
   <!-- Java source version -->
-  <property name="javasrc.version" value="1.4"/>
-  <condition property="javasrc.14">
-    <equals arg1="${javasrc.version}" arg2="1.4"/>
+  <property name="farrago.javasrc.version" value="1.4"/>
+  <condition property="farrago.javasrc.14">
+    <equals arg1="${farrago.javasrc.version}" arg2="1.4"/>
+  </condition>
+
+  <!-- JRE location for test execution -->
+  <property name="farrago.jre.dir" location="${javahome.dir}"/>
+
+  <!-- if JRE location doesn't match javahome, assume we should retroweave -->
+  <condition property="farrago.need.retroweave">
+    <not>
+      <equals arg1="${farrago.jre.dir}" arg2="${javahome.dir}"/>
+    </not>
   </condition>
 
   <!-- import thirdparty library settings -->
@@ -91,6 +106,7 @@
   <fail unless="sqlline.lib.dir"/>
   <fail unless="mdrlibs.dir"/>
   <fail unless="rmijdbc.dir"/>
+  <fail unless="retroweaver.dir"/>
 
 
   <!-- Directories -->
@@ -113,8 +129,12 @@
   <!-- overridable alias for farrago.catalog.dir -->
   <property name="project.catalog.dir" location="${farrago.catalog.dir}"/>
 
-  <!-- Alias for farrago.catalog.dir to match runtime properties convention -->
-  <property name="FARRAGO_CATALOG_DIR" location="${farrago.catalog.dir}"/>
+  <!-- overridable alias for FarragoTrace.properties -->
+  <property name="project.trace.propfile" 
+    location="${FarragoTrace.properties}"/>
+
+  <!-- Alias for project.catalog.dir to match runtime properties convention -->
+  <property name="FARRAGO_CATALOG_DIR" location="${project.catalog.dir}"/>
 
   <!-- directory in which catalog sources are generated -->
   <property name="farrago.catalog.src.dir" 
@@ -245,6 +265,9 @@
   <!-- classpath for execution -->
   <path id="farrago.run.classpath">
     <pathelement path="${farrago.3p.classpath}"/>
+    <fileset dir="${retroweaver.dir}">
+      <include name="release/retroweaver-rt.jar" if="farrago.need.retroweave"/>
+    </fileset>
     <pathelement location="${farrago.classes.dir}"/>
     <pathelement location="${farrago.catalog.src.dir}"/>
   </path>
@@ -290,10 +313,11 @@
   <macrodef name="farrago.antFork">
     <attribute name="target" default="unspecifiedTarget"/>
     <attribute name="classpathref" default="ant.classpath"/>
+    <attribute name="jvm" default="${farrago.jre.dir}/bin/java"/>
     <element name="jvmargs" optional="yes"/>
     <sequential>
       <java classname="org.apache.tools.ant.Main" fork="true" failonerror="true"
-        classpathref="@{classpathref}">
+        classpathref="@{classpathref}" jvm="@{jvm}">
         <jvmargs/>
         <arg value="${farrago.forkVerbosity}"/>
         <arg value="@{target}"/>
@@ -306,8 +330,9 @@
   <macrodef name="farrago.mdrFork">
     <attribute name="target" default="unspecifiedTarget"/>
     <sequential>
-      <loadproperties srcFile="${farrago.ReposStorage.propfile}"/>
-      <farrago.antFork target="@{target}">
+      <loadproperties 
+        srcFile="${project.catalog.dir}/ReposStorage.properties"/>
+      <farrago.antFork target="@{target}" jvm="java">
         <jvmargs>
           <sysproperty key="org.netbeans.mdr.Logger" value="256"/>
           <syspropertyset>
@@ -321,7 +346,7 @@
 
   <!-- Customization for javac task -->
   <presetdef name="farrago.javaCompile">
-    <javac debug="on" deprecation="on" source="${javasrc.version}"/>
+    <javac debug="on" deprecation="on" source="${farrago.javasrc.version}"/>
   </presetdef>
 
   <!-- Customization for java task -->
@@ -521,5 +546,13 @@
     <taskdef name="mdr" classname="org.netbeans.mdrant.MdrTask"
       classpathref="farrago.3p.classpath"/>
   </target>
+
+  <taskdef name="retroweaver"
+    classname="com.rc.retroweaver.ant.RetroWeaverTask">
+    <classpath>
+      <fileset dir="${retroweaver.dir}/lib" includes="**/*"/>
+      <pathelement location="${retroweaver.dir}/release/retroweaver.jar"/>
+    </classpath>
+  </taskdef>
 
 </project>

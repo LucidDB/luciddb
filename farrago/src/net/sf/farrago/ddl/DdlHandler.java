@@ -446,20 +446,8 @@ public abstract class DdlHandler
         }
         endLine += (offsetPos.getLineNum() - 1);
 
-        EigenbaseContextException newEx =
-            line == endLine && col == endCol ?
-            EigenbaseResource.instance().newValidatorContextPoint(
-                new Integer(line),
-                new Integer(col),
-                ex.getCause()) :
-            EigenbaseResource.instance().newValidatorContext(
-                new Integer(line),
-                new Integer(col),
-                new Integer(endLine),
-                new Integer(endCol),
-                ex.getCause());
-        newEx.setPosition(line, col, endLine, endCol);
-        return newEx;
+        return SqlUtil.newContextException(
+            line, col, endLine, endCol, ex.getCause());
     }
 
     private void validateDefaultClause(

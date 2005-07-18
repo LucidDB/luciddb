@@ -1,8 +1,8 @@
 /*
 // $Id$
-// Farrago is an extensible data management system.
+// Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2003-2005 Disruptive Tech
+// Copyright (C) 2002-2005 Disruptive Tech
 // Copyright (C) 2005-2005 LucidEra, Inc.
 // Portions Copyright (C) 2003-2005 John V. Sichi
 //
@@ -20,42 +20,31 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package net.sf.farrago.parser;
+package org.eigenbase.sql.test;
 
-import net.sf.farrago.parser.impl.FarragoParserImpl;
-
-import java.io.Reader;
-
+import org.eigenbase.test.SqlValidatorTestCase;
 
 /**
- * FarragoParser is the public wrapper for the JavaCC-generated
- * FarragoParserImpl.
+ * Concrete subclass of {@link SqlOperatorTests} which checks against
  *
- * @author John V. Sichi
+ * @author Julian Hyde
+ * @since July 7, 2005
  * @version $Id$
  */
-public class FarragoParser extends FarragoAbstractParser
+public class SqlOperatorTest extends SqlOperatorTests
 {
-    //~ Static fields/initializers --------------------------------------------
+    private SqlTester tester = (SqlTester) new SqlValidatorTestCase().getTester();
 
-
-    //~ Constructors ----------------------------------------------------------
-
-    /**
-     * Creates a new parser.
-     */
-    public FarragoParser()
+    public SqlOperatorTest(String testName)
     {
+        super(testName);
     }
 
-    //~ Methods ---------------------------------------------------------------
-
-    // implement FarragoAbstractParser
-    protected FarragoAbstractParserImpl newParserImpl(Reader reader)
+    protected SqlTester getTester()
     {
-        return new FarragoParserImpl(reader);
+        return tester;
     }
+
 }
 
-
-// End FarragoParser.java
+// End SqlOperatorTest.java

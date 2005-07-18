@@ -23,11 +23,9 @@
 
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.test.SqlOperatorTests;
-import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.type.SqlTypeStrategies;
 
 
 /**
@@ -197,11 +195,6 @@ public class SqlSelectOperator extends SqlOperator
             writer.print("ORDER BY ");
             orderClause.unparse(writer, 0, 0);
         }
-    }
-
-    public void test(SqlTester tester)
-    {
-        SqlOperatorTests.testSelect(tester);
     }
 }
 

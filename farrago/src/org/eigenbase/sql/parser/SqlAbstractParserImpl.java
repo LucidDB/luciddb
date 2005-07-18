@@ -23,11 +23,16 @@
 
 package org.eigenbase.sql.parser;
 
-import java.util.*;
-
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.parser.impl.ParseException;
+import org.eigenbase.util.Util;
 
+import java.io.Reader;
+import java.io.StringReader;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
 
 /**
  * Abstract base for parsers generated from CommonParser.jj.
@@ -62,7 +67,7 @@ public abstract class SqlAbstractParserImpl
     protected static final ExprContext EXPR_ACCEPT_SUBQUERY =
         new ExprContext();
 
-    private static final Set sql92ReservedWords;
+    private static final Set sql92ReservedWordSet;
 
     static {
         Set set = new HashSet();
@@ -293,7 +298,7 @@ public abstract class SqlAbstractParserImpl
         set.add("WRITE");
         set.add("YEAR");
         set.add("ZONE");
-        sql92ReservedWords = Collections.unmodifiableSet(set);
+        sql92ReservedWordSet = Collections.unmodifiableSet(set);
     }
 
     /**
@@ -303,7 +308,7 @@ public abstract class SqlAbstractParserImpl
      */
     public static Set getSql92ReservedWords()
     {
-        return sql92ReservedWords;
+        return sql92ReservedWordSet;
     }
 
     //~ Instance fields -------------------------------------------------------
@@ -344,9 +349,23 @@ public abstract class SqlAbstractParserImpl
         if (fun == null) {
             fun = new SqlFunction(funName, null, null, null, null, funcType);
         }
-        
+
         return fun.createCall(operands, pos);
     }
+
+    /**
+     * Returns metadata about this parser: keywords, etc.
+     */
+    public abstract Metadata getMetadata();
+
+    public abstract SqlParseException normalizeException(Exception ex);
+
+    /**
+     * Reinitializes parser with new input.
+     *
+     * @param reader provides new input
+     */
+    public abstract void ReInit(Reader reader);
 
     //~ Inner Classes ---------------------------------------------------------
 
@@ -355,6 +374,241 @@ public abstract class SqlAbstractParserImpl
      */
     protected static class ExprContext
     {
+    }
+
+    /**
+     * Metadata about the parser.
+     *
+     * For example:<ul>
+     * <li>"KEY" is a keyword: it is meaningful in certain
+     *     contexts, such as "CREATE FOREIGN KEY", but can be used as
+     *     an identifier, as in <code>"CREATE TABLE t (key INTEGER)"</code>.
+     * <li>"SELECT" is a reserved word. It can not be used as an
+     *     identifier.
+     * <li>"CURRENT_USER" is the name of a context variable. It cannot be
+     *     used as an identifier.
+     * <li>"ABS" is the name of a reserved function. It cannot be
+     *     used as an identifier.
+     * <li>"DOMAIN" is a reserved word as specified by the SQL:92 standard.
+     * </ul>
+     */
+    public interface Metadata
+    {
+        /**
+         * Returns true if token is a keyword but not a reserved word.
+         * For example, "KEY".
+         */
+        boolean isNonReservedKeyword(String token);
+
+        /**
+         * Returns whether token is the name of a context variable such as
+         * "CURRENT_USER".
+         */
+        boolean isContextVariableName(String token);
+
+        /**
+         * Returns whether token is a reserved function name such as
+         * "CURRENT_USER".
+         */
+        boolean isReservedFunctionName(String token);
+
+        /**
+         * Returns whether token is a keyword. (That is, a non-reserved
+         * keyword, a context variable, or a reserved function name.)
+         */
+        boolean isKeyword(String token);
+
+        /**
+         * Returns whether token is a reserved word.
+         */
+        boolean isReservedWord(String token);
+
+        /**
+         * Returns whether token is a reserved word as specified by the SQL:92
+         * standard.
+         */
+        boolean isSql92ReservedWord(String token);
+
+        /**
+         * Returns comma-separated list of JDBC keywords.
+         */
+        String getJdbcKeywords();
+
+        /**
+         * Returns a list of all tokens in alphabetical order.
+         */
+        List getTokens();
+    }
+
+    /**
+     * Default implementation of the {@link Metadata} interface.
+     */
+    public static class MetadataImpl implements Metadata
+    {
+        private final Set reservedFunctionNames = new HashSet();
+        private final Set contextVariableNames = new HashSet();
+        private final Set nonReservedKeyWordSet = new HashSet();
+        /**
+         * Set of all tokens.
+         */
+        private final SortedSet tokenSet = new TreeSet();
+        /**
+         * Immutable list of all tokens, in alphabetical order.
+         */
+        private final List tokenList;
+        private final Set reservedWords = new HashSet();
+        private final String sql92ReservedWords;
+
+        public MetadataImpl(SqlAbstractParserImpl sqlParser)
+        {
+            initList(sqlParser, reservedFunctionNames, "ReservedFunctionName");
+            initList(sqlParser, contextVariableNames, "ContextVariable");
+            initList(sqlParser, nonReservedKeyWordSet, "NonReservedKeyWord");
+            tokenList = Collections.unmodifiableList(new ArrayList(tokenSet));
+            sql92ReservedWords = constructSql92ReservedWordList();
+            Set reservedWordSet = new TreeSet();
+            reservedWordSet.addAll(tokenSet);
+            reservedWordSet.removeAll(nonReservedKeyWordSet);
+            reservedWords.addAll(reservedWordSet);
+        }
+
+        /**
+         * Initializes lists of keywords.
+         */
+        private void initList(
+            SqlAbstractParserImpl parserImpl, Set keywords, final String name)
+        {
+            parserImpl.ReInit(new StringReader("1"));
+            try {
+                Object o = virtualCall(parserImpl, name);
+                Util.discard(o);
+                throw Util.newInternal("expected call to fail");
+            } catch (Throwable throwable) {
+                if (throwable instanceof ParseException) {
+                    ParseException parseException = (ParseException) throwable;
+                    // First time through, build the list of all tokens.
+                    if (tokenSet.isEmpty()) {
+                        for (int i = 0; i < parseException.tokenImage.length;
+                             i++) {
+                            String token = parseException.tokenImage[i];
+                            String tokenVal = SqlParserUtil.getTokenVal(token);
+                            if (tokenVal != null) {
+                                tokenSet.add(tokenVal);
+                            }
+                        }
+                    }
+                    // Add the tokens which would have been expected in this
+                    // syntactic context to the list we're building.
+                    for (int i = 0; i <
+                        parseException.expectedTokenSequences.length; i++) {
+                        final int[] expectedTokenSequence =
+                            parseException.expectedTokenSequences[i];
+                        assert expectedTokenSequence.length == 1;
+                        final int tokenId = expectedTokenSequence[0];
+                        String token = parseException.tokenImage[tokenId];
+                        String tokenVal = SqlParserUtil.getTokenVal(token);
+                        if (tokenVal != null) {
+                            keywords.add(tokenVal);
+                        }
+                    }
+                }
+            }
+        }
+
+        /**
+         * Uses reflection to invoke a method on this parser. The method must be
+         * public and have no parameters.
+         *
+         * @param parserImpl
+         * @param name Name of method. For example "ReservedFunctionName".
+         * @return Result of calling method
+         */
+        private Object virtualCall(
+            SqlAbstractParserImpl parserImpl,
+            String name) throws Throwable
+        {
+            Class clazz = parserImpl.getClass();
+            try {
+                final Method method = clazz.getMethod(name, (Class []) null);
+                return method.invoke(parserImpl, (Object []) null);
+            } catch (NoSuchMethodException e) {
+                throw Util.newInternal(e);
+            } catch (IllegalAccessException e) {
+                throw Util.newInternal(e);
+            } catch (InvocationTargetException e) {
+                Throwable cause = e.getCause();
+                if (cause instanceof Exception) {
+                    throw parserImpl.normalizeException((Exception) cause);
+                } else {
+                    throw cause;
+                }
+            }
+        }
+
+        /**
+         * Builds a comma-separated list of JDBC reserved words.
+         */
+        private String constructSql92ReservedWordList()
+        {
+            StringBuffer sb = new StringBuffer();
+            TreeSet jdbcReservedSet = new TreeSet();
+            jdbcReservedSet.addAll(tokenSet);
+            jdbcReservedSet.removeAll(sql92ReservedWordSet);
+            jdbcReservedSet.removeAll(nonReservedKeyWordSet);
+            int j = 0;
+            for (Iterator jdbcReservedIter = jdbcReservedSet.iterator();
+                 jdbcReservedIter.hasNext();) {
+                String jdbcReserved = (String) jdbcReservedIter.next();
+                if (j++ > 0) {
+                    sb.append(",");
+                }
+                sb.append(jdbcReserved);
+            }
+            return sb.toString();
+        }
+
+        public List getTokens()
+        {
+            return tokenList;
+        }
+
+        public boolean isSql92ReservedWord(String token)
+        {
+            return sql92ReservedWordSet.contains(token);
+        }
+
+        public String getJdbcKeywords()
+        {
+            return sql92ReservedWords;
+        }
+
+        public boolean isKeyword(String token)
+        {
+            return isNonReservedKeyword(token) ||
+                isReservedFunctionName(token) ||
+                isContextVariableName(token) ||
+                isReservedWord(token);
+        }
+
+        public boolean isNonReservedKeyword(String token)
+        {
+            return nonReservedKeyWordSet.contains(token);
+        }
+
+        public boolean isReservedFunctionName(String token)
+        {
+            return reservedFunctionNames.contains(token);
+        }
+
+        public boolean isContextVariableName(String token)
+        {
+            return contextVariableNames.contains(token);
+        }
+
+        public boolean isReservedWord(String token)
+        {
+            return reservedWords.contains(token);
+        }
     }
 }
 

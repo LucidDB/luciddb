@@ -29,7 +29,7 @@ import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.Util;
 
-import java.math.BigDecimal;
+import java.math.*;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -317,7 +317,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                         RexMultisetUtil.opTab.greaterThanOperator,
                         c,
                         cluster.getRexBuilder().makeExactLiteral(
-                            new BigDecimal(1)))},
+                            new BigDecimal(BigInteger.ONE)))},
                     null,
                     null);
             RelNode notExistRel = createExistsPlanSingleRow(filterRel, true);
@@ -356,7 +356,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                         cluster.getTypeFactory().createSqlType(
                             SqlTypeName.Integer), 0),
                     cluster.getRexBuilder().makeExactLiteral(
-                        new BigDecimal(1))),
+                        new BigDecimal(BigInteger.ONE))),
                 // then
                 cluster.getRexBuilder().makeLiteral(true), 
                 // else
@@ -584,7 +584,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                         RexMultisetUtil.opTab.greaterThanOperator,
                         c,
                         cluster.getRexBuilder().makeExactLiteral(
-                            new BigDecimal(1)))},
+                            new BigDecimal(BigInteger.ONE)))},
                     null,
                     null);
             RelNode notExistsRel = createExistsPlanSingleRow(filterRel, true);
@@ -741,7 +741,8 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                 ,cluster.getRexBuilder().makeInputRef(
                     cluster.getTypeFactory().createSqlType(
                         SqlTypeName.Integer), 0)
-                ,cluster.getRexBuilder().makeExactLiteral(new BigDecimal(0)))
+                ,cluster.getRexBuilder().makeExactLiteral(
+                    new BigDecimal(BigInteger.ZERO)))
             // then
             ,cluster.getRexBuilder().makeLiteral(true)
             // else

@@ -22,7 +22,7 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/disruptivetech/xo/CorrelationJoinExecStream.h"
-#include "fennel/disruptivetech/calc/DynamicParam.h"
+#include "fennel/exec/DynamicParam.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/ExecStreamGraph.h"
 #include "fennel/tuple/TuplePrinter.h"

@@ -24,14 +24,8 @@
 package org.eigenbase.sql.fun;
 
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.test.SqlOperatorTests;
-import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.util.Util;
+import org.eigenbase.sql.type.SqlTypeStrategies;
 
 
 /**
@@ -77,11 +71,6 @@ public class SqlRowOperator extends SqlSpecialOperator
         }
         return opBinding.getTypeFactory().createStructType(
             argTypes, fieldNames);
-    }
-
-    public void test(SqlTester tester)
-    {
-        SqlOperatorTests.testRow(tester);
     }
 
     public void unparse(

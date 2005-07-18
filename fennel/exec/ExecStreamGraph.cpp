@@ -26,8 +26,9 @@
 #include "fennel/exec/ExecStream.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/ExecStreamScheduler.h"
+#include "fennel/exec/DynamicParam.h"
 #include "fennel/segment/Segment.h"
-#include "fennel/disruptivetech/calc/DynamicParam.h"
+#include "fennel/exec/DynamicParam.h"
 
 
 #include <boost/bind.hpp>
@@ -458,6 +459,12 @@ void ExecStreamGraphImpl::closeImpl()
     if (pScratchSegment) {
         pScratchSegment->deallocatePageRange(NULL_PAGE_ID,NULL_PAGE_ID);
     }
+}
+
+SharedExecStream ExecStreamGraphImpl::getStream(ExecStreamId id)
+{
+    Vertex v = boost::vertices(graphRep).first[id];
+    return getStreamFromVertex(v);
 }
 
 uint ExecStreamGraphImpl::getInputCount(

@@ -127,13 +127,8 @@ public class SqlTestGen
                     throw new UnsupportedOperationException();
                 }
 
-                public void assertExceptionIsThrown(
-                    String sql,
-                    String expectedMsgPattern,
-                    int expectedLine,
-                    int expectedColumn,
-                    int expectedEndLine,
-                    int expectedEndColumn)
+                public void assertExceptionIsThrown(String sql,
+                    String expectedMsgPattern)
                 {
                     if (expectedMsgPattern == null) {
                         // This SQL statement is supposed to succeed. Generate

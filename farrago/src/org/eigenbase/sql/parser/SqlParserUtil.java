@@ -559,6 +559,24 @@ public final class SqlParserUtil
         return sqlWithCarets;
     }
 
+    public static String getTokenVal(String token)
+    {
+        // We don't care about the token which are not string
+        if (!token.startsWith("\"")) {
+            return null;
+        }
+
+        // Remove the quote from the token
+        int startIndex = token.indexOf("\"");
+        int endIndex = token.lastIndexOf("\"");
+        String tokenVal = token.substring(startIndex + 1, endIndex);
+        char c = tokenVal.charAt(0);
+        if (Character.isLetter(c)) {
+            return tokenVal;
+        }
+        return null;
+    }
+
     public static class ParsedCollation {
         private final Charset charset;
         private final Locale locale;
@@ -814,8 +832,10 @@ outer:
                         // irrelevant.
                         SqlNode leftExp = (SqlNode) list.get(i - 1);
 
+                        SqlParserPos callPos = currentPos.plusAll(
+                            new SqlNode[] {leftExp});
                         final SqlCall newExp =
-                            current.createCall(leftExp, currentPos);
+                            current.createCall(leftExp, callPos);
                         if (tracer.isLoggable(Level.FINE)) {
                             tracer.fine("Reduced postfix: " + newExp);
                         }

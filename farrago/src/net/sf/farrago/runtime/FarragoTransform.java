@@ -52,6 +52,11 @@ public interface FarragoTransform
         FarragoTransform.Binding[] bindings);
 
     /**
+     * Does a quantum of work.
+     */
+    void execute(FarragoRuntimeContext context);
+
+    /**
      * A port is an point where a transform needs to be connected to an
      * input or an output.
      */

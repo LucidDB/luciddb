@@ -72,11 +72,36 @@ import net.sf.farrago.rng.*;
  */
 public class RngParser extends FarragoAbstractParserImpl
 {
+    private static Metadata metadata;
+
     public SqlParserPos getCurrentPosition()
     {
         return new SqlParserPos(
             token.beginLine,
             token.beginColumn);
+    }
+
+    public SqlParseException normalizeException(Exception ex)
+    {
+        try {
+            if (ex instanceof ParseException) {
+                ex = cleanupParseException((ParseException) ex);
+            }
+            return convertException(ex);
+        } catch (ParseException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    public Metadata getMetadata()
+    {
+        synchronized (RngParser.class) {
+            if (metadata == null) {
+                metadata = new MetadataImpl(
+                    new RngParser(new java.io.StringReader("")));
+            }
+            return metadata;
+        }
     }
 
     RngmodelPackage getRngModelPackage()

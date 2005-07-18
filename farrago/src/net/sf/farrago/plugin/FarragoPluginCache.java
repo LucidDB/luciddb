@@ -150,7 +150,7 @@ public abstract class FarragoPluginCache extends FarragoCompoundAllocation
 
         FarragoPlugin plugin;
         try {
-            Object obj = pluginClass.newInstance();
+            Object obj = classLoader.newPluginInstance(pluginClass);
             assert(obj instanceof FarragoPlugin) : obj.getClass();
             plugin = (FarragoPlugin) obj;
             plugin.initialize(repos, options);

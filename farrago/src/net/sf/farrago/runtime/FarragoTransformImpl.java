@@ -42,6 +42,11 @@ public abstract class FarragoTransformImpl implements FarragoTransform
         }
     }
 
+    public void execute(FarragoRuntimeContext context)
+    {
+        // do nothing
+    }
+
     protected void bindPort(Binding binding)
     {
         final Port port = binding.getPort(this);

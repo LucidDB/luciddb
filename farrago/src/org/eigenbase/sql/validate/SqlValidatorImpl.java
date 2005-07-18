@@ -912,6 +912,12 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                     typeFactory, ns.getRowType(), false);
             }
 
+            // Check for COUNT(*) function.  If it is we don't
+            // want to try and derive the "*"
+            if (call.isCountStar()) {
+                return typeFactory.createSqlType(SqlTypeName.Integer);
+            }
+
             final SqlSyntax syntax = call.getOperator().getSyntax();
             switch (syntax.getOrdinal()) {
             case SqlSyntax.Prefix_ordinal:
@@ -944,6 +950,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 SqlOperator operator = call.getOperator();
 
                 RelDataType[] argTypes = new RelDataType[operands.length];
+
                 for (int i = 0; i < operands.length; ++i) {
                     RelDataType nodeType = deriveType(subScope, operands[i]);
                     setValidatedNodeTypeImpl(operands[i], nodeType);
@@ -1819,7 +1826,8 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         case SqlJoinOperator.JoinType.Right_ORDINAL:
         case SqlJoinOperator.JoinType.Full_ORDINAL:
             if (condition == null && !natural) {
-                throw newValidationError(join,
+                throw newValidationError(
+                    join,
                     EigenbaseResource.instance()
                     .newJoinRequiresCondition());
             }
@@ -1827,12 +1835,14 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         case SqlJoinOperator.JoinType.Comma_ORDINAL:
         case SqlJoinOperator.JoinType.Cross_ORDINAL:
             if (condition != null) {
-                throw newValidationError(condition,
+                throw newValidationError(
+                    join.operands[SqlJoin.CONDITION_TYPE_OPERAND],
                     EigenbaseResource.instance()
                     .newCrossJoinDisallowsCondition());
             }
             if (natural) {
-                throw newValidationError(join,
+                throw newValidationError(
+                    join.operands[SqlJoin.CONDITION_TYPE_OPERAND],
                     EigenbaseResource.instance()
                     .newCrossJoinDisallowsCondition());
             }
@@ -2310,34 +2320,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
     {
         Util.pre(node != null, "node != null");
         final SqlParserPos pos = node.getParserPosition();
-        return newContextException(pos, e);
-    }
-
-    /**
-     * Wraps an exception with context.
-     */
-    public static EigenbaseException newContextException(
-        final SqlParserPos pos,
-        SqlValidatorException e)
-    {
-        int line = pos.getLineNum();
-        int col = pos.getColumnNum();
-        int endLine = pos.getEndLineNum();
-        int endCol = pos.getEndColumnNum();
-        EigenbaseContextException contextExcn =
-            line == endLine && col == endCol ?
-            EigenbaseResource.instance().newValidatorContextPoint(
-                new Integer(line),
-                new Integer(col),
-                e) :
-            EigenbaseResource.instance().newValidatorContext(
-                new Integer(line),
-                new Integer(col),
-                new Integer(endLine),
-                new Integer(endCol),
-                e);
-        contextExcn.setPosition(line, col, endLine, endCol);
-        return contextExcn;
+        return SqlUtil.newContextException(pos, e);
     }
 
     private SqlWindow getWindowByName(

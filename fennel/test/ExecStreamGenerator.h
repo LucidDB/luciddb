@@ -25,7 +25,7 @@
 #define Fennel_ExecStreamGenerator_Included
 
 #include "fennel/exec/MockProducerExecStream.h"
-#include "fennel/disruptivetech/calc/DynamicParam.h"
+#include "fennel/exec/DynamicParam.h"
 #include <algorithm>
 #include <numeric>
 

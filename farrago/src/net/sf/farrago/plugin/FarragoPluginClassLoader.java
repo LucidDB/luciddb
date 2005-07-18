@@ -179,6 +179,28 @@ public class FarragoPluginClassLoader extends URLClassLoader
                 ex);
         }
     }
+
+    /**
+     * Constructs a new object instance of a plugin class, making sure the
+     * thread's context ClassLoader is set to <code>this</code> for the
+     * duration of the construction.
+     *
+     * @param pluginClass class to instantiate
+     *
+     * @return new object
+     */
+    public Object newPluginInstance(Class pluginClass)
+        throws InstantiationException, IllegalAccessException
+    {
+        Thread currentThread = Thread.currentThread();
+        ClassLoader savedClassLoader = currentThread.getContextClassLoader();
+        try {
+            currentThread.setContextClassLoader(this);
+            return pluginClass.newInstance();
+        } finally {
+            currentThread.setContextClassLoader(savedClassLoader);
+        }
+    }
 }
 
 // End FarragoPluginClassLoader.java

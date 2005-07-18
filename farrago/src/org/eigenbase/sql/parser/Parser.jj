@@ -64,6 +64,31 @@ import java.util.logging.Level;
 public class SqlParserImpl extends SqlAbstractParserImpl
 {
     private static final Logger tracer = EigenbaseTrace.getParserTracer();
+
+    private static Metadata metadata;
+
+    public SqlParseException normalizeException(Exception ex)
+    {
+        try {
+            if (ex instanceof ParseException) {
+                ex = cleanupParseException((ParseException) ex);
+            }
+            return convertException(ex);
+        } catch (ParseException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    public Metadata getMetadata()
+    {
+        synchronized (SqlParserImpl.class) {
+            if (metadata == null) {
+                metadata = new MetadataImpl(
+                    new SqlParserImpl(new java.io.StringReader("")));
+            }
+            return metadata;
+        }
+    }
 }
 
 PARSER_END(SqlParserImpl)

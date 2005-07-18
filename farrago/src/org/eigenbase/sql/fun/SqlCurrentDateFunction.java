@@ -21,16 +21,9 @@
 */
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
-import org.eigenbase.sql.util.*;
-import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.test.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
-
-import java.util.*;
+import org.eigenbase.sql.type.SqlTypeStrategies;
+import org.eigenbase.sql.validate.SqlValidatorScope;
 
 /**
  * The <code>CURRENT_DATE</code> function.
@@ -48,17 +41,12 @@ public class SqlCurrentDateFunction extends SqlFunction
             SqlTypeStrategies.otcNiladic,
             SqlFunctionCategory.TimeDate);
     }
-    
-    public void test(SqlTester tester)
-    {
-        SqlOperatorTests.testCurrentDateFunc(tester);
-    }
-            
+
     public SqlSyntax getSyntax()
     {
         return SqlSyntax.FunctionId;
     }
-            
+
     public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
     {
         return true;

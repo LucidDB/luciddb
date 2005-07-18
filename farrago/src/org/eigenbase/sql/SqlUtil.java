@@ -26,9 +26,10 @@ package org.eigenbase.sql;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.util.BarfingInvocationHandler;
-import org.eigenbase.util.Util;
+import org.eigenbase.sql.validate.SqlValidatorException;
+import org.eigenbase.util.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.resource.EigenbaseResource;
 
 import java.lang.reflect.Proxy;
 import java.sql.DatabaseMetaData;
@@ -562,9 +563,9 @@ public abstract class SqlUtil
      *
      * @return constructed signature
      */
-    public static String getOperatorSignature(SqlOperator op, List list)
+    public static String getOperatorSignature(SqlOperator op, List typeList)
     {
-        return getAliasedSignature(op, op.getName(), list);
+        return getAliasedSignature(op, op.getName(), typeList);
     }
 
     /**
@@ -611,6 +612,46 @@ public abstract class SqlUtil
         }
 
         return ret.toString();
+    }
+
+    /**
+     * Wraps an exception with context.
+     */
+    public static EigenbaseException newContextException(
+        final SqlParserPos pos,
+        Throwable e)
+    {
+        int line = pos.getLineNum();
+        int col = pos.getColumnNum();
+        int endLine = pos.getEndLineNum();
+        int endCol = pos.getEndColumnNum();
+        return newContextException(line, col, endLine, endCol, e);
+    }
+
+    /**
+     * Wraps an exception with context.
+     */
+    public static EigenbaseException newContextException(
+        int line,
+        int col,
+        int endLine,
+        int endCol,
+        Throwable e)
+    {
+        EigenbaseContextException contextExcn =
+            line == endLine && col == endCol ?
+            EigenbaseResource.instance().newValidatorContextPoint(
+                new Integer(line),
+                new Integer(col),
+                e) :
+            EigenbaseResource.instance().newValidatorContext(
+                new Integer(line),
+                new Integer(col),
+                new Integer(endLine),
+                new Integer(endCol),
+                e);
+        contextExcn.setPosition(line, col, endLine, endCol);
+        return contextExcn;
     }
 
     //~ Inner Classes ---------------------------------------------------------

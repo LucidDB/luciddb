@@ -1549,7 +1549,7 @@ public class FarragoJdbcTest extends FarragoTestCase
 
         preparedStmt.setBigDecimal(
             3,
-            new BigDecimal(2));
+            new BigDecimal(2.0));
         preparedStmt.setBigDecimal(
             4,
             new BigDecimal(88.23432432));

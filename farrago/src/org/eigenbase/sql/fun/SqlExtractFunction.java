@@ -21,16 +21,10 @@
 */
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
-import org.eigenbase.sql.util.*;
-import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.test.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
-
-import java.util.*;
+import org.eigenbase.sql.test.SqlOperatorTests;
+import org.eigenbase.sql.type.SqlTypeStrategies;
+import org.eigenbase.util.Util;
 
 /**
  * The SQL <code>EXTRACT</code> operator.  Extracts a specified field value
@@ -48,11 +42,6 @@ public class SqlExtractFunction extends SqlFunction
             SqlTypeStrategies.rtiNullableDouble, null,
             SqlTypeStrategies.otcIntervalSameX2,
             SqlFunctionCategory.System);
-    }
-    
-    public void test(SqlTester tester)
-    {
-        SqlOperatorTests.testExtractFunc(tester);
     }
 
     public String getSignatureTemplate(int operandsCount)

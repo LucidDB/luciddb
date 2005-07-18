@@ -25,7 +25,6 @@ package net.sf.farrago.parser;
 import net.sf.farrago.session.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.parser.impl.*;
 
 import java.io.*;
 import java.util.*;
@@ -46,7 +45,7 @@ import org.eigenbase.resource.*;
 public abstract class FarragoAbstractParser implements FarragoSessionParser
 {
     protected FarragoSessionStmtValidator stmtValidator;
-    
+
     protected FarragoSessionDdlValidator ddlValidator;
 
     protected FarragoAbstractParserImpl parserImpl;
@@ -91,6 +90,14 @@ public abstract class FarragoAbstractParser implements FarragoSessionParser
     protected abstract FarragoAbstractParserImpl newParserImpl(Reader reader);
 
     // implement FarragoSessionParser
+    public String getJdbcKeywords()
+    {
+        SqlAbstractParserImpl.Metadata metadata =
+            newParserImpl(new StringReader("")).getMetadata();
+        return metadata.getJdbcKeywords();
+    }
+
+    // implement FarragoSessionParser
     public Object parseSqlText(
         FarragoSessionStmtValidator stmtValidator,
         FarragoSessionDdlValidator ddlValidator,
@@ -110,75 +117,43 @@ public abstract class FarragoAbstractParser implements FarragoSessionParser
             } else {
                 return parserImpl.SqlExpressionEof();
             }
-        } catch (Exception ex) {
-            if (ex instanceof ParseException) {
-                ex = cleanupParseException((ParseException) ex);
+        } catch (EigenbaseContextException ex) {
+            Throwable actualEx = (ex.getCause() == null) ? ex : ex.getCause();
+            throw EigenbaseResource.instance().newParserError(
+                actualEx.getMessage(),
+                ex);
+
+        } catch (SqlParseException spex) {
+            Throwable actualEx = (spex.getCause() == null) ? spex :
+                spex.getCause();
+            Exception x = spex;
+            final SqlParserPos pos = spex.getPos();
+            if (pos != null) {
+                x = SqlUtil.newContextException(pos, actualEx);
+            } else {
+                x = spex;
             }
             throw EigenbaseResource.instance().newParserError(
-                ex.getMessage(),
-                ex);
+                actualEx.getMessage(),
+                x);
+
+        } catch (Exception ex) {
+            SqlParseException spex = parserImpl.normalizeException(ex);
+            Throwable actualEx = (spex.getCause() == null) ? spex :
+                spex.getCause();
+            Exception x = spex;
+            final SqlParserPos pos = spex.getPos();
+            if (pos != null) {
+                x = SqlUtil.newContextException(pos, actualEx);
+            } else {
+                x = spex;
+            }
+            throw EigenbaseResource.instance().newParserError(
+                actualEx.getMessage(),
+                x);
         } finally {
             sourceString = null;
         }
-    }
-
-    /**
-     * Removes or transforms misleading information from a parse exception.
-     *
-     *<p>
-     *
-     * TODO jvs 1-Feb-2005:  figure out how to move this up to SqlParser
-     * level in such a way that we can share it.
-     *
-     * @param ex dirty excn
-     *
-     * @return clean excn
-     */
-    private Exception cleanupParseException(ParseException ex)
-    {
-        if (ex.expectedTokenSequences == null) {
-            return ex;
-        }
-        int iIdentifier = Arrays.asList(ex.tokenImage).indexOf("<IDENTIFIER>");
-
-        boolean id = false;
-        for (int i = 0; i < ex.expectedTokenSequences.length; ++i) {
-            if (ex.expectedTokenSequences[i][0] == iIdentifier) {
-                id = true;
-                break;
-            }
-        }
-
-        if (!id) {
-            return ex;
-        }
-
-        // Since <IDENTIFIER> was one of the possible productions,
-        // we know that the parser will also have included all
-        // of the non-reserved keywords (which are treated as
-        // identifiers in non-keyword contexts).  So, now we need
-        // to clean those out, since they're totally irrelevant.
-
-        List list = new ArrayList();
-        for (int i = 0; i < ex.expectedTokenSequences.length; ++i) {
-            int [] sequence = ex.expectedTokenSequences[i];
-            String token = getTokenVal(ex.tokenImage[sequence[0]]);
-            if (token != null) {
-                if (isNonReserved(parserImpl, token)) {
-                    continue;
-                }
-                if (isReservedFunctionName(parserImpl, token)) {
-                    continue;
-                }
-                if (isContextVariable(parserImpl, token)) {
-                    continue;
-                }
-            }
-            list.add(sequence);
-        }
-
-        ex.expectedTokenSequences = (int [][]) list.toArray(new int [0][]);
-        return ex;
     }
 
     // implement FarragoSessionParser
@@ -220,84 +195,6 @@ public abstract class FarragoAbstractParser implements FarragoSessionParser
         }
         pw.close();
         return sw.toString();
-    }
-
-    protected static String constructReservedKeywordList(
-        String [] tokens,
-        FarragoAbstractParserImpl parserImpl)
-    {
-        StringBuffer sb = new StringBuffer();
-        boolean withComma = false;
-        for (int i = 0, size = tokens.length; i < size; i++) {
-            String tokenVal = getTokenVal(tokens[i]);
-            if ((tokenVal != null)
-                && !SqlAbstractParserImpl.getSql92ReservedWords().contains(
-                    tokenVal)
-                && !isNonReserved(parserImpl, tokenVal))
-            {
-                if (withComma) {
-                    sb.append(",");
-                } else {
-                    withComma = true;
-                }
-                sb.append(tokenVal);
-            }
-        }
-        return sb.toString();
-    }
-
-    private static String getTokenVal(String token)
-    {
-        // We don't care about the token which are not string
-        if (!token.startsWith("\"")) {
-            return null;
-        }
-
-        // Remove the quote from the token
-        int startIndex = token.indexOf("\"");
-        int endIndex = token.lastIndexOf("\"");
-        String tokenVal = token.substring(startIndex + 1, endIndex);
-        char c = tokenVal.charAt(0);
-        if (Character.isLetter(c)) {
-            return tokenVal;
-        }
-        return null;
-    }
-
-    private static boolean isNonReserved(
-        FarragoAbstractParserImpl parserImpl, String keyword)
-    {
-        parserImpl.ReInit(new StringReader(keyword));
-        try {
-            parserImpl.NonReservedKeyWord();
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    private static boolean isReservedFunctionName(
-        FarragoAbstractParserImpl parserImpl, String keyword)
-    {
-        parserImpl.ReInit(new StringReader(keyword));
-        try {
-            parserImpl.ReservedFunctionName();
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    private static boolean isContextVariable(
-        FarragoAbstractParserImpl parserImpl, String keyword)
-    {
-        parserImpl.ReInit(new StringReader(keyword));
-        try {
-            parserImpl.ContextVariable();
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
     }
 }
 

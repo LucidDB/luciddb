@@ -28,11 +28,10 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.test.SqlOperatorTests;
-import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.type.SqlTypeStrategies;
+import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.util.Util;
 
 import java.util.ArrayList;
@@ -298,8 +297,8 @@ public class SqlCaseOperator extends SqlOperator
                 SqlNode e = (SqlNode) list.get(i);
                 list.set(
                     i,
-                    stdOps.equalsOperator.createCall(caseIdentifier, e,
-                        pos));
+                    SqlStdOperatorTable.equalsOperator.createCall(
+                        caseIdentifier, e, pos));
             }
         }
 
@@ -319,11 +318,6 @@ public class SqlCaseOperator extends SqlOperator
         int rightPrec)
     {
         throw Util.needToImplement("need to implement");
-    }
-
-    public void test(SqlTester tester)
-    {
-        SqlOperatorTests.testCase(tester);
     }
 }
 

@@ -26,11 +26,10 @@ package org.eigenbase.sql.parser;
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 import org.eigenbase.sql.SqlNode;
-import org.eigenbase.util.*;
-
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import org.eigenbase.sql.parser.impl.SqlParserImpl;
+import org.eigenbase.test.SqlValidatorTestCase;
+import org.eigenbase.util.TestUtil;
+import org.eigenbase.util.Util;
 
 /**
  * A <code>SqlParserTest</code> is a unit-test for {@link SqlParser the SQL
@@ -46,12 +45,11 @@ public class SqlParserTest extends TestCase
     //~ Static fields/initializers --------------------------------------------
 
     protected static final String NL = System.getProperty("line.separator");
-    private final Pattern lineColPattern =
-        Pattern.compile("At line (.*), column (.*)");
+
     /** @deprecated */
     private static final boolean todo = false;
-    /** todo: set this to true, fix bugs, and obsolete. */
-    private static final boolean FailIfNoPosition = false;
+
+    public static final boolean bug317Fixed = false;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -103,6 +101,10 @@ public class SqlParserTest extends TestCase
         return new SqlParser(sql).parseExpression();
     }
 
+    protected SqlParserImpl getParserImpl() {
+        return new SqlParser("").getParserImpl();
+    }
+
     protected void checkExpSame(String sql)
     {
         checkExp(sql, sql);
@@ -110,134 +112,18 @@ public class SqlParserTest extends TestCase
 
     protected void checkFails(
         String sql,
-        String exceptionPattern)
+        String expectedMsgPattern)
     {
         SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);
-        if (sap.pos == null) {
-            checkFails(
-                sap.sql,
-                exceptionPattern,
-                -1, -1, -1, -1);
-        } else {
-            checkFails(
-                sap.sql,
-                exceptionPattern,
-                sap.pos.getLineNum(), sap.pos.getColumnNum(),
-                sap.pos.getEndLineNum(), sap.pos.getEndColumnNum());
-        }
-    }
-
-    protected void checkFails(
-        String sql,
-        String expectedMsgPattern,
-        int expectedLine,
-        int expectedColumn,
-        int expectedEndLine,
-        int expectedEndColumn)
-    {
-        Throwable actualException = null;
-        int actualLine = -1;
-        int actualColumn = -1;
-        int actualEndLine = -1;
-        int actualEndColumn = -1;
+        Throwable thrown = null;
         try {
-            final SqlNode sqlNode = parseStmt(sql);
+            final SqlNode sqlNode = parseStmt(sap.sql);
             Util.discard(sqlNode);
-            fail("Expected query '" + sql + "' to throw exception matching '"
-                + expectedMsgPattern + "'");
-        } catch (EigenbaseContextException ex) {
-            actualLine = ex.getPosLine();
-            actualColumn = ex.getPosColumn();
-            actualEndLine = ex.getEndPosLine();
-            actualEndColumn = ex.getEndPosColumn();
-            actualException = ex.getCause() == null ?
-                ex :
-                ex.getCause();
-        } catch (SqlParseException ex) {
-            final SqlParserPos pos = ex.getPos();
-            if (pos != null) {
-                actualLine = pos.getLineNum();
-                actualColumn = pos.getColumnNum();
-                actualEndLine = pos.getEndLineNum();
-                actualEndColumn = pos.getEndColumnNum();
-            }
-            actualException = ex;
         } catch (Throwable ex) {
-            final String message = ex.getMessage();
-            final Matcher matcher = lineColPattern.matcher(message);
-            if (message != null && matcher.matches()) {
-                actualException = ex.getCause();
-                actualLine = Integer.parseInt(matcher.group(1));
-                actualColumn = Integer.parseInt(matcher.group(2));
-            } else {
-                actualException = ex;
-            }
+            thrown = ex;
         }
-        final String message = actualException.toString();
-        if (!Pattern.matches(expectedMsgPattern, message)) {
-            actualException.printStackTrace();
-            fail("Expected query '" + sql
-                + "' to throw exception matching '" + expectedMsgPattern
-                + "', but it threw " + message);
-        }
-        String sqlWithCarets;
-        if (actualColumn <= 0 ||
-            actualLine <= 0 ||
-            actualEndColumn <= 0 ||
-            actualEndLine <= 0) {
-            if (FailIfNoPosition) {
-                assert false :
-                    "Error did not have position: " +
-                    " actualLine=" + actualLine +
-                    " actualColumn=" + actualColumn +
-                    " actualEndLine=" + actualEndLine +
-                    " actualEndColumn=" + actualEndColumn;
-            }
-            sqlWithCarets = sql;
-        } else {
-            sqlWithCarets = SqlParserUtil.addCarets(
-                sql,
-                actualLine, actualColumn,
-                actualEndLine, actualEndColumn);
-        }
-        if (FailIfNoPosition &&
-            (expectedLine == -1 ||
-            expectedColumn == -1 ||
-            expectedEndLine == -1 ||
-            expectedEndColumn == -1)) {
-            assert false :
-                "todo: add carets to sql: " + sqlWithCarets;
-        }
-        String actualMessage = actualException.getMessage();
-        if (actualMessage == null ||
-            !actualMessage.matches(expectedMsgPattern)) {
-            actualException.printStackTrace();
-            fail("Validator threw different " +
-                "exception than expected; query [" + sql +
-                "]; expected [" + expectedMsgPattern +
-                "]; actual [" + actualMessage +
-                "]; line [" + actualLine +
-                "]; column [" + actualColumn + "]");
-        } else if ((expectedLine != -1 &&
-            actualLine != expectedLine) ||
-            (expectedColumn != -1 &&
-            actualColumn != expectedColumn) ||
-            (expectedEndLine != -1 &&
-            actualEndLine != expectedEndLine) ||
-            (expectedEndColumn != -1 &&
-            actualEndColumn != expectedEndColumn)) {
-            fail("SqlValidationTest: Validator threw expected " +
-                "exception [" + actualMessage +
-                "]; but at line [" + actualLine +
-                "], column [" + actualColumn +
-                "] thru line [" + actualEndLine +
-                "] column [" + actualEndColumn +
-                "]; rather than expected line [" + expectedLine +
-                "], column [" + expectedColumn +
-                "] thru line [" + expectedEndLine +
-                "] column [" + expectedEndColumn +
-                "]; sql [" + sqlWithCarets + "]");
-        }
+
+        SqlValidatorTestCase.checkEx(thrown, expectedMsgPattern, sap);
     }
 
     protected void checkExpFails(String sql)
@@ -247,22 +133,59 @@ public class SqlParserTest extends TestCase
 
     protected void checkExpFails(
         String sql,
-        String exceptionPattern)
+        String expectedMsgPattern)
     {
+        SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);
+        Throwable thrown = null;
         try {
-            final SqlNode sqlNode = parseExpression(sql);
+            final SqlNode sqlNode = parseExpression(sap.sql);
             Util.discard(sqlNode);
-            fail("Expected expression '" + sql + "' to throw exception matching '"
-                + exceptionPattern + "'");
-        } catch (Throwable e) {
-            final String message = e.toString();
-            if (!Pattern.matches(exceptionPattern, message)) {
-                e.printStackTrace();
-                fail("Expected expression '" + sql
-                    + "' to throw exception matching '" + exceptionPattern
-                    + "', but it threw " + message);
-            }
+        } catch (Throwable ex) {
+            thrown = ex;
         }
+
+        SqlValidatorTestCase.checkEx(thrown, expectedMsgPattern, sap);
+    }
+
+    /**
+     * Tests that when there is an error, non-reserved keywords such as
+     * "A", "ABSOLUTE" (which naturally arise whenver a production uses
+     * "&lt;IDENTIFIER&gt;") are removed, but reserved words such as "AND"
+     * remain.
+     */
+    public void testExceptionCleanup()
+    {
+        checkFails("select 0.5e1^.1^ from sales.emps",
+            "(?s).*Encountered \".1\" at line 1, column 13." + NL +
+            "Was expecting one of:" + NL +
+            "    \"AND\" ..." + NL +
+            "    \"AS\" ..." + NL +
+            "    \"BETWEEN\" ..." + NL +
+            "    \"FROM\" ..." + NL +
+            "    \"IN\" ..." + NL +
+            "    \"IS\" ..." + NL +
+            "    \"LIKE\" ..." + NL +
+            "    \"MEMBER\" ..." + NL +
+            "    \"MULTISET\" ..." + NL +
+            "    \"NOT\" ..." + NL +
+            "    \"OR\" ..." + NL +
+            "    \"SIMILAR\" ..." + NL +
+            "    \"SUBMULTISET\" ..." + NL +
+            "    \",\" ..." + NL +
+            "    \"=\" ..." + NL +
+            "    \">\" ..." + NL +
+            "    \"<\" ..." + NL +
+            "    \"<=\" ..." + NL +
+            "    \">=\" ..." + NL +
+            "    \"<>\" ..." + NL +
+            "    \"\\+\" ..." + NL +
+            "    \"-\" ..." + NL +
+            "    \"\\*\" ..." + NL +
+            "    \"/\" ..." + NL +
+            "    \"\\|\\|\" ..." + NL +
+            "    <IDENTIFIER> ..." + NL +
+            "    <QUOTED_IDENTIFIER> ..." + NL +
+            ".*");
     }
 
     public void _testDerivedColumnList()
@@ -791,6 +714,32 @@ public class SqlParserTest extends TestCase
             + "FROM `A`))");
     }
 
+    public void testUnionOfNonQueryFails()
+    {
+        checkFails("select 1 from emp union ^2^ + 5",
+            "Non-query expression encountered in illegal context");
+    }
+
+    /**
+     * In modern SQL, a query can occur almost everywhere that an expression
+     * can. This test tests the few exceptions.
+     */
+    public void testQueryInIllegalContext()
+    {
+        checkFails("select case ^(^select * from emp) when 1 then 2 end from dept",
+            "Query expression encountered in illegal context");
+        checkFails("select case 1 when ^(^select * from emp) then 2 end from dept",
+            "Query expression encountered in illegal context");
+        checkFails("select case 1 when 2 then ^(^select * from emp) end from dept",
+            "Query expression encountered in illegal context");
+        checkFails("select case 1 when 2 then 3 else ^(^select * from emp) end from dept",
+            "Query expression encountered in illegal context");
+        checkFails("select 0, multiset[^(^select * from emp), 2] from dept",
+            "Query expression encountered in illegal context");
+        checkFails("select 0, multiset[1, ^(^select * from emp), 2, 3] from dept",
+            "Query expression encountered in illegal context");
+    }
+
     public void testExcept()
     {
         check("select * from a except select * from a",
@@ -983,6 +932,96 @@ public class SqlParserTest extends TestCase
         check("select 1 from t--this is a comment" + NL
             + "where a>b-- this is comment" + NL,
             "SELECT 1" + NL + "FROM `T`" + NL + "WHERE (`A` > `B`)");
+    }
+
+    public void testMultilineComment()
+    {
+        // on single line
+        check("select 1 /* , 2 */, 3 from t",
+            "SELECT 1, 3" + NL +
+            "FROM `T`");
+
+        // on several lines
+        check("select /* 1," + NL +
+            " 2, " + NL +
+            " */ 3 from t",
+            "SELECT 3" + NL +
+            "FROM `T`");
+
+        // stuff inside comment
+        check("values ( /** 1, 2 + ** */ 3)",
+            "(VALUES (ROW(3)))");
+
+        // comment in string is preserved
+        check("values ('a string with /* a comment */ in it')",
+            "(VALUES (ROW('a string with /* a comment */ in it')))");
+
+        // SQL:2003, 5.2, syntax rule # 8 "There shall be no <separator>
+        // separating the <minus sign>s of a <simple comment introducer>".
+
+        check("values (- -1" + NL +
+            ")",
+            "(VALUES (ROW((- (- 1)))))");
+
+        check("values (--1+" + NL +
+            "2)",
+            "(VALUES (ROW(2)))");
+
+        // end of multiline commment without start
+        if (bug317Fixed)
+        checkFails("values (1 */ 2)", "xx");
+
+        // SQL:2003, 5.2, syntax rule #10 "Within a <bracket comment context>,
+        // any <solidus> immediately followed by an <asterisk> without any
+        // intervening <separator> shall be considered to be the <bracketed
+        // comment introducer> for a <separator> that is a <bracketed
+        // comment>".
+
+        // comment inside a comment
+        // Spec is unclear what should happen, but currently it crashes the
+        // parser, and that's bad
+        if (bug317Fixed)
+        check("values (1 + /* comment /* inner comment */ */ 2)", "xx");
+
+        // single-line comment inside multiline comment is illegal
+        //
+        // SQL-2003, 5.2: "Note 63 - Conforming programs should not place
+        // <simple comment> within a <bracketed comment> because if such a
+        // <simple comment> contains the sequence of characeters "*/" without
+        // a preceding "/*" in the same <simple comment>, it will prematurely
+        // terminate the containing <bracketed comment>.
+        if (bug317Fixed)
+        checkFails("values /* multiline contains -- singline */ " + NL +
+            " (1)", "xxx");
+
+        // non-terminated multiline comment inside singleline comment
+        if (bug317Fixed)
+        // Test should fail, and it does, but it should give "*/" as the
+        // erroneous token.
+        checkFails("values ( -- rest of line /* a comment  " + NL +
+            " 1, ^*/^ 2)", "Encountered \"/\\*\" at");
+
+        check("values (1 + /* comment -- rest of line" + NL +
+            " rest of comment */ 2)",
+            "(VALUES (ROW((1 + 2))))");
+
+        // multiline comment inside singleline comment
+        check("values -- rest of line /* a comment */ " + NL +
+            "(1)",
+            "(VALUES (ROW(1)))");
+
+        // non-terminated multiline comment inside singleline comment
+        check("values -- rest of line /* a comment  " + NL +
+            "(1)",
+            "(VALUES (ROW(1)))");
+
+        // even if comment abuts the tokens at either end, it becomes a space
+        check("values ('abc'/* a comment*/'def')",
+            "(VALUES (ROW('abc' 'def')))");
+
+        // comment which starts as soon as it has begun
+        check("values /**/ (1)",
+            "(VALUES (ROW(1)))");
     }
 
     // expressions
@@ -1304,7 +1343,10 @@ public class SqlParserTest extends TestCase
         checkFails("select x'1' x'2' from t",
             "(?s).*Encountered .x.*2.* at line 1, column 13.*");
 
-        //checkFails("select x'1' '2' from t",?); validator error
+         // valid syntax, but should fail in the validator
+        check("select x'1' '2' from t",
+            "SELECT X'1' '2'" + NL +
+            "FROM `T`");
     }
 
     public void testStringLiteral()
@@ -1332,7 +1374,10 @@ public class SqlParserTest extends TestCase
         checkFails("select _unknown-charset'' from (values(true))",
             "(?s).*UNKNOWN-CHARSET.*");
 
-        // checkFails("select N'1' '2' from t", "?"); a validator error
+        // valid syntax, but should give a validator error
+        check("select N'1' '2' from t",
+            "SELECT _ISO-8859-1'1' '2'" + NL +
+            "FROM `T`");
     }
 
     public void testCaseExpression()
@@ -1364,7 +1409,8 @@ public class SqlParserTest extends TestCase
     {
         checkExp("nullif(v1,v2)",
             "NULLIF(`V1`, `V2`)");
-        checkExpFails("nullif(1,2,3)", "(?s).*");
+        checkExpFails("1 ^+^ nullif + 3",
+            "(?s)Encountered \"\\+ nullif \\+\" at line 1, column 3.*");
     }
 
     public void testCoalesce()
@@ -1535,14 +1581,28 @@ public class SqlParserTest extends TestCase
 
     public void testWindowSpec()
     {
-        // todo: raise bug: ORDER BY should come first
-        boolean bugXxxFixed = false;
-        if (bugXxxFixed) {
-            checkFails("select count(z) over w as foo from Bids window w as (partition by y order by x partition by y)",
-                "xx");
-            check("select count(z) over w as foo from Bids window w as (order by x partition by y)",
-                "xx");
-        }
+        // Correct syntax
+        check("select count(z) over w as foo from Bids window w as (partition by y order by x rows between 2 preceding and 2 following)",
+            "SELECT (COUNT(`Z`) OVER `W`) AS `FOO`" + NL +
+            "FROM `BIDS`" + NL +
+            "WINDOW (PARTITION BY `Y`" + NL +
+            "ORDER BY `X`" + NL +
+            "ROWS BETWEEN (2 PRECEDING) AND (2 FOLLOWING))"
+            );
+
+        check("select count(*) over w from emp window w as (rows 2 preceding)",
+            "SELECT (COUNT(*) OVER `W`)" + NL +
+            "FROM `EMP`" + NL +
+            "WINDOW (ROWS (2 PRECEDING))"
+            );
+
+
+        // Partition clause out of place. Found after ORDER BY
+        checkFails("select count(z) over w as foo "+NL+
+            "from Bids window w as (partition by y order by x ^partition^ by y)",
+            "(?s).*Encountered \"partition\".*");
+        checkFails("select count(z) over w as foo from Bids window w as (order by x ^partition^ by y)",
+            "(?s).*Encountered \"partition\".*");
 
         // AND is required in BETWEEN clause of window frame
         checkFails("select sum(x) over (order by x range between unbounded preceding ^unbounded^ following)",
@@ -1551,6 +1611,10 @@ public class SqlParserTest extends TestCase
         // WINDOW keyword is not permissible.
         checkFails("select sum(x) over ^window^ (order by x) from bids",
             "(?s).*Encountered \"window\".*");
+
+        // ORDER BY must be before Frame spec
+        checkFails("select sum(x) over (rows 2 preceding ^order^ by x) from emp",
+            "(?s).*Encountered \"order\".*");
     }
 
     public void testAs()
@@ -1696,12 +1760,12 @@ public class SqlParserTest extends TestCase
         checkExp("interval '1 2:3:4' day to second","(INTERVAL '1 2:3:4' DAY TO SECOND)");
         checkExp("interval '1 2:3:4.5' day to second","(INTERVAL '1 2:3:4.5' DAY TO SECOND)");
 
-        checkExpFails("interval '1' day to hour");
-        checkExpFails("interval '1 2' day to second");
+        checkExp("interval '1' day to hour", "(INTERVAL '1' DAY TO HOUR)"); // ok in parser, not in validator
+        checkExp("interval '1 2' day to second", "(INTERVAL '1 2' DAY TO SECOND)"); // ok in parser, not in validator
 
         checkExp("interval '123' hour","(INTERVAL '123' HOUR)");
         checkExp("interval '1:2' hour to minute","(INTERVAL '1:2' HOUR TO MINUTE)");
-        checkExpFails("interval '1 2' hour to minute","(?s).*Illegal INTERVAL literal.*");
+        checkExp("interval '1 2' hour to minute","(INTERVAL '1 2' HOUR TO MINUTE)"); // ok in parser, not in validator
         checkExp("interval '1' hour","(INTERVAL '1' HOUR)");
         checkExp("interval '1:2:3' hour(2) to second","(INTERVAL '1:2:3' HOUR(2) TO SECOND)");
         checkExp("interval '1:22222:3.4567' hour(2) to second","(INTERVAL '1:22222:3.4567' HOUR(2) TO SECOND)");
@@ -1709,7 +1773,7 @@ public class SqlParserTest extends TestCase
         checkExp("interval '1' minute","(INTERVAL '1' MINUTE)");
         checkExp("interval '1:2' minute to second","(INTERVAL '1:2' MINUTE TO SECOND)");
         checkExp("interval '1:2.3' minute to second","(INTERVAL '1:2.3' MINUTE TO SECOND)");
-        checkExpFails("interval '1:2' minute to second");
+        checkExp("interval '1:2' minute to second", "(INTERVAL '1:2' MINUTE TO SECOND)");
 
         checkExp("interval '1' second","(INTERVAL '1' SECOND)");
         checkExp("interval '1' second(3)","(INTERVAL '1' SECOND(3))");
@@ -1722,11 +1786,11 @@ public class SqlParserTest extends TestCase
 
         checkExp("interval '1 2:3:4.567' day to second","(INTERVAL '1 2:3:4.567' DAY TO SECOND)");
 
-        checkExpFails("interval '-' day","(?s).*");
-        checkExpFails("interval '1 2:3:4.567' day to hour to second","(?s).*");
-        checkExpFails("interval '1:2' minute to second(2, 2)","(?s).*");
-        checkExpFails("interval '1:x' hour to minute","(?s).*");
-        checkExpFails("interval '1:x:2' hour to second","(?s).*");
+        checkExp("interval '-' day","(INTERVAL '-' DAY)");
+        checkExpFails("interval '1 2:3:4.567' day to hour ^to^ second","(?s)Encountered \"to\" at.*");
+        checkExpFails("interval '1:2' minute to second(2^,^ 2)","(?s)Encountered \",\" at.*");
+        checkExp("interval '1:x' hour to minute","(INTERVAL '1:x' HOUR TO MINUTE)");
+        checkExp("interval '1:x:2' hour to second","(INTERVAL '1:x:2' HOUR TO SECOND)");
     }
 
     public void testIntervalOperators() {
@@ -1736,8 +1800,8 @@ public class SqlParserTest extends TestCase
 
         checkExp("interval -'1' day","(INTERVAL -'1' DAY)");
         checkExp("interval '-1' day","(INTERVAL '-1' DAY)");
-        checkExpFails("interval 'wael was here'","(?s).*");
-        checkExpFails("interval 'wael was here' HOUR","(?s).*Illegal INTERVAL literal .wael was here..*");
+        checkExpFails("interval 'wael was here'","(?s)Encountered \"<EOF>\".*");
+        checkExp("interval 'wael was here' HOUR","(INTERVAL 'wael was here' HOUR)"); // ok in parser, not in validator
 
     }
 
@@ -1848,8 +1912,41 @@ public class SqlParserTest extends TestCase
             "abcdef^",
             SqlParserUtil.addCarets("abcdef", 1, 7, 1, 7));
     }
-}
 
+    public void testMetadata()
+    {
+        SqlAbstractParserImpl.Metadata metadata =
+            getParserImpl().getMetadata();
+
+        assertTrue(metadata.isReservedFunctionName("ABS"));
+        assertFalse(metadata.isReservedFunctionName("FOO"));
+
+        assertTrue(metadata.isContextVariableName("CURRENT_USER"));
+        assertFalse(metadata.isContextVariableName("ABS"));
+        assertFalse(metadata.isContextVariableName("FOO"));
+
+        assertTrue(metadata.isNonReservedKeyword("A"));
+        assertTrue(metadata.isNonReservedKeyword("KEY"));
+        assertFalse(metadata.isNonReservedKeyword("SELECT"));
+        assertFalse(metadata.isNonReservedKeyword("FOO"));
+        assertFalse(metadata.isNonReservedKeyword("ABS"));
+
+        assertTrue(metadata.isKeyword("ABS"));
+        assertTrue(metadata.isKeyword("CURRENT_USER"));
+        assertTrue(metadata.isKeyword("KEY"));
+        assertTrue(metadata.isKeyword("SELECT"));
+        assertTrue(metadata.isKeyword("HAVING"));
+        assertTrue(metadata.isKeyword("A"));
+        assertFalse(metadata.isKeyword("BAR"));
+
+        assertTrue(metadata.isReservedWord("SELECT"));
+        assertFalse(metadata.isReservedWord("KEY"));
+
+        String jdbcKeywords = metadata.getJdbcKeywords();
+        assertTrue(jdbcKeywords.indexOf(",COLLECT,") >= 0);
+        assertTrue(jdbcKeywords.indexOf(",SELECT,") < 0);
+    }
+}
 
 // End SqlParserTest.java
 

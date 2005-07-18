@@ -21,16 +21,11 @@
 */
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
-import org.eigenbase.sql.util.*;
-import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.test.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
-
-import java.util.*;
+import org.eigenbase.sql.test.SqlOperatorTests;
+import org.eigenbase.sql.type.CompositeOperandTypeChecker;
+import org.eigenbase.sql.type.SqlOperandTypeChecker;
+import org.eigenbase.sql.type.SqlTypeStrategies;
 
 /**
  * The <code>OVERLAY</code> function.
@@ -42,12 +37,12 @@ public class SqlOverlayFunction extends SqlFunction
 {
     private static final SqlOperandTypeChecker otcCustom =
         new CompositeOperandTypeChecker(
-            CompositeOperandTypeChecker.OR, 
+            CompositeOperandTypeChecker.OR,
             new SqlOperandTypeChecker[] {
                 SqlTypeStrategies.otcStringX2Int,
                 SqlTypeStrategies.otcStringX2IntX2
             });
-    
+
     public SqlOverlayFunction()
     {
         super("OVERLAY", SqlKind.Function,
@@ -55,7 +50,7 @@ public class SqlOverlayFunction extends SqlFunction
             null, otcCustom,
             SqlFunctionCategory.String);
     }
-    
+
     public void unparse(
         SqlWriter writer,
         SqlNode [] operands,
@@ -86,11 +81,6 @@ public class SqlOverlayFunction extends SqlFunction
         }
         assert (false);
         return null;
-    }
-
-    public void test(SqlTester tester)
-    {
-        SqlOperatorTests.testOverlayFunc(tester);
     }
 }
 

@@ -203,7 +203,7 @@ Error: Dropping routine "UDFTEST"."TO_UPPER2" requires CASCADE because other obj
 . . . . . . . . > returns int
 . . . . . . . . > contains sql
 . . . . . . . . > return add_integers(i,i);
-Error: From line 1, column 93 to line 1, column 104: No match found for function signature ADD_INTEGERS(<NUMERIC>, <NUMERIC>) (state=,code=0)
+Error: From line 1, column 93 to line 1, column 109: No match found for function signature ADD_INTEGERS(<NUMERIC>, <NUMERIC>) (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should succeed
 0: jdbc:farrago:> create schema goodpath
@@ -221,7 +221,7 @@ Error: From line 1, column 93 to line 1, column 104: No match found for function
 . . . . . . . . > contains sql
 . . . . . . . . > external name 'class java.lang.System.getProperty'
 . . . . . . . . > return 'undefined';
-Error: net.sf.farrago.parser.impl.ParseException: Encountered "return" at line 1, column 139.
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "return" at line 1, column 139.
 Was expecting one of:
     <EOF> 
     "EXTERNAL" ...

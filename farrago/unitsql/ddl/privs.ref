@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/privs.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/privs.sql#3 $
 0: jdbc:farrago:> -- Test DDL on privileges
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- REVIEW jvs 12-June-2005:  see comments at top of auth.sql
@@ -52,7 +52,7 @@ Error: DDL validation error near line 1, column 17: Reference to unknown table "
 0: jdbc:farrago:> 
 0: jdbc:farrago:> ---- Invalid privs
 0: jdbc:farrago:> grant sel on privstest.pt3 to PUBLIC;
-Error: net.sf.farrago.parser.impl.ParseException: Encountered "sel" at line 1, column 7.
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "sel" at line 1, column 7.
 Was expecting one of:
     "ALL" ...
     "DELETE" ...

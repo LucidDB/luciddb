@@ -50,7 +50,7 @@ import sqlline.SqlLine;
 /**
  * FarragoTestCase is a common base for Farrago JUnit tests.  Subclasses must
  * implement the suite() method in order to get a database connection
- * correctly initialized.  See InnerTest for an example.
+ * correctly initialized.  See FarragoQueryTest for an example.
  *
  * @author John V. Sichi
  * @version $Id$

@@ -23,10 +23,8 @@
 package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.SqlTypeStrategies;
 import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.test.SqlOperatorTests;
-import org.eigenbase.sql.type.*;
 
 /**
  * Support for the CEIL/CEILING builtin function.
@@ -45,11 +43,6 @@ public class SqlCeilFunction extends SqlFunction
             SqlTypeStrategies.otcNumeric,
             SqlFunctionCategory.Numeric);
 
-    }
-
-    public void test(SqlTester tester)
-    {
-        SqlOperatorTests.testCeilFunc(tester);
     }
 
     public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)

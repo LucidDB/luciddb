@@ -26,10 +26,9 @@ package org.eigenbase.sql.fun;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.test.SqlOperatorTests;
-import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.util.EnumeratedValues;
 
 /**
@@ -115,7 +114,7 @@ public class SqlTrimFunction extends SqlFunction
         SqlCall call = callBinding.getCall();
         SqlValidator validator = callBinding.getValidator();
         SqlValidatorScope scope  = callBinding.getScope();
-        
+
         for (int i = 1; i < 3; i++) {
             if (!SqlTypeStrategies.otcString.checkSingleOperandType(
                     callBinding,
@@ -135,11 +134,6 @@ public class SqlTrimFunction extends SqlFunction
 
         return SqlTypeUtil.isCharTypeComparable(
             validator, scope, ops, throwOnFailure);
-    }
-
-    public void test(SqlTester tester)
-    {
-        SqlOperatorTests.testTrimFunc(tester);
     }
 
     //~ Inner Classes ---------------------------------------------------------

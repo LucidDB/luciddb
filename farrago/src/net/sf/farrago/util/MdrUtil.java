@@ -236,6 +236,12 @@ public abstract class MdrUtil
             }
             tracer.throwing(
                 "MdrUtil.TracingErrorManager", "annotate", t);
+            if (tracer.isLoggable(Level.FINEST) && (stackTrace != null)) {
+                tracer.throwing(
+                    "MdrUtil.TracingErrorManager",
+                    "annotate:stackTrace",
+                    stackTrace);
+            }
             tracer.log(level, message, t);
             if (t instanceof JmiException) {
                 JmiException ex = (JmiException) t;

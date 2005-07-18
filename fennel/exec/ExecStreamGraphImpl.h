@@ -189,6 +189,7 @@ public:
         std::string name,
         uint iOutput,
         ExecStreamId interposedId);
+    virtual SharedExecStream getStream(ExecStreamId id);
     virtual uint getInputCount(
         ExecStreamId streamId);
     virtual uint getOutputCount(

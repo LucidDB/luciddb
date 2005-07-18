@@ -35,22 +35,6 @@ import java.io.*;
  */
 public class FarragoRngParser extends FarragoAbstractParser
 {
-    private static final String jdbcKeywords;
-
-    static 
-    {
-        RngParser parser = new RngParser(new StringReader(""));
-        jdbcKeywords = constructReservedKeywordList(
-            RngParserConstants.tokenImage,
-            parser);
-    }
-
-    // implement FarragoSessionParser
-    public String getJdbcKeywords()
-    {
-        return jdbcKeywords;
-    }
-    
     // implement FarragoAbstractParser
     protected FarragoAbstractParserImpl newParserImpl(Reader reader)
     {

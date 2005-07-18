@@ -26,10 +26,8 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.type.SqlTypeStrategies;
+import org.eigenbase.sql.type.SqlTypeUtil;
 
 /**
  * SqlMultisetOperator represents the SQL:2003 standard MULTISET constructor
@@ -99,11 +97,6 @@ public class SqlMultisetOperator extends SqlSpecialOperator
             return false;
         }
         return true;
-    }
-
-    public void test(SqlTester tester)
-    {
-//        SqlOperatorTests.testMultiset();
     }
 
     public void unparse(

@@ -23,20 +23,20 @@
 
 package org.eigenbase.sql.parser;
 
+import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.parser.impl.ParseException;
+import org.eigenbase.sql.parser.impl.SqlParserImpl;
+
 import java.io.Reader;
 import java.io.StringReader;
-
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.parser.impl.*;
 
 
 /**
  * A <code>SqlParser</code> parses a SQL statement.
  *
- * @author jhyde$
+ * @author jhyde
  * @version $Id$
- *
- * @since Mar 18, 2003$
+ * @since Mar 18, 2003
  */
 public class SqlParser
 {
@@ -75,7 +75,7 @@ public class SqlParser
         try {
             return parser.SqlExpressionEof();
         } catch (ParseException ex) {
-            throw convertException(ex);
+            throw parser.normalizeException(ex);
         }
     }
 
@@ -96,7 +96,7 @@ public class SqlParser
         try {
             return parser.SqlQueryEof();
         } catch (ParseException ex) {
-            throw convertException(ex);
+            throw parser.normalizeException(ex);
         }
     }
 
@@ -113,28 +113,16 @@ public class SqlParser
         try {
             return parser.SqlStmtEof();
         } catch (ParseException ex) {
-            throw convertException(ex);
+            throw parser.normalizeException(ex);
         }
     }
 
-    private SqlParseException convertException(ParseException ex)
+    /**
+     * Returns the underlying generated parser.
+     */ 
+    public SqlParserImpl getParserImpl()
     {
-        SqlParserPos pos;
-        if (ex.currentToken == null) {
-            pos = null;
-        } else {
-            final Token token = ex.currentToken.next;
-            pos = new SqlParserPos(
-                token.beginLine,
-                token.beginColumn,
-                token.endLine,
-                token.endColumn);
-        }
-        if (ex.getMessage().length() == 0) {
-            return new SqlParseException(ex, pos);
-        } else {
-            return new SqlParseException(ex.getMessage(), pos);
-        }
+        return parser;
     }
 }
 

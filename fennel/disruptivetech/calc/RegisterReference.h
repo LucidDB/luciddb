@@ -26,7 +26,7 @@
 
 #include "fennel/tuple/TupleData.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
-#include "fennel/disruptivetech/calc/DynamicParam.h"
+#include "fennel/exec/DynamicParam.h"
 #include "boost/lexical_cast.hpp"
 
 #include <strstream>
