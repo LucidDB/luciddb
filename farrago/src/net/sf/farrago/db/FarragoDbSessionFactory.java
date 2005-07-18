@@ -78,7 +78,7 @@ public class FarragoDbSessionFactory implements FarragoSessionFactory
                 pluginClassLoader.loadClassFromJarUrlManifest(url, attr);
             FarragoSessionModelExtensionFactory factory =
                 (FarragoSessionModelExtensionFactory)
-                factoryClass.newInstance();
+                pluginClassLoader.newPluginInstance(factoryClass);
             // TODO:  trace info about extension
             FarragoSessionModelExtension modelExtension =
                 factory.newModelExtension();

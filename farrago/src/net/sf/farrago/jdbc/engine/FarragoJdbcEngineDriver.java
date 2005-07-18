@@ -105,7 +105,8 @@ public class FarragoJdbcEngineDriver extends FarragoAbstractJdbcDriver
                 new FarragoPluginClassLoader();
             Class c = classLoader.loadClassFromLibraryManifest(
                 libraryName,"SessionFactoryClassName");
-            return (FarragoSessionFactory) c.newInstance();
+            return (FarragoSessionFactory)
+                classLoader.newPluginInstance(c);
         } catch (Throwable ex) {
             throw FarragoResource.instance().newPluginInitFailed(
                 libraryName,ex);

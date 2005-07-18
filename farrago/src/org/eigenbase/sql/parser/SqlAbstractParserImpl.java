@@ -529,8 +529,8 @@ public abstract class SqlAbstractParserImpl
         {
             Class clazz = parserImpl.getClass();
             try {
-                final Method method = clazz.getMethod(name, null);
-                return method.invoke(parserImpl, null);
+                final Method method = clazz.getMethod(name, (Class []) null);
+                return method.invoke(parserImpl, (Object []) null);
             } catch (NoSuchMethodException e) {
                 throw Util.newInternal(e);
             } catch (IllegalAccessException e) {

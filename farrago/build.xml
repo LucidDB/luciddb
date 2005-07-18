@@ -276,7 +276,7 @@ require version '${required.ant.version}'."/>
       classpathref="farrago.build.classpath">
       <include name="**/*.java" />
       <exclude name="**/namespace/jdbc/**/*.java" />
-      <exclude name="**/Jdk15Test.java" if="javasrc.14" />
+      <exclude name="**/Jdk15Test.java" if="farrago.javasrc.14" />
     </farrago.javaCompile>
   </target>
 
@@ -321,6 +321,7 @@ require version '${required.ant.version}'."/>
     <fail message="Test failure(s)" if="junit.failure"/>
   </target>
 
+  <!-- create the FarragoMedJdbc plugin jar -->
   <target name="buildJdbcPlugin"
     depends="checkJdbcPluginUptodate" unless="plugin.jdbc.uptodate">
     <farrago.javaCompile
@@ -329,6 +330,10 @@ require version '${required.ant.version}'."/>
       classpathref="plugin.build.classpath">
       <include name="**/namespace/jdbc/**/*.java" />
     </farrago.javaCompile>
+    <antcall target="buildJdbcPluginJar"/>
+  </target>
+
+  <target name="buildJdbcPluginJar">
     <jar jarfile="${farrago.plugin.dir}/FarragoMedJdbc.jar">
       <fileset dir="${plugin.classes.dir}">
         <include name="**/namespace/jdbc/**/*.class" />
@@ -776,7 +781,7 @@ require version '${required.ant.version}'."/>
 
   <!-- run all JUnit test cases (or a single test case chosen with -->
   <!-- property junit.class, normally from script junitSingle) -->
-  <target name="junit" depends="all,cleanTestLogs">
+  <target name="junit" depends="cleanTestLogs">
     <farrago.antFork target="forked_junit" classpathref="test.classpath">
       <jvmargs>
         <jvmarg line="${assertions.jvmarg}"/>
@@ -789,7 +794,7 @@ require version '${required.ant.version}'."/>
     <delete file="${FarragoTrace.log}.lck"/>
   </target>
 
-  <target name="forked_junit" depends="all,cleanTestLogs">
+  <target name="forked_junit">
     <farrago.runTests>
       <testfileset>
         <fileset dir="${farrago.classes.dir}">
@@ -812,6 +817,7 @@ require version '${required.ant.version}'."/>
     <antcall target="cleanExamples"/>
     <antcall target="createCatalog"/>
     <antcall target="buildExamples"/>
+    <antcall target="retroweaveIfRequested"/>
     <antcall target="junit"/>
     <antcall target="regressionWithoutBuild"/>
     <antcall target="testRngPlugin"/>
@@ -820,7 +826,7 @@ require version '${required.ant.version}'."/>
   </target>
 
   <!-- run all regression test cases -->
-  <target name="regression" depends="all,cleanTestLogs">
+  <target name="regression" depends="cleanTestLogs">
     <antcall target="regressionWithoutBuild"/>
   </target>
 
@@ -1037,7 +1043,7 @@ require version '${required.ant.version}'."/>
     <javadoc
       private="true"
       destdir="${javadoc.dir}"
-      source="${javasrc.version}"
+      source="${farrago.javasrc.version}"
       classpathref="farrago.run.classpath">
       <tag dir="src" includes="customJavadocTags.txt"/>
       <packageset dir="${farrago.catalog.src.dir}">
@@ -1200,22 +1206,19 @@ require version '${required.ant.version}'."/>
   </target>
 
   <!-- Experimental stuff for JDK 1.5 -->
-  <!-- verifyrefs reports lots of bogus warnings -->
-  <!-- in customBuild.properties, set javasrc.version=1.5 -->
-  <!-- and java14rt.jar=/path//to/rt.jar -->
+  <!-- in customBuild.properties, set farrago.javasrc.version=1.5 -->
+  <!-- to test retroweaver, set farrago.jre.dir=/path/to/jre1.4 -->
 
-  <target name="retroweave" depends="compile">
-    <taskdef name="retroweaver" 
-      classname="com.rc.retroweaver.ant.RetroWeaverTask">
-      <classpath>
-        <fileset dir="${retroweaver.dir}/lib" includes="**/*"/>
-        <pathelement location="${retroweaver.dir}/release/retroweaver.jar"/>
-      </classpath>
-    </taskdef>
-    <retroweaver srcdir="${farrago.classes.dir}"
-      verifyrefs="${farrago.retro.classpath}" />
-    <retroweaver srcdir="${plugin.classes.dir}"
-      verifyrefs="${farrago.retro.classpath}" />
+  <target name="retroweaveIfRequested" if="farrago.need.retroweave">
+    <antcall target="retroweave"/>
+  </target>
+
+  <target name="retroweave">
+    <retroweaver srcdir="${farrago.classes.dir}" />
+    <retroweaver srcdir="${farrago.catalog.src.dir}" />
+    <retroweaver srcdir="${plugin.classes.dir}" />
+    <!-- rebuild retrowoven plugin jar -->
+    <antcall target="buildJdbcPluginJar"/>
   </target>
 
   <!-- Below is all experimental stuff for the user repository -->

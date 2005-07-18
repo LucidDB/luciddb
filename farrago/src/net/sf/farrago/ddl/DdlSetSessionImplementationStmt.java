@@ -78,7 +78,9 @@ public class DdlSetSessionImplementationStmt extends DdlStmt
                 FarragoPluginClassLoader.PLUGIN_FACTORY_CLASS_ATTRIBUTE);
         try {
             FarragoSessionPersonalityFactory factory =
-                (FarragoSessionPersonalityFactory) factoryClass.newInstance();
+                (FarragoSessionPersonalityFactory)
+                session.getPluginClassLoader().newPluginInstance(
+                    factoryClass);
             return factory.newSessionPersonality(
                 session,
                 defaultPersonality);
