@@ -8,6 +8,7 @@ libfennel_dt_calc_la_SOURCES=
 libfennel_dt_calc_la_LIBADD=\
 	$(top_builddir)/disruptivetech/calc/libcalc.la \
 	-L$(top_builddir)/libfennel \
+	-lfennel_exec \
 	-lfennel_tuple \
 	-lfennel_synch \
 	-lfennel_common
