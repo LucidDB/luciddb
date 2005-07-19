@@ -27,6 +27,7 @@ import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.util.SqlVisitor;
 
 /**
  * An operator describing a window function specification.
@@ -67,6 +68,25 @@ public class SqlOverOperator extends SqlBinaryOperator
                 EigenbaseResource.instance().newOverNonAggregate());
         }
         validator.validateWindow(operands[1], scope, aggCall);
+    }
+
+    /** 
+     * Accepts a {@link SqlVisitor}, and tells it to visit each child.
+     *
+     * @param visitor Visitor.
+     */
+    public void acceptCall(SqlVisitor visitor, SqlCall call)
+    {
+        for (int i = 0; i < call.operands.length; i++) {
+            SqlNode operand = call.operands[i];
+            // if the second parm is an Identifier then it's supposed to
+            // be a name from a window clause and isn't part of the
+            // group by check
+            if ((operand == null) || (i == 1 && operand instanceof SqlIdentifier)){
+                continue;
+            }
+            visitor.visitChild(call, i, operand);
+        }
     }
 }
 

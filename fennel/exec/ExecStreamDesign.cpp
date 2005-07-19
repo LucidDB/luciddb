@@ -98,7 +98,7 @@ Here is some common ExecStreamGraph terminology:
 <li><em>stream</em>:  a vertex in an ExecStreamGraph.
 
 <li><em>dataflow</em>:  a directed edge in an ExecStreamGraph.  Streams are
-connected by dataflow edges.  In the exapmle diagram, there is no
+connected by dataflow edges.  In the example diagram, there is
 dataflow between the <code>CartesianJoin</code> and the
 <code>Calc</code>, but there is no dataflow between the two instances
 of <code>BTreeScan</code>.
