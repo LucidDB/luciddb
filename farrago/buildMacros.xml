@@ -62,11 +62,7 @@
   <property environment="env"/>
 
   <!-- runtime assertion control -->
-  <!-- REVIEW: SWZ: 7/14/2005: Increase default max heap to 128 MB to 
-       allow tests to complete without OutOfMemoryError.  Still investigating
-       whether there's a memory leak or not. If this change becomes
-       permanent it should be configured elsewhere. -->
-  <property name="assertions.jvmarg" value="-Xmx128m -ea -esa"/>
+  <property name="assertions.jvmarg" value="-ea -esa"/>
 
 
   <!-- forked ant verbosity control -->
