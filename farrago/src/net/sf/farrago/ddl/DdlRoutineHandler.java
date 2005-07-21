@@ -239,13 +239,13 @@ public class DdlRoutineHandler extends DdlHandler
                     res.newValidatorRoutineExternalNoBody(
                         repos.getLocalizedObjectName(routine)));
             }
+        } else {
+            CwmProcedureExpression dummyBody =
+                repos.newCwmProcedureExpression();
+            dummyBody.setLanguage(ExtensionLanguageEnum.JAVA.toString());
+            dummyBody.setBody(";");
+            routine.setBody(dummyBody);
         }
-
-        CwmProcedureExpression dummyBody =
-            repos.newCwmProcedureExpression();
-        dummyBody.setLanguage(ExtensionLanguageEnum.JAVA.toString());
-        dummyBody.setBody(";");
-        routine.setBody(dummyBody);
 
         if (!routine.getLanguage().equals(
                 ExtensionLanguageEnum.JAVA.toString()))

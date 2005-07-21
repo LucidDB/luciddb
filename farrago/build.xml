@@ -818,9 +818,12 @@ require version '${required.ant.version}'."/>
     <antcall target="createCatalog"/>
     <antcall target="buildExamples"/>
     <antcall target="retroweaveIfRequested"/>
+    <antcall target="testRngPlugin"/>
+    <antcall target="exportCatalog"/>
     <antcall target="junit"/>
     <antcall target="regressionWithoutBuild"/>
-    <antcall target="testRngPlugin"/>
+    <antcall target="testCleanup"/>
+    <antcall target="compareCatalogExport"/>
     <antcall target="macker"/>
     <antcall target="checkSourceFilePreambles"/>
   </target>
@@ -869,6 +872,37 @@ require version '${required.ant.version}'."/>
       file="${farrago.dir}/examples/rng/unitsql/installPlugin.sql"/>
     <farrago.runSqlTest
       file="${farrago.dir}/examples/rng/unitsql/testPlugin.sql"/>
+  </target>
+
+  <target name="testCleanup">
+    <farrago.runSqlTest
+      file="${farrago.dir}/initsql/testCleanup.sql"/>
+  </target>
+
+  <!-- if this task fails, it means some test has polluted the catalog -->
+  <target name="compareCatalogExport">
+    <delete quiet="true" dir="${testlog.dir}/CatalogLeak"/>
+    <mkdir dir="${testlog.dir}/CatalogLeak"/>
+    <move file="${farrago.xmi.dir}/FarragoCatalogExport.xmi"
+      tofile="${testlog.dir}/CatalogLeak/before.xmi"/>
+    <antcall target="exportCatalog"/>
+    <move file="${farrago.xmi.dir}/FarragoCatalogExport.xmi"
+      tofile="${testlog.dir}/CatalogLeak/after.xmi"/>
+    <xslt style="${farrago.xmi.dir}/maskIds.xsl"
+      in="${testlog.dir}/CatalogLeak/before.xmi"
+      out="${testlog.dir}/CatalogLeak/before.masked.xmi" />
+    <xslt style="${farrago.xmi.dir}/maskIds.xsl"
+      in="${testlog.dir}/CatalogLeak/after.xmi"
+      out="${testlog.dir}/CatalogLeak/after.masked.xmi" />
+    <fail message="catalog differs from clean state">
+      <condition>
+        <not>
+          <filesmatch 
+            file1="${testlog.dir}/CatalogLeak/before.masked.xmi" 
+            file2="${testlog.dir}/CatalogLeak/after.masked.xmi" />
+        </not>
+      </condition>
+    </fail>
   </target>
 
   <target name="generateTestSql" depends="compile">

@@ -204,11 +204,24 @@ JAVACODE SqlParseException convertException(Exception ex)
                 token.endColumn);
         }
     }
+    
+    // REVIEW jvs 19-July-2005:  What is this commented-out code doing here?
+    // Please add an English comment to explain why it is disabled, or get rid
+    // of it.
+    
 //    if (ex.getMessage().length() == 0) {
 //        return new SqlParseException(ex, pos);
 //    } else {
-        return new SqlParseException(
-            ex.getMessage(), pos, expectedTokenSequences, tokenImage);
+          SqlParseException spex = new SqlParseException(
+              ex.getMessage(), pos, expectedTokenSequences, tokenImage);
+          // TODO jvs 19-July-2005:  this should be enabled so that
+          // the trace log will see the real underlying cause, but when
+          // I do so,  it causes lots of test diffs (back to Farrago
+          // parser exception instead of SqlParserException).
+          /*
+          spex.initCause(ex);
+          */
+          return spex;
 //    }
 }
 

@@ -859,7 +859,7 @@ void TypedElement(FemAbstractTypedElement element) :
     {
         if (null != dataType.getCollectionsTypeName()) {
             FemSqlmultisetType colType = getRepos().newFemSqlmultisetType();
-            colType.setName("MULTISET");
+            colType.setName("SYS$MULTISET_" + colType.refMofId());
             FemSqltypeAttribute componentType =
             getRepos().newFemSqltypeAttribute();
             componentType.setName("COMPONENT");
@@ -870,6 +870,14 @@ void TypedElement(FemAbstractTypedElement element) :
             FemSqltypedElement typedElement =
             FarragoCatalogUtil.toFemSqltypedElement(element);
             typedElement.setType(colType);
+            // REVIEW jvs 19-July-2005:  This won't work once we
+            // have DROP COLUMN.  Need to either make the column
+            // a Namespace of its own, or create a trigger to
+            // make the lifetime of the constructed type match
+            // that of the column.
+            CwmNamespace namespace = (CwmNamespace)
+                element.refImmediateComposite();
+            namespace.getOwnedElement().add(colType);
             return;
         }
 
@@ -1467,10 +1475,10 @@ FemRoutine ConstructorDefinition() :
     {
         defEnd = getEndPos();
         String bodyText = farragoParser.getSubstring(defStart, defEnd);
-        CwmProcedureExpression procedureExpr =
-        getRepos().newCwmProcedureExpression();
+        CwmProcedureExpression procedureExpr = method.getBody();
         procedureExpr.setLanguage("SQL");
         procedureExpr.setBody(bodyText);
+        // NOTE: this is necessary to force a revalidation of the method
         method.setBody(procedureExpr);
     }
     {
