@@ -953,6 +953,24 @@ public abstract class SqlOperatorTests extends TestCase
     {
         getTester().isFor(SqlStdOperatorTable.rowNumberFunc);
     }
+
+    public void testCountFunc()
+    {
+        getTester().isFor(SqlStdOperatorTable.countOperator);
+        getTester().checkScalarExact("count(*)","INTEGER");
+        getTester().checkScalarExact("count('name')","INTEGER");
+        getTester().checkScalarExact("count(1)","INTEGER");
+        getTester().checkScalarExact("count(1.2)","INTEGER");
+   }
+
+    public void testLastValueFunc()
+    {
+        getTester().isFor(SqlStdOperatorTable.lastValueOperator);
+        getTester().checkScalarExact("last_value(1)","INTEGER");
+        getTester().checkScalarApprox("last_value(1.2)","DECIMAL(2, 1) NOT NULL", 1.2, 0);
+        getTester().checkType("last_value('name')","CHAR(4) NOT NULL");
+        getTester().checkString("last_value('name')","name","todo: CHAR(4) NOT NULL");
+    }
 }
 
 // End SqlOperatorTests.java

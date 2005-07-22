@@ -412,17 +412,23 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     public static final SqlAggFunction countOperator =
         new SqlCountAggFunction();
     /**
-     * <code>SUM</code> aggregate function.
+     * <code>MIN</code> aggregate function.
      */
     public static final SqlAggFunction minOperator =
         new SqlMinMaxAggFunction(new RelDataType[0], true,
             SqlMinMaxAggFunction.MINMAX_COMPARABLE);
     /**
-     * <code>SUM</code> aggregate function.
+     * <code>MAX</code> aggregate function.
      */
     public static final SqlAggFunction maxOperator =
         new SqlMinMaxAggFunction(new RelDataType[0], false,
             SqlMinMaxAggFunction.MINMAX_COMPARABLE);
+
+    /**
+     * <code>LAST</code> aggregate function.
+     */
+    public static final SqlAggFunction lastValueOperator =
+        new SqlLastValueAggFunction();
 
     //-------------------------------------------------------------
     // WINDOW Rank Functions
