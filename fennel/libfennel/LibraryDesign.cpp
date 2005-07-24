@@ -40,8 +40,8 @@ but not vice versa (e.g. everything depends on common, and btree and
 exec both depend on tuple).  No lateral dependencies are allowed
 (e.g. segment does not depend on tuple).  In this context, dependency
 means early binding; that is, the higher-level component references
-the lower-level component in order to satisfy #includes and/or the linker
-(whether static or dynamic).
+the lower-level component in order to satisfy preprocessor include directives
+and/or the linker (whether static or dynamic).
 
 <p>
 

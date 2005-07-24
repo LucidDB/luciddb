@@ -105,6 +105,14 @@ public interface FennelStoredTypeDescriptor
      * than the second otherwise a positive value
      */
     public int compareValues(FennelTupleDatum datum1, FennelTupleDatum datum2);
+
+    /**
+     * Indicate whether numeric data type is signed.
+     * @return false for non-numeric data types,
+     *      false for unsigned numeric data types,
+     *      true for signed numeric data types
+     */
+    public boolean isSigned();
 };
 
 // End FennelStoredTypeDescriptor.java

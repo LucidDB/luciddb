@@ -63,7 +63,7 @@ class NumericType : public StoredTypeDescriptor
         return cbMaxWidth;
     }
     
-    virtual uint getAlignmentByteCount(uint) const
+    virtual uint getAlignmentByteCount(uint cbWidth) const
     {
         return sizeof(T);
     }
@@ -152,7 +152,7 @@ class CharType : public StoredTypeDescriptor
         return cbMaxWidth;
     }
     
-    virtual uint getAlignmentByteCount(uint) const
+    virtual uint getAlignmentByteCount(uint cbWidth) const
     {
         return 1;
     }
@@ -195,12 +195,12 @@ class VarCharType : public StoredTypeDescriptor
         return 0;
     }
     
-    virtual uint getMinByteCount(uint) const
+    virtual uint getMinByteCount(uint cbMaxWidth) const
     {
         return 0;
     }
     
-    virtual uint getAlignmentByteCount(uint) const
+    virtual uint getAlignmentByteCount(uint cbWidth) const
     {
         return 1;
     }
@@ -271,7 +271,7 @@ class BinaryType : public StoredTypeDescriptor
         return cbMaxWidth;
     }
     
-    virtual uint getAlignmentByteCount(uint) const
+    virtual uint getAlignmentByteCount(uint cbWidth) const
     {
         return 1;
     }
@@ -312,12 +312,12 @@ class VarBinaryType : public StoredTypeDescriptor
         return 0;
     }
     
-    virtual uint getMinByteCount(uint) const
+    virtual uint getMinByteCount(uint cbMaxWidth) const
     {
         return 0;
     }
     
-    virtual uint getAlignmentByteCount(uint) const
+    virtual uint getAlignmentByteCount(uint cbWidth) const
     {
         return 1;
     }

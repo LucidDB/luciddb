@@ -131,6 +131,10 @@ CmdInterpreter::TxnHandle::~TxnHandle()
     
 CmdInterpreter::StreamGraphHandle::~StreamGraphHandle()
 {
+    if (javaRuntimeContext) {
+        JniEnvAutoRef pEnv;
+        pEnv->DeleteGlobalRef(javaRuntimeContext);
+    }
     --JniUtil::handleCount;
 }
     
@@ -338,6 +342,7 @@ void CmdInterpreter::visit(ProxyCmdCreateExecutionStreamGraph &cmd)
     std::auto_ptr<StreamGraphHandle> pStreamGraphHandle(
         new StreamGraphHandle());
     ++JniUtil::handleCount;
+    pStreamGraphHandle->javaRuntimeContext = NULL;
     pStreamGraphHandle->pTxnHandle = pTxnHandle;
     pStreamGraphHandle->pExecStreamGraph = pGraph;
     pStreamGraphHandle->pExecStreamFactory.reset(

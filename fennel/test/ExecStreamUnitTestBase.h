@@ -64,7 +64,7 @@ protected:
      *
      * @param sourceStreamEmbryo embryonic source stream which produces tuples
      *
-     * @param transformStreamEmbryo embryonic transforms streams which processes
+     * @param transforms embryonic transform streams which process
      * tuples produced by sourceStreamEmbryo or a child stream
      *
      * @return output buffer stream

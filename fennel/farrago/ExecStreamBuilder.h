@@ -113,8 +113,8 @@ public:
     /**
      * Main builder entry point.
      *
-     * @param streamDef Java representation for collection of stream
-     * definitions
+     * @param cmd Java representation for command containing collection of
+     * stream definitions
      *
      * @param assumeOutputFromSinks if true, sinks in the graph are
      * assumed to be dataflow output nodes; if false, sinks in the
