@@ -131,6 +131,10 @@ CmdInterpreter::TxnHandle::~TxnHandle()
     
 CmdInterpreter::StreamGraphHandle::~StreamGraphHandle()
 {
+    if (javaRuntimeContext) {
+        JniEnvAutoRef pEnv;
+        pEnv->DeleteGlobalRef(javaRuntimeContext);
+    }
     --JniUtil::handleCount;
 }
     

@@ -146,14 +146,14 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphOpen(
             CmdInterpreter::getStreamGraphHandleFromLong(hStreamGraph);
         CmdInterpreter::TxnHandle &txnHandle =
             CmdInterpreter::getTxnHandleFromLong(hTxn);
-        streamGraphHandle.javaRuntimeContext = hJavaStreamMap;
+        // Provide runtime context for stream open(), which a scheduler may defer
+        // til after out java caller returns: hence the global ref.
+        streamGraphHandle.javaRuntimeContext = pEnv->NewGlobalRef(hJavaStreamMap);
         streamGraphHandle.pExecStreamGraph->setTxn(txnHandle.pTxn);
         streamGraphHandle.pExecStreamGraph->open();
         if (streamGraphHandle.pScheduler.unique()) {
             streamGraphHandle.pScheduler->start();
         }
-        // TODO:  finally?
-        streamGraphHandle.javaRuntimeContext = NULL;
     } catch (std::exception &ex) {
         pEnv.handleExcn(ex);
     }
