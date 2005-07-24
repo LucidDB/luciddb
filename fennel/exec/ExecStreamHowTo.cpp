@@ -350,8 +350,6 @@ The restart flag is only true when a stream is restarted in the middle of an
 execution (e.g. as part of a nested loop join).  In the restart case,
 UniqExecStream can skip reallocating its private buffer.
 
-</code></pre>
-
 <hr>
 
 <h3>Execution</h3>

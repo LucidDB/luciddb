@@ -128,10 +128,8 @@ public:
      *
      * @param subStream substream whose contents are to be fetched
      * and stored as a run
-     *
-     * @return result of storage (
      */
-    void storeRun(ExternalSortSubStream &pObjLoad);
+    void storeRun(ExternalSortSubStream &subStream);
 
     /**
      * Returns information about run created by storeRun().

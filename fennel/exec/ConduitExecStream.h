@@ -63,9 +63,9 @@ protected:
 public:
     // implement ExecStream
     virtual void setOutputBufAccessors(
-        std::vector<SharedExecStreamBufAccessor> const &inAccessors);
-    virtual void setInputBufAccessors(
         std::vector<SharedExecStreamBufAccessor> const &outAccessors);
+    virtual void setInputBufAccessors(
+        std::vector<SharedExecStreamBufAccessor> const &inAccessors);
     virtual void prepare(ConduitExecStreamParams const &params);
     virtual void open(bool restart);
 };

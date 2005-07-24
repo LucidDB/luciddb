@@ -163,11 +163,11 @@ public:
     inline SharedExecStreamBufAccessor &getSharedBufAccessorFromEdge(Edge);
     inline ExecStreamBufAccessor &getBufAccessorFromEdge(Edge);
     
-    virtual void setTxn(SharedLogicalTxn);
+    virtual void setTxn(SharedLogicalTxn pTxn);
     virtual void setScratchSegment(
         SharedSegment pScratchSegment);
     virtual SharedLogicalTxn getTxn();
-    virtual void prepare(ExecStreamScheduler &);
+    virtual void prepare(ExecStreamScheduler &scheduler);
     virtual void open();
     virtual void addStream(SharedExecStream pStream);
     virtual void removeStream(ExecStreamId);

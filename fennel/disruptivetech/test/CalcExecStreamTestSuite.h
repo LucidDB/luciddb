@@ -68,8 +68,6 @@ public:
 
     /**
      * Tests with program that produces same amount of output as input.
-     *
-     * @param nRowsInput number of rows of input
      */
     void testConstantOneForOne();
     

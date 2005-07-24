@@ -213,7 +213,7 @@ public:
      *
      * @param iOutput ordinal of output of stream
      *
-     * @param ID of adapter stream within this graph
+     * @param interposedId ID of adapter stream within this graph
      *
      */
     virtual void interposeStream(
@@ -296,7 +296,7 @@ public:
      *
      * @param streamId ID of stream
      *
-     * @param iInput 0-based output flow ordinal
+     * @param iOutput 0-based output flow ordinal
      *
      * @return downstream consumer
      */
@@ -309,7 +309,7 @@ public:
      *
      * @param streamId ID of stream
      *
-     * @param iInput 0-based output flow ordinal
+     * @param iOutput 0-based output flow ordinal
      *
      * @return accessor used by downstream consumer
      */
