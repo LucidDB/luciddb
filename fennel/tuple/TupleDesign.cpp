@@ -526,8 +526,6 @@ eliminated eventually; a calculator program generator should be used instead.
 The TuplePrinter class provides a simple means of rendering tuple values
 as text.
 
-</ul>
-
  */
 struct TupleDesign 
 {

@@ -111,16 +111,18 @@ public final class FennelStandardTypeDescriptor
     public static abstract class FennelNumericType
         implements FennelStoredTypeDescriptor
     {
-        private final int ordinal;
+//        private final int ordinal;
         private final int bitCount;
         private final int fixedByteCount;
+        private final boolean signed;
+        public final FennelStandardTypeDescriptor type;
 
         /**
          * returns the ordinal representing this type.
          */
         public int getOrdinal()
         {
-            return ordinal;
+            return type.getOrdinal();
         };
 
         /**
@@ -174,23 +176,40 @@ public final class FennelStandardTypeDescriptor
         };
 
         /**
+         * Indicate whether numeric data type is signed.
+         * @return true for signed types, otherwise false.
+         */
+        public boolean isSigned()
+        {
+            return signed;
+        }
+
+        /**
          *  required by the serialization mechanism; should never be used.
          */
         protected FennelNumericType()
         {
-            this.ordinal = 0;
+//            this.ordinal = 0;
             this.bitCount = 0;
             this.fixedByteCount = 0;
+            this.signed = false;
+            this.type = null;
         }
 
         /**
          * Construction.
          */
-        public FennelNumericType(int ordinal, int bitCount, int fixedByteCount)
+        public FennelNumericType(
+            int ordinal, 
+            int bitCount, 
+            int fixedByteCount,
+            boolean signed)
         {
-            this.ordinal        = ordinal;
+//            this.ordinal        = ordinal;
             this.bitCount       = bitCount;
             this.fixedByteCount = fixedByteCount;
+            this.signed         = signed;
+            this.type = forOrdinal(ordinal);
         }
     }
 
@@ -201,7 +220,8 @@ public final class FennelStandardTypeDescriptor
         implements java.io.Serializable
     {
         public stdINT_8() { super(
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_8, 0, 1); };
+            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_8,
+            0, 1, true); };
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelByteAccessor();
@@ -218,7 +238,8 @@ public final class FennelStandardTypeDescriptor
         implements java.io.Serializable
     {
         public stdUINT_8() { super(
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_8, 0, 1); };
+            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_8,
+            0, 1, false); };
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelByteAccessor();
@@ -235,7 +256,8 @@ public final class FennelStandardTypeDescriptor
         implements java.io.Serializable
     {
         public stdINT_16() { super(
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_16, 0, 2); };
+            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_16,
+            0, 2, true); };
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelShortAccessor();
@@ -253,8 +275,7 @@ public final class FennelStandardTypeDescriptor
     {
         public stdUINT_16() { super(
             FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_16,
-            0,
-            2); };
+            0, 2, false); };
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelShortAccessor();
@@ -271,7 +292,8 @@ public final class FennelStandardTypeDescriptor
         implements java.io.Serializable
     {
         public stdINT_32() { super(
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_32, 0, 4); };
+            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_32,
+            0, 4, true); };
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelIntAccessor();
@@ -289,8 +311,7 @@ public final class FennelStandardTypeDescriptor
     {
         public stdUINT_32() { super(
             FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_32,
-            0,
-            4); };
+            0, 4, false); };
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelIntAccessor();
@@ -307,7 +328,8 @@ public final class FennelStandardTypeDescriptor
         implements java.io.Serializable
     {
         public stdINT_64() { super(
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_64, 0, 8); };
+            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_64,
+            0, 8, true); };
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelLongAccessor();
@@ -325,8 +347,7 @@ public final class FennelStandardTypeDescriptor
     {
         public stdUINT_64() { super(
             FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_64,
-            0,
-            8); };
+            0, 8, false); };
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelLongAccessor();
@@ -343,7 +364,8 @@ public final class FennelStandardTypeDescriptor
         implements java.io.Serializable
     {
         public stdREAL() { super(
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_REAL, 0, 4); };
+            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_REAL,
+            0, 4, true); };
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelIntAccessor();
@@ -360,7 +382,8 @@ public final class FennelStandardTypeDescriptor
         implements java.io.Serializable
     {
         public stdDOUBLE() { super(
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_DOUBLE, 0, 8); };
+            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_DOUBLE,
+            0, 8, true); };
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelLongAccessor();
@@ -377,7 +400,8 @@ public final class FennelStandardTypeDescriptor
         implements java.io.Serializable
     {
         public stdBOOL() { super(
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_BOOL, 1, 1); };
+            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_BOOL,
+            1, 1, false); };
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelBitAccessor();
@@ -406,6 +430,7 @@ public final class FennelStandardTypeDescriptor
         public int getFixedByteCount() { return 0; }
         public int getMinByteCount(int maxWidth) { return maxWidth; }
         public int getAlignmentByteCount(int width) { return 1; }
+        public boolean isSigned() { return false; }
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelFixedWidthAccessor();
@@ -437,6 +462,7 @@ public final class FennelStandardTypeDescriptor
         public int getFixedByteCount() { return 0; }
         public int getMinByteCount(int maxWidth) { return 0; }
         public int getAlignmentByteCount(int width) { return 1; }
+        public boolean isSigned() { return false; }
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelVarWidthAccessor();
@@ -469,6 +495,7 @@ public final class FennelStandardTypeDescriptor
         public int getFixedByteCount() { return 0; }
         public int getMinByteCount(int maxWidth) { return maxWidth; }
         public int getAlignmentByteCount(int width) { return 1; }
+        public boolean isSigned() { return false; }
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelFixedWidthAccessor();
@@ -502,6 +529,7 @@ public final class FennelStandardTypeDescriptor
         public int getFixedByteCount() { return 0; }
         public int getMinByteCount(int maxWidth) { return 0; }
         public int getAlignmentByteCount(int width) { return 1; }
+        public boolean isSigned() { return false; }
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelVarWidthAccessor();

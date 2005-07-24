@@ -2953,7 +2953,9 @@ SqlIdentifier ReservedFunctionName() :
         | <DENSE_RANK>
         | <ELEMENT>
         | <EXP>
+        | <FIRST_VALUE>
         | <FUSION>
+        | <LAST_VALUE>
         | <LN>
         | <LOCALTIME>
         | <LOCALTIMESTAMP>
@@ -3374,6 +3376,7 @@ TOKEN :
     | < FILTER: "FILTER" >
     | < FINAL: "FINAL" >
     | < FIRST: "FIRST" >
+    | < FIRST_VALUE: "FIRST_VALUE">
     | < FLOAT: "FLOAT" >
     | < FLOOR: "FLOOR" >
     | < FOLLOWING: "FOLLOWING" >
@@ -3433,10 +3436,11 @@ TOKEN :
     | < KEY_TYPE: "KEY_TYPE" >
     | < LANGUAGE: "LANGUAGE" >
     | < LARGE: "LARGE" >
+    | < LAST: "LAST" >
+    | < LAST_VALUE: "LAST_VALUE" >
     | < LATERAL: "LATERAL" >
     | < LEADING: "LEADING" >
     | < LEFT: "LEFT" >
-    | < LAST: "LAST" >
     | < LENGTH: "LENGTH" >
     | < LEVEL: "LEVEL" >
     | < LIBRARY: "LIBRARY" >

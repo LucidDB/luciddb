@@ -132,7 +132,7 @@ public:
      *
      * @param page the page being freed
      */
-    void unregisterPage(PageT &)
+    void unregisterPage(PageT &page)
     {
         // NOTE:  for now we assume that CacheImpl only registers pages on
         // initialization and unregisters them on shutdown (no dynamic page

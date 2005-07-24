@@ -1670,6 +1670,11 @@ public class IteratorResultSet implements ResultSet
      */
     public static class SqlTimeoutException extends SQLException
     {
+        SqlTimeoutException() {
+            // SQLException(reason, SQLState, vendorCode)
+            // REVIEW mb 19-Jul-05 Is there a standard SQLState?
+            super("timeout", null, 0);
+        }
     }
 }
 
