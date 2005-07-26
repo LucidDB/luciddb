@@ -232,6 +232,17 @@
        properties file.  The properties file will take precedence. -->
   <property name="farrago.custom.classpath" value=""/>
 
+  <!-- xerces path -->
+  <path id="xerces.classpath">
+    <fileset dir=".">
+      <include name="${ant.home}/lib/xml-apis.jar" if="farrago.javasrc.14" />
+      <include name="${ant.home}/lib/xercesImpl.jar" if="farrago.javasrc.14" />
+    </fileset>
+    <fileset dir=".">
+      <include name="${java.home}/lib/endorsed/xercesImpl.jar" unless="farrago.javasrc.14" />
+    </fileset>
+  </path>
+
   <!-- third-party libraries -->
   <path id="farrago.3p.classpath">
     <pathelement location="${mdrlibs.dir}/mdrant.jar"/>
@@ -245,8 +256,7 @@
     <pathelement location="${resgen.dir}/lib/eigenbase-xom.jar"/>
     <pathelement location="${mdrlibs.dir}/mdrjdbc.jar"/>
     <pathelement location="${junit.dir}/junit.jar"/>
-    <pathelement location="${ant.home}/lib/xml-apis.jar"/>
-    <pathelement location="${ant.home}/lib/xercesImpl.jar"/>
+    <path refid="xerces.classpath"/>
     <pathelement location="${javahome.dir}/lib/tools.jar"/>
     <pathelement location="${rmijdbc.dir}/dist/lib/RmiJdbc.jar"/>
     <pathelement location="${csvjdbc.dir}/csvjdbc.jar"/>
@@ -288,8 +298,7 @@
     <pathelement location="${ant.home}/lib/ant.jar"/>
     <pathelement location="${ant.home}/lib/ant-launcher.jar"/>
     <pathelement location="${ant.home}/lib/junit.jar"/>
-    <pathelement location="${ant.home}/lib/xercesImpl.jar"/>
-    <pathelement location="${ant.home}/lib/xml-apis.jar"/>
+    <path refid="xerces.classpath"/>
     <pathelement location="${ant.home}/lib/ant-junit.jar"/>
   </path>
   <property name="ant.classpath" refid="ant.classpath"/>
