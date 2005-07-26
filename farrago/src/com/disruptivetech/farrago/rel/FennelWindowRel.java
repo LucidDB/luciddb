@@ -31,12 +31,12 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.SqlAggFunction;
-import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.*;
 import org.eigenbase.util.Util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.math.BigDecimal;
 
 
 /**
@@ -208,7 +208,7 @@ public class FennelWindowRel extends FennelSingleRel
         // Generate output program.
         RexToCalcTranslator translator =
             new RexToCalcTranslator(getCluster().getRexBuilder());
-        String program = translator.getProgram(
+        String program = translator.getAggProgram(
             // REVIEW: Is the input to the output program the buckets of all
             //   windows: [w0.b0] [w0.b1] [w1.b0] [w1.b1] [w1.b2]
             getChild().getRowType(),
@@ -240,6 +240,22 @@ public class FennelWindowRel extends FennelSingleRel
             windowDef.setOrderKeyList(
                 FennelRelUtil.createTupleProjection(repos, window.orderKeys));
 
+            // Cases: (range, offset)
+            // 3 preceding: (3, 0)
+            // 3 following: (3, 3)
+            // 10 preceding and 2 preceding: (8, -2)
+            // 3 preceding and 2 following: (5, 2)
+            // 2 following and 6 following: (4, 6)
+            int[] upper = getRangeOffset(window.upperBound, "PRECEDING");
+            int[] lower = getRangeOffset(window.lowerBound, "FOLLOWING");
+            int offset = upper[1]*upper[0];
+            if (offset == 0 && lower[1] == -1) {
+                lower[1] = -lower[1];
+                offset = lower[1]*lower[0];
+            }
+            windowDef.setOffset(offset);
+            windowDef.setRange((lower[1]*lower[0] + upper[1]*upper[0]) + "");
+
             // For each partition...
             for (int j = 0; j < window.partitions.size(); j++) {
                 Partition partition = (Partition) window.partitions.get(j);
@@ -256,6 +272,12 @@ public class FennelWindowRel extends FennelSingleRel
                 windowPartitionDef.setInitializeProgram(programs[0]);
                 windowPartitionDef.setAddProgram(programs[1]);
                 windowPartitionDef.setDropProgram(programs[2]);
+
+                // Review: Should we use tupleDescriptorToString instead?
+                final FemTupleDescriptor bucketDesc = FennelRelUtil.createTupleDescriptorFromRowType
+                        (repos, getCluster().getTypeFactory(), getRowType());
+                windowPartitionDef.setBucketDesc(bucketDesc);
+
                 windowPartitionDef.setPartitionKeyList(
                     FennelRelUtil.createTupleProjection(
                         repos, partition.partitionKeys));
@@ -263,6 +285,35 @@ public class FennelWindowRel extends FennelSingleRel
         }
 
         return windowStreamDef;
+    }
+
+    private int[] getRangeOffset(SqlNode node, String strCheck)
+    {
+        int[] out = new int[2];
+        int val = 0;
+        int sign = 1;
+        if (node != null) {
+            if (node instanceof SqlCall) {
+                sign = ((SqlCall) node).getOperator().getName().
+                        equals(strCheck) ? -1 : 1;
+                SqlNode[] operands = ((SqlCall) node).getOperands();
+                assert operands.length == 1 && operands[0] != null;
+                SqlLiteral operand = (SqlLiteral) operands[0];
+                Object obj = operand.getValue();
+                if (obj instanceof BigDecimal) {
+                    val = ((BigDecimal) obj).intValue();
+                } else if (obj instanceof SqlIntervalLiteral.IntervalValue) {
+                    // TODO: Fix this... We should figure out if it is hour, minute etc and
+                    // normalize it to milliseconds or something like that.
+                    val = ((SqlIntervalLiteral.IntervalValue) obj).getSign()*
+                            Integer.parseInt(((SqlIntervalLiteral.IntervalValue) obj).
+                            getIntervalLiteral());
+                }
+            }
+        }
+        out[0] = val;
+        out[1] = sign;
+        return out;
     }
 
     /**
