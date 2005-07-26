@@ -421,6 +421,7 @@ protected:
     /**
      * Verifies that the program counter is valid
      * @param pc the program counter
+     * @param loc
      * @throw CalcAssemblerException Exception indicating that the PC is invalid 
      */ 
     void checkPC(TProgramCounter pc, CalcYYLocType& loc) {
