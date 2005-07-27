@@ -165,7 +165,8 @@ public abstract class FarragoTestCase extends DiffTestCase
     protected static void runCleanup()
         throws Exception
     {
-        Cleanup cleanup = new Cleanup("cleanup");
+        // See CleanupFactory for an example of adding custom cleanup.
+        Cleanup cleanup = CleanupFactory.getFactory().newCleanup("cleanup");
         try {
             cleanup.setUp();
             cleanup.execute();
@@ -558,6 +559,79 @@ public abstract class FarragoTestCase extends DiffTestCase
     }
 
     //~ Inner Classes ---------------------------------------------------------
+
+    /**
+     * CleanupFactory is a factory for Cleanup objects.  Test cases
+     * overriding FarragoTestCase can provide custom test cleanup by
+     * overriding CleanupFactory.  This is normally done only for
+     * extension projects that have additional repository objects that
+     * require special cleanup.  Most individual test cases can simply
+     * use the setUp/tearDown facility built into JUnit. The alternate
+     * CleanupFactory should override <code>newCleanup(String)</code>
+     * to return an extension of Cleanup that provides custom cleanup.
+     * The extension project test case should provide static helper
+     * methods to wrap the Test objects returned by FarragoTestCase's
+     * static <code>wrappedSuite</code> methods with code that sets
+     * and resets the CleanupFactory.  In other words:
+     *
+     * <pre>
+     * public abstract class ExtensionTestCase extends FarragoTestCase
+     * {
+     *     public static Test wrappedExtensionSuite(Class clazz)
+     *     {
+     *         TestSuite suite = new TestSuite(clazz);
+     *         return wrappedExtensionSuite(suite);
+     *     }
+     *
+     *     public static Test wrappedExtensionSuite(TestSuite suite)
+     *     {
+     *         Test farragoSuite = FarragoTestCase.wrappedSuite(suite);
+     *       
+     *         TestSetup wrapper = 
+     *             new TestSetup(farragoSuite) {
+     *                 protected void setUp() throws Exception
+     *                 {
+     *                     CleanupFactory.setFactory(
+     *                         new ExtensionCleanupFactory());
+     *                 }
+     *       
+     *                 protected void tearDown() throws Exception
+     *                 {
+     *                     CleanupFactory.resetFactory();
+     *                 }
+     *             };
+     *         return wrapper;
+     *     }
+     * }
+     * </pre>
+     */
+    public static class CleanupFactory
+    {
+        private static final CleanupFactory defaultFactory = 
+        	new CleanupFactory();
+
+        private static CleanupFactory factory = defaultFactory;
+
+        public static synchronized void setFactory(CleanupFactory altFactory)
+        {
+            factory = altFactory;
+        }
+
+        public static synchronized void resetFactory()
+        {
+            factory = defaultFactory;
+        }
+
+        public static synchronized CleanupFactory getFactory()
+        {
+            return factory;
+        }
+        
+        public Cleanup newCleanup(String name) throws Exception
+        {
+            return new Cleanup(name);
+        }
+    }
 
     /**
      * Helper for staticSetUp.
