@@ -179,11 +179,8 @@ class ExtendedInstruction0 : public ExtendedInstruction
 public:
     /**
      * The type of functor used to implement this extended instruction. For
-     * example, a function such as<blockquote>
-     *
+     * example, a function such as
      * <pre>void execute()</pre>
-     *
-     * </blockquote>
      */
     typedef void (*Functor)();
     /**
@@ -238,11 +235,8 @@ class ExtendedInstruction0Context : public ExtendedInstruction
 public:
     /**
      * The type of functor used to implement this extended instruction. For
-     * example, a function such as<blockquote>
-     *
+     * example, a function such as
      * <pre>void execute()</pre>
-     *
-     * </blockquote>
      */
     typedef void (*Functor)(boost::scoped_ptr<ExtendedInstructionContext>& ctx);
     /**
@@ -303,11 +297,8 @@ public:
     /**
      * The type of functor used to implement this extended instruction.
      * For example, if T0 is 'int', then we will require a function such
-     * as<blockquote>
-     *
+     * as
      * <pre>void execute(RegisterRef<int>* reg0</pre>
-     *
-     * </blockquote>
      */
     typedef void (*Functor)(RegisterRef<T0>* reg0);
     /**
@@ -369,11 +360,8 @@ public:
     /**
      * The type of functor used to implement this extended instruction.
      * For example, if T0 is 'int', then we will require a function such
-     * as<blockquote>
-     *
+     * as
      * <pre>void execute(RegisterRef<int>* reg0</pre>
-     *
-     * </blockquote>
      */
     typedef void (*Functor)(boost::scoped_ptr<ExtendedInstructionContext>& ctx,
                             RegisterRef<T0>* reg0);
@@ -441,13 +429,11 @@ public:
     /**
      * The type of functor used to implement this extended instruction. For
      * example, if T0 is 'int' and T1 is 'double',
-     * then we will require a function such as<blockquote>
+     * then we will require a function such as
      *
      * <pre>void execute(RegisterRef<int>* reg0,
      *                   RegisterRef<double>* reg1)
      * </pre>
-     *
-     * </blockquote>
      */
     typedef void (*Functor)(RegisterRef<T0>* const reg0,
                             RegisterRef<T1>* const reg1);
@@ -517,13 +503,11 @@ public:
     /**
      * The type of functor used to implement this extended instruction. For
      * example, if T0 is 'int' and T1 is 'double',
-     * then we will require a function such as<blockquote>
+     * then we will require a function such as
      *
      * <pre>void execute(RegisterRef<int>* reg0,
      *                   RegisterRef<double>* reg1)
      * </pre>
-     *
-     * </blockquote>
      */
     typedef void (*Functor)(boost::scoped_ptr<ExtendedInstructionContext>& ctx,
                             RegisterRef<T0>* const reg0,
@@ -598,14 +582,12 @@ public:
     /**
      * The type of functor used to implement this extended instruction. For
      * example, if T0 is 'int' and T1 is 'double' and T2 is 'int'
-     * then we will require a function such as<blockquote>
+     * then we will require a function such as
      *
      * <pre>void execute(
      *     RegisterRef<int> &reg0,
      *     RegisterRef<double> &reg1,
      *     RegisterRef<int> &reg2)</pre>
-     *
-     * </blockquote>
      */
     typedef void (*Functor)(RegisterRef<T0>* const reg0,
                             RegisterRef<T1>* const reg1,
@@ -682,14 +664,13 @@ public:
     /**
      * The type of functor used to implement this extended instruction. For
      * example, if T0 is 'int' and T1 is 'double' and T2 is 'int'
-     * then we will require a function such as<blockquote>
+     * then we will require a function such as
      *
      * <pre>void execute(
      *     RegisterRef<int> &reg0,
      *     RegisterRef<double> &reg1,
      *     RegisterRef<int> &reg2)</pre>
-     *
-     * </blockquote>
+     * 
      */
     typedef void (*Functor)(boost::scoped_ptr<ExtendedInstructionContext>& ctx,
                             RegisterRef<T0>* const reg0,
@@ -772,14 +753,13 @@ public:
     /**
      * The type of functor used to implement this extended instruction. For
      * example, if T0 is 'int' and T1 is 'double' and T2 is 'int'
-     * then we will require a function such as<blockquote>
+     * then we will require a function such as
      *
      * <pre>void execute(
      *     RegisterRef<int> &reg0,
      *     RegisterRef<double> &reg1,
      *     RegisterRef<int> &reg2)</pre>
-     *
-     * </blockquote>
+     * 
      */
     typedef void (*Functor)(RegisterRef<T0>* const reg0,
                             RegisterRef<T1>* const reg1,
@@ -862,14 +842,13 @@ public:
     /**
      * The type of functor used to implement this extended instruction. For
      * example, if T0 is 'int' and T1 is 'double' and T2 is 'int'
-     * then we will require a function such as<blockquote>
+     * then we will require a function such as
      *
      * <pre>void execute(
      *     RegisterRef<int> &reg0,
      *     RegisterRef<double> &reg1,
      *     RegisterRef<int> &reg2)</pre>
-     *
-     * </blockquote>
+     * 
      */
     typedef void (*Functor)(boost::scoped_ptr<ExtendedInstructionContext>& ctx,
                             RegisterRef<T0>* const reg0,
@@ -959,14 +938,13 @@ public:
     /**
      * The type of functor used to implement this extended instruction. For
      * example, if T0 is 'int' and T1 is 'double' and T2 is 'int'
-     * then we will require a function such as<blockquote>
+     * then we will require a function such as
      *
      * <pre>void execute(
      *     RegisterRef<int> &reg0,
      *     RegisterRef<double> &reg1,
      *     RegisterRef<int> &reg2)</pre>
-     *
-     * </blockquote>
+     * 
      */
     typedef void (*Functor)(RegisterRef<T0>* const reg0,
                             RegisterRef<T1>* const reg1,
@@ -1056,14 +1034,13 @@ public:
     /**
      * The type of functor used to implement this extended instruction. For
      * example, if T0 is 'int' and T1 is 'double' and T2 is 'int'
-     * then we will require a function such as<blockquote>
+     * then we will require a function such as
      *
      * <pre>void execute(
      *     RegisterRef<int> &reg0,
      *     RegisterRef<double> &reg1,
      *     RegisterRef<int> &reg2)</pre>
-     *
-     * </blockquote>
+     * 
      */
     typedef void (*Functor)(boost::scoped_ptr<ExtendedInstructionContext>& ctx,
                             RegisterRef<T0>* const reg0,

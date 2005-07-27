@@ -51,8 +51,7 @@ import net.sf.farrago.cwm.core.*;
 public interface FarragoSessionDdlHandler
 {
     /**
-     * Validates the definition of an object when it is created (and also when
-     * it is altered if there is no validateModification handler).
+     * Validates the definition of an object when it is created.
      *
      * @param modelElement element being validated
      */

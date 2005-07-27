@@ -935,7 +935,7 @@ SqlStrCastToExact(char const * const str,
 //!
 //! Cast a string to an approximate (e.g. floating point) numeric.
 //!
-//! See SQL99 Part 2 Section 5.3 Format <approximate numeric literal> for
+//! See SQL99 Part 2 Section 5.3 Format &lt;approximate numeric literal&gt; for
 //! details on the format of an approximate numeric.
 //! Basically nnn.mmm[Exxx].
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint>
@@ -1156,7 +1156,7 @@ SqlStrCastFromExact(char* dest,
 //! Pad character code points that require more than one code unit are
 //! currently unsupported.
 //!
-//! See SQL99 Part 2 Section 5.3 Format <approximate numeric literal> for
+//! See SQL99 Part 2 Section 5.3 Format &lt;approximate numeric literal&gt; for
 //! details on the format of an approximate numeric.
 //! Basically nnn.mmmExxx.
 //!

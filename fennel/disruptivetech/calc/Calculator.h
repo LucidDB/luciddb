@@ -65,6 +65,7 @@ public:
     //! Constructor for XOs that will populate Calculator piecemeal.
     //!
     //! Cannot use the assembler with this format.
+    //! @param dynamicParamManager the dynamic parameter manager
     //! @param codeSize size of Instruction vector
     //! @param literalSize size of literal RegisterReference vector
     //! @param inputSize size of literal RegisterReference vector
