@@ -551,4 +551,59 @@
     </classpath>
   </taskdef>
 
+  <!-- Macro for creating a TAGS file suitable for use in Emacs -->
+  <macrodef name="farrago.createEmacsTags">
+    <attribute name="filesetPropertyName" default="unspecified"/>
+    <sequential>
+      <delete file="${basedir}/taggedfiles.tmp" quiet="true"/>
+      <concat destfile="taggedfiles.tmp">replaceme</concat>
+      <pathconvert property="files.taggable"
+          pathsep="${line.separator}"
+          dirsep="/" refid="@{filesetPropertyName}" >
+        <map from="${basedir}" to="." />
+      </pathconvert>
+      <replace file="taggedfiles.tmp"
+        token="replaceme" value="${files.taggable}" />
+      <fixcrlf srcDir="${basedir}" includes="taggedfiles.tmp"
+        eol="lf" eof="remove" />
+      <exec dir="${basedir}" executable="ctags">
+        <arg line="--langmap=java:+.jj"/>
+        <arg line="-e"/>
+        <arg line="-L taggedfiles.tmp"/>
+      </exec>
+      <delete file="${basedir}/taggedfiles.tmp" quiet="true"/>
+    </sequential>
+  </macrodef>
+
+  <!-- Macro for comparing catalog export before/after test run -->
+  <macrodef name="farrago.compareCatalogExport">
+    <attribute name="log.dir" default="unspecified"/>
+    <attribute name="export.file" default="unspecified"/>
+    <attribute name="export.target" default="exportCatalog"/>
+    <sequential>
+      <delete quiet="true" dir="@{log.dir}"/>
+      <mkdir dir="@{log.dir}"/>
+      <move file="@{export.file}"
+        tofile="@{log.dir}/before.xmi"/>
+      <antcall target="@{export.target}"/>
+      <move file="@{export.file}"
+        tofile="@{log.dir}/after.xmi"/>
+      <xslt style="${farrago.xmi.dir}/maskIds.xsl"
+        in="@{log.dir}/before.xmi"
+        out="@{log.dir}/before.masked.xmi" />
+      <xslt style="${farrago.xmi.dir}/maskIds.xsl"
+        in="@{log.dir}/after.xmi"
+        out="@{log.dir}/after.masked.xmi" />
+      <fail message="catalog differs from clean state">
+        <condition>
+          <not>
+            <filesmatch 
+              file1="@{log.dir}/before.masked.xmi" 
+              file2="@{log.dir}/after.masked.xmi" />
+          </not>
+        </condition>
+      </fail>
+    </sequential>
+  </macrodef>
+
 </project>

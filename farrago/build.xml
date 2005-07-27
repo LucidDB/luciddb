@@ -173,10 +173,6 @@ require version '${required.ant.version}'."/>
   <pathconvert property="fileset.unitlurql" refid="fileset.unitlurql"
     pathsep="${line.separator}" dirsep="${file.separator}" />
 
-  <!-- name for a temp file used during tags generation -->
-  <property name="file.taggable.tmp"
-    location="${farrago.dir}/taggedfiles"/>
-
   <!-- newline for use in constructing strings -->
   <property name="nl" value="${line.separator}"/>
 
@@ -881,28 +877,9 @@ require version '${required.ant.version}'."/>
 
   <!-- if this task fails, it means some test has polluted the catalog -->
   <target name="compareCatalogExport">
-    <delete quiet="true" dir="${testlog.dir}/CatalogLeak"/>
-    <mkdir dir="${testlog.dir}/CatalogLeak"/>
-    <move file="${farrago.xmi.dir}/FarragoCatalogExport.xmi"
-      tofile="${testlog.dir}/CatalogLeak/before.xmi"/>
-    <antcall target="exportCatalog"/>
-    <move file="${farrago.xmi.dir}/FarragoCatalogExport.xmi"
-      tofile="${testlog.dir}/CatalogLeak/after.xmi"/>
-    <xslt style="${farrago.xmi.dir}/maskIds.xsl"
-      in="${testlog.dir}/CatalogLeak/before.xmi"
-      out="${testlog.dir}/CatalogLeak/before.masked.xmi" />
-    <xslt style="${farrago.xmi.dir}/maskIds.xsl"
-      in="${testlog.dir}/CatalogLeak/after.xmi"
-      out="${testlog.dir}/CatalogLeak/after.masked.xmi" />
-    <fail message="catalog differs from clean state">
-      <condition>
-        <not>
-          <filesmatch 
-            file1="${testlog.dir}/CatalogLeak/before.masked.xmi" 
-            file2="${testlog.dir}/CatalogLeak/after.masked.xmi" />
-        </not>
-      </condition>
-    </fail>
+    <farrago.compareCatalogExport 
+      log.dir="${testlog.dir}/CatalogLeak" 
+      export.file="${farrago.xmi.dir}/FarragoCatalogExport.xmi" />
   </target>
 
   <target name="generateTestSql" depends="compile">
@@ -986,22 +963,6 @@ require version '${required.ant.version}'."/>
     </mdr>
   </target>
 
-  <!-- Utility target for dumping the value of fileset.taggable into
-  file.taggable.tmp in a form suitable for consumption by ctags,
-  which always expects a Unix file format -->
-  <target name="tags.find_taggable_files">
-    <concat destfile="${file.taggable.tmp}">replaceme</concat>
-    <pathconvert property="files.taggable"
-      pathsep="${line.separator}"
-      dirsep="/" refid="fileset.taggable" >
-      <map from="${farrago.dir}" to="." />
-    </pathconvert>
-    <replace file="${file.taggable.tmp}"
-      token="replaceme" value="${files.taggable}" />
-    <fixcrlf srcDir="${farrago.dir}" includes="taggedfiles"
-      eol="lf" eof="remove" />
-  </target>
-
   <target name="macker">
     <path id="macker.classpath">
       <fileset dir="${macker.dir}/lib" includes="*.jar"/>
@@ -1059,13 +1020,7 @@ require version '${required.ant.version}'."/>
 
   <!-- generate Emacs tags -->
   <target name="etags">
-    <antcall target="tags.find_taggable_files"/>
-    <exec dir="${farrago.dir}" executable="ctags">
-      <arg line="--langmap=java:+.jj"/>
-      <arg line="-e"/>
-      <arg line="-L taggedfiles"/>
-    </exec>
-    <delete file="${file.taggable.tmp}" quiet="true"/>
+    <farrago.createEmacsTags filesetPropertyName="fileset.taggable"/>
   </target>
 
   <!-- generate Farrago javadoc (clean first to get rid of dummy classes) -->
