@@ -376,6 +376,24 @@ public abstract class FarragoCatalogUtil
             }
         }
     }
+
+    /**
+     * Indexes a collection of model elements by name.
+     *
+     * @param inCollection elements to be indexed
+     *
+     * @param outMap receives indexed elements; key is name, value is element
+     */
+    public static void indexModelElementsByName(
+        Collection inCollection,
+        Map outMap)
+    {
+        Iterator iter = inCollection.iterator();
+        while (iter.hasNext()) {
+            CwmModelElement element = (CwmModelElement) iter.next();
+            outMap.put(element.getName(), element);
+        }
+    }
     
     /**
      * Looks up a schema by name in a catalog.
