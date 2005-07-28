@@ -1040,6 +1040,11 @@ require version '${required.ant.version}'."/>
       </packageset>
       <packageset dir="${farrago.src.dir}">
         <include name="**"/>
+        <!-- 2005-07-28 hersker: Jdk15Test.java kills javadoc 
+           build on pre-1.5 systems; eliminate test dir for now.
+           TODO: figure out how to conditionally eliminate 
+           just the Jdk15Test.java file. -->
+	<exclude name="net/sf/farrago/test/"/>
       </packageset>
       <packageset dir="${farrago.dir}/examples/plannerviz/src">
         <include name="**"/>
