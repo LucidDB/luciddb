@@ -51,4 +51,4 @@ from class NamedColumnSet where name=?tableName then (
 
 </resourceBundle>
 
-<!-- End FarragoInternalQuery.lurql -->
+<!-- End FarragoInternalQuery.xml -->

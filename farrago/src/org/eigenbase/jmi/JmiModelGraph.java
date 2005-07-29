@@ -33,9 +33,9 @@ import java.util.*;
 
 /**
  * JmiModelGraph is a directed graph representation of a JMI model.  Vertices
- * are instances of {@link JmiClassVertex}.  Edges are instance of either
- * {@link JmiInheritanceEdge} or {@link JmiAssocEdge}.  Instances are immutable
- * and can be accessed concurrently by multiple threads.
+ * are instances of {@link JmiClassVertex}.  Edges are instances of either
+ * {@link JmiInheritanceEdge} or {@link JmiAssocEdge}.  Graph instances are
+ * immutable and can be accessed concurrently by multiple threads.
  *
  * @author John V. Sichi
  * @version $Id$

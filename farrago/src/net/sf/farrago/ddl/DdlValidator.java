@@ -777,7 +777,7 @@ public class DdlValidator extends FarragoCompoundAllocation
 
         if (dependency == null) {
             dependency = getRepos().newCwmDependency();
-            dependency.setName(client.getName() + "$DEP");
+            dependency.setName(depName);
             dependency.setKind("GenericDependency");
 
             // NOTE: The client owns the dependency, so their lifetimes are
