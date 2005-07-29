@@ -428,7 +428,10 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * <code>LAST</code> aggregate function.
      */
     public static final SqlAggFunction lastValueOperator =
-        new SqlLastValueAggFunction();
+        new SqlFirstLastValueAggFunction(false);
+    
+    public static final SqlAggFunction firstValueOperator =
+        new SqlFirstLastValueAggFunction(true);
 
     //-------------------------------------------------------------
     // WINDOW Rank Functions

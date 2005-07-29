@@ -70,7 +70,7 @@ public class SqlOverOperator extends SqlBinaryOperator
         validator.validateWindow(operands[1], scope, aggCall);
     }
 
-    /** 
+    /* 
      * Accepts a {@link SqlVisitor}, and tells it to visit each child.
      *
      * @param visitor Visitor.
