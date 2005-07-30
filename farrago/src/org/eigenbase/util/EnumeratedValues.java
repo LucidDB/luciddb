@@ -25,6 +25,7 @@ package org.eigenbase.util;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.io.*;
 
 
 /**
@@ -374,8 +375,23 @@ public class EnumeratedValues implements Cloneable
     /**
      * <code>BasicValue</code> is an obvious implementation of {@link
      * EnumeratedValues.Value}.
+     *
+     * This class is marked Serializable so that serializable subclasses
+     * can be supported without requiring a default (no-argument)
+     * constructor.
+     *
+     * However, note that while <code>BasicValue</code> is marked Serializable,
+     * deserialized instances will be new instances rather than members
+     * of the original enumeration. In other words,
+     * <code>deserializedBasicValue == origBasicValue</code>
+     * will be false.
+     *
+     * Use {@link EnumeratedValues.SerializableValue} for instances
+     * that deserialize into members of the original enumeration so that
+     * <code>deserializedBasicValue == origBasicValue</code>
+     * will be true.
      */
-    public static class BasicValue implements Value
+    public static class BasicValue implements Value, Serializable
     {
         private final String description;
         private final String name;
@@ -440,6 +456,65 @@ public class EnumeratedValues implements Cloneable
         {
             return Util.newInternal("Value " + name + " of class "
                 + getClass() + " unexpected here");
+        }
+    }
+
+    /**
+     * <code>SerializableValue</code> extends <code>BasicValue</code> to
+     * provide better support for serializable subclasses.
+     *
+     * Instances of <code>SerializableValue</code> will deserialize
+     * into members of the original enumeration so that
+     * <code>deserializedBasicValue == origBasicValue</code>
+     * will be true.
+     */
+    public static abstract class SerializableValue extends BasicValue
+        implements Serializable
+    {
+        /**
+         * Ordinal value which, when deserialized, can be used by
+         * {@link #readResolve} to locate a matching instance in
+         * the original enumeration. 
+         */
+        protected int _ordinal;
+
+        /** Creates a new SerializableValue. */
+        public SerializableValue(
+            String name,
+            int ordinal,
+            String description)
+        {
+            super(name, ordinal, description);
+        }
+
+        /**
+         * Subclass must implement this method to retrieve a matching
+         * instance based on the <code>_ordinal</code> deserialized by
+         * {@link #readObject}.
+         * This would typically be an instance from the original enumeration.
+         *
+         * Current instance is the candidate object deserialized from the
+         * ObjectInputStream. It is incomplete, cannot be used as-is, and
+         * this method must return a valid replacement.
+         *
+         * For example, <br>
+         * <code>return SqlTypeName.get(_ordinal);</code>
+         *
+         * @return replacement instance that matches <code>_ordinal</code>
+         * @throws java.io.ObjectStreamException
+         */
+        protected abstract Object readResolve() throws ObjectStreamException;
+
+        /** Deserialization method reads the <code>_ordinal</code> value. */
+        private void readObject(ObjectInputStream in) throws IOException
+        {
+            this._ordinal = in.readInt();
+        }
+
+        /** Serialization method writes just the ordinal value. */
+        private void writeObject(ObjectOutputStream out) throws IOException
+        {
+            out.writeInt(this.getOrdinal());
         }
     }
 }

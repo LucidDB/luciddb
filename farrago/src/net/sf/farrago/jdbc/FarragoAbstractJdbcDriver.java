@@ -103,6 +103,9 @@ public abstract class FarragoAbstractJdbcDriver implements Driver
     public boolean acceptsURL(String url)
         throws SQLException
     {
+        if (url == null) {
+            return false;
+        }
         return url.startsWith(getUrlPrefix());
     }
 
