@@ -274,6 +274,10 @@
     <text>Binary literal string must contain an even number of hexits</text>
 </exception>
 
+<exception id="120415" name="BinaryLiteralInvalid" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Binary literal string must contain only characters ''0'' - ''9'', ''A'' - ''F''</text>
+</exception>
+
 <exception id="120420" name="UnsupportedIntervalLiteral" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Illegal interval literal format {0} for {1}</text>
 </exception>

@@ -3985,7 +3985,9 @@ TOKEN :
     [ " ","\t","\n","\r","\f" ]
     >
     |
-    < BINARY_STRING_LITERAL: ["x","X"] <QUOTE> (<HEXDIGIT>)* <QUOTE> >
+    /* To improve error reporting, we allow all kinds of characters,
+     * not just hexits, in a binary string literal. */
+    < BINARY_STRING_LITERAL: ["x","X"] <QUOTE> ( (~["'","\n","\r"]) | ("''"))* <QUOTE> >
     |
     < QUOTED_STRING: <QUOTE> ( (~["'","\n","\r"]) | ("''"))* <QUOTE> >
     |

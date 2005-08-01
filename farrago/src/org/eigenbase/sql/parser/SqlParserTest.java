@@ -46,9 +46,6 @@ public class SqlParserTest extends TestCase
 
     protected static final String NL = System.getProperty("line.separator");
 
-    /** @deprecated */
-    private static final boolean todo = false;
-
     public static final boolean bug317Fixed = false;
 
     //~ Constructors ----------------------------------------------------------
@@ -886,7 +883,8 @@ public class SqlParserTest extends TestCase
         checkExp("x'01aa'\n'03ff'", "X'01AA' '03FF'");
 
         // a bad hexstring
-        checkFails("x'01aa'\n'vvvv'", ".*Invalid binary string 'vvvv'.*");
+        checkFails("x'01aa'\n^'vvvv'^",
+            "Binary literal string must contain only characters '0' - '9', 'A' - 'F'");
     }
 
     public void testMixedFrom()
@@ -1330,17 +1328,17 @@ public class SqlParserTest extends TestCase
             "X'1' '000' '01'");
         checkExp("x'1234567890abcdef'=X'fFeEdDcCbBaA'",
             "(X'1234567890ABCDEF' = X'FFEEDDCCBBAA')");
-        checkExp("x'001'=X'000102'", "(X'001' = X'000102')"); //check so inital zeros dont get trimmed somehow
-        if (todo) {
-            checkFails("select x'FeedGoats' from t", "blah");
-        }
+        // Check the inital zeroes don't get trimmed somehow
+        checkExp("x'001'=X'000102'", "(X'001' = X'000102')");
     }
 
     public void testHexAndBinaryStringFails()
     {
-        checkFails("select x'abcdefG' from t",
-            "(?s).*Encountered .*G.* at line 1, column ...*");
-        checkFails("select x'1' x'2' from t",
+        checkFails("select ^x'FeedGoats'^ from t",
+            "Binary literal string must contain only characters '0' - '9', 'A' - 'F'");
+        checkFails("select ^x'abcdefG'^ from t",
+            "Binary literal string must contain only characters '0' - '9', 'A' - 'F'");
+        checkFails("select x'1' ^x'2'^ from t",
             "(?s).*Encountered .x.*2.* at line 1, column 13.*");
 
          // valid syntax, but should fail in the validator
