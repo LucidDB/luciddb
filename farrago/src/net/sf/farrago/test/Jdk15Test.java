@@ -25,6 +25,9 @@ import junit.framework.*;
 
 import java.util.*;
 
+import org._3pq.jgrapht.*;
+import org._3pq.jgrapht.graph.*;
+
 /**
  * Jdk15Test tests language features introduced in JDK 1.5.  It is excluded
  * from compilation when src="1.4" is passed to javac.
@@ -69,6 +72,17 @@ public class Jdk15Test extends TestCase
         for (String s : words) {
             assertTrue(s.endsWith("ingo"));
         }
+    }
+
+    public void testGraphGenerics()
+    {
+        Graph<String, Edge<String>> graph =
+            new SimpleGraph<String, Edge<String>>();
+        graph.addVertex("Absalom");
+        graph.addVertex("Achitophel");
+        graph.addEdge("Absalom", "Achitophel");
+        String s = graph.vertexSet().iterator().next();
+        assertTrue(s.startsWith("A"));
     }
 }
 
