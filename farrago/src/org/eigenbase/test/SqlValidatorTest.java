@@ -2040,6 +2040,9 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     {
         check("select LAST_VALUE(sal) over (order by empno) from emp");
         check("select LAST_VALUE(ename) over (order by empno) from emp");
+
+        check("select FIRST_VALUE(sal) over (order by empno) from emp");
+        check("select FIRST_VALUE(ename) over (order by empno) from emp");
     }
 
     public void testNew()

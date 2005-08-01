@@ -39,14 +39,14 @@ import org.eigenbase.sql.type.*;
  * number of rows for which that argument (or all) is not
  * <code>null</code>.
  */
-public class SqlLastValueAggFunction extends SqlAggFunction
+public class SqlFirstLastValueAggFunction extends SqlAggFunction
 {
     public static final RelDataType type = null; // TODO:
 
-    public SqlLastValueAggFunction()
+    public SqlFirstLastValueAggFunction(boolean firstFlag)
     {
         super(
-            "LAST_VALUE",
+            (firstFlag) ? "FIRST_VALUE":"LAST_VALUE",
             SqlKind.Function,
             SqlTypeStrategies.rtiFirstArgType,
             null,

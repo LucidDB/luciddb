@@ -26,6 +26,7 @@ package org.eigenbase.sql.type;
 import org.eigenbase.util.EnumeratedValues;
 
 import java.sql.*;
+import java.io.ObjectStreamException;
 
 /**
  * Enumeration of the type names which can be used to construct a SQL type.
@@ -47,7 +48,7 @@ import java.sql.*;
  * @since Nov 24, 2003
  * @version $Id$
  **/
-public class SqlTypeName extends EnumeratedValues.BasicValue
+public class SqlTypeName extends EnumeratedValues.SerializableValue
 {
     //~ Static fields/initializers --------------------------------------------
 
@@ -474,7 +475,23 @@ public class SqlTypeName extends EnumeratedValues.BasicValue
     {
         jdbcTypeToName[jdbcType - MIN_JDBC_TYPE] = name;
     }
-}
 
+    /**
+     * Retrieves a matching SqlTypeName instance based on the
+     * <code>_ordinal</code> deserialized by
+     * {@link EnumeratedValues.SerializableValue#readObject}.
+     *
+     * Current instance is the candidate object deserialized from the
+     * ObjectInputStream. It is incomplete, cannot be used as-is, and
+     * this method must return a valid replacement.
+     * 
+     * @return replacement instance that matches <code>_ordinal</code>
+     * @throws java.io.ObjectStreamException
+     */
+    protected Object readResolve() throws ObjectStreamException
+    {
+        return SqlTypeName.get(_ordinal);
+    }
+}
 
 // End SqlTypeName.java

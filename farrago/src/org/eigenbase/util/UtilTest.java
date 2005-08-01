@@ -23,9 +23,7 @@
 
 package org.eigenbase.util;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.math.BigDecimal;
 
 import junit.framework.TestCase;
@@ -200,6 +198,76 @@ public class UtilTest extends TestCase
     }
 
     /**
+     * Tests whether {@link EnumeratedValues} serialize correctly.
+     */
+    public void testSerializeEnumeratedValues()
+        throws IOException, ClassNotFoundException
+    {
+        UnserializableEnum unser = (UnserializableEnum)
+            serializeAndDeserialize(UnserializableEnum.Foo);
+        assertFalse(unser == UnserializableEnum.Foo);
+
+        SerializableEnum ser = (SerializableEnum)
+            serializeAndDeserialize(SerializableEnum.Foo);
+        assertTrue(ser == SerializableEnum.Foo);
+    }
+
+    private static Object serializeAndDeserialize(Object e1)
+        throws IOException, ClassNotFoundException
+    {
+        ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        ObjectOutputStream out = new ObjectOutputStream(bout);
+
+        out.writeObject(e1);
+        out.flush();
+
+        ByteArrayInputStream bin =
+            new ByteArrayInputStream(bout.toByteArray());
+        ObjectInputStream in = new ObjectInputStream(bin);
+
+        Object o = in.readObject();
+        return o;
+    }
+
+    /**
+     * Enumeration which extends BasicValue does NOT serialize correctly.
+     */
+    private static class UnserializableEnum
+        extends EnumeratedValues.BasicValue
+    {
+        public UnserializableEnum(String name, int ordinal)
+        {
+            super(name, ordinal, null);
+        }
+        public static final UnserializableEnum Foo = new UnserializableEnum("foo", 1);
+        public static final UnserializableEnum Bar = new UnserializableEnum("bar", 2);
+    }
+
+    /**
+     * Enumeration which serializes correctly.
+     */
+    private static class SerializableEnum
+        extends EnumeratedValues.SerializableValue
+    {
+        public SerializableEnum(String name, int ordinal)
+        {
+            super(name, ordinal, null);
+        }
+        public static final SerializableEnum Foo = new SerializableEnum("foo", 1);
+        public static final SerializableEnum Bar = new SerializableEnum("bar", 2);
+
+        protected Object readResolve() throws ObjectStreamException
+        {
+            switch (_ordinal) {
+            case 1: return Foo;
+            case 2: return Bar;
+            default: throw new IllegalArgumentException();
+            }
+        }
+    }
+
+
+    /**
      * Unit-test for {@link BitString}.
      */
     public void testBitString()
@@ -323,7 +391,7 @@ public class UtilTest extends TestCase
         }
         return buf.toString();
     }
-    
+
     /**
      * Runs the test suite.
      */
