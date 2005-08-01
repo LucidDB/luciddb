@@ -64,7 +64,7 @@ public abstract class AbstractSqlTester implements SqlTester
 
     //~ Methods ---------------------------------------------------------------
 
-    public void isFor(SqlOperator operator)
+    public void setFor(SqlOperator operator)
     {
         if (operator != null && this.operator != null) {
             throw new AssertionFailedError("isFor() called twice");

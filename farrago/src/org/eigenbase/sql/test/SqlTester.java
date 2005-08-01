@@ -177,7 +177,7 @@ public interface SqlTester
      * Declares that this test is for a given operator.
      * So we can check that all operators are tested.
      */
-    void isFor(SqlOperator operator);
+    void setFor(SqlOperator operator);
 
     interface TypeChecker {
         void checkType(RelDataType type);

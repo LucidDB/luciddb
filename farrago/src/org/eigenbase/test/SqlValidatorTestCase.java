@@ -595,7 +595,7 @@ public class SqlValidatorTestCase extends TestCase
 
         // SqlTester methods
 
-        public void isFor(SqlOperator operator)
+        public void setFor(SqlOperator operator)
         {
             // do nothing
         }
