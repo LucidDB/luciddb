@@ -33,7 +33,7 @@ import java.rmi.RemoteException;
  * @author Tim Leung
  * @version $Id$
  */
-class FarragoRJJdbcServer extends RJJdbcServer
+public class FarragoRJJdbcServer extends RJJdbcServer
 {
     public static void main(String[] args)
     {

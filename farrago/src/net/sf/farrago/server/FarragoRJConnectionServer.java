@@ -41,7 +41,7 @@ import java.util.Properties;
  * @author Tim Leung
  * @version $Id$
  */
-class FarragoRJConnectionServer extends RJConnectionServer
+public class FarragoRJConnectionServer extends RJConnectionServer
     implements FarragoRJConnectionInterface {
     /**
      * Holds the underlying connection. The underlying connection is also held
