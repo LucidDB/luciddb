@@ -366,6 +366,10 @@
     <text>Referenced window cannot have framing declarations</text>
 </exception>
 
+<exception id="120610" name="TypeNotSupported" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Type ''{0}'' is not supported</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Eigenbase Generic resources 130,000 - 140,000 -->
 <!-- ====================================================================== -->

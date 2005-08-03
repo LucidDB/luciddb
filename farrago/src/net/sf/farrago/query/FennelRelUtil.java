@@ -29,6 +29,7 @@ import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fennel.*;
+import net.sf.farrago.fennel.tuple.FennelStandardTypeDescriptor;
 import net.sf.farrago.util.*;
 import net.sf.farrago.session.FarragoSessionPlanner;
 import net.sf.farrago.FarragoMetadataFactory;
@@ -207,55 +208,47 @@ public abstract class FennelRelUtil
     {
         FemTupleAttrDescriptor attrDesc = repos.newFemTupleAttrDescriptor();
         tupleDesc.getAttrDescriptor().add(attrDesc);
-        attrDesc.setTypeOrdinal(
-            convertSqlTypeNameToFennelTypeOrdinal(
-                type.getSqlTypeName()));
+        final FennelStandardTypeDescriptor fennelType =
+            convertSqlTypeNameToFennelType(type.getSqlTypeName());
+        attrDesc.setTypeOrdinal(fennelType.getOrdinal());
         int byteLength = SqlTypeUtil.getMaxByteSize(type);
         attrDesc.setByteLength(byteLength);
         attrDesc.setNullable(type.isNullable());
     }
 
-    public static int convertSqlTypeNameToFennelTypeOrdinal(
+    public static FennelStandardTypeDescriptor convertSqlTypeNameToFennelType(
         SqlTypeName sqlType)
     {
-        // TODO:  return values correspond to enum
-        // StandardTypeDescriptorOrdinal in Fennel; should be single-sourced
-        // somehow
-        // NOTE: Any changes must be copied into
-        // 1) enum StandardTypeDescriptorOrdinal
-        // 2) this method
-        // 3) StandardTypeDescriptor class
-        // 4) StoredTypeDescriptor standardTypes
         switch (sqlType.getOrdinal()) {
         case SqlTypeName.Boolean_ordinal:
-            return 9; // STANDARD_TYPE_BOOL
+            return FennelStandardTypeDescriptor.BOOL;
         case SqlTypeName.Tinyint_ordinal:
-            return 1; // STANDARD_TYPE_INT_8
+            return FennelStandardTypeDescriptor.INT_8;
         case SqlTypeName.Smallint_ordinal:
-            return 3; // STANDARD_TYPE_INT_16
+            return FennelStandardTypeDescriptor.INT_16;
         case SqlTypeName.Integer_ordinal:
-            return 5; // STANDARD_TYPE_INT_32
+            return FennelStandardTypeDescriptor.INT_32;
         case SqlTypeName.Date_ordinal:
         case SqlTypeName.Time_ordinal:
         case SqlTypeName.Timestamp_ordinal:
         case SqlTypeName.Bigint_ordinal:
-            return 7; // STANDARD_TYPE_INT_64
+            return FennelStandardTypeDescriptor.INT_64;
         case SqlTypeName.Varchar_ordinal:
-            return 13; // STANDARD_TYPE_VARCHAR
+            return FennelStandardTypeDescriptor.VARCHAR;
         case SqlTypeName.Varbinary_ordinal:
         case SqlTypeName.Multiset_ordinal:
-            return 15; // STANDARD_TYPE_VARBINARY
+            return FennelStandardTypeDescriptor.VARBINARY;
         case SqlTypeName.Char_ordinal:
-            return 12; // STANDARD_TYPE_CHAR
+            return FennelStandardTypeDescriptor.CHAR;
         case SqlTypeName.Binary_ordinal:
-            return 14; // STANDARD_TYPE_BINARY
+            return FennelStandardTypeDescriptor.BINARY;
         case SqlTypeName.Real_ordinal:
-            return 10; // STANDARD_TYPE_REAL
+            return FennelStandardTypeDescriptor.REAL;
         case SqlTypeName.Float_ordinal:
         case SqlTypeName.Double_ordinal:
-            return 11; // STANDARD_TYPE_DOUBLE
+            return FennelStandardTypeDescriptor.DOUBLE;
         default:
-            throw Util.newInternal("unimplemented SQL type number");
+            throw sqlType.unexpected();
         }
     }
 

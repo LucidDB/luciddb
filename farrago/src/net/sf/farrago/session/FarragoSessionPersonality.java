@@ -23,7 +23,9 @@ package net.sf.farrago.session;
 
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.jmi.*;
+import org.eigenbase.reltype.RelDataType;
 
 import java.util.*;
 
@@ -170,6 +172,15 @@ public interface FarragoSessionPersonality extends FarragoStreamFactoryProvider
      * @return query processor, or null if language not supported
      */
     public JmiQueryProcessor newJmiQueryProcessor(String language);
+
+    /**
+     * Returns whether a type is valid in this database.
+     *
+     * @param type Type
+     *
+     * @return whether a type is valid in this database
+     */
+    boolean isSupportedType(SqlTypeName type);
 }
 
 // End FarragoSessionPersonality.java

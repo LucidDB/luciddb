@@ -31,9 +31,9 @@ import java.util.logging.Logger;
 
 import net.sf.farrago.resource.*;
 import net.sf.farrago.trace.*;
+import net.sf.farrago.fennel.tuple.FennelStandardTypeDescriptor;
 
 import org.eigenbase.sql.SqlLiteral;
-import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.Util;
 
@@ -1892,97 +1892,140 @@ public class CalcProgramBuilder
 
     /**
      * Enumeration of the types supported by the calculator.
-     *
-     * <p>TODO: Unify this list with
-     * {@link net.sf.farrago.query.FennelRelUtil#convertSqlTypeNameToFennelTypeOrdinal(SqlTypeName)}
+     * These types map onto the {@link FennelStandardTypeDescriptor} values,
+     * and even have the same names and ordinals.
      */
-    public static class OpType extends EnumeratedValues.BasicValue
+    public static class OpType implements EnumeratedValues.Value
     {
-        public static final int Bool_ordinal = 0;
-        public static final OpType Bool = new OpType("bo", Bool_ordinal);
-        public static final int Int1_ordinal = 1;
-        public static final OpType Int1 = new OpType("s1", Int1_ordinal);
-        public static final int Uint1_ordinal = 2;
-        public static final OpType Uint1 = new OpType("u1", Uint1_ordinal);
-        public static final int Int2_ordinal = 3;
-        public static final OpType Int2 = new OpType("s2", Int2_ordinal);
-        public static final int Uint2_ordinal = 4;
-        public static final OpType Uint2 = new OpType("u2", Uint2_ordinal);
-        public static final int Int4_ordinal = 5;
-        public static final OpType Int4 = new OpType("s4", Int4_ordinal);
-        public static final int Uint4_ordinal = 6;
-        public static final OpType Uint4 = new OpType("u4", Uint4_ordinal);
-        public static final int Real_ordinal = 7;
-        public static final OpType Real = new OpType("r", Real_ordinal);
-        public static final int Int8_ordinal = 8;
-        public static final OpType Int8 = new OpType("s8", Int8_ordinal);
-        public static final int Uint8_ordinal = 9;
-        public static final OpType Uint8 = new OpType("u8", Uint8_ordinal);
-        public static final int Double_ordinal = 10;
-        public static final OpType Double = new OpType("d", Double_ordinal);
-        public static final int Varbinary_ordinal = 11;
+        private final FennelStandardTypeDescriptor type;
+
+        public static final int Bool_ordinal =
+            FennelStandardTypeDescriptor.BOOL_ORDINAL;
+        public static final OpType Bool =
+            new OpType(FennelStandardTypeDescriptor.BOOL);
+        public static final int Int1_ordinal =
+            FennelStandardTypeDescriptor.INT_8_ORDINAL;
+        public static final OpType Int1 =
+            new OpType(FennelStandardTypeDescriptor.INT_8);
+        public static final int Uint1_ordinal =
+            FennelStandardTypeDescriptor.UINT_8_ORDINAL;
+        public static final OpType Uint1 =
+            new OpType(FennelStandardTypeDescriptor.UINT_8);
+        public static final int Int2_ordinal =
+            FennelStandardTypeDescriptor.INT_16_ORDINAL;
+        public static final OpType Int2 =
+            new OpType(FennelStandardTypeDescriptor.INT_16);
+        public static final int Uint2_ordinal =
+            FennelStandardTypeDescriptor.UINT_16_ORDINAL;
+        public static final OpType Uint2 =
+            new OpType(FennelStandardTypeDescriptor.UINT_16);
+        public static final int Int4_ordinal =
+            FennelStandardTypeDescriptor.INT_32_ORDINAL;
+        public static final OpType Int4 =
+            new OpType(FennelStandardTypeDescriptor.INT_32);
+        public static final int Uint4_ordinal =
+            FennelStandardTypeDescriptor.UINT_32_ORDINAL;
+        public static final OpType Uint4 =
+            new OpType(FennelStandardTypeDescriptor.UINT_32);
+        public static final int Real_ordinal =
+            FennelStandardTypeDescriptor.REAL_ORDINAL;
+        public static final OpType Real =
+            new OpType(FennelStandardTypeDescriptor.REAL);
+        public static final int Int8_ordinal =
+            FennelStandardTypeDescriptor.INT_64_ORDINAL;
+        public static final OpType Int8 =
+            new OpType(FennelStandardTypeDescriptor.INT_64);
+        public static final int Uint8_ordinal =
+            FennelStandardTypeDescriptor.UINT_64_ORDINAL;
+        public static final OpType Uint8 =
+            new OpType(FennelStandardTypeDescriptor.UINT_64);
+        public static final int Double_ordinal =
+            FennelStandardTypeDescriptor.DOUBLE_ORDINAL;
+        public static final OpType Double =
+            new OpType(FennelStandardTypeDescriptor.DOUBLE);
+        public static final int Varbinary_ordinal =
+            FennelStandardTypeDescriptor.VARBINARY_ORDINAL;
         public static final OpType Varbinary =
-            new OpType("vb", Varbinary_ordinal);
-        public static final int Varchar_ordinal = 12;
-        public static final OpType Varchar = new OpType("vc", Varchar_ordinal);
-        public static final int Binary_ordinal = 13;
-        public static final OpType Binary = new OpType("b", Binary_ordinal);
-        public static final int Char_ordinal = 14;
-        public static final OpType Char = new OpType("c", Char_ordinal);
+            new OpType(FennelStandardTypeDescriptor.VARBINARY);
+        public static final int Varchar_ordinal =
+            FennelStandardTypeDescriptor.VARCHAR_ORDINAL;
+        public static final OpType Varchar =
+            new OpType(FennelStandardTypeDescriptor.VARCHAR);
+        public static final int Binary_ordinal =
+            FennelStandardTypeDescriptor.BINARY_ORDINAL;
+        public static final OpType Binary =
+            new OpType(FennelStandardTypeDescriptor.BINARY);
+        public static final int Char_ordinal =
+            FennelStandardTypeDescriptor.CHAR_ORDINAL;
+        public static final OpType Char =
+            new OpType(FennelStandardTypeDescriptor.CHAR);
+
         public static final EnumeratedValues enumeration =
             new EnumeratedValues(new OpType [] {
                     Int1, Uint1, Int2, Uint2, Bool, Int4, Uint4, Real, Int8,
                     Uint8, Double, Varbinary, Varchar, Binary, Char,
                 });
 
-        private OpType(
-            String name,
-            int ordinal)
+        private OpType(FennelStandardTypeDescriptor type)
         {
-            super(name, ordinal, null);
+            this.type = type;
+        }
+
+        public String getDescription()
+        {
+            return null;
+        }
+
+        public String getName()
+        {
+            return type.getName();
+        }
+
+        public int getOrdinal()
+        {
+            return type.getOrdinal();
+        }
+
+        public String toString()
+        {
+            return getName();
+        }
+
+        /**
+         * Returns an exception indicating that we didn't expect to find this
+         * value here.
+         */
+        public Error unexpected()
+        {
+            return enumeration.unexpected(this);
         }
 
         public boolean isExact()
         {
-            switch (getOrdinal()) {
-            case Int1_ordinal:
-            case Uint1_ordinal:
-            case Int2_ordinal:
-            case Uint2_ordinal:
-            case Int4_ordinal:
-            case Uint4_ordinal:
-            case Int8_ordinal:
-            case Uint8_ordinal:
-                return true;
-            }
-            return false;
+            return type.isExact();
         }
 
         public boolean isApprox()
         {
-            switch (getOrdinal()) {
-            case Real_ordinal:
-            case Double_ordinal:
-                return true;
-            }
-            return false;
+            return type.isNumeric() && !type.isExact();
         }
 
         public boolean isNumeric()
         {
-            return isExact() || isApprox();
+            return type.isNumeric();
         }
     }
 
     public static class RegisterDescriptor
     {
-        private OpType type;
-        private int bytes;
+        private final OpType type;
+        private final int bytes;
 
         public RegisterDescriptor(
             OpType type,
             int bytes)
         {
+            assert type != null;
             this.type = type;
             this.bytes = bytes;
         }

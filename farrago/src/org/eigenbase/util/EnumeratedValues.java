@@ -23,8 +23,7 @@
 
 package org.eigenbase.util;
 
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.*;
 import java.io.*;
 
 
@@ -246,6 +245,16 @@ public class EnumeratedValues implements Cloneable
         return true;
     }
 
+    /**
+     * Returns an iterator over the values of this enumeration.
+     */
+    public Iterator iterator()
+    {
+        final Collection values = Collections.unmodifiableCollection(
+            valuesByName.values());
+        return values.iterator();
+    }
+    
     /**
      * Returns the names in this enumeration, in no particular order.
      */

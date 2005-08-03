@@ -49,21 +49,20 @@ package net.sf.farrago.fennel.tuple;
 public interface FennelStoredTypeDescriptor
 {
     /**
-     * Returns the ordinal representing this type, a value of the
-     * {@link FennelStandardTypeDescriptorOrdinal} enumeration.
+     * Returns the ordinal representing this type.
      */
     public int getOrdinal();
 
     /**
-     * returns number of bits in marshalled representation, or 0 for a non-bit
-     * type; currently only 0 or 1 is supported
+     * Returns number of bits in marshalled representation, or 0 for a non-bit
+     * type; currently only 0 or 1 is supported.
      */
     public int getBitCount();
 
     /**
-     * returns the width in bytes for a fixed-width non-bit type which admits
+     * Returns the width in bytes for a fixed-width non-bit type which admits
      * no per-attribute precision, or 0 for types with per-attribute precision;
-     * for bit types, this yields the size of the unmarshalled representation
+     * for bit types, this yields the size of the unmarshalled representation.
      */
     public int getFixedByteCount();
 
@@ -107,12 +106,22 @@ public interface FennelStoredTypeDescriptor
     public int compareValues(FennelTupleDatum datum1, FennelTupleDatum datum2);
 
     /**
-     * Indicate whether numeric data type is signed.
+     * Indicates whether numeric data type is signed.
+     *
      * @return false for non-numeric data types,
      *      false for unsigned numeric data types,
      *      true for signed numeric data types
      */
     public boolean isSigned();
-};
+
+    /**
+     * Indicates whether numeric data type is exact.
+     *
+     * @return false for non-numeric data types,
+     *      false for approximate numeric data types (REAL, FLOAT)
+     *      true for exact numeric data types
+     */
+    public boolean isExact();
+}
 
 // End FennelStoredTypeDescriptor.java

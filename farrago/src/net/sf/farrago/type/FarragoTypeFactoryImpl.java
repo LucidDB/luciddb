@@ -46,6 +46,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
+import org.eigenbase.resource.EigenbaseResource;
 
 import java.util.List;
 
@@ -145,11 +146,19 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             RelDataType type;
             if (pScale != null) {
                 assert(pPrecision != null);
+//                if (!typeName.allowsPrecScale(true, true)) {
+//                    throw EigenbaseResource.instance()
+//                        .newTypeDoesNotAllowScale(typeName.toString());
+//                }
                 type = createSqlType(
                     typeName,
                     pPrecision.intValue(),
                     pScale.intValue());
             } else if (pPrecision != null) {
+//                if (!typeName.allowsPrecScale(true, false)) {
+//                    throw EigenbaseResource.instance()
+//                        .newTypeDoesNotAllowPrecision(typeName.toString());
+//                }
                 type = createSqlType(
                     typeName,
                     pPrecision.intValue());

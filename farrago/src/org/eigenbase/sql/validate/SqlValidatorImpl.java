@@ -884,10 +884,11 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             return unknownType;
         }
 
-        // SqlDataTypeSpec may occur in an expression as the 2nd arg to the CAST
-        // function.
+        // SqlDataTypeSpec may occur in an expression as the 2nd arg to the
+        // CAST function.
         if (operand instanceof SqlDataTypeSpec) {
             SqlDataTypeSpec dataType = (SqlDataTypeSpec) operand;
+            validateDataType(dataType);
             return dataType.deriveType(this);
         }
 

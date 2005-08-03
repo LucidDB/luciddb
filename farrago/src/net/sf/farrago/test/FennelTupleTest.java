@@ -27,7 +27,10 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import java.nio.ByteBuffer;
+import java.util.Iterator;
+
 import net.sf.farrago.fennel.tuple.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -42,34 +45,27 @@ public class FennelTupleTest extends TestCase
     //~ Methods ---------------------------------------------------------------
 
     private FennelTupleDescriptor buildDescriptor(
-        int[] types,
+        FennelStandardTypeDescriptor[] types,
         boolean[] nullable,
         int[] sizes)
     {
-        FennelStoredTypeDescriptorFactory typeFactory =
-            FennelStandardTypeDescriptorFactory.getInstance();
         FennelTupleDescriptor d = new FennelTupleDescriptor();
-
-        int i;
-        for (i = 0; i < types.length; ++i) {
-            d.add(new FennelTupleAttributeDescriptor(
-                typeFactory.newDataType(types[i]),
-                nullable[i],
-                sizes[i]));
+        for (int i = 0; i < types.length; ++i) {
+            d.add(
+                new FennelTupleAttributeDescriptor(
+                    types[i], nullable[i], sizes[i]));
         }
         return d;
     }
 
-    private FennelTupleDescriptor buildDescriptor(int[] types)
+    private FennelTupleDescriptor buildDescriptor(
+        FennelStandardTypeDescriptor[] types)
     {
-        FennelStoredTypeDescriptorFactory typeFactory =
-            FennelStandardTypeDescriptorFactory.getInstance();
         FennelTupleDescriptor d = new FennelTupleDescriptor();
-
-        int i;
-        for (i = 0; i < types.length; ++i) {
-            d.add(new FennelTupleAttributeDescriptor(
-                typeFactory.newDataType(types[i]), false, 0));
+        for (int i = 0; i < types.length; ++i) {
+            d.add(
+                new FennelTupleAttributeDescriptor(
+                    types[i], false, 0));
         }
         return d;
     }
@@ -123,53 +119,53 @@ public class FennelTupleTest extends TestCase
                 continue;
             }
             switch(desc.getAttr(i).typeDescriptor.getOrdinal()) {
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_8:
+                case FennelStandardTypeDescriptor.INT_8_ORDINAL:
                     d.getDatum(i).setByte(((Byte) objs[i]).byteValue());
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_8:
+                case FennelStandardTypeDescriptor.UINT_8_ORDINAL:
                     d.getDatum(i).setUnsignedByte(
                         ((Short) objs[i]).shortValue());
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_16:
+                case FennelStandardTypeDescriptor.INT_16_ORDINAL:
                     d.getDatum(i).setShort(((Short) objs[i]).shortValue());
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_16:
+                case FennelStandardTypeDescriptor.UINT_16_ORDINAL:
                     d.getDatum(i).setUnsignedShort(
                         ((Integer) objs[i]).intValue());
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_32:
+                case FennelStandardTypeDescriptor.INT_32_ORDINAL:
                     d.getDatum(i).setInt(((Integer) objs[i]).intValue());
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_32:
+                case FennelStandardTypeDescriptor.UINT_32_ORDINAL:
                     d.getDatum(i).setUnsignedInt(((Long) objs[i]).longValue());
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_64:
+                case FennelStandardTypeDescriptor.INT_64_ORDINAL:
                     d.getDatum(i).setLong(((Long) objs[i]).longValue());
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_64:
+                case FennelStandardTypeDescriptor.UINT_64_ORDINAL:
                     d.getDatum(i).setUnsignedLong(
                         ((Long) objs[i]).longValue());
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_BOOL:
+                case FennelStandardTypeDescriptor.BOOL_ORDINAL:
                     d.getDatum(i).setBoolean(
                         ((Boolean) objs[i]).booleanValue());
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_REAL:
+                case FennelStandardTypeDescriptor.REAL_ORDINAL:
                     d.getDatum(i).setFloat(((Float) objs[i]).floatValue());
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_DOUBLE:
+                case FennelStandardTypeDescriptor.DOUBLE_ORDINAL:
                     d.getDatum(i).setDouble(((Double) objs[i]).doubleValue());
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_CHAR:
+                case FennelStandardTypeDescriptor.CHAR_ORDINAL:
                     d.getDatum(i).setString(((String) objs[i]));
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_VARCHAR:
+                case FennelStandardTypeDescriptor.VARCHAR_ORDINAL:
                     d.getDatum(i).setString(((String) objs[i]));
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_BINARY:
+                case FennelStandardTypeDescriptor.BINARY_ORDINAL:
                     d.getDatum(i).setBytes(((String) objs[i]).getBytes());
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_VARBINARY:
+                case FennelStandardTypeDescriptor.VARBINARY_ORDINAL:
                     d.getDatum(i).setBytes(((String) objs[i]).getBytes());
                     break;
                 default:
@@ -217,59 +213,59 @@ public class FennelTupleTest extends TestCase
                 continue;
             }
             
-            switch(desc.getAttr(i).typeDescriptor.getOrdinal()) {
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_8:
+            switch (desc.getAttr(i).typeDescriptor.getOrdinal()) {
+                case FennelStandardTypeDescriptor.INT_8_ORDINAL:
                     o[i] = new Byte(d.getDatum(i).getByte());
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_8:
+                case FennelStandardTypeDescriptor.UINT_8_ORDINAL:
                     o[i] = new Short(d.getDatum(i).getUnsignedByte());
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_16:
+                case FennelStandardTypeDescriptor.INT_16_ORDINAL:
                     o[i] = new Short(d.getDatum(i).getShort());
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_16:
+                case FennelStandardTypeDescriptor.UINT_16_ORDINAL:
                     o[i] = new Integer(d.getDatum(i).getUnsignedShort());
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_32:
+                case FennelStandardTypeDescriptor.INT_32_ORDINAL:
                     o[i] = new Integer(d.getDatum(i).getInt());
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_32:
+                case FennelStandardTypeDescriptor.UINT_32_ORDINAL:
                     o[i] = new Long(d.getDatum(i).getUnsignedInt());
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_64:
+                case FennelStandardTypeDescriptor.INT_64_ORDINAL:
                     o[i] = new Long(d.getDatum(i).getLong());
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_64:
+                case FennelStandardTypeDescriptor.UINT_64_ORDINAL:
                     o[i] = new Long(d.getDatum(i).getUnsignedLong());
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_BOOL:
+                case FennelStandardTypeDescriptor.BOOL_ORDINAL:
                     o[i] = new Boolean(d.getDatum(i).getBoolean());
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_REAL:
+                case FennelStandardTypeDescriptor.REAL_ORDINAL:
                     o[i] = new Float(d.getDatum(i).getFloat());
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_DOUBLE:
+                case FennelStandardTypeDescriptor.DOUBLE_ORDINAL:
                     o[i] = new Double(d.getDatum(i).getDouble());
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_CHAR:
+                case FennelStandardTypeDescriptor.CHAR_ORDINAL:
                     o[i] = new String(
                         d.getDatum(i).getBytes(),
                         0,
                         d.getDatum(i).getLength());
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_VARCHAR:
+                case FennelStandardTypeDescriptor.VARCHAR_ORDINAL:
                     o[i] = new String(
                         d.getDatum(i).getBytes(),
                         0,
                         d.getDatum(i).getLength());
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_BINARY:
+                case FennelStandardTypeDescriptor.BINARY_ORDINAL:
                     o[i] = new String(
                         d.getDatum(i).getBytes(),
                         0,
                         d.getDatum(i).getLength());
                     break;
-                case FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_VARBINARY:
+                case FennelStandardTypeDescriptor.VARBINARY_ORDINAL:
                     o[i] = new String(
                         d.getDatum(i).getBytes(),
                         0,
@@ -296,12 +292,12 @@ public class FennelTupleTest extends TestCase
 
     public void testMinimal()
     {
-        int[] o1 = {
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_32,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_16,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_32,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_8,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_8 };
+        FennelStandardTypeDescriptor[] o1 = {
+            FennelStandardTypeDescriptor.INT_32,
+            FennelStandardTypeDescriptor.INT_16,
+            FennelStandardTypeDescriptor.UINT_32,
+            FennelStandardTypeDescriptor.INT_8,
+            FennelStandardTypeDescriptor.UINT_8 };
         FennelTupleDescriptor desc = buildDescriptor(o1);
 
         Object[] before = {
@@ -319,18 +315,18 @@ public class FennelTupleTest extends TestCase
 
     public void testNumericMaximums()
     {
-        int[] o1 = {
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_32,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_32,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_64,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_64,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_16,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_16,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_8,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_8,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_BOOL,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_REAL,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_DOUBLE };
+        FennelStandardTypeDescriptor[] o1 = {
+            FennelStandardTypeDescriptor.INT_32,
+            FennelStandardTypeDescriptor.UINT_32,
+            FennelStandardTypeDescriptor.INT_64,
+            FennelStandardTypeDescriptor.UINT_64,
+            FennelStandardTypeDescriptor.INT_16,
+            FennelStandardTypeDescriptor.UINT_16,
+            FennelStandardTypeDescriptor.INT_8,
+            FennelStandardTypeDescriptor.UINT_8,
+            FennelStandardTypeDescriptor.BOOL,
+            FennelStandardTypeDescriptor.REAL,
+            FennelStandardTypeDescriptor.DOUBLE };
         FennelTupleDescriptor desc = buildDescriptor(o1);
 
         Object[] maxVals = {
@@ -358,18 +354,18 @@ public class FennelTupleTest extends TestCase
 
     public void testNumericMinimums()
     {
-        int[] o1 = {
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_32,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_32,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_64,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_64,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_16,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_16,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_8,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_8,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_BOOL,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_REAL,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_DOUBLE };
+        FennelStandardTypeDescriptor[] o1 = {
+            FennelStandardTypeDescriptor.INT_32,
+            FennelStandardTypeDescriptor.UINT_32,
+            FennelStandardTypeDescriptor.INT_64,
+            FennelStandardTypeDescriptor.UINT_64,
+            FennelStandardTypeDescriptor.INT_16,
+            FennelStandardTypeDescriptor.UINT_16,
+            FennelStandardTypeDescriptor.INT_8,
+            FennelStandardTypeDescriptor.UINT_8,
+            FennelStandardTypeDescriptor.BOOL,
+            FennelStandardTypeDescriptor.REAL,
+            FennelStandardTypeDescriptor.DOUBLE };
         FennelTupleDescriptor desc = buildDescriptor(o1);
 
         Object[] minVals = {
@@ -396,16 +392,16 @@ public class FennelTupleTest extends TestCase
 
     public void testNullables()
     {
-        int[] o1 = {
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_32,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_32,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_BOOL,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_64,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_REAL,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_16,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_8,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_8,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_BOOL };
+        FennelStandardTypeDescriptor[] o1 = {
+            FennelStandardTypeDescriptor.INT_32,
+            FennelStandardTypeDescriptor.UINT_32,
+            FennelStandardTypeDescriptor.BOOL,
+            FennelStandardTypeDescriptor.UINT_64,
+            FennelStandardTypeDescriptor.REAL,
+            FennelStandardTypeDescriptor.UINT_16,
+            FennelStandardTypeDescriptor.INT_8,
+            FennelStandardTypeDescriptor.UINT_8,
+            FennelStandardTypeDescriptor.BOOL };
         FennelTupleDescriptor desc = buildDescriptor(o1,
                 new boolean[] { true, true, true, true, true,
                                 true, true, true, true},
@@ -425,11 +421,11 @@ public class FennelTupleTest extends TestCase
 
     public void testStrings()
     {
-        int[] o1 = {
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_CHAR,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_VARCHAR,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_VARCHAR,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_CHAR };
+        FennelStandardTypeDescriptor[] o1 = {
+            FennelStandardTypeDescriptor.CHAR,
+            FennelStandardTypeDescriptor.VARCHAR,
+            FennelStandardTypeDescriptor.VARCHAR,
+            FennelStandardTypeDescriptor.CHAR };
         FennelTupleDescriptor desc = buildDescriptor(o1,
                 new boolean[] { false, false, true, true },
                 new int[] {10,20,12,8});
@@ -462,11 +458,11 @@ public class FennelTupleTest extends TestCase
 
     public void testBinaries()
     {
-        int[] o1 = {
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_BINARY,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_VARBINARY,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_VARBINARY,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_BINARY };
+        FennelStandardTypeDescriptor[] o1 = {
+            FennelStandardTypeDescriptor.BINARY,
+            FennelStandardTypeDescriptor.VARBINARY,
+            FennelStandardTypeDescriptor.VARBINARY,
+            FennelStandardTypeDescriptor.BINARY };
         FennelTupleDescriptor desc = buildDescriptor(o1,
                 new boolean[] { false, false, true, true },
                 new int[] {10,20,12,8});
@@ -495,14 +491,13 @@ public class FennelTupleTest extends TestCase
          * rather than an assert in the tuple library, but that
          * needs to be argued with the fennel library
          */
-        int ordinal;
-        for (ordinal = FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_MIN;
-             ordinal < FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_END;
-             ++ordinal) {
+        for (Iterator iterator = FennelStandardTypeDescriptor.enumeration.iterator(); iterator.hasNext();) {
+            FennelStandardTypeDescriptor fennelStandardTypeDescriptor = (FennelStandardTypeDescriptor) iterator.next();
             FennelTupleDescriptor desc =
-                buildDescriptor( new int[] {ordinal} );
+                buildDescriptor( new FennelStandardTypeDescriptor[] {fennelStandardTypeDescriptor} );
             try {
                 ByteBuffer buff = marshallValues(desc, new Object[]{null} );
+                Util.discard(buff);
                 fail("should have thrown an exception");
             } catch (NullPointerException e ){
             }
@@ -515,11 +510,11 @@ public class FennelTupleTest extends TestCase
      */
     public void testMultipleMarshalling()
     {
-        int[] o1 = {
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_VARCHAR,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_32,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_VARCHAR,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_32 };
+        FennelStandardTypeDescriptor[] o1 = {
+            FennelStandardTypeDescriptor.VARCHAR,
+            FennelStandardTypeDescriptor.INT_32,
+            FennelStandardTypeDescriptor.VARCHAR,
+            FennelStandardTypeDescriptor.UINT_32 };
         FennelTupleDescriptor desc = buildDescriptor(o1,
                 new boolean[] { false, false, false, true },
                 new int[] {40,0,120,0} );
@@ -590,10 +585,10 @@ public class FennelTupleTest extends TestCase
 
     public void testLargeVarBuffers()
     {
-        int[] o1 = {
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_CHAR,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_VARCHAR,
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_VARBINARY };
+        FennelStandardTypeDescriptor[] o1 = {
+            FennelStandardTypeDescriptor.CHAR,
+            FennelStandardTypeDescriptor.VARCHAR,
+            FennelStandardTypeDescriptor.VARBINARY };
         FennelTupleDescriptor desc = buildDescriptor(o1,
                 new boolean[] { false, false, false },
                 new int[] {40000,2000,5000});

@@ -29,6 +29,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.resource.*;
@@ -197,6 +198,16 @@ public abstract class DdlHandler
 
         CwmSqldataType type = (CwmSqldataType) element.getType();
         SqlTypeName typeName = SqlTypeName.get(type.getName());
+
+        // Check that every type is supported. For example, we don't support
+        // columns of type DECIMAL(p, s) or LONG VARCHAR right now.
+        final FarragoSessionPersonality personality =
+            validator.getStmtValidator().getSession().getPersonality();
+        if (!personality.isSupportedType(typeName)) {
+            throw newContextException(type,
+                EigenbaseResource.instance().newTypeNotSupported(
+                    typeName.toString()));
+        }
 
         // REVIEW jvs 23-Mar-2005:  For now, we attach the dependency to
         // a containing namespace.  For example, if a column is declared
@@ -381,6 +392,29 @@ public abstract class DdlHandler
         }
 
         validator.getStmtValidator().setParserPosition(null);
+    }
+
+    /**
+     * Adds position information to an exception.
+     *
+     * <p>This method is similar to
+     * {@link SqlValidator#newValidationError(SqlNode, SqlValidatorException)}
+     * and should be unified with it, if only we could figure out how.
+     *
+     * @param element Element which had the error, and is therefore the locus
+     *     of the exception
+     * @param e Exception raised
+     * @return Exception with position information
+     */
+    private RuntimeException newContextException(
+        CwmModelElement element,
+        Exception e)
+    {
+        SqlParserPos pos = validator.getParserOffset(element);
+        if (pos == null) {
+            pos = SqlParserPos.ZERO;
+        }
+        return SqlUtil.newContextException(pos, e);
     }
 
     /**

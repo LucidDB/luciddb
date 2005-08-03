@@ -1095,6 +1095,8 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             CalcProgramBuilder.RegisterDescriptor rd)
         {
             switch (rd.getType().getOrdinal()) {
+            case CalcProgramBuilder.OpType.Bool_ordinal:
+                return 5;
             case CalcProgramBuilder.OpType.Uint1_ordinal:
                 return 10;
             case CalcProgramBuilder.OpType.Int1_ordinal:
@@ -1115,10 +1117,9 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 return 1000;
             case CalcProgramBuilder.OpType.Double_ordinal:
                 return 1010;
+            default:
+                throw rd.getType().unexpected();
             }
-
-            assert (false);
-            return -1;
         }
 
         public CalcProgramBuilder.Register implement(
