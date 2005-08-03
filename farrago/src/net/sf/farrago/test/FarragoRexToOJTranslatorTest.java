@@ -547,7 +547,56 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
 
     // TODO jvs 22-June-2004:  figure out a way to test codegen for
     // assignment of nullable value to NOT NULL field
-}
 
+    //
+    // start Case test cases.
+    //
+    //
+    public void testCaseNotNullableCondWithElse()
+        throws Exception
+    {
+        testTranslation("case manager when true then 'Yes' when false then 'No' else 'Other' end");
+    }
+
+    public void testCaseNotNullableCondWithoutElse()
+        throws Exception
+    {
+        testTranslation("case deptno when 10 then 'Yes' end");
+    }
+
+    public void testCaseNullableCondWithElse()
+        throws Exception
+    {
+        testTranslation("case age when 50 then 'fifty' when 25 then 'twenty-five' end");
+    }
+    public void testCaseNullableCondWithoutElse()
+        throws Exception
+    {
+        testTranslation("case gender when 'M' then 'Yes' end");
+    }
+
+    public void testCaseNotNullableCondWithElsePrimitive()
+        throws Exception
+    {
+        testTranslation("case empno when 120 then 1 else 2 end");
+    }
+
+    public void testCaseNotNullableCondWithoutElsePrimitive()
+        throws Exception
+    {
+        testTranslation("case name when 'Fred' then 1 when 'Eric' then 2  when 'Wilma' then 3 when 'John' then 4 end");
+    }
+
+    public void testCaseNullableCondWithElsePrimitive()
+        throws Exception
+    {
+        testTranslation("case deptno when 10 then 1 when 20 then 2 when 40 then 3 else 4 end");
+    }
+    public void testCaseNullableCondWithoutElsePrimitive()
+        throws Exception
+    {
+        testTranslation("case slacker when true then 1 end");
+    }
+}
 
 // End FarragoRexToOJTranslatorTest.java

@@ -62,6 +62,10 @@ public class FarragoOJRexImplementorTable extends OJRexImplementorTableImpl
         // FarragoRexToOJTranslatorTest
         // refine with Farrago specifics
         registerOperator(
+            opTab.caseOperator,
+            new FarragoOJRexCaseImplementor());
+
+        registerOperator(
             opTab.castFunc,
             new FarragoOJRexCastImplementor());
 

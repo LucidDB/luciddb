@@ -143,6 +143,7 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
     {
         return castImplementor.convertCastToAssignableValue(
             this,
+            null,
             type,
             null,
             null,
@@ -168,6 +169,7 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         setTranslation(
             castImplementor.convertCastToAssignableValue(
                 this,
+                null,
                 type,
                 type,
                 null,
@@ -260,6 +262,20 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         return getFarragoTypeFactory().getValueAccessExpression(type, expr);
     }
 
+    public Expression convertCastOrAssignmentWithStmtList(
+        StatementList stmtList,
+        String targetName,
+        RelDataType lhsType,
+        RelDataType rhsType,
+        Expression lhsExp,
+        Expression rhsExp)
+    {
+        return castImplementor.convertCastOrAssignment(
+            this, stmtList, targetName,
+            lhsType, rhsType,
+            lhsExp, rhsExp);
+    }
+
     public Expression convertCastOrAssignment(
         String targetName,
         RelDataType lhsType,
@@ -268,7 +284,7 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         Expression rhsExp)
     {
         return castImplementor.convertCastOrAssignment(
-            this, targetName,
+            this, null, targetName,
             lhsType, rhsType,
             lhsExp, rhsExp);
     }

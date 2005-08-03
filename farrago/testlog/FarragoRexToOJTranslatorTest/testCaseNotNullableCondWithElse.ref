@@ -1,0 +1,24 @@
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+
+ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
+
+
+ExecutableStmt.Oj_inner_2 oj_var2 = new ExecutableStmt.Oj_inner_2();
+
+
+ExecutableStmt.Oj_inner_2 oj_var3 = new ExecutableStmt.Oj_inner_2();
+
+oj_var0.assignFrom( "Yes" );
+oj_var1.assignFrom( "No" );
+oj_var2.assignFrom( "Other" );
+oj_var3.assignFrom( oj_var2 );
+if (ID$9$MANAGER == true) {
+    oj_var3.assignFrom( oj_var0 );
+}
+if (ID$9$MANAGER == false) {
+    oj_var3.assignFrom( oj_var1 );
+}
+
+return oj_var3;

@@ -1,0 +1,13 @@
+int oj_var0;
+oj_var0 = (int) 4;
+if (ID$2$DEPTNO == 10) {
+    oj_var0 = (int) 1;
+}
+if (ID$2$DEPTNO == 20) {
+    oj_var0 = (int) 2;
+}
+if (ID$2$DEPTNO == 40) {
+    oj_var0 = (int) 3;
+}
+
+return oj_var0;
