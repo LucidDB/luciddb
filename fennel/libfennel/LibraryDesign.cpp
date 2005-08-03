@@ -49,8 +49,10 @@ Other aspects of the diagram are suggestive but not strict.  For
 example, the segment layer mostly "hides" the cache and device
 layers, so that higher layers depend on segment to pass on requests to
 cache and device.  But in some cases, they may bypass segment and
-access a device directly.  (TODO:  make synch wider, add STLport
-and boost, remove stream, change xo to exec).
+access a device directly.  Similarly, the thirdparty boost and STLport
+libraries are available throughout Fennel.  Finally, note that
+although common and synch are separate source trees they are compiled
+into a single library called common.
 
 <p>
 

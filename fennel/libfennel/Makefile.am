@@ -6,7 +6,6 @@ include $(top_srcdir)/am_include.mk
 
 lib_LTLIBRARIES=\
 libfennel_common.la \
-libfennel_synch.la \
 libfennel_device.la \
 libfennel_cache.la \
 libfennel_segment.la \
@@ -17,9 +16,7 @@ libfennel_btree.la \
 libfennel_db.la \
 libfennel_ftrs.la
 
-SYNCH_DEPS = libfennel_common.la
-
-DEVICE_DEPS = libfennel_synch.la $(SYNCH_DEPS)
+DEVICE_DEPS = libfennel_common.la
 
 CACHE_DEPS = libfennel_device.la $(DEVICE_DEPS)
 
@@ -43,11 +40,8 @@ TEST_DEPS = libfennel_btree.la libfennel_exec.la $(BTREE_DEPS)
 
 libfennel_common_la_SOURCES=
 libfennel_common_la_LIBADD=\
-	$(top_builddir)/common/libcommon.la
-
-libfennel_synch_la_SOURCES=
-libfennel_synch_la_LIBADD=\
-	$(top_builddir)/synch/libsynch.la $(SYNCH_DEPS)
+	$(top_builddir)/common/libcommon.la \
+	$(top_builddir)/synch/libsynch.la
 
 libfennel_device_la_SOURCES=
 libfennel_device_la_LIBADD=\
