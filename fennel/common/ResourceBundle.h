@@ -29,6 +29,7 @@
 #include <string>
 
 #include "fennel/common/Locale.h"
+#include "fennel/synch/SynchObj.h"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -55,6 +56,8 @@ public:
 
     static void setGlobalResourceFileLocation(const string &location);
 
+    static RecursiveMutex &getMutex();
+
 private:
     void loadMessages();
 
@@ -65,6 +68,8 @@ private:
     ResourceBundle *_parent;
 
     map<string, string> _messages;
+
+    static RecursiveMutex mutex;
 };
 
 
@@ -73,16 +78,19 @@ private:
 // _BC must be a map<Locale, _GRB *, localeLess>.
 // _BC_ITER must be _BC::iterator
 
-// TODO: SZ: why can't I just use  _BC::iterator in the function?
-// REVIEW jvs 18-Feb-2004:  try typedef typename _BC::iterator _BC_ITER;
-
-// TODO: make thread safe
+// REVIEW: SWZ 02-Aug-2005: Originally wanted to just use _BC::iterator
+// within makeInstance, but that wasn't working.  JVS suggested using
+//     typedef typename _BC::iterator _BC_ITER;
+// That works, but changing it now means updating the resgen code to
+// output compatible calls to makeInstance.
 
 template<class _GRB, class _BC, class _BC_ITER>
 _GRB *makeInstance(
     _BC &bundleCache,
     const Locale &locale)
 {
+    RecursiveMutexGuard mutexGuard(ResourceBundle::getMutex());
+
     _BC_ITER iter = bundleCache.find(locale);
     if (iter == bundleCache.end()) {
         _GRB *bundle = new _GRB(locale);

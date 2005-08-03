@@ -40,6 +40,13 @@ using namespace boost;
 
 static string globalResourceLocation("");
 
+RecursiveMutex ResourceBundle::mutex;
+
+RecursiveMutex &ResourceBundle::getMutex()
+{
+    return mutex;
+}
+
 void ResourceBundle::setGlobalResourceFileLocation(const string &location)
 {
     globalResourceLocation = location;
@@ -125,8 +132,8 @@ const string &ResourceBundle::getBaseName() const
 
 
 static const char APOS = '\'';
-static const char LEFT_BRACKET = '{';
-static const char RIGHT_BRACKET = '}';
+static const char LEFT_BRACE = '{';
+static const char RIGHT_BRACE = '}';
 static const char COMMA = ',';
 
 static string convertPropertyToBoost(string &message)
@@ -143,28 +150,28 @@ static string convertPropertyToBoost(string &message)
 
         if (ch == APOS) {
             if (nextCh != APOS) {
-                // bare apostrophes single start/end of QuotedString in the BNF
+                // Bare apostrophes signal start/end of QuotedString in the BNF
                 quoted = !quoted;
                 continue;
             }
 
-            // quoted or not, the next character is an apostrophe, so we
-            // output an apostrophe
+            // Quoted or not, the next character is an apostrophe, so we
+            // output an apostrophe.
             ss << APOS;
             i++; // skip nextCh
             continue;
         }
 
-        if (quoted || ch != LEFT_BRACKET) {
+        if (quoted || ch != LEFT_BRACE) {
             ss << ch;
             continue;
         }
 
-        // handle an argument
+        // Handle an argument
         string::size_type commaPos = message.find(COMMA, i);
-        string::size_type bracketPos = message.find(RIGHT_BRACKET, i);
+        string::size_type bracketPos = message.find(RIGHT_BRACE, i);
         if (bracketPos == string::npos) {
-            // bad format -- give up
+            // Bad format -- give up
             return message;
         }
 
@@ -175,10 +182,10 @@ static string convertPropertyToBoost(string &message)
         int argIndex = boost::lexical_cast<int>(
             message.substr(i + 1, argEndIndex - (i + 1)));
 
-        // boost args are 1-based
+        // Boost args are 1-based
         ss << '%' << (argIndex + 1) << '%';
 
-        // find the end of the argument tag
+        // Find the end of the argument tag
         bool quotedPattern = false;
         int bracketDepth = 0;
         i = argEndIndex;
@@ -197,14 +204,14 @@ static string convertPropertyToBoost(string &message)
                 i++;
                 break;
             
-            case LEFT_BRACKET:
+            case LEFT_BRACE:
                 if (!quotedPattern) {
                     bracketDepth++;
                 }
                 i++;
                 break;
             
-            case RIGHT_BRACKET:
+            case RIGHT_BRACE:
                 if (!quotedPattern) {
                     if (bracketDepth > 0) {
                         bracketDepth--;
