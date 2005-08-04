@@ -594,14 +594,39 @@ public abstract class FarragoCatalogUtil
         FarragoRepos repos, String authName)
     {
         Collection authIdCollection =
-            repos.getSecurityPackage().getFemAuthId().
-            refAllOfType();
+            repos.getSecurityPackage().getFemAuthId().refAllOfType();
+
+        // TODO: all the looping to scan for name can't be good for
+        // performance. Should look for alternative.
         FemAuthId femAuthId = (FemAuthId)
             FarragoCatalogUtil.getModelElementByName(
                 authIdCollection, authName);
 
         return femAuthId;
     }
+
+    /**
+     * Looks up a user by name in a catalog.
+     *
+     * @param repos repos storing catalog
+     *
+     * @param userName name of user to find
+     *
+     * @return user definition, or null if not found
+     */
+    public static FemUser getUserByName(
+        FarragoRepos repos,
+        String userName)
+    {
+        Collection authIdCollection =
+            repos.getSecurityPackage().getFemUser().
+            refAllOfType();
+        FemUser user = (FemUser)
+            FarragoCatalogUtil.getModelElementByName(
+                authIdCollection, userName);
+        return user;
+    }
+
 
     /**
      * Creates a new grant on a ROLE with specified role name and associate it

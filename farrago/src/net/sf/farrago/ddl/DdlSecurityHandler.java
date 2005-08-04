@@ -104,7 +104,7 @@ public class DdlSecurityHandler extends DdlHandler
             
             // WITH ADMIN grantor clause has already been dealt with during
             // parsing.
-
+            
             // create a new creation grant on the object where the creator will
             // be the grantee i.e. FemCreationGrant. grantor is _SYSTEM, and
             // granted object is the femRole itself.

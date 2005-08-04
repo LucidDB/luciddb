@@ -70,6 +70,11 @@ public class FarragoCatalogInit implements MDRPreChangeListener
      */
     public static final String SECURITY_SYSUSER_NAME = "_SYSTEM";
 
+    /**
+     * Reserved name for the system admin authorization user.
+     */
+    public static final String SECURITY_SAUSER_NAME = "SA";
+
     private final FarragoRepos repos;
 
     private final Set objs;
@@ -175,11 +180,18 @@ public class FarragoCatalogInit implements MDRPreChangeListener
         // Create the System Internal User 
         FemUser systemUser = repos.newFemUser();
         systemUser.setName(SECURITY_SYSUSER_NAME);
-        
+
+        // Create the System admin user, this is the only system created
+        // authenticatable user (via login)
+        FemUser saUser = repos.newFemUser();
+        saUser.setName(SECURITY_SAUSER_NAME);
+
         // Create the built-in role PUBLIC
         FemRole publicRole = repos.newFemRole();
         publicRole.setName(SECURITY_PUBLIC_ROLE_NAME);
 
+        // TODO: create built-in system roles 
+        
         // Create a creation grant for sys user and public role
         Timestamp ts = new Timestamp(System.currentTimeMillis());
         

@@ -720,7 +720,8 @@ public abstract class FarragoTestCase extends DiffTestCase
                 FemAuthId authId =
                     (FemAuthId) iter.next();
                 if (authId.getName().equals("_SYSTEM")
-                    || authId.getName().equals("PUBLIC"))
+                    || authId.getName().equals("PUBLIC")
+                    || authId.getName().equals("SA"))
                 {
                     continue;
                 }

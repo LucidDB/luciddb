@@ -26,6 +26,7 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.security.*;
 
 import java.sql.*;
 import java.util.*;
@@ -170,6 +171,61 @@ public class FarragoQueryTest extends FarragoTestCase
         assertTrue(obj instanceof CwmSchema);
         assertEquals(schemaName, ((CwmSchema) obj).getName());
     }
+
+    /**
+     * Tests execution of a LURQL query to check role cycle. If role_2 has been
+     * granted to role_1,  then role_1 can't be granted to role_2.
+     * This query expanded all the roles inherited by a specified input role,
+     * the test then scans through the inherit roles to ensure that a second
+     * specified role (to be granted to the first specified role) does not
+     * exist.
+     */
+//     public void testCheckSecurityRoleCyleLurqlQuery()
+//         throws Exception
+//     {
+//         // Create Role_1,  Role_2
+//         // Grant Role_2 to Role_1
+//         // Grant Role_1 to Role_2. This should fail
+
+//         // TODO: remove this temporary setting of the session current user
+//         // once we have a proper login i.e. login user exists in the database
+//         FarragoJdbcEngineConnection farragoConnection =
+//             (FarragoJdbcEngineConnection) connection;
+//         FarragoSession session = (FarragoSession)
+//             farragoConnection.getSession();
+//         session.getSessionVariables().currentUserName = "_SYSTEM";
+        
+//         stmt.execute("create Role ROLE_1");
+//         stmt.execute("create Role ROLE_2");
+//         stmt.execute("grant role ROLE_2 to ROLE_1");
+        
+//         String lurql =
+//             FarragoInternalQuery.instance().getTestSecurityRoleCycleCheck();
+//         assertTrue(checkLurqlSecurityRoleCycle(lurql,  "ROLE_1",  "ROLE_2"));
+//     }
+    
+//     private boolean checkLurqlSecurityRoleCycle(
+//         String lurql, String granteeName, String grantedRoleName)
+//         throws Exception
+//     {
+//         Map argMap = new HashMap();
+//         argMap.put("granteeName", granteeName);
+//         FarragoJdbcEngineConnection farragoConnection =
+//             (FarragoJdbcEngineConnection) connection;
+//         FarragoSession session = (FarragoSession)
+//             farragoConnection.getSession();
+//         Collection result = session.executeLurqlQuery(
+//             lurql, argMap);
+//         Iterator iter = result.iterator();
+//         while(iter.hasNext())
+//         {
+//             FemRole role = (FemRole) iter.next();
+//             if (role.getName().equals(grantedRoleName)) {
+//                 return true;
+//             }
+//         }
+//         return false;
+//     }
 }
 
 // End FarragoQueryTest.java

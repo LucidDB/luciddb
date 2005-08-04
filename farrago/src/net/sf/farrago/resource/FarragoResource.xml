@@ -517,6 +517,11 @@ column type family is {1} but default value type family is {2}</text>
 <text>Privilege {0} is not applicable to {1}</text>
 </exception>
 
+<exception id="420890" name="InvalidUser">
+<text>User name {0} not found</text>
+</exception>
+
+
 <!-- ====================================================================== -->
 <!-- Fennel resources 440,000 - 450,000 -->
 <!-- Actual resources are defined separately in Fennel -->
