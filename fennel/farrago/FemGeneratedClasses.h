@@ -338,6 +338,8 @@ SharedProxyStreamHandle getResultHandle();
 static jmethodID meth_getResultHandle;
 std::string getStreamName();
 static jmethodID meth_getStreamName;
+bool isInput();
+static jmethodID meth_isInput;
 };
 
 class ProxyCmdDropIndex

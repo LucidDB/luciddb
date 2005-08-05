@@ -13,6 +13,7 @@ jmethodID ProxyCmdCheckpoint::meth_isAsync = 0;
 jmethodID ProxyCmdCreateExecutionStreamGraph::meth_getResultHandle = 0;
 jmethodID ProxyCmdCreateStreamHandle::meth_getResultHandle = 0;
 jmethodID ProxyCmdCreateStreamHandle::meth_getStreamName = 0;
+jmethodID ProxyCmdCreateStreamHandle::meth_isInput = 0;
 jmethodID ProxyCmdDropIndex::meth_getRootPageId = 0;
 jmethodID ProxyCmdOpenDatabase::meth_getResultHandle = 0;
 jmethodID ProxyCmdOpenDatabase::meth_isCreateDatabase = 0;
@@ -140,6 +141,7 @@ jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdCreateStreamHandle");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdCreateStreamHandle>));
 ProxyCmdCreateStreamHandle::meth_getResultHandle = pEnv->GetMethodID(jClass,"getResultHandle","()Lnet/sf/farrago/fem/fennel/FemStreamHandle;");
 ProxyCmdCreateStreamHandle::meth_getStreamName = pEnv->GetMethodID(jClass,"getStreamName","()Ljava/lang/String;");
+ProxyCmdCreateStreamHandle::meth_isInput = pEnv->GetMethodID(jClass,"isInput","()Z");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdDropIndex");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdDropIndex>));
@@ -442,6 +444,11 @@ return p;
 std::string ProxyCmdCreateStreamHandle::getStreamName()
 {
 return constructString(pEnv->CallObjectMethod(jObject,meth_getStreamName));
+}
+
+bool ProxyCmdCreateStreamHandle::isInput()
+{
+return pEnv->CallBooleanMethod(jObject,meth_isInput);
 }
 
 int64_t ProxyCmdDropIndex::getRootPageId()

@@ -491,7 +491,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
         assert (dummies == null);
         assert (streamGraph != null);
 
-        FennelStreamHandle streamHandle = getStreamHandle(streamName);
+        FennelStreamHandle streamHandle = getStreamHandle(streamName, true);
 
         return new FennelIterator(
             tupleReader,
@@ -500,11 +500,11 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
             repos.getCurrentConfig().getFennelConfig().getCachePageSize());
     }
 
-    protected FennelStreamHandle getStreamHandle(String globalStreamName)
+    protected FennelStreamHandle getStreamHandle(String globalStreamName, boolean isInput)
     {
         repos.beginReposTxn(true);
         try {
-            return streamGraph.findStream(repos, globalStreamName);
+            return streamGraph.findStream(repos, globalStreamName, isInput);
         } finally {
             repos.endReposTxn(false);
         }

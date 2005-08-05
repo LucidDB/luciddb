@@ -68,16 +68,17 @@ public class FennelStreamGraph implements FarragoAllocation
      *
      * @param streamName name of stream to find
      *
+     * @param isInput
      * @return handle to stream
      */
-    public FennelStreamHandle findStream(
-        FarragoMetadataFactory metadataFactory,
-        String streamName)
+    public FennelStreamHandle findStream(FarragoMetadataFactory metadataFactory,
+                                         String streamName, boolean isInput)
     {
         FemCmdCreateStreamHandle cmd =
             metadataFactory.newFemCmdCreateStreamHandle();
         cmd.setStreamGraphHandle(getStreamGraphHandle());
         cmd.setStreamName(streamName);
+        cmd.setInput(isInput);
         fennelDbHandle.executeCmd(cmd);
         return new FennelStreamHandle(cmd.getResultHandle().getLongHandle());
     }
