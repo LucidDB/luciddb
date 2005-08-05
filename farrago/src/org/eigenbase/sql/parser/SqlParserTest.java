@@ -622,6 +622,21 @@ public class SqlParserTest extends TestCase
             "(LOG(1) + (POW(2, ((MOD(3, LN(4)) * LOG(5)) - (6 * LOG(((7 / ABS(8)) + 9))))) * POW(10, 11)))");
     }
 
+    public void testFunctionWithDistinct()
+    {
+        checkExp("count(DISTINCT 1)","COUNT(1)");
+        checkExp("count(ALL 1)","COUNT(1)");
+        checkExp("count(1)","COUNT(1)");
+/*
+        These are the correct tests when the unparse function is fixed
+        checkExp("count(DISTINCT 1)","COUNT('DISTINCT' 1)");
+        checkExp("count(ALL 1)","COUNT('ALL' 1)");
+        check("select count(1), count(distinct 2) from emp",
+            "SELECT COUNT(1), COUNT('DISTINCT' 2)" + NL +
+            "FROM `EMP`");
+*/
+    }
+
     public void testFunctionInFunction()
     {
         checkExp("ln(pow(2,2))", "LN(POW(2, 2))");

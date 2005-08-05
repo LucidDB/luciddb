@@ -23,7 +23,10 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.rel.Aggregation;
+import org.eigenbase.resource.EigenbaseResource;
 import openjava.mop.OJClass;
 
 
@@ -50,6 +53,17 @@ public abstract class SqlAggFunction extends SqlFunction implements Aggregation
     {
         return new OJClass[0];
     }
+
+    public boolean isQuantifierAllowed()
+    {
+        return( true);
+    }
+
+    public void unparse(SqlWriter writer, SqlNode[] operands, int leftPrec, int rightPrec)
+    {
+        super.unparse(writer, operands, leftPrec, rightPrec);    //To change body of overridden methods use File | Settings | File Templates.
+    }
+
 }
 
 // End SqlAggFunction.java

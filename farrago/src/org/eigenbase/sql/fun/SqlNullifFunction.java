@@ -22,6 +22,7 @@
 package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.util.Util;
 
@@ -40,7 +41,7 @@ public class SqlNullifFunction extends SqlFunction
     }
 
     // override SqlOperator
-    public SqlNode rewriteCall(SqlCall call)
+    public SqlNode rewriteCall(SqlValidator validator, SqlCall call)
     {
         SqlNode [] operands = call.getOperands();
         SqlParserPos pos = call.getParserPosition();

@@ -2045,14 +2045,18 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         check("select FIRST_VALUE(ename) over (order by empno) from emp");
     }
 
+    public void testFunctionalDistinct()
+    {
+        check("select count(distinct sal) from emp");
+        checkFails("select COALESCE(^distinct^ sal) from emp",
+            "DISTINCT/ALL not allowed with COALESCE function");
+    }
+
     public void testNew()
     {
         // (To debug invidual statements, paste them into this method.)
         //            1         2         3         4         5         6
         //   12345678901234567890123456789012345678901234567890123456789012345
-        checkFails(
-            "select ^LAST_VALUE(ename,sal) over^ (order by empno) from emp",
-            "Invalid number of arguments to function 'LAST_VALUE'. Was expecting 1 arguments");
     }
 }
 

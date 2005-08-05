@@ -60,7 +60,7 @@ public class SqlFunctionalOperator extends SqlSpecialOperator
         int leftPrec,
         int rightPrec)
     {
-        SqlUtil.unparseFunctionSyntax(this, writer, operands, true);
+        SqlUtil.unparseFunctionSyntax(this, writer, operands, true, null);
     }
 }
 

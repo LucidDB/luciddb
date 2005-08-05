@@ -22,7 +22,9 @@
 package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.resource.EigenbaseResource;
 
 /**
  * The <code>COALESCE</code> function.
@@ -39,8 +41,13 @@ public class SqlCoalesceFunction extends SqlFunction
     }
 
     // override SqlOperator
-    public SqlNode rewriteCall(SqlCall call)
+    public SqlNode rewriteCall(SqlValidator validator, SqlCall call)
     {
+        if ((null != call.getFunctionQuantifier()) && !isQuantifierAllowed()) {
+            throw validator.newValidationError(call.getFunctionQuantifier(),
+                EigenbaseResource.instance()
+                .newFunctionQuantifierNotAllowed(call.getOperator().getName()));
+        }
         SqlNode [] operands = call.getOperands();
         SqlParserPos pos = call.getParserPosition();
 
@@ -56,9 +63,11 @@ public class SqlCoalesceFunction extends SqlFunction
                     operands[i], pos));
             thenList.add(operands[i]);
         }
-        return SqlStdOperatorTable.caseOperator.createCall(
+        final SqlCall newCall = SqlStdOperatorTable.caseOperator.createCall(
             null, whenList, thenList,
             operands[i], pos);
+        newCall.setFunctionQuantifier(call.getFunctionQuantifier());
+        return newCall;
     }
 
     // REVIEW jvs 1-Jan-2005:  should this be here?  It's

@@ -599,7 +599,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                     }
                 }
             }
-            node = call.getOperator().rewriteCall(call);
+            node = call.getOperator().rewriteCall(this, call);
         } else if (node instanceof SqlNodeList) {
             SqlNodeList list = (SqlNodeList) node;
             for (int i = 0, count = list.size(); i < count; i++) {

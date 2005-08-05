@@ -2088,6 +2088,11 @@ public class SqlToRelConverter
             RelDataType type = validator.getValidatedNodeType(call);
             final AggregateRel.Call aggCall =
                 new AggregateRel.Call(aggregation, args, type);
+            SqlLiteral quantifier = call.getFunctionQuantifier();
+            if ((null != quantifier) &&
+                (quantifier.getValue() == SqlSelectKeyword.Distinct)) {
+                aggCall.setDistinctFalg(true);
+            }
             int index = aggCalls.size();
             aggCalls.add(aggCall);
             final RexNode rex = rexBuilder.makeInputRef(type, index);

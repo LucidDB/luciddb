@@ -370,6 +370,10 @@
     <text>Type ''{0}'' is not supported</text>
 </exception>
 
+<exception id="120620" name="FunctionQuantifierNotAllowed" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>DISTINCT/ALL not allowed with {0} function</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Eigenbase Generic resources 130,000 - 140,000 -->
 <!-- ====================================================================== -->

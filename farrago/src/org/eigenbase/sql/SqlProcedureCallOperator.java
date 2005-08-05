@@ -24,6 +24,7 @@ package org.eigenbase.sql;
 
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.validate.SqlValidator;
 
 import java.util.*;
 
@@ -42,8 +43,7 @@ public class SqlProcedureCallOperator extends SqlPrefixOperator
     }
 
     // override SqlOperator
-    public SqlNode rewriteCall(
-        SqlCall call)
+    public SqlNode rewriteCall(SqlValidator validator, SqlCall call)
     {
         // for now, rewrite "CALL f(x)" to "SELECT f(x) FROM VALUES(0)"
         // TODO jvs 18-Jan-2005:  rewrite to SELECT * FROM TABLE f(x)

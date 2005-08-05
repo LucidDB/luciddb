@@ -26,6 +26,9 @@ package org.eigenbase.sql;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.resource.EigenbaseResource;
 
 
 /**
@@ -166,6 +169,45 @@ public class SqlFunction extends SqlOperator
     {
         return this.functionType;
     }
+
+    public boolean isQuantifierAllowed()
+    {
+        return(false);
+    }
+
+    /*
+     * Validates a call to this operator.
+     * <p/>
+     *
+     * This implementation looks for the quantifier keywords DISTINCT or ALL
+     * as te first operand in the list.  If found then the literal is not
+     * called to validate itself.  Further the function is checked to make
+     * sure that a quantifier is valid for that particular function.
+     *
+     * If the first operand does not appear to be a quantifier then the
+     * parent ValidateCall is invoked to do normal function validation.
+     *
+     * @param call the call to this operator
+     * @param validator the active validator
+     * @param scope validator scope
+     * @param operandScope validator scope in which to validate operands to
+     * this call; usually equal to scope, but not always because some operators
+     * introduce new scopes
+     */
+    public void validateCall(
+        SqlCall call,
+        SqlValidator validator,
+        SqlValidatorScope scope,
+        SqlValidatorScope operandScope)
+    {
+        super.validateCall(call, validator, scope, operandScope);    //To change body of overridden methods use File | Settings | File Templates.
+        if ((null != call.getFunctionQuantifier()) && !isQuantifierAllowed()) {
+            throw validator.newValidationError(call.getFunctionQuantifier(),
+                EigenbaseResource.instance()
+                .newFunctionQuantifierNotAllowed(call.getOperator().getName()));
+        }
+    }
+
 }
 
 

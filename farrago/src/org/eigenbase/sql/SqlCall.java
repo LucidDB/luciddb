@@ -24,6 +24,8 @@
 package org.eigenbase.sql;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Arrays;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.resource.EigenbaseResource;
@@ -46,6 +48,7 @@ public class SqlCall extends SqlNode
 
     private SqlOperator operator;
     public final SqlNode [] operands;
+    public SqlLiteral functionQuantifier;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -57,6 +60,7 @@ public class SqlCall extends SqlNode
         super(pos);
         this.operator = operator;
         this.operands = operands;
+        this.functionQuantifier = null;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -239,6 +243,16 @@ public class SqlCall extends SqlNode
         }
 
         return false;
+    }
+
+    public void setFunctionQuantifier(SqlLiteral quantifier)
+    {
+        functionQuantifier = quantifier;
+    }
+
+    public SqlLiteral getFunctionQuantifier()
+    {
+        return functionQuantifier;
     }
 }
 
