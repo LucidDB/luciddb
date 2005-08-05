@@ -600,6 +600,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         // Register agg functions.
         registerAgg(opTab.sumOperator, new SumCalcRexImplementor());
         registerAgg(opTab.countOperator, new CountCalcRexImplementor());
+        registerAgg(opTab.lastValueOperator, new LastValueCalcRexImplementor());
         if (false) {
             // TODO:
             registerAgg(opTab.minOperator, new SumCalcRexImplementor());
@@ -1466,6 +1467,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             if (call.operands.length == 1) {
                 operand = call.operands[0];
             }
+
             // Minor optimization where count(*) = count(x) if x
             // cannot be null. See the help for SumCalcRexImplementor.implementAdd()
             if (operand != null && operand.getType().isNullable()) {
@@ -1482,8 +1484,18 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                     isNullReg = translator.builder.getRegister
                             (ordinal, CalcProgramBuilder.RegisterSetType.Local);
                 }
-                CalcProgramBuilder.boolNativeIsNull.add(translator.builder, isNullReg,
-                    translator.implementNode(operand));
+
+                CalcProgramBuilder.Register input = null;
+                final RexNode[] inputExps = translator.getInputExprs();
+                if (inputExps != null) {
+                    RexNode arg = inputExps[((RexInputRef) operand).getIndex()];
+                    input = translator.implementNode(arg);
+                } else {
+                    input = translator.implementNode(operand);
+                }
+
+                CalcProgramBuilder.boolNativeIsNull.add(translator.builder,
+                        isNullReg, input);
                 translator.builder.addLabelJumpFalse(wasNotNull, isNullReg);
                 translator.builder.addLabelJump(next);
                 translator.builder.addLabel(wasNotNull);
@@ -1537,8 +1549,18 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                     isNullReg = translator.builder.getRegister
                             (ordinal, CalcProgramBuilder.RegisterSetType.Local);
                 }
-                CalcProgramBuilder.boolNativeIsNull.add(translator.builder, isNullReg,
-                    translator.implementNode(operand));
+
+                CalcProgramBuilder.Register input = null;
+                final RexNode[] inputExps = translator.getInputExprs();
+                if (inputExps != null) {
+                    RexNode arg = inputExps[((RexInputRef) operand).getIndex()];
+                    input = translator.implementNode(arg);
+                } else {
+                    input = translator.implementNode(operand);
+                }
+
+                CalcProgramBuilder.boolNativeIsNull.add(translator.builder,
+                        isNullReg, input);
                 translator.builder.addLabelJumpFalse(wasNotNull, isNullReg);
                 translator.builder.addLabelJump(next);
                 translator.builder.addLabel(wasNotNull);
@@ -1591,6 +1613,15 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             assert call.operands.length == 1;
             final RexNode operand = call.operands[0];
 
+            CalcProgramBuilder.Register input = null;
+            final RexNode[] inputExps = translator.getInputExprs();
+            if (inputExps != null) {
+                RexNode arg = inputExps[((RexInputRef) operand).getIndex()];
+                input = translator.implementNode(arg);
+            } else {
+                input = translator.implementNode(operand);
+            }
+
             // If the input can be null, then we check if the value is in fact
             // null and then skip adding it to the total. If, however, the value
             // cannot be null, we can simply perform the add operation.
@@ -1610,7 +1641,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             // Note that a label '4' is created for a row that doesn't have any
             // instruction. This is critical both when there is sum(col2) or
             // simply a return statement.
-            if (operand.getType().isNullable()) {
+            if (operand.getType().isNullable() && inputExps == null) {
                 int ordinal = translator.getNullRegisterOrdinal();
                 CalcProgramBuilder.Register isNullReg = null;
                 String wasNotNull = translator.newLabel();
@@ -1633,14 +1664,14 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                                 translator.builder,
                                 accumulatorRegister,
                                 accumulatorRegister,
-                                translator.implementNode(operand));
+                                input);
                 translator.builder.addLabel(next);
             } else {
                 CalcProgramBuilder.nativeAdd.add(
                     translator.builder,
                     accumulatorRegister,
                     accumulatorRegister,
-                    translator.implementNode(operand));
+                    input);
             }
         }
 
@@ -1652,6 +1683,15 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             assert call.operands.length == 1;
             final RexNode operand = call.operands[0];
 
+            CalcProgramBuilder.Register input = null;
+            final RexNode[] inputExps = translator.getInputExprs();
+            if (inputExps != null) {
+                RexNode arg = inputExps[((RexInputRef) operand).getIndex()];
+                input = translator.implementNode(arg);
+            } else {
+                input = translator.implementNode(operand);
+            }
+
             // Refer to the comments for implementAdd method above.
             // Here is the pseudo code:
             // ISNULL nullReg, col1    /* 0 */
@@ -1659,7 +1699,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             // JMP @4                  /* 2 */
             // SUB O0, O0, col1        /* 3 */
             //                         /* 4 */
-            if (operand.getType().isNullable()) {
+            if (operand.getType().isNullable() && inputExps == null) {
                 int ordinal = translator.getNullRegisterOrdinal();
                 CalcProgramBuilder.Register isNullReg = null;
                 String wasNotNull = translator.newLabel();
@@ -1682,15 +1722,74 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                                 translator.builder,
                                 accumulatorRegister,
                                 accumulatorRegister,
-                                translator.implementNode(operand));
+                                input);
                 translator.builder.addLabel(next);
             } else {
                 CalcProgramBuilder.nativeMinus.add(
                     translator.builder,
                     accumulatorRegister,
                     accumulatorRegister,
-                    translator.implementNode(operand));
+                    input);
             }
+        }
+    }
+
+    /**
+     * Implementation of the <code>LAST_VALUE</code> aggregate function,
+     * {@link SqlStdOperatorTable#lastValueOperator}.
+     */
+    private static class LastValueCalcRexImplementor
+        extends AbstractCalcRexAggImplementor
+    {
+        public void implementInitialize(
+            RexCall call,
+            CalcProgramBuilder.Register accumulatorRegister,
+            RexToCalcTranslator translator)
+        {
+            // Return null during the initialization.
+            assert call.operands.length == 1;
+
+            final CalcProgramBuilder.Register nullReg =
+                translator.builder.newLiteral(
+                    translator.getCalcRegisterDescriptor(call),
+                    null);
+            CalcProgramBuilder.move.add(
+                            translator.builder,
+                            accumulatorRegister,
+                            nullReg);
+        }
+
+        public void implementAdd(
+            RexCall call,
+            CalcProgramBuilder.Register accumulatorRegister,
+            RexToCalcTranslator translator)
+        {
+            assert call.operands.length == 1;
+            final RexNode operand = call.operands[0];
+
+            CalcProgramBuilder.Register input = null;
+            final RexNode[] inputExps = translator.getInputExprs();
+            if (inputExps != null) {
+                RexNode arg = inputExps[((RexInputRef) operand).getIndex()];
+                input = translator.implementNode(arg);
+            } else {
+                input = translator.implementNode(operand);
+            }
+
+            // Just return the operand of the current row as the output.
+            CalcProgramBuilder.move.add(
+                            translator.builder,
+                            accumulatorRegister,
+                            input);
+        }
+
+        public void implementDrop(
+            RexCall call,
+            CalcProgramBuilder.Register accumulatorRegister,
+            RexToCalcTranslator translator)
+        {
+            // Do nothing when a row is dropped.
+            assert call.operands.length == 1;
         }
     }
 }

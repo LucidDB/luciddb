@@ -40,6 +40,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
+import org.eigenbase.rex.RexNode;
 
 
 /**
@@ -137,6 +138,24 @@ public abstract class FennelRelUtil
         RelDataTypeField [] fields = rowType.getFields();
         for (int i = 0; i < fields.length; ++i) {
             addTupleAttrDescriptor(repos, tupleDesc, fields[i].getType());
+        }
+        return tupleDesc;
+    }
+
+    /**
+     * Creates a FemTupleDescriptor from RexNode's which is a row.
+     *
+     * @param repos repos storing object definitions
+     * @param nodes RexNode's
+     *
+     * @return generated tuple descriptor
+     */
+    public static FemTupleDescriptor createTupleDescriptorFromRexNode
+            (FarragoMetadataFactory repos, RexNode[] nodes)
+    {
+        FemTupleDescriptor tupleDesc = repos.newFemTupleDescriptor();
+        for (int i = 0; i < nodes.length; i++) {
+            addTupleAttrDescriptor(repos, tupleDesc, nodes[i].getType());
         }
         return tupleDesc;
     }
