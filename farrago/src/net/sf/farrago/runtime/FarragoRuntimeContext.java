@@ -373,9 +373,19 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
      */
     protected void registerJavaStream(int streamId, Object stream)
     {
+        registerJavaStream(streamId, stream, this);
+    }
+
+    /**
+     * Associates a stream id with a java stream object, so that it can be retrieved
+     * by a native method later. Binds the stream to a specific owner (that will
+     * eventually close it).
+     */
+    protected void registerJavaStream(int streamId, Object stream, FarragoCompoundAllocation streamOwner)
+    {
         streamIdToHandleMap.put(
             new Integer(streamId),
-            FennelDbHandle.allocateNewObjectHandle(this, stream));
+            FennelDbHandle.allocateNewObjectHandle(streamOwner, stream));
     }
 
     /**
