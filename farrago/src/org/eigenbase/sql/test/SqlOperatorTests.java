@@ -966,6 +966,14 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkScalarExact("count(1.2)","INTEGER");
    }
 
+    public void testAvgFunc()
+    {
+        getTester().setFor(SqlStdOperatorTable.avgOperator);
+        getTester().checkType("AVG(CAST(NULL AS INTEGER))", "INTEGER");
+        getTester().checkAgg(
+            "AVG(x)", new String[] {"0", "CAST(null AS INTEGER)", "1"}, new Double(0.5), 0);
+    }
+
     public void testLastValueFunc()
     {
         getTester().setFor(SqlStdOperatorTable.lastValueOperator);

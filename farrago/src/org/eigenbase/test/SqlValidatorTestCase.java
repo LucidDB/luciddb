@@ -600,6 +600,16 @@ public class SqlValidatorTestCase extends TestCase
             // do nothing
         }
 
+        public void checkAgg(
+            String expr,
+            String[] inputValues,
+            Object result,
+            int delta)
+        {
+            String query = AbstractSqlTester.generateAggQuery(expr, inputValues);
+            check(query, AbstractSqlTester.AnyTypeChecker, result, delta);
+        }
+
         public void checkScalar(
             String expression,
             Object result,

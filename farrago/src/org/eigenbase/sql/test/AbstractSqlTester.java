@@ -72,6 +72,33 @@ public abstract class AbstractSqlTester implements SqlTester
         this.operator = operator;
     }
 
+    public void checkAgg(
+        String expr,
+        String[] inputValues,
+        Object result,
+        int delta)
+    {
+        String query = generateAggQuery(expr, inputValues);
+        check(query, AnyTypeChecker, result, delta);
+    }
+
+    public static String generateAggQuery(String expr, String[] inputValues)
+    {
+        StringBuffer buf = new StringBuffer();
+        buf.append("SELECT ").append(expr).append(" FROM (");
+        for (int i = 0; i < inputValues.length; i++) {
+            if (i > 0) {
+                buf.append(" UNION ALL ");
+            }
+            buf.append("SELECT ");
+            String inputValue = inputValues[i];
+            buf.append(inputValue).append(" AS x FROM (VALUES (1))");
+        }
+        buf.append(")");
+        String query = buf.toString();
+        return query;
+    }
+
     /**
      * Helper method which converts a scalar expression into a SQL query.
      *

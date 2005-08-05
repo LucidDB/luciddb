@@ -453,7 +453,7 @@ public class CalcProgramBuilder
                 writer.print("," + reg.storageBytes);
                 break;
             default:
-                assert reg.storageBytes == -1;
+                assert reg.storageBytes == -1 : reg.getOpType().getName();
             }
             if (false) {
                 // Assembler doesn't support this.

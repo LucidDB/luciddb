@@ -179,6 +179,22 @@ public interface SqlTester
      */
     void setFor(SqlOperator operator);
 
+    /**
+     * Checks that an aggregate expression returns the expected result.
+     *
+     * <p>For example,
+     * <code>checkAgg("AVG(DISTINCT x)", new String[] {"2", "3", null, "3"},
+     *   new Double(2.5), 0);</code>
+     * 
+     * @param expr Aggregate expression, e.g. <code>SUM(DISTINCT x)</code>
+     * @param inputValues Array of input values, e.g.
+     *    <code>["1", null, "2"]</code>.
+     * @param result
+     * @param delta
+     */
+    void checkAgg(String expr,
+        String[] inputValues, Object result, int delta);
+
     interface TypeChecker {
         void checkType(RelDataType type);
     }

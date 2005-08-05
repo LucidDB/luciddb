@@ -33,6 +33,8 @@ import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.util.BitString;
 import org.eigenbase.util.NlsString;
 
+import java.util.Arrays;
+
 /**
  * Internal operator, by which the parser represents a continued string
  * literal.
@@ -180,6 +182,21 @@ public class SqlLiteralChainOperator extends SqlInternalOperator {
             writer.print(" ");
             writer.print(collation.toString());
         }
+    }
+
+    /**
+     * Concatenates the operands of a call to this operator.
+     */
+    public static SqlLiteral concatenateOperands(SqlCall call)
+    {
+        assert call.operands.length > 0;
+        assert call.operands[0] instanceof SqlLiteral :
+            call.operands[0].getClass();
+        SqlLiteral [] fragments =
+            (SqlLiteral []) Arrays.asList(call.operands).toArray(
+                new SqlLiteral[call.operands.length]);
+        SqlLiteral sum = SqlUtil.concatenateLiterals(fragments);
+        return sum;
     }
 }
 
