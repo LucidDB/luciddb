@@ -3473,6 +3473,7 @@ TOKEN :
     | < IDENTITY: "IDENTITY" >
     | < IMMEDIATE: "IMMEDIATE" >
     | < IMPLEMENTATION: "IMPLEMENTATION" >
+    | < IMPORT: "IMPORT" >
     | < IN: "IN" >
     | < INDICATOR: "INDICATOR" >
     | < INCLUDING: "INCLUDING" >
@@ -3511,6 +3512,7 @@ TOKEN :
     | < LEVEL: "LEVEL" >
     | < LIBRARY: "LIBRARY" >
     | < LIKE: "LIKE" >
+    | < LIMIT: "LIMIT" >
     | < LN: "LN" >
     | < LOCAL: "LOCAL" >
     | < LOCALTIME: "LOCALTIME" >

@@ -162,7 +162,7 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
         return sql.replaceAll("\\s", " ");
     }
 
-    // TODO:  lookupSubdirectory, getContentsAsCwm
+    // TODO:  lookupSubdirectory, queryMetadata
 }
 
 

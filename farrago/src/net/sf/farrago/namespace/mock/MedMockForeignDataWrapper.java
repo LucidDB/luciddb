@@ -80,7 +80,8 @@ public class MedMockForeignDataWrapper extends MedAbstractDataWrapper
         Properties props)
         throws SQLException
     {
-        MedMockDataServer server = new MedMockDataServer(serverMofId, props);
+        MedMockDataServer server = new MedMockDataServer(
+            this, serverMofId, props);
         boolean success = false;
         try {
             server.initialize();

@@ -204,18 +204,18 @@ class MedMdrNameDirectory extends MedAbstractNameDirectory
     }
 
     // implement FarragoMedNameDirectory
-    public FarragoMedNameDirectory lookupSubdirectory(String [] foreignName)
+    public FarragoMedNameDirectory lookupSubdirectory(String foreignName)
         throws SQLException
     {
         RefPackage subPackage =
-            lookupRefPackage(foreignName, foreignName.length);
+            lookupRefPackage(new String[]{foreignName}, 1);
         if (subPackage == null) {
             return null;
         }
         return new MedMdrNameDirectory(server, subPackage);
     }
 
-    // TODO:  getContentsAsCwm
+    // TODO:  queryMetadata
 }
 
 

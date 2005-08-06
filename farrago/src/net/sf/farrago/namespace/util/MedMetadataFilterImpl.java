@@ -4,7 +4,6 @@
 // Copyright (C) 2005-2005 The Eigenbase Project
 // Copyright (C) 2005-2005 Disruptive Tech
 // Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -20,42 +19,54 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package net.sf.farrago.namespace.impl;
+package net.sf.farrago.namespace.util;
 
-import java.sql.*;
-import java.util.*;
-
-import net.sf.farrago.*;
 import net.sf.farrago.namespace.*;
 
+import java.util.*;
 
 /**
- * MedAbstractNameDirectory is an abstract base class for
- * implementations of the {@link FarragoMedNameDirectory} interface.
+ * MedMetadataFilterImpl is a default implementation {@link
+ * FarragoMedMetadataFilter}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class MedAbstractNameDirectory extends MedAbstractBase
-    implements FarragoMedNameDirectory
+public class MedMetadataFilterImpl implements FarragoMedMetadataFilter
 {
-    //~ Methods ---------------------------------------------------------------
+    private final boolean exclude;
 
-    // implement FarragoMedNameDirectory
-    public FarragoMedNameDirectory lookupSubdirectory(String foreignName)
-        throws SQLException
+    private final Set roster;
+
+    private final String pattern;
+    
+    public MedMetadataFilterImpl(
+        boolean exclude,
+        Set roster,
+        String pattern)
     {
-        return null;
+        this.exclude = exclude;
+        this.roster = roster;
+        this.pattern = pattern;
     }
-
-    public boolean queryMetadata(
-        FarragoMedMetadataQuery query,
-        FarragoMedMetadataSink sink)
-        throws SQLException
+    
+    // implement FarragoMedMetadataFilter
+    public boolean isExclusion()
     {
-        return false;
+        return exclude;
+    }
+    
+    // implement FarragoMedMetadataFilter
+    public Set getRoster()
+    {
+        return roster;
+    }
+    
+    // implement FarragoMedMetadataFilter
+    public String getPattern()
+    {
+        return pattern;
     }
 }
 
-
-// End MedAbstractNameDirectory.java
+// End MedMetadataFilterImpl.java

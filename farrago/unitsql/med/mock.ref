@@ -15,6 +15,14 @@
 0: jdbc:farrago:> create server mock_local_server
 . . . . . . . . > local data wrapper mock_local_wrapper;
 0: jdbc:farrago:> 
+0: jdbc:farrago:> create server mock_foreign_metadata_server
+. . . . . . . . > foreign data wrapper mock_foreign_wrapper
+. . . . . . . . > options (
+. . . . . . . . > foreign_schema_name 'MOCK_SCHEMA', 
+. . . . . . . . > foreign_table_name 'MOCK_TABLE',
+. . . . . . . . > executor_impl 'JAVA',
+. . . . . . . . > row_count '3');
+0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema mock_schema;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'mock_schema';
@@ -32,6 +40,26 @@
 0: jdbc:farrago:> create table mock_empty_table(
 . . . . . . . . >     id int not null primary key)
 . . . . . . . . > server mock_local_server;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create foreign table mock_implicit_metadata_table
+. . . . . . . . > server mock_foreign_metadata_server;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create foreign table mock_explicit_metadata_table(
+. . . . . . . . >     id int not null)
+. . . . . . . . > server mock_foreign_metadata_server
+. . . . . . . . > options (foreign_schema_name 'MOCK_SCHEMA', foreign_table_name 'MOCK_TABLE');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  schema name mismatch
+0: jdbc:farrago:> create foreign table bad_schema_name
+. . . . . . . . > server mock_foreign_metadata_server
+. . . . . . . . > options (foreign_schema_name 'BACH_SCHEMA');
+Error: Mock foreign object "BACH_SCHEMA" not found (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  table name mismatch
+0: jdbc:farrago:> create foreign table bad_table_name
+. . . . . . . . > server mock_foreign_metadata_server
+. . . . . . . . > options (foreign_table_name 'BACH_TABLE');
+Error: Mock foreign object "BACH_TABLE" not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> insert into mock_empty_table values (5);
 0: jdbc:farrago:> 
@@ -58,6 +86,41 @@
 | ID  |
 +-----+
 +-----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from mock_implicit_metadata_table;
++--------------+
+| MOCK_COLUMN  |
++--------------+
+| 0            |
+| 0            |
+| 0            |
++--------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from mock_explicit_metadata_table;
++-----+
+| ID  |
++-----+
+| 0   |
+| 0   |
+| 0   |
++-----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from mock_foreign_metadata_server.mock_schema.mock_table;
++--------------+
+| MOCK_COLUMN  |
++--------------+
+| 0            |
+| 0            |
+| 0            |
++--------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  unknown schema name
+0: jdbc:farrago:> select * from mock_foreign_metadata_server.bach_schema.mock_table;
+Error: From line 1, column 15 to line 1, column 42: Table 'MOCK_FOREIGN_METADATA_SERVER.BACH_SCHEMA.MOCK_TABLE' not found (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  unknown table name
+0: jdbc:farrago:> select * from mock_foreign_metadata_server.mock_schema.bach_table;
+Error: From line 1, column 15 to line 1, column 42: Table 'MOCK_FOREIGN_METADATA_SERVER.MOCK_SCHEMA.BACH_TABLE' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for select * from mock_fennel_table;
 +------------------------------------------------------------------------+
@@ -87,5 +150,78 @@
 +-------------------------------------------------------------------+
 | MedMockIterRel(table=[[LOCALDB, MOCK_SCHEMA, MOCK_EMPTY_TABLE]])  |
 +-------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create schema mock_local_schema;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set schema 'mock_local_schema';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> import foreign schema mock_schema
+. . . . . . . . > from server mock_foreign_metadata_server
+. . . . . . . . > into mock_local_schema;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from mock_local_schema.mock_table;
++--------------+
+| MOCK_COLUMN  |
++--------------+
+| 0            |
+| 0            |
+| 0            |
++--------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  no metadata
+0: jdbc:farrago:> import foreign schema mock_schema
+. . . . . . . . > from server mock_foreign_server
+. . . . . . . . > into mock_local_schema;
+Error: Support for foreign schema import not available in data server "SYS_BOOT"."MOCK_FOREIGN_SERVER" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  no such schema
+0: jdbc:farrago:> import foreign schema bach_schema
+. . . . . . . . > from server mock_foreign_metadata_server
+. . . . . . . . > into mock_local_schema;
+Error: Unknown foreign schema "BACH_SCHEMA" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  duplicate table name
+0: jdbc:farrago:> import foreign schema mock_schema
+. . . . . . . . > from server mock_foreign_metadata_server
+. . . . . . . . > into mock_local_schema;
+Error: Target schema "LOCALDB"."MOCK_LOCAL_SCHEMA" already contains foreign table "MOCK_TABLE" with same name (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create schema mock_limit_schema;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set schema 'mock_limit_schema';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> import foreign schema mock_schema
+. . . . . . . . > limit to (mock_table)
+. . . . . . . . > from server mock_foreign_metadata_server
+. . . . . . . . > into mock_limit_schema;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from mock_limit_schema.mock_table;
++--------------+
+| MOCK_COLUMN  |
++--------------+
+| 0            |
+| 0            |
+| 0            |
++--------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  no such table
+0: jdbc:farrago:> import foreign schema mock_schema
+. . . . . . . . > limit to (bach_table)
+. . . . . . . . > from server mock_foreign_metadata_server
+. . . . . . . . > into mock_limit_schema;
+Error: One or more tables not found while importing foreign schema "MOCK_SCHEMA":  [BACH_TABLE] (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create schema mock_exclude_schema;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set schema 'mock_exclude_schema';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> import foreign schema mock_schema
+. . . . . . . . > except (mock_table)
+. . . . . . . . > from server mock_foreign_metadata_server
+. . . . . . . . > into mock_exclude_schema;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  excluded
+0: jdbc:farrago:> select * from mock_exclude_schema.mock_table;
+Error: From line 1, column 15 to line 1, column 33: Table 'MOCK_EXCLUDE_SCHEMA.MOCK_TABLE' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

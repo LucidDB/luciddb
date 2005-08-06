@@ -4,7 +4,6 @@
 // Copyright (C) 2005-2005 The Eigenbase Project
 // Copyright (C) 2005-2005 Disruptive Tech
 // Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -20,42 +19,37 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package net.sf.farrago.namespace.impl;
+package net.sf.farrago.namespace;
 
-import java.sql.*;
 import java.util.*;
 
-import net.sf.farrago.*;
-import net.sf.farrago.namespace.*;
-
-
 /**
- * MedAbstractNameDirectory is an abstract base class for
- * implementations of the {@link FarragoMedNameDirectory} interface.
+ * FarragoMedMetadataFilter represents a filter on a
+ * {@link FarragoMedMetadataQuery}.  A filter may be expressed as either
+ * an explicit name roster or a name pattern.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class MedAbstractNameDirectory extends MedAbstractBase
-    implements FarragoMedNameDirectory
+public interface FarragoMedMetadataFilter
 {
-    //~ Methods ---------------------------------------------------------------
-
-    // implement FarragoMedNameDirectory
-    public FarragoMedNameDirectory lookupSubdirectory(String foreignName)
-        throws SQLException
-    {
-        return null;
-    }
-
-    public boolean queryMetadata(
-        FarragoMedMetadataQuery query,
-        FarragoMedMetadataSink sink)
-        throws SQLException
-    {
-        return false;
-    }
+    /**
+     * @return true if objects matching filter are to be excluded
+     * from query results; false if only objects matching filter are to
+     * be included in the results
+     */
+    public boolean isExclusion();
+    
+    /**
+     * @return Set<String> representing filter membership, or null
+     * for a pattern filter
+     */
+    public Set getRoster();
+    
+    /**
+     * @return LIKE pattern, or null for a roster filter
+     */
+    public String getPattern();
 }
 
-
-// End MedAbstractNameDirectory.java
+// End FarragoMedMetadataFilter.java

@@ -39,6 +39,7 @@ import org.eigenbase.rel.jdbc.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
 
@@ -53,18 +54,24 @@ class MedMockDataServer extends MedAbstractDataServer
 {
     //~ Static fields/initializers --------------------------------------------
 
+    public static final String PROP_SCHEMA_NAME = "FOREIGN_SCHEMA_NAME";
+    public static final String PROP_TABLE_NAME = "FOREIGN_TABLE_NAME";
     public static final String PROP_ROW_COUNT = "ROW_COUNT";
     public static final String PROP_EXECUTOR_IMPL = "EXECUTOR_IMPL";
     public static final String PROPVAL_JAVA = "JAVA";
     public static final String PROPVAL_FENNEL = "FENNEL";
 
+    private MedAbstractDataWrapper wrapper;
+    
     //~ Constructors ----------------------------------------------------------
 
     MedMockDataServer(
+        MedAbstractDataWrapper wrapper,
         String serverMofId,
         Properties props)
     {
         super(serverMofId, props);
+        this.wrapper = wrapper;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -78,7 +85,12 @@ class MedMockDataServer extends MedAbstractDataServer
     public FarragoMedNameDirectory getNameDirectory()
         throws SQLException
     {
-        return new MedMockNameDirectory(this);
+        if (getForeignSchemaName() == null) {
+            return null;
+        }
+        return new MedMockNameDirectory(
+            this,
+            FarragoMedMetadataQuery.OTN_SCHEMA);
     }
 
     // implement FarragoMedDataServer
@@ -90,16 +102,51 @@ class MedMockDataServer extends MedAbstractDataServer
         Map columnPropMap)
         throws SQLException
     {
+
+        if (rowType == null) {
+            rowType = createMockRowType(typeFactory);
+        }
+        
         assert (rowType.getFieldList().size() == 1);
         RelDataType type = rowType.getFields()[0].getType();
         assert (!type.isNullable());
         assert (typeFactory.getClassForPrimitive(type) != null);
-        long nRows = getLongProperty(tableProps, PROP_ROW_COUNT, 10);
+
+        // TODO jvs 5-Aug-2005:  clean up usage of server properties
+        // as defaults
+        
+        long nRows = getLongProperty(
+            tableProps, PROP_ROW_COUNT,
+            getLongProperty(getProperties(), PROP_ROW_COUNT, 10));
+        
         String executorImpl =
-            tableProps.getProperty(PROP_EXECUTOR_IMPL, PROPVAL_JAVA);
+            tableProps.getProperty(
+                PROP_EXECUTOR_IMPL,
+                getProperties().getProperty(
+                    PROP_EXECUTOR_IMPL, PROPVAL_JAVA));
         assert (executorImpl.equals(PROPVAL_JAVA)
             || executorImpl.equals(PROPVAL_FENNEL));
+
+        checkNameMatch(
+            getForeignSchemaName(),
+            tableProps.getProperty(PROP_SCHEMA_NAME));
+        
+        checkNameMatch(
+            getForeignTableName(),
+            tableProps.getProperty(PROP_TABLE_NAME));
+        
         return new MedMockColumnSet(localName, rowType, nRows, executorImpl);
+    }
+
+    private void checkNameMatch(String expectedName, String actualName)
+    {
+        if ((expectedName != null) && (actualName != null)) {
+            if (!expectedName.equals(actualName)) {
+                throw FarragoResource.instance().newMockForeignObjectNotFound(
+                    wrapper.getRepos().getLocalizedObjectName(
+                        actualName));
+            }
+        }
     }
 
     // implement FarragoMedDataServer
@@ -119,6 +166,37 @@ class MedMockDataServer extends MedAbstractDataServer
     public void closeAllocation()
     {
         super.closeAllocation();
+    }
+
+    String getForeignSchemaName()
+    {
+        return getProperties().getProperty(PROP_SCHEMA_NAME);
+    }
+
+    String getForeignTableName()
+    {
+        return getProperties().getProperty(PROP_TABLE_NAME);
+    }
+
+    MedAbstractDataWrapper getWrapper()
+    {
+        return wrapper;
+    }
+
+    RelDataType createMockRowType(FarragoTypeFactory typeFactory)
+    {
+        return typeFactory.createStructType(
+            new RelDataType [] {
+                createMockColumnType(typeFactory), 
+            },
+            new String [] {
+                MedMockNameDirectory.COLUMN_NAME
+            });
+    }
+
+    RelDataType createMockColumnType(FarragoTypeFactory typeFactory)
+    {
+        return typeFactory.createSqlType(SqlTypeName.Integer);
     }
 }
 
