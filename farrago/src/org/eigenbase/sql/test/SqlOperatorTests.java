@@ -747,6 +747,15 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkString("nullif('a','bc')", "a", "todo: VARCHAR(2) NOT NULL");
         getTester().checkString("nullif('a',cast(null as varchar(1)))", "a", "todo: VARCHAR(1) NOT NULL");
         getTester().checkNull("nullif(cast(null as varchar(1)),'a')");
+        // Error message reflects the fact that Nullif is expanded before it is
+        // validated (like a C macro). Not perfect, but good enough.
+        getTester().checkFails("1 + ^nullif(1, date '2005-8-4')^ + 2",
+            "(?s)Cannot apply '=' to arguments of type '<INTEGER> = <DATE>'\\..*");
+        // TODO: fix bug 324.
+        if (todo) {
+        getTester().checkFails("1 + ^nullif(1, 2, 3)^ + 2",
+            "invalid number of arguments to NULLIF");
+        }
     }
 
     public void testCoalesceFunc()
@@ -754,6 +763,8 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().setFor(SqlStdOperatorTable.coalesceFunc);
         getTester().checkString("coalesce('a','b')", "a", "CHAR(1) NOT NULL");
         getTester().checkScalarExact("coalesce(null,null,3)", "3");
+        getTester().checkFails("1 + ^coalesce('a', 'b', 1, null)^ + 2",
+            "Illegal mixing of types in CASE or COALESCE statement");
     }
 
     public void testUserFunc()
@@ -960,32 +971,84 @@ public abstract class SqlOperatorTests extends TestCase
     public void testCountFunc()
     {
         getTester().setFor(SqlStdOperatorTable.countOperator);
-        getTester().checkScalarExact("count(*)","INTEGER");
-        getTester().checkScalarExact("count('name')","INTEGER");
-        getTester().checkScalarExact("count(1)","INTEGER");
-        getTester().checkScalarExact("count(1.2)","INTEGER");
+        getTester().checkType("count(*)","INTEGER NOT NULL");
+        getTester().checkType("count('name')","INTEGER NOT NULL");
+        getTester().checkType("count(1)","INTEGER NOT NULL");
+        getTester().checkType("count(1.2)","INTEGER NOT NULL");
+        getTester().checkType("COUNT(DISTINCT 'x')","INTEGER NOT NULL");
+        getTester().checkFails("^COUNT()^",
+            "Invalid number of arguments to function 'COUNT'. Was expecting 1 arguments");
+        getTester().checkFails("^COUNT(1, 2)^",
+            "Invalid number of arguments to function 'COUNT'. Was expecting 1 arguments");
+        final String[] values = {"0", "CAST(null AS INTEGER)", "1", "0"};
+        getTester().checkAgg("COUNT(x)", values, new Integer(3), 0);
+        getTester().checkAgg("COUNT(CASE x WHEN 0 THEN NULL ELSE -1 END)",
+            values, new Integer(2), 0);
+        getTester().checkAgg("COUNT(DISTINCT x)", values, new Integer(2), 0);
+        // string values -- note that empty string is not null
+        final String[] stringValues = {"'a'", "CAST(NULL AS VARCHAR(1))", "''"};
+        getTester().checkAgg("COUNT(*)", stringValues, new Integer(3), 0);
+        getTester().checkAgg("COUNT(x)", stringValues, new Integer(2), 0);
+        getTester().checkAgg("COUNT(DISTINCT x)", stringValues, new Integer(2), 0);
+        getTester().checkAgg("COUNT(DISTINCT 123)", stringValues, new Integer(1), 0);
    }
+
+    public void testSumFunc()
+    {
+        getTester().setFor(SqlStdOperatorTable.sumOperator);
+        getTester().checkFails("sum(^*^)",
+            "Unknown identifier '\\*'");
+        getTester().checkFails("^sum('name')^",
+            "(?s)Cannot apply 'SUM' to arguments of type 'SUM\\(<CHAR\\(4\\)>\\)'\\. Supported form\\(s\\): 'SUM\\(<NUMERIC>\\)'.*");
+        getTester().checkType("sum(1)","INTEGER NOT NULL");
+        getTester().checkType("sum(1.2)","DECIMAL(2, 1) NOT NULL");
+        getTester().checkType("sum(DISTINCT 1.5)","DECIMAL(2, 1) NOT NULL");
+        getTester().checkFails("^sum()^",
+            "Invalid number of arguments to function 'SUM'. Was expecting 1 arguments");
+        getTester().checkFails("^sum(1, 2)^",
+            "Invalid number of arguments to function 'SUM'. Was expecting 1 arguments");
+        getTester().checkFails("^sum(cast(null as varchar(2)))^",
+            "(?s)Cannot apply 'SUM' to arguments of type 'SUM\\(<VARCHAR\\(2\\)>\\)'\\. Supported form\\(s\\): 'SUM\\(<NUMERIC>\\)'.*");
+        final String[] values = {"0", "CAST(null AS INTEGER)", "2", "2"};
+        getTester().checkAgg("sum(x)", values, new Integer(4), 0);
+        getTester().checkAgg("sum(CASE x WHEN 0 THEN NULL ELSE -1 END)",
+            values, new Integer(-3), 0);
+        getTester().checkAgg(
+            "sum(DISTINCT CASE x WHEN 0 THEN NULL ELSE -1 END)",
+            values, new Integer(-1), 0);
+        getTester().checkAgg("sum(DISTINCT x)", values, new Integer(2), 0);
+    }
 
     public void testAvgFunc()
     {
         getTester().setFor(SqlStdOperatorTable.avgOperator);
+        getTester().checkFails("avg(^*^)",
+            "Unknown identifier '\\*'");
+        getTester().checkFails("^avg(cast(null as varchar(2)))^",
+            "(?s)Cannot apply 'AVG' to arguments of type 'AVG\\(<VARCHAR\\(2\\)>\\)'\\. Supported form\\(s\\): 'AVG\\(<NUMERIC>\\)'.*");
         getTester().checkType("AVG(CAST(NULL AS INTEGER))", "INTEGER");
+        getTester().checkType("AVG(DISTINCT 1.5)", "DECIMAL(2, 1) NOT NULL");
+        final String[] values = {"0", "CAST(null AS INTEGER)", "3", "3"};
+        getTester().checkAgg("AVG(x)", values, new Double(1), 0);
+        getTester().checkAgg("AVG(DISTINCT x)", values, new Double(1.5), 0);
         getTester().checkAgg(
-            "AVG(x)", new String[] {"0", "CAST(null AS INTEGER)", "1"}, new Double(0.5), 0);
+            "avg(DISTINCT CASE x WHEN 0 THEN NULL ELSE -1 END)",
+            values, new Integer(-1), 0);
     }
 
     public void testLastValueFunc()
     {
         getTester().setFor(SqlStdOperatorTable.lastValueOperator);
-        getTester().checkScalarExact("last_value(1)","INTEGER");
+        getTester().checkScalarExact("last_value(1)","1");
         getTester().checkScalarApprox("last_value(1.2)","DECIMAL(2, 1) NOT NULL", 1.2, 0);
         getTester().checkType("last_value('name')","CHAR(4) NOT NULL");
         getTester().checkString("last_value('name')","name","todo: CHAR(4) NOT NULL");
     }
+
     public void testFirstValueFunc()
     {
         getTester().setFor(SqlStdOperatorTable.firstValueOperator);
-        getTester().checkScalarExact("first_value(1)","INTEGER");
+        getTester().checkScalarExact("first_value(1)","1");
         getTester().checkScalarApprox("first_value(1.2)","DECIMAL(2, 1) NOT NULL", 1.2, 0);
         getTester().checkType("first_value('name')","CHAR(4) NOT NULL");
         getTester().checkString("first_value('name')","name","todo: CHAR(4) NOT NULL");
