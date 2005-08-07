@@ -137,10 +137,9 @@ public abstract class FarragoAbstractParser implements FarragoSessionParser
                 actualEx.getMessage(),
                 x);
 
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             SqlParseException spex = parserImpl.normalizeException(ex);
-            Throwable actualEx = (spex.getCause() == null) ? spex :
-                spex.getCause();
+            Throwable actualEx = spex;
             Exception x = spex;
             final SqlParserPos pos = spex.getPos();
             if (pos != null) {
@@ -151,6 +150,7 @@ public abstract class FarragoAbstractParser implements FarragoSessionParser
             throw EigenbaseResource.instance().newParserError(
                 actualEx.getMessage(),
                 x);
+
         } finally {
             sourceString = null;
         }

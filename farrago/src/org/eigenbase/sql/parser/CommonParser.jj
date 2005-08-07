@@ -183,7 +183,7 @@ JAVACODE SqlIntervalLiteral parseIntervalLiteral(
  * Converts a ParseException (local to this particular instantiation
  * of the parser) into a SqlParseException (common to all parsers).
  */
-JAVACODE SqlParseException convertException(Exception ex)
+JAVACODE SqlParseException convertException(Throwable ex)
 {
     if (ex instanceof SqlParseException) {
         return (SqlParseException) ex;
@@ -203,26 +203,25 @@ JAVACODE SqlParseException convertException(Exception ex)
                 token.endLine,
                 token.endColumn);
         }
+    } else if (ex instanceof TokenMgrError) {
+        TokenMgrError tme = (TokenMgrError) ex;
+        expectedTokenSequences = null;
+        tokenImage = null;
+        // Example:
+        //    Lexical error at line 3, column 24.  Encountered "#" after "a".
+        final java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(
+            "(?s)Lexical error at line ([0-9]+), column ([0-9]+).*");
+        java.util.regex.Matcher matcher = pattern.matcher(ex.getMessage());
+        if (matcher.matches()) {
+            int line = Integer.parseInt(matcher.group(1));
+            int column = Integer.parseInt(matcher.group(2));
+            pos = new SqlParserPos(line, column, line, column);
+        }
     }
     
-    // REVIEW jvs 19-July-2005:  What is this commented-out code doing here?
-    // Please add an English comment to explain why it is disabled, or get rid
-    // of it.
-    
-//    if (ex.getMessage().length() == 0) {
-//        return new SqlParseException(ex, pos);
-//    } else {
-          SqlParseException spex = new SqlParseException(
-              ex.getMessage(), pos, expectedTokenSequences, tokenImage);
-          // TODO jvs 19-July-2005:  this should be enabled so that
-          // the trace log will see the real underlying cause, but when
-          // I do so,  it causes lots of test diffs (back to Farrago
-          // parser exception instead of SqlParserException).
-          /*
-          spex.initCause(ex);
-          */
-          return spex;
-//    }
+    SqlParseException spex = new SqlParseException(
+        ex.getMessage(), pos, expectedTokenSequences, tokenImage, ex);
+    return spex;
 }
 
 /**

@@ -185,6 +185,15 @@ public class SqlParserTest extends TestCase
             ".*");
     }
 
+    public void testInvalidToken()
+    {
+        // Causes problems to the test infrastructure because the token mgr
+        // throws a java.lang.Error. The usual case is that the parser throws
+        // an exception.
+        checkFails("values (a^#^b)",
+            "Lexical error at line 1, column 10\\.  Encountered: \"#\" \\(35\\), after : \"\"");
+    }
+
     public void _testDerivedColumnList()
     {
         check("select * from emp (empno, gender) where true", "foo");

@@ -79,7 +79,7 @@ public class FarragoParserImpl extends FarragoAbstractParserImpl
             token.beginColumn);
     }
 
-    public SqlParseException normalizeException(Exception ex)
+    public SqlParseException normalizeException(Throwable ex)
     {
         try {
             if (ex instanceof ParseException) {

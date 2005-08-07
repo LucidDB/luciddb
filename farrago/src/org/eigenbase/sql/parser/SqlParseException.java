@@ -22,8 +22,6 @@
 */
 package org.eigenbase.sql.parser;
 
-import org.eigenbase.sql.parser.impl.*;
-
 import java.util.Collection;
 import java.util.TreeSet;
 
@@ -34,29 +32,30 @@ import java.util.TreeSet;
  * @author John V. Sichi
  * @version $Id$
  */
-public class SqlParseException extends ParseException
+public class SqlParseException extends Exception
 {
     private final SqlParserPos pos;
-
-    public SqlParseException(ParseException ex, SqlParserPos pos)
-    {
-        super(
-            ex.currentToken,
-            ex.expectedTokenSequences,
-            ex.tokenImage);
-        this.pos = pos;
-    }
+    private final int[][] expectedTokenSequences;
+    private final String[] tokenImages;
+    /**
+     * The original exception thrown by the generated parser. Unfortunately,
+     * each generated parser throws exceptions of a different class. So, we
+     * keep the exception for forensic purposes, but don't print it publicly.
+     */
+    private final Throwable parserException;
 
     public SqlParseException(
         String message,
         SqlParserPos pos,
         int[][] expectedTokenSequences,
-        String[] tokenImages)
+        String[] tokenImages,
+        Throwable parserException)
     {
-        super(message);
+        super(message, parserException);
         this.pos = pos;
         this.expectedTokenSequences = expectedTokenSequences;
-        this.tokenImage = tokenImages;
+        this.tokenImages = tokenImages;
+        this.parserException = parserException;
     }
 
     public SqlParserPos getPos()
@@ -73,9 +72,19 @@ public class SqlParseException extends ParseException
         final TreeSet set = new TreeSet();
         for (int i = 0; i < expectedTokenSequences.length; i++) {
             int[] expectedTokenSequence = expectedTokenSequences[i];
-            set.add(tokenImage[expectedTokenSequence[0]]);
+            set.add(tokenImages[expectedTokenSequence[0]]);
         }
         return set;
+    }
+
+    public String[] getTokenImages()
+    {
+        return tokenImages;
+    }
+
+    public int[][] getExpectedTokenSequences()
+    {
+        return expectedTokenSequences;
     }
 }
 
