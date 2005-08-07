@@ -164,9 +164,9 @@ public class StandardConvertletTable extends ReflectiveConvertletTable
         final SqlValidator validator = cx.getValidator();
         // Need to set the type of the NULL literal, since it can only be
         // deduced from the context.
-        validator.setValidatedNodeType(
-            nullLiteral,
-            validator.getValidatedNodeType(call));
+        RelDataType type = validator.getValidatedNodeType(call);
+        type = cx.getTypeFactory().createTypeWithNullability(type, true);
+        validator.setValidatedNodeType(nullLiteral, type);
         final SqlNode kase =
             SqlStdOperatorTable.caseOperator.createCall(
                 count,

@@ -1034,6 +1034,7 @@ require version '${required.ant.version}'."/>
     </delete>
     <mkdir dir="${javadoc.dir}"/>
     <javadoc
+      maxmemory="512m"
       private="true"
       destdir="${javadoc.dir}"
       source="${farrago.javasrc.version}"
