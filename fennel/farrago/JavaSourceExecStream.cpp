@@ -127,6 +127,6 @@ JavaSourceExecStream::getOutputBufProvision() const
     return BUFPROV_PRODUCER;
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dev/fennel/farrago/JavaSourceExecStream.cpp#5 $");
+FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/farrago/JavaSourceExecStream.cpp#5 $");
 
 // End JavaSourceExecStream.cpp
