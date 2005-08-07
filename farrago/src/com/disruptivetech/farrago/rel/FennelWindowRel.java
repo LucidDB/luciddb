@@ -158,6 +158,11 @@ public class FennelWindowRel extends FennelSingleRel
             termList.add("input#" + i);
             valueList.add(inputExpr);
         }
+        for (int i = 0; i < aggs.length; i++) {
+            RexNode agg = aggs[i];
+            termList.add("agg#" + i);
+            valueList.add(agg);
+        }
         for (int i = 0; i < outputExprs.length; i++) {
             RexNode outputExpr = outputExprs[i];
             termList.add("output#" + i);
