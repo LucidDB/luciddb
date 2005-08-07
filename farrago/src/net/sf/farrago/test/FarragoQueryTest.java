@@ -172,6 +172,9 @@ public class FarragoQueryTest extends FarragoTestCase
         assertEquals(schemaName, ((CwmSchema) obj).getName());
     }
 
+    // REVIEW jvs 6-Aug-2005:  Tai, please fix and uncomment these
+    // or remove them.
+
     /**
      * Tests execution of a LURQL query to check role cycle. If role_2 has been
      * granted to role_1,  then role_1 can't be granted to role_2.
@@ -180,52 +183,54 @@ public class FarragoQueryTest extends FarragoTestCase
      * specified role (to be granted to the first specified role) does not
      * exist.
      */
-//     public void testCheckSecurityRoleCyleLurqlQuery()
-//         throws Exception
-//     {
-//         // Create Role_1,  Role_2
-//         // Grant Role_2 to Role_1
-//         // Grant Role_1 to Role_2. This should fail
+    /*
+     public void testCheckSecurityRoleCyleLurqlQuery()
+         throws Exception
+     {
+         // Create Role_1,  Role_2
+         // Grant Role_2 to Role_1
+         // Grant Role_1 to Role_2. This should fail
 
-//         // TODO: remove this temporary setting of the session current user
-//         // once we have a proper login i.e. login user exists in the database
-//         FarragoJdbcEngineConnection farragoConnection =
-//             (FarragoJdbcEngineConnection) connection;
-//         FarragoSession session = (FarragoSession)
-//             farragoConnection.getSession();
-//         session.getSessionVariables().currentUserName = "_SYSTEM";
+         // TODO: remove this temporary setting of the session current user
+         // once we have a proper login i.e. login user exists in the database
+         FarragoJdbcEngineConnection farragoConnection =
+             (FarragoJdbcEngineConnection) connection;
+         FarragoSession session = (FarragoSession)
+             farragoConnection.getSession();
+         session.getSessionVariables().currentUserName = "_SYSTEM";
         
-//         stmt.execute("create Role ROLE_1");
-//         stmt.execute("create Role ROLE_2");
-//         stmt.execute("grant role ROLE_2 to ROLE_1");
+         stmt.execute("create Role ROLE_1");
+         stmt.execute("create Role ROLE_2");
+         stmt.execute("grant role ROLE_2 to ROLE_1");
         
-//         String lurql =
-//             FarragoInternalQuery.instance().getTestSecurityRoleCycleCheck();
-//         assertTrue(checkLurqlSecurityRoleCycle(lurql,  "ROLE_1",  "ROLE_2"));
-//     }
+         String lurql =
+             FarragoInternalQuery.instance().getTestSecurityRoleCycleCheck();
+         assertTrue(checkLurqlSecurityRoleCycle(lurql,  "ROLE_1",  "ROLE_2"));
+     }
     
-//     private boolean checkLurqlSecurityRoleCycle(
-//         String lurql, String granteeName, String grantedRoleName)
-//         throws Exception
-//     {
-//         Map argMap = new HashMap();
-//         argMap.put("granteeName", granteeName);
-//         FarragoJdbcEngineConnection farragoConnection =
-//             (FarragoJdbcEngineConnection) connection;
-//         FarragoSession session = (FarragoSession)
-//             farragoConnection.getSession();
-//         Collection result = session.executeLurqlQuery(
-//             lurql, argMap);
-//         Iterator iter = result.iterator();
-//         while(iter.hasNext())
-//         {
-//             FemRole role = (FemRole) iter.next();
-//             if (role.getName().equals(grantedRoleName)) {
-//                 return true;
-//             }
-//         }
-//         return false;
-//     }
+     private boolean checkLurqlSecurityRoleCycle(
+         String lurql, String granteeName, String grantedRoleName)
+         throws Exception
+     {
+         Map argMap = new HashMap();
+         argMap.put("granteeName", granteeName);
+         FarragoJdbcEngineConnection farragoConnection =
+             (FarragoJdbcEngineConnection) connection;
+         FarragoSession session = (FarragoSession)
+             farragoConnection.getSession();
+         Collection result = session.executeLurqlQuery(
+             lurql, argMap);
+         Iterator iter = result.iterator();
+         while(iter.hasNext())
+         {
+             FemRole role = (FemRole) iter.next();
+             if (role.getName().equals(grantedRoleName)) {
+                 return true;
+             }
+         }
+         return false;
+     }
+    */
 }
 
 // End FarragoQueryTest.java
