@@ -217,6 +217,10 @@ bool TupleDescriptor::storageEqual(
     TupleDescriptor const &other) const
 {
     uint sz = size();
+    if (other.size() != sz) {
+        return false;
+    }
+
     TupleAttributeDescriptor const * us;
     TupleAttributeDescriptor const * them;
     
