@@ -22,11 +22,14 @@
 */
 package net.sf.farrago.namespace;
 
+import net.sf.farrago.fem.med.*;
+
 import java.sql.*;
 import java.util.*;
 
 import net.sf.farrago.FarragoMetadataFactory;
 import net.sf.farrago.type.*;
+import net.sf.farrago.catalog.*;
 
 
 /**
@@ -48,7 +51,8 @@ public interface FarragoMedNameDirectory
      * @param typeFactory FarragoTypeFactory to use
      * for defining types
      *
-     * @param foreignName foreign compound identifier to lookup
+     * @param foreignName simple name of foreign ColumnSet to lookup
+     * as a direct child of this directory
      *
      * @param localName compound identifier by which
      * FarragoMedColumnSet will be referenced locally
@@ -59,7 +63,7 @@ public interface FarragoMedNameDirectory
      */
     public FarragoMedColumnSet lookupColumnSet(
         FarragoTypeFactory typeFactory,
-        String [] foreignName,
+        String foreignName,
         String [] localName)
         throws SQLException;
 
@@ -99,6 +103,20 @@ public interface FarragoMedNameDirectory
         FarragoMedMetadataQuery query,
         FarragoMedMetadataSink sink)
         throws SQLException;
+
+    /**
+     * Creates a new instance of FemBaseColumnSet in the catalog to represent
+     * an imported table.
+     *
+     * @param repos repository storing catalog
+     *
+     * @param tableName name of imported table
+     *
+     * @return new object in catalog
+     */
+    public FemBaseColumnSet newImportedColumnSet(
+        FarragoRepos repos,
+        String tableName);
 }
 
 

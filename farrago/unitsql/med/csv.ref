@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/ddl/med.sql#4 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/med/csv.sql#1 $
 0: jdbc:farrago:> -- Test SQL/MED data access to CSV files
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- create a private wrapper for jdbc (don't use the standard jdbc wrapper)
@@ -30,7 +30,7 @@
 0: jdbc:farrago:> create schema csv_schema;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- create a foreign table definition
-0: jdbc:farrago:> create foreign table csv_schema.example(
+0: jdbc:farrago:> create foreign table csv_schema.explicit_example(
 . . . . . . . . >     id int not null,
 . . . . . . . . >     name varchar(50) not null,
 . . . . . . . . >     extra_field char(1) not null)
@@ -42,7 +42,7 @@
 . . . . . . . . >     name,
 . . . . . . . . >     extra_field 
 . . . . . . . . > from 
-. . . . . . . . >     csv_schema.example 
+. . . . . . . . >     csv_schema.explicit_example 
 . . . . . . . . > order by 3;
 +------------+------------------------------------------+--------------+
 | IDPLUSONE  |                   NAME                   | EXTRA_FIELD  |
@@ -54,5 +54,11 @@
 | 124        | "S,"                                     | F            |
 | 235        | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |
 +------------+------------------------------------------+--------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  required metadata support not available
+0: jdbc:farrago:> import foreign schema testdata
+. . . . . . . . > from server csv_server
+. . . . . . . . > into csv_schema;
+Error: Support for foreign schema import not available in data server "SYS_BOOT"."CSV_SERVER" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

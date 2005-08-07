@@ -143,9 +143,12 @@ public class DdlImportForeignSchemaStmt extends DdlStmt
 
             // Create a sink to receive query results
             ImportSink sink = new ImportSink(
-                ddlValidator, query);
+                ddlValidator, query, schemaDir);
             
-            schemaDir.queryMetadata(query, sink);
+            if (!schemaDir.queryMetadata(query, sink)) {
+                throw FarragoResource.instance().newValidatorImportUnsupported(
+                    ddlValidator.getRepos().getLocalizedObjectName(femServer));
+            }
 
             if (requiredSet != null) {
                 requiredSet.removeAll(sink.getImportedTableNames());
@@ -157,8 +160,9 @@ public class DdlImportForeignSchemaStmt extends DdlStmt
                 }
             }
 
-            // TODO:  drop new tables without any columns; 
-            // improve error messages for duplicate table/column names
+            // TODO:  error handling for duplicate table/column names
+            sink.dropStragglers();
+
         } catch (SQLException ex) {
             throw FarragoResource.instance().newValidatorImportFailed(
                 ddlValidator.getRepos().getLocalizedObjectName(
@@ -170,6 +174,9 @@ public class DdlImportForeignSchemaStmt extends DdlStmt
 
     private Set convertRoster()
     {
+        if (roster == null) {
+            return null;
+        }
         Set set = new HashSet();
         Iterator iter = roster.iterator();
         while (iter.hasNext()) {
@@ -192,35 +199,41 @@ public class DdlImportForeignSchemaStmt extends DdlStmt
         private final Map tableMap;
 
         private DdlMedHandler medHandler;
+
+        private FarragoMedNameDirectory directory;
         
         ImportSink(
             FarragoSessionDdlValidator ddlValidator,
-            FarragoMedMetadataQuery query)
+            FarragoMedMetadataQuery query,
+            FarragoMedNameDirectory directory)
         {
             super(query, ddlValidator.getTypeFactory());
 
             this.ddlValidator = ddlValidator;
+            this.directory = directory;
+            
             tableMap = new HashMap();
             medHandler = new DdlMedHandler(ddlValidator);
         }
 
         // implement FarragoMedMetadataSink
-        public void writeObjectDescriptor(
+        public boolean writeObjectDescriptor(
             String name,
             String typeName,
             String remarks,
             Map properties)
         {
             if (!shouldInclude(name, typeName, false)) {
-                return;
+                return false;
             }
             
-            FemForeignTable table = getTable(name);
+            FemBaseColumnSet table = createTable(name);
             setStorageOptions(table, properties);
+            return true;
         }
         
         // implement FarragoMedMetadataSink
-        public void writeColumnDescriptor(
+        public boolean writeColumnDescriptor(
             String tableName,
             String columnName,
             int ordinal,
@@ -232,15 +245,18 @@ public class DdlImportForeignSchemaStmt extends DdlStmt
             if (!shouldInclude(
                     tableName, FarragoMedMetadataQuery.OTN_TABLE, true))
             {
-                return;
+                return false;
             }
             if (!shouldInclude(
                     columnName, FarragoMedMetadataQuery.OTN_COLUMN, false))
             {
-                return;
+                return false;
             }
 
-            FemForeignTable table = getTable(tableName);
+            FemBaseColumnSet table = (FemBaseColumnSet) tableMap.get(tableName);
+            if (table == null) {
+                return false;
+            }
 
             FemStoredColumn column =
                 ddlValidator.getRepos().newFemStoredColumn();
@@ -257,6 +273,8 @@ public class DdlImportForeignSchemaStmt extends DdlStmt
             table.getFeature().add(column);
 
             // TODO:  set column remarks, default value
+
+            return true;
         }
 
         Set getImportedTableNames()
@@ -264,16 +282,26 @@ public class DdlImportForeignSchemaStmt extends DdlStmt
             return tableMap.keySet();
         }
 
-        private FemForeignTable getTable(String tableName)
+        void dropStragglers()
         {
-            FemForeignTable table = (FemForeignTable) tableMap.get(tableName);
-            if (table == null) {
-                table = ddlValidator.getRepos().newFemForeignTable();
-                table.setName(tableName);
-                table.setServer(femServer);
-                localSchema.getOwnedElement().add(table);
-                tableMap.put(tableName, table);
+            // Drop all tables with no columns.
+            Iterator iter = tableMap.values().iterator();
+            while (iter.hasNext()) {
+                FemBaseColumnSet table = (FemBaseColumnSet) iter.next();
+                if (table.getFeature().isEmpty()) {
+                    table.refDelete();
+                }
             }
+        }
+
+        private FemBaseColumnSet createTable(String tableName)
+        {
+            FemBaseColumnSet table = directory.newImportedColumnSet(
+                ddlValidator.getRepos(), tableName);
+            table.setName(tableName);
+            table.setServer(femServer);
+            localSchema.getOwnedElement().add(table);
+            tableMap.put(tableName, table);
             return table;
         }
 

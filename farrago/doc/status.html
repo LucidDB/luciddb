@@ -11,13 +11,13 @@
 <h1>What's Working Already?</h1>
 
 Here's a laundry list of SQL features which are already working in
-Farrago as of release 0.5.  Restrictions are noted inline as well as
-in subsequent sections.  If a sub-feature isn't mentioned (e.g. CHECK
-clause in CREATE TABLE), it isn't available yet.  Everything is
-supposed to work according to the SQL standard, so if something
-doesn't, that's either a bug or an incomplete feature.  Which
-standard?  Normal procedure is to consult the SQL:2003 standard and
-cross-check it with SQL-92 and SQL:1999 to see if there are any
+Farrago as of release 0.5.  Restrictions and 0.6 features are noted
+inline as well as in subsequent sections.  If a sub-feature isn't
+mentioned (e.g. CHECK clause in CREATE TABLE), it isn't available yet.
+Everything is supposed to work according to the SQL standard, so if
+something doesn't, that's either a bug or an incomplete feature.
+Which standard?  Normal procedure is to consult the SQL:2003 standard
+and cross-check it with SQL-92 and SQL:1999 to see if there are any
 incompatibilities.
 
 <h2>DDL</h2>
@@ -54,7 +54,7 @@ and "View").  Likewise for SYS_FEM.
 <li>CREATE SCHEMA: a schema can be created by itself, or together with
 all of its contents in the same statement.  The AUTHORIZATION clause
 is currently parsed but ignored since users and roles are not yet
-implemented.
+implemented (under development for 0.6).
 
 <li>CREATE TABLE: every table must have a primary key.  Supported
 column datatypes are BOOLEAN, TINYINT, SMALLINT, INTEGER, BIGINT,
@@ -111,7 +111,8 @@ temporary tables support the same features as permanent tables
 FOREIGN DATA WRAPPER, CREATE/DROP SERVER, and CREATE/DROP FOREIGN
 TABLE are working.  Implementations for JDBC and MDR are
 available (the MDR implementation is already being used for exposing
-the catalog contents via SQL).
+the catalog contents via SQL).  IMPORT FOREIGN SCHEMA is working
+in version 0.6.
 
 <li><a href="design/UserDefinedTypesAndRoutines.html#Routines">CREATE
 FUNCTION/PROCEDURE</a>: supports functions with SQL-defined bodies

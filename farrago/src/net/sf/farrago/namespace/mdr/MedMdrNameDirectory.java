@@ -136,11 +136,13 @@ class MedMdrNameDirectory extends MedAbstractNameDirectory
     // implement FarragoMedNameDirectory
     public FarragoMedColumnSet lookupColumnSet(
         FarragoTypeFactory typeFactory,
-        String [] foreignName,
+        String foreignName,
         String [] localName)
         throws SQLException
     {
-        return lookupColumnSetAndImposeType(typeFactory, foreignName,
+        return lookupColumnSetAndImposeType(
+            typeFactory,
+            new String [] { foreignName },
             localName, null);
     }
 

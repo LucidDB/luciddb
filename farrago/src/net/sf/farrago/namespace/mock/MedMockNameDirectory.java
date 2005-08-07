@@ -68,25 +68,14 @@ class MedMockNameDirectory extends MedAbstractNameDirectory
     // implement FarragoMedNameDirectory
     public FarragoMedColumnSet lookupColumnSet(
         FarragoTypeFactory typeFactory,
-        String [] foreignName,
+        String foreignName,
         String [] localName)
         throws SQLException
     {
-        int iName = 0;
-        if (scope.equals(FarragoMedMetadataQuery.OTN_SCHEMA)) {
-            if (foreignName.length != 2) {
-                return null;
-            }
-            if (!foreignName[iName].equals(server.getForeignSchemaName())) {
-                return null;
-            }
-            ++iName;
-        } else {
-            if (foreignName.length != 1) {
-                return null;
-            }
+        if (!scope.equals(FarragoMedMetadataQuery.OTN_TABLE)) {
+            return null;
         }
-        if (!foreignName[iName].equals(server.getForeignTableName())) {
+        if (!foreignName.equals(server.getForeignTableName())) {
             return null;
         }
 

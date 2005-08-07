@@ -80,6 +80,7 @@ options(
     driver_class 'org.hsqldb.jdbcDriver',
     url 'jdbc:hsqldb:testcases/hsqldb/scott',
     user_name 'SA',
-    schema_name 'SALES');
+    schema_name 'SALES',
+    table_types 'TABLE,VIEW');
 
 commit;

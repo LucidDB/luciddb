@@ -31,9 +31,14 @@ import java.util.*;
 /**
  * FarragoMedMetadataSink provides a target for instances of {@link
  * FarragoMedNameDirectory} to write metadata results in response to a {@link
- * FarragoMedMetadataQuery}.  Results may be written in any dependency order
- * (e.g. columns before their containing table).  However, columns must
+ * FarragoMedMetadataQuery}.  Results must be written in dependency order
+ * (e.g. a table before its columns), and columns must
  * be written in ordinal order.
+ *
+ *<p>
+ *
+ * Results may be filtered as they are written, in which case the sink
+ * reports the filter result back to the caller.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -49,11 +54,14 @@ public interface FarragoMedMetadataSink
      * @param type object type name, from enumeration in
      * {@link FarragoMedMetadataQuery}
      *
-     * @param remarks object description
+     * @param remarks object description, or null for none
      *
      * @param properties storage options
+     *
+     * @return true if object was accepted; false if object was
+     * filtered out
      */
-    public void writeObjectDescriptor(
+    public boolean writeObjectDescriptor(
         String name,
         String typeName,
         String remarks,
@@ -70,13 +78,16 @@ public interface FarragoMedMetadataSink
      *
      * @param type column datatype
      *
-     * @param remarks column description
+     * @param remarks column description, or null for none
      *
      * @param defaultValue column default value, or null for none
      *
      * @param properties storage options
+     *
+     * @return true if object was accepted; false if object was
+     * filtered out
      */
-    public void writeColumnDescriptor(
+    public boolean writeColumnDescriptor(
         String tableName,
         String columnName,
         int ordinal,

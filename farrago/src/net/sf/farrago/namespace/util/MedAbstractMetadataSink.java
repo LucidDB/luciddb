@@ -26,6 +26,10 @@ import net.sf.farrago.type.*;
 
 import org.eigenbase.util.*;
 
+import java.io.*;
+import java.util.*;
+import java.util.regex.*;
+
 /**
  * MedAbstractMetadataSink is an abstract base class for implementations
  * of the {@link FarragoMedMetadataSink} interface.
@@ -37,6 +41,7 @@ public abstract class MedAbstractMetadataSink implements FarragoMedMetadataSink
 {
     private final FarragoMedMetadataQuery query;
     private final FarragoTypeFactory typeFactory;
+    private final Map patternMap;
     
     /**
      * Creates a new sink.
@@ -52,6 +57,7 @@ public abstract class MedAbstractMetadataSink implements FarragoMedMetadataSink
     {
         this.query = query;
         this.typeFactory = typeFactory;
+        patternMap = new HashMap();
     }
 
     /**
@@ -79,26 +85,54 @@ public abstract class MedAbstractMetadataSink implements FarragoMedMetadataSink
         if (filter == null) {
             return true;
         }
+        boolean included = false;
         if (filter.getRoster() != null) {
-            boolean included = false;
             if (filter.getRoster().contains(objectName)) {
                 included = true;
             }
-            if (filter.isExclusion()) {
-                included = !included;
-            }
-            return included;
         } else {
-            // TODO jvs 6-Aug-2005:  share code with Java implementation
-            // of LIKE expression
-            throw Util.needToImplement("IMPORT FOREIGN SCHEMA with LIKE");
+            Pattern pattern = getPattern(filter.getPattern());
+            included = pattern.matcher(objectName).matches();
         }
+        if (filter.isExclusion()) {
+            included = !included;
+        }
+        return included;
     }
     
     // implement FarragoMedMetadataSink
     public FarragoTypeFactory getTypeFactory()
     {
         return typeFactory;
+    }
+
+    Pattern getPattern(String likePattern)
+    {
+        Pattern pattern = (Pattern) patternMap.get(likePattern);
+        if (pattern == null) {
+            // TODO jvs 6-Aug-2005:  move this to a common location
+            // where it can be used for LIKE evaluations in SQL expressions,
+            // and enhance it with escapes, etc.
+            StringWriter regex = new StringWriter();
+            int n = likePattern.length();
+            for (int i = 0; i < n; ++i) {
+                char c = likePattern.charAt(i);
+                switch(c) {
+                case '%':
+                    regex.write(".*");
+                    break;
+                case '_':
+                    regex.write(".");
+                    break;
+                default:
+                    regex.write((int) c);
+                    break;
+                }
+            }
+            pattern = Pattern.compile(regex.toString());
+            patternMap.put(likePattern, pattern);
+        }
+        return pattern;
     }
 }
 

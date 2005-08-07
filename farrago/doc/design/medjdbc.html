@@ -13,6 +13,34 @@
 Farrago provides a plugin implementing <a href="sqlmed.html">SQL/MED access</a>
 to any foreign DBMS for which a JDBC driver is available.  
 
+<p>
+
+Farrago supports the SQL standard three-level qualifier scheme for the
+names of tables: <code>catalog.schema.table</code>.  When using the
+SQL/MED plugin for JDBC to make foreign data namespaces accessible
+from Farrago SQL queries, it is important to keep a number of points
+in mind:
+
+<ul>
+
+<li>Different JDBC drivers support different qualifier schemes.  Some
+support catalogs and schemas; others only support schemas; and still
+others support neither catalogs nor schemas.  Default values may or may
+not be in effect depending on the server connection URL.  For this
+reason, the user must be careful when defining the foreign server
+in Farrago to get the desired mapping.
+
+<li>When referencing foreign tables directly via a virtual catalog (without
+importing their metadata into a local schema), use the foreign schema
+and table name.  In this case, the catalog name will be the name given
+the foreign server via CREATE SERVER.
+
+<li>When referencing foreign table via locally defined or imported
+metadata, use the local schema and table name.  In this case, the
+catalog name will be LOCALDB.
+
+</ul>
+
 <h2>JDBC Foreign Data Wrapper Definition</h2>
 
 Because this plugin is included as part of the standard Farrago
@@ -29,8 +57,8 @@ can be specified:
 <p>
 <table border="1">
 <tr>
-<td>Name</td>
-<td>Description</td>
+<td><b>Name</b></td>
+<td><b>Description</b></td>
 </tr>
 <tr>
 <td>DRIVER_CLASS</td>
@@ -50,8 +78,38 @@ can be specified:
 </tr>
 <tr>
 <td>SCHEMA_NAME</td> 
-<td>Default schema name to use for qualifying
-tables (optional)
+<td>Artificial foreign schema name.  This option is only required for
+servers which don't support schemas.  When specified, the plugin will
+accept this schema name as a foreign qualifier when importing foreign tables
+or accessing them directly, but will omit all schema references when
+sending SQL to the foreign server.  For servers that support schemas,
+this option should never be specified; reference the real foreign schema names 
+instead.
+</td>
+</tr>
+<tr>
+<td>QUALIFYING_CATALOG_NAME</td> 
+<td>Foreign catalog name to which this server should correspond.  This
+option should only be used for servers which support multiple
+catalogs.  Normally, a default catalog is always defined for a
+connection, so this option isn't usually required.  To access multiple
+catalogs from the same physical server, create multiple logical
+servers, each with a different value for this option.
+</td>
+</tr>
+<tr>
+<td>TABLE_TYPES</td>
+<td>Comma-separated list of table types used to restrict metadata
+results for operations such as IMPORT FOREIGN SCHEMA.  For example,
+some servers mix system tables into the same schema with user tables
+and views.  To hide them, specify a value like 'TABLE,VIEW' for this
+option.  To retrieve only tables and system tables, but no views, use
+'TABLE,SYTEM TABLE'.  In general, table type names may vary across
+JDBC drivers, so check your driver's documentation or call your
+driver's DatabaseMetaData.getTableTypes() method to list the available
+types.  This option is never required; if not specified, metadata for
+all table types is returned.  No spaces are allowed in the list
+unless they make up part of the type name, e.g. 'SYSTEM TABLE'. 
 </td>
 </tr>
 </table>
@@ -80,7 +138,7 @@ definition:
 
 <h2>JDBC Foreign Table Definition</h2>
 
-The only option required when defining a JDBC foreign
+The only option always required when defining a JDBC foreign
 table is <code>TABLE_NAME</code>:
 
 <pre><code>
@@ -89,6 +147,20 @@ create schema ora_sales;
 create foreign table ora_sales.dept
 server ora_sales_server
 options(table_name 'DEPT');
+</code></pre>
+
+<p>
+
+For servers which support multiple schemas, the <code>SCHEMA_NAME</code>
+option can be specified at the table level to choose a schema other
+than the default:
+
+<pre><code>
+create schema sqlsrvr_sales;
+
+create foreign table sqlsrvr_sales.dept
+server sqlsrvr_sales_server
+options(schema_name 'DBO', table_name 'DEPT');
 </code></pre>
 
 The following JDBC API calls are made in order to validate a foreign table
@@ -156,6 +228,28 @@ multiple foreign queries may be issued, even if all of the foreign
 tables are from the same data source.)  The default isolation level is
 DBMS-dependent, and so the effect of SQL/MED queries on foreign
 concurrency control (e.g. read locks) also varies by DBMS.
+
+<h2>JDBC Metadata Import</h2>
+
+Multiple foreign table definitions can be imported into Farrago
+automatically with the IMPORT FOREIGN SCHEMA statement:
+
+<pre><code>
+import foreign schema sales
+from server ora_sales_server
+into ora_sales;
+
+select * from ora_sales.emp;
+</code></pre>
+
+<p>
+
+The following JDBC API calls are made in order to perform the import:
+
+<ul>
+<li>DatabaseMetaData.getTables
+<li>DatabaseMetaData.getColumns
+</ul>
 
 <h2>Updating JDBC Foreign Tables</h2>
 

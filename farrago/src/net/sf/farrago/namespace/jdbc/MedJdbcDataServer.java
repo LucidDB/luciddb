@@ -61,8 +61,10 @@ class MedJdbcDataServer extends MedAbstractDataServer
     public static final String PROP_URL = "URL";
     public static final String PROP_USER_NAME = "USER_NAME";
     public static final String PROP_PASSWORD = "PASSWORD";
+    public static final String PROP_CATALOG_NAME = "QUALIFYING_CATALOG_NAME";
     public static final String PROP_SCHEMA_NAME = "SCHEMA_NAME";
     public static final String PROP_TABLE_NAME = "TABLE_NAME";
+    public static final String PROP_TABLE_TYPES = "TABLE_TYPES";
 
     //~ Instance fields -------------------------------------------------------
 
@@ -70,7 +72,9 @@ class MedJdbcDataServer extends MedAbstractDataServer
     // app servers and distributed txns
     Connection connection;
     String url;
+    String catalogName;
     String schemaName;
+    String [] tableTypes;
     DatabaseMetaData databaseMetaData;
 
     //~ Constructors ----------------------------------------------------------
@@ -93,6 +97,14 @@ class MedJdbcDataServer extends MedAbstractDataServer
         String userName = props.getProperty(PROP_USER_NAME);
         String password = props.getProperty(PROP_PASSWORD);
         schemaName = props.getProperty(PROP_SCHEMA_NAME);
+        catalogName = props.getProperty(PROP_CATALOG_NAME);
+
+        String tableTypeString = props.getProperty(PROP_TABLE_TYPES);
+        if (tableTypeString == null) {
+            tableTypes = null;
+        } else {
+            tableTypes = tableTypeString.split(",");
+        }
 
         if (userName == null) {
             connection = DriverManager.getConnection(url);
@@ -116,12 +128,22 @@ class MedJdbcDataServer extends MedAbstractDataServer
     public FarragoMedNameDirectory getNameDirectory()
         throws SQLException
     {
-        return getJdbcNameDirectory();
+        return getSchemaNameDirectory();
     }
 
-    private MedJdbcNameDirectory getJdbcNameDirectory()
+    private MedJdbcNameDirectory getSchemaNameDirectory()
     {
         return new MedJdbcNameDirectory(this);
+    }
+
+    private MedJdbcNameDirectory getTableNameDirectory(String tableSchemaName)
+    {
+        if (schemaName != null) {
+            // TODO jvs 11-June-2004: this should be a real error, not an
+            // assert
+            assert(schemaName.equals(tableSchemaName));
+        }
+        return new MedJdbcNameDirectory(this, tableSchemaName);
     }
 
     // implement FarragoMedDataServer
@@ -140,9 +162,9 @@ class MedJdbcDataServer extends MedAbstractDataServer
         }
         assert (tableSchemaName != null);
         String tableName = tableProps.getProperty(PROP_TABLE_NAME);
-        String [] foreignName = new String [] { tableSchemaName, tableName };
-        return getJdbcNameDirectory().lookupColumnSetAndImposeType(typeFactory,
-            foreignName, localName, rowType);
+        MedJdbcNameDirectory directory = getTableNameDirectory(tableSchemaName);
+        return directory.lookupColumnSetAndImposeType(
+            typeFactory, tableName, localName, rowType);
     }
 
     // implement FarragoMedDataServer
