@@ -23,6 +23,7 @@
 package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.SqlValidator;
 
 /**
  * SqlNewOperator represents an SQL <code>new specification</code> such as
@@ -42,8 +43,7 @@ public class SqlNewOperator extends SqlPrefixOperator
     }
     
     // override SqlOperator
-    public SqlNode rewriteCall(
-        SqlCall call)
+    public SqlNode rewriteCall(SqlValidator validator, SqlCall call)
     {
         // New specification is purely syntactic, so we rewrite it as a
         // direct call to the constructor method.

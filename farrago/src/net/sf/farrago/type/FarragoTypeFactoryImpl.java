@@ -46,6 +46,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
+import org.eigenbase.resource.EigenbaseResource;
 
 import java.util.List;
 
@@ -145,11 +146,19 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             RelDataType type;
             if (pScale != null) {
                 assert(pPrecision != null);
+//                if (!typeName.allowsPrecScale(true, true)) {
+//                    throw EigenbaseResource.instance()
+//                        .newTypeDoesNotAllowScale(typeName.toString());
+//                }
                 type = createSqlType(
                     typeName,
                     pPrecision.intValue(),
                     pScale.intValue());
             } else if (pPrecision != null) {
+//                if (!typeName.allowsPrecScale(true, false)) {
+//                    throw EigenbaseResource.instance()
+//                        .newTypeDoesNotAllowPrecision(typeName.toString());
+//                }
                 type = createSqlType(
                     typeName,
                     pPrecision.intValue());
@@ -298,44 +307,14 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                 {
                     int iOneBased = index + 1;
                     try {
-                        SqlTypeName typeName = SqlTypeName.getNameForJdbcType(
-                            metaData.getColumnType(iOneBased));
-
-                        assert(typeName != null);
-
+                        int typeOrdinal = metaData.getColumnType(iOneBased);
                         int precision = metaData.getPrecision(iOneBased);
-                        if (SqlTypeFamily.getFamilyForSqlType(typeName)
-                            == SqlTypeFamily.Character)
-                        {
-                            if ((precision == 0) || (precision > 65535)) {
-                                // REVIEW jvs 4-Mar-2004: Need a good way to
-                                // handle drivers like hsqldb which return 0 or
-                                // large numbers to indicate unlimited
-                                // precision.
-                                precision = 2048;
-                            }
-                        }
                         int scale = metaData.getScale(iOneBased);
-
-                        RelDataType type;
-                        if (typeName.allowsScale()) {
-                            type = createSqlType(
-                                typeName, precision, scale);
-                        } else if (typeName.allowsPrec()) {
-                            type = createSqlType(
-                                typeName, precision);
-                        } else {
-                            type = createSqlType(
-                                typeName);
-                        }
-
                         boolean isNullable =
                             (metaData.isNullable(iOneBased)
                                 != ResultSetMetaData.columnNoNulls);
-                        type = createTypeWithNullability(
-                            type,
-                            isNullable);
-                        return type;
+                        return createJdbcType(
+                            typeOrdinal, precision, scale, isNullable);
                     } catch (SQLException ex) {
                         throw newSqlTypeException(ex);
                     }
@@ -343,6 +322,67 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             });
     }
 
+    // implement FarragoTypeFactory
+    public RelDataType createJdbcColumnType(ResultSet getColumnsResultSet)
+    {
+        try {
+            int typeOrdinal = getColumnsResultSet.getInt(5);
+            int precision = getColumnsResultSet.getInt(7);
+            int scale = getColumnsResultSet.getInt(9);
+            boolean isNullable =
+                getColumnsResultSet.getInt(11)
+                != DatabaseMetaData.columnNoNulls;
+            return createJdbcType(typeOrdinal, precision, scale, isNullable);
+        } catch (SQLException ex) {
+            throw newSqlTypeException(ex);
+        }
+    }
+
+    private RelDataType createJdbcType(
+        int typeOrdinal,
+        int precision,
+        int scale,
+        boolean isNullable)
+    {
+        SqlTypeName typeName = SqlTypeName.getNameForJdbcType(typeOrdinal);
+        assert(typeName != null);
+
+        if (SqlTypeFamily.getFamilyForSqlType(typeName)
+            == SqlTypeFamily.Character)
+        {
+            if ((precision == 0) || (precision > 65535)) {
+                // REVIEW jvs 4-Mar-2004: Need a good way to
+                // handle drivers like hsqldb which return 0 or
+                // large numbers to indicate unlimited
+                // precision.
+                precision = 2048;
+            }
+        }
+
+        // TODO jvs 6-Aug-2005:  get rid of this once we support fixed-point
+        // numerics
+        if (typeName == SqlTypeName.Decimal) {
+            typeName = SqlTypeName.Double;
+        }
+
+        RelDataType type;
+        if (typeName.allowsScale()) {
+            type = createSqlType(
+                typeName, precision, scale);
+        } else if (typeName.allowsPrec()) {
+            type = createSqlType(
+                typeName, precision);
+        } else {
+            type = createSqlType(
+                typeName);
+        }
+
+        type = createTypeWithNullability(
+            type,
+            isNullable);
+        return type;
+    }
+    
     private EigenbaseException newSqlTypeException(SQLException ex)
     {
         return FarragoResource.instance().newJdbcDriverTypeInfoFailed(ex);

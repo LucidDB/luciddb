@@ -27,10 +27,12 @@ import java.util.*;
 
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
+import net.sf.farrago.resource.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.util.*;
@@ -45,15 +47,20 @@ import org.eigenbase.util.*;
  */
 class MedMockNameDirectory extends MedAbstractNameDirectory
 {
+    static final String COLUMN_NAME = "MOCK_COLUMN";
+    
     //~ Instance fields -------------------------------------------------------
 
     final MedMockDataServer server;
 
+    String scope;
+
     //~ Constructors ----------------------------------------------------------
 
-    MedMockNameDirectory(MedMockDataServer server)
+    MedMockNameDirectory(MedMockDataServer server, String scope)
     {
         this.server = server;
+        this.scope = scope;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -61,14 +68,71 @@ class MedMockNameDirectory extends MedAbstractNameDirectory
     // implement FarragoMedNameDirectory
     public FarragoMedColumnSet lookupColumnSet(
         FarragoTypeFactory typeFactory,
-        String [] foreignName,
+        String foreignName,
         String [] localName)
         throws SQLException
     {
-        return null;
+        if (!scope.equals(FarragoMedMetadataQuery.OTN_TABLE)) {
+            return null;
+        }
+        if (!foreignName.equals(server.getForeignTableName())) {
+            return null;
+        }
+
+        return server.newColumnSet(
+            localName,
+            server.getProperties(),
+            typeFactory,
+            server.createMockRowType(typeFactory),
+            Collections.EMPTY_MAP);
     }
 
-    // TODO:  lookupSubdirectory, getContentsAsCwm
+    // implement FarragoMedNameDirectory
+    public FarragoMedNameDirectory lookupSubdirectory(String foreignName)
+        throws SQLException
+    {
+        if (scope.equals(FarragoMedMetadataQuery.OTN_SCHEMA)) {
+            if (foreignName.equals(server.getForeignSchemaName())) {
+                return new MedMockNameDirectory(
+                    server,
+                    FarragoMedMetadataQuery.OTN_TABLE);
+            }
+        }
+        return null;
+    }
+    
+    // implement FarragoMedNameDirectory
+    public boolean queryMetadata(
+        FarragoMedMetadataQuery query,
+        FarragoMedMetadataSink sink)
+        throws SQLException
+    {
+        // NOTE:  We take advantage of the fact that we're permitted
+        // to ignore query filters and return everything.
+        
+        if (scope.equals(FarragoMedMetadataQuery.OTN_SCHEMA)) {
+            sink.writeObjectDescriptor(
+                server.getForeignSchemaName(),
+                FarragoMedMetadataQuery.OTN_SCHEMA,
+                "Mock schema",
+                Collections.EMPTY_MAP);
+        } else {
+            sink.writeObjectDescriptor(
+                server.getForeignTableName(),
+                FarragoMedMetadataQuery.OTN_TABLE,
+                "Mock table",
+                Collections.EMPTY_MAP);
+            sink.writeColumnDescriptor(
+                server.getForeignTableName(),
+                COLUMN_NAME,
+                0,
+                server.createMockColumnType(sink.getTypeFactory()),
+                "Mock column",
+                "0",
+                Collections.EMPTY_MAP);
+        }
+        return true;
+    }
 }
 
 

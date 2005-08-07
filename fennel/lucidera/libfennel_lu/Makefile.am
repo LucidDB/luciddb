@@ -10,7 +10,6 @@ libfennel_lu_sorter_la_LIBADD=\
 	-lfennel_exec \
 	-lfennel_segment \
 	-lfennel_tuple \
-	-lfennel_synch \
 	-lfennel_common
 
 # Make sure that dependencies are strictly satisfied by failing on

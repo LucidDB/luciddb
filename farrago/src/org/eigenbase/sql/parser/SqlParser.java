@@ -26,6 +26,7 @@ package org.eigenbase.sql.parser;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.parser.impl.ParseException;
 import org.eigenbase.sql.parser.impl.SqlParserImpl;
+import org.eigenbase.sql.parser.impl.TokenMgrError;
 
 import java.io.Reader;
 import java.io.StringReader;
@@ -74,7 +75,7 @@ public class SqlParser
     {
         try {
             return parser.SqlExpressionEof();
-        } catch (ParseException ex) {
+        } catch (Throwable ex) {
             throw parser.normalizeException(ex);
         }
     }
@@ -95,7 +96,7 @@ public class SqlParser
     {
         try {
             return parser.SqlQueryEof();
-        } catch (ParseException ex) {
+        } catch (Throwable ex) {
             throw parser.normalizeException(ex);
         }
     }
@@ -112,7 +113,7 @@ public class SqlParser
     {
         try {
             return parser.SqlStmtEof();
-        } catch (ParseException ex) {
+        } catch (Throwable ex) {
             throw parser.normalizeException(ex);
         }
     }

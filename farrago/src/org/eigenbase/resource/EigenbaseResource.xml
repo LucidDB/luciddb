@@ -274,6 +274,10 @@
     <text>Binary literal string must contain an even number of hexits</text>
 </exception>
 
+<exception id="120415" name="BinaryLiteralInvalid" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Binary literal string must contain only characters ''0'' - ''9'', ''A'' - ''F''</text>
+</exception>
+
 <exception id="120420" name="UnsupportedIntervalLiteral" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Illegal interval literal format {0} for {1}</text>
 </exception>
@@ -360,6 +364,14 @@
 
 <exception id="120600" name="RefWindowWithFrame" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Referenced window cannot have framing declarations</text>
+</exception>
+
+<exception id="120610" name="TypeNotSupported" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Type ''{0}'' is not supported</text>
+</exception>
+
+<exception id="120620" name="FunctionQuantifierNotAllowed" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>DISTINCT/ALL not allowed with {0} function</text>
 </exception>
 
 <!-- ====================================================================== -->

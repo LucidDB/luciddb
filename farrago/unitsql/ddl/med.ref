@@ -236,5 +236,155 @@ Error: From line 1, column 15 to line 1, column 24: Table 'MOF_SCHEMA.FOREIGN_EX
 | 40      | OPERATIONS  | BOSTON    |
 +---------+-------------+-----------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> create schema demo_import_schema;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test full import
+0: jdbc:farrago:> import foreign schema sales
+. . . . . . . . > from server hsqldb_demo
+. . . . . . . . > into demo_import_schema;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select deptno from demo_import_schema.dept order by deptno;
++---------+
+| DEPTNO  |
++---------+
+| 10      |
+| 20      |
+| 30      |
+| 40      |
++---------+
+0: jdbc:farrago:> select empno from demo_import_schema.emp order by empno;
++--------+
+| EMPNO  |
++--------+
+| 7369   |
+| 7499   |
+| 7521   |
+| 7566   |
+| 7654   |
+| 7698   |
+| 7782   |
+| 7788   |
+| 7839   |
+| 7844   |
+| 7876   |
+| 7900   |
+| 7902   |
+| 7934   |
++--------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop schema demo_import_schema cascade;
+0: jdbc:farrago:> create schema demo_import_schema;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test explicit import
+0: jdbc:farrago:> import foreign schema sales
+. . . . . . . . > limit to (dept, salgrade)
+. . . . . . . . > from server hsqldb_demo
+. . . . . . . . > into demo_import_schema;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select deptno from demo_import_schema.dept order by deptno;
++---------+
+| DEPTNO  |
++---------+
+| 10      |
+| 20      |
+| 30      |
+| 40      |
++---------+
+0: jdbc:farrago:> -- should fail:  not there
+0: jdbc:farrago:> select empno from demo_import_schema.emp order by empno;
+Error: From line 1, column 19 to line 1, column 36: Table 'DEMO_IMPORT_SCHEMA.EMP' not found (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop schema demo_import_schema cascade;
+0: jdbc:farrago:> create schema demo_import_schema;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  attempt to explicitly import non-existent table
+0: jdbc:farrago:> import foreign schema sales
+. . . . . . . . > limit to (dept, salgrade, space_ghost, green_lantern)
+. . . . . . . . > from server hsqldb_demo
+. . . . . . . . > into demo_import_schema;
+Error: One or more tables not found while importing foreign schema "SALES":  [SPACE_GHOST, GREEN_LANTERN] (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test explicit exclusion
+0: jdbc:farrago:> import foreign schema sales
+. . . . . . . . > except (dept, salgrade)
+. . . . . . . . > from server hsqldb_demo
+. . . . . . . . > into demo_import_schema;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select empno from demo_import_schema.emp order by empno;
++--------+
+| EMPNO  |
++--------+
+| 7369   |
+| 7499   |
+| 7521   |
+| 7566   |
+| 7654   |
+| 7698   |
+| 7782   |
+| 7788   |
+| 7839   |
+| 7844   |
+| 7876   |
+| 7900   |
+| 7902   |
+| 7934   |
++--------+
+0: jdbc:farrago:> -- should fail:  not there
+0: jdbc:farrago:> select deptno from demo_import_schema.dept order by deptno;
+Error: From line 1, column 20 to line 1, column 37: Table 'DEMO_IMPORT_SCHEMA.DEPT' not found (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop schema demo_import_schema cascade;
+0: jdbc:farrago:> create schema demo_import_schema;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test pattern import
+0: jdbc:farrago:> import foreign schema sales
+. . . . . . . . > limit to table_name like '%D%E%'
+. . . . . . . . > from server hsqldb_demo
+. . . . . . . . > into demo_import_schema;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select deptno from demo_import_schema.dept order by deptno;
++---------+
+| DEPTNO  |
++---------+
+| 10      |
+| 20      |
+| 30      |
+| 40      |
++---------+
+0: jdbc:farrago:> -- should fail:  not there
+0: jdbc:farrago:> select empno from demo_import_schema.emp order by empno;
+Error: From line 1, column 19 to line 1, column 36: Table 'DEMO_IMPORT_SCHEMA.EMP' not found (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop schema demo_import_schema cascade;
+0: jdbc:farrago:> create schema demo_import_schema;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test pattern exclusion
+0: jdbc:farrago:> import foreign schema sales
+. . . . . . . . > except table_name like '%D%E%'
+. . . . . . . . > from server hsqldb_demo
+. . . . . . . . > into demo_import_schema;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select empno from demo_import_schema.emp order by empno;
++--------+
+| EMPNO  |
++--------+
+| 7369   |
+| 7499   |
+| 7521   |
+| 7566   |
+| 7654   |
+| 7698   |
+| 7782   |
+| 7788   |
+| 7839   |
+| 7844   |
+| 7876   |
+| 7900   |
+| 7902   |
+| 7934   |
++--------+
+0: jdbc:farrago:> -- should fail:  not there
+0: jdbc:farrago:> select deptno from demo_import_schema.dept order by deptno;
+Error: From line 1, column 20 to line 1, column 37: Table 'DEMO_IMPORT_SCHEMA.DEPT' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

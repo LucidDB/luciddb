@@ -33,6 +33,7 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlOperatorTable;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.fun.SqlCaseOperator;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql.type.SqlTypeFactoryImpl;
 import org.eigenbase.sql.validate.*;
@@ -574,6 +575,76 @@ public class SqlToRelConverterTest extends TestCase
             "  ProjectRel(EXPR$0=[$0])" + NL +
             "    ProjectRel(EXPR$0=[true])" + NL +
             "      OneRowRel" + NL);
+    }
+
+    public void testNotLike() {
+        // note that 'x not like y' becomes 'not(x like y)'
+        check("values ('a' not like 'b' escape 'c')",
+            "ProjectRel(EXPR$0=[$0])" + NL +
+            "  ProjectRel(EXPR$0=[NOT(LIKE(_ISO-8859-1'a', _ISO-8859-1'b', _ISO-8859-1'c'))])" + NL +
+            "    OneRowRel" + NL);
+    }
+
+    public void testOverMultiple() {
+        check(
+            "select sum(sal) over w1," + NL +
+            "  sum(deptno) over w1," + NL +
+            "  sum(deptno) over w2" + NL +
+            "from emp" + NL +
+            "where sum(deptno - sal) over w1 > 999" + NL +
+            "window w1 as (partition by job order by hiredate rows 2 preceding)," + NL +
+            "  w2 as (partition by job order by hiredate rows 3 preceding)," + NL +
+            "  w3 as (partition by job order by hiredate range interval '1' second preceding)",
+
+            "ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
+            "ROWS (2 PRECEDING))], EXPR$1=[SUM($7) OVER (PARTITION BY $2 ORDER BY $4" + NL +
+            "ROWS (2 PRECEDING))], EXPR$2=[SUM($7) OVER (PARTITION BY $2 ORDER BY $4" + NL +
+            "ROWS (3 PRECEDING))])" + NL +
+            "  FilterRel(condition=[>(SUM(-($7, $5)) OVER (PARTITION BY $2 ORDER BY $4" + NL +
+            "ROWS (2 PRECEDING)), 999)])" + NL +
+            "    TableAccessRel(table=[[EMP]])" + NL);
+    }
+
+    /**
+     * Test one of the custom conversions which is recognized by the class
+     * of the operator (in this case, {@link SqlCaseOperator}).
+     */
+    public void testCase()
+    {
+        check("values (case 'a' when 'a' then 1 end)",
+            "ProjectRel(EXPR$0=[$0])" + NL +
+            "  ProjectRel(EXPR$0=[CASE(=(_ISO-8859-1'a', _ISO-8859-1'a'), 1, CAST(null):INTEGER)])" + NL +
+            "    OneRowRel" + NL);
+    }
+
+    /**
+     * Tests one of the custom conversions which is recognized by the identity
+     * of the operator (in this case,
+     * {@link SqlStdOperatorTable#characterLengthFunc}).
+     */
+    public void testCharLength()
+    {
+        // Note that CHARACTER_LENGTH becomes CHAR_LENGTH.
+        check("values (character_length('foo'))",
+            "ProjectRel(EXPR$0=[$0])" + NL +
+            "  ProjectRel(EXPR$0=[CHAR_LENGTH(_ISO-8859-1'foo')])" + NL +
+            "    OneRowRel" + NL);
+    }
+
+    public void testOverAvg()
+    {
+        check(
+            "select sum(sal) over w1," + NL +
+            "  avg(sal) over w1" + NL +
+            "from emp" + NL +
+            "window w1 as (partition by job order by hiredate rows 2 preceding)",
+
+            "ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
+            "ROWS (2 PRECEDING))], EXPR$1=[CASE(=(COUNT($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
+            "ROWS (2 PRECEDING)), 0), CAST(null):INTEGER NOT NULL, /(SUM($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
+            "ROWS (2 PRECEDING)), COUNT($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
+            "ROWS (2 PRECEDING))))])" + NL +
+            "  TableAccessRel(table=[[EMP]])" + NL);
     }
 
     public void testExplainAsXml() {

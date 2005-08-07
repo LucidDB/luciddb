@@ -87,7 +87,7 @@ public class SqlMinMaxAggFunction extends SqlAggFunction
             SqlKind.Function,
             SqlTypeStrategies.rtiFirstArgType,
             null,
-            SqlTypeStrategies.otcNumeric,
+            SqlTypeStrategies.otcComparableOrdered,
             SqlFunctionCategory.Numeric);
         this.argTypes = argTypes;
         this.isMin = isMin;

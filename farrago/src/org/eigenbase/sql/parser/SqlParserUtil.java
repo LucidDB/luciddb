@@ -134,6 +134,7 @@ public final class SqlParserUtil
     public static void checkDateFormat(String pattern)
     {
         SimpleDateFormat df = new SimpleDateFormat(pattern);
+        Util.discard(df);
     }
 
     /**
@@ -509,12 +510,29 @@ public final class SqlParserUtil
         int line = 0;
         int j = 0;
         while (true) {
+            String s;
+            int rn = sql.indexOf("\r\n", j);
+            int r = sql.indexOf("\r", j);
+            int n = sql.indexOf("\n", j);
             int prevj = j;
-            j = sql.indexOf(Util.lineSeparator, j + 1);
+            if (r < 0 && n < 0) {
+                assert rn < 0;
+                s = null;
+                j = -1;
+            } else if (rn >= 0 && rn < n && rn <= r) {
+                s = "\r\n";
+                j = rn;
+            } else if (r >= 0 && r < n) {
+                s = "\r";
+                j = r;
+            } else {
+                s = "\n";
+                j = n;
+            }
             if (j < 0 || j > i) {
                 return new int[] {line + 1, i - prevj + 1};
             }
-            j += Util.lineSeparator.length();
+            j += s.length();
             ++line;
         }
     }

@@ -20,7 +20,7 @@ select * from csv_server.testdata."example" order by 3;
 create schema csv_schema;
 
 -- create a foreign table definition
-create foreign table csv_schema.example(
+create foreign table csv_schema.explicit_example(
     id int not null,
     name varchar(50) not null,
     extra_field char(1) not null)
@@ -32,5 +32,10 @@ select
     name,
     extra_field 
 from 
-    csv_schema.example 
+    csv_schema.explicit_example 
 order by 3;
+
+-- should fail:  required metadata support not available
+import foreign schema testdata
+from server csv_server
+into csv_schema;

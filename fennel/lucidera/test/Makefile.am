@@ -30,7 +30,6 @@ LDADD = \
 	-lfennel_segment \
 	-lfennel_cache \
 	-lfennel_device \
-	-lfennel_synch \
 	-lfennel_common \
 	-l$(STLPORT_LIB) \
 	$(EXTRA_LDFLAGS)

@@ -11,7 +11,7 @@
 <h1>Farrago SQL/MED Support</h1>
 
 This document describes Farrago support for SQL/MED
-(Management of External Data), the portion of the SQL99 standard which
+(Management of External Data), the portion of the SQL:1999 standard which
 governs access to foreign data (both relational
 and non-relational) hosted in other servers.
 
@@ -47,14 +47,17 @@ transactional row format.  This is not really foreign data, but is
 represented as such for architectural uniformity.  A normal CREATE
 TABLE statement uses this implicitly.  The CREATE TABLE
 statement has been extended to allow creation of other types of table
-storage (e.g. FCS for Fennel column-store format).
+storage (e.g. FCS for a hypothetical Fennel column-store format).
 
 <li>
 <a href="medjdbc.html">JDBC</a>: for access to data stored in foreign
 SQL databases.
 
-<li>MDR:  for access to metadata stored in an MDR repository
+<li><a href="../howto/medmdr.html">MDR</a>:  
+for access to metadata stored in an MDR repository
 (including Farrago's own system catalog).
+
+<li>MOCK:  for testing or dummy tables.
 
 </ul>
 
@@ -222,20 +225,33 @@ AND table_name = 'REVIEWERS'
 
 <h2>Foreign Schema Import</h2>
 
-In order to import metadata for a large number of tables at once, SQL/MED
-provides the IMPORT FOREIGN SCHEMA statement (not yet supported by Farrago):
+In order to import metadata for a number of tables at once, SQL/MED
+provides the IMPORT FOREIGN SCHEMA statement (available in version 0.6):
 
 <pre><code>
 IMPORT FOREIGN SCHEMA foreign-schema-name
-[ LIMIT TO ( table1 [, table2 ... ] ) | EXCEPT ( table3 [, table4 ... ] ) ]
+[ 
+ { LIMIT TO | EXCEPT }
+ { ( table1 [, table2 ... ] ) | TABLE_NAME LIKE 'pattern' }
+]
 FROM SERVER foreign-server-name
 INTO local-schema-name
 </code></pre>
 
-For the running example:
+The LIMIT TO clause restricts the import to an explicit list of table
+names or those matching a LIKE pattern.  If a list is provided, all of
+the named tables must exist on the foreign server or the import will
+fail.  Conversely, the EXCEPT clause imports everything except
+those named in the list or matching the LIKE pattern.  Note that
+the LIKE pattern is a non-standard extension.
+
+<p>
+
+For the running example (this imports only table names starting with R):
 
 <pre><code>
 IMPORT FOREIGN SCHEMA movie_facts
+LIMIT TO TABLE_NAME LIKE 'R%'
 FROM SERVER movie_catalog
 INTO localhost.movie_schema
 </code></pre>

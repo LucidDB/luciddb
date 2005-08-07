@@ -24,6 +24,7 @@ package net.sf.farrago.test;
 
 import junit.framework.*;
 import net.sf.farrago.test.regression.FarragoCalcSystemTest;
+import net.sf.farrago.util.FarragoUtil;
 import org.eigenbase.sql.SqlOperator;
 import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.test.AbstractSqlTester;
@@ -276,6 +277,11 @@ public class FarragoSqlOperatorsTest
             Throwable thrown = null;
             try {
                 resultSet = stmt.executeQuery(sap.sql);
+            } catch (FarragoUtil.FarragoSqlException ex) {
+                // The exception returned by the JDBC driver is dumbed down,
+                // and doesn't contain the full position information.
+                // Use the undiluted error instead.
+                thrown = ex.getOriginalThrowable();
             } catch (Throwable ex) {
                 thrown = ex;
             }

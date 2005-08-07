@@ -99,6 +99,18 @@ public interface FarragoTypeFactory extends OJTypeFactory
     public RelDataType createResultSetType(ResultSetMetaData metaData);
 
     /**
+     * Creates a type which represents column metadata returned
+     * by the {@link DatabaseMetaData#getColumns} call.
+     *
+     * @param getColumnsResultSet {@link ResultSet} positioned on
+     * a row returned from the getColumns call; result set position
+     * is unchanged by this method
+     *
+     * @return generated type
+     */
+    public RelDataType createJdbcColumnType(ResultSet getColumnsResultSet);
+
+    /**
      * Creates a type which represents a MOF feature.
      *
      * @param feature MOF feature

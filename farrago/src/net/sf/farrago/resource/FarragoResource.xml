@@ -517,10 +517,29 @@ column type family is {1} but default value type family is {2}</text>
 <text>Privilege {0} is not applicable to {1}</text>
 </exception>
 
-<exception id="420890" name="InvalidUser">
-<text>User name {0} not found</text>
+<exception id="420890" name="ValidatorImportMustBeForeign">
+<text>Cannot import from local {0}</text>
 </exception>
 
+<exception id="420900" name="ValidatorImportUnsupported">
+<text>Support for foreign schema import not available in {0}</text>
+</exception>
+
+<exception id="420910" name="ValidatorImportUnknown">
+<text>Unknown foreign schema {0}</text>
+</exception>
+
+<exception id="420920" name="ValidatorImportFailed">
+<text>Failed importing foreign schema {0} from {1}</text>
+</exception>
+
+<exception id="420930" name="ValidatorImportMissing">
+<text>One or more tables not found while importing foreign schema {0}:  {1}</text>
+</exception>
+
+<exception id="420940" name="InvalidUser">
+<text>User name {0} not found</text>
+</exception>
 
 <!-- ====================================================================== -->
 <!-- Fennel resources 440,000 - 450,000 -->
@@ -590,6 +609,10 @@ column type family is {1} but default value type family is {2}</text>
 
 <exception id="460090" name="DataServerIndexDropFailed">
 <text>Failed to drop storage for {0}</text>
+</exception>
+
+<exception id="460100" name="MockForeignObjectNotFound">
+<text>Mock foreign object {0} not found</text>
 </exception>
 
 <!-- ====================================================================== -->

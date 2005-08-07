@@ -305,9 +305,9 @@
       </deny>
     </access-rule>
     
-	<pattern name="fennel.tuple.deps"> 
-	  <include pattern="util" /> 
-	  <include pattern="fennel.tuple" />
+    <pattern name="fennel.tuple.deps"> 
+      <include pattern="util" /> 
+      <include pattern="fennel.tuple" />
     </pattern> 
  
     <access-rule> 
@@ -425,6 +425,7 @@
     <pattern name="query.deps">
       <include pattern="dynamic.deps" />
       <include pattern="ojrex.deps" />
+      <include pattern="fennel.tuple" />
       <include pattern="query" />
     </pattern>
 
@@ -653,6 +654,7 @@
     <pattern name="dt.calc.deps">
       <include pattern="resource.deps" />
       <include pattern="dt.calc" />
+      <include pattern="fennel.tuple" />
     </pattern>
 
     <access-rule>

@@ -31,6 +31,7 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 JavaSinkExecStream::JavaSinkExecStream()
 {
+    lastResult = EXECRC_QUANTUM_EXPIRED; // neutral
     pStreamGraphHandle = NULL;
     javaFennelPipeIterId = 0;
     javaFennelPipeIter = NULL;
@@ -85,7 +86,7 @@ ExecStreamResult JavaSinkExecStream::execute(ExecStreamQuantum const &)
         // would interpret a 0-length buffer as end-of-stream, which is not the
         // case.
         FENNEL_TRACE(TRACE_FINE, "no input");
-        return EXECRC_BUF_UNDERFLOW;
+        return (lastResult = EXECRC_BUF_UNDERFLOW);
     case EXECBUF_EOS:
         // Need to signal end-of-stream to Java. Do this by sending a buffer of
         // length 0. There should be 0 bytes available, so the code below
@@ -94,36 +95,40 @@ ExecStreamResult JavaSinkExecStream::execute(ExecStreamQuantum const &)
         assert(inAccessor.getConsumptionAvailable() == 0);
         break;
     default:
-        // fall through
         break;
     }
 
-    JniEnvAutoRef pEnv;
     PConstBuffer pInBufStart = inAccessor.getConsumptionStart();
     PConstBuffer pInBufEnd = inAccessor.getConsumptionEnd();
     uint nbytes = pInBufEnd - pInBufStart;
+    sendData(pInBufStart, nbytes);
+    if (nbytes > 0) {
+        inAccessor.consumeData(pInBufEnd);
+        return (lastResult = EXECRC_BUF_UNDERFLOW);
+    } else
+        return (lastResult = EXECRC_EOS);
+}
 
+/// sends data to java peer
+void JavaSinkExecStream::sendData(PConstBuffer src, uint size)
+{
     // Get an output ByteBuffer. Since this is a local ref, it will be automatically
     // deleted when the next method call returns.
     // REVIEW: Could give the ByteBuffer a longer lifecycle.
+    JniEnvAutoRef pEnv;
     jobject javaByteBuf = pEnv->CallObjectMethod(
-        javaFennelPipeIter, methFennelPipeIterator_getByteBuffer, nbytes);
+        javaFennelPipeIter, methFennelPipeIterator_getByteBuffer, size);
     assert(javaByteBuf);
 
     // copy the data, allowing upstream XO to produce more output
-    stuffByteBuffer(javaByteBuf, pInBufStart, nbytes);
+    stuffByteBuffer(javaByteBuf, src, size);
 
     // Send to the iterator, calling the method
     //   void FennelIterPipe.write(ByteBuffer, int byteCount)
-    FENNEL_TRACE(TRACE_FINE, "call FennelPipeIter.write" << nbytes << " bytes");
+    FENNEL_TRACE(TRACE_FINE, "call FennelPipeIter.write" << size << " bytes");
     pEnv->CallVoidMethod(javaFennelPipeIter, methFennelPipeIterator_write,
-                         javaByteBuf, nbytes);
+                         javaByteBuf, size);
     FENNEL_TRACE(TRACE_FINE, "FennelPipeIter.write returned");
-    if (nbytes > 0) {
-        inAccessor.consumeData(pInBufEnd);
-        return EXECRC_BUF_UNDERFLOW;
-    } else
-        return EXECRC_EOS;
 }
 
 void JavaSinkExecStream::stuffByteBuffer(jobject byteBuffer, PConstBuffer src, uint size)
@@ -148,6 +153,14 @@ void JavaSinkExecStream::stuffByteBuffer(jobject byteBuffer, PConstBuffer src, u
 
 void JavaSinkExecStream::closeImpl()
 {
+    FENNEL_TRACE(TRACE_FINE, "closing");
+
+    // If java peer is waiting for more data, send it a final EOS
+    if (lastResult != EXECRC_EOS) {
+        FixedBuffer dummy[1];
+        sendData(dummy, 0);
+    }
+
     javaFennelPipeIter = NULL;
     SingleInputExecStream::closeImpl();
 }

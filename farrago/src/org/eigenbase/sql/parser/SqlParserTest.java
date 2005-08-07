@@ -46,9 +46,6 @@ public class SqlParserTest extends TestCase
 
     protected static final String NL = System.getProperty("line.separator");
 
-    /** @deprecated */
-    private static final boolean todo = false;
-
     public static final boolean bug317Fixed = false;
 
     //~ Constructors ----------------------------------------------------------
@@ -186,6 +183,15 @@ public class SqlParserTest extends TestCase
             "    <IDENTIFIER> ..." + NL +
             "    <QUOTED_IDENTIFIER> ..." + NL +
             ".*");
+    }
+
+    public void testInvalidToken()
+    {
+        // Causes problems to the test infrastructure because the token mgr
+        // throws a java.lang.Error. The usual case is that the parser throws
+        // an exception.
+        checkFails("values (a^#^b)",
+            "Lexical error at line 1, column 10\\.  Encountered: \"#\" \\(35\\), after : \"\"");
     }
 
     public void _testDerivedColumnList()
@@ -625,6 +631,21 @@ public class SqlParserTest extends TestCase
             "(LOG(1) + (POW(2, ((MOD(3, LN(4)) * LOG(5)) - (6 * LOG(((7 / ABS(8)) + 9))))) * POW(10, 11)))");
     }
 
+    public void testFunctionWithDistinct()
+    {
+        checkExp("count(DISTINCT 1)","COUNT(1)");
+        checkExp("count(ALL 1)","COUNT(1)");
+        checkExp("count(1)","COUNT(1)");
+/*
+        These are the correct tests when the unparse function is fixed
+        checkExp("count(DISTINCT 1)","COUNT('DISTINCT' 1)");
+        checkExp("count(ALL 1)","COUNT('ALL' 1)");
+        check("select count(1), count(distinct 2) from emp",
+            "SELECT COUNT(1), COUNT('DISTINCT' 2)" + NL +
+            "FROM `EMP`");
+*/
+    }
+
     public void testFunctionInFunction()
     {
         checkExp("ln(pow(2,2))", "LN(POW(2, 2))");
@@ -886,7 +907,8 @@ public class SqlParserTest extends TestCase
         checkExp("x'01aa'\n'03ff'", "X'01AA' '03FF'");
 
         // a bad hexstring
-        checkFails("x'01aa'\n'vvvv'", ".*Invalid binary string 'vvvv'.*");
+        checkFails("x'01aa'\n^'vvvv'^",
+            "Binary literal string must contain only characters '0' - '9', 'A' - 'F'");
     }
 
     public void testMixedFrom()
@@ -1330,17 +1352,17 @@ public class SqlParserTest extends TestCase
             "X'1' '000' '01'");
         checkExp("x'1234567890abcdef'=X'fFeEdDcCbBaA'",
             "(X'1234567890ABCDEF' = X'FFEEDDCCBBAA')");
-        checkExp("x'001'=X'000102'", "(X'001' = X'000102')"); //check so inital zeros dont get trimmed somehow
-        if (todo) {
-            checkFails("select x'FeedGoats' from t", "blah");
-        }
+        // Check the inital zeroes don't get trimmed somehow
+        checkExp("x'001'=X'000102'", "(X'001' = X'000102')");
     }
 
     public void testHexAndBinaryStringFails()
     {
-        checkFails("select x'abcdefG' from t",
-            "(?s).*Encountered .*G.* at line 1, column ...*");
-        checkFails("select x'1' x'2' from t",
+        checkFails("select ^x'FeedGoats'^ from t",
+            "Binary literal string must contain only characters '0' - '9', 'A' - 'F'");
+        checkFails("select ^x'abcdefG'^ from t",
+            "Binary literal string must contain only characters '0' - '9', 'A' - 'F'");
+        checkFails("select x'1' ^x'2'^ from t",
             "(?s).*Encountered .x.*2.* at line 1, column 13.*");
 
          // valid syntax, but should fail in the validator

@@ -305,12 +305,12 @@ public abstract class SqlOperator
      * derivation methods).  The default implementation is to just return the
      * original call without any rewrite.
      *
+     * @param validator
      * @param call to be rewritten
      *
      * @return rewritten call
      */
-    public SqlNode rewriteCall(
-        SqlCall call)
+    public SqlNode rewriteCall(SqlValidator validator, SqlCall call)
     {
         return call;
     }

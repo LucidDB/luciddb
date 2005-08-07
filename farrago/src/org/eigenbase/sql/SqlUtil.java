@@ -211,15 +211,17 @@ public abstract class SqlUtil
      * @param writer Writer
      * @param operands List of 0 or more operands
      * @param emptyParens Whether to print parentheses if there are 0 operands
+     * @param quantifier
      */
-    public static void unparseFunctionSyntax(
-        SqlOperator operator,
+    public static void unparseFunctionSyntax(SqlOperator operator,
         SqlWriter writer,
-        SqlNode [] operands,
-        boolean emptyParens)
+        SqlNode[] operands,
+        boolean emptyParens,
+        SqlLiteral quantifier)
     {
         if (operator instanceof SqlFunction) {
             SqlFunction function = (SqlFunction) operator;
+
             if (function.getFunctionType()
                 == SqlFunctionCategory.UserDefinedSpecificFunction)
             {
@@ -240,8 +242,13 @@ public abstract class SqlUtil
             return;
         }
         writer.print('(');
-        for (int i = 0; i < operands.length; i++) {
+        if (null != quantifier) {
+            quantifier.unparse(writer,0,0);
+            writer.print(" ");
+        }
+        for (int i=0; i < operands.length; i++) {
             SqlNode operand = operands[i];
+
             if (i > 0) {
                 writer.print(", ");
             }

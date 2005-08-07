@@ -835,7 +835,9 @@ public class DdlValidator extends FarragoCompoundAllocation
         SqlValidatorException ex)
     {
         SqlParserPos parserContext = getParserPos(refObj);
-        assert(parserContext != null);
+        if (parserContext == null) {
+            return new EigenbaseException(ex.getMessage(), ex.getCause());
+        }
         String msg = parserContext.toString();
         EigenbaseContextException contextExcn =
             FarragoResource.instance().newValidatorPositionContext(msg, ex);

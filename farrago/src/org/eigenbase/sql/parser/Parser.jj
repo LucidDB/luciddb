@@ -67,7 +67,7 @@ public class SqlParserImpl extends SqlAbstractParserImpl
 
     private static Metadata metadata;
 
-    public SqlParseException normalizeException(Exception ex)
+    public SqlParseException normalizeException(Throwable ex)
     {
         try {
             if (ex instanceof ParseException) {

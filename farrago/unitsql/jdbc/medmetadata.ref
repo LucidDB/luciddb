@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/jdbc/medmetadata.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/jdbc/medmetadata.sql#3 $
 0: jdbc:farrago:> -- Test JDBC metadata calls for foreign data wrappers
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- !set verbose true
@@ -52,6 +52,7 @@
 | SCHEMA_NAME        | MODEL                               |
 | SCHEMA_NAME        | SALES                               |
 | SCHEMA_NAME        | TESTDATA                            |
+| TABLE_TYPES        | TABLE,VIEW                          |
 | URL                | jdbc:hsqldb:testcases/hsqldb/scott  |
 | URL                | jdbc:relique:csv:unitsql/med        |
 | USER_NAME          | SA                                  |

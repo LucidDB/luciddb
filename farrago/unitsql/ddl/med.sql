@@ -150,3 +150,70 @@ options(table_name 'DEPT');
 -- test same query as above, but against foreign table with inferred types
 select * from demo_schema.dept_inferred order by deptno;
 
+create schema demo_import_schema;
+
+-- test full import
+import foreign schema sales
+from server hsqldb_demo
+into demo_import_schema;
+
+select deptno from demo_import_schema.dept order by deptno;
+select empno from demo_import_schema.emp order by empno;
+
+drop schema demo_import_schema cascade;
+create schema demo_import_schema;
+
+-- test explicit import
+import foreign schema sales
+limit to (dept, salgrade)
+from server hsqldb_demo
+into demo_import_schema;
+
+select deptno from demo_import_schema.dept order by deptno;
+-- should fail:  not there
+select empno from demo_import_schema.emp order by empno;
+
+drop schema demo_import_schema cascade;
+create schema demo_import_schema;
+
+-- should fail:  attempt to explicitly import non-existent table
+import foreign schema sales
+limit to (dept, salgrade, space_ghost, green_lantern)
+from server hsqldb_demo
+into demo_import_schema;
+
+-- test explicit exclusion
+import foreign schema sales
+except (dept, salgrade)
+from server hsqldb_demo
+into demo_import_schema;
+
+select empno from demo_import_schema.emp order by empno;
+-- should fail:  not there
+select deptno from demo_import_schema.dept order by deptno;
+
+drop schema demo_import_schema cascade;
+create schema demo_import_schema;
+
+-- test pattern import
+import foreign schema sales
+limit to table_name like '%D%E%'
+from server hsqldb_demo
+into demo_import_schema;
+
+select deptno from demo_import_schema.dept order by deptno;
+-- should fail:  not there
+select empno from demo_import_schema.emp order by empno;
+
+drop schema demo_import_schema cascade;
+create schema demo_import_schema;
+
+-- test pattern exclusion
+import foreign schema sales
+except table_name like '%D%E%'
+from server hsqldb_demo
+into demo_import_schema;
+
+select empno from demo_import_schema.emp order by empno;
+-- should fail:  not there
+select deptno from demo_import_schema.dept order by deptno;

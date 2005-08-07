@@ -1,6 +1,6 @@
 /*
 // $Id$
-// Farrago is an extensible data management system.
+// Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2005 The Eigenbase Project
 // Copyright (C) 2005-2005 Disruptive Tech
 // Copyright (C) 2005-2005 LucidEra, Inc.
@@ -20,38 +20,37 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+package org.eigenbase.sql2rel;
 
-package net.sf.farrago.fennel.tuple;
+import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.SqlCall;
+import org.eigenbase.sql.SqlLiteral;
+import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexLiteral;
 
 /**
- * FennelStoredTypeDescriptorFactory is an abstract interface for creating
- * StoredTypeDescriptors as described in the fennel tuple 
- * <a href="http://fennel.sourceforge.net/doxygen/html/structTupleDesign.html">
- * design document</a>
+ * Converts expressions from {@link SqlNode} to {@link RexNode}.
  */
-public interface FennelStoredTypeDescriptorFactory
+public interface SqlNodeToRexConverter
 {
     /**
-     * Adds a new typedescriptor to this factory.
-     *
-     * @param ordinalId the new ordinal to track
-     *
-     * @param storedType  the new typeDescriptor to return from calls to
-     * newDataType for this ordinalType 
-     *
-     */ 
-    public void addType(int ordinalId, FennelStoredTypeDescriptor storedType);
+     * Converts a {@link SqlCall} to a {@link RexNode} expression.
+     */
+    RexNode convertCall(
+        SqlRexContext cx,
+        SqlCall call);
 
     /**
-     * Instantiates a FennelStoredTypeDescriptor.
+     * Converts a {@link SqlLiteral SQL literal} to
+     * a {@link RexLiteral REX literal}.
      *
-     *<p>
-     *
-     * @param ordinalId the ordinal for the type
-     *
-     * @return the corresponding data type object
+     * <p>The result is {@link RexNode}, not {@link RexLiteral} because if the
+     * literal is NULL (or the boolean Unknown value), we make a
+     * <code>CAST(NULL AS type)</code> expression.
      */
-    public FennelStoredTypeDescriptor newDataType(int ordinalId);
-};
+    RexNode convertLiteral(
+        SqlRexContext cx,
+        SqlLiteral literal);
+}
 
-// End FennelStoredTypeDescriptorFactory.java
+// End SqlNodeToRexConverter.java

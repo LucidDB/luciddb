@@ -266,6 +266,7 @@ public abstract class FennelWindowRule extends RelOptRule
                 outRowType,
                 inputExprs,
                 windows,
+                winAggRel.aggs,
                 outputExprs,
                 conditionExpr);
         call.transformTo(fennelCalcRel);

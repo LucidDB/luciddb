@@ -384,9 +384,18 @@ void CmdInterpreter::visit(ProxyCmdCreateStreamHandle &cmd)
 {
     StreamGraphHandle *pStreamGraphHandle = getStreamGraphHandle(
         cmd.getStreamGraphHandle());
-    SharedExecStream pStream =
-        pStreamGraphHandle->pExecStreamGraph->findLastStream(
+    SharedExecStream pStream;
+    if (cmd.isInput()) {
+        pStream =
+            pStreamGraphHandle->pExecStreamGraph->findLastStream(
             cmd.getStreamName(), 0);
+    }
+    else {
+        pStream =
+            pStreamGraphHandle->pExecStreamGraph->findStream(
+            cmd.getStreamName());
+    }
+
     setExecStreamHandle(
         cmd.getResultHandle(),
         pStream.get());

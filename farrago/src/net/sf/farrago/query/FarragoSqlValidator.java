@@ -29,6 +29,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.SqlValidatorImpl;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
+import net.sf.farrago.session.FarragoSessionPersonality;
 
 
 /**
@@ -119,6 +120,25 @@ class FarragoSqlValidator extends SqlValidatorImpl
         }
 
         // REVIEW jvs 4-Aug-2004:  what about underflow?
+    }
+
+    public void validateDataType(SqlDataTypeSpec dataType)
+    {
+        super.validateDataType(dataType);
+        FarragoPreparingStmt preparingStmt =
+            (FarragoPreparingStmt) getCatalogReader();
+        final FarragoSessionPersonality personality =
+            preparingStmt.getSession().getPersonality();
+        final String typeNameName = dataType.getTypeName().getSimple();
+        SqlTypeName typeName = SqlTypeName.get(typeNameName);
+        if (typeName != null) {
+            if (!personality.isSupportedType(typeName)) {
+                throw newValidationError(
+                    dataType,
+                    EigenbaseResource.instance().newTypeNotSupported(
+                        typeName.toString()));
+            }
+        }
     }
 }
 

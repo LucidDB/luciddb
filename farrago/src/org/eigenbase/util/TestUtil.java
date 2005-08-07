@@ -81,8 +81,8 @@ public abstract class TestUtil
      */
     public static String quoteForJava(String s)
     {
-        s = Util.replace(s, "\"", "\\\"");
-        final String lineBreak = "\" + NL +" + Util.lineSeparator + "\"";
+        s = s.replace("\\", "\\\\");
+        s = s.replace("\"", "\\\"");
         s = LineBreakPattern.matcher(s).replaceAll(lineBreak);
         s = TabPattern.matcher(s).replaceAll("\\\\t");
         s = "\"" + s + "\"";
@@ -92,6 +92,9 @@ public abstract class TestUtil
         }
         return s;
     }
+
+    private static final String lineBreak =
+        "\" + NL +" + Util.lineSeparator + "\"";
 
     /**
      * Quotes a pattern.

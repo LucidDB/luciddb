@@ -842,17 +842,19 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
         FarragoMedDataServer server = loadDataServerFromCache(femServer);
 
-        String [] namesWithoutCatalog =
-            new String [] { resolved.schemaName, resolved.objectName };
         try {
             FarragoMedNameDirectory directory = server.getNameDirectory();
+            if (directory == null) {
+                return null;
+            }
+            directory = directory.lookupSubdirectory(resolved.schemaName);
             if (directory == null) {
                 return null;
             }
             FarragoMedColumnSet medColumnSet =
                 directory.lookupColumnSet(
                     getFarragoTypeFactory(),
-                    namesWithoutCatalog,
+                    resolved.objectName,
                     resolved.getQualifiedName());
             initializeQueryColumnSet(medColumnSet, null);
             return medColumnSet;

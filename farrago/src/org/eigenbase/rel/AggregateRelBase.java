@@ -144,6 +144,7 @@ public abstract class AggregateRelBase extends SingleRel
         private final Aggregation aggregation;
         public final int [] args;
         private final RelDataType type;
+        private boolean distinctFlag;
 
         public Call(
             Aggregation aggregation,
@@ -153,8 +154,18 @@ public abstract class AggregateRelBase extends SingleRel
             this.aggregation = aggregation;
             this.args = args;
             this.type = type;
+            this.distinctFlag = false;
         }
 
+        public void setDistinctFalg( boolean flag)
+        {
+            distinctFlag = flag;
+        }
+
+        public boolean isDistinct()
+        {
+            return distinctFlag;
+        }
         public Aggregation getAggregation()
         {
             return aggregation;

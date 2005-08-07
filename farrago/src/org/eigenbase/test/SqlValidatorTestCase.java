@@ -407,14 +407,17 @@ public class SqlValidatorTestCase extends TestCase
                 if (actualMessage == null ||
                     !actualMessage.matches(expectedMsgPattern)) {
                     actualException.printStackTrace();
-                    final String expectedPatternJava =
+                    final String actualJavaRegexp =
                         TestUtil.quoteForJava(
-                            TestUtil.quotePattern(expectedMsgPattern));
+                            TestUtil.quotePattern(actualMessage));
                     fail("SqlValidationTest: Validator threw different " +
                         "exception than expected; query [" + sap.sql +
-                        "]; expected pattern [" + expectedMsgPattern +
-                        "]; expected pattern as java [" + expectedPatternJava +
-                        "]; actual [" + actualMessage +
+                        "];" + NL +
+                        " expected pattern [" + expectedMsgPattern +
+                        "];" + NL +
+                        " actual [" + actualMessage +
+                        "];" + NL +
+                        " actual as java regexp [" + actualJavaRegexp +
                         "]; pos [" + actualLine +
                         " col " + actualColumn +
                         " thru line " + actualEndLine +
@@ -595,9 +598,19 @@ public class SqlValidatorTestCase extends TestCase
 
         // SqlTester methods
 
-        public void isFor(SqlOperator operator)
+        public void setFor(SqlOperator operator)
         {
             // do nothing
+        }
+
+        public void checkAgg(
+            String expr,
+            String[] inputValues,
+            Object result,
+            int delta)
+        {
+            String query = AbstractSqlTester.generateAggQuery(expr, inputValues);
+            check(query, AbstractSqlTester.AnyTypeChecker, result, delta);
         }
 
         public void checkScalar(

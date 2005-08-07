@@ -22,11 +22,14 @@
 */
 package net.sf.farrago.namespace;
 
+import net.sf.farrago.fem.med.*;
+
 import java.sql.*;
 import java.util.*;
 
 import net.sf.farrago.FarragoMetadataFactory;
 import net.sf.farrago.type.*;
+import net.sf.farrago.catalog.*;
 
 
 /**
@@ -48,7 +51,8 @@ public interface FarragoMedNameDirectory
      * @param typeFactory FarragoTypeFactory to use
      * for defining types
      *
-     * @param foreignName foreign compound identifier to lookup
+     * @param foreignName simple name of foreign ColumnSet to lookup
+     * as a direct child of this directory
      *
      * @param localName compound identifier by which
      * FarragoMedColumnSet will be referenced locally
@@ -59,43 +63,60 @@ public interface FarragoMedNameDirectory
      */
     public FarragoMedColumnSet lookupColumnSet(
         FarragoTypeFactory typeFactory,
-        String [] foreignName,
+        String foreignName,
         String [] localName)
         throws SQLException;
 
     /**
-     * Looks up a subdirectory by name.
+     * Looks up an immediate subdirectory by name.
      *
-     * @param foreignName compound identifier for subdirectory
+     * @param foreignName identifier for subdirectory
      *
      * @return subdirectory, or null if none found
      *
      * @exception SQLException if metadata access is unsuccessful
      */
-    public FarragoMedNameDirectory lookupSubdirectory(String [] foreignName)
+    public FarragoMedNameDirectory lookupSubdirectory(String foreignName)
         throws SQLException;
 
     /**
-     * Retrieves the contents of this directory as CWM elements.  The
-     * implementation should construct new instances of CWM elements and return
-     * them.  There is no need to start a transaction; the caller will take
-     * care of that as well as commit/rollback.  This method supports the
-     * SQL/MED IMPORT FOREIGN SCHEMA statement, and general metadata browsing.
+     * Executes a query against the metadata contained by this directory.  This
+     * method supports the SQL/MED IMPORT FOREIGN SCHEMA statement, and general
+     * metadata browsing.
      *
      *<p>
      *
-     * NOTE jvs 23-Feb-2003:  This will probably get more complicated;
-     * right now it's just a placeholder.
+     * NOTE: the supplied sink may be used to implement passive aborts by
+     * throwing an unchecked exception when an abort request is detected.
      *
-     * @param factory factory for creating CWM elements
+     * @param query the query to execute
      *
-     * @return element iterator, or null if enumeration is unsupported
+     * @param sink target which receives the query results
+     *
+     * @return true if the query executed successfully; false if the
+     * requested query type was not supported
      *
      * @exception SQLException if metadata access is unsuccessful
-     * (but not if enumeration is unsupported)
+     * (but not if query is unsupported)
      */
-    public Iterator getContentsAsCwm(FarragoMetadataFactory factory)
+    public boolean queryMetadata(
+        FarragoMedMetadataQuery query,
+        FarragoMedMetadataSink sink)
         throws SQLException;
+
+    /**
+     * Creates a new instance of FemBaseColumnSet in the catalog to represent
+     * an imported table.
+     *
+     * @param repos repository storing catalog
+     *
+     * @param tableName name of imported table
+     *
+     * @return new object in catalog
+     */
+    public FemBaseColumnSet newImportedColumnSet(
+        FarragoRepos repos,
+        String tableName);
 }
 
 

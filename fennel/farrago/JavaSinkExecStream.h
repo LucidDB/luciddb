@@ -49,12 +49,16 @@ struct JavaSinkExecStreamParams : public SingleInputExecStreamParams
  */
 class JavaSinkExecStream : public SingleInputExecStream
 {
+    ExecStreamResult lastResult;
     CmdInterpreter::StreamGraphHandle *pStreamGraphHandle;
     int javaFennelPipeIterId;
     jobject javaFennelPipeIter;         // our java peer, a FennelPipeIterator
     jmethodID methFennelPipeIterator_write; // its method 'write(ByteBuffer, int byteCount)'
     jmethodID methFennelPipeIterator_getByteBuffer; // its method 'getByteBuffer(int size)'
     jmethodID methByteBuffer_array;     // java method ByteBuffer.array()
+
+    /// sends data to the java peer
+    void sendData(PConstBuffer src, uint size);
 
     /// copies into a java ByteBuffer
     void stuffByteBuffer(jobject byteBuffer, PConstBuffer src, uint size);

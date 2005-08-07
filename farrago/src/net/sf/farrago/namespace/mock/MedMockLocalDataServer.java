@@ -29,6 +29,7 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.*;
+import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.type.*;
 
 import org.eigenbase.reltype.*;
@@ -46,10 +47,11 @@ class MedMockLocalDataServer
     implements FarragoMedLocalDataServer
 {
     MedMockLocalDataServer(
+        MedAbstractDataWrapper wrapper,
         String serverMofId,
         Properties props)
     {
-        super(serverMofId, props);
+        super(wrapper, serverMofId, props);
     }
     
     // implement FarragoMedLocalDataServer

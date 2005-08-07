@@ -45,10 +45,10 @@ public abstract class SqlSyntax extends EnumeratedValues.BasicValue
     public static final SqlSyntax Function =
         new SqlSyntax("Function", Function_ordinal) {
             public void unparse(SqlWriter writer, SqlOperator operator,
-                SqlNode [] operands, int leftPrec, int rightPrec)
+                SqlNode[] operands, int leftPrec, int rightPrec)
             {
                 SqlUtil.unparseFunctionSyntax(operator,writer,operands,
-                    true);
+                    true, null);
             }
         };
     public static final int Binary_ordinal = 1;
@@ -113,10 +113,10 @@ public abstract class SqlSyntax extends EnumeratedValues.BasicValue
     public static final SqlSyntax FunctionId =
         new SqlSyntax("FunctionId",FunctionId_ordinal) {
             public void unparse(SqlWriter writer, SqlOperator operator,
-                SqlNode [] operands, int leftPrec, int rightPrec)
+                SqlNode[] operands, int leftPrec, int rightPrec)
             {
                 SqlUtil.unparseFunctionSyntax(operator,writer,operands,
-                    false);
+                    false, null);
             }
         };
     public static final int Internal_ordinal = 6;
@@ -169,7 +169,7 @@ public abstract class SqlSyntax extends EnumeratedValues.BasicValue
      * Converts a call to an operator of this syntax into a string.
      */
     public abstract void unparse(SqlWriter writer, SqlOperator operator,
-        SqlNode [] operands, int leftPrec, int rightPrec);
+        SqlNode[] operands, int leftPrec, int rightPrec);
 
 }
 

@@ -25,7 +25,6 @@ package org.eigenbase.sql.parser;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.parser.impl.ParseException;
 import org.eigenbase.util.Util;
 
 import java.io.Reader;
@@ -358,7 +357,14 @@ public abstract class SqlAbstractParserImpl
      */
     public abstract Metadata getMetadata();
 
-    public abstract SqlParseException normalizeException(Exception ex);
+    /**
+     * Removes or transforms misleading information from a parse exception
+     * or error, and converts to {@link SqlParseException}.
+     *
+     * @param ex dirty excn
+     * @return clean excn
+     */
+    public abstract SqlParseException normalizeException(Throwable ex);
 
     /**
      * Reinitializes parser with new input.
@@ -483,35 +489,39 @@ public abstract class SqlAbstractParserImpl
                 Object o = virtualCall(parserImpl, name);
                 Util.discard(o);
                 throw Util.newInternal("expected call to fail");
-            } catch (Throwable throwable) {
-                if (throwable instanceof ParseException) {
-                    ParseException parseException = (ParseException) throwable;
-                    // First time through, build the list of all tokens.
-                    if (tokenSet.isEmpty()) {
-                        for (int i = 0; i < parseException.tokenImage.length;
-                             i++) {
-                            String token = parseException.tokenImage[i];
-                            String tokenVal = SqlParserUtil.getTokenVal(token);
-                            if (tokenVal != null) {
-                                tokenSet.add(tokenVal);
-                            }
-                        }
-                    }
-                    // Add the tokens which would have been expected in this
-                    // syntactic context to the list we're building.
-                    for (int i = 0; i <
-                        parseException.expectedTokenSequences.length; i++) {
-                        final int[] expectedTokenSequence =
-                            parseException.expectedTokenSequences[i];
-                        assert expectedTokenSequence.length == 1;
-                        final int tokenId = expectedTokenSequence[0];
-                        String token = parseException.tokenImage[tokenId];
+            } catch (SqlParseException parseException) {
+                // First time through, build the list of all tokens.
+                final String[] tokenImages =
+                    parseException.getTokenImages();
+                if (tokenSet.isEmpty()) {
+                    for (int i = 0; i < tokenImages.length;
+                         i++) {
+                        String token = tokenImages[i];
                         String tokenVal = SqlParserUtil.getTokenVal(token);
                         if (tokenVal != null) {
-                            keywords.add(tokenVal);
+                            tokenSet.add(tokenVal);
                         }
                     }
                 }
+                // Add the tokens which would have been expected in this
+                // syntactic context to the list we're building.
+                final int[][] expectedTokenSequences =
+                    parseException.getExpectedTokenSequences();
+                for (int i = 0; i <
+                    expectedTokenSequences.length; i++) {
+                    final int[] expectedTokenSequence =
+                        expectedTokenSequences[i];
+                    assert expectedTokenSequence.length == 1;
+                    final int tokenId = expectedTokenSequence[0];
+                    String token = tokenImages[tokenId];
+                    String tokenVal = SqlParserUtil.getTokenVal(token);
+                    if (tokenVal != null) {
+                        keywords.add(tokenVal);
+                    }
+                }
+            } catch (Throwable e) {
+                throw Util.newInternal(
+                    e, "Unexpected error while building token lists");
             }
         }
 
@@ -537,11 +547,7 @@ public abstract class SqlAbstractParserImpl
                 throw Util.newInternal(e);
             } catch (InvocationTargetException e) {
                 Throwable cause = e.getCause();
-                if (cause instanceof Exception) {
-                    throw parserImpl.normalizeException((Exception) cause);
-                } else {
-                    throw cause;
-                }
+                throw parserImpl.normalizeException(cause);
             }
         }
 

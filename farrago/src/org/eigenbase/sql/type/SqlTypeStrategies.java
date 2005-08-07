@@ -233,6 +233,17 @@ public abstract class SqlTypeStrategies
             RelDataTypeComparability.All);
 
     /**
+     * Operand type-checking strategy where operand type must allow
+     * ordered comparisons. Used when instance comparisons are made
+     * on single operand functions
+     */
+    public static final SqlOperandTypeChecker
+        otcComparableOrdered =
+        new ComparableOperandTypeChecker(
+            1,
+            RelDataTypeComparability.All);
+
+    /**
      * Operand type-checking strategy where operand types must allow
      * unordered comparisons.
      */

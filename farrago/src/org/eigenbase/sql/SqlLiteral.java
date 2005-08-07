@@ -35,6 +35,7 @@ import org.eigenbase.util.BitString;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.NlsString;
 import org.eigenbase.util.Util;
+import org.eigenbase.resource.EigenbaseResource;
 
 import java.math.BigDecimal;
 import java.util.Calendar;
@@ -566,7 +567,14 @@ public class SqlLiteral extends SqlNode
         String s,
         SqlParserPos pos)
     {
-        BitString bits = BitString.createFromHexString(s);
+        BitString bits;
+        try {
+            bits = BitString.createFromHexString(s);
+        } catch (NumberFormatException e) {
+            throw SqlUtil.newContextException(
+                pos,
+                EigenbaseResource.instance().newBinaryLiteralInvalid());
+        }
         return new SqlBinaryStringLiteral(bits, pos);
     }
 

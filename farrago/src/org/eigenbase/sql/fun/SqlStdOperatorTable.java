@@ -425,13 +425,22 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             SqlMinMaxAggFunction.MINMAX_COMPARABLE);
 
     /**
-     * <code>LAST</code> aggregate function.
+     * <code>LAST_VALUE</code> aggregate function.
      */
     public static final SqlAggFunction lastValueOperator =
         new SqlFirstLastValueAggFunction(false);
-    
+
+    /**
+     * <code>FIRST_VALUE</code> aggregate function.
+     */
     public static final SqlAggFunction firstValueOperator =
         new SqlFirstLastValueAggFunction(true);
+
+    /**
+     * <code>AVG</code> aggregate function.
+     */
+    public static final SqlAggFunction avgOperator =
+        new SqlAvgAggFunction(null);
 
     //-------------------------------------------------------------
     // WINDOW Rank Functions
@@ -519,7 +528,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     public static final SqlSpecialOperator valuesOperator =
         new SqlValuesOperator();
 
-    public static final SqlInternalOperator literalChainOperator =
+    public static final SqlLiteralChainOperator literalChainOperator =
         new SqlLiteralChainOperator();
 
     public static final SqlInternalOperator throwOperator =

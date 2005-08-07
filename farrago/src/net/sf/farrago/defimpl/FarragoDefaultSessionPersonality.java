@@ -28,6 +28,7 @@ import com.lucidera.lurql.*;
 import org.eigenbase.jmi.*;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.fun.*;
 
 import net.sf.farrago.session.*;
@@ -242,6 +243,38 @@ public class FarragoDefaultSessionPersonality
         }
         return new LurqlQueryProcessor(
             database.getSystemRepos().getMdrRepos());
+    }
+
+    public boolean isSupportedType(SqlTypeName type)
+    {
+        if (type == null) {
+            // Not a SQL type -- may be a structured type, such as MULTISET.
+            return true;
+        }
+        switch (type.getOrdinal()) {
+        case SqlTypeName.Boolean_ordinal:
+        case SqlTypeName.Tinyint_ordinal:
+        case SqlTypeName.Smallint_ordinal:
+        case SqlTypeName.Integer_ordinal:
+        case SqlTypeName.Date_ordinal:
+        case SqlTypeName.Time_ordinal:
+        case SqlTypeName.Timestamp_ordinal:
+        case SqlTypeName.Bigint_ordinal:
+        case SqlTypeName.Varchar_ordinal:
+        case SqlTypeName.Varbinary_ordinal:
+        case SqlTypeName.Multiset_ordinal:
+        case SqlTypeName.Char_ordinal:
+        case SqlTypeName.Binary_ordinal:
+        case SqlTypeName.Real_ordinal:
+        case SqlTypeName.Float_ordinal:
+        case SqlTypeName.Double_ordinal:
+        case SqlTypeName.Row_ordinal:
+            return true;
+        case SqlTypeName.Decimal_ordinal:
+        case SqlTypeName.Distinct_ordinal:
+        default:
+            return false;
+        }
     }
 }
 

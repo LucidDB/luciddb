@@ -25,6 +25,8 @@ package net.sf.farrago.fennel.tuple;
 
 import org.eigenbase.util.EnumeratedValues;
 
+import java.io.Serializable;
+
 /**
  * FennelStandardTypeDescriptor implements the
  * {@link FennelStandardTypeDescriptor} enumerations as kept in fennel.
@@ -35,66 +37,136 @@ import org.eigenbase.util.EnumeratedValues;
  * @author Mike Bennett
  * @version $Id$
  */
-public final class FennelStandardTypeDescriptor
+public abstract class FennelStandardTypeDescriptor
     extends EnumeratedValues.BasicValue
+    implements FennelStoredTypeDescriptor
 {
+    public static final int MIN_ORDINAL = 1;
+    public static final int INT_8_ORDINAL = 1;
+    public static final int UINT_8_ORDINAL = 2;
+    public static final int INT_16_ORDINAL = 3;
+    public static final int UINT_16_ORDINAL = 4;
+    public static final int INT_32_ORDINAL = 5;
+    public static final int UINT_32_ORDINAL = 6;
+    public static final int INT_64_ORDINAL = 7;
+    public static final int UINT_64_ORDINAL = 8;
+    public static final int BOOL_ORDINAL = 9;
+    public static final int REAL_ORDINAL = 10;
+    public static final int DOUBLE_ORDINAL = 11;
+    public static final int CHAR_ORDINAL = 12;
+    public static final int VARCHAR_ORDINAL = 13;
+    public static final int BINARY_ORDINAL = 14;
+    public static final int VARBINARY_ORDINAL = 15;
+    public static final int EXTENSION_MIN_ORDINAL = 1000;
+
+    /**
+     * Describes a signed byte.
+     */
+    public static final Type_INT_8 INT_8 = new Type_INT_8();
+
+    /**
+     * Describes an unsigned signed byte.
+     */
+    public static final Type_UINT_8 UINT_8 = new Type_UINT_8();
+
+    /**
+     * Describes a signed short.
+     */
+    public static final Type_INT_16 INT_16 = new Type_INT_16();
+
+    /**
+     * Describes an unsigned short.
+     */
+    public static final Type_UINT_16 UINT_16 = new Type_UINT_16();
+
+    /**
+     * Describes a signed int.
+     */
+    public static final Type_INT_32 INT_32 = new Type_INT_32();
+
+    /**
+     * Describes an unsigned int.
+     */
+    public static final Type_UINT_32 UINT_32 = new Type_UINT_32();
+
+    /**
+     * Describes a signed long.
+     */
+    public static final Type_INT_64 INT_64 = new Type_INT_64();
+
+    /**
+     * Describes an unsigned long.
+     */
+    public static final Type_UINT_64 UINT_64 = new Type_UINT_64();
+
+    /**
+     * Describes a boolean.
+     */
+    public static final Type_BOOL BOOL = new Type_BOOL();
+
+    /**
+     * Describes a float.
+     */
+    public static final Type_REAL REAL = new Type_REAL();
+
+    /**
+     * Describes a double.
+     */
+    public static final Type_DOUBLE DOUBLE = new Type_DOUBLE();
+
+    /**
+     * Describes a fixed-width character string.
+     */
+    public static final Type_CHAR CHAR = new Type_CHAR();
+
+    /**
+     * Describes a variable-width character string.
+     */
+    public static final Type_VARCHAR VARCHAR = new Type_VARCHAR();
+
+    /**
+     * Describes a fixed-width binary string.
+     */
+    public static final Type_BINARY BINARY = new Type_BINARY();
+
+    /**
+     * Describes a variable-width binary string.
+     */
+    public static final Type_VARBINARY VARBINARY = new Type_VARBINARY();
+
+    private static final FennelStandardTypeDescriptor[] values = {
+        INT_8,
+        UINT_8,
+        INT_16,
+        UINT_16,
+        INT_32,
+        UINT_32,
+        INT_64,
+        UINT_64,
+        BOOL,
+        REAL,
+        DOUBLE,
+        CHAR,
+        VARCHAR,
+        BINARY,
+        VARBINARY,
+    };
+
+    public static final EnumeratedValues enumeration =
+        new EnumeratedValues(values);
+
     private FennelStandardTypeDescriptor(String name, int ordinal)
     {
         super(name, ordinal, null);
     }
 
-    public static final FennelStandardTypeDescriptor INT_S =
-        new FennelStandardTypeDescriptor(
-            "s1", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_8);
-    public static final FennelStandardTypeDescriptor UINT_S =
-        new FennelStandardTypeDescriptor(
-            "u1", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_8);
-    public static final FennelStandardTypeDescriptor INT_16 =
-        new FennelStandardTypeDescriptor(
-            "s2", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_16);
-    public static final FennelStandardTypeDescriptor UINT_16 =
-        new FennelStandardTypeDescriptor(
-            "u2", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_16);
-    public static final FennelStandardTypeDescriptor INT_32 =
-        new FennelStandardTypeDescriptor(
-            "s4", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_32);
-    public static final FennelStandardTypeDescriptor UINT_32 =
-        new FennelStandardTypeDescriptor(
-            "u4", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_32);
-    public static final FennelStandardTypeDescriptor INT_64 =
-        new FennelStandardTypeDescriptor(
-            "s8", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_64);
-    public static final FennelStandardTypeDescriptor UINT_64 =
-        new FennelStandardTypeDescriptor(
-            "u8", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_64);
-    public static final FennelStandardTypeDescriptor BOOL =
-        new FennelStandardTypeDescriptor(
-            "bo", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_BOOL);
-    public static final FennelStandardTypeDescriptor REAL =
-        new FennelStandardTypeDescriptor(
-            "r", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_REAL);
-    public static final FennelStandardTypeDescriptor DOUBLE =
-        new FennelStandardTypeDescriptor(
-            "d", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_DOUBLE);
-    public static final FennelStandardTypeDescriptor CHAR =
-        new FennelStandardTypeDescriptor(
-            "c", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_CHAR);
-    public static final FennelStandardTypeDescriptor VARCHAR =
-        new FennelStandardTypeDescriptor(
-            "vc", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_VARCHAR);
-    public static final FennelStandardTypeDescriptor BINARY =
-        new FennelStandardTypeDescriptor(
-            "b", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_BINARY);
-    public static final FennelStandardTypeDescriptor VARBINARY =
-        new FennelStandardTypeDescriptor(
-            "vb", FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_VARBINARY);
-
-    public static final EnumeratedValues enumeration = new EnumeratedValues(
-        new EnumeratedValues.Value[] {
-            INT_S, UINT_S, INT_16, UINT_16, INT_32, UINT_32, INT_64, UINT_64,
-            BOOL, REAL, DOUBLE, CHAR, VARCHAR, BINARY, VARBINARY,
-        }
-    );
+    /**
+     * Returns the {@link FennelStandardTypeDescriptor} with a given name.
+     */
+    public static FennelStandardTypeDescriptor get(String name)
+    {
+        return (FennelStandardTypeDescriptor) enumeration.getValue(name);
+    }
 
     /**
      * Returns the {@link FennelStandardTypeDescriptor} with a given ordinal.
@@ -105,308 +177,472 @@ public final class FennelStandardTypeDescriptor
     }
 
     /**
-     *  abstract base class for all the numeric types. This is only used
-     *  within this module to save typing
+     * Returns whether this type is numeric.
      */
-    public static abstract class FennelNumericType
-        implements FennelStoredTypeDescriptor
+    public abstract boolean isNumeric();
+
+    /**
+     * Returns whether this is primitive type.
+     */
+    public boolean isNative()
     {
-//        private final int ordinal;
+        return getOrdinal() < DOUBLE_ORDINAL;
+    }
+
+    /**
+     * Returns whether this ordinal represents a primitive non-boolean type.
+     */
+    public boolean isNativeNotBool()
+    {
+        return getOrdinal() <= DOUBLE_ORDINAL &&
+            getOrdinal() != BOOL_ORDINAL;
+    }
+
+    /**
+     * Returns whether this ordinal represents an integral native type.
+     */
+    public boolean isIntegralNative(int st)
+    {
+        if (getOrdinal() <= BOOL_ORDINAL) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns whether this ordinal is an exact numeric.
+     */
+    public boolean isExact()
+    {
+        if (getOrdinal() <= UINT_64_ORDINAL) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns whether this ordinal is an approximate numeric.
+     */
+    public boolean isApprox()
+    {
+        if (getOrdinal() == REAL_ORDINAL ||
+            getOrdinal() == DOUBLE_ORDINAL) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns whether this ordinal represents an array.
+     */
+    public boolean isArray()
+    {
+        if (getOrdinal() >= CHAR_ORDINAL &&
+            getOrdinal() <= VARBINARY_ORDINAL) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns whether this ordinal represents a variable length array.
+     */
+    public boolean isVariableLenArray()
+    {
+        if (getOrdinal() == VARCHAR_ORDINAL ||
+            getOrdinal() == VARBINARY_ORDINAL) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns whether this ordinal represents a fixed length array.
+     */
+    public boolean isFixedLenArray()
+    {
+        if (getOrdinal() == CHAR_ORDINAL ||
+            getOrdinal() == BINARY_ORDINAL) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns whether this ordinal represents a text array.
+     */
+    public boolean isTextArray()
+    {
+        if (getOrdinal() == CHAR_ORDINAL ||
+            getOrdinal() == VARCHAR_ORDINAL) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns whether this ordinal represent a binary array.
+     */
+    public boolean isBinaryArray()
+    {
+        if (getOrdinal() == VARBINARY_ORDINAL ||
+            getOrdinal() == BINARY_ORDINAL) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Abstract base class for all types.
+     */
+    private static abstract class FennelType
+        extends FennelStandardTypeDescriptor
+        implements FennelStoredTypeDescriptor, Serializable
+    {
+        FennelType(String name, int ordinal)
+        {
+            super(name, ordinal);
+        }
+
+        public int getBitCount()
+        {
+            return 0;
+        }
+
+        public int getFixedByteCount()
+        {
+            return 0;
+        }
+
+        public int getMinByteCount(int maxWidth)
+        {
+            return 0;
+        }
+
+        public int getAlignmentByteCount(int width)
+        {
+            return 1;
+        }
+
+        public boolean isExact()
+        {
+            return false;
+        }
+
+        public boolean isSigned()
+        {
+            return false;
+        }
+
+        public boolean isNumeric()
+        {
+            return false;
+        }
+    }
+
+    /**
+     * Abstract base class for all numeric types.
+     */
+    private static abstract class FennelNumericType extends FennelType
+    {
         private final int bitCount;
         private final int fixedByteCount;
         private final boolean signed;
-        public final FennelStandardTypeDescriptor type;
+        private final boolean exact;
 
         /**
-         * returns the ordinal representing this type.
+         * Creates a FennelNumericType.
          */
-        public int getOrdinal()
+        protected FennelNumericType(
+            String name,
+            int ordinal,
+            int bitCount,
+            int fixedByteCount,
+            boolean signed,
+            boolean exact)
         {
-            return type.getOrdinal();
-        };
+            super(name, ordinal);
+            this.bitCount = bitCount;
+            this.fixedByteCount = fixedByteCount;
+            this.signed = signed;
+            this.exact = exact;
+        }
 
-        /**
-         * returns number of bits in marshalled representation, or 0 for a
-         * non-bit type; currently only 0 or 1 is supported.
-         */
         public int getBitCount()
         {
             return bitCount;
-        };
+        }
 
-        /**
-         * returns the width in bytes for a fixed-width non-bit type which
-         * admits no per-attribute precision, or 0 for types with per-attribute
-         * precision; for bit types, this yields the size of the unmarshalled
-         * representation.
-         */
         public int getFixedByteCount()
         {
             return fixedByteCount;
-        };
+        }
 
-        /**
-         * Gets the number of bytes required to store the narrowest value with
-         * this type, given a particular max byte count.  For a fixed-width
-         * type, the return value is the same as the input.
-         *
-         * @param maxWidth maximum width for which to compute the minimum
-         *
-         * @return number of bytes
-         */
         public int getMinByteCount(int maxWidth)
         {
             return maxWidth;
-        };
+        }
 
-        /**
-         * Gets the alignment size in bytes required for values of this type,
-         * given a particular max byte count.  This must be 1, 2, 4, or 8,
-         * and may not be greater than 1 for variable-width datatypes.
-         * For fixed-width datatypes, the width must be a multiple of the
-         * alignment size.
-         *
-         * @param width width for which to compute the alignment
-         *
-         * @return number of bytes
-         */
         public int getAlignmentByteCount(int width)
         {
             return width;
-        };
+        }
 
-        /**
-         * Indicate whether numeric data type is signed.
-         * @return true for signed types, otherwise false.
-         */
         public boolean isSigned()
         {
             return signed;
         }
 
-        /**
-         *  required by the serialization mechanism; should never be used.
-         */
-        protected FennelNumericType()
+        public boolean isExact()
         {
-//            this.ordinal = 0;
-            this.bitCount = 0;
-            this.fixedByteCount = 0;
-            this.signed = false;
-            this.type = null;
+            return exact;
+        }
+
+        public boolean isNumeric()
+        {
+            return true;
         }
 
         /**
-         * Construction.
+         * Required by the serialization mechanism; should never be used.
          */
-        public FennelNumericType(
-            int ordinal, 
-            int bitCount, 
-            int fixedByteCount,
-            boolean signed)
+        protected FennelNumericType()
         {
-//            this.ordinal        = ordinal;
-            this.bitCount       = bitCount;
-            this.fixedByteCount = fixedByteCount;
-            this.signed         = signed;
-            this.type = forOrdinal(ordinal);
+            super(null, -1);
+            this.bitCount = 0;
+            this.fixedByteCount = 0;
+            this.signed = false;
+            this.exact = true;
         }
     }
 
     /**
-     * describes a signed byte.
+     * Describes a signed byte.
      */
-    public static class stdINT_8 extends FennelNumericType
-        implements java.io.Serializable
+    private static class Type_INT_8 extends FennelNumericType
     {
-        public stdINT_8() { super(
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_8,
-            0, 1, true); };
+        Type_INT_8()
+        {
+            super("s1", INT_8_ORDINAL, 0, 1, true, true);
+        }
+
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelByteAccessor();
-        };
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
+        }
+        
+        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
+        {
             return (int) (d2.getByte() - d1.getByte());
         }
     }
 
     /**
-     * describes an unsigned byte.
+     * Describes an unsigned byte.
      */
-    public static class stdUINT_8 extends FennelNumericType
-        implements java.io.Serializable
+    private static class Type_UINT_8 extends FennelNumericType
     {
-        public stdUINT_8() { super(
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_8,
-            0, 1, false); };
+        Type_UINT_8()
+        {
+            super("u1", UINT_8_ORDINAL, 0, 1, false, true);
+        }
+        
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelByteAccessor();
-        };
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
+        }
+        
+        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
+        {
             return (int) (d2.getUnsignedByte() - d1.getUnsignedByte());
         }
     }
 
     /**
-     * describes a signed short.
+     * Describes a signed short.
      */
-    public static class stdINT_16 extends FennelNumericType
-        implements java.io.Serializable
+    private static class Type_INT_16 extends FennelNumericType
     {
-        public stdINT_16() { super(
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_16,
-            0, 2, true); };
+        Type_INT_16()
+        {
+            super("s2", INT_16_ORDINAL, 0, 2, true, true);
+        }
+
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelShortAccessor();
-        };
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
+        }
+
+        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
+        {
             return (int) (d2.getShort() - d1.getShort());
         }
     }
 
     /**
-     * describes an unsigned short.
+     * Describes an unsigned short.
      */
-    public static class stdUINT_16 extends FennelNumericType
-        implements java.io.Serializable
+    private static class Type_UINT_16 extends FennelNumericType
     {
-        public stdUINT_16() { super(
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_16,
-            0, 2, false); };
+        Type_UINT_16()
+        {
+            super("u2", UINT_16_ORDINAL, 0, 2, false, true);
+        }
+
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelShortAccessor();
-        };
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
+        }
+
+        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
+        {
             return d2.getUnsignedShort() - d1.getUnsignedShort();
         }
     }
 
     /**
-     * describes a signed int.
+     * Describes a signed int.
      */
-    public static class stdINT_32 extends FennelNumericType
-        implements java.io.Serializable
+    private static class Type_INT_32 extends FennelNumericType
     {
-        public stdINT_32() { super(
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_32,
-            0, 4, true); };
+        Type_INT_32()
+        {
+            super("s4", INT_32_ORDINAL, 0, 4, true, true);
+        }
+
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelIntAccessor();
-        };
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
+        }
+
+        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
+        {
             return d2.getInt() - d1.getInt();
         }
     }
 
     /**
-     * describes an unsigned int.
+     * Describes an unsigned int.
      */
-    public static class stdUINT_32 extends FennelNumericType
-        implements java.io.Serializable
+    private static class Type_UINT_32 extends FennelNumericType
     {
-        public stdUINT_32() { super(
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_32,
-            0, 4, false); };
+        Type_UINT_32()
+        {
+            super("u4", UINT_32_ORDINAL, 0, 4, false, true);
+        }
+
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelIntAccessor();
-        };
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
+        }
+
+        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
+        {
             return (int) (d2.getUnsignedInt() - d1.getUnsignedInt());
         }
     }
 
     /**
-     * describes a signed long.
+     * Describes a signed long.
      */
-    public static class stdINT_64 extends FennelNumericType
-        implements java.io.Serializable
+    private static class Type_INT_64 extends FennelNumericType
     {
-        public stdINT_64() { super(
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_INT_64,
-            0, 8, true); };
+        Type_INT_64()
+        {
+            super("s8", INT_64_ORDINAL, 0, 8, true, true);
+        }
+
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelLongAccessor();
-        };
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
+        }
+
+        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
+        {
             return (int) (d2.getLong() - d1.getLong());
         }
     }
 
     /**
-     * describes an unsigned long.
+     * Describes an unsigned long.
      */
-    public static class stdUINT_64 extends FennelNumericType
-        implements java.io.Serializable
+    private static class Type_UINT_64 extends FennelNumericType
     {
-        public stdUINT_64() { super(
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_UINT_64,
-            0, 8, false); };
+        Type_UINT_64()
+        {
+            super("u8", UINT_64_ORDINAL, 0, 8, false, true);
+        }
+
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelLongAccessor();
-        };
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
+        }
+
+        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
+        {
             return (int) (d2.getUnsignedLong() - d1.getUnsignedLong());
         }
     }
 
     /**
-     * describes a float.
+     * Describes a float.
      */
-    public static class stdREAL extends FennelNumericType
-        implements java.io.Serializable
+    private static class Type_REAL extends FennelNumericType
     {
-        public stdREAL() { super(
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_REAL,
-            0, 4, true); };
+        Type_REAL()
+        {
+            super("r", REAL_ORDINAL, 0, 4, true, false);
+        }
+
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelIntAccessor();
-        };
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
+        }
+
+        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
+        {
             return (int) (d2.getFloat() - d1.getFloat());
         }
     }
 
     /**
-     * describes a double.
+     * Describes a double.
      */
-    public static class stdDOUBLE extends FennelNumericType
-        implements java.io.Serializable
+    private static class Type_DOUBLE extends FennelNumericType
     {
-        public stdDOUBLE() { super(
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_DOUBLE,
-            0, 8, true); };
+        public Type_DOUBLE()
+        {
+            super("d", DOUBLE_ORDINAL, 0, 8, true, false);
+        }
+
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelLongAccessor();
-        };
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
+        }
+
+        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
+        {
             return (int) (d2.getDouble() - d1.getDouble());
         }
     }
 
     /**
-     * describes a boolean.
+     * Describes a boolean.
      */
-    public static class stdBOOL extends FennelNumericType
-        implements java.io.Serializable
+    private static class Type_BOOL extends FennelNumericType
     {
-        public stdBOOL() { super(
-            FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_BOOL,
-            1, 1, false); };
+        public Type_BOOL()
+        {
+            super("bo", BOOL_ORDINAL, 1, 1, false, true);
+        }
+
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelBitAccessor();
-        };
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
+        }
+
+        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
+        {
             if (d2.getBoolean() == d1.getBoolean()) {
                 return 0;
             }
@@ -418,30 +654,39 @@ public final class FennelStandardTypeDescriptor
     }
 
     /**
-     * describes a fixed width char array.
+     * Describes a fixed-width character string.
      */
-    public static class stdCHAR
-        implements FennelStoredTypeDescriptor, java.io.Serializable
+    private static class Type_CHAR extends FennelType
     {
-        public int getOrdinal() {
-            return FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_CHAR; }
-        public int getBitCount() { return 0; }
-        public int getFixedBitCount() { return 0; }
-        public int getFixedByteCount() { return 0; }
-        public int getMinByteCount(int maxWidth) { return maxWidth; }
-        public int getAlignmentByteCount(int width) { return 1; }
-        public boolean isSigned() { return false; }
+        Type_CHAR()
+        {
+            super("c", CHAR_ORDINAL);
+        }
+
+        public int getFixedBitCount()
+        {
+            return 0;
+        }
+
+        public int getMinByteCount(int maxWidth)
+        {
+            return maxWidth;
+        }
+
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelFixedWidthAccessor();
         }
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
+
+        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
+        {
             int c = d2.getLength() - d1.getLength();
             if (c != 0) {
                 return c;
             }
-            if (new String(d1.getBytes(), 0, c).equals(
-                new String(d2.getBytes(), 0, c))) {
+            final String s1 = new String(d1.getBytes(), 0, c);
+            final String s2 = new String(d2.getBytes(), 0, c);
+            if (s1.equals(s2)) {
                 return 0;
             }
             // arbitrarily mark the first one larger; if this is actually
@@ -451,29 +696,34 @@ public final class FennelStandardTypeDescriptor
     }
 
     /**
-     * describes a variable width char array.
+     * Describes a variable-width character string.
      */
-    public static class stdVARCHAR implements FennelStoredTypeDescriptor, java.io.Serializable
+    private static class Type_VARCHAR extends FennelType
     {
-        public int getOrdinal() {
-            return FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_VARCHAR; }
-        public int getBitCount() { return 0; }
-        public int getFixedBitCount() { return 0; }
-        public int getFixedByteCount() { return 0; }
-        public int getMinByteCount(int maxWidth) { return 0; }
-        public int getAlignmentByteCount(int width) { return 1; }
-        public boolean isSigned() { return false; }
+        Type_VARCHAR()
+        {
+            super("vc", VARCHAR_ORDINAL);
+        }
+
+        public int getFixedBitCount()
+        {
+            return 0;
+        }
+
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelVarWidthAccessor();
         }
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
+
+        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
+        {
             int c = d2.getLength() - d1.getLength();
             if (c != 0) {
                 return c;
             }
-            if (new String(d1.getBytes(), 0, c).equals(
-                new String(d2.getBytes(), 0, c))) {
+            final String s1 = new String(d1.getBytes(), 0, c);
+            final String s2 = new String(d2.getBytes(), 0, c);
+            if (s1.equals(s2)) {
                 return 0;
             }
             // arbitrarily mark the first one larger; if this is actually
@@ -483,30 +733,39 @@ public final class FennelStandardTypeDescriptor
     }
 
     /**
-     * describes a fixed width binary array.
+     * Describes a fixed-width binary string.
      */
-    public static class stdBINARY
-        implements FennelStoredTypeDescriptor, java.io.Serializable
+    private static class Type_BINARY extends FennelType
     {
-        public int getOrdinal() {
-            return FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_BINARY; }
-        public int getBitCount() { return 0; }
-        public int getFixedBitCount() { return 0; }
-        public int getFixedByteCount() { return 0; }
-        public int getMinByteCount(int maxWidth) { return maxWidth; }
-        public int getAlignmentByteCount(int width) { return 1; }
-        public boolean isSigned() { return false; }
+        Type_BINARY()
+        {
+            super("b", BINARY_ORDINAL);
+        }
+
+        public int getFixedBitCount()
+        {
+            return 0;
+        }
+
+        public int getMinByteCount(int maxWidth)
+        {
+            return maxWidth;
+        }
+
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelFixedWidthAccessor();
         }
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
+
+        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
+        {
             int c = d2.getLength() - d1.getLength();
             if (c != 0) {
                 return c;
             }
-            if (new String(d1.getBytes(), 0, c).equals(
-                new String(d2.getBytes(), 0, c))) {
+            final String s1 = new String(d1.getBytes(), 0, c);
+            final String s2 = new String(d2.getBytes(), 0, c);
+            if (s1.equals(s2)) {
                 return 0;
             }
             // arbitrarily mark the first one larger; if this is actually
@@ -516,31 +775,34 @@ public final class FennelStandardTypeDescriptor
     }
 
     /**
-     * describes a variable width binary array
+     * Describes a variable-width binary array.
      */
-    public static class stdVARBINARY
-        implements FennelStoredTypeDescriptor, java.io.Serializable
+    private static class Type_VARBINARY extends FennelType
     {
-        public int getOrdinal() {
-            return FennelStandardTypeDescriptorOrdinal.STANDARD_TYPE_VARBINARY;
+        Type_VARBINARY()
+        {
+            super("vb", VARBINARY_ORDINAL);
         }
-        public int getBitCount() { return 0; }
-        public int getFixedBitCount() { return 0; }
-        public int getFixedByteCount() { return 0; }
-        public int getMinByteCount(int maxWidth) { return 0; }
-        public int getAlignmentByteCount(int width) { return 1; }
-        public boolean isSigned() { return false; }
+
+        public int getFixedBitCount()
+        {
+            return 0;
+        }
+
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelVarWidthAccessor();
         }
-        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2) {
+
+        public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
+        {
             int c = d2.getLength() - d1.getLength();
             if (c != 0) {
                 return c;
             }
-            if (new String(d1.getBytes(), 0, c).equals(
-                new String(d2.getBytes(), 0, c))) {
+            final String s1 = new String(d1.getBytes(), 0, c);
+            final String s2 = new String(d2.getBytes(), 0, c);
+            if (s1.equals(s2)) {
                 return 0;
             }
             // arbitrarily mark the first one larger; if this is actually
@@ -548,6 +810,6 @@ public final class FennelStandardTypeDescriptor
             return -1;
         }
     }
-};
+}
 
 // End FennelStandardTypeDescriptor.java

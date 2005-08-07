@@ -183,7 +183,7 @@ JAVACODE SqlIntervalLiteral parseIntervalLiteral(
  * Converts a ParseException (local to this particular instantiation
  * of the parser) into a SqlParseException (common to all parsers).
  */
-JAVACODE SqlParseException convertException(Exception ex)
+JAVACODE SqlParseException convertException(Throwable ex)
 {
     if (ex instanceof SqlParseException) {
         return (SqlParseException) ex;
@@ -203,26 +203,25 @@ JAVACODE SqlParseException convertException(Exception ex)
                 token.endLine,
                 token.endColumn);
         }
+    } else if (ex instanceof TokenMgrError) {
+        TokenMgrError tme = (TokenMgrError) ex;
+        expectedTokenSequences = null;
+        tokenImage = null;
+        // Example:
+        //    Lexical error at line 3, column 24.  Encountered "#" after "a".
+        final java.util.regex.Pattern pattern = java.util.regex.Pattern.compile(
+            "(?s)Lexical error at line ([0-9]+), column ([0-9]+).*");
+        java.util.regex.Matcher matcher = pattern.matcher(ex.getMessage());
+        if (matcher.matches()) {
+            int line = Integer.parseInt(matcher.group(1));
+            int column = Integer.parseInt(matcher.group(2));
+            pos = new SqlParserPos(line, column, line, column);
+        }
     }
     
-    // REVIEW jvs 19-July-2005:  What is this commented-out code doing here?
-    // Please add an English comment to explain why it is disabled, or get rid
-    // of it.
-    
-//    if (ex.getMessage().length() == 0) {
-//        return new SqlParseException(ex, pos);
-//    } else {
-          SqlParseException spex = new SqlParseException(
-              ex.getMessage(), pos, expectedTokenSequences, tokenImage);
-          // TODO jvs 19-July-2005:  this should be enabled so that
-          // the trace log will see the real underlying cause, but when
-          // I do so,  it causes lots of test diffs (back to Farrago
-          // parser exception instead of SqlParserException).
-          /*
-          spex.initCause(ex);
-          */
-          return spex;
-//    }
+    SqlParseException spex = new SqlParseException(
+        ex.getMessage(), pos, expectedTokenSequences, tokenImage, ex);
+    return spex;
 }
 
 /**
@@ -422,7 +421,51 @@ List ParenthesizedQueryOrCommaList(
     ExprContext exprContext) :
 {
     SqlNode e;
-    List list = null;
+    List list;
+}
+{
+    <LPAREN>
+    {
+        if (exprContext == EXPR_ACCEPT_SUBQUERY) {
+            // we've now seen left paren, so queries inside should
+            // be allowed as subqueries
+            exprContext = EXPR_ACCEPT_ALL;
+        }
+    }
+    e = OrderedQueryOrExpr(exprContext)
+    {
+        list = startList(e);
+    }
+    (
+        <COMMA>
+        {
+            // a comma-list can't appear where only a query is expected
+            checkNonQueryExpression(exprContext);
+        }
+        e = Expression(exprContext)
+        {
+            list.add(e);
+        }
+    ) *
+    <RPAREN>
+    {
+        return list;
+    }
+}
+
+/**
+ * Parses function parameter lists including DISTINCT keyword recognition
+ *
+ *<p>
+ *
+ * This is pretty much the same as ParenthesizedQueryOrCommaList but allows the
+ * DISTINCT keyword to follow the left paren and not be followed by a comma.
+ */
+List FunctionParameterList(
+    ExprContext exprContext) :
+{
+    SqlNode e = null;
+    List list = new ArrayList();
 }
 {
     <LPAREN>
@@ -434,9 +477,24 @@ List ParenthesizedQueryOrCommaList(
             exprContext = EXPR_ACCEPT_ALL;
         }
     }
+    [ <DISTINCT>
+        {
+            e = SqlLiteral.createSymbol(SqlSelectKeyword.Distinct, getPos());
+        }
+        |
+      <ALL>
+        {
+            e = SqlLiteral.createSymbol(SqlSelectKeyword.All, getPos());
+        }
+    ]
+    {
+       list.add(e);
+    }
     e = OrderedQueryOrExpr(exprContext)
     {
-        list = startList(e);
+        if (e != null) {
+            list.add(e);
+        }
     }
     (
         <COMMA>
@@ -2805,6 +2863,7 @@ SqlNode NamedFunctionCall() :
     SqlFunctionCategory funcType =
         SqlFunctionCategory.UserDefinedFunction;
     SqlNode e = null;
+    SqlLiteral quantifier = null;
 }
 {
     [
@@ -2829,9 +2888,11 @@ SqlNode NamedFunctionCall() :
                 args = SqlParserUtil.emptyList;
                 pos = pos.plus(getPos());
             }
-            | args = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_SUBQUERY)
+            | args = FunctionParameterList(EXPR_ACCEPT_SUBQUERY)
             {
                 pos = pos.plus(getPos());
+		quantifier = (SqlLiteral) args.get(0);
+		args.remove(0);
             }
         )
         [ <OVER>
@@ -2846,9 +2907,13 @@ SqlNode NamedFunctionCall() :
             )
         ]
         {
+	
             function = createCall(
                 qualifiedName, SqlParserUtil.toNodeArray(args),
                 pos, funcType);
+            
+            function.setFunctionQuantifier( quantifier);		
+
             if (over) {
                 if (id != null) {
                     return SqlStdOperatorTable.overOperator.createCall(
@@ -2863,7 +2928,7 @@ SqlNode NamedFunctionCall() :
         }
     )
 }
-
+  
 
 /*
 * Parse Floor/Ceil function parameters
@@ -3407,6 +3472,7 @@ TOKEN :
     | < IDENTITY: "IDENTITY" >
     | < IMMEDIATE: "IMMEDIATE" >
     | < IMPLEMENTATION: "IMPLEMENTATION" >
+    | < IMPORT: "IMPORT" >
     | < IN: "IN" >
     | < INDICATOR: "INDICATOR" >
     | < INCLUDING: "INCLUDING" >
@@ -3445,6 +3511,7 @@ TOKEN :
     | < LEVEL: "LEVEL" >
     | < LIBRARY: "LIBRARY" >
     | < LIKE: "LIKE" >
+    | < LIMIT: "LIMIT" >
     | < LN: "LN" >
     | < LOCAL: "LOCAL" >
     | < LOCALTIME: "LOCALTIME" >
@@ -3985,7 +4052,9 @@ TOKEN :
     [ " ","\t","\n","\r","\f" ]
     >
     |
-    < BINARY_STRING_LITERAL: ["x","X"] <QUOTE> (<HEXDIGIT>)* <QUOTE> >
+    /* To improve error reporting, we allow all kinds of characters,
+     * not just hexits, in a binary string literal. */
+    < BINARY_STRING_LITERAL: ["x","X"] <QUOTE> ( (~["'","\n","\r"]) | ("''"))* <QUOTE> >
     |
     < QUOTED_STRING: <QUOTE> ( (~["'","\n","\r"]) | ("''"))* <QUOTE> >
     |

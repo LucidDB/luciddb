@@ -25,8 +25,10 @@ package net.sf.farrago.namespace.impl;
 import java.sql.*;
 import java.util.*;
 
-import net.sf.farrago.*;
+import net.sf.farrago.fem.med.*;
+
 import net.sf.farrago.namespace.*;
+import net.sf.farrago.catalog.*;
 
 
 /**
@@ -42,17 +44,28 @@ public abstract class MedAbstractNameDirectory extends MedAbstractBase
     //~ Methods ---------------------------------------------------------------
 
     // implement FarragoMedNameDirectory
-    public FarragoMedNameDirectory lookupSubdirectory(String [] foreignName)
+    public FarragoMedNameDirectory lookupSubdirectory(String foreignName)
         throws SQLException
     {
         return null;
     }
 
     // implement FarragoMedNameDirectory
-    public Iterator getContentsAsCwm(FarragoMetadataFactory factory)
+    public boolean queryMetadata(
+        FarragoMedMetadataQuery query,
+        FarragoMedMetadataSink sink)
         throws SQLException
     {
-        return null;
+        return false;
+    }
+    
+    // implement FarragoMedNameDirectory
+    public FemBaseColumnSet newImportedColumnSet(
+        FarragoRepos repos,
+        String tableName)
+    {
+        // By default, all imported objects are treated as foreign tables
+        return repos.newFemForeignTable();
     }
 }
 

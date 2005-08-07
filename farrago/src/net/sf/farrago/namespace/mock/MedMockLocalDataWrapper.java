@@ -72,7 +72,7 @@ public class MedMockLocalDataWrapper extends MedAbstractDataWrapper
         throws SQLException
     {
         MedMockLocalDataServer server = new MedMockLocalDataServer(
-            serverMofId, props);
+            this, serverMofId, props);
         boolean success = false;
         try {
             server.initialize();

@@ -23,7 +23,6 @@ libfarrago_lu_la_LIBADD = \
 	-lfennel_segment \
 	-lfennel_cache \
 	-lfennel_device \
-	-lfennel_synch \
 	-lfennel_common
 
 LDADD = -Wl,--no-undefined

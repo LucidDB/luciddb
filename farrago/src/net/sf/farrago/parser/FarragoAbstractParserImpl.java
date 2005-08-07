@@ -122,14 +122,8 @@ public abstract class FarragoAbstractParserImpl extends SqlAbstractParserImpl
         attribute.setInitialValue(defaultExpression);
     }
 
-    /**
-     * Removes or transforms misleading information from a parse exception,
-     * and converts to {@link SqlParseException}.
-     *
-     * @param e dirty excn
-     * @return clean excn
-     */
-    public abstract SqlParseException normalizeException(Exception e);
+    // implement SqlAbstractParserImpl
+    public abstract SqlParseException normalizeException(Throwable e);
 
     /**
      * Returns whether a keyword is a non-reserved word.

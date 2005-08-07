@@ -64,6 +64,7 @@ public class FennelWindowRel extends FennelSingleRel
 {
     private RexNode[] inputExprs;
     private RexNode[] outputExprs;
+    private RexNode[] aggs;
     private Window[] windows;
     private final RexNode conditionExpr;
 
@@ -88,6 +89,7 @@ public class FennelWindowRel extends FennelSingleRel
         RelDataType rowType,
         RexNode[] inputExprs,
         Window[] windows,
+        RexNode[] aggs,
         RexNode[] outputExprs,
         RexNode conditionExpr)
     {
@@ -105,6 +107,8 @@ public class FennelWindowRel extends FennelSingleRel
         }
         assert windows != null : "precondition: windows != null";
         assert windows.length > 0 : "precondition : windows.length > 0";
+        assert aggs != null : "precondition: aggs != null";
+        assert aggs.length > 0 : "precondition: aggs.length > 0";
         assert child.getConvention() == FennelRel.FENNEL_EXEC_CONVENTION;
         assert !RexOver.containsOver(inputExprs, null);
         assert !RexOver.containsOver(outputExprs, conditionExpr);
@@ -112,14 +116,15 @@ public class FennelWindowRel extends FennelSingleRel
         this.outputExprs = outputExprs;
         this.inputExprs = inputExprs;
         this.windows = windows;
+        this.aggs = aggs;
         this.conditionExpr = conditionExpr;
     }
 
     // override Object (public, does not throw CloneNotSupportedException)
     public Object clone() {
         FennelWindowRel clone = new FennelWindowRel(
-            getCluster(), getChild(), rowType, inputExprs, windows, outputExprs,
-            conditionExpr);
+            getCluster(), getChild(), rowType, inputExprs, windows, aggs,
+            outputExprs, conditionExpr);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -209,9 +214,9 @@ public class FennelWindowRel extends FennelSingleRel
         RexToCalcTranslator translator =
             new RexToCalcTranslator(getCluster().getRexBuilder());
         String program = translator.getAggProgram(
-            // REVIEW: Is the input to the output program the buckets of all
-            //   windows: [w0.b0] [w0.b1] [w1.b0] [w1.b1] [w1.b2]
             getChild().getRowType(),
+            inputExprs,
+            aggs,
             outputExprs,
             conditionExpr);
         windowStreamDef.setOutputProgram(program);
@@ -268,14 +273,13 @@ public class FennelWindowRel extends FennelSingleRel
                     new RexCall[partition.overList.size()]);
                 RelDataType inputRowType = getChild().getRowType();
                 String[] programs = new String[3];
-                translator.getAggProgram(inputRowType, overs, programs);
+                translator.getAggProgram(inputRowType, inputExprs, null, overs, programs);
                 windowPartitionDef.setInitializeProgram(programs[0]);
                 windowPartitionDef.setAddProgram(programs[1]);
                 windowPartitionDef.setDropProgram(programs[2]);
 
-                // Review: Should we use tupleDescriptorToString instead?
-                final FemTupleDescriptor bucketDesc = FennelRelUtil.createTupleDescriptorFromRowType
-                        (repos, getCluster().getTypeFactory(), getRowType());
+                final FemTupleDescriptor bucketDesc = FennelRelUtil.
+                        createTupleDescriptorFromRexNode(repos, overs);
                 windowPartitionDef.setBucketDesc(bucketDesc);
 
                 windowPartitionDef.setPartitionKeyList(

@@ -235,23 +235,21 @@ DdlStmt DdlStmtEof() :
             )
         )
         |
+        <ALTER>
         (
-            <ALTER>
+            <SYSTEM>
             (
-                <SYSTEM>
-                (
-                    <SET> ddlStmt = SystemParamAssignment()
-                    |
-                    <ADD> ddlStmt = CatalogExtension()
-                )
+                <SET> ddlStmt = SystemParamAssignment()
                 |
-                <SESSION>
-                (
-                    <IMPLEMENTATION> ddlStmt = SessionImplementation()
-                )
-                |
-                ddlStmt = ExtensionModelAlter()
+                <ADD> ddlStmt = CatalogExtension()
             )
+            |
+            <SESSION>
+            (
+                <IMPLEMENTATION> ddlStmt = SessionImplementation()
+            )
+            |
+            ddlStmt = ExtensionModelAlter()
         )
         |
         <GRANT>
@@ -276,6 +274,8 @@ DdlStmt DdlStmtEof() :
         <SAVEPOINT> ddlStmt = Savepoint()
         |
         <RELEASE> <SAVEPOINT> ddlStmt = ReleaseSavepoint()
+        |
+        <IMPORT> ddlStmt = ImportForeignSchemaStmt()
     )
     <EOF>
     {
@@ -2165,6 +2165,42 @@ void StorageOption(FemElementWithStorageOptions element) :
         option.setName(name.getSimple());
         option.setValue(value);
         element.getStorageOptions().add(option);
+    }
+}
+
+DdlImportForeignSchemaStmt ImportForeignSchemaStmt() :
+{
+    SqlIdentifier foreignSchemaName;
+    SqlIdentifier localSchemaName;
+    boolean exclude = false;
+    List roster = null;
+    String pattern = null;
+    FemDataServer server;
+}
+{
+    // REVIEW jvs 5-Aug-2005:  is a catalog-qualified name legal here?
+    <FOREIGN> <SCHEMA> foreignSchemaName = SimpleIdentifier()
+    [
+        (<LIMIT> <TO> | <EXCEPT> { exclude = true; })
+        // TODO jvs 5-Aug-2005:  this is supposed to take compound
+        // identifiers, but it's useless because all the schema names
+        // have to match foreignSchemaName
+        (
+            <LPAREN> roster = SimpleIdentifierCommaList() <RPAREN>
+            |
+            <TABLE_NAME> <LIKE> pattern = QuotedString()
+        )
+    ]
+    <FROM> server = DataServerReference()
+    <INTO> localSchemaName = CompoundIdentifier2()
+    {
+        return new DdlImportForeignSchemaStmt(
+            farragoParser.getStmtValidator().findSchema(localSchemaName),
+            server,
+            foreignSchemaName,
+            exclude,
+            roster,
+            pattern);
     }
 }
 

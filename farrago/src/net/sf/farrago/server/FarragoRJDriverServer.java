@@ -36,7 +36,7 @@ import java.sql.Connection;
  * @author Tim Leung
  * @version $Id$
  */
-class FarragoRJDriverServer extends RJDriverServer
+public class FarragoRJDriverServer extends RJDriverServer
     implements RJDriverInterface
 {
     public FarragoRJDriverServer(String admpasswd) throws RemoteException
