@@ -641,7 +641,7 @@ public class SqlToRelConverterTest extends TestCase
 
             "ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
             "ROWS (2 PRECEDING))], EXPR$1=[CASE(=(COUNT($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
-            "ROWS (2 PRECEDING)), 0), CAST(null):INTEGER NOT NULL, /(SUM($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
+            "ROWS (2 PRECEDING)), 0), CAST(null):INTEGER, /(SUM($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
             "ROWS (2 PRECEDING)), COUNT($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
             "ROWS (2 PRECEDING))))])" + NL +
             "  TableAccessRel(table=[[EMP]])" + NL);
