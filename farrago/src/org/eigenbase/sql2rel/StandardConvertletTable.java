@@ -283,6 +283,21 @@ public class StandardConvertletTable extends ReflectiveConvertletTable
         return cx.getRexBuilder().makeCall(fun, exprs);
     }
 
+    public RexNode convertAggregateFunction(
+        SqlRexContext cx,
+        SqlAggFunction fun,
+        SqlCall call)
+    {
+        final SqlNode[] operands = call.getOperands();
+        final RexNode [] exprs;
+        if (call.isCountStar()) {
+            exprs = RexNode.EMPTY_ARRAY;
+        } else {
+            exprs = convertExpressionList(cx, operands);
+        }
+        return cx.getRexBuilder().makeCall(fun, exprs);
+    }
+
     private RexNode makeConstructorCall(
         SqlRexContext cx,
         SqlFunction constructor,
@@ -333,12 +348,12 @@ public class StandardConvertletTable extends ReflectiveConvertletTable
         SqlRexContext cx,
         SqlNode [] nodes)
     {
-        final RexNode [] exps = new RexNode[nodes.length];
+        final RexNode [] exprs = new RexNode[nodes.length];
         for (int i = 0; i < nodes.length; i++) {
             SqlNode node = nodes[i];
-            exps[i] = cx.convertExpression(node);
+            exprs[i] = cx.convertExpression(node);
         }
-        return exps;
+        return exprs;
     }
 
     private RexNode convertIsDistinctFrom(

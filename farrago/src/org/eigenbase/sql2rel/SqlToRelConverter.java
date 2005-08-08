@@ -482,7 +482,7 @@ public class SqlToRelConverter
     /**
      * For use by {@link Blackboard#visit} methods.
      */
-    private void setResult(RexNode node)
+    void setResult(RexNode node)
     {
         Util.permAssert(
             node != null,
@@ -541,12 +541,8 @@ public class SqlToRelConverter
     {
         SqlCall call = (SqlCall) node;
         SqlCall aggCall = (SqlCall) call.operands[0];
-        SqlAggFunction op = (SqlAggFunction) aggCall.getOperator();
         SqlNode windowOrRef = call.operands[1];
         final SqlWindow window = validator.resolveWindow(windowOrRef, bb.scope);
-        final RexNode[] exprs =
-            convertExpressionList(bb, aggCall.operands);
-        final RelDataType type = validator.getValidatedNodeType(aggCall);
         final SqlNodeList partitionList = window.getPartitionList();
         final RexNode[] partitionKeys = new RexNode[partitionList.size()];
         for (int i = 0; i < partitionKeys.length; i++) {
@@ -558,41 +554,26 @@ public class SqlToRelConverter
             orderKeys[i] = bb.convertExpression(orderList.get(i));
         }
         RexNode rexAgg = exprConverter.convertCall(bb, aggCall);
-//        RexNode preCall = rexBuilder.makeCall(op, exprs);
-//        RexNode postCall = exprConverter.macroExpand(bb, preCall);
-//        if (preCall != postCall) {
-            // Macro expander did some work. The returned expression is not
-            // necessarily a call to an agg function, so walk over the tree
-            // and apply 'over' to all agg functions.
-            final RexShuttle visitor = new RexShuttle() {
-                public RexNode visit(RexCall call)
-                {
-                    final SqlOperator op = call.getOperator();
-                    if (op instanceof SqlAggFunction) {
-                        RelDataType type = call.getType();
-                        RexNode[] exprs = call.getOperands();
-                        return rexBuilder.makeOver(
-                            type, (SqlAggFunction) op, exprs, partitionKeys,
-                            orderKeys, window.getLowerBound(),
-                            window.getUpperBound(), window.isRows());
-                    }
-                    return super.visit(call);
+        // Walk over the tree and apply 'over' to all agg functions.
+        // This is necessary because the returned expression is not necessarily
+        // a call to an agg function. For example, AVG(x) becomes SUM(x) /
+        // COUNT(x).
+        final RexShuttle visitor = new RexShuttle() {
+            public RexNode visit(RexCall call)
+            {
+                final SqlOperator op = call.getOperator();
+                if (op instanceof SqlAggFunction) {
+                    RelDataType type = call.getType();
+                    RexNode[] exprs = call.getOperands();
+                    return rexBuilder.makeOver(
+                        type, (SqlAggFunction) op, exprs, partitionKeys,
+                        orderKeys, window.getLowerBound(),
+                        window.getUpperBound(), window.isRows());
                 }
-            };
-            return visitor.visit(rexAgg);
-//        }
-    }
-
-    private RexNode [] convertExpressionList(
-        Blackboard bb,
-        SqlNode [] nodes)
-    {
-        final RexNode [] exps = new RexNode[nodes.length];
-        for (int i = 0; i < nodes.length; i++) {
-            SqlNode node = nodes[i];
-            exps[i] = bb.convertExpression(node);
-        }
-        return exps;
+                return super.visit(call);
+            }
+        };
+        return visitor.visit(rexAgg);
     }
 
     /**

@@ -647,6 +647,20 @@ public class SqlToRelConverterTest extends TestCase
             "  TableAccessRel(table=[[EMP]])" + NL);
     }
 
+    public void testOverCountStar()
+    {
+        check(
+            "select count(sal) over w1," + NL +
+            "  count(*) over w1" + NL +
+            "from emp" + NL +
+            "window w1 as (partition by job order by hiredate rows 2 preceding)",
+
+            "ProjectRel(EXPR$0=[COUNT($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
+            "ROWS (2 PRECEDING))], EXPR$1=[COUNT() OVER (PARTITION BY $2 ORDER BY $4" + NL +
+            "ROWS (2 PRECEDING))])" + NL +
+            "  TableAccessRel(table=[[EMP]])" + NL);
+    }
+
     public void testExplainAsXml() {
         String sql = "select 1 + 2, 3 from (values (true))";
         final RelNode rel = tester.convertSqlToRel(sql);
