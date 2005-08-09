@@ -159,6 +159,9 @@ typedef boost::shared_ptr<Calculator> SharedCalculator;
 class DynamicParamManager;
 typedef boost::shared_ptr<DynamicParamManager> SharedDynamicParamManager;
 
+class SizeBuffer;
+typedef boost::shared_ptr<SizeBuffer> SharedSizeBuffer;
+
 FENNEL_END_NAMESPACE
 
 #endif

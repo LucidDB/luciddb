@@ -43,6 +43,7 @@ PseudoUuid.cpp \
 ResourceBundle.cpp \
 ResourceDefinition.cpp \
 RawIntrusiveList.cpp \
+SizeBuffer.cpp \
 SysCallExcn.cpp \
 TraceSource.cpp \
 TraceTarget.cpp
