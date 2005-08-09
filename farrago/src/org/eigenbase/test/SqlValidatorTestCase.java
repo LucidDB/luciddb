@@ -27,9 +27,7 @@ import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.sql.SqlCollation;
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlOperator;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.test.AbstractSqlTester;
@@ -147,6 +145,15 @@ public class SqlValidatorTestCase extends TestCase
         void checkQueryType(
             String sql,
             String expected);
+
+        /**
+         * Checks if the interval value conversion to milliseconds is valid.
+         * For example,
+         * <code>checkIntervalConv(VALUES (INTERVAL '1' Minute), "60000")</code>.
+         */
+        void checkIntervalConv(
+            String sql,
+            String expected);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -239,6 +246,23 @@ public class SqlValidatorTestCase extends TestCase
         String expected)
     {
         tester.checkQueryType(sql, expected);
+    }
+
+    /**
+     * Checks that the first column returned by a query has the expected type.
+     * For example,
+     * <blockquote><code>
+     * checkQueryType("SELECT empno FROM Emp", "INTEGER NOT NULL");
+     * </code></blockquote>
+     *
+     * @param sql Query
+     * @param expected Expected type, including nullability
+     */
+    public void checkIntervalConv(
+        String sql,
+        String expected)
+    {
+        tester.checkIntervalConv(buildQuery(sql), expected);
     }
 
     protected final void assertExceptionIsThrown(
@@ -544,6 +568,26 @@ public class SqlValidatorTestCase extends TestCase
                 return; // don't check the type for now
             }
             String actual = getTypeString(actualType);
+            assertEquals(expected, actual);
+        }
+
+        public void checkIntervalConv(String sql, String expected)
+        {
+            SqlValidator validator = getValidator();
+            SqlNode n = parseAndValidate(validator, sql);
+
+            SqlNode node = null;
+            for (int i = 0; i < ((SqlSelect) n).getOperands().length; i++) {
+                node = ((SqlSelect) n).getOperands()[i];
+                if (node instanceof SqlCall) {
+                    node = ((SqlCall) ((SqlCall) node).getOperands()[0]).getOperands()[0];
+                    break;
+                }
+            }
+
+            long l = SqlParserUtil.intervalToMillis((SqlIntervalLiteral.IntervalValue)
+                    ((SqlIntervalLiteral) node).getValue());
+            String actual = l + "";
             assertEquals(expected, actual);
         }
 

@@ -1440,8 +1440,8 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
 
             final CalcProgramBuilder.Register zeroReg =
                 translator.builder.newLiteral(
-                    translator.getCalcRegisterDescriptor(call),
-                    integer0);
+                translator.getCalcRegisterDescriptor(call),
+                integer0);
             CalcProgramBuilder.move.add(
                 translator.builder,
                 accumulatorRegister,
@@ -1458,8 +1458,8 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
 
             final CalcProgramBuilder.Register oneReg =
                 translator.builder.newLiteral(
-                    translator.getCalcRegisterDescriptor(call),
-                    integer1);
+                translator.getCalcRegisterDescriptor(call),
+                integer1);
 
             // If operand is null, then it is like count(*).
             // Otherwise, it is like count(x).
@@ -1524,8 +1524,8 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
 
             final CalcProgramBuilder.Register oneReg =
                 translator.builder.newLiteral(
-                    translator.getCalcRegisterDescriptor(call),
-                    integer1);
+                translator.getCalcRegisterDescriptor(call),
+                integer1);
 
             // If operand is null, then it is like count(*).
             // Otherwise, it is like count(x).
@@ -1597,8 +1597,8 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
 
             final CalcProgramBuilder.Register zeroReg =
                 translator.builder.newLiteral(
-                    translator.getCalcRegisterDescriptor(call),
-                    new Integer(0));
+                translator.getCalcRegisterDescriptor(call),
+                integer0);
             CalcProgramBuilder.move.add(
                 translator.builder,
                 accumulatorRegister,
@@ -1641,7 +1641,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             // Note that a label '4' is created for a row that doesn't have any
             // instruction. This is critical both when there is sum(col2) or
             // simply a return statement.
-            if (operand.getType().isNullable() && inputExps == null) {
+            if (operand.getType().isNullable()) {
                 int ordinal = translator.getNullRegisterOrdinal();
                 CalcProgramBuilder.Register isNullReg = null;
                 String wasNotNull = translator.newLabel();
@@ -1749,14 +1749,15 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             // Return null during the initialization.
             assert call.operands.length == 1;
 
-            final CalcProgramBuilder.Register nullReg =
+            // TODO: Fix this... Supposed to be null instead of zero.
+            final CalcProgramBuilder.Register zeroReg =
                 translator.builder.newLiteral(
-                    translator.getCalcRegisterDescriptor(call),
-                    null);
+                translator.getCalcRegisterDescriptor(call),
+                integer0);
             CalcProgramBuilder.move.add(
                             translator.builder,
                             accumulatorRegister,
-                            nullReg);
+                            zeroReg);
         }
 
         public void implementAdd(

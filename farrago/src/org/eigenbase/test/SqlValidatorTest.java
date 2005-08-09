@@ -962,6 +962,23 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         assertTrue(b);
     }
 
+    public void testIntervalMillisConversion() {
+        checkIntervalConv("INTERVAL '1' DAY", "86400000");
+        checkIntervalConv("INTERVAL '1' HOUR", "3600000");
+        checkIntervalConv("INTERVAL '1' MINUTE", "60000");
+        checkIntervalConv("INTERVAL '1' SECOND", "1000");
+        checkIntervalConv("INTERVAL '1:05' HOUR TO MINUTE", "3900000");
+        checkIntervalConv("INTERVAL '1:05' MINUTE TO SECOND", "65000");
+        checkIntervalConv("INTERVAL '1 1' DAY TO HOUR", "90000000");
+        checkIntervalConv("INTERVAL '1 1:05' DAY TO MINUTE", "90300000");
+        checkIntervalConv("INTERVAL '1 1:05:03' DAY TO SECOND", "90303000");
+        checkIntervalConv("INTERVAL '1 1:05:03.12345' DAY TO SECOND", "90303123");
+        checkIntervalConv("INTERVAL '1.12345' SECOND", "1123");
+        checkIntervalConv("INTERVAL '1:05.12345' MINUTE TO SECOND", "65123");
+        checkIntervalConv("INTERVAL '1:05:03' HOUR TO SECOND", "3903000");
+        checkIntervalConv("INTERVAL '1:05:03.12345' HOUR TO SECOND", "3903123");
+    }
+
     public void testIntervalLiteral() {
         checkExpType("INTERVAL '1' DAY", "INTERVAL DAY NOT NULL");
         checkExpType("INTERVAL '1' DAY(4)", "INTERVAL DAY(4) NOT NULL");
