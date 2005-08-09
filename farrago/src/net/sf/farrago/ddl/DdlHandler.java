@@ -477,30 +477,10 @@ public abstract class DdlHandler
      */
     private void convertTypeToCwmColumn(RelDataType type, CwmColumn column)
     {
-        final FarragoRepos repos = validator.getRepos();
-        CwmSqldataType cwmType =
-            validator.getStmtValidator().findSqldataType(type.getSqlIdentifier());
-        if (cwmType != null) {
-            SqlTypeName typeName = type.getSqlTypeName();
-            if (typeName != null) {
-                if (typeName.allowsPrec()) {
-                    column.setPrecision(new Integer(type.getPrecision()));
-                    if (typeName.allowsScale()) {
-                        column.setScale(new Integer(type.getScale()));
-                    }
-                }
-            }
-        } else if (type.getComponentType() != null) {
-            final RelDataType componentType = type.getComponentType();
-            final FemSqlmultisetType multisetType =
-                repos.newFemSqlmultisetType();
-            multisetType.setName("SYS$MULTISET_" + multisetType.refMofId());
-            final FemAbstractAttribute attr = repos.newFemSqltypeAttribute();
-            attr.setName("SYS$MULTISET_COMPONENT_" + attr.refMofId());
-            convertTypeToCwmColumn(componentType, attr);
-            multisetType.getFeature().add(attr);
-            cwmType = multisetType;
-        } else if (type.isStruct()) {
+        CwmSqldataType cwmType;
+        final SqlTypeName typeName = type.getSqlTypeName();
+        if (typeName == SqlTypeName.Row) {
+            Util.permAssert(type.isStruct(), "type.isStruct()");
             FemSqlrowType rowType = repos.newFemSqlrowType();
             rowType.setName("SYS$ROW_" + rowType.refMofId());
             final RelDataTypeField[] fields = type.getFields();
@@ -512,8 +492,30 @@ public abstract class DdlHandler
                 rowType.getFeature().add(subColumn);
             }
             cwmType = rowType;
+        } else if (type.getComponentType() != null) {
+            final RelDataType componentType = type.getComponentType();
+            final FemSqlmultisetType multisetType =
+                repos.newFemSqlmultisetType();
+            multisetType.setName("SYS$MULTISET_" + multisetType.refMofId());
+            final FemAbstractAttribute attr = repos.newFemSqltypeAttribute();
+            attr.setName("SYS$MULTISET_COMPONENT_" + attr.refMofId());
+            convertTypeToCwmColumn(componentType, attr);
+            multisetType.getFeature().add(attr);
+            cwmType = multisetType;
         } else {
-            throw Util.needToImplement(type);
+            cwmType = validator.getStmtValidator().findSqldataType(
+                type.getSqlIdentifier());
+            Util.permAssert(cwmType != null, "cwmType != null");
+            if (typeName != null) {
+                if (typeName.allowsPrec()) {
+                    column.setPrecision(new Integer(type.getPrecision()));
+                    if (typeName.allowsScale()) {
+                        column.setScale(new Integer(type.getScale()));
+                    }
+                }
+            } else {
+                throw Util.needToImplement(type);
+            }
         }
         column.setType(cwmType);
         if (type.isNullable()) {
