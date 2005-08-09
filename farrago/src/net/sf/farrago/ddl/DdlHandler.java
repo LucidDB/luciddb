@@ -53,7 +53,7 @@ import java.util.logging.*;
 
 /**
  * DdlHandler is an abstract base for classes which provide implementations for
- * the actions taken by DdlValidator on individual objects.  See {@link
+ * the actions taken by {@link DdlValidator} on individual objects.  See {@link
  * FarragoSessionDdlHandler} for an explanation.
  *
  * @author John V. Sichi
@@ -186,9 +186,16 @@ public abstract class DdlHandler
         FemAbstractTypedElement abstractElement,
         CwmNamespace cwmNamespace)
     {
-        FemSqltypedElement element = FarragoCatalogUtil.toFemSqltypedElement(
-            abstractElement);
+        validateTypedElement(
+            FarragoCatalogUtil.toFemSqltypedElement(abstractElement),
+            cwmNamespace);
+    }
 
+    private void validateTypedElement(
+        FemSqltypedElement element,
+        CwmNamespace cwmNamespace)
+    {
+        final FemAbstractTypedElement abstractElement = element.getModelElement();
         SqlDataTypeSpec dataType = (SqlDataTypeSpec)
             validator.getSqlDefinition(abstractElement);
 
@@ -376,6 +383,14 @@ public abstract class DdlHandler
         } else if (type instanceof FemUserDefinedType) {
             // nothing special to do for UDT's, which were
             // already validated on creation
+        } else if (type instanceof FemSqlrowType) {
+            FemSqlrowType rowType = (FemSqlrowType) type;
+            for (Iterator columnIter = rowType.getFeature().iterator();
+                columnIter.hasNext();) {
+                FemAbstractAttribute column =
+                    (FemAbstractAttribute) columnIter.next();
+                validateAttribute(column);
+            }
         } else {
             throw Util.needToImplement(type);
         }
@@ -418,8 +433,15 @@ public abstract class DdlHandler
     }
 
     /**
-     * Initializes a CwmColumn definition based on a RelDataTypeField.
-     * If the column has no name, the name is initialized from the field
+     * Initializes a {@link CwmColumn} definition based on a
+     * {@link RelDataTypeField}.
+     *
+     * <p>As well as calling {@link CwmColumn#setType(CwmClassifier)},
+     * also calls {@link CwmColumn#setPrecision(Integer)},
+     * {@link CwmColumn#setScale(Integer)} and
+     * {@link CwmColumn#setIsNullable(NullableType)}.
+     *
+     * <p>If the column has no name, the name is initialized from the field
      * name; otherwise, the existing name is left unmodified.
      *
      * @param field input field
@@ -431,23 +453,69 @@ public abstract class DdlHandler
         RelDataTypeField field,
         CwmColumn column)
     {
-        RelDataType type = field.getType();
         if (column.getName() == null) {
-            column.setName(field.getName());
+            final String name = field.getName();
+            assert name != null;
+            column.setName(name);
         }
+        convertTypeToCwmColumn(field.getType(), column);
+    }
+
+    /**
+     * Populates a {@link CwmColumn} object with type information.
+     *
+     * <p>As well as calling {@link CwmColumn#setType(CwmClassifier)},
+     * also calls {@link CwmColumn#setPrecision(Integer)},
+     * {@link CwmColumn#setScale(Integer)} and
+     * {@link CwmColumn#setIsNullable(NullableType)}.
+     *
+     * <p>If the type is structured or a multiset, the implementation is
+     * recursive.
+     *
+     * @param type Type to convert
+     * @param column Column to populate with type information
+     */
+    private void convertTypeToCwmColumn(RelDataType type, CwmColumn column)
+    {
+        final FarragoRepos repos = validator.getRepos();
         CwmSqldataType cwmType =
-            validator.getStmtValidator().findSqldataType(
-                type.getSqlIdentifier());
-        column.setType(cwmType);
-        SqlTypeName typeName = type.getSqlTypeName();
-        if (typeName != null) {
-            if (typeName.allowsPrec()) {
-                column.setPrecision(new Integer(type.getPrecision()));
-                if (typeName.allowsScale()) {
-                    column.setScale(new Integer(type.getScale()));
+            validator.getStmtValidator().findSqldataType(type.getSqlIdentifier());
+        if (cwmType != null) {
+            SqlTypeName typeName = type.getSqlTypeName();
+            if (typeName != null) {
+                if (typeName.allowsPrec()) {
+                    column.setPrecision(new Integer(type.getPrecision()));
+                    if (typeName.allowsScale()) {
+                        column.setScale(new Integer(type.getScale()));
+                    }
                 }
             }
+        } else if (type.getComponentType() != null) {
+            final RelDataType componentType = type.getComponentType();
+            final FemSqlmultisetType multisetType =
+                repos.newFemSqlmultisetType();
+            multisetType.setName("SYS$MULTISET_" + multisetType.refMofId());
+            final FemAbstractAttribute attr = repos.newFemSqltypeAttribute();
+            attr.setName("SYS$MULTISET_COMPONENT_" + attr.refMofId());
+            convertTypeToCwmColumn(componentType, attr);
+            multisetType.getFeature().add(attr);
+            cwmType = multisetType;
+        } else if (type.isStruct()) {
+            FemSqlrowType rowType = repos.newFemSqlrowType();
+            rowType.setName("SYS$ROW_" + rowType.refMofId());
+            final RelDataTypeField[] fields = type.getFields();
+            for (int i = 0; i < fields.length; i++) {
+                RelDataTypeField subField = fields[i];
+                FemSqltypeAttribute subColumn =
+                    repos.newFemSqltypeAttribute();
+                convertFieldToCwmColumn(subField, subColumn);
+                rowType.getFeature().add(subColumn);
+            }
+            cwmType = rowType;
+        } else {
+            throw Util.needToImplement(type);
         }
+        column.setType(cwmType);
         if (type.isNullable()) {
             column.setIsNullable(NullableTypeEnum.COLUMN_NULLABLE);
         } else {

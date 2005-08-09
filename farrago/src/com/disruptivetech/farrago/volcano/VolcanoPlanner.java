@@ -548,6 +548,7 @@ public class VolcanoPlanner implements RelOptPlanner
      */
     public RelOptCost getCost(RelNode rel)
     {
+        assert rel != null : "pre-condition: rel != null";
         if (rel instanceof RelSubset) {
             return ((RelSubset) rel).bestCost;
         }

@@ -45,3 +45,8 @@ create table multisetTable_ic(i integer primary key, ii integer multiset, c char
 
 -- View of table with multiset
 -- create view multisetView as select * from multisetTable_i;
+
+-- View with inline multiset
+create view multisetView as select 1 as x, multiset[2, 3] as y from (values (4));
+
+-- End collectionTypes.sql

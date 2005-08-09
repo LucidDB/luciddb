@@ -225,6 +225,11 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                 new ObjectSqlType(
                     SqlTypeName.Structured, id, false, structType.getFields(),
                     getUserDefinedComparability(objectType)));
+        } else if (classifier instanceof FemSqlrowType) {
+            FemSqlrowType rowType = (FemSqlrowType) classifier;
+            RelDataType structType = createStructTypeFromClassifier(rowType);
+            return canonize(structType);
+
         } else {
             throw Util.needToImplement(classifier);
         }

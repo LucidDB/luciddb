@@ -1,0 +1,23 @@
+-- $Id$
+-- Test DDL for row types
+
+create schema rowTest;
+set schema 'rowTest';
+
+-- View which has a ROW column
+create view rowView as select 1 as x, row (2, 'abcd') as y from (values (true));
+
+-- View which has a ROW inside a MULTISET
+create view rowMultisetView as select 1 as x, multiset[row (2, 'abcd')] as y from (values (true));
+
+-- View which has a MULTISET inside a ROW
+create view rowMultisetRowView as
+select
+   1 as x,
+   row(
+      row (2, 'abcd'),
+      multiset[row (3, false), row (5, true)]) as y
+from (values (true));
+
+
+-- End row.sql
