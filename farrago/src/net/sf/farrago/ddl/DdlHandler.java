@@ -445,20 +445,23 @@ public abstract class DdlHandler
      * name; otherwise, the existing name is left unmodified.
      *
      * @param field input field
-     *
      * @param column on input, contains unintialized CwmColumn instance;
-     * on return, this has been initialized (but not validated)
+     * @param owner The object which is to own any anonymous datatypes created;
+     *     typically, the table which this column belongs to
+     * @pre field != null && column != null && owner != null
      */
     public void convertFieldToCwmColumn(
         RelDataTypeField field,
-        CwmColumn column)
+        CwmColumn column,
+        CwmNamespace owner)
     {
+        assert field != null && column != null && owner != null : "pre";
         if (column.getName() == null) {
             final String name = field.getName();
             assert name != null;
             column.setName(name);
         }
-        convertTypeToCwmColumn(field.getType(), column);
+        convertTypeToCwmColumn(field.getType(), column, owner);
     }
 
     /**
@@ -474,8 +477,13 @@ public abstract class DdlHandler
      *
      * @param type Type to convert
      * @param column Column to populate with type information
+     * @param owner The object which is to own any anonymous datatypes created;
+     *     typically, the table which this column belongs to
      */
-    private void convertTypeToCwmColumn(RelDataType type, CwmColumn column)
+    private void convertTypeToCwmColumn(
+        RelDataType type,
+        CwmColumn column,
+        CwmNamespace owner)
     {
         CwmSqldataType cwmType;
         final SqlTypeName typeName = type.getSqlTypeName();
@@ -488,9 +496,12 @@ public abstract class DdlHandler
                 RelDataTypeField subField = fields[i];
                 FemSqltypeAttribute subColumn =
                     repos.newFemSqltypeAttribute();
-                convertFieldToCwmColumn(subField, subColumn);
+                convertFieldToCwmColumn(subField, subColumn, owner);
                 rowType.getFeature().add(subColumn);
             }
+            // Attach the anonymous type to the owner of the column, to ensure
+            // that it is destroyed.
+            owner.getOwnedElement().add(rowType);
             cwmType = rowType;
         } else if (type.getComponentType() != null) {
             final RelDataType componentType = type.getComponentType();
@@ -499,8 +510,11 @@ public abstract class DdlHandler
             multisetType.setName("SYS$MULTISET_" + multisetType.refMofId());
             final FemAbstractAttribute attr = repos.newFemSqltypeAttribute();
             attr.setName("SYS$MULTISET_COMPONENT_" + attr.refMofId());
-            convertTypeToCwmColumn(componentType, attr);
+            convertTypeToCwmColumn(componentType, attr, owner);
             multisetType.getFeature().add(attr);
+            // Attach the anonymous type to the owner of the column, to ensure
+            // that it is destroyed.
+            owner.getOwnedElement().add(multisetType);
             cwmType = multisetType;
         } else {
             cwmType = validator.getStmtValidator().findSqldataType(

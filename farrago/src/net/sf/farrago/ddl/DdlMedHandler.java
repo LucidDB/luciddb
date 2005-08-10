@@ -93,7 +93,7 @@ public class DdlMedHandler extends DdlHandler
             for (int i = 0; i < fields.length; ++i) {
                 FemStoredColumn column = repos.newFemStoredColumn();
                 columnList.add(column);
-                convertFieldToCwmColumn(fields[i], column);
+                convertFieldToCwmColumn(fields[i], column, columnSet);
                 validateAttribute(column);
             }
         }

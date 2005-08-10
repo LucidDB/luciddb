@@ -297,7 +297,7 @@ public class DdlRelationalHandler extends DdlHandler
             } else {
                 column = (FemViewColumn) columnList.get(i);
             }
-            convertFieldToCwmColumn(fields[i], column);
+            convertFieldToCwmColumn(fields[i], column, view);
             validateAttribute(column);
         }
 
