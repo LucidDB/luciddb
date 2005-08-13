@@ -1,0 +1,7 @@
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+oj_var0.assignFrom( ID$1$NAME );
+oj_var0.setSubstring( 2 - 1, ID$5$EMPID, true );
+
+return oj_var0;

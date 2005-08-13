@@ -597,6 +597,48 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
     {
         testTranslation("case slacker when true then 1 end");
     }
+
+    public void testSubstringNullableLength()
+        throws Exception
+    {
+        testTranslation("substring(city,  2, age/10)");
+    }
+
+    public void testSubstringNullablePosition()
+        throws Exception
+    {
+        testTranslation("substring(city,  age/20, empid)");
+    }
+
+    public void testSubstringNoLength()
+        throws Exception
+    {
+        testTranslation("substring(city, 3)");
+    }
+
+    public void testSubstringPositionLessThanZero()
+        throws Exception
+    {
+        testTranslation("substring(city, -1, 4)");
+    }
+
+    public void testSubstringPositionZero()
+        throws Exception
+    {
+        testTranslation("substring(city, 0, 4)");
+    }
+
+    public void testSubstringNegativeLength()
+        throws Exception
+    {
+        testTranslation("substring(city, 1, empid - 2)");
+    }
+
+    public void testSubstringNothingNullable()
+        throws Exception
+    {
+        testTranslation("substring(name, 2, empid)");
+    }
 }
 
 // End FarragoRexToOJTranslatorTest.java

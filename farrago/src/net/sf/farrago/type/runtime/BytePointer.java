@@ -22,6 +22,8 @@
 */
 package net.sf.farrago.type.runtime;
 
+import net.sf.farrago.resource.*;
+
 import org.eigenbase.util.*;
 
 import java.io.*;
@@ -190,6 +192,67 @@ public class BytePointer extends ByteArrayInputStream
             pos = 0;
             count = precision;
         }
+    }
+
+    /**
+     * get a substring  of the array.
+     *
+     * @param starting desired starting position
+     *
+     * @param length  the length.
+     *
+     * @param useLength to indicate whether length parameter should be used. 
+     *
+     */
+    public void setSubstring(
+        int starting,
+        int length,
+        boolean useLength)
+    {
+        // This is the implementation of the SQL standard 2003.
+        // It leaves the null checking to the caller.
+        // Here S = starting + 1
+        // LC = getByteCount()
+        // L = length
+        int e;
+        // calculate the E it is the S + L or larger of LC + 1 and S
+        if (useLength) {
+            if (length < 0) {
+                // If E is less than S, then it means L is negative exception.
+                throw FarragoResource.instance().newNegativeLengthForSubstring();
+            }
+            e = starting + 1 + length;
+        } else {
+            e = starting + 1;
+            if (e <= getByteCount()) {
+                e = getByteCount() + 1;
+            }
+        }
+
+        // f) and i) in the standard. S > LC or E < 1 
+        if (starting >= getByteCount() || e < 1) 
+        {
+            count = pos;
+        } else {
+            // f) and ii) in the standard. 
+            // calculate the E1 and L1
+            int s1 = starting;
+            if (s1 < 0) {
+                s1 = 0;
+            }
+            int e1 = e;
+            if (e1 > getByteCount()) {
+                e1 = getByteCount() + 1;
+            }
+            int l1 = e1 - (s1 + 1);
+            pos +=  s1;
+            count = pos + l1;
+        }
+    }
+
+    public int getByteCount() 
+    {
+        return available();
     }
 
     private void allocateOwnBytes(int n)

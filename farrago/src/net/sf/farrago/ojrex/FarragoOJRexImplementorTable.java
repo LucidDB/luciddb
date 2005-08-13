@@ -66,6 +66,10 @@ public class FarragoOJRexImplementorTable extends OJRexImplementorTableImpl
             new FarragoOJRexCaseImplementor());
 
         registerOperator(
+            opTab.substringFunc,
+            new FarragoOJRexSubstringImplementor());
+
+        registerOperator(
             opTab.castFunc,
             new FarragoOJRexCastImplementor());
 

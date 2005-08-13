@@ -1,0 +1,20 @@
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
+
+
+ExecutableStmt.Oj_inner_0 oj_var1 = new ExecutableStmt.Oj_inner_0();
+
+if (ID$6$AGE.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.setNull( false );
+    oj_var0.value = (int) (ID$6$AGE.value / 20);
+}
+if (ID$4$CITY.isNull() || oj_var0.isNull()) {
+    oj_var1.setNull( true );
+} else {
+    oj_var1.assignFrom( ID$4$CITY );
+    oj_var1.setSubstring( oj_var0.value - 1, ID$5$EMPID, true );
+}
+
+return oj_var1;
