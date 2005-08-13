@@ -150,7 +150,7 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
         // otherwise, try shared cache
         ServerFactory factory = new ServerFactory(mofId, dataWrapper, options);
         FarragoObjectCache.Entry entry =
-            getSharedCache().pin(mofId, factory, true);
+            getSharedCache().pin(mofId, factory, false);
 
         server = (FarragoMedDataServer) addToPrivateCache(entry);
         return server;
@@ -193,6 +193,10 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
         val = femServer.getVersion();
         if (val != null) {
             props.setProperty(FarragoMedDataServer.PROP_SERVER_VERSION, val);
+        }
+        val = femServer.getName();
+        if (val != null) {
+            props.setProperty(FarragoMedDataServer.PROP_SERVER_NAME, val);
         }
 
         FemDataWrapper femDataWrapper = femServer.getWrapper();
