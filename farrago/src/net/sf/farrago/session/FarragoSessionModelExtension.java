@@ -21,7 +21,11 @@
 */
 package net.sf.farrago.session;
 
+import net.sf.farrago.fem.security.*;
+
 import java.util.*;
+
+import org.eigenbase.util.*;
 
 /**
  * FarragoSessionModelExtension defines the SPI for plugging in custom
@@ -58,6 +62,14 @@ public interface FarragoSessionModelExtension
      */
     public void defineResourceBundles(
         List bundleList);
+
+    /**
+     * Defines privileges allowed on various object types.
+     *
+     * @param map receives allowed privileges
+     */
+    public void definePrivileges(
+        FarragoSessionPrivilegeMap map);
 }
 
 // End FarragoSessionModelExtension.java

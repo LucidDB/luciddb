@@ -2,13 +2,6 @@
 -- Test DDL on Authorization: 
 -- User, Role, Role Inheritance structure
 
--- REVIEW jvs 12-June-2005:  I put in this connect as _SYSTEM so that
--- the creation grant for user SECMAN has a non-null grantee.  In
--- "real life" this shouldn't be allowed.  And there needs to be a check
--- for valid user creator.
-!closeall
-!connect jdbc:farrago: _SYSTEM net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver
-
 -------------------------------------------------------------------------
 -- Basic setup
 
@@ -23,7 +16,6 @@ create user SECMAN_2 authorization 'Unknown' DEFAULT CATALOG localdb;
 !closeall
 !connect jdbc:farrago: SECMAN net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver
 
-set catalog 'localdb'; 
 create schema authtest;
 set schema 'authtest';
 

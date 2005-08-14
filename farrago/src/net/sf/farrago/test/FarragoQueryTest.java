@@ -23,6 +23,7 @@
 package net.sf.farrago.test;
 
 import net.sf.farrago.session.*;
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.cwm.relational.*;
@@ -172,24 +173,20 @@ public class FarragoQueryTest extends FarragoTestCase
         assertEquals(schemaName, ((CwmSchema) obj).getName());
     }
 
-    // REVIEW jvs 6-Aug-2005:  Tai, please fix and uncomment these
-    // or remove them.
-
     /**
      * Tests execution of a LURQL query to check role cycle. If role_2 has been
      * granted to role_1,  then role_1 can't be granted to role_2.
      * This query expanded all the roles inherited by a specified input role,
-     * the test then scans through the inherit roles to ensure that a second
+     * the test then scans through the inherited roles to ensure that a second
      * specified role (to be granted to the first specified role) does not
      * exist.
      */
-    /*
      public void testCheckSecurityRoleCyleLurqlQuery()
          throws Exception
      {
-         // Create Role_1,  Role_2
-         // Grant Role_2 to Role_1
-         // Grant Role_1 to Role_2. This should fail
+         // CREATE ROLE ROLE_1,  ROLE_2
+         // GRANT ROLE_2 TO ROLE_1
+         // Simulate GRANT ROLE ROLE_1 TO ROLE_2. This should fail.
 
          // TODO: remove this temporary setting of the session current user
          // once we have a proper login i.e. login user exists in the database
@@ -197,12 +194,18 @@ public class FarragoQueryTest extends FarragoTestCase
              (FarragoJdbcEngineConnection) connection;
          FarragoSession session = (FarragoSession)
              farragoConnection.getSession();
-         session.getSessionVariables().currentUserName = "_SYSTEM";
+         session.getSessionVariables().currentUserName =
+             FarragoCatalogInit.SYSTEM_USER_NAME;
         
-         stmt.execute("create Role ROLE_1");
-         stmt.execute("create Role ROLE_2");
-         stmt.execute("grant role ROLE_2 to ROLE_1");
-        
+         stmt.execute("CREATE ROLE ROLE_1");
+         stmt.execute("CREATE ROLE ROLE_2");
+         stmt.execute("GRANT ROLE ROLE_2 TO ROLE_1");
+
+         // NOTE:  now we want to simulate GRANT ROLE ROLE_1 TO ROLE_2.
+         // So the grantee is ROLE_2, and the granted role is ROLE_1.
+         // For the cycle check, we need to look for paths in the
+         // opposite direction, so we reverse the two roles in the
+         // call below.
          String lurql =
              FarragoInternalQuery.instance().getTestSecurityRoleCycleCheck();
          assertTrue(checkLurqlSecurityRoleCycle(lurql,  "ROLE_1",  "ROLE_2"));
@@ -230,7 +233,6 @@ public class FarragoQueryTest extends FarragoTestCase
          }
          return false;
      }
-    */
 }
 
 // End FarragoQueryTest.java

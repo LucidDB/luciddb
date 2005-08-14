@@ -36,6 +36,7 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.util.*;
@@ -437,9 +438,9 @@ public class DdlValidator extends FarragoCompoundAllocation
             if (obj instanceof CwmModelElement) {
                 CwmModelElement modelElement = (CwmModelElement) obj;
 
-                // We use the visibility attribute to distinguish new objects
-                // from existing objects.  Here's the transition.
-                modelElement.setVisibility(VisibilityKindEnum.VK_PUBLIC);
+                if (action != VALIDATE_DELETION) {
+                    updateObjectTimestamp(modelElement);
+                }
             }
 
             if (obj instanceof CwmStructuralFeature) {
@@ -497,6 +498,44 @@ public class DdlValidator extends FarragoCompoundAllocation
             }
             refObj.refDelete();
         }
+    }
+
+    private void updateObjectTimestamp(CwmModelElement element)
+    {
+        FemCreationGrant creationGrant = null;
+        if (isNewObject(element)) {
+            // Define a pseudo-grant representing the element's relationship to
+            // its creator.  As a bonus, this will initialize element creation
+            // time.
+            creationGrant = FarragoCatalogUtil.newCreationGrant(
+                getRepos(),
+                FarragoCatalogInit.SYSTEM_USER_NAME,
+                getInvokingSession().getSessionVariables().currentUserName,
+                element);
+        } else {
+            // Find the original creation grant for this existing element.
+            PrivilegeIsGrantedOnElement privAssoc =
+                getRepos().getSecurityPackage().
+                getPrivilegeIsGrantedOnElement();
+            Iterator iter = privAssoc.getPrivilege(element).iterator();
+            while (iter.hasNext()) {
+                Object obj = iter.next();
+                if (obj instanceof FemCreationGrant) {
+                    creationGrant = (FemCreationGrant) obj;
+                    break;
+                }
+            }
+        }
+        assert(creationGrant != null);
+
+        // Update element modification time.
+        Timestamp ts = new Timestamp(System.currentTimeMillis());
+        creationGrant.setModificationTimestamp(ts.toString());
+        
+        // We use the visibility attribute to distinguish new objects
+        // from existing objects.  From here on, no longer treat
+        // this element as new.
+        element.setVisibility(VisibilityKindEnum.VK_PUBLIC);
     }
 
     // implement MDRPreChangeListener

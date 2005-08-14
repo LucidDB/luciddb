@@ -7,7 +7,7 @@ source ./defineFarragoRuntime.sh
 
 if java ${SERVER_JAVA_ARGS} ${SQLLINE_JAVA_ARGS} \
     -u jdbc:farrago: -d net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver \
-    -n guest $*;
+    -n sa $*;
 then
     echo
 else

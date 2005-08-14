@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/expressions/values.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/expressions/values.sql#3 $
 0: jdbc:farrago:> -- Test queries with VALUES
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- single-row
@@ -56,7 +56,7 @@ Error: At line 1, column 9: Unknown identifier 'X' (state=,code=0)
 +---------------+
 | SESSION_USER  |
 +---------------+
-| guest         |
+| sa            |
 +---------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test CURRENT_USER (should be same as SESSION_USER)
@@ -64,16 +64,16 @@ Error: At line 1, column 9: Unknown identifier 'X' (state=,code=0)
 +---------------+
 | CURRENT_USER  |
 +---------------+
-| guest         |
+| sa            |
 +---------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test USER (should be same as CURRENT_USER)
 0: jdbc:farrago:> values (user);
-+--------+
-|  USER  |
-+--------+
-| guest  |
-+--------+
++-------+
+| USER  |
++-------+
+| sa    |
++-------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test SYSTEM_USER (but don't actually execute since it's context-dependent)
 0: jdbc:farrago:> explain plan for values (system_user);

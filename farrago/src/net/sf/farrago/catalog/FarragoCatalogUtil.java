@@ -596,8 +596,6 @@ public abstract class FarragoCatalogUtil
         Collection authIdCollection =
             repos.getSecurityPackage().getFemAuthId().refAllOfType();
 
-        // TODO: all the looping to scan for name can't be good for
-        // performance. Should look for alternative.
         FemAuthId femAuthId = (FemAuthId)
             FarragoCatalogUtil.getModelElementByName(
                 authIdCollection, authName);
@@ -770,8 +768,7 @@ public abstract class FarragoCatalogUtil
         grant.setAction(PrivilegedActionEnum.CREATION.toString());
         grant.setWithGrantOption(false);
 
-        // TODO: set creation grant attributes
-        Timestamp ts = new java.sql.Timestamp(System.currentTimeMillis());
+        Timestamp ts = new Timestamp(System.currentTimeMillis());
         grant.setCreationTimestamp(ts.toString());
         grant.setModificationTimestamp(grant.getCreationTimestamp());
         

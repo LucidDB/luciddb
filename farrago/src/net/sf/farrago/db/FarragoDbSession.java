@@ -123,6 +123,8 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     private Map txnCodeCache;
     private DatabaseMetaData dbMetaData;
     protected FarragoSessionFactory sessionFactory;
+    
+    private FarragoSessionPrivilegeMap privilegeMap;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -266,6 +268,25 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     {
         // Instantiate a new privilege checker
         return new FarragoDbSessionPrivilegeChecker(this);
+    }
+
+    // implement FarragoSession
+    public FarragoSessionPrivilegeMap getPrivilegeMap()
+    {
+        if (privilegeMap == null) {
+            FarragoDbSessionPrivilegeMap newPrivilegeMap =
+                new FarragoDbSessionPrivilegeMap(repos.getModelView());
+            getPersonality().definePrivileges(newPrivilegeMap);
+            Iterator iter = getModelExtensions().iterator();
+            while (iter.hasNext()) {
+                FarragoSessionModelExtension ext =
+                    (FarragoSessionModelExtension) iter.next();
+                ext.definePrivileges(newPrivilegeMap);
+            }
+            newPrivilegeMap.makeImmutable();
+            privilegeMap = newPrivilegeMap;
+        }
+        return privilegeMap;
     }
     
     // implement FarragoSession

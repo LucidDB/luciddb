@@ -1,9 +1,6 @@
 -- $Id$
 -- Test DDL on privileges
 
--- REVIEW jvs 12-June-2005:  see comments at top of auth.sql
-!closeall
-!connect jdbc:farrago: _SYSTEM net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver
 -- Create a security manager and login as this user to perform all grant 
 -- tests. 
 -- TODO: grant all appropriate system privilege for this user once
@@ -11,6 +8,7 @@
 
 create user SECMAN authorization 'Unknown';
 create user SECMAN_2 authorization 'Unknown';
+create user PRIV_USER1 authorization 'Unknown';
 
 !closeall
 !connect jdbc:farrago: SECMAN net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver
@@ -27,14 +25,10 @@ grant SELECT on pt1 to PRIV_USER1 with grant option;
 
 grant SELECT on pt_notexist to PRIV_USER1 with grant option;
 
----- TODO: read back on whether a user has been created. Looks like there is a bug
----- i.e. I can't select specific columns, only seems to work with select *
----- set catalog 'sys_boot';
----- select name from sys_fem."Security"."AuthorizationIdentifier";
+select "name" from sys_fem."Security"."AuthId" order by 1;
 
 -- Test 2: multiple privs
 -- 
-set catalog 'localdb';
 create table pt2 (c1 int not null primary key, c2 int);
 
 GRANT select, insert, delete, update ON PT2 TO PUBLIC;
@@ -55,7 +49,7 @@ grant sel on privstest.pt3 to PUBLIC;
 ---- invalid object
 GRANT SELECT ON PRIVSTEST.PT_NOTEXIST TO PUBLIC WITH GRANT OPTION;
 
----- todo: incompatible priv vs. object type. EXECUTE vs TABLE
+---- incompatible priv vs. object type. EXECUTE vs TABLE
 grant execute on pt3 to public;
 
 ---- todo: incompatible priv vs. object type. EXECUTE vs SEQUENCE

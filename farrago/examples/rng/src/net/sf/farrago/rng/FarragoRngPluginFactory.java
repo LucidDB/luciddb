@@ -136,6 +136,13 @@ public class FarragoRngPluginFactory
         {
             bundleList.add(res);
         }
+        
+        // implement FarragoSessionModelExtension
+        public void definePrivileges(
+            FarragoSessionPrivilegeMap map)
+        {
+            // TODO:  invent a custom rng privilege
+        }
     }
 }
 

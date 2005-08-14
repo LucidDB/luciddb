@@ -63,17 +63,19 @@ public class FarragoCatalogInit implements MDRPreChangeListener
     /**
      * Reserved name for the public role.
      */
-    public static final String SECURITY_PUBLIC_ROLE_NAME = "PUBLIC";
+    public static final String PUBLIC_ROLE_NAME = "PUBLIC";
 
     /**
      * Reserved name for the system internal authorization user.
      */
-    public static final String SECURITY_SYSUSER_NAME = "_SYSTEM";
+    public static final String SYSTEM_USER_NAME = "_SYSTEM";
 
     /**
-     * Reserved name for the system admin authorization user.
+     * Reserved name for the system admin authorization user.  Note
+     * that this is intentionally lower-case to match the SQL Server
+     * convention.
      */
-    public static final String SECURITY_SAUSER_NAME = "SA";
+    public static final String SA_USER_NAME = "sa";
 
     private final FarragoRepos repos;
 
@@ -140,8 +142,6 @@ public class FarragoCatalogInit implements MDRPreChangeListener
         if (rollback) {
             return;
         }
-        // TODO jvs 12-June-2005:  other stuff like creation grants for
-        // all objects
         Iterator iter = objs.iterator();
         while (iter.hasNext()) {
             Object obj = iter.next();
@@ -149,8 +149,15 @@ public class FarragoCatalogInit implements MDRPreChangeListener
                 CwmModelElement modelElement =
                     (CwmModelElement) obj;
                 // Set visibility so that DdlValidator doesn't try
-                // to re-validate these objects.
+                // to revalidate this object.
                 modelElement.setVisibility(VisibilityKindEnum.VK_PUBLIC);
+
+                // Define this as a system-owned object.
+                FarragoCatalogUtil.newCreationGrant(
+                    repos,
+                    SYSTEM_USER_NAME,
+                    SYSTEM_USER_NAME,
+                    modelElement);
             }
         }
     }
@@ -179,42 +186,16 @@ public class FarragoCatalogInit implements MDRPreChangeListener
     {
         // Create the System Internal User 
         FemUser systemUser = repos.newFemUser();
-        systemUser.setName(SECURITY_SYSUSER_NAME);
+        systemUser.setName(SYSTEM_USER_NAME);
 
         // Create the System admin user, this is the only system created
         // authenticatable user (via login)
         FemUser saUser = repos.newFemUser();
-        saUser.setName(SECURITY_SAUSER_NAME);
+        saUser.setName(SA_USER_NAME);
 
         // Create the built-in role PUBLIC
         FemRole publicRole = repos.newFemRole();
-        publicRole.setName(SECURITY_PUBLIC_ROLE_NAME);
-
-        // TODO: create built-in system roles 
-        
-        // Create a creation grant for sys user and public role
-        Timestamp ts = new Timestamp(System.currentTimeMillis());
-        
-        FemCreationGrant grantUser = repos.newFemCreationGrant();
-        grantUser.setAction(PrivilegedActionEnum.CREATION.toString());
-        grantUser.setWithGrantOption(false);
-        grantUser.setCreationTimestamp(ts.toString());
-        grantUser.setModificationTimestamp(grantUser.getCreationTimestamp());
-        // TODO: can we set to something?
-        grantUser.setGrantor(systemUser);
-        grantUser.setGrantee(systemUser);
-        grantUser.setElement(systemUser);
-        
-        FemCreationGrant grantPublicRole = repos.newFemCreationGrant();
-        grantPublicRole.setAction(PrivilegedActionEnum.CREATION.toString());
-        grantPublicRole.setWithGrantOption(false);
-        grantPublicRole.setCreationTimestamp(ts.toString());
-        grantPublicRole.setModificationTimestamp(
-            grantPublicRole.getCreationTimestamp());
-        // TODO: can we set to something?
-        grantPublicRole.setGrantor(systemUser);
-        grantPublicRole.setGrantee(systemUser);
-        grantPublicRole.setElement(publicRole);
+        publicRole.setName(PUBLIC_ROLE_NAME);
     }
 
     private void defineTypeAlias(
@@ -341,6 +322,9 @@ public class FarragoCatalogInit implements MDRPreChangeListener
         simpleType.setNumericPrecisionRadix(new Integer(10));
         defineTypeAlias("DEC", simpleType);
 
+        // REVIEW jvs 11-Aug-2005:  This isn't a real type descriptor, since
+        // collection types are constructed anonymously rather than
+        // defined as named instances.  Do we need it?
         FemSqlcollectionType collectType;
         collectType = repos.newFemSqlmultisetType();
         collectType.setName("MULTISET");

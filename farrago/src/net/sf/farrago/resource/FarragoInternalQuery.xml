@@ -49,7 +49,6 @@ from class NamedColumnSet where name=?tableName then (
 </text>
 </message>
 
-
 <message id="20" name="TestSecurityRoleCycleCheck">
 <text>
 select r
@@ -62,11 +61,6 @@ from class Role where name=?granteeName then (
 );
 </text>
 </message>
-
-
-
-
-
 
 </resourceBundle>
 

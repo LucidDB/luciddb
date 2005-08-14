@@ -770,19 +770,19 @@ public abstract class SqlOperatorTests extends TestCase
     public void testUserFunc()
     {
         getTester().setFor(SqlStdOperatorTable.userFunc);
-        getTester().checkString("USER", null, "VARCHAR(2000) NOT NULL");
+        getTester().checkString("USER", "sa", "VARCHAR(2000) NOT NULL");
     }
 
     public void testCurrentUserFunc()
     {
         getTester().setFor(SqlStdOperatorTable.currentUserFunc);
-        getTester().checkString("CURRENT_USER", null, "VARCHAR(2000) NOT NULL");
+        getTester().checkString("CURRENT_USER", "sa", "VARCHAR(2000) NOT NULL");
     }
 
     public void testSessionUserFunc()
     {
         getTester().setFor(SqlStdOperatorTable.sessionUserFunc);
-        getTester().checkString("SESSION_USER", null, "VARCHAR(2000) NOT NULL");
+        getTester().checkString("SESSION_USER", "sa", "VARCHAR(2000) NOT NULL");
     }
 
     public void testSystemUserFunc()
