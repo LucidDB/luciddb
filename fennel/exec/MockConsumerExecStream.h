@@ -26,6 +26,7 @@
 
 #include "fennel/exec/SingleInputExecStream.h"
 #include "fennel/tuple/TupleData.h"
+#include "fennel/tuple/TuplePrinter.h"
 
 using std::vector;
 using std::string;
@@ -57,15 +58,17 @@ class MockConsumerExecStream : public SingleInputExecStream
 {
     bool saveData;
     ostream* echoData;
+    long rowCount;
     TupleData inputTuple;
+    TuplePrinter tuplePrinter;
     vector<string> rowStrings;
-
 public:
     // implement ExecStream
     virtual void prepare(MockConsumerExecStreamParams const &params);
     virtual void open(bool restart);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
 
+    long getRowCount() const { return rowCount; }
     vector<string>& getRowVector() { return rowStrings; }
 };
 
