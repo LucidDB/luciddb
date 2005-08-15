@@ -149,8 +149,11 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
 
         // otherwise, try shared cache
         ServerFactory factory = new ServerFactory(mofId, dataWrapper, options);
+
+        // Use pin exclusive if data wrapper does not support server sharing
+        boolean exclusive = !dataWrapper.supportsServerSharing();
         FarragoObjectCache.Entry entry =
-            getSharedCache().pin(mofId, factory, false);
+            getSharedCache().pin(mofId, factory, exclusive);
 
         server = (FarragoMedDataServer) addToPrivateCache(entry);
         return server;
