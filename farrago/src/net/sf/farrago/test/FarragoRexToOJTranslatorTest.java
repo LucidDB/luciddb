@@ -639,6 +639,55 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
     {
         testTranslation("substring(name, 2, empid)");
     }
+
+    public void testConcatNoNullable()
+        throws Exception
+    {
+        testTranslation("name||name");
+    }
+
+    public void testConcatWithOneNullable()
+        throws Exception
+    {
+        testTranslation("city||name");
+    }
+
+    public void testConcatBothNullable()
+        throws Exception
+    {
+        testTranslation("city||city");
+    }
+
+    public void testOverlayNoLength()
+        throws Exception
+    {
+        testTranslation("overlay(city placing 'MIDDLE' from 2)");
+    }
+
+    public void testOverlayNullable()
+        throws Exception
+    {
+        testTranslation("overlay(city placing 'MIDDLE' from 2 for 3)");
+    }
+
+    public void testOverlayNoNullable()
+        throws Exception
+    {
+        testTranslation("overlay(name placing 'MIDDLE' from 2 for 3)");
+    }
+
+    public void testOverlayThreeNullable()
+        throws Exception
+    {
+        testTranslation("overlay(city placing name from age for age)");
+    }
+
+    public void testOverlayAllNullable()
+        throws Exception
+    {
+        testTranslation("overlay(city placing gender from age for age)");
+    }
+
 }
 
 // End FarragoRexToOJTranslatorTest.java
