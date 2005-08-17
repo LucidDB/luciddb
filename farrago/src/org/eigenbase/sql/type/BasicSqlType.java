@@ -141,7 +141,7 @@ public class BasicSqlType extends AbstractSqlType
     public int getPrecision()
     {
         if (precision == PRECISION_NOT_SPECIFIED) {
-            switch(typeName.getOrdinal()) {
+            switch (typeName.getOrdinal()) {
             case SqlTypeName.Boolean_ordinal:
                 return 1;
             case SqlTypeName.Tinyint_ordinal:
@@ -157,8 +157,14 @@ public class BasicSqlType extends AbstractSqlType
             case SqlTypeName.Float_ordinal:
             case SqlTypeName.Double_ordinal:
                 return 15;
+            case SqlTypeName.Time_ordinal:
+                return 0;               // SQL99 part 2 section 6.1 syntax rule 30
+            case SqlTypeName.Timestamp_ordinal:
+                // farrago supports only 0 (see SqlTypeName.getDefaultPrecision),
+                // but it should be 6 (microseconds) per SQL99 part 2 section 6.1 syntax rule 30.
+                return 0;  
             default:
-                throw new AssertionError();
+                throw Util.newInternal("type "+typeName+" does not have a precision");
             }
         }
         return precision;
@@ -185,14 +191,30 @@ public class BasicSqlType extends AbstractSqlType
         return collation;
     }
 
+
     // implement RelDataTypeImpl
     protected void generateTypeString(StringBuffer sb, boolean withDetail)
     {
+        // Called to make the digest, which equals() compares;
+        // so equivalent data types must produce identical type strings.
+
         sb.append(typeName.getName());
-        if (precision != PRECISION_NOT_SPECIFIED) {
+        boolean printPrecision = (precision != PRECISION_NOT_SPECIFIED);
+        boolean printScale = (scale != SCALE_NOT_SPECIFIED);
+
+        // for the digest, print the precision when defaulted,
+        // since (for instance) TIME is equivalent to TIME(0).
+        if (withDetail) {
+            // -1 means there is no default value for precision
+            if (typeName.getDefaultPrecision() > -1) {
+                printPrecision = true;
+            }
+        }
+
+        if (printPrecision) {
             sb.append('(');
             sb.append(getPrecision());
-            if (scale != SCALE_NOT_SPECIFIED) {
+            if (printScale) {
                 sb.append(", ");
                 sb.append(getScale());
             }
