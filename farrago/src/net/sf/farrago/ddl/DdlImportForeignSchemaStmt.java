@@ -243,13 +243,11 @@ public class DdlImportForeignSchemaStmt extends DdlStmt
             Map properties)
         {
             if (!shouldInclude(
-                    tableName, FarragoMedMetadataQuery.OTN_TABLE, true))
-            {
+                tableName, FarragoMedMetadataQuery.OTN_TABLE, true)) {
                 return false;
             }
             if (!shouldInclude(
-                    columnName, FarragoMedMetadataQuery.OTN_COLUMN, false))
-            {
+                columnName, FarragoMedMetadataQuery.OTN_COLUMN, false)) {
                 return false;
             }
 
@@ -264,7 +262,7 @@ public class DdlImportForeignSchemaStmt extends DdlStmt
             column.setOrdinal(ordinal);
             RelDataTypeField field = new RelDataTypeFieldImpl(
                 columnName, ordinal, type);
-            medHandler.convertFieldToCwmColumn(field, column);
+            medHandler.convertFieldToCwmColumn(field, column, table);
 
             setStorageOptions(column, properties);
             

@@ -21,6 +21,7 @@
 */
 package net.sf.farrago.session;
 
+import org.eigenbase.util.*;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.SqlTypeName;
@@ -103,10 +104,7 @@ public interface FarragoSessionPersonality extends FarragoStreamFactoryProvider
         FarragoSessionStmtValidator stmtValidator);
 
     /**
-     * Defines the handlers to be used to validate and execute DDL actions
-     * for various object types.  See {@link FarragoSessionDdlHandler}
-     * for an explanation of how to define the handler objects in this
-     * list.  Optionally, may also define drop rules.
+     * See {@link FarragoSessionModelExtension#defineDdlHandlers}.
      *
      * @param ddlValidator validator which will invoke handlers
      *
@@ -116,6 +114,14 @@ public interface FarragoSessionPersonality extends FarragoStreamFactoryProvider
     public void defineDdlHandlers(
         FarragoSessionDdlValidator ddlValidator,
         List handlerList);
+
+    /**
+     * Defines privileges allowed on various object types.
+     *
+     * @param map receives allowed privileges
+     */
+    public void definePrivileges(
+        FarragoSessionPrivilegeMap map);
 
     /**
      * Creates a new planner.

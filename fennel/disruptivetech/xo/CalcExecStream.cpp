@@ -31,76 +31,82 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 void CalcExecStream::prepare(CalcExecStreamParams const &params)
 {
     ConduitExecStream::prepare(params);
-    
-    // Force instantiation of the calculator's instruction tables.
-    (void) CalcInit::instance();
 
-    pCalc.reset(new Calculator(pDynamicParamManager.get()));
-    if (isTracing()) {
-        pCalc->initTraceSource(&(getTraceTarget()), "calc");
+    try {
+        // Force instantiation of the calculator's instruction tables.
+        (void) CalcInit::instance();
+
+        pCalc.reset(new Calculator(pDynamicParamManager.get()));
+        if (isTracing()) {
+            pCalc->initTraceSource(&(getTraceTarget()), "calc");
+        }
+
+        pCalc->assemble(params.program.c_str());
+
+        if (params.isFilter) {
+            pFilterDatum = &((*(pCalc->getStatusRegister()))[0]);
+        } else {
+            pFilterDatum = NULL;
+        }
+
+        FENNEL_TRACE(
+            TRACE_FINER,
+            "calc program = "
+            << std::endl << params.program);
+
+        FENNEL_TRACE(
+            TRACE_FINER,
+            "calc input TupleDescriptor = "
+            << pCalc->getInputRegisterDescriptor());
+
+        inputDesc = pInAccessor->getTupleDesc();
+        FENNEL_TRACE(
+            TRACE_FINER,
+            "xo input TupleDescriptor = "
+            << inputDesc);
+
+        FENNEL_TRACE(
+            TRACE_FINER,
+            "calc output TupleDescriptor = "
+            << pCalc->getOutputRegisterDescriptor());
+
+        FENNEL_TRACE(
+            TRACE_FINER,
+            "xo output TupleDescriptor = "
+            << params.outputTupleDesc);
+
+        assert(inputDesc.storageEqual(pCalc->getInputRegisterDescriptor()));
+
+        TupleDescriptor outputDesc = pCalc->getOutputRegisterDescriptor();
+
+        if (!params.outputTupleDesc.empty()) {
+            assert(outputDesc.storageEqual(params.outputTupleDesc));
+
+            // if the plan specifies an output descriptor with different
+            // nullability, use that instead
+            outputDesc = params.outputTupleDesc;
+        }
+        pOutAccessor->setTupleShape(
+            outputDesc,
+            pInAccessor->getTupleFormat());
+
+        inputData.compute(inputDesc);
+
+        outputData.compute(outputDesc);
+
+        // bind calculator to tuple data (tuple data may later change)
+        pCalc->bind(&inputData,&outputData);
+
+        // Set calculator to return immediately on exception as a
+        // workaround.  Prevents indeterminate results from an instruction
+        // that throws an exception from causing non-deterministic
+        // behavior later in program execution.
+        pCalc->continueOnException(false);
+
+    } catch (FennelExcn e) {
+        FENNEL_TRACE(TRACE_SEVERE, "error preparing calculator: " << e.getMessage());
+        throw e;
     }
-
-    pCalc->assemble(params.program.c_str());
-
-    if (params.isFilter) {
-        pFilterDatum = &((*(pCalc->getStatusRegister()))[0]);
-    } else {
-        pFilterDatum = NULL;
-    }
-
-    FENNEL_TRACE(
-        TRACE_FINER,
-        "calc program = "
-        << std::endl << params.program);
-
-    FENNEL_TRACE(
-        TRACE_FINER,
-        "calc input TupleDescriptor = "
-        << pCalc->getInputRegisterDescriptor());
-
-    inputDesc = pInAccessor->getTupleDesc();
-    FENNEL_TRACE(
-        TRACE_FINER,
-        "xo input TupleDescriptor = "
-        << inputDesc);
-
-    FENNEL_TRACE(
-        TRACE_FINER,
-        "calc output TupleDescriptor = "
-        << pCalc->getOutputRegisterDescriptor());
-
-    FENNEL_TRACE(
-        TRACE_FINER,
-        "xo output TupleDescriptor = "
-        << params.outputTupleDesc);
-
-    assert(inputDesc.storageEqual(pCalc->getInputRegisterDescriptor()));
-
-    TupleDescriptor outputDesc = pCalc->getOutputRegisterDescriptor();
-
-    if (!params.outputTupleDesc.empty()) {
-        assert(outputDesc.storageEqual(params.outputTupleDesc));
-
-        // if the plan specifies an output descriptor with different
-        // nullability, use that instead
-        outputDesc = params.outputTupleDesc;
-    }
-    pOutAccessor->setTupleShape(
-        outputDesc,
-        pInAccessor->getTupleFormat());
-
-    inputData.compute(inputDesc);
-
-    outputData.compute(outputDesc);
-
-    // bind calculator to tuple data (tuple data may later change)
-    pCalc->bind(&inputData,&outputData);
-
-    // Set calculator to return immediately on exception as a
-    // workaround.  Prevents indeterminate results from an instruction
-    // that throws an exception from causing non-deterministic
-    // behavior later in program execution.
-    pCalc->continueOnException(false);
 }
 
 ExecStreamResult CalcExecStream::execute(ExecStreamQuantum const &quantum)
@@ -117,8 +123,12 @@ ExecStreamResult CalcExecStream::execute(ExecStreamQuantum const &quantum)
             }
             
             pInAccessor->unmarshalTuple(inputData);
-
-            pCalc->exec();
+            try {
+                pCalc->exec();
+            } catch (FennelExcn e) {
+                FENNEL_TRACE(TRACE_SEVERE, "error executing calculator: " << e.getMessage());
+                throw e;
+            }
 
             // REVIEW: JK 2004/7/16. Note that the calculator provides
             // two interfaces to the list of warnings. One is a

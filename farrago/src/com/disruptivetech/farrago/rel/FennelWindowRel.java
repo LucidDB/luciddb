@@ -32,6 +32,7 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.util.Util;
 
 import java.util.ArrayList;
@@ -233,7 +234,7 @@ public class FennelWindowRel extends FennelSingleRel
             RelDataTypeField field = fields[i];
             // FIXME (jhyde, 2004/12/6) programmatically determine which are
             //   the sort keys of the underlying relexp.
-            if (!field.getName().equals("ROWTIME")) {
+            if (!field.getName().toUpperCase().equals("ROWTIME")) {
                 continue;
             }
             sortFields = new Integer[] {new Integer(i)};
@@ -256,14 +257,14 @@ public class FennelWindowRel extends FennelSingleRel
             // 10 preceding and 2 preceding: (8, -2)
             // 3 preceding and 2 following: (5, 2)
             // 2 following and 6 following: (4, 6)
-            int[] upper = getRangeOffset(window.upperBound, "PRECEDING");
-            int[] lower = getRangeOffset(window.lowerBound, "FOLLOWING");
-            int offset = upper[1]*upper[0];
+            long[] upper = getRangeOffset(window.upperBound, "PRECEDING");
+            long[] lower = getRangeOffset(window.lowerBound, "FOLLOWING");
+            long offset = upper[1]*upper[0];
             if (offset == 0 && lower[1] == -1) {
                 lower[1] = -lower[1];
                 offset = lower[1]*lower[0];
             }
-            windowDef.setOffset(offset);
+            windowDef.setOffset((int) offset);
             windowDef.setRange((lower[1]*lower[0] + upper[1]*upper[0]) + "");
 
             // For each partition...
@@ -278,7 +279,8 @@ public class FennelWindowRel extends FennelSingleRel
                     new RexCall[partition.overList.size()]);
                 RelDataType inputRowType = getChild().getRowType();
                 String[] programs = new String[3];
-                translator.getAggProgram(inputRowType, inputExprs, null, overs, programs);
+                translator.getAggProgram(inputRowType, inputExprs, null,
+                        overs, conditionExpr, programs);
                 windowPartitionDef.setInitializeProgram(programs[0]);
                 windowPartitionDef.setAddProgram(programs[1]);
                 windowPartitionDef.setDropProgram(programs[2]);
@@ -296,11 +298,11 @@ public class FennelWindowRel extends FennelSingleRel
         return windowStreamDef;
     }
 
-    private int[] getRangeOffset(SqlNode node, String strCheck)
+    private long[] getRangeOffset(SqlNode node, String strCheck)
     {
-        int[] out = new int[2];
-        int val = 0;
-        int sign = 1;
+        long[] out = new long[2];
+        long val = 0;
+        long sign = 1;
         if (node != null) {
             if (node instanceof SqlCall) {
                 sign = ((SqlCall) node).getOperator().getName().
@@ -312,11 +314,7 @@ public class FennelWindowRel extends FennelSingleRel
                 if (obj instanceof BigDecimal) {
                     val = ((BigDecimal) obj).intValue();
                 } else if (obj instanceof SqlIntervalLiteral.IntervalValue) {
-                    // TODO: Fix this... We should figure out if it is hour, minute etc and
-                    // normalize it to milliseconds or something like that.
-                    val = ((SqlIntervalLiteral.IntervalValue) obj).getSign()*
-                            Integer.parseInt(((SqlIntervalLiteral.IntervalValue) obj).
-                            getIntervalLiteral());
+                    val = SqlParserUtil.intervalToMillis((SqlIntervalLiteral.IntervalValue) obj);
                 }
             }
         }

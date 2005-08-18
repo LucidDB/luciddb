@@ -22,18 +22,7 @@
 package net.sf.farrago.session;
 
 import net.sf.farrago.fem.security.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.fem.med.*;
-import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.session.*;
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.util.*;
-import java.util.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.util.*;
-import net.sf.farrago.resource.*;
-
 
 /**
  * This interface specifies the privilege check service methods. The caller
@@ -48,13 +37,15 @@ public interface FarragoSessionPrivilegeChecker
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Submits a request for access to a catalog object.
+     * Submits a request for access to a catalog object.  Actual
+     * checking of the request may be deferred until the next
+     * call to checkAccess.
      * 
      * @param obj object to be accessed
      *
      * @param authId the authorization id of the requester
      *
-     * @param action the action to be performed on the object 'obj'
+     * @param action the action to be performed on obj
      */
     public void requestAccess(
         CwmModelElement obj,

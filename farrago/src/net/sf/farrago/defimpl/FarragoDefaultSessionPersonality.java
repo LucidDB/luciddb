@@ -25,6 +25,7 @@ import com.disruptivetech.farrago.fennel.*;
 import com.lucidera.farrago.fennel.*;
 import com.lucidera.lurql.*;
 
+import org.eigenbase.util.*;
 import org.eigenbase.jmi.*;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.sql.*;
@@ -46,8 +47,11 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.fem.security.*;
 
 import java.util.*;
+
+import javax.jmi.reflect.*;
 
 /**
  * FarragoDefaultSessionPersonality is a default implementation of the
@@ -212,6 +216,48 @@ public class FarragoDefaultSessionPersonality
                 "Element",
                 null,
                 ReferentialRuleTypeEnum.IMPORTED_KEY_CASCADE));
+    }
+    
+    // implement FarragoSessionPersonality
+    public void definePrivileges(
+        FarragoSessionPrivilegeMap map)
+    {
+        FarragoRepos repos = database.getSystemRepos();
+
+        PrivilegedAction [] tableActions = new PrivilegedAction [] 
+            {
+                PrivilegedActionEnum.SELECT,
+                PrivilegedActionEnum.INSERT,
+                PrivilegedActionEnum.DELETE,
+                PrivilegedActionEnum.UPDATE,
+            };
+        defineTypePrivileges(
+            map,
+            repos.getRelationalPackage().getCwmNamedColumnSet(),
+            tableActions);
+        
+        PrivilegedAction [] routineActions = new PrivilegedAction [] 
+            {
+                PrivilegedActionEnum.EXECUTE
+            };
+        defineTypePrivileges(
+            map,
+            repos.getSql2003Package().getFemRoutine(), 
+            routineActions);
+    }
+
+    private void defineTypePrivileges(
+        FarragoSessionPrivilegeMap map,
+        RefClass refClass,
+        PrivilegedAction [] actions)
+    {
+        for (int i = 0; i < actions.length; ++i) {
+            map.mapPrivilegeForType(
+                refClass,
+                actions[i].toString(),
+                true,
+                true);
+        }
     }
     
     // implement FarragoSessionPersonality

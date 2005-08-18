@@ -20,6 +20,14 @@
     <xsl:attribute name="timestamp">XXX</xsl:attribute>
   </xsl:template>
 
+  <xsl:template match="@creationTimestamp">
+    <xsl:attribute name="creationTimestamp">XXX</xsl:attribute>
+  </xsl:template>
+
+  <xsl:template match="@modificationTimestamp">
+    <xsl:attribute name="modificationTimestamp">XXX</xsl:attribute>
+  </xsl:template>
+
   <!-- Pass everything else through unchanged -->
   <xsl:template match="/ | @* | node()">
     <xsl:copy>

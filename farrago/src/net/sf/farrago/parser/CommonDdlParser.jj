@@ -2272,7 +2272,8 @@ SqlIdentifier PrivilegedAction() :
 {
     (<INSERT> | <UPDATE> | <SELECT> | <DELETE> | <EXECUTE> | <USAGE>) 
     {
-        SqlIdentifier privId = new SqlIdentifier(token.image,  getPos());
+        SqlIdentifier privId = new SqlIdentifier(
+            token.image.toUpperCase(),  getPos());
         return privId;
     }
 }

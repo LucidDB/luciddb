@@ -1,0 +1,25 @@
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/collectionTypes.sql#5 $
+0: jdbc:farrago:> -- Test DDL for row types
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create schema rowTest;
+0: jdbc:farrago:> set schema 'rowTest';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- View which has a ROW column
+0: jdbc:farrago:> create view rowView as select 1 as x, row (2, 'abcd') as y from (values (true));
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- View which has a ROW inside a MULTISET
+0: jdbc:farrago:> create view rowMultisetView as select 1 as x, multiset[row (2, 'abcd')] as y from (values (true));
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- View which has a MULTISET inside a ROW
+0: jdbc:farrago:> create view rowMultisetRowView as
+. . . . . . . . > select
+. . . . . . . . >    1 as x,
+. . . . . . . . >    row(
+. . . . . . . . >       row (2, 'abcd'),
+. . . . . . . . >       multiset[row (3, false), row (5, true)]) as y
+. . . . . . . . > from (values (true));
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- End row.sql
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

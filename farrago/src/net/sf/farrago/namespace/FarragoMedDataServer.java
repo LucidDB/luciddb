@@ -49,6 +49,9 @@ public interface FarragoMedDataServer extends FarragoAllocation
     /** keyword for VERSION in server properties list */
     public static final String PROP_SERVER_VERSION = "VERSION";
 
+    /** keyword for NAME in server properties list */
+    public static final String PROP_SERVER_NAME = "NAME";
+
     //~ Methods ---------------------------------------------------------------
 
     /**

@@ -367,6 +367,201 @@ public final class SqlParserUtil
     }
 
     /**
+     * Parses a INTERVAL value.
+     * @return an int array where each element in the array represents a time
+     * unit in the input string.<br>
+     * NOTE: that the first element in the array indicates the sign of the value
+     * E.g<br>
+     * An input string of: <code>'364 23:59:59.9999' INTERVAL DAY TO SECOND'</code><br>
+     * would make this method return<br>
+     * <code>int[] {1, 364, 23, 59, 59, 9999 }</code><br>
+     * An negative interval value: <code>'-364 23:59:59.9999' INTERVAL DAY TO SECOND'</code><br>
+     * would make this method return<br>
+     * <code>int[] {-1, 364, 23, 59, 59, 9999 }</code><br>
+     * @return null if the interval value is illegal.
+     * Illegal values are:
+     * <ul>
+     *  <li>non digit character (except optional minus '-'
+     *                          at the first character in the input string.)
+     *  </li>
+     *  <li>the number of time units described in
+     *      intervalQualifer doesn't match the parsed number of time units.
+     *  </li>
+     * </ul>
+     */
+    public static int[] getIntervalValue(SqlIntervalLiteral.IntervalValue interval)
+    {
+        String value = interval.getIntervalLiteral();
+        SqlIntervalQualifier intervalQualifier = interval.getIntervalQualifier();
+
+        value = value.trim();
+        if (Util.isNullOrEmpty(value)) {
+            return null;
+        }
+
+        int sign = 1;
+        if ('-' == value.charAt(0)) {
+            sign = -1;
+            if (value.length()==1) {
+                // handles the case when we have a single input value of '-'
+                return null;
+            }
+            value = value.substring(1);
+        }
+
+        // sign, day, hour, minute, second, millisecond
+        int ret[] = new int[6];
+        for (int i = 0; i < ret.length; i++) {
+            ret[i] = 0;
+        }
+        ret[0] = sign;
+        try {
+            // TODO (mravuri 08/08/2005): Need to support this later...
+            if (intervalQualifier.isYearMonth()) {
+                //~------ YEAR-MONTH INTERVAL
+                return null;
+            }
+            //~------ DAY-TIME INTERVAL
+            String[] withDayPattern = {
+                "(\\d+)"                                    // day
+                ,"(\\d+) (\\d+)"                            // day to hour
+                ,"(\\d+) (\\d+):(\\d+)"                     // day to minute
+                ,"(\\d+) (\\d+):(\\d+):(\\d+)"              // day to second
+                ,"(\\d+) (\\d+):(\\d+):(\\d+)\\.(\\d+)"     // day to second
+            };
+
+            // Add spurious groups (:) so that each pattern has different number of groups.
+            String[] withoutDayPattern = {
+                "(\\d+)"                                    // hour, minute, second
+                ,"(\\d+)\\.(\\d+)"                          // second
+                ,"(\\d+)(:)(\\d+)"                          // hour to minute, minute to second
+                ,"(\\d+)(:)(\\d+)\\.(\\d+)"                 // minute to second
+                ,"(\\d+)(:)(\\d+)(:)(\\d+)"                 // hour to second
+                ,"(\\d+)(:)(\\d+)(:)(\\d+)\\.(\\d+)"        // hour to second
+            };
+
+            String[] ps;
+            boolean bWithDayPattern = false;
+            if (SqlIntervalQualifier.TimeUnit.Day.equals(
+                intervalQualifier.getStartUnit())) {
+                ps = withDayPattern;
+                bWithDayPattern = true;
+            } else {
+                ps = withoutDayPattern;
+                bWithDayPattern = false;
+            }
+
+            for (int iPattern = 0; iPattern < ps.length; iPattern++) {
+                String p = ps[iPattern];
+                Matcher m = Pattern.compile(p).matcher(value);
+                if (!m.matches()) {
+                    continue;
+                }
+                int timeUnitsCount = m.groupCount();
+                if (bWithDayPattern) {
+                    if (timeUnitsCount >= 1) {
+                        ret[1] = Integer.parseInt(m.group(1));
+                    }
+                    if (timeUnitsCount >= 2) {
+                        ret[2] = Integer.parseInt(m.group(2));
+                    }
+                    if (timeUnitsCount >= 3) {
+                        ret[3] = Integer.parseInt(m.group(3));
+                    }
+                    if (timeUnitsCount >= 4) {
+                        ret[4] = Integer.parseInt(m.group(4));
+                    }
+                    if (timeUnitsCount >= 5) {
+                        // Decimal value can be more than 3 digits. So just get the
+                        // millisecond part.
+                        ret[5] = (int) (Float.parseFloat("0." + m.group(5))*1000);
+                    }
+                } else {
+                    switch (timeUnitsCount) {
+                    case 1:
+                        if (intervalQualifier.getStartUnit().getOrdinal()
+                                == SqlIntervalQualifier.TimeUnit.Hour_ordinal) {
+                            ret[2] = Integer.parseInt(m.group(1));
+                        } else if (intervalQualifier.getStartUnit().getOrdinal()
+                                == SqlIntervalQualifier.TimeUnit.Minute_ordinal) {
+                            ret[3] = Integer.parseInt(m.group(1));
+                        } else if (intervalQualifier.getStartUnit().getOrdinal()
+                                == SqlIntervalQualifier.TimeUnit.Second_ordinal) {
+                            ret[4] = Integer.parseInt(m.group(1));
+                        } else {
+                            return null;
+                        }
+                        break;
+                    case 2:
+                        ret[4] = Integer.parseInt(m.group(1));
+                        ret[5] = (int) (Float.parseFloat("0." + m.group(2))*1000);
+                        break;
+                    case 3:
+                        if (intervalQualifier.getStartUnit().getOrdinal()
+                                == SqlIntervalQualifier.TimeUnit.Hour_ordinal) {
+                            ret[2] = Integer.parseInt(m.group(1));
+                            ret[3] = Integer.parseInt(m.group(3));
+                        } else if (intervalQualifier.getStartUnit().getOrdinal()
+                                == SqlIntervalQualifier.TimeUnit.Minute_ordinal) {
+                            ret[3] = Integer.parseInt(m.group(1));
+                            ret[4] = Integer.parseInt(m.group(3));
+                        } else {
+                            return null;
+                        }
+                        break;
+                    case 4:
+                        ret[3] = Integer.parseInt(m.group(1));
+                        ret[4] = Integer.parseInt(m.group(3));
+                        ret[5] = (int) (Float.parseFloat("0." + m.group(4))*1000);
+                        break;
+                    case 5:
+                        ret[2] = Integer.parseInt(m.group(1));
+                        ret[3] = Integer.parseInt(m.group(3));
+                        ret[4] = Integer.parseInt(m.group(5));
+                        break;
+                    case 6:
+                        ret[2] = Integer.parseInt(m.group(1));
+                        ret[3] = Integer.parseInt(m.group(3));
+                        ret[4] = Integer.parseInt(m.group(5));
+                        ret[5] = (int) (Float.parseFloat("0." + m.group(6))*1000);
+                        break;
+                    default:
+                        break;
+                    }
+                }
+                break;
+            }
+        } catch (NumberFormatException e) {
+            return null;
+        }
+        return ret;
+    }
+
+    /**
+     * Converts the interval value into a millisecond representation.
+     * @param interval
+     * @return a long value that represents millisecond equivalent of
+     * the interval value.
+     */
+    public static long intervalToMillis(SqlIntervalLiteral.IntervalValue interval)
+    {
+        int[] ret = getIntervalValue(interval);
+        assert (ret != null);
+
+        long l = 0;
+        long[] conv = new long[5];
+        conv[4] = 1;             // millisecond
+        conv[3] = conv[4]*1000;  // second
+        conv[2] = conv[3]*60;    // minute
+        conv[1] = conv[2]*60;    // hour
+        conv[0] = conv[1]*24;    // day
+        for (int i = 1; i < ret.length; i++) {
+            l += conv[i-1]*ret[i];
+        }
+        return ret[0]*l;
+    }
+
+    /**
      * Parses a positive int. All characters have to be digits.
      * @see {@link java.lang.Integer#parseInt(String)}
      */

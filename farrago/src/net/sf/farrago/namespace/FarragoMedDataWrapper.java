@@ -78,6 +78,15 @@ public interface FarragoMedDataWrapper
         Properties props)
         throws SQLException;
 
+    /**
+     * Returns whether server supports sharing by multiple threads. Used by
+     * {@link net.sf.farrago.namespace.util.FarragoDataWrapperCache#loadServer}
+     * to determine if the entry should be exclusive (not shared).
+     *
+     * @return true only if server sharing is supported
+     */
+    public boolean supportsServerSharing();
+
 }
 
 

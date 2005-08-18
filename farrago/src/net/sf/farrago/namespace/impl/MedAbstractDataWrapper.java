@@ -126,6 +126,12 @@ public abstract class MedAbstractDataWrapper extends MedAbstractBase
     {
         return true;
     }
+
+    // implement FarragoMedDataWrapper
+    public boolean supportsServerSharing()
+    {
+        return false;
+    }
 }
 
 

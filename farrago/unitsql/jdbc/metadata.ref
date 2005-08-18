@@ -296,7 +296,7 @@ getStringFunctions                                CONCAT,INSERT,LCASE,LENGTH,LOC
 getSystemFunctions                                
 getTimeDateFunctions                              CURDATE,CURTIME,NOW
 getURL                                            jdbc:farrago:
-getUserName                                       guest
+getUserName                                       sa
 isCatalogAtStart                                  true
 isReadOnly                                        false
 nullPlusNonNullIsNull                             true

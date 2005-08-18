@@ -1,13 +1,6 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/ddl/auth.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/auth.sql#3 $
 0: jdbc:farrago:> -- Test DDL on Authorization: 
 0: jdbc:farrago:> -- User, Role, Role Inheritance structure
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- REVIEW jvs 12-June-2005:  I put in this connect as _SYSTEM so that
-0: jdbc:farrago:> -- the creation grant for user SECMAN has a non-null grantee.  In
-0: jdbc:farrago:> -- "real life" this shouldn't be allowed.  And there needs to be a check
-0: jdbc:farrago:> -- for valid user creator.
-0: jdbc:farrago:> !closeall
-sqlline> !connect jdbc:farrago: _SYSTEM net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -------------------------------------------------------------------------
 0: jdbc:farrago:> -- Basic setup
@@ -23,7 +16,6 @@ sqlline> !connect jdbc:farrago: _SYSTEM net.sf.farrago.jdbc.engine.FarragoJdbcEn
 0: jdbc:farrago:> !closeall
 sqlline> !connect jdbc:farrago: SECMAN net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver
 0: jdbc:farrago:> 
-0: jdbc:farrago:> set catalog 'localdb'; 
 0: jdbc:farrago:> create schema authtest;
 0: jdbc:farrago:> set schema 'authtest';
 0: jdbc:farrago:> 

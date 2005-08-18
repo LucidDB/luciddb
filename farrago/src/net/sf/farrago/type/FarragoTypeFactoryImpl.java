@@ -146,19 +146,11 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             RelDataType type;
             if (pScale != null) {
                 assert(pPrecision != null);
-//                if (!typeName.allowsPrecScale(true, true)) {
-//                    throw EigenbaseResource.instance()
-//                        .newTypeDoesNotAllowScale(typeName.toString());
-//                }
                 type = createSqlType(
                     typeName,
                     pPrecision.intValue(),
                     pScale.intValue());
             } else if (pPrecision != null) {
-//                if (!typeName.allowsPrecScale(true, false)) {
-//                    throw EigenbaseResource.instance()
-//                        .newTypeDoesNotAllowPrecision(typeName.toString());
-//                }
                 type = createSqlType(
                     typeName,
                     pPrecision.intValue());
@@ -225,6 +217,11 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                 new ObjectSqlType(
                     SqlTypeName.Structured, id, false, structType.getFields(),
                     getUserDefinedComparability(objectType)));
+        } else if (classifier instanceof FemSqlrowType) {
+            FemSqlrowType rowType = (FemSqlrowType) classifier;
+            RelDataType structType = createStructTypeFromClassifier(rowType);
+            return canonize(structType);
+
         } else {
             throw Util.needToImplement(classifier);
         }

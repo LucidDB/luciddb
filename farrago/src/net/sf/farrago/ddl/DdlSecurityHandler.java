@@ -70,25 +70,17 @@ public class DdlSecurityHandler extends DdlHandler
     public void validateDefinition(FemUser femUser)
     {
         try {
-            // ensure that the user does not exist. We assume that the
+            // Ensure that the user does not exist. We assume that the
             // repository service can enforce unique name constraint, so we
             // don't have to check that the name already exist.
-            // TODO: repos should enforce unique constrains 
-
-            // create a new creation grant on the object where the creator will
-            // be the grantee i.e. FemCreationGrant. grantor is _SYSTEM, and
-            // granted object is the femUer itself.
-            FemCreationGrant creationGrant =
-                FarragoCatalogUtil.newCreationGrant(
-                    repos, "_SYSTEM",
-                    validator.getInvokingSession().getSessionVariables()
-                    .currentUserName,
-                    femUser);
+            // TODO: repos should enforce unique constraints.
             
-            // let the user inherit PUBLIC role. TODO: externalize the PUBLIC
-            // role string,  can't hard code.
+            // Let the user inherit the PUBLIC role.
             FemGrant grantPublic = FarragoCatalogUtil.newRoleGrant(
-                repos, "_SYSTEM", femUser.getName(), "PUBLIC");
+                repos,
+                FarragoCatalogInit.SYSTEM_USER_NAME,
+                femUser.getName(),
+                FarragoCatalogInit.PUBLIC_ROLE_NAME);
             
         } catch (Throwable ex) {
             throw res.newValidatorDefinitionInvalid(
@@ -101,20 +93,8 @@ public class DdlSecurityHandler extends DdlHandler
     public void validateDefinition(FemRole femRole)
     {
         try {
-            
             // WITH ADMIN grantor clause has already been dealt with during
-            // parsing.
-            
-            // create a new creation grant on the object where the creator will
-            // be the grantee i.e. FemCreationGrant. grantor is _SYSTEM, and
-            // granted object is the femRole itself.
-            FemCreationGrant creationGrant =
-                FarragoCatalogUtil.newCreationGrant(
-                    repos, "_SYSTEM",
-                    validator.getInvokingSession().getSessionVariables()
-                    .currentUserName,
-                    femRole);
-            
+            // parsing.  Nothing to do yet!
         } catch (Throwable ex) {
             throw res.newValidatorDefinitionInvalid(
                 repos.getLocalizedObjectName(femRole),

@@ -201,7 +201,10 @@ public abstract class FarragoTestCase extends DiffTestCase
     {
         FarragoJdbcEngineDriver driver = newJdbcEngineDriver();
         Connection newConnection =
-            DriverManager.getConnection(driver.getUrlPrefix());
+            DriverManager.getConnection(
+                driver.getUrlPrefix(),
+                FarragoCatalogInit.SA_USER_NAME,
+                null);
         newConnection.setAutoCommit(false);
         return newConnection;
     }
@@ -515,7 +518,8 @@ public abstract class FarragoTestCase extends DiffTestCase
             new String [] {
                 "-u", driver.getUrlPrefix(), "-d",
                 "net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver", "-n",
-                "guest", "--force=true", "--silent=true",
+                FarragoCatalogInit.SA_USER_NAME,
+                "--force=true", "--silent=true",
                 "--showWarnings=false", "--maxWidth=1024"
             };
         PrintStream savedOut = System.out;
@@ -719,9 +723,12 @@ public abstract class FarragoTestCase extends DiffTestCase
             while (iter.hasNext()) {
                 FemAuthId authId =
                     (FemAuthId) iter.next();
-                if (authId.getName().equals("_SYSTEM")
-                    || authId.getName().equals("PUBLIC")
-                    || authId.getName().equals("SA"))
+                if (authId.getName().equals(
+                        FarragoCatalogInit.SYSTEM_USER_NAME)
+                    || authId.getName().equals(
+                        FarragoCatalogInit.PUBLIC_ROLE_NAME)
+                    || authId.getName().equals(
+                        FarragoCatalogInit.SA_USER_NAME))
                 {
                     continue;
                 }

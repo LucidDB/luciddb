@@ -25,7 +25,6 @@
 #include "fennel/exec/MockConsumerExecStream.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/ExecStreamGraph.h"
-#include "fennel/tuple/TuplePrinter.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -49,8 +48,6 @@ ExecStreamResult MockConsumerExecStream::execute(
     }
     assert(inAccessor.isConsumptionPossible());
 
-    TuplePrinter tuplePrinter;
-
     // Read rows from the input buffer until we exceed the quantum or read all
     // of the rows. Convert each row to a string, and append to the rows
     // vector.
@@ -67,7 +64,7 @@ ExecStreamResult MockConsumerExecStream::execute(
             }
         }
         inAccessor.unmarshalTuple(inputTuple);
-
+        rowCount++;
         if (echoData) {
             tuplePrinter.print(*echoData, inAccessor.getTupleDesc(), inputTuple);
         }
@@ -93,6 +90,7 @@ void MockConsumerExecStream::prepare(
 void MockConsumerExecStream::open(bool restart)
 {
     SingleInputExecStream::open(restart);
+    rowCount = 0;
     rowStrings.clear();
     inputTuple.compute(pInAccessor->getTupleDesc());
 }

@@ -1,9 +1,6 @@
 0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/privs.sql#3 $
 0: jdbc:farrago:> -- Test DDL on privileges
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- REVIEW jvs 12-June-2005:  see comments at top of auth.sql
-0: jdbc:farrago:> !closeall
-sqlline> !connect jdbc:farrago: _SYSTEM net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver
 0: jdbc:farrago:> -- Create a security manager and login as this user to perform all grant 
 0: jdbc:farrago:> -- tests. 
 0: jdbc:farrago:> -- TODO: grant all appropriate system privilege for this user once
@@ -11,6 +8,7 @@ sqlline> !connect jdbc:farrago: _SYSTEM net.sf.farrago.jdbc.engine.FarragoJdbcEn
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create user SECMAN authorization 'Unknown';
 0: jdbc:farrago:> create user SECMAN_2 authorization 'Unknown';
+0: jdbc:farrago:> create user PRIV_USER1 authorization 'Unknown';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !closeall
 sqlline> !connect jdbc:farrago: SECMAN net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver
@@ -28,14 +26,20 @@ sqlline> !connect jdbc:farrago: SECMAN net.sf.farrago.jdbc.engine.FarragoJdbcEng
 0: jdbc:farrago:> grant SELECT on pt_notexist to PRIV_USER1 with grant option;
 Error: DDL validation error near line 1, column 17: Reference to unknown table "PT_NOTEXIST" (state=,code=0)
 0: jdbc:farrago:> 
-0: jdbc:farrago:> ---- TODO: read back on whether a user has been created. Looks like there is a bug
-0: jdbc:farrago:> ---- i.e. I can't select specific columns, only seems to work with select *
-0: jdbc:farrago:> ---- set catalog 'sys_boot';
-0: jdbc:farrago:> ---- select name from sys_fem."Security"."AuthorizationIdentifier";
+0: jdbc:farrago:> select "name" from sys_fem."Security"."AuthId" order by 1;
++-------------+
+|    name     |
++-------------+
+| PRIV_USER1  |
+| PUBLIC      |
+| SECMAN      |
+| SECMAN_2    |
+| _SYSTEM     |
+| sa          |
++-------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Test 2: multiple privs
 0: jdbc:farrago:> -- 
-0: jdbc:farrago:> set catalog 'localdb';
 0: jdbc:farrago:> create table pt2 (c1 int not null primary key, c2 int);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> GRANT select, insert, delete, update ON PT2 TO PUBLIC;
@@ -67,9 +71,9 @@ Was expecting one of:
 0: jdbc:farrago:> GRANT SELECT ON PRIVSTEST.PT_NOTEXIST TO PUBLIC WITH GRANT OPTION;
 Error: DDL validation error near line 1, column 27: Reference to unknown table "PT_NOTEXIST" (state=,code=0)
 0: jdbc:farrago:> 
-0: jdbc:farrago:> ---- todo: incompatible priv vs. object type. EXECUTE vs TABLE
+0: jdbc:farrago:> ---- incompatible priv vs. object type. EXECUTE vs TABLE
 0: jdbc:farrago:> grant execute on pt3 to public;
-Error: Privilege execute is not applicable to PT3 (state=,code=0)
+Error: Privilege EXECUTE is not applicable to PT3 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> ---- todo: incompatible priv vs. object type. EXECUTE vs SEQUENCE
 0: jdbc:farrago:> 

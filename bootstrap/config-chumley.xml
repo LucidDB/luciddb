@@ -8,7 +8,7 @@
 <!ENTITY open_root       "//open/dt/dev">
 <!ENTITY open_propfile   "chumley.perforce.properties">
 
-<!ENTITY aspen_p4port    "jhyde.dyndns.org:1666">
+<!ENTITY aspen_p4port    "chumley:1667">
 <!ENTITY aspen_p4client  "cruise.chumley">
 <!ENTITY aspen_p4user    "guest">
 

@@ -83,6 +83,11 @@ public interface FarragoSession extends FarragoAllocation
     public FarragoSessionPrivilegeChecker newPrivilegeChecker();
 
     /**
+     * @return {@link FarragoSessionPrivilegeMap} for this session
+     */
+    public FarragoSessionPrivilegeMap getPrivilegeMap();
+
+    /**
      * @return JDBC URL used to establish this session
      */
     public String getUrl();

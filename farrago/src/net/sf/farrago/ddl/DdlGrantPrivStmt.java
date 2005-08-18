@@ -26,16 +26,19 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.cwm.core.*;
+
 import net.sf.farrago.session.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.util.*;
-import java.util.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.util.*;
 import net.sf.farrago.resource.*;
 
+import java.util.*;
 
-    
+import org.eigenbase.jmi.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
+
+
 /**
  * DdlGrantPrivStmt represents a DDL GRANT privileges statement.
  * 
@@ -49,8 +52,6 @@ public class DdlGrantPrivStmt extends DdlGrantStmt
     private List privList;
     private boolean hierarchyOption;
     private SqlIdentifier grantor;
-    private MultiMap privilegeMap; //TODO: to be moved to session level
-    
 
     //~ Constructors ----------------------------------------------------------
 
@@ -82,51 +83,39 @@ public class DdlGrantPrivStmt extends DdlGrantStmt
         // Generate a lurql query to ensure that the grantor
         // (a) Has GRANT OPTION on all the privileges specified in this
         // grant. or
-        // (b) Is the creator the owner of the object? 
-        // all at once at this point before we proceed with granting.
+        // (b) Is the owner of the object? 
+        // All at once at this point before we proceed with granting.
 
-        // initialized the privilege lookup table. 
-        privilegeMap = initGrantValidationLookupMap(repos);
+        // Initialize the privilege lookup table. 
+        validatePrivileges(ddlValidator);
         
         Iterator iter = granteeList.iterator();
         while(iter.hasNext()) {
             // process the next grantee
             SqlIdentifier id = (SqlIdentifier) iter.next();
 
-            // Find the repository element id for the grantee,  create one if
-            // it does not exist
-            FemAuthId granteeAuthId = findAuthIdByName(repos,
+            // Find the repository element id for the grantee
+            FemAuthId granteeAuthId = FarragoCatalogUtil.getAuthIdByName(repos,
                 id.getSimple());
 
-            // for each privilege in the list,  we instantiate a repository
+            // For each privilege in the list, we instantiate a repository
             // element. Note that this makes it easier to revoke the privs on
-            // the individual basis.
+            // an individual basis.
             Iterator iterPriv = privList.iterator();
             while (iterPriv.hasNext()) {
                 SqlIdentifier privId = (SqlIdentifier) iterPriv.next();
-
-                // make sure that the privilege is appropriate for the object
-                // type. 
-                List legalList = privilegeMap.getMulti(
-                    grantedObject.refClass());
-
-                if (!legalList.contains(privId.getSimple().toUpperCase())) {
-                    // throw an exception, we see an illegal privilege
-                    throw FarragoResource.instance().newValidatorInvalidGrant(
-                        privId.getSimple(),grantedObject.getName());
-                }
                 
-                
-                // create a privilege object and set its properties
+                // Create a privilege object and set its properties.
                 FemGrant grant = repos.newFemGrant();
                 
-                // set the privilege name (i.e. action) and properties
+                // Set the privilege name (i.e. action) and properties.
                 grant.setAction(privId.getSimple());
                 grant.setWithGrantOption(grantOption);
 
                 // TODO: to grant.setHierarchyOption(hierarchyOption);
 
-                // associate the privilege with the 
+                // Associate the privilege with the grantor, grantee,
+                // and object.
                 grant.setGrantor(grantorAuthId);
                 grant.setGrantee(granteeAuthId);
                 grant.setElement(grantedObject);
@@ -154,69 +143,23 @@ public class DdlGrantPrivStmt extends DdlGrantStmt
         this.hierarchyOption = hierarchyOption;
     }
 
-    private FemAuthId findAuthIdByName(
-        FarragoRepos repos, String authName)
+    private void validatePrivileges(FarragoSessionDdlValidator ddlValidator)
     {
-        // TODO: remove this,  this has been replaced by getAuthIdByName in
-        // FarragoCatalogUtil
-        
-        Collection authIdCollection =
-            repos.getSecurityPackage().getFemAuthId().
-            refAllOfType();
-        FemAuthId femAuthId =
-            (FemAuthId)
-            FarragoCatalogUtil.getModelElementByName(
-                authIdCollection, authName);
-
-        if (femAuthId == null) {
-            // need to create a new auth id instance for metadata repository
-            femAuthId = repos.newFemUser();
-            femAuthId.setName(authName);
+        FarragoSession session = ddlValidator.getStmtValidator().getSession();
+        Set legalPrivSet =
+            session.getPrivilegeMap().getLegalPrivilegesForType(
+                grantedObject.refClass());
+        Iterator iter = privList.iterator();
+        while (iter.hasNext()) {
+            SqlIdentifier privId = (SqlIdentifier) iter.next();
+            if (!legalPrivSet.contains(privId.getSimple())) {
+                // throw an exception, because this is an illegal privilege
+                // REVIEW jvs 13-Aug-2005:  maybe report all illegal
+                // privileges at once instead of just the first one?
+                throw FarragoResource.instance().newValidatorInvalidGrant(
+                    privId.getSimple(), grantedObject.getName());
+            }
         }
-        return femAuthId;
-    }
-
-    
-    private MultiMap initGrantValidationLookupMap (FarragoRepos repos)
-    {
-        // TODO: This routine is temporary. We need to have an extensible way
-        // of handling new kind of privileges. Plus we must be move to session
-        // level so that we don't have to initialize it on the per GRANT
-        // request basis.
-
-        // TODO: we want to dynamically load any type of privileges associate
-        // with each access controlled object types e.g. TABLE, VIEW, PROCEDURE
-        // etc.
-
-        // Populate the privilege validation table. The key is the object type
-        // such as TABLE,  SEQUENCE etc. and the value of the entry will be a
-        // list of privileges legal for an object type. 
-        String[] tabPrivs = {"SELECT", "INSERT",  "DELETE",  "UPDATE"};
-        String[] seqPrivs = {"SELECT"};
-        String[] procPrivs = {"EXECUTE"};        
-
-        MultiMap pMap = new MultiMap();
-
-        // Table prvileges
-        for (int i = 0; i < tabPrivs.length; i++)
-        {   
-            pMap.putMulti(
-                repos.getMedPackage().getFemLocalTable(), tabPrivs[i]);
-        }
-
-        // Sequence prvileges. TODO
-//         for (int i = 0; i < tabPrivs.length; i++)
-//         {   
-//             pMap.putMulti(FemSequence, tabPrivs[i]);
-//         }
-
-        // Procedure prvileges
-        for (int i = 0; i < procPrivs.length; i++)
-        {   
-            pMap.putMulti(repos.getSql2003Package().getFemRoutine(), procPrivs[i]);
-        }
-
-        return pMap;
     }
 }
 
