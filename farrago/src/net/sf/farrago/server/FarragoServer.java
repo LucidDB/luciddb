@@ -44,7 +44,7 @@ public class FarragoServer
 {
     //~ Static fields/initializers --------------------------------------------
 
-    private static Registry rmiRegistry;
+    protected static Registry rmiRegistry;
 
     //~ Methods ---------------------------------------------------------------
 
@@ -171,8 +171,13 @@ public class FarragoServer
         System.out.println(res.getServerShutdownComplete());
     }
 
-    private void unbindRegistry()
+    /** Unbinds all items remaining in RMI registry. */
+    protected void unbindRegistry()
     {
+        if (rmiRegistry == null) {
+            return;
+        }
+
         try {
             String [] names = rmiRegistry.list();
             for (int i = 0; i < names.length; ++i) {
@@ -180,6 +185,7 @@ public class FarragoServer
             }
         } catch (Exception ex) {
             // TODO:  handle this better
+            ex.printStackTrace();
         }
     }
 
