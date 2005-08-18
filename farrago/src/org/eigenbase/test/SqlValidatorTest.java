@@ -666,8 +666,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("cast(null as char(1))", "CHAR(1)");
         checkExpType("cast(null as binary(1))", "BINARY(1)");
         checkExpType("cast(null as date)", "DATE");
-        checkExpType("cast(null as time)", "TIME");
-        checkExpType("cast(null as timestamp)", "TIMESTAMP");
+        checkExpType("cast(null as time)", "TIME(0)");
+        checkExpType("cast(null as timestamp)", "TIMESTAMP(0)");
         checkExpType("cast(null as decimal)", "DECIMAL");
         checkExpType("cast(null as varbinary(1))", "VARBINARY(1)");
 

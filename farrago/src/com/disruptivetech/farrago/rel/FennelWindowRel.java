@@ -234,7 +234,7 @@ public class FennelWindowRel extends FennelSingleRel
             RelDataTypeField field = fields[i];
             // FIXME (jhyde, 2004/12/6) programmatically determine which are
             //   the sort keys of the underlying relexp.
-            if (!field.getName().equals("ROWTIME")) {
+            if (!field.getName().toUpperCase().equals("ROWTIME")) {
                 continue;
             }
             sortFields = new Integer[] {new Integer(i)};
@@ -279,7 +279,8 @@ public class FennelWindowRel extends FennelSingleRel
                     new RexCall[partition.overList.size()]);
                 RelDataType inputRowType = getChild().getRowType();
                 String[] programs = new String[3];
-                translator.getAggProgram(inputRowType, inputExprs, null, overs, programs);
+                translator.getAggProgram(inputRowType, inputExprs, null,
+                        overs, conditionExpr, programs);
                 windowPartitionDef.setInitializeProgram(programs[0]);
                 windowPartitionDef.setAddProgram(programs[1]);
                 windowPartitionDef.setDropProgram(programs[2]);

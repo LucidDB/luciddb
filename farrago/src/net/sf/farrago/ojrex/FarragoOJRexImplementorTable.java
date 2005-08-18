@@ -66,6 +66,18 @@ public class FarragoOJRexImplementorTable extends OJRexImplementorTableImpl
             new FarragoOJRexCaseImplementor());
 
         registerOperator(
+            opTab.substringFunc,
+            new FarragoOJRexSubstringImplementor());
+
+        registerOperator(
+            opTab.concatOperator,
+            new FarragoOJRexConcatImplementor());
+
+        registerOperator(
+            opTab.overlayFunc,
+            new FarragoOJRexOverlayImplementor());
+
+        registerOperator(
             opTab.castFunc,
             new FarragoOJRexCastImplementor());
 
@@ -84,10 +96,6 @@ public class FarragoOJRexImplementorTable extends OJRexImplementorTableImpl
         registerOperator(
             opTab.isNotNullOperator,
             new FarragoOJRexNullTestImplementor(false));
-
-        registerOperator(
-            opTab.rowConstructor,
-            new FarragoOJRexRowImplementor());
 
         registerOperator(
             opTab.rowConstructor,

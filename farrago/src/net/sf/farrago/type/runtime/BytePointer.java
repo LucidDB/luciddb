@@ -22,6 +22,8 @@
 */
 package net.sf.farrago.type.runtime;
 
+import net.sf.farrago.resource.*;
+
 import org.eigenbase.util.*;
 
 import java.io.*;
@@ -67,6 +69,12 @@ public class BytePointer extends ByteArrayInputStream
      * be created.
      */
     private byte [] ownBytes;
+	/**
+	 * two temp variables to store the substring pointers
+	 *
+	 */
+	private int S1;
+	private int L1;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -190,6 +198,135 @@ public class BytePointer extends ByteArrayInputStream
             pos = 0;
             count = precision;
         }
+    }
+
+	// we store the result in the member variables to avoid memory allocation.
+    
+    private void calcSubstringPointers(
+        int S,
+        int L,
+        int LC,
+        boolean useLength)
+    {
+        int e;
+        if (useLength) {
+            if (L < 0) {
+                // If E is less than S, then it means L is negative exception.
+                throw FarragoResource.instance().newNegativeLengthForSubstring();
+            }
+            e = S + 1 + L;
+        } else {
+            e = S + 1;
+            if (e <= LC) {
+                e = LC + 1;
+            }
+        }
+
+        // f) and i) in the standard. S > LC or E < 1 
+        if (S >= LC || e < 1) {
+			S1 = L1 = 0;
+        } else {
+            // f) and ii) in the standard. 
+            // calculate the E1 and L1
+            S1 = S;
+            if (S1 < 0) {
+                S1 = 0;
+            }
+            int e1 = e;
+            if (e1 > LC) {
+                e1 = LC + 1;
+            }
+            L1 = e1 - (S1 + 1);
+        }
+    }
+
+    /**
+     * Reduces the value to a substring of the current value.
+     *
+     * @param starting desired starting position
+     *
+     * @param length  the length.
+     *
+     * @param useLength to indicate whether length parameter should be used. 
+     *
+     */
+    public void setSubstring(
+        int starting,
+        int length,
+        boolean useLength)
+    {
+        calcSubstringPointers( starting, length, getByteCount(), useLength); 
+        pos += S1;
+        count = pos + L1;
+    }
+
+    /**
+     * Assigns this value to the result of inserting bp2's value into bp1's
+     * value at a specified starting point, possibly deleting a prefix of the
+     * remainder of bp1 of a given length.  Implements the SQL string OVERLAY
+     * function.
+     *
+     * @param bp1 string1
+     *
+     * @param bp2 string2
+     *
+     * @param s starting point
+     *
+     * @param l length
+     *
+     * @param useLength whether to use length parameter
+     *
+     */
+    public void overlay(
+        BytePointer bp1,
+        BytePointer bp2,
+        int starting,
+        int length,
+        boolean useLength)
+    {
+        if (!useLength) {
+            length = bp2.getByteCount();
+        }
+        calcSubstringPointers( starting, length, bp1.getByteCount(), true); 
+        int totalLength = S1 + bp2.getByteCount() + 
+                bp1.getByteCount() - L1;
+        allocateOwnBytes(totalLength);
+        System.arraycopy(bp1.buf, bp1.pos, ownBytes, 0, S1);
+        System.arraycopy(bp2.buf, bp2.pos, ownBytes, S1, bp2.getByteCount());
+
+        System.arraycopy(bp1.buf, bp1.pos + S1 + L1, 
+                ownBytes, S1 + bp2.getByteCount(), 
+                bp1.getByteCount() - L1);
+        buf = ownBytes;
+        pos = 0;
+        count = totalLength;
+    }
+
+    /**
+     * Assigns this pointer to the result of concatenating two input strings.
+     *
+     * @param bp1 string1
+     *
+     * @param bp2 string2
+     *
+     */
+    public void concat(
+        BytePointer bp1,
+        BytePointer bp2)
+    {
+        // can not be null.
+        allocateOwnBytes(bp1.getByteCount()+bp2.getByteCount());
+        System.arraycopy(bp1.buf, bp1.pos, ownBytes, 0, bp1.getByteCount());
+        System.arraycopy(bp2.buf, bp2.pos, ownBytes, bp1.getByteCount(), 
+                        bp2.getByteCount());
+        buf = ownBytes;
+        pos = 0;
+        count = bp1.getByteCount()+bp2.getByteCount();
+    }
+    
+    public int getByteCount() 
+    {
+        return available();
     }
 
     private void allocateOwnBytes(int n)

@@ -601,6 +601,26 @@ public class RexToCalcTranslator implements RexVisitor
 
         // Step 1: implement all the filtering logic
         if (conditionExp != null) {
+
+
+            switch (aggOp.getOrdinal()) {
+            // FennelWindowRel calls this method in the following order:
+            // None, Init, Add and Drop. We want to fix the conditionExp
+            // only once. So we do it for None as it is called first. If
+            // FennelWindowRef.toStreamDef() changes the order, then this
+            // should be changed as well.
+            case AggOp.None_ordinal:
+                ArrayList alCond = new ArrayList(1);
+                // Change the conditionExp to map to the correct input refs.
+                // TODO: Aggregate expressions inside a where clause is not yet
+                // supported.
+                RexNode[] nodes = new RexNode[1];
+                nodes[0] = conditionExp;
+                fixOutputExps(alCond, 0, inputExps, aggs, nodes);
+                break;
+            default:
+                break;
+            }
             CalcProgramBuilder.Register filterResult =
                 implementNode(conditionExp);
             assert CalcProgramBuilder.OpType.Bool == filterResult.getOpType() :
@@ -1119,6 +1139,7 @@ public class RexToCalcTranslator implements RexVisitor
         final RexNode[] inputExps,
         final RexNode[] aggs,
         final RexCall[] aggCalls,
+        final RexNode conditionExp,
         String[] programs)
     {
         Util.pre(programs.length == 3, "programs.length == 3");
@@ -1135,9 +1156,9 @@ public class RexToCalcTranslator implements RexVisitor
         programs[0] = getAggProgram(inputType, inputExps, aggs, aggCalls,
                                     null, AggOp.Init);
         programs[1] = getAggProgram(inputType, inputExps, aggs, aggCalls,
-                                    null, AggOp.Add);
+                                    conditionExp, AggOp.Add);
         programs[2] = getAggProgram(inputType, inputExps, aggs, aggCalls,
-                                    null, AggOp.Drop);
+                                    conditionExp, AggOp.Drop);
     }
 
     //~ Inner Classes ---------------------------------------------------------
