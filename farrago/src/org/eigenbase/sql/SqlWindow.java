@@ -106,6 +106,12 @@ public class SqlWindow extends SqlCall
 
     public void unparse(SqlWriter writer, int leftPrec, int rightPrec)
     {
+        SqlIdentifier declName =
+            (SqlIdentifier) operands[DeclName_OPERAND];
+        if (null != declName) {
+            declName.unparse(writer, 0, 0);
+            writer.print(" AS ");
+        }
         // Override, so we don't print extra parentheses.
         getOperator().unparse(writer, operands, 0, 0);
     }

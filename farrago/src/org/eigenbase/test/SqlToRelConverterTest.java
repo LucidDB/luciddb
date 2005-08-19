@@ -597,11 +597,11 @@ public class SqlToRelConverterTest extends TestCase
             "  w3 as (partition by job order by hiredate range interval '1' second preceding)",
 
             "ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
-            "ROWS (2 PRECEDING))], EXPR$1=[SUM($7) OVER (PARTITION BY $2 ORDER BY $4" + NL +
-            "ROWS (2 PRECEDING))], EXPR$2=[SUM($7) OVER (PARTITION BY $2 ORDER BY $4" + NL +
-            "ROWS (3 PRECEDING))])" + NL +
+            "ROWS 2 PRECEDING)], EXPR$1=[SUM($7) OVER (PARTITION BY $2 ORDER BY $4" + NL +
+            "ROWS 2 PRECEDING)], EXPR$2=[SUM($7) OVER (PARTITION BY $2 ORDER BY $4" + NL +
+            "ROWS 3 PRECEDING)])" + NL +
             "  FilterRel(condition=[>(SUM(-($7, $5)) OVER (PARTITION BY $2 ORDER BY $4" + NL +
-            "ROWS (2 PRECEDING)), 999)])" + NL +
+            "ROWS 2 PRECEDING), 999)])" + NL +
             "    TableAccessRel(table=[[EMP]])" + NL);
     }
 
@@ -640,10 +640,10 @@ public class SqlToRelConverterTest extends TestCase
             "window w1 as (partition by job order by hiredate rows 2 preceding)",
 
             "ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
-            "ROWS (2 PRECEDING))], EXPR$1=[CASE(=(COUNT($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
-            "ROWS (2 PRECEDING)), 0), CAST(null):INTEGER, /(SUM($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
-            "ROWS (2 PRECEDING)), COUNT($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
-            "ROWS (2 PRECEDING))))])" + NL +
+            "ROWS 2 PRECEDING)], EXPR$1=[CASE(=(COUNT($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
+            "ROWS 2 PRECEDING), 0), CAST(null):INTEGER, /(SUM($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
+            "ROWS 2 PRECEDING), COUNT($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
+            "ROWS 2 PRECEDING)))])" + NL +
             "  TableAccessRel(table=[[EMP]])" + NL);
     }
 
@@ -656,8 +656,8 @@ public class SqlToRelConverterTest extends TestCase
             "window w1 as (partition by job order by hiredate rows 2 preceding)",
 
             "ProjectRel(EXPR$0=[COUNT($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
-            "ROWS (2 PRECEDING))], EXPR$1=[COUNT() OVER (PARTITION BY $2 ORDER BY $4" + NL +
-            "ROWS (2 PRECEDING))])" + NL +
+            "ROWS 2 PRECEDING)], EXPR$1=[COUNT() OVER (PARTITION BY $2 ORDER BY $4" + NL +
+            "ROWS 2 PRECEDING)])" + NL +
             "  TableAccessRel(table=[[EMP]])" + NL);
     }
 

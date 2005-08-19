@@ -111,9 +111,10 @@ public class SqlCall extends SqlNode
         int leftPrec,
         int rightPrec)
     {
-        if ((leftPrec > operator.getLeftPrec()) ||
+        if (((leftPrec > operator.getLeftPrec()) ||
             (operator.getRightPrec() <= rightPrec) ||
-            (SqlWriter.alwaysUseParentheses && isA(SqlKind.Expression))) {
+            (SqlWriter.alwaysUseParentheses && isA(SqlKind.Expression))) &&
+            !operator.isName("PRECEDING") && !operator.isName("FOLLOWING")) {
             writer.print('(');
             operator.unparse(writer, operands, 0, 0);
             writer.print(')');
