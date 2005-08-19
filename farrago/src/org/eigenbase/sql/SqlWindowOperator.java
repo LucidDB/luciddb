@@ -73,14 +73,13 @@ public class SqlWindowOperator extends SqlOperator {
      * The FOLLOWING operator used exclusively in a window specification.
      */
     private final SqlPostfixOperator followingOperator =
-            new SqlPostfixOperator("FOLLOWING", SqlKind.Other, 10, null, null, null);
+            new SqlPostfixOperator("FOLLOWING", SqlKind.Following, 10, null, null, null);
 
     /**
      * The PRECEDING operator used exclusively in a window specification.
      */
     private final SqlPostfixOperator precedingOperator =
-            new SqlPostfixOperator("PRECEDING", SqlKind.Other, 10, null, null, null);
-
+            new SqlPostfixOperator("PRECEDING", SqlKind.Following, 10, null, null, null);
 
     public SqlWindowOperator() {
         super("WINDOW", SqlKind.Window, 1, true, null, null, null);

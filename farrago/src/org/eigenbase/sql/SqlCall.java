@@ -23,18 +23,15 @@
 
 package org.eigenbase.sql;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Arrays;
-
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.util.SqlVisitor;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.validate.SqlMoniker;
+import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.util.Util;
+
+import java.util.ArrayList;
 
 /**
  * A <code>SqlCall</code> is a call to an {@link SqlOperator operator}.
@@ -111,10 +108,9 @@ public class SqlCall extends SqlNode
         int leftPrec,
         int rightPrec)
     {
-        if (((leftPrec > operator.getLeftPrec()) ||
-            (operator.getRightPrec() <= rightPrec) ||
-            (SqlWriter.alwaysUseParentheses && isA(SqlKind.Expression))) &&
-            !operator.isName("PRECEDING") && !operator.isName("FOLLOWING")) {
+        if (leftPrec > operator.getLeftPrec() ||
+            (operator.getRightPrec() <= rightPrec && rightPrec != 0) ||
+            (SqlWriter.alwaysUseParentheses &&  isA(SqlKind.Expression))) {
             writer.print('(');
             operator.unparse(writer, operands, 0, 0);
             writer.print(')');
