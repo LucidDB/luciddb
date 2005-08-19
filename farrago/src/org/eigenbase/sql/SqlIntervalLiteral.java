@@ -51,7 +51,8 @@ public class SqlIntervalLiteral extends SqlLiteral
             int leftPrec,
             int rightPrec) {
         IntervalValue interval = (IntervalValue) value;
-        writer.print("(INTERVAL ");
+        if (writer.alwaysUseParentheses) writer.print("(");
+        writer.print("INTERVAL ");
         if (interval.getSign() == -1) {
             writer.print("-");
         }
@@ -59,7 +60,7 @@ public class SqlIntervalLiteral extends SqlLiteral
         writer.print(value.toString());
         writer.print("' ");
         writer.print(interval.intervalQualifier.toString());
-        writer.print(")");
+        if (writer.alwaysUseParentheses) writer.print(")");
     }
 
     /**

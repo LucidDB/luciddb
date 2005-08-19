@@ -122,6 +122,9 @@ public abstract class SqlNode implements Cloneable
     /**
      * Returns the SQL text of the tree of which this <code>SqlNode</code> is
      * the root.
+     * @param dialect
+     * @param forceParens wraps all expressions in parentheses; good for parse test,
+     *   but false by default.
      *
      * <p>Typical return values are:<ul>
      * <li>'It''s a bird!'</li>
@@ -130,18 +133,24 @@ public abstract class SqlNode implements Cloneable
      * <li>DATE '1969-04-29'</li>
      * </ul>
      */
-    public String toSqlString(SqlDialect dialect)
+    public String toSqlString(SqlDialect dialect, boolean forceParens)
     {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         if (dialect == null) {
             dialect = SqlUtil.dummyDialect;
         }
-        SqlWriter writer = new SqlWriter(dialect, pw);
+        SqlWriter writer = new SqlWriter(dialect, pw, forceParens);
         unparse(writer, 0, 0);
         pw.flush();
         return sw.toString();
     }
+
+    public String toSqlString(SqlDialect dialect)
+    {
+        return toSqlString(dialect, false);
+    }
+
 
     /**
      * Writes a SQL representation of this node to a writer.

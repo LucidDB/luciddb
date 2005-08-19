@@ -110,13 +110,14 @@ public class SqlCall extends SqlNode
     {
         if (leftPrec > operator.getLeftPrec() ||
             (operator.getRightPrec() <= rightPrec && rightPrec != 0) ||
-            (SqlWriter.alwaysUseParentheses &&  isA(SqlKind.Expression))) {
-            writer.print('(');
-            operator.unparse(writer, operands, 0, 0);
-            writer.print(')');
-        } else {
-            operator.unparse(writer, operands, leftPrec, rightPrec);
-        }
+            (writer.alwaysUseParentheses &&  isA(SqlKind.Expression))) 
+            {
+                writer.print('(');
+                operator.unparse(writer, operands, 0, 0);
+                writer.print(')');
+            } else {
+                operator.unparse(writer, operands, leftPrec, rightPrec);
+            }
     }
 
     /**

@@ -70,7 +70,7 @@ public class SqlParserTest extends TestCase
                     "'; error is:" + NL + e.toString();
             throw new AssertionFailedError(message);
         }
-        final String actual = sqlNode.toSqlString(null);
+        final String actual = sqlNode.toSqlString(null, true); // no dialect, always parenthesize
         TestUtil.assertEqualsVerbose(expected, actual);
     }
 
@@ -90,7 +90,7 @@ public class SqlParserTest extends TestCase
                     "'; error is:" + NL + e.toString();
             throw new AssertionFailedError(message);
         }
-        final String actual = sqlNode.toSqlString(null);
+        final String actual = sqlNode.toSqlString(null, true);
         TestUtil.assertEqualsVerbose(expected, actual);
     }
 
