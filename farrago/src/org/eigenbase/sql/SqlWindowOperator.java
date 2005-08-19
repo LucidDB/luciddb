@@ -299,6 +299,8 @@ public class SqlWindowOperator extends SqlOperator {
             break;
 
         case SqlKind.OtherORDINAL:
+        case SqlKind.FollowingORDINAL:
+        case SqlKind.PrecedingORDINAL:
             assert(bound instanceof SqlCall);
             final SqlNode boundVal = ((SqlCall)bound).getOperands()[0];
             // Boundries must be a constant
