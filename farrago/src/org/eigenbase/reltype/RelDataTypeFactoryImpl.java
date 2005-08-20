@@ -180,6 +180,12 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
         final boolean ignoreNullable, 
         final boolean nullable)
     {
+        // REVIEW: angel 18-Aug-2005 dtbug336
+        // Shouldn't null refer to the nullability of the record type
+        // not the individual field types?
+        // For flattening and outer joins, it is desirable to change
+        // the nullability of the individual fields.
+
         return createStructType(
             new FieldInfo() {
                 public int getFieldCount()
@@ -195,6 +201,7 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
                 public RelDataType getFieldType(int index)
                 {
                     RelDataType fieldType = type.getFields()[index].getType();
+
                     if (ignoreNullable) {
                         return copyType(fieldType);
                     } else {
@@ -221,7 +228,19 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
     {
         RelDataType newType;
         if (type instanceof RelRecordType) {
-            newType = copyRecordType((RelRecordType) type, false, nullable);
+            // REVIEW: angel 18-Aug-2005 dtbug 336 workaround
+            // Changed to ignore nullable parameter if nullable is false since
+            // copyRecordType implementation is doubtful
+            if (nullable) {
+                // Do a deep copy, setting all fields of the record type
+                // to be nullable regardless of initial nullability
+                newType = copyRecordType((RelRecordType) type, false, true);
+            }
+            else {
+                // Keep same type as before, ignore nullable parameter
+                // RelRecordType currently always returns a nullability of false
+                newType = copyRecordType((RelRecordType) type, true, false);
+            }
         } else {
             newType = copySimpleType(type, nullable);
         }
