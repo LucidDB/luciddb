@@ -929,9 +929,14 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         RelDataType rowType =
             getFarragoTypeFactory().createStructTypeFromClassifier(
                 table);
-        return new ValidatorTable(
-            resolved.getQualifiedName(),
-            rowType);
+        return newValidatorTable(resolved.getQualifiedName(), rowType);
+    }
+
+    /// factory method for our inner class
+    protected SqlValidatorTable 
+        newValidatorTable(String [] qualifiedName, RelDataType rowType)
+    {
+        return new ValidatorTable(qualifiedName, rowType);
     }
 
     // implement SqlValidator.CatalogReader
@@ -1019,12 +1024,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         return "execute";
     }
 
-    //~ Inner Classes ---------------------------------------------------------
-
-    /**
-     * Private implementation for SqlValidator.Table.
-     */
-    private static class ValidatorTable implements SqlValidatorTable
+    //~ Inner Classes
+    protected static class ValidatorTable implements SqlValidatorTable
     {
         private final String [] qualifiedName;
         private final RelDataType rowType;
@@ -1032,7 +1033,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         /**
          * Creates a new ValidatorTable object.
          */
-        ValidatorTable(
+        public ValidatorTable(
             String [] qualifiedName,
             RelDataType rowType)
         {
