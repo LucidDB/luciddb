@@ -205,6 +205,25 @@ public abstract class SqlUtil
     }
 
     /**
+     * Returns whether a node is a literal chain which is used to represent
+     * a continued string literal.
+     *
+     * @param node The node, never null.
+     * @return Whether the node is a literal chain
+     * @pre node != null
+     */
+    public static boolean isLiteralChain(SqlNode node)
+    {
+        Util.pre(node != null, "node != null");
+        if (node instanceof SqlCall) {
+            SqlCall call = (SqlCall) node;
+            return call.isA(SqlKind.LiteralChain);
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * Unparses a call to an operator which has function syntax.
      *
      * @param operator The operator
