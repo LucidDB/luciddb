@@ -123,11 +123,10 @@ public class SqlParserTest extends TestCase
         SqlValidatorTestCase.checkEx(thrown, expectedMsgPattern, sap);
     }
 
-    protected void checkExpFails(String sql)
-    {
-        checkExpFails(sql, "(?s).*");
-    }
-
+    /**
+     * Tests that an expression throws an exception which matches the given
+     * pattern.
+     */
     protected void checkExpFails(
         String sql,
         String expectedMsgPattern)
@@ -1400,6 +1399,26 @@ public class SqlParserTest extends TestCase
         check("select N'1' '2' from t",
             "SELECT _ISO-8859-1'1' '2'" + NL +
             "FROM `T`");
+
+        // newline in string literal
+        checkExpFails("'foo\rbar'",
+            "(?s)Encountered \"\\\\'\" at line 1, column 1.*");
+        checkExpFails("'foo\nbar'",
+            "(?s)Encountered \"\\\\'\" at line 1, column 1.*");
+        checkExpFails("'foo\r\nbar'",
+            "(?s)Encountered \"\\\\'\" at line 1, column 1.*");
+    }
+
+    public void testStringLiteralChain()
+    {
+        checkExp("   'foo'\r'bar'", "'foo' 'bar'");
+        checkExp("   'foo'\r\n'bar'", "'foo' 'bar'");
+        checkExp("   'foo'\r\n\r\n'bar'  \n   'baz'", "'foo' 'bar' 'baz'");
+        checkExp("   'foo' /* a comment */ 'bar'", "'foo' 'bar'");
+        checkExp("   'foo' -- a comment\r\n 'bar'", "'foo' 'bar'");
+        // String literals not separated by comment or newline are OK in
+        // parser, should fail in validator.
+        checkExp("   'foo' 'bar'", "'foo' 'bar'");
     }
 
     public void testCaseExpression()
@@ -1846,7 +1865,8 @@ public class SqlParserTest extends TestCase
         checkExp("extract(minute from x)","EXTRACT(MINUTE FROM `X`)");
         checkExp("extract(second from x)","EXTRACT(SECOND FROM `X`)");
 
-        checkExpFails("extract(day to second from x)");
+        checkExpFails("extract(day ^to^ second from x)",
+            "(?s)Encountered \"to\".*");
     }
 
     public void testIntervalArithmetics() {

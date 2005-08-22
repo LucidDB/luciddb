@@ -298,6 +298,13 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     public void testStringLiteralBroken() {
         check("select 'foo'" + NL + "'bar' from (values(true))");
+        check("select 'foo'\r'bar' from (values(true))");
+        check("select 'foo'\n\r'bar' from (values(true))");
+        check("select 'foo'\r\n'bar' from (values(true))");
+        check("select 'foo'\n'bar' from (values(true))");
+        checkFails("select 'foo' /* comment */ ^'bar'^ from (values(true))",
+            "String literal continued on same line");
+        check("select 'foo' -- comment\r from (values(true))");
         checkFails("select 'foo' ^'bar'^ from (values(true))",
             "String literal continued on same line");
     }
