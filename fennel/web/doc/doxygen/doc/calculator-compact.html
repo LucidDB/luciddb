@@ -10,6 +10,8 @@
 
 <h1>Calculator Design Specification</h1>
 
+<hr>
+
 <p>John Kalucki, 2/22/2004</p>
 
 <p>Copyright (C) 2003-2005, Disruptive Tech, Inc.</p>
@@ -43,7 +45,7 @@ Calculator</li>
 <p>Calculator will be installed as a component of <a
 href="http://sourceforge.net/projects/fennel/">Fennel</a>. Coding standards,
 build environment, etc. are to follow the Fennel project&#8217;s example. Calculator
-will introduce no additional dependencies to Fennel. </p>
+will introduce no additional dependencies to Fennel.</p>
 
 <p>The primary goals of this Calculator design are Execution
 Performance and, as a pair: Extensibility and Maintainability. Overall
@@ -250,16 +252,17 @@ and must <u>always</u> Do The Right Thing.</p>
 <h2>Type Mappings</h2>
 
 <p>Mappings between SQL types and C++ native types is provided
-by the Fennel Tuple code.</p>
-
-<p>Tuple represent NULL values with a NULL pointer. </p>
-
-<p>SQL&#8217;s DECIMAL type is not
+by the Fennel Tuple code. (See
+<a href="http://farrago.sourceforge.net/api/net/sf/farrago/query/FennelRelUtil.html#convertSqlTypeNameToFennelType(org.eigenbase.sql.type.SqlTypeName)">
+documentation for SQL to Fennel type mapping</a>.) Some types, such as SQL&#8217;s 
+<code>DECIMAL(p,s)</code> and <code>TIMESTAMP(p)</code> types are not
 directly supported by Calculator. The compiler should handle this type by generating
 appropriate programs.</p>
 
+<p>Tuple represent NULL values with a NULL pointer. </p>
+
 <p>Non-native types supported by
-Fennel Tuples, such as VARCHAR, are simply represented by a pointer in the
+Fennel Tuples, such as <code>VARCHAR</code>, are simply represented by a pointer in the
 Calculator, and perhaps also an integer containing the length of the array.</p>
 
 <p>When represented as strings, for example in serialized
@@ -270,12 +273,12 @@ by <code>standardTypetoString()</code> located in <code>fennel/calc/StandardType
 
 <table border=1 cellspacing=0 cellpadding=0 width=336>
  <tr>
-  <td width=217 nowrap valign=bottom>
+  <th valign=bottom>
   <p>Fennel/Tuple/ StandardTypeDescriptorOrdinal</p>
-  </td>
-  <td width=119 nowrap valign=bottom>
+  </th>
+  <th valign=bottom>
   <p>String Representation</p>
-  </td>
+  </th>
  </tr>
  <tr>
   <td width=217 nowrap valign=bottom>
@@ -717,14 +720,13 @@ added to the warning queue. Format of this exception <b>TBD</b>.</p>
   <p><code>bool</code></p>
   </th>
   <th width=38 valign=top>
-  <p><code>long</code><br>
-  <code>ulong</code></p>
+  <p><code>long</code> <code>ulong</code></p>
   </th>
   <th width=38 valign=top>
   <p><code>float</code><br>
-  <code>long dou-ble</code></p>
+  <code>long double</code></p>
   </th>
-  <th width=38 valign=top>
+  <th width=38 valign=top nowrap>
   <p><code>T
   *</code></p>
   </th>
@@ -2845,8 +2847,6 @@ resources and utilizing external functions. <b>TBD</b>.</p>
 <p>XOs will find it necessary to determine the format of the
 Input and Output tuples to perform their processing. getRegisterDescriptors()
 has been provided for this purpose.</p>
-
-<p>&nbsp;</p>
 
 
 <hr color="#000000" noshade="noshade">
