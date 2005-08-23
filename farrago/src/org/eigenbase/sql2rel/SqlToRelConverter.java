@@ -1683,6 +1683,11 @@ public class SqlToRelConverter
             return exprConverter.convertLiteral(this, literal);
         }
 
+        public RexNode convertInterval(SqlIntervalQualifier intervalQualifier)
+        {
+            return exprConverter.convertInterval(this, intervalQualifier);
+        }
+
         // implement SqlVisitor
         public void visit(SqlLiteral literal)
         {
@@ -1733,7 +1738,7 @@ public class SqlToRelConverter
         // implement SqlVisitor
         public void visit(SqlIntervalQualifier intervalQualifier)
         {
-            throw new UnsupportedOperationException();
+            setResult(convertInterval(intervalQualifier));
         }
 
         // implement SqlVisitor

@@ -25,6 +25,7 @@ package org.eigenbase.sql2rel;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlCall;
 import org.eigenbase.sql.SqlLiteral;
+import org.eigenbase.sql.SqlIntervalQualifier;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexLiteral;
 
@@ -51,6 +52,14 @@ public interface SqlNodeToRexConverter
     RexNode convertLiteral(
         SqlRexContext cx,
         SqlLiteral literal);
+    
+    /**
+     * Converts a {@link SqlIntervalQualifier SQL Interval Qualifier} to
+     * a {@link RexLiteral REX literal}.
+     */
+    RexLiteral convertInterval(
+        SqlRexContext cx,
+        SqlIntervalQualifier intervalQualifier);
 }
 
 // End SqlNodeToRexConverter.java

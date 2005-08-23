@@ -276,6 +276,9 @@ public class RexToCalcTranslator implements RexVisitor
              // hack for now
              return new CalcProgramBuilder.RegisterDescriptor(
                  CalcProgramBuilder.OpType.Varbinary, 4096);
+        } else if (typeDigest.startsWith("INTERVAL")) {
+            return new CalcProgramBuilder.RegisterDescriptor(
+                 CalcProgramBuilder.OpType.Int8, -1);
         }
         for (int i = 0; i < knownTypes.length; i++) {
             TypePair knownType = knownTypes[i];

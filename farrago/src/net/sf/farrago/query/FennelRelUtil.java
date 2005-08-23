@@ -251,6 +251,8 @@ public abstract class FennelRelUtil
         case SqlTypeName.Time_ordinal:
         case SqlTypeName.Timestamp_ordinal:
         case SqlTypeName.Bigint_ordinal:
+        case SqlTypeName.IntervalDayTime_ordinal:
+        case SqlTypeName.IntervalYearMonth_ordinal:
             return FennelStandardTypeDescriptor.INT_64;
         case SqlTypeName.Varchar_ordinal:
             return FennelStandardTypeDescriptor.VARCHAR;

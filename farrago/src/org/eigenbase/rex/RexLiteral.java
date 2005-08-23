@@ -30,6 +30,7 @@ import java.util.Calendar;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.SqlIntervalQualifier;
 import org.eigenbase.util.BitString;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.NlsString;
@@ -202,11 +203,15 @@ public class RexLiteral extends RexNode
             return value == null;
         case SqlTypeName.Decimal_ordinal:
         case SqlTypeName.Double_ordinal:
+        case SqlTypeName.Bigint_ordinal:
             return value instanceof BigDecimal;
         case SqlTypeName.Date_ordinal:
         case SqlTypeName.Time_ordinal:
         case SqlTypeName.Timestamp_ordinal:
             return value instanceof Calendar;
+        case SqlTypeName.IntervalDayTime_ordinal:
+        case SqlTypeName.IntervalYearMonth_ordinal:
+            return value == null;
         case SqlTypeName.Binary_ordinal:
             return value instanceof byte [];
         case SqlTypeName.Char_ordinal:
@@ -305,6 +310,11 @@ public class RexLiteral extends RexNode
         case SqlTypeName.Timestamp_ordinal:
             assert value instanceof Calendar;
             pw.print(value.toString());
+            break;
+        case SqlTypeName.IntervalDayTime_ordinal:
+        case SqlTypeName.IntervalYearMonth_ordinal:
+            assert value == null;
+            pw.print("null");
             break;
         default:
             Util.pre(
