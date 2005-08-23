@@ -1697,7 +1697,8 @@ void CalcAssemblerTest::testStandardTypes()
                 testCase3.expectAssemblerError("out of");
             else if (underflow[type] == "-1")
                 testCase3.expectAssemblerError("Invalid value");
-            else testCase3.expectAssemblerError("bad numeric cast");
+            else testCase3.expectAssemblerError(
+                "bad numeric");
 
             testCase3.assemble();
 
@@ -1717,7 +1718,8 @@ void CalcAssemblerTest::testStandardTypes()
                 testCase4.expectAssemblerError("out of range");
             else if (type == STANDARD_TYPE_BOOL)
                 testCase4.expectAssemblerError("Invalid value");
-            else testCase4.expectAssemblerError("bad numeric cast");
+            else testCase4.expectAssemblerError(
+                "bad numeric");
 
             testCase4.assemble();
         }
@@ -1785,7 +1787,8 @@ void CalcAssemblerTest::testLiteralBinding()
     // Test overflow of u2
     CalcAssemblerTestCase testCase1(__LINE__, "OVERFLOW U2", 
                                     "O u2; C u2; V 777777; T; ADD O0, C0, C0;");
-    testCase1.expectAssemblerError("bad numeric cast");
+    testCase1.expectAssemblerError(
+        "bad numeric conversion");
     testCase1.assemble();
 
     // Test binding a float to a u2
@@ -1813,7 +1816,8 @@ void CalcAssemblerTest::testLiteralBinding()
     // Test binding a valid u2 that is out of range for a s2
     CalcAssemblerTestCase testCase4(__LINE__, "NEGVALUE U4", 
                                     "O s2; C s2; V 40000; T; ADD O0, C0, C0;");
-    testCase4.expectAssemblerError("bad numeric cast");
+    testCase4.expectAssemblerError(
+        "bad numeric conversion");
     testCase4.assemble();
 
     // Test invalid literal index

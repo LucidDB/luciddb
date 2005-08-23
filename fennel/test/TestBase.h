@@ -32,16 +32,16 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/test/unit_test_suite.hpp>
+#include <boost/test/parameterized_test.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <fstream>
 
 typedef boost::unit_test_framework::test_suite TestSuite;
-typedef boost::unit_test_framework::test_case TestCase;
 
 FENNEL_BEGIN_NAMESPACE
 
 /**
- * TestBase is the common base for all fennel tests.
+ * TestBase is the common base for all Fennel tests.
  */
 class TestBase
     : public TraceTarget,
@@ -141,62 +141,51 @@ public:
 };
 
 /**
- * BaseTestCase enhances test_case with setUp/tearDown hooks around
+ * TestWrapperTemplate wraps a test class with setUp/tearDown hooks around
  * each test case method invocation.
- *
- *<p>
- *
- * NOTE:  Code adapted from boost::unit_test_framework::class_test_case.
  */
 template<class UserTestClass>
-class BaseTestCase : public TestCase
+class TestWrapperTemplate
 {
 public:
-    typedef void  (UserTestClass::*function_type)();
-    
-    // Constructor
-    BaseTestCase(
-        function_type f_,
-        std::string name_,
-        boost::shared_ptr<UserTestClass>& user_test_case_ )
-        : TestCase(name_,true,1),
-          m_user_test_case(user_test_case_),
-          m_function(f_)
-    {
-    }
+    typedef void (UserTestClass::*FunctionType)();
 
 private:
-    // test case implementation
-    void do_run()
+    std::string name;
+    boost::shared_ptr<UserTestClass> pUserTestCase;
+    
+public:
+    // Constructor
+    TestWrapperTemplate(
+        std::string nameInit,
+        boost::shared_ptr<UserTestClass>& pUserTestCaseInit)
+        : pUserTestCase(pUserTestCaseInit)
     {
-        m_user_test_case->beforeTestCase(p_name);
-        m_user_test_case->testCaseSetUp();
+        name = nameInit;
+    }
+
+    void runTest(FunctionType pFunction)
+    {
+        pUserTestCase->beforeTestCase(name);
+        pUserTestCase->testCaseSetUp();
         try {
-            ((*m_user_test_case).*m_function)();
+            ((*pUserTestCase).*pFunction)();
         } catch (...) {
             try {
-                m_user_test_case->testCaseTearDown();
+                pUserTestCase->testCaseTearDown();
             } catch (...) {
                 // ignore teardown errors after failure
             }
             throw;
         }
         try {
-            m_user_test_case->testCaseTearDown();
+            pUserTestCase->testCaseTearDown();
         } catch (...) {
-            m_user_test_case->afterTestCase(p_name);
+            pUserTestCase->afterTestCase(name);
             throw;
         }
-        m_user_test_case->afterTestCase(p_name);
+        pUserTestCase->afterTestCase(name);
     }
-    
-    void do_destroy()
-    {
-        m_user_test_case.reset();
-    }
-
-    boost::shared_ptr<UserTestClass> m_user_test_case;
-    function_type       m_function;
 };
 
 // FENNEL_UNIT_TEST_SUITE should be invoked at top scope within the .cpp file
@@ -219,12 +208,20 @@ TestSuite* init_unit_test_suite(int argc,char **argv) \
 
 #define FENNEL_UNIT_TEST_CASE(UserTestClass,testMethodName) \
 do { \
+    typedef TestWrapperTemplate<UserTestClass> TestWrapper; \
     boost::shared_ptr<UserTestClass> pDerivedTestObj = \
         boost::dynamic_pointer_cast<UserTestClass>(pTestObj); \
-        pTestSuite->add(new BaseTestCase<UserTestClass>( \
-            &UserTestClass::testMethodName, \
+    TestWrapper::FunctionType params [] = \
+        { &UserTestClass::testMethodName }; \
+    pTestSuite->add( \
+        boost::unit_test::make_test_case<TestWrapper>( \
+            &TestWrapper::runTest, \
             #testMethodName, \
-            pDerivedTestObj)); \
+            boost::shared_ptr<TestWrapper>(new TestWrapper( \
+                #testMethodName, \
+                pDerivedTestObj)), \
+            params, \
+            params + 1)); \
 } while (0)
 
 FENNEL_END_NAMESPACE
