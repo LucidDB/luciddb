@@ -1,0 +1,11 @@
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
+
+if (ID$6$AGE.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.setNull( false );
+    oj_var0.value = (int) (ID$6$AGE.value % 3);
+}
+
+return oj_var0;

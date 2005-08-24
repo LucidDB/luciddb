@@ -8,7 +8,7 @@ oj_var0.assignFrom( "MIDDLE" );
 if (ID$4$CITY.isNull()) {
     oj_var1.setNull( true );
 } else {
-    oj_var1.overlay( ID$4$CITY, oj_var0, 2 - 1, 3, true );
+    oj_var1.overlay( ID$4$CITY, oj_var0, 2, 3, true );
 }
 
 return oj_var1;

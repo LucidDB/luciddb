@@ -62,20 +62,64 @@ public class FarragoOJRexImplementorTable extends OJRexImplementorTableImpl
         // FarragoRexToOJTranslatorTest
         // refine with Farrago specifics
         registerOperator(
-            opTab.caseOperator,
-            new FarragoOJRexCaseImplementor());
+            opTab.lnFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.LN_FUNCTION));
+
+        registerOperator(
+            opTab.log10Func,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.LOG10_FUNCTION));
+
+        registerOperator(
+            opTab.absFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.ABS_FUNCTION));
+
+        registerOperator(
+            opTab.ceilFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.CEIL_FUNCTION));
+
+        registerOperator(
+            opTab.floorFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.FLOOR_FUNCTION));
+
+        registerOperator(
+            opTab.expFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.EXP_FUNCTION));
+
+        registerOperator(
+            opTab.modFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.MOD_FUNCTION));
+
 
         registerOperator(
             opTab.substringFunc,
-            new FarragoOJRexSubstringImplementor());
-
-        registerOperator(
-            opTab.concatOperator,
-            new FarragoOJRexConcatImplementor());
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.SUBSTRING_FUNCTION));
 
         registerOperator(
             opTab.overlayFunc,
-            new FarragoOJRexOverlayImplementor());
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.OVERLAY_FUNCTION));
+
+        registerOperator(
+            opTab.powFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.POW_FUNCTION));
+
+        registerOperator(
+            opTab.concatOperator,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.CONCAT_OPERATOR));
+
+        registerOperator(
+            opTab.caseOperator,
+            new FarragoOJRexCaseImplementor());
 
         registerOperator(
             opTab.castFunc,

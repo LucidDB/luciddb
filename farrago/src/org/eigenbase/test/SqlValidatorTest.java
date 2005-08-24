@@ -307,10 +307,11 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExp("aBs(-2.3e-2)");
         checkExp("MOD(5             ,\t\f\r\n2)");
         checkExp("ln(5.43  )");
-        checkExp("log(- -.2  )");
+        checkExp("log10(- -.2  )");
 
         checkExp("mod(5.1, 3)");
         checkExp("mod(2,5.1)");
+        checkExp("exp(3.67)");
     }
 
     public void testArithmeticOperatorsTypes() {
@@ -322,7 +323,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("aBs(+interval '1:1' hour to minute)", "todo: INTERVAL HOUR TO MINUTE");
         checkExpType("MOD(5,2)", "todo: INTEGER");
         checkExpType("ln(5.43  )", "todo: DOUBLE");
-        checkExpType("log(- -.2  )", "todo: DOUBLE");
+        checkExpType("log10(- -.2  )", "todo: DOUBLE");
+        checkExpType("exp(3)", "todo: DOUBLE");
     }
 
     public void testArithmeticOperatorsFails() {
@@ -338,8 +340,10 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "(?s).*Cannot apply 'ABS' to arguments of type 'ABS.<BINARY.0.>.*");
         checkExpFails("ln(x'face12')",
             "(?s).*Cannot apply 'LN' to arguments of type 'LN.<BINARY.3.>.*");
-        checkExpFails("log(x'fa')",
-            "(?s).*Cannot apply 'LOG' to arguments of type 'LOG.<BINARY.1.>.*");
+        checkExpFails("log10(x'fa')",
+            "(?s).*Cannot apply 'LOG10' to arguments of type 'LOG10.<BINARY.1.>.*");
+        checkExpFails("exp('abc')",
+            "(?s).*Cannot apply 'EXP' to arguments of type 'EXP.<CHAR.3.>.*");
     }
 
     public void testCaseExpression() {
@@ -808,16 +812,16 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     }
 
     public void testJdbcFunctionCall() {
-        checkExp("{fn log(1)}");
+        checkExp("{fn log10(1)}");
         checkExp("{fn locate('','')}");
         checkExp("{fn insert('',1,2,'')}");
         checkExpFails("{fn insert('','',1,2)}", "(?s).*.*");
         checkExpFails("{fn insert('','',1)}", "(?s).*4.*");
         checkExpFails("{fn locate('','',1)}", "(?s).*"); //todo this is legal jdbc syntax, just that currently the 3 ops call is not implemented in the system
-        checkExpFails("{fn log('1')}",
-            "(?s).*Cannot apply.*fn LOG..<CHAR.1.>.*");
-        checkExpFails("{fn log(1,1)}",
-            "(?s).*Encountered .fn LOG. with 2 parameter.s.; was expecting 1 parameter.s.*");
+        checkExpFails("{fn log10('1')}",
+            "(?s).*Cannot apply.*fn LOG10..<CHAR.1.>.*");
+        checkExpFails("{fn log10(1,1)}",
+            "(?s).*Encountered .fn LOG10. with 2 parameter.s.; was expecting 1 parameter.s.*");
         checkExpFails("{fn fn(1)}",
             "(?s).*Function '.fn FN.' is not defined.*");
         checkExpFails("{fn hahaha(1)}",

@@ -710,6 +710,15 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkNull("pow(2,cast(null as double))");
     }
 
+    public void testExpFunc()
+    {
+        getTester().setFor(SqlStdOperatorTable.expFunc);
+        getTester().checkScalarApprox("exp(2)", "todo:", 7.389056, 0.000001);
+        getTester().checkScalarApprox("exp(-2)", "todo:", 0.1353, 0.0001);
+        getTester().checkNull("exp(cast(null as integer))");
+        getTester().checkNull("exp(cast(null as double))");
+    }
+
     public void testModFunc()
     {
         getTester().setFor(SqlStdOperatorTable.modFunc);
@@ -728,9 +737,9 @@ public abstract class SqlOperatorTests extends TestCase
 
     public void testLogFunc()
     {
-        getTester().setFor(SqlStdOperatorTable.logFunc);
-        getTester().checkScalarApprox("log(10)", "todo:", 1.0, 0);
-        getTester().checkNull("log(cast(null as real))");
+        getTester().setFor(SqlStdOperatorTable.log10Func);
+        getTester().checkScalarApprox("log10(10)", "todo:", 1.0, 0);
+        getTester().checkNull("log10(cast(null as real))");
     }
 
     public void testAbsFunc()
