@@ -22,6 +22,7 @@
 package org.eigenbase.sql.validate;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.SqlParserPos;
 
 import java.util.ArrayList;
 import java.util.ListIterator;
@@ -84,6 +85,13 @@ public class SelectScope extends ListScope
     protected final ArrayList windowNames = new ArrayList();
 
     /**
+     * List of column names which sort this scope.
+     * Empty if this scope is not sorted.
+     * Null if has not been computed yet.
+     */
+    private SqlNodeList orderList;
+
+    /**
      * Creates a scope corresponding to a SELECT clause.
      *
      * @param parent Parent scope, or null
@@ -126,17 +134,30 @@ public class SelectScope extends ListScope
             return true;
         }
 
-        if (children.size() == 1) {
-            final SqlNodeList monotonicExprs =
-                ((SqlValidatorNamespace) children.get(0)).getMonotonicExprs();
-            for (int i = 0; i < monotonicExprs.size(); i++) {
-                SqlNode monotonicExpr = monotonicExprs.get(i);
-                if (expr.equalsDeep(monotonicExpr)) {
-                    return true;
+        // TODO: compare fully qualified names
+        final SqlNodeList orderList = getOrderList();
+        if (orderList.size() == 1 &&
+            expr.equalsDeep((SqlNode) orderList.get(0))) {
+            return true;
+        }
+
+        return super.isMonotonic(expr);
+    }
+
+    public SqlNodeList getOrderList()
+    {
+        if (orderList == null) {
+            // Compute on demand first call.
+            orderList = new SqlNodeList(SqlParserPos.ZERO);
+            if (children.size() == 1) {
+                final SqlNodeList monotonicExprs =
+                    ((SqlValidatorNamespace) children.get(0)).getMonotonicExprs();
+                if (monotonicExprs.size() > 0) {
+                    orderList.add(monotonicExprs.get(0));
                 }
             }
         }
-        return super.isMonotonic(expr);
+        return orderList;
     }
 
     public void addWindowName(String winName)

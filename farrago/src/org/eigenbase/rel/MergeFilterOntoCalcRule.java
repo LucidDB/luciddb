@@ -67,6 +67,15 @@ public class MergeFilterOntoCalcRule extends RelOptRule
         final FilterRel filter = (FilterRel) call.rels[0];
         final CalcRel calc = (CalcRel) call.rels[1];
 
+        // Don't merge a filter onto a calc which contains windowed aggregates.
+        // That would effectively be pushing a multiset down through a filter.
+        // We'll have chance to merge later, when the over is expanded.
+        if (RexOver.containsOver(
+            calc.getProjectExprs(),
+            calc.getCondition())) {
+            return;
+        }
+
         // Expand all references to columns in the condition, and AND with any
         // existing condition. For example,
         //
@@ -90,9 +99,9 @@ public class MergeFilterOntoCalcRule extends RelOptRule
             };
         RexNode newCondition = shuttle.visit(filter.getCondition());
         if (calc.getCondition() != null) {
-            SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
             newCondition =
-                calc.getCluster().getRexBuilder().makeCall(opTab.andOperator, 
+                calc.getCluster().getRexBuilder().makeCall(
+                    SqlStdOperatorTable.andOperator,
                     calc.getCondition(), newCondition);
         }
         final CalcRel newCalc =

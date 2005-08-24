@@ -796,9 +796,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                     table,
                     getFarragoTypeFactory());
         } else if (columnSet instanceof FemLocalView) {
-            RelDataType rowType =
-                getFarragoTypeFactory().createStructTypeFromClassifier(
-                    columnSet);
+            RelDataType rowType = createTableRowType(columnSet);
             relOptTable = new FarragoView(columnSet, rowType);
         } else {
             throw Util.needToImplement(columnSet);
@@ -926,15 +924,30 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             throw new FarragoUnvalidatedDependencyException();
         }
 
-        RelDataType rowType =
-            getFarragoTypeFactory().createStructTypeFromClassifier(
-                table);
+        RelDataType rowType = createTableRowType(table);
         return newValidatorTable(resolved.getQualifiedName(), rowType);
     }
 
-    /// factory method for our inner class
-    protected SqlValidatorTable 
-        newValidatorTable(String [] qualifiedName, RelDataType rowType)
+    /**
+     * Creates a row-type for a given table.
+     * This row-type includes any system columns which are implicit for this
+     * type of type.
+     *
+     * @param table Repository table
+     * @return Row type including system columns
+     */
+    protected RelDataType createTableRowType(CwmNamedColumnSet table)
+    {
+        return getFarragoTypeFactory().createStructTypeFromClassifier(
+            table);
+    }
+
+    /**
+     * Factory method, creates a table.
+     */
+    protected SqlValidatorTable newValidatorTable(
+        String[] qualifiedName,
+        RelDataType rowType)
     {
         return new ValidatorTable(qualifiedName, rowType);
     }

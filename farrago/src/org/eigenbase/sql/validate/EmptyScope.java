@@ -103,6 +103,12 @@ class EmptyScope implements SqlValidatorScope
             expr instanceof SqlDynamicParam ||
             expr instanceof SqlDataTypeSpec;
     }
+
+    public SqlNodeList getOrderList()
+    {
+        // scope is not ordered
+        return null;
+    }
 }
 
 // End EmptyScope.java
