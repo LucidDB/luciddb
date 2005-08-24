@@ -1,0 +1,11 @@
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+if (ID$4$CITY.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.assignFrom( ID$4$CITY );
+    oj_var0.setSubstring( 0, 4, true );
+}
+
+return oj_var0;

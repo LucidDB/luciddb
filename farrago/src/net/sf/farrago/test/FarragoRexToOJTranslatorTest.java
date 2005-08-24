@@ -597,6 +597,109 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
     {
         testTranslation("case slacker when true then 1 end");
     }
+
+    public void testSubstringNullableLength()
+        throws Exception
+    {
+        testTranslation("substring(city,  2, age/10)");
+    }
+
+    public void testSubstringNullablePosition()
+        throws Exception
+    {
+        testTranslation("substring(city,  age/20, empid)");
+    }
+
+    public void testSubstringNoLength()
+        throws Exception
+    {
+        testTranslation("substring(city, 3)");
+    }
+
+    public void testSubstringPositionLessThanZero()
+        throws Exception
+    {
+        testTranslation("substring(city, -1, 4)");
+    }
+
+    public void testSubstringPositionZero()
+        throws Exception
+    {
+        testTranslation("substring(city, 0, 4)");
+    }
+
+    public void testSubstringNegativeLength()
+        throws Exception
+    {
+        testTranslation("substring(city, 1, empid - 2)");
+    }
+
+    public void testSubstringNothingNullable()
+        throws Exception
+    {
+        testTranslation("substring(name, 2, empid)");
+    }
+
+    public void testConcatNoNullable()
+        throws Exception
+    {
+        testTranslation("name||name");
+    }
+
+    public void testConcatWithOneNullable()
+        throws Exception
+    {
+        testTranslation("city||name");
+    }
+
+    public void testConcatBothNullable()
+        throws Exception
+    {
+        testTranslation("city||city");
+    }
+
+    public void testOverlayNoLength()
+        throws Exception
+    {
+        testTranslation("overlay(city placing 'MIDDLE' from 2)");
+    }
+
+    public void testOverlayNullable()
+        throws Exception
+    {
+        testTranslation("overlay(city placing 'MIDDLE' from 2 for 3)");
+    }
+
+    public void testOverlayNoNullable()
+        throws Exception
+    {
+        testTranslation("overlay(name placing 'MIDDLE' from 2 for 3)");
+    }
+
+    public void testOverlayThreeNullable()
+        throws Exception
+    {
+        testTranslation("overlay(city placing name from age for age)");
+    }
+
+    public void testOverlayAllNullable()
+        throws Exception
+    {
+        testTranslation("overlay(city placing gender from age for age)");
+    }
+
+    public void testPower()
+        throws Exception
+    {
+        testTranslation("pow(2, empid)");
+    }
+
+    public void testMod()
+        throws Exception
+    {
+        testTranslation("mod(age, 3)");
+    }
+
 }
 
 // End FarragoRexToOJTranslatorTest.java

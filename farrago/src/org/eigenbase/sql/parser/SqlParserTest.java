@@ -573,7 +573,7 @@ public class SqlParserTest extends TestCase
         checkExp("aBs(-2.3e-2)", "ABS((- 2.3E-2))");
         checkExp("MOD(5             ,\t\f\r\n2)", "MOD(5, 2)");
         checkExp("ln(5.43  )", "LN(5.43)");
-        checkExp("log(- -.2  )", "LOG((- (- 0.2)))");
+        checkExp("log10(- -.2  )", "LOG10((- (- 0.2)))");
     }
 
     public void testExists()
@@ -626,8 +626,8 @@ public class SqlParserTest extends TestCase
         check("select substring('Eggs and ham', 1, 3 + 2) || ' benedict' from emp",
             "SELECT (SUBSTRING('Eggs and ham' FROM 1 FOR (3 + 2)) || ' benedict')"
             + NL + "FROM `EMP`");
-        checkExp("log(1)\r\n+pow(2, mod(\r\n3\n\t\t\f\n,ln(4))*log(5)-6*log(7/abs(8)+9))*pow(10,11)",
-            "(LOG(1) + (POW(2, ((MOD(3, LN(4)) * LOG(5)) - (6 * LOG(((7 / ABS(8)) + 9))))) * POW(10, 11)))");
+        checkExp("log10(1)\r\n+pow(2, mod(\r\n3\n\t\t\f\n,ln(4))*log10(5)-6*log10(7/abs(8)+9))*pow(10,11)",
+            "(LOG10(1) + (POW(2, ((MOD(3, LN(4)) * LOG10(5)) - (6 * LOG10(((7 / ABS(8)) + 9))))) * POW(10, 11)))");
     }
 
     public void testFunctionWithDistinct()
@@ -1607,7 +1607,7 @@ public class SqlParserTest extends TestCase
     public void testJdbcFunctionCall()
     {
         checkExp("{fn apa(1,'1')}", "{fn APA(1, '1') }");
-        checkExp("{ Fn apa(log(ln(1))+2)}", "{fn APA((LOG(LN(1)) + 2)) }");
+        checkExp("{ Fn apa(log10(ln(1))+2)}", "{fn APA((LOG10(LN(1)) + 2)) }");
         checkExp("{fN apa(*)}", "{fn APA(*) }");
         checkExp("{   FN\t\r\n apa()}", "{fn APA() }");
         checkExp("{fn insert()}", "{fn INSERT() }");
