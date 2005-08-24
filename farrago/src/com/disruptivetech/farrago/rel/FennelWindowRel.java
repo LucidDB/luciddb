@@ -37,6 +37,8 @@ import org.eigenbase.util.Util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Iterator;
+import java.util.HashMap;
 import java.math.BigDecimal;
 
 
@@ -285,8 +287,9 @@ public class FennelWindowRel extends FennelSingleRel
                 windowPartitionDef.setAddProgram(programs[1]);
                 windowPartitionDef.setDropProgram(programs[2]);
 
+                RexNode[] dups = removeDuplicates(translator, overs);
                 final FemTupleDescriptor bucketDesc = FennelRelUtil.
-                        createTupleDescriptorFromRexNode(repos, overs);
+                        createTupleDescriptorFromRexNode(repos, dups);
                 windowPartitionDef.setBucketDesc(bucketDesc);
 
                 windowPartitionDef.setPartitionKeyList(
@@ -296,6 +299,30 @@ public class FennelWindowRel extends FennelSingleRel
         }
 
         return windowStreamDef;
+    }
+
+    private RexNode[] removeDuplicates(RexToCalcTranslator translator, RexNode[] outputExps)
+    {
+        HashMap dups = new HashMap();
+        for (int i = 0; i < outputExps.length; i++) {
+            RexNode node = outputExps[i];
+            if (node instanceof RexWinAggCall) {
+                // This should be aggregate input.
+                Object key = translator.getKey(node);
+                if (dups.containsKey(key)) {
+                    continue;
+                }
+                dups.put(key, node);
+            }
+        }
+        int count = 0;
+        RexNode[] nodes = new RexNode[dups.size()];
+        for (Iterator i = dups.values().iterator(); i.hasNext(); ) {
+            RexNode node = (RexNode) i.next();
+            nodes[count] = node;
+            count++;
+        }
+        return nodes;
     }
 
     private long[] getRangeOffset(SqlNode node, String strCheck)

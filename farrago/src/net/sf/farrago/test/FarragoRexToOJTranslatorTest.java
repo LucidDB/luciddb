@@ -688,6 +688,18 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
         testTranslation("overlay(city placing gender from age for age)");
     }
 
+    public void testPower()
+        throws Exception
+    {
+        testTranslation("pow(2, empid)");
+    }
+
+    public void testMod()
+        throws Exception
+    {
+        testTranslation("mod(age, 3)");
+    }
+
 }
 
 // End FarragoRexToOJTranslatorTest.java

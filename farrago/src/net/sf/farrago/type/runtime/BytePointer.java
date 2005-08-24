@@ -199,8 +199,11 @@ public class BytePointer extends ByteArrayInputStream
             count = precision;
         }
     }
+    /**
+     * @sql.2003 Part 2 Section 6.29 General Rule 3
+     */
 
-	// we store the result in the member variables to avoid memory allocation.
+    // we store the result in the member variables to avoid memory allocation.
     
     private void calcSubstringPointers(
         int S,
@@ -214,21 +217,21 @@ public class BytePointer extends ByteArrayInputStream
                 // If E is less than S, then it means L is negative exception.
                 throw FarragoResource.instance().newNegativeLengthForSubstring();
             }
-            e = S + 1 + L;
+            e = S + L;
         } else {
-            e = S + 1;
+            e = S;
             if (e <= LC) {
                 e = LC + 1;
             }
         }
 
         // f) and i) in the standard. S > LC or E < 1 
-        if (S >= LC || e < 1) {
-			S1 = L1 = 0;
+        if (S > LC || e < 1) {
+            S1 = L1 = 0;
         } else {
             // f) and ii) in the standard. 
             // calculate the E1 and L1
-            S1 = S;
+            S1 = S - 1;
             if (S1 < 0) {
                 S1 = 0;
             }

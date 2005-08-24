@@ -23,6 +23,7 @@ package org.eigenbase.sql;
 
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.fun.SqlLiteralChainOperator;
 import org.eigenbase.resource.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.*;
@@ -70,9 +71,18 @@ public class SqlCallBinding extends SqlOperatorBinding
     // implement SqlOperatorBinding
     public String getStringLiteralOperand(int ordinal)
     {
-        SqlLiteral sqlLiteral = (SqlLiteral) call.operands[ordinal];
-        assert(SqlTypeUtil.inCharFamily(sqlLiteral.getTypeName()));
-        return sqlLiteral.getStringValue();
+        SqlNode node = call.operands[ordinal];
+        if (node instanceof SqlLiteral) {
+            SqlLiteral sqlLiteral = (SqlLiteral) node;
+            assert(SqlTypeUtil.inCharFamily(sqlLiteral.getTypeName()));
+            return sqlLiteral.getStringValue();
+        } else if (SqlUtil.isLiteralChain(node)) {
+            SqlLiteral sqlLiteral =
+                SqlLiteralChainOperator.concatenateOperands((SqlCall) node);
+            assert(SqlTypeUtil.inCharFamily(sqlLiteral.getTypeName()));
+            return sqlLiteral.getStringValue();
+        }
+        throw Util.newInternal("should never come here");
     }
 
     // implement SqlOperatorBinding

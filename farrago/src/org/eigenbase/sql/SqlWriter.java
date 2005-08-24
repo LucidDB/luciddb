@@ -37,7 +37,7 @@ public class SqlWriter
 {
     //~ Static fields/initializers --------------------------------------------
 
-    static final boolean alwaysUseParentheses = true;
+    final boolean alwaysUseParentheses;
 
     //~ Instance fields -------------------------------------------------------
 
@@ -50,10 +50,19 @@ public class SqlWriter
 
     public SqlWriter(
         SqlDialect dialect,
-        PrintWriter pw)
+        PrintWriter pw,
+        boolean alwaysUseParentheses)
     {
         this.dialect = dialect;
         this.pw = pw;
+        this.alwaysUseParentheses = alwaysUseParentheses;
+    }
+
+    public SqlWriter(
+        SqlDialect dialect,
+        PrintWriter pw)
+    {
+        this(dialect, pw, true);
     }
 
     //~ Methods ---------------------------------------------------------------

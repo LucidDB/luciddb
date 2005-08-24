@@ -235,6 +235,181 @@ public abstract class FennelRelUtil
         attrDesc.setNullable(type.isNullable());
     }
 
+    /**
+     * Converts a SQL type to a Fennel type.
+     *
+     * <p>The mapping is as follows:
+     *
+     * <table border="1">
+     *
+     * <tr>
+     * <th>SQL type</th>
+     * <th>Fennel type</th>
+     * <th>Comments</th>
+     * </tr>
+     *
+     * <tr>
+     * <td>{@link SqlTypeName#Boolean}</td>
+     * <td>{@link FennelStandardTypeDescriptor#BOOL BOOL}</td>
+     * <td>&nbsp;</td>
+     * </tr>
+     *
+     * <tr>
+     * <td>{@link SqlTypeName#Tinyint}</td>
+     * <td>{@link FennelStandardTypeDescriptor#INT_8 INT_8}</td>
+     * <td>&nbsp;</td>
+     * </tr>
+     *
+     * <tr>
+     * <td>{@link SqlTypeName#Smallint}</td>
+     * <td>{@link FennelStandardTypeDescriptor#INT_16 INT_16}</td>
+     * <td>&nbsp;</td>
+     * </tr>
+     *
+     * <tr>
+     * <td>{@link SqlTypeName#Integer}</td>
+     * <td>{@link FennelStandardTypeDescriptor#INT_32 INT_32}</td>
+     * <td>&nbsp;</td>
+     * </tr>
+     *
+     * <tr>
+     * <td>{@link SqlTypeName#Decimal}(precision, scale)</td>
+     * <td>{@link FennelStandardTypeDescriptor#INT_32 INT_32}</td>
+     * <td>Not yet implemented.
+     *
+     *     <p>We plan to use a shifted representation. For example, the
+     *     <code>DECIMAL(6, 2)</code> value 1234.5 would be represented as
+     *     an {@link FennelStandardTypeDescriptor#INT_32 INT_32} value 123450
+     *     (which is 1234.5 * 10 ^ 2)</td>
+     * </tr>
+     *
+     * <tr>
+     * <td>{@link SqlTypeName#Date}</td>
+     * <td>{@link FennelStandardTypeDescriptor#INT_64 INT_64}</td>
+     * <td>Milliseconds since the epoch.</td>
+     * </tr>
+     *
+     * <tr>
+     * <td>{@link SqlTypeName#Time}</td>
+     * <td>{@link FennelStandardTypeDescriptor#INT_64 INT_64}</td>
+     * <td>Milliseconds since midnight.</td>
+     * </tr>
+     *
+     * <tr>
+     * <td>{@link SqlTypeName#Timestamp}</td>
+     * <td>{@link FennelStandardTypeDescriptor#INT_64 INT_64}</td>
+     * <td>Milliseconds since the epoch.</td>
+     * </tr>
+     *
+     * <tr>
+     * <td>Timestamp with timezone</td>
+     * <td>&nbsp;</td>
+     * <td>Not implemented. We will probably use a user-defined type consisting
+     *     of a TIMESTAMP and a VARCHAR.</td>
+     * </tr>
+     *
+     * <tr>
+     * <td>{@link SqlTypeName#IntervalDayTime}</td>
+     * <td>{@link FennelStandardTypeDescriptor#INT_64 INT_64}</td>
+     * <td>Not implemented.
+     *
+     *     <p>All types of day-time interval are represented in the same way:
+     *     an integer milliseconds value. For example,
+     *     <code>INTERVAL '1' HOUR</code> and
+     *     <code>INTERVAL '3600' MINUTE</code> are both represented as
+     *     3,600,000.
+     *
+     *     <p>TBD: How to represent fractions of seconds smaller than a
+     *     millisecond, for example, <code>INTERVAL SECOND(6)</code>.</td>
+     * </tr>
+     *
+     * <tr>
+     * <td>{@link SqlTypeName#IntervalYearMonth}</td>
+     * <td>{@link FennelStandardTypeDescriptor#INT_64 INT_64}</td>
+     * <td>Not implemented.
+     *
+     *     <p>All types of year-month interval are represented in the same way:
+     *     an integer value which holds the number of months. For example,
+     *     <code>INTERVAL '2' YEAR</code> and
+     *     <code>INTERVAL '24' MONTH</code> are both represented as 24.
+     * </tr>
+     *
+     * <tr>
+     * <td>{@link SqlTypeName#Bigint}</td>
+     * <td>{@link FennelStandardTypeDescriptor#INT_64 INT_64}</td>
+     * <td>&nbsp;</td>
+     * </tr>
+     *
+     * <tr>
+     * <td>{@link SqlTypeName#Varchar}(precision)</td>
+     * <td>{@link FennelStandardTypeDescriptor#VARCHAR VARCHAR}</td>
+     * <td>&nbsp;</td>
+     * </tr>
+     *
+     * <tr>
+     * <td>{@link SqlTypeName#Varbinary}(precision)</td>
+     * <td>{@link FennelStandardTypeDescriptor#VARBINARY VARBINARY}</td>
+     * <td>&nbsp;</td>
+     * </tr>
+     *
+     * <tr>
+     * <td>{@link SqlTypeName#Multiset}</td>
+     * <td>{@link FennelStandardTypeDescriptor#VARBINARY VARBINARY}</td>
+     * <td>The fields are serialized into the VARBINARY field in the standard
+     *     Fennel serialization format. There is no 'count' field. To deduce
+     *     the number of records, deserialize values until you reach the
+     *     length of the field. Of course, this requires that every value
+     *     takes at least one byte.
+     *
+     *     <p>The length of a multiset value is limited by the capacity of the
+     *     <code>VARBINARY</code> datatype. This limitation will be liften
+     *     when <code>LONG VARBINARY</code> is implemented.</td>
+     * </tr>
+     *
+     * <tr>
+     * <td>{@link SqlTypeName#Row}</td>
+     * <td>&nbsp;</td>
+     * <td>The fields are 'flattened' so that they become top-level fields of
+     *     the relation.
+     *
+     *     <p>If the row is nullable, then all fields will be
+     *     nullable after flattening. An extra 'null indicator' field is added
+     *     to discriminate between a NULL row and a not-NULL row which happens
+     *     to have all fields NULL.</td>
+     * </tr>
+     *
+     * <tr>
+     * <td>{@link SqlTypeName#Char}(precision)</td>
+     * <td>{@link FennelStandardTypeDescriptor#CHAR CHAR}</td>
+     * <td>&nbsp;</td>
+     * </tr>
+     *
+     * <tr>
+     * <td>{@link SqlTypeName#Binary}(precision)</td>
+     * <td>{@link FennelStandardTypeDescriptor#BINARY BINARY}</td>
+     * <td>&nbsp;</td>
+     * </tr>
+     *
+     * <tr>
+     * <td>{@link SqlTypeName#Real}</td>
+     * <td>{@link FennelStandardTypeDescriptor#REAL REAL}</td>
+     * <td>&nbsp;</td>
+     * </tr>
+     *
+     * <tr>
+     * <td>{@link SqlTypeName#Float}</td>
+     * <td>{@link FennelStandardTypeDescriptor#DOUBLE DOUBLE}</td>
+     * <td>&nbsp;</td>
+     * </tr>
+     *
+     * <tr>
+     * <td>{@link SqlTypeName#Double}</td>
+     * <td>{@link FennelStandardTypeDescriptor#DOUBLE DOUBLE}</td>
+     * <td>&nbsp;</td>
+     * </tr>
+     *
+     * </table>
+     */
     public static FennelStandardTypeDescriptor convertSqlTypeNameToFennelType(
         SqlTypeName sqlType)
     {
@@ -251,6 +426,8 @@ public abstract class FennelRelUtil
         case SqlTypeName.Time_ordinal:
         case SqlTypeName.Timestamp_ordinal:
         case SqlTypeName.Bigint_ordinal:
+        case SqlTypeName.IntervalDayTime_ordinal:
+        case SqlTypeName.IntervalYearMonth_ordinal:
             return FennelStandardTypeDescriptor.INT_64;
         case SqlTypeName.Varchar_ordinal:
             return FennelStandardTypeDescriptor.VARCHAR;

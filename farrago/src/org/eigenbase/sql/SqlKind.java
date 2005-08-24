@@ -286,6 +286,14 @@ public class SqlKind extends EnumeratedValues.BasicValue
     public static final int IsNullORDINAL = 154;
     public static final SqlKind IsNull = new SqlKind("IsNull", IsNullORDINAL);
 
+    /** PRECEDING */
+    public static final int PrecedingORDINAL = 155;
+    public static final SqlKind Preceding = new SqlKind("Preceding", PrecedingORDINAL);
+
+    /** FOLLOWING */
+    public static final int FollowingORDINAL = 156;
+    public static final SqlKind Following = new SqlKind("Following", FollowingORDINAL);
+
     // functions 160-169
 
     /** ROW function */
@@ -398,7 +406,7 @@ public class SqlKind extends EnumeratedValues.BasicValue
             // prefix
             Not, PlusPrefix, MinusPrefix, Exists, Values, ExplicitTable,
             // postfix
-            Descending, IsTrue, IsFalse, IsNull,
+            Descending, IsTrue, IsFalse, IsNull, Preceding, Following,
             // row
             Row, Cast, Trim,
             // special
@@ -438,7 +446,8 @@ public class SqlKind extends EnumeratedValues.BasicValue
         case ExpressionORDINAL:
             return !((this == As) || (this == Descending) || (this == Select)
                 || (this == Join) || (this == Function) || (this == Cast)
-                || (this == Trim) || (this == LiteralChain) || (this == JdbcFn));
+                || (this == Trim) || (this == LiteralChain) || (this == JdbcFn)
+                || (this == Preceding) || (this == Following));
         case FunctionORDINAL:
             return (this == Function) || (this == Row) || (this == Trim)
                 || (this == Cast) || (this == JdbcFn);

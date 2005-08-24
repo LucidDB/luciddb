@@ -54,6 +54,13 @@ public class RelRecordType extends RelDataTypeImpl
         return false;
     }
 
+    // implement RelDataType
+    public int getPrecision()
+    {
+        // REVIEW: angel 18-Aug-2005 Put in fake implementation for precision
+        return 0;
+    }
+
     protected void generateTypeString(StringBuffer sb, boolean withDetail)
     {
         sb.append("RecordType(");

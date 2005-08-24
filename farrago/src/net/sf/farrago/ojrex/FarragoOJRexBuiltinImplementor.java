@@ -1,0 +1,506 @@
+/*
+// $Id$
+// Farrago is an extensible data management system.
+// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2005-2005 Disruptive Tech
+// Copyright (C) 2005-2005 LucidEra, Inc.
+// Portions Copyright (C) 2005-2005 Xiaoyang
+//
+// This program is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation; either version 2 of the License, or (at your option)
+// any later version approved by The Eigenbase Project.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+package net.sf.farrago.ojrex;
+
+import net.sf.farrago.type.*;
+import net.sf.farrago.type.runtime.*;
+
+import openjava.mop.*;
+import openjava.ptree.*;
+
+import org.eigenbase.oj.util.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
+
+
+/**
+ * FarragoOJRexBuiltinImplementor implements Farrago specifics of {@link
+ * OJRexImplementor} for builtin functions
+ *
+ * @author Xiaoyang Luo
+ * @version $Id$
+ */
+public class FarragoOJRexBuiltinImplementor extends FarragoOJRexImplementor
+{
+    public static final int FLOOR_FUNCTION = 1;
+    public static final int CEIL_FUNCTION = 2;
+    public static final int ABS_FUNCTION = 3;
+    public static final int POW_FUNCTION = 4;
+    public static final int LN_FUNCTION = 5;
+    public static final int LOG10_FUNCTION = 6;
+    public static final int SUBSTRING_FUNCTION = 7;
+    public static final int OVERLAY_FUNCTION = 8;
+    public static final int MOD_FUNCTION = 9;
+    public static final int EXP_FUNCTION = 10;
+    public static final int CONCAT_OPERATOR = 11;
+
+    int builtinFunction;
+    //~ Methods ---------------------------------------------------------------
+
+    public FarragoOJRexBuiltinImplementor(int function)
+    {
+        builtinFunction = function;
+    }
+
+    // implement FarragoOJRexImplementor
+    public Expression implementFarrago(
+        FarragoRexToOJTranslator translator,
+        RexCall call,
+        Expression [] operands)
+    {
+        Variable varResult = null;
+        
+        RelDataType retType = call.getType();
+
+        if (SqlTypeUtil.isJavaPrimitive(retType) && !retType.isNullable()) {
+            OJClass retClass = OJUtil.typeToOJClass(
+                retType, translator.getFarragoTypeFactory());
+            varResult = translator.getRelImplementor().newVariable();
+            translator.addStatement(
+                new VariableDeclaration(TypeName.forOJClass(retClass),
+                new VariableDeclarator( varResult.toString(), null)));
+        } else {
+            varResult = translator.createScratchVariable(retType);
+        }
+
+        Expression nullTest = null;
+        for (int i = 0; i < operands.length; i++) {
+            nullTest = translator.createNullTest(
+                call.operands[i], operands[i], nullTest);
+        }
+
+        StatementList stmtList = new StatementList();
+
+        switch (builtinFunction) {
+        case FLOOR_FUNCTION:
+        case CEIL_FUNCTION:
+            implementFloorCeil(translator, call, operands, varResult, stmtList);
+            break;
+        case ABS_FUNCTION:
+            implementAbs(translator, call, operands, varResult, stmtList);
+            break;
+        case POW_FUNCTION:
+            implementPow(translator, call, operands, varResult, stmtList);
+            break;
+        case LN_FUNCTION:
+        case LOG10_FUNCTION:
+            implementLog(translator, call, operands, varResult, stmtList);
+            break;
+        case SUBSTRING_FUNCTION:
+            implementSubstring(translator, call, operands, varResult, stmtList);
+            break;
+        case OVERLAY_FUNCTION:
+            implementOverlay(translator, call, operands, varResult, stmtList);
+            break;
+        case CONCAT_OPERATOR:
+            implementConcat(translator, call, operands, varResult, stmtList);
+            break;
+        case MOD_FUNCTION:
+            implementMod(translator, call, operands, varResult, stmtList);
+            break;
+        case EXP_FUNCTION:
+            implementExp(translator, call, operands, varResult, stmtList);
+            break;
+        default:
+            assert(false);
+        }
+
+        // All the builtin function returns null if
+        // one of the arguements is null.
+
+        if (nullTest != null) {
+            translator.addStatement(
+                new IfStatement(
+                    nullTest,
+                    new StatementList(
+                        translator.createSetNullStatement(varResult, true)),
+                    stmtList));
+        } else {
+            for (int i = 0; i < stmtList.size(); i++) {
+                translator.addStatement(stmtList.get(i));
+            }
+        }
+        return varResult;
+
+    }
+
+    private void implementLog(
+        FarragoRexToOJTranslator translator,
+        RexCall call,
+        Expression [] operands,
+        Variable varResult,
+        StatementList stmtList)
+    {
+        Expression argument = translator.convertPrimitiveAccess(
+                operands[0], call.operands[0]);
+
+        Expression logFunc = new MethodCall(
+                            new Literal(Literal.STRING, "java.lang.Math"),
+                            "log",
+                            new ExpressionList(argument));
+        if (builtinFunction == LOG10_FUNCTION) 
+        {
+            Expression ln10 = new MethodCall(
+                new Literal(Literal.STRING, "java.lang.Math"),
+                "log",
+                new ExpressionList(new Literal(Literal.DOUBLE, "10.0")));
+            logFunc = new BinaryExpression(logFunc,
+                BinaryExpression.DIVIDE,
+                ln10);
+
+        }
+        String funcName = "LN";
+        if (builtinFunction == LOG10_FUNCTION) {
+            funcName = "LOG10";
+        }
+        StatementList stmtList1 = new StatementList();
+        addAssignmentStatement(
+                    stmtList1, 
+                    translator, 
+                    logFunc, 
+                    call.getType(),
+                    varResult,
+                    false);
+        Statement ifStmt = new IfStatement(
+            new BinaryExpression(
+                argument,
+                BinaryExpression.GREATER,
+                Literal.constantZero()),
+            stmtList1,
+            getThrowStatementList(funcName));
+
+        stmtList.add(ifStmt);
+    }
+
+    private void implementFloorCeil(
+        FarragoRexToOJTranslator translator,
+        RexCall call,
+        Expression [] operands,
+        Variable varResult,
+        StatementList stmtList)
+    {
+        Expression argument = translator.convertPrimitiveAccess(
+                operands[0], call.operands[0]);
+
+        String funcStr = "floor";
+        if (builtinFunction == CEIL_FUNCTION) {
+            funcStr = "ceil";
+        }
+        Expression floorOrCeilFunction =
+            new MethodCall(
+                new Literal(Literal.STRING, "java.lang.Math"),
+                funcStr,
+                new ExpressionList(argument));
+        addAssignmentStatement(
+                    stmtList, 
+                    translator, 
+                    floorOrCeilFunction, 
+                    call.getType(),
+                    varResult,
+                    true);
+    }
+
+    private void implementAbs(
+        FarragoRexToOJTranslator translator,
+        RexCall call,
+        Expression [] operands,
+        Variable varResult,
+        StatementList stmtList)
+    {
+        Expression argument = translator.convertPrimitiveAccess(
+                operands[0], call.operands[0]);
+
+        Expression absFunc = new MethodCall(
+                            new Literal(Literal.STRING, "java.lang.Math"),
+                            "abs",
+                            new ExpressionList(argument));
+        addAssignmentStatement(
+                    stmtList, 
+                    translator, 
+                    absFunc, 
+                    call.getType(),
+                    varResult,
+                    true);
+    }
+
+    /**
+     * @2003.sql Part 2 Section 6.27 General Rule 12
+     */
+
+    private void implementPow(
+        FarragoRexToOJTranslator translator,
+        RexCall call,
+        Expression [] operands,
+        Variable varResult,
+        StatementList stmtList)
+    {
+        Expression argument1 = translator.convertPrimitiveAccess(
+                operands[0], call.operands[0]);
+        Expression argument2 = translator.convertPrimitiveAccess(
+                operands[1], call.operands[1]);
+
+
+        Expression powFunc = new MethodCall(
+                            new Literal(Literal.STRING, "java.lang.Math"),
+                            "pow",
+                            new ExpressionList(argument1, argument2));
+        // General 12 b)
+        Expression condb = new BinaryExpression(
+                new BinaryExpression(
+                    argument1, 
+                    BinaryExpression.EQUAL,
+                    Literal.constantZero()),
+                BinaryExpression.LOGICAL_AND,
+                new BinaryExpression(
+                    argument2,
+                    BinaryExpression.LESS,
+                    Literal.constantZero()));
+        // General 12 e)
+        Expression conde = new BinaryExpression(
+                new BinaryExpression(
+                    argument1, 
+                    BinaryExpression.LESS,
+                    Literal.constantZero()),
+                BinaryExpression.LOGICAL_AND,
+                new BinaryExpression(
+                    argument2,
+                    BinaryExpression.NOTEQUAL,
+                    new MethodCall(
+                        new Literal(Literal.STRING, "java.lang.Math"),
+                            "floor",
+                        new ExpressionList(argument2))));
+        Expression condition = new BinaryExpression(
+                                condb, 
+                                BinaryExpression.LOGICAL_OR, 
+                                conde);
+        StatementList stmtList1 = new StatementList(); 
+        addAssignmentStatement(
+                    stmtList1, 
+                    translator, 
+                    powFunc, 
+                    call.getType(),
+                    varResult,
+                    false);
+        Statement ifStmt = new IfStatement(
+                condition,
+                getThrowStatementList("POW"),
+                stmtList1);
+        stmtList.add(ifStmt);
+    }
+
+
+
+    private void implementExp(
+        FarragoRexToOJTranslator translator,
+        RexCall call,
+        Expression [] operands,
+        Variable varResult,
+        StatementList stmtList)
+    {
+        Expression argument = translator.convertPrimitiveAccess(
+                operands[0], call.operands[0]);
+
+        Expression expFunc = new MethodCall(
+                            new Literal(Literal.STRING, "java.lang.Math"),
+                            "exp",
+                            new ExpressionList(argument));
+        addAssignmentStatement(
+                    stmtList, 
+                    translator, 
+                    expFunc, 
+                    call.getType(),
+                    varResult,
+                    false);
+    }
+
+    /**
+     * @2003.sql Part 2 Section 6.27 General Rule 9
+     */
+
+    private void implementMod(
+        FarragoRexToOJTranslator translator,
+        RexCall call,
+        Expression [] operands,
+        Variable varResult,
+        StatementList stmtList)
+    {
+        Expression argument1 = translator.convertPrimitiveAccess(
+                operands[0], call.operands[0]);
+        Expression argument2 = translator.convertPrimitiveAccess(
+                operands[1], call.operands[1]);
+
+        Expression modFunc = new BinaryExpression(
+                            argument1,
+                            BinaryExpression.MOD,
+                            argument2);
+
+        addAssignmentStatement(
+                    stmtList, 
+                    translator, 
+                    modFunc, 
+                    call.getType(),
+                    varResult,
+                    true);
+    }
+
+
+    private void implementSubstring(
+        FarragoRexToOJTranslator translator,
+        RexCall call,
+        Expression [] operands,
+        Variable varResult,
+        StatementList stmtList)
+    {
+        boolean bHasLength = (operands.length > 2);
+        translator.convertCastOrAssignmentWithStmtList(
+                stmtList, 
+                call.toString(), 
+                call.getType(), 
+                call.operands[0].getType(), 
+                varResult, 
+                operands[0]);
+        Expression intS = translator.convertPrimitiveAccess(
+                operands[1], call.operands[1]);
+        Expression intL = Literal.constantZero();
+        if (bHasLength) {
+            intL = translator.convertPrimitiveAccess(
+                operands[2], call.operands[2]); 
+        }
+
+        ExpressionList expList = new ExpressionList(intS, intL);
+        if (bHasLength) {
+            expList.add(Literal.constantTrue());
+        } else { 
+            expList.add(Literal.constantFalse());
+        }
+        stmtList.add(new ExpressionStatement(
+            new MethodCall(varResult, "setSubstring", expList)));
+    }
+
+    private void implementOverlay(
+        FarragoRexToOJTranslator translator,
+        RexCall call,
+        Expression [] operands,
+        Variable varResult,
+        StatementList stmtList)
+    {
+        boolean bHasLength = (operands.length > 3);
+        Expression intS = translator.convertPrimitiveAccess(
+               operands[2], call.operands[2]);
+        Expression intL = Literal.constantZero();
+        if (bHasLength) {
+            intL = translator.convertPrimitiveAccess(
+                operands[3], call.operands[3]);
+        }
+        ExpressionList expList = new ExpressionList(
+                        operands[0], 
+                        operands[1], intS);
+        expList.add(intL);
+        if (bHasLength) {
+            expList.add(Literal.constantTrue());
+        } else {
+            expList.add(Literal.constantFalse());
+        }
+        stmtList.add(new ExpressionStatement(
+                        new MethodCall(
+                            varResult,
+                            "overlay", 
+                            expList)));
+    }
+
+    private void implementConcat(
+        FarragoRexToOJTranslator translator,
+        RexCall call,
+        Expression [] operands,
+        Variable varResult,
+        StatementList stmtList)
+    {
+        stmtList.add(new ExpressionStatement(
+                         new MethodCall(
+                             varResult, 
+                             "concat", 
+                             new ExpressionList(operands[0], operands[1]))));
+    }
+    
+    // helper function
+
+    private void addAssignmentStatement(
+        StatementList stmtList,
+        FarragoRexToOJTranslator translator,
+        Expression funcResult,
+        RelDataType retType,
+        Variable varResult,
+        boolean needCast)
+
+    {
+        Expression lhsExp;
+        if (SqlTypeUtil.isJavaPrimitive(retType) && !retType.isNullable()) {
+            lhsExp = varResult;
+        } else {
+            lhsExp = new FieldAccess(varResult, 
+                        NullablePrimitive.VALUE_FIELD_NAME);
+        }
+        if (!SqlTypeUtil.isJavaPrimitive(retType) || retType.isNullable()) {
+            stmtList.add(translator.createSetNullStatement(varResult, false));
+        }
+        Expression result = funcResult;
+        if (needCast) {
+            OJClass lhsClass = 
+                OJClass.forClass(
+                    translator.getFarragoTypeFactory().getClassForPrimitive(
+                        retType));
+            
+            result = new CastExpression(lhsClass, funcResult);
+        }
+        Statement stmt =new ExpressionStatement(
+                            new AssignmentExpression(
+                                lhsExp,
+                                AssignmentExpression.EQUALS, 
+                                result));
+        stmtList.add(stmt);
+    }
+
+    private StatementList getThrowStatementList(String funcName)
+    {
+        String quotedName = "\"" + funcName + "\"";
+        return new StatementList(
+            new ThrowStatement(
+                new MethodCall(
+                    new Literal(
+                        Literal.STRING, 
+                        "net.sf.farrago.resource.FarragoResource.instance()"),
+                    "newInvalidFunctionArgument",
+                    new ExpressionList(
+                        new Literal(Literal.STRING, quotedName)))));
+    }
+
+    // implement OJRexImplementor
+    public boolean canImplement(RexCall call)
+    {
+        return true;
+    }
+}
+
+// End FarragoOJRexBuiltinImplementor.java

@@ -31,6 +31,7 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.fun.SqlDatetimeSubtractionOperator;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.NlsString;
 import org.eigenbase.util.Util;
@@ -175,7 +176,30 @@ public class RexBuilder
         RexNode [] exprs)
     {
         final RelDataType type = deriveReturnType(op, typeFactory, exprs);
-        return new RexCall(type, op, exprs);
+        RexNode [] fixExprs = exprs;
+        if (type instanceof IntervalSqlType) {
+            //if (op instanceof SqlDatetimeSubtractionOperator) {
+            //    op = SqlStdOperatorTable.minusOperator;
+            //}
+            int count = 0;
+            for (int i = 0; i < exprs.length; i++) {
+                if (exprs[i] instanceof RexLiteral &&
+                    exprs[i].getType() instanceof IntervalSqlType &&
+                    exprs[i].getType().getIntervalQualifier() != null) {
+                    exprs[i] = null;
+                    continue;
+                }
+                count++;
+            }
+            fixExprs = new RexNode[count];
+            for (int i = 0; i < exprs.length; i++) {
+                if (exprs[i] == null) {
+                    continue;
+                }
+                fixExprs[i] = exprs[i];
+            }
+        }
+        return new RexCall(type, op, fixExprs);
     }
 
     /**
@@ -473,6 +497,30 @@ public class RexBuilder
             timestamp,
             typeFactory.createSqlType(SqlTypeName.Timestamp, precision),
             SqlTypeName.Timestamp);
+    }
+
+    /**
+     * Creates an interval literal.
+     */
+    public RexLiteral makeIntervalLiteral(
+        SqlIntervalQualifier intervalQualifier)
+    {
+        Util.pre(intervalQualifier != null, "intervalQualifier != null");
+        return makeLiteral(
+            null,
+            new IntervalSqlType(intervalQualifier, false),
+            intervalQualifier.isYearMonth() ? SqlTypeName.IntervalYearMonth :
+                SqlTypeName.IntervalDayTime);
+    }
+
+    /**
+     * Creates an interval literal.
+     */
+    public RexLiteral makeIntervalLiteral(long l)
+    {
+        return makeLiteral(
+            new BigDecimal(l), typeFactory.createSqlType(SqlTypeName.Bigint),
+            SqlTypeName.Decimal);
     }
 
     public RexDynamicParam makeDynamicParam(

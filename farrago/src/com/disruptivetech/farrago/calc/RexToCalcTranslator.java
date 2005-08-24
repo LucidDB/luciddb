@@ -276,6 +276,9 @@ public class RexToCalcTranslator implements RexVisitor
              // hack for now
              return new CalcProgramBuilder.RegisterDescriptor(
                  CalcProgramBuilder.OpType.Varbinary, 4096);
+        } else if (typeDigest.startsWith("INTERVAL")) {
+            return new CalcProgramBuilder.RegisterDescriptor(
+                 CalcProgramBuilder.OpType.Int8, -1);
         }
         for (int i = 0; i < knownTypes.length; i++) {
             TypePair knownType = knownTypes[i];
@@ -307,7 +310,7 @@ public class RexToCalcTranslator implements RexVisitor
         return new CalcProgramBuilder.RegisterDescriptor(calcType, bytes);
     }
 
-    private Object getKey(RexNode node)
+    public Object getKey(RexNode node)
     {
         if (node instanceof RexInputRef) {
             return ((RexInputRef) node).getName();
@@ -588,8 +591,9 @@ public class RexToCalcTranslator implements RexVisitor
             switch (aggOp.getOrdinal()) {
             case AggOp.None_ordinal:
                 ArrayList al = new ArrayList(1);
+                HashMap dups = new HashMap();
                 // Change the projectExps to map to the correct input refs.
-                fixOutputExps(al, inputRefs.length, inputExps, aggs, projectExps);
+                fixOutputExps(al, inputRefs.length, inputExps, aggs, projectExps, dups);
                 for (int i = 0; i < al.size(); i++) {
                     implementNode((RexNode) al.get(i));
                 }
@@ -601,8 +605,6 @@ public class RexToCalcTranslator implements RexVisitor
 
         // Step 1: implement all the filtering logic
         if (conditionExp != null) {
-
-
             switch (aggOp.getOrdinal()) {
             // FennelWindowRel calls this method in the following order:
             // None, Init, Add and Drop. We want to fix the conditionExp
@@ -611,12 +613,13 @@ public class RexToCalcTranslator implements RexVisitor
             // should be changed as well.
             case AggOp.None_ordinal:
                 ArrayList alCond = new ArrayList(1);
+                HashMap dups = new HashMap();
                 // Change the conditionExp to map to the correct input refs.
                 // TODO: Aggregate expressions inside a where clause is not yet
                 // supported.
                 RexNode[] nodes = new RexNode[1];
                 nodes[0] = conditionExp;
-                fixOutputExps(alCond, 0, inputExps, aggs, nodes);
+                fixOutputExps(alCond, 0, inputExps, aggs, nodes, dups);
                 break;
             default:
                 break;
@@ -670,7 +673,7 @@ public class RexToCalcTranslator implements RexVisitor
     }
 
     private void fixOutputExps(ArrayList extInputs, int start, RexNode[] inputExps,
-            RexNode[] aggs, RexNode[] outputExps)
+            RexNode[] aggs, RexNode[] outputExps, HashMap dups)
     {
         // Review (murali 2005/08/03): Notice that we are changing the contents of
         // the outputExps here. It may be better to pass a copy of the outputExps
@@ -689,14 +692,20 @@ public class RexToCalcTranslator implements RexVisitor
                 } else if (aggNode instanceof RexOver) {
                     // This should be aggregate input. Create a new input ref
                     // with the next location.
+                    Object key = getKey(aggNode);
+                    if (dups.containsKey(key)) {
+                        outputExps[i] = (RexNode) dups.get(key);
+                        continue;
+                    }
                     RexNode extInput = new RexInputRef(extInputs.size() + start,
                             aggNode.getType());
                     extInputs.add(extInput);
                     outputExps[i] = extInput;
+                    dups.put(key, extInput);
                 }
             } else if (node instanceof RexCall) {
                 fixOutputExps(extInputs, start, inputExps, aggs,
-                        ((RexCall) node).getOperands());
+                        ((RexCall) node).getOperands(), dups);
             }
         }
     }

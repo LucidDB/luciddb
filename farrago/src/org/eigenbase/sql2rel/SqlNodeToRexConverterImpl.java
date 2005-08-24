@@ -25,10 +25,13 @@ package org.eigenbase.sql2rel;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexBuilder;
 import org.eigenbase.rex.RexCall;
+import org.eigenbase.rex.RexLiteral;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.fun.SqlAvgAggFunction;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.IntervalSqlType;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.*;
 import org.eigenbase.reltype.RelDataTypeFactory;
@@ -64,6 +67,15 @@ public class SqlNodeToRexConverterImpl
         // No convertlet was suitable. (Unlikely, because the standard
         // convertlet table has a fall-back for all possible calls.)
         throw Util.needToImplement(call);
+    }
+
+    public RexLiteral convertInterval(
+        SqlRexContext cx,
+        SqlIntervalQualifier intervalQualifier)
+    {
+        RexBuilder rexBuilder = cx.getRexBuilder();
+
+        return rexBuilder.makeIntervalLiteral(intervalQualifier);
     }
 
     public RexNode convertLiteral(
@@ -123,6 +135,10 @@ public class SqlNodeToRexConverterImpl
                 ((SqlTimeLiteral) literal).getPrec());
         case SqlTypeName.Date_ordinal:
             return rexBuilder.makeDateLiteral((Calendar) value);
+        // TODO: support IntervalYearMonth type of interval.
+        case SqlTypeName.IntervalDayTime_ordinal:
+            long l = SqlParserUtil.intervalToMillis((SqlIntervalLiteral.IntervalValue) value);
+            return rexBuilder.makeIntervalLiteral(l);
         default:
             throw literal.getTypeName().unexpected();
         }

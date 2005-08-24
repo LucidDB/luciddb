@@ -70,7 +70,7 @@ public class SqlParserTest extends TestCase
                     "'; error is:" + NL + e.toString();
             throw new AssertionFailedError(message);
         }
-        final String actual = sqlNode.toSqlString(null);
+        final String actual = sqlNode.toSqlString(null, true); // no dialect, always parenthesize
         TestUtil.assertEqualsVerbose(expected, actual);
     }
 
@@ -90,7 +90,7 @@ public class SqlParserTest extends TestCase
                     "'; error is:" + NL + e.toString();
             throw new AssertionFailedError(message);
         }
-        final String actual = sqlNode.toSqlString(null);
+        final String actual = sqlNode.toSqlString(null, true);
         TestUtil.assertEqualsVerbose(expected, actual);
     }
 
@@ -123,11 +123,10 @@ public class SqlParserTest extends TestCase
         SqlValidatorTestCase.checkEx(thrown, expectedMsgPattern, sap);
     }
 
-    protected void checkExpFails(String sql)
-    {
-        checkExpFails(sql, "(?s).*");
-    }
-
+    /**
+     * Tests that an expression throws an exception which matches the given
+     * pattern.
+     */
     protected void checkExpFails(
         String sql,
         String expectedMsgPattern)
@@ -574,7 +573,7 @@ public class SqlParserTest extends TestCase
         checkExp("aBs(-2.3e-2)", "ABS((- 2.3E-2))");
         checkExp("MOD(5             ,\t\f\r\n2)", "MOD(5, 2)");
         checkExp("ln(5.43  )", "LN(5.43)");
-        checkExp("log(- -.2  )", "LOG((- (- 0.2)))");
+        checkExp("log10(- -.2  )", "LOG10((- (- 0.2)))");
     }
 
     public void testExists()
@@ -627,8 +626,8 @@ public class SqlParserTest extends TestCase
         check("select substring('Eggs and ham', 1, 3 + 2) || ' benedict' from emp",
             "SELECT (SUBSTRING('Eggs and ham' FROM 1 FOR (3 + 2)) || ' benedict')"
             + NL + "FROM `EMP`");
-        checkExp("log(1)\r\n+pow(2, mod(\r\n3\n\t\t\f\n,ln(4))*log(5)-6*log(7/abs(8)+9))*pow(10,11)",
-            "(LOG(1) + (POW(2, ((MOD(3, LN(4)) * LOG(5)) - (6 * LOG(((7 / ABS(8)) + 9))))) * POW(10, 11)))");
+        checkExp("log10(1)\r\n+pow(2, mod(\r\n3\n\t\t\f\n,ln(4))*log10(5)-6*log10(7/abs(8)+9))*pow(10,11)",
+            "(LOG10(1) + (POW(2, ((MOD(3, LN(4)) * LOG10(5)) - (6 * LOG10(((7 / ABS(8)) + 9))))) * POW(10, 11)))");
     }
 
     public void testFunctionWithDistinct()
@@ -1400,6 +1399,26 @@ public class SqlParserTest extends TestCase
         check("select N'1' '2' from t",
             "SELECT _ISO-8859-1'1' '2'" + NL +
             "FROM `T`");
+
+        // newline in string literal
+        checkExpFails("'foo\rbar'",
+            "(?s)Encountered \"\\\\'\" at line 1, column 1.*");
+        checkExpFails("'foo\nbar'",
+            "(?s)Encountered \"\\\\'\" at line 1, column 1.*");
+        checkExpFails("'foo\r\nbar'",
+            "(?s)Encountered \"\\\\'\" at line 1, column 1.*");
+    }
+
+    public void testStringLiteralChain()
+    {
+        checkExp("   'foo'\r'bar'", "'foo' 'bar'");
+        checkExp("   'foo'\r\n'bar'", "'foo' 'bar'");
+        checkExp("   'foo'\r\n\r\n'bar'  \n   'baz'", "'foo' 'bar' 'baz'");
+        checkExp("   'foo' /* a comment */ 'bar'", "'foo' 'bar'");
+        checkExp("   'foo' -- a comment\r\n 'bar'", "'foo' 'bar'");
+        // String literals not separated by comment or newline are OK in
+        // parser, should fail in validator.
+        checkExp("   'foo' 'bar'", "'foo' 'bar'");
     }
 
     public void testCaseExpression()
@@ -1588,7 +1607,7 @@ public class SqlParserTest extends TestCase
     public void testJdbcFunctionCall()
     {
         checkExp("{fn apa(1,'1')}", "{fn APA(1, '1') }");
-        checkExp("{ Fn apa(log(ln(1))+2)}", "{fn APA((LOG(LN(1)) + 2)) }");
+        checkExp("{ Fn apa(log10(ln(1))+2)}", "{fn APA((LOG10(LN(1)) + 2)) }");
         checkExp("{fN apa(*)}", "{fn APA(*) }");
         checkExp("{   FN\t\r\n apa()}", "{fn APA() }");
         checkExp("{fn insert()}", "{fn INSERT() }");
@@ -1607,15 +1626,15 @@ public class SqlParserTest extends TestCase
         check("select count(z) over w as foo from Bids window w as (partition by y order by x rows between 2 preceding and 2 following)",
             "SELECT (COUNT(`Z`) OVER `W`) AS `FOO`" + NL +
             "FROM `BIDS`" + NL +
-            "WINDOW (PARTITION BY `Y`" + NL +
+            "WINDOW `W` AS (PARTITION BY `Y`" + NL +
             "ORDER BY `X`" + NL +
-            "ROWS BETWEEN (2 PRECEDING) AND (2 FOLLOWING))"
+            "ROWS BETWEEN 2 PRECEDING AND 2 FOLLOWING)"
             );
 
         check("select count(*) over w from emp window w as (rows 2 preceding)",
             "SELECT (COUNT(*) OVER `W`)" + NL +
             "FROM `EMP`" + NL +
-            "WINDOW (ROWS (2 PRECEDING))"
+            "WINDOW `W` AS (ROWS 2 PRECEDING)"
             );
 
 
@@ -1677,15 +1696,15 @@ public class SqlParserTest extends TestCase
         checkExp("sum(sal) over (order by x desc, y asc)",
             "(SUM(`SAL`) OVER (ORDER BY `X` DESC, `Y`))");
         checkExp("sum(sal) over (rows 5 preceding)",
-            "(SUM(`SAL`) OVER (ROWS (5 PRECEDING)))");
+            "(SUM(`SAL`) OVER (ROWS 5 PRECEDING))");
         checkExp("sum(sal) over (range between interval '1' second preceding and interval '1' second following)",
-            "(SUM(`SAL`) OVER (RANGE BETWEEN ((INTERVAL '1' SECOND) PRECEDING) AND ((INTERVAL '1' SECOND) FOLLOWING)))");
+            "(SUM(`SAL`) OVER (RANGE BETWEEN (INTERVAL '1' SECOND) PRECEDING AND (INTERVAL '1' SECOND) FOLLOWING))");
         checkExp("sum(sal) over (range between interval '1:03' hour preceding and interval '2' minute following)",
-            "(SUM(`SAL`) OVER (RANGE BETWEEN ((INTERVAL '1:03' HOUR) PRECEDING) AND ((INTERVAL '2' MINUTE) FOLLOWING)))");
+            "(SUM(`SAL`) OVER (RANGE BETWEEN (INTERVAL '1:03' HOUR) PRECEDING AND (INTERVAL '2' MINUTE) FOLLOWING))");
         checkExp("sum(sal) over (range between interval '5' day preceding and current row)",
-            "(SUM(`SAL`) OVER (RANGE BETWEEN ((INTERVAL '5' DAY) PRECEDING) AND CURRENT ROW))");
+            "(SUM(`SAL`) OVER (RANGE BETWEEN (INTERVAL '5' DAY) PRECEDING AND CURRENT ROW))");
         checkExp("sum(sal) over (range interval '5' day preceding)",
-            "(SUM(`SAL`) OVER (RANGE ((INTERVAL '5' DAY) PRECEDING)))");
+            "(SUM(`SAL`) OVER (RANGE (INTERVAL '5' DAY) PRECEDING))");
         checkExp("sum(sal) over (range between unbounded preceding and current row)",
             "(SUM(`SAL`) OVER (RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW))");
         checkExp("sum(sal) over (range unbounded preceding)",
@@ -1695,9 +1714,9 @@ public class SqlParserTest extends TestCase
         checkExp("sum(sal) over (range between current row and unbounded following)",
             "(SUM(`SAL`) OVER (RANGE BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING))");
         checkExp("sum(sal) over (range between 6 preceding and interval '1:03' hour preceding)",
-            "(SUM(`SAL`) OVER (RANGE BETWEEN (6 PRECEDING) AND ((INTERVAL '1:03' HOUR) PRECEDING)))");
+            "(SUM(`SAL`) OVER (RANGE BETWEEN 6 PRECEDING AND (INTERVAL '1:03' HOUR) PRECEDING))");
         checkExp("sum(sal) over (range between interval '1' second following and interval '5' day following)",
-            "(SUM(`SAL`) OVER (RANGE BETWEEN ((INTERVAL '1' SECOND) FOLLOWING) AND ((INTERVAL '5' DAY) FOLLOWING)))");
+            "(SUM(`SAL`) OVER (RANGE BETWEEN (INTERVAL '1' SECOND) FOLLOWING AND (INTERVAL '5' DAY) FOLLOWING))");
     }
 
     public void testElementFunc() {
@@ -1846,7 +1865,8 @@ public class SqlParserTest extends TestCase
         checkExp("extract(minute from x)","EXTRACT(MINUTE FROM `X`)");
         checkExp("extract(second from x)","EXTRACT(SECOND FROM `X`)");
 
-        checkExpFails("extract(day to second from x)");
+        checkExpFails("extract(day ^to^ second from x)",
+            "(?s)Encountered \"to\".*");
     }
 
     public void testIntervalArithmetics() {
