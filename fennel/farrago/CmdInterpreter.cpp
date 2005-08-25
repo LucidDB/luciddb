@@ -165,7 +165,7 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
         pCache,
         configMap,
         openMode,
-        pDbHandle->pTraceTarget.get());
+        pDbHandle->pTraceTarget);
 
     pDbHandle->pDb = pDb;
 
@@ -363,7 +363,7 @@ void CmdInterpreter::visit(ProxyCmdPrepareExecutionStreamGraph &cmd)
     // NOTE:  sequence is important here
     SharedExecStreamScheduler pScheduler(
         new DfsTreeExecStreamScheduler(
-            &(pTxnHandle->pDb->getTraceTarget()),
+            pTxnHandle->pDb->getSharedTraceTarget(),
             "xo.scheduler"));
     ExecStreamGraphEmbryo graphEmbryo(
         pStreamGraphHandle->pExecStreamGraph,

@@ -66,7 +66,7 @@ SharedDatabase Database::newDatabase(
     SharedCache pCacheInit,
     ConfigMap const &configMapInit,
     DeviceMode openModeInit,
-    TraceTarget *pTraceTarget)
+    SharedTraceTarget pTraceTarget)
 {
     return SharedDatabase(
         new Database(pCacheInit, configMapInit, openModeInit, pTraceTarget),
@@ -77,7 +77,7 @@ Database::Database(
     SharedCache pCacheInit,
     ConfigMap const &configMapInit,
     DeviceMode openModeInit,
-    TraceTarget *pTraceTarget)
+    SharedTraceTarget pTraceTarget)
     : TraceSource(pTraceTarget,"Database"),
       pCache(pCacheInit),
       configMap(configMapInit)

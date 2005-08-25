@@ -102,7 +102,7 @@ class CalcCastTest : virtual public TestBase, public TraceSource
 
 public:
     explicit CalcCastTest()
-        : TraceSource(this,"CalcCastTest")
+        : TraceSource(shared_from_this(),"CalcCastTest")
     {
         srand(time(NULL));
         CalcInit::instance();
