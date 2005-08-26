@@ -48,7 +48,7 @@ ExecStreamTestBase::newStreamGraphEmbryo(SharedExecStreamGraph g)
 ExecStreamScheduler *ExecStreamTestBase::newScheduler()
 {
     return new DfsTreeExecStreamScheduler(
-        this->shared_from_this(),
+        this,
         "DfsTreeExecStreamScheduler");
 }
 

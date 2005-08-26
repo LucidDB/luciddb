@@ -49,7 +49,7 @@ class CalcMiscTest : virtual public TestBase, public TraceSource
     
 public:
     explicit CalcMiscTest()
-        : TraceSource(shared_from_this(),"CalcMiscTest")
+        : TraceSource(this,"CalcMiscTest")
     {
         srand(time(NULL));
         CalcInit::instance();

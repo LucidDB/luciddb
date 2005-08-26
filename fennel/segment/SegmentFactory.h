@@ -37,6 +37,7 @@
 FENNEL_BEGIN_NAMESPACE
 
 class ConfigMap;
+class TraceTarget;
 class LinearDeviceSegmentParams;
 class PseudoUuid;
 
@@ -56,7 +57,7 @@ class SegmentFactory
     /**
      * Trace target if tracing enable.
      */
-    SharedTraceTarget pTraceTarget;
+    TraceTarget *pTraceTarget;
 
     boost::dynamic_bitset<> tempDeviceIdBitset;
 
@@ -70,7 +71,7 @@ class SegmentFactory
 
     explicit SegmentFactory(
         ConfigMap const &configMap,
-        SharedTraceTarget pTraceTarget);
+        TraceTarget *pTraceTarget);
 public:
     /**
      * Constructs a new SegmentFactory.
@@ -85,7 +86,7 @@ public:
      */
     static SharedSegmentFactory newSegmentFactory(
         ConfigMap const &configMap,
-        SharedTraceTarget pTraceTarget);
+        TraceTarget *pTraceTarget);
     
     virtual ~SegmentFactory();
 

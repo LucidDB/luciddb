@@ -184,7 +184,7 @@ class SqlStringTest : virtual public TestBase, public TraceSource
     
 public:
     explicit SqlStringTest()
-        : TraceSource(shared_from_this(),"SqlStringTest")
+        : TraceSource(this,"SqlStringTest")
     {
         srand(time(NULL));
         FENNEL_UNIT_TEST_CASE(SqlStringTest, testSqlStringClass);

@@ -117,9 +117,6 @@ typedef boost::shared_ptr<BTreeRecoveryFactory> SharedBTreeRecoveryFactory;
 class Database;
 typedef boost::shared_ptr<Database> SharedDatabase;
 
-class TraceTarget;
-typedef boost::shared_ptr<TraceTarget> SharedTraceTarget;
-
 class CheckpointThread;
 typedef boost::shared_ptr<CheckpointThread> SharedCheckpointThread;
 

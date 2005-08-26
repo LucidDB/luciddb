@@ -47,7 +47,7 @@ class CalcExtDynamicVariableTest : virtual public TestBase, public TraceSource
 
 public:
     explicit CalcExtDynamicVariableTest()
-        : TraceSource(shared_from_this(),"CalcExtDynamicVariableTest")
+        : TraceSource(this,"CalcExtDynamicVariableTest")
     {
         srand(time(NULL));
         CalcInit::instance();

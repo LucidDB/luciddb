@@ -33,10 +33,10 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 TracingSegment::TracingSegment(
     SharedSegment pDelegateSegment,
-    SharedTraceTarget pTraceTarget,
+    TraceTarget &traceTarget,
     std::string sourceName)
     : DelegatingSegment(pDelegateSegment),
-      TraceSource(pTraceTarget,"segment."+sourceName)
+      TraceSource(&traceTarget,"segment."+sourceName)
 {
     FENNEL_TRACE(TRACE_FINE,"constructor");
 }

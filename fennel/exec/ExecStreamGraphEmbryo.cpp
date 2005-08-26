@@ -196,7 +196,7 @@ SegmentAccessor &ExecStreamGraphEmbryo::getScratchAccessor()
 }
 
 void ExecStreamGraphEmbryo::prepareGraph(
-    SharedTraceTarget pTraceTarget,
+    TraceTarget *pTraceTarget,
     std::string const &tracePrefix)
 {
     pGraph->prepare(*pScheduler);

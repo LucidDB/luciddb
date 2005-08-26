@@ -116,7 +116,7 @@ class Database
         SharedCache pCache,
         ConfigMap const &configMap,
         DeviceMode openMode,
-        SharedTraceTarget pTraceTarget);
+        TraceTarget *pTraceTarget);
     
     // implement ClosableObject
     virtual void closeImpl();
@@ -177,7 +177,7 @@ public:
         SharedCache pCache,
         ConfigMap const &configMap,
         DeviceMode openMode,
-        SharedTraceTarget pTraceTarget);
+        TraceTarget *pTraceTarget = NULL);
     
     virtual ~Database();
 

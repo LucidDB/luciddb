@@ -55,7 +55,7 @@ class SqlRegExpTest : virtual public TestBase, public TraceSource
 
 public:
     explicit SqlRegExpTest()
-        : TraceSource(shared_from_this(),"SqlRegExpTest")
+        : TraceSource(this,"SqlRegExpTest")
     {
         srand(time(NULL));
 

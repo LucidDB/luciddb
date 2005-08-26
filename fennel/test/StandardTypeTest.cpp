@@ -49,7 +49,7 @@ class StandardTypeTest : virtual public TestBase, public TraceSource
     
 public:
     explicit StandardTypeTest()
-        : TraceSource(this->shared_from_this(),"StandardTypeTest")
+        : TraceSource(this,"StandardTypeTest")
     {
         FENNEL_UNIT_TEST_CASE(StandardTypeTest, testStandardTypeToString);
         FENNEL_UNIT_TEST_CASE(StandardTypeTest, testStandardTypeIsNative);

@@ -71,7 +71,7 @@ SharedExecStream ExecStreamUnitTestBase::prepareTransformGraph(
                                     BUFPROV_PRODUCER);
     pGraph->addOutputDataflow(pAdaptedStream->getStreamId());
 
-    pGraphEmbryo->prepareGraph(this->shared_from_this(), "");
+    pGraphEmbryo->prepareGraph(this, "");
     return pAdaptedStream;
 }
 
@@ -99,7 +99,7 @@ SharedExecStream ExecStreamUnitTestBase::prepareConfluenceGraph(
     pGraph->addOutputDataflow(
         pAdaptedStream->getStreamId());
 
-    pGraphEmbryo->prepareGraph(this->shared_from_this(), "");
+    pGraphEmbryo->prepareGraph(this, "");
 
     return pAdaptedStream;
 }

@@ -54,7 +54,7 @@ public:
      * @param name the name to use for tracing this scheduler
      */
     explicit DfsTreeExecStreamScheduler(
-        SharedTraceTarget pTraceTarget,
+        TraceTarget *pTraceTarget,
         std::string name);
     
     virtual ~DfsTreeExecStreamScheduler();

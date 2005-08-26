@@ -68,7 +68,7 @@ void TraceSource::trace(TraceLevel level,std::string message) const
 
 void TraceSource::disableTracing()
 {
-    pTraceTarget.reset();
+    pTraceTarget.reset((TraceTarget *)NULL);
 }
 
 FENNEL_END_CPPFILE("$Id$");

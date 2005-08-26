@@ -72,7 +72,7 @@ class SqlDateTest : virtual public TestBase, public TraceSource
     
 public:
     explicit SqlDateTest()
-        : TraceSource(shared_from_this(),"SqlDateTest")
+        : TraceSource(this,"SqlDateTest")
     {
         srand(time(NULL));
         FENNEL_UNIT_TEST_CASE(SqlDateTest, testSqlDateToStr_Ascii);

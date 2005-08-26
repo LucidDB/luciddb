@@ -86,7 +86,7 @@ public:
      */
     bool isTracing() const
     {
-        return pTraceTarget.get() ? true : false;
+        return pTraceTarget.use_count() > 0;
     }
     
     /**

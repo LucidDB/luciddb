@@ -55,7 +55,7 @@ protected:
      * @param name the name to use for tracing this scheduler
      */
     explicit ExecStreamScheduler(
-        SharedTraceTarget pTraceTarget,
+        TraceTarget *pTraceTarget,
         std::string name);
     
     /**

@@ -145,7 +145,7 @@ void DatabaseTest::testCreateEmpty()
         pCache,
         configMap,
         DeviceMode::createNew,
-        shared_from_this());
+        this);
     BOOST_CHECK(!pDatabase->isRecoveryRequired());
 }
 
@@ -255,7 +255,7 @@ void DatabaseTest::loadDatabase()
         pCache,
         configMap,
         DeviceMode::load,
-        shared_from_this());
+        this);
 }
 
 LogicalTxnClassId DatabaseTest::getParticipantClassId() const

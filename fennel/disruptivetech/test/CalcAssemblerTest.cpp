@@ -733,8 +733,9 @@ protected:
                               uint n);
 
 public:
+public:
     explicit CalcAssemblerTest()
-        : TraceSource(shared_from_this(),"CalcAssemblerTest")
+        : TraceSource(this,"CalcAssemblerTest")
     {
         srand(time(NULL));
         CalcInit::instance();

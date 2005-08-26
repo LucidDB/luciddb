@@ -82,8 +82,7 @@ void SegStorageTestBase::closeStorage()
 
 SegStorageTestBase::SegStorageTestBase()
 {
-    pSegmentFactory = 
-        SegmentFactory::newSegmentFactory(configMap,this->shared_from_this());
+    pSegmentFactory = SegmentFactory::newSegmentFactory(configMap,this);
 }
 
 // End SegStorageTestBase.cpp

@@ -62,7 +62,7 @@ class CalcInstFactoryTest : virtual public TestBase, public TraceSource
     
 public:
     explicit CalcInstFactoryTest()
-        : TraceSource(shared_from_this(),"CalcInstFactoryTest")
+        : TraceSource(this,"CalcInstFactoryTest")
     {
         srand(time(NULL));
         CalcInit::instance();

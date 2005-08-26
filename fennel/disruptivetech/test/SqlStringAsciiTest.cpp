@@ -83,7 +83,7 @@ class SqlStringAsciiTest : virtual public TestBase, public TraceSource
     
 public:
     explicit SqlStringAsciiTest()
-        : TraceSource(shared_from_this(),"SqlStringAsciiTest")
+        : TraceSource(this,"SqlStringAsciiTest")
     {
         srand(time(NULL));
         FENNEL_UNIT_TEST_CASE(SqlStringAsciiTest, testSqlStringBuffer_Ascii);

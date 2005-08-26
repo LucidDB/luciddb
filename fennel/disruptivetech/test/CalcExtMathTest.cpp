@@ -55,7 +55,7 @@ class CalcExtMathTest : virtual public TestBase, public TraceSource
     string mProgramPower;
 public:
     explicit CalcExtMathTest()
-        : TraceSource(shared_from_this(),"CalcExtMathTest")
+        : TraceSource(this,"CalcExtMathTest")
     {
         srand(time(NULL));
         CalcInit::instance();
