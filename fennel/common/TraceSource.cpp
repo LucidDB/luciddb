@@ -29,25 +29,25 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 TraceSource::TraceSource()
 {
-    pTraceTarget = NULL;
+    pTraceTarget.reset();
 }
 
-TraceSource::TraceSource(TraceTarget *pTraceTargetInit,std::string nameInit)
+TraceSource::TraceSource(SharedTraceTarget pTraceTargetInit,std::string nameInit)
 {
-    pTraceTarget = NULL;
+    pTraceTarget.reset();
     initTraceSource(pTraceTargetInit,nameInit);
 }
 
 TraceSource::~TraceSource()
 {
-    pTraceTarget = NULL;
+    pTraceTarget.reset();
 }
 
 void TraceSource::initTraceSource(
-    TraceTarget *pTraceTargetInit,
+    SharedTraceTarget pTraceTargetInit,
     std::string nameInit)
 {
-    assert(!pTraceTarget);
+    assert(!pTraceTarget.get());
     assert(name == "");
     
     pTraceTarget = pTraceTargetInit;
@@ -68,7 +68,7 @@ void TraceSource::trace(TraceLevel level,std::string message) const
 
 void TraceSource::disableTracing()
 {
-    pTraceTarget = NULL;
+    pTraceTarget.reset();
 }
 
 FENNEL_END_CPPFILE("$Id$");

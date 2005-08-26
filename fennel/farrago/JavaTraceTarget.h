@@ -52,7 +52,7 @@ class JavaTraceTarget : public TraceTarget
     jmethodID methGetSourceTraceLevel;
     
 public:
-    explicit JavaTraceTarget(jobject javaTrace);
+    explicit JavaTraceTarget();
     virtual ~JavaTraceTarget();
 
     // implement TraceTarget

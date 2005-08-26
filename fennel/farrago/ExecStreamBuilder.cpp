@@ -71,7 +71,7 @@ void ExecStreamBuilder::buildStreamGraph(
 
     // PASS 3: sort and prepare streams
     graphEmbryo.prepareGraph(
-        &(streamFactory.getDatabase()->getTraceTarget()),
+        streamFactory.getDatabase()->getSharedTraceTarget(),
         "xo.");
 }
 

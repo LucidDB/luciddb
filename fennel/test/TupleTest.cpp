@@ -67,7 +67,7 @@ class TupleTest : virtual public TestBase, public TraceSource
     
 public:
     explicit TupleTest()
-        : TraceSource(this,"TupleTest")
+        : TraceSource(shared_from_this(),"TupleTest")
     {
         FENNEL_UNIT_TEST_CASE(TupleTest,testStandardTypesNotNull);
         FENNEL_UNIT_TEST_CASE(TupleTest,testStandardTypesNullable);

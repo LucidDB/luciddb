@@ -40,13 +40,13 @@ public:
      *
      * @param delegateSegment the underlying segment
      *
-     * @param traceTarget the target for trace messages
+     * @param pTraceTarget the target for trace messages
      *
      * @param sourceName the source name for trace messages
      */
     explicit TracingSegment(
         SharedSegment delegateSegment,
-        TraceTarget &traceTarget,
+        SharedTraceTarget pTraceTarget,
         std::string sourceName);
 
     virtual ~TracingSegment();

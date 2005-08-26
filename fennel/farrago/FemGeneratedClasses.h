@@ -358,8 +358,6 @@ SharedProxyDbHandle getResultHandle();
 static jmethodID meth_getResultHandle;
 bool isCreateDatabase();
 static jmethodID meth_isCreateDatabase;
-int64_t getJavaTraceHandle();
-static jmethodID meth_getJavaTraceHandle;
 SharedProxyDatabaseParam getParams();
 static jmethodID meth_getParams;
 };
