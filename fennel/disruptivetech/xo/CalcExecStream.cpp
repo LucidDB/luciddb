@@ -38,7 +38,7 @@ void CalcExecStream::prepare(CalcExecStreamParams const &params)
 
         pCalc.reset(new Calculator(pDynamicParamManager.get()));
         if (isTracing()) {
-            pCalc->initTraceSource(&(getTraceTarget()), "calc");
+            pCalc->initTraceSource(getSharedTraceTarget(), "calc");
         }
 
         pCalc->assemble(params.program.c_str());

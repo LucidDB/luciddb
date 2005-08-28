@@ -80,6 +80,11 @@ public abstract class IterRules
         }
     }
 
+    /**
+     * Refinement of {@link UnionToIteratorRule} which only applies to a
+     * {@link UnionRel} all of whose input rows are the same type as its output
+     * row. Luckily, a {@link CoerceInputsRule} will have made that happen.
+     */
     public static class HomogeneousUnionToIteratorRule
         extends UnionToIteratorRule
     {
@@ -91,13 +96,8 @@ public abstract class IterRules
         public RelNode convert(RelNode rel)
         {
             final UnionRel unionRel = (UnionRel) rel;
-            RelDataType unionType = unionRel.getRowType();
-            RelNode [] inputs = unionRel.getInputs();
-            for (int i = 0; i < inputs.length; ++i) {
-                RelDataType inputType = inputs[i].getRowType();
-                if (!RelOptUtil.areRowTypesEqual(inputType, unionType, true)) {
-                    return null;
-                }
+            if (!unionRel.isHomogeneous()) {
+                return null;
             }
             return super.convert(rel);
         }

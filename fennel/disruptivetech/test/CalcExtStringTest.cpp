@@ -72,7 +72,7 @@ class CalcExtStringTest : virtual public TestBase, public TraceSource
     
 public:
     explicit CalcExtStringTest()
-        : TraceSource(this,"CalcExtStringTest")
+        : TraceSource(shared_from_this(),"CalcExtStringTest")
     {
         srand(time(NULL));
         CalcInit::instance();

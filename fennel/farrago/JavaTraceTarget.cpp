@@ -26,12 +26,25 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-JavaTraceTarget::JavaTraceTarget(jobject javaTraceInit)
+JavaTraceTarget::JavaTraceTarget()
 {
     JniEnvAutoRef pEnv;
-    javaTrace = javaTraceInit;
     jclass classNativeTrace = pEnv->FindClass(
         "net/sf/farrago/util/NativeTrace");
+
+    jmethodID methInstance = 
+        pEnv->GetStaticMethodID(
+            classNativeTrace, "instance",
+            "()Lnet/sf/farrago/util/NativeTrace;");
+
+    jobject javaTraceInit = 
+        pEnv->CallStaticObjectMethod(classNativeTrace, methInstance);
+
+    ++JniUtil::handleCount;
+    javaTrace = pEnv->NewGlobalRef(javaTraceInit);
+
+    // TODO:  convert to Java excn instead
+    assert(javaTrace);
 
     methTrace = pEnv->GetMethodID(
         classNativeTrace,"trace",
@@ -43,7 +56,11 @@ JavaTraceTarget::JavaTraceTarget(jobject javaTraceInit)
 
 JavaTraceTarget::~JavaTraceTarget()
 {
-    // NOTE:  we don't really own javaTrace, so don't delete it here
+    JniEnvAutoRef pEnv;
+
+    pEnv->DeleteGlobalRef(javaTrace);
+    --JniUtil::handleCount;
+
     javaTrace = NULL;
 }
 

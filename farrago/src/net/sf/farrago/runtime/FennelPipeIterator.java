@@ -21,13 +21,14 @@
 */
 package net.sf.farrago.runtime;
 
-import org.eigenbase.runtime.Interlock;
+import org.eigenbase.util.ArrayQueue;
+import net.sf.farrago.trace.FarragoTrace;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.logging.Logger;
+import java.util.logging.Level;
 
-import net.sf.farrago.trace.FarragoTrace;
 
 /**
  * FennelPipeIterator implements the
@@ -35,18 +36,13 @@ import net.sf.farrago.trace.FarragoTrace;
  * data from a producer as {@link ByteBuffer} objects, and unmarshalling them
  * to a consumer.
  *
- * <p>Data is not copied between the producer and consumer. To this end,
- * the class is synchronized so that only one of the producer and consumer
- * can be active at a time. The synchronization automatically ensures that the
- * calls occur in the following order: <ul>
- *
- * <li>The producer calls {@link #write(java.nio.ByteBuffer, int)},
- * <li>The consumer calls {@link #populateBuffer()} via the {@link #hasNext}
- *     method of the base class;
- * <li>The consumer calls {@link #releaseBuffer()} via the {@link #next}
- *     method of the base class, when the last record in the buffer has been
- *     read.
- * <li>Repeat.</ul>
+ * <p> A FennelPipeIterator has a C++ peer, a JavaSinkExecstream.
+ * The peer sends marshalled data, wrapped as a ByteBuffer.
+ * The reader has a current buffer from which it unmarshals rows on demand,
+ * and a queue of buffers to read next.
+ * The queue is synchronized; but it is left available to the writer between Iterator
+ * calls (#next() and #hasNext()). Otherwise, if it were unavailable for a long time,
+ * the peer XO would block, which is a severe problem for a single-thread XO scheduler.
  *
  * @author Julian Hyde
  * @version $Id$
@@ -57,19 +53,49 @@ public class FennelPipeIterator extends FennelAbstractIterator
     private static final Logger tracer =
         FarragoTrace.getFarragoIteratorResultSetTracer();
 
-    /**
-     * Interlock manages the synchronization between producer and consumer.
-     */
-    private final Interlock interlock = new Interlock();
+    // byteBuffer is the current buffer, and belongs exclusively to the reader (this object)
+
+    private ArrayQueue moreBuffers = null; // buffers from the writer, not yet read
+
+    /** adds a buffer to the buffer queue. The writer peer calls this. */
+    private void enqueue(ByteBuffer bb)
+    {
+        synchronized(moreBuffers) {
+            moreBuffers.offer(bb);
+            if (moreBuffers.size() == 1)    // was empty
+                moreBuffers.notify();        // REVIEW mb: Use Semaphore instead?
+        }
+    }
+
+    /** Gets the head buffer from the queue. If the queue is empty, blocks until a buffer arrives. */
+    private ByteBuffer dequeue()
+    {
+        Object head = null;
+        synchronized(moreBuffers) {
+            head =  moreBuffers.poll();
+            while (head == null) {
+                try {
+                    moreBuffers.wait();
+                } catch (InterruptedException e) {
+                }
+                head = moreBuffers.poll();
+            }
+        }
+        return (ByteBuffer) head;
+    }
+
 
     /**
-     * Creates a new FennelPipeIterator object.
+     * creates a new FennelPipeIterator object.
      *
      * @param tupleReader FennelTupleReader to use to interpret Fennel data
      */
     public FennelPipeIterator(FennelTupleReader tupleReader)
     {
         super(tupleReader);
+
+        // start with an empty buffer queue
+        moreBuffers = new ArrayQueue(2);
 
         // Create an empty byteBuffer which will cause us to fetch new rows the
         // first time our consumer tries to fetch. TODO: Add a new state 'have
@@ -80,30 +106,38 @@ public class FennelPipeIterator extends FennelAbstractIterator
         byteBuffer.limit(0);
     }
 
+    // override FennelAbstractIterator to trace
+    public boolean hasNext()
+    {
+        boolean val = super.hasNext();
+        if (tracer.isLoggable(Level.FINER))
+            tracer.finer(getStatus(this.toString())+" => " +val);
+        return val;
+    }
+
     protected int populateBuffer()
     {
-        // Wait until the producer has finished populating the buffer.
-        tracer.fine("FennelPipeIterator.populateBuffer: wait");
-        interlock.beginReading();
-        tracer.fine("FennelPipeIterator.populateBuffer: continue");
-        return byteBuffer.limit();
+        tracer.fine(this + " reader waits");
+        byteBuffer = dequeue();         // get next buffer; may block
+        int n = byteBuffer.limit(); 
+        if (n > 0)
+            bufferAsArray = byteBuffer.array();
+        if (tracer.isLoggable(Level.FINE)) {
+            tracer.fine(getStatus(this.toString()) + " => " + n);
+        }
+        return n;
     }
-
-    protected void releaseBuffer()
-    {
-        // signal that the producer can start writing to the buffer
-        tracer.fine("FennelPipeIterator.releaseBuffer");
-        interlock.endReading();
-    }
-
 
     /**
-     * Requests a direct ByteBuffer suitable for #write. The C++ caller may pin the
+     * Gets a direct ByteBuffer suitable for #write. The C++ caller may pin the
      * backing array (JNI GetByteArrayElements), copy data, and then pass back the
      * ByteBuffer by calling #write.
      */
     public ByteBuffer getByteBuffer(int size)
     {
+        // REVIEW mb 8/22/05 Why not call ByteBuffer.allocateDirect(size) ?
+        // Why can't C++ peer call it directly?
+        // Or else recycle buffer with a free list.
         byte b[] = new byte[size];
         ByteBuffer bb = ByteBuffer.wrap(b);
         bb.order(ByteOrder.nativeOrder());
@@ -120,40 +154,30 @@ public class FennelPipeIterator extends FennelAbstractIterator
      * a backing array).
      
      * <p>This method is called by the producer, typically from JNI.
-     * When it is complete, the {@link #populateBuffer()} method will be able
-     * to proceed.
-     *
      * <p>The limit of the byte buffer is ignored; the
-     * <code>byteCount</code> parameter is used instead.
+     * <code>bblen</code> parameter is used instead.
 
-     * @param byteBuffer the source
-     * @param byteCount 0 means end-of-stream
+     * @param bb     A ByteBuffer containing the new data
+     * @param bblen  size of {@code bb} in bytes; 0 means end of data.
      */
-    public void write(ByteBuffer byteBuffer, int byteCount) throws Throwable
+    public void write(ByteBuffer bb, int bblen) throws Throwable
     {
         try {
-            // Wait until the consumer has finished reading from the buffer.
-            tracer.fine("FennelPipeIterator.write: wait");
-            interlock.beginWriting();
-            tracer.fine("FennelPipeIterator.write: have buffer");
-
-            byteBuffer.limit(byteCount);
-            if (byteBuffer.hasArray()) {
-                this.byteBuffer = byteBuffer;
-                this.bufferAsArray = byteBuffer.array();
-            } else {
+            bb.limit(bblen);
+            bb.position(0);
+            if (!bb.hasArray())  {
                 // argh, have to wrap a copy of the new data
-                byte b[] = new byte[byteCount];
-                byteBuffer.rewind();
-                byteBuffer.get(b);
-                this.bufferAsArray = b;
-                this.byteBuffer = ByteBuffer.wrap(b);
+                tracer.finer("copies buffer");
+                byte b[] = new byte[bblen];
+                bb.rewind();
+                bb.get(b);
+                bb = ByteBuffer.wrap(b);
             }
-
-            // Signal that the consumer can start reading. This will allow the
-            // populateBuffer method to complete.
-            tracer.fine("FennelPipeIterator.write: done");
-            interlock.endWriting();
+                
+            tracer.fine(this + " writer waits (buf: " + bb + " bytes: " + bblen);
+            enqueue(bb);
+            tracer.fine(this + " writer proceeds");
+            
         } catch (Throwable e) {
             tracer.throwing(null, null, e);
             throw e;

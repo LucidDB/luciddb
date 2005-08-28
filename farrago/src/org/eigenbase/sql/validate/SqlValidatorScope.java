@@ -118,6 +118,12 @@ public interface SqlValidatorScope
      * X, Y, then X is monotonic in this scope, but Y is not.
      */
     boolean isMonotonic(SqlNode expr);
+
+    /**
+     * Returns the expressions by which the rows in this scope are sorted.
+     * If the rows are unsorted, returns null.
+     */
+    SqlNodeList getOrderList();
 }
 
 // End SqlValidatorScope.java

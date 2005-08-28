@@ -172,7 +172,7 @@ void BTreeTxnTest::testCaseSetUp()
         pCache,
         configMap,
         DeviceMode::createNew,
-        this);
+        shared_from_this());
     
     statsTimer.addSource(pDatabase);
     statsTimer.start();
@@ -268,7 +268,7 @@ void BTreeTxnTest::testTxns()
         pCache,
         configMap,
         DeviceMode::load,
-        this);
+        shared_from_this());
     BOOST_CHECK(pDatabase->isRecoveryRequired());
 
     statsTimer.addSource(pDatabase);

@@ -92,6 +92,7 @@ public class FennelIterator extends FennelAbstractIterator
 
     protected int populateBuffer()
     {
+        byteBuffer.clear();
         return streamGraph.fetch(streamHandle, bufferAsArray);
     }
 

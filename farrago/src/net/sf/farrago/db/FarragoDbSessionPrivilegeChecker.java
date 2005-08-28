@@ -47,7 +47,8 @@ import net.sf.farrago.resource.*;
  * @author Tai Tran
  * @version $Id$
  */
-class FarragoDbSessionPrivilegeChecker implements FarragoSessionPrivilegeChecker
+public class FarragoDbSessionPrivilegeChecker
+    implements FarragoSessionPrivilegeChecker
 {
     private final FarragoSession session;
 

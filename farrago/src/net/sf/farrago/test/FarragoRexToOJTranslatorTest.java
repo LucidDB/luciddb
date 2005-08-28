@@ -700,6 +700,60 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
         testTranslation("mod(age, 3)");
     }
 
+    public void testTrimBoth()
+        throws Exception
+    {
+        testTranslation("trim(both 'S' from city)");
+    }
+
+    public void testTrimLeading()
+        throws Exception
+    {
+        testTranslation("trim(leading 'W' from name)");
+    }
+
+    public void testTrimTrailing()
+        throws Exception
+    {
+        testTranslation("trim(trailing 'c' from name)");
+    }
+
+    public void testUpper()
+        throws Exception
+    {
+        testTranslation("upper(city)");
+    }
+
+    public void testLower()
+        throws Exception
+    {
+        testTranslation("Lower(city)");
+    }
+
+    public void testInitcap()
+        throws Exception
+    {
+        testTranslation("initcap(city)");
+    }
+
+    public void testCharLength()
+        throws Exception
+    {
+        testTranslation("char_length(city)");
+    }
+
+    public void testCharacterLength()
+        throws Exception
+    {
+        testTranslation("character_length(city)");
+    }
+
+    public void testPosition()
+        throws Exception
+    {
+        testTranslation("position('Fran' in city)");
+    }
+
 }
 
 // End FarragoRexToOJTranslatorTest.java

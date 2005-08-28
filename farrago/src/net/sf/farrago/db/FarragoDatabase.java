@@ -131,6 +131,10 @@ public class FarragoDatabase extends FarragoCompoundAllocation
     {
         instance = this;
         try {
+            FarragoCompoundAllocation startOfWorldAllocation = 
+                new FarragoCompoundAllocation();
+            this.addAllocation(startOfWorldAllocation);
+
             final String prop = "java.util.logging.config.file";
             String loggingConfigFile =
                 System.getProperties().getProperty(prop);
@@ -184,6 +188,7 @@ public class FarragoDatabase extends FarragoCompoundAllocation
                 systemRepos.beginReposTxn(true);
                 try {
                     loadFennel(
+                        startOfWorldAllocation,
                         sessionFactory.newFennelCmdExecutor(),
                         init);
                 } finally {
@@ -498,10 +503,11 @@ public class FarragoDatabase extends FarragoCompoundAllocation
     {
         tracer.warning("Caught " + ex.getClass().getName()
             + " during database shutdown:" + ex.getMessage());
-        if (!suppressExcns) {
+//        if (!suppressExcns) {
+        tracer.log(Level.SEVERE, "warnonclose", ex);
             tracer.throwing("FarragoDatabase", "warnOnClose", ex);
             throw Util.newInternal(ex);
-        }
+//        }
     }
 
     private void dumpTraceConfig()
@@ -530,6 +536,7 @@ public class FarragoDatabase extends FarragoCompoundAllocation
     }
 
     private void loadFennel(
+        FarragoCompoundAllocation startOfWorldAllocation,
         FennelCmdExecutor cmdExecutor,
         boolean init)
     {
@@ -573,11 +580,8 @@ public class FarragoDatabase extends FarragoCompoundAllocation
 
         cmd.setCreateDatabase(init);
 
-        NativeTrace nativeTrace = new NativeTrace("net.sf.fennel.");
+        NativeTrace.createInstance("net.sf.fennel.");
 
-        FennelJavaHandle hNativeTrace =
-            FennelDbHandle.allocateNewObjectHandle(this, nativeTrace);
-        cmd.setJavaTraceHandle(hNativeTrace.getLongHandle());
         fennelDbHandle =
             new FennelDbHandle(systemRepos, systemRepos, this, cmdExecutor, cmd);
 

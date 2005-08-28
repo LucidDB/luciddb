@@ -65,8 +65,9 @@ public class IterConcatenateRel extends UnionRelBase implements JavaRel
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         double dRows = getRows();
-        double dCpu = 0;
-        double dIo = 0;
+        // favor a Nexus over a CompoundIterator, due to hassles of java/c++/java data transfer
+        double dCpu = 1000;
+        double dIo = 1000;
         return planner.makeCost(dRows, dCpu, dIo);
     }
 

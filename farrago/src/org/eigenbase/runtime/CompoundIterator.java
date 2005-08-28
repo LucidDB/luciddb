@@ -25,7 +25,7 @@ package org.eigenbase.runtime;
 
 import java.util.Collections;
 import java.util.Iterator;
-
+import java.util.logging.Logger;
 import org.eigenbase.util.*;
 
 /**
@@ -33,6 +33,9 @@ import org.eigenbase.util.*;
  */
 public class CompoundIterator implements RestartableIterator
 {
+    private static final Logger tracer =
+        Logger.getLogger(CompoundIterator.class.getName());
+
     //~ Instance fields -------------------------------------------------------
 
     private Iterator iterator;
@@ -51,6 +54,7 @@ public class CompoundIterator implements RestartableIterator
 
     public boolean hasNext()
     {
+        tracer.finer(toString());
         if (iterator == null) {
             nextIterator();
         }
@@ -59,6 +63,7 @@ public class CompoundIterator implements RestartableIterator
 
     public Object next()
     {
+        tracer.finer(toString());
         Object o = iterator.next();
         if (!iterator.hasNext()) {
             nextIterator();
@@ -75,10 +80,12 @@ public class CompoundIterator implements RestartableIterator
     {
         while (i < iterators.length) {
             iterator = iterators[i++];
+            tracer.fine("try "+iterator);
             if (iterator.hasNext()) {
                 return;
             }
         }
+        tracer.fine("next is the empty iterator");
         iterator = Collections.EMPTY_LIST.iterator();
     }
 

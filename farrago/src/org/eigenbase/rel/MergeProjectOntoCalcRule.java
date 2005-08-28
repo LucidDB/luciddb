@@ -67,6 +67,24 @@ public class MergeProjectOntoCalcRule extends RelOptRule
         final ProjectRel project = (ProjectRel) call.rels[0];
         final CalcRel calc = (CalcRel) call.rels[1];
 
+        // Don't merge a project which contains windowed aggregates onto a
+        // calc. That would effectively be pushing a windowed aggregate down
+        // through a filter. Transform the project into an identical calc,
+        // which we'll have chance to merge later, after the over is
+        // expanded.
+        if (false &&
+            RexOver.containsOver(project.getChildExps(), null)) {
+            CalcRel projectAsCalc = new CalcRel(
+                project.getCluster(),
+                project.cloneTraits(),
+                calc,
+                project.getRowType(),
+                project.getChildExps(),
+                null);
+            call.transformTo(projectAsCalc);
+            return;
+        }
+
         // Expand all references to columns in the project exprs. For example,
         //
         // SELECT x + 1 AS p, x + y AS q FROM (

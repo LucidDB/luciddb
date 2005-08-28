@@ -160,20 +160,23 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         sessionVariables.systemUserName = System.getProperty("user.name");
         sessionVariables.schemaSearchPath = Collections.EMPTY_LIST;
 
+        FemUser femUser = null;
+        
         if (MDR_USER_NAME.equals(sessionVariables.sessionUserName)) {
             // This is a reentrant session from MDR.
             repos = database.getSystemRepos();
         } else {
             // This is a normal session.
             repos = database.getUserRepos();
-        }
 
-        FemUser femUser = 
-            FarragoCatalogUtil.getUserByName(repos, sessionUser);
-        if (femUser == null) {
-            // TODO:  authenticate
-            throw FarragoResource.instance().newSessionUnknownUser(
-                repos.getLocalizedObjectName(sessionUser));
+            femUser = 
+                FarragoCatalogUtil.getUserByName(repos, sessionUser);
+            if (femUser == null) {
+                throw FarragoResource.instance().newSessionUnknownUser(
+                    repos.getLocalizedObjectName(sessionUser));
+            } else {
+                // TODO:  authenticate
+            }
         }
 
         fennelTxnContext =
@@ -181,7 +184,10 @@ public class FarragoDbSession extends FarragoCompoundAllocation
                 repos,
                 database.getFennelDbHandle());
 
-        CwmNamespace defaultNamespace = femUser.getDefaultNamespace();
+        CwmNamespace defaultNamespace = null;
+        if (femUser != null) {
+            defaultNamespace = femUser.getDefaultNamespace();
+        }
         if (defaultNamespace == null) {
             sessionVariables.catalogName = repos.getSelfAsCatalog().getName();
         } else if (defaultNamespace instanceof CwmCatalog) {

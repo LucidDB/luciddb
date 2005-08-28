@@ -194,6 +194,10 @@ public class RexOver extends RexCall
             this.upperBound = upperBound;
             this.physical = physical;
             this.digest = computeDigest();
+            if (!physical) {
+                assert orderKeys.length > 0 :
+                    "logical window requires sort key";
+            }
         }
 
         public String toString()

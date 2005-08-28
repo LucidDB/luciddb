@@ -49,6 +49,8 @@ import junit.framework.TestCase;
 
 import net.sf.farrago.trace.FarragoTrace;
 
+import net.sf.farrago.catalog.*;
+
 import org.eigenbase.runtime.IteratorResultSet;
 import org.eigenbase.util.Util;
 
@@ -239,7 +241,8 @@ public class FarragoTestConcurrentScriptedCommandGenerator
             return;
         }
 
-        Connection connection = DriverManager.getConnection(jdbcUrl);
+        Connection connection = DriverManager.getConnection(
+            jdbcUrl, FarragoCatalogInit.SA_USER_NAME, null);
         connection.setAutoCommit(false);
 
         try {

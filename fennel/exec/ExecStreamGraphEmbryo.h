@@ -31,8 +31,6 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-class TraceTarget;
-
 /**
  * ExecStreamGraphEmbryo encapsulates the "embryonic" state of an
  * ExecStreamGraph as its constituent embryonic streams are built up.
@@ -182,7 +180,7 @@ public:
      * @param tracePrefix common prefix for stream trace names
      */
     void prepareGraph(
-        TraceTarget *pTraceTarget,
+        SharedTraceTarget pTraceTarget,
         std::string const &tracePrefix);
 };
 
