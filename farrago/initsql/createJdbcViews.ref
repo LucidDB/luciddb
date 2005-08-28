@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/initsql/createJdbcViews.sql#6 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/initsql/createJdbcViews.sql#1 $
 0: jdbc:farrago:> -- This script creates a view schema used by JDBC metadata calls
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set verbose true
@@ -128,6 +128,7 @@
 . . . . . . . . >     from 
 . . . . . . . . >         sys_cwm."Relational"."Catalog" c
 . . . . . . . . > ;
+0: jdbc:farrago:> grant select on catalogs_view to public;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create view schemas_view as
 . . . . . . . . >     select 
@@ -136,6 +137,7 @@
 . . . . . . . . >     from 
 . . . . . . . . >         schemas_view_internal
 . . . . . . . . > ;
+0: jdbc:farrago:> grant select on schemas_view to public;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- TODO:  add 'GLOBAL TEMPORARY' and 'SYSTEM TABLE'
 0: jdbc:farrago:> create view table_types_view_internal(table_type,uml_class_name) as
@@ -163,6 +165,7 @@
 . . . . . . . . >     where
 . . . . . . . . >         t."mofClassName"=tt.uml_class_name
 . . . . . . . . > ;
+0: jdbc:farrago:> grant select on tables_view to public;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create view table_types_view as
 . . . . . . . . >     select distinct
@@ -170,6 +173,7 @@
 . . . . . . . . >     from
 . . . . . . . . >         table_types_view_internal
 . . . . . . . . > ;
+0: jdbc:farrago:> grant select on table_types_view to public;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- TODO: get column_def by left-outer-join to get default value
 0: jdbc:farrago:> -- TODO: get source_data_type for distinct types
@@ -229,6 +233,7 @@
 . . . . . . . . >         sys_cwm."Relational"."SQLDataType" t 
 . . . . . . . . >     on 
 . . . . . . . . >         c."type" = t."mofId";
+0: jdbc:farrago:> grant select on columns_view to public;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create view udts_view_internal as
 . . . . . . . . >     select
@@ -259,6 +264,7 @@
 . . . . . . . . >     from
 . . . . . . . . >         udts_view_internal u
 . . . . . . . . > ;
+0: jdbc:farrago:> grant select on udts_view to public;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create view attributes_view_internal as
 . . . . . . . . >     select
@@ -312,6 +318,7 @@
 . . . . . . . . >     on
 . . . . . . . . >         a."type" = t."mofId"
 . . . . . . . . > ;
+0: jdbc:farrago:> grant select on attributes_view to public;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- TODO:  find out why replacing BehavioralFeature below with Method or
 0: jdbc:farrago:> -- Routine doesn't work (causes assignment of null to NOT NULL).  Must be
@@ -347,6 +354,7 @@
 . . . . . . . . >     from
 . . . . . . . . >         procedures_view_internal p
 . . . . . . . . > ;
+0: jdbc:farrago:> grant select on procedures_view to public;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create view procedure_columns_view_internal as
 . . . . . . . . >     select
@@ -393,6 +401,7 @@
 . . . . . . . . >     on 
 . . . . . . . . >         pc."type" = t."mofId"
 . . . . . . . . > ;
+0: jdbc:farrago:> grant select on procedure_columns_view to public;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- TODO:  refine precision, case_sensitive, searchable, minimum/maximum_scale
 0: jdbc:farrago:> -- as we add LOB, NUMERIC, and UNICODE data types; unsigned should
@@ -425,6 +434,7 @@
 . . . . . . . . >     from
 . . . . . . . . >         sys_cwm."Relational"."SQLSimpleType" t
 . . . . . . . . > ;
+0: jdbc:farrago:> grant select on type_info_view to public;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create view primary_keys_view_internal as
 . . . . . . . . >     select
@@ -456,12 +466,13 @@
 . . . . . . . . >     on
 . . . . . . . . >         k."mofId" = c."KeyConstraint"
 . . . . . . . . > ;
+0: jdbc:farrago:> grant select on primary_keys_view to public;
 0: jdbc:farrago:>         
 0: jdbc:farrago:> -- TODO:  all the rest
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- just a placeholder for now
 0: jdbc:farrago:> create schema localdb.information_schema;
-0: jdbc:farrago:>          
+0: jdbc:farrago:> 
 0: jdbc:farrago:> commit;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

@@ -704,6 +704,9 @@ public class DdlValidator extends FarragoCompoundAllocation
 
         // one last time
         checkValidationExcnQueue();
+
+        // finally, process any deferred privilege checks
+        stmtValidator.getPrivilegeChecker().checkAccess();
     }
 
     private void clearDependencySuppliers(RefObject refObj)

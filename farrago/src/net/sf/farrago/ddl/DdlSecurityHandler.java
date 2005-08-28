@@ -74,14 +74,9 @@ public class DdlSecurityHandler extends DdlHandler
             // repository service can enforce unique name constraint, so we
             // don't have to check that the name already exist.
             // TODO: repos should enforce unique constraints.
-            
-            // Let the user inherit the PUBLIC role.
-            FemGrant grantPublic = FarragoCatalogUtil.newRoleGrant(
-                repos,
-                FarragoCatalogInit.SYSTEM_USER_NAME,
-                femUser.getName(),
-                FarragoCatalogInit.PUBLIC_ROLE_NAME);
-            
+
+            // Note that no grant is created to record the user's membership in
+            // PUBLIC; this is implicit during privilege check.
         } catch (Throwable ex) {
             throw res.newValidatorDefinitionInvalid(
                 repos.getLocalizedObjectName(femUser),
@@ -109,13 +104,14 @@ public class DdlSecurityHandler extends DdlHandler
     }
 
     // implement FarragoSessionDdlHandler
-    public void executeDrop(FemUser user)
+    public void validateDrop(FemUser user)
     {
-        // TODO: implement drop handler
+        // TODO: implement drop handler, including preventing the drop from
+        // taking place if there are any active sessions for this user.
     }
 
     // implement FarragoSessionDdlHandler
-    public void executeDrop(FemRole role)
+    public void validateDrop(FemRole role)
     {
         // TODO: implement drop handler
     }

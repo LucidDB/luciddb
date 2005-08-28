@@ -625,6 +625,27 @@ public abstract class FarragoCatalogUtil
         return user;
     }
 
+    /**
+     * Looks up a role by name in a catalog.
+     *
+     * @param repos repos storing catalog
+     *
+     * @param roleName name of role to find
+     *
+     * @return role definition, or null if not found
+     */
+    public static FemRole getRoleByName(
+        FarragoRepos repos,
+        String roleName)
+    {
+        Collection authIdCollection =
+            repos.getSecurityPackage().getFemRole().
+            refAllOfType();
+        FemRole role = (FemRole)
+            FarragoCatalogUtil.getModelElementByName(
+                authIdCollection, roleName);
+        return role;
+    }
 
     /**
      * Creates a new grant on a ROLE with specified role name and associate it

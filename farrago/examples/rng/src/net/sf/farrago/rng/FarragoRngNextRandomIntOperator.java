@@ -31,6 +31,7 @@ import org.eigenbase.util.*;
 
 import net.sf.farrago.query.*;
 import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.fem.security.*;
 
 /**
  * FarragoRngNextRandomIntOperator defines the SqlOperator for the
@@ -87,8 +88,9 @@ public class FarragoRngNextRandomIntOperator extends SqlFunction
                 FarragoRngUDR.getRngModelPackage(
                     preparingStmt.getRepos())
                 .getRngschema().getRngRandomNumberGenerator());
-        
-        preparingStmt.addDependency(rng);
+
+        // TODO jvs 27-Aug-2005:  make this USAGE instead
+        preparingStmt.addDependency(rng, PrivilegedActionEnum.REFERENCES);
     }
     
     // override SqlOperator

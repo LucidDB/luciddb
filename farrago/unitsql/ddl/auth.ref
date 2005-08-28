@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/auth.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/auth.sql#2 $
 0: jdbc:farrago:> -- Test DDL on Authorization: 
 0: jdbc:farrago:> -- User, Role, Role Inheritance structure
 0: jdbc:farrago:> 
@@ -10,11 +10,20 @@
 0: jdbc:farrago:> -- TODO: grant all appropriate system privileges for this user once
 0: jdbc:farrago:> -- these privs are available.
 0: jdbc:farrago:> 
+0: jdbc:farrago:> create schema extra;
+0: jdbc:farrago:> create table extra.t(i int not null primary key);
+0: jdbc:farrago:> 
 0: jdbc:farrago:> create user SECMAN authorization 'Unknown' DEFAULT CATALOG localdb;
 0: jdbc:farrago:> create user SECMAN_2 authorization 'Unknown' DEFAULT CATALOG localdb;
 0: jdbc:farrago:> 
+0: jdbc:farrago:> create user SECMAN_3 authorization 'Unknown' DEFAULT CATALOG sys_boot;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create user SECMAN_4 authorization 'Unknown' DEFAULT SCHEMA extra;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> grant select on extra.t to secman_4;
+0: jdbc:farrago:> 
 0: jdbc:farrago:> !closeall
-sqlline> !connect jdbc:farrago: SECMAN net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver
+sqlline> !connect jdbc:farrago: SECMAN tiger
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema authtest;
 0: jdbc:farrago:> set schema 'authtest';
@@ -78,7 +87,6 @@ sqlline> !connect jdbc:farrago: SECMAN net.sf.farrago.jdbc.engine.FarragoJdbcEng
 +------------------+----------+----------+---------------+------------------+
 | GRANTED_ELEMENT  | GRANTEE  | GRANTOR  |    action     | withGrantOption  |
 +------------------+----------+----------+---------------+------------------+
-| PUBLIC           | U1       | _SYSTEM  | INHERIT_ROLE  | false            |
 | R1_L1            | U1       | SECMAN   | INHERIT_ROLE  | false            |
 +------------------+----------+----------+---------------+------------------+
 0: jdbc:farrago:> 
@@ -96,7 +104,8 @@ sqlline> !connect jdbc:farrago: SECMAN net.sf.farrago.jdbc.engine.FarragoJdbcEng
 0: jdbc:farrago:> Create user U6 AUTHORIZATION 'Unknown' DEFAULT CATALOG localdb;
 0: jdbc:farrago:> Create user U7 AUTHORIZATION 'Unknown' DEFAULT CATALOG localdb;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select "name" from sys_fem."Security"."User" where "name" like 'U%';
+0: jdbc:farrago:> select "name" from sys_fem."Security"."User" where "name" like 'U%' 
+. . . . . . . . > order by "name";
 +-------+
 | name  |
 +-------+
@@ -156,7 +165,6 @@ sqlline> !connect jdbc:farrago: SECMAN net.sf.farrago.jdbc.engine.FarragoJdbcEng
 +------------------+----------+----------+---------------+------------------+
 | GRANTED_ELEMENT  | GRANTEE  | GRANTOR  |    action     | withGrantOption  |
 +------------------+----------+----------+---------------+------------------+
-| PUBLIC           | U2       | _SYSTEM  | INHERIT_ROLE  | false            |
 | R1_L2            | R2_L1    | SECMAN   | INHERIT_ROLE  | true             |
 | R2_L1            | U2       | SECMAN   | INHERIT_ROLE  | false            |
 +------------------+----------+----------+---------------+------------------+
@@ -172,7 +180,6 @@ sqlline> !connect jdbc:farrago: SECMAN net.sf.farrago.jdbc.engine.FarragoJdbcEng
 +------------------+----------+----------+---------------+------------------+
 | GRANTED_ELEMENT  | GRANTEE  | GRANTOR  |    action     | withGrantOption  |
 +------------------+----------+----------+---------------+------------------+
-| PUBLIC           | U3       | _SYSTEM  | INHERIT_ROLE  | false            |
 | R1_L1            | U3       | SECMAN   | INHERIT_ROLE  | false            |
 | R2_L1            | U3       | SECMAN   | INHERIT_ROLE  | false            |
 | R3_L1            | U3       | SECMAN   | INHERIT_ROLE  | false            |
@@ -188,15 +195,12 @@ sqlline> !connect jdbc:farrago: SECMAN net.sf.farrago.jdbc.engine.FarragoJdbcEng
 +------------------+----------+----------+---------------+------------------+
 | GRANTED_ELEMENT  | GRANTEE  | GRANTOR  |    action     | withGrantOption  |
 +------------------+----------+----------+---------------+------------------+
-| PUBLIC           | U5       | _SYSTEM  | INHERIT_ROLE  | false            |
 | R3_L1            | U5       | SECMAN   | INHERIT_ROLE  | false            |
 | R4_L1            | U5       | SECMAN   | INHERIT_ROLE  | false            |
 | R1_L3            | U5       | SECMAN   | INHERIT_ROLE  | false            |
 | R1_L3            | U6       | SECMAN   | INHERIT_ROLE  | false            |
 | R4_L1            | U6       | SECMAN   | INHERIT_ROLE  | false            |
 | R3_L1            | U6       | SECMAN   | INHERIT_ROLE  | false            |
-| PUBLIC           | U6       | _SYSTEM  | INHERIT_ROLE  | false            |
-| PUBLIC           | U7       | _SYSTEM  | INHERIT_ROLE  | false            |
 | R3_L1            | U7       | SECMAN   | INHERIT_ROLE  | false            |
 | R4_L1            | U7       | SECMAN   | INHERIT_ROLE  | false            |
 | R1_L3            | U7       | SECMAN   | INHERIT_ROLE  | false            |
@@ -209,6 +213,48 @@ sqlline> !connect jdbc:farrago: SECMAN net.sf.farrago.jdbc.engine.FarragoJdbcEng
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -------------------------------------------------------------------------
 0: jdbc:farrago:> -- Test 3:
-0: jdbc:farrago:> -- 
+0: jdbc:farrago:> -- authentication
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  unknown user
+0: jdbc:farrago:> !closeall
+sqlline> !connect jdbc:farrago: BOBO tiger
+Error: Unknown user "BOBO" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -------------------------------------------------------------------------
+0: jdbc:farrago:> -- Test 4:
+0: jdbc:farrago:> -- default schemas and catalogs
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !closeall
+sqlline> !connect jdbc:farrago: SECMAN_3 tiger
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- default catalog is sys_boot
+0: jdbc:farrago:> select * from jdbc_metadata.table_types_view order by table_type;
++----------------+
+|   TABLE_TYPE   |
++----------------+
+| FOREIGN TABLE  |
+| TABLE          |
+| VIEW           |
++----------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !closeall
+sqlline> !connect jdbc:farrago: SECMAN_4 tiger
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- default schema is extra
+0: jdbc:farrago:> select * from t;
++----+
+| I  |
++----+
++----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify that dropping default schema does not cascade to user
+0: jdbc:farrago:> drop schema extra cascade;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !closeall
+sqlline> !connect jdbc:farrago: SECMAN_4 tiger
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  it's gone now
+0: jdbc:farrago:> select * from t;
+Error: No default schema specified; execute SET SCHEMA or use fully qualified names (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

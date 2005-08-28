@@ -810,8 +810,8 @@ public abstract class SqlOperatorTests extends TestCase
     public void testCurrentRoleFunc()
     {
         getTester().setFor(SqlStdOperatorTable.currentRoleFunc);
-        // We don't have roles yet, so the CURRENT_ROLE function returns
-        // the empty string.
+        // By default, the CURRENT_ROLE function returns
+        // the empty string because a role has to be set explicitly.
         getTester().checkString("CURRENT_ROLE", "", "VARCHAR(2000) NOT NULL");
     }
 

@@ -39,6 +39,7 @@ import net.sf.farrago.cwm.behavioral.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.util.*;
@@ -110,6 +111,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     private final FarragoUserDefinedRoutineLookup routineLookup;
     private int expansionDepth;
     private RelDataType originalRowType;
+    private SqlIdentifier dmlTarget;
+    private PrivilegedAction dmlAction;
 
     /**
      * Name of Java package containing code generated for this statement.
@@ -168,6 +171,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
         routineLookup = new FarragoUserDefinedRoutineLookup(
             stmtValidator, this, null);
+
+        clearDmlValidation();
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -256,6 +261,16 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         implementingClassDecl = super.init(implementingArgs);
     }
 
+    // implement FarragoSessionPreparingStmt
+    public void postValidate(SqlNode sqlNode)
+    {
+        analyzeRoutineDependencies(sqlNode);
+        
+        // Now that we're done with validation, perform any deferred
+        // privilege checks.
+        stmtValidator.getPrivilegeChecker().checkAccess();
+    }
+    
     /**
      * Creates a new class declaration to be a container for generated code,
      * a public static inner class of {@link #implementingClassDecl}.
@@ -479,26 +494,6 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         SqlNode sqlNode,
         final FarragoSessionAnalyzedSql analyzedSql)
     {
-        // Round up all the dependencies on UDF's.  We can't do this
-        // during function lookup because overloads need to be resolved
-        // first.  And we can't do this any later because we stop
-        // collecting direct dependencies during SqlToRelConverter.
-        SqlVisitor udfInvocationFinder = new SqlBasicVisitor()
-            {
-                public void visit(SqlCall call)
-                {
-                    if (call.getOperator()
-                        instanceof FarragoUserDefinedRoutine)
-                    {
-                        FarragoUserDefinedRoutine function =
-                            (FarragoUserDefinedRoutine) call.getOperator();
-                        addDependency(function.getFemRoutine());
-                    }
-                    super.visit(call);
-                }
-            };
-        sqlNode.accept(udfInvocationFinder);
-
         getSqlToRelConverter();
         if (analyzedSql.paramRowType == null) {
             // query expression
@@ -523,6 +518,31 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                 }
             };
         sqlNode.accept(dynamicParamFinder);
+    }
+
+    void analyzeRoutineDependencies(SqlNode sqlNode)
+    {
+        // Round up all the dependencies on UDF's.  We can't do this during
+        // function lookup because overloads need to be resolved first.  And we
+        // can't do this during SqlToRelConverter because then we stop
+        // collecting direct dependencies.
+        SqlVisitor udfInvocationFinder = new SqlBasicVisitor()
+            {
+                public void visit(SqlCall call)
+                {
+                    if (call.getOperator()
+                        instanceof FarragoUserDefinedRoutine)
+                    {
+                        FarragoUserDefinedRoutine function =
+                            (FarragoUserDefinedRoutine) call.getOperator();
+                        addDependency(
+                            function.getFemRoutine(),
+                            PrivilegedActionEnum.EXECUTE);
+                    }
+                    super.visit(call);
+                }
+            };
+        sqlNode.accept(udfInvocationFinder);
     }
 
     private Set getReferencedObjectIds()
@@ -669,6 +689,18 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             sqlExpr, invocation.getParamNameToArgMap());
         --expansionDepth;
         return rexNode;
+    }
+
+    void setDmlValidation(SqlIdentifier target, PrivilegedAction action)
+    {
+        dmlTarget = target;
+        dmlAction = action;
+    }
+
+    void clearDmlValidation()
+    {
+        dmlTarget = null;
+        dmlAction = null;
     }
 
     /**
@@ -834,11 +866,14 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             return null;
         }
 
+        // TODO jvs 27-Aug-2005:  decide on required privileges for direct
+        // access to foreign tables
+
         // When a foreign table is referenced directly via a namespace, we have
         // nothing to hang a direct dependency on.  Instead, we
         // remember the dependency on the server, so that if the server
         // gets dropped, dependent views will cascade.
-        addDependency(femServer);
+        addDependency(femServer, null);
 
         FarragoMedDataServer server = loadDataServerFromCache(femServer);
 
@@ -920,7 +955,23 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
         CwmNamedColumnSet table = (CwmNamedColumnSet) resolved.object;
 
-        addDependency(table);
+        PrivilegedAction action = PrivilegedActionEnum.SELECT;
+        if (dmlTarget != null) {
+            if (Arrays.equals(names, dmlTarget.names)) {
+                assert(dmlAction != null);
+                action = dmlAction;
+
+                // REVIEW jvs 27-Aug-2005:  This is a hack to handle the case
+                // of self-insert, where the same table is both the source and
+                // target.  We need to require SELECT for the source role
+                // and INSERT for the target role.  It only works because
+                // SqlValidatorImpl happens to validate the target first, so
+                // this is very brittle.
+                clearDmlValidation();
+            }
+        }
+
+        addDependency(table, action);
 
         if (table.getVisibility() == null) {
             throw new FarragoUnvalidatedDependencyException();
@@ -948,7 +999,9 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             // user-defined structured type is allowed here
             return null;
         }
-        addDependency(cwmType);
+        // FIXME jvs 27-Aug-2005:  this should be USAGE, not REFERENCES;
+        // need to add to FEM
+        addDependency(cwmType, PrivilegedActionEnum.REFERENCES);
         return getFarragoTypeFactory().createCwmType(cwmType);
     }
 
@@ -958,10 +1011,15 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         return stmtValidator.getAllSchemaObjectNames(names);
     }
 
-    public void addDependency(Object supplier)
+    public void addDependency(CwmModelElement supplier, PrivilegedAction action)
     {
         if (!isExpandingDefinition()) {
             directDependencies.add(supplier);
+            if (action != null) {
+                stmtValidator.requestPrivilege(
+                    supplier,
+                    action.toString());
+            }
         }
         allDependencies.add(supplier);
     }
