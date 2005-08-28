@@ -25,6 +25,7 @@ package net.sf.farrago.type.runtime;
 import net.sf.farrago.resource.*;
 
 import org.eigenbase.util.*;
+import org.eigenbase.sql.fun.SqlTrimFunction;
 
 import java.io.*;
 import java.nio.*;
@@ -55,6 +56,15 @@ public class BytePointer extends ByteArrayInputStream
     public static final String ENFORCE_PRECISION_METHOD_NAME =
         "enforceBytePrecision";
     public static final String SET_POINTER_METHOD_NAME = "setPointer";
+    public static final String GET_BYTE_COUNT_METHOD_NAME = "getByteCount";
+    public static final String SUBSTRING_METHOD_NAME = "substring";
+    public static final String OVERLAY_METHOD_NAME = "overlay";
+    public static final String INITCAP_METHOD_NAME = "initcap";
+    public static final String CONCAT_METHOD_NAME = "concat";
+    public static final String UPPER_METHOD_NAME = "upper";
+    public static final String LOWER_METHOD_NAME = "lower";
+    public static final String TRIM_METHOD_NAME = "trim";
+    public static final String POSITION_METHOD_NAME = "position";
 
     /** Read-only global for 0-length byte array */
     public static final byte [] emptyBytes = new byte[0];
@@ -199,49 +209,6 @@ public class BytePointer extends ByteArrayInputStream
             count = precision;
         }
     }
-    /**
-     * @sql.2003 Part 2 Section 6.29 General Rule 3
-     */
-
-    // we store the result in the member variables to avoid memory allocation.
-    
-    private void calcSubstringPointers(
-        int S,
-        int L,
-        int LC,
-        boolean useLength)
-    {
-        int e;
-        if (useLength) {
-            if (L < 0) {
-                // If E is less than S, then it means L is negative exception.
-                throw FarragoResource.instance().newNegativeLengthForSubstring();
-            }
-            e = S + L;
-        } else {
-            e = S;
-            if (e <= LC) {
-                e = LC + 1;
-            }
-        }
-
-        // f) and i) in the standard. S > LC or E < 1 
-        if (S > LC || e < 1) {
-            S1 = L1 = 0;
-        } else {
-            // f) and ii) in the standard. 
-            // calculate the E1 and L1
-            S1 = S - 1;
-            if (S1 < 0) {
-                S1 = 0;
-            }
-            int e1 = e;
-            if (e1 > LC) {
-                e1 = LC + 1;
-            }
-            L1 = e1 - (S1 + 1);
-        }
-    }
 
     /**
      * Reduces the value to a substring of the current value.
@@ -253,7 +220,7 @@ public class BytePointer extends ByteArrayInputStream
      * @param useLength to indicate whether length parameter should be used. 
      *
      */
-    public void setSubstring(
+    public void substring(
         int starting,
         int length,
         boolean useLength)
@@ -330,6 +297,183 @@ public class BytePointer extends ByteArrayInputStream
     public int getByteCount() 
     {
         return available();
+    }
+
+    /**
+     * upper the case for each character of the string
+     *
+     * @param bp1 string1
+     *
+     */
+    public void upper(BytePointer bp1)
+    {
+        copyFrom(bp1);
+        for (int i = 0; i < count; i++) {
+            if (Character.isLowerCase(ownBytes[i])) {
+                ownBytes[i] = (byte)Character.toUpperCase(ownBytes[i]);
+            }
+        }
+    }
+
+    /**
+     * lower the case for each character of the string
+     *
+     * @param bp1 string1
+     *
+     */
+    public void lower(BytePointer bp1)
+    { 
+        copyFrom(bp1);
+        for (int i = 0; i < count; i++) {
+            if (Character.isUpperCase(ownBytes[i])) {
+                ownBytes[i] = (byte)Character.toLowerCase(ownBytes[i]);
+            }
+        }
+    }
+                
+    /**
+     * initcap the string.
+     *
+     * @param bp1 string1
+     *
+     */
+    public void initcap(BytePointer bp1)
+    {
+        boolean bWordBegin = true;
+        copyFrom(bp1);
+        for (int i = 0; i < count; i++) {
+            if (Character.isWhitespace(ownBytes[i])) {
+                bWordBegin = true;
+            } else {
+                if (bWordBegin) {
+                    if (Character.isLowerCase(ownBytes[i])) {
+                        ownBytes[i] = (byte)Character.toUpperCase(ownBytes[i]);
+                    }
+                } else{
+                    if (Character.isUpperCase(ownBytes[i])) {
+                        ownBytes[i] = (byte)Character.toLowerCase(ownBytes[i]);
+                    }
+                }
+                bWordBegin = false;
+            }
+        }
+    }
+
+    public void trim(int trimOrdinal, BytePointer bp1, BytePointer bp2)
+    {
+        boolean leading = false;
+        boolean trailing = false;
+        int i;
+        byte trimChar;
+
+        if (bp1.getByteCount() != 1) {
+            throw FarragoResource.instance().newInvalidFunctionArgument("trim");
+        }
+        copyFrom(bp2);
+        trimChar = bp1.buf[bp1.pos];
+        if (trimOrdinal == SqlTrimFunction.Flag.Both.getOrdinal()){
+            leading = true;
+            trailing = true;
+        } else if (trimOrdinal == SqlTrimFunction.Flag.Leading.getOrdinal()){
+            leading = true;
+        } else {
+            assert trimOrdinal == SqlTrimFunction.Flag.Trailing.getOrdinal();
+            trailing = true;
+        }
+        int cnt = count;
+        if (leading) {
+            for (i = 0; i < cnt; i++) {
+                if (buf[i] == trimChar) {
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+        }
+        if (trailing) {
+            for (i = cnt - 1; i >= 0 ; i--) {
+                if (buf[i] == trimChar) {
+                    count--;
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+
+    public int position(BytePointer bp1)
+    {
+        if (bp1.getByteCount() == 0) {
+            return 1;
+        }
+        int cnt1 = bp1.getByteCount();
+        int cnt = getByteCount() - cnt1;
+        for (int i = 0; i < cnt; i++) {
+            boolean stillMatch = true; 
+            for (int j = 0; j < cnt1; j++) {
+                if (buf[pos+i+j] != bp1.buf[bp1.pos+j]) {
+                    stillMatch = false;
+                    break;
+                }
+            }
+            if (stillMatch) {
+                return i+1;
+            }
+        }
+        return 0;
+    }
+
+    private void copyFrom(BytePointer bp1)
+    {
+        allocateOwnBytes(bp1.getByteCount());
+        System.arraycopy(bp1.buf, bp1.pos, ownBytes, 0, bp1.getByteCount());
+        buf = ownBytes;
+        pos = 0;
+        count = bp1.getByteCount();
+    }
+
+    /**
+     * @sql.2003 Part 2 Section 6.29 General Rule 3
+     */
+
+    // we store the result in the member variables to avoid memory allocation.
+    
+    private void calcSubstringPointers(
+        int S,
+        int L,
+        int LC,
+        boolean useLength)
+    {
+        int e;
+        if (useLength) {
+            if (L < 0) {
+                // If E is less than S, then it means L is negative exception.
+                throw FarragoResource.instance().newNegativeLengthForSubstring();
+            }
+            e = S + L;
+        } else {
+            e = S;
+            if (e <= LC) {
+                e = LC + 1;
+            }
+        }
+
+        // f) and i) in the standard. S > LC or E < 1 
+        if (S > LC || e < 1) {
+            S1 = L1 = 0;
+        } else {
+            // f) and ii) in the standard. 
+            // calculate the E1 and L1
+            S1 = S - 1;
+            if (S1 < 0) {
+                S1 = 0;
+            }
+            int e1 = e;
+            if (e1 > LC) {
+                e1 = LC + 1;
+            }
+            L1 = e1 - (S1 + 1);
+        }
     }
 
     private void allocateOwnBytes(int n)

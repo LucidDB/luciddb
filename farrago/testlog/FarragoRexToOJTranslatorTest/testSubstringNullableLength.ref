@@ -14,7 +14,7 @@ if (ID$4$CITY.isNull() || oj_var0.isNull()) {
     oj_var1.setNull( true );
 } else {
     oj_var1.assignFrom( ID$4$CITY );
-    oj_var1.setSubstring( 2, oj_var0.value, true );
+    oj_var1.substring( 2, oj_var0.value, true );
 }
 
 return oj_var1;

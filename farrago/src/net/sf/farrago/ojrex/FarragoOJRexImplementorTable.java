@@ -117,6 +117,53 @@ public class FarragoOJRexImplementorTable extends OJRexImplementorTableImpl
             new FarragoOJRexBuiltinImplementor(
                 FarragoOJRexBuiltinImplementor.CONCAT_OPERATOR));
 
+        /*
+        registerOperator(
+            opTab.convertFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.CONVERT_FUNCTION));
+
+        registerOperator(
+            opTab.translateFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.TRANSLATE_FUNCTION));
+         */
+
+        registerOperator(
+            opTab.positionFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.POSITION_FUNCTION));
+
+        registerOperator(
+            opTab.trimFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.TRIM_FUNCTION));
+
+        registerOperator(
+            opTab.charLengthFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.CHAR_LENGTH_FUNCTION));
+
+        registerOperator(
+            opTab.characterLengthFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.CHARACTER_LENGTH_FUNCTION));
+
+        registerOperator(
+            opTab.upperFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.UPPER_FUNCTION));
+
+        registerOperator(
+            opTab.lowerFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.LOWER_FUNCTION));
+
+        registerOperator(
+            opTab.initcapFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.INITCAP_FUNCTION));
+
         registerOperator(
             opTab.caseOperator,
             new FarragoOJRexCaseImplementor());

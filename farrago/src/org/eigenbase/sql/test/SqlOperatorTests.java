@@ -692,14 +692,11 @@ public abstract class SqlOperatorTests extends TestCase
     public void testInitcapFunc()
     {
         getTester().setFor(SqlStdOperatorTable.initcapFunc);
-        if (false) {
-            //not yet supported
-            getTester().checkString("initcap('aA')", "'Aa'", "todo:");
-            getTester().checkString("initcap('Aa')", "'Aa'", "todo:");
-            getTester().checkString("initcap('1a')", "'1a'", "todo:");
-            getTester().checkString("initcap('ab cd Ef 12')", "'Ab Cd Ef 12'", "todo:");
-            getTester().checkNull("initcap(cast(null as varchar(1)))");
-        }
+        getTester().checkString("initcap('aA')", "Aa", "todo:");
+        getTester().checkString("initcap('Aa')", "Aa", "todo:");
+        getTester().checkString("initcap('1a')", "1a", "todo:");
+        getTester().checkString("initcap('ab cd Ef 12')", "Ab Cd Ef 12", "todo:");
+        getTester().checkNull("initcap(cast(null as varchar(1)))");
     }
 
     public void testPowFunc()

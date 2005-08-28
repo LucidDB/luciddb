@@ -55,6 +55,15 @@ public class FarragoOJRexBuiltinImplementor extends FarragoOJRexImplementor
     public static final int MOD_FUNCTION = 9;
     public static final int EXP_FUNCTION = 10;
     public static final int CONCAT_OPERATOR = 11;
+    public static final int TRIM_FUNCTION = 12;
+    public static final int POSITION_FUNCTION = 13;
+    public static final int CHAR_LENGTH_FUNCTION = 14;
+    public static final int CHARACTER_LENGTH_FUNCTION = 15;
+    public static final int UPPER_FUNCTION = 16;
+    public static final int LOWER_FUNCTION = 17;
+    public static final int INITCAP_FUNCTION = 18;
+    public static final int CONVERT_FUNCTION = 19;
+    public static final int TRANSLATE_FUNCTION = 20;
 
     int builtinFunction;
     //~ Methods ---------------------------------------------------------------
@@ -71,7 +80,13 @@ public class FarragoOJRexBuiltinImplementor extends FarragoOJRexImplementor
         Expression [] operands)
     {
         Variable varResult = null;
-        
+        Expression nullTest = null;
+        /*
+        System.out.println(operands[0]);
+        System.out.println(call.operands[0]);
+        System.out.println(call.operands[0].getType());
+        */
+
         RelDataType retType = call.getType();
 
         if (SqlTypeUtil.isJavaPrimitive(retType) && !retType.isNullable()) {
@@ -85,7 +100,6 @@ public class FarragoOJRexBuiltinImplementor extends FarragoOJRexImplementor
             varResult = translator.createScratchVariable(retType);
         }
 
-        Expression nullTest = null;
         for (int i = 0; i < operands.length; i++) {
             nullTest = translator.createNullTest(
                 call.operands[i], operands[i], nullTest);
@@ -123,6 +137,39 @@ public class FarragoOJRexBuiltinImplementor extends FarragoOJRexImplementor
         case EXP_FUNCTION:
             implementExp(translator, call, operands, varResult, stmtList);
             break;
+        case LOWER_FUNCTION:
+        case UPPER_FUNCTION:
+        case INITCAP_FUNCTION:
+            implementChangeCase(translator, call, operands, varResult, stmtList);
+            break;
+        case TRIM_FUNCTION:
+            implementTrim(translator, call, operands, varResult, stmtList);
+            break;
+        case POSITION_FUNCTION:
+            addAssignmentStatement(
+                    stmtList, 
+                    translator, 
+                    new MethodCall(
+                        operands[1],
+                        BytePointer.POSITION_METHOD_NAME, 
+                        new ExpressionList(operands[0])),
+                    call.getType(),
+                    varResult,
+                    false);
+            break;
+        case CHAR_LENGTH_FUNCTION:
+        case CHARACTER_LENGTH_FUNCTION:
+            addAssignmentStatement(
+                    stmtList, 
+                    translator, 
+                    new MethodCall(
+                        operands[0],
+                        BytePointer.GET_BYTE_COUNT_METHOD_NAME, 
+                        new ExpressionList()),
+                    call.getType(),
+                    varResult,
+                    false);
+            break;
         default:
             assert(false);
         }
@@ -143,7 +190,6 @@ public class FarragoOJRexBuiltinImplementor extends FarragoOJRexImplementor
             }
         }
         return varResult;
-
     }
 
     private void implementLog(
@@ -396,7 +442,10 @@ public class FarragoOJRexBuiltinImplementor extends FarragoOJRexImplementor
             expList.add(Literal.constantFalse());
         }
         stmtList.add(new ExpressionStatement(
-            new MethodCall(varResult, "setSubstring", expList)));
+            new MethodCall(
+                varResult, 
+                BytePointer.SUBSTRING_METHOD_NAME, 
+                expList)));
     }
 
     private void implementOverlay(
@@ -426,7 +475,7 @@ public class FarragoOJRexBuiltinImplementor extends FarragoOJRexImplementor
         stmtList.add(new ExpressionStatement(
                         new MethodCall(
                             varResult,
-                            "overlay", 
+                            BytePointer.OVERLAY_METHOD_NAME, 
                             expList)));
     }
 
@@ -438,10 +487,51 @@ public class FarragoOJRexBuiltinImplementor extends FarragoOJRexImplementor
         StatementList stmtList)
     {
         stmtList.add(new ExpressionStatement(
+                        new MethodCall(
+                            varResult, 
+                            BytePointer.CONCAT_METHOD_NAME, 
+                            new ExpressionList(operands[0], operands[1]))));
+    }
+    
+    private void implementChangeCase(
+        FarragoRexToOJTranslator translator,
+        RexCall call,
+        Expression [] operands,
+        Variable varResult,
+        StatementList stmtList)
+    {
+        String funcName = null;
+        if (builtinFunction == LOWER_FUNCTION) {
+            funcName = BytePointer.LOWER_METHOD_NAME; 
+        } else if (builtinFunction == UPPER_FUNCTION) {
+            funcName = BytePointer.UPPER_METHOD_NAME; 
+        } else if (builtinFunction == INITCAP_FUNCTION) {
+            funcName = BytePointer.INITCAP_METHOD_NAME; 
+        }
+        stmtList.add(new ExpressionStatement(
                          new MethodCall(
                              varResult, 
-                             "concat", 
-                             new ExpressionList(operands[0], operands[1]))));
+                             funcName,
+                             new ExpressionList(operands[0]))));
+    }
+
+    private void implementTrim(
+        FarragoRexToOJTranslator translator,
+        RexCall call,
+        Expression [] operands,
+        Variable varResult,
+        StatementList stmtList)
+    {
+        Expression trimOrdinal = translator.convertPrimitiveAccess(
+                operands[0], call.operands[0]);
+        stmtList.add(new ExpressionStatement(
+                         new MethodCall(
+                             varResult, 
+                             BytePointer.TRIM_METHOD_NAME, 
+                             new ExpressionList(
+                                 trimOrdinal,
+                                 operands[1], 
+                                 operands[2]))));
     }
     
     // helper function
