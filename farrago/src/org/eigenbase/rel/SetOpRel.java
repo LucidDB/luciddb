@@ -21,11 +21,7 @@
 */
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptPlanWriter;
-import org.eigenbase.relopt.RelOptUtil;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
 
 /**
@@ -94,6 +90,23 @@ public abstract class SetOpRel extends AbstractRelNode
             types[i] = inputs[i].getRowType();
         }
         return getCluster().getTypeFactory().leastRestrictive(types);
+    }
+
+    /**
+     * Returns whether all the inputs of this set operator have the same row
+     * type as its output row.
+     */
+    public boolean isHomogeneous()
+    {
+        RelDataType unionType = getRowType();
+        RelNode [] inputs = getInputs();
+        for (int i = 0; i < inputs.length; ++i) {
+            RelDataType inputType = inputs[i].getRowType();
+            if (!RelOptUtil.areRowTypesEqual(inputType, unionType, true)) {
+                return false;
+            }
+        }
+        return true;
     }
 }
 

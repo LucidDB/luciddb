@@ -125,10 +125,10 @@ void JavaSinkExecStream::sendData(PConstBuffer src, uint size)
 
     // Send to the iterator, calling the method
     //   void FennelIterPipe.write(ByteBuffer, int byteCount)
-    FENNEL_TRACE(TRACE_FINE, "call FennelPipeIter.write" << size << " bytes");
+    FENNEL_TRACE(TRACE_FINE, "call FennelPipeIterator.write " << size << " bytes");
     pEnv->CallVoidMethod(javaFennelPipeIter, methFennelPipeIterator_write,
                          javaByteBuf, size);
-    FENNEL_TRACE(TRACE_FINE, "FennelPipeIter.write returned");
+    FENNEL_TRACE(TRACE_FINE, "FennelPipeIterator.write returned");
 }
 
 void JavaSinkExecStream::stuffByteBuffer(jobject byteBuffer, PConstBuffer src, uint size)

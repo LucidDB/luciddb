@@ -34,6 +34,8 @@ import java.util.logging.*;
  */
 public class NativeTrace
 {
+    private static NativeTrace instance = null;
+
     //~ Instance fields -------------------------------------------------------
 
     private String loggerPrefix;
@@ -45,12 +47,24 @@ public class NativeTrace
      *
      * @param loggerPrefix prefix to use in constructing logger names
      */
-    public NativeTrace(String loggerPrefix)
+    private NativeTrace(String loggerPrefix)
     {
         this.loggerPrefix = loggerPrefix;
     }
 
     //~ Methods ---------------------------------------------------------------
+
+    public static void createInstance(String loggerPrefix)
+    {
+        instance = new NativeTrace(loggerPrefix);
+    }
+
+
+    public static NativeTrace instance()
+    {
+        return instance;
+    }
+
 
     private Logger getLogger(String loggerSuffix)
     {

@@ -548,7 +548,16 @@ public class SqlToRelConverter
         for (int i = 0; i < partitionKeys.length; i++) {
             partitionKeys[i] = bb.convertExpression(partitionList.get(i));
         }
-        final SqlNodeList orderList = window.getOrderList();
+        SqlNodeList orderList = window.getOrderList();
+        if (orderList.size() == 0 && !window.isRows()) {
+            // A logical range requires an ORDER BY clause. Use the implicit
+            // ordering of this relation. There must be one, otherwise it would
+            // have failed validation.
+            orderList = bb.scope.getOrderList();
+            Util.permAssert(orderList != null,
+                "Relation should have sort key for implicit ORDER BY");
+            Util.permAssert(orderList.size() > 0, "sort key must not be empty");
+        }
         final RexNode[] orderKeys = new RexNode[orderList.size()];
         for (int i = 0; i < orderKeys.length; i++) {
             orderKeys[i] = bb.convertExpression(orderList.get(i));

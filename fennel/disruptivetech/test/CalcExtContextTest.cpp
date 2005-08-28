@@ -53,7 +53,7 @@ class CalcExtContextTest : virtual public TestBase, public TraceSource
     
 public:
     explicit CalcExtContextTest()
-        : TraceSource(this,"CalcExtContextTest")
+        : TraceSource(shared_from_this(),"CalcExtContextTest")
     {
         CalcInit::instance();
         FENNEL_UNIT_TEST_CASE(CalcExtContextTest, testCalcExtContext);

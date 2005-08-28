@@ -41,7 +41,7 @@ ParamName SegmentFactory::paramTraceSegments = "traceSegments";
 
 SharedSegmentFactory SegmentFactory::newSegmentFactory(
     ConfigMap const &configMap,
-    TraceTarget *pTraceTarget)
+    SharedTraceTarget pTraceTarget)
 {
     return SharedSegmentFactory(
         new SegmentFactory(configMap,pTraceTarget));
@@ -49,7 +49,7 @@ SharedSegmentFactory SegmentFactory::newSegmentFactory(
 
 SegmentFactory::SegmentFactory(
     ConfigMap const &configMap,
-    TraceTarget *pTraceTargetInit)
+    SharedTraceTarget pTraceTargetInit)
 {
     pTraceTarget = pTraceTargetInit;
 
@@ -149,7 +149,7 @@ SharedSegment SegmentFactory::newTracingSegment(
     std::string sourceName,
     bool qualifySourceName)
 {
-    if (!pTraceTarget) {
+    if (!pTraceTarget.get()) {
         return pSegment;
     }
     if (qualifySourceName) {
@@ -162,7 +162,7 @@ SharedSegment SegmentFactory::newTracingSegment(
         return pSegment;
     }
     SharedSegment pTracingSegment(
-        new TracingSegment(pSegment,*pTraceTarget,sourceName),
+        new TracingSegment(pSegment,pTraceTarget,sourceName),
         ClosableObjectDestructor());
     return pTracingSegment;
 }

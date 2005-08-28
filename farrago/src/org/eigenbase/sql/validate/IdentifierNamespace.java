@@ -21,16 +21,13 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.sql.validate.SqlValidatorTable;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidatorImpl;
-import org.eigenbase.sql.validate.AbstractNamespace;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.SqlIdentifier;
-import org.eigenbase.sql.SqlNodeList;
-import org.eigenbase.sql.SqlNode;
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.resource.EigenbaseResource;
+import org.eigenbase.sql.SqlIdentifier;
+import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.SqlNodeList;
+import org.eigenbase.sql.parser.SqlParserPos;
 
 /**
  * Namespace whose contents are defined by the type of an
@@ -47,9 +44,8 @@ public class IdentifierNamespace extends AbstractNamespace
     /** The underlying table. Set on validate. */
     private SqlValidatorTable table;
 
-    /** List of monotonic expressions. */
-    private final SqlNodeList monotonicExprs =
-        new SqlNodeList(SqlParserPos.ZERO);
+    /** List of monotonic expressions. Set on validate. */
+    private SqlNodeList monotonicExprs;
 
     IdentifierNamespace(SqlValidatorImpl validator, SqlIdentifier id)
     {
@@ -72,7 +68,19 @@ public class IdentifierNamespace extends AbstractNamespace
                 id.names = qualifiedNames;
             }
         }
-        return table.getRowType();
+        // Build a list of monotonic expressions.
+        monotonicExprs = new SqlNodeList(SqlParserPos.ZERO);
+        RelDataType rowType = table.getRowType();
+        RelDataTypeField[] fields = rowType.getFields();
+        for (int i = 0; i < fields.length; i++) {
+            final String fieldName = fields[i].getName();
+            if (table.isMonotonic(fieldName)) {
+                monotonicExprs.add(
+                    new SqlIdentifier(fieldName, SqlParserPos.ZERO));
+            }
+        }
+        // Validation successful.
+        return rowType;
     }
 
     public SqlIdentifier getId()
@@ -98,7 +106,9 @@ public class IdentifierNamespace extends AbstractNamespace
         return null;
     }
 
-    public SqlValidatorNamespace lookupChild(String name, SqlValidatorScope[] ancestorOut,
+    public SqlValidatorNamespace lookupChild(
+        String name,
+        SqlValidatorScope[] ancestorOut,
         int[] offsetOut)
     {
         return null;

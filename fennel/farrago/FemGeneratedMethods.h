@@ -17,7 +17,6 @@ jmethodID ProxyCmdCreateStreamHandle::meth_isInput = 0;
 jmethodID ProxyCmdDropIndex::meth_getRootPageId = 0;
 jmethodID ProxyCmdOpenDatabase::meth_getResultHandle = 0;
 jmethodID ProxyCmdOpenDatabase::meth_isCreateDatabase = 0;
-jmethodID ProxyCmdOpenDatabase::meth_getJavaTraceHandle = 0;
 jmethodID ProxyCmdOpenDatabase::meth_getParams = 0;
 jmethodID ProxyCmdPrepareExecutionStreamGraph::meth_getStreamDefs = 0;
 jmethodID ProxyCmdSavepoint::meth_getResultHandle = 0;
@@ -151,7 +150,6 @@ jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdOpenDatabase");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdOpenDatabase>));
 ProxyCmdOpenDatabase::meth_getResultHandle = pEnv->GetMethodID(jClass,"getResultHandle","()Lnet/sf/farrago/fem/fennel/FemDbHandle;");
 ProxyCmdOpenDatabase::meth_isCreateDatabase = pEnv->GetMethodID(jClass,"isCreateDatabase","()Z");
-ProxyCmdOpenDatabase::meth_getJavaTraceHandle = pEnv->GetMethodID(jClass,"getJavaTraceHandle","()J");
 ProxyCmdOpenDatabase::meth_getParams = pEnv->GetMethodID(jClass,"getParams","()Ljava/util/Collection;");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdPrepareExecutionStreamGraph");
@@ -468,11 +466,6 @@ return p;
 bool ProxyCmdOpenDatabase::isCreateDatabase()
 {
 return pEnv->CallBooleanMethod(jObject,meth_isCreateDatabase);
-}
-
-int64_t ProxyCmdOpenDatabase::getJavaTraceHandle()
-{
-return pEnv->CallLongMethod(jObject,meth_getJavaTraceHandle);
 }
 
 SharedProxyDatabaseParam ProxyCmdOpenDatabase::getParams()

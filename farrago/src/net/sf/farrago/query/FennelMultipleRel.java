@@ -30,7 +30,6 @@ import org.eigenbase.rel.AbstractRelNode;
 import org.eigenbase.rel.RelFieldCollation;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
 
@@ -102,7 +101,7 @@ public abstract class FennelMultipleRel
         for (int i = 0; i < inputs.length; i++) {
             RelNode input = inputs[i];
             Expression expr = 
-                (Expression) implementor.visitChild(this, 0, input);
+                (Expression) implementor.visitChild(this, i, input);
             expressionList.add(expr);            
         }
 

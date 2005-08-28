@@ -35,7 +35,7 @@ FENNEL_BEGIN_NAMESPACE
  */
 class TraceSource 
 {
-    TraceTarget *pTraceTarget;
+    SharedTraceTarget pTraceTarget;
     
     std::string name;
 
@@ -57,7 +57,7 @@ protected:
      * deferred init)
      */
     explicit TraceSource(
-        TraceTarget *pTraceTarget,
+        SharedTraceTarget pTraceTarget,
         std::string name);
 
 public:
@@ -70,7 +70,7 @@ public:
      *
      * @param name the name of this source
      */
-    void initTraceSource(TraceTarget *pTraceTarget,std::string name);
+    void initTraceSource(SharedTraceTarget pTraceTarget,std::string name);
     
     /**
      * Records a trace message.  Normally only called via FENNEL_TRACE.
@@ -86,7 +86,7 @@ public:
      */
     bool isTracing() const
     {
-        return pTraceTarget ? true : false;
+        return pTraceTarget.get() ? true : false;
     }
     
     /**
@@ -107,7 +107,15 @@ public:
     TraceTarget &getTraceTarget() const
     {
         assert(isTracing());
-        return *pTraceTarget;
+        return *(pTraceTarget.get());
+    }
+
+    /**
+     * @return the SharedTraceTarget for this source
+     */
+    SharedTraceTarget getSharedTraceTarget() const
+    {
+        return pTraceTarget;
     }
 
     /**

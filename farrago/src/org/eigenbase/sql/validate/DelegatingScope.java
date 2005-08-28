@@ -79,8 +79,10 @@ abstract class DelegatingScope implements SqlValidatorScope
         return parent.resolve(name, ancestorOut, offsetOut);
     }
 
-    protected void addColumnNames(SqlValidatorNamespace ns,
-                                List colNames) {
+    protected void addColumnNames(
+        SqlValidatorNamespace ns,
+        List colNames)
+    {
         final RelDataType rowType;
         try {
             rowType = ns.getRowType();
@@ -96,8 +98,10 @@ abstract class DelegatingScope implements SqlValidatorScope
         }
     }
 
-    protected void addTableNames(SqlValidatorNamespace ns,
-                                List tableNames) {
+    protected void addTableNames(
+        SqlValidatorNamespace ns,
+        List tableNames)
+    {
         SqlValidatorTable table = ns.getTable();
         if (table == null) return;
         String [] qnames = table.getQualifiedName();
@@ -133,7 +137,8 @@ abstract class DelegatingScope implements SqlValidatorScope
      *
      * If the identifier cannot be resolved, throws. Never returns null.
      */
-    public SqlIdentifier fullyQualify(SqlIdentifier identifier) {
+    public SqlIdentifier fullyQualify(SqlIdentifier identifier)
+    {
         if (identifier.isStar()) {
             return identifier;
         }
@@ -179,12 +184,19 @@ abstract class DelegatingScope implements SqlValidatorScope
         }
     }
 
-    public SqlWindow lookupWindow(String name) {
+    public SqlWindow lookupWindow(String name)
+    {
         return parent.lookupWindow(name);
     }
 
-    public boolean isMonotonic(SqlNode expr) {
+    public boolean isMonotonic(SqlNode expr)
+    {
         return parent.isMonotonic(expr);
+    }
+
+    public SqlNodeList getOrderList()
+    {
+        return parent.getOrderList();
     }
 }
 

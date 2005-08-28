@@ -155,17 +155,15 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
         ? DeviceMode::createNew
         : DeviceMode::load;
     
-    jobject javaTrace = getObjectFromLong(cmd.getJavaTraceHandle());
-
     std::auto_ptr<DbHandle> pDbHandle(newDbHandle());
     ++JniUtil::handleCount;
-    pDbHandle->pTraceTarget.reset(new JavaTraceTarget(javaTrace));
+    pDbHandle->pTraceTarget.reset(new JavaTraceTarget());
 
     SharedDatabase pDb = Database::newDatabase(
         pCache,
         configMap,
         openMode,
-        pDbHandle->pTraceTarget.get());
+        pDbHandle->pTraceTarget);
 
     pDbHandle->pDb = pDb;
 
@@ -363,7 +361,7 @@ void CmdInterpreter::visit(ProxyCmdPrepareExecutionStreamGraph &cmd)
     // NOTE:  sequence is important here
     SharedExecStreamScheduler pScheduler(
         new DfsTreeExecStreamScheduler(
-            &(pTxnHandle->pDb->getTraceTarget()),
+            pTxnHandle->pDb->getSharedTraceTarget(),
             "xo.scheduler"));
     ExecStreamGraphEmbryo graphEmbryo(
         pStreamGraphHandle->pExecStreamGraph,

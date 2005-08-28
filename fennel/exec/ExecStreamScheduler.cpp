@@ -34,7 +34,7 @@
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 ExecStreamScheduler::ExecStreamScheduler(
-    TraceTarget *pTraceTargetInit,
+    SharedTraceTarget pTraceTargetInit,
     std::string nameInit)
     : TraceSource(pTraceTargetInit, nameInit)
 {
