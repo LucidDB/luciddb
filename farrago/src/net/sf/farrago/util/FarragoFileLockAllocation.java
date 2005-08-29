@@ -22,9 +22,11 @@
 */
 package net.sf.farrago.util;
 
+import net.sf.farrago.trace.*;
+
+import java.util.logging.*;
 import java.io.*;
 import java.nio.channels.*;
-
 
 /**
  * FarragoFileLockAllocation takes care of unlocking a file when it is closed.
@@ -34,8 +36,20 @@ import java.nio.channels.*;
  */
 public class FarragoFileLockAllocation implements FarragoAllocation
 {
+    /**
+     * Location to lock.  We lock a bogus byte way beyond any real data to make
+     * sure the lock doesn't interfere with I/O on operating systems with
+     * non-advisory lock semantics such as Windows.  Don't use Long.MAX_VALUE
+     * because that breaks on any OS without large file support.
+     */
+    private static final int LOCK_OFFSET = 0x7FFFFFFD;
+    
+    private static final Logger tracer =
+        FarragoTrace.getFileLockAllocationTracer();
+    
     //~ Instance fields -------------------------------------------------------
 
+    private File file;
     private RandomAccessFile randomAccessFile;
     private FileChannel channel;
     private FileLock lock;
@@ -48,7 +62,8 @@ public class FarragoFileLockAllocation implements FarragoAllocation
      * @param owner the FarragoAllocationOwner which will be made responsible
      * for the lock as a result of this call
      *
-     * @param file the file to be locked for the lifetime of this allocation
+     * @param file the file to be locked for the lifetime of this allocation;
+     * if it does not exist, it will be created (but not deleted) automatically
      *
      * @param tryLock if true and lock cannot be obtained throw an
      * exception; if false, wait for the lock instead
@@ -61,32 +76,28 @@ public class FarragoFileLockAllocation implements FarragoAllocation
         boolean tryLock)
         throws IOException
     {
+        file = file.getCanonicalFile();
+        this.file = file;
+        file.createNewFile();
         try {
-            if (!file.exists()) {
-                // REVIEW:  to avoid i18n in the util package, just throw
-                // IOException with no message; caller must wrap with
-                // a proper excn.  Is this OK?
-                throw new IOException();
-            }
             randomAccessFile = new RandomAccessFile(file, "rw");
             channel = randomAccessFile.getChannel();
             if (tryLock) {
-                // NOTE:  we lock a bogus byte way beyond any real data
-                // to make sure the lock doesn't interfere with I/O
-                // on operating systems with non-advisory lock semantics
-                // such as Windows.  Don't use Long.MAX_VALUE because
-                // that breaks on any OS without large file support.
-                lock = channel.tryLock(0x7FFFFFFE - 1, 1, false);
+                tracer.fine("Trying to lock file " + file);
+                lock = channel.tryLock(LOCK_OFFSET, 1, false);
                 if (lock == null) {
                     throw new IOException();
                 }
             } else {
-                lock = channel.lock(Integer.MAX_VALUE - 1, 1, false);
+                tracer.fine("Locking file " + file);
+                lock = channel.lock(LOCK_OFFSET, 1, false);
             }
         } catch (IOException ex) {
+            tracer.fine("Failed to acquire lock on file " + file);
             closeAllocation();
             throw ex;
         }
+        tracer.fine("Successfully acquired lock on file " + file);
         owner.addAllocation(this);
     }
 
@@ -97,6 +108,7 @@ public class FarragoFileLockAllocation implements FarragoAllocation
     {
         try {
             if (lock != null) {
+                tracer.fine("Unlocking file " + file);
                 lock.release();
             }
         } catch (IOException ex) {
@@ -121,6 +133,34 @@ public class FarragoFileLockAllocation implements FarragoAllocation
             // TODO:  trace?
         } finally {
             randomAccessFile = null;
+        }
+    }
+
+    /**
+     * Command-line entry point for bench testing.  Attempts to lock the file
+     * named by the one and only argument and hold the lock for 20 seconds.
+     *
+     *<p>
+     *
+     * TODO jvs 24-Aug-2005:  Figure out a way to test this automatically.
+     * Requires starting two concurrent processes.
+     *
+     * @param args args[0] = name of file to lock
+     */
+    public static void main(String [] args)
+        throws Exception
+    {
+        FarragoCompoundAllocation owner = new FarragoCompoundAllocation();
+        try {
+            FarragoFileLockAllocation alloc =
+                new FarragoFileLockAllocation(
+                    owner,
+                    new File(args[0]),
+                    true);
+            Thread.currentThread().sleep(20000);
+            System.out.println("done");
+        } finally {
+            owner.closeAllocation();
         }
     }
 }

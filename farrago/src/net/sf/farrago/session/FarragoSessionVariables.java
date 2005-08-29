@@ -65,6 +65,11 @@ public class FarragoSessionVariables implements Cloneable
     public String currentUserName;
 
     /**
+     * Value of SQL expression CURRENT_ROLE.
+     */
+    public String currentRoleName;
+
+    /**
      * Value of SQL expression CURRENT_PATH as a list of schemas.  Entries are
      * SqlIdentifiers (catalog.schema).  This list is immutable to prevent
      * accidental aliasing.

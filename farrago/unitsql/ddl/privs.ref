@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/privs.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/privs.sql#2 $
 0: jdbc:farrago:> -- Test DDL on privileges
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Create a security manager and login as this user to perform all grant 
@@ -11,7 +11,7 @@
 0: jdbc:farrago:> create user PRIV_USER1 authorization 'Unknown';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !closeall
-sqlline> !connect jdbc:farrago: SECMAN net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver
+sqlline> !connect jdbc:farrago: SECMAN tiger
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Test 1:
 0: jdbc:farrago:> -- 
@@ -42,11 +42,15 @@ Error: DDL validation error near line 1, column 17: Reference to unknown table "
 0: jdbc:farrago:> -- 
 0: jdbc:farrago:> create table pt2 (c1 int not null primary key, c2 int);
 0: jdbc:farrago:> 
+0: jdbc:farrago:> create view pv1 as select * from pt1;
+0: jdbc:farrago:> 
 0: jdbc:farrago:> GRANT select, insert, delete, update ON PT2 TO PUBLIC;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> GRANT select ON pv1 TO PUBLIC;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> GRANT SELECT, UPDATE ON PT2 TO PRIV_USER1 GRANTED BY CURRENT_USER;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> ---- specify fully qualify name 
+0: jdbc:farrago:> ---- specify fully qualified name 
 0: jdbc:farrago:> GRANT SELECT, INSERT, DELETE, UPDATE ON PRIVSTEST.PT2 to PRIV_USER1;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Test 3: negative test
@@ -107,7 +111,7 @@ Error: DDL validation error near line 1, column 37: Reference to unknown procedu
 0: jdbc:farrago:> GRANT EXECUTE on SPECIFIC FUNCTION set_java_property to PUBLIC;
 Error: DDL validation error near line 1, column 36: Reference to unknown function "PRIVSTEST"."SET_JAVA_PROPERTY" (state=,code=0)
 0: jdbc:farrago:> 
-0: jdbc:farrago:> ---- Check the catalog that they the privileges are actually created accordingly
+0: jdbc:farrago:> ---- Check the catalog that the privileges are actually created accordingly
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Test 5: Test with grantor as CURRENT_ROLE and CURRENT_USER
 0: jdbc:farrago:> 
@@ -117,5 +121,32 @@ Error: DDL validation error near line 1, column 36: Reference to unknown functio
 0: jdbc:farrago:> grant select on pt5 to PUBLIC granted by CURRENT_USER;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- TODO: grant SELECT on pt5 to PUBLIC granted by CURRENT_ROLE
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- Test 6: Tests for insufficient privileges
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !closeall
+sqlline> !connect jdbc:farrago: SECMAN_2 tiger
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set schema 'privstest';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  no grant
+0: jdbc:farrago:> select * from pt1;
+Error: Privilege "SELECT" required for access to table "PRIVSTEST"."PT1" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should succeed:  via PUBLIC
+0: jdbc:farrago:> select * from pt2;
++-----+-----+
+| C1  | C2  |
++-----+-----+
++-----+-----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should succeed:  via PUBLIC on view, even though underlying table pt1
+0: jdbc:farrago:> -- is inaccessible
+0: jdbc:farrago:> select * from pv1;
++-----+-----+
+| C1  | C2  |
++-----+-----+
++-----+-----+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit
