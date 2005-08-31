@@ -727,7 +727,7 @@ public abstract class SqlOperatorTests extends TestCase
     public void testLnFunc()
     {
         getTester().setFor(SqlStdOperatorTable.lnFunc);
-        getTester().checkScalarApprox("ln(2.71828)", "DOUBLE NOT NULL", 1, 0.000001);
+        getTester().checkScalarApprox("ln(2.71828)", "DOUBLE NOT NULL", 1.0, 0.000001);
         getTester().checkScalarApprox("ln(2.71828)", "DOUBLE NOT NULL", 0.999999327, 0.0000001);
         getTester().checkNull("ln(cast(null as tinyint))");
     }
@@ -735,7 +735,7 @@ public abstract class SqlOperatorTests extends TestCase
     public void testLogFunc()
     {
         getTester().setFor(SqlStdOperatorTable.log10Func);
-        getTester().checkScalarApprox("log10(10)", "todo:", 1.0, 0);
+        getTester().checkScalarApprox("log10(10)", "todo:", 1.0, 0.000001);
         getTester().checkNull("log10(cast(null as real))");
     }
 
