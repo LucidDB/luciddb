@@ -178,8 +178,8 @@ if test "$target_os" = "mingw32"
 then
     CXXFLAGS="$CXXFLAGS -mthreads"
     postdeps="-lstdc++"
-    EXTRA_LDFLAGS="-lstdc++ -lws2_32 -lrpcrt4 -Wl,--kill-at -Wl,--export-all-symbols -no-undefined"
-    BOOST_LINKAGE=runtime-link-dynamic
+    EXTRA_LDFLAGS="-lstdc++ -lws2_32 -lrpcrt4 -Wl,--kill-at -Wl,--export-all-symbols -Wl,--allow-multiple-definition -no-undefined"
+    dnl BOOST_LINKAGE=runtime-link-dynamic
     DLLEXT=dll
     boost_jam_platform=cygwinx86
     jdk_platform=win32
