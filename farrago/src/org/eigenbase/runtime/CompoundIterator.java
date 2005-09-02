@@ -25,8 +25,10 @@ package org.eigenbase.runtime;
 
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.logging.Logger;
 import org.eigenbase.util.*;
+import org.eigenbase.test.EigenbaseTestCase;
 
 /**
  * <code>CompoundIterator</code> creates an iterator out of several.
@@ -55,38 +57,43 @@ public class CompoundIterator implements RestartableIterator
     public boolean hasNext()
     {
         tracer.finer(toString());
-        if (iterator == null) {
-            nextIterator();
-        }
-        return iterator.hasNext();
+        if (iterator == null)
+            return nextIterator();
+        if (iterator.hasNext())
+            return true;
+        return nextIterator();
     }
 
     public Object next()
     {
         tracer.finer(toString());
-        Object o = iterator.next();
-        if (!iterator.hasNext()) {
+        if (iterator == null)
             nextIterator();
-        }
-        return o;
+        return iterator.next();
     }
 
     public void remove()
     {
+        tracer.finer(toString());
+        if (iterator == null)
+            nextIterator();
         iterator.remove();
     }
 
-    private void nextIterator()
+    // moves to the next child iterator, skipping any empty ones, and returns true.
+    // when all the child iteratators are used up, return false;
+    private boolean nextIterator()
     {
         while (i < iterators.length) {
             iterator = iterators[i++];
             tracer.fine("try "+iterator);
             if (iterator.hasNext()) {
-                return;
+                return true;
             }
         }
-        tracer.fine("next is the empty iterator");
+        tracer.fine("exhausted iterators");
         iterator = Collections.EMPTY_LIST.iterator();
+        return false;
     }
 
     // implement RestartableIterator
@@ -98,7 +105,179 @@ public class CompoundIterator implements RestartableIterator
         i = 0;
         iterator = null;
     }
-}
+
+    //~ Inner Class ----
+
+    public static class Test extends EigenbaseTestCase
+    {
+        public Test(String s) throws Exception 
+        {
+            super(s);
+        }
+
+        public void testCompoundIter()
+        {
+            Iterator iterator =
+                new CompoundIterator(new Iterator [] {
+                        makeIterator(new String [] { "a", "b" }),
+                        makeIterator(new String [] { "c" })
+                    });
+            assertEquals(
+                iterator,
+                new String [] { "a", "b", "c" });
+        }
+
+        public void testCompoundIterEmpty()
+        {
+            Iterator iterator = new CompoundIterator(new Iterator [] {  });
+            assertEquals(
+                iterator,
+                new String [] {  });
+        }
+
+        public void testCompoundIterFirstEmpty()
+        {
+            Iterator iterator =
+                new CompoundIterator(new Iterator [] {
+                        makeIterator(new String [] {  }),
+                        makeIterator(new String [] { "a", null }),
+                        makeIterator(new String [] {  }),
+                        makeIterator(new String [] {  }),
+                        makeIterator(new String [] { "b", "c" }),
+                        makeIterator(new String [] {  })
+                    });
+            assertEquals(
+                iterator,
+                new String [] { "a", null, "b", "c" });
+        }
 
 
+        // makes a trivial CalcIterator on top of a base Iterator
+        private static CalcIterator makeCalcIterator(final Iterator base)
+        {
+            return new CalcIterator(base) {
+                    protected Object calcNext() {
+                        return base.hasNext()? base.next() : null;
+                    }
+                };
+        }
+
+        public void testCompoundCalcIter()
+        {
+            Iterator iterator =
+                new CompoundIterator(new Iterator [] {
+                    makeCalcIterator(makeIterator(new String [] { "a", "b" })),
+                    makeCalcIterator(makeIterator(new String [] { "c" }))
+                });
+            assertEquals(
+                iterator,
+                new String [] { "a", "b", "c" });
+        }
+
+        public void testCompoundCalcIterFirstEmpty()
+        {
+            Iterator iterator =
+                new CompoundIterator(new Iterator [] {
+                    makeCalcIterator(makeIterator(new String [] {  })),
+                    makeCalcIterator(makeIterator(new String [] { "a" })),
+                    makeCalcIterator(makeIterator(new String [] {  })),
+                    makeCalcIterator(makeIterator(new String [] {  })),
+                    makeCalcIterator(makeIterator(new String [] { "b", "c" })),
+                    makeCalcIterator(makeIterator(new String [] {  }))
+                });
+            assertEquals(
+                iterator,
+                new String [] { "a", "b", "c" });
+        }
+
+        // a boxed value (see BoxIterator below)
+        static class Box 
+        {
+            Object val;
+            public Box() {
+                val = null;
+            }
+            public Object getValue() {
+                return val;
+            }
+            public Box setValue(Object val) {
+                this.val = val;
+                return this;
+            }
+        };
+
+        // An Iterator that always returns the same object, a Box, but with different
+        // contents. Mimics the Iterator from a farrago dynamic statement.
+        static class BoxIterator implements Iterator
+        {
+            Iterator base;
+            Box box;
+            public BoxIterator(Iterator base) {
+                this.base = base;
+                this.box = new Box();
+            }
+            // implement Iterator
+            public boolean hasNext() {
+                return base.hasNext();
+            }
+            public Object next() {
+                box.setValue(base.next());
+                return box;
+            }
+            public void remove()
+            {
+                base.remove();
+            }
+        };
+ 
+        /**
+         * Checks that a BoxIterator returns the same values as the contents of an
+         * array.
+         */
+        protected void assertUnboxedEquals(Iterator p, Object [] a)
+        {
+            ArrayList list = new ArrayList();
+            while (p.hasNext()) {
+                Object o = p.next();
+                if (o instanceof Box)
+                    list.add(((Box) o).getValue());
+                else
+                    list.add(o);
+            }
+            assertEquals(list, a);
+        }
+
+
+
+        public void testCompoundBoxIter()
+        {
+            Iterator iterator =
+                new CompoundIterator(new Iterator[] {
+                    new BoxIterator(makeIterator(new String[] {"400", "401", "402", "403"})),
+                    new BoxIterator(makeIterator(new String[] {"500", "501", "502", "503"})),
+                    new BoxIterator(makeIterator(new String[] {"600", "601", "602", "603"}))
+                });
+            assertUnboxedEquals(
+                iterator,
+                new String[] {"400", "401", "402", "403",
+                              "500", "501", "502", "503",
+                              "600", "601", "602", "603" });
+        }
+
+        public void testCompoundBoxedCalcIter()
+        {
+            Iterator iterator =
+                new CompoundIterator(new Iterator[] {
+                    new BoxIterator(makeCalcIterator(makeIterator(new String[] {"400", "401", "402", "403"}))),
+                    new BoxIterator(makeCalcIterator(makeIterator(new String[] {"500", "501", "502", "503"}))),
+                    new BoxIterator(makeCalcIterator(makeIterator(new String[] {"600", "601", "602", "603"})))
+                });
+            assertUnboxedEquals(
+                iterator,
+                new String[] {"400", "401", "402", "403",
+                              "500", "501", "502", "503",
+                              "600", "601", "602", "603" });
+        }
+    }
+} 
 // End CompoundIterator.java

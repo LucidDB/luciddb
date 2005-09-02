@@ -167,44 +167,6 @@ public class BufferedIterator implements Iterator, Iterable, Enumeration
             assertEquals(clonerator, ab);
             assertEquals(list, ab);
         }
-
-        // --------------------------------------------------------------------
-        // test CompoundIterator
-        public void testCompoundIter()
-        {
-            Iterator iterator =
-                new CompoundIterator(new Iterator [] {
-                        makeIterator(new String [] { "a", "b" }),
-                        makeIterator(new String [] { "c" })
-                    });
-            assertEquals(
-                iterator,
-                new String [] { "a", "b", "c" });
-        }
-
-        public void testCompoundIterEmpty()
-        {
-            Iterator iterator = new CompoundIterator(new Iterator [] {  });
-            assertEquals(
-                iterator,
-                new String [] {  });
-        }
-
-        public void testCompoundIterFirstEmpty()
-        {
-            Iterator iterator =
-                new CompoundIterator(new Iterator [] {
-                        makeIterator(new String [] {  }),
-                        makeIterator(new String [] { "a", null }),
-                        makeIterator(new String [] {  }),
-                        makeIterator(new String [] {  }),
-                        makeIterator(new String [] { "b", "c" }),
-                        makeIterator(new String [] {  })
-                    });
-            assertEquals(
-                iterator,
-                new String [] { "a", null, "b", "c" });
-        }
     }
 
     /**

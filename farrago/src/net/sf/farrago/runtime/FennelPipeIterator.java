@@ -49,9 +49,7 @@ import java.util.logging.Level;
  */
 public class FennelPipeIterator extends FennelAbstractIterator
 {
-    // TODO: don't borrow the neighbors' tracer
-    private static final Logger tracer =
-        FarragoTrace.getFarragoIteratorResultSetTracer();
+    private static final Logger tracer = FarragoTrace.getFennelPipeIteratorTracer();
 
     // byteBuffer is the current buffer, and belongs exclusively to the reader (this object)
 
@@ -107,12 +105,30 @@ public class FennelPipeIterator extends FennelAbstractIterator
     }
 
     // override FennelAbstractIterator to trace
+    public void restart()
+    {
+        tracer.fine(this.toString());
+        super.restart();
+    }
+
+    // override FennelAbstractIterator to trace
     public boolean hasNext()
     {
         boolean val = super.hasNext();
-        if (tracer.isLoggable(Level.FINER))
-            tracer.finer(getStatus(this.toString())+" => " +val);
+        if (!val || tracer.isLoggable(Level.FINER)) {
+            String msg = getStatus(this.toString()) + " => " +val;
+            if (!val)
+                tracer.fine(msg);
+            else
+                tracer.finer(msg);
+        }
         return val;
+    }
+
+    protected void traceNext(Object val)
+    {
+        if (tracer.isLoggable(Level.FINER)) 
+            tracer.finer(getStatus(this.toString())+" => " + val);
     }
 
     protected int populateBuffer()
@@ -167,7 +183,7 @@ public class FennelPipeIterator extends FennelAbstractIterator
             bb.position(0);
             if (!bb.hasArray())  {
                 // argh, have to wrap a copy of the new data
-                tracer.finer("copies buffer");
+                tracer.fine("copies buffer");
                 byte b[] = new byte[bblen];
                 bb.rewind();
                 bb.get(b);
