@@ -72,8 +72,7 @@ public class MergeProjectOntoCalcRule extends RelOptRule
         // through a filter. Transform the project into an identical calc,
         // which we'll have chance to merge later, after the over is
         // expanded.
-        if (false &&
-            RexOver.containsOver(project.getChildExps(), null)) {
+        if (RexOver.containsOver(project.getChildExps(), null)) {
             CalcRel projectAsCalc = new CalcRel(
                 project.getCluster(),
                 project.cloneTraits(),
@@ -87,7 +86,7 @@ public class MergeProjectOntoCalcRule extends RelOptRule
 
         // Expand all references to columns in the project exprs. For example,
         //
-        // SELECT x + 1 AS p, x + y AS q FROM (
+        // SELECT x + 1 AS p, x + y AS q FROM (                                         e
         //   SELECT a + b AS x, c AS y
         //   FROM t
         //   WHERE c < 6)

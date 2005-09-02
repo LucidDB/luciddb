@@ -157,6 +157,9 @@ public abstract class FennelWindowRule extends RelOptRule
                 final WindowedAggregateRel winAgg =
                     (WindowedAggregateRel) call.rels[0];
                 final CalcRel inCalc = (CalcRel) call.rels[1];
+                if (inCalc.getCondition() != null) {
+                    return;
+                }
                 final RelNode child = call.rels[2];
                 doThing(call, null, winAgg, inCalc, child);
             }

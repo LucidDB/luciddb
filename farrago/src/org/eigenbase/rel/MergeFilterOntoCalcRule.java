@@ -70,9 +70,7 @@ public class MergeFilterOntoCalcRule extends RelOptRule
         // Don't merge a filter onto a calc which contains windowed aggregates.
         // That would effectively be pushing a multiset down through a filter.
         // We'll have chance to merge later, when the over is expanded.
-        if (RexOver.containsOver(
-            calc.getProjectExprs(),
-            calc.getCondition())) {
+        if (calc.containsAggs()) {
             return;
         }
 
