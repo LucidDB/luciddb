@@ -193,6 +193,8 @@ public abstract class FarragoTestCase extends DiffTestCase
         }
         if (connection != null) {
             connection.rollback();
+            connection.close();
+            connection = null;
         }
     }
 
