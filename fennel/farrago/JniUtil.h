@@ -157,7 +157,7 @@ public:
     static const jint jniVersion = JNI_VERSION_1_2;
 
     /**
-     * Java method JavaTupleStream.fillBuffer.
+     * Java method JavaPullTupleStream.fillBuffer.
      */
     static jmethodID methFillBuffer;
 

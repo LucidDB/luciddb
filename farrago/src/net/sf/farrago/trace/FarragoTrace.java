@@ -134,6 +134,16 @@ public abstract class FarragoTrace
     }
 
     /**
+     * The tracer "net.sf.farrago.runtime.JavaPushTupleStream"
+     * traces {@link JavaPushTupleStream}.
+     */
+    public static Logger getJavaPushTupleStreamTracer()
+    {
+        return getClassTracer(JavaPushTupleStream.class);
+    }
+
+
+    /**
      * The tracer "net.sf.farrago.runtime.FarragoIteratorResultSet"
      * traces {@link FarragoIteratorResultSet}.
      */

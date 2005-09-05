@@ -156,7 +156,7 @@ void JavaSinkExecStream::closeImpl()
     FENNEL_TRACE(TRACE_FINE, "closing");
 
     // If java peer is waiting for more data, send it a final EOS
-    if (lastResult != EXECRC_EOS) {
+    if (javaFennelPipeIter && (lastResult != EXECRC_EOS)) {
         FixedBuffer dummy[1];
         sendData(dummy, 0);
     }
