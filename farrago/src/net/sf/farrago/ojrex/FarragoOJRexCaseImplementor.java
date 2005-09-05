@@ -85,11 +85,15 @@ public class FarragoOJRexCaseImplementor extends FarragoOJRexImplementor
             translator.createSetNullStatement(varResult, true);
         }
 
+        IfStatement wholeStatement = null;
+        IfStatement prevIfStatement = null;
+
         for (i = 0; i < operands.length - 1; i = i + 2) {
             Expression cond = operands[ i ];
             Expression value = operands[ i + 1 ];
             boolean isCondNullable = call.operands[i].getType().isNullable();
             StatementList stmtList = new StatementList();
+            IfStatement ifStmt = null;
 
             translator.convertCastOrAssignmentWithStmtList(
                 stmtList,
@@ -103,25 +107,34 @@ public class FarragoOJRexCaseImplementor extends FarragoOJRexImplementor
                 // the result of comparison must be boolean.
                 // If it is nullable then we get the result
                 // from getBit.
-                Expression condition = new MethodCall(cond, 
+                Expression getBitCondition = new MethodCall(cond, 
                     "getBit", new ExpressionList());
-                Expression nullTest = translator.createNullTest(
-                    call.operands[ i ], cond, null);
+                Expression notNullTest = new UnaryExpression(
+                            translator.createNullTest(
+                                call.operands[ i ], cond, null),
+                            UnaryExpression.NOT);
+                Expression condition = new BinaryExpression(
+                            notNullTest,
+                            BinaryExpression.LOGICAL_AND,
+                            getBitCondition);
 
-                Statement ifStatement = new IfStatement(
+                ifStmt = new IfStatement(
                         condition, 
                         stmtList);
-                Statement stmt = new IfStatement(
-                        nullTest, 
-                        new StatementList(), 
-                        new StatementList(ifStatement));
-                translator.addStatement(stmt);
             } else {
-                translator.addStatement(new IfStatement(
-                            cond, 
-                            stmtList));
+                ifStmt = new IfStatement(cond, stmtList);
+            }
+            if (wholeStatement == null) {
+                wholeStatement = ifStmt;
+            }
+            if (prevIfStatement == null) {
+                prevIfStatement = ifStmt;
+            } else {
+                prevIfStatement.setElseStatements(new StatementList(ifStmt));
+                prevIfStatement = ifStmt;
             }
         } 
+        translator.addStatement(wholeStatement);
         return varResult;
     }
 

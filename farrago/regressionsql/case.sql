@@ -45,3 +45,4 @@ select slacker, case slacker when true then 1 else 2 end from sales.emps;
 -- condition is nullable, list one case, without else.
 select slacker, case slacker when true then 1 end from sales.emps;
 
+select empno, case empno when 120 then 1 when 120 then 3 else 2 end from sales.emps;

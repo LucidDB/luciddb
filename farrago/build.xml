@@ -1116,7 +1116,7 @@ require version '${required.ant.version}'."/>
         <arg line="&FarragoProps;"/>
       </jvmargs>
       <programargs>
-        <arg value="-u jdbc:farrago: -d net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver -n guest"/>
+        <arg value="-u jdbc:farrago: -d net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver -n sa"/>
       </programargs>
     </farrago.jswatDebug>
   </target>

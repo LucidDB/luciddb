@@ -1,0 +1,19 @@
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+
+java.util.regex.Pattern oj_var1 = null;
+
+java.util.regex.Matcher oj_var2;
+java.lang.String oj_var3;
+if (ID$4$CITY.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var3 = net.sf.farrago.type.runtime.RuntimeTypeUtil.SqlToRegexLike( ID$1$NAME.toString(), null );
+    oj_var1 = java.util.regex.Pattern.compile( oj_var3 );
+    oj_var2 = oj_var1.matcher( ID$4$CITY.toString() );
+    oj_var0.setNull( false );
+    oj_var0.value = oj_var2.find();
+}
+
+return oj_var0;

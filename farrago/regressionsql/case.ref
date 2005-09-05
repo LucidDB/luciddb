@@ -157,5 +157,14 @@
 | false    |         |
 +----------+---------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> select empno, case empno when 120 then 1 when 120 then 3 else 2 end from sales.emps;
++--------+---------+
+| EMPNO  | EXPR$1  |
++--------+---------+
+| 100    | 2       |
+| 110    | 2       |
+| 120    | 1       |
+| 110    | 2       |
++--------+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

@@ -108,6 +108,8 @@ public class OJRexImplementorTableImpl implements OJRexImplementorTable
     {
         registerBinaryOperator(opTab.equalsOperator, BinaryExpression.EQUAL);
 
+        registerBinaryOperator(opTab.notEqualsOperator, BinaryExpression.NOTEQUAL);
+
         registerBinaryOperator(opTab.lessThanOperator, BinaryExpression.LESS);
 
         registerBinaryOperator(opTab.lessThanOrEqualOperator,
