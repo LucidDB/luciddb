@@ -232,6 +232,14 @@ public class FarragoOJRexSimilarLikeImplementor extends FarragoOJRexImplementor
                         "find",
                         emptyArguments);
 
+
+        translator.addAssignmentStatement(
+            stmtList, 
+            matcherResult,
+            call.getType(),
+            varResult,
+            false);
+
         if (isNot) {
             // should not be here.
             // The optimizer should have already got rid of IS NOT.
@@ -253,13 +261,6 @@ public class FarragoOJRexSimilarLikeImplementor extends FarragoOJRexImplementor
                             UnaryExpression.NOT))));
 
         }
-
-        translator.addAssignmentStatement(
-            stmtList, 
-            matcherResult,
-            call.getType(),
-            varResult,
-            false);
 
         // All the builtin function returns null if
         // one of the arguements is null.
