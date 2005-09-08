@@ -94,3 +94,19 @@ select * from v11;
 
 -- make sure dependencies got dropped too
 select "name" from sys_cwm."Core"."Dependency" where "name"='V8$DEP';
+
+-- multi-line view including comments and description
+create view v12 
+description 'foo'
+   'bar' as
+select empno, /* a comment */ name
+  from sales.emps;
+
+!set outputformat csv
+
+-- make sure that the original text is stored correctly
+select "originalDefinition", "description"
+from sys_fem."SQL2003"."LocalView"
+where "name" = 'V12';
+
+-- End view.sql

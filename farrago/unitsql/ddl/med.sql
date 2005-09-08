@@ -4,7 +4,8 @@
 -- create a private wrapper for mdr (don't use the standard mdr wrapper)
 create foreign data wrapper test_mdr
 library 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'
-language java;
+language java
+description 'private data wrapper for mdr';
 
 -- test name uniqueness:  should fail
 create foreign data wrapper test_mdr
@@ -16,7 +17,8 @@ foreign data wrapper test_mdr
 options(
     extent_name 'MOF', 
     schema_name 'Model',
-    "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr');
+    "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr')
+description 'a server';
 
 -- test name uniqueness:  should fail
 create server mof_server
@@ -59,7 +61,8 @@ create foreign table mof_schema.mof_exception(
     "mofId" varchar(128),
     "mofClassName" varchar(128))
 server mof_server
-options(class_name 'Exception');
+options(class_name 'Exception')
+description 'a foreign table';
 
 -- verify that creating a local table using foreign wrapper is illegal
 create table mof_schema.local_table_foreign_wrapper(

@@ -1,7 +1,7 @@
 0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/schema.sql#2 $
 0: jdbc:farrago:> -- Test DDL on schemas
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema s;
+0: jdbc:farrago:> create schema s description 'a schema';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create table s.t(i int not null primary key);
 0: jdbc:farrago:> 

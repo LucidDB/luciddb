@@ -31,6 +31,7 @@ import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.util.SqlVisitor;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.fun.SqlLiteralChainOperator;
 import org.eigenbase.util.BitString;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.NlsString;
@@ -273,6 +274,24 @@ public class SqlLiteral extends SqlNode
     public static EnumeratedValues.Value symbolValue(SqlNode node)
     {
         return (EnumeratedValues.Value) ((SqlLiteral) node).value;
+    }
+
+    /**
+     * Extracts the string value from a string literal or a chain of string
+     * literals.
+     */
+    public static String stringValue(SqlNode node)
+    {
+        if (node instanceof SqlLiteral) {
+            SqlLiteral literal = (SqlLiteral) node;
+            return literal.toValue();
+        } else if (node instanceof SqlCall) {
+            final SqlLiteral literal =
+                SqlLiteralChainOperator.concatenateOperands((SqlCall) node);
+            return literal.toValue();
+        } else {
+            throw Util.newInternal("invalid string literal " + node);
+        }
     }
 
     /**

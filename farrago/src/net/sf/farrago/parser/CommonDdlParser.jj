@@ -289,8 +289,9 @@ DdlStmt DdlStmtEof() :
 FemLocalSchema SchemaDefinition() :
 {
     FemLocalSchema schema;
-    SqlIdentifier schemaName,userName;
+    SqlIdentifier schemaName, userName;
     boolean pathDefined = false;
+    SqlNode description;
 }
 {
     <SCHEMA> schemaName = CompoundIdentifier2()
@@ -328,6 +329,7 @@ FemLocalSchema SchemaDefinition() :
         // definitions included in this schema definition
         farragoParser.getDdlValidator().setCreatedSchemaContext(schema);
     }
+    OptionalDescription(schema)
     (
         <CREATE>
         SchemaObjectDefinition()
@@ -467,6 +469,7 @@ FemLocalTable UnscopedTableDefinition() :
             table,qualifiedTableName);
     }
     <LPAREN> TableElementList(table) <RPAREN>
+    OptionalDescription(table)
     {
         return table;
     }
@@ -515,7 +518,7 @@ FemLocalView ViewDefinition() :
 {
     FemLocalView view;
     SqlIdentifier qualifiedViewName;
-    SqlNode query;
+    SqlNode query, description;
     List columnNameList;
     SqlParserPos defStart, defEnd;
 }
@@ -543,6 +546,7 @@ FemLocalView ViewDefinition() :
         }
         <RPAREN>
     ]
+    OptionalDescription(view)
     <AS>
     {
         defStart = getEndPos();
@@ -1327,6 +1331,7 @@ FemDataWrapper DataWrapperDefinition() :
         wrapper.setLanguage("JAVA");
     }
     OptionalStorageOptions(wrapper)
+    OptionalDescription(wrapper)
     {
         return wrapper;
     }
@@ -1394,6 +1399,7 @@ FemDataServer DataServerDefinition() :
         server.setWrapper(wrapper);
     }
     OptionalStorageOptions(server)
+    OptionalDescription(server)
     {
         return server;
     }
@@ -2105,6 +2111,7 @@ FemForeignTable ForeignTableDefinition() :
         server.getColumnSet().add(table);
     }
     OptionalStorageOptions(table)
+    OptionalDescription(table)
     {
         return table;
     }
@@ -2134,6 +2141,19 @@ void ForeignTableElementList(FemForeignTable table) :
     (
         <COMMA> ColumnDefinition(table)
     ) *
+}
+
+void OptionalDescription(FemAnnotatedElement element) :
+{
+    SqlNode description;
+}
+{
+    [
+        <DESCRIPTION> description = StringLiteral(false) 
+        {
+            element.setDescription(SqlLiteral.stringValue(description));
+        }
+    ]
 }
 
 void OptionalStorageOptions(FemElementWithStorageOptions element) :

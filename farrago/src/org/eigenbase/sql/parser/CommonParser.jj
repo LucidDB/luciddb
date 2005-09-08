@@ -3405,6 +3405,7 @@ TOKEN :
     | < DERIVED: "DERIVED" >
     | < DESCRIBE: "DESCRIBE" >
     | < DESC: "DESC" >
+    | < DESCRIPTION: "DESCRIPTION" >
     | < DESCRIPTOR: "DESCRIPTOR" >
     | < DETERMINISTIC: "DETERMINISTIC" >
     | < DIAGNOSTICS: "DIAGNOSTICS" >
@@ -3867,6 +3868,7 @@ String CommonNonReservedKeyWord() :
         | <DEPTH>
         | <DERIVED>
         | <DESC>
+        | <DESCRIPTION>
         | <DESCRIPTOR>
         | <DIAGNOSTICS>
         | <DISPATCH>
