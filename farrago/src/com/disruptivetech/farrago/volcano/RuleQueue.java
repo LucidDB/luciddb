@@ -162,7 +162,8 @@ class RuleQueue
      */
     void add(RelNode rel)
     {
-        assert (rels.add(rel)) : "RuleQueue already contained rel";
+        boolean b = rels.add(rel);
+        //assert b : "RuleQueue already contained rel";
         final RelSubset subset = planner.getSubset(rel);
         assert (subset != null);
         add(subset);
