@@ -117,35 +117,33 @@ public class SqlWindowOperator extends SqlOperator {
     }
 
     public void unparse(
-            SqlWriter writer,
-            SqlNode[] operands,
-            int leftPrec,
-            int rightPrec) {
-        writer.print("(");
+        SqlWriter writer,
+        SqlNode[] operands,
+        int leftPrec,
+        int rightPrec)
+    {
+        final SqlWriter.Frame frame =
+            writer.startList(SqlWriter.FrameType.Window, "(", ")");
         SqlIdentifier refName =
                 (SqlIdentifier) operands[SqlWindow.RefName_OPERAND];
-        int clauseCount = 0;
         if (refName != null) {
             refName.unparse(writer, 0, 0);
-            ++clauseCount;
         }
         SqlNodeList partitionList =
                 (SqlNodeList) operands[SqlWindow.PartitionList_OPERAND];
         if (partitionList.size() > 0) {
-            if (clauseCount++ > 0) {
-                writer.println();
-            }
-            writer.print("PARTITION BY ");
+            writer.sep("PARTITION BY");
+            final SqlWriter.Frame partitionFrame = writer.startList("", "");
             partitionList.unparse(writer, 0, 0);
+            writer.endList(partitionFrame);
         }
         SqlNodeList orderList =
                 (SqlNodeList) operands[SqlWindow.OrderList_OPERAND];
         if (orderList.size() > 0) {
-            if (clauseCount++ > 0) {
-                writer.println();
-            }
-            writer.print("ORDER BY ");
+            writer.sep("ORDER BY");
+            final SqlWriter.Frame orderFrame = writer.startList("", "");
             orderList.unparse(writer, 0, 0);
+            writer.endList(orderFrame);
         }
         boolean isRows =
                 SqlLiteral.booleanValue(operands[SqlWindow.IsRows_OPERAND]);
@@ -154,29 +152,23 @@ public class SqlWindowOperator extends SqlOperator {
         if (lowerBound == null) {
             // No ROWS or RANGE clause
         } else if (upperBound == null) {
-            if (clauseCount++ > 0) {
-                writer.println();
-            }
             if (isRows) {
-                writer.print("ROWS ");
+                writer.sep("ROWS");
             } else {
-                writer.print("RANGE ");
+                writer.sep("RANGE");
             }
             lowerBound.unparse(writer, 0, 0);
         } else {
-            if (clauseCount++ > 0) {
-                writer.println();
-            }
             if (isRows) {
-                writer.print("ROWS BETWEEN ");
+                writer.sep("ROWS BETWEEN");
             } else {
-                writer.print("RANGE BETWEEN ");
+                writer.sep("RANGE BETWEEN");
             }
             lowerBound.unparse(writer, 0, 0);
-            writer.print(" AND ");
+            writer.keyword("AND");
             upperBound.unparse(writer, 0, 0);
         }
-        writer.print(")");
+        writer.endList(frame);
     }
 
     public void validateCall(
@@ -200,7 +192,7 @@ public class SqlWindowOperator extends SqlOperator {
                 (SqlNodeList) operands[SqlWindow.PartitionList_OPERAND];
         if (null != partitionList) {
             if (0 != partitionList.size()) {
-                for (int i =0; i < partitionList.size(); i++) {
+                for (int i = 0; i < partitionList.size(); i++) {
                     SqlNode partitionItem = partitionList.get(i);
                     partitionItem.validateExpr(validator,operandScope);
                 }

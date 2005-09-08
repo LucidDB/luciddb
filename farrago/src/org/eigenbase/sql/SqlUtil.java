@@ -23,19 +23,19 @@
 
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.fun.*;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.validate.SqlValidatorException;
-import org.eigenbase.util.*;
-import org.eigenbase.reltype.*;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypePrecedenceList;
 import org.eigenbase.resource.EigenbaseResource;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.util.*;
 
 import java.lang.reflect.Proxy;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+import java.text.MessageFormat;
 import java.util.*;
-import java.text.*;
 
 /**
  * Contains utility functions related to SQL parsing, all static.
@@ -232,7 +232,8 @@ public abstract class SqlUtil
      * @param emptyParens Whether to print parentheses if there are 0 operands
      * @param quantifier
      */
-    public static void unparseFunctionSyntax(SqlOperator operator,
+    public static void unparseFunctionSyntax(
+        SqlOperator operator,
         SqlWriter writer,
         SqlNode[] operands,
         boolean emptyParens,
@@ -242,13 +243,12 @@ public abstract class SqlUtil
             SqlFunction function = (SqlFunction) operator;
 
             if (function.getFunctionType()
-                == SqlFunctionCategory.UserDefinedSpecificFunction)
-            {
-                writer.print("SPECIFIC ");
+                == SqlFunctionCategory.UserDefinedSpecificFunction) {
+                writer.keyword("SPECIFIC");
             }
             SqlIdentifier id = function.getSqlIdentifier();
             if (id == null) {
-                writer.print(operator.getName());
+                writer.keyword(operator.getName());
             } else {
                 id.unparse(writer, 0, 0);
             }
@@ -260,20 +260,17 @@ public abstract class SqlUtil
             // when it has 0 args, not "LOCALTIME()".
             return;
         }
-        writer.print('(');
+        final SqlWriter.Frame frame =
+            writer.startList(SqlWriter.FrameType.FunCall, "(", ")");
         if (null != quantifier) {
             quantifier.unparse(writer,0,0);
-            writer.print(" ");
         }
-        for (int i=0; i < operands.length; i++) {
+        for (int i = 0; i < operands.length; i++) {
             SqlNode operand = operands[i];
-
-            if (i > 0) {
-                writer.print(", ");
-            }
+            writer.sep(",");
             operand.unparse(writer,0,0);
         }
-        writer.print(')');
+        writer.endList(frame);
     }
 
     public static void unparseBinarySyntax(
@@ -285,15 +282,17 @@ public abstract class SqlUtil
     {
         SqlBinaryOperator binop = (SqlBinaryOperator) operator;
         assert operands.length == 2;
-        operands[0].unparse(writer,leftPrec,binop.getLeftPrec());
-        if (binop.needsSpace()) {
-            writer.print(' ');
-            writer.print(binop.getName());
-            writer.print(' ');
-        } else {
-            writer.print(binop.getName());
-        }
-        operands[1].unparse(writer,binop.getRightPrec(),rightPrec);
+        final SqlWriter.Frame frame = writer.startList(
+            binop instanceof SqlSetOperator ?
+            SqlWriter.FrameType.Setop :
+            SqlWriter.FrameType.Simple);
+        operands[0].unparse(writer, leftPrec, binop.getLeftPrec());
+        final boolean needsSpace = binop.needsSpace();
+        writer.setNeedWhitespace(needsSpace);
+        writer.sep(binop.getName());
+        writer.setNeedWhitespace(needsSpace);
+        operands[1].unparse(writer, binop.getRightPrec(), rightPrec);
+        writer.endList(frame);
     }
 
     /**

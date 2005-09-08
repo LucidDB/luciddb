@@ -91,15 +91,15 @@ public class SqlExplain extends SqlCall
         int leftPrec,
         int rightPrec)
     {
-        writer.print("EXPLAIN PLAN ");
+        writer.keyword("EXPLAIN PLAN");
         if (!withImplementation()) {
-            writer.print("WITHOUT IMPLEMENTATION ");
+            writer.keyword("WITHOUT IMPLEMENTATION");
         }
         if (isXml()) {
-            writer.print("AS XML ");
+            writer.keyword("AS XML");
         }
-        writer.print("FOR");
-        writer.println();
+        writer.keyword("FOR");
+        writer.newlineAndIndent();
         getExplicandum().unparse(
             writer, getOperator().getLeftPrec(), getOperator().getRightPrec());
     }

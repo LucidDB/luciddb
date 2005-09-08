@@ -22,7 +22,6 @@
 package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.type.SqlTypeStrategies;
 import org.eigenbase.util.Util;
 
@@ -56,12 +55,11 @@ public class SqlExtractFunction extends SqlFunction
         int leftPrec,
         int rightPrec)
     {
-        writer.print(getName());
-        writer.print("(");
+        final SqlWriter.Frame frame = writer.startFunCall(getName());
         operands[0].unparse(writer, leftPrec, rightPrec);
-        writer.print(" FROM ");
+        writer.sep("FROM");
         operands[1].unparse(writer, leftPrec, rightPrec);
-        writer.print(")");
+        writer.endFunCall(frame);
     }
 }
 

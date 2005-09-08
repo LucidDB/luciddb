@@ -47,7 +47,7 @@ public abstract class SqlSyntax extends EnumeratedValues.BasicValue
             public void unparse(SqlWriter writer, SqlOperator operator,
                 SqlNode[] operands, int leftPrec, int rightPrec)
             {
-                SqlUtil.unparseFunctionSyntax(operator,writer,operands,
+                SqlUtil.unparseFunctionSyntax(operator, writer, operands,
                     true, null);
             }
         };
@@ -72,8 +72,7 @@ public abstract class SqlSyntax extends EnumeratedValues.BasicValue
                 SqlNode[] operands, int leftPrec, int rightPrec)
             {
                 assert(operands.length == 1);
-                writer.print(operator.getName());
-                writer.print(' ');
+                writer.keyword(operator.getName());
                 operands[0].unparse(writer, operator.getLeftPrec(),
                     operator.getRightPrec());
             }
@@ -89,8 +88,7 @@ public abstract class SqlSyntax extends EnumeratedValues.BasicValue
                 assert(operands.length == 1);
                 operands[0].unparse(writer, operator.getLeftPrec(),
                     operator.getRightPrec());
-                writer.print(' ');
-                writer.print(operator.getName());
+                writer.keyword(operator.getName());
             }
         };
     public static final int Special_ordinal = 4;
@@ -168,9 +166,12 @@ public abstract class SqlSyntax extends EnumeratedValues.BasicValue
     /**
      * Converts a call to an operator of this syntax into a string.
      */
-    public abstract void unparse(SqlWriter writer, SqlOperator operator,
-        SqlNode[] operands, int leftPrec, int rightPrec);
-
+    public abstract void unparse(
+        SqlWriter writer,
+        SqlOperator operator,
+        SqlNode[] operands,
+        int leftPrec,
+        int rightPrec);
 }
 
 

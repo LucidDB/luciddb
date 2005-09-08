@@ -24,6 +24,7 @@ package org.eigenbase.util;
 import junit.framework.ComparisonFailure;
 
 import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 /**
  * Static utilities for JUnit tests.
@@ -55,7 +56,7 @@ public abstract class TestUtil
         if (expected != null && expected.equals(actual)) {
             return;
         }
-        String s = quoteForJava(actual);
+        String s = quoteForJavaUsingFold(actual);
 
         String message =
             "Expected:" + Util.lineSeparator + expected + Util.lineSeparator
@@ -95,6 +96,60 @@ public abstract class TestUtil
 
     private static final String lineBreak =
         "\" + NL +" + Util.lineSeparator + "\"";
+
+
+    /**
+     * Converts a string (which may contain quotes and newlines) into a
+     * java literal.
+     *
+     * <p>For example,
+     *
+     * <code><pre>string with "quotes" split
+     * across lines</pre></code>
+     *
+     * becomes
+     *
+     * <code><pre>fold(new String[] {
+     *  "string with \"quotes\" split",
+     *  "across lines"})</pre></code>
+     *
+     */
+    public static String quoteForJavaUsingFold(String s)
+    {
+        s = Util.replace(s, "\\", "\\\\");
+        s = Util.replace(s, "\"", "\\\"");
+        final Matcher lineBreakMatcher = LineBreakPattern.matcher(s);
+        final boolean lineBreaks = lineBreakMatcher.find();
+        s = lineBreakMatcher.replaceAll(commaLineBreak);
+        s = TabPattern.matcher(s).replaceAll("\\\\t");
+        s = "\"" + s + "\"";
+        if (lineBreaks) {
+            return "fold(new String[] {" + Util.lineSeparator + s + "})";
+        } else {
+            return s;
+        }
+    }
+
+    private static final String commaLineBreak =
+        "\"," + Util.lineSeparator + "\"";
+
+
+    /**
+     * Combines an array of strings, each representing a line, into a single
+     * string containing line separators.
+     */
+    public static String fold(String[] strings)
+    {
+        StringBuffer buf = new StringBuffer();
+        for (int i = 0; i < strings.length; i++) {
+            if (i > 0) {
+                buf.append(Util.lineSeparator);
+            }
+            String string = strings[i];
+            buf.append(string);
+        }
+        return buf.toString();
+    }
 
     /**
      * Quotes a pattern.

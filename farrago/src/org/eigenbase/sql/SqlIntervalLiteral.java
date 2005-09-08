@@ -23,7 +23,6 @@ package org.eigenbase.sql;
 
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.util.EnumeratedValues;
 
 /**
  * A SQL literal representing a time interval.
@@ -51,16 +50,12 @@ public class SqlIntervalLiteral extends SqlLiteral
             int leftPrec,
             int rightPrec) {
         IntervalValue interval = (IntervalValue) value;
-        if (writer.alwaysUseParentheses) writer.print("(");
-        writer.print("INTERVAL ");
+        writer.keyword("INTERVAL");
         if (interval.getSign() == -1) {
             writer.print("-");
         }
-        writer.print("'");
-        writer.print(value.toString());
-        writer.print("' ");
-        writer.print(interval.intervalQualifier.toString());
-        if (writer.alwaysUseParentheses) writer.print(")");
+        writer.literal("'" + value.toString() + "'");
+        writer.keyword(interval.intervalQualifier.toString());
     }
 
     /**

@@ -40,6 +40,7 @@ import org.eigenbase.util.EnumeratedValues;
  */
 public class SqlJoinOperator extends SqlOperator
 {
+    private static final SqlWriter.FrameType UsingFrameType = SqlWriter.FrameType.create("USING");
     //~ Static fields/initializers --------------------------------------------
 
     //~ Constructors ----------------------------------------------------------
@@ -96,30 +97,30 @@ public class SqlJoinOperator extends SqlOperator
     {
         final SqlNode left = operands[SqlJoin.LEFT_OPERAND];
         left.unparse(writer, leftPrec, getLeftPrec());
-        writer.print(' ');
+        String natural = "";
         if (SqlLiteral.booleanValue(operands[SqlJoin.IS_NATURAL_OPERAND])) {
-            writer.print("NATURAL ");
+            natural = "NATURAL ";
         }
         final SqlJoinOperator.JoinType joinType =
             (JoinType) SqlLiteral.symbolValue(operands[SqlJoin.TYPE_OPERAND]);
         switch (joinType.getOrdinal()) {
         case JoinType.Comma_ORDINAL:
-            writer.print(", ");
+            writer.sep(",", true);
             break;
         case JoinType.Cross_ORDINAL:
-            writer.print("CROSS JOIN ");
+            writer.sep(natural + "CROSS JOIN");
             break;
         case JoinType.Full_ORDINAL:
-            writer.print("FULL JOIN ");
+            writer.sep(natural + "FULL JOIN");
             break;
         case JoinType.Inner_ORDINAL:
-            writer.print("INNER JOIN ");
+            writer.sep(natural + "INNER JOIN");
             break;
         case JoinType.Left_ORDINAL:
-            writer.print("LEFT JOIN ");
+            writer.sep(natural + "LEFT JOIN");
             break;
         case JoinType.Right_ORDINAL:
-            writer.print("RIGHT JOIN ");
+            writer.sep(natural + "RIGHT JOIN");
             break;
         default:
             throw joinType.unexpected();
@@ -132,12 +133,14 @@ public class SqlJoinOperator extends SqlOperator
                 SqlLiteral.symbolValue(operands[SqlJoin.CONDITION_TYPE_OPERAND]);
             switch (conditionType.getOrdinal()) {
             case ConditionType.Using_ORDINAL:
-                writer.print(" USING (");
+                writer.keyword("USING");
+                final SqlWriter.Frame frame =
+                    writer.startList(UsingFrameType, "(", ")");
                 condition.unparse(writer, leftPrec, rightPrec); // e.g. "using (deptno, gender)"
-                writer.print(")");
+                writer.endList(frame);
                 break;
             case ConditionType.On_ORDINAL:
-                writer.print(" ON ");
+                writer.keyword("ON");
                 condition.unparse(writer, leftPrec, rightPrec);
                 break;
             default:

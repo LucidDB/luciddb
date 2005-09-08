@@ -125,16 +125,12 @@ public class SqlCastFunction extends SqlFunction
         int leftPrec,
         int rightPrec)
     {
-        writer.print(getName());
-        writer.print('(');
-        for (int i = 0; i < operands.length; i++) {
-            SqlNode operand = operands[i];
-            if (i > 0) {
-                writer.print(" AS ");
-            }
-            operand.unparse(writer, 0, 0);
-        }
-        writer.print(')');
+        assert operands.length == 2;
+        final SqlWriter.Frame frame = writer.startFunCall(getName());
+        operands[0].unparse(writer, 0, 0);
+        writer.sep("AS");
+        operands[1].unparse(writer, 0, 0);
+        writer.endFunCall(frame);
     }
 }
 

@@ -23,7 +23,6 @@ package org.eigenbase.sql.fun;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.type.SqlTypeStrategies;
 import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.sql.validate.SqlValidator;
@@ -50,12 +49,11 @@ public class SqlPositionFunction extends SqlFunction
         int leftPrec,
         int rightPrec)
     {
-        writer.print(getName());
-        writer.print("(");
+        final SqlWriter.Frame frame = writer.startFunCall(getName());
         operands[0].unparse(writer, leftPrec, rightPrec);
-        writer.print(" IN ");
+        writer.sep("IN");
         operands[1].unparse(writer, leftPrec, rightPrec);
-        writer.print(")");
+        writer.endFunCall(frame);
     }
 
     public String getSignatureTemplate(final int operandsCount)

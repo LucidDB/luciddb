@@ -43,10 +43,10 @@ import net.sf.farrago.util.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.util.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.pretty.SqlPrettyWriter;
 import org.eigenbase.runtime.RestartableIterator;
 
 import java.sql.Date;
-import java.io.*;
 
 /**
  * FarragoRuntimeContext defines runtime support routines needed by generated
@@ -266,19 +266,14 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
     {
         // The SQL standard is very precise about the formatting
         SqlDialect dialect = new SqlDialect(session.getDatabaseMetaData());
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        SqlWriter sqlWriter = new SqlWriter(dialect, pw);
+        SqlPrettyWriter writer = new SqlPrettyWriter(dialect);
         Iterator iter = sessionVariables.schemaSearchPath.iterator();
         while (iter.hasNext()) {
+            writer.sep(",");
             SqlIdentifier id = (SqlIdentifier) iter.next();
-            id.unparse(sqlWriter, 0, 0);
-            if (iter.hasNext()) {
-                sqlWriter.print(',');
-            }
+            id.unparse(writer, 0, 0);
         }
-        pw.close();
-        return sw.toString();
+        return writer.toString();
     }
 
     protected long getCurrentTime()

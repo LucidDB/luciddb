@@ -77,11 +77,11 @@ public class SqlCharStringLiteral extends SqlAbstractStringLiteral
     {
         if (false) {
             String stringValue = ((NlsString) value).getValue();
-            writer.print(
+            writer.literal(
                 writer.getDialect().quoteStringLiteral(stringValue));
         }
         assert value instanceof NlsString;
-        writer.print(value.toString());
+        writer.literal(value.toString());
     }
 
     protected SqlAbstractStringLiteral concat1(SqlLiteral [] lits)

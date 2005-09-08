@@ -124,22 +124,22 @@ public class SqlIdentifier extends SqlNode
         int leftPrec,
         int rightPrec)
     {
+        final SqlWriter.Frame frame =
+            writer.startList(SqlWriter.FrameType.Simple);
         for (int i = 0; i < names.length; i++) {
             String name = names[i];
-            if (i > 0) {
-                writer.print('.');
-            }
+            writer.sep(".");
             if (name.equals("*")) {
                 writer.print(name);
             } else {
-                writer.printIdentifier(name);
+                writer.identifier(name);
             }
         }
 
         if (null != collation) {
-            writer.print(" ");
             collation.unparse(writer, leftPrec, rightPrec);
         }
+        writer.endList(frame);
     }
 
     public void validate(SqlValidator validator, SqlValidatorScope scope)

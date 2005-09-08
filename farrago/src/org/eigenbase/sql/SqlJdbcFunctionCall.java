@@ -28,12 +28,12 @@ import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.fun.SqlTrimFunction;
 import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.type.SqlTypeStrategies;
 import org.eigenbase.util.Util;
 
 import java.sql.DatabaseMetaData;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A <code>SqlJdbcFunctionCall</code> is a node of a parse tree which
@@ -433,14 +433,13 @@ public class SqlJdbcFunctionCall extends SqlFunction
     {
         writer.print("{fn ");
         writer.print(jdbcName);
-        writer.print("(");
+        final SqlWriter.Frame frame = writer.startList("(", ")");
         for (int i = 0; i < operands.length; i++) {
-            if (i > 0) {
-                writer.print(", ");
-            }
+            writer.sep(",");
             operands[i].unparse(writer, leftPrec, rightPrec);
         }
-        writer.print(") }");
+        writer.endList(frame);
+        writer.print("}");
     }
 
     /**
@@ -595,51 +594,50 @@ public class SqlJdbcFunctionCall extends SqlFunction
      */
     private static class JdbcToInternalLookupTable
     {
-        private final HashMap map = new HashMap();
+        private final Map map = new HashMap();
 
         private JdbcToInternalLookupTable()
         {
-            SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
             // A table of all functions can be found at
             // http://java.sun.com/products/jdbc/driverdevs.html
             // which is also provided in the javadoc for this class.
             map.put(
                 "ABS",
-                new MakeCall(opTab.absFunc, 1));
+                new MakeCall(SqlStdOperatorTable.absFunc, 1));
             map.put(
                 "LOG",
-                new MakeCall(opTab.lnFunc, 1));
+                new MakeCall(SqlStdOperatorTable.lnFunc, 1));
             map.put(
                 "LOG10",
-                new MakeCall(opTab.logFunc, 1));
+                new MakeCall(SqlStdOperatorTable.logFunc, 1));
             map.put(
                 "MOD",
-                new MakeCall(opTab.modFunc, 2));
+                new MakeCall(SqlStdOperatorTable.modFunc, 2));
             map.put(
                 "POWER",
-                new MakeCall(opTab.powFunc, 2));
+                new MakeCall(SqlStdOperatorTable.powFunc, 2));
 
             map.put(
                 "CONCAT",
-                new MakeCall(opTab.concatOperator, 2));
+                new MakeCall(SqlStdOperatorTable.concatOperator, 2));
             map.put(
                 "INSERT",
                 new MakeCall(
-                    opTab.overlayFunc,
+                    SqlStdOperatorTable.overlayFunc,
                     4,
                     new int [] { 0, 2, 3, 1 }));
             map.put(
                 "LCASE",
-                new MakeCall(opTab.lowerFunc, 1));
+                new MakeCall(SqlStdOperatorTable.lowerFunc, 1));
             map.put(
                 "LENGTH",
-                new MakeCall(opTab.characterLengthFunc, 1));
+                new MakeCall(SqlStdOperatorTable.characterLengthFunc, 1));
             map.put(
                 "LOCATE",
-                new MakeCall(opTab.positionFunc, 2));
+                new MakeCall(SqlStdOperatorTable.positionFunc, 2));
             map.put(
                 "LTRIM",
-                new MakeCall(opTab.trimFunc, 1) {
+                new MakeCall(SqlStdOperatorTable.trimFunc, 1) {
                     SqlCall createCall(SqlNode [] operands)
                     {
                         assert (null != operands);
@@ -656,7 +654,7 @@ public class SqlJdbcFunctionCall extends SqlFunction
                 });
             map.put(
                 "RTRIM",
-                new MakeCall(opTab.trimFunc, 1) {
+                new MakeCall(SqlStdOperatorTable.trimFunc, 1) {
                     SqlCall createCall(SqlNode [] operands)
                     {
                         assert (null != operands);
@@ -673,20 +671,20 @@ public class SqlJdbcFunctionCall extends SqlFunction
                 });
             map.put(
                 "SUBSTRING",
-                new MakeCall(opTab.substringFunc, 3));
+                new MakeCall(SqlStdOperatorTable.substringFunc, 3));
             map.put(
                 "UCASE",
-                new MakeCall(opTab.upperFunc, 0));
+                new MakeCall(SqlStdOperatorTable.upperFunc, 0));
 
             map.put(
                 "CURDATE",
-                new MakeCall(opTab.currentDateFunc, 0));
+                new MakeCall(SqlStdOperatorTable.currentDateFunc, 0));
             map.put(
                 "CURTIME",
-                new MakeCall(opTab.localTimeFunc, 0));
+                new MakeCall(SqlStdOperatorTable.localTimeFunc, 0));
             map.put(
                 "NOW",
-                new MakeCall(opTab.currentTimestampFunc, 0));
+                new MakeCall(SqlStdOperatorTable.currentTimestampFunc, 0));
         }
 
         /**

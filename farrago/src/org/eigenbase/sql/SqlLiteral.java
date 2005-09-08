@@ -401,11 +401,13 @@ public class SqlLiteral extends SqlNode
     {
         switch (typeName.getOrdinal()) {
         case SqlTypeName.Boolean_ordinal:
-            writer.print((value == null) ? "UNKNOWN"
-                : (((Boolean) value).booleanValue() ? "TRUE" : "FALSE"));
+            writer.keyword(
+                value == null ? "UNKNOWN" :
+                ((Boolean) value).booleanValue() ? "TRUE" :
+                "FALSE");
             break;
         case SqlTypeName.Null_ordinal:
-            writer.print("NULL");
+            writer.keyword("NULL");
             break;
         case SqlTypeName.Char_ordinal:
         case SqlTypeName.Decimal_ordinal:
@@ -417,10 +419,10 @@ public class SqlLiteral extends SqlNode
 
         case SqlTypeName.Symbol_ordinal:
             EnumeratedValues.Value enumVal = (EnumeratedValues.Value) value;
-            writer.print(enumVal.getName().toUpperCase());
+            writer.keyword(enumVal.getName().toUpperCase());
             break;
         default:
-            writer.print(value.toString());
+            writer.literal(value.toString());
         }
     }
 

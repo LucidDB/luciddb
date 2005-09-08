@@ -112,15 +112,13 @@ public class SqlNodeList extends SqlNode
         int rightPrec)
     {
         if ((leftPrec > 0) || (rightPrec > 0)) {
-            writer.print('(');
+            final SqlWriter.Frame frame = writer.startList("(", ")");
             unparse(writer, 0, 0);
-            writer.print(')');
+            writer.endList(frame);
         } else {
             for (int i = 0; i < list.size(); i++) {
                 SqlNode node = (SqlNode) list.get(i);
-                if (i > 0) {
-                    writer.print(", ");
-                }
+                writer.sep(",");
                 node.unparse(writer, 0, 0);
             }
         }

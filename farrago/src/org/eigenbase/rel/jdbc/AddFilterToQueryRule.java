@@ -24,12 +24,14 @@
 package org.eigenbase.rel.jdbc;
 
 import org.eigenbase.rel.FilterRel;
+import org.eigenbase.rel.TableAccessRel;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelOptRuleOperand;
 import org.eigenbase.rex.RexToSqlTranslator;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlWriter;
+import org.eigenbase.sql.pretty.SqlPrettyWriter;
 
 
 /**
@@ -38,7 +40,7 @@ import org.eigenbase.sql.SqlWriter;
  *
  * <p> This rule only works if the query's select clause is "&#42;". If you
  * start with a {@link FilterRel} on a {@link org.eigenbase.rel.ProjectRel} on
- * a {@link org.eigenbase.oj.rel.JavaTableAccessRel}, this will not be the
+ * a {@link TableAccessRel}, this will not be the
  * case. You can fix it by pushing the filter through the project.  (todo:
  * Implement a rule to do this.)  </p>
  *
@@ -69,13 +71,11 @@ class AddFilterToQueryRule extends RelOptRule
             return;
         }
         JdbcQuery query = (JdbcQuery) oldQuery.clone();
-        SqlWriter writer = new SqlWriter(oldQuery.dialect, null);
+        SqlWriter writer = new SqlPrettyWriter(oldQuery.dialect);
         final RexToSqlTranslator translator = new RexToSqlTranslator();
-        writer.pushQuery(query.sql);
         final SqlNode sqlCondition =
             translator.translate(writer, filter.getCondition());
         query.sql.addWhere(sqlCondition);
-        writer.popQuery(query.sql);
         call.transformTo(query);
     }
 }

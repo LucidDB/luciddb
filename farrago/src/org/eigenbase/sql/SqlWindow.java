@@ -22,12 +22,10 @@
 
 package org.eigenbase.sql;
 
+import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SelectScope;
 import org.eigenbase.util.Util;
-import org.eigenbase.resource.EigenbaseResource;
 
 /**
  * SQL window specifcation.
@@ -110,7 +108,7 @@ public class SqlWindow extends SqlCall
             (SqlIdentifier) operands[DeclName_OPERAND];
         if (null != declName) {
             declName.unparse(writer, 0, 0);
-            writer.print(" AS ");
+            writer.keyword("AS");
         }
         // Override, so we don't print extra parentheses.
         getOperator().unparse(writer, operands, 0, 0);
@@ -266,13 +264,7 @@ public class SqlWindow extends SqlCall
         // operands[0] the declared name fo this window.  We only want
         // to check the window components.
         for (int i = 1; i < this.operands.length; i++) {
-            if (null == this.operands[i] && null == that.operands[i]) {
-                continue;
-            }
-            if (null == this.operands[i] || null == that.operands[i]) {
-                return false;
-            }
-            if (!this.operands[i].equalsDeep(that.operands[i])) {
+            if (!SqlNode.equalDeep(this.operands[i], that.operands[i])) {
                 return false;
             }
         }

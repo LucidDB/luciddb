@@ -32,7 +32,6 @@ import org.eigenbase.sql.type.SqlTypeStrategies;
 import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.util.Util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -117,11 +116,12 @@ import java.util.List;
  **/
 public class SqlCaseOperator extends SqlOperator
 {
+    private static final SqlWriter.FrameType CaseFrameType = SqlWriter.FrameType.create("CASE");
     //~ Constructors ----------------------------------------------------------
 
     public SqlCaseOperator()
     {
-        super("CASE", SqlKind.Case, 1, true, null,
+        super("CASE", SqlKind.Case, 100, true, null,
             SqlTypeStrategies.otiReturnType, null);
     }
 
@@ -290,7 +290,6 @@ public class SqlCaseOperator extends SqlOperator
         SqlNode elseClause,
         SqlParserPos pos)
     {
-        SqlStdOperatorTable stdOps = SqlStdOperatorTable.instance();
         if (null != caseIdentifier) {
             List list = whenList.getList();
             for (int i = 0; i < list.size(); i++) {
@@ -317,8 +316,25 @@ public class SqlCaseOperator extends SqlOperator
         int leftPrec,
         int rightPrec)
     {
-        throw Util.needToImplement("need to implement");
+        final SqlWriter.Frame frame = writer.startList(CaseFrameType, "CASE", "END");
+        SqlNodeList whenList = (SqlNodeList) operands[SqlCase.WHEN_OPERANDS];
+        SqlNodeList thenList = (SqlNodeList) operands[SqlCase.THEN_OPERANDS];
+        assert (whenList.size() == thenList.size());
+        for (int i = 0; i < whenList.size(); i++) {
+            writer.sep("WHEN");
+            SqlNode e = whenList.get(i);
+            e.unparse(writer, 0, 0);
+            writer.sep("THEN");
+            e = thenList.get(i);
+            e.unparse(writer, 0, 0);
+        }
+
+        writer.sep("ELSE");
+        final SqlNode elseOperand = operands[SqlCase.ELSE_OPERAND];
+        elseOperand.unparse(writer, 0, 0);
+        writer.endList(frame);
     }
+
 }
 
 

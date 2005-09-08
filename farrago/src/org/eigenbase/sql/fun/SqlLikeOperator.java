@@ -24,11 +24,10 @@
 package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.parser.SqlParserUtil;
-import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.type.SqlTypeStrategies;
+import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.util.Util;
 
 import java.util.List;
@@ -127,17 +126,17 @@ public class SqlLikeOperator extends SqlSpecialOperator
         int leftPrec,
         int rightPrec)
     {
+        final SqlWriter.Frame frame = writer.startList("", "");
         operands[0].unparse(
             writer, getLeftPrec(), getRightPrec());
-        writer.print(' ');
-        writer.print(getName());
-        writer.print(' ');
+        writer.sep(getName());
 
         operands[1].unparse(writer, getLeftPrec(), getRightPrec());
         if (operands.length == 3) {
-            writer.print(" ESCAPE ");
+            writer.sep("ESCAPE");
             operands[2].unparse(writer, getLeftPrec(), getRightPrec());
         }
+        writer.endList(frame);
     }
 
     public int reduceExpr(

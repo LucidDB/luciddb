@@ -27,10 +27,11 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.sql.util.SqlVisitor;
-import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.util.Util;
 
 import java.nio.charset.Charset;
@@ -184,29 +185,6 @@ public class SqlDataTypeSpec extends SqlNode
             typeName, precision, scale, charSetName, getParserPosition());
     }
 
-    /**
-     * Writes a SQL representation of this node to a writer.
-     *
-     * <p>The <code>leftPrec</code> and <code>rightPrec</code> parameters
-     * give us enough context to decide whether we need to enclose the
-     * expression in parentheses. For example, we need parentheses around
-     * "2 + 3" if preceded by "5 *". This is because the precedence of the "*"
-     * operator is greater than the precedence of the "+" operator.
-     *
-     * <p>The algorithm handles left- and right-associative operators by giving
-     * them slightly different left- and right-precedence.
-     *
-     * <p>If {@link SqlWriter#alwaysUseParentheses} is true, we use parentheses
-     * even when they are not required by the precedence rules.
-     *
-     * <p>For the details of this algorithm, see {@link SqlCall#unparse}.
-     *
-     * @param writer Target writer
-     * @param leftPrec The precedence of the {@link SqlNode} immediately
-     *   preceding this node in a depth-first scan of the parse tree
-     * @param rightPrec The precedence of the {@link SqlNode} immediately
-     *   following this node in a depth-first scan of the parse tree
-     */
     public void unparse(
         SqlWriter writer,
         int leftPrec,
@@ -216,25 +194,27 @@ public class SqlDataTypeSpec extends SqlNode
         if (SqlTypeName.containsName(name)) {
             SqlTypeName sqlTypeName = SqlTypeName.get(name);
 
-            //we have a built in data type
-            writer.print(name);
+            // we have a built-in data type
+            writer.keyword(name);
 
             if (sqlTypeName.allowsPrec()) {
-                writer.print("(" + precision);
+                final SqlWriter.Frame frame =
+                    writer.startList(SqlWriter.FrameType.FunCall, "(", ")");
+                writer.print(precision);
                 if (sqlTypeName.allowsScale()) {
-                    writer.print(", " + scale);
+                    writer.sep(",", true);
+                    writer.print(scale);
                 }
-                writer.print(")");
+                writer.endList(frame);
             }
 
             if (charSetName != null) {
-                writer.print(" CHARACTER SET ");
-                writer.printIdentifier(charSetName);
+                writer.keyword("CHARACTER SET");
+                writer.identifier(charSetName);
             }
 
             if (collectionsTypeName != null) {
-                writer.print(" ");
-                writer.print(collectionsTypeName.getSimple());
+                writer.keyword(collectionsTypeName.getSimple());
             }
         } else {
             // else we have a user defined type
@@ -256,16 +236,9 @@ public class SqlDataTypeSpec extends SqlNode
     {
         if (node instanceof SqlDataTypeSpec) {
             SqlDataTypeSpec that = (SqlDataTypeSpec) node;
-            final boolean collectionsTest;
-            if (null != this.collectionsTypeName) {
-                collectionsTest =
-                    this.collectionsTypeName.equalsDeep(
-                        that.collectionsTypeName);
-            } else {
-                collectionsTest =
-                    this.collectionsTypeName == that.collectionsTypeName;
-            }
-            return collectionsTest &&
+            return SqlNode.equalDeep(
+                this.collectionsTypeName,
+                that.collectionsTypeName) &&
                 this.typeName.equalsDeep(that.typeName) &&
                 this.precision == that.precision &&
                 this.scale == that.scale &&

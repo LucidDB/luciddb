@@ -105,22 +105,23 @@ public class SqlDelete extends SqlCall
         int leftPrec,
         int rightPrec)
     {
-        writer.print("DELETE FROM ");
+        final SqlWriter.Frame frame =
+            writer.startList(SqlWriter.FrameType.Select, "DELETE FROM", "");
         getTargetTable().unparse(
             writer, getOperator().getLeftPrec(), getOperator().getRightPrec());
         if (getAlias() != null) {
-            writer.print(" AS ");
+            writer.keyword("AS");
             getAlias().unparse(
                 writer, getOperator().getLeftPrec(),
                 getOperator().getRightPrec());
         }
         if (getCondition() != null) {
-            writer.println();
-            writer.print("WHERE ");
+            writer.sep("WHERE");
             getCondition().unparse(
                 writer, getOperator().getLeftPrec(),
                 getOperator().getRightPrec());
         }
+        writer.endList(frame);
     }
 
     public void validate(SqlValidator validator, SqlValidatorScope scope)

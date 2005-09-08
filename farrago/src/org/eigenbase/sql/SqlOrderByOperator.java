@@ -23,9 +23,6 @@
 
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.test.SqlTester;
-
-
 /**
  * SqlOrderByOperator is used to represent an ORDER BY on a query
  * other than a SELECT (e.g. VALUES or UNION).  It is a purely syntactic
@@ -65,13 +62,16 @@ public class SqlOrderByOperator extends SqlSpecialOperator
         int rightPrec)
     {
         assert (operands.length == 2);
+        final SqlWriter.Frame frame =
+            writer.startList(SqlWriter.FrameType.OrderBy);
         operands[QUERY_OPERAND].unparse(writer, getLeftPrec(), getRightPrec());
-        writer.print(' ');
-        writer.print(getName());
-        writer.print(' ');
+        writer.sep(getName());
+        final SqlWriter.Frame listFrame =
+            writer.startList(SqlWriter.FrameType.OrderByList);
         operands[ORDER_OPERAND].unparse(writer, 0, 0);
+        writer.endList(listFrame);
+        writer.endList(frame);
     }
 }
-
 
 // End SqlOrderByOperator.java

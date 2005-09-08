@@ -24,7 +24,6 @@ package org.eigenbase.sql.fun;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.type.SqlTypeStrategies;
 import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.sql.validate.SqlValidator;
@@ -40,6 +39,7 @@ import java.util.ArrayList;
  * @version $Id$
  */
 public class SqlOverlapsOperator extends SqlSpecialOperator {
+    private static final SqlWriter.FrameType OverlapsFrameType = SqlWriter.FrameType.create("OVERLAPS");
 
     public SqlOverlapsOperator() {
         super("OVERLAPS", SqlKind.Overlaps, 15, true,
@@ -51,18 +51,19 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
         SqlWriter writer,
         SqlNode[] operands,
         int leftPrec,
-        int rightPrec) {
-        writer.print("(");
+        int rightPrec)
+    {
+        final SqlWriter.Frame frame = writer.startList(OverlapsFrameType, "(", ")");
         operands[0].unparse(writer, leftPrec, rightPrec);
-        writer.print(", ");
+        writer.sep(",", true);
         operands[1].unparse(writer, leftPrec, rightPrec);
-        writer.print(") ");
-        writer.print(getName());
-        writer.print(" (");
+        writer.sep(")", true);
+        writer.sep(getName());
+        writer.sep("(", true);
         operands[2].unparse(writer, leftPrec, rightPrec);
-        writer.print(", ");
+        writer.sep(",", true);
         operands[3].unparse(writer, leftPrec, rightPrec);
-        writer.print(")");
+        writer.endList(frame);
     }
 
     public SqlOperandCountRange getOperandCountRange() {

@@ -107,7 +107,7 @@ abstract class SqlAbstractDateTimeLiteral extends SqlLiteral {
         int leftPrec,
         int rightPrec)
     {
-        writer.print(this.toString());
+        writer.literal(this.toString());
     }
 
     /**

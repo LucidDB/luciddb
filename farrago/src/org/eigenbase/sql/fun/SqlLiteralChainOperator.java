@@ -148,40 +148,38 @@ public class SqlLiteralChainOperator extends SqlInternalOperator {
         int leftPrec,
         int rightPrec)
     {
+        final SqlWriter.Frame frame = writer.startList("", "");
         SqlCollation collation = null;
         for (int i = 0; i < rands.length; i++) {
-            if (i > 0) {
-                writer.print(" ");
-            }
             SqlLiteral rand = (SqlLiteral) rands[i];
             if (rand instanceof SqlCharStringLiteral) {
                 NlsString nls =
                     ((SqlCharStringLiteral) rand).getNlsString();
                 if (i == 0) {
                     collation = nls.getCollation();
-                    writer.print(nls.asSql(true, false)); // print with prefix
+                    // print with prefix
+                    writer.literal(nls.asSql(true, false));
                 } else {
-                    writer.print(nls.asSql(false, false)); // print without prefix
+                    // print without prefix
+                    writer.literal(nls.asSql(false, false));
                 }
             } else if (i == 0) {
                 // print with prefix
                 rand.unparse(writer, leftPrec, rightPrec);
             } else {
                 // print without prefix
-                writer.print("'");
                 if (rand.getTypeName() == SqlTypeName.Binary) {
                     BitString bs = (BitString) rand.getValue();
-                    writer.print(bs.toHexString());
+                    writer.literal("'" + bs.toHexString() + "'");
                 } else {
-                    writer.print(rand.toValue());
+                    writer.literal("'" + rand.toValue() + "'");
                 }
-                writer.print("'");
             }
         }
         if (collation != null) {
-            writer.print(" ");
-            writer.print(collation.toString());
+            collation.unparse(writer, 0, 0);
         }
+        writer.endList(frame);
     }
 
     /**
