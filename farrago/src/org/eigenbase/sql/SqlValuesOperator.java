@@ -42,14 +42,13 @@ public class SqlValuesOperator extends SqlSpecialOperator
         int leftPrec,
         int rightPrec)
     {
-        writer.print("VALUES ");
+        final SqlWriter.Frame frame = writer.startList("VALUES", "");
         for (int i = 0; i < operands.length; i++) {
-            if (i > 0) {
-                writer.print(", ");
-            }
+            writer.sep(",");
             SqlNode operand = operands[i];
             operand.unparse(writer, 0, 0);
         }
+        writer.endList(frame);
     }
 }
 

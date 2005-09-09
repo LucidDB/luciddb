@@ -127,50 +127,51 @@ public class SqlIntervalQualifier extends SqlNode
         return endUnit;
     }
 
-    public String toString()
-    {
-        StringBuffer ret = new StringBuffer();
-        ret.append(startUnit.getName().toUpperCase());
-        if (startUnit.equals(TimeUnit.Second)) {
-            if (0 != fractionalSecondPrecision) {
-                ret.append("(");
-                ret.append(startPrecision);
-                ret.append(", ");
-                ret.append(fractionalSecondPrecision);
-                ret.append(")");
-            } else if (0 != startPrecision) {
-                ret.append("(");
-                ret.append(startPrecision);
-                ret.append(")");
-            }
-        } else {
-
-            if (0 != startPrecision) {
-                ret.append("(");
-                ret.append(startPrecision);
-                ret.append(")");
-            }
-
-            if (null != endUnit) {
-                ret.append(" TO ");
-                ret.append(endUnit.getName().toUpperCase());
-            }
-
-            if (0 != fractionalSecondPrecision) {
-                ret.append("(");
-                ret.append(fractionalSecondPrecision);
-                ret.append(")");
-            }
-        }
-        return ret.toString();
-    }
-
     public void unparse(
         SqlWriter writer,
         int leftPrec,
         int rightPrec)
     {
-        writer.print(this.toString());
+        final String start = startUnit.getName().toUpperCase();
+        if (startUnit.equals(TimeUnit.Second)) {
+            if (0 != fractionalSecondPrecision) {
+                final SqlWriter.Frame frame = writer.startFunCall(start);
+                writer.print(startPrecision);
+                writer.sep(",", true);
+                writer.print(fractionalSecondPrecision);
+                writer.endList(frame);
+            } else if (0 != startPrecision) {
+                final SqlWriter.Frame frame = writer.startFunCall(start);
+                writer.print(startPrecision);
+                writer.endList(frame);
+            } else {
+                writer.keyword(start);
+            }
+        } else {
+            if (0 != startPrecision) {
+                final SqlWriter.Frame frame = writer.startFunCall(start);
+                writer.print(startPrecision);
+                writer.endList(frame);
+            } else {
+                writer.keyword(start);
+            }
+
+            if (null != endUnit) {
+                writer.keyword("TO");
+                final String end = endUnit.getName().toUpperCase();
+                if (0 != fractionalSecondPrecision) {
+                    final SqlWriter.Frame frame = writer.startFunCall(end);
+                    writer.print(fractionalSecondPrecision);
+                    writer.endList(frame);
+                } else {
+                    writer.keyword(end);
+                }
+            } else if (0 != fractionalSecondPrecision) {
+                final SqlWriter.Frame frame = writer.startList("(", ")");
+                writer.print(fractionalSecondPrecision);
+                writer.endList(frame);
+            }
+        }
     }
 
     public boolean isYearMonth()

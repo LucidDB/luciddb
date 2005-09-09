@@ -24,13 +24,11 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/farrago/JavaSourceExecStream.h"
 #include "fennel/farrago/JniUtil.h"
-#include "fennel/exec/ExecStreamBufAccessor.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 JavaSourceExecStream::JavaSourceExecStream()
 {
-    javaByteBuffer = NULL;
 }
 
 void JavaSourceExecStream::prepare(JavaSourceExecStreamParams const &params)
@@ -43,24 +41,13 @@ void JavaSourceExecStream::prepare(JavaSourceExecStreamParams const &params)
     bufferLock.accessSegment(scratchAccessor);
 }
 
-void JavaSourceExecStream::getResourceRequirements(
-    ExecStreamResourceQuantity &minQuantity,
-    ExecStreamResourceQuantity &optQuantity)
-{
-    SingleOutputExecStream::getResourceRequirements(minQuantity,optQuantity);
-
-    // one page for scratch buffer
-    minQuantity.nCachePages += 1;
-    
-    optQuantity = minQuantity;
-}
-
 void JavaSourceExecStream::open(bool restart)
 {
+    FENNEL_TRACE(TRACE_FINE, "open" << (restart? " (restart)" : ""));
     SingleOutputExecStream::open(restart);
 
     JniEnvAutoRef pEnv;
-    
+
     if (restart) {
         if (javaTupleStream) {
             pEnv->CallVoidMethod(
@@ -69,53 +56,16 @@ void JavaSourceExecStream::open(bool restart)
         return;
     }
 
-    bufferLock.allocatePage();
     jlong hJavaSourceExecStream = pEnv->CallLongMethod(
         pStreamGraphHandle->javaRuntimeContext,JniUtil::methGetJavaStreamHandle,
         javaTupleStreamId);
     javaTupleStream = CmdInterpreter::getObjectFromLong(hJavaSourceExecStream);
+    FENNEL_TRACE(TRACE_FINER, "found javaTupleStream " << javaTupleStream << " for stream ID " << javaTupleStreamId);
     assert(javaTupleStream);
-    javaByteBuffer = pEnv->NewDirectByteBuffer(
-        bufferLock.getPage().getWritableData(),
-        bufferLock.getPage().getCache().getPageSize());
-    javaByteBuffer = pEnv->NewGlobalRef(javaByteBuffer);
-    assert(javaByteBuffer);
-}
-
-ExecStreamResult JavaSourceExecStream::execute(ExecStreamQuantum const &)
-{
-    switch(pOutAccessor->getState()) {
-    case EXECBUF_NONEMPTY:
-    case EXECBUF_OVERFLOW:
-        return EXECRC_BUF_OVERFLOW;
-    case EXECBUF_EOS:
-        return EXECRC_EOS;
-    default:
-        break;
-    }
-
-    JniEnvAutoRef pEnv;
-    assert(javaTupleStream);
-    uint cb = pEnv->CallIntMethod(
-        javaTupleStream,JniUtil::methFillBuffer,javaByteBuffer);
-    if (cb) {
-        pOutAccessor->provideBufferForConsumption(
-            bufferLock.getPage().getWritableData(),
-            bufferLock.getPage().getWritableData() + cb);
-        return EXECRC_BUF_OVERFLOW;
-    } else {
-        pOutAccessor->markEOS();
-        return EXECRC_EOS;
-    }
 }
 
 void JavaSourceExecStream::closeImpl()
 {
-    JniEnvAutoRef pEnv;
-    if (javaByteBuffer) {
-        pEnv->DeleteGlobalRef(javaByteBuffer);
-        javaByteBuffer = NULL;
-    }
     javaTupleStream = NULL;
     bufferLock.unlock();
     SingleOutputExecStream::closeImpl();
@@ -127,6 +77,6 @@ JavaSourceExecStream::getOutputBufProvision() const
     return BUFPROV_PRODUCER;
 }
 
-FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/farrago/JavaSourceExecStream.cpp#1 $");
+FENNEL_END_CPPFILE("$Id$");
 
 // End JavaSourceExecStream.cpp

@@ -69,7 +69,7 @@ public class SqlInsert extends SqlCall
     }
 
     /**
-     * Gets the source SELECT expression for the data to be inserted. 
+     * Gets the source SELECT expression for the data to be inserted.
      * returns null before the statement
      * has been expanded by SqlValidator.performUnconditionalRewrites.
      *
@@ -103,7 +103,8 @@ public class SqlInsert extends SqlCall
         int leftPrec,
         int rightPrec)
     {
-        writer.print("INSERT INTO ");
+        writer.startList(SqlWriter.FrameType.Select);
+        writer.sep("INSERT INTO");
         getTargetTable().unparse(
             writer, getOperator().getLeftPrec(), getOperator().getRightPrec());
         if (getTargetColumnList() != null) {
@@ -111,7 +112,7 @@ public class SqlInsert extends SqlCall
                 writer, getOperator().getLeftPrec(),
                 getOperator().getRightPrec());
         }
-        writer.println();
+        writer.newlineAndIndent();
         getSource().unparse(
             writer, getOperator().getLeftPrec(), getOperator().getRightPrec());
     }

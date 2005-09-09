@@ -25,6 +25,7 @@ package org.eigenbase.sql;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+import java.util.regex.Pattern;
 
 import org.eigenbase.util.Util;
 
@@ -100,6 +101,14 @@ public class SqlDialect
             val.replaceAll(identifierQuoteString,
                 identifierQuoteString + identifierQuoteString);
         return identifierQuoteString + val2 + identifierQuoteString;
+    }
+
+    /**
+     * Returns whether a given identifier needs to be quoted.
+     */
+    public boolean identifierNeedsToBeQuoted(String val)
+    {
+        return !Pattern.compile("^[A-Z_$0-9]+").matcher(val).matches();
     }
 
     /**

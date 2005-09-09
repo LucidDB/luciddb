@@ -28,9 +28,8 @@ import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelOptRuleOperand;
 import org.eigenbase.rex.RexNode;
-import org.eigenbase.sql.SqlNodeList;
-import org.eigenbase.sql.SqlSelect;
-import org.eigenbase.sql.SqlWriter;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.pretty.SqlPrettyWriter;
 import org.eigenbase.sql.parser.SqlParserPos;
 
 
@@ -75,8 +74,7 @@ class AddProjectToQueryRule extends RelOptRule
                 oldQuery.dialect,
                 (SqlSelect) oldQuery.sql.clone(),
                 oldQuery.getDataSource());
-        SqlWriter writer = new SqlWriter(query.dialect, null);
-        writer.pushQuery(query.sql);
+        SqlPrettyWriter writer = new SqlPrettyWriter(query.dialect);
         SqlNodeList list = new SqlNodeList(SqlParserPos.ZERO);
         for (int i = 0; i < project.getChildExps().length; i++) {
             RexNode exp = project.getChildExps()[i];
@@ -85,7 +83,6 @@ class AddProjectToQueryRule extends RelOptRule
                     writer, exp));
         }
         query.sql.getOperands()[SqlSelect.SELECT_OPERAND] = list;
-        writer.popQuery(query.sql);
         call.transformTo(query);
     }
 }

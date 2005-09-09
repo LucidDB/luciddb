@@ -53,12 +53,11 @@ public class SqlConvertFunction extends SqlFunction
         int leftPrec,
         int rightPrec)
     {
-        writer.print(getName());
-        writer.print("(");
+        final SqlWriter.Frame frame = writer.startFunCall(getName());
         operands[0].unparse(writer, leftPrec, rightPrec);
-        writer.print(" USING ");
+        writer.sep("USING");
         operands[1].unparse(writer, leftPrec, rightPrec);
-        writer.print(")");
+        writer.endFunCall(frame);
     }
 
     public String getSignatureTemplate(final int operandsCount)

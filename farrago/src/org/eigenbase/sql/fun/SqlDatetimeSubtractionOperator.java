@@ -56,11 +56,11 @@ public class SqlDatetimeSubtractionOperator extends SqlSpecialOperator
         int leftPrec,
         int rightPrec)
     {
-        writer.print("(");
+        final SqlWriter.Frame frame = writer.startList("(", ")");
         operands[0].unparse(writer, leftPrec, rightPrec);
-        writer.print(" - ");
+        writer.sep("-");
         operands[1].unparse(writer, leftPrec, rightPrec);
-        writer.print(") ");
+        writer.endList(frame);
         operands[2].unparse(writer, leftPrec, rightPrec);
     }
 }

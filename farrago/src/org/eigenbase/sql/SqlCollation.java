@@ -77,7 +77,7 @@ public class SqlCollation
     /**
      * Creates a SqlCollation with the default collation name and the given
      * coercibility.
-     * 
+     *
      * @param coercibility
      */
     public SqlCollation(Coercibility coercibility)
@@ -247,7 +247,8 @@ public class SqlCollation
         int leftPrec,
         int rightPrec)
     {
-        writer.print(this.toString());
+        writer.keyword("COLLATE");
+        writer.identifier(collationName);
     }
 
     public Charset getCharset()

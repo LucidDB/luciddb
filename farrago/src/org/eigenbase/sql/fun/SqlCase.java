@@ -60,7 +60,7 @@ public class SqlCase extends SqlCall
      * <li>operands[2] is a SqlNode representing the implicit or explicit
      *     ELSE expression
      * </ul>
-     * 
+     *
      * <p>See {@link #WHEN_OPERANDS}, {@link #THEN_OPERANDS},
      * {@link #ELSE_OPERAND}.
      */
@@ -87,29 +87,6 @@ public class SqlCase extends SqlCall
     public SqlNode getElseOperand()
     {
         return operands[ELSE_OPERAND];
-    }
-
-    public void unparse(
-        SqlWriter writer,
-        int leftPrec,
-        int rightPrec)
-    {
-        writer.print("(CASE");
-        SqlNodeList whenList = getWhenOperands();
-        SqlNodeList thenList = getThenOperands();
-        assert (whenList.size() == thenList.size());
-        for (int i = 0; i < whenList.size(); i++) {
-            writer.print(" WHEN ");
-            SqlNode e = whenList.get(i);
-            e.unparse(writer, leftPrec, rightPrec);
-            writer.print(" THEN ");
-            e = thenList.get(i);
-            e.unparse(writer, leftPrec, rightPrec);
-        }
-
-        writer.print(" ELSE ");
-        getElseOperand().unparse(writer, leftPrec, rightPrec);
-        writer.print(" END)");
     }
 }
 

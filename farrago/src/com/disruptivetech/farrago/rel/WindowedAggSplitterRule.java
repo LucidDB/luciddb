@@ -122,9 +122,12 @@ public class WindowedAggSplitterRule extends RelOptRule
             RexNode conditionExpr)
         {
             if (relType == CalcRelType) {
-                return super.makeRel(
+                RelNode node = super.makeRel(
                     relType, cluster, traits, rowType, child, exprs,
                     conditionExpr);
+                assert node instanceof CalcRel;
+                ((CalcRel) node).setAggs(true);
+                return node;
             } else {
                 Util.permAssert(conditionExpr == null,
                     "FennelWindowRel cannot accept a condition");

@@ -28,81 +28,22 @@ import java.util.*;
 import org.eigenbase.util.*;
 
 /**
- * JavaTupleStream implements the contract expected by the Fennel C++
- * JavaTupleStream XO.
- *
+ * A JavaTupleStream is the counterpart of a Fennel JavaSourceExecStream.
+ * There are push and pull-mode implementations: <ul>
+ * <li>a {@link JavaPullTupleStream} matching a JavaPullSourceExecStream</li>
+ * <li>a {@link JavaPushTupleStream} matching a JavaPushSourceExecStream</li>
+ * </ul>
  * @author John V. Sichi
  * @version $Id$
  */
-public class JavaTupleStream
+public interface JavaTupleStream
 {
-    //~ Instance fields -------------------------------------------------------
-
-    private FennelTupleWriter tupleWriter;
-    private Iterator iter;
-    private Object next;
-
-    //~ Constructors ----------------------------------------------------------
-
-    /**
-     * Constructs a new JavaTupleStream.
-     *
-     * @param tupleWriter the FennelTupleWriter to use for marshalling tuples
-     * @param iter Iterator producing objects
-     */
-    public JavaTupleStream(
-        FennelTupleWriter tupleWriter,
-        Iterator iter)
-    {
-        this.tupleWriter = tupleWriter;
-        this.iter = iter;
-        next = null;
-    }
-
-    //~ Methods ---------------------------------------------------------------
-
-    /**
-     * Called from native code.
-     *
-     * @param byteBuffer target buffer for marshalled tuples; note that this
-     *        is allocated from within native code so that cache pages can be
-     *        used, and so that data never needs to be copied
-     *
-     * @return number of bytes written to buffer
-     */
-    private int fillBuffer(ByteBuffer byteBuffer)
-    {
-        if (next == null) {
-            if (!iter.hasNext()) {
-                return 0;
-            }
-            next = iter.next();
-        }
-        byteBuffer.order(ByteOrder.nativeOrder());
-        byteBuffer.clear();
-        for (;;) {
-            if (!tupleWriter.marshalTuple(byteBuffer, next)) {
-                break;
-            }
-            if (!iter.hasNext()) {
-                next = null;
-                break;
-            }
-            next = iter.next();
-        }
-        byteBuffer.flip();
-        return byteBuffer.limit();
-    }
-
     /**
      * Called from native code to restart this stream.
      */
-    public void restart()
-    {
-        Util.restartIterator(iter);
-        next = null;
-    }
+    public void restart();
 }
 
 
-// End JavaTupleStream.java
+
+

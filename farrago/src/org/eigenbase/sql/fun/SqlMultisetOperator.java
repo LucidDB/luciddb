@@ -105,27 +105,22 @@ public class SqlMultisetOperator extends SqlSpecialOperator
         int leftPrec,
         int rightPrec) {
 
-        writer.print("MULTISET");
-        if (getKind().isA(SqlKind.MultisetValueConstructor)) {
-            writer.print("[");
-        } else {
-            writer.print("(");
-        }
+        writer.keyword("MULTISET");
+        final boolean msvc = getKind().isA(SqlKind.MultisetValueConstructor);
+        final SqlWriter.Frame frame = writer.startList(
+            msvc ? "[" : "(",
+            msvc ? "]" : ")");
         for (int i = 0; i < operands.length; i++) {
-            if (i>0) {
-                assert(getKind().isA(SqlKind.MultisetValueConstructor));
-                writer.print(", ");
+            writer.sep(",");
+            if (i > 0) {
+                assert msvc;
             }
             operands[i].unparse(writer, leftPrec, rightPrec);
         }
-        if (getKind().isA(SqlKind.MultisetValueConstructor)) {
-            writer.print("]");
-        } else {
-            writer.print(")");
-        }
+        writer.endList(frame);
     }
 }
 
 
-// End SqlRowOperator.java
+// End SqlMultisetOperator.java
 

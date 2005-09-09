@@ -1,10 +1,11 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/med.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/med.sql#4 $
 0: jdbc:farrago:> -- Test SQL/MED DDL
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- create a private wrapper for mdr (don't use the standard mdr wrapper)
 0: jdbc:farrago:> create foreign data wrapper test_mdr
 . . . . . . . . > library 'class net.sf.farrago.namespace.mdr.MedMdrForeignDataWrapper'
-. . . . . . . . > language java;
+. . . . . . . . > language java
+. . . . . . . . > description 'private data wrapper for mdr';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test name uniqueness:  should fail
 0: jdbc:farrago:> create foreign data wrapper test_mdr
@@ -17,7 +18,8 @@ Error: DDL validation error near line 1, column 29: Target catalog "SYS_BOOT" al
 . . . . . . . . > options(
 . . . . . . . . >     extent_name 'MOF', 
 . . . . . . . . >     schema_name 'Model',
-. . . . . . . . >     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr');
+. . . . . . . . >     "org.netbeans.mdr.persistence.Dir" 'unitsql/ddl/mdr')
+. . . . . . . . > description 'a server';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test name uniqueness:  should fail
 0: jdbc:farrago:> create server mof_server
@@ -74,7 +76,8 @@ Error: DDL validation error near line 1, column 15: Target catalog "SYS_BOOT" al
 . . . . . . . . >     "mofId" varchar(128),
 . . . . . . . . >     "mofClassName" varchar(128))
 . . . . . . . . > server mof_server
-. . . . . . . . > options(class_name 'Exception');
+. . . . . . . . > options(class_name 'Exception')
+. . . . . . . . > description 'a foreign table';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify that creating a local table using foreign wrapper is illegal
 0: jdbc:farrago:> create table mof_schema.local_table_foreign_wrapper(

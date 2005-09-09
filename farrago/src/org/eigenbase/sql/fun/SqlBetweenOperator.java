@@ -31,7 +31,6 @@ import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.SqlValidatorImpl;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.Util;
@@ -91,6 +90,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
 
     /** If true the call represents 'NOT BETWEEN'. */
     private final boolean negated;
+    private static final SqlWriter.FrameType BetweenFrameType = SqlWriter.FrameType.create("BETWEEN");
 
     //~ Constructors ----------------------------------------------------------
 
@@ -160,15 +160,14 @@ public class SqlBetweenOperator extends SqlInfixOperator
         int leftPrec,
         int rightPrec)
     {
+        final SqlWriter.Frame frame = writer.startList(BetweenFrameType, "", "");
         operands[VALUE_OPERAND].unparse(writer, getLeftPrec(), 0);
-        writer.print(" ");
-        writer.print(getName());
-        writer.print(" ");
+        writer.sep(getName());
         operands[SYMFLAG_OPERAND].unparse(writer, 0, 0);
-        writer.print(" ");
         operands[LOWER_OPERAND].unparse(writer, 0, 0);
-        writer.print(" AND ");
+        writer.sep("AND");
         operands[UPPER_OPERAND].unparse(writer, 0, getRightPrec());
+        writer.endList(frame);
     }
 
     public int reduceExpr(

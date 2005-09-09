@@ -26,9 +26,6 @@ import org.eigenbase.runtime.RestartableIterator;
 
 import java.nio.ByteBuffer;
 import java.util.NoSuchElementException;
-import java.util.logging.Logger;
-import java.util.logging.Level;
-import net.sf.farrago.trace.FarragoTrace;
 
 
 /**
@@ -42,7 +39,7 @@ import net.sf.farrago.trace.FarragoTrace;
  * <p>Neither does it actually populate the source buffer. This is the
  * responsibility of the {@link #populateBuffer()} method, which must be
  * implemented by the subclass. The subclass may optionally override the
- * {@link #releaseBuffer()} method to tell the producer that it is safe to
+ * {@link #requestData()} method to tell the producer that it is safe to
  * start producing more data.
  *
  * @author John V. Sichi
@@ -50,10 +47,6 @@ import net.sf.farrago.trace.FarragoTrace;
  */
 public abstract class FennelAbstractIterator implements RestartableIterator
 {
-    // TODO: don't borrow the neighbors' tracer
-    private static final Logger tracer =
-        FarragoTrace.getFarragoIteratorResultSetTracer();
-
     protected final FennelTupleReader tupleReader;
     protected ByteBuffer byteBuffer;
     protected byte [] bufferAsArray;
@@ -71,27 +64,27 @@ public abstract class FennelAbstractIterator implements RestartableIterator
     }
 
     /**
-     * a string that tersely describes the status of the iterator, for tracing.
+     * For subclasses that trace, returns a terse description of the status.
      * @param prefix prepended to the results
      */
     protected String getStatus(String prefix)
     {
-        StringBuffer buf = new StringBuffer(prefix);
-        if (prefix.length() > 0) buf.append(" ");
+        StringBuffer sb = new StringBuffer(prefix);
+        if (prefix.length() > 0) sb.append(" ");
         if (byteBuffer == null) {
-            buf.append("(ByteBuffer:null)");
+            sb.append("buf: null");
         } else {
-            buf.append("(").append(byteBuffer).append(")");
+            sb.append("buf: ").append(Integer.toHexString(byteBuffer.hashCode()));
+            sb.append(" (").append(byteBuffer).append(")");
         } 
-        if (endOfData) buf.append(" EOD");
-        return buf.toString();
+        if (endOfData) sb.append(" EOD");
+        return sb.toString();
     }
 
 
     // implement RestartableIterator
     public void restart()
     {
-        tracer.fine(this.toString());
         this.endOfData = false;
     }
 
@@ -133,13 +126,16 @@ public abstract class FennelAbstractIterator implements RestartableIterator
             ++newPosition;
         }
         byteBuffer.position(newPosition);
-        // trace shows buffer state after this element, but before refill
-        if (tracer.isLoggable(Level.FINER)) 
-            tracer.finer(getStatus(this.toString())+" => " + obj);
+        traceNext(obj);
         if (!byteBuffer.hasRemaining()) {
-            releaseBuffer();
+            requestData();
         }
         return obj;
+    }
+
+    // override to trace the buffer state after next(), but before refill
+    protected void traceNext(Object val)
+    {
     }
 
     // implement Iterator
@@ -154,8 +150,6 @@ public abstract class FennelAbstractIterator implements RestartableIterator
      * The call blocks til the buffer is filled.
      * A subclass can implement this to fill the buffer itself,
      * or it can work by allowing an outside object to fill the buffer.
-     * In order to cooperate with an outside object, a subclass should implement
-     * {@link acquireBuffer()} and {@link relaseBuffer()}.
      * @return The number of bytes now in the buffer. 0 means end of stream.
      */
     protected abstract int populateBuffer();
@@ -167,7 +161,7 @@ public abstract class FennelAbstractIterator implements RestartableIterator
      * can start producing. The default implementation does nothing.
      * The method should not block.
      */
-    protected void releaseBuffer()
+    protected void requestData()
     {
     }
 }

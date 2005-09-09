@@ -146,9 +146,8 @@ public class FarragoOJRexBuiltinImplementor extends FarragoOJRexImplementor
             implementTrim(translator, call, operands, varResult, stmtList);
             break;
         case POSITION_FUNCTION:
-            addAssignmentStatement(
+            translator.addAssignmentStatement(
                     stmtList, 
-                    translator, 
                     new MethodCall(
                         operands[1],
                         BytePointer.POSITION_METHOD_NAME, 
@@ -159,9 +158,8 @@ public class FarragoOJRexBuiltinImplementor extends FarragoOJRexImplementor
             break;
         case CHAR_LENGTH_FUNCTION:
         case CHARACTER_LENGTH_FUNCTION:
-            addAssignmentStatement(
+            translator.addAssignmentStatement(
                     stmtList, 
-                    translator, 
                     new MethodCall(
                         operands[0],
                         BytePointer.GET_BYTE_COUNT_METHOD_NAME, 
@@ -222,9 +220,8 @@ public class FarragoOJRexBuiltinImplementor extends FarragoOJRexImplementor
             funcName = "LOG10";
         }
         StatementList stmtList1 = new StatementList();
-        addAssignmentStatement(
+        translator.addAssignmentStatement(
                     stmtList1, 
-                    translator, 
                     logFunc, 
                     call.getType(),
                     varResult,
@@ -259,9 +256,8 @@ public class FarragoOJRexBuiltinImplementor extends FarragoOJRexImplementor
                 new Literal(Literal.STRING, "java.lang.Math"),
                 funcStr,
                 new ExpressionList(argument));
-        addAssignmentStatement(
+        translator.addAssignmentStatement(
                     stmtList, 
-                    translator, 
                     floorOrCeilFunction, 
                     call.getType(),
                     varResult,
@@ -282,9 +278,8 @@ public class FarragoOJRexBuiltinImplementor extends FarragoOJRexImplementor
                             new Literal(Literal.STRING, "java.lang.Math"),
                             "abs",
                             new ExpressionList(argument));
-        addAssignmentStatement(
+        translator.addAssignmentStatement(
                     stmtList, 
-                    translator, 
                     absFunc, 
                     call.getType(),
                     varResult,
@@ -342,9 +337,8 @@ public class FarragoOJRexBuiltinImplementor extends FarragoOJRexImplementor
                                 BinaryExpression.LOGICAL_OR, 
                                 conde);
         StatementList stmtList1 = new StatementList(); 
-        addAssignmentStatement(
+        translator.addAssignmentStatement(
                     stmtList1, 
-                    translator, 
                     powFunc, 
                     call.getType(),
                     varResult,
@@ -372,9 +366,8 @@ public class FarragoOJRexBuiltinImplementor extends FarragoOJRexImplementor
                             new Literal(Literal.STRING, "java.lang.Math"),
                             "exp",
                             new ExpressionList(argument));
-        addAssignmentStatement(
+        translator.addAssignmentStatement(
                     stmtList, 
-                    translator, 
                     expFunc, 
                     call.getType(),
                     varResult,
@@ -402,9 +395,8 @@ public class FarragoOJRexBuiltinImplementor extends FarragoOJRexImplementor
                             BinaryExpression.MOD,
                             argument2);
 
-        addAssignmentStatement(
+        translator.addAssignmentStatement(
                     stmtList, 
-                    translator, 
                     modFunc, 
                     call.getType(),
                     varResult,
@@ -534,47 +526,9 @@ public class FarragoOJRexBuiltinImplementor extends FarragoOJRexImplementor
                                  operands[2]))));
     }
     
-    // helper function
-
-    private void addAssignmentStatement(
-        StatementList stmtList,
-        FarragoRexToOJTranslator translator,
-        Expression funcResult,
-        RelDataType retType,
-        Variable varResult,
-        boolean needCast)
-
-    {
-        Expression lhsExp;
-        if (SqlTypeUtil.isJavaPrimitive(retType) && !retType.isNullable()) {
-            lhsExp = varResult;
-        } else {
-            lhsExp = new FieldAccess(varResult, 
-                        NullablePrimitive.VALUE_FIELD_NAME);
-        }
-        if (!SqlTypeUtil.isJavaPrimitive(retType) || retType.isNullable()) {
-            stmtList.add(translator.createSetNullStatement(varResult, false));
-        }
-        Expression result = funcResult;
-        if (needCast) {
-            OJClass lhsClass = 
-                OJClass.forClass(
-                    translator.getFarragoTypeFactory().getClassForPrimitive(
-                        retType));
-            
-            result = new CastExpression(lhsClass, funcResult);
-        }
-        Statement stmt =new ExpressionStatement(
-                            new AssignmentExpression(
-                                lhsExp,
-                                AssignmentExpression.EQUALS, 
-                                result));
-        stmtList.add(stmt);
-    }
-
     private StatementList getThrowStatementList(String funcName)
     {
-        String quotedName = "\"" + funcName + "\"";
+        // String quotedName = "\"" + funcName + "\"";
         return new StatementList(
             new ThrowStatement(
                 new MethodCall(
@@ -583,7 +537,7 @@ public class FarragoOJRexBuiltinImplementor extends FarragoOJRexImplementor
                         "net.sf.farrago.resource.FarragoResource.instance()"),
                     "newInvalidFunctionArgument",
                     new ExpressionList(
-                        new Literal(Literal.STRING, quotedName)))));
+                        Literal.makeLiteral(funcName)))));
     }
 
     // implement OJRexImplementor

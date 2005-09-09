@@ -45,7 +45,7 @@ struct JavaSourceExecStreamParams : public SingleOutputExecStreamParams
 };
 
 /**
- * JavaSourceExecStream calls a Java object to produce a stream of tuples.
+ * JavaSourceExecStream gets input from a Java object and outputs a stream of tuples.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -53,39 +53,31 @@ struct JavaSourceExecStreamParams : public SingleOutputExecStreamParams
 class JavaSourceExecStream : public SingleOutputExecStream
 {
     CmdInterpreter::StreamGraphHandle *pStreamGraphHandle;
-    
     int javaTupleStreamId;
-    
+
+protected:
     /**
-     * The Java subclass instance of net.sf.farrago.query.JavaTupleStream.
+     * The Java peer, an instance of a net.sf.farrago.query.JavaTupleStream;
      */
     jobject javaTupleStream;
 
-    /**
-     * Java instance of java.nio.ByteBuffer used for passing tuple data.
-     */
-    jobject javaByteBuffer;
-    
+
     /**
      * Accessor for scratch segment.
      */
     SegmentAccessor scratchAccessor;
-    
+
     /**
-     * Lock on buffer used to fetch data from Java.
+     * Lock on buffer used to fetch data from Java. Can this support 2 buffers??
      */
     SegPageLock bufferLock;
-    
+
 public:
     explicit JavaSourceExecStream();
 
     // implement ExecStream
     virtual void prepare(JavaSourceExecStreamParams const &params);
-    virtual void getResourceRequirements(
-        ExecStreamResourceQuantity &minQuantity,
-        ExecStreamResourceQuantity &optQuantity);
     virtual void open(bool restart);
-    virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
     virtual void closeImpl();
     virtual ExecStreamBufProvision getOutputBufProvision() const;
 };

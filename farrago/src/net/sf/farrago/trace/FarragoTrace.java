@@ -125,6 +125,25 @@ public abstract class FarragoTrace
     }
 
     /**
+     * The tracer "net.sf.farrago.runtime.FennelPipeIterator"
+     * traces {@link FennelPipeIterator}.
+     */
+    public static Logger getFennelPipeIteratorTracer()
+    {
+        return getClassTracer(FennelPipeIterator.class);
+    }
+
+    /**
+     * The tracer "net.sf.farrago.runtime.JavaPushTupleStream"
+     * traces {@link JavaPushTupleStream}.
+     */
+    public static Logger getJavaPushTupleStreamTracer()
+    {
+        return getClassTracer(JavaPushTupleStream.class);
+    }
+
+
+    /**
      * The tracer "net.sf.farrago.runtime.FarragoIteratorResultSet"
      * traces {@link FarragoIteratorResultSet}.
      */

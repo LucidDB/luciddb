@@ -96,6 +96,22 @@ public abstract class MockMetadataFactory
         return (RefPackage) rootPackageImpl.wrap();
     }
 
+    protected static Method[] sortMethods(Method[] methods)
+    {
+        Method[] sortedMethods = (Method[])methods.clone();
+        Arrays.sort(sortedMethods, new Comparator() {
+            public int compare(Object o1, Object o2)
+            {
+                Method m1 = (Method)o1;
+                Method m2 = (Method)o2;
+
+                return m1.getName().compareTo(m2.getName());
+            }
+        });
+
+        return sortedMethods;
+    }
+
     /**
      * Implementation of a {@link RefBaseObject} via an
      * {@link InvocationHandler} interface.
@@ -243,7 +259,7 @@ public abstract class MockMetadataFactory
         {
             super(clazz);
             // For each method which returns a class, create an attribute.
-            Method[] methods = clazz.getMethods();
+            Method[] methods = sortMethods(clazz.getMethods());
             for (int i = 0; i < methods.length; i++) {
                 Method method = methods[i];
                 String methodName = method.getName();
@@ -303,7 +319,7 @@ public abstract class MockMetadataFactory
             List refNames, List refValues)
         {
             Class clazz = o.getClass();
-            Method[] methods = clazz.getMethods();
+            Method[] methods = sortMethods(clazz.getMethods());
             for (int i = 0; i < methods.length; i++) {
                 Method method = methods[i];
                 String methodName = method.getName();

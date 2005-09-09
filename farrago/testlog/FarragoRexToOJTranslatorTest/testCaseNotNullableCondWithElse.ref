@@ -16,9 +16,10 @@ oj_var2.assignFrom( "Other" );
 oj_var3.assignFrom( oj_var2 );
 if (ID$9$MANAGER == true) {
     oj_var3.assignFrom( oj_var0 );
-}
-if (ID$9$MANAGER == false) {
-    oj_var3.assignFrom( oj_var1 );
+} else {
+    if (ID$9$MANAGER == false) {
+        oj_var3.assignFrom( oj_var1 );
+    }
 }
 
 return oj_var3;

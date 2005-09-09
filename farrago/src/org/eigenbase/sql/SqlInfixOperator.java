@@ -73,15 +73,12 @@ public class SqlInfixOperator extends SqlSpecialOperator
         int rightPrec)
     {
         assert operands.length == (names.length + 1);
+        final boolean needWhitespace = needsSpace();
         for (int i = 0; i < operands.length; i++) {
             if (i > 0) {
-                if (needsSpace()) {
-                    writer.print(' ');
-                    writer.print(names[i - 1]);
-                    writer.print(' ');
-                } else {
-                    writer.print(names[i - 1]);
-                }
+                writer.setNeedWhitespace(needWhitespace);
+                writer.keyword(names[i - 1]);
+                writer.setNeedWhitespace(needWhitespace);
             }
             operands[i].unparse(writer, leftPrec, getLeftPrec());
         }

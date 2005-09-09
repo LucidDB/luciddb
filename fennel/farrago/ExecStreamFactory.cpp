@@ -23,7 +23,7 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/farrago/ExecStreamFactory.h"
-#include "fennel/farrago/JavaSourceExecStream.h"
+#include "fennel/farrago/JavaPullSourceExecStream.h"
 #include "fennel/farrago/JavaSinkExecStream.h"
 #include "fennel/farrago/CmdInterpreter.h"
 #include "fennel/ftrs/BTreeScanExecStream.h"
@@ -152,11 +152,11 @@ void ExecStreamFactory::visit(ProxyIndexSearchDef &streamDef)
 
 void ExecStreamFactory::visit(ProxyJavaTupleStreamDef &streamDef)
 {
-    JavaSourceExecStreamParams params;
+    JavaPullSourceExecStreamParams params;
     readTupleStreamParams(params, streamDef);
     params.pStreamGraphHandle = pStreamGraphHandle;
     params.javaTupleStreamId = streamDef.getStreamId();
-    embryo.init(new JavaSourceExecStream(), params);
+    embryo.init(new JavaPullSourceExecStream(), params);
 }
 
 void ExecStreamFactory::visit(ProxyJavaSinkStreamDef &streamDef)

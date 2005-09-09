@@ -21,10 +21,7 @@
 */
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.sql.SqlInternalOperator;
-import org.eigenbase.sql.SqlKind;
-import org.eigenbase.sql.SqlWriter;
-import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 
 /**
@@ -39,7 +36,7 @@ import org.eigenbase.sql.type.*;
  *  ELSE throw("what's wrong with you man?")<br>
  * END
  *
- * @author Wael Chatila 
+ * @author Wael Chatila
  * @since Mar 29, 2005
  * @version $Id$
  */
@@ -59,9 +56,8 @@ public class SqlThrowOperator extends SqlInternalOperator
         int leftPrec,
         int rightPrec)
     {
-        writer.print(getName());
-        writer.print("(");
+        final SqlWriter.Frame frame = writer.startFunCall(getName());
         operands[0].unparse(writer, 0, 0);
-        writer.print(")");
+        writer.endFunCall(frame);
     }
 }

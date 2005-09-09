@@ -130,4 +130,22 @@ Error: From line 1, column 15 to line 1, column 17: Table 'V11' not found (state
 +-------+
 +-------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- multi-line view including comments and description
+0: jdbc:farrago:> create view v12 
+. . . . . . . . > description 'foo'
+. . . . . . . . >    'bar' as
+. . . . . . . . > select empno, /* a comment */ name
+. . . . . . . . >   from sales.emps;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- make sure that the original text is stored correctly
+0: jdbc:farrago:> select "originalDefinition", "description"
+. . . . . . . . > from sys_fem."SQL2003"."LocalView"
+. . . . . . . . > where "name" = 'V12';
+'originalDefinition','description'
+' select empno, /* a comment */ name   from sales.emps','foobar'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- End view.sql
+0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

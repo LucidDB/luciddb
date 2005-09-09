@@ -161,18 +161,17 @@ public class SqlSubstringFunction extends SqlFunction {
         int leftPrec,
         int rightPrec)
     {
-        writer.print(getName());
-        writer.print("(");
+        final SqlWriter.Frame frame = writer.startFunCall(getName());
         operands[0].unparse(writer, leftPrec, rightPrec);
-        writer.print(" FROM ");
+        writer.sep("FROM");
         operands[1].unparse(writer, leftPrec, rightPrec);
 
         if (3 == operands.length) {
-            writer.print(" FOR ");
+            writer.sep("FOR");
             operands[2].unparse(writer, leftPrec, rightPrec);
         }
 
-        writer.print(")");
+        writer.endFunCall(frame);
     }
 }
 

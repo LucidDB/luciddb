@@ -143,19 +143,25 @@ public class SqlSelect extends SqlCall
             SqlUtil.andExpressions(operands[WHERE_OPERAND], condition);
     }
 
-    public void unparse(
-        SqlWriter writer,
-        int leftPrec,
-        int rightPrec)
-    {
-        writer.pushQuery(this);
-        super.unparse(writer, leftPrec, rightPrec);
-        writer.popQuery(this);
-    }
-
     public void validate(SqlValidator validator, SqlValidatorScope scope)
     {
         validator.validateQuery(this);
+    }
+
+    // Override SqlCall, to introduce a subquery frame.
+    public void unparse(SqlWriter writer, int leftPrec, int rightPrec)
+    {
+        if (!writer.inQuery()) {
+            // If this SELECT is the topmost item in a subquery, introduce a
+            // new frame. (The topmost item in the subquery might be a UNION or
+            // ORDER. In this case, we don't need a wrapper frame.)
+            final SqlWriter.Frame frame =
+                writer.startList(SqlWriter.FrameType.Subquery, "(", ")");
+            getOperator().unparse(writer, operands, 0, 0);
+            writer.endList(frame);
+        } else {
+            getOperator().unparse(writer, operands, leftPrec, rightPrec);
+        }
     }
 }
 

@@ -14,6 +14,8 @@ Fem.cpp \
 JavaExcn.cpp \
 JavaSinkExecStream.cpp \
 JavaSourceExecStream.cpp \
+JavaPullSourceExecStream.cpp \
+JavaPushSourceExecStream.cpp \
 JavaTraceTarget.cpp \
 JniProxy.cpp \
 JniPseudoUuid.cpp \

@@ -754,6 +754,31 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
         testTranslation("position('Fran' in city)");
     }
 
+    public void testLikeLiteral()
+        throws Exception
+    {
+        testTranslation("City like 'San%'");
+    }
+
+    public void testLikeRuntime()
+        throws Exception
+    {
+        testTranslation("City like Name");
+    }
+
+    public void testLikeLiteralWithEscape()
+        throws Exception
+    {
+        testTranslation("City like 'San%' escape 'n'");
+    }
+
+    public void testLikeRuntimeWithEscape()
+        throws Exception
+    {
+        testTranslation("City like Name escape 'n'");
+    }
+
+
 }
 
 // End FarragoRexToOJTranslatorTest.java

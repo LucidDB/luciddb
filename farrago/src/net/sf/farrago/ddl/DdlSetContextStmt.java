@@ -10,12 +10,12 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -25,12 +25,12 @@ package net.sf.farrago.ddl;
 import net.sf.farrago.session.*;
 import net.sf.farrago.resource.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.pretty.SqlPrettyWriter;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.reltype.*;
 
 import java.sql.*;
-import java.io.*;
 import java.util.*;
 
 /**
@@ -53,7 +53,7 @@ public abstract class DdlSetContextStmt extends DdlStmt
         super(null);
         this.valueExpr = valueExpr;
     }
-    
+
     // override DdlStmt
     public boolean requiresCommit()
     {
@@ -64,7 +64,7 @@ public abstract class DdlSetContextStmt extends DdlStmt
     {
         return valueExpr;
     }
-    
+
     public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
         // Use a reentrant session to simplify cleanup.
@@ -84,16 +84,13 @@ public abstract class DdlSetContextStmt extends DdlStmt
         // We're given a string value expression.  First step is to
         // evaluate it to a string value.  We do this by executing
         // the query "VALUES <valueExpr>".
-        
+
         SqlDialect dialect = new SqlDialect(session.getDatabaseMetaData());
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        SqlWriter sqlWriter = new SqlWriter(dialect, pw);
-        sqlWriter.print("VALUES ");
-        valueExpr.unparse(sqlWriter, 0, 0);
-        pw.close();
-        
-        String sql = sw.toString();
+        SqlPrettyWriter writer = new SqlPrettyWriter(dialect);
+        writer.keyword("VALUES");
+        valueExpr.unparse(writer, 0, 0);
+
+        String sql = writer.toString();
         FarragoSessionStmtContext stmtContext = session.newStmtContext();
         stmtContext.prepare(sql, true);
         RelDataType rowType = stmtContext.getPreparedRowType();

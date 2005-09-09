@@ -110,6 +110,8 @@ jint JniUtil::init(JavaVM *pVmInit)
     jclass classIterator = pEnv->FindClass("java/util/Iterator");
     jclass classJavaTupleStream = pEnv->FindClass(
         "net/sf/farrago/runtime/JavaTupleStream");
+    jclass classJavaPullTupleStream = pEnv->FindClass(
+        "net/sf/farrago/runtime/JavaPullTupleStream");
     jclass classFennelJavaStreamMap = pEnv->FindClass(
         "net/sf/farrago/fennel/FennelJavaStreamMap");
     methGetClassName = pEnv->GetMethodID(
@@ -121,7 +123,7 @@ jint JniUtil::init(JavaVM *pVmInit)
     methNext = pEnv->GetMethodID(
         classIterator,"next","()Ljava/lang/Object;");
     methFillBuffer = pEnv->GetMethodID(
-        classJavaTupleStream,"fillBuffer","(Ljava/nio/ByteBuffer;)I");
+        classJavaPullTupleStream,"fillBuffer","(Ljava/nio/ByteBuffer;)I");
     methRestart = pEnv->GetMethodID(
         classJavaTupleStream,"restart","()V");
     methGetJavaStreamHandle = pEnv->GetMethodID(

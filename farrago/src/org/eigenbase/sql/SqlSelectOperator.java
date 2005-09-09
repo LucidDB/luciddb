@@ -27,7 +27,6 @@ import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.SqlTypeStrategies;
 
-
 /**
  * An operator describing a query. (Not a query itself.)
  *
@@ -132,13 +131,14 @@ public class SqlSelectOperator extends SqlOperator
         int leftPrec,
         int rightPrec)
     {
-        writer.print("SELECT ");
+        final SqlWriter.Frame selectFrame =
+            writer.startList(SqlWriter.FrameType.Select);
+        writer.sep("SELECT");
         final SqlNodeList keywords =
             (SqlNodeList) operands[SqlSelect.KEYWORDS_OPERAND];
         for (int i = 0; i < keywords.size(); i++) {
             final SqlNode keyword = keywords.get(i);
             keyword.unparse(writer, 0, 0);
-            writer.print(" ");
         }
         SqlNode selectClause = operands[SqlSelect.SELECT_OPERAND];
         if (selectClause == null) {
@@ -147,54 +147,61 @@ public class SqlSelectOperator extends SqlOperator
                     "*",
                     selectClause.getParserPosition());
         }
+        final SqlWriter.Frame selectListFrame =
+            writer.startList(SqlWriter.FrameType.SelectList);
         selectClause.unparse(writer, 0, 0);
-        writer.println();
-        writer.print("FROM ");
+        writer.endList(selectListFrame);
+
+        writer.sep("FROM");
         SqlNode fromClause = operands[SqlSelect.FROM_OPERAND];
 
         // for FROM clause, use precedence just below join operator to make
         // sure that an unjoined nested select will be properly
         // parenthesized
+        final SqlWriter.Frame fromFrame =
+            writer.startList(SqlWriter.FrameType.FromList);
         fromClause.unparse(writer,
             SqlStdOperatorTable.joinOperator.getLeftPrec() - 1,
             SqlStdOperatorTable.joinOperator.getRightPrec() - 1);
+        writer.endList(fromFrame);
+
         SqlNode whereClause = operands[SqlSelect.WHERE_OPERAND];
         if (whereClause != null) {
-            writer.println();
-            writer.print("WHERE ");
+            writer.sep("WHERE");
             whereClause.unparse(writer, 0, 0);
         }
         SqlNode groupClause = operands[SqlSelect.GROUP_OPERAND];
         if (groupClause != null) {
-            writer.println();
-            writer.print("GROUP BY ");
+            writer.sep("GROUP BY");
+            final SqlWriter.Frame groupFrame =
+                writer.startList(SqlWriter.FrameType.GroupByList);
             groupClause.unparse(writer, 0, 0);
+            writer.endList(groupFrame);
         }
         SqlNode havingClause = operands[SqlSelect.HAVING_OPERAND];
         if (havingClause != null) {
-            writer.println();
-            writer.print("HAVING ");
+            writer.sep("HAVING");
             havingClause.unparse(writer, 0, 0);
         }
         SqlNodeList windowDecls = (SqlNodeList)
-                operands[SqlSelect.WINDOW_OPERAND];
-        for (int i = 0; i < windowDecls.size(); i++) {
-            SqlNode windowDecl = windowDecls.get(i);
-            if (i == 0) {
-                writer.println();
-                writer.print("WINDOW ");
-            } else {
-                writer.print(",");
-                writer.println();
+            operands[SqlSelect.WINDOW_OPERAND];
+        if (windowDecls.size() > 0) {
+            writer.sep("WINDOW");
+            final SqlWriter.Frame windowFrame =
+                writer.startList(SqlWriter.FrameType.WindowDeclList);
+            for (int i = 0; i < windowDecls.size(); i++) {
+                SqlNode windowDecl = windowDecls.get(i);
+                writer.sep(",");
+                windowDecl.unparse(writer, 0, 0);
             }
-            windowDecl.unparse(writer, 0, 0);
+            writer.endList(windowFrame);
         }
         SqlNode orderClause = operands[SqlSelect.ORDER_OPERAND];
         if (orderClause != null) {
-            writer.println();
-            writer.print("ORDER BY ");
+            writer.sep("ORDER BY");
             orderClause.unparse(writer, 0, 0);
         }
+        writer.endList(selectFrame);
     }
 }
 

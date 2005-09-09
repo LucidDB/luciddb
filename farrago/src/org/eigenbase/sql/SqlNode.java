@@ -25,13 +25,11 @@ package org.eigenbase.sql;
 
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.util.SqlVisitor;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.validate.SqlMoniker;
-import org.eigenbase.util.*;
-
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.pretty.SqlPrettyWriter;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -135,15 +133,15 @@ public abstract class SqlNode implements Cloneable
      */
     public String toSqlString(SqlDialect dialect, boolean forceParens)
     {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
         if (dialect == null) {
             dialect = SqlUtil.dummyDialect;
         }
-        SqlWriter writer = new SqlWriter(dialect, pw, forceParens);
+        SqlPrettyWriter writer = new SqlPrettyWriter(dialect);
+        writer.setAlwaysUseParentheses(true);
+        writer.setSelectListItemsOnSeparateLines(false);
+        writer.setIndentation(0);
         unparse(writer, 0, 0);
-        pw.flush();
-        return sw.toString();
+        return writer.toString();
     }
 
     public String toSqlString(SqlDialect dialect)
@@ -164,8 +162,8 @@ public abstract class SqlNode implements Cloneable
      * <p>The algorithm handles left- and right-associative operators by giving
      * them slightly different left- and right-precedence.
      *
-     * <p>If {@link SqlWriter#alwaysUseParentheses} is true, we use parentheses
-     * even when they are not required by the precedence rules.
+     * <p>If {@link SqlWriter#isAlwaysUseParentheses()} is true, we use
+     * parentheses even when they are not required by the precedence rules.
      *
      * <p>For the details of this algorithm, see {@link SqlCall#unparse}.
      *
@@ -173,7 +171,6 @@ public abstract class SqlNode implements Cloneable
      * @param leftPrec The precedence of the {@link SqlNode} immediately
      *   preceding this node in a depth-first scan of the parse tree
      * @param rightPrec The precedence of the {@link SqlNode} immediately
-     *   following this node in a depth-first scan of the parse tree
      */
     public abstract void unparse(
         SqlWriter writer,
@@ -265,6 +262,21 @@ public abstract class SqlNode implements Cloneable
      * </ul>
      */
     public abstract boolean equalsDeep(SqlNode node);
+
+    /**
+     * Returns whether two nodes are equal (using {@link #equalsDeep(SqlNode)})
+     * or are both null.
+     */
+    public static boolean equalDeep(SqlNode node1, SqlNode node2)
+    {
+        if (node1 == null) {
+            return node2 == null;
+        } else if (node2 == null) {
+            return false;
+        } else {
+            return node1.equalsDeep(node2);
+        }
+    }
 
     /**
      * Returns whether expression is always ascending, descending or constant.

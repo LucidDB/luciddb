@@ -100,19 +100,18 @@ public class FarragoRngNextRandomIntOperator extends SqlFunction
         int leftPrec,
         int rightPrec)
     {
-        writer.print(getName());
-        writer.print("(");
+        final SqlWriter.Frame frame = writer.startFunCall(getName());
         SqlLiteral ceiling = (SqlLiteral) operands[0];
         if (ceiling.intValue() == -1) {
-            writer.print("UNBOUNDED ");
+            writer.sep("UNBOUNDED");
         } else {
-            writer.print("CEILING ");
+            writer.sep("CEILING");
             ceiling.unparse(writer, leftPrec, rightPrec);
         }
-        writer.print(" FROM ");
+        writer.sep("FROM");
         SqlLiteral id = (SqlLiteral) operands[1];
-        writer.print(id.getStringValue());
-        writer.print(")");
+        writer.literal(id.getStringValue());
+        writer.endFunCall(frame);
     }
 }
 

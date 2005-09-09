@@ -258,15 +258,18 @@ public class BytePointer extends ByteArrayInputStream
             length = bp2.getByteCount();
         }
         calcSubstringPointers( starting, length, bp1.getByteCount(), true); 
-        int totalLength = S1 + bp2.getByteCount() + 
-                bp1.getByteCount() - L1;
+        int totalLength = bp2.getByteCount() + bp1.getByteCount() - L1;
         allocateOwnBytes(totalLength);
-        System.arraycopy(bp1.buf, bp1.pos, ownBytes, 0, S1);
-        System.arraycopy(bp2.buf, bp2.pos, ownBytes, S1, bp2.getByteCount());
-
-        System.arraycopy(bp1.buf, bp1.pos + S1 + L1, 
+        if (L1 == 0 &&  starting > bp1.getByteCount()) {
+            System.arraycopy(bp1.buf, bp1.pos, ownBytes, 0, bp1.getByteCount());
+            System.arraycopy(bp2.buf, bp2.pos, ownBytes, bp1.getByteCount(), bp2.getByteCount());
+        } else {
+            System.arraycopy(bp1.buf, bp1.pos, ownBytes, 0, S1);
+            System.arraycopy(bp2.buf, bp2.pos, ownBytes, S1, bp2.getByteCount());
+            System.arraycopy(bp1.buf, bp1.pos + S1 + L1, 
                 ownBytes, S1 + bp2.getByteCount(), 
-                bp1.getByteCount() - L1);
+                bp1.getByteCount() - S1 - L1);
+        }
         buf = ownBytes;
         pos = 0;
         count = totalLength;
@@ -556,7 +559,8 @@ public class BytePointer extends ByteArrayInputStream
                 // we know i1 < count, so this must be greater than other
                 return 1;
             }
-            int c = (int) other.buf[i2] - (int) buf[i1];
+            // need to convert the signed byte to unsigned.
+            int c = (int) (0xFF & buf[i1]) - (int) (0xFF & other.buf[i2]);
             if (c != 0) {
                 return c;
             }

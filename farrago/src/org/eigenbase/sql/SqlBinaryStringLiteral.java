@@ -55,9 +55,7 @@ public class SqlBinaryStringLiteral extends SqlAbstractStringLiteral
         int rightPrec)
     {
         assert value instanceof BitString;
-        writer.print("X'");
-        writer.print(((BitString) value).toHexString());
-        writer.print("'");
+        writer.literal("X'" + ((BitString) value).toHexString() + "'");
     }
 
     protected SqlAbstractStringLiteral concat1(SqlLiteral [] lits)

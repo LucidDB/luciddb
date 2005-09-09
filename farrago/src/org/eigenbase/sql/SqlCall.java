@@ -110,14 +110,13 @@ public class SqlCall extends SqlNode
     {
         if (leftPrec > operator.getLeftPrec() ||
             (operator.getRightPrec() <= rightPrec && rightPrec != 0) ||
-            (writer.alwaysUseParentheses &&  isA(SqlKind.Expression))) 
-            {
-                writer.print('(');
-                operator.unparse(writer, operands, 0, 0);
-                writer.print(')');
-            } else {
-                operator.unparse(writer, operands, leftPrec, rightPrec);
-            }
+            (writer.isAlwaysUseParentheses() && isA(SqlKind.Expression))) {
+            final SqlWriter.Frame frame = writer.startList("(", ")");
+            operator.unparse(writer, operands, 0, 0);
+            writer.endList(frame);
+        } else {
+            operator.unparse(writer, operands, leftPrec, rightPrec);
+        }
     }
 
     /**
@@ -180,7 +179,7 @@ public class SqlCall extends SqlNode
             return false;
         }
         for (int i = 0; i < this.operands.length; i++) {
-            if (!this.operands[i].equalsDeep(that.operands[i])) {
+            if (!SqlNode.equalDeep(this.operands[i], that.operands[i])) {
                 return false;
             }
         }

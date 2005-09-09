@@ -24,8 +24,8 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidatorScope;
 
 import java.util.Iterator;
 
@@ -130,7 +130,8 @@ public class SqlUpdate extends SqlCall
         int leftPrec,
         int rightPrec)
     {
-        writer.print("UPDATE ");
+        final SqlWriter.Frame frame =
+            writer.startList(SqlWriter.FrameType.Select, "UPDATE", "");
         getTargetTable().unparse(
             writer, getOperator().getLeftPrec(), getOperator().getRightPrec());
         if (getTargetColumnList() != null) {
@@ -139,40 +140,39 @@ public class SqlUpdate extends SqlCall
                 getOperator().getRightPrec());
         }
         if (getAlias() != null) {
-            writer.print(" AS ");
+            writer.keyword("AS");
             getAlias().unparse(
                 writer,
                 getOperator().getLeftPrec(),
                 getOperator().getRightPrec());
         }
-        writer.print("SET ");
+        final SqlWriter.Frame setFrame =
+            writer.startList(SqlWriter.FrameType.UpdateSetList, "SET", "");
         Iterator targetColumnIter = getTargetColumnList().getList().iterator();
         Iterator sourceExpressionIter =
             getSourceExpressionList().getList().iterator();
         while (targetColumnIter.hasNext()) {
-            writer.println();
+            writer.sep(",");
             SqlIdentifier id = (SqlIdentifier) targetColumnIter.next();
             id.unparse(
                 writer, getOperator().getLeftPrec(),
                 getOperator().getRightPrec());
-            writer.print(" = ");
+            writer.keyword("=");
             SqlNode sourceExp = (SqlNode) sourceExpressionIter.next();
             sourceExp.unparse(
                 writer,
                 getOperator().getLeftPrec(),
                 getOperator().getRightPrec());
-            if (targetColumnIter.hasNext()) {
-                writer.print(",");
-            }
         }
+        writer.endList(setFrame);
         if (getCondition() != null) {
-            writer.println();
-            writer.print("WHERE ");
+            writer.sep("WHERE");
             getCondition().unparse(
                 writer,
                 getOperator().getLeftPrec(),
                 getOperator().getRightPrec());
         }
+        writer.endList(frame);
     }
 
     public void validate(SqlValidator validator, SqlValidatorScope scope)

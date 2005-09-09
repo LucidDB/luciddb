@@ -1,0 +1,13 @@
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/schema.sql#2 $
+0: jdbc:farrago:> -- Miscellaneous DDL
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set schema 'sales';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- Table with description
+0: jdbc:farrago:> create table foo (i int primary key) description 'this is a table';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop table foo;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- End misc.sql
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

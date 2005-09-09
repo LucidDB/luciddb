@@ -25,7 +25,6 @@ package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.validate.SqlValidatorScope;
@@ -69,15 +68,13 @@ public class SqlTrimFunction extends SqlFunction
         int leftPrec,
         int rightPrec)
     {
-        writer.print(getName());
-        writer.print("(");
+        final SqlWriter.Frame frame = writer.startFunCall(getName());
         assert operands[0] instanceof SqlLiteral;
         operands[0].unparse(writer, 0, 0);
-        writer.print(" ");
         operands[1].unparse(writer, leftPrec, rightPrec);
-        writer.print(" FROM ");
+        writer.sep("FROM");
         operands[2].unparse(writer, leftPrec, rightPrec);
-        writer.print(")");
+        writer.endFunCall(frame);
     }
 
     public String getSignatureTemplate(final int operandsCount)

@@ -164,6 +164,25 @@ public class FarragoOJRexImplementorTable extends OJRexImplementorTableImpl
             new FarragoOJRexBuiltinImplementor(
                 FarragoOJRexBuiltinImplementor.INITCAP_FUNCTION));
 
+        /*
+         * Similar not implemented yet.
+        registerOperator(
+            opTab.similarOperator,
+            new FarragoOJRexSimilarLikeImplementor(true, false));
+
+        registerOperator(
+            opTab.notSimilarOperator,
+            new FarragoOJRexSimilarLikeImplementor(true, true));
+        */
+
+        registerOperator(
+            opTab.likeOperator,
+            new FarragoOJRexSimilarLikeImplementor(false, false));
+
+        registerOperator(
+            opTab.notLikeOperator,
+            new FarragoOJRexSimilarLikeImplementor(false, true));
+
         registerOperator(
             opTab.caseOperator,
             new FarragoOJRexCaseImplementor());

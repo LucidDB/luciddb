@@ -31,6 +31,7 @@ import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.util.SqlVisitor;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.fun.SqlLiteralChainOperator;
 import org.eigenbase.util.BitString;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.NlsString;
@@ -276,6 +277,24 @@ public class SqlLiteral extends SqlNode
     }
 
     /**
+     * Extracts the string value from a string literal or a chain of string
+     * literals.
+     */
+    public static String stringValue(SqlNode node)
+    {
+        if (node instanceof SqlLiteral) {
+            SqlLiteral literal = (SqlLiteral) node;
+            return literal.toValue();
+        } else if (node instanceof SqlCall) {
+            final SqlLiteral literal =
+                SqlLiteralChainOperator.concatenateOperands((SqlCall) node);
+            return literal.toValue();
+        } else {
+            throw Util.newInternal("invalid string literal " + node);
+        }
+    }
+
+    /**
      * For calc program builder - value may be different than {@link #unparse}
      * Typical values:<ul>
      * <li>Hello, world!</li>
@@ -401,11 +420,13 @@ public class SqlLiteral extends SqlNode
     {
         switch (typeName.getOrdinal()) {
         case SqlTypeName.Boolean_ordinal:
-            writer.print((value == null) ? "UNKNOWN"
-                : (((Boolean) value).booleanValue() ? "TRUE" : "FALSE"));
+            writer.keyword(
+                value == null ? "UNKNOWN" :
+                ((Boolean) value).booleanValue() ? "TRUE" :
+                "FALSE");
             break;
         case SqlTypeName.Null_ordinal:
-            writer.print("NULL");
+            writer.keyword("NULL");
             break;
         case SqlTypeName.Char_ordinal:
         case SqlTypeName.Decimal_ordinal:
@@ -417,10 +438,10 @@ public class SqlLiteral extends SqlNode
 
         case SqlTypeName.Symbol_ordinal:
             EnumeratedValues.Value enumVal = (EnumeratedValues.Value) value;
-            writer.print(enumVal.getName().toUpperCase());
+            writer.keyword(enumVal.getName().toUpperCase());
             break;
         default:
-            writer.print(value.toString());
+            writer.literal(value.toString());
         }
     }
 

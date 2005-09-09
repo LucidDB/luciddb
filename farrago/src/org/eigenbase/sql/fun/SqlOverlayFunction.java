@@ -22,7 +22,6 @@
 package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.type.CompositeOperandTypeChecker;
 import org.eigenbase.sql.type.SqlOperandTypeChecker;
 import org.eigenbase.sql.type.SqlTypeStrategies;
@@ -57,18 +56,17 @@ public class SqlOverlayFunction extends SqlFunction
         int leftPrec,
         int rightPrec)
     {
-        writer.print(getName());
-        writer.print("(");
+        final SqlWriter.Frame frame = writer.startFunCall(getName());
         operands[0].unparse(writer, leftPrec, rightPrec);
-        writer.print(" PLACING ");
+        writer.sep("PLACING");
         operands[1].unparse(writer, leftPrec, rightPrec);
-        writer.print(" FROM ");
+        writer.sep("FROM");
         operands[2].unparse(writer, leftPrec, rightPrec);
         if (4 == operands.length) {
-            writer.print(" FOR ");
+            writer.sep("FOR");
             operands[3].unparse(writer, leftPrec, rightPrec);
         }
-        writer.print(")");
+        writer.endFunCall(frame);
     }
 
     public String getSignatureTemplate(final int operandsCount)

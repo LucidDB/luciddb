@@ -282,7 +282,7 @@ public class FennelWindowRel extends FennelSingleRel
                 RelDataType inputRowType = getChild().getRowType();
                 String[] programs = new String[3];
                 translator.getAggProgram(inputRowType, inputExprs, null,
-                        overs, conditionExpr, programs);
+                        overs, programs);
                 windowPartitionDef.setInitializeProgram(programs[0]);
                 windowPartitionDef.setAddProgram(programs[1]);
                 windowPartitionDef.setDropProgram(programs[2]);

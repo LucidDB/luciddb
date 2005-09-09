@@ -41,6 +41,7 @@ public abstract class CalcRelBase extends SingleRel
 
     public final RexNode [] projectExprs;
     private final RexNode conditionExpr;
+    private boolean bAggs = false;
 
     protected CalcRelBase(
         RelOptCluster cluster,
@@ -54,6 +55,7 @@ public abstract class CalcRelBase extends SingleRel
         this.rowType = rowType;
         this.projectExprs = projectExprs;
         this.conditionExpr = conditionExpr;
+        bAggs = RexOver.containsOver(projectExprs, conditionExpr);
     }
 
     public RexNode [] getProjectExprs()
@@ -65,7 +67,17 @@ public abstract class CalcRelBase extends SingleRel
     {
         return conditionExpr;
     }
-    
+
+    public boolean containsAggs()
+    {
+        return bAggs || RexOver.containsOver(projectExprs, conditionExpr);
+    }
+
+    public void setAggs(boolean bAggs)
+    {
+        this.bAggs = bAggs;
+    }
+
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         double dRows = getChild().getRows();

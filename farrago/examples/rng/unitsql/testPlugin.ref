@@ -279,7 +279,7 @@ Was expecting one of:
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- sorry, view based on personality will no longer work  :(
 0: jdbc:farrago:> select * from random_personality_view;
-Error: org.eigenbase.sql.parser.SqlParseException: Encountered "10" at line 2, column 42.
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "10" at line 2, column 44.
 Was expecting:
     "(" ... (state=,code=0)
 0: jdbc:farrago:> 
