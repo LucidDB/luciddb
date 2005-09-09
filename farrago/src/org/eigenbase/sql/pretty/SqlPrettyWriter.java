@@ -124,7 +124,7 @@ public class SqlPrettyWriter implements SqlWriter
 
     private final SqlDialect dialect;
     private final StringWriter sw = new StringWriter();
-    protected final PrintWriter pw = new PrintWriter(sw);
+    protected final PrintWriter pw;
     private final Stack listStack = new Stack();
     protected FrameImpl frame;
     private boolean needWhitespace;
@@ -149,12 +149,24 @@ public class SqlPrettyWriter implements SqlWriter
 
     public SqlPrettyWriter(
         SqlDialect dialect,
-        boolean alwaysUseParentheses)
+        boolean alwaysUseParentheses,
+        PrintWriter pw)
     {
+        if (pw == null) {
+            pw = new PrintWriter(sw);
+        }
+        this.pw = pw;
         this.dialect = dialect;
         this.alwaysUseParentheses = alwaysUseParentheses;
         resetSettings();
         reset();
+    }
+
+    public SqlPrettyWriter(
+        SqlDialect dialect,
+        boolean alwaysUseParentheses)
+    {
+        this(dialect, alwaysUseParentheses, null);
     }
 
     public SqlPrettyWriter(SqlDialect dialect)
@@ -729,7 +741,7 @@ public class SqlPrettyWriter implements SqlWriter
             s.equals("."));
     }
 
-    private void whiteSpace()
+    protected void whiteSpace()
     {
         if (needWhitespace) {
             if (nextWhitespace == NL) {

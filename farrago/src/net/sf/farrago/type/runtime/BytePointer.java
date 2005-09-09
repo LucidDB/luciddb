@@ -312,8 +312,8 @@ public class BytePointer extends ByteArrayInputStream
     {
         copyFrom(bp1);
         for (int i = 0; i < count; i++) {
-            if (Character.isLowerCase(ownBytes[i])) {
-                ownBytes[i] = (byte)Character.toUpperCase(ownBytes[i]);
+            if (Character.isLowerCase((char) ownBytes[i])) {
+                ownBytes[i] = (byte)Character.toUpperCase((char) ownBytes[i]);
             }
         }
     }
@@ -328,8 +328,8 @@ public class BytePointer extends ByteArrayInputStream
     { 
         copyFrom(bp1);
         for (int i = 0; i < count; i++) {
-            if (Character.isUpperCase(ownBytes[i])) {
-                ownBytes[i] = (byte)Character.toLowerCase(ownBytes[i]);
+            if (Character.isUpperCase((char) ownBytes[i])) {
+                ownBytes[i] = (byte)Character.toLowerCase((char) ownBytes[i]);
             }
         }
     }
@@ -345,16 +345,18 @@ public class BytePointer extends ByteArrayInputStream
         boolean bWordBegin = true;
         copyFrom(bp1);
         for (int i = 0; i < count; i++) {
-            if (Character.isWhitespace(ownBytes[i])) {
+            if (Character.isWhitespace((char) ownBytes[i])) {
                 bWordBegin = true;
             } else {
                 if (bWordBegin) {
-                    if (Character.isLowerCase(ownBytes[i])) {
-                        ownBytes[i] = (byte)Character.toUpperCase(ownBytes[i]);
+                    if (Character.isLowerCase((char) ownBytes[i])) {
+                        ownBytes[i] = (byte)Character.toUpperCase(
+                            (char) ownBytes[i]);
                     }
                 } else{
-                    if (Character.isUpperCase(ownBytes[i])) {
-                        ownBytes[i] = (byte)Character.toLowerCase(ownBytes[i]);
+                    if (Character.isUpperCase((char) ownBytes[i])) {
+                        ownBytes[i] = (byte)Character.toLowerCase(
+                            (char) ownBytes[i]);
                     }
                 }
                 bWordBegin = false;
