@@ -1,0 +1,14 @@
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+
+ExecutableStmt.Oj_inner_1 oj_var1 = new ExecutableStmt.Oj_inner_1();
+
+oj_var0.assignFrom( "MIDDLE" );
+if (ID$4$CITY.isNull()) {
+    oj_var1.setNull( true );
+} else {
+    oj_var1.overlay( ID$4$CITY, oj_var0, 2, 3, true );
+}
+
+return oj_var1;

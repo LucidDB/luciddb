@@ -327,7 +327,7 @@ public class Rex2CalcPlanTest extends FarragoTestCase
 
     public void testArithmeticOperators() {
         String sql = "SELECT POW(1.0,1.0), MOD(1,1), ABS(5000000000), ABS(1), " +
-            "ABS(1.1), LN(1), LOG(1) FROM emps WHERE empno > 10";
+            "ABS(1.1), LN(1), LOG10(1) FROM emps WHERE empno > 10";
         check(sql, false,false);
     }
 

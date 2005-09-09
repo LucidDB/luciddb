@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/jdbc/metadata.sql#6 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/jdbc/metadata.sql#9 $
 0: jdbc:farrago:> -- Test JDBC metadata calls
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test getCatalogs
@@ -287,7 +287,7 @@ getMaxStatements                                  0
 getMaxTableNameLength                             128
 getMaxTablesInSelect                              0
 getMaxUserNameLength                              128
-getNumericFunctions                               ABS,LOG,LOG10,MOD,POWER
+getNumericFunctions                               ABS,EXP,LOG,LOG10,MOD,POWER
 getProcedureTerm                                  routine
 getSchemaTerm                                     schema
 getSearchStringEscape                             \

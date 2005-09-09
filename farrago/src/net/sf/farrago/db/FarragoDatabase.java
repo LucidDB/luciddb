@@ -682,6 +682,9 @@ public class FarragoDatabase extends FarragoCompoundAllocation
         FarragoAllocationOwner owner,
         FarragoSessionAnalyzedSql analyzedSql)
     {
+        // REVIEW jvs 27-Aug-2005:  what are the security implications of
+        // EXPLAIN PLAN?
+        
         // It would be silly to cache EXPLAIN PLAN results, so deal with them
         // directly.
         if (sqlNode.isA(SqlKind.Explain)) {
@@ -708,6 +711,8 @@ public class FarragoDatabase extends FarragoCompoundAllocation
             validatedSqlNode = sqlValidator.validate(sqlNode);
         }
 
+        stmt.postValidate(validatedSqlNode);
+        
         SqlDialect sqlDialect =
             new SqlDialect(stmt.getSession().getDatabaseMetaData());
         final String sql = validatedSqlNode.toSqlString(sqlDialect);

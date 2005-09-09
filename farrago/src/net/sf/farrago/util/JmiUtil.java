@@ -198,7 +198,7 @@ public abstract class JmiUtil
      * @param extent target
      * @param string string representation of XMI
      *
-     * @return imported JMI objects
+     * @return outermost JMI objects imported
      */
     public static Collection importFromXmiString(
         RefPackage extent,

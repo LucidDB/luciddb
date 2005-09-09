@@ -93,12 +93,13 @@ public class FarragoMdrReposImpl extends FarragoReposImpl
         MdrUtil.integrateTracing(FarragoTrace.getMdrTracer());
 
         if (!userRepos) {
-            File reposFile = modelLoader.getSystemReposFile();
+            File lockFile = new File(
+                modelLoader.getSystemReposFile().toString() + ".lck");
             try {
-                new FarragoFileLockAllocation(allocations, reposFile, true);
+                new FarragoFileLockAllocation(allocations, lockFile, true);
             } catch (IOException ex) {
                 throw FarragoResource.instance().newCatalogFileLockFailed(
-                    reposFile.toString());
+                    lockFile.toString());
             }
         }
 

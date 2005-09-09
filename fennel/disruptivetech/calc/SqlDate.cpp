@@ -83,10 +83,23 @@ int TimestampToIsoString(char *dest, boost::posix_time::ptime t)
 
 int64_t milliseconds_per_day = 24 * 60 * 60 * 1000LL;
 
+// NOTE jvs 14-Aug-2005:  I added this as part of upgrading to Boost 1.33
+// because the datetime library is no longer forgiving of trailing spaces.
+// Maybe this should be generated automatically as a regular trim.
+static inline void trimTrailingSpaces(std::string &s)
+{
+    std::string::size_type n = s.find_last_not_of(' ');
+    if (n == std::string::npos) {
+        s.resize(0);
+    } else {
+        s.resize(n + 1);
+    }
+}
 
 int64_t IsoStringToDate(char *src, int len)
 {
     std::string s(src,len);
+    trimTrailingSpaces(s);
   
 
     date_duration td = boost::gregorian::from_string(s) - epoc.date();
@@ -99,6 +112,7 @@ int64_t IsoStringToDate(char *src, int len)
 int64_t IsoStringToTime(char *src, int len) 
 {
     std::string s(src, len);
+    trimTrailingSpaces(s);
     
     time_duration td = duration_from_string(s);
     //    ptime p = epoc + td;
@@ -111,6 +125,7 @@ int64_t IsoStringToTimestamp(char *src, int len)
 {
 
     std::string s(src, len);
+    trimTrailingSpaces(s);
     
     ptime p(time_from_string(s));
     

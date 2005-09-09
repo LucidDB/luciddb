@@ -32,7 +32,7 @@ import net.sf.farrago.resource.*;
 
 /**
  * MedMockLocalDataWrapper implements the {@link FarragoMedDataWrapper}
- * interface for local mock tables (which always contain zero rows).
+ * interface for local mock tables.
  *
  * @author John V. Sichi
  * @version $Id$

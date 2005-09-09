@@ -149,11 +149,17 @@ public interface RelDataType
     public SqlIntervalQualifier getIntervalQualifier();
     
     /**
-     * Gets the precision of this type.
+     * Gets the JDBC-defined precision for values of this type.  Note that this
+     * is not always the same as the user-specified precision.  For example,
+     * the type INTEGER has no user-specified precision, but this method
+     * returns 10 for an INTEGER type.
      *
-     * @return number of digits of precision for numeric and datetime types;
+     * @return number of decimal digits for exact numeric types;
+     * number of decimal digits in mantissa for approximate numeric types;
+     * number of decimal digits for fractional seconds of datetime types;
      * length in characters for character types; length in bytes
-     * for binary types; length in bits for bit types
+     * for binary types; length in bits for bit types;
+     * 1 for BOOLEAN
      */
     public int getPrecision();
 

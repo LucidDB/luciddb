@@ -31,6 +31,7 @@ import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.ddl.*;
 import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.parser.*;
 import net.sf.farrago.query.*;
@@ -151,18 +152,31 @@ public class FarragoDbSession extends FarragoCompoundAllocation
 
         sessionVariables = new FarragoSessionVariables();
 
-        sessionVariables.sessionUserName = info.getProperty("user");
-        sessionVariables.currentUserName = sessionVariables.sessionUserName;
+        String sessionUser = info.getProperty("user", "GUEST");
+        sessionVariables.sessionUserName = sessionUser;
+        sessionVariables.currentUserName = sessionUser;
+        sessionVariables.currentRoleName = "";
+        // TODO jvs 27-Aug-2005:  for remote connections, get this from client
         sessionVariables.systemUserName = System.getProperty("user.name");
         sessionVariables.schemaSearchPath = Collections.EMPTY_LIST;
 
-        // TODO:  authenticate sessionUserName with password
+        FemUser femUser = null;
+        
         if (MDR_USER_NAME.equals(sessionVariables.sessionUserName)) {
             // This is a reentrant session from MDR.
             repos = database.getSystemRepos();
         } else {
             // This is a normal session.
             repos = database.getUserRepos();
+
+            femUser = 
+                FarragoCatalogUtil.getUserByName(repos, sessionUser);
+            if (femUser == null) {
+                throw FarragoResource.instance().newSessionUnknownUser(
+                    repos.getLocalizedObjectName(sessionUser));
+            } else {
+                // TODO:  authenticate
+            }
         }
 
         fennelTxnContext =
@@ -170,8 +184,19 @@ public class FarragoDbSession extends FarragoCompoundAllocation
                 repos,
                 database.getFennelDbHandle());
 
-        // TODO:  look up from user profile
-        sessionVariables.catalogName = repos.getSelfAsCatalog().getName();
+        CwmNamespace defaultNamespace = null;
+        if (femUser != null) {
+            defaultNamespace = femUser.getDefaultNamespace();
+        }
+        if (defaultNamespace == null) {
+            sessionVariables.catalogName = repos.getSelfAsCatalog().getName();
+        } else if (defaultNamespace instanceof CwmCatalog) {
+            sessionVariables.catalogName = defaultNamespace.getName();
+        } else {
+            sessionVariables.schemaName = defaultNamespace.getName();
+            sessionVariables.catalogName =
+                defaultNamespace.getNamespace().getName();
+        }
 
         this.url = url;
 

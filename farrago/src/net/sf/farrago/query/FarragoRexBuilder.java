@@ -168,7 +168,7 @@ class FarragoRexBuilder extends JavaRexBuilder
             assert(udt.getOrdering().size() == 1);
             FemUserDefinedOrdering udo = (FemUserDefinedOrdering)
                 udt.getOrdering().iterator().next();
-            preparingStmt.addDependency(udo);
+            preparingStmt.addDependency(udo, null);
             UserDefinedOrderingCategory udoc = udo.getCategory();
             if (udoc == UserDefinedOrderingCategoryEnum.UDOC_RELATIVE) {
                 return makeRelativeComparison(udt, udo, op, exprs);

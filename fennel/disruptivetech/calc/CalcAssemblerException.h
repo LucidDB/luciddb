@@ -125,13 +125,18 @@ public:
     {
         mCode = s;
         if (mLocValid) {
-            // The following assert is often not met with wierd
+            // The following assert is often not met with weird
             // programs: Better to get some sort of error message with
             // the invariant violated, than to just get an assert
             // error masking the problem.
 
             // assert(mLoc.first_pos <= mLoc.last_pos);
-            mCodeSnippet = s.substr(mLoc.first_pos, mLoc.last_pos - mLoc.first_pos+1);
+            try {
+                mCodeSnippet = s.substr(
+                    mLoc.first_pos, mLoc.last_pos - mLoc.first_pos+1);
+            } catch (std::out_of_range ex) {
+                mCodeSnippet = "UNAVAILABLE";
+            }
         }
     }
 

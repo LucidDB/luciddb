@@ -227,7 +227,8 @@ void TupleTest::checkData(
         BOOST_CHECK_EQUAL_COLLECTIONS(
             datum1.pData,
             datum1.pData + datum1.cbData,
-            datum2.pData);
+            datum2.pData,
+            datum2.pData + datum2.cbData);
     }
 }
 

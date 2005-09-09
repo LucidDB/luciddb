@@ -523,6 +523,7 @@ public abstract class SqlTypeUtil
         case SqlTypeName.Float_ordinal:
         case SqlTypeName.Real_ordinal:
         case SqlTypeName.Double_ordinal:
+        case SqlTypeName.Symbol_ordinal:
             return true;
         default:
             return false;

@@ -37,19 +37,24 @@ public interface FarragoSessionPrivilegeChecker
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * Submits a request for access to a catalog object.  Actual
-     * checking of the request may be deferred until the next
-     * call to checkAccess.
+     * Submits a request for access to a catalog object.  Actual checking of
+     * the request may be deferred until the next call to checkAccess.  It is
+     * legal to specify neither, one, or both of user and role; even when both
+     * are null, privileges granted to PUBLIC still apply.
      * 
      * @param obj object to be accessed
      *
-     * @param authId the authorization id of the requester
+     * @param user the requesting user, or null for none
+     *
+     * @param role the requesting role, or null for none
      *
      * @param action the action to be performed on obj
+     * (see {@link PrivilegedActionEnum} for base set)
      */
     public void requestAccess(
         CwmModelElement obj,
-        FemAuthId authId,
+        FemUser user,
+        FemRole role,
         String action);
 
     /**

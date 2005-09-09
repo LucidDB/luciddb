@@ -70,6 +70,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
     private final FarragoSessionIndexMap indexMap;
     private final FarragoObjectCache sharedDataWrapperCache;
     private final FarragoSessionParser parser;
+    private final FarragoSessionPrivilegeChecker privilegeChecker;
 
     private SqlParserPos parserPos;
 
@@ -118,6 +119,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
                 session.getPluginClassLoader(),
                 repos,
                 fennelDbHandle);
+        privilegeChecker = session.newPrivilegeChecker();
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -182,6 +184,29 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         return sharedDataWrapperCache;
     }
 
+    // implement FarragoSessionStmtValidator
+    public FarragoSessionPrivilegeChecker getPrivilegeChecker()
+    {
+        return privilegeChecker;
+    }
+    
+    // implement FarragoSessionStmtValidator
+    public void requestPrivilege(
+        CwmModelElement obj,
+        String action)
+    {
+        // TODO jvs 27-Aug-2005:  cache user/role
+        privilegeChecker.requestAccess(
+            obj,
+            FarragoCatalogUtil.getUserByName(
+                getRepos(),
+                sessionVariables.currentUserName),
+            FarragoCatalogUtil.getRoleByName(
+                getRepos(),
+                sessionVariables.currentRoleName),
+            action);
+    }
+    
     // implement FarragoSessionStmtValidator
     public CwmColumn findColumn(
         CwmNamedColumnSet namedColumnSet,

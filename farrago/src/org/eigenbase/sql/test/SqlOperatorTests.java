@@ -692,14 +692,11 @@ public abstract class SqlOperatorTests extends TestCase
     public void testInitcapFunc()
     {
         getTester().setFor(SqlStdOperatorTable.initcapFunc);
-        if (false) {
-            //not yet supported
-            getTester().checkString("initcap('aA')", "'Aa'", "todo:");
-            getTester().checkString("initcap('Aa')", "'Aa'", "todo:");
-            getTester().checkString("initcap('1a')", "'1a'", "todo:");
-            getTester().checkString("initcap('ab cd Ef 12')", "'Ab Cd Ef 12'", "todo:");
-            getTester().checkNull("initcap(cast(null as varchar(1)))");
-        }
+        getTester().checkString("initcap('aA')", "Aa", "todo:");
+        getTester().checkString("initcap('Aa')", "Aa", "todo:");
+        getTester().checkString("initcap('1a')", "1a", "todo:");
+        getTester().checkString("initcap('ab cd Ef 12')", "Ab Cd Ef 12", "todo:");
+        getTester().checkNull("initcap(cast(null as varchar(1)))");
     }
 
     public void testPowFunc()
@@ -708,6 +705,15 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkScalarApprox("pow(2,-2)", "todo:", 0.25, 0);
         getTester().checkNull("pow(cast(null as integer),2)");
         getTester().checkNull("pow(2,cast(null as double))");
+    }
+
+    public void testExpFunc()
+    {
+        getTester().setFor(SqlStdOperatorTable.expFunc);
+        getTester().checkScalarApprox("exp(2)", "todo:", 7.389056, 0.000001);
+        getTester().checkScalarApprox("exp(-2)", "todo:", 0.1353, 0.0001);
+        getTester().checkNull("exp(cast(null as integer))");
+        getTester().checkNull("exp(cast(null as double))");
     }
 
     public void testModFunc()
@@ -728,9 +734,9 @@ public abstract class SqlOperatorTests extends TestCase
 
     public void testLogFunc()
     {
-        getTester().setFor(SqlStdOperatorTable.logFunc);
-        getTester().checkScalarApprox("log(10)", "todo:", 1.0, 0);
-        getTester().checkNull("log(cast(null as real))");
+        getTester().setFor(SqlStdOperatorTable.log10Func);
+        getTester().checkScalarApprox("log10(10)", "todo:", 1.0, 0);
+        getTester().checkNull("log10(cast(null as real))");
     }
 
     public void testAbsFunc()
@@ -801,8 +807,8 @@ public abstract class SqlOperatorTests extends TestCase
     public void testCurrentRoleFunc()
     {
         getTester().setFor(SqlStdOperatorTable.currentRoleFunc);
-        // We don't have roles yet, so the CURRENT_ROLE function returns
-        // the empty string.
+        // By default, the CURRENT_ROLE function returns
+        // the empty string because a role has to be set explicitly.
         getTester().checkString("CURRENT_ROLE", "", "VARCHAR(2000) NOT NULL");
     }
 

@@ -97,6 +97,9 @@ public abstract class FarragoTestCase extends DiffTestCase
     /** Statement for processing queries. */
     protected Statement stmt;
 
+    /** An owner for any heavyweight allocations. */
+    protected FarragoCompoundAllocation allocOwner;
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -342,6 +345,8 @@ public abstract class FarragoTestCase extends DiffTestCase
     protected void setUp()
         throws Exception
     {
+        allocOwner = new FarragoCompoundAllocation();
+        
         if (connection == null) {
             assert (!individualTest) : "You forgot to implement suite()";
             individualTest = true;
@@ -389,6 +394,8 @@ public abstract class FarragoTestCase extends DiffTestCase
             if (connection != null) {
                 connection.rollback();
             }
+            allocOwner.closeAllocation();
+            allocOwner = null;
         } finally {
             tracer.info("Leaving test case "
                 + getClass().getName() + "." + getName());

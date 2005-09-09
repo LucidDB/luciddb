@@ -17,6 +17,12 @@ values 'a'<='b';
 select substring(name from 1 for 2) from sales.emps order by 1;
 select substring(name from 2) from sales.emps order by 1;
 select substring(name from 1) from sales.emps order by 1;
+select city, age, substring(city, 2, age/10) from sales.emps order by 1;
+select city, age, substring(city,  age/20, empid) from sales.emps order by 1;
+select city, substring(city, 3) from sales.emps order by 1;
+select city, substring(city, -1, 4) from sales.emps order by 1;
+select city, substring(city, 0, 4) from sales.emps order by 1;
+select name, empid, substring(name, 2, empid) from sales.emps order by 1;
 
 select lower(city) from sales.emps order by 1;
 select upper(city) from sales.emps order by 1;
