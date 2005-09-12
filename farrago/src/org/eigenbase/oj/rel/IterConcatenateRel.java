@@ -71,11 +71,21 @@ public class IterConcatenateRel extends UnionRelBase implements JavaRel
         return planner.makeCost(dRows, dCpu, dIo);
     }
 
+    protected OJClass getCompoundIteratorClass()
+    {
+        return OJClass.forClass(org.eigenbase.runtime.CompoundIterator.class);
+    }
+
     public ParseTree implement(JavaRelImplementor implementor)
     {
         // Generate
         //   new CompoundIterator(
         //     new Iterator[] {<<input0>>, ...})
+        // If any input is infinite, should instead generate
+        //   new CompoundParallelIterator(
+        //     new Iterator[] {<<input0>>, ...})
+        // but there's no way to tell, so we can't.
+        // REVIEW: mb 9-Sep-2005: add a predicate RelNode.isInfinite().
         ExpressionList exps = new ExpressionList();
         for (int i = 0; i < inputs.length; i++) {
             Expression exp =
@@ -83,7 +93,7 @@ public class IterConcatenateRel extends UnionRelBase implements JavaRel
             exps.add(exp);
         }
         return new AllocationExpression(
-            OJClass.forClass(org.eigenbase.runtime.CompoundIterator.class),
+            getCompoundIteratorClass(),
             new ExpressionList(
                 new ArrayAllocationExpression(
                     OJUtil.clazzIterator,

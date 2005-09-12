@@ -28,15 +28,19 @@ import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 import org.eigenbase.util.*;
+import org.eigenbase.trace.EigenbaseTrace;
 import org.eigenbase.test.EigenbaseTestCase;
 
 /**
  * <code>CompoundIterator</code> creates an iterator out of several.
+ * CompoundIterator is serial: it yields all the elements of its first input
+ * Iterator, then all those of its second input, etc. When all inputs are exhausted,
+ * it is done.
+ * (Cf {@link CompoundParallelIterator}.)
  */
 public class CompoundIterator implements RestartableIterator
 {
-    private static final Logger tracer =
-        Logger.getLogger(CompoundIterator.class.getName());
+    private static final Logger tracer = EigenbaseTrace.getCompoundIteratorTracer();
 
     //~ Instance fields -------------------------------------------------------
 

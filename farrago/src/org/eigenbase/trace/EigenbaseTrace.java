@@ -31,7 +31,8 @@ import org.eigenbase.oj.stmt.OJPreparingStmt;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.oj.util.OJClassMap;
 import org.eigenbase.util.property.Property;
-
+import org.eigenbase.runtime.CompoundIterator;
+import org.eigenbase.runtime.CompoundParallelIterator;
 
 /**
  * Contains all of the {@link java.util.logging.Logger tracers} used within
@@ -130,6 +131,24 @@ public abstract class EigenbaseTrace
     public static Logger getPropertyTracer()
     {
         return Logger.getLogger(Property.class.getName());
+    }
+
+    /** The tracer "org.eigenbase.runtime.CompoundIterator" traces {@link CompoundIterator}.
+     * FINE shows the transition to the next child Iterator.
+     * FINER shows every element.
+     */
+    public static Logger getCompoundIteratorTracer()
+    {
+        return Logger.getLogger(CompoundIterator.class.getName());
+    }
+
+    /** The tracer "org.eigenbase.runtime.CompoundParallelIterator" traces {@link CompoundParallelIterator}.
+     * FINE shows synchronization among the consumer and the source Iterators.
+     * FINER shows every element.
+     */
+    public static Logger getCompoundParallelIteratorTracer()
+    {
+        return Logger.getLogger(CompoundParallelIterator.class.getName());
     }
 }
 
