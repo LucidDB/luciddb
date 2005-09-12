@@ -595,6 +595,10 @@ column type family is {1} but default value type family is {2}</text>
 <text>Invalid escape sequence.</text>
 </exception>
 
+<exception id="450090" name="InvalidRegularExpression">
+<text>Invalid regular expression.</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Data wrapper resources 460,000 - 470,000 -->
 <!-- ====================================================================== -->

@@ -162,7 +162,7 @@ public class FarragoOJRexBuiltinImplementor extends FarragoOJRexImplementor
                     stmtList, 
                     new MethodCall(
                         operands[0],
-                        BytePointer.GET_BYTE_COUNT_METHOD_NAME, 
+                        "length",
                         new ExpressionList()),
                     call.getType(),
                     varResult,

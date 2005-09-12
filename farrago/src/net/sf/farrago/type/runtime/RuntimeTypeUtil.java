@@ -44,9 +44,25 @@ public class RuntimeTypeUtil
      * Translate the like pattern to java's regex pattern.
      */
 
-    private static final String javaRegexSpecials = "([{}])$^|?*-+\\";
+    private static final String javaRegexSpecials = "[]()|^-+*?{}$\\";
+    private static final String SqlSimilarSpecials = "[]()|^-+*_%?{}";
+    private static final String regCharClasses[] = 
+        { "[:ALPHA:]", "\\p{Alpha}",
+          "[:alpha:]", "\\p{Alpha}", 
+          "[:UPPER:]", "\\p{Upper}", 
+          "[:upper:]", "\\p{Upper}", 
+          "[:LOWER:]", "\\p{Lower}", 
+          "[:lower:]", "\\p{Lower}",
+          "[:DIGIT:]", "\\d", 
+          "[:digit:]", "\\d", 
+          "[:SPACE:]", " ",
+          "[:space:]", " ", 
+          "[:WHITESPACE:]", "\\s",
+          "[:whitespace:]", "\\s",
+          "[:ALNUM:]", "\\p{alnum}", 
+          "[:alnum:]", "\\p{alnum}"};
 
-    public static String SqlToRegexLike(String sqlPattern, String escapeStr)
+    public static String SqlToRegexLike(String sqlPattern, CharSequence escapeStr)
     { 
         int i;
         char escapeChar = (char) 0;
@@ -58,7 +74,6 @@ public class RuntimeTypeUtil
         }
         int len = sqlPattern.length();
         StringBuffer javaPattern = new StringBuffer(len + len);
-        javaPattern.append("\\A");
         for (i = 0; i < len; i++) {
             char c = sqlPattern.charAt(i);
             if (javaRegexSpecials.indexOf(c)>= 0) {
@@ -84,15 +99,193 @@ public class RuntimeTypeUtil
                 javaPattern.append(c);
             }
         }
-        javaPattern.append("\\Z");
         return javaPattern.toString();
     }
-    public static String SqlToRegexSimilar(String sqlPattern, String escapeStr)
+
+    private static void similarEscapeRuleChecking(String sqlPattern, char escapeChar)
     {
-        // not implemented yet.
-        assert(false);
-        return null;
+        if (escapeChar == 0) {
+            return;
+        }
+        if (SqlSimilarSpecials.indexOf(escapeChar) >= 0) {
+            // The the escape character is a special character
+            // SQL 2003 Part 2 Section 8.6 General Rule 3.b
+            for (int i = 0; i < sqlPattern.length(); i++) {
+                if (sqlPattern.charAt(i) == escapeChar) {
+                    if (i == (sqlPattern.length() - 1)) {
+                        throw net.sf.farrago.resource.FarragoResource.
+                            instance().newInvalidEscapeSequence();
+                    }
+                    char c = sqlPattern.charAt(i+1);
+                    if (SqlSimilarSpecials.indexOf(c) < 0 &&
+                        c != escapeChar)
+                    {
+                        throw net.sf.farrago.resource.FarragoResource.
+                            instance().newInvalidEscapeSequence();
+                    }
+                }
+            }
+        }
+        // SQL 2003 Part 2 Section 8.6 General Rule 3.c
+        if (escapeChar == ':' &&
+            (sqlPattern.indexOf("[:") >= 0 ||   
+            sqlPattern.indexOf(":]") >= 0))
+        {
+            // it should be Escape character conflict
+            throw net.sf.farrago.resource.FarragoResource.
+                instance().newInvalidEscapeSequence();
+        }
     }
+
+    private static String sqlSimilarRewrite(String sqlPattern, 
+                                     char escapeChar)
+    {
+        boolean insideCharacterEnumeration = false;
+
+        StringBuffer javaPattern = new StringBuffer(sqlPattern.length()*2); 
+        int len = sqlPattern.length(); 
+        for (int i = 0; i < len; i++) {
+            char c = sqlPattern.charAt(i);
+            if (c == escapeChar) {
+                if (i == len - 1) {
+                    //It should never reach here after the escape rule checking.
+                    //
+                    throw net.sf.farrago.resource.FarragoResource.
+                        instance().newInvalidEscapeSequence();
+                }
+                char nextChar = sqlPattern.charAt(i+1);
+                if (SqlSimilarSpecials.indexOf(nextChar) >= 0) {
+                    // special character, use \ to replace the escape char.
+                    if (javaRegexSpecials.indexOf(nextChar) >= 0) {
+                        javaPattern.append('\\');
+                    }
+                    javaPattern.append(nextChar);
+                } else if (nextChar == escapeChar) {
+                    javaPattern.append(nextChar);
+                } else {
+                    //It should never reach here after the escape rule checking.
+                    //
+                    throw net.sf.farrago.resource.FarragoResource.
+                        instance().newInvalidEscapeSequence();
+                }
+                i++; // we already process the next char.
+            } else {
+                switch (c) { 
+                case '_':
+                    javaPattern.append('.'); 
+                    break;
+                case '%':
+                    javaPattern.append('.'); 
+                    javaPattern.append('*'); 
+                    break;
+                case '[':
+                    javaPattern.append('[');
+                    insideCharacterEnumeration = true;
+                    i = sqlSimilarRewriteCharEnumeration(
+                            sqlPattern, javaPattern, i, escapeChar);
+                    break;
+                case ']':
+                    if (!insideCharacterEnumeration) {
+                        throw net.sf.farrago.resource.FarragoResource.
+                            instance().newInvalidRegularExpression();
+                    }
+                    insideCharacterEnumeration = false;
+                    javaPattern.append(']'); 
+                    break;
+                case '\\':
+                    javaPattern.append("\\\\");
+                    break;
+                case '$':
+                    // $ is special character in java regex, but regular in
+                    // SQL regex.
+                    javaPattern.append("\\$");
+                    break;
+                default:
+                    javaPattern.append(c);
+                } 
+            }
+        }
+        if (insideCharacterEnumeration) {
+            throw net.sf.farrago.resource.FarragoResource.
+                instance().newInvalidRegularExpression();
+        }
+
+        return javaPattern.toString();
+    }
+
+    public static int sqlSimilarRewriteCharEnumeration(
+                    String sqlPattern, 
+                    StringBuffer javaPattern, 
+                    int pos, 
+                    char escapeChar)
+    {
+        int i = pos + 1;
+        for (i = pos + 1; i < sqlPattern.length(); i++) {
+            char c = sqlPattern.charAt(i);
+            if (c == ']') {
+                return i - 1;
+            } else if ( c == escapeChar) {
+                i++;
+                char nextChar = sqlPattern.charAt(i);
+                if (SqlSimilarSpecials.indexOf(nextChar) >= 0) {
+                    if (javaRegexSpecials.indexOf(nextChar) >= 0) {
+                        javaPattern.append('\\');
+                    } 
+                    javaPattern.append(nextChar);
+                } else if (escapeChar == nextChar) {
+                    javaPattern.append(nextChar);
+                } else {
+                    throw net.sf.farrago.resource.FarragoResource.
+                        instance().newInvalidRegularExpression();
+                }
+            }  else if ( c == '-') {
+                javaPattern.append('-');
+            }  else if ( c == '^') {
+                javaPattern.append('^');
+            } else if (sqlPattern.startsWith("[:", i)) {
+                int numOfRegCharSets = regCharClasses.length/2;
+                boolean found = false;
+                for (int j = 0;  j < numOfRegCharSets; j++) {
+                    if (sqlPattern.startsWith(regCharClasses[j+j], i)) {
+                        javaPattern.append(regCharClasses[j+j+1]);
+
+                        i += regCharClasses[j+j].length()-1;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    throw net.sf.farrago.resource.FarragoResource.
+                        instance().newInvalidRegularExpression();
+                }
+            } else if (SqlSimilarSpecials.indexOf(c) >= 0) {
+                throw net.sf.farrago.resource.FarragoResource.
+                    instance().newInvalidRegularExpression();
+            } else {
+                javaPattern.append(c);
+            }
+        }
+        return i - 1;
+    }
+
+    public static String SqlToRegexSimilar(String sqlPattern, CharSequence escapeStr)
+    { 
+        int i;
+        char escapeChar = (char) 0;
+        int len = sqlPattern.length();
+        if (escapeStr != null) {
+            if (escapeStr.length() != 1) {
+                throw net.sf.farrago.resource.FarragoResource.
+                    instance().newInvalidRegularExpression();
+            }
+            escapeChar = escapeStr.charAt(0);
+        }
+
+        similarEscapeRuleChecking(sqlPattern, escapeChar);
+
+        return sqlSimilarRewrite(sqlPattern, escapeChar);
+    }
+
 }
 
 
