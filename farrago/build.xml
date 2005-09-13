@@ -179,16 +179,23 @@ require version '${required.ant.version}'."/>
 
   <!-- Classpaths -->
 
-  <!-- classpath for main build (after catalog codegen) -->
-  <path id="farrago.build.classpath">
+  <!-- thirdparty classpath for main build (after catalog codegen) -->
+  <path id="farrago.build.3p.classpath">
     <pathelement path="${farrago.3p.classpath}"/>
-    <pathelement location="${farrago.catalog.src.dir}"/>
     <pathelement location="${sqlline.lib.dir}/sqlline.jar"/>
     <pathelement location="${sqlline.lib.dir}/jline.jar"/>
     <fileset dir="${jgrapht.dir}">
       <include name="jgrapht-jdk1.4.jar" if="farrago.javasrc.14"/>
       <include name="jgrapht-jdk1.5.jar" unless="farrago.javasrc.14"/>
     </fileset>
+  </path>
+  <property name="farrago.build.3p.classpath" 
+    refid="farrago.build.3p.classpath"/>
+
+  <!-- classpath for main build (after catalog codegen) -->
+  <path id="farrago.build.classpath">
+    <pathelement path="${farrago.build.3p.classpath}"/>
+    <pathelement location="${farrago.catalog.src.dir}"/>
   </path>
   <property name="farrago.build.classpath" refid="farrago.build.classpath"/>
 
@@ -1292,6 +1299,8 @@ require version '${required.ant.version}'."/>
     </mdr>
   </target>
 
+  <!-- End experimental stuff for the user repository -->
+
   <target name="propertiesJar" depends="compile" description="
 Create eigenbase-properties.jar, which is used by Mondrian.">
     <jar jarfile="${open.dir}/thirdparty/eigenbase-properties.jar">
@@ -1301,4 +1310,17 @@ Create eigenbase-properties.jar, which is used by Mondrian.">
     </jar>
   </target>
 
+  <target name="createEclipseProject">
+    <pathconvert property="eclipse.libpath" refid="farrago.build.3p.classpath"
+      pathsep="&quot;/&gt;&lt;classpathentry kind=&quot;lib&quot; path=&quot;"/>
+    <copy file="${farrago.dir}/eclipse/farrago.project" overwrite="true"
+        tofile="${farrago.dir}/.project">
+    </copy>
+    <copy file="${farrago.dir}/eclipse/farrago.classpath" overwrite="true"
+        tofile="${farrago.dir}/.classpath">
+      <filterset>
+        <filter token="LIBPATH" value="${eclipse.libpath}"/>
+      </filterset>
+    </copy>
+  </target>
 </project>
