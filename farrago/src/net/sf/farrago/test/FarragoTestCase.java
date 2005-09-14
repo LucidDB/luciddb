@@ -43,6 +43,7 @@ import net.sf.farrago.db.*;
 
 import org.eigenbase.test.*;
 import org.eigenbase.util.SaffronProperties;
+import org.eigenbase.util.property.*;
 
 import sqlline.SqlLine;
 
@@ -99,6 +100,32 @@ public abstract class FarragoTestCase extends DiffTestCase
 
     /** An owner for any heavyweight allocations. */
     protected FarragoCompoundAllocation allocOwner;
+
+    static 
+    {
+        // If required system properties aren't set yet, attempt to set them
+        // based on environment variables.  This allows tests to work with less
+        // fuss in IDE's such as Eclipse which make it difficult to set
+        // properties globally.
+        StringProperty homeDir =
+            FarragoProperties.instance().homeDir;
+        StringProperty traceConfigFile =
+            FarragoProperties.instance().traceConfigFile;
+        if (homeDir.get() == null) {
+            String eigenHome = System.getenv("EIGEN_HOME");
+            if (eigenHome != null) {
+                homeDir.set(new File(eigenHome, "farrago").getAbsolutePath());
+                if (traceConfigFile.get() == null) {
+                    traceConfigFile.set(
+                        new File(
+                            new File(
+                                homeDir.get(),
+                                "trace"),
+                            "FarragoTrace.properties").getAbsolutePath());
+                }
+            }
+        }
+    }
 
     //~ Constructors ----------------------------------------------------------
 

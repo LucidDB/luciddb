@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="lib" path="catalog/java"/>
-	<classpathentry kind="lib" path="examples/rng/catalog/java"/>
-	<classpathentry kind="src" path="examples/rng/src"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="lib" path="@LIBPATH@"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
