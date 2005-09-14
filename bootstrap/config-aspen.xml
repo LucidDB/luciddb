@@ -21,7 +21,7 @@
 
 
 		<!-- Configures the actual build loop, how often and which build file/target -->
-		<schedule interval="3600">
+		<schedule interval="&build_interval;">
 			<ant buildfile="build-aspen.xml" uselogger="true" usedebug="false" antscript="&ant;" target="integration-build-and-test">
 			    <property name="open_propfile" value="&open_propfile;"/>
 			    <property name="open_root" value="&open_root;"/>

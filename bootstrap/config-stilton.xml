@@ -30,6 +30,8 @@
 <!ENTITY rsync_cmd        "rsync -az -e &quot;ssh -p 8022&quot; --delete-after">
 <!ENTITY rsync_dest       "aspen@jhyde.dyndns.org:web/artifacts">
 
+<!ENTITY build_interval   "3600">
+
 <!ENTITY ant              "doant-stilton.bat">
 
 <!ENTITY configSuffix     "-win32">
