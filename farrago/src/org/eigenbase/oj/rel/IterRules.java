@@ -96,7 +96,12 @@ public abstract class IterRules
     {
         public HomogeneousUnionToIteratorRule()
         {
-            super("HomogeneousUnionToIteratorRule");
+            this("HomogeneousUnionToIteratorRule");
+        }
+
+        protected HomogeneousUnionToIteratorRule(String description)
+        {
+            super(description);
         }
 
         public RelNode convert(RelNode rel)
