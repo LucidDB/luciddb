@@ -778,6 +778,30 @@ public class FarragoRexToOJTranslatorTest extends FarragoTestCase
         testTranslation("City like Name escape 'n'");
     }
 
+    public void testSimilarLiteral()
+        throws Exception
+    {
+        testTranslation("City similar to '[S][[:ALPHA:]]n%'");
+    }
+
+    public void testSimilarRuntime()
+        throws Exception
+    {
+        testTranslation("City similar to Name");
+    }
+
+    public void testSimilarLiteralWithEscape()
+        throws Exception
+    {
+        testTranslation("City similar to 'San%' escape 'n'");
+    }
+
+    public void testSimilarRuntimeWithEscape()
+        throws Exception
+    {
+        testTranslation("City similar to Name escape 'n'");
+    }
+
 
 }
 

@@ -138,12 +138,9 @@ public class FarragoOJRexSimilarLikeImplementor extends FarragoOJRexImplementor
                         ojPatternClass, 
                         expForPattern);
 
-        varMatcher = translator.getRelImplementor().newVariable();
-        translator.addStatement(
-            new VariableDeclaration(
-                TypeName.forOJClass(ojMatcherClass),
-                new VariableDeclarator(varMatcher.toString(), null)));
-
+        varMatcher = translator.createScratchVariableWithExpression(
+                        ojMatcherClass, 
+                        Literal.constantNull());
 
         for (int i = 0; i < operands.length; i++) {
             nullTest = translator.createNullTest(
@@ -176,11 +173,7 @@ public class FarragoOJRexSimilarLikeImplementor extends FarragoOJRexImplementor
                         emptyArguments));
 
             if (hasEscape) {
-                likeArguments.add(
-                    new MethodCall(
-                        operands[2],
-                        "toString",
-                        emptyArguments));
+                likeArguments.add(operands[2]);
 
             } else {
                 likeArguments.add(Literal.constantNull());
@@ -212,7 +205,6 @@ public class FarragoOJRexSimilarLikeImplementor extends FarragoOJRexImplementor
                             "compile",
                             new ExpressionList(
                                 varJavaPatternStr)))));
-        } 
 
         stmtList.add(new ExpressionStatement(
                          new AssignmentExpression(
@@ -222,14 +214,36 @@ public class FarragoOJRexSimilarLikeImplementor extends FarragoOJRexImplementor
                                  varPattern,
                                  "matcher",
                                   new ExpressionList(
-                                      new MethodCall(
-                                          operands[0],
-                                          "toString",
-                                          emptyArguments))))));
+                                          operands[0])))));
+        } else {
+            IfStatement ifStmt = new IfStatement(
+                new BinaryExpression(
+                    varMatcher, 
+                    BinaryExpression.EQUAL,
+                    Literal.constantNull()),
+                new StatementList(
+                    new ExpressionStatement(
+                        new AssignmentExpression(
+                            varMatcher,
+                            AssignmentExpression.EQUALS,
+                            new MethodCall(
+                                varPattern,
+                                "matcher",
+                                 new ExpressionList(
+                                     operands[0]))))),
+                new StatementList(
+                    new ExpressionStatement(
+                        new MethodCall(
+                            varMatcher,
+                            "reset",
+                            new ExpressionList(
+                                operands[0])))));
+            stmtList.add(ifStmt);
+        }
 
         Expression matcherResult = new MethodCall(
                         varMatcher,
-                        "find",
+                        "matches",
                         emptyArguments);
 
 
