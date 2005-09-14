@@ -49,7 +49,7 @@ import java.nio.*;
  * @version $Id$
  */
 public class BytePointer extends ByteArrayInputStream
-    implements AssignableValue
+    implements AssignableValue, CharSequence
 {
     //~ Static fields/initializers --------------------------------------------
 
@@ -300,6 +300,35 @@ public class BytePointer extends ByteArrayInputStream
     public int getByteCount() 
     {
         return available();
+    }
+
+    /* 
+     * implement CharSequence
+     * the Default implementation.
+     * Only works for ISO-8859-1
+     * If Unicode, or any other variable length
+     * encoding, it needs to override these functions.
+     *
+     */
+
+    public int length() 
+    {
+        return available();
+    }
+
+    public char charAt(int index) 
+    {
+        return (char) buf[pos+index];
+    }
+
+    public CharSequence subSequence(int start, int end) 
+    {
+        BytePointer bp = new BytePointer();
+        if (start < 0 || end < 0 || end >= getByteCount()) {
+            throw new IndexOutOfBoundsException();
+        }
+        bp.setPointer(buf, pos + start, pos + end);
+        return bp;
     }
 
     /**

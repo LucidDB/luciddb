@@ -164,8 +164,6 @@ public class FarragoOJRexImplementorTable extends OJRexImplementorTableImpl
             new FarragoOJRexBuiltinImplementor(
                 FarragoOJRexBuiltinImplementor.INITCAP_FUNCTION));
 
-        /*
-         * Similar not implemented yet.
         registerOperator(
             opTab.similarOperator,
             new FarragoOJRexSimilarLikeImplementor(true, false));
@@ -173,7 +171,6 @@ public class FarragoOJRexImplementorTable extends OJRexImplementorTableImpl
         registerOperator(
             opTab.notSimilarOperator,
             new FarragoOJRexSimilarLikeImplementor(true, true));
-        */
 
         registerOperator(
             opTab.likeOperator,
