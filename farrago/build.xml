@@ -79,10 +79,13 @@
     location="${farrago.src.dir}/com/lucidera/lurql/parser"/>
 
   <!-- The version of ANT we require. -->
-  <property name="required.ant.version" value="1.6.5"/>
+  <property name="required.ant.version" value="1.6.2"/>
 
   <condition property="is.correct.ant.version">
-    <contains string="${ant.version}" substring="${required.ant.version}"/>
+    <or>
+	<contains string="${ant.version}" substring="${required.ant.version}"/>
+	<contains string="${ant.version}" substring="1.6.5"/>
+    </or>
   </condition>
   <fail unless="is.correct.ant.version"
       message="Incorrect ant version '${ant.version}';
