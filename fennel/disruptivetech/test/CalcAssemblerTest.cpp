@@ -1899,16 +1899,15 @@ void CalcAssemblerTest::testAdd()
         testCase1.test();
     }
 
-// REVIEW: SZ: Disabled pending fix for FennelExcn
-//    CalcAssemblerTestCase testCase2(__LINE__, "ADD UNKNOWN INST", 
-//                                    "I u2, u4;\nO u4;\nT;\nADD O0, I0, I1;");
-//    testCase2.expectAssemblerError("not a registered instruction");
-//    testCase2.assemble();
-//
-//    CalcAssemblerTestCase testCase3(__LINE__, "ADD O0 I0", 
-//                                    "I u2, u4;\nO u4;\nT;\nADD O0, I0;");
-//    testCase3.expectAssemblerError("not a registered instruction");
-//    testCase3.assemble();
+    CalcAssemblerTestCase testCase2(__LINE__, "ADD UNKNOWN INST", 
+                                    "I u2, u4;\nO u4;\nT;\nADD O0, I0, I1;");
+    testCase2.expectAssemblerError("not a registered instruction");
+    testCase2.assemble();
+
+    CalcAssemblerTestCase testCase3(__LINE__, "ADD O0 I0", 
+                                    "I u2, u4;\nO u4;\nT;\nADD O0, I0;");
+    testCase3.expectAssemblerError("not a registered instruction");
+    testCase3.assemble();
 
     CalcAssemblerTestCase testCase4(__LINE__, "ADD FLOAT", "I r, r;\nO r, r;\n"
                                     "C r, r;\nV 0.3, -2.3;\n"
