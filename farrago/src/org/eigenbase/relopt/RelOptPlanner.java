@@ -43,6 +43,11 @@ public interface RelOptPlanner
 
     //~ Methods ---------------------------------------------------------------
 
+    /**
+     * Sets the root node of this query.
+     *
+     * @param rel Relational expression
+     */
     public void setRoot(RelNode rel);
 
     public RelNode getRoot();
@@ -78,9 +83,14 @@ public interface RelOptPlanner
 
     /**
      * Changes a relational expression to an equivalent one with a different
-     * set of traits.  The return is never null, but may be abstract.
+     * set of traits.
      *
-     * @pre rel.getTraits() != toTraits
+     * @param rel Relational expression, may or may not have been registered
+     * @param toTraits Trait set to convert relational expression to
+     * @return Relational expression with desired traits. Never null, but may
+     *   be abstract
+     *
+     * @pre !rel.getTraits().equals(toTraits)
      * @post return != null
      */
     public RelNode changeTraits(RelNode rel, RelTraitSet toTraits);
@@ -131,20 +141,37 @@ public interface RelOptPlanner
     public RelOptCost getCost(RelNode rel);
 
     /**
-     * Registers a relational expression in the expression bank. After it has
-     * been registered, you may not modify it.
+     * Registers a relational expression in the expression bank.
      *
-     * @param rel Relational expression to register
+     * <p>After it has been registered, you may not modify it.
+     *
+     * <p>The expression must not already have been registered. If you are
+     * not sure whether it has been registered, call
+     * {@link #ensureRegistered(RelNode)}.
+     *
+     * @param rel Relational expression to register (must not already be
+     *   registered)
+     *
      * @param equivRel Relational expression it is equivalent to (may be null)
      *
      * @return the same expression, or an equivalent existing expression
+     *
+     * @pre !isRegistered(rel)
      */
     public RelNode register(
         RelNode rel,
         RelNode equivRel);
 
     /**
-     * Determines whether a relational expression has been registered yet.
+     * Registers a relational expression if it is not already registered.
+     *
+     * @param rel Relational expression
+     * @return Registered relational expression
+     */
+    RelNode ensureRegistered(RelNode rel);
+
+    /**
+     * Determines whether a relational expression has been registered.
      *
      * @param rel expression to test
      *

@@ -25,8 +25,6 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.oj.rel.*;
 
-import java.util.*;
-
 /**
  * MockRelOptPlanner is a mock implementation of the {@link RelOptPlanner}
  * interface.
@@ -129,6 +127,12 @@ public class MockRelOptPlanner implements RelOptPlanner
     public RelNode register(
         RelNode rel,
         RelNode equivRel)
+    {
+        return rel;
+    }
+
+    // implement RelOptPlanner
+    public RelNode ensureRegistered(RelNode rel)
     {
         return rel;
     }

@@ -307,18 +307,20 @@ public abstract class AbstractRelNode implements RelNode
     {
         RelNode [] inputs = getInputs();
         for (int i = 0; i < inputs.length; i++) {
-            RelNode e = planner.register(inputs[i], null);
+            RelNode e = planner.ensureRegistered(inputs[i]);
             if (e != inputs[i]) {
                 replaceInput(i, e);
             }
         }
         digest = computeDigest();
-        assert (digest != null);
+        assert digest != null : "post: return != null";
     }
 
     public String recomputeDigest()
     {
-        return digest = computeDigest();
+        digest = computeDigest();
+        assert digest != null : "post: return != null";
+        return digest;
     }
 
     public void registerCorrelVariable(String correlVariable)
@@ -347,6 +349,8 @@ public abstract class AbstractRelNode implements RelNode
 
     /**
      * Computes the digest. Does not modify this object.
+     *
+     * @post return != null
      */
     protected String computeDigest()
     {

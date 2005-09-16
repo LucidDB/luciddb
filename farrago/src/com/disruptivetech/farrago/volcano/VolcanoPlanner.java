@@ -58,16 +58,16 @@ public class VolcanoPlanner implements RelOptPlanner
      * List of all operands of all rules. Any operand can be an 'entry point'
      * to a rule call, when a relexp is registered which matches the.
      */
-    ArrayList allOperands = new ArrayList();
+    final List allOperands = new ArrayList();
 
     /** List of all sets. Used only for debugging. */
-    ArrayList allSets = new ArrayList();
+    final List allSets = new ArrayList();
 
     /**
      * Canonical map from {@link String digest} to the unique {@link
      * RelNode relational expression} with that digest.
      */
-    HashMap mapDigestToRel = new HashMap();
+    final Map mapDigestToRel = new HashMap();
 
     /**
      * Map each registered expression ({@link RelNode}) to its equivalence
@@ -82,10 +82,10 @@ public class VolcanoPlanner implements RelOptPlanner
     IdentityHashMap mapRel2Subset = new IdentityHashMap();
 
     /** List of all schemas which have been registered. */
-    HashSet registeredSchemas = new HashSet();
+    final Set registeredSchemas = new HashSet();
 
     /** Holds rule calls waiting to be fired. */
-    RuleQueue ruleQueue = new RuleQueue(this);
+    final RuleQueue ruleQueue = new RuleQueue(this);
 
     /** Holds the currently registered RelTraitDefs. */
     private final HashSet traitDefs = new HashSet();
@@ -93,13 +93,13 @@ public class VolcanoPlanner implements RelOptPlanner
     /**
      * Set of all registered rules.
      */
-    private final HashSet ruleSet = new HashSet();
+    private final Set ruleSet = new HashSet();
 
     /**
      * Maps rule description to rule, just to ensure that rules' descriptions
      * are unique.
      */
-    private final HashMap mapDescToRule = new HashMap();
+    private final Map mapDescToRule = new HashMap();
 
     private int nextSetId = 0;
 
@@ -164,9 +164,12 @@ public class VolcanoPlanner implements RelOptPlanner
     /**
      * Find an expression's equivalence set.  If the expression is not
      * registered, return null.
+     *
+     * @pre rel != null
      */
     public RelSet getSet(RelNode rel)
     {
+        assert rel != null : "pre: rel != null";
         final RelSubset subset = getSubset(rel);
         if (subset != null) {
             assert subset.set != null;
@@ -335,9 +338,10 @@ public class VolcanoPlanner implements RelOptPlanner
 
     public RelNode changeTraits(final RelNode rel, RelTraitSet toTraits)
     {
-        assert(!rel.getTraits().equals(toTraits));
+        assert !rel.getTraits().equals(toTraits) :
+            "pre: !rel.getTraits().equals(toTraits)";
 
-        RelSubset rel2 = registerImpl(rel, null);
+        RelNode rel2 = ensureRegistered(rel);
         if (rel2.getTraits().equals(toTraits)) {
             return rel2;
         }
@@ -455,7 +459,8 @@ public class VolcanoPlanner implements RelOptPlanner
         RelNode rel,
         RelNode equivRel)
     {
-        final RelSet set = getSet(equivRel);
+        assert !isRegistered(rel) : "pre: isRegistered(rel)";
+        final RelSet set = equivRel == null ? null : getSet(equivRel);
         final RelSubset subset = registerImpl(rel, set);
 
         if (tracer.isLoggable(Level.FINE)) {
@@ -463,6 +468,16 @@ public class VolcanoPlanner implements RelOptPlanner
         }
 
         return subset;
+    }
+
+    public RelNode ensureRegistered(RelNode rel)
+    {
+        final RelSubset subset = (RelSubset) mapRel2Subset.get(rel);
+        if (subset != null) {
+            return subset;
+        } else {
+            return register(rel, null);
+        }
     }
 
     /**
@@ -567,8 +582,16 @@ public class VolcanoPlanner implements RelOptPlanner
         return cost;
     }
 
+    /**
+     * Returns the subset that a relational expression belongs to.
+     *
+     * @param rel Relational expression
+     * @return Subset it belongs to, or null if it is not registered
+     * @pre rel != null
+     */
     RelSubset getSubset(RelNode rel)
     {
+        assert rel != null : "pre: rel != null";
         if (rel instanceof RelSubset) {
             return (RelSubset) rel;
         } else {
@@ -663,7 +686,9 @@ public class VolcanoPlanner implements RelOptPlanner
                 if (converted == null) {
                     i++; // couldn't convert this; move on to the next
                 } else {
-                    registerImpl(converted, set);
+                    if (!isRegistered(converted)) {
+                        registerImpl(converted, set);
+                    }
                     set.abstractConverters.remove(converter); // success
                 }
             }
@@ -1033,20 +1058,26 @@ loop:
 
     /**
      * Registers a new expression <code>exp</code> and queues up rule matches.
-     * If <code>set</code> is not null, make the expression part of that
+     * If <code>set</code> is not null, makes the expression part of that
      * equivalence set.  If an identical expression is already registered,
      * we don't need to register this one and nor should we queue up rule
      * matches.
      *
-     * @param rel relational expression to register
+     * @param rel relational expression to register.
+     *   Must be either a {@link RelSubset}, or an unregistered {@link RelNode}
      * @param set set that rel belongs to, or <code>null</code>
      *
      * @return the equivalence-set
+     *
+     * @pre rel instanceof RelSubset || !isRegistered(rel)
      */
     private RelSubset registerImpl(
         RelNode rel,
         RelSet set)
     {
+        assert rel instanceof RelSubset || !isRegistered(rel) :
+            "pre: rel instanceof RelSubset || !isRegistered(rel)" +
+            " : {rel=" + rel + "}";
         if (rel instanceof RelSubset) {
             return registerSubset(set, (RelSubset) rel);
         }
@@ -1061,9 +1092,9 @@ loop:
         // implements the interface required by its calling convention.
         final RelTraitSet traits = rel.getTraits();
         final CallingConvention convention =
-            (CallingConvention)traits.getTrait(0);
-        if (!convention.getInterface().isInstance(rel)
-                && !(rel instanceof ConverterRel)) {
+            (CallingConvention) traits.getTrait(0);
+        if (!convention.getInterface().isInstance(rel) &&
+            !(rel instanceof ConverterRel)) {
             throw Util.newInternal("Relational expression " + rel
                 + " has calling-convention " + convention
                 + " but does not implement the required interface '"
