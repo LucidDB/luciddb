@@ -1325,5 +1325,8 @@ Create eigenbase-properties.jar, which is used by Mondrian.">
         <filter token="LIBPATH" value="${eclipse.libpath}"/>
       </filterset>
     </copy>
+    <copy todir="${farrago.dir}/.settings" overwrite="true">
+      <fileset dir="${farrago.dir}/eclipse/.settings"/>
+    </copy>
   </target>
 </project>
