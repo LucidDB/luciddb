@@ -57,6 +57,12 @@ public abstract class IterRules
                 CallingConvention.ITERATOR, description);
         }
 
+        // factory method
+        protected RelNode newIterConcatenateRel(RelOptCluster cluster, RelNode[] inputs)
+        {
+            return new IterConcatenateRel(cluster, inputs);
+        }
+
         public RelNode convert(RelNode rel)
         {
             final UnionRel union = (UnionRel) rel;
@@ -74,7 +80,7 @@ public abstract class IterRules
                     return null; // cannot convert this input
                 }
             }
-            return new IterConcatenateRel(
+            return newIterConcatenateRel(
                 union.getCluster(),
                 newInputs);
         }
@@ -90,7 +96,12 @@ public abstract class IterRules
     {
         public HomogeneousUnionToIteratorRule()
         {
-            super("HomogeneousUnionToIteratorRule");
+            this("HomogeneousUnionToIteratorRule");
+        }
+
+        protected HomogeneousUnionToIteratorRule(String description)
+        {
+            super(description);
         }
 
         public RelNode convert(RelNode rel)

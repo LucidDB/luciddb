@@ -130,12 +130,28 @@ public:
             // the invariant violated, than to just get an assert
             // error masking the problem.
 
-            // assert(mLoc.first_pos <= mLoc.last_pos);
-            try {
-                mCodeSnippet = s.substr(
-                    mLoc.first_pos, mLoc.last_pos - mLoc.first_pos+1);
-            } catch (std::out_of_range ex) {
-                mCodeSnippet = "UNAVAILABLE";
+            // SWZ: REVIEW: 9/15/2005: I find this to occur for
+            // certain *sequences* of very simple programs, any one of
+            // which when run singly, causes no problems!
+
+            //assert(mLoc.first_pos <= mLoc.last_pos);
+
+            // SWZ: REVIEW: 9/15/2005: Additionally, when invalid,
+            // mLoc.first_pos can be very large (e.g. past the end of
+            // s) which causes an out_of_range exception.  Added code
+            // to prevent s.substr from throwing.  A better solution
+            // would be to fix the bug that causes a supposedly valid
+            // mLoc to have wildly out-of-range values.
+
+            if (mLoc.first_pos <= mLoc.last_pos && 
+                mLoc.first_pos < s.length()) 
+            {
+                mCodeSnippet = 
+                    s.substr(
+                        mLoc.first_pos, 
+                        mLoc.last_pos - mLoc.first_pos + 1);
+            } else {
+                mCodeSnippet = s;
             }
         }
     }

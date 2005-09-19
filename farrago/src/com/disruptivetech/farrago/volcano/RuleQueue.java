@@ -159,11 +159,15 @@ class RuleQueue
 
     /**
      * Registers that a relational expression's rules have not been fired.
+     *
+     * @pre rel != null
      */
     void add(RelNode rel)
     {
+        assert rel != null : "pre: rel != null";
         boolean b = rels.add(rel);
-        //assert b : "RuleQueue already contained rel";
+        assert b : "RuleQueue already contained rel: " + rel +
+            " (Did you forget to clone a rel in a rule?)";
         final RelSubset subset = planner.getSubset(rel);
         assert (subset != null);
         add(subset);

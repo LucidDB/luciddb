@@ -257,11 +257,12 @@ public class SqlSimpleParser
         ArrayList nokwList = new ArrayList();
         while (i.hasNext()) {
             String token = (String) i.next();
-            if (keywords.contains(token) || token.equals("<EOF>")) {
+            String tokenLc = token.toLowerCase();
+            if (keywords.contains(tokenLc) || token.equals("<EOF>")) {
                 if (!curToken.equals("")) {
                     buckets.put(curToken, curList);
                 }
-                curToken = token;
+                curToken = tokenLc;
                 curList = new ArrayList();
             } else {
                 if (curToken.equals("")) {

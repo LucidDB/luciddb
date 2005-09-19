@@ -25,6 +25,8 @@
 <!ENTITY rsync_cmd        "rsync -az -e ssh --delete-after">
 <!ENTITY rsync_dest       "cruise@apoptosis:web/artifacts">
 
+<!ENTITY build_interval   "3600">
+
 <!ENTITY ant              "./doant.sh">
 
 <!ENTITY saffronProject SYSTEM "config-saffron.xml">

@@ -1,7 +1,7 @@
 -- $Id$
 -- Test DDL on schemas
 
-create schema s;
+create schema s description 'a schema';
 
 create table s.t(i int not null primary key);
 

@@ -37,7 +37,6 @@ import org.eigenbase.util.Util;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Iterator;
 import java.util.HashMap;
 import java.math.BigDecimal;
 
@@ -315,12 +314,19 @@ public class FennelWindowRel extends FennelSingleRel
                 dups.put(key, node);
             }
         }
-        int count = 0;
         RexNode[] nodes = new RexNode[dups.size()];
-        for (Iterator i = dups.values().iterator(); i.hasNext(); ) {
-            RexNode node = (RexNode) i.next();
-            nodes[count] = node;
-            count++;
+        int count = 0;
+        for (int i = 0; i < outputExps.length; i++) {
+            RexNode node = outputExps[i];
+            if (!(node instanceof RexWinAggCall)) {
+                continue;
+            }
+            Object key = translator.getKey(node);
+            if (dups.containsKey(key)) {
+                nodes[count] = node;
+                dups.remove(key);
+                count++;
+            }
         }
         return nodes;
     }
