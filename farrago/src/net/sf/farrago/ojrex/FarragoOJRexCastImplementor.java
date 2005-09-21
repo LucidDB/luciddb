@@ -144,7 +144,7 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
                 new FieldAccess(rhsExp, NullablePrimitive.VALUE_FIELD_NAME);
         }
         if (lhsType != rhsType) {
-            String numClassName = SqlTypeUtil.GetNumericJavaClassName(lhsType);
+            String numClassName = SqlTypeUtil.getNumericJavaClassName(lhsType);
             if (numClassName != null 
                 &&  SqlTypeUtil.inCharOrBinaryFamilies(rhsType)
                 && !SqlTypeUtil.isLob(rhsType))
@@ -197,11 +197,11 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
             return;
         }
         if (SqlTypeUtil.isExactNumeric(lhsType)) {
-            String numClassName = SqlTypeUtil.GetNumericJavaClassName(lhsType);
+            String numClassName = SqlTypeUtil.getNumericJavaClassName(lhsType);
             minLiteral = numClassName + ".MIN_VALUE";
             maxLiteral = numClassName + ".MAX_VALUE";
         } else if (SqlTypeUtil.isApproximateNumeric(lhsType)) {
-            String numClassName = SqlTypeUtil.GetNumericJavaClassName(lhsType);
+            String numClassName = SqlTypeUtil.getNumericJavaClassName(lhsType);
             maxLiteral = numClassName + ".MAX_VALUE";
             minLiteral = "-" + maxLiteral;
         }

@@ -533,7 +533,7 @@ public abstract class SqlTypeUtil
     /**
      * @return class name of the numeric data type.
      */
-    public static String GetNumericJavaClassName(RelDataType type)
+    public static String getNumericJavaClassName(RelDataType type)
     {
         if (type == null) {
             return null;
