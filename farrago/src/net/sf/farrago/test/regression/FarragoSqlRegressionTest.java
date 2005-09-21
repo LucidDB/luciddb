@@ -66,11 +66,21 @@ public class FarragoSqlRegressionTest extends FarragoSqlTest
         throws Exception
     {
         addDiffMask("\\$Id.*\\$");
+        /*
+        addDiffMask("Error: .*\\(state=,code=0\\)"); // java error msg
+        addDiffMask("Error: could not calculate results for the following row:");
+        addDiffMask("3\\.1415927886962891E");
+        addDiffMask("3\\.1415927886962889E");
+        addIgnorePattern("\\[.*\\]"); // fennel data row
+        addIgnorePattern("Messages:"); // fennel message
+        addIgnorePattern("\\[0\\].*\\(state=,code=0\\)");  // fennel error code
+        */
         stmt.execute(FarragoCalcSystemTest.VirtualMachine.Fennel
-            .getAlterSystemCommand());
+              .getAlterSystemCommand());
         runSqlLineTest(getName());
 
-        //        stmt.execute(FarragoCalcSystemTest.vmJava);
-        //        runSqlLineTest(getName());
+        // stmt.execute(FarragoCalcSystemTest.VirtualMachine.Java
+        //      .getAlterSystemCommand());
+        //  runSqlLineTest(getName());
     }
 }

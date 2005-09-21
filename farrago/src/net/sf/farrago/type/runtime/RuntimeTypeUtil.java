@@ -68,7 +68,7 @@ public class RuntimeTypeUtil
         char escapeChar = (char) 0;
         if (escapeStr != null) {
             if (escapeStr.length() != 1) {
-                throw net.sf.farrago.resource.FarragoResource.instance().newInvalidEscapeCharacter();
+                throw net.sf.farrago.resource.FarragoResource.instance().newInvalidEscapeCharacter(escapeStr.toString());
             }
             escapeChar = escapeStr.charAt(0);
         }
@@ -81,14 +81,14 @@ public class RuntimeTypeUtil
             }
             if (c == escapeChar) {
                 if (i == sqlPattern.length()-1) {
-                    throw net.sf.farrago.resource.FarragoResource.instance().newInvalidEscapeSequence();
+                    throw net.sf.farrago.resource.FarragoResource.instance().newInvalidEscapeSequence(sqlPattern, Integer.valueOf(i));
                 }
                 char nextChar = sqlPattern.charAt(i+1);
                 if (nextChar == '_' || nextChar == '%' || nextChar == escapeChar) {
                     javaPattern.append(nextChar);
                     i++;
                 } else {
-                    throw net.sf.farrago.resource.FarragoResource.instance().newInvalidEscapeSequence();
+                    throw net.sf.farrago.resource.FarragoResource.instance().newInvalidEscapeSequence(sqlPattern, Integer.valueOf(i));
                 }
             } else if (c == '_') {
                 javaPattern.append('.');
@@ -114,26 +114,29 @@ public class RuntimeTypeUtil
                 if (sqlPattern.charAt(i) == escapeChar) {
                     if (i == (sqlPattern.length() - 1)) {
                         throw net.sf.farrago.resource.FarragoResource.
-                            instance().newInvalidEscapeSequence();
+                            instance().newInvalidEscapeSequence(sqlPattern, Integer.valueOf(i));
                     }
                     char c = sqlPattern.charAt(i+1);
                     if (SqlSimilarSpecials.indexOf(c) < 0 &&
                         c != escapeChar)
                     {
                         throw net.sf.farrago.resource.FarragoResource.
-                            instance().newInvalidEscapeSequence();
+                            instance().newInvalidEscapeSequence(sqlPattern, Integer.valueOf(i));
                     }
                 }
             }
         }
         // SQL 2003 Part 2 Section 8.6 General Rule 3.c
-        if (escapeChar == ':' &&
-            (sqlPattern.indexOf("[:") >= 0 ||   
-            sqlPattern.indexOf(":]") >= 0))
-        {
-            // it should be Escape character conflict
-            throw net.sf.farrago.resource.FarragoResource.
-                instance().newInvalidEscapeSequence();
+        if (escapeChar == ':') {
+            int position;
+            position = sqlPattern.indexOf("[:");
+            if (position >= 0 ) { 
+                position = sqlPattern.indexOf(":]");
+            }
+            if (position < 0) {
+                throw net.sf.farrago.resource.FarragoResource.
+                    instance().newInvalidEscapeSequence(sqlPattern, Integer.valueOf(position));
+            }
         }
     }
 
@@ -151,7 +154,7 @@ public class RuntimeTypeUtil
                     //It should never reach here after the escape rule checking.
                     //
                     throw net.sf.farrago.resource.FarragoResource.
-                        instance().newInvalidEscapeSequence();
+                        instance().newInvalidEscapeSequence(sqlPattern, Integer.valueOf(i));
                 }
                 char nextChar = sqlPattern.charAt(i+1);
                 if (SqlSimilarSpecials.indexOf(nextChar) >= 0) {
@@ -166,7 +169,7 @@ public class RuntimeTypeUtil
                     //It should never reach here after the escape rule checking.
                     //
                     throw net.sf.farrago.resource.FarragoResource.
-                        instance().newInvalidEscapeSequence();
+                        instance().newInvalidEscapeSequence(sqlPattern, Integer.valueOf(i));
                 }
                 i++; // we already process the next char.
             } else {
@@ -187,7 +190,7 @@ public class RuntimeTypeUtil
                 case ']':
                     if (!insideCharacterEnumeration) {
                         throw net.sf.farrago.resource.FarragoResource.
-                            instance().newInvalidRegularExpression();
+                            instance().newInvalidRegularExpression(sqlPattern, Integer.valueOf(i));
                     }
                     insideCharacterEnumeration = false;
                     javaPattern.append(']'); 
@@ -207,7 +210,7 @@ public class RuntimeTypeUtil
         }
         if (insideCharacterEnumeration) {
             throw net.sf.farrago.resource.FarragoResource.
-                instance().newInvalidRegularExpression();
+                instance().newInvalidRegularExpression(sqlPattern, Integer.valueOf(len));
         }
 
         return javaPattern.toString();
@@ -236,7 +239,7 @@ public class RuntimeTypeUtil
                     javaPattern.append(nextChar);
                 } else {
                     throw net.sf.farrago.resource.FarragoResource.
-                        instance().newInvalidRegularExpression();
+                        instance().newInvalidRegularExpression(sqlPattern, Integer.valueOf(i));
                 }
             }  else if ( c == '-') {
                 javaPattern.append('-');
@@ -256,11 +259,11 @@ public class RuntimeTypeUtil
                 }
                 if (!found) {
                     throw net.sf.farrago.resource.FarragoResource.
-                        instance().newInvalidRegularExpression();
+                        instance().newInvalidRegularExpression(sqlPattern, Integer.valueOf(i));
                 }
             } else if (SqlSimilarSpecials.indexOf(c) >= 0) {
                 throw net.sf.farrago.resource.FarragoResource.
-                    instance().newInvalidRegularExpression();
+                    instance().newInvalidRegularExpression(sqlPattern, Integer.valueOf(i));
             } else {
                 javaPattern.append(c);
             }
@@ -276,7 +279,7 @@ public class RuntimeTypeUtil
         if (escapeStr != null) {
             if (escapeStr.length() != 1) {
                 throw net.sf.farrago.resource.FarragoResource.
-                    instance().newInvalidRegularExpression();
+                    instance().newInvalidEscapeCharacter(escapeStr.toString());
             }
             escapeChar = escapeStr.charAt(0);
         }

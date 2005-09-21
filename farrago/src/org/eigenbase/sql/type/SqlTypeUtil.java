@@ -531,6 +531,40 @@ public abstract class SqlTypeUtil
     }
 
     /**
+     * @return class name of the numeric data type.
+     */
+    public static String GetNumericJavaClassName(RelDataType type)
+    {
+        if (type == null) {
+            return null;
+        }
+        SqlTypeName typeName = type.getSqlTypeName();
+        if (typeName == null) {
+            return null;
+        }
+
+        switch (typeName.getOrdinal()) {
+        case SqlTypeName.Tinyint_ordinal:
+            return "Byte";
+        case SqlTypeName.Smallint_ordinal:
+            return "Short";
+        case SqlTypeName.Integer_ordinal:
+            return "Integer";
+        case SqlTypeName.Bigint_ordinal:
+            return "Long";
+        case SqlTypeName.Real_ordinal:
+            return "Float";
+        case SqlTypeName.Float_ordinal:
+            return "Double";
+        case SqlTypeName.Double_ordinal:
+            return "Double";
+        default:
+            return null;
+        }
+    }
+
+
+    /**
      * Tests assignability of a value to a site.
      *
      * @param toType type of the target site

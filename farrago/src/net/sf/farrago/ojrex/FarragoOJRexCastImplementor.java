@@ -143,10 +143,96 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
             rhsExp =
                 new FieldAccess(rhsExp, NullablePrimitive.VALUE_FIELD_NAME);
         }
-        OJClass lhsClass = OJUtil.typeToOJClass(
-            lhsType, translator.getFarragoTypeFactory());
-        rhsExp = new CastExpression(lhsClass, rhsExp);
+        if (lhsType != rhsType) {
+            String numClassName = SqlTypeUtil.GetNumericJavaClassName(lhsType);
+            if (numClassName != null 
+                &&  SqlTypeUtil.inCharOrBinaryFamilies(rhsType)
+                && !SqlTypeUtil.isLob(rhsType))
+            {
+                //TODO: toString will cause too much garbage collection.
+                rhsExp = new MethodCall(
+                            rhsExp,
+                            "toString", 
+                            new ExpressionList());
+                String methodName = "parse" + numClassName;
+                if (lhsType.getSqlTypeName().getOrdinal() == 
+                       SqlTypeName.Integer_ordinal) 
+                {
+                    methodName = "parseInt";
+                }
+                rhsExp = new MethodCall(
+                            new Literal(
+                                Literal.STRING,
+                                numClassName),
+                            methodName,
+                            new ExpressionList(rhsExp));
+            }  else {
+                checkOverflow(translator, stmtList, lhsType, rhsExp);
+            }
+            OJClass lhsClass = OJUtil.typeToOJClass(
+                lhsType, translator.getFarragoTypeFactory());
+            if (SqlTypeUtil.isExactNumeric(lhsType) 
+                && SqlTypeUtil.isApproximateNumeric(rhsType)) {
+                rhsExp = new MethodCall(
+                            new Literal(
+                                Literal.STRING,
+                                "java.lang.Math"),
+                            "round",
+                            new ExpressionList(rhsExp));
+            }
+            rhsExp = new CastExpression(lhsClass, rhsExp);
+        }
         return convertDirectAssignment(translator, stmtList, lhsExp, rhsExp);
+    }
+
+    private void checkOverflow(
+        FarragoRexToOJTranslator translator,
+        StatementList stmtList,
+        RelDataType lhsType,
+        Expression rhsExp)
+    {
+        String maxLiteral = null;
+        String minLiteral = null;
+        if (lhsType == null) {
+            return;
+        }
+        if (SqlTypeUtil.isExactNumeric(lhsType)) {
+            String numClassName = SqlTypeUtil.GetNumericJavaClassName(lhsType);
+            minLiteral = numClassName + ".MIN_VALUE";
+            maxLiteral = numClassName + ".MAX_VALUE";
+        } else if (SqlTypeUtil.isApproximateNumeric(lhsType)) {
+            String numClassName = SqlTypeUtil.GetNumericJavaClassName(lhsType);
+            maxLiteral = numClassName + ".MAX_VALUE";
+            minLiteral = "-" + maxLiteral;
+        }
+        if (maxLiteral == null) {
+            return;
+        }
+        Statement ifstmt = 
+            new IfStatement(
+                new BinaryExpression(
+                    new BinaryExpression(
+                        rhsExp,
+                        BinaryExpression.LESS,
+                        new Literal(
+                            Literal.STRING,
+                            minLiteral)),
+                    BinaryExpression.LOGICAL_OR,
+                    new BinaryExpression(
+                        rhsExp,
+                        BinaryExpression.GREATER,
+                        new Literal(
+                            Literal.STRING,
+                            maxLiteral))),
+                new StatementList(
+                    new ThrowStatement(
+                        new MethodCall(
+                            new Literal(
+                                Literal.STRING,
+                                "net.sf.farrago.resource.FarragoResource.instance()"),
+                            "newOverflow",
+                            new ExpressionList()))));
+        addStatement(translator, stmtList, ifstmt);
     }
 
     private Expression convertDirectAssignment(
@@ -177,12 +263,36 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
         if (lhsExp == null) {
             lhsExp = translator.createScratchVariable(lhsType);
         }
-        addStatement(translator, stmtList, 
-            new ExpressionStatement(
-                new MethodCall(
-                    lhsExp,
-                    AssignableValue.ASSIGNMENT_METHOD_NAME,
-                    new ExpressionList(rhsExp))));
+        if (rhsType != null 
+            && SqlTypeUtil.isNumeric(rhsType) 
+            && SqlTypeUtil.inCharOrBinaryFamilies(lhsType)
+            && !SqlTypeUtil.isLob(lhsType))
+        {
+            // Numeric to String.
+            // sometimes the Integer got slipped by.
+            if (rhsType.isNullable()) {
+                rhsExp = new FieldAccess(
+                                rhsExp, 
+                                NullablePrimitive.VALUE_FIELD_NAME);
+            }
+            addStatement(translator, stmtList, 
+                new ExpressionStatement(
+                    new MethodCall(
+                        lhsExp,
+                        "cast",
+                        new ExpressionList(
+                            rhsExp,
+                            Literal.makeLiteral(
+                                lhsType.getPrecision())))));
+            
+        } else {
+            addStatement(translator, stmtList, 
+                new ExpressionStatement(
+                    new MethodCall(
+                        lhsExp,
+                        AssignableValue.ASSIGNMENT_METHOD_NAME,
+                        new ExpressionList(rhsExp))));
+        }
 
         boolean mayNeedPadOrTruncate = false;
         if (SqlTypeUtil.inCharOrBinaryFamilies(lhsType)
@@ -338,6 +448,7 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
     // implement OJRexImplementor
     public boolean canImplement(RexCall call)
     {
+        /*
         RelDataType lhsType = call.getType();
         RelDataType rhsType = call.operands[0].getType();
         
@@ -354,6 +465,7 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
             && (lhsTypeFamily != SqlTypeFamily.Numeric)) {
             return false;
         }
+        */
 
         // TODO jvs 11-Aug-2004:  think through other cases
         return true;

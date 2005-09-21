@@ -143,26 +143,6 @@ Messages:
 | -9223372036854775808  |
 +-----------------------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- these should fail (numeric out of range)
-0: jdbc:farrago:> values cast('9223372036854775808' as bigint);
-+-----------------------+
-|        EXPR$0         |
-+-----------------------+
-| -9223372036854775808  |
-+-----------------------+
-0: jdbc:farrago:> values cast('18446744073709551615' as bigint);
-+---------+
-| EXPR$0  |
-+---------+
-| -1      |
-+---------+
-0: jdbc:farrago:> values cast('-9223372036854775809' as bigint);
-+----------------------+
-|        EXPR$0        |
-+----------------------+
-| 9223372036854775807  |
-+----------------------+
-0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- test decimal(N, 0) limits (signed N-digit integers)
 0: jdbc:farrago:> --
@@ -289,5 +269,36 @@ Messages:
 +---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- TODO: determine limits of REAL and test them
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- these should fail (numeric out of range)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+0: jdbc:farrago:> values cast('9223372036854775808' as bigint);
+Error: java.lang.NumberFormatException: For input string: "9223372036854775808" (state=,code=0)
+0: jdbc:farrago:> values cast('18446744073709551615' as bigint);
+Error: java.lang.NumberFormatException: For input string: "18446744073709551615" (state=,code=0)
+0: jdbc:farrago:> values cast('-9223372036854775809' as bigint);
+Error: java.lang.NumberFormatException: For input string: "-9223372036854775809" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+0: jdbc:farrago:> values cast('9223372036854775808' as bigint);
++-----------------------+
+|        EXPR$0         |
++-----------------------+
+| -9223372036854775808  |
++-----------------------+
+0: jdbc:farrago:> values cast('18446744073709551615' as bigint);
++---------+
+| EXPR$0  |
++---------+
+| -1      |
++---------+
+0: jdbc:farrago:> values cast('-9223372036854775809' as bigint);
++----------------------+
+|        EXPR$0        |
++----------------------+
+| 9223372036854775807  |
++----------------------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

@@ -44,11 +44,6 @@ values cast('-2147483649' as integer);
 values cast('9223372036854775807' as bigint);
 values cast('-9223372036854775808' as bigint);
 
--- these should fail (numeric out of range)
-values cast('9223372036854775808' as bigint);
-values cast('18446744073709551615' as bigint);
-values cast('-9223372036854775809' as bigint);
-
 --
 -- test decimal(N, 0) limits (signed N-digit integers)
 --
@@ -115,3 +110,16 @@ values cast('-1' as real);
 values cast('0' as real);
 
 -- TODO: determine limits of REAL and test them
+
+-- these should fail (numeric out of range)
+
+alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+values cast('9223372036854775808' as bigint);
+values cast('18446744073709551615' as bigint);
+values cast('-9223372036854775809' as bigint);
+
+alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+values cast('9223372036854775808' as bigint);
+values cast('18446744073709551615' as bigint);
+values cast('-9223372036854775809' as bigint);
+

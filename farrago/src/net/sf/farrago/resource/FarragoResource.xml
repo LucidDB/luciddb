@@ -588,15 +588,19 @@ column type family is {1} but default value type family is {2}</text>
 </exception>
 
 <exception id="450070" name="InvalidEscapeCharacter">
-<text>Invalid escape character.</text>
+<text>Invalid escape character of {0} </text>
 </exception>
 
 <exception id="450080" name="InvalidEscapeSequence">
-<text>Invalid escape sequence.</text>
+<text>Invalid escape sequence: {0} at {1,number,#}</text>
 </exception>
 
 <exception id="450090" name="InvalidRegularExpression">
-<text>Invalid regular expression.</text>
+<text>Invalid regular expression: {0} at {1,number,#}</text>
+</exception>
+
+<exception id="450100" name="Overflow">
+<text>Overflow during calculation or cast.</text>
 </exception>
 
 <!-- ====================================================================== -->
