@@ -271,6 +271,11 @@ public class MockCatalogReader implements SqlValidatorCatalogReader
             return false;
         }
 
+        public SqlAccessType getAllowedAccess()
+        {
+            return SqlAccessType.ALL;
+        }
+
         public void addColumn(String name, RelDataType type)
         {
             columnNames.add(name);

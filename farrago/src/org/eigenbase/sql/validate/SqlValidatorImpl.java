@@ -39,6 +39,7 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.lang.reflect.Array;
 
 
 /**
@@ -451,7 +452,9 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         if (namespace == null) {
             throw Util.newInternal("Not a query: " + node);
         }
+
         validateNamespace(namespace);
+        validateAccess(namespace.getTable(), SqlAccessEnum.SELECT);
     }
 
     /**
@@ -2164,7 +2167,8 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 new Integer(sourceRowType.getFieldList().size()));
         }
 
-        // TODO:  validate updatability, type compatibility, etc.
+        // TODO:  validate type compatibility, etc.
+        validateAccess(table, SqlAccessEnum.INSERT);
     }
 
     /**
@@ -2175,7 +2179,14 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         SqlSelect sqlSelect = call.getSourceSelect();
         validateSelect(sqlSelect, unknownType);
 
-        // TODO:  validate updatability, etc.
+        IdentifierNamespace targetNamespace =
+            (IdentifierNamespace) getNamespace(call.getTargetTable());
+        validateNamespace(targetNamespace);
+        SqlValidatorTable table = targetNamespace.getTable();
+
+        validateAccess(table, SqlAccessEnum.DELETE);
+
+        // TODO:  validate etc.
     }
 
     /**
@@ -2201,7 +2212,25 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
 
         validateSelect(select, targetRowType);
 
-        // TODO:  validate updatability, type compatibility
+        validateAccess(table, SqlAccessEnum.UPDATE);
+
+        // TODO:  validate type compatibility
+    }
+
+    /**
+     * Validates access to a table
+     */
+    private void validateAccess(SqlValidatorTable table,
+                                SqlAccessEnum requiredAccess)
+    {
+        if (table != null) {
+            SqlAccessType access = table.getAllowedAccess();
+            if (!access.allowsAccess(requiredAccess)) {
+                throw EigenbaseResource.instance().newAccessNotAllowed(
+                    requiredAccess.getName(),
+                    Arrays.asList(table.getQualifiedName()).toString());
+            }
+        }
     }
 
     /**
