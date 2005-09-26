@@ -286,6 +286,7 @@ require version '${required.ant.version}'."/>
       classpathref="farrago.build.classpath">
       <include name="**/*.java" />
       <exclude name="**/namespace/jdbc/**/*.java" />
+      <exclude name="**/org/eigenbase/inventory/**/*.java" />
       <exclude name="**/Jdk15Test.java" if="farrago.javasrc.14" />
     </farrago.javaCompile>
   </target>
@@ -300,6 +301,7 @@ require version '${required.ant.version}'."/>
       <include name="openjava/**/*.java" />
       <include name="org/eigenbase/**/*.java" />
       <include name="com/disruptivetech/farrago/volcano/**/*.java" />
+      <exclude name="**/org/eigenbase/inventory/**/*.java" />
     </farrago.javaCompile>
   </target>
 
@@ -1303,6 +1305,32 @@ require version '${required.ant.version}'."/>
   </target>
 
   <!-- End experimental stuff for the user repository -->
+
+  <!-- TODO 24-Sept-2005:  replace this with apt task from ant 1.7 -->
+  <target name="generateInventoryReport" depends="compile">
+    <pathconvert property="sources.gen"
+      pathsep="${line.separator}" dirsep="${file.separator}">
+      <path>
+        <fileset dir="${farrago.src.dir}">
+          <include name="**/*.java" />
+        </fileset>
+      </path>
+    </pathconvert>
+    <echo message="${sources.gen}" file="sources.gen"/>
+    <exec dir="${farrago.dir}" failonerror="true"
+      executable="${javahome.dir}/bin/apt">
+      <arg value="-s"/>
+      <arg value="${farrago.dir}/inventorys"/>
+      <arg value="-nocompile"/>
+      <arg value="-classpath"/>
+      <arg pathref="farrago.sqlline.classpath"/>
+      <arg value="-d"/>
+      <arg value="${farrago.dir}/inventoryd"/>
+      <arg value="-factory"/>
+      <arg value="org.eigenbase.inventory.EigenbaseInventoryGenerator"/>
+      <arg value="@sources.gen"/>
+    </exec>
+  </target>
 
   <target name="propertiesJar" depends="compile" description="
 Create eigenbase-properties.jar, which is used by Mondrian.">
