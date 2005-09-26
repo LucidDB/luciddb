@@ -34,7 +34,6 @@ import net.sf.farrago.type.*;
 
 import net.sf.farrago.fem.med.*;
 
-import org.eigenbase.util.*;
 import org.eigenbase.reltype.*;
 
 
@@ -263,6 +262,14 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
                 typeFactory.getRepos().getLocalizedObjectName(
                     baseColumnSet, null),
                 ex);
+        }
+
+        if (baseColumnSet.getAllowedAccess() == null) {
+            // Allowed access not specified, use allowed access from loadedColumnSet
+            baseColumnSet.setAllowedAccess(
+                loadedColumnSet.getAllowedAccess().toString());
+        } else {
+            // TODO: Check allowed access are the same
         }
 
         if (rowType != null) {

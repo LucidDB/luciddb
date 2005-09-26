@@ -25,6 +25,7 @@
 #define Fennel_JavaPushSourceExecStream_Included
 
 #include "fennel/farrago/JavaSourceExecStream.h"
+#include "fennel/tuple/TupleAccessor.h"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -34,7 +35,17 @@ FENNEL_BEGIN_NAMESPACE
  */
 struct JavaPushSourceExecStreamParams : public JavaSourceExecStreamParams
 {
+    uint nbuffers;                      // min 2
+    uint bufferSize;                    // min size is max tuple size
+    JavaPushSourceExecStreamParams();
 };
+
+inline JavaPushSourceExecStreamParams::JavaPushSourceExecStreamParams()
+{
+    nbuffers = 2;
+    bufferSize = 0;                     // default to tuple size
+}
+
 
 /**
  * JavaPushSourceExecStream is a "push mode" version of JavaSourceExecStream:
@@ -58,20 +69,30 @@ class JavaPushSourceExecStream : public JavaSourceExecStream
     jmethodID methGetBuffer;
     jmethodID methFreeBuffer;
 
+    uint nbuffers;
+    uint bufferSize;
 
-    // allocate 2 buffers, one for java peer to fill in background,
-    // and one for us to expose to our consumer.
-    // Swapping the buffers is managed by our java peer.
-    static const int NBUFFERS = 2;
-
-    // the readable ByteBuffer that belongs to us
+    // the current input ByteBuffer (which belongs to us, not to our java peer):
     jobject rdBuffer;
+    PConstBuffer rdBufferStart;         // buffer bounds
+    PConstBuffer rdBufferEnd;
+    PConstBuffer rdBufferPosn;          // next tuple to read
+    bool rdBufferEOS;                   // saw EOS indicated by rdBuffer
+
+    void releaseReadBuffer();           // frees the input buffer
+    bool getReadBuffer();               // gets a new input buffer from the peer
+
+    /// copies whole marshalled tuples from one buffer to another
+    /// @param acc suitable TupleAccessor
+    /// @returns count of byte copied. 0 means nothing fit.
+    uint copyRows(TupleAccessor& acc, PBuffer dest, PBuffer destEnd, PConstBuffer src, PConstBuffer srcEnd);
 
 public:
     explicit JavaPushSourceExecStream();
 
     // implement ExecStream
     virtual void prepare(JavaPushSourceExecStreamParams const &params);
+    virtual ExecStreamBufProvision getOutputBufProvision() const;
     virtual void getResourceRequirements(
         ExecStreamResourceQuantity &minQuantity,
         ExecStreamResourceQuantity &optQuantity);

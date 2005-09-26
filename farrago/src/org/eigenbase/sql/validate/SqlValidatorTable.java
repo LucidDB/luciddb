@@ -22,6 +22,7 @@
 package org.eigenbase.sql.validate;
 
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.sql.SqlAccessType;
 
 /**
  * Supplies a {@link SqlValidator} with the
@@ -43,6 +44,11 @@ public interface SqlValidatorTable
      * Returns whether a given column is monotonic.
      */
     boolean isMonotonic(String columnName);
+
+    /**
+     * Returns the access type of the table
+     */
+    SqlAccessType getAllowedAccess();
 }
 
 // End SqlValidatorTable.java

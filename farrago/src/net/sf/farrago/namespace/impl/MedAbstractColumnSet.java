@@ -28,9 +28,9 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.query.*;
 
-import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.SqlAccessType;
 
 
 /**
@@ -51,6 +51,7 @@ public abstract class MedAbstractColumnSet extends RelOptAbstractTable
     private Map columnPropMap;
     private FarragoPreparingStmt preparingStmt;
     private CwmNamedColumnSet cwmColumnSet;
+    private SqlAccessType allowedAccess;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -78,6 +79,7 @@ public abstract class MedAbstractColumnSet extends RelOptAbstractTable
         this.foreignName = foreignName;
         this.tableProps = tableProps;
         this.columnPropMap = columnPropMap;
+        this.allowedAccess = SqlAccessType.ALL;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -146,9 +148,21 @@ public abstract class MedAbstractColumnSet extends RelOptAbstractTable
         return cwmColumnSet;
     }
 
+    // implement SqlValidatorTable
     public boolean isMonotonic(String columnName)
     {
         return false;
+    }
+
+    // implement SqlValidatorTable
+    public SqlAccessType getAllowedAccess()
+    {
+        return allowedAccess;
+    }
+
+    public void setAllowedAccess(SqlAccessType allowedAccess)
+    {
+        this.allowedAccess = allowedAccess;
     }
 }
 
