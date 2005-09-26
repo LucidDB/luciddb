@@ -198,16 +198,16 @@ public class SqlTypeAssignmentRules
         rule.add(SqlTypeName.Char);
         rule.add(SqlTypeName.Varchar);
 
-        coerceRules.put(SqlTypeName.Tinyint, rule);
-        coerceRules.put(SqlTypeName.Smallint, rule);
-        coerceRules.put(SqlTypeName.Integer, rule);
-        coerceRules.put(SqlTypeName.Bigint, rule);
-        coerceRules.put(SqlTypeName.Float, rule);
-        coerceRules.put(SqlTypeName.Real, rule);
-        coerceRules.put(SqlTypeName.Decimal, rule);
-        coerceRules.put(SqlTypeName.Double, rule);
-        coerceRules.put(SqlTypeName.Char, rule);
-        coerceRules.put(SqlTypeName.Varchar, rule);
+        coerceRules.put(SqlTypeName.Tinyint, rule.clone());
+        coerceRules.put(SqlTypeName.Smallint, rule.clone());
+        coerceRules.put(SqlTypeName.Integer, rule.clone());
+        coerceRules.put(SqlTypeName.Bigint, rule.clone());
+        coerceRules.put(SqlTypeName.Float, rule.clone());
+        coerceRules.put(SqlTypeName.Real, rule.clone());
+        coerceRules.put(SqlTypeName.Decimal, rule.clone());
+        coerceRules.put(SqlTypeName.Double, rule.clone());
+        coerceRules.put(SqlTypeName.Char, rule.clone());
+        coerceRules.put(SqlTypeName.Varchar, rule.clone());
 
         // varchar is castable from Date, time and timestamp and numbers
         rule = (HashSet) coerceRules.get(SqlTypeName.Varchar);
@@ -223,27 +223,42 @@ public class SqlTypeAssignmentRules
 
         // Date, time, and timestamp are castable from
         // char and varchar
-        rule = (HashSet) coerceRules.get(SqlTypeName.Date);
+        // Date is assignable from ...
+        rule = new HashSet();
+        rule.add(SqlTypeName.Date);
+        rule.add(SqlTypeName.Timestamp);
         rule.add(SqlTypeName.Char);
         rule.add(SqlTypeName.Varchar);
+        coerceRules.put(SqlTypeName.Date, rule);
 
-        rule = (HashSet) coerceRules.get(SqlTypeName.Time);
+        // Time is assignable from ...
+        rule = new HashSet();
+        rule.add(SqlTypeName.Time);
+        rule.add(SqlTypeName.Timestamp);
         rule.add(SqlTypeName.Char);
         rule.add(SqlTypeName.Varchar);
+        coerceRules.put(SqlTypeName.Time, rule);
 
-        rule = (HashSet) coerceRules.get(SqlTypeName.Timestamp);
+        rule = new HashSet();
+        rule.add(SqlTypeName.Timestamp);
         rule.add(SqlTypeName.Char);
         rule.add(SqlTypeName.Varchar);
+        coerceRules.put(SqlTypeName.Timestamp, rule);
 
         // REVIEW jvs 13-Dec-2004:  getting the milliseconds?
         // That sounds like a physical operation, and has nothing to do
         // with enforcing the logical rules.
 
         // for getting the milliseconds.
+        // Bigint is assignable from...
+        rule = new HashSet();
         rule = (HashSet) coerceRules.get(SqlTypeName.Bigint);
+        // xluo 24-Sept-2005 datetime added, there is a specific 
+        // test case for that. I assume it should.
         rule.add(SqlTypeName.Date);
         rule.add(SqlTypeName.Time);
         rule.add(SqlTypeName.Timestamp);
+        coerceRules.put(SqlTypeName.Bigint, rule);
     }
 
     public synchronized static SqlTypeAssignmentRules instance()

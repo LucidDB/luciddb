@@ -38,3 +38,4 @@ select * from t_boolean;
 
 drop table t_boolean;
 
+drop schema test;

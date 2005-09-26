@@ -144,3 +144,5 @@ select cast(long_c as varchar(64)) from t;
 select cast(short_vc as char(3)) from t;
 select cast(med_vc as char(10)) from t;
 select cast(long_vc as char(64)) from t;
+drop table t;
+drop schema s;

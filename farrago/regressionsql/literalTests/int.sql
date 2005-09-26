@@ -49,4 +49,4 @@ insert into t_int values(-1.2345678901234e-200,null);
 select * from t_int;
 
 drop table t_int;
-
+drop schema test;

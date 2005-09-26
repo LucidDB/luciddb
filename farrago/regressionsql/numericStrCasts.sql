@@ -73,13 +73,6 @@ select cast(bi as varchar(20)) from ints;
 --select cast(i as varchar(6)) from exacts;
 --select cast(r as varchar(6)) from exacts;
 
--- Note: Currently need >= 23 characters to display a double -JK 2004/08/11
--- REVIEW: Results are likely to be non-portable, as float representations
--- REVIEW: will differ on various processors. Should round or truncate
--- REVIEW: results lexically. -JK 2004/08/11
-select cast(r as varchar(23)) from approx;
-select cast(d as varchar(23)) from approx;
-
 
 --
 -- cast numbers to char that's too small
@@ -103,3 +96,17 @@ select cast(bi as varchar(10)) from ints;
 --select cast(r as varchar(3)) from exacts;
 select cast(r as varchar(3)) from approx;
 select cast(d as varchar(3)) from approx;
+
+-- Note: Currently need >= 23 characters to display a double -JK 2004/08/11
+-- REVIEW: Results are likely to be non-portable, as float representations
+-- REVIEW: will differ on various processors. Should round or truncate
+-- REVIEW: results lexically. -JK 2004/08/11
+select cast(d as varchar(23)) from approx;
+
+-- TODO: fennel displays more than 8 digits. (plus signg ...), that caused diff.
+alter system set "calcVirtualMachine"='CALCVM_JAVA';
+select cast(r as varchar(23)) from approx;
+
+drop table ints;
+drop table approx;
+drop schema s;

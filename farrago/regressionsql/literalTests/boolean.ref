@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/boolean.sql#5 $ 
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/regressionsql/literalTests/boolean.sql#5 $ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test boolean literal
 0: jdbc:farrago:> values true;
@@ -82,5 +82,6 @@ Messages:
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop table t_boolean;
 0: jdbc:farrago:> 
+0: jdbc:farrago:> drop schema test;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

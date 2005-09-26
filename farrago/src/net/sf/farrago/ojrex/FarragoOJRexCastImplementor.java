@@ -33,6 +33,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.resource.*;
 
 
 /**
@@ -45,7 +46,15 @@ import org.eigenbase.sql.type.*;
 public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
 {
     //~ Methods ---------------------------------------------------------------
-
+    private static StatementList throwOverflowStmtList = 
+                new StatementList(
+                    new ThrowStatement(
+                        new MethodCall(
+                            new Literal(
+                                Literal.STRING,
+                                "net.sf.farrago.resource.FarragoResource.instance()"),
+                            "newOverflow",
+                            new ExpressionList())));
     // implement FarragoOJRexImplementor
     public Expression implementFarrago(
         FarragoRexToOJTranslator translator,
@@ -55,6 +64,24 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
         RelDataType lhsType = call.getType();
         RelDataType rhsType = call.operands[0].getType();
         Expression rhsExp = operands[0];
+        // Normally the validator will report the error.
+        // but when do insert into t values (...)
+        // somehow, it slipped in.
+        // TODO: should it be done by the validator even
+        // for insert into table?
+        if (lhsType != null && rhsType != null) {
+            // in the case of set catalog 'sys_cwm'
+            // select "name" from Relational"."Schema";
+            // somehow java String datatype slipped in.
+            // we need to filter it out.
+            if (lhsType.getSqlTypeName() != null && 
+                rhsType.getSqlTypeName() != null) 
+            {
+                if (!SqlTypeUtil.canCastFrom(lhsType, rhsType, true)) {
+                    throw net.sf.farrago.resource.FarragoResource.instance().newOverflow();
+                }
+            }
+        }
         return convertCastOrAssignment(
             translator,
             null,
@@ -224,15 +251,13 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
                         new Literal(
                             Literal.STRING,
                             maxLiteral))),
-                new StatementList(
-                    new ThrowStatement(
-                        new MethodCall(
-                            new Literal(
-                                Literal.STRING,
-                                "net.sf.farrago.resource.FarragoResource.instance()"),
-                            "newOverflow",
-                            new ExpressionList()))));
+                getThrowStmtList());
         addStatement(translator, stmtList, ifstmt);
+    }
+
+    private StatementList getThrowStmtList()
+    {
+        return throwOverflowStmtList;
     }
 
     private Expression convertDirectAssignment(
@@ -301,6 +326,31 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
             mayNeedPadOrTruncate = true;
         }
         if (mayNeedPadOrTruncate) {
+            // check overflow if it is datetime.
+            // TODO: should check it at the run time.
+            // so, it should be in the 
+            // cast(SqlDateTimeWithTZ, int precision);
+            if (rhsType != null && rhsType.getSqlTypeName() != null) {
+                SqlTypeName typeName = rhsType.getSqlTypeName();
+                int precision = 0;
+                int ord = typeName.getOrdinal();
+                if (ord == SqlTypeName.Date_ordinal) {
+                    precision = 10;
+                } else if (ord == SqlTypeName.Time_ordinal) {
+                    precision = 8;
+                } else if (ord == SqlTypeName.Timestamp_ordinal) {
+                    precision = 19;
+                }
+                if (precision != 0 && precision > lhsType.getPrecision()) {
+                    addStatement(translator, stmtList,
+                        new IfStatement(
+                            new BinaryExpression(
+                                Literal.makeLiteral(precision),
+                                BinaryExpression.GREATER,
+                                Literal.makeLiteral(lhsType.getPrecision())),
+                            getThrowStmtList()));
+                }
+            }
             if ((rhsType != null)
                 && (rhsType.getFamily() == lhsType.getFamily())
                 && !SqlTypeUtil.isLob(rhsType))
@@ -448,10 +498,9 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
     // implement OJRexImplementor
     public boolean canImplement(RexCall call)
     {
-        /*
-        RelDataType lhsType = call.getType();
-        RelDataType rhsType = call.operands[0].getType();
+        return true;
         
+        /*
         RelDataTypeFamily lhsTypeFamily = lhsType.getFamily();
         RelDataTypeFamily rhsTypeFamily = rhsType.getFamily();
 
@@ -465,10 +514,10 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
             && (lhsTypeFamily != SqlTypeFamily.Numeric)) {
             return false;
         }
-        */
 
         // TODO jvs 11-Aug-2004:  think through other cases
         return true;
+        */
     }
 }
 

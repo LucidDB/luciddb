@@ -59,6 +59,8 @@ public abstract class DiffTestCase extends TestCase
     private String ignorePatterns;
     Pattern compiledIgnorePattern;
 
+    int gcInterval;
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -76,6 +78,7 @@ public abstract class DiffTestCase extends TestCase
         ignorePatterns = "";
         compiledIgnorePattern = null;
         compiledDiffPattern = null;
+        gcInterval = 0;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -90,6 +93,7 @@ public abstract class DiffTestCase extends TestCase
         ignorePatterns = "";
         compiledIgnorePattern = null;
         compiledDiffPattern = null;
+        gcInterval = 0;
     }
 
     // implement TestCase
@@ -173,6 +177,7 @@ public abstract class DiffTestCase extends TestCase
     protected void diffTestLog()
         throws IOException
     {
+        int n = 0;
         assert (logOutputStream != null);
         logOutputStream.close();
         logOutputStream = null;
@@ -185,6 +190,15 @@ public abstract class DiffTestCase extends TestCase
         FileReader logReader = null;
         FileReader refReader = null;
         try {
+            if (compiledIgnorePattern != null) {
+                if (gcInterval != 0) {
+                    n++;
+                    if ( n == gcInterval) {
+                        n = 0;
+                        System.gc();
+                    }
+                }
+            }
             logReader = new FileReader(logFile);
             refReader = new FileReader(refFile);
             LineNumberReader logLineReader = new LineNumberReader(logReader);
@@ -226,6 +240,17 @@ public abstract class DiffTestCase extends TestCase
 
         // no diffs detected, so delete redundant .log file
         logFile.delete();
+    }
+
+    /**
+     * set the number of lines for garbage collection.
+     *
+     * @param n an integer, the number of line for garbage collection, 0 means 
+     * no garbage collection.
+     */
+    protected void setGC(int n)
+    {
+        gcInterval = n;
     }
 
     /**

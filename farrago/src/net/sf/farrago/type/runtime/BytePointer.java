@@ -609,36 +609,57 @@ public class BytePointer extends ByteArrayInputStream
     }
 
     // private static fmt = new DecimalFormat;
+    public void cast(float f, int precision)
+    {
+        castNoChecking(f, precision, true);
+    }
 
     public void cast(double d, int precision)
+    {
+        castNoChecking(d, precision, false);
+    }
+
+    private void castNoChecking(double d, int precision, boolean isFloat)
     {
         // once precision is relaxed, we need to calculate the minimum
         // length and make sure the precision is >= minimum length.
         //
-        int len = precision;
 
         if (d == 0) {
-            allocateOwnBytes(3);
-            ownBytes[0] = (byte) '0';
-            ownBytes[1] = (byte) 'E';
-            ownBytes[2] = (byte) '0';
+            if (precision >= 3) {
+                allocateOwnBytes(3);
+                ownBytes[0] = (byte) '0';
+                ownBytes[1] = (byte) 'E';
+                ownBytes[2] = (byte) '0';
+                count = 3;
+            } else if (precision >= 1) {
+                allocateOwnBytes(1);
+                ownBytes[0] = (byte) '0';
+                count = 1;
+            } else {
+                // char(0) is it possible?
+                throw net.sf.farrago.resource.FarragoResource.instance().newOverflow();
+            }
             buf = ownBytes;
             pos = 0;
-            count = 3;
             return;
         }
-        if (precision < 23) {
-            // in sync with 
-            throw net.sf.farrago.resource.FarragoResource.instance().newOverflow();
+
+        int effectiveDigits = 17;
+        if (isFloat) {
+            effectiveDigits = 8;
         }
+        int lengthNeeded = effectiveDigits + 5; // . Esnn
+
         boolean negative = false;
 
         if (d < 0.0) {
             negative = true;
             d = -d;
-        } else {
-            len--;
+            lengthNeeded++;   // need the sign for that.
         }
+
+        // E , firstDigit, and sign for exponenent.
 
         int exponent = 0;
         double  tempd;
@@ -654,20 +675,86 @@ public class BytePointer extends ByteArrayInputStream
                 exponent++;
             }
         }
-
-        // E , firstDigit, and sign for exponenent.
-        int minimumDigits = exponent + 1 + 1 + 1; 
-        if (negative) {
-            minimumDigits++;
+        if (exponent >= 100) {
+            lengthNeeded++;
         }
-        if (minimumDigits>len) {
+        if (precision < lengthNeeded) {
             throw net.sf.farrago.resource.FarragoResource.instance().newOverflow();
+        }
+        int len = lengthNeeded;
+
+        if (exponentNegative) {
+            exponent = - exponent;
         }
 
         allocateOwnBytes(len);
-        int currentLength = len;
+        int currentLength = fillExponent(exponent, len);
 
+        // now, we can just keep using the floor part.
+        int currentStart = 0;
+        if (negative) {
+            ownBytes[0] = (byte) '-';
+            currentStart = 1;
+        }
+
+        int currentChar = (int)tempd;
+        ownBytes[currentStart] = (byte) (currentChar + '0');
+        currentStart++;
+        tempd = (tempd - currentChar)*10;
+        ownBytes[currentStart] = (byte) '.';
+        currentStart++;
+
+        for (int i = currentStart; i < currentLength; i++) {
+            if (i != currentLength-1) {
+                currentChar = (int)tempd;
+            } else {
+                currentChar = (int)(tempd+0.5); // last digit, rounding
+                if (currentChar == 10) {
+                    currentChar = 0;
+                    boolean needShift = true;
+                    for (int k = i - 1;  k >= currentStart; k--) {
+                        if (ownBytes[k] == ('0' + 9)) {
+                            ownBytes[k] = '0';
+                        } else {
+                            ownBytes[k] += 1;
+                            needShift = false;
+                            break;
+                        }
+                    }
+                    if (needShift) {
+                        int k = currentStart - 2;  // we need to skip the .
+                        if (ownBytes[k] != ('0' + 9)) {
+                            // gee, it is 10.0000000
+                            ownBytes[k] = '1';
+                        } else {
+                            ownBytes[k] += 1;
+                            needShift = false;
+                        }
+                    }
+                    if (needShift) {
+                        fillExponent(exponent, len);
+                    }
+                }
+            }
+            // currentChar must be between 0 and 10
+            ownBytes[i] = (byte) (currentChar + '0');
+            tempd = (tempd - currentChar)*10;
+        }
+
+        buf = ownBytes;
+        pos = 0;
+        count = len;
+    }
+
+    private int fillExponent(int exponent, int len)
+    {
+        boolean exponentNegative = false;
+        if (exponent < 0) {
+            exponentNegative = true;
+            exponent = - exponent;
+        }
         int digitsOfExponent = 0;
+        int currentLength = len;
         for (int tempe = exponent; tempe != 0; tempe = tempe/10) {
             digitsOfExponent++;
             currentLength--;
@@ -692,34 +779,7 @@ public class BytePointer extends ByteArrayInputStream
         }
         currentLength--;
         ownBytes[currentLength] = (byte) 'E';
-        // now, we can just keep using the floor part.
-        int currentStart = 0;
-        if (negative) {
-            ownBytes[0] = (byte) '-';
-            currentStart = 1;
-        }
-
-        int currentChar = (int)tempd;
-        ownBytes[currentStart] = (byte) (currentChar + '0');
-        currentStart++;
-        tempd = (tempd - currentChar)*10;
-        ownBytes[currentStart] = (byte) '.';
-        currentStart++;
-
-        for (int i = currentStart; i < currentLength; i++) {
-            if (i != currentLength-1) {
-                currentChar = (int)tempd;
-            } else {
-                currentChar = (int)(tempd+0.5); // last digit, rounding
-            }
-            // currentChar must be between 0 and 10
-            ownBytes[i] = (byte) (currentChar + '0');
-            tempd = (tempd - currentChar)*10;
-        }
-
-        buf = ownBytes;
-        pos = 0;
-        count = len;
+        return currentLength;
     }
 
     public void cast(long l, int precision)
