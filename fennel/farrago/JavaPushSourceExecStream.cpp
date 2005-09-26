@@ -30,6 +30,10 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 
 JavaPushSourceExecStream::JavaPushSourceExecStream()
 {
+    nbuffers = bufferSize = 0;
+    rdBuffer = NULL;
+    rdBufferStart = rdBufferEnd = rdBufferPosn = 0;
+    rdBufferEOS = false;
 }
 
 void JavaPushSourceExecStream::prepare(JavaPushSourceExecStreamParams const &params)
@@ -50,7 +54,15 @@ void JavaPushSourceExecStream::prepare(JavaPushSourceExecStreamParams const &par
     methFreeBuffer = pEnv->GetMethodID(
         classJavaPushTupleStream, "freeBuffer", "(Ljava/nio/ByteBuffer;)V");
 
-    rdBuffer = NULL;
+    nbuffers = params.nbuffers;
+    bufferSize = params.bufferSize;
+    assert(nbuffers >= 0);
+    assert(bufferSize >= 0);
+    if (nbuffers < 2)
+        nbuffers = 2;
+    if (bufferSize == 0)                // default is row size
+        bufferSize = pOutAccessor->getScratchTupleAccessor().getMaxByteCount();
+
 }
 
 void JavaPushSourceExecStream::getResourceRequirements(
@@ -59,31 +71,32 @@ void JavaPushSourceExecStream::getResourceRequirements(
 {
     JavaSourceExecStream::getResourceRequirements(minQuantity,optQuantity);
 
-    // one page for each buffer
-    minQuantity.nCachePages += NBUFFERS;
+    // one page for each buffer ??
+    minQuantity.nCachePages += nbuffers;
     optQuantity = minQuantity;
 }
 
 void JavaPushSourceExecStream::open(bool restart)
 {
     JavaSourceExecStream::open(restart);
+
+    releaseReadBuffer();
     if (restart) 
         return;
 
-    // allocate 2 direct byte buffers; provide then to java peer
+    // allocate direct byte buffers; provide then to java peer
+    // REVIEW mb 9/18/05 Why use a whole cache page for each? How to allocate better?
     JniEnvAutoRef pEnv;
     jclass classByteBuffer = pEnv->FindClass("java/nio/ByteBuffer");
-    jobjectArray bba = pEnv->NewObjectArray(NBUFFERS, classByteBuffer, NULL);
-    for (int i = 0; i < NBUFFERS; i++) {
+    jobjectArray bba = pEnv->NewObjectArray(nbuffers, classByteBuffer, NULL);
+    for (int i = 0; i < nbuffers; i++) {
         PageId pageID = bufferLock.allocatePage();
         PBuffer bufstart = bufferLock.getPage().getWritableData();
         uint cb = bufferLock.getPage().getCache().getPageSize();
-        FENNEL_TRACE(TRACE_FINER, "alloc buffer at " <<
-                     bufstart << " len " << cb << " on page " << pageID);
-
+        FENNEL_TRACE(TRACE_FINER, "alloc buffer at " << bufstart <<
+                     " len " << bufferSize << " on page " << pageID << ", pagesize " << cb);
         assert(bufstart);
-        assert(cb > 0);
-        jobject o = pEnv->NewDirectByteBuffer(bufstart, cb);
+        jobject o = pEnv->NewDirectByteBuffer(bufstart, bufferSize);
         assert(o);
         FENNEL_TRACE(TRACE_FINER, "direct ByteBuffer " << o << " wraps buffer " << bufstart);
         pEnv->SetObjectArrayElement(bba, i, o);
@@ -96,48 +109,116 @@ void JavaPushSourceExecStream::open(bool restart)
 
 ExecStreamResult JavaPushSourceExecStream::execute(ExecStreamQuantum const &)
 {
-    // pass unless ouput buffer (rdBuffer) has been completely consumed
-    switch(pOutAccessor->getState()) {
-    case EXECBUF_NONEMPTY:
-    case EXECBUF_OVERFLOW:
-        return EXECRC_BUF_OVERFLOW;
-    case EXECBUF_EOS:
-        return EXECRC_EOS;
-    default:
-        break;
+    while(true) {                       // should respect the quantum
+
+        if (!pOutAccessor->isProductionPossible()) {
+            FENNEL_TRACE(TRACE_FINE, "output buffer full");
+            return EXECRC_BUF_OVERFLOW;
+        }
+    
+        if (rdBufferPosn >= rdBufferEnd) {
+            // need more input data
+            releaseReadBuffer();
+            if (!getReadBuffer()) {
+                FENNEL_TRACE(TRACE_FINE, "no input available");
+                // sets all rdBuffer pointers
+                return EXECRC_QUANTUM_EXPIRED; 
+                // (Not underflow, since input is not from a regular fennel buffer,
+                // and scheduler will not know when more input arrives.)
+            }
+            if (rdBufferEOS) {
+                FENNEL_TRACE(TRACE_FINE, "input EOS");
+                pOutAccessor->markEOS();
+                return EXECRC_EOS;
+            }
+        }
+
+        // copy the buffer (or as many rows as will fit)
+        PBuffer dest = pOutAccessor->getProductionStart();
+        uint ncopied = 
+            copyRows(pOutAccessor->getScratchTupleAccessor(),
+                     dest, pOutAccessor->getProductionEnd(),
+                     rdBufferPosn, rdBufferEnd);
+        FENNEL_TRACE(TRACE_FINE, "copied " << ncopied << " bytes");
+        if (ncopied == 0) {
+            pOutAccessor->requestConsumption();
+            return EXECRC_BUF_OVERFLOW;
+        }
+        rdBufferPosn += ncopied;
+        pOutAccessor->produceData(dest + ncopied);
     }
+}
+
+
+void JavaPushSourceExecStream::releaseReadBuffer()
+{
+    if (rdBuffer == NULL)
+        return;
 
     JniEnvAutoRef pEnv;
     assert(javaTupleStream);
 
-    // swap the byte buffer for fresh data from our peer
+    FENNEL_TRACE(TRACE_FINER, "reader calls JavaPushTupleStream.freeBuffer(" << rdBuffer << ")");
+    pEnv->CallVoidMethod(javaTupleStream, methFreeBuffer, rdBuffer);
+    FENNEL_TRACE(TRACE_FINER, "JavaPushTupleStream.freeBuffer(" << rdBuffer << ") returned");
+    pEnv->DeleteGlobalRef(rdBuffer);
+
+    rdBuffer = 0;
+    rdBufferEOS = false;
+    rdBufferStart = rdBufferEnd = rdBufferPosn = 0;
+}
+ 
+bool JavaPushSourceExecStream::getReadBuffer()
+{
+    JniEnvAutoRef pEnv;
+    assert(!rdBuffer);
+    assert(javaTupleStream);
+    
     FENNEL_TRACE(TRACE_FINER, "reader asks for a data buffer");
     jobject newBuffer = pEnv->CallObjectMethod(javaTupleStream, methGetBuffer);
     FENNEL_TRACE(TRACE_FINE, "reader gets buffer " << newBuffer);
+    if (!newBuffer)
+        return false;
 
-    if (!newBuffer)                     // no new data yet
-        return EXECRC_QUANTUM_EXPIRED;  // what if we return EXECRC_BUF_UNDERFLOW?
-
-    if (rdBuffer) {
-        FENNEL_TRACE(TRACE_FINER, "reader calls JavaPushTupleStream.freeBuffer(" << rdBuffer << ")");
-        pEnv->CallVoidMethod(javaTupleStream, methFreeBuffer, rdBuffer);
-        FENNEL_TRACE(TRACE_FINER, "JavaPushTupleStream.freeBuffer(" << rdBuffer << ") returned");
-        pEnv->DeleteGlobalRef(rdBuffer);
-    }
     rdBuffer = pEnv->NewGlobalRef(newBuffer);
-
     int cb = pEnv->CallIntMethod(newBuffer, methBufferSize);
     FENNEL_TRACE(TRACE_FINE, "buffer size " << cb);
-    if (cb == 0) {                    // empty buffer means EOS
-        pOutAccessor->markEOS();
-        return EXECRC_EOS;
-    } else {
-        PConstBuffer bufStart =
-            reinterpret_cast<PConstBuffer>(pEnv->GetDirectBufferAddress(rdBuffer));
-        PConstBuffer bufEnd = bufStart + cb;
-        pOutAccessor->provideBufferForConsumption(bufStart, bufEnd);
-        return EXECRC_BUF_OVERFLOW;
+
+    rdBufferEOS = (cb == 0);            // buffer size 0 indicates EOS
+    rdBufferStart = reinterpret_cast<PConstBuffer>(pEnv->GetDirectBufferAddress(rdBuffer));
+    rdBufferEnd = rdBufferStart + cb;
+    rdBufferPosn = rdBufferStart;
+    return true;
+}
+
+// TODO: factor out. Similar code appears in CopyExecStream, SimpleNexusExecStream, JavaPushSourceExecStream.
+uint JavaPushSourceExecStream::copyRows(
+    TupleAccessor& acc,
+    PBuffer dest, PBuffer destEnd,
+    PConstBuffer src, PConstBuffer srcEnd)
+{
+    uint navail = destEnd - dest;
+    uint n  = srcEnd  - src;
+    assert((navail >= 0) && (n >= 0));
+
+    if (n > navail) {
+        // what fits? span whole tuples in src buffer
+        PConstBuffer p, q;
+        PConstBuffer limit = src + navail;
+        assert(limit <= srcEnd);
+        int ct;
+        for (ct = 0, p = q = src; p < limit; ct++) {
+            acc.setCurrentTupleBuf(p);
+            q = p;
+            p += acc.getCurrentByteCount(); // forward 1 tuple
+        }
+        // here when p is too far, and the tuple [q, p] did not fit.
+        uint nfits = q - src;
+        n = nfits;
     }
+
+    memcpy(dest, src, n);
+    return n;
 }
 
 void JavaPushSourceExecStream::closeImpl()
@@ -148,6 +229,12 @@ void JavaPushSourceExecStream::closeImpl()
     if (rdBuffer)
         pEnv->DeleteGlobalRef(rdBuffer);
     JavaSourceExecStream::closeImpl();
+}
+
+ExecStreamBufProvision
+JavaPushSourceExecStream::getOutputBufProvision() const
+{
+    return BUFPROV_CONSUMER;
 }
 
 FENNEL_END_CPPFILE("$Id$");

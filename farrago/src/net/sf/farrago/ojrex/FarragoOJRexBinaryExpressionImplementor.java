@@ -31,6 +31,7 @@ import openjava.ptree.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.oj.util.OJUtil;
 
 /**
  * FarragoOJRexBinaryExpressionImplementor implements Farrago specifics of
@@ -75,7 +76,14 @@ public class FarragoOJRexBinaryExpressionImplementor
         }
 
         if (!call.getType().isNullable()) {
-            return implementNotNull(translator, call, valueOperands);
+            Expression expr = implementNotNull(translator, call, valueOperands);
+            Statement ifstmt = checkOverflow(expr, call.getType());
+            if (ifstmt != null) {
+                translator.addStatement(ifstmt);
+            }
+
+            return expr;
+
         }
 
         Variable varResult = translator.createScratchVariable(call.getType());
@@ -97,9 +105,8 @@ public class FarragoOJRexBinaryExpressionImplementor
 
         Expression nullTest = null;
         for (int i = 0; i < 2; ++i) {
-            nullTest =
-                translator.createNullTest(call.operands[i], operands[i],
-                    nullTest);
+            nullTest = translator.createNullTest(
+                            call.operands[i], operands[i], nullTest);
         }
         assert (nullTest != null);
 
@@ -111,13 +118,23 @@ public class FarragoOJRexBinaryExpressionImplementor
                     AssignmentExpression.EQUALS,
                     implementNotNull(translator, call, valueOperands)));
 
+        Statement overflowStmt = checkOverflow(
+                        new FieldAccess(varResult,
+                            NullablePrimitive.VALUE_FIELD_NAME),
+                        call.getType());
+        StatementList stmtList = 
+                new StatementList(translator.createSetNullStatement(
+                        varResult, false),
+                    assignmentStmt);
+        if (overflowStmt != null) {
+            stmtList.add(overflowStmt);
+        }
+
         Statement ifStatement =
             new IfStatement(nullTest,
                 new StatementList(translator.createSetNullStatement(
                         varResult, true)),
-                new StatementList(translator.createSetNullStatement(
-                        varResult, false),
-                    assignmentStmt));
+                stmtList);
 
         translator.addStatement(ifStatement);
 
@@ -235,6 +252,35 @@ public class FarragoOJRexBinaryExpressionImplementor
             comparisonResultExp,
             ojBinaryExpressionOrdinal,
             Literal.makeLiteral(0));
+    }
+
+    private Statement checkOverflow(Expression expr, RelDataType returnType)
+        
+    {
+        if (SqlTypeUtil.isApproximateNumeric(returnType) && 
+            (ojBinaryExpressionOrdinal == BinaryExpression.DIVIDE || 
+            ojBinaryExpressionOrdinal == BinaryExpression.TIMES))
+        {
+            Statement ifStatement =
+                new IfStatement(
+                     new MethodCall(
+                         new Literal(
+                             Literal.STRING,
+                             "Double"),
+                         "isInfinite",
+                         new ExpressionList(expr)),
+                     new StatementList(
+                         new ThrowStatement(
+                             new MethodCall(
+                             new Literal(
+                                 Literal.STRING, 
+                                 "net.sf.farrago.resource.FarragoResource.instance()"),
+                                 "newOverflow", 
+                                 new ExpressionList()))));
+            return ifStatement;
+        } else {
+            return null;
+        }
     }
 }
 

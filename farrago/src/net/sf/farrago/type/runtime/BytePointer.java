@@ -607,6 +607,224 @@ public class BytePointer extends ByteArrayInputStream
         System.arraycopy(buf, pos, bytes, 0, n);
         return Util.toStringFromByteArray(bytes, 16);
     }
+
+    // private static fmt = new DecimalFormat;
+    public void cast(float f, int precision)
+    {
+        castNoChecking(f, precision, true);
+    }
+
+    public void cast(double d, int precision)
+    {
+        castNoChecking(d, precision, false);
+    }
+
+    private void castNoChecking(double d, int precision, boolean isFloat)
+    {
+        // once precision is relaxed, we need to calculate the minimum
+        // length and make sure the precision is >= minimum length.
+        //
+
+        if (d == 0) {
+            if (precision >= 3) {
+                allocateOwnBytes(3);
+                ownBytes[0] = (byte) '0';
+                ownBytes[1] = (byte) 'E';
+                ownBytes[2] = (byte) '0';
+                count = 3;
+            } else if (precision >= 1) {
+                allocateOwnBytes(1);
+                ownBytes[0] = (byte) '0';
+                count = 1;
+            } else {
+                // char(0) is it possible?
+                throw net.sf.farrago.resource.FarragoResource.instance().newOverflow();
+            }
+            buf = ownBytes;
+            pos = 0;
+            return;
+        }
+
+        int effectiveDigits = 17;
+        if (isFloat) {
+            effectiveDigits = 8;
+        }
+        int lengthNeeded = effectiveDigits + 5; // . Esnn
+
+        boolean negative = false;
+
+        if (d < 0.0) {
+            negative = true;
+            d = -d;
+            lengthNeeded++;   // need the sign for that.
+        }
+
+        // E , firstDigit, and sign for exponenent.
+
+        int exponent = 0;
+        double  tempd;
+        boolean exponentNegative = false;
+
+        if (d < 1.0) {
+            for (tempd = d; tempd < 1.0; tempd *= 10) {
+                exponent++;
+            }
+            exponentNegative = true;
+        } else {
+            for (tempd = d; tempd >= 10.0; tempd /= 10) {
+                exponent++;
+            }
+        }
+        if (exponent >= 100) {
+            lengthNeeded++;
+        }
+        if (precision < lengthNeeded) {
+            throw net.sf.farrago.resource.FarragoResource.instance().newOverflow();
+        }
+        int len = lengthNeeded;
+
+        if (exponentNegative) {
+            exponent = - exponent;
+        }
+
+        allocateOwnBytes(len);
+        int currentLength = fillExponent(exponent, len);
+
+        // now, we can just keep using the floor part.
+        int currentStart = 0;
+        if (negative) {
+            ownBytes[0] = (byte) '-';
+            currentStart = 1;
+        }
+
+        int currentChar = (int)tempd;
+        ownBytes[currentStart] = (byte) (currentChar + '0');
+        currentStart++;
+        tempd = (tempd - currentChar)*10;
+        ownBytes[currentStart] = (byte) '.';
+        currentStart++;
+
+        for (int i = currentStart; i < currentLength; i++) {
+            if (i != currentLength-1) {
+                currentChar = (int)tempd;
+            } else {
+                currentChar = (int)(tempd+0.5); // last digit, rounding
+                if (currentChar == 10) {
+                    currentChar = 0;
+                    boolean needShift = true;
+                    for (int k = i - 1;  k >= currentStart; k--) {
+                        if (ownBytes[k] == ('0' + 9)) {
+                            ownBytes[k] = '0';
+                        } else {
+                            ownBytes[k] += 1;
+                            needShift = false;
+                            break;
+                        }
+                    }
+                    if (needShift) {
+                        int k = currentStart - 2;  // we need to skip the .
+                        if (ownBytes[k] != ('0' + 9)) {
+                            // gee, it is 10.0000000
+                            ownBytes[k] = '1';
+                        } else {
+                            ownBytes[k] += 1;
+                            needShift = false;
+                        }
+                    }
+                    if (needShift) {
+                        fillExponent(exponent, len);
+                    }
+                }
+            }
+            // currentChar must be between 0 and 10
+            ownBytes[i] = (byte) (currentChar + '0');
+            tempd = (tempd - currentChar)*10;
+        }
+
+        buf = ownBytes;
+        pos = 0;
+        count = len;
+    }
+
+    private int fillExponent(int exponent, int len)
+    {
+        boolean exponentNegative = false;
+        if (exponent < 0) {
+            exponentNegative = true;
+            exponent = - exponent;
+        }
+        int digitsOfExponent = 0;
+        int currentLength = len;
+        for (int tempe = exponent; tempe != 0; tempe = tempe/10) {
+            digitsOfExponent++;
+            currentLength--;
+            ownBytes[currentLength] = (byte) ('0' + tempe % 10);
+        }
+        // if less than two digits, need to fill them.
+        if (digitsOfExponent == 0) {
+            currentLength--;
+            ownBytes[currentLength] = (byte) '0';
+            digitsOfExponent++;
+        }
+        if (digitsOfExponent == 1) {
+            currentLength--;
+            ownBytes[currentLength] = (byte) '0';
+        }
+
+        currentLength--;
+        if (exponentNegative) {
+            ownBytes[currentLength] = (byte) '-';
+        } else {
+            ownBytes[currentLength] = (byte) '+';
+        }
+        currentLength--;
+        ownBytes[currentLength] = (byte) 'E';
+        return currentLength;
+    }
+
+    public void cast(long l, int precision)
+    {
+        boolean negative = false;
+        if (l < 0) {
+            l = -l;
+            negative = true;
+        }
+        int len = 0;
+        long templ;
+
+        for (templ = l ;templ != 0; templ = templ/10) 
+        {
+            len++;
+        }
+
+        if (negative) {
+            len++;
+        }
+        if (len > precision) {
+            throw net.sf.farrago.resource.FarragoResource.instance().newOverflow();
+        }
+
+        if (l == 0) {
+            len = 1;
+        }
+        allocateOwnBytes(len);
+        if (l == 0) {
+            ownBytes[0] = (byte) '0';
+        } else {
+            if (negative) {
+                ownBytes[0] = (byte) '-';
+            }
+            int i = 0;
+            for (templ=l; templ != 0; i++, templ = templ/10) {
+                int currentDigit = (int) (templ % 10);
+                ownBytes[len - 1 - i] = (byte) ('0' + (char) currentDigit);
+            }
+        }
+
+        buf = ownBytes;
+        pos = 0;
+        count = len;
+    }
 }
 
 

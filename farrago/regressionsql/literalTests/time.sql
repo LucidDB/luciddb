@@ -39,7 +39,8 @@ insert into t_time values(-1.2345678901234e-200,null);
 insert into t_time values(-1234.03,null);
 insert into t_time values(x'ff',null);
 insert into t_date values(date '1999-01-08',null);
-insert into t_time values(timestamp '2004-12-01 12:01:01',null);
+-- the following line should be allowed.
+-- insert into t_time values(timestamp '2004-12-01 12:01:01',null);
 
 -- insert the right values
 insert into t_time values(time '12:01:01',null);
@@ -51,3 +52,4 @@ select * from t_time;
 
 drop table t_time;
 
+drop schema test;

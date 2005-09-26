@@ -80,3 +80,4 @@ select * from t_varchar;
 
 drop table t_varchar;
 
+drop schema test;

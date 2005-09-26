@@ -23,12 +23,9 @@
 package net.sf.farrago.query;
 
 import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.namespace.*;
 import net.sf.farrago.catalog.*;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.util.*;
-import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 
@@ -51,12 +48,15 @@ public abstract class FarragoQueryNamedColumnSet extends RelOptAbstractTable
     /** Refinement for RelOptAbstractTable.schema. */
     private FarragoPreparingStmt preparingStmt;
 
+    /** Allowed access */
+    private SqlAccessType allowedAccess;
+
     //~ Constructors ----------------------------------------------------------
 
     /**
      * Creates a new FarragoQueryNamedColumnSet object.
      *
-     * @param cwmTable catalog definition for column set
+     * @param cwmColumnSet catalog definition for column set
      *
      * @param rowType type for rows stored in column set
      */
@@ -67,6 +67,8 @@ public abstract class FarragoQueryNamedColumnSet extends RelOptAbstractTable
         super(null,
             cwmColumnSet.getName(), rowType);
         this.cwmColumnSet = cwmColumnSet;
+        this.allowedAccess =
+            FarragoCatalogUtil.getTableAllowedAccess(cwmColumnSet);
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -82,6 +84,12 @@ public abstract class FarragoQueryNamedColumnSet extends RelOptAbstractTable
     public boolean isMonotonic(String columnName)
     {
         return false;
+    }
+
+    // implement SqlValidatorTable
+    public SqlAccessType getAllowedAccess()
+    {
+        return allowedAccess;
     }
 
     // implement FarragoQueryColumnSet

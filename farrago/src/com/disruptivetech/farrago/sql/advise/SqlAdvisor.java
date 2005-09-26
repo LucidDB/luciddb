@@ -196,10 +196,7 @@ public class SqlAdvisor
             // the error to entire line for now
             ValidateErrorInfo errInfo =
                 new ValidateErrorInfo(
-                    1,
-                    1,
-                    1,
-                    sql.length(),
+                    e.getPos(),
                     e.getMessage());
 
             // parser only returns 1 exception now

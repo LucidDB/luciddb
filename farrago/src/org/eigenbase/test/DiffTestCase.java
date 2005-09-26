@@ -25,6 +25,7 @@ package org.eigenbase.test;
 
 import java.io.*;
 import java.util.*;
+import java.util.regex.*;
 
 import junit.framework.*;
 
@@ -52,7 +53,13 @@ public abstract class DiffTestCase extends TestCase
     private OutputStream logOutputStream;
 
     /** Diff masks defined so far */
-    private List diffMasks;
+    // private List diffMasks;
+    private String diffMasks;
+    Pattern compiledDiffPattern;
+    private String ignorePatterns;
+    Pattern compiledIgnorePattern;
+
+    int gcInterval;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -66,7 +73,12 @@ public abstract class DiffTestCase extends TestCase
     {
         super(testCaseName);
 
-        diffMasks = new ArrayList();
+        // diffMasks = new ArrayList();
+        diffMasks = "";
+        ignorePatterns = "";
+        compiledIgnorePattern = null;
+        compiledDiffPattern = null;
+        gcInterval = 0;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -76,7 +88,12 @@ public abstract class DiffTestCase extends TestCase
         throws Exception
     {
         super.setUp();
-        diffMasks.clear();
+        // diffMasks.clear();
+        diffMasks = "";
+        ignorePatterns = "";
+        compiledIgnorePattern = null;
+        compiledDiffPattern = null;
+        gcInterval = 0;
     }
 
     // implement TestCase
@@ -160,6 +177,7 @@ public abstract class DiffTestCase extends TestCase
     protected void diffTestLog()
         throws IOException
     {
+        int n = 0;
         assert (logOutputStream != null);
         logOutputStream.close();
         logOutputStream = null;
@@ -172,6 +190,15 @@ public abstract class DiffTestCase extends TestCase
         FileReader logReader = null;
         FileReader refReader = null;
         try {
+            if (compiledIgnorePattern != null) {
+                if (gcInterval != 0) {
+                    n++;
+                    if ( n == gcInterval) {
+                        n = 0;
+                        System.gc();
+                    }
+                }
+            }
             logReader = new FileReader(logFile);
             refReader = new FileReader(refFile);
             LineNumberReader logLineReader = new LineNumberReader(logReader);
@@ -179,6 +206,14 @@ public abstract class DiffTestCase extends TestCase
             for (;;) {
                 String logLine = logLineReader.readLine();
                 String refLine = refLineReader.readLine();
+                while (logLine != null && matchIgnorePatterns(logLine)) {
+                    // System.out.println("logMatch Line:" + logLine);
+                    logLine = logLineReader.readLine();
+                }
+                while (refLine != null && matchIgnorePatterns(refLine)) {
+                    // System.out.println("refMatch Line:" + logLine);
+                    refLine = refLineReader.readLine();
+                }
                 if ((logLine == null) || (refLine == null)) {
                     if (logLine != null) {
                         diffFail(logFile, logLineReader);
@@ -208,6 +243,17 @@ public abstract class DiffTestCase extends TestCase
     }
 
     /**
+     * set the number of lines for garbage collection.
+     *
+     * @param n an integer, the number of line for garbage collection, 0 means 
+     * no garbage collection.
+     */
+    protected void setGC(int n)
+    {
+        gcInterval = n;
+    }
+
+    /**
      * Adds a diff mask.  Strings matching the given regular expression
      * will be masked before diffing.  This can be used to suppress
      * spurious diffs on a case-by-case basis.
@@ -216,17 +262,50 @@ public abstract class DiffTestCase extends TestCase
      */
     protected void addDiffMask(String mask)
     {
-        diffMasks.add(mask);
+        // diffMasks.add(mask);
+        if (diffMasks.length() == 0) {
+            diffMasks = mask;
+        } else {
+            diffMasks = diffMasks + "|" + mask;
+        }
+        compiledDiffPattern = Pattern.compile(diffMasks);
+    }
+
+    protected void addIgnorePattern(String javaPattern)
+    {
+        if (ignorePatterns.length() == 0) {
+            ignorePatterns = javaPattern;
+        } else {
+            ignorePatterns = ignorePatterns + "|" + javaPattern;
+        }
+        compiledIgnorePattern = Pattern.compile(ignorePatterns);
     }
 
     private String applyDiffMask(String s)
     {
         // TODO:  reuse a single java.util.regex.Matcher
+        /*
         for (int i = 0; i < diffMasks.size(); ++i) {
             String mask = (String) diffMasks.get(i);
             s = s.replaceAll(mask, "XYZZY");
         }
+        */
+        if (compiledDiffPattern != null) {
+            // we assume most of lines do not match
+            // so compiled matches will be faster than replaceAll.
+            if (compiledDiffPattern.matcher(s).find()) {
+                return s.replaceAll(diffMasks, "XYZZY");
+            }
+        }
+
         return s;
+    }
+    private boolean matchIgnorePatterns(String s)
+    {
+        if (compiledIgnorePattern != null) {
+            return compiledIgnorePattern.matcher(s).matches();
+        }
+        return false;
     }
 
     private void diffFail(

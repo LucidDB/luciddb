@@ -374,6 +374,11 @@
     <text>DISTINCT/ALL not allowed with {0} function</text>
 </exception>
 
+<exception id="120630" name="AccessNotAllowed">
+    <text>Not allowed to perform {0} on {1}</text>
+</exception>
+
+
 <!-- ====================================================================== -->
 <!-- Eigenbase Generic resources 130,000 - 140,000 -->
 <!-- ====================================================================== -->

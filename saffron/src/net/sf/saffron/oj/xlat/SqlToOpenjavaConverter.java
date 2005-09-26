@@ -596,6 +596,11 @@ public class SqlToOpenjavaConverter
                     {
                         return false;
                     }
+
+                    public SqlAccessType getAllowedAccess()
+                    {
+                        return SqlAccessType.ALL;
+                    }
                 };
             }
             return null;

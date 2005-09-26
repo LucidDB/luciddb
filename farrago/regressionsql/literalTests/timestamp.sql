@@ -111,3 +111,4 @@ select * from t_timestamp;
 
 drop table t_timestamp;
 
+drop schema test;

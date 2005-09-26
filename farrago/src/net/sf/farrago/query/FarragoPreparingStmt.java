@@ -976,7 +976,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         }
 
         RelDataType rowType = createTableRowType(table);
-        return newValidatorTable(resolved.getQualifiedName(), rowType);
+        SqlAccessType allowedAccess = FarragoCatalogUtil.getTableAllowedAccess(table);
+        return newValidatorTable(resolved.getQualifiedName(), rowType, allowedAccess);
     }
 
     /**
@@ -998,9 +999,10 @@ public class FarragoPreparingStmt extends OJPreparingStmt
      */
     protected SqlValidatorTable newValidatorTable(
         String[] qualifiedName,
-        RelDataType rowType)
+        RelDataType rowType,
+        SqlAccessType allowedAccess)
     {
-        return new ValidatorTable(qualifiedName, rowType);
+        return new ValidatorTable(qualifiedName, rowType, allowedAccess);
     }
 
     // implement SqlValidator.CatalogReader
@@ -1100,16 +1102,19 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     {
         private final String [] qualifiedName;
         private final RelDataType rowType;
+        private final SqlAccessType accessType;
 
         /**
          * Creates a new ValidatorTable object.
          */
         public ValidatorTable(
             String [] qualifiedName,
-            RelDataType rowType)
+            RelDataType rowType,
+            SqlAccessType accessType)
         {
             this.qualifiedName = qualifiedName;
             this.rowType = rowType;
+            this.accessType = accessType;
         }
 
         // implement SqlValidatorTable
@@ -1122,6 +1127,12 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         public boolean isMonotonic(String columnName)
         {
             return false;
+        }
+
+        // implement SqlValidatorTable
+        public SqlAccessType getAllowedAccess()
+        {
+            return accessType;
         }
 
         // implement SqlValidatorTable

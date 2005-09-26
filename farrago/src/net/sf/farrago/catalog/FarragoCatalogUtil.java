@@ -799,6 +799,32 @@ public abstract class FarragoCatalogUtil
         grant.setElement(grantedObject);
         return grant;
     }    
+
+    /**
+     * Determines the allowed access for a table
+     * @param table Repository table
+     * @return Access type of the table
+     */
+    public static SqlAccessType getTableAllowedAccess(CwmNamedColumnSet table)
+    {
+        SqlAccessType allowedAccess;
+        if (table instanceof FemBaseColumnSet) {
+            FemBaseColumnSet cs = (FemBaseColumnSet) table;
+            String accessNames = cs.getAllowedAccess();
+            if (accessNames != null)  {
+                allowedAccess = SqlAccessType.create(accessNames);
+            } else {
+                allowedAccess = SqlAccessType.ALL;
+            }
+        } else if (table instanceof CwmView) {
+            CwmView view = (CwmView) table;
+            allowedAccess = view.isReadOnly()?
+                SqlAccessType.READ_ONLY: SqlAccessType.ALL;
+        } else {
+            allowedAccess = SqlAccessType.ALL;
+        }
+        return allowedAccess;
+    }
 }
 
 // End FarragoCatalogUtil.java

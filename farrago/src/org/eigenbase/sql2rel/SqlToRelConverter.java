@@ -1375,6 +1375,11 @@ public class SqlToRelConverter
                     {
                         return false;
                     }
+
+                    public SqlAccessType getAllowedAccess()
+                    {
+                        return SqlAccessType.ALL;
+                    }                    
                 };
             }
             return null;
