@@ -264,8 +264,13 @@ public abstract class OJPreparingStmt
     {
         RelOptPlanner planner = rootRel.getCluster().getPlanner();
         planner.setRoot(rootRel);
-        rootRel = planner.changeTraits(
-            rootRel, new RelTraitSet(resultCallingConvention));
+
+        // Make sure non-CallingConvention traits, if any, are preserved
+        RelTraitSet desiredTraits = RelOptUtil.clone(rootRel.getTraits());
+        desiredTraits.setTrait(
+            CallingConventionTraitDef.instance, resultCallingConvention);
+
+        rootRel = planner.changeTraits(rootRel, desiredTraits);
         assert (rootRel != null);
         planner.setRoot(rootRel);
         planner = planner.chooseDelegate();
