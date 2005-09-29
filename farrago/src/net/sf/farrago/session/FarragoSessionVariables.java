@@ -22,9 +22,12 @@
 */
 package net.sf.farrago.session;
 
-import net.sf.farrago.cwm.relational.*;
-
 import java.util.*;
+import java.sql.DatabaseMetaData;
+
+import org.eigenbase.sql.SqlDialect;
+import org.eigenbase.sql.SqlIdentifier;
+import org.eigenbase.sql.pretty.SqlPrettyWriter;
 
 /**
  * FarragoSessionVariables defines global variable settings for a Farrago
@@ -80,6 +83,57 @@ public class FarragoSessionVariables implements Cloneable
         } catch (CloneNotSupportedException ex) {
             throw new AssertionError();
         }
+    }
+
+    /**
+     * Format the schema search path as required by the SQL99 standard.
+     *
+     * @sql.99 Part 2 Section 6.3 General Rule 10
+     *
+     * @param databaseMetadata current database metadata
+     * @return formated schema search path, as per the SQL standard
+     */
+    public String getFormattedSchemaSearchPath(
+        DatabaseMetaData databaseMetadata)
+    {
+        // The SQL standard is very precise about the formatting
+        SqlDialect dialect = new SqlDialect(databaseMetadata);
+        SqlPrettyWriter writer = new SqlPrettyWriter(dialect);
+        StringBuffer buf = new StringBuffer();
+        int k = 0;
+        Iterator iter = schemaSearchPath.iterator();
+        while (iter.hasNext()) {
+            if (k++ > 0) {
+                buf.append(",");
+            }
+            SqlIdentifier id = (SqlIdentifier) iter.next();
+            id.unparse(writer, 0, 0);
+            buf.append(writer.toString());
+            writer.reset();
+        }
+        return buf.toString();
+    }
+
+    /**
+     * Copy the values in <code>baseVariables</code> to this instance.
+     * Allows extensions projects to provide extend FarragoSessionVariables
+     * and those new session variables to values from  an existing
+     * FarragoSessionVariables.
+     *
+     * @param baseVariables an existing FarragoSessionVariables to copy into
+     *                      <code>this</code>.
+     */
+    protected void copyVariables(FarragoSessionVariables baseVariables)
+    {
+        this.catalogName = baseVariables.catalogName;
+        this.schemaName = baseVariables.schemaName;
+        this.systemUserName = baseVariables.systemUserName;
+        this.sessionUserName = baseVariables.sessionUserName;
+        this.currentUserName = baseVariables.currentUserName;
+
+        // Since schemaSearchPath is meant to be an unmodifiable list,
+        // it should be okay to just copy the reference.
+        this.schemaSearchPath = baseVariables.schemaSearchPath;
     }
 }
 
