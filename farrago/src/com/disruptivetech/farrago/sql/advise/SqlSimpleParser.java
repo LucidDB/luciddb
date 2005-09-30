@@ -125,8 +125,21 @@ public class SqlSimpleParser
         return result.substring(1, result.length()-1);
     }
 
+    private String handleUnion(String sql)
+    {
+        String[] parts = sql.split("(?i)UNION( )+(ALL)?");
+        for (int i = 0; i < parts.length; i++) {
+            if (parts[i].indexOf(hintToken) >= 0) {
+                return parts[i];
+            }
+        }
+        // no hint token found
+        return sql;
+    }
+
     private String handleSubQuery(String subquery, Stack stack)
     {
+        subquery = handleUnion(subquery);
         List tokenList = tokenizeSubquery(subquery);
         HashMap buckets = bucketByKeyword(tokenList);
         //printBuckets(buckets);
