@@ -108,8 +108,7 @@ public class SqlAdvisor
     public SqlMoniker[] getCompletionHints(String sql, SqlParserPos pos)
         throws SqlParseException
     {
-        SqlParser parser = new SqlParser(sql);
-        SqlNode sqlNode = parser.parseQuery();
+        SqlNode sqlNode = parseQuery(sql);
         try {
             validator.validate(sqlNode);
         } catch (Exception e) {
@@ -138,10 +137,9 @@ public class SqlAdvisor
      */
     public SqlMoniker getQualifiedName(String sql, int cursor)
     {
-        SqlParser parser = new SqlParser(sql);
-        SqlNode sqlNode;
+        SqlNode sqlNode = null;
         try {
-            sqlNode = parser.parseQuery();
+            sqlNode = parseQuery(sql);
             validator.validate(sqlNode);
         } catch (Exception e) {
             return null;
@@ -160,10 +158,9 @@ public class SqlAdvisor
     {
         SqlSimpleParser simpleParser = new SqlSimpleParser(hintToken);
         String simpleSql = simpleParser.simplifySql(sql);
-        SqlParser parser = new SqlParser(simpleSql);
         SqlNode sqlNode = null;
         try {
-            sqlNode = parser.parseQuery();
+            sqlNode = parseQuery(simpleSql);
         } catch (Exception e) {
             // if the sql can't be parsed we wont' be able to validate it
             return false;
@@ -187,10 +184,9 @@ public class SqlAdvisor
      */
     public List validate(String sql)
     {
-        SqlParser parser = new SqlParser(sql);
         SqlNode sqlNode = null;
         try {
-            sqlNode = parser.parseQuery();
+            sqlNode = parseQuery(sql);
         } catch (SqlParseException e) {
             // parser error does not contain a range info yet.  we set
             // the error to entire line for now
@@ -270,6 +266,17 @@ public class SqlAdvisor
         } else {
             return -1;
         }
+    }
+    
+    /**
+     * Wrapper function to parse a SQL statement, throwing a 
+     * {@link SqlParseException} if the statement is not syntactically valid
+     */
+    protected SqlNode parseQuery(String sql) throws SqlParseException
+    {
+        SqlParser parser = new SqlParser(sql);
+        SqlNode sqlNode = null;
+        return parser.parseQuery();
     }
 
     /**
