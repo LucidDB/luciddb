@@ -2041,9 +2041,15 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             return;
         }
         final SqlValidatorScope havingScope = getSelectScope(select);
+        SqlValidatorScope inferScope = havingScope;
+        if (havingScope instanceof AggregatingScope) {
+            AggregatingScope aggScope = (AggregatingScope) havingScope;
+            aggScope.checkAggregateExpr(having);
+            inferScope = aggScope.getScopeAboveAggregation();
+        }
         inferUnknownTypes(
             booleanType,
-            havingScope,
+            inferScope,
             having);
         having.validate(this, havingScope);
         final RelDataType type = deriveType(havingScope, having);
