@@ -48,8 +48,9 @@ public class SqlSimpleParser
     
     // patterns are made static, to amortize cost of compiling regexps
     static Pattern psq = Pattern.compile(subqueryRegex);
-    static Pattern pparen = Pattern.compile("\\([^()]*\\)");
-    static Pattern pparensq = Pattern.compile("\\([^()]*"+subqueryRegex+"$\\)");
+    static Pattern pparen = Pattern.compile("\\([^()]*(SELECT)+[^()]*\\)",
+        Pattern.CASE_INSENSITIVE);
+    static Pattern pparensq = Pattern.compile("\\([^()]*(SELECT)+[^()]*"+subqueryRegex+"$\\)", Pattern.CASE_INSENSITIVE);
     final LinkedHashSet keywords;
 
     //~ Constructors ----------------------------------------------------------
@@ -206,12 +207,22 @@ public class SqlSimpleParser
         if (msq.find()) {
             found = true;
             String matched = msq.group();
+            // remove the enclosing parentheses 
+            matched = matched.substring(1, matched.length()-1);
             stack.push(matched);
+            if (matched.indexOf(hintToken) >=0 ) {
+                return;
+            }
             remained = msq.replaceFirst(subqueryRegex);
         } else if (m.find()) {
             found = true;
             String matched = m.group();
+            // remove the enclosing parentheses 
+            matched = matched.substring(1, matched.length()-1);
             stack.push(matched);
+            if (matched.indexOf(hintToken) >=0 ) {
+                return;
+            }
             remained = m.replaceFirst(subqueryRegex);
         }
         if (!found) {
@@ -339,8 +350,9 @@ public class SqlSimpleParser
         st.ordinaryChars(123, 127);
         // we use $ for our specialized token => hence considered word character
         st.wordChars(36, 36);
-        // , . * = are considered word characters for a SQL statement
-        st.wordChars(42, 42);
+        // " ' ( ) , . * = are considered word characters for a SQL statement
+        st.wordChars(34, 34);
+        st.wordChars(39, 42);
         st.wordChars(44, 44);
         st.wordChars(46, 46);
         st.wordChars(61, 61);
@@ -354,6 +366,8 @@ public class SqlSimpleParser
             return new SqlKwSelect(entries);
         } else if (keyword.equals("from")) {
             return new SqlKwFrom(entries);
+        } else if (keyword.equals("where")) {
+            return new SqlKwWhere(entries);
         } else if (keyword.equals("group") || keyword.equals("order")) {
             return new SqlKwGroupOrder(entries);
         } else {
@@ -499,8 +513,31 @@ public class SqlSimpleParser
                 // actual Sql Identifier
                 return null;
             } else {
-                return super.validate();
+                Iterator i = entries.iterator();
+                while (i.hasNext()) {
+                    if (((String)i.next()).indexOf(hintToken) >= 0) {
+                        return super.validate();
+                    }
+                }
+                return null;
             }
+        }
+    }
+    
+    class SqlKwWhere extends SqlKwList {
+        
+        SqlKwWhere(List entries) {
+            super(entries);
+        }
+
+        List validate() {
+            Iterator i = entries.iterator();
+            while (i.hasNext()) {
+                if (((String)i.next()).indexOf(hintToken) >= 0) {
+                    return super.validate();
+                }
+            }
+            return null;
         }
     }
 }
