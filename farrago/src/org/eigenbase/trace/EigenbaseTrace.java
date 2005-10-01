@@ -125,7 +125,7 @@ public abstract class EigenbaseTrace
     }
 
     /**
-     * The "ord.eigenbase.util.property.Property" tracer reports errors
+     * The "org.eigenbase.util.property.Property" tracer reports errors
      * related to all manner of properties.
      */
     public static Logger getPropertyTracer()
@@ -133,18 +133,25 @@ public abstract class EigenbaseTrace
         return Logger.getLogger(Property.class.getName());
     }
 
-    /** The tracer "org.eigenbase.runtime.CompoundIterator" traces {@link CompoundIterator}.
-     * FINE shows the transition to the next child Iterator.
-     * FINER shows every element.
+    /**
+     * The "org.eigenbase.runtime.CompoundIterator" tracer traces
+     * {@link CompoundIterator}:<ul>
+     * <li>{@link Level#FINE} shows the transition to the next child Iterator.
+     * <li>{@link Level#FINER} shows every element.
+     * </ul>
      */
     public static Logger getCompoundIteratorTracer()
     {
         return Logger.getLogger(CompoundIterator.class.getName());
     }
 
-    /** The tracer "org.eigenbase.runtime.CompoundParallelIterator" traces {@link CompoundParallelIterator}.
-     * FINE shows synchronization among the consumer and the source Iterators.
-     * FINER shows every element.
+    /**
+     * The "org.eigenbase.runtime.CompoundParallelIterator" tracer
+     * traces {@link CompoundParallelIterator}.<ul>
+     * <li>{@link Level#FINE} shows synchronization among the consumer and the
+     *     source Iterators.
+     * <li>{@link Level#FINER} shows every element.
+     * </ul>
      */
     public static Logger getCompoundParallelIteratorTracer()
     {
