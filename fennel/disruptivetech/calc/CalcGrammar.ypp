@@ -1,3 +1,23 @@
+/*
+// $Id: //open/dt/dev/fennel/disruptivetech/calc/BoolInstruction.cpp#3 $
+// Fennel is a library of data storage and processing components.
+// Copyright (C) 2004-2005 Disruptive Tech
+// Copyright (C) 2005-2005 The Eigenbase Project
+//
+// This program is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation; either version 2 of the License, or (at your option)
+// any later version approved by The Eigenbase Project.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
 %name-prefix="CalcYY"  /* Give our parser a prefix so it doesn't collide with other parsers */
 %defines               /* Write header file of tokens */
 %locations             /* Do location tracking for better error messages */
@@ -11,7 +31,7 @@
 #include "fennel/disruptivetech/calc/InstructionCommon.h"
 #include "fennel/disruptivetech/calc/CalcAssembler.h"
 
-FENNEL_BEGIN_CPPFILE("$Id$")
+FENNEL_BEGIN_CPPFILE("$Id: $");
 
 /* Define parameters for yyparse and yylex so we can pass them as
    arguments and create a re-entrant parser/lexer */
@@ -223,4 +243,6 @@ void CalcYYerror(char *s)
     throw CalcAssemblerException(s);
 }
 
-FENNEL_END_CPPFILE("$Id$")
+FENNEL_END_CPPFILE("$Id: $");
+
+// End CalcGrammar.ypp
