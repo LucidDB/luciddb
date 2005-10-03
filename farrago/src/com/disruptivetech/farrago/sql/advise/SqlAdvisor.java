@@ -29,9 +29,12 @@ import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.util.EigenbaseContextException;
+import net.sf.farrago.parser.impl.FarragoParserImpl;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.ArrayList;
+import java.io.StringReader;
 
 /**
  * An assistant which offers hints and corrections to a partially-formed SQL
@@ -242,6 +245,12 @@ public class SqlAdvisor
     {
         SqlSimpleParser parser = new SqlSimpleParser(hintToken);
         return parser.simplifySql(sql, cursor);
+    }
+
+    public Collection getReservedAndKeyWords()
+    {   
+        SqlParser parser = new SqlParser(new StringReader(""));
+        return parser.getParserImpl().getSql92ReservedWords();
     }
 
     /**
