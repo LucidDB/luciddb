@@ -279,6 +279,18 @@ require version '${required.ant.version}'."/>
 
   <target name="compile" 
     depends="generateResources,sqlParser,ddlParser,lurqlParser">
+    <farrago.javaCompileClient
+      srcdir="${farrago.src.dir}"
+      destdir="${farrago.classes.dir}"
+      classpathref="farrago.build.classpath">
+      <include name="org/eigenbase/util14/**/*.java" />
+      <include name="org/eigenbase/util/property/**/*.java" />
+      <include name="net/sf/farrago/fennel/tuple/**/*.java" />
+      <include name="net/sf/farrago/release/**/*.java" />
+      <include name="net/sf/farrago/jdbc/*.java" />
+      <include name="net/sf/farrago/jdbc/client/**/*.java" />
+      <include name="net/sf/farrago/jdbc/rmi/**/*.java" />
+    </farrago.javaCompileClient>
     <farrago.javaCompile
       deprecation="off"
       srcdir="${farrago.src.dir}"
@@ -286,22 +298,28 @@ require version '${required.ant.version}'."/>
       classpathref="farrago.build.classpath">
       <include name="**/*.java" />
       <exclude name="**/namespace/jdbc/**/*.java" />
-      <exclude name="**/org/eigenbase/inventory/**/*.java" />
+      <exclude name="org/eigenbase/inventory/**/*.java" />
       <exclude name="**/Jdk15Test.java" if="farrago.javasrc.14" />
     </farrago.javaCompile>
   </target>
 
   <!-- compile only packages needed by Saffron -->
   <target name="compile.saffron.deps" depends="generateResources,sqlParser">
+    <farrago.javaCompileClient
+      srcdir="${farrago.src.dir}"
+      destdir="${farrago.classes.dir}"
+      classpathref="farrago.build.classpath">
+      <include name="org/eigenbase/util14/**/*.java" />
+      <include name="org/eigenbase/util/property/**/*.java" />
+    </farrago.javaCompileClient>
     <farrago.javaCompile
       deprecation="off"
       srcdir="${farrago.src.dir}"
       destdir="${farrago.classes.dir}"
       classpathref="farrago.build.classpath">
-      <include name="openjava/**/*.java" />
       <include name="org/eigenbase/**/*.java" />
       <include name="com/disruptivetech/farrago/volcano/**/*.java" />
-      <exclude name="**/org/eigenbase/inventory/**/*.java" />
+      <exclude name="org/eigenbase/inventory/**/*.java" />
     </farrago.javaCompile>
   </target>
 
@@ -1032,7 +1050,6 @@ require version '${required.ant.version}'."/>
       classpathref="farrago.run.classpath" history="FILE" force="true">
       <fileset dir="${farrago.src.dir}">
         <include name="**/*.java"/>
-        <exclude name="openjava/**/*.java"/>
       </fileset>
     </jalopy>
   </target>

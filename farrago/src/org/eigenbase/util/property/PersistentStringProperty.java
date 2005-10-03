@@ -23,8 +23,6 @@
 
 package org.eigenbase.util.property;
 
-import org.eigenbase.trace.EigenbaseTrace;
-
 import java.util.Properties;
 import java.util.logging.Logger;
 import java.io.IOException;
@@ -40,7 +38,12 @@ import java.io.IOException;
 public class PersistentStringProperty extends StringProperty
 {
     //~ Static fields/initializers --------------------------------------------
+    // NOTE jvs 2-Oct-2005:  have to avoid dragging in dependencies.
+    /*
     private static final Logger tracer = EigenbaseTrace.getPropertyTracer();
+    */
+    private static final Logger tracer =
+        Logger.getLogger(Property.class.getName());
 
     //~ Fields ----------------------------------------------------------------
 

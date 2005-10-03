@@ -23,7 +23,7 @@
 
 package net.sf.farrago.fennel.tuple;
 
-import org.eigenbase.util.EnumeratedValues;
+import org.eigenbase.util14.*;
 
 import java.io.Serializable;
 
@@ -38,7 +38,7 @@ import java.io.Serializable;
  * @version $Id$
  */
 public abstract class FennelStandardTypeDescriptor
-    extends EnumeratedValues.BasicValue
+    extends Enum14.BasicValue
     implements FennelStoredTypeDescriptor
 {
     public static final int MIN_ORDINAL = 1;
@@ -152,8 +152,8 @@ public abstract class FennelStandardTypeDescriptor
         VARBINARY,
     };
 
-    public static final EnumeratedValues enumeration =
-        new EnumeratedValues(values);
+    public static final Enum14 enumeration =
+        new Enum14(values);
 
     private FennelStandardTypeDescriptor(String name, int ordinal)
     {

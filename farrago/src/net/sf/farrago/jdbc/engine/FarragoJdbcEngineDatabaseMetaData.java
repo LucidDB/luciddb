@@ -25,6 +25,7 @@ package net.sf.farrago.jdbc.engine;
 import java.sql.*;
 import java.util.*;
 
+import net.sf.farrago.release.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.session.*;

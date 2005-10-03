@@ -22,7 +22,7 @@
 */
 package net.sf.farrago.jdbc;
 
-import net.sf.farrago.util.*;
+import net.sf.farrago.release.*;
 
 import java.sql.*;
 import java.util.*;

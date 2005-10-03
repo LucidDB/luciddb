@@ -364,6 +364,12 @@
     <javac debug="on" deprecation="on" source="${farrago.javasrc.version}"/>
   </presetdef>
 
+  <!-- Customization for javac task for compiling client-side code -->
+  <!-- NOTE jvs 2-Oct-2005:  We keep all client-side code 1.4-compatible -->
+  <presetdef name="farrago.javaCompileClient">
+    <javac debug="on" deprecation="on" source="1.4"/>
+  </presetdef>
+
   <!-- Customization for java task -->
   <presetdef name="farrago.javaExec">
     <java fork="yes" failonerror="true">
