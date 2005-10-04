@@ -29,11 +29,12 @@ import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.util.EigenbaseContextException;
-import net.sf.farrago.parser.impl.FarragoParserImpl;
+import org.eigenbase.sql.parser.SqlAbstractParserImpl;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.io.StringReader;
 
 /**
@@ -247,10 +248,33 @@ public class SqlAdvisor
         return parser.simplifySql(sql, cursor);
     }
 
-    public Collection getReservedAndKeyWords()
+    /**
+     * Return an array of SQL reserved and keywords 
+     *
+     * @return an of SQL reserved and keywords
+     *
+     */
+    public String [] getReservedAndKeyWords()
     {   
+        Collection c = getParserImpl().getSql92ReservedWords();
+        List l = Arrays.asList(
+            getParserImpl().getMetadata().getJdbcKeywords().split(","));
+        ArrayList al = new ArrayList();
+        al.addAll(c);
+        al.addAll(l);
+        return (String[]) al.toArray(new String[0]);
+    }
+
+    /**
+     * Return the underlying Parser implementation class
+     *
+     * @return a {@link SqlAbstractParserImpl} instance
+     *
+     */
+    protected SqlAbstractParserImpl getParserImpl()
+    {
         SqlParser parser = new SqlParser(new StringReader(""));
-        return parser.getParserImpl().getSql92ReservedWords();
+        return parser.getParserImpl();
     }
 
     /**
