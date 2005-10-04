@@ -32,6 +32,24 @@
 FENNEL_BEGIN_NAMESPACE
 
 /**
+ * Column generator.
+ *
+ * Interface for any class which generates an infinite sequence of values.
+ *
+ * @author Julian Hyde
+ */
+template <class T>
+class ColumnGenerator
+{
+public:
+    virtual T next() = 0;
+};
+
+typedef ColumnGenerator<int64_t> Int64ColumnGenerator;
+
+typedef boost::shared_ptr<Int64ColumnGenerator> SharedInt64ColumnGenerator;
+
+/**
  * MockProducerExecStreamGenerator defines an interface for generating
  * a data stream.
  */
@@ -49,6 +67,9 @@ public:
     virtual int64_t generateValue(uint iRow, uint iCol) = 0;
 };
 
+typedef boost::shared_ptr<MockProducerExecStreamGenerator>
+    SharedMockProducerExecStreamGenerator;
+    
 typedef boost::shared_ptr<MockProducerExecStreamGenerator>
     SharedMockProducerExecStreamGenerator;
     
@@ -81,8 +102,16 @@ struct MockProducerExecStreamParams : public SingleOutputExecStreamParams
      */
     std::ostream* echoTuples;
 
-    MockProducerExecStreamParams() :nRows(0), saveTuples(false), echoTuples(0) {}
+    /**
+     * Generator which determines batch size. If the generator returns a
+     * non-zero value, a new batch is started. If the generator is NULL, the
+     * effect is the same as a generator which always returns zero: batches are
+     * created as large as possible.
+     */
+    SharedInt64ColumnGenerator pBatchGenerator;
 
+    MockProducerExecStreamParams()
+        : nRows(0), saveTuples(false), echoTuples(0) {}
 };
 
 /**
@@ -98,6 +127,7 @@ class MockProducerExecStream : public SingleOutputExecStream
     uint64_t nRowsProduced;
     TupleData outputData;
     SharedMockProducerExecStreamGenerator pGenerator;
+    SharedInt64ColumnGenerator pBatchGenerator;
     bool saveTuples;
     std::ostream* echoTuples;
     std::vector<std::string> savedTuples;
