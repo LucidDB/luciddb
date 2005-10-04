@@ -551,7 +551,6 @@ require version '${required.ant.version}'."/>
       <classpath refid="farrago.sqlline.classpath"/>
       <jvmarg line="${assertions.jvmarg}"/>
       <jvmarg line="&FarragoProps;"/>
-      <sysproperty key="java.ext.dirs" value="${sqlline.dir}"/>
       <sysproperty key="net.sf.farrago.fileset.unitsql"
         value="${filelist.initsql}"/>
       <formatter type="plain"/>
@@ -904,7 +903,6 @@ require version '${required.ant.version}'."/>
       <jvmargs>
         <arg value="-Dnet.sf.farrago.fileset.unitsql=${fileset.unitsql}"/>
         <arg value="-Dcom.lucidera.fileset.unitlurql=${fileset.unitlurql}"/>
-        <arg value="-Djava.ext.dirs=${sqlline.dir}"/>
         <arg line="&FarragoProps;"/>
       </jvmargs>
       <programargs>
@@ -1115,7 +1113,6 @@ require version '${required.ant.version}'."/>
       sourcepath="${farrago.sourcepath}"
       classname="sqlline.SqlLine">
       <jvmargs>
-        <arg value="-Djava.ext.dirs=${sqlline.dir}"/>
         <arg line="&FarragoProps;"/>
       </jvmargs>
       <programargs>
