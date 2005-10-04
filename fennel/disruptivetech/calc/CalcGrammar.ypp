@@ -1,5 +1,5 @@
 /*
-// $Id: //open/dt/dev/fennel/disruptivetech/calc/BoolInstruction.cpp#3 $
+// $Id$
 // Fennel is a library of data storage and processing components.
 // Copyright (C) 2004-2005 Disruptive Tech
 // Copyright (C) 2005-2005 The Eigenbase Project
@@ -31,7 +31,7 @@
 #include "fennel/disruptivetech/calc/InstructionCommon.h"
 #include "fennel/disruptivetech/calc/CalcAssembler.h"
 
-FENNEL_BEGIN_CPPFILE("$Id: $");
+FENNEL_BEGIN_CPPFILE("$Id$");
 
 /* Define parameters for yyparse and yylex so we can pass them as
    arguments and create a re-entrant parser/lexer */
@@ -243,6 +243,6 @@ void CalcYYerror(char *s)
     throw CalcAssemblerException(s);
 }
 
-FENNEL_END_CPPFILE("$Id: $");
+FENNEL_END_CPPFILE("$Id$");
 
 // End CalcGrammar.ypp
