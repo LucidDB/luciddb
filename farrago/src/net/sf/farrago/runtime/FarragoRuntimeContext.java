@@ -263,22 +263,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
      */
     public String getContextVariable_CURRENT_PATH()
     {
-        // The SQL standard is very precise about the formatting
-        SqlDialect dialect = new SqlDialect(session.getDatabaseMetaData());
-        SqlPrettyWriter writer = new SqlPrettyWriter(dialect);
-        StringBuffer buf = new StringBuffer();
-        int k = 0;
-        Iterator iter = sessionVariables.schemaSearchPath.iterator();
-        while (iter.hasNext()) {
-            if (k++ > 0) {
-                buf.append(",");
-            }
-            SqlIdentifier id = (SqlIdentifier) iter.next();
-            id.unparse(writer, 0, 0);
-            buf.append(writer.toString());
-            writer.reset();
-        }
-        return buf.toString();
+        return sessionVariables.getFormattedSchemaSearchPath(session.getDatabaseMetaData());
     }
 
     protected long getCurrentTime()

@@ -31,27 +31,35 @@ import org.eigenbase.trace.EigenbaseTrace;
 
 /**
  * <code>CompoundParallelIterator</code> creates one iterator out of several.
- * Unlike its serial counterpart {@link CompoundIterator}, it runs all its inputs in
- * parallel, in separate threads that it spawns. It outputs the next element available
- * from any of its inputs. Note that the order of output rows is indeterminate, since it is
- * unpredictable which input will arrive next.
- *<p>
- * The compound iterator is finished when all of its inputs are finished. The set of
- * input iterators is fixed at construction.
+ * Unlike its serial counterpart {@link CompoundIterator}, it runs all its
+ * inputs in parallel, in separate threads that it spawns. It outputs the next
+ * element available from any of its inputs. Note that the order of output rows
+ * is indeterminate, since it is unpredictable which input will arrive next.
+ *
  * <p>
- * This variant is needed when an input is infinite, since CompoundIterator would hang.
- * Extending this class to preserve order is problematic, given its low level:<ul>
- * <li>items Are now synthetic <code>Object</code>s.</li>
- * <li>Items would have to become things that expose a <code>Comparable</code> <i>key</i> value.</li>
- * <li>Even if one input lags behind the other provding a <code>next()</code> value, that missing
- *     value might sort before its available counterparts from the other inputs.
+ * The compound iterator is finished when all of its inputs are finished. The
+ * set of input iterators is fixed at construction.
+ *
+ * <p>
+ * This variant is needed when an input is infinite, since CompoundIterator
+ * would hang. Extending this class to preserve order is problematic, given its
+ * low level:<ul>
+ * <li>items Are now synthetic {@link Object}s.</li>
+ * <li>Items would have to become things that expose a {@link Comparable}
+ *     <i>key</i> value.</li>
+ * <li>Even if one input lags behind the other provding a {@link #next()}
+ *     value, that missing value might sort before its available counterparts
+ *      from the other inputs.
  *     There is no basis to decide to wait for it or not.</li>
  *</ul>
  *
+ * @author Marc Berkowitz
+ * @version $Id$
  */
 public class CompoundParallelIterator implements Iterator
 {
-    private static final Logger tracer = EigenbaseTrace.getCompoundParallelIteratorTracer();
+    private static final Logger tracer =
+        EigenbaseTrace.getCompoundParallelIteratorTracer();
 
     //~ Instance fields -------------------------------------------------------
     final private Iterator [] in;
@@ -188,3 +196,4 @@ public class CompoundParallelIterator implements Iterator
     }
 } 
 
+// End CompoundParallelIterator.java

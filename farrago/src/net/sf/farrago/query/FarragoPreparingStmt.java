@@ -374,7 +374,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         }
     }
 
-    void prepareForCompilation()
+    protected void prepareForCompilation()
     {
         // REVIEW jvs 20-Jan-2005: The idea here is to gather up all jars
         // referenced by external user-defined routines and provide them to the
@@ -419,7 +419,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         packageDir.mkdir();
     }
 
-    private FarragoSessionExecutableStmt implement(
+    protected FarragoSessionExecutableStmt implement(
         PreparedResult preparedResult)
     {
         FarragoSessionExecutableStmt executableStmt;
@@ -608,7 +608,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         return rootRel;
     }
 
-    private RelDataType getParamRowType()
+    protected RelDataType getParamRowType()
     {
         return getFarragoTypeFactory().createStructType(
             new RelDataTypeFactory.FieldInfo() {

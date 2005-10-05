@@ -1695,6 +1695,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "Expression '\\*' is not being grouped");
         // agg in select and having, no group by
         check("select sum(sal + sal) from emp having sum(sal) > 10");
+        checkFails("SELECT deptno FROM emp GROUP BY deptno HAVING ^sal^ > 10",
+            "Expression 'SAL' is not being grouped");
     }
 
     public void testOrder() {
@@ -2079,6 +2081,28 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         check("select count(distinct sal) from emp");
         checkFails("select COALESCE(^distinct^ sal) from emp",
             "DISTINCT/ALL not allowed with COALESCE function");
+    }
+
+    public void testSelectDistinct()
+    {
+        check("SELECT DISTINCT deptno FROM emp");
+        check("SELECT DISTINCT deptno, sal FROM emp");
+        check("SELECT DISTINCT deptno FROM emp GROUP BY deptno");
+        checkFails("SELECT DISTINCT ^deptno^ FROM emp GROUP BY sal",
+            "Expression 'DEPTNO' is not being grouped");
+        check("SELECT DISTINCT avg(sal) from emp");
+        checkFails("SELECT DISTINCT ^deptno^, avg(sal) from emp",
+            "Expression 'DEPTNO' is not being grouped");
+        check ("SELECT DISTINCT deptno, sal from emp GROUP BY sal, deptno");
+        check("SELECT deptno FROM emp GROUP BY deptno HAVING deptno > 55");
+        check("SELECT DISTINCT deptno, 33 FROM emp GROUP BY deptno HAVING deptno > 55");
+        checkFails("SELECT DISTINCT deptno, 33 FROM emp HAVING ^deptno^ > 55",
+            "Expression 'DEPTNO' is not being grouped");
+        check("SELECT DISTINCT * from emp");
+        checkFails("SELECT DISTINCT ^*^ from emp GROUP BY deptno",
+            "Expression '\\*' is not being grouped");
+        check("SELECT DISTINCT 5, 10+5, 'string' from emp");
+
     }
 
     public void testNew()

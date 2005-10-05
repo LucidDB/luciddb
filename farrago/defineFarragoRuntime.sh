@@ -9,4 +9,4 @@ SERVER_JAVA_ARGS="-ea -esa -cp `cat classpath.gen` \
 # TODO:  trim this
 CLIENT_JAVA_ARGS=${SERVER_JAVA_ARGS}
 
-SQLLINE_JAVA_ARGS="-Djava.ext.dirs=../thirdparty/sqlline sqlline.SqlLine"
+SQLLINE_JAVA_ARGS="sqlline.SqlLine"

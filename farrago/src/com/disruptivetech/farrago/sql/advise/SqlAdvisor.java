@@ -29,9 +29,13 @@ import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.util.EigenbaseContextException;
+import org.eigenbase.sql.parser.SqlAbstractParserImpl;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.io.StringReader;
 
 /**
  * An assistant which offers hints and corrections to a partially-formed SQL
@@ -108,8 +112,7 @@ public class SqlAdvisor
     public SqlMoniker[] getCompletionHints(String sql, SqlParserPos pos)
         throws SqlParseException
     {
-        SqlParser parser = new SqlParser(sql);
-        SqlNode sqlNode = parser.parseQuery();
+        SqlNode sqlNode = parseQuery(sql);
         try {
             validator.validate(sqlNode);
         } catch (Exception e) {
@@ -138,16 +141,21 @@ public class SqlAdvisor
      */
     public SqlMoniker getQualifiedName(String sql, int cursor)
     {
-        SqlParser parser = new SqlParser(sql);
-        SqlNode sqlNode;
+        SqlNode sqlNode = null;
         try {
-            sqlNode = parser.parseQuery();
+            sqlNode = parseQuery(sql);
             validator.validate(sqlNode);
         } catch (Exception e) {
             return null;
         }
         SqlParserPos pos = new SqlParserPos(1, cursor+1);
-        return validator.lookupQualifiedName(sqlNode, pos);
+        try {
+            return validator.lookupQualifiedName(sqlNode, pos);
+        } catch (EigenbaseContextException e) {
+            return null;
+        } catch (java.lang.AssertionError e) {
+            return null;
+        }
     }
 
     /**
@@ -160,10 +168,9 @@ public class SqlAdvisor
     {
         SqlSimpleParser simpleParser = new SqlSimpleParser(hintToken);
         String simpleSql = simpleParser.simplifySql(sql);
-        SqlParser parser = new SqlParser(simpleSql);
         SqlNode sqlNode = null;
         try {
-            sqlNode = parser.parseQuery();
+            sqlNode = parseQuery(simpleSql);
         } catch (Exception e) {
             // if the sql can't be parsed we wont' be able to validate it
             return false;
@@ -187,21 +194,11 @@ public class SqlAdvisor
      */
     public List validate(String sql)
     {
-        SqlParser parser = new SqlParser(sql);
         SqlNode sqlNode = null;
-        try {
-            sqlNode = parser.parseQuery();
-        } catch (SqlParseException e) {
-            // parser error does not contain a range info yet.  we set
-            // the error to entire line for now
-            ValidateErrorInfo errInfo =
-                new ValidateErrorInfo(
-                    e.getPos(),
-                    e.getMessage());
-
-            // parser only returns 1 exception now
-            ArrayList errorList = new ArrayList();
-            errorList.add(errInfo);
+        ArrayList errorList = new ArrayList();
+        
+        sqlNode = collectParserError(sql, errorList);
+        if (!errorList.isEmpty()) {
             return errorList;
         }
         try {
@@ -211,7 +208,6 @@ public class SqlAdvisor
                 new ValidateErrorInfo(e);
 
             // validator only returns 1 exception now
-            ArrayList errorList = new ArrayList();
             errorList.add(errInfo);
             return errorList;
         } catch (Exception e) {
@@ -224,7 +220,6 @@ public class SqlAdvisor
                     e.getMessage());
 
             // parser only returns 1 exception now
-            ArrayList errorList = new ArrayList();
             errorList.add(errInfo);
             return errorList;
         }
@@ -246,6 +241,76 @@ public class SqlAdvisor
     {
         SqlSimpleParser parser = new SqlSimpleParser(hintToken);
         return parser.simplifySql(sql, cursor);
+    }
+
+    /**
+     * Return an array of SQL reserved and keywords 
+     *
+     * @return an of SQL reserved and keywords
+     *
+     */
+    public String [] getReservedAndKeyWords()
+    {   
+        Collection c = getParserImpl().getSql92ReservedWords();
+        List l = Arrays.asList(
+            getParserImpl().getMetadata().getJdbcKeywords().split(","));
+        ArrayList al = new ArrayList();
+        al.addAll(c);
+        al.addAll(l);
+        return (String[]) al.toArray(new String[0]);
+    }
+
+    /**
+     * Return the underlying Parser implementation class
+     *
+     * @return a {@link SqlAbstractParserImpl} instance
+     *
+     */
+    protected SqlAbstractParserImpl getParserImpl()
+    {
+        SqlParser parser = new SqlParser(new StringReader(""));
+        return parser.getParserImpl();
+    }
+
+    /**
+     * Wrapper function to parse a SQL statement, throwing a 
+     * {@link SqlParseException} if the statement is not syntactically valid
+     */
+    protected SqlNode parseQuery(String sql) throws SqlParseException
+    {
+        SqlParser parser = new SqlParser(sql);
+        SqlNode sqlNode = null;
+        return parser.parseQuery();
+    }
+
+    /**
+     * Attempts to parse a SQL statement and adds to the errorList 
+     * if any syntax error is found.
+     * This implementation uses {@link SqlParser}.
+     * Subclass can re-implement this with a different parser implementation
+     *
+     * @param sql A user-input sql statement to be parsed 
+     * @param errorList A {@link List} of error to be added to
+     *
+     * @return {@link SqlNode } that is root of the parse tree, null if 
+     * the sql is not valid
+     */
+    protected SqlNode collectParserError(String sql, List errorList)
+    {
+        SqlNode sqlNode = null;
+        try {
+            sqlNode = parseQuery(sql);
+        } catch (SqlParseException e) {
+            ValidateErrorInfo errInfo =
+                new ValidateErrorInfo(
+                    e.getPos(),
+                    e.getMessage());
+
+            // parser only returns 1 exception now
+            errorList.add(errInfo);
+            return null;
+        }
+        return sqlNode;
     }
 
     /**
@@ -271,7 +336,7 @@ public class SqlAdvisor
             return -1;
         }
     }
-
+    
     /**
      *  An inner class that represents error message text and position info
      *  of a validator or parser exception
@@ -303,7 +368,7 @@ public class SqlAdvisor
         }
 
         /**
-        *  Creates a new ValidateErrorInfo with an EigenbaseException
+        *  Creates a new ValidateErrorInfo with an EigenbaseContextException
         */
         public ValidateErrorInfo(
             EigenbaseContextException e)

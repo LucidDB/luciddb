@@ -372,7 +372,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         return sessionVariables;
     }
 
-    void endTransactionIfAuto(boolean commit)
+    protected void endTransactionIfAuto(boolean commit)
     {
         if (isAutoCommit) {
             if (commit) {
@@ -657,7 +657,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         }
     }
 
-    FarragoSessionExecutableStmt prepare(
+    protected FarragoSessionExecutableStmt prepare(
         String sql,
         FarragoAllocationOwner owner,
         boolean isExecDirect,

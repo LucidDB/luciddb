@@ -384,8 +384,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
 
         // join
         sql = "select a.empno, b.deptno from dummy a join ^on where empno=1";
-        expected="select a.empno , b.deptno from dummy a join _suggest_ "
-            + "where empno=1";
+        expected="select a.empno , b.deptno from dummy a join _suggest_";
         assertSimplify(sql, expected);
 
         // on
@@ -404,12 +403,12 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
 
         // order by
         sql = "select emp.empno from sales.emp where empno=1 order by ^";
-        expected = "select emp.empno from sales.emp where empno=1 order by _suggest_";
+        expected = "select emp.empno from sales.emp order by _suggest_";
         assertSimplify(sql, expected);
 
         // subquery
         sql = "select t.^ from (select 1 as x, 2 as y from sales.emp) as t where t.dummy=1";
-        expected = "select t._suggest_ from (select 1 as x , 2 as y from sales.emp) as t where t.dummy=1";
+        expected = "select t._suggest_ from (select 1 as x , 2 as y from sales.emp) as t";
         assertSimplify(sql, expected);
 
         sql = "select t. from (select 1 as x, 2 as y from (select x from sales.emp)) as t where ^";
@@ -417,10 +416,10 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         assertSimplify(sql, expected);
 
         sql = "select ^from (select 1 as x, 2 as y from sales.emp), (select 2 as y from (select m from n where)) as t where t.dummy=1";
-        expected = "select _suggest_ from (select 1 as x , 2 as y from sales.emp) , (select 2 as y from (select m from n)) as t where t.dummy=1";
+        expected = "select _suggest_ from (select 1 as x , 2 as y from sales.emp) , (select 2 as y from (select m from n)) as t";
         assertSimplify(sql, expected);
 
-        sql = "select t.x from (select 1 as x, 2 as y from sales.^";
+        sql = "select t.x from ( select 1 as x, 2 as y from sales.^";
         expected = "select 1 as x , 2 as y from sales._suggest_";
         assertSimplify(sql, expected);
 

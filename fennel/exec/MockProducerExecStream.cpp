@@ -44,6 +44,7 @@ void MockProducerExecStream::prepare(MockProducerExecStreamParams const &params)
 {
     SingleOutputExecStream::prepare(params);
     pGenerator = params.pGenerator;
+    pBatchGenerator = params.pBatchGenerator;
     for (uint i = 0; i < params.outputTupleDesc.size(); i++) {
         assert(!params.outputTupleDesc[i].isNullable);
         StandardTypeDescriptorOrdinal ordinal =
@@ -86,7 +87,14 @@ ExecStreamResult MockProducerExecStream::execute(
             if (pOutAccessor->getProductionAvailable() < cbTuple) {
                 return EXECRC_BUF_OVERFLOW;
             }
-            
+
+            if (pBatchGenerator) {
+                int64_t newBatch = pBatchGenerator->next();
+                if (newBatch == 0) {
+                    return EXECRC_QUANTUM_EXPIRED;
+                }
+            }
+
             for (int col=0;col<outputData.size();++col) {
                 values.get()[col] = pGenerator->generateValue(nRowsProduced, col);
             }

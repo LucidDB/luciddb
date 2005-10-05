@@ -155,9 +155,17 @@
   <property name="eigenbase.resource.dir"
     location="${farrago.src.dir}/org/eigenbase/resource"/>
 
+  <!-- directory in which Eigenbase resource properties are stored -->
+  <property name="eigenbase.resource.properties.dir"
+    location="${farrago.classes.dir}/org/eigenbase/resource"/>
+
   <!-- directory in which Farrago resources are stored -->
   <property name="farrago.resource.dir"
     location="${farrago.src.dir}/net/sf/farrago/resource"/>
+
+  <!-- directory in which Farrago resource properties are stored -->
+  <property name="farrago.resource.properties.dir"
+    location="${farrago.classes.dir}/net/sf/farrago/resource"/>
 
   <!-- directory in which catalog data is backed up -->
   <property name="farrago.catalog.backup.dir" 

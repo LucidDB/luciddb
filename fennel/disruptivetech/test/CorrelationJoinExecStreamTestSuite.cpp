@@ -78,7 +78,8 @@ void CorrelationJoinExecStreamTestSuite::testCorrelationJoin()
         rightStreamEmbryo,
         joinStreamEmbryo);
 
-    StairCaseExecStremGenerator rampExpectedGenerator(1, paramsMockRight.nRows);
+    StairCaseExecStreamGenerator rampExpectedGenerator(
+        1, paramsMockRight.nRows);
     verifyOutput(*pOutputStream, 
                  paramsMockLeft.nRows * paramsMockRight.nRows, 
                  rampExpectedGenerator);
