@@ -631,4 +631,45 @@
     </sequential>
   </macrodef>
 
+  <!-- Macro for generating a test wrapper for .sql diff-based test scripts -->
+  <macrodef name="farrago.generateSqlTestWrapper">
+    <attribute name="filesetref" default="unspecified"/>
+    <attribute name="outputfile" default="unspecified"/>
+    <attribute name="rootpath" default="unspecified"/>
+    <attribute name="packagename" default="unspecified"/>
+    <attribute name="classname" default="unspecified"/>
+    <attribute name="basename" default="FarragoTestCase"/>
+    <sequential>
+      <property name="list.xml" location="${farrago.dir}/testgen/list.xml"/>
+      <delete file="${list.xml}"/>
+      <delete file="@{outputfile}"/>
+      <pathconvert property="filename.list" pathsep="," refid="@{filesetref}">
+        <map from="@{rootpath}" to=""/>
+      </pathconvert>
+      <echo file="${list.xml}" append="true"
+        message="&lt;fileset&gt;${line.separator}"/>
+      <ac:for param="filename" xmlns:ac="antlib:net.sf.antcontrib"
+        list="${filename.list}">
+        <sequential>
+          <echo file="${list.xml}" append="true"
+            message="&lt;file path='@{filename}'/&gt;${line.separator}"/>
+        </sequential>
+      </ac:for>
+      <echo file="${list.xml}" append="true"
+        message="&lt;/fileset&gt;${line.separator}"/>
+      <xslt style="${farrago.dir}/testgen/generateSqlTestWrapper.xsl"
+        in="${list.xml}"
+        out="@{outputfile}">
+        <param name="rootpath"
+          expression="@{rootpath}"/>
+        <param name="packagename"
+          expression="@{packagename}"/>
+        <param name="classname"
+          expression="@{classname}"/>
+        <param name="basename"
+          expression="@{basename}"/>
+      </xslt>
+    </sequential>
+  </macrodef>
+
 </project>

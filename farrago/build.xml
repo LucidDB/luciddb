@@ -129,6 +129,9 @@ require version '${required.ant.version}'."/>
   </fileset>
   <pathconvert property="fileset.unitsql" refid="fileset.unitsql"
     pathsep="${line.separator}" dirsep="${file.separator}" />
+  <property name="FarragoSqlTestWrapper.java" 
+    location=
+    "${farrago.src.dir}/net/sf/farrago/test/FarragoSqlTestWrapper.java"/>
 
   <!-- a fileset of all SQL regression tests -->
   <fileset dir="${regressionsql.dir}" id="fileset.regressionsql.std">
@@ -460,7 +463,7 @@ require version '${required.ant.version}'."/>
   </target>
 
   <target name="compileCatalog"
-    depends="cleanCatalog,createRepository"/>
+    depends="cleanCatalog,generateSqlTestWrapper,createRepository"/>
 
   <!-- initialize catalog repository -->
   <target name="createRepository" 
@@ -623,6 +626,7 @@ require version '${required.ant.version}'."/>
     <delete
       file="${farrago.src.dir}/net/sf/farrago/FarragoMetadataFactoryImpl.java"/>
     <delete dir="${farrago.catalog.src.dir}"/>
+    <delete file="${FarragoSqlTestWrapper.java}"/>
   </target>
 
   <!-- delete catalog data only -->
@@ -1377,4 +1381,15 @@ Create eigenbase-properties.jar, which is used by Mondrian.">
       <fileset dir="${farrago.dir}/eclipse/.settings"/>
     </copy>
   </target>
+
+  <target name="generateSqlTestWrapper"
+    description="Generate JUnit test wrappers for all unitsql scripts">
+    <farrago.generateSqlTestWrapper
+      filesetref="fileset.unitsql"
+      outputfile="${FarragoSqlTestWrapper.java}" 
+      rootpath="${farrago.dir}${file.separator}" 
+      packagename="net.sf.farrago.test"
+      classname="FarragoSqlTestWrapper"/>
+  </target>
+
 </project>
