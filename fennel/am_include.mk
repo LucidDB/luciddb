@@ -23,6 +23,6 @@ $(ICU_LD_FLAGS) \
 -Wl,-E \
 $(EXTRA_LDFLAGS)
 
-AM_ETAGSFLAGS = --c++ --members
+AM_ETAGSFLAGS = --c++ --declarations --members
 
 noinst_HEADERS=$(wildcard *.h)

@@ -1,0 +1,26 @@
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean oj_var1 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableBoolean();
+
+
+java.util.regex.Pattern oj_var2 = java.util.regex.Pattern.compile( "[S][\\p{Alpha}]n.*" );
+
+
+java.util.regex.Matcher oj_var3 = null;
+
+oj_var0.assignFrom( "[S][[:ALPHA:]]n%" );
+if (ID$4$CITY.isNull()) {
+    oj_var1.setNull( true );
+} else {
+    if (oj_var3 == null) {
+        oj_var3 = oj_var2.matcher( ID$4$CITY );
+    } else {
+        oj_var3.reset( ID$4$CITY );
+    }
+    oj_var1.setNull( false );
+    oj_var1.value = oj_var3.matches();
+}
+
+return oj_var1;

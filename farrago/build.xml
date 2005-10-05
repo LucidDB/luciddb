@@ -82,7 +82,10 @@
   <property name="required.ant.version" value="1.6.2"/>
 
   <condition property="is.correct.ant.version">
-    <contains string="${ant.version}" substring="${required.ant.version}"/>
+    <or>
+	<contains string="${ant.version}" substring="${required.ant.version}"/>
+	<contains string="${ant.version}" substring="1.6.5"/>
+    </or>
   </condition>
   <fail unless="is.correct.ant.version"
       message="Incorrect ant version '${ant.version}';
@@ -179,16 +182,23 @@ require version '${required.ant.version}'."/>
 
   <!-- Classpaths -->
 
-  <!-- classpath for main build (after catalog codegen) -->
-  <path id="farrago.build.classpath">
+  <!-- thirdparty classpath for main build (after catalog codegen) -->
+  <path id="farrago.build.3p.classpath">
     <pathelement path="${farrago.3p.classpath}"/>
-    <pathelement location="${farrago.catalog.src.dir}"/>
     <pathelement location="${sqlline.lib.dir}/sqlline.jar"/>
     <pathelement location="${sqlline.lib.dir}/jline.jar"/>
     <fileset dir="${jgrapht.dir}">
       <include name="jgrapht-jdk1.4.jar" if="farrago.javasrc.14"/>
       <include name="jgrapht-jdk1.5.jar" unless="farrago.javasrc.14"/>
     </fileset>
+  </path>
+  <property name="farrago.build.3p.classpath" 
+    refid="farrago.build.3p.classpath"/>
+
+  <!-- classpath for main build (after catalog codegen) -->
+  <path id="farrago.build.classpath">
+    <pathelement path="${farrago.build.3p.classpath}"/>
+    <pathelement location="${farrago.catalog.src.dir}"/>
   </path>
   <property name="farrago.build.classpath" refid="farrago.build.classpath"/>
 
@@ -276,6 +286,7 @@ require version '${required.ant.version}'."/>
       classpathref="farrago.build.classpath">
       <include name="**/*.java" />
       <exclude name="**/namespace/jdbc/**/*.java" />
+      <exclude name="**/org/eigenbase/inventory/**/*.java" />
       <exclude name="**/Jdk15Test.java" if="farrago.javasrc.14" />
     </farrago.javaCompile>
   </target>
@@ -290,6 +301,7 @@ require version '${required.ant.version}'."/>
       <include name="openjava/**/*.java" />
       <include name="org/eigenbase/**/*.java" />
       <include name="com/disruptivetech/farrago/volcano/**/*.java" />
+      <exclude name="**/org/eigenbase/inventory/**/*.java" />
     </farrago.javaCompile>
   </target>
 
@@ -1132,7 +1144,7 @@ require version '${required.ant.version}'."/>
         <arg line="&FarragoProps;"/>
       </jvmargs>
       <programargs>
-        <arg value="-u jdbc:farrago: -d net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver -n guest"/>
+        <arg value="-u jdbc:farrago: -d net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver -n sa"/>
       </programargs>
     </farrago.jswatDebug>
   </target>
@@ -1308,6 +1320,34 @@ require version '${required.ant.version}'."/>
     </mdr>
   </target>
 
+  <!-- End experimental stuff for the user repository -->
+
+  <!-- TODO 24-Sept-2005:  replace this with apt task from ant 1.7 -->
+  <target name="generateInventoryReport" depends="compile">
+    <pathconvert property="sources.gen"
+      pathsep="${line.separator}" dirsep="${file.separator}">
+      <path>
+        <fileset dir="${farrago.src.dir}">
+          <include name="**/*.java" />
+        </fileset>
+      </path>
+    </pathconvert>
+    <echo message="${sources.gen}" file="sources.gen"/>
+    <exec dir="${farrago.dir}" failonerror="true"
+      executable="${javahome.dir}/bin/apt">
+      <arg value="-s"/>
+      <arg value="${farrago.dir}/inventorys"/>
+      <arg value="-nocompile"/>
+      <arg value="-classpath"/>
+      <arg pathref="farrago.sqlline.classpath"/>
+      <arg value="-d"/>
+      <arg value="${farrago.dir}/inventoryd"/>
+      <arg value="-factory"/>
+      <arg value="org.eigenbase.inventory.EigenbaseInventoryGenerator"/>
+      <arg value="@sources.gen"/>
+    </exec>
+  </target>
+
   <target name="propertiesJar" depends="compile" description="
 Create eigenbase-properties.jar, which is used by Mondrian.">
     <jar jarfile="${open.dir}/thirdparty/eigenbase-properties.jar">
@@ -1317,4 +1357,20 @@ Create eigenbase-properties.jar, which is used by Mondrian.">
     </jar>
   </target>
 
+  <target name="createEclipseProject">
+    <pathconvert property="eclipse.libpath" refid="farrago.build.3p.classpath"
+      pathsep="&quot;/&gt;&lt;classpathentry kind=&quot;lib&quot; path=&quot;"/>
+    <copy file="${farrago.dir}/eclipse/farrago.project" overwrite="true"
+        tofile="${farrago.dir}/.project">
+    </copy>
+    <copy file="${farrago.dir}/eclipse/farrago.classpath" overwrite="true"
+        tofile="${farrago.dir}/.classpath">
+      <filterset>
+        <filter token="LIBPATH" value="${eclipse.libpath}"/>
+      </filterset>
+    </copy>
+    <copy todir="${farrago.dir}/.settings" overwrite="true">
+      <fileset dir="${farrago.dir}/eclipse/.settings"/>
+    </copy>
+  </target>
 </project>

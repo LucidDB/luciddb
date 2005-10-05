@@ -39,7 +39,7 @@
 +--------------------+
 | 0.999999327347282  |
 +--------------------+
-0: jdbc:farrago:> select log(10.0) from sales.emps;
+0: jdbc:farrago:> select log10(10.0) from sales.emps;
 +---------+
 | EXPR$0  |
 +---------+
@@ -48,7 +48,7 @@
 | 1.0     |
 | 1.0     |
 +---------+
-0: jdbc:farrago:> select log(10) from sales.emps;
+0: jdbc:farrago:> select log10(10) from sales.emps;
 +---------+
 | EXPR$0  |
 +---------+
@@ -57,7 +57,7 @@
 | 1.0     |
 | 1.0     |
 +---------+
-0: jdbc:farrago:> values log(10*10.0);
+0: jdbc:farrago:> values log10(10*10.0);
 +---------+
 | EXPR$0  |
 +---------+

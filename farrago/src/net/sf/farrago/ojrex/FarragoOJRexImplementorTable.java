@@ -62,6 +62,125 @@ public class FarragoOJRexImplementorTable extends OJRexImplementorTableImpl
         // FarragoRexToOJTranslatorTest
         // refine with Farrago specifics
         registerOperator(
+            opTab.lnFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.LN_FUNCTION));
+
+        registerOperator(
+            opTab.log10Func,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.LOG10_FUNCTION));
+
+        registerOperator(
+            opTab.absFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.ABS_FUNCTION));
+
+        registerOperator(
+            opTab.ceilFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.CEIL_FUNCTION));
+
+        registerOperator(
+            opTab.floorFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.FLOOR_FUNCTION));
+
+        registerOperator(
+            opTab.expFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.EXP_FUNCTION));
+
+        registerOperator(
+            opTab.modFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.MOD_FUNCTION));
+
+
+        registerOperator(
+            opTab.substringFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.SUBSTRING_FUNCTION));
+
+        registerOperator(
+            opTab.overlayFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.OVERLAY_FUNCTION));
+
+        registerOperator(
+            opTab.powFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.POW_FUNCTION));
+
+        registerOperator(
+            opTab.concatOperator,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.CONCAT_OPERATOR));
+
+        /*
+        registerOperator(
+            opTab.convertFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.CONVERT_FUNCTION));
+
+        registerOperator(
+            opTab.translateFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.TRANSLATE_FUNCTION));
+         */
+
+        registerOperator(
+            opTab.positionFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.POSITION_FUNCTION));
+
+        registerOperator(
+            opTab.trimFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.TRIM_FUNCTION));
+
+        registerOperator(
+            opTab.charLengthFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.CHAR_LENGTH_FUNCTION));
+
+        registerOperator(
+            opTab.characterLengthFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.CHARACTER_LENGTH_FUNCTION));
+
+        registerOperator(
+            opTab.upperFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.UPPER_FUNCTION));
+
+        registerOperator(
+            opTab.lowerFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.LOWER_FUNCTION));
+
+        registerOperator(
+            opTab.initcapFunc,
+            new FarragoOJRexBuiltinImplementor(
+                FarragoOJRexBuiltinImplementor.INITCAP_FUNCTION));
+
+        registerOperator(
+            opTab.similarOperator,
+            new FarragoOJRexSimilarLikeImplementor(true, false));
+
+        registerOperator(
+            opTab.notSimilarOperator,
+            new FarragoOJRexSimilarLikeImplementor(true, true));
+
+        registerOperator(
+            opTab.likeOperator,
+            new FarragoOJRexSimilarLikeImplementor(false, false));
+
+        registerOperator(
+            opTab.notLikeOperator,
+            new FarragoOJRexSimilarLikeImplementor(false, true));
+
+        registerOperator(
             opTab.caseOperator,
             new FarragoOJRexCaseImplementor());
 
@@ -84,10 +203,6 @@ public class FarragoOJRexImplementorTable extends OJRexImplementorTableImpl
         registerOperator(
             opTab.isNotNullOperator,
             new FarragoOJRexNullTestImplementor(false));
-
-        registerOperator(
-            opTab.rowConstructor,
-            new FarragoOJRexRowImplementor());
 
         registerOperator(
             opTab.rowConstructor,

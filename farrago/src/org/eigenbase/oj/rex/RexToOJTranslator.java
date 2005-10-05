@@ -179,6 +179,11 @@ public class RexToOJTranslator implements RexVisitor
             timeInMillis = calendar.getTimeInMillis();
             setTranslation(Literal.makeLiteral(timeInMillis));
             break;
+        case SqlTypeName.Symbol_ordinal:
+            EnumeratedValues.BasicValue ord = 
+                (EnumeratedValues.BasicValue) value;
+            setTranslation(Literal.makeLiteral(ord.getOrdinal()));
+            break;
         default:
             throw Util.newInternal("Bad literal value " + value + " ("
                 + value.getClass() + "); breaches "

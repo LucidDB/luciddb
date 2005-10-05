@@ -178,8 +178,8 @@ if test "$target_os" = "mingw32"
 then
     CXXFLAGS="$CXXFLAGS -mthreads"
     postdeps="-lstdc++"
-    EXTRA_LDFLAGS="-lstdc++ -lws2_32 -lrpcrt4 -Wl,--kill-at -Wl,--export-all-symbols -no-undefined"
-    BOOST_LINKAGE=runtime-link-dynamic
+    EXTRA_LDFLAGS="-lstdc++ -lws2_32 -lrpcrt4 -Wl,--kill-at -Wl,--export-all-symbols -Wl,--allow-multiple-definition -no-undefined"
+    dnl BOOST_LINKAGE=runtime-link-dynamic
     DLLEXT=dll
     boost_jam_platform=cygwinx86
     jdk_platform=win32
@@ -199,7 +199,7 @@ AC_ARG_WITH([optimization],
 if test "$with_optimization" = "no"
 then
     CXXFLAGS="$CXXFLAGS -D_STLP_DEBUG=1 -D_STLP_DEBUG_UNINITIALIZED=1"
-    BOOST_LIB_SUFFIX=gcc-mt-gdp-1_32
+    BOOST_LIB_SUFFIX=gcc-mt-gdp-1_33
     STLPORT_LIB=${STLPORT_LIB_BASE}_stldebug
 else
     CXXFLAGS="$CXXFLAGS -O3 -Wno-unused-variable"
@@ -208,7 +208,7 @@ else
         dnl optimized mingw build encounters bogus errors for -Wuninitialized
         CXXFLAGS="$CXXFLAGS -Wno-uninitialized"
     fi
-    BOOST_LIB_SUFFIX=gcc-mt-p-1_32
+    BOOST_LIB_SUFFIX=gcc-mt-p-1_33
     STLPORT_LIB=$STLPORT_LIB_BASE
 fi
 

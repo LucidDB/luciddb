@@ -22,6 +22,8 @@
 */
 package net.sf.farrago.query;
 
+import net.sf.farrago.fem.security.*;
+
 import java.math.*;
 
 import org.eigenbase.resource.*;
@@ -52,6 +54,14 @@ class FarragoSqlValidator extends SqlValidatorImpl
 
     //~ Methods ---------------------------------------------------------------
 
+    // override SqlValidator
+    public SqlNode validate(SqlNode topNode)
+    {
+        SqlNode node = super.validate(topNode);
+        getPreparingStmt().analyzeRoutineDependencies(node);
+        return node;
+    }
+    
     // override SqlValidator
     protected boolean shouldExpandIdentifiers()
     {
@@ -125,8 +135,7 @@ class FarragoSqlValidator extends SqlValidatorImpl
     public void validateDataType(SqlDataTypeSpec dataType)
     {
         super.validateDataType(dataType);
-        FarragoPreparingStmt preparingStmt =
-            (FarragoPreparingStmt) getCatalogReader();
+        FarragoPreparingStmt preparingStmt = getPreparingStmt();
         final FarragoSessionPersonality personality =
             preparingStmt.getSession().getPersonality();
         final String typeNameName = dataType.getTypeName().getSimple();
@@ -139,6 +148,41 @@ class FarragoSqlValidator extends SqlValidatorImpl
                         typeName.toString()));
             }
         }
+    }
+
+    private FarragoPreparingStmt getPreparingStmt()
+    {
+        return (FarragoPreparingStmt) getCatalogReader();
+    }
+
+    // override SqlValidatorImpl
+    public void validateInsert(SqlInsert call)
+    {
+        getPreparingStmt().setDmlValidation(
+            call.getTargetTable(),
+            PrivilegedActionEnum.INSERT);
+        super.validateInsert(call);
+        getPreparingStmt().clearDmlValidation();
+    }
+
+    // override SqlValidatorImpl
+    public void validateUpdate(SqlUpdate call)
+    {
+        getPreparingStmt().setDmlValidation(
+            call.getTargetTable(),
+            PrivilegedActionEnum.UPDATE);
+        super.validateUpdate(call);
+        getPreparingStmt().clearDmlValidation();
+    }
+
+    // override SqlValidatorImpl
+    public void validateDelete(SqlDelete call)
+    {
+        getPreparingStmt().setDmlValidation(
+            call.getTargetTable(),
+            PrivilegedActionEnum.DELETE);
+        super.validateDelete(call);
+        getPreparingStmt().clearDmlValidation();
     }
 }
 

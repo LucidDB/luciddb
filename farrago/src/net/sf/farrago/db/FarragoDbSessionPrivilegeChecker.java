@@ -44,53 +44,122 @@ import net.sf.farrago.resource.*;
  * An instance of this class must be created per statement i.e. it can't be
  * shared between statements.
  *
- *<p>
- *
- * REVIEW jvs 10-June-2005:  I don't think we need (a) below.  It's
- * fine to state the expected usage, but we're defining a general-purpose
- * API, so there's no need to constrain the caller in this way.
- *
- *<p>
- *
- * TODO:
- * (a) Check that all requests come from the same statement handle.
- * (b) Do cache of underlying graph. It can be slow to keep reading.
- *
  * @author Tai Tran
  * @version $Id$
  */
-class FarragoDbSessionPrivilegeChecker implements FarragoSessionPrivilegeChecker
+public class FarragoDbSessionPrivilegeChecker
+    implements FarragoSessionPrivilegeChecker
 {
-    private DoubleKeyMap requestsMap;
+    private final FarragoSession session;
 
-    // constructor
+    private final Map authMap;
+    
     public FarragoDbSessionPrivilegeChecker(FarragoSession session)
     {
-        requestsMap = new DoubleKeyMap();
+        this.session = session;
+        authMap = new HashMap();
     }
     
     // implement FarragoSessionPrivilegeChecker
-    public void requestAccess(CwmModelElement obj,  FemAuthId authId,
+    public void requestAccess(
+        CwmModelElement obj,
+        FemUser user,
+        FemRole role,
         String action)
     {
-        // TODO: Should consider a way of checking that the request is coming
-        // from the same statement. E.g. should a statement handle be kept a
-        // check each time.
-        
-        // add the request to the queue
-        requestsMap.put(obj, authId,  action);
-    }
+        List authKey = new ArrayList(2);
+        authKey.add(user);
+        authKey.add(role);
 
+        // Find credentials for the given user and role.
+        Set authSet = (Set) authMap.get(authKey);
+        if (authSet == null) {
+            // Compute all credentials for the given user and role.
+            authSet = new HashSet();
+            authMap.put(authKey, authSet);
+
+            if (user != null) {
+                authSet.add(user);
+            }
+
+            if (role != null) {
+                authSet.add(role);
+                inheritRoles(role, authSet);
+            }
+
+            authSet.add(
+                FarragoCatalogUtil.getRoleByName(
+                    session.getRepos(),
+                    FarragoCatalogInit.PUBLIC_ROLE_NAME));
+        }
+
+        // Now, let's check their papers...
+        if (testAccess(obj, authSet, action)) {
+            // It's all good.
+            return;
+        }
+
+        // Verboten!
+        throw FarragoResource.instance().newValidatorAccessDenied(
+            session.getRepos().getLocalizedObjectName(action),
+            session.getRepos().getLocalizedObjectName(obj));
+    }
     
     // implement FarragoSessionPrivilegeChecker
     public void checkAccess()
     {
-        // TODO: for efficieny purpose, all objects and their corresponding
-        // accessor must be provided as one single LURQL query
+        // This implementation does all the work immediately in requestAccess,
+        // so nothing to do here.
+    }
 
+    private void inheritRoles(FemRole role, Set inheritedRoles)
+    {
+        String inheritAction = PrivilegedActionEnum.INHERIT_ROLE.toString();
         
-        // TODO: Use LURQL to query all privileges for obj, authid and compare
-        // that with the requested actions respectively
+        Iterator grants = role.getGranteePrivilege().iterator();
+        while (grants.hasNext()) {
+            FemGrant grant = (FemGrant) grants.next();
+            if (grant.getAction().equals(inheritAction)) {
+                FemRole inheritedRole = (FemRole) grant.getElement();
+                // sanity check:  DDL validation is supposed to prevent
+                // cycles
+                assert(!inheritedRoles.contains(inheritedRole));
+                inheritedRoles.add(inheritedRole);
+                inheritRoles(inheritedRole, inheritedRoles);
+            }
+        }
+    }
+
+    private boolean testAccess(
+        CwmModelElement obj,  Set authSet, String action)
+    {
+        SecurityPackage sp =
+            session.getRepos().getSecurityPackage();
+        Iterator grants =
+            sp.getPrivilegeIsGrantedOnElement().getPrivilege(obj).iterator();
+        boolean sawCreationGrant = false;
+        while (grants.hasNext()) {
+            FemGrant grant = (FemGrant) grants.next();
+            if (grant instanceof FemCreationGrant) {
+                sawCreationGrant = true;
+            }
+            if (authSet.contains(grant.getGrantee())
+                &&
+                (grant.getAction().equals(action)
+                    || (grant instanceof FemCreationGrant)))
+            {
+                return true;
+            }
+        }
+        if (sawCreationGrant) {
+            return false;
+        } else {
+            // We didn't see a creation grant.  The only way that's possible is
+            // that obj is currently in the process of being created.  In that
+            // case, whatever object is referencing it must have the same
+            // creator,  so no explicit privilege is required.
+            return true;
+        }
     }
 }
 

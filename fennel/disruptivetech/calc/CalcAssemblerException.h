@@ -144,9 +144,12 @@ public:
             // mLoc to have wildly out-of-range values.
 
             if (mLoc.first_pos <= mLoc.last_pos && 
-                mLoc.first_pos < s.length()) {
+                mLoc.first_pos < s.length()) 
+            {
                 mCodeSnippet = 
-                    s.substr(mLoc.first_pos, mLoc.last_pos - mLoc.first_pos+1);
+                    s.substr(
+                        mLoc.first_pos, 
+                        mLoc.last_pos - mLoc.first_pos + 1);
             } else {
                 mCodeSnippet = s;
             }

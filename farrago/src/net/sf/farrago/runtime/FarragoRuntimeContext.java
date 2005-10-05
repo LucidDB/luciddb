@@ -251,8 +251,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
      */
     public String getContextVariable_CURRENT_ROLE()
     {
-        // TODO jvs 25-Sept-2004:  once supported
-        return "";
+        return sessionVariables.currentRoleName;
     }
 
     /**

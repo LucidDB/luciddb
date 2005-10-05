@@ -41,7 +41,7 @@ import java.util.WeakHashMap;
  * <p>Conversion data is held in a {@link WeakHashMap} so that the JVM's
  * garbage collector may reclaim the conversion data after the planner itself
  * has been garbage collected.  The conversion information consists of a
- * graph of converisons (from one calling convention to another) and a map
+ * graph of conversions (from one calling convention to another) and a map
  * of graph arcs to {@link ConverterRule}s.
  *
  * @author Stephan Zuercher

@@ -537,8 +537,8 @@ column type family is {1} but default value type family is {2}</text>
 <text>One or more tables not found while importing foreign schema {0}:  {1}</text>
 </exception>
 
-<exception id="420940" name="InvalidUser">
-<text>User name {0} not found</text>
+<exception id="420940" name="ValidatorAccessDenied">
+<text>Privilege {0} required for access to {1}</text>
 </exception>
 
 <!-- ====================================================================== -->
@@ -577,6 +577,30 @@ column type family is {1} but default value type family is {2}</text>
 
 <exception id="450040" name="RoutineInvocationException">
 <text>Invocation of user-defined external Java method {0} failed</text>
+</exception>
+
+<exception id="450050" name="NegativeLengthForSubstring">
+<text>The length for substring can not be negative</text>
+</exception>
+
+<exception id="450060" name="InvalidFunctionArgument">
+<text>Invalid argument(s) for {0} function</text>
+</exception>
+
+<exception id="450070" name="InvalidEscapeCharacter">
+<text>Invalid escape character of {0} </text>
+</exception>
+
+<exception id="450080" name="InvalidEscapeSequence">
+<text>Invalid escape sequence: {0} at {1,number,#}</text>
+</exception>
+
+<exception id="450090" name="InvalidRegularExpression">
+<text>Invalid regular expression: {0} at {1,number,#}</text>
+</exception>
+
+<exception id="450100" name="Overflow">
+<text>Overflow during calculation or cast.</text>
 </exception>
 
 <!-- ====================================================================== -->
@@ -657,6 +681,10 @@ column type family is {1} but default value type family is {2}</text>
 
 <exception id="470090" name="SessionInternalQueryFailed">
 <text>Failed executing internal query</text>
+</exception>
+
+<exception id="470100" name="SessionUnknownUser">
+<text>Unknown user {0}</text>
 </exception>
 
 <!-- ====================================================================== -->

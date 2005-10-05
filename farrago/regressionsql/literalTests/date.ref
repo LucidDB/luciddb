@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/date.sql#5 $ 
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/regressionsql/literalTests/date.sql#5 $ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test date literal
 0: jdbc:farrago:> 
@@ -388,8 +388,8 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast fro
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(1)' to 'DATE' (state=,code=0)
 0: jdbc:farrago:> insert into t_date values(time '12:01:01',null);
 Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIME(0)' to 'DATE' (state=,code=0)
-0: jdbc:farrago:> insert into t_date values(timestamp '2004-12-01 12:01:01',null);
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'TIMESTAMP(0)' to 'DATE' (state=,code=0)
+0: jdbc:farrago:> -- the next insert statement should be allowed.
+0: jdbc:farrago:> -- insert into t_date values(timestamp '2004-12-01 12:01:01',null);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- insert the right values
 0: jdbc:farrago:> insert into t_date values(date '1999-01-08',null);
@@ -405,5 +405,6 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast fro
 +-------------+------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop table t_date;
+0: jdbc:farrago:> drop schema test;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

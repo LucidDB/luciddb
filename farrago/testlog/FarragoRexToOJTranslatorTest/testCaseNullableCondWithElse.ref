@@ -32,15 +32,10 @@ if (ID$6$AGE.isNull()) {
 oj_var3.assignFrom( "twenty-five" );
 oj_var4.setNull( true );
 oj_var5.assignFrom( oj_var4 );
-if (oj_var0.isNull()) {
+if (!oj_var0.isNull() && oj_var0.getBit()) {
+    oj_var5.assignFrom( oj_var1 );
 } else {
-    if (oj_var0.getBit()) {
-        oj_var5.assignFrom( oj_var1 );
-    }
-}
-if (oj_var2.isNull()) {
-} else {
-    if (oj_var2.getBit()) {
+    if (!oj_var2.isNull() && oj_var2.getBit()) {
         oj_var5.assignFrom( oj_var3 );
     }
 }

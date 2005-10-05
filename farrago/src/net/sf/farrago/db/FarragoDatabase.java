@@ -53,6 +53,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.util.*;
+import org.eigenbase.util.property.*;
 
 import org.netbeans.mdr.handlers.*;
 
@@ -135,11 +136,11 @@ public class FarragoDatabase extends FarragoCompoundAllocation
                 new FarragoCompoundAllocation();
             this.addAllocation(startOfWorldAllocation);
 
-            final String prop = "java.util.logging.config.file";
-            String loggingConfigFile =
-                System.getProperties().getProperty(prop);
+            StringProperty prop = FarragoProperties.instance().traceConfigFile;
+            String loggingConfigFile = prop.get();
             if (loggingConfigFile == null) {
-                throw FarragoResource.instance().newMissingHomeProperty(prop);
+                throw FarragoResource.instance().newMissingHomeProperty(
+                    prop.getPath());
             }
             traceConfigFile = new File(loggingConfigFile);
 
@@ -682,6 +683,9 @@ public class FarragoDatabase extends FarragoCompoundAllocation
         FarragoAllocationOwner owner,
         FarragoSessionAnalyzedSql analyzedSql)
     {
+        // REVIEW jvs 27-Aug-2005:  what are the security implications of
+        // EXPLAIN PLAN?
+        
         // It would be silly to cache EXPLAIN PLAN results, so deal with them
         // directly.
         if (sqlNode.isA(SqlKind.Explain)) {
@@ -708,6 +712,8 @@ public class FarragoDatabase extends FarragoCompoundAllocation
             validatedSqlNode = sqlValidator.validate(sqlNode);
         }
 
+        stmt.postValidate(validatedSqlNode);
+        
         SqlDialect sqlDialect =
             new SqlDialect(stmt.getSession().getDatabaseMetaData());
         final String sql = validatedSqlNode.toSqlString(sqlDialect);

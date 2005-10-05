@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/string.sql#6 $ 
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/regressionsql/literalTests/string.sql#7 $ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values 'unknown';
 +----------+
@@ -164,5 +164,6 @@ Messages:
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop table t_varchar;
 0: jdbc:farrago:> 
+0: jdbc:farrago:> drop schema test;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

@@ -525,7 +525,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             opTab.lnFunc,
             new MakeOperandsDoubleImplementor(ExtInstructionDefTable.log));
         register(
-            opTab.logFunc,
+            opTab.log10Func,
             new MakeOperandsDoubleImplementor(ExtInstructionDefTable.log10));
 
         // TODO: need to know charset aswell. When ready,

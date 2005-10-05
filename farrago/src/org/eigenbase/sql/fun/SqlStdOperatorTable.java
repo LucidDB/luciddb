@@ -715,8 +715,8 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             SqlTypeStrategies.rtiNullableDouble, null,
             SqlTypeStrategies.otcNumeric, SqlFunctionCategory.Numeric);
 
-    public static final SqlFunction logFunc =
-        new SqlFunction("LOG", SqlKind.Function,
+    public static final SqlFunction log10Func =
+        new SqlFunction("LOG10", SqlKind.Function,
             SqlTypeStrategies.rtiNullableDouble, null,
             SqlTypeStrategies.otcNumeric, SqlFunctionCategory.Numeric);
 
@@ -725,6 +725,11 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             SqlTypeStrategies.rtiFirstArgType, null,
             SqlTypeStrategies.otcNumericOrInterval,
             SqlFunctionCategory.Numeric);
+
+    public static final SqlFunction expFunc =
+        new SqlFunction("EXP", SqlKind.Function,
+            SqlTypeStrategies.rtiNullableDouble, null,
+            SqlTypeStrategies.otcNumeric, SqlFunctionCategory.Numeric);
 
     public static final SqlFunction nullIfFunc =
         new SqlNullifFunction();

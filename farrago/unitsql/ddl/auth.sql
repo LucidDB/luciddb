@@ -10,11 +10,20 @@
 -- TODO: grant all appropriate system privileges for this user once
 -- these privs are available.
 
+create schema extra;
+create table extra.t(i int not null primary key);
+
 create user SECMAN authorization 'Unknown' DEFAULT CATALOG localdb;
 create user SECMAN_2 authorization 'Unknown' DEFAULT CATALOG localdb;
 
+create user SECMAN_3 authorization 'Unknown' DEFAULT CATALOG sys_boot;
+
+create user SECMAN_4 authorization 'Unknown' DEFAULT SCHEMA extra;
+
+grant select on extra.t to secman_4;
+
 !closeall
-!connect jdbc:farrago: SECMAN net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver
+!connect jdbc:farrago: SECMAN tiger
 
 create schema authtest;
 set schema 'authtest';
@@ -80,7 +89,8 @@ Create user U5 AUTHORIZATION 'Unknown' DEFAULT CATALOG localdb;
 Create user U6 AUTHORIZATION 'Unknown' DEFAULT CATALOG localdb;
 Create user U7 AUTHORIZATION 'Unknown' DEFAULT CATALOG localdb;
 
-select "name" from sys_fem."Security"."User" where "name" like 'U%';
+select "name" from sys_fem."Security"."User" where "name" like 'U%' 
+order by "name";
 
 -- Create Role 2, 3 and 4 at level 1
 Create Role R2_L1 WITH ADMIN SECMAN_2;
@@ -133,4 +143,33 @@ order by grantee;
 
 -------------------------------------------------------------------------
 -- Test 3:
--- 
+-- authentication
+
+-- should fail:  unknown user
+!closeall
+!connect jdbc:farrago: BOBO tiger
+
+-------------------------------------------------------------------------
+-- Test 4:
+-- default schemas and catalogs
+
+!closeall
+!connect jdbc:farrago: SECMAN_3 tiger
+
+-- default catalog is sys_boot
+select * from jdbc_metadata.table_types_view order by table_type;
+
+!closeall
+!connect jdbc:farrago: SECMAN_4 tiger
+
+-- default schema is extra
+select * from t;
+
+-- verify that dropping default schema does not cascade to user
+drop schema extra cascade;
+
+!closeall
+!connect jdbc:farrago: SECMAN_4 tiger
+
+-- should fail:  it's gone now
+select * from t;

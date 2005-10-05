@@ -32,7 +32,7 @@ import org.eigenbase.relopt.*;
 /**
  * FennelRel defines the interface which must be implemented by any
  * {@link RelNode} corresponding to a C++ physical implementation conforming
- * to the fennel::ExecutionStream interface.
+ * to the fennel::ExecStream interface.
  *
  * @author John V. Sichi
  * @version $Id$

@@ -128,6 +128,7 @@ create view catalogs_view as
     from 
         sys_cwm."Relational"."Catalog" c
 ;
+grant select on catalogs_view to public;
 
 create view schemas_view as
     select 
@@ -136,6 +137,7 @@ create view schemas_view as
     from 
         schemas_view_internal
 ;
+grant select on schemas_view to public;
 
 -- TODO:  add 'GLOBAL TEMPORARY' and 'SYSTEM TABLE'
 create view table_types_view_internal(table_type,uml_class_name) as
@@ -163,6 +165,7 @@ create view tables_view as
     where
         t."mofClassName"=tt.uml_class_name
 ;
+grant select on tables_view to public;
 
 create view table_types_view as
     select distinct
@@ -170,6 +173,7 @@ create view table_types_view as
     from
         table_types_view_internal
 ;
+grant select on table_types_view to public;
 
 -- TODO: get column_def by left-outer-join to get default value
 -- TODO: get source_data_type for distinct types
@@ -229,6 +233,7 @@ create view columns_view as
         sys_cwm."Relational"."SQLDataType" t 
     on 
         c."type" = t."mofId";
+grant select on columns_view to public;
 
 create view udts_view_internal as
     select
@@ -259,6 +264,7 @@ create view udts_view as
     from
         udts_view_internal u
 ;
+grant select on udts_view to public;
 
 create view attributes_view_internal as
     select
@@ -312,6 +318,7 @@ create view attributes_view as
     on
         a."type" = t."mofId"
 ;
+grant select on attributes_view to public;
 
 -- TODO:  find out why replacing BehavioralFeature below with Method or
 -- Routine doesn't work (causes assignment of null to NOT NULL).  Must be
@@ -347,6 +354,7 @@ create view procedures_view as
     from
         procedures_view_internal p
 ;
+grant select on procedures_view to public;
 
 create view procedure_columns_view_internal as
     select
@@ -393,6 +401,7 @@ create view procedure_columns_view as
     on 
         pc."type" = t."mofId"
 ;
+grant select on procedure_columns_view to public;
 
 -- TODO:  refine precision, case_sensitive, searchable, minimum/maximum_scale
 -- as we add LOB, NUMERIC, and UNICODE data types; unsigned should
@@ -425,6 +434,7 @@ create view type_info_view as
     from
         sys_cwm."Relational"."SQLSimpleType" t
 ;
+grant select on type_info_view to public;
 
 create view primary_keys_view_internal as
     select
@@ -456,10 +466,11 @@ create view primary_keys_view as
     on
         k."mofId" = c."KeyConstraint"
 ;
+grant select on primary_keys_view to public;
         
 -- TODO:  all the rest
 
 -- just a placeholder for now
 create schema localdb.information_schema;
-         
+
 commit;

@@ -88,6 +88,13 @@ public interface FarragoSessionPreparingStmt extends FarragoAllocation
     public void preImplement();
 
     /**
+     * Performs post-validation work after SqlValidator has been called.
+     *
+     * @param validatedSqlNode output of SqlValidator
+     */
+    public void postValidate(SqlNode validatedSqlNode);
+
+    /**
      * Implements a logical or physical query plan but does not execute it.
      * You must call {@link #preImplement()} first, in fact before constructing
      * the query plan.

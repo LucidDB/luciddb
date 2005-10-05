@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/str.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/regressionsql/str.sql#6 $
 0: jdbc:farrago:> -- Full vertical system testing of non function statements
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -81,6 +81,60 @@
 | John    |
 | Wilma   |
 +---------+
+0: jdbc:farrago:> select city, age, substring(city, 2, age/10) from sales.emps order by 1;
++----------------+------+-----------+
+|      CITY      | AGE  |  EXPR$2   |
++----------------+------+-----------+
+|                | 25   |           |
+|                | 50   |           |
+| San Francisco  | 80   | an Franc  |
+| Vancouver      |      |           |
++----------------+------+-----------+
+0: jdbc:farrago:> select city, age, substring(city,  age/20, empid) from sales.emps order by 1;
++----------------+------+---------+
+|      CITY      | AGE  | EXPR$2  |
++----------------+------+---------+
+|                | 25   |         |
+|                | 50   |         |
+| San Francisco  | 80   |  Fr     |
+| Vancouver      |      |         |
++----------------+------+---------+
+0: jdbc:farrago:> select city, substring(city, 3) from sales.emps order by 1;
++----------------+--------------+
+|      CITY      |    EXPR$1    |
++----------------+--------------+
+|                |              |
+|                |              |
+| San Francisco  | n Francisco  |
+| Vancouver      | ncouver      |
++----------------+--------------+
+0: jdbc:farrago:> select city, substring(city, -1, 4) from sales.emps order by 1;
++----------------+---------+
+|      CITY      | EXPR$1  |
++----------------+---------+
+|                |         |
+|                |         |
+| San Francisco  | Sa      |
+| Vancouver      | Va      |
++----------------+---------+
+0: jdbc:farrago:> select city, substring(city, 0, 4) from sales.emps order by 1;
++----------------+---------+
+|      CITY      | EXPR$1  |
++----------------+---------+
+|                |         |
+|                |         |
+| San Francisco  | San     |
+| Vancouver      | Van     |
++----------------+---------+
+0: jdbc:farrago:> select name, empid, substring(name, 2, empid) from sales.emps order by 1;
++--------+--------+---------+
+|  NAME  | EMPID  | EXPR$2  |
++--------+--------+---------+
+| Eric   | 3      | ric     |
+| Fred   | 30     | red     |
+| John   | 2      | oh      |
+| Wilma  | 1      | i       |
++--------+--------+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select lower(city) from sales.emps order by 1;
 +----------------+
