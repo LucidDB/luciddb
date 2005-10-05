@@ -149,7 +149,13 @@ public class SqlAdvisor
             return null;
         }
         SqlParserPos pos = new SqlParserPos(1, cursor+1);
-        return validator.lookupQualifiedName(sqlNode, pos);
+        try {
+            return validator.lookupQualifiedName(sqlNode, pos);
+        } catch (EigenbaseContextException e) {
+            return null;
+        } catch (java.lang.AssertionError e) {
+            return null;
+        }
     }
 
     /**
@@ -189,19 +195,10 @@ public class SqlAdvisor
     public List validate(String sql)
     {
         SqlNode sqlNode = null;
-        try {
-            sqlNode = parseQuery(sql);
-        } catch (SqlParseException e) {
-            // parser error does not contain a range info yet.  we set
-            // the error to entire line for now
-            ValidateErrorInfo errInfo =
-                new ValidateErrorInfo(
-                    e.getPos(),
-                    e.getMessage());
-
-            // parser only returns 1 exception now
-            ArrayList errorList = new ArrayList();
-            errorList.add(errInfo);
+        ArrayList errorList = new ArrayList();
+        
+        sqlNode = collectParserError(sql, errorList);
+        if (!errorList.isEmpty()) {
             return errorList;
         }
         try {
@@ -211,7 +208,6 @@ public class SqlAdvisor
                 new ValidateErrorInfo(e);
 
             // validator only returns 1 exception now
-            ArrayList errorList = new ArrayList();
             errorList.add(errInfo);
             return errorList;
         } catch (Exception e) {
@@ -224,7 +220,6 @@ public class SqlAdvisor
                     e.getMessage());
 
             // parser only returns 1 exception now
-            ArrayList errorList = new ArrayList();
             errorList.add(errInfo);
             return errorList;
         }
@@ -278,6 +273,47 @@ public class SqlAdvisor
     }
 
     /**
+     * Wrapper function to parse a SQL statement, throwing a 
+     * {@link SqlParseException} if the statement is not syntactically valid
+     */
+    protected SqlNode parseQuery(String sql) throws SqlParseException
+    {
+        SqlParser parser = new SqlParser(sql);
+        SqlNode sqlNode = null;
+        return parser.parseQuery();
+    }
+
+    /**
+     * Attempts to parse a SQL statement and adds to the errorList 
+     * if any syntax error is found.
+     * This implementation uses {@link SqlParser}.
+     * Subclass can re-implement this with a different parser implementation
+     *
+     * @param sql A user-input sql statement to be parsed 
+     * @param errorList A {@link List} of error to be added to
+     *
+     * @return {@link SqlNode } that is root of the parse tree, null if 
+     * the sql is not valid
+     */
+    protected SqlNode collectParserError(String sql, List errorList)
+    {
+        SqlNode sqlNode = null;
+        try {
+            sqlNode = parseQuery(sql);
+        } catch (SqlParseException e) {
+            ValidateErrorInfo errInfo =
+                new ValidateErrorInfo(
+                    e.getPos(),
+                    e.getMessage());
+
+            // parser only returns 1 exception now
+            errorList.add(errInfo);
+            return null;
+        }
+        return sqlNode;
+    }
+
+    /**
      * simplifySql takes a 0-based cursor which points to exactly where
      * completion hint is to be requested.
      *
@@ -301,17 +337,6 @@ public class SqlAdvisor
         }
     }
     
-    /**
-     * Wrapper function to parse a SQL statement, throwing a 
-     * {@link SqlParseException} if the statement is not syntactically valid
-     */
-    protected SqlNode parseQuery(String sql) throws SqlParseException
-    {
-        SqlParser parser = new SqlParser(sql);
-        SqlNode sqlNode = null;
-        return parser.parseQuery();
-    }
-
     /**
      *  An inner class that represents error message text and position info
      *  of a validator or parser exception
@@ -343,7 +368,7 @@ public class SqlAdvisor
         }
 
         /**
-        *  Creates a new ValidateErrorInfo with an EigenbaseException
+        *  Creates a new ValidateErrorInfo with an EigenbaseContextException
         */
         public ValidateErrorInfo(
             EigenbaseContextException e)
