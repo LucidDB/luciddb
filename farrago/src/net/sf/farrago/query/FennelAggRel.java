@@ -60,8 +60,9 @@ public class FennelAggRel extends AggregateRelBase implements FennelRel
     // implement FennelRel
     public RelFieldCollation [] getCollations()
     {
-        // TODO jvs 5-Oct-2005: if input is sorted, non-hash agg will preserve
-        // it
+        // TODO jvs 5-Oct-2005: if group keys are already sorted,
+        // non-hash agg will preserve them; full-table agg is
+        // trivially sorted (only one row of output)
         return RelFieldCollation.emptyCollationArray;
     }
 
@@ -79,12 +80,18 @@ public class FennelAggRel extends AggregateRelBase implements FennelRel
         for (int i = 0; i < aggCalls.length; ++i) {
             Call call = aggCalls[i];
             assert(!call.isDistinct());
-            assert(call.args.length == 1);
+            // allow 0 for COUNT(*)
+            assert(call.args.length <= 1);
             AggFunction func = AggFunctionEnum.forName(
                 call.getAggregation().getName());
             FemAggInvocation aggInvocation = repos.newFemAggInvocation();
             aggInvocation.setFunction(func);
-            aggInvocation.setInputAttributeIndex(call.args[0]);
+            if (call.args.length == 1) {
+                aggInvocation.setInputAttributeIndex(call.args[0]);
+            } else {
+                // COUNT(*) ignores input
+                aggInvocation.setInputAttributeIndex(-1);
+            }
             aggStream.getAggInvocation().add(aggInvocation);
         }
         aggStream.getInput().add(
