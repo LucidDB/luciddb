@@ -141,6 +141,10 @@ public:
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
     
     std::vector<std::string>& getRowVector() { return savedTuples; }
+
+    /// Returns the number of rows emitted (which does not include rows still
+    /// in the output buffer).
+    uint64_t getProducedRowCount();
 };
 
 FENNEL_END_NAMESPACE

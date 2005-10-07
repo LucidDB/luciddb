@@ -143,6 +143,12 @@ ExecStreamResult MockProducerExecStream::execute(
     }
 }
 
+uint64_t MockProducerExecStream::getProducedRowCount() 
+{
+    uint waitingRowCount = pOutAccessor->getConsumptionTuplesAvailable();
+    return nRowsProduced - waitingRowCount;
+}
+
 MockProducerExecStreamGenerator::~MockProducerExecStreamGenerator()
 {
 }

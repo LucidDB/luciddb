@@ -223,6 +223,23 @@ public:
     inline uint getConsumptionAvailable() const;
 
     /**
+     * Computes the number of tuples available to be consumed from this buffer.
+     * 
+     * @return the number of tuples available for consumption
+     */
+    inline uint getConsumptionTuplesAvailable();
+
+    /**
+     * Spans as many tuples as can be consumed from this buffer and will fit
+     * into a buffer of given size.
+     *
+     * @param start starting address in the source buffer
+     * @param size  size of target buffer
+     * @return end of last input tuple that fit
+     */
+    inline PConstBuffer spanWholeTuples(PConstBuffer start, uint size);
+
+    /**
      * Accesses start of buffer into which data should be produced; called by
      * producer.
      *
@@ -475,6 +492,46 @@ inline uint ExecStreamBufAccessor::getConsumptionAvailable() const
 {
     return getConsumptionEnd() - getConsumptionStart();
 }
+
+inline uint ExecStreamBufAccessor::getConsumptionTuplesAvailable()
+{
+    TupleAccessor& acc = getScratchTupleAccessor();
+    PConstBuffer p = getConsumptionStart(),
+        end = getConsumptionEnd();
+    int count = 0;
+    while (p < end) {
+        acc.setCurrentTupleBuf(p);
+        p += acc.getCurrentByteCount();
+        ++count;
+    }
+    return count;
+}
+
+inline PConstBuffer ExecStreamBufAccessor::spanWholeTuples(
+    PConstBuffer start, uint size) 
+{
+    TupleAccessor& acc = getScratchTupleAccessor();
+    assert(size > 0);
+    PConstBuffer p = start;
+    PConstBuffer pend = start + size;
+    for (int ct = 0; ; ct++) {
+        assert(p < pend);
+        acc.setCurrentTupleBuf(p);
+        PConstBuffer q = p;
+        p += acc.getCurrentByteCount(); // forward 1 tuple
+        if (p >= pend) {
+            if (p == pend) {
+                // fit the current tuple, but no more
+                return p;
+            } else {
+                // here when p is too far, and the tuple [q, p] did not fit.
+                return q;
+            }
+        }
+    }
+    assert(false); // not reached
+}
+
 
 inline PBuffer ExecStreamBufAccessor::getProductionStart() const
 {
