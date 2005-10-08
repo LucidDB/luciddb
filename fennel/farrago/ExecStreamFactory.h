@@ -111,6 +111,7 @@ protected:
     virtual void visit(ProxyIndexLoaderDef &);
     virtual void visit(ProxyCartesianProductStreamDef &);
     virtual void visit(ProxyMockTupleStreamDef &);
+    virtual void visit(ProxyAggStreamDef &);
 
     // helpers for above visitors
 

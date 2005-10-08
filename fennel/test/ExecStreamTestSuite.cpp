@@ -32,6 +32,7 @@
 #include "fennel/exec/CopyExecStream.h"
 #include "fennel/exec/SegBufferExecStream.h"
 #include "fennel/exec/CartesianJoinExecStream.h"
+#include "fennel/exec/SortedAggExecStream.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
 
@@ -174,5 +175,79 @@ void ExecStreamTestSuite::testCartesianJoinExecStream(
         nRowsOuter*nRowsInner*2*sizeof(int32_t));
 }
 
-// End ExecStreamTest.cpp
+void ExecStreamTestSuite::testCountAggExecStream()
+{
+    StandardTypeDescriptorFactory stdTypeFactory;
+    TupleAttributeDescriptor attrDesc(
+        stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
+    
+    MockProducerExecStreamParams mockParams;
+    mockParams.outputTupleDesc.push_back(attrDesc);
+    mockParams.nRows = 10000;   // at least two buffers
 
+    ExecStreamEmbryo mockStreamEmbryo;
+    mockStreamEmbryo.init(new MockProducerExecStream(),mockParams);
+    mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
+
+    // simulate SELECT COUNT(*) FROM t10k
+    SortedAggExecStreamParams aggParams;
+    aggParams.outputTupleDesc.push_back(attrDesc);
+    AggInvocation countInvocation;
+    countInvocation.aggFunction = AGG_FUNC_COUNT;
+    countInvocation.iInputAttr = -1; // interpreted as COUNT(*)
+    aggParams.aggInvocations.push_back(countInvocation);
+    
+    ExecStreamEmbryo aggStreamEmbryo;
+    aggStreamEmbryo.init(new SortedAggExecStream(),aggParams);
+    aggStreamEmbryo.getStream()->setName("SortedAggExecStream");
+    
+    SharedExecStream pOutputStream = prepareTransformGraph(
+        mockStreamEmbryo,aggStreamEmbryo);
+
+    // set up a generator which can produce the expected output
+    // (a count of 10000)
+    RampExecStreamGenerator expectedResultGenerator(mockParams.nRows);
+
+    verifyOutput(*pOutputStream, 1, expectedResultGenerator);
+}
+
+void ExecStreamTestSuite::testSumAggExecStream()
+{
+    StandardTypeDescriptorFactory stdTypeFactory;
+    TupleAttributeDescriptor attrDesc(
+        stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
+    
+    MockProducerExecStreamParams mockParams;
+    mockParams.outputTupleDesc.push_back(attrDesc);
+    mockParams.nRows = 10000;   // at least two buffers
+    mockParams.pGenerator.reset(new RampExecStreamGenerator());
+
+    ExecStreamEmbryo mockStreamEmbryo;
+    mockStreamEmbryo.init(new MockProducerExecStream(),mockParams);
+    mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
+
+    // simulate SELECT SUM(x) FROM t10k with x iterating from 0 to 9999
+    SortedAggExecStreamParams aggParams;
+    attrDesc.isNullable = true;
+    aggParams.outputTupleDesc.push_back(attrDesc);
+    AggInvocation sumInvocation;
+    sumInvocation.aggFunction = AGG_FUNC_SUM;
+    sumInvocation.iInputAttr = 0;
+    aggParams.aggInvocations.push_back(sumInvocation);
+    
+    ExecStreamEmbryo aggStreamEmbryo;
+    aggStreamEmbryo.init(new SortedAggExecStream(),aggParams);
+    aggStreamEmbryo.getStream()->setName("SortedAggExecStream");
+    
+    SharedExecStream pOutputStream = prepareTransformGraph(
+        mockStreamEmbryo,aggStreamEmbryo);
+
+    // set up a generator which can produce the expected output
+    // (a count of 5000*9999)
+    RampExecStreamGenerator expectedResultGenerator(
+        (mockParams.nRows-1)*mockParams.nRows/2);
+
+    verifyOutput(*pOutputStream, 1, expectedResultGenerator);
+}
+
+// End ExecStreamTest.cpp

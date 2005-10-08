@@ -81,14 +81,13 @@ public class SqlMinMaxAggFunction extends SqlAggFunction
         boolean isMin,
         int kind)
     {
-        // REVIEW jvs 25-Mar-2005:  these aren't necessarily numeric
         super(
             isMin ? "MIN" : "MAX",
             SqlKind.Function,
-            SqlTypeStrategies.rtiFirstArgType,
+            SqlTypeStrategies.rtiFirstArgTypeForceNullable,
             null,
             SqlTypeStrategies.otcComparableOrdered,
-            SqlFunctionCategory.Numeric);
+            SqlFunctionCategory.System);
         this.argTypes = argTypes;
         this.isMin = isMin;
         this.kind = kind;

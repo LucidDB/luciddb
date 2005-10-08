@@ -25,13 +25,22 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+TupleDataWithBuffer::TupleDataWithBuffer()
+{
+}
+
 TupleDataWithBuffer::TupleDataWithBuffer(TupleDescriptor const& tupleDesc)
+{
+    computeAndAllocate(tupleDesc);
+}
+
+void TupleDataWithBuffer::computeAndAllocate(TupleDescriptor const& tupleDesc)
 {
     TupleAccessor tupleAccessor;
     tupleAccessor.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
     array.reset(new FixedBuffer[tupleAccessor.getMaxByteCount()]);
     tupleAccessor.setCurrentTupleBuf(array.get());
-    this->compute(tupleDesc);
+    compute(tupleDesc);
     tupleAccessor.unmarshal(*this);
 }
 

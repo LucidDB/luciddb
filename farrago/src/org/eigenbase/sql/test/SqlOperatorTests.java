@@ -892,7 +892,7 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().setFor(SqlStdOperatorTable.windowOperator);
         getTester().check(
             "select sum(1) over (order by x) from (select 1 as x, 2 as y from (values (true)))",
-            new AbstractSqlTester.StringTypeChecker("INTEGER NOT NULL"),
+            new AbstractSqlTester.StringTypeChecker("INTEGER"),
             "1",
             0);
     }
@@ -977,11 +977,11 @@ public abstract class SqlOperatorTests extends TestCase
     public void testCountFunc()
     {
         getTester().setFor(SqlStdOperatorTable.countOperator);
-        getTester().checkType("count(*)","INTEGER NOT NULL");
-        getTester().checkType("count('name')","INTEGER NOT NULL");
-        getTester().checkType("count(1)","INTEGER NOT NULL");
-        getTester().checkType("count(1.2)","INTEGER NOT NULL");
-        getTester().checkType("COUNT(DISTINCT 'x')","INTEGER NOT NULL");
+        getTester().checkType("count(*)","BIGINT NOT NULL");
+        getTester().checkType("count('name')","BIGINT NOT NULL");
+        getTester().checkType("count(1)","BIGINT NOT NULL");
+        getTester().checkType("count(1.2)","BIGINT NOT NULL");
+        getTester().checkType("COUNT(DISTINCT 'x')","BIGINT NOT NULL");
         getTester().checkFails("^COUNT()^",
             "Invalid number of arguments to function 'COUNT'. Was expecting 1 arguments");
         getTester().checkFails("^COUNT(1, 2)^",
@@ -1006,9 +1006,9 @@ public abstract class SqlOperatorTests extends TestCase
             "Unknown identifier '\\*'");
         getTester().checkFails("^sum('name')^",
             "(?s)Cannot apply 'SUM' to arguments of type 'SUM\\(<CHAR\\(4\\)>\\)'\\. Supported form\\(s\\): 'SUM\\(<NUMERIC>\\)'.*");
-        getTester().checkType("sum(1)","INTEGER NOT NULL");
-        getTester().checkType("sum(1.2)","DECIMAL(2, 1) NOT NULL");
-        getTester().checkType("sum(DISTINCT 1.5)","DECIMAL(2, 1) NOT NULL");
+        getTester().checkType("sum(1)","INTEGER");
+        getTester().checkType("sum(1.2)","DECIMAL(2, 1)");
+        getTester().checkType("sum(DISTINCT 1.5)","DECIMAL(2, 1)");
         getTester().checkFails("^sum()^",
             "Invalid number of arguments to function 'SUM'. Was expecting 1 arguments");
         getTester().checkFails("^sum(1, 2)^",

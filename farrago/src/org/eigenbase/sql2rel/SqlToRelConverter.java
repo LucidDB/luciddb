@@ -837,7 +837,7 @@ public class SqlToRelConverter
         try {
             Util.permAssert(bb.agg == null, "already in agg mode");
             bb.agg = aggConverter;
-            // convert the the select and having expressions, so that the
+            // convert the select and having expressions, so that the
             // agg converter knows which aggregations are required
             for (int i = 0; i < selectList.size(); i++) {
                 SqlNode expr = selectList.get(i);
@@ -854,6 +854,13 @@ public class SqlToRelConverter
 
         // compute inputs to the aggregator
         RexNode[] preExprs = aggConverter.getPreExprs();
+        if (preExprs.length == 0) {
+            // Special case for COUNT(*), where we can end up with no inputs at
+            // all.  The rest of the system doesn't like 0-tuples, so we select
+            // a dummy constant here.
+            preExprs = new RexNode[1];
+            preExprs[0] = rexBuilder.makeLiteral(true);
+        }
         bb.setRoot(
             new ProjectRel(
                 cluster,

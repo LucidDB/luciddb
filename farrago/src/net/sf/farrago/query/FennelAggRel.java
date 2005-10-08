@@ -82,8 +82,7 @@ public class FennelAggRel extends AggregateRelBase implements FennelRel
             assert(!call.isDistinct());
             // allow 0 for COUNT(*)
             assert(call.args.length <= 1);
-            AggFunction func = AggFunctionEnum.forName(
-                call.getAggregation().getName());
+            AggFunction func = lookupFennelAggFunction(call);
             FemAggInvocation aggInvocation = repos.newFemAggInvocation();
             aggInvocation.setFunction(func);
             if (call.args.length == 1) {
@@ -97,6 +96,13 @@ public class FennelAggRel extends AggregateRelBase implements FennelRel
         aggStream.getInput().add(
             implementor.visitFennelChild((FennelRel) getChild()));
         return aggStream;
+    }
+
+    public static AggFunction lookupFennelAggFunction(
+        AggregateRel.Call call)
+    {
+        return AggFunctionEnum.forName(
+            "AGG_FUNC_" + call.getAggregation().getName());
     }
 }
 

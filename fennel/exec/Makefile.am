@@ -2,6 +2,7 @@ include $(top_srcdir)/am_include.mk
 
 noinst_LTLIBRARIES=libexec.la
 libexec_la_SOURCES=\
+AggComputer.cpp \
 CartesianJoinExecStream.cpp \
 ConduitExecStream.cpp \
 ConfluenceExecStream.cpp \
@@ -17,7 +18,8 @@ MockProducerExecStream.cpp \
 ScratchBufferExecStream.cpp \
 SegBufferExecStream.cpp \
 SingleInputExecStream.cpp \
-SingleOutputExecStream.cpp
+SingleOutputExecStream.cpp \
+SortedAggExecStream.cpp
 
 DESIGN_DOCS=\
 ExecStreamDesign.cpp \

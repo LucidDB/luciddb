@@ -83,7 +83,7 @@ public class FennelAggRule extends RelOptRule
             // whether the aggregate function is one of the builtins supported
             // by Fennel; also test whether we can handle input datatype
             try {
-                AggFunctionEnum.forName(calls[i].getAggregation().getName());
+                FennelAggRel.lookupFennelAggFunction(calls[i]);
             } catch (IllegalArgumentException ex) {
                 return;
             }

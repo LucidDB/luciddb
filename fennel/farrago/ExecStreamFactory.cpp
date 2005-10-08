@@ -35,6 +35,7 @@
 #include "fennel/exec/ExecStreamGraphEmbryo.h"
 #include "fennel/ftrs/FtrsTableWriterFactory.h"
 #include "fennel/exec/CartesianJoinExecStream.h"
+#include "fennel/exec/SortedAggExecStream.h"
 #include "fennel/exec/MockProducerExecStream.h"
 #include "fennel/db/Database.h"
 #include "fennel/db/CheckpointThread.h"
@@ -211,6 +212,21 @@ void ExecStreamFactory::visit(ProxySortingStreamDef &streamDef)
         streamDef.getKeyProj());
     params.tupleDesc = params.outputTupleDesc;
     embryo.init(new BTreeSortExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxyAggStreamDef &streamDef)
+{
+    SortedAggExecStreamParams params;
+    readTupleStreamParams(params,streamDef);
+    SharedProxyAggInvocation pAggInvocation = streamDef.getAggInvocation();
+    for (; pAggInvocation; ++pAggInvocation) {
+        AggInvocation aggInvocation;
+        aggInvocation.aggFunction = pAggInvocation->getFunction();
+        aggInvocation.iInputAttr =
+            pAggInvocation->getInputAttributeIndex();
+        params.aggInvocations.push_back(aggInvocation);
+    }
+    embryo.init(new SortedAggExecStream(), params);
 }
 
 void ExecStreamFactory::visit(ProxyIndexLoaderDef &streamDef)

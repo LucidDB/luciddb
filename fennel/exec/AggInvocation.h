@@ -2,7 +2,7 @@
 // $Id$
 // Fennel is a library of data storage and processing components.
 // Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2004-2005 Disruptive Tech
+// Copyright (C) 2005-2005 Disruptive Tech
 // Copyright (C) 2005-2005 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
@@ -20,38 +20,42 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#ifndef Fennel_TupleDataWithBuffer_Included
-#define Fennel_tupleDataWithBuffer_Included
+#ifndef Fennel_AggInvocation_Included
+#define Fennel_AggInvocation_Included
 
-#include "fennel/tuple/TupleData.h"
-#include "fennel/tuple/TupleAccessor.h"
-
-#include <boost/scoped_array.hpp>
+#include "fennel/common/FemEnums.h"
 
 FENNEL_BEGIN_NAMESPACE
 
 /**
- * TupleDataWithBuffer is a convenience that creates a TupleData, and
- * a supporting buffer from a TupleDescriptor.
+ * AggInvocation represents one call to an aggregate function.
  *
- * A common use is to create an input and output tuple for Calculator
- * given the TupleDescriptor obtained from
- * Calculator::getOutputRegisterDescriptor and from
- * Calculator::getInputRegisterDescriptor()
- * 
+ * @author John V. Sichi
+ * @version $Id$
  */
-class TupleDataWithBuffer : public TupleData
+struct AggInvocation
 {
-public:
-    explicit TupleDataWithBuffer();
-    explicit TupleDataWithBuffer(TupleDescriptor const& tupleDesc);
-    void computeAndAllocate(TupleDescriptor const& tupleDesc);
-    ~TupleDataWithBuffer();
-private:
-    boost::scoped_array<FixedBuffer> array;
+    /**
+     * Aggregate function to be computed.
+     */
+    AggFunction aggFunction;
+
+    // TODO jvs 6-Oct-2005: May need to generalize this to a
+    // TupleProjection, since I think SQL:2003 allows SUM(A,B), producing
+    // a ROW result value; need to check.
+    /**
+     * 0-based index of source attribute in input tuple, or -1 for none,
+     * as in the case of COUNT(*).
+     */
+    int iInputAttr;
 };
+
+typedef std::vector<AggInvocation> AggInvocationList;
+typedef std::vector<AggInvocation>::iterator AggInvocationIter;
+typedef std::vector<AggInvocation>::const_iterator AggInvocationConstIter;
 
 FENNEL_END_NAMESPACE
 
 #endif
-// End TupleDataWithBuffer.h
+
+// End AggInvocation.h
