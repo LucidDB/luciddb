@@ -45,6 +45,7 @@
       <include class="net.sf.farrago.FarragoMetadataFactoryImpl" />
     </pattern>
     <pattern name="trace" class="net.sf.farrago.trace.*" />
+    <pattern name="release" class="net.sf.farrago.release.*" />
     <pattern name="util" class="net.sf.farrago.util.*" />
     <pattern name="resource" class="net.sf.farrago.resource.*" />
     <pattern name="catalog.codegen" class="net.sf.farrago.catalog.codegen.*" />
@@ -101,6 +102,7 @@
       <include pattern="fem"/>
       <include pattern="FarragoPackage"/>
       <include pattern="trace"/>
+      <include pattern="release"/>
       <include pattern="util"/>
       <include pattern="resource"/>
       <include pattern="catalog.codegen"/>
@@ -160,9 +162,25 @@
     <!-- NOTE:  we don't enforce any rules on what generated classes in
          FarragoPackage can depend on; this is to allow extensions. -->
 
+    <pattern name="release.deps">
+      <include pattern="release" />
+    </pattern>
+
+    <access-rule>
+      <message>release dependency violation</message>
+      <deny>
+        <from pattern="release" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="release.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
     <pattern name="util.deps">
       <include pattern="trace" />
       <include pattern="util" />
+      <include pattern="release" />
     </pattern>
 
     <!-- NOTE:  trace is a special case, allowing for a circular dependency
@@ -306,7 +324,7 @@
     </access-rule>
     
     <pattern name="fennel.tuple.deps"> 
-      <include pattern="util" /> 
+      <include pattern="release.deps" /> 
       <include pattern="fennel.tuple" />
     </pattern> 
  
@@ -489,7 +507,7 @@
     </access-rule>
 
     <pattern name="jdbc.deps">
-      <include pattern="util.deps" />
+      <include pattern="release.deps" />
       <include pattern="jdbc" />
     </pattern>
 
@@ -521,23 +539,6 @@
       </deny>
     </access-rule>
 
-    <pattern name="jdbc.client.deps">
-      <include pattern="jdbc.deps" />
-      <include pattern="jdbc.rmi" />
-      <include pattern="jdbc.client" />
-    </pattern>
-
-    <access-rule>
-      <message>jdbc.client dependency violation</message>
-      <deny>
-        <from pattern="jdbc.client" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="jdbc.client.deps" />
-        </allow>
-      </deny>
-    </access-rule>
-
     <pattern name="jdbc.rmi.deps">
       <include pattern="jdbc.deps" />
       <include pattern="jdbc.rmi" />
@@ -550,6 +551,24 @@
         <to pattern="farrago" />
         <allow>
           <to pattern="jdbc.rmi.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="jdbc.client.deps">
+      <include pattern="jdbc.deps" />
+      <include pattern="fennel.tuple.deps" />
+      <include pattern="jdbc.rmi.deps" />
+      <include pattern="jdbc.client" />
+    </pattern>
+
+    <access-rule>
+      <message>jdbc.client dependency violation</message>
+      <deny>
+        <from pattern="jdbc.client" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="jdbc.client.deps" />
         </allow>
       </deny>
     </access-rule>

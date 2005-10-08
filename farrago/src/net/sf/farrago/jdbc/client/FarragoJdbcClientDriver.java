@@ -26,7 +26,7 @@ import java.sql.*;
 import java.util.*;
 
 import net.sf.farrago.jdbc.*;
-import net.sf.farrago.util.*;
+import net.sf.farrago.release.*;
 
 import org.objectweb.rmijdbc.RJConnectionInterface;
 

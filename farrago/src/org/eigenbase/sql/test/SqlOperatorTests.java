@@ -692,14 +692,11 @@ public abstract class SqlOperatorTests extends TestCase
     public void testInitcapFunc()
     {
         getTester().setFor(SqlStdOperatorTable.initcapFunc);
-        if (false) {
-            //not yet supported
-            getTester().checkString("initcap('aA')", "'Aa'", "todo:");
-            getTester().checkString("initcap('Aa')", "'Aa'", "todo:");
-            getTester().checkString("initcap('1a')", "'1a'", "todo:");
-            getTester().checkString("initcap('ab cd Ef 12')", "'Ab Cd Ef 12'", "todo:");
-            getTester().checkNull("initcap(cast(null as varchar(1)))");
-        }
+        getTester().checkString("initcap('aA')", "Aa", "todo:");
+        getTester().checkString("initcap('Aa')", "Aa", "todo:");
+        getTester().checkString("initcap('1a')", "1a", "todo:");
+        getTester().checkString("initcap('ab cd Ef 12')", "Ab Cd Ef 12", "todo:");
+        getTester().checkNull("initcap(cast(null as varchar(1)))");
     }
 
     public void testPowFunc()
@@ -708,6 +705,15 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().checkScalarApprox("pow(2,-2)", "todo:", 0.25, 0);
         getTester().checkNull("pow(cast(null as integer),2)");
         getTester().checkNull("pow(2,cast(null as double))");
+    }
+
+    public void testExpFunc()
+    {
+        getTester().setFor(SqlStdOperatorTable.expFunc);
+        getTester().checkScalarApprox("exp(2)", "todo:", 7.389056, 0.000001);
+        getTester().checkScalarApprox("exp(-2)", "todo:", 0.1353, 0.0001);
+        getTester().checkNull("exp(cast(null as integer))");
+        getTester().checkNull("exp(cast(null as double))");
     }
 
     public void testModFunc()
@@ -721,16 +727,16 @@ public abstract class SqlOperatorTests extends TestCase
     public void testLnFunc()
     {
         getTester().setFor(SqlStdOperatorTable.lnFunc);
-        getTester().checkScalarApprox("ln(2.71828)", "DOUBLE NOT NULL", 1, 0.000001);
+        getTester().checkScalarApprox("ln(2.71828)", "DOUBLE NOT NULL", 1.0, 0.000001);
         getTester().checkScalarApprox("ln(2.71828)", "DOUBLE NOT NULL", 0.999999327, 0.0000001);
         getTester().checkNull("ln(cast(null as tinyint))");
     }
 
     public void testLogFunc()
     {
-        getTester().setFor(SqlStdOperatorTable.logFunc);
-        getTester().checkScalarApprox("log(10)", "todo:", 1.0, 0);
-        getTester().checkNull("log(cast(null as real))");
+        getTester().setFor(SqlStdOperatorTable.log10Func);
+        getTester().checkScalarApprox("log10(10)", "todo:", 1.0, 0.000001);
+        getTester().checkNull("log10(cast(null as real))");
     }
 
     public void testAbsFunc()
@@ -801,8 +807,8 @@ public abstract class SqlOperatorTests extends TestCase
     public void testCurrentRoleFunc()
     {
         getTester().setFor(SqlStdOperatorTable.currentRoleFunc);
-        // We don't have roles yet, so the CURRENT_ROLE function returns
-        // the empty string.
+        // By default, the CURRENT_ROLE function returns
+        // the empty string because a role has to be set explicitly.
         getTester().checkString("CURRENT_ROLE", "", "VARCHAR(2000) NOT NULL");
     }
 
@@ -886,7 +892,7 @@ public abstract class SqlOperatorTests extends TestCase
         getTester().setFor(SqlStdOperatorTable.windowOperator);
         getTester().check(
             "select sum(1) over (order by x) from (select 1 as x, 2 as y from (values (true)))",
-            new AbstractSqlTester.StringTypeChecker("INTEGER NOT NULL"),
+            new AbstractSqlTester.StringTypeChecker("INTEGER"),
             "1",
             0);
     }
@@ -971,11 +977,11 @@ public abstract class SqlOperatorTests extends TestCase
     public void testCountFunc()
     {
         getTester().setFor(SqlStdOperatorTable.countOperator);
-        getTester().checkType("count(*)","INTEGER NOT NULL");
-        getTester().checkType("count('name')","INTEGER NOT NULL");
-        getTester().checkType("count(1)","INTEGER NOT NULL");
-        getTester().checkType("count(1.2)","INTEGER NOT NULL");
-        getTester().checkType("COUNT(DISTINCT 'x')","INTEGER NOT NULL");
+        getTester().checkType("count(*)","BIGINT NOT NULL");
+        getTester().checkType("count('name')","BIGINT NOT NULL");
+        getTester().checkType("count(1)","BIGINT NOT NULL");
+        getTester().checkType("count(1.2)","BIGINT NOT NULL");
+        getTester().checkType("COUNT(DISTINCT 'x')","BIGINT NOT NULL");
         getTester().checkFails("^COUNT()^",
             "Invalid number of arguments to function 'COUNT'. Was expecting 1 arguments");
         getTester().checkFails("^COUNT(1, 2)^",
@@ -1000,9 +1006,9 @@ public abstract class SqlOperatorTests extends TestCase
             "Unknown identifier '\\*'");
         getTester().checkFails("^sum('name')^",
             "(?s)Cannot apply 'SUM' to arguments of type 'SUM\\(<CHAR\\(4\\)>\\)'\\. Supported form\\(s\\): 'SUM\\(<NUMERIC>\\)'.*");
-        getTester().checkType("sum(1)","INTEGER NOT NULL");
-        getTester().checkType("sum(1.2)","DECIMAL(2, 1) NOT NULL");
-        getTester().checkType("sum(DISTINCT 1.5)","DECIMAL(2, 1) NOT NULL");
+        getTester().checkType("sum(1)","INTEGER");
+        getTester().checkType("sum(1.2)","DECIMAL(2, 1)");
+        getTester().checkType("sum(DISTINCT 1.5)","DECIMAL(2, 1)");
         getTester().checkFails("^sum()^",
             "Invalid number of arguments to function 'SUM'. Was expecting 1 arguments");
         getTester().checkFails("^sum(1, 2)^",

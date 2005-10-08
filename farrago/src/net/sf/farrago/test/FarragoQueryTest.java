@@ -75,7 +75,8 @@ public class FarragoQueryTest extends FarragoTestCase
         throws Exception
     {
         String sql =
-            "select deptno*1, deptno/1, deptno+0,deptno-0,deptno*deptno,deptno/deptno,deptno"
+            "select deptno*1, deptno/1, deptno+0, deptno-0,"
+            + " deptno*deptno, deptno/deptno,deptno"
             + " from sales.emps order by deptno";
         preparedStmt = connection.prepareStatement(sql);
         resultSet = preparedStmt.executeQuery();
@@ -181,58 +182,49 @@ public class FarragoQueryTest extends FarragoTestCase
      * specified role (to be granted to the first specified role) does not
      * exist.
      */
-     public void testCheckSecurityRoleCyleLurqlQuery()
-         throws Exception
-     {
-         // CREATE ROLE ROLE_1,  ROLE_2
-         // GRANT ROLE_2 TO ROLE_1
-         // Simulate GRANT ROLE ROLE_1 TO ROLE_2. This should fail.
-
-         // TODO: remove this temporary setting of the session current user
-         // once we have a proper login i.e. login user exists in the database
-         FarragoJdbcEngineConnection farragoConnection =
-             (FarragoJdbcEngineConnection) connection;
-         FarragoSession session = (FarragoSession)
-             farragoConnection.getSession();
-         session.getSessionVariables().currentUserName =
-             FarragoCatalogInit.SYSTEM_USER_NAME;
-        
-         stmt.execute("CREATE ROLE ROLE_1");
-         stmt.execute("CREATE ROLE ROLE_2");
-         stmt.execute("GRANT ROLE ROLE_2 TO ROLE_1");
-
-         // NOTE:  now we want to simulate GRANT ROLE ROLE_1 TO ROLE_2.
-         // So the grantee is ROLE_2, and the granted role is ROLE_1.
-         // For the cycle check, we need to look for paths in the
-         // opposite direction, so we reverse the two roles in the
-         // call below.
-         String lurql =
-             FarragoInternalQuery.instance().getTestSecurityRoleCycleCheck();
-         assertTrue(checkLurqlSecurityRoleCycle(lurql,  "ROLE_1",  "ROLE_2"));
-     }
+    public void testCheckSecurityRoleCyleLurqlQuery()
+    throws Exception
+    {
+        // CREATE ROLE ROLE_1, ROLE_2
+        // GRANT ROLE_2 TO ROLE_1
+        // Simulate GRANT ROLE ROLE_1 TO ROLE_2. This should fail.
+            
+        stmt.execute("CREATE ROLE ROLE_1");
+        stmt.execute("CREATE ROLE ROLE_2");
+        stmt.execute("GRANT ROLE ROLE_2 TO ROLE_1");
+            
+        // NOTE: now we want to simulate GRANT ROLE ROLE_1 TO ROLE_2.
+        // So the grantee is ROLE_2, and the granted role is ROLE_1.
+        // For the cycle check, we need to look for paths in the
+        // opposite direction, so we reverse the two roles in the
+        // call below.
+        String lurql =
+            FarragoInternalQuery.instance().getTestSecurityRoleCycleCheck();
+        assertTrue(checkLurqlSecurityRoleCycle(lurql,  "ROLE_1",  "ROLE_2"));
+    }
     
-     private boolean checkLurqlSecurityRoleCycle(
-         String lurql, String granteeName, String grantedRoleName)
-         throws Exception
-     {
-         Map argMap = new HashMap();
-         argMap.put("granteeName", granteeName);
-         FarragoJdbcEngineConnection farragoConnection =
-             (FarragoJdbcEngineConnection) connection;
-         FarragoSession session = (FarragoSession)
-             farragoConnection.getSession();
-         Collection result = session.executeLurqlQuery(
-             lurql, argMap);
-         Iterator iter = result.iterator();
-         while(iter.hasNext())
-         {
-             FemRole role = (FemRole) iter.next();
-             if (role.getName().equals(grantedRoleName)) {
-                 return true;
-             }
-         }
-         return false;
-     }
+    private boolean checkLurqlSecurityRoleCycle(
+        String lurql, String granteeName, String grantedRoleName)
+        throws Exception
+    {
+        Map argMap = new HashMap();
+        argMap.put("granteeName", granteeName);
+        FarragoJdbcEngineConnection farragoConnection =
+            (FarragoJdbcEngineConnection) connection;
+        FarragoSession session = (FarragoSession)
+            farragoConnection.getSession();
+        Collection result = session.executeLurqlQuery(
+            lurql, argMap);
+        Iterator iter = result.iterator();
+        while(iter.hasNext())
+        {
+            FemRole role = (FemRole) iter.next();
+            if (role.getName().equals(grantedRoleName)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 // End FarragoQueryTest.java

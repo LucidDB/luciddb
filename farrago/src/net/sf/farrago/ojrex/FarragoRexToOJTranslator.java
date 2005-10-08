@@ -194,6 +194,20 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         return variable;
     }
 
+    public Variable createScratchVariableWithExpression(
+        OJClass ojClass,
+        Expression  exp)
+    {
+        Variable variable = getRelImplementor().newVariable();
+        memberList.add(
+            new FieldDeclaration(
+                new ModifierList(ModifierList.EMPTY),
+                TypeName.forOJClass(ojClass),
+                variable.toString(),
+                exp));
+        return variable;
+    }
+
     public Variable createScratchVariable(RelDataType type)
     {
         OJClass ojClass = OJUtil.typeToOJClass(
@@ -297,6 +311,41 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
     public FarragoRepos getRepos()
     {
         return repos;
+    }
+
+    public void addAssignmentStatement(
+        StatementList stmtList,
+        Expression funcResult,
+        RelDataType retType,
+        Variable varResult,
+        boolean needCast)
+
+    {
+        Expression lhsExp;
+        if (SqlTypeUtil.isJavaPrimitive(retType) && !retType.isNullable()) {
+            lhsExp = varResult;
+        } else {
+            lhsExp = new FieldAccess(varResult, 
+                        NullablePrimitive.VALUE_FIELD_NAME);
+        }
+        if (!SqlTypeUtil.isJavaPrimitive(retType) || retType.isNullable()) {
+            stmtList.add(createSetNullStatement(varResult, false));
+        }
+        Expression result = funcResult;
+        if (needCast) {
+            OJClass lhsClass = 
+                OJClass.forClass(
+                    getFarragoTypeFactory().getClassForPrimitive(
+                        retType));
+            
+            result = new CastExpression(lhsClass, funcResult);
+        }
+        Statement stmt =new ExpressionStatement(
+                            new AssignmentExpression(
+                                lhsExp,
+                                AssignmentExpression.EQUALS, 
+                                result));
+        stmtList.add(stmt);
     }
 }
 

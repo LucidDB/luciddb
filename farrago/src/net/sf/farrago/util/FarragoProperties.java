@@ -55,6 +55,13 @@ public class FarragoProperties extends Properties
     //~ Instance fields -------------------------------------------------------
 
     /**
+     * The string property "java.util.logging.config.file" is the path to the
+     * Farrago trace configuration file.
+     */
+    public final StringProperty traceConfigFile =
+        new StringProperty(this, "java.util.logging.config.file", null);
+
+    /**
      * The string property "net.sf.farrago.home" is the path to the Farrago
      * installation directory.
      */

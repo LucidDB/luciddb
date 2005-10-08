@@ -173,6 +173,15 @@ public abstract class FarragoTrace
     }
 
     /**
+     * The tracer "net.sf.farrago.util.FarragoFileLockAllocation"
+     * traces {@link FarragoFileLockAllocation}.
+     */
+    public static Logger getFileLockAllocationTracer()
+    {
+        return getClassTracer(FarragoFileLockAllocation.class);
+    }
+
+    /**
      * The tracer "net.sf.farrago.util.FarragoObjectCache"
      * traces {@link FarragoObjectCache}.
      */

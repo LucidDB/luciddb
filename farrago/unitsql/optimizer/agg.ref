@@ -1,0 +1,107 @@
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/agg.sql#1 $
+0: jdbc:farrago:> -- Test aggregate queries
+0: jdbc:farrago:> 
+0: jdbc:farrago:> set schema 'sales';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- force usage of Java calculator
+0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_FENNEl';
+Error: Type mismatch in value ''CALCVM_FENNEl'' for system parameter "calcVirtualMachine" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select count(*) from depts;
++---------+
+| EXPR$0  |
++---------+
+| 3       |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select count(city) from emps;
++---------+
+| EXPR$0  |
++---------+
+| 2       |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select count(city) from emps where empno > 100000;
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select sum(deptno) from depts;
++---------+
+| EXPR$0  |
++---------+
+| 60      |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select sum(deptno) from depts where deptno > 100000;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select max(deptno) from depts;
++---------+
+| EXPR$0  |
++---------+
+| 30      |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select min(deptno) from depts;
++---------+
+| EXPR$0  |
++---------+
+| 10      |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify plans
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select count(*) from depts;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[EXPR$0]])'
+'    FennelAggRel(groupCount=[0], agg#0=[COUNT()])'
+'      FennelCalcRel($f0=[true])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select count(city) from emps;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[EXPR$0]])'
+'    FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])'
+'      FennelRenameRel(fieldNames=[[$f0]])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[4]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select sum(deptno) from depts;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[EXPR$0]])'
+'    FennelAggRel(groupCount=[0], agg#0=[SUM(0)])'
+'      FennelRenameRel(fieldNames=[[$f0]])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select max(deptno) from depts;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[EXPR$0]])'
+'    FennelAggRel(groupCount=[0], agg#0=[MAX(0)])'
+'      FennelRenameRel(fieldNames=[[$f0]])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select min(deptno) from depts;
+'column0'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[EXPR$0]])'
+'    FennelAggRel(groupCount=[0], agg#0=[MIN(0)])'
+'      FennelRenameRel(fieldNames=[[$f0]])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

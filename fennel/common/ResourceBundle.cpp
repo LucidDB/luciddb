@@ -264,7 +264,7 @@ void ResourceBundle::loadMessages()
     if (!_location.empty()) {
         string path = _location + "/" + fileName;
         in.open(path.c_str(), ios::in);
-        if (in.is_open()) {
+        if (in.good()) {
             tryGlobalLocation = false;
         }
     }
@@ -278,7 +278,7 @@ void ResourceBundle::loadMessages()
         if (!globalResourceLocation.empty()) {
             string path = globalResourceLocation + "/" + fileName;
             in.open(path.c_str(), ios::in);
-            if (in.is_open()) {
+            if (in.good()) {
                 tryEnvVar = false;
             }
         }
@@ -289,14 +289,14 @@ void ResourceBundle::loadMessages()
       
             string path = string(fennelHome) + "/common/" + fileName;
             in.open(path.c_str(), ios::in);
-            if (!in.is_open()) {
+            if (!in.good()) {
                 return; // give up
             }
         }
     }
 
     string line, key, message;
-    while(!in.eof()) {
+    while(in.good()) {
         getline(in, line);
 
         if (line.length() == 0 || line[0] == '#') {

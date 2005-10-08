@@ -46,7 +46,7 @@ public class DdlExtendCatalogStmt extends DdlStmt
     private FarragoRepos repos;
     private FarragoSessionFactory sessionFactory;
     private FemJar femJar;
-    private URL jarUrl;
+    private String jarUrlUnexpanded;
     
     public DdlExtendCatalogStmt(SqlIdentifier jarName)
     {
@@ -100,7 +100,8 @@ public class DdlExtendCatalogStmt extends DdlStmt
         JarInputStream jarInputStream = null;
 
         try {
-            jarUrl = new URL(FarragoCatalogUtil.getJarUrl(femJar));
+            jarUrlUnexpanded = femJar.getUrl();
+            URL jarUrl = new URL(FarragoCatalogUtil.getJarUrl(femJar));
             jarInputStream = new JarInputStream(jarUrl.openStream());
             Manifest manifest = jarInputStream.getManifest();
             String xmiResourceName =
@@ -119,9 +120,9 @@ public class DdlExtendCatalogStmt extends DdlStmt
         }
     }
 
-    public URL getJarUrl()
+    public String getJarUrl()
     {
-        return jarUrl;
+        return jarUrlUnexpanded;
     }
 }
 

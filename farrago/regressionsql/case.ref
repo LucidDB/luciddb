@@ -1,7 +1,6 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/regressionsql/case.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/regressionsql/case.sql#2 $
 0: jdbc:farrago:> -- Full vertical system testing of the case function
 0: jdbc:farrago:> -- 
-0: jdbc:farrago:> alter system set "calcVirtualMachine"='CALCVM_JAVA';
 0: jdbc:farrago:> -- 
 0: jdbc:farrago:> -- The result is not primitive
 0: jdbc:farrago:> 
@@ -27,16 +26,6 @@
 | John   | Other   |
 +--------+---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- condition is not nullable, list one case, without else.
-0: jdbc:farrago:> select deptno, case deptno when 10 then 'Yes' end from sales.emps;
-+---------+---------+
-| DEPTNO  | EXPR$1  |
-+---------+---------+
-| 10      | Yes     |
-| 20      |         |
-| 20      |         |
-| 40      |         |
-+---------+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- condition is nullable, list all possible cases, with else.
 0: jdbc:farrago:> select slacker, case slacker when true then 'yes' when false then 'no' else 'other' end from sales.emps;
@@ -49,27 +38,6 @@
 | false    | no      |
 +----------+---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- condition is nullable, list two case, with else.
-0: jdbc:farrago:> select age, case age when 50 then 'fifty' when 25 then 'twenty-five' end from sales.emps;
-+------+--------------+
-| AGE  |    EXPR$1    |
-+------+--------------+
-| 25   | twenty-five  |
-| 80   |              |
-| 50   | fifty        |
-|      |              |
-+------+--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- condition is nullable, list one case, without else.
-0: jdbc:farrago:> select gender, case gender when 'M' then 'Yes' end from sales.emps;
-+---------+---------+
-| GENDER  | EXPR$1  |
-+---------+---------+
-|         |         |
-| M       | Yes     |
-| F       |         |
-| M       | Yes     |
-+---------+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- The result is primitive
 0: jdbc:farrago:> 
@@ -157,5 +125,49 @@
 | false    |         |
 +----------+---------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> select empno, case empno when 120 then 1 when 120 then 3 else 2 end from sales.emps;
++--------+---------+
+| EMPNO  | EXPR$1  |
++--------+---------+
+| 100    | 2       |
+| 110    | 2       |
+| 120    | 1       |
+| 110    | 2       |
++--------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- Fennel can not handle the following cases.
+0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_JAVA';
+0: jdbc:farrago:> -- condition is not nullable, list one case, without else.
+0: jdbc:farrago:> select deptno, case deptno when 10 then 'Yes' end from sales.emps;
++---------+---------+
+| DEPTNO  | EXPR$1  |
++---------+---------+
+| 10      | Yes     |
+| 20      |         |
+| 20      |         |
+| 40      |         |
++---------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- condition is nullable, list two case, with else.
+0: jdbc:farrago:> select age, case age when 50 then 'fifty' when 25 then 'twenty-five' end from sales.emps;
++------+--------------+
+| AGE  |    EXPR$1    |
++------+--------------+
+| 25   | twenty-five  |
+| 80   |              |
+| 50   | fifty        |
+|      |              |
++------+--------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- condition is nullable, list one case, without else.
+0: jdbc:farrago:> select gender, case gender when 'M' then 'Yes' end from sales.emps;
++---------+---------+
+| GENDER  | EXPR$1  |
++---------+---------+
+|         |         |
+| M       | Yes     |
+| F       |         |
+| M       | Yes     |
++---------+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

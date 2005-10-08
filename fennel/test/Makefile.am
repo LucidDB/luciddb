@@ -94,6 +94,7 @@ LDADD = -L$(top_builddir)/test -l$(TEST_LIB) \
 	-lfennel_cache \
 	-lfennel_device \
 	-lfennel_common \
+	-l$(BOOST_THREADLIB) \
 	-l$(STLPORT_LIB) \
 	$(EXTRA_LDFLAGS)
 

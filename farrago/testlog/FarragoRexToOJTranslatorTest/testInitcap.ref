@@ -1,0 +1,10 @@
+
+ExecutableStmt.Oj_inner_0 oj_var0 = new ExecutableStmt.Oj_inner_0();
+
+if (ID$4$CITY.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.initcap( ID$4$CITY );
+}
+
+return oj_var0;

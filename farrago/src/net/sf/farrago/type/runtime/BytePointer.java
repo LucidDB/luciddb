@@ -22,7 +22,10 @@
 */
 package net.sf.farrago.type.runtime;
 
+import net.sf.farrago.resource.*;
+
 import org.eigenbase.util.*;
+import org.eigenbase.sql.fun.SqlTrimFunction;
 
 import java.io.*;
 import java.nio.*;
@@ -46,13 +49,22 @@ import java.nio.*;
  * @version $Id$
  */
 public class BytePointer extends ByteArrayInputStream
-    implements AssignableValue
+    implements AssignableValue, CharSequence
 {
     //~ Static fields/initializers --------------------------------------------
 
     public static final String ENFORCE_PRECISION_METHOD_NAME =
         "enforceBytePrecision";
     public static final String SET_POINTER_METHOD_NAME = "setPointer";
+    public static final String GET_BYTE_COUNT_METHOD_NAME = "getByteCount";
+    public static final String SUBSTRING_METHOD_NAME = "substring";
+    public static final String OVERLAY_METHOD_NAME = "overlay";
+    public static final String INITCAP_METHOD_NAME = "initcap";
+    public static final String CONCAT_METHOD_NAME = "concat";
+    public static final String UPPER_METHOD_NAME = "upper";
+    public static final String LOWER_METHOD_NAME = "lower";
+    public static final String TRIM_METHOD_NAME = "trim";
+    public static final String POSITION_METHOD_NAME = "position";
 
     /** Read-only global for 0-length byte array */
     public static final byte [] emptyBytes = new byte[0];
@@ -67,6 +79,12 @@ public class BytePointer extends ByteArrayInputStream
      * be created.
      */
     private byte [] ownBytes;
+	/**
+	 * two temp variables to store the substring pointers
+	 *
+	 */
+	private int S1;
+	private int L1;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -192,6 +210,306 @@ public class BytePointer extends ByteArrayInputStream
         }
     }
 
+    /**
+     * Reduces the value to a substring of the current value.
+     *
+     * @param starting desired starting position
+     *
+     * @param length  the length.
+     *
+     * @param useLength to indicate whether length parameter should be used. 
+     *
+     */
+    public void substring(
+        int starting,
+        int length,
+        boolean useLength)
+    {
+        calcSubstringPointers( starting, length, getByteCount(), useLength); 
+        pos += S1;
+        count = pos + L1;
+    }
+
+    /**
+     * Assigns this value to the result of inserting bp2's value into bp1's
+     * value at a specified starting point, possibly deleting a prefix of the
+     * remainder of bp1 of a given length.  Implements the SQL string OVERLAY
+     * function.
+     *
+     * @param bp1 string1
+     *
+     * @param bp2 string2
+     *
+     * @param s starting point
+     *
+     * @param l length
+     *
+     * @param useLength whether to use length parameter
+     *
+     */
+    public void overlay(
+        BytePointer bp1,
+        BytePointer bp2,
+        int starting,
+        int length,
+        boolean useLength)
+    {
+        if (!useLength) {
+            length = bp2.getByteCount();
+        }
+        calcSubstringPointers( starting, length, bp1.getByteCount(), true); 
+        int totalLength = bp2.getByteCount() + bp1.getByteCount() - L1;
+        allocateOwnBytes(totalLength);
+        if (L1 == 0 &&  starting > bp1.getByteCount()) {
+            System.arraycopy(bp1.buf, bp1.pos, ownBytes, 0, bp1.getByteCount());
+            System.arraycopy(bp2.buf, bp2.pos, ownBytes, bp1.getByteCount(), bp2.getByteCount());
+        } else {
+            System.arraycopy(bp1.buf, bp1.pos, ownBytes, 0, S1);
+            System.arraycopy(bp2.buf, bp2.pos, ownBytes, S1, bp2.getByteCount());
+            System.arraycopy(bp1.buf, bp1.pos + S1 + L1, 
+                ownBytes, S1 + bp2.getByteCount(), 
+                bp1.getByteCount() - S1 - L1);
+        }
+        buf = ownBytes;
+        pos = 0;
+        count = totalLength;
+    }
+
+    /**
+     * Assigns this pointer to the result of concatenating two input strings.
+     *
+     * @param bp1 string1
+     *
+     * @param bp2 string2
+     *
+     */
+    public void concat(
+        BytePointer bp1,
+        BytePointer bp2)
+    {
+        // can not be null.
+        allocateOwnBytes(bp1.getByteCount()+bp2.getByteCount());
+        System.arraycopy(bp1.buf, bp1.pos, ownBytes, 0, bp1.getByteCount());
+        System.arraycopy(bp2.buf, bp2.pos, ownBytes, bp1.getByteCount(), 
+                        bp2.getByteCount());
+        buf = ownBytes;
+        pos = 0;
+        count = bp1.getByteCount()+bp2.getByteCount();
+    }
+    
+    public int getByteCount() 
+    {
+        return available();
+    }
+
+    /* 
+     * implement CharSequence
+     * the Default implementation.
+     * Only works for ISO-8859-1
+     * If Unicode, or any other variable length
+     * encoding, it needs to override these functions.
+     *
+     */
+
+    public int length() 
+    {
+        return available();
+    }
+
+    public char charAt(int index) 
+    {
+        return (char) buf[pos+index];
+    }
+
+    public CharSequence subSequence(int start, int end) 
+    {
+        BytePointer bp = new BytePointer();
+        if (start < 0 || end < 0 || end >= getByteCount()) {
+            throw new IndexOutOfBoundsException();
+        }
+        bp.setPointer(buf, pos + start, pos + end);
+        return bp;
+    }
+
+    /**
+     * upper the case for each character of the string
+     *
+     * @param bp1 string1
+     *
+     */
+    public void upper(BytePointer bp1)
+    {
+        copyFrom(bp1);
+        for (int i = 0; i < count; i++) {
+            if (Character.isLowerCase((char) ownBytes[i])) {
+                ownBytes[i] = (byte)Character.toUpperCase((char) ownBytes[i]);
+            }
+        }
+    }
+
+    /**
+     * lower the case for each character of the string
+     *
+     * @param bp1 string1
+     *
+     */
+    public void lower(BytePointer bp1)
+    { 
+        copyFrom(bp1);
+        for (int i = 0; i < count; i++) {
+            if (Character.isUpperCase((char) ownBytes[i])) {
+                ownBytes[i] = (byte)Character.toLowerCase((char) ownBytes[i]);
+            }
+        }
+    }
+                
+    /**
+     * initcap the string.
+     *
+     * @param bp1 string1
+     *
+     */
+    public void initcap(BytePointer bp1)
+    {
+        boolean bWordBegin = true;
+        copyFrom(bp1);
+        for (int i = 0; i < count; i++) {
+            if (Character.isWhitespace((char) ownBytes[i])) {
+                bWordBegin = true;
+            } else {
+                if (bWordBegin) {
+                    if (Character.isLowerCase((char) ownBytes[i])) {
+                        ownBytes[i] = (byte)Character.toUpperCase(
+                            (char) ownBytes[i]);
+                    }
+                } else{
+                    if (Character.isUpperCase((char) ownBytes[i])) {
+                        ownBytes[i] = (byte)Character.toLowerCase(
+                            (char) ownBytes[i]);
+                    }
+                }
+                bWordBegin = false;
+            }
+        }
+    }
+
+    public void trim(int trimOrdinal, BytePointer bp1, BytePointer bp2)
+    {
+        boolean leading = false;
+        boolean trailing = false;
+        int i;
+        byte trimChar;
+
+        if (bp1.getByteCount() != 1) {
+            throw FarragoResource.instance().newInvalidFunctionArgument("trim");
+        }
+        copyFrom(bp2);
+        trimChar = bp1.buf[bp1.pos];
+        if (trimOrdinal == SqlTrimFunction.Flag.Both.getOrdinal()){
+            leading = true;
+            trailing = true;
+        } else if (trimOrdinal == SqlTrimFunction.Flag.Leading.getOrdinal()){
+            leading = true;
+        } else {
+            assert trimOrdinal == SqlTrimFunction.Flag.Trailing.getOrdinal();
+            trailing = true;
+        }
+        int cnt = count;
+        if (leading) {
+            for (i = 0; i < cnt; i++) {
+                if (buf[i] == trimChar) {
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+        }
+        if (trailing) {
+            for (i = cnt - 1; i >= 0 ; i--) {
+                if (buf[i] == trimChar) {
+                    count--;
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+
+    public int position(BytePointer bp1)
+    {
+        if (bp1.getByteCount() == 0) {
+            return 1;
+        }
+        int cnt1 = bp1.getByteCount();
+        int cnt = getByteCount() - cnt1;
+        for (int i = 0; i < cnt; i++) {
+            boolean stillMatch = true; 
+            for (int j = 0; j < cnt1; j++) {
+                if (buf[pos+i+j] != bp1.buf[bp1.pos+j]) {
+                    stillMatch = false;
+                    break;
+                }
+            }
+            if (stillMatch) {
+                return i+1;
+            }
+        }
+        return 0;
+    }
+
+    private void copyFrom(BytePointer bp1)
+    {
+        allocateOwnBytes(bp1.getByteCount());
+        System.arraycopy(bp1.buf, bp1.pos, ownBytes, 0, bp1.getByteCount());
+        buf = ownBytes;
+        pos = 0;
+        count = bp1.getByteCount();
+    }
+
+    /**
+     * @sql.2003 Part 2 Section 6.29 General Rule 3
+     */
+
+    // we store the result in the member variables to avoid memory allocation.
+    
+    private void calcSubstringPointers(
+        int S,
+        int L,
+        int LC,
+        boolean useLength)
+    {
+        int e;
+        if (useLength) {
+            if (L < 0) {
+                // If E is less than S, then it means L is negative exception.
+                throw FarragoResource.instance().newNegativeLengthForSubstring();
+            }
+            e = S + L;
+        } else {
+            e = S;
+            if (e <= LC) {
+                e = LC + 1;
+            }
+        }
+
+        // f) and i) in the standard. S > LC or E < 1 
+        if (S > LC || e < 1) {
+            S1 = L1 = 0;
+        } else {
+            // f) and ii) in the standard. 
+            // calculate the E1 and L1
+            S1 = S - 1;
+            if (S1 < 0) {
+                S1 = 0;
+            }
+            int e1 = e;
+            if (e1 > LC) {
+                e1 = LC + 1;
+            }
+            L1 = e1 - (S1 + 1);
+        }
+    }
+
     private void allocateOwnBytes(int n)
     {
         if ((ownBytes == null) || (ownBytes.length < n)) {
@@ -270,7 +588,8 @@ public class BytePointer extends ByteArrayInputStream
                 // we know i1 < count, so this must be greater than other
                 return 1;
             }
-            int c = (int) other.buf[i2] - (int) buf[i1];
+            // need to convert the signed byte to unsigned.
+            int c = (int) (0xFF & buf[i1]) - (int) (0xFF & other.buf[i2]);
             if (c != 0) {
                 return c;
             }
@@ -287,6 +606,224 @@ public class BytePointer extends ByteArrayInputStream
         byte [] bytes = new byte[n];
         System.arraycopy(buf, pos, bytes, 0, n);
         return Util.toStringFromByteArray(bytes, 16);
+    }
+
+    // private static fmt = new DecimalFormat;
+    public void cast(float f, int precision)
+    {
+        castNoChecking(f, precision, true);
+    }
+
+    public void cast(double d, int precision)
+    {
+        castNoChecking(d, precision, false);
+    }
+
+    private void castNoChecking(double d, int precision, boolean isFloat)
+    {
+        // once precision is relaxed, we need to calculate the minimum
+        // length and make sure the precision is >= minimum length.
+        //
+
+        if (d == 0) {
+            if (precision >= 3) {
+                allocateOwnBytes(3);
+                ownBytes[0] = (byte) '0';
+                ownBytes[1] = (byte) 'E';
+                ownBytes[2] = (byte) '0';
+                count = 3;
+            } else if (precision >= 1) {
+                allocateOwnBytes(1);
+                ownBytes[0] = (byte) '0';
+                count = 1;
+            } else {
+                // char(0) is it possible?
+                throw net.sf.farrago.resource.FarragoResource.instance().newOverflow();
+            }
+            buf = ownBytes;
+            pos = 0;
+            return;
+        }
+
+        int effectiveDigits = 17;
+        if (isFloat) {
+            effectiveDigits = 8;
+        }
+        int lengthNeeded = effectiveDigits + 5; // . Esnn
+
+        boolean negative = false;
+
+        if (d < 0.0) {
+            negative = true;
+            d = -d;
+            lengthNeeded++;   // need the sign for that.
+        }
+
+        // E , firstDigit, and sign for exponenent.
+
+        int exponent = 0;
+        double  tempd;
+        boolean exponentNegative = false;
+
+        if (d < 1.0) {
+            for (tempd = d; tempd < 1.0; tempd *= 10) {
+                exponent++;
+            }
+            exponentNegative = true;
+        } else {
+            for (tempd = d; tempd >= 10.0; tempd /= 10) {
+                exponent++;
+            }
+        }
+        if (exponent >= 100) {
+            lengthNeeded++;
+        }
+        if (precision < lengthNeeded) {
+            throw net.sf.farrago.resource.FarragoResource.instance().newOverflow();
+        }
+        int len = lengthNeeded;
+
+        if (exponentNegative) {
+            exponent = - exponent;
+        }
+
+        allocateOwnBytes(len);
+        int currentLength = fillExponent(exponent, len);
+
+        // now, we can just keep using the floor part.
+        int currentStart = 0;
+        if (negative) {
+            ownBytes[0] = (byte) '-';
+            currentStart = 1;
+        }
+
+        int currentChar = (int)tempd;
+        ownBytes[currentStart] = (byte) (currentChar + '0');
+        currentStart++;
+        tempd = (tempd - currentChar)*10;
+        ownBytes[currentStart] = (byte) '.';
+        currentStart++;
+
+        for (int i = currentStart; i < currentLength; i++) {
+            if (i != currentLength-1) {
+                currentChar = (int)tempd;
+            } else {
+                currentChar = (int)(tempd+0.5); // last digit, rounding
+                if (currentChar == 10) {
+                    currentChar = 0;
+                    boolean needShift = true;
+                    for (int k = i - 1;  k >= currentStart; k--) {
+                        if (ownBytes[k] == ('0' + 9)) {
+                            ownBytes[k] = '0';
+                        } else {
+                            ownBytes[k] += 1;
+                            needShift = false;
+                            break;
+                        }
+                    }
+                    if (needShift) {
+                        int k = currentStart - 2;  // we need to skip the .
+                        if (ownBytes[k] != ('0' + 9)) {
+                            // gee, it is 10.0000000
+                            ownBytes[k] = '1';
+                        } else {
+                            ownBytes[k] += 1;
+                            needShift = false;
+                        }
+                    }
+                    if (needShift) {
+                        fillExponent(exponent, len);
+                    }
+                }
+            }
+            // currentChar must be between 0 and 10
+            ownBytes[i] = (byte) (currentChar + '0');
+            tempd = (tempd - currentChar)*10;
+        }
+
+        buf = ownBytes;
+        pos = 0;
+        count = len;
+    }
+
+    private int fillExponent(int exponent, int len)
+    {
+        boolean exponentNegative = false;
+        if (exponent < 0) {
+            exponentNegative = true;
+            exponent = - exponent;
+        }
+        int digitsOfExponent = 0;
+        int currentLength = len;
+        for (int tempe = exponent; tempe != 0; tempe = tempe/10) {
+            digitsOfExponent++;
+            currentLength--;
+            ownBytes[currentLength] = (byte) ('0' + tempe % 10);
+        }
+        // if less than two digits, need to fill them.
+        if (digitsOfExponent == 0) {
+            currentLength--;
+            ownBytes[currentLength] = (byte) '0';
+            digitsOfExponent++;
+        }
+        if (digitsOfExponent == 1) {
+            currentLength--;
+            ownBytes[currentLength] = (byte) '0';
+        }
+
+        currentLength--;
+        if (exponentNegative) {
+            ownBytes[currentLength] = (byte) '-';
+        } else {
+            ownBytes[currentLength] = (byte) '+';
+        }
+        currentLength--;
+        ownBytes[currentLength] = (byte) 'E';
+        return currentLength;
+    }
+
+    public void cast(long l, int precision)
+    {
+        boolean negative = false;
+        if (l < 0) {
+            l = -l;
+            negative = true;
+        }
+        int len = 0;
+        long templ;
+
+        for (templ = l ;templ != 0; templ = templ/10) 
+        {
+            len++;
+        }
+
+        if (negative) {
+            len++;
+        }
+        if (len > precision) {
+            throw net.sf.farrago.resource.FarragoResource.instance().newOverflow();
+        }
+
+        if (l == 0) {
+            len = 1;
+        }
+        allocateOwnBytes(len);
+        if (l == 0) {
+            ownBytes[0] = (byte) '0';
+        } else {
+            if (negative) {
+                ownBytes[0] = (byte) '-';
+            }
+            int i = 0;
+            for (templ=l; templ != 0; i++, templ = templ/10) {
+                int currentDigit = (int) (templ % 10);
+                ownBytes[len - 1 - i] = (byte) ('0' + (char) currentDigit);
+            }
+        }
+
+        buf = ownBytes;
+        pos = 0;
+        count = len;
     }
 }
 

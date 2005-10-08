@@ -1,7 +1,7 @@
 int oj_var0;
-oj_var0 = (int) 2;
+oj_var0 = 2;
 if (ID$0$EMPNO == 120) {
-    oj_var0 = (int) 1;
+    oj_var0 = 1;
 }
 
 return oj_var0;

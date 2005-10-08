@@ -19,9 +19,8 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package net.sf.farrago.util;
+package net.sf.farrago.release;
 
-import org.eigenbase.util.*;
 import org.eigenbase.util.property.*;
 
 import java.util.*;
@@ -29,10 +28,10 @@ import java.net.*;
 import java.io.*;
 
 /**
- * Provides immutable properties burned into a particular release of
- * Farrago.  See {@link FarragoProperties} for an explanation of
- * what NOT to define here.  In addition, no site-specific property
- * should ever be defined here.
+ * Provides immutable properties burned into a particular release of Farrago.
+ * See {@link net.sf.farrago.util.FarragoProperties} for an explanation of what
+ * NOT to define here.  In addition, no site-specific property should ever be
+ * defined here.
  *
  *<p>
  *
@@ -71,14 +70,16 @@ public class FarragoReleaseProperties extends Properties
                 FarragoReleaseProperties.class.getClassLoader().getResource(
                     resourceName);
             if (url == null) {
-                throw Util.newInternal(failureString);
+                throw new RuntimeException(failureString);
             }
             InputStream urlStream = null;
             try {
                 urlStream = url.openStream();
                 instance.load(urlStream);
             } catch (IOException ex) {
-                throw Util.newInternal(ex, failureString);
+                RuntimeException rx = new RuntimeException(failureString);
+                rx.initCause(ex);
+                throw rx;
             } finally {
                 if (urlStream != null) {
                     try {

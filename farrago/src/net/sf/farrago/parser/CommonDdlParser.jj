@@ -655,7 +655,6 @@ FemUser UserDefinition() :
         // TODO: Finalize the syntax for JAAS integration
         // user.setAuthenticationMethod = 
         // TODO: validate and save the authentication method
-        // TODO: Grant PUBLIC to user
     }
     [<DEFAULT_KW>
         (
@@ -722,6 +721,22 @@ CwmTable TableIdentifier() :
         farragoParser.getStmtValidator().findSchemaObject(
             qualifiedTableName,
             getRepos().getRelationalPackage().getCwmTable());
+        return table;
+    }
+}
+
+CwmNamedColumnSet ColumnSetIdentifier() :
+{
+    SqlIdentifier qualifiedTableName;
+    CwmNamedColumnSet table;
+}
+{
+    qualifiedTableName = CompoundIdentifier3()
+    {
+        table = (CwmNamedColumnSet)
+        farragoParser.getStmtValidator().findSchemaObject(
+            qualifiedTableName,
+            getRepos().getRelationalPackage().getCwmNamedColumnSet());
         return table;
     }
 }
@@ -2369,7 +2384,7 @@ DdlStmt GrantPrivStmt() :
         stmt.setPrivList(privList);
     }
     <ON> (
-        [ <TABLE> ] grantedObject = TableIdentifier()
+        [ <TABLE> ] grantedObject = ColumnSetIdentifier()
         |
         grantedObject = SpecificRoutineReference()
         // TODO: (qtt) <SEQUENCE> grantedObject = SequenceIdentifier()

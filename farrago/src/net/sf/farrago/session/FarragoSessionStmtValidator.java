@@ -109,6 +109,25 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
     public FarragoObjectCache getSharedDataWrapperCache();
 
     /**
+     * @return the privilege checker for this validator
+     */
+    public FarragoSessionPrivilegeChecker getPrivilegeChecker();
+
+    /**
+     * Submits a request for access from the current user and/or role to a
+     * catalog object via this validator's privilege checker.  Actual checking
+     * of the request may be deferred.
+     * 
+     * @param obj object to be accessed
+     *
+     * @param action the action to be performed on obj
+     * (see {@link PrivilegedActionEnum} for base set)
+     */
+    public void requestPrivilege(
+        CwmModelElement obj,
+        String action);
+
+    /**
      * Looks up a table's column by name, throwing a validation error if not
      * found.
      *

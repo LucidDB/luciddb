@@ -46,7 +46,7 @@ public class SqlCountAggFunction extends SqlAggFunction
     public SqlCountAggFunction()
     {
         super(
-            "COUNT", SqlKind.Function, SqlTypeStrategies.rtiInteger,
+            "COUNT", SqlKind.Function, SqlTypeStrategies.rtiBigint,
             null, SqlTypeStrategies.otcAny,
             SqlFunctionCategory.Numeric);
     }

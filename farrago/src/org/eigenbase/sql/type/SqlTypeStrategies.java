@@ -518,6 +518,15 @@ public abstract class SqlTypeStrategies
 
     /**
      * Type-inference strategy whereby the result type of a call is the type of
+     * the first operand, with nulls always allowed.
+     */
+    public static final SqlReturnTypeInference
+        rtiFirstArgTypeForceNullable =
+        new SqlTypeTransformCascade(
+            rtiFirstArgType, SqlTypeTransforms.forceNullable);
+
+    /**
+     * Type-inference strategy whereby the result type of a call is the type of
      * the first operand. If any of the other operands are nullable the returned
      * type will also be nullable.
      */
@@ -628,6 +637,13 @@ public abstract class SqlTypeStrategies
     public static final SqlReturnTypeInference
         rtiInteger =
         new ExplicitReturnTypeInference(SqlTypeName.Integer);
+
+    /**
+     * Type-inference strategy whereby the result type of a call is an Bigint
+     */
+    public static final SqlReturnTypeInference
+        rtiBigint =
+        new ExplicitReturnTypeInference(SqlTypeName.Bigint);
 
     /**
      * Type-inference strategy whereby the result type of a call is an Integer

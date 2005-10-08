@@ -102,3 +102,5 @@ insert into s.b values (true, 1);
 select not b from s.b;
 select b or true from s.b;
 select b and true from s.b;
+drop table s.b;
+drop schema s;

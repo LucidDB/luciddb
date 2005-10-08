@@ -170,6 +170,17 @@ void TestBase::snooze(uint nSeconds)
 #endif
 }
 
+#ifdef __MINGW32__
+// REVIEW jvs 31-Aug-2005:  I had to add this to shut up the linker
+// when moving to boost 1.33.  According to the boost docs, the
+// linker's complaint indicates the potential for a leak due to
+// the interaction between threads and DLL's.  Since it's only
+// for tests, figuring out what's going wrong is low priority.
+extern "C" void tss_cleanup_implemented(void)
+{
+}
+#endif
+
 // NOTE:  This pulls in all of the code for the Boost unit test framework.
 // This way, it's only compiled and linked once into shared library
 // libfenneltest, rather than linked statically into each unit test.  For a

@@ -135,6 +135,7 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
             planner.addRule(new FennelCartesianJoinRule());
             planner.addRule(new FennelCorrelatorRule());
             planner.addRule(new FennelOneRowRule());
+            planner.addRule(new FennelAggRule());
         }
 
         // Add the rule to introduce FennelCalcRel's only if the fennel

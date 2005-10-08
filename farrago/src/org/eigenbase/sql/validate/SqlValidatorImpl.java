@@ -919,7 +919,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             // Check for COUNT(*) function.  If it is we don't
             // want to try and derive the "*"
             if (call.isCountStar()) {
-                return typeFactory.createSqlType(SqlTypeName.Integer);
+                return typeFactory.createSqlType(SqlTypeName.Bigint);
             }
 
             final SqlSyntax syntax = call.getOperator().getSyntax();

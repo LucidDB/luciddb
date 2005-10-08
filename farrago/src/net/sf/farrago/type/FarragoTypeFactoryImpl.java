@@ -477,6 +477,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             } else {
                 return OJSystem.SHORT;
             }
+        case SqlTypeName.Symbol_ordinal:
         case SqlTypeName.Integer_ordinal:
             if (type.isNullable()) {
                 return OJClass.forClass(

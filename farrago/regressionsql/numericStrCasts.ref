@@ -158,31 +158,6 @@ Messages:
 0: jdbc:farrago:> --select cast(i as varchar(6)) from exacts;
 0: jdbc:farrago:> --select cast(r as varchar(6)) from exacts;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Note: Currently need >= 23 characters to display a double -JK 2004/08/11
-0: jdbc:farrago:> -- REVIEW: Results are likely to be non-portable, as float representations
-0: jdbc:farrago:> -- REVIEW: will differ on various processors. Should round or truncate
-0: jdbc:farrago:> -- REVIEW: results lexically. -JK 2004/08/11
-0: jdbc:farrago:> select cast(r as varchar(23)) from approx;
-+--------------------------+
-|          EXPR$0          |
-+--------------------------+
-| 1.0000000000000000E+00   |
-| -1.0000000000000000E+00  |
-| 0E0                      |
-| 3.1415927410125732E+00   |
-| 3.1415927886962891E+01   |
-+--------------------------+
-0: jdbc:farrago:> select cast(d as varchar(23)) from approx;
-+--------------------------+
-|          EXPR$0          |
-+--------------------------+
-| 1.0000000000000000E+00   |
-| -1.0000000000000000E+00  |
-| 0E0                      |
-| 3.1415926535897931E+00   |
-| 3.1415926535897931E+01   |
-+--------------------------+
-0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- cast numbers to char that's too small
@@ -246,5 +221,37 @@ Error: could not calculate results for the following row:
 [ 1, 1, 1 ]
 Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- Note: Currently need >= 23 characters to display a double -JK 2004/08/11
+0: jdbc:farrago:> -- REVIEW: Results are likely to be non-portable, as float representations
+0: jdbc:farrago:> -- REVIEW: will differ on various processors. Should round or truncate
+0: jdbc:farrago:> -- REVIEW: results lexically. -JK 2004/08/11
+0: jdbc:farrago:> select cast(d as varchar(23)) from approx;
++--------------------------+
+|          EXPR$0          |
++--------------------------+
+| 1.0000000000000000E+00   |
+| -1.0000000000000000E+00  |
+| 0E0                      |
+| 3.1415926535897931E+00   |
+| 3.1415926535897931E+01   |
++--------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- TODO: fennel displays more than 8 digits. (plus signg ...), that caused diff.
+0: jdbc:farrago:> alter system set "calcVirtualMachine"='CALCVM_JAVA';
+0: jdbc:farrago:> select cast(r as varchar(23)) from approx;
++-----------------+
+|     EXPR$0      |
++-----------------+
+| 1.0000000E+00   |
+| -1.0000000E+00  |
+| 0E0             |
+| 3.1415927E+00   |
+| 3.1415928E+01   |
++-----------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop table ints;
+0: jdbc:farrago:> drop table approx;
+0: jdbc:farrago:> drop schema s;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

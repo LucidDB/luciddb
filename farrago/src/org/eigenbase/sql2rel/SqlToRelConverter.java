@@ -837,7 +837,7 @@ public class SqlToRelConverter
         try {
             Util.permAssert(bb.agg == null, "already in agg mode");
             bb.agg = aggConverter;
-            // convert the the select and having expressions, so that the
+            // convert the select and having expressions, so that the
             // agg converter knows which aggregations are required
             for (int i = 0; i < selectList.size(); i++) {
                 SqlNode expr = selectList.get(i);
@@ -854,6 +854,13 @@ public class SqlToRelConverter
 
         // compute inputs to the aggregator
         RexNode[] preExprs = aggConverter.getPreExprs();
+        if (preExprs.length == 0) {
+            // Special case for COUNT(*), where we can end up with no inputs at
+            // all.  The rest of the system doesn't like 0-tuples, so we select
+            // a dummy constant here.
+            preExprs = new RexNode[1];
+            preExprs[0] = rexBuilder.makeLiteral(true);
+        }
         bb.setRoot(
             new ProjectRel(
                 cluster,
@@ -1877,7 +1884,19 @@ public class SqlToRelConverter
                 bb.agg = null;
                 for (int i = 0; i < call.operands.length; i++) {
                     SqlNode operand = call.operands[i];
-                    final RexNode convertedExpr = bb.convertExpression(operand);
+                    RexNode convertedExpr = null;
+                    // special case for COUNT(*):  delete the *
+                    if (operand instanceof SqlIdentifier) {
+                        SqlIdentifier id = (SqlIdentifier) operand;
+                        if (id.isStar()) {
+                            assert(call.operands.length == 1);
+                            args = new int[0];
+                            break;
+                        }
+                    }
+                    if (convertedExpr == null) {
+                        convertedExpr = bb.convertExpression(operand);
+                    }
                     args[i] = lookupOrCreateGroupExpr(convertedExpr);
                 }
             } finally {

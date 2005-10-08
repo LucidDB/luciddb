@@ -31,7 +31,7 @@
 FENNEL_BEGIN_NAMESPACE
 
 /**
- * TupleDataWithBuffer is a convienence that creates a TupleData, and
+ * TupleDataWithBuffer is a convenience that creates a TupleData, and
  * a supporting buffer from a TupleDescriptor.
  *
  * A common use is to create an input and output tuple for Calculator
@@ -43,8 +43,9 @@ FENNEL_BEGIN_NAMESPACE
 class TupleDataWithBuffer : public TupleData
 {
 public:
-    explicit
-    TupleDataWithBuffer(TupleDescriptor const& tupleDesc);
+    explicit TupleDataWithBuffer();
+    explicit TupleDataWithBuffer(TupleDescriptor const& tupleDesc);
+    void computeAndAllocate(TupleDescriptor const& tupleDesc);
     ~TupleDataWithBuffer();
 private:
     boost::scoped_array<FixedBuffer> array;

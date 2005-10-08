@@ -605,11 +605,14 @@ public class SqlJdbcFunctionCall extends SqlFunction
                 "ABS",
                 new MakeCall(SqlStdOperatorTable.absFunc, 1));
             map.put(
+                "EXP",
+                new MakeCall(SqlStdOperatorTable.expFunc, 1));
+            map.put(
                 "LOG",
                 new MakeCall(SqlStdOperatorTable.lnFunc, 1));
             map.put(
                 "LOG10",
-                new MakeCall(SqlStdOperatorTable.logFunc, 1));
+                new MakeCall(SqlStdOperatorTable.log10Func, 1));
             map.put(
                 "MOD",
                 new MakeCall(SqlStdOperatorTable.modFunc, 2));

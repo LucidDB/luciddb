@@ -24,6 +24,8 @@ package org.eigenbase.rel;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
 
 import java.util.*;
 
@@ -98,15 +100,29 @@ public abstract class AggregateRelBase extends SingleRel
     protected RelDataType deriveRowType()
     {
         final RelDataType childType = getChild().getRowType();
-        RelDataType [] types = new RelDataType[groupCount + aggCalls.length];
+        final RelDataType [] types =
+            new RelDataType[groupCount + aggCalls.length];
         for (int i = 0; i < groupCount; i++) {
             types[i] = childType.getFields()[i].getType();
         }
         for (int i = 0; i < aggCalls.length; i++) {
-            final RelDataType returnType =
-                aggCalls[i].aggregation.getReturnType(
-                    getCluster().getTypeFactory());
-            types[groupCount + i] = returnType;
+            final Call aggCall = aggCalls[i];
+            int nOperands = aggCall.args.length;
+            RexNode [] operands = new RexNode[nOperands];
+            for (int j = 0; j < nOperands; ++j) {
+                int iInput = aggCall.args[j];
+                operands[j] = new RexInputRef(
+                    iInput,
+                    childType.getFields()[iInput].getType());
+            }
+            // TODO jvs 5-Oct-2005:  clean up Aggregation interface
+            SqlAggFunction aggFunction = (SqlAggFunction) aggCall.aggregation;
+            RexCallBinding callBinding = new RexCallBinding(
+                getCluster().getTypeFactory(),
+                aggFunction, 
+                operands);
+            types[groupCount + i] =
+                aggFunction.inferReturnType(callBinding);
         }
         return getCluster().getTypeFactory().createStructType(
             new RelDataTypeFactory.FieldInfo() {
@@ -126,13 +142,7 @@ public abstract class AggregateRelBase extends SingleRel
 
                 public RelDataType getFieldType(int index)
                 {
-                    if (index < groupCount) {
-                        return childType.getFields()[index].getType();
-                    } else {
-                        final Call aggCall = aggCalls[index - groupCount];
-                        return aggCall.aggregation.getReturnType(
-                            getCluster().getTypeFactory());
-                    }
+                    return types[index];
                 }
             });
     }
@@ -166,6 +176,7 @@ public abstract class AggregateRelBase extends SingleRel
         {
             return distinctFlag;
         }
+        
         public Aggregation getAggregation()
         {
             return aggregation;

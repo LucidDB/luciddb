@@ -27,6 +27,7 @@ import java.sql.DriverManager;
 import java.sql.Statement;
 import java.util.Iterator;
 
+import net.sf.farrago.catalog.*;
 
 /**
  * FarragoTestConcurrentCommandExecutor is a thread that executes a sequence of
@@ -110,7 +111,8 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
     public void run()
     {
         try {
-            connection = DriverManager.getConnection(jdbcURL);
+            connection = DriverManager.getConnection(
+                jdbcURL, FarragoCatalogInit.SA_USER_NAME, null);
             connection.setAutoCommit(false);
         } catch (Throwable t) {
             handleError(t, "during connect");

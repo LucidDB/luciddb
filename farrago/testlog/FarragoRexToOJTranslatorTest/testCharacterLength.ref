@@ -1,0 +1,11 @@
+
+net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger oj_var0 = new net.sf.farrago.type.runtime.NullablePrimitive.NullableInteger();
+
+if (ID$4$CITY.isNull()) {
+    oj_var0.setNull( true );
+} else {
+    oj_var0.setNull( false );
+    oj_var0.value = ID$4$CITY.length();
+}
+
+return oj_var0;

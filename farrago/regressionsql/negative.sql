@@ -34,7 +34,7 @@ values 1.1/0.0;
 values MOD(1, 0);
 values pow(0.0, -1.0);
 values ln(0.0);
-values log(0.0);
+values log10(0.0);
 
 values 1='';
 values false='';
@@ -104,7 +104,7 @@ values current_time(2,3);
 values current_timestamp(-1);
 values current_time(-20);
 values current_date(2);
-values log(1,2,3);
+values log10(1,2,3);
 
 values (1),(2,3);
 values (1),('1');
