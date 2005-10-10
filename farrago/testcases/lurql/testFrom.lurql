@@ -13,7 +13,7 @@ from class ModelElement where name in ('Class', 'Exception');
 # Test IN filter with SQL query.
 EXPLAIN AND EXECUTE
 select *
-from class ModelElement where name in [values ('Class'), ('Exception')];
+from class ModelElement where name in [values (trim('Class')), ('Exception')];
 
 # Test IN filter with SQL query which returns object ID.
 EXECUTE

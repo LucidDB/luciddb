@@ -45,7 +45,7 @@ public class SqlOverlayFunction extends SqlFunction
     public SqlOverlayFunction()
     {
         super("OVERLAY", SqlKind.Function,
-            SqlTypeStrategies.rtiNullableDyadicStringSumPrecision,
+            SqlTypeStrategies.rtiNullableVaryingDyadicStringSumPrecision,
             null, otcCustom,
             SqlFunctionCategory.String);
     }

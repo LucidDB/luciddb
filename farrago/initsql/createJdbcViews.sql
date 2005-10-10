@@ -58,7 +58,7 @@ returns varchar(128)
 contains sql
 deterministic
 return case
-when typename='VARCHAR' then ''''
+when typename='VARCHAR' then trim('''')
 when typename='CHAR' then ''''
 when typename='VARBINARY' then 'X'''
 when typename='BINARY' then 'X'''
@@ -73,7 +73,7 @@ returns varchar(128)
 contains sql
 deterministic
 return case
-when typename='VARCHAR' then ''''
+when typename='VARCHAR' then trim('''')
 when typename='CHAR' then ''''
 when typename='VARBINARY' then ''''
 when typename='BINARY' then ''''
@@ -97,9 +97,6 @@ create view schemas_view_internal as
     on
         c."mofId" = s."namespace"
 ;
-
--- FIXME:  need UPPER(t."mofClassName"), but first need support for UPPER
--- in Java calc
 
 create view tables_view_internal as
     select 
@@ -142,7 +139,7 @@ grant select on schemas_view to public;
 -- TODO:  add 'GLOBAL TEMPORARY' and 'SYSTEM TABLE'
 create view table_types_view_internal(table_type,uml_class_name) as
     values 
-        ('FOREIGN TABLE','ForeignTable'),
+        (trim('FOREIGN TABLE'),trim('ForeignTable')),
         ('TABLE','LocalTable'),
         ('VIEW','LocalView')
 ;

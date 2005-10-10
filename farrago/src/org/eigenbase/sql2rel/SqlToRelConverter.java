@@ -201,7 +201,21 @@ public class SqlToRelConverter
      */
     public RelNode convertValidatedQuery(SqlNode query)
     {
-        return convertQueryRecursive(query);
+        RelNode result = convertQueryRecursive(query);
+        // FIXME jvs 9-Oct-2005:  re-enable this assert once all
+        // tests can pass with it on.
+        /*
+        if (validator.getNamespace(query) != null) {
+            // Verify that conversion from SQL to relational algebra did
+            // not perturb any type information.  (We can't do this if the
+            // SQL statement is something like an INSERT which has no
+            // validator type information associated with its result,
+            // hence the namespace check above.)
+            assert(
+                result.getRowType() == validator.getValidatedNodeType(query));
+        }
+        */
+        return result;
     }
 
     /**

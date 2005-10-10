@@ -11,7 +11,7 @@ ExecutableStmt.Oj_inner_1 oj_var2 = new ExecutableStmt.Oj_inner_1();
 ExecutableStmt.Oj_inner_2 oj_var3 = new ExecutableStmt.Oj_inner_2();
 
 
-ExecutableStmt.Oj_inner_3 oj_var4 = new ExecutableStmt.Oj_inner_3();
+ExecutableStmt.Oj_inner_2 oj_var4 = new ExecutableStmt.Oj_inner_2();
 
 oj_var0.assignFrom( "M" );
 if (ID$3$GENDER.isNull()) {

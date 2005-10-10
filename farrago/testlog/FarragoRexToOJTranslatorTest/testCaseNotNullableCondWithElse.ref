@@ -16,9 +16,11 @@ oj_var2.assignFrom( "Other" );
 oj_var3.assignFrom( oj_var2 );
 if (ID$9$MANAGER == true) {
     oj_var3.assignFrom( oj_var0 );
+    oj_var3.enforceBytePrecision( 5, true, (byte) ' ' );
 } else {
     if (ID$9$MANAGER == false) {
         oj_var3.assignFrom( oj_var1 );
+        oj_var3.enforceBytePrecision( 5, true, (byte) ' ' );
     }
 }
 

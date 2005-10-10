@@ -688,13 +688,15 @@ public abstract class SqlTypeStrategies
             rtiNullableFirstInterval, rtiLeastRestrictive);
 
     /**
-     * Type-inference strategy where by the
-     * Result type of a call is
+     * Type-inference strategy whereby the
+     * result type of a call is
      * <ul>
      * <li>the same type as the input types but with the
      * combined length of the two first types</li>
-     * <li>If types are of char type the type with the highest coercibility
+     * <li>if types are of char type the type with the highest coercibility
      * will be used</li>
+     * <li>result is varying if either input is; otherwise fixed
+     *</ul>
      *
      * @pre input types must be of the same string type
      * @pre types must be comparable without casting
@@ -736,9 +738,19 @@ public abstract class SqlTypeStrategies
                     assert (null != pickedCollation);
                 }
 
+                // Determine whether result is variable-length
+                SqlTypeName typeName =
+                    opBinding.getOperandType(0).getSqlTypeName();
+                if (SqlTypeUtil.isBoundedVariableWidth(
+                        opBinding.getOperandType(1)))
+                {
+                    typeName =
+                        opBinding.getOperandType(1).getSqlTypeName();
+                }
+
                 RelDataType ret;
                 ret = opBinding.getTypeFactory().createSqlType(
-                        opBinding.getOperandType(0).getSqlTypeName(),
+                        typeName,
                         opBinding.getOperandType(0).getPrecision()
                         + opBinding.getOperandType(1).getPrecision());
                 if (null != pickedCollation) {

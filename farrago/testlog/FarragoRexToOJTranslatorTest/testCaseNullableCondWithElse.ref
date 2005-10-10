@@ -14,7 +14,7 @@ ExecutableStmt.Oj_inner_1 oj_var3 = new ExecutableStmt.Oj_inner_1();
 ExecutableStmt.Oj_inner_2 oj_var4 = new ExecutableStmt.Oj_inner_2();
 
 
-ExecutableStmt.Oj_inner_3 oj_var5 = new ExecutableStmt.Oj_inner_3();
+ExecutableStmt.Oj_inner_2 oj_var5 = new ExecutableStmt.Oj_inner_2();
 
 if (ID$6$AGE.isNull()) {
     oj_var0.setNull( true );
@@ -34,6 +34,7 @@ oj_var4.setNull( true );
 oj_var5.assignFrom( oj_var4 );
 if (!oj_var0.isNull() && oj_var0.getBit()) {
     oj_var5.assignFrom( oj_var1 );
+    oj_var5.enforceBytePrecision( 11, true, (byte) ' ' );
 } else {
     if (!oj_var2.isNull() && oj_var2.getBit()) {
         oj_var5.assignFrom( oj_var3 );

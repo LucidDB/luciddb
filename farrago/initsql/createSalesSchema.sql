@@ -63,13 +63,13 @@ contains sql
 return not((gender = 'F') is false);
 
 insert into depts values
-    (10,'Sales'),
+    (10,trim('Sales')),
     (20,'Marketing'),
     (30,'Accounts');
 
 insert into emps values
     (100,'Fred',10,null,null,30,25, x'41626320',true,false),
-    (110,'Eric',20,'M','San Francisco',3,80,x'416263',null,false),
+    (110,trim('Eric'),20,'M',trim('San Francisco'),3,80,x'416263',null,false),
     (110,'John',40,'M','Vancouver',2,null,x'58797A',false,true),
     (120,'Wilma',20,'F',null,1,50,null,null,true);
 

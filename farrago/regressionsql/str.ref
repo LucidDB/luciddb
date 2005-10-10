@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/regressionsql/str.sql#6 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/regressionsql/str.sql#2 $
 0: jdbc:farrago:> -- Full vertical system testing of non function statements
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -155,7 +155,12 @@
 | VANCOUVER      |
 +----------------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select overlay(name placing '??' from 1) from sales.emps order by 1;
+0: jdbc:farrago:> -- NOTE jvs 10-Oct-2005:  I added these trims to avoid dtbug 405 in the
+0: jdbc:farrago:> -- Fennel calc codegen which causes varchar to get pre-cast to char
+0: jdbc:farrago:> -- when overlay operand types are mixed.  Get rid of them once this bug
+0: jdbc:farrago:> -- is fixed.
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select overlay(name placing trim('??') from 1) from sales.emps order by 1;
 +---------+
 | EXPR$0  |
 +---------+
@@ -164,7 +169,7 @@
 | ??ic    |
 | ??lma   |
 +---------+
-0: jdbc:farrago:> select overlay(name placing '??' from 2 for 1) from sales.emps order by 1;
+0: jdbc:farrago:> select overlay(name placing trim('??') from 2 for 1) from sales.emps order by 1;
 +---------+
 | EXPR$0  |
 +---------+
@@ -173,7 +178,7 @@
 | J??hn   |
 | W??lma  |
 +---------+
-0: jdbc:farrago:> select overlay(name placing '??' from 2 for 2) from sales.emps order by 1;
+0: jdbc:farrago:> select overlay(name placing trim('??') from 2 for 2) from sales.emps order by 1;
 +---------+
 | EXPR$0  |
 +---------+
@@ -182,7 +187,7 @@
 | J??n    |
 | W??ma   |
 +---------+
-0: jdbc:farrago:> select overlay(city placing '??' from 2 for 3) from sales.emps order by 1;
+0: jdbc:farrago:> select overlay(city placing trim('??') from 2 for 3) from sales.emps order by 1;
 +---------------+
 |    EXPR$0     |
 +---------------+
@@ -191,7 +196,7 @@
 | S??Francisco  |
 | V??ouver      |
 +---------------+
-0: jdbc:farrago:> select overlay(name placing '??' from 2 for 4) from sales.emps order by 1;
+0: jdbc:farrago:> select overlay(name placing trim('??') from 2 for 4) from sales.emps order by 1;
 +---------+
 | EXPR$0  |
 +---------+

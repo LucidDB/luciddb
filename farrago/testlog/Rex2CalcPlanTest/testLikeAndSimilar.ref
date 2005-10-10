@@ -2,7 +2,7 @@ O bo, bo, bo, bo;
 I s4;
 L bo, bo, bo, bo, bo, bo;
 S bo;
-C bo, bo, s4, vc,1, vc,1, vc,1, vc,5;
+C bo, bo, s4, c,1, c,1, c,1, vc,5;
 V 1, 0, 10, 0x61 /* a */, 0x62 /* b */, 0x63 /* c */, 0x3232303034 /* 22004 */;
 T;
 GT L0, I0, C2 /* 0: >($0, 10) */;

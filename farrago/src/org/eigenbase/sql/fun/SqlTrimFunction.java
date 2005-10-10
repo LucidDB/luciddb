@@ -46,7 +46,8 @@ public class SqlTrimFunction extends SqlFunction
         super("TRIM", SqlKind.Trim,
             new SqlTypeTransformCascade(
                 SqlTypeStrategies.rtiThirdArgType,
-                SqlTypeTransforms.toNullable
+                SqlTypeTransforms.toNullable,
+                SqlTypeTransforms.toVarying
             ),
             null,
             SqlTypeStrategies.otcStringSameX2,

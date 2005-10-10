@@ -336,10 +336,7 @@ public class Rex2CalcPlanTest extends FarragoTestCase
         check(sql, false,false);
     }
 
-    // FIXME jvs 26-Jan-2005:  disabled because of calculator
-    // assertion after I changed the type of string literals from
-    // VARCHAR to CHAR (see dtbug 278)
-    public void _testCaseExpressions() {
+    public void testCaseExpressions() {
         String sql = "SELECT case 1+1 when 1 then 'wael' when 2 then 'waels clone' end" +
             ",case when 1=1 then 1+1+2 else 2+10 end" +
             " FROM emps WHERE empno > 10";
@@ -402,11 +399,8 @@ public class Rex2CalcPlanTest extends FarragoTestCase
 
     private void checkCharOp(final String op, final String instr) {
         String sql = "SELECT 'a' " + op +
-            "'b' collate latin1$sv$1 FROM emps WHERE empno > 10";
-        // FIXME jvs 3-Feb-2005:  disabled due to dtbug 280
-        if (false) {
-            check(sql, false,false);
-        }
+            "'b' FROM emps WHERE empno > 10";
+        check(sql, false,false);
     }
 
     public void testBinaryGt() {

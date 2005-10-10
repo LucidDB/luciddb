@@ -1,8 +1,8 @@
-O s4, vc,1, vc,1, s4, vc,1, vc,2, vc,1, vc,2, vc,1, vc,1, vc,3;
+O s4, c,1, c,1, s4, vc,1, vc,2, vc,1, vc,2, vc,1, vc,1, c,3;
 I s4;
-L bo, s4, vc,1, vc,1, s4, vc,1, vc,2, vc,1, c,2, vc,2, vc,1, vc,1, vc,3, bo;
+L bo, s4, c,1, c,1, s4, vc,1, vc,2, vc,1, c,2, vc,2, vc,1, vc,1, c,3, bo;
 S bo;
-C bo, bo, s4, vc,1, s4, s4, vc,1, vc,1, vc,5;
+C bo, bo, s4, c,1, s4, s4, c,1, c,1, vc,5;
 V 1, 0, 10, 0x61 /* a */, 1, 1, 0x5C /* \ */, 0x62 /* b */, 0x3232303034 /* 22004 */;
 T;
 GT L0, I0, C2 /* 0: >($0, 10) */;

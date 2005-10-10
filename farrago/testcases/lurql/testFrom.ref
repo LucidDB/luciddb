@@ -39,12 +39,12 @@ from
 class "ModelElement"
 where
     "name" in [
-        values ('Class'), ('Exception')
+        values (trim('Class')), ('Exception')
     ];
 
 EXPLANATION:
 anon_1 { ModelElement } where "name" in [
-    values ('Class'), ('Exception')
+    values (trim('Class')), ('Exception')
 ]
 
 EXECUTION RESULT:

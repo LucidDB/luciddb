@@ -140,7 +140,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      */
     public static final SqlBinaryOperator concatOperator =
         new SqlBinaryOperator("||", SqlKind.Other, 30, true,
-            SqlTypeStrategies.rtiNullableVaryingDyadicStringSumPrecision,
+            SqlTypeStrategies.rtiNullableDyadicStringSumPrecision,
             null,
             SqlTypeStrategies.otcStringSameX2);
 

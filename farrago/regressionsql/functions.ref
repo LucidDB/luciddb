@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/functions.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/regressionsql/functions.sql#2 $
 0: jdbc:farrago:> -- Full vertical system testing of non function statements
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel
@@ -145,8 +145,15 @@
 | 50      |
 | 80      |
 +---------+
-0: jdbc:farrago:> -- FIXME jvs 26-Jan-2005:  see dtbug 278
-0: jdbc:farrago:> -- select case slacker when true then 'yes' when false then 'no' end from sales.emps order by 1;
+0: jdbc:farrago:> select case slacker when true then 'yes' when false then 'no' end from sales.emps order by 1;
++---------+
+| EXPR$0  |
++---------+
+|         |
+|         |
+| no      |
+| yes     |
++---------+
 0: jdbc:farrago:> select case slacker when true then 'yes' when false then 'no' else 'null' end from sales.emps order by 1;
 +---------+
 | EXPR$0  |

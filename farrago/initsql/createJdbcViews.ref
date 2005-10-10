@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/initsql/createJdbcViews.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/initsql/createJdbcViews.sql#2 $
 0: jdbc:farrago:> -- This script creates a view schema used by JDBC metadata calls
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set verbose true
@@ -58,7 +58,7 @@
 . . . . . . . . > contains sql
 . . . . . . . . > deterministic
 . . . . . . . . > return case
-. . . . . . . . > when typename='VARCHAR' then ''''
+. . . . . . . . > when typename='VARCHAR' then trim('''')
 . . . . . . . . > when typename='CHAR' then ''''
 . . . . . . . . > when typename='VARBINARY' then 'X'''
 . . . . . . . . > when typename='BINARY' then 'X'''
@@ -73,7 +73,7 @@
 . . . . . . . . > contains sql
 . . . . . . . . > deterministic
 . . . . . . . . > return case
-. . . . . . . . > when typename='VARCHAR' then ''''
+. . . . . . . . > when typename='VARCHAR' then trim('''')
 . . . . . . . . > when typename='CHAR' then ''''
 . . . . . . . . > when typename='VARBINARY' then ''''
 . . . . . . . . > when typename='BINARY' then ''''
@@ -97,9 +97,6 @@
 . . . . . . . . >     on
 . . . . . . . . >         c."mofId" = s."namespace"
 . . . . . . . . > ;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- FIXME:  need UPPER(t."mofClassName"), but first need support for UPPER
-0: jdbc:farrago:> -- in Java calc
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create view tables_view_internal as
 . . . . . . . . >     select 
@@ -142,7 +139,7 @@
 0: jdbc:farrago:> -- TODO:  add 'GLOBAL TEMPORARY' and 'SYSTEM TABLE'
 0: jdbc:farrago:> create view table_types_view_internal(table_type,uml_class_name) as
 . . . . . . . . >     values 
-. . . . . . . . >         ('FOREIGN TABLE','ForeignTable'),
+. . . . . . . . >         (trim('FOREIGN TABLE'),trim('ForeignTable')),
 . . . . . . . . >         ('TABLE','LocalTable'),
 . . . . . . . . >         ('VIEW','LocalView')
 . . . . . . . . > ;
