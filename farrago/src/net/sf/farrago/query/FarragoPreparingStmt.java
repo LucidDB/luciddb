@@ -217,6 +217,11 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         return sqlOperatorTable;
     }
 
+    public boolean hasSqlValidator()
+    {
+        return sqlValidator != null;
+    }
+    
     // implement FarragoSessionPreparingStmt
     public SqlValidator getSqlValidator()
     {
