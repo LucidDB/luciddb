@@ -139,7 +139,7 @@ public class FarragoDatabase extends FarragoCompoundAllocation
             StringProperty prop = FarragoProperties.instance().traceConfigFile;
             String loggingConfigFile = prop.get();
             if (loggingConfigFile == null) {
-                throw FarragoResource.instance().newMissingHomeProperty(
+                throw FarragoResource.instance().MissingHomeProperty.ex(
                     prop.getPath());
             }
             traceConfigFile = new File(loggingConfigFile);
@@ -250,7 +250,7 @@ public class FarragoDatabase extends FarragoCompoundAllocation
         } catch (Throwable ex) {
             tracer.throwing("FarragoDatabase", "<init>", ex);
             close(true);
-            throw FarragoResource.instance().newDatabaseLoadFailed(ex);
+            throw FarragoResource.instance().DatabaseLoadFailed.ex(ex);
         }
     }
 
@@ -439,7 +439,7 @@ public class FarragoDatabase extends FarragoCompoundAllocation
                 pluginClassLoader.addPluginUrl(url);
             }
         } catch (Throwable ex) {
-            throw FarragoResource.instance().newCatalogBootUrlReadFailed(ex);
+            throw FarragoResource.instance().CatalogBootUrlReadFailed.ex(ex);
         }
     }
 
@@ -454,7 +454,7 @@ public class FarragoDatabase extends FarragoCompoundAllocation
             pw.close();
             fileWriter.close();
         } catch (Throwable ex) {
-            throw FarragoResource.instance().newCatalogBootUrlUpdateFailed(ex);
+            throw FarragoResource.instance().CatalogBootUrlUpdateFailed.ex(ex);
         } finally {
             Util.squelchWriter(fileWriter);
         }
@@ -819,8 +819,8 @@ public class FarragoDatabase extends FarragoCompoundAllocation
                 CalcVirtualMachine vm =
                     userRepos.getCurrentConfig().getCalcVirtualMachine();
                 if (vm.equals(CalcVirtualMachineEnum.CALCVM_FENNEL)) {
-                    throw FarragoResource.instance()
-                        .newValidatorCalcUnavailable();
+                    throw FarragoResource.instance().
+                        ValidatorCalcUnavailable.ex();
                 }
             }
 

@@ -125,7 +125,7 @@ abstract class ListScope extends DelegatingScope
             return tableName;
         default:
             throw validator.newValidationError(ctx,
-                EigenbaseResource.instance().newColumnAmbiguous(columnName));
+                EigenbaseResource.instance().ColumnAmbiguous.ex(columnName));
         }
     }
 
@@ -167,7 +167,7 @@ abstract class ListScope extends DelegatingScope
             return null;
         } else if (found > 1) {
             throw validator.newValidationError(ctx,
-                EigenbaseResource.instance().newColumnAmbiguous(columnName));
+                EigenbaseResource.instance().ColumnAmbiguous.ex(columnName));
         } else {
             return theType;
         }

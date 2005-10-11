@@ -23,18 +23,14 @@
 package net.sf.farrago.test;
 
 import net.sf.farrago.session.*;
-import net.sf.farrago.catalog.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.security.*;
 
-import java.sql.*;
 import java.util.*;
 
 import junit.framework.*;
-
-import org.eigenbase.jmi.*;
 
 /**
  * FarragoQueryTest tests miscellaneous aspects of Farrago query
@@ -150,7 +146,7 @@ public class FarragoQueryTest extends FarragoTestCase
     public void testInternalLurqlQuery()
         throws Exception
     {
-        String lurql = FarragoInternalQuery.instance().getTestQuery();
+        String lurql = FarragoInternalQuery.instance().TestQuery.str();
 
         checkLurqlTableSchema(lurql, "DEPTS", "SALES");
         checkLurqlTableSchema(lurql, "CATALOGS_VIEW", "JDBC_METADATA");
@@ -199,7 +195,7 @@ public class FarragoQueryTest extends FarragoTestCase
         // opposite direction, so we reverse the two roles in the
         // call below.
         String lurql =
-            FarragoInternalQuery.instance().getTestSecurityRoleCycleCheck();
+            FarragoInternalQuery.instance().TestSecurityRoleCycleCheck.str();
         assertTrue(checkLurqlSecurityRoleCycle(lurql,  "ROLE_1",  "ROLE_2"));
     }
     

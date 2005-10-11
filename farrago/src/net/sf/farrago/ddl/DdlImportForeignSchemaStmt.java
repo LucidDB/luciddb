@@ -97,7 +97,7 @@ public class DdlImportForeignSchemaStmt extends DdlStmt
     public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
         if (!femServer.getWrapper().isForeign()) {
-            throw FarragoResource.instance().newValidatorImportMustBeForeign(
+            throw FarragoResource.instance().ValidatorImportMustBeForeign.ex(
                 ddlValidator.getRepos().getLocalizedObjectName(femServer));
         }
         FarragoMedDataServer medServer = 
@@ -105,14 +105,14 @@ public class DdlImportForeignSchemaStmt extends DdlStmt
         try {
             FarragoMedNameDirectory catalogDir = medServer.getNameDirectory();
             if (catalogDir == null) {
-                throw FarragoResource.instance().newValidatorImportUnsupported(
+                throw FarragoResource.instance().ValidatorImportUnsupported.ex(
                     ddlValidator.getRepos().getLocalizedObjectName(femServer));
             }
             assert(foreignSchemaName.isSimple());
             FarragoMedNameDirectory schemaDir =
                 catalogDir.lookupSubdirectory(foreignSchemaName.getSimple());
             if (schemaDir == null) {
-                throw FarragoResource.instance().newValidatorImportUnknown(
+                throw FarragoResource.instance().ValidatorImportUnknown.ex(
                     ddlValidator.getRepos().getLocalizedObjectName(
                         foreignSchemaName.getSimple()));
             }
@@ -146,14 +146,14 @@ public class DdlImportForeignSchemaStmt extends DdlStmt
                 ddlValidator, query, schemaDir);
             
             if (!schemaDir.queryMetadata(query, sink)) {
-                throw FarragoResource.instance().newValidatorImportUnsupported(
+                throw FarragoResource.instance().ValidatorImportUnsupported.ex(
                     ddlValidator.getRepos().getLocalizedObjectName(femServer));
             }
 
             if (requiredSet != null) {
                 requiredSet.removeAll(sink.getImportedTableNames());
                 if (!requiredSet.isEmpty()) {
-                    throw FarragoResource.instance().newValidatorImportMissing(
+                    throw FarragoResource.instance().ValidatorImportMissing.ex(
                         ddlValidator.getRepos().getLocalizedObjectName(
                             foreignSchemaName.getSimple()),
                         requiredSet.toString());
@@ -164,7 +164,7 @@ public class DdlImportForeignSchemaStmt extends DdlStmt
             sink.dropStragglers();
 
         } catch (SQLException ex) {
-            throw FarragoResource.instance().newValidatorImportFailed(
+            throw FarragoResource.instance().ValidatorImportFailed.ex(
                 ddlValidator.getRepos().getLocalizedObjectName(
                     foreignSchemaName.getSimple()),
                 ddlValidator.getRepos().getLocalizedObjectName(femServer),

@@ -142,7 +142,7 @@ class MedMockDataServer extends MedAbstractDataServer
     {
         if ((expectedName != null) && (actualName != null)) {
             if (!expectedName.equals(actualName)) {
-                throw FarragoResource.instance().newMockForeignObjectNotFound(
+                throw FarragoResource.instance().MockForeignObjectNotFound.ex(
                     wrapper.getRepos().getLocalizedObjectName(
                         actualName));
             }

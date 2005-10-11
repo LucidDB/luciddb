@@ -76,7 +76,7 @@ public class FarragoJdbcRoutineDriver
         }
         try {
             if (!url.equals(getBaseUrl())) {
-                throw FarragoResource.instance().newJdbcInvalidUrl(url);
+                throw FarragoResource.instance().JdbcInvalidUrl.ex(url);
             }
             return FarragoRuntimeContext.newConnection();
         } catch (Throwable ex) {

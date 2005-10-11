@@ -24,6 +24,7 @@ package net.sf.farrago.ojrex;
 
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
+import net.sf.farrago.resource.FarragoResource;
 
 import openjava.mop.*;
 import openjava.ptree.*;
@@ -31,9 +32,7 @@ import openjava.ptree.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.resource.*;
 
 
 /**
@@ -46,15 +45,16 @@ import org.eigenbase.resource.*;
 public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
 {
     //~ Methods ---------------------------------------------------------------
-    private static StatementList throwOverflowStmtList = 
-                new StatementList(
-                    new ThrowStatement(
-                        new MethodCall(
-                            new Literal(
-                                Literal.STRING,
-                                "net.sf.farrago.resource.FarragoResource.instance()"),
-                            "newOverflow",
-                            new ExpressionList())));
+    private static StatementList throwOverflowStmtList =
+        new StatementList(
+            new ThrowStatement(
+                new MethodCall(
+                    new Literal(
+                        Literal.STRING,
+                        "net.sf.farrago.resource.FarragoResource.instance().Overflow"),
+                    "ex",
+                    new ExpressionList())));
+
     // implement FarragoOJRexImplementor
     public Expression implementFarrago(
         FarragoRexToOJTranslator translator,
@@ -78,7 +78,7 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
                 rhsType.getSqlTypeName() != null) 
             {
                 if (!SqlTypeUtil.canCastFrom(lhsType, rhsType, true)) {
-                    throw net.sf.farrago.resource.FarragoResource.instance().newOverflow();
+                    throw FarragoResource.instance().Overflow.ex();
                 }
             }
         }

@@ -240,9 +240,9 @@ public class BytePointer extends ByteArrayInputStream
      *
      * @param bp2 string2
      *
-     * @param s starting point
+     * @param starting starting point
      *
-     * @param l length
+     * @param length length
      *
      * @param useLength whether to use length parameter
      *
@@ -401,7 +401,7 @@ public class BytePointer extends ByteArrayInputStream
         byte trimChar;
 
         if (bp1.getByteCount() != 1) {
-            throw FarragoResource.instance().newInvalidFunctionArgument("trim");
+            throw FarragoResource.instance().InvalidFunctionArgument.ex("trim");
         }
         copyFrom(bp2);
         trimChar = bp1.buf[bp1.pos];
@@ -482,7 +482,7 @@ public class BytePointer extends ByteArrayInputStream
         if (useLength) {
             if (L < 0) {
                 // If E is less than S, then it means L is negative exception.
-                throw FarragoResource.instance().newNegativeLengthForSubstring();
+                throw FarragoResource.instance().NegativeLengthForSubstring.ex();
             }
             e = S + L;
         } else {
@@ -638,7 +638,7 @@ public class BytePointer extends ByteArrayInputStream
                 count = 1;
             } else {
                 // char(0) is it possible?
-                throw net.sf.farrago.resource.FarragoResource.instance().newOverflow();
+                throw FarragoResource.instance().Overflow.ex();
             }
             buf = ownBytes;
             pos = 0;
@@ -679,7 +679,7 @@ public class BytePointer extends ByteArrayInputStream
             lengthNeeded++;
         }
         if (precision < lengthNeeded) {
-            throw net.sf.farrago.resource.FarragoResource.instance().newOverflow();
+            throw FarragoResource.instance().Overflow.ex();
         }
         int len = lengthNeeded;
 
@@ -801,7 +801,7 @@ public class BytePointer extends ByteArrayInputStream
             len++;
         }
         if (len > precision) {
-            throw net.sf.farrago.resource.FarragoResource.instance().newOverflow();
+            throw FarragoResource.instance().Overflow.ex();
         }
 
         if (l == 0) {

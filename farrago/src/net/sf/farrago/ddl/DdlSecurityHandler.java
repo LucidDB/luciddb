@@ -21,36 +21,9 @@
 */
 package net.sf.farrago.ddl;
 
-// TODO jvs 10-June-2005: Tai, looks like you copied and pasted these imports.
-// I doubt they're all necessary.
-
-import org.eigenbase.util.*;
-import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.*;
-
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.resource.*;
-import net.sf.farrago.query.*;
-import net.sf.farrago.session.*;
-import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
-import net.sf.farrago.plugin.*;
-import net.sf.farrago.namespace.*;
-import net.sf.farrago.namespace.util.*;
-
-import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.cwm.relational.enumerations.*;
-import net.sf.farrago.fem.med.*;
-import net.sf.farrago.fem.security.*;
-import net.sf.farrago.fem.sql2003.*;
-
-import java.io.*;
-import java.nio.charset.*;
-import java.sql.*;
-import java.util.*;
+import net.sf.farrago.fem.security.FemRole;
+import net.sf.farrago.fem.security.FemUser;
+import net.sf.farrago.session.FarragoSessionDdlValidator;
 
 /**
  * DdlSecurityHandler defines DDL handler methods for Fem Security objects of
@@ -78,7 +51,7 @@ public class DdlSecurityHandler extends DdlHandler
             // Note that no grant is created to record the user's membership in
             // PUBLIC; this is implicit during privilege check.
         } catch (Throwable ex) {
-            throw res.newValidatorDefinitionInvalid(
+            throw res.ValidatorDefinitionInvalid.ex(
                 repos.getLocalizedObjectName(femUser),
                 ex);
         }
@@ -91,7 +64,7 @@ public class DdlSecurityHandler extends DdlHandler
             // WITH ADMIN grantor clause has already been dealt with during
             // parsing.  Nothing to do yet!
         } catch (Throwable ex) {
-            throw res.newValidatorDefinitionInvalid(
+            throw res.ValidatorDefinitionInvalid.ex(
                 repos.getLocalizedObjectName(femRole),
                 ex);
         }

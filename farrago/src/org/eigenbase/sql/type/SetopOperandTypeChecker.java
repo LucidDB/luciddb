@@ -67,7 +67,7 @@ public class SetopOperandTypeChecker implements SqlOperandTypeChecker
                     throw callBinding.getValidator().newValidationError(
                         operand,
                         EigenbaseResource.instance()
-                        .newColumnCountMismatchInSetop(
+                        .ColumnCountMismatchInSetop.ex(
                             callBinding.getOperator().getName()));
                 } else {
                     return false;
@@ -93,7 +93,7 @@ public class SetopOperandTypeChecker implements SqlOperandTypeChecker
                     throw callBinding.getValidator().newValidationError(
                         field,
                         EigenbaseResource.instance()
-                        .newColumnTypeMismatchInSetop(
+                        .ColumnTypeMismatchInSetop.ex(
                             new Integer(i + 1), // 1-based
                             callBinding.getOperator().getName()));
                 } else {

@@ -231,7 +231,7 @@ public class SqlWindowOperator extends SqlOperator {
         // 6.10 rule 6a Function RANk & DENSE_RANK require OBC
         if ( (null == orderList) && triggerFunction && !isTableSorted(scope)) {
             throw validator.newValidationError(call,
-                EigenbaseResource.instance().newFuncNeedsOrderBy());
+                EigenbaseResource.instance().FuncNeedsOrderBy.ex());
         }
 
         // Run framing checks if there are any
@@ -239,7 +239,7 @@ public class SqlWindowOperator extends SqlOperator {
             // 6.10 Rule 6a
             if (triggerFunction) {
                 throw validator.newValidationError(operands[SqlWindow.IsRows_OPERAND],
-                    EigenbaseResource.instance().newRankWithFrame());
+                    EigenbaseResource.instance().RankWithFrame.ex());
             }
             SqlTypeFamily orderTypeFam = null;
             // SQL03 7.10 Rule 11a
@@ -247,7 +247,7 @@ public class SqlWindowOperator extends SqlOperator {
                 // if order by is a conpound list then range not allowed
                 if (orderList.size() > 1 && !isRows) {
                     throw validator.newValidationError(operands[SqlWindow.IsRows_OPERAND],
-                        EigenbaseResource.instance().newCompoundOrderByProhibitsRange());
+                        EigenbaseResource.instance().CompoundOrderByProhibitsRange.ex());
                 }
                 // get the type family for the sort key for Frame Boundary Val.
                 RelDataType orderType = validator.deriveType(operandScope,orderList.get(0));
@@ -258,7 +258,7 @@ public class SqlWindowOperator extends SqlOperator {
                 // sorted already
                 if (!isRows  && !isTableSorted(scope)) {
                     throw validator.newValidationError(call,
-                        EigenbaseResource.instance().newOverMissingOrderBy());
+                        EigenbaseResource.instance().OverMissingOrderBy.ex());
                 }
             }
 
@@ -269,7 +269,7 @@ public class SqlWindowOperator extends SqlOperator {
             checkSpecialLiterals(lowerBound,upperBound,validator);
         } else if (null == orderList && !isTableSorted(scope)) {
             throw validator.newValidationError(call,
-                EigenbaseResource.instance().newOverMissingOrderBy());
+                EigenbaseResource.instance().OverMissingOrderBy.ex());
         }
     }
 
@@ -298,13 +298,13 @@ public class SqlWindowOperator extends SqlOperator {
             // Boundries must be a constant
             if (!(boundVal instanceof SqlLiteral)) {
                 throw validator.newValidationError(boundVal,
-                    EigenbaseResource.instance().newRangeOrRowMustBeConstant());
+                    EigenbaseResource.instance().RangeOrRowMustBeConstant.ex());
             }
             // SQL03 7.10 rule 11b
             // Physical ROWS must be a numeric constant.
             if (isRows && !(boundVal instanceof SqlNumericLiteral)) {
                 throw validator.newValidationError(boundVal,
-                    EigenbaseResource.instance().newRowMustBeNumeric());
+                    EigenbaseResource.instance().RowMustBeNumeric.ex());
             }
             // if this is a range spec check and make sure the boundery type
             // and order by type are compatible
@@ -316,7 +316,7 @@ public class SqlWindowOperator extends SqlOperator {
                 case SqlTypeFamily.Numeric_ordinal:
                     if (SqlTypeFamily.Numeric != bndTypeFam) {
                         throw validator.newValidationError(boundVal,
-                            EigenbaseResource.instance().newOrderByRangeMismatch());
+                            EigenbaseResource.instance().OrderByRangeMismatch.ex());
                     }
                     break;
                 case SqlTypeFamily.Date_ordinal:
@@ -325,12 +325,12 @@ public class SqlWindowOperator extends SqlOperator {
                     if (SqlTypeFamily.IntervalDayTime != bndTypeFam &&
                         SqlTypeFamily.IntervalYearMonth != bndTypeFam) {
                         throw validator.newValidationError(boundVal,
-                            EigenbaseResource.instance().newOrderByRangeMismatch());
+                            EigenbaseResource.instance().OrderByRangeMismatch.ex());
                     }
                     break;
                 default:
                     throw validator.newValidationError(boundVal,
-                        EigenbaseResource.instance().newOrderByDataTypeProhibitsRange());
+                        EigenbaseResource.instance().OrderByDataTypeProhibitsRange.ex());
                 }
             }
             break;
@@ -353,7 +353,7 @@ public class SqlWindowOperator extends SqlOperator {
                 lowerLitType = ((SqlLiteral)lowerBound).getValue();
                 if (Bound.UnboundedFollowing == lowerLitType) {
                     throw validator.newValidationError(lowerBound,
-                        EigenbaseResource.instance().newBadLowerBoundary());
+                        EigenbaseResource.instance().BadLowerBoundary.ex());
                 }
             } else if (lowerBound instanceof SqlCall) {
                 lowerOp = ((SqlCall)lowerBound).getOperator();
@@ -364,7 +364,7 @@ public class SqlWindowOperator extends SqlOperator {
                 upperLitType = ((SqlLiteral) upperBound).getValue();
                 if (Bound.UnboundedPreceding == upperLitType) {
                     throw validator.newValidationError(upperBound,
-                        EigenbaseResource.instance().newBadUpperBoundary());
+                        EigenbaseResource.instance().BadUpperBoundary.ex());
                 }
             } else if (upperBound instanceof SqlCall) {
                 upperOp = ((SqlCall)upperBound).getOperator();
@@ -375,7 +375,7 @@ public class SqlWindowOperator extends SqlOperator {
             if (null != upperOp) {
                 if (upperOp.getName().equals("PRECEDING")) {
                     throw validator.newValidationError(upperBound,
-                        EigenbaseResource.instance().newCurrentRowPrecedingError());
+                        EigenbaseResource.instance().CurrentRowPrecedingError.ex());
                 }
             }
         } else if (null != lowerOp) {
@@ -383,12 +383,12 @@ public class SqlWindowOperator extends SqlOperator {
                 if (null != upperOp) {
                     if (upperOp.getName().equals("PRECEDING")) {
                         throw validator.newValidationError(upperBound,
-                            EigenbaseResource.instance().newFollowingBeforePrecedingError());
+                            EigenbaseResource.instance().FollowingBeforePrecedingError.ex());
                     }
                 } else if (null != upperLitType) {
                     if (Bound.CurrentRow == upperLitType) {
                         throw validator.newValidationError(upperBound,
-                            EigenbaseResource.instance().newCurrentRowFollowingError());
+                            EigenbaseResource.instance().CurrentRowFollowingError.ex());
                     }
                 }
             }

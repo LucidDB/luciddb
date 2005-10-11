@@ -155,7 +155,7 @@ public abstract class FarragoPluginCache extends FarragoCompoundAllocation
             plugin = (FarragoPlugin) obj;
             plugin.initialize(repos, options);
         } catch (Throwable ex) {
-            throw FarragoResource.instance().newPluginInitFailed(
+            throw FarragoResource.instance().PluginInitFailed.ex(
                 repos.getLocalizedObjectName(libraryName),
                 ex);
         }

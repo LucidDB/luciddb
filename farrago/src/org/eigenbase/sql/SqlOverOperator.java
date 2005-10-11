@@ -65,7 +65,7 @@ public class SqlOverOperator extends SqlBinaryOperator
         SqlCall aggCall = (SqlCall) operands[0];
         if (!aggCall.getOperator().isAggregator()) {
             throw validator.newValidationError(aggCall,
-                EigenbaseResource.instance().newOverNonAggregate());
+                EigenbaseResource.instance().OverNonAggregate.ex());
         }
         validator.validateWindow(operands[1], scope, aggCall);
     }

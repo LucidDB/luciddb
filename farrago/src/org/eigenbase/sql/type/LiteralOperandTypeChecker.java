@@ -61,14 +61,14 @@ public class LiteralOperandTypeChecker implements SqlSingleOperandTypeChecker
                 return true;
             }
             if (throwOnFailure) {
-                throw EigenbaseResource.instance().newArgumentMustNotBeNull(
+                throw EigenbaseResource.instance().ArgumentMustNotBeNull.ex(
                     callBinding.getOperator().getName());
             }
             return false;
         }
         if (!SqlUtil.isLiteral(node) && !SqlUtil.isLiteralChain(node)) {
             if (throwOnFailure) {
-                throw EigenbaseResource.instance().newArgumentMustBeLiteral(
+                throw EigenbaseResource.instance().ArgumentMustBeLiteral.ex(
                     callBinding.getOperator().getName());
             }
             return false;

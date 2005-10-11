@@ -740,7 +740,7 @@ require version '${required.ant.version}'."/>
       srcdir="${farrago.src.dir}"
       destdir="${farrago.src.dir}"
       resdir="${farrago.classes.dir}"
-      style="dynamic"
+      style="functor"
       locales="en_US">
       <include name="net/sf/farrago/resource/FarragoResource.xml"/>
     </resgen>
@@ -748,7 +748,7 @@ require version '${required.ant.version}'."/>
       srcdir="${farrago.src.dir}"
       destdir="${farrago.src.dir}"
       resdir="${farrago.classes.dir}"
-      style="dynamic"
+      style="functor"
       locales="en_US">
       <include name="net/sf/farrago/resource/FarragoInternalQuery.xml"/>
     </resgen>
@@ -756,7 +756,7 @@ require version '${required.ant.version}'."/>
       srcdir="${farrago.src.dir}"
       destdir="${farrago.src.dir}"
       resdir="${farrago.classes.dir}"
-      style="dynamic"
+      style="functor"
       locales="en_US">
       <include name="org/eigenbase/resource/EigenbaseResource.xml"/>
     </resgen>

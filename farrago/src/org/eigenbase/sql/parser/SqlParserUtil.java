@@ -851,7 +851,7 @@ public final class SqlParserUtil
                 new Locale(localeParts[0], localeParts[1], localeParts[2]);
         } else {
             // FIXME jvs 28-Aug-2004:  i18n
-            throw EigenbaseResource.instance().newParserError("Locale '"
+            throw EigenbaseResource.instance().ParserError.ex("Locale '"
                 + localeStr + "' in an illegal format");
         }
         return new ParsedCollation(charset, locale, strength);

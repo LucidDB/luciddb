@@ -200,11 +200,11 @@ public class SqlFunction extends SqlOperator
         SqlValidatorScope scope,
         SqlValidatorScope operandScope)
     {
-        super.validateCall(call, validator, scope, operandScope);    //To change body of overridden methods use File | Settings | File Templates.
+        super.validateCall(call, validator, scope, operandScope);
         if ((null != call.getFunctionQuantifier()) && !isQuantifierAllowed()) {
             throw validator.newValidationError(call.getFunctionQuantifier(),
                 EigenbaseResource.instance()
-                .newFunctionQuantifierNotAllowed(call.getOperator().getName()));
+                .FunctionQuantifierNotAllowed.ex(call.getOperator().getName()));
         }
     }
 

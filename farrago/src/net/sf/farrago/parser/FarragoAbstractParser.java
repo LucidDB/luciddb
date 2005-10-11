@@ -67,10 +67,10 @@ public abstract class FarragoAbstractParser implements FarragoSessionParser
         SqlValidatorException ex)
     {
         if (sourceString == null) {
-            return FarragoResource.instance().newValidatorNoPositionContext(ex);
+            return FarragoResource.instance().ValidatorNoPositionContext.ex(ex);
         } else {
             String msg = getCurrentPosition().toString();
-            return FarragoResource.instance().newValidatorPositionContext(
+            return FarragoResource.instance().ValidatorPositionContext.ex(
                 msg, ex);
         }
     }
@@ -119,7 +119,7 @@ public abstract class FarragoAbstractParser implements FarragoSessionParser
             }
         } catch (EigenbaseContextException ex) {
             Throwable actualEx = (ex.getCause() == null) ? ex : ex.getCause();
-            throw EigenbaseResource.instance().newParserError(
+            throw EigenbaseResource.instance().ParserError.ex(
                 actualEx.getMessage(),
                 ex);
 
@@ -133,7 +133,7 @@ public abstract class FarragoAbstractParser implements FarragoSessionParser
             } else {
                 x = spex;
             }
-            throw EigenbaseResource.instance().newParserError(
+            throw EigenbaseResource.instance().ParserError.ex(
                 actualEx.getMessage(),
                 x);
 
@@ -147,7 +147,7 @@ public abstract class FarragoAbstractParser implements FarragoSessionParser
             } else {
                 x = spex;
             }
-            throw EigenbaseResource.instance().newParserError(
+            throw EigenbaseResource.instance().ParserError.ex(
                 actualEx.getMessage(),
                 x);
 
