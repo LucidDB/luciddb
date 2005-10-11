@@ -10,7 +10,7 @@ JMPT @4, L0 /* 1: */;
 MOVE S0, C0 /* 2: */;
 RETURN /* 3: */;
 MOVE S0, C1 /* 4: */;
-CAST L1, C3 /* 5: CAST(1):DOUBLE NOT NULL */;
+CAST L1, C3 /* 5: CAST(1):DECIMAL(2, 1) NOT NULL */;
 ADD L2, L1, C4 /* 6: +(1, 1.0) */;
 ISNULL L3, L2 /* 7: */;
 JMPF @11, L3 /* 8: */;

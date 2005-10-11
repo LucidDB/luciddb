@@ -292,7 +292,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         try {
             outermostNode = performUnconditionalRewrites(topNode);
             if (outermostNode.getKind().isA(SqlKind.TopLevel)) {
-                registerQuery(scope, null, outermostNode, null);
+                registerQuery(scope, null, outermostNode, null, false);
             }
             final SqlValidatorNamespace namespace = getNamespace(outermostNode);
             if (namespace == null) {
@@ -428,7 +428,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                     outermostNode.toString());
             }
             if (outermostNode.getKind().isA(SqlKind.TopLevel)) {
-                registerQuery(scope, null, outermostNode, null);
+                registerQuery(scope, null, outermostNode, null, false);
             }
             outermostNode.validate(this, scope);
             if (!outermostNode.getKind().isA(SqlKind.TopLevel)) {
@@ -716,27 +716,35 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         SqlValidatorScope scope)
     {
         assert values.getOperands().length >= 1;
-        final SqlNode operand = values.getOperands()[0];
-        assert(operand.isA(SqlKind.Row));
-        SqlCall rowConstructor = (SqlCall) operand;
+        RelDataType [] rowTypes = new RelDataType[values.getOperands().length];
+        for (int iRow = 0; iRow < values.getOperands().length; ++iRow) {
+            final SqlNode operand = values.getOperands()[iRow];
+            assert(operand.isA(SqlKind.Row));
+            SqlCall rowConstructor = (SqlCall) operand;
 
-        // REVIEW jvs 10-Sept-2003: This assumes we can get everything we need
-        // from the first row.  Once we support single-row queries as rows,
-        // need to infer aliases from there.
-        SqlNode [] operands = rowConstructor.getOperands();
-        final ArrayList aliasList = new ArrayList();
-        final ArrayList typeList = new ArrayList();
-        for (int i = 0; i < operands.length; ++i) {
-            final String alias = deriveAlias(operands[i], i);
-            aliasList.add(alias);
-            final RelDataType type = deriveType(scope, operands[i]);
-            typeList.add(type);
+            // REVIEW jvs 10-Sept-2003: Once we support single-row queries as
+            // rows, need to infer aliases from there.
+            SqlNode [] operands = rowConstructor.getOperands();
+            final ArrayList aliasList = new ArrayList();
+            final ArrayList typeList = new ArrayList();
+            for (int iCol = 0; iCol < operands.length; ++iCol) {
+                final String alias = deriveAlias(operands[iCol], iCol);
+                aliasList.add(alias);
+                final RelDataType type = deriveType(scope, operands[iCol]);
+                typeList.add(type);
+            }
+            final RelDataType[] types = (RelDataType [])
+                typeList.toArray(new RelDataType[typeList.size()]);
+            final String[] aliases = (String[])
+                aliasList.toArray(new String[aliasList.size()]);
+            rowTypes[iRow] = typeFactory.createStructType(types, aliases);
         }
-        final RelDataType[] types = (RelDataType [])
-            typeList.toArray(new RelDataType[typeList.size()]);
-        final String[] aliases = (String[])
-            aliasList.toArray(new String[aliasList.size()]);
-        return typeFactory.createStructType(types, aliases);
+        if (values.getOperands().length == 1) {
+            // TODO jvs 10-Oct-2005:  get rid of this workaround once
+            // leastRestrictive can handle all cases
+            return rowTypes[0];
+        }
+        return typeFactory.leastRestrictive(rowTypes);
     }
 
     public RelDataType getValidatedNodeType(SqlNode node)
@@ -1365,8 +1373,12 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
     private void registerNamespace(
         SqlValidatorScope usingScope,
         String alias,
-        SqlValidatorNamespace ns)
+        SqlValidatorNamespace ns,
+        boolean forceNullable)
     {
+        if (forceNullable) {
+            ns.makeNullable();
+        }
         namespaces.put(ns.getNode(), ns);
         if (usingScope != null) {
             usingScope.addChild(ns, alias);
@@ -1377,7 +1389,8 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         SqlValidatorScope parentScope,
         SqlValidatorScope usingScope,
         SqlNode node,
-        String alias)
+        String alias,
+        boolean forceNullable)
     {
         SqlNode newNode;
         switch (node.getKind().getOrdinal()) {
@@ -1387,7 +1400,8 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 alias = sqlCall.operands[1].toString();
             }
             final SqlNode expr = sqlCall.operands[0];
-            final SqlNode newExpr = registerFrom(parentScope, usingScope, expr, alias);
+            final SqlNode newExpr = registerFrom(
+                parentScope, usingScope, expr, alias, forceNullable);
             if (newExpr != expr) {
                 sqlCall.setOperand(0, newExpr);
             }
@@ -1398,8 +1412,20 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             final JoinScope joinScope = new JoinScope(parentScope, usingScope, join);
             scopes.put(join, joinScope);
             final SqlNode left = join.getLeft();
+            boolean forceLeftNullable = forceNullable;
+            boolean forceRightNullable = forceNullable;
+            if (join.getJoinType() == SqlJoinOperator.JoinType.Left) {
+                forceRightNullable = true;
+            }
+            if (join.getJoinType() == SqlJoinOperator.JoinType.Right) {
+                forceLeftNullable = true;
+            }
+            if (join.getJoinType() == SqlJoinOperator.JoinType.Full) {
+                forceLeftNullable = true;
+                forceRightNullable = true;
+            }
             final SqlNode newLeft = registerFrom(parentScope, joinScope, left,
-                null);
+                null, forceLeftNullable);
             if (newLeft != left) {
                 join.setOperand(SqlJoin.LEFT_OPERAND, newLeft);
             }
@@ -1413,12 +1439,12 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 rightParentScope = parentScope;
             }
             final SqlNode newRight = registerFrom(rightParentScope, joinScope,
-                right, null);
+                right, null, forceRightNullable);
             if (newRight != right) {
                 join.setOperand(SqlJoin.RIGHT_OPERAND, newRight);
             }
             final JoinNamespace joinNamespace = new JoinNamespace(this, join);
-            registerNamespace(null, null, joinNamespace);
+            registerNamespace(null, null, joinNamespace, forceNullable);
             return join;
 
         case SqlKind.IdentifierORDINAL:
@@ -1430,8 +1456,9 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 }
             }
             final SqlIdentifier id = (SqlIdentifier) node;
-            final IdentifierNamespace newNs = new IdentifierNamespace(this, id);
-            registerNamespace(usingScope, alias, newNs);
+            final IdentifierNamespace newNs = new IdentifierNamespace(
+                this, id);
+            registerNamespace(usingScope, alias, newNs, forceNullable);
             return newNode;
 
         case SqlKind.LateralORDINAL:
@@ -1439,7 +1466,8 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                     parentScope,
                     usingScope,
                     ((SqlCall) node).operands[0],
-                    alias);
+                    alias,
+                    forceNullable);
 
         case SqlKind.SelectORDINAL:
         case SqlKind.UnionORDINAL:
@@ -1460,7 +1488,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                     newNode = SqlValidatorUtil.addAlias(node, alias);
                 }
             }
-            registerQuery(parentScope, usingScope, node, alias);
+            registerQuery(parentScope, usingScope, node, alias, forceNullable);
             return newNode;
 
         case SqlKind.OverORDINAL:
@@ -1472,7 +1500,8 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             scopes.put(call, overScope);
             final SqlNode operand = call.operands[0];
             final SqlNode newOperand =
-                registerFrom(parentScope, overScope, operand, alias);
+                registerFrom(parentScope, overScope, operand, alias,
+                    false);
             if (newOperand != operand) {
                 call.setOperand(0, newOperand);
             }
@@ -1481,7 +1510,8 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             for (int i = 0; i < tableNames.size(); i++) {
                 String tableName = (String) tableNames.get(i);
                 final SqlValidatorNamespace childSpace = overScope.getChild(tableName);
-                registerNamespace(usingScope,tableName, childSpace);
+                registerNamespace(usingScope,tableName, childSpace,
+                    false);
             }
 
             return call;
@@ -1511,7 +1541,8 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         SqlValidatorScope parentScope,
         SqlValidatorScope usingScope,
         SqlNode node,
-        String alias)
+        String alias,
+        boolean forceNullable)
     {
         Util.pre(usingScope == null || alias != null,
             "usingScope == null || alias != null");
@@ -1521,8 +1552,9 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         switch (node.getKind().getOrdinal()) {
         case SqlKind.SelectORDINAL:
             final SqlSelect select = (SqlSelect) node;
-            final SelectNamespace selectNs = new SelectNamespace(this, select);
-            registerNamespace(usingScope, alias, selectNs);
+            final SelectNamespace selectNs = new SelectNamespace(
+                this, select);
+            registerNamespace(usingScope, alias, selectNs, forceNullable);
             SelectScope selectScope = new SelectScope(parentScope, select);
             scopes.put(select, selectScope);
             // Start by registering the WHERE clause
@@ -1538,7 +1570,8 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 parentScope,
                 selectScope,
                 from,
-                null);
+                null,
+                false);
             if (newFrom != from) {
                 select.setOperand(SqlSelect.FROM_OPERAND, newFrom);
             }
@@ -1575,18 +1608,19 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         case SqlKind.UnionORDINAL:
             final SetopNamespace setopNamespace =
                 new SetopNamespace(this, (SqlCall) node);
-            registerNamespace(usingScope, alias, setopNamespace);
+            registerNamespace(usingScope, alias, setopNamespace, forceNullable);
             call = (SqlCall) node;
             // A setop is in the same scope as its parent.
             scopes.put(call, parentScope);
-            registerQuery(parentScope, null, call.operands[0], null);
-            registerQuery(parentScope, null, call.operands[1], null);
+            registerQuery(parentScope, null, call.operands[0], null, false);
+            registerQuery(parentScope, null, call.operands[1], null, false);
             break;
 
         case SqlKind.ValuesORDINAL:
             final TableConstructorNamespace tableConstructorNamespace =
                 new TableConstructorNamespace(this, node, parentScope);
-            registerNamespace(usingScope, alias, tableConstructorNamespace);
+            registerNamespace(
+                usingScope, alias, tableConstructorNamespace, forceNullable);
             call = (SqlCall) node;
             operands = call.getOperands();
             for (int i = 0; i < operands.length; ++i) {
@@ -1604,12 +1638,13 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             IdentifierNamespace insertScope =
                 new IdentifierNamespace(this,
                     insertCall.getTargetTable());
-            registerNamespace(usingScope, null, insertScope);
+            registerNamespace(usingScope, null, insertScope, forceNullable);
             registerQuery(
                 parentScope,
                 usingScope,
                 insertCall.getSourceSelect(),
-                null);
+                null,
+                false);
             break;
 
         case SqlKind.DeleteORDINAL:
@@ -1618,22 +1653,26 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 parentScope,
                 usingScope,
                 deleteCall.getSourceSelect(),
-                null);
+                null,
+                false);
             break;
 
         case SqlKind.UpdateORDINAL:
             SqlUpdate updateCall = (SqlUpdate) node;
             registerQuery(
                 parentScope,
-                usingScope, updateCall.getSourceSelect(),
-                null);
+                usingScope,
+                updateCall.getSourceSelect(),
+                null,
+                false);
             break;
 
         case SqlKind.UnnestORDINAL:
             call = (SqlCall) node;
             final UnnestNamespace unnestNamespace =
                 new UnnestNamespace(this, node, usingScope);
-            registerNamespace(usingScope, alias, unnestNamespace);
+            registerNamespace(
+                usingScope, alias, unnestNamespace, forceNullable);
             registerSubqueries(usingScope, call.operands[0]);
             break;
 
@@ -1645,7 +1684,8 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
              final CollectNamespace ttableConstructorNamespace =
                 new CollectNamespace(node, cs);
             final String alias2 = deriveAlias(node, nextGeneratedId++);
-            registerNamespace(cs,  alias2, ttableConstructorNamespace);
+            registerNamespace(
+                cs,  alias2, ttableConstructorNamespace, forceNullable);
             operands = call.getOperands();
             for (int i = 0; i < operands.length; i++) {
                 SqlNode operand = operands[i];
@@ -1678,10 +1718,10 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         if (node == null) {
             return;
         } else if (node.isA(SqlKind.Query)) {
-            registerQuery(parentScope, null, node, null);
+            registerQuery(parentScope, null, node, null, false);
         } else if (node.isA(SqlKind.MultisetValueConstructor) ||
                    node.isA(SqlKind.MultisetQueryConstructor)) {
-                registerQuery(parentScope, null, node, null);
+                registerQuery(parentScope, null, node, null, false);
         } else if (node instanceof SqlCall) {
             SqlCall call = (SqlCall) node;
             final SqlNode [] operands = call.getOperands();
@@ -2493,6 +2533,10 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             public boolean isMonotonic(String columnName)
             {
                 return false;
+            }
+
+            public void makeNullable()
+            {
             }
         };
     }

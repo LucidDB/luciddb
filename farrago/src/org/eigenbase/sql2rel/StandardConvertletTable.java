@@ -250,6 +250,9 @@ public class StandardConvertletTable extends ReflectiveConvertletTable
         }
         RexNode arg = cx.convertExpression(call.operands[0]);
         RelDataType type = dataType.getType();
+        if (arg.getType().isNullable()) {
+            type = typeFactory.createTypeWithNullability(type, true);
+        }
         if (null != dataType.getCollectionsTypeName()) {
             final RelDataType argComponentType =
                 arg.getType().getComponentType();

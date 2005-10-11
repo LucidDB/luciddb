@@ -107,7 +107,8 @@ public class SqlNodeToRexConverterImpl
 
             // exact number
             BigDecimal bd = (BigDecimal) value;
-            return rexBuilder.makeExactLiteral(bd);
+            return rexBuilder.makeExactLiteral(
+                bd, literal.createSqlType(typeFactory));
         case SqlTypeName.Double_ordinal:
 
             // approximate type

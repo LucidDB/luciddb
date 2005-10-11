@@ -44,7 +44,11 @@ public abstract class AbstractSqlType
     {
         super(fields);
         this.typeName = typeName;
-        this.isNullable = isNullable;
+        if (typeName == SqlTypeName.Null) {
+            this.isNullable = true;
+        } else {
+            this.isNullable = isNullable;
+        }
     }
 
     // implement RelDataType

@@ -522,6 +522,9 @@ public abstract class SqlTypeUtil
         case SqlTypeName.Bigint_ordinal:
         case SqlTypeName.Float_ordinal:
         case SqlTypeName.Real_ordinal:
+            // TODO jvs 10-Oct-2005:  get rid of this once Java
+            // calc supports fixed-point numerics
+        case SqlTypeName.Decimal_ordinal:
         case SqlTypeName.Double_ordinal:
         case SqlTypeName.Symbol_ordinal:
             return true;
@@ -554,8 +557,8 @@ public abstract class SqlTypeUtil
             return "Long";
         case SqlTypeName.Real_ordinal:
             return "Float";
+        case SqlTypeName.Decimal_ordinal:
         case SqlTypeName.Float_ordinal:
-            return "Double";
         case SqlTypeName.Double_ordinal:
             return "Double";
         default:

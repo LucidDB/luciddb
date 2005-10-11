@@ -499,25 +499,6 @@ public class FarragoOJRexCastImplementor extends FarragoOJRexImplementor
     public boolean canImplement(RexCall call)
     {
         return true;
-        
-        /*
-        RelDataTypeFamily lhsTypeFamily = lhsType.getFamily();
-        RelDataTypeFamily rhsTypeFamily = rhsType.getFamily();
-
-        // casting between numeric and non-numeric types is
-        // not yet implemented
-        if ((lhsTypeFamily == SqlTypeFamily.Numeric)
-            && (rhsTypeFamily != SqlTypeFamily.Numeric)) {
-            return rhsType.getSqlTypeName() == SqlTypeName.Null;
-        }
-        if ((rhsTypeFamily == SqlTypeFamily.Numeric)
-            && (lhsTypeFamily != SqlTypeFamily.Numeric)) {
-            return false;
-        }
-
-        // TODO jvs 11-Aug-2004:  think through other cases
-        return true;
-        */
     }
 }
 

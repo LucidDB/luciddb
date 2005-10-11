@@ -107,6 +107,12 @@ public interface SqlValidatorNamespace
      * Returns whether a given column is sorted.
      */
     boolean isMonotonic(String columnName);
+
+    /**
+     * Makes all fields in this namespace nullable (typically because
+     * it is on the outer side of an outer join.
+     */
+    void makeNullable();
 }
 
 // End SqlValidatorNamespace.java

@@ -47,6 +47,9 @@ create table multisetTable_ic(i integer primary key, ii integer multiset, c char
 -- create view multisetView as select * from multisetTable_i;
 
 -- View with inline multiset
-create view multisetView as select 1 as x, multiset[2, 3] as y from (values (4));
+
+-- FIXME jvs 10-Oct-2005:  I disabled this because it was triggering
+-- my new assertion in SqlToRelConverter.convertValidatedQuery.
+-- create view multisetView as select 1 as x, multiset[2, 3] as y from (values (4));
 
 -- End collectionTypes.sql

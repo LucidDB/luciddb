@@ -179,6 +179,9 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
     public static final SqlTypeName [] numericTypes =
         combine(exactTypes, approxTypes);
 
+    public static final SqlTypeName [] fractionalTypes =
+        combine(approxTypes,  new SqlTypeName[] { Decimal } );
+
     public static final SqlTypeName [] charTypes = {
         Char, Varchar
     };

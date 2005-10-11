@@ -899,10 +899,9 @@ SqlNode SelectExpression() :
 
 // TODO jvs 15-Nov-2003:  SQL standard allows parentheses in the FROM list for
 // building up non-linear join trees (e.g. OUTER JOIN two tables, and then INNER
-// JOIN the result).  Also note that aliases on paranthesized FROM expressions
+// JOIN the result).  Also note that aliases on parenthesized FROM expressions
 // "hide" all table names inside the parentheses (without aliases, they're
-// visible).  Should also support UNION JOIN.  Also, CROSS JOIN shouldn't
-// permit a join condition.
+// visible).  Also, CROSS JOIN shouldn't permit a join condition.
 /**
  * Parses the FROM clause a SELECT.
  */

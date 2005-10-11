@@ -362,7 +362,7 @@ public class RexBuilder
     }
 
     /**
-     * Creates an integer literal.
+     * Creates a numeric literal.
      */
     public RexLiteral makeExactLiteral(BigDecimal bd)
     {
@@ -378,9 +378,17 @@ public class RexBuilder
             }
         }
 
+        return makeExactLiteral(bd, typeFactory.createSqlType(result));
+    }
+
+    /**
+     * Creates a numeric literal.
+     */
+    public RexLiteral makeExactLiteral(BigDecimal bd, RelDataType type)
+    {
         return makeLiteral(
             bd,
-            typeFactory.createSqlType(result),
+            type,
             SqlTypeName.Decimal);
     }
 

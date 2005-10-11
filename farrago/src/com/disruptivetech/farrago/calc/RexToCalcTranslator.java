@@ -112,6 +112,11 @@ public class RexToCalcTranslator implements RexVisitor
                 new TypePair(
                     fac.createSqlType(SqlTypeName.Bigint),
                     CalcProgramBuilder.OpType.Int8),
+                // TODO jvs 10-Oct-2005:  get rid of this once Fennel
+                // calc supports fixed-point numerics
+                new TypePair(
+                    fac.createSqlType(SqlTypeName.Decimal),
+                    CalcProgramBuilder.OpType.Double),
                 new TypePair(
                     fac.createSqlType(SqlTypeName.Float),
                     CalcProgramBuilder.OpType.Double),

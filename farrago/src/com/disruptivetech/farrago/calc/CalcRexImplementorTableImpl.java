@@ -876,7 +876,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 new UsingInstrImplementor(CalcProgramBuilder.Cast));
             doubleKeyMap.put(
                 SqlTypeName.intTypes,
-                SqlTypeName.approxTypes,
+                SqlTypeName.fractionalTypes,
                 new UsingInstrImplementor(CalcProgramBuilder.Cast));
             doubleKeyMap.put(
                 SqlTypeName.datetimeTypes,
@@ -902,11 +902,11 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 });
 
             doubleKeyMap.put(
-                SqlTypeName.approxTypes,
-                SqlTypeName.approxTypes,
+                SqlTypeName.fractionalTypes,
+                SqlTypeName.fractionalTypes,
                 new UsingInstrImplementor(CalcProgramBuilder.Cast));
             doubleKeyMap.put(
-                SqlTypeName.approxTypes,
+                SqlTypeName.fractionalTypes,
                 SqlTypeName.charTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castA) {
                     public CalcProgramBuilder.Register implement(
@@ -923,7 +923,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                     }
                 });
             doubleKeyMap.put(
-                SqlTypeName.approxTypes,
+                SqlTypeName.fractionalTypes,
                 SqlTypeName.intTypes,
                 new AbstractCalcRexImplementor() {
                     public CalcProgramBuilder.Register implement(
@@ -1001,7 +1001,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
                 });
             doubleKeyMap.put(
                 SqlTypeName.charTypes,
-                SqlTypeName.approxTypes,
+                SqlTypeName.fractionalTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castA) {
                     public CalcProgramBuilder.Register implement(
                         RexCall call,

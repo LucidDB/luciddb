@@ -202,19 +202,26 @@ public class SqlToRelConverter
     public RelNode convertValidatedQuery(SqlNode query)
     {
         RelNode result = convertQueryRecursive(query);
-        // FIXME jvs 9-Oct-2005:  re-enable this assert once all
-        // tests can pass with it on.
-        /*
         if (validator.getNamespace(query) != null) {
             // Verify that conversion from SQL to relational algebra did
             // not perturb any type information.  (We can't do this if the
             // SQL statement is something like an INSERT which has no
             // validator type information associated with its result,
             // hence the namespace check above.)
-            assert(
-                result.getRowType() == validator.getValidatedNodeType(query));
+            RelDataType validatedRowType =
+                validator.getValidatedNodeType(query);
+            RelDataType convertedRowType =
+                result.getRowType();
+            if (validatedRowType != convertedRowType) {
+                throw Util.newInternal(
+                    "Conversion to relational algebra failed to preserve "
+                    + "datatypes:"
+                    + Util.lineSeparator + "validated type is "
+                    + validatedRowType.getFullTypeString()
+                    + Util.lineSeparator + "converted type is "
+                    + convertedRowType.getFullTypeString());
+            }
         }
-        */
         return result;
     }
 

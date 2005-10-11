@@ -499,6 +499,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             } else {
                 return OJSystem.FLOAT;
             }
+        case SqlTypeName.Decimal_ordinal:
         case SqlTypeName.Float_ordinal:
         case SqlTypeName.Double_ordinal:
             if (type.isNullable()) {
@@ -638,6 +639,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             return long.class;
         case SqlTypeName.Real_ordinal:
             return float.class;
+        case SqlTypeName.Decimal_ordinal:
         case SqlTypeName.Float_ordinal:
         case SqlTypeName.Double_ordinal:
             return double.class;

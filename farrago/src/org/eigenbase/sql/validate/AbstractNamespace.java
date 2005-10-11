@@ -50,6 +50,8 @@ abstract class AbstractNamespace implements SqlValidatorNamespace
     protected RelDataType rowType;
     private Object extra;
 
+    private boolean forceNullable;
+
     /**
      * Creates an AbstractNamespace.
      */
@@ -74,6 +76,14 @@ abstract class AbstractNamespace implements SqlValidatorNamespace
                 rowType = validateImpl();
                 Util.permAssert(rowType != null,
                     "validateImpl() returned null");
+                if (forceNullable) {
+                    // REVIEW jvs 10-Oct-2005: This may not be quite right
+                    // if it means that nullability will be forced in the
+                    // ON clause where it doesn't belong.
+                    rowType = validator.getTypeFactory().
+                        createTypeWithNullability(
+                            rowType, true);
+                }
             } finally {
                 status = SqlValidatorImpl.Status.Valid;
             }
@@ -144,5 +154,10 @@ abstract class AbstractNamespace implements SqlValidatorNamespace
     public boolean isMonotonic(String columnName)
     {
         return false;
+    }
+    
+    public void makeNullable()
+    {
+        forceNullable = true;
     }
 }

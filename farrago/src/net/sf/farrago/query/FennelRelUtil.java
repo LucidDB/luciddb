@@ -440,6 +440,7 @@ public abstract class FennelRelUtil
             return FennelStandardTypeDescriptor.BINARY;
         case SqlTypeName.Real_ordinal:
             return FennelStandardTypeDescriptor.REAL;
+        case SqlTypeName.Decimal_ordinal:
         case SqlTypeName.Float_ordinal:
         case SqlTypeName.Double_ordinal:
             return FennelStandardTypeDescriptor.DOUBLE;
