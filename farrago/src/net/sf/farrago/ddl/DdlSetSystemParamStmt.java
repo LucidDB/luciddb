@@ -77,7 +77,7 @@ public class DdlSetSystemParamStmt extends DdlSetParamStmt
     protected void handleInvalidName(
         FarragoSessionDdlValidator ddlValidator, InvalidNameException thrown)
     {
-        throw FarragoResource.instance().newValidatorUnknownSysParam(
+        throw FarragoResource.instance().ValidatorUnknownSysParam.ex(
             ddlValidator.getRepos().getLocalizedObjectName(getParamName()));
     }
 
@@ -85,7 +85,7 @@ public class DdlSetSystemParamStmt extends DdlSetParamStmt
     protected void handleReflectionException(
         FarragoSessionDdlValidator ddlValidator, Exception thrown)
     {
-        throw FarragoResource.instance().newValidatorSysParamTypeMismatch(
+        throw FarragoResource.instance().ValidatorSysParamTypeMismatch.ex(
             getParamValue().toString(),
             ddlValidator.getRepos().getLocalizedObjectName(getParamName()));
     }
@@ -94,7 +94,7 @@ public class DdlSetSystemParamStmt extends DdlSetParamStmt
     protected void handleImmutableParameter(
         FarragoSessionDdlValidator ddlValidator, InvalidNameException thrown)
     {
-        throw FarragoResource.instance().newValidatorImmutableSysParam(
+        throw FarragoResource.instance().ValidatorImmutableSysParam.ex(
             ddlValidator.getRepos().getLocalizedObjectName(getParamName()));
     }
 
@@ -102,7 +102,7 @@ public class DdlSetSystemParamStmt extends DdlSetParamStmt
     protected void handleTypeMismatch(
         FarragoSessionDdlValidator ddlValidator, TypeMismatchException thrown)
     {
-        throw FarragoResource.instance().newValidatorSysParamTypeMismatch(
+        throw FarragoResource.instance().ValidatorSysParamTypeMismatch.ex(
             getParamValue().toString(), getParamName());
     }
     
@@ -131,7 +131,7 @@ public class DdlSetSystemParamStmt extends DdlSetParamStmt
 //                 // if we get here, it's a Fennel parameter
 //                 config = farragoConfig.getFennelConfig();
 //             } catch (InvalidNameException ex2) {
-//                 throw FarragoResource.instance().newValidatorUnknownSysParam(
+//                 throw FarragoResource.instance().ValidatorUnknownSysParam.ex(
 //                     ddlValidator.getRepos().getLocalizedObjectName(paramName));
 //             }
 //         }
@@ -160,7 +160,7 @@ public class DdlSetSystemParamStmt extends DdlSetParamStmt
 //                         new Object [] { newValueAsString });
 //             }
 //         } catch (Exception ex) {
-//             throw FarragoResource.instance().newValidatorSysParamTypeMismatch(
+//             throw FarragoResource.instance().ValidatorSysParamTypeMismatch.ex(
 //                 paramValue.toString(),
 //                 ddlValidator.getRepos().getLocalizedObjectName(paramName));
 //         }
@@ -170,10 +170,10 @@ public class DdlSetSystemParamStmt extends DdlSetParamStmt
 //         } catch (InvalidNameException ex) {
 //             // We know the parameter exists, so InvalidNameException in this
 //             // context implies that it's immutable.
-//             throw FarragoResource.instance().newValidatorImmutableSysParam(
+//             throw FarragoResource.instance().ValidatorImmutableSysParam.ex(
 //                 ddlValidator.getRepos().getLocalizedObjectName(paramName));
 //         } catch (TypeMismatchException ex) {
-//             throw FarragoResource.instance().newValidatorSysParamTypeMismatch(
+//             throw FarragoResource.instance().ValidatorSysParamTypeMismatch.ex(
 //                 paramValue.toString(),
 //                 paramName);
 //         }

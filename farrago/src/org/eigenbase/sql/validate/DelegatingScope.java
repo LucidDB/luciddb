@@ -161,7 +161,7 @@ abstract class DelegatingScope implements SqlValidatorScope
                 final SqlValidatorNamespace fromNs = resolve(tableName, null, null);
                 if (fromNs == null) {
                     throw validator.newValidationError(identifier,
-                        EigenbaseResource.instance().newTableNameNotFound(
+                        EigenbaseResource.instance().TableNameNotFound.ex(
                             tableName));
                 }
                 final String columnName = identifier.names[1];
@@ -172,7 +172,7 @@ abstract class DelegatingScope implements SqlValidatorScope
                     return identifier; // it was fine already
                 } else {
                     throw EigenbaseResource.instance()
-                        .newColumnNotFoundInTable(columnName, tableName);
+                        .ColumnNotFoundInTable.ex(columnName, tableName);
                 }
             }
 

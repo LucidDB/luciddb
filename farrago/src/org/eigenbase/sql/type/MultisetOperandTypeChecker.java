@@ -71,7 +71,7 @@ public class MultisetOperandTypeChecker implements SqlOperandTypeChecker
             argTypes);
         if (null==biggest) {
             if (throwOnFailure) {
-                throw EigenbaseResource.instance().newTypeNotComparable(
+                throw EigenbaseResource.instance().TypeNotComparable.ex(
                     call.operands[0].getParserPosition().toString(),
                     call.operands[1].getParserPosition().toString());
             }

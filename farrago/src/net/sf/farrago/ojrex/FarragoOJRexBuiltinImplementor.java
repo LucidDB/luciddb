@@ -534,8 +534,8 @@ public class FarragoOJRexBuiltinImplementor extends FarragoOJRexImplementor
                 new MethodCall(
                     new Literal(
                         Literal.STRING, 
-                        "net.sf.farrago.resource.FarragoResource.instance()"),
-                    "newInvalidFunctionArgument",
+                        "net.sf.farrago.resource.FarragoResource.instance().InvalidFunctionArgument"),
+                    "ex",
                     new ExpressionList(
                         Literal.makeLiteral(funcName)))));
     }

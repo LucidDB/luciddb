@@ -57,7 +57,7 @@ public class SameOperandTypeChecker implements SqlOperandTypeChecker
                 if (throwOnFailure) {
                     throw callBinding.getValidator().newValidationError(
                         operand,
-                        EigenbaseResource.instance().newNullIllegal());
+                        EigenbaseResource.instance().NullIllegal.ex());
                 } else {
                     return false;
                 }
@@ -92,7 +92,7 @@ public class SameOperandTypeChecker implements SqlOperandTypeChecker
                 // newValidationSignatureError() here?  It gives more
                 // specific diagnostics.
                 throw callBinding.newValidationError(
-                    EigenbaseResource.instance().newNeedSameTypeParameter());
+                    EigenbaseResource.instance().NeedSameTypeParameter.ex());
             }
         }
         return true;

@@ -64,7 +64,7 @@ public class DdlSetCatalogStmt extends DdlSetContextStmt
             }
         }
         if (catalogName == null) {
-            throw FarragoResource.instance().newValidatorSetCatalogInvalidExpr(
+            throw FarragoResource.instance().ValidatorSetCatalogInvalidExpr.ex(
                 ddlValidator.getRepos().getLocalizedObjectName(valueString));
         }
     }

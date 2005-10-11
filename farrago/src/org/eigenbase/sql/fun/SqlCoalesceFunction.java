@@ -46,7 +46,8 @@ public class SqlCoalesceFunction extends SqlFunction
         if ((null != call.getFunctionQuantifier()) && !isQuantifierAllowed()) {
             throw validator.newValidationError(call.getFunctionQuantifier(),
                 EigenbaseResource.instance()
-                .newFunctionQuantifierNotAllowed(call.getOperator().getName()));
+                .FunctionQuantifierNotAllowed.ex(
+                    call.getOperator().getName()));
         }
         SqlNode [] operands = call.getOperands();
         SqlParserPos pos = call.getParserPosition();

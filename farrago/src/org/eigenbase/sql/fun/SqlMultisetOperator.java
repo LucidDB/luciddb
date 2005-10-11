@@ -92,7 +92,7 @@ public class SqlMultisetOperator extends SqlSpecialOperator
         if (null == componentType) {
             if (throwOnFailure) {
                 throw callBinding.newValidationError(
-                    EigenbaseResource.instance().newNeedSameTypeParameter());
+                    EigenbaseResource.instance().NeedSameTypeParameter.ex());
             }
             return false;
         }

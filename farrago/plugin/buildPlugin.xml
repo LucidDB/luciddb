@@ -133,6 +133,7 @@
       srcdir="${plugin.src.dir}"
       destdir="${plugin.src.dir}"
       resdir="${plugin.classes.dir}"
+      style="functor"
       locales="en_US">
       <include 
         name="${plugin.resource.package}/${plugin.resource.basename}.xml"/>

@@ -127,7 +127,7 @@ public abstract class SqlTypeUtil
                     }
                     msg += operands[i].toString();
                 }
-                throw EigenbaseResource.instance().newOperandNotComparable(msg);
+                throw EigenbaseResource.instance().OperandNotComparable.ex(msg);
             }
             return false;
         }
@@ -240,7 +240,7 @@ public abstract class SqlTypeUtil
                 RelDataType argType = argTypes[i];
                 msg += argType.toString();
             }
-            throw EigenbaseResource.instance().newTypeNotComparableEachOther(msg);
+            throw EigenbaseResource.instance().TypeNotComparableEachOther.ex(msg);
         }
     }
 

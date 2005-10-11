@@ -85,7 +85,7 @@ public class DdlSetSessionImplementationStmt extends DdlStmt
                 session,
                 defaultPersonality);
         } catch (Throwable ex) {
-            throw FarragoResource.instance().newPluginInitFailed(url, ex);
+            throw FarragoResource.instance().PluginInitFailed.ex(url, ex);
         }
     }
 }

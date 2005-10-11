@@ -172,7 +172,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             femUser = 
                 FarragoCatalogUtil.getUserByName(repos, sessionUser);
             if (femUser == null) {
-                throw FarragoResource.instance().newSessionUnknownUser(
+                throw FarragoResource.instance().SessionUnknownUser.ex(
                     repos.getLocalizedObjectName(sessionUser));
             } else {
                 // TODO:  authenticate
@@ -420,7 +420,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     public void commit()
     {
         if (isAutoCommit) {
-            throw FarragoResource.instance().newSessionNoCommitInAutocommit();
+            throw FarragoResource.instance().SessionNoCommitInAutocommit.ex();
         }
         commitImpl();
     }
@@ -430,7 +430,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     {
         if (name != null) {
             if (findSavepointByName(name, false) != -1) {
-                throw FarragoResource.instance().newSessionDupSavepointName(
+                throw FarragoResource.instance().SessionDupSavepointName.ex(
                     repos.getLocalizedObjectName(name));
             }
         }
@@ -521,7 +521,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     public void rollback(FarragoSessionSavepoint savepoint)
     {
         if (isAutoCommit) {
-            throw FarragoResource.instance().newSessionNoRollbackInAutocommit();
+            throw FarragoResource.instance().SessionNoRollbackInAutocommit.ex();
         }
         if (savepoint == null) {
             rollbackImpl();
@@ -548,7 +548,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
                 getRepos().getModelView(), lurql);
             return query.execute(connection, argMap);
         } catch (JmiQueryException ex) {
-            throw FarragoResource.instance().newSessionInternalQueryFailed(ex);
+            throw FarragoResource.instance().SessionInternalQueryFailed.ex(ex);
         } finally {
             Util.squelchConnection(connection);
         }
@@ -572,7 +572,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     private FarragoSessionSavepoint newSavepointImpl(String name)
     {
         if (isAutoCommit) {
-            throw FarragoResource.instance().newSessionNoSavepointInAutocommit();
+            throw FarragoResource.instance().SessionNoSavepointInAutocommit.ex();
         }
         FennelSvptHandle fennelSvptHandle;
         if (repos.isFennelEnabled()) {
@@ -590,21 +590,21 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     private int validateSavepoint(FarragoSessionSavepoint savepoint)
     {
         if (!(savepoint instanceof FarragoDbSavepoint)) {
-            throw FarragoResource.instance().newSessionWrongSavepoint(
+            throw FarragoResource.instance().SessionWrongSavepoint.ex(
                 repos.getLocalizedObjectName(savepoint.getName()));
         }
         FarragoDbSavepoint dbSavepoint = (FarragoDbSavepoint) savepoint;
         if (dbSavepoint.session != this) {
-            throw FarragoResource.instance().newSessionWrongSavepoint(
+            throw FarragoResource.instance().SessionWrongSavepoint.ex(
                 savepoint.getName());
         }
         int iSavepoint = findSavepoint(savepoint);
         if (iSavepoint == -1) {
             if (savepoint.getName() == null) {
-                throw FarragoResource.instance().newSessionInvalidSavepointId(
+                throw FarragoResource.instance().SessionInvalidSavepointId.ex(
                     new Integer(savepoint.getId()));
             } else {
-                throw FarragoResource.instance().newSessionInvalidSavepointName(
+                throw FarragoResource.instance().SessionInvalidSavepointName.ex(
                         repos.getLocalizedObjectName(savepoint.getName()));
             }
         }
@@ -623,7 +623,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             }
         }
         if (throwIfNotFound) {
-            throw FarragoResource.instance().newSessionInvalidSavepointName(name);
+            throw FarragoResource.instance().SessionInvalidSavepointName.ex(name);
         }
         return -1;
     }
@@ -642,7 +642,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     private void rollbackToSavepoint(int iSavepoint)
     {
         if (isAutoCommit) {
-            throw FarragoResource.instance().newSessionNoRollbackInAutocommit();
+            throw FarragoResource.instance().SessionNoRollbackInAutocommit.ex();
         }
         FarragoDbSavepoint savepoint =
             (FarragoDbSavepoint) savepointList.get(iSavepoint);
@@ -742,8 +742,8 @@ public class FarragoDbSession extends FarragoCompoundAllocation
                 && (stmt.getDynamicParamRowType().getFieldList().size() > 0))
             {
                 owner.closeAllocation();
-                throw FarragoResource.instance()
-                    .newSessionNoExecuteImmediateParameters(sql);
+                throw FarragoResource.instance().
+                    SessionNoExecuteImmediateParameters.ex(sql);
             }
             return stmt;
         }
@@ -791,7 +791,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
                     try {
                         FarragoReposUtil.dumpRepository();
                     } catch (Exception ex) {
-                        throw FarragoResource.instance().newCatalogDumpFailed(
+                        throw FarragoResource.instance().CatalogDumpFailed.ex(
                             ex);
                     }
                 }

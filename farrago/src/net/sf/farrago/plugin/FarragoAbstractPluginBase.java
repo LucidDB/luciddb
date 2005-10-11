@@ -75,7 +75,7 @@ public class FarragoAbstractPluginBase
             try {
                 return Long.parseLong(s);
             } catch (NumberFormatException ex) {
-                throw FarragoResource.instance().newPluginInvalidIntProp(s,
+                throw FarragoResource.instance().PluginInvalidIntProp.ex(s,
                     propName);
             }
         }
@@ -107,7 +107,7 @@ public class FarragoAbstractPluginBase
             try {
                 return Integer.parseInt(s);
             } catch (NumberFormatException ex) {
-                throw FarragoResource.instance().newPluginInvalidIntProp(s,
+                throw FarragoResource.instance().PluginInvalidIntProp.ex(s,
                     propName);
             }
         }

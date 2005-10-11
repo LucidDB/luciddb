@@ -60,7 +60,7 @@ class SetopNamespace extends AbstractNamespace
                 SqlNode operand = call.operands[i];
                 if (!operand.getKind().isA(SqlKind.Query)) {
                     throw validator.newValidationError(operand,
-                        EigenbaseResource.instance().newNeedQueryOp(
+                        EigenbaseResource.instance().NeedQueryOp.ex(
                             operand.toString()));
                 }
                 validator.validateQuery(operand);

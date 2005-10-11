@@ -87,7 +87,7 @@ JAVACODE SqlParserPos getPos()
 
 JAVACODE String getPositionString()
 {
-    return EigenbaseResource.instance().getParserContext(
+    return EigenbaseResource.instance().ParserContext.str(
         new Integer(token.beginLine),
         new Integer(token.beginColumn));
 }
@@ -98,7 +98,7 @@ JAVACODE void checkQueryExpression(ExprContext exprContext)
         exprContext == EXPR_ACCEPT_SUBQUERY) {
         throw SqlUtil.newContextException(
             getPos(),
-            EigenbaseResource.instance().newIllegalQueryExpression());
+            EigenbaseResource.instance().IllegalQueryExpression.ex());
     }
 }
 
@@ -107,7 +107,7 @@ JAVACODE void checkNonQueryExpression(ExprContext exprContext)
     if (exprContext == EXPR_ACCEPT_QUERY) {
         throw SqlUtil.newContextException(
             getPos(),
-            EigenbaseResource.instance().newIllegalNonQueryExpression());
+            EigenbaseResource.instance().IllegalNonQueryExpression.ex());
     }
 }
 
@@ -123,8 +123,8 @@ JAVACODE SqlDateLiteral parseDateLiteral(
         dateStr, SqlParserUtil.DateFormatStr, null);
     if (null==cal) {
         EigenbaseResource res = EigenbaseResource.instance();
-        String msg = res.getIllegalLiteral("DATE", s, pos.toString(),
-            res.getBadFormat(SqlParserUtil.DateFormatStr));
+        String msg = res.IllegalLiteral.str("DATE", s, pos.toString(),
+            res.BadFormat.str(SqlParserUtil.DateFormatStr));
         throw new ParseException(msg);
     }
     return SqlLiteral.createDate(cal, pos);
@@ -139,8 +139,8 @@ JAVACODE SqlTimeLiteral parseTimeLiteral(
         dateStr, SqlParserUtil.TimeFormatStr, null);
     if (null == pt) {
         EigenbaseResource res = EigenbaseResource.instance();
-        String msg = res.getIllegalLiteral("TIME", s, pos.toString(),
-            res.getBadFormat(SqlParserUtil.TimeFormatStr));
+        String msg = res.IllegalLiteral.str("TIME", s, pos.toString(),
+            res.BadFormat.str(SqlParserUtil.TimeFormatStr));
         throw new ParseException(msg);
     }
     return SqlLiteral.createTime(pt.getCalendar(), pt.getPrecision(), pos);
@@ -155,8 +155,8 @@ JAVACODE SqlTimestampLiteral parseTimestampLiteral(
         dateStr, SqlParserUtil.TimestampFormatStr, null);
     if (null == pt) {
         EigenbaseResource res = EigenbaseResource.instance();
-        String msg = res.getIllegalLiteral("TIMESTAMP", s, pos.toString(),
-            res.getBadFormat(SqlParserUtil.TimestampFormatStr));
+        String msg = res.IllegalLiteral.str("TIMESTAMP", s, pos.toString(),
+            res.BadFormat.str(SqlParserUtil.TimestampFormatStr));
         throw new ParseException(msg);
     }
     return SqlLiteral.createTimestamp(pt.getCalendar(), pt.getPrecision(), pos);
@@ -172,8 +172,8 @@ JAVACODE SqlIntervalLiteral parseIntervalLiteral(
 
     if ("".equals(intervalStr)) {
         EigenbaseResource res = EigenbaseResource.instance();
-        String msg = res.getIllegalIntervalLiteral(
-            s+" "+intervalQualifier.toString(), pos.toString());
+        String msg = res.IllegalIntervalLiteral.str(
+            s + " " + intervalQualifier.toString(), pos.toString());
         throw new ParseException(msg);
     }
     return SqlLiteral.createInterval(sign, intervalStr, intervalQualifier, pos);
@@ -1767,7 +1767,7 @@ SqlNode Expression3(ExprContext exprContext) :
             {
                 if (list.size()!=2 || list2.size() != 2) {
                     throw new ParseException(
-                        EigenbaseResource.instance().getIllegalOverlaps(
+                        EigenbaseResource.instance().IllegalOverlaps.str(
                             getPos().toString()));
                 }
                 list.addAll(list2);
@@ -1784,7 +1784,7 @@ SqlNode Expression3(ExprContext exprContext) :
                     !((SqlCall) list.get(0)).isA(SqlKind.Minus) ||
                     (((SqlCall) list.get(0)).operands.length != 2)) {
                     throw new ParseException(
-                        EigenbaseResource.instance().getIllegalMinusDate(
+                        EigenbaseResource.instance().IllegalMinusDate.str(
                             getPos().toString()));
                 } else {
                     list2 = startList(((SqlCall) list.get(0)).operands[0]);
@@ -2031,7 +2031,8 @@ SqlNode StringLiteral(boolean strict) :
                 nfrags++;
             } catch (NumberFormatException ex) {
                 throw new ParseException(
-                    "Invalid binary string "+token.image+ " near "+getPositionString());
+                    "Invalid binary string " + token.image + " near " +
+                    getPositionString());
             }
         }
     ) *

@@ -200,20 +200,20 @@ public class SqlBetweenOperator extends SqlInfixOperator
             SqlParserPos errPos = new SqlParserPos(line, col, line, col);
             throw SqlUtil.newContextException(
                 errPos,
-                EigenbaseResource.instance().newBetweenWithoutAnd());
+                EigenbaseResource.instance().BetweenWithoutAnd.ex());
         }
         final Object o = list.get(opOrdinal + 2);
         if (!(o instanceof SqlParserUtil.ToTreeListItem)) {
             SqlParserPos errPos = ((SqlNode) o).getParserPosition();
             throw SqlUtil.newContextException(
                 errPos,
-                EigenbaseResource.instance().newBetweenWithoutAnd());
+                EigenbaseResource.instance().BetweenWithoutAnd.ex());
         }
         if (((SqlParserUtil.ToTreeListItem) o).getOperator().getKind() != SqlKind.And) {
             SqlParserPos errPos = ((SqlParserUtil.ToTreeListItem) o).getPos();
             throw SqlUtil.newContextException(
                 errPos,
-                EigenbaseResource.instance().newBetweenWithoutAnd());
+                EigenbaseResource.instance().BetweenWithoutAnd.ex());
         }
 
         // Create the expression after 'AND', but stopping if we encounter an

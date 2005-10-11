@@ -88,7 +88,7 @@ public class FarragoJdbcEngineDriver extends FarragoAbstractJdbcDriver
                     info,
                     newSessionFactory());
             } else {
-                throw FarragoResource.instance().newJdbcInvalidUrl(url);
+                throw FarragoResource.instance().JdbcInvalidUrl.ex(url);
             }
         } catch (Throwable ex) {
             throw newSqlException(ex);
@@ -108,7 +108,7 @@ public class FarragoJdbcEngineDriver extends FarragoAbstractJdbcDriver
             return (FarragoSessionFactory)
                 classLoader.newPluginInstance(c);
         } catch (Throwable ex) {
-            throw FarragoResource.instance().newPluginInitFailed(
+            throw FarragoResource.instance().PluginInitFailed.ex(
                 libraryName,ex);
         }
     }

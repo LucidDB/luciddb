@@ -258,7 +258,7 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
                 medServer.newColumnSet(qualifiedName, props, typeFactory,
                     rowType, columnPropMap);
         } catch (Throwable ex) {
-            throw FarragoResource.instance().newForeignTableAccessFailed(
+            throw FarragoResource.instance().ForeignTableAccessFailed.ex(
                 typeFactory.getRepos().getLocalizedObjectName(
                     baseColumnSet, null),
                 ex);
@@ -358,7 +358,7 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
             try {
                 server = dataWrapper.newServer(mofId, options);
             } catch (Throwable ex) {
-                throw FarragoResource.instance().newDataServerInitFailed(ex);
+                throw FarragoResource.instance().DataServerInitFailed.ex(ex);
             }
 
             if (!dataWrapper.isForeign()) {

@@ -96,7 +96,7 @@ class FarragoSqlValidator extends SqlValidatorImpl
                     // overflow
                     throw newValidationError(
                         literal, EigenbaseResource.instance()
-                        .newNumberLiteralOutOfRange(bd.toString()));
+                        .NumberLiteralOutOfRange.ex(bd.toString()));
                 }
             } else {
                 // fall through for scaled case
@@ -124,7 +124,7 @@ class FarragoSqlValidator extends SqlValidatorImpl
         if (Double.isInfinite(d) || Double.isNaN(d)) {
             // overflow
             throw newValidationError(
-                literal, EigenbaseResource.instance().newNumberLiteralOutOfRange(
+                literal, EigenbaseResource.instance().NumberLiteralOutOfRange.ex(
                     Util.toScientificNotation(bd))
             );
         }
@@ -144,7 +144,7 @@ class FarragoSqlValidator extends SqlValidatorImpl
             if (!personality.isSupportedType(typeName)) {
                 throw newValidationError(
                     dataType,
-                    EigenbaseResource.instance().newTypeNotSupported(
+                    EigenbaseResource.instance().TypeNotSupported.ex(
                         typeName.toString()));
             }
         }

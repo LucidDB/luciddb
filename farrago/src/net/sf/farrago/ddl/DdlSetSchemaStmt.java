@@ -66,7 +66,7 @@ public class DdlSetSchemaStmt extends DdlSetContextStmt
             }
         }
         if (schemaName == null) {
-            throw FarragoResource.instance().newValidatorSetSchemaInvalidExpr(
+            throw FarragoResource.instance().ValidatorSetSchemaInvalidExpr.ex(
                 ddlValidator.getRepos().getLocalizedObjectName(valueString));
         }
     }

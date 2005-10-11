@@ -382,7 +382,7 @@ public class SqlJdbcFunctionCall extends SqlFunction
 
         if (null == lookupMakeCallObj) {
             throw callBinding.newValidationError(
-                EigenbaseResource.instance().newFunctionUndefined(
+                EigenbaseResource.instance().FunctionUndefined.ex(
                     getName()));
         }
 
@@ -390,7 +390,7 @@ public class SqlJdbcFunctionCall extends SqlFunction
                 opBinding.getOperandCount()))
         {
             throw callBinding.newValidationError(
-                EigenbaseResource.instance().newWrongNumberOfParam(
+                EigenbaseResource.instance().WrongNumberOfParam.ex(
                     getName(),
                     new Integer(thisOperands.length),
                     getArgCountMismatchMsg()));

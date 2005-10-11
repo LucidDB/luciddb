@@ -71,7 +71,7 @@ public class FarragoServer
     public void start(FarragoJdbcServerDriver jdbcDriver)
     {
         FarragoResource res = FarragoResource.instance();
-        System.out.println(res.getServerLoadingDatabase());
+        System.out.println(res.ServerLoadingDatabase.str());
 
         // Load the session factory
         FarragoSessionFactory sessionFactory = jdbcDriver.newSessionFactory();
@@ -85,7 +85,7 @@ public class FarragoServer
 
         int singleListenerPort = config.getServerSingleListenerPort();
 
-        System.out.println(res.getServerStartingNetwork());
+        System.out.println(res.ServerStartingNetwork.str());
 
         List argList = new ArrayList();
 
@@ -117,7 +117,7 @@ public class FarragoServer
         }
 
         System.out.println(
-            res.getServerListening(new Integer(rmiRegistryPort)));
+            res.ServerListening.str(new Integer(rmiRegistryPort)));
     }
 
     /**
@@ -128,18 +128,18 @@ public class FarragoServer
     public boolean stopSoft()
     {
         FarragoResource res = FarragoResource.instance();
-        System.out.println(res.getServerShuttingDown());
+        System.out.println(res.ServerShuttingDown.str());
 
         // NOTE:  use groundReferences=1 in shutdownConditional
         // to account for our baseline reference
         if (FarragoDatabase.shutdownConditional(getGroundReferences())) {
-            System.out.println(res.getServerShutdownComplete());
+            System.out.println(res.ServerShutdownComplete.str());
 
             // TODO: should find a way to prevent new messages BEFORE shutdown
             unbindRegistry();
             return true;
         } else {
-            System.out.println(res.getServerSessionsExist());
+            System.out.println(res.ServerSessionsExist.str());
             return false;
         }
     }
@@ -166,9 +166,9 @@ public class FarragoServer
     {
         unbindRegistry();
         FarragoResource res = FarragoResource.instance();
-        System.out.println(res.getServerShuttingDown());
+        System.out.println(res.ServerShuttingDown.str());
         FarragoDatabase.shutdown();
-        System.out.println(res.getServerShutdownComplete());
+        System.out.println(res.ServerShutdownComplete.str());
     }
 
     /** Unbinds all items remaining in RMI registry. */
@@ -220,7 +220,7 @@ public class FarragoServer
                 stopHard();
                 break;
             } else {
-                System.out.println(res.getServerBadCommand(cmd));
+                System.out.println(res.ServerBadCommand.str(cmd));
             }
         }
         System.exit(0);

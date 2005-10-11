@@ -71,7 +71,7 @@ public class FarragoRngDdlHandler extends DdlHandler
                 new File(FarragoRngUDR.getFilename(rng)),
                 random);
         } catch (Throwable ex) {
-            throw FarragoRngPluginFactory.res.newRngFileCreationFailed(
+            throw FarragoRngPluginFactory.res.RngFileCreationFailed.ex(
                 validator.getRepos().getLocalizedObjectName(
                     rng.getSerializedFile()),
                 validator.getRepos().getLocalizedObjectName(rng),

@@ -454,7 +454,7 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
          */
         protected EigenbaseException newInvalidType(Object x)
         {
-            return FarragoResource.instance().newParameterValueIncompatible(
+            return FarragoResource.instance().ParameterValueIncompatible.ex(
                 x.getClass().getName(),
                 type.toString());
         }
@@ -613,7 +613,7 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
             // Float/Double/Date/Time/Timestamp/byte[] may not be correct here.
             final String s = x.toString();
             if (s.length() > maxCharCount) {
-                throw FarragoResource.instance().newParameterValueTooLong(
+                throw FarragoResource.instance().ParameterValueTooLong.ex(
                     s,
                     type.toString());
             }
@@ -646,7 +646,7 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
             }
             final byte [] bytes = (byte []) x;
             if (bytes.length > maxByteCount) {
-                throw FarragoResource.instance().newParameterValueTooLong(
+                throw FarragoResource.instance().ParameterValueTooLong.ex(
                     Util.toStringFromByteArray(bytes,16),
                     type.toString());
             }

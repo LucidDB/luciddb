@@ -45,8 +45,6 @@ import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 
 import java.io.*;
-import java.nio.charset.*;
-import java.sql.*;
 import java.util.*;
 
 /**
@@ -75,7 +73,7 @@ public class DdlMedHandler extends DdlHandler
         FemDataWrapper dataWrapper = dataServer.getWrapper();
 
         if (!dataWrapper.isForeign()) {
-            throw res.newValidatorForeignTableButLocalWrapper(
+            throw res.ValidatorForeignTableButLocalWrapper.ex(
                 repos.getLocalizedObjectName(columnSet),
                 repos.getLocalizedObjectName(dataWrapper));
         }
@@ -113,7 +111,7 @@ public class DdlMedHandler extends DdlHandler
             // validate that we can successfully initialize the server
             validator.getDataWrapperCache().loadServerFromCatalog(femServer);
         } catch (Throwable ex) {
-            throw res.newValidatorDefinitionInvalid(
+            throw res.ValidatorDefinitionInvalid.ex(
                 repos.getLocalizedObjectName(femServer),
                 ex);
         }
@@ -178,19 +176,19 @@ public class DdlMedHandler extends DdlHandler
             wrapper = validator.getDataWrapperCache().loadWrapperFromCatalog(
                 femWrapper);
         } catch (Throwable ex) {
-            throw res.newValidatorDefinitionInvalid(
+            throw res.ValidatorDefinitionInvalid.ex(
                 repos.getLocalizedObjectName(femWrapper),
                 ex);
         }
 
         if (femWrapper.isForeign()) {
             if (!wrapper.isForeign()) {
-                throw res.newValidatorForeignWrapperHasLocalImpl(
+                throw res.ValidatorForeignWrapperHasLocalImpl.ex(
                     repos.getLocalizedObjectName(femWrapper));
             }
         } else {
             if (wrapper.isForeign()) {
-                throw res.newValidatorLocalWrapperHasForeignImpl(
+                throw res.ValidatorLocalWrapperHasForeignImpl.ex(
                     repos.getLocalizedObjectName(femWrapper));
             }
         }
@@ -220,7 +218,7 @@ public class DdlMedHandler extends DdlHandler
                     femColumnSet,
                     validator.getTypeFactory());
         } catch (Throwable ex) {
-            throw res.newValidatorDataServerTableInvalid(
+            throw res.ValidatorDataServerTableInvalid.ex(
                 repos.getLocalizedObjectName(femColumnSet),
                 ex);
         }

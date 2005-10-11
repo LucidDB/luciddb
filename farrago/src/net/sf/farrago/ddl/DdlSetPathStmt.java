@@ -95,7 +95,7 @@ public class DdlSetPathStmt extends DdlSetContextStmt
             }
         }
         if (schemaList == null) {
-            throw FarragoResource.instance().newValidatorSetPathInvalidExpr(
+            throw FarragoResource.instance().ValidatorSetPathInvalidExpr.ex(
                 ddlValidator.getRepos().getLocalizedObjectName(valueString));
         }
     }

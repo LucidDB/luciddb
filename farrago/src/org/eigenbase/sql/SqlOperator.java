@@ -501,7 +501,7 @@ public abstract class SqlOperator
         }
         if (!od.getAllowedList().contains(new Integer(call.operands.length))) {
             throw validator.newValidationError(call,
-                EigenbaseResource.instance().newWrongNumOfArguments());
+                EigenbaseResource.instance().WrongNumOfArguments.ex());
         }
     }
 
