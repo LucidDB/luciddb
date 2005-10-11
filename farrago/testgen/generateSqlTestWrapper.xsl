@@ -43,10 +43,10 @@ public class <xsl:value-of select="$classname"/> extends <xsl:value-of select="$
   </xsl:template>
 
   <xsl:template match="fileset/file">
-    public void test_<xsl:value-of select="translate(@path,'/.','__')"/>()
+    public void test_<xsl:value-of select="translate(@path,'/.\:','____')"/>()
         throws Exception
     {
-        runSqlLineTest("<xsl:value-of select="concat($rootpath,@path)"/>");
+        runSqlLineTest("<xsl:value-of select="translate(concat($rootpath,@path),'\','/')"/>");
     }
   </xsl:template>
 
