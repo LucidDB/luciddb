@@ -171,7 +171,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
             }
             return obj;
         } catch (Throwable ex) {
-            throw FarragoResource.instance().newDataServerRuntimeFailed(ex);
+            throw FarragoResource.instance().DataServerRuntimeFailed.ex(ex);
         }
     }
 
@@ -555,7 +555,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
     public void checkNotNull(String targetName, NullableValue nullableValue)
     {
         if (nullableValue.isNull()) {
-            throw FarragoResource.instance().newNullNotAllowed(
+            throw FarragoResource.instance().NullNotAllowed.ex(
                 targetName);
         }
     }
@@ -570,7 +570,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
     public void checkNotNull(String targetName, Object obj)
     {
         if (null == obj) {
-            throw FarragoResource.instance().newNullNotAllowed(
+            throw FarragoResource.instance().NullNotAllowed.ex(
                 targetName);
         }
     }
@@ -617,7 +617,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
     {
         // TODO jvs 19-Jan-2005:  special SQLSTATE handling defined
         // in SQL:2003-13-15.1
-        return FarragoResource.instance().newRoutineInvocationException(
+        return FarragoResource.instance().RoutineInvocationException.ex(
             methodName, ex);
     }
 
@@ -639,14 +639,14 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
     {
         List stack = getInvocationStack();
         if (stack.isEmpty()) {
-            throw FarragoResource.instance().newNoDefaultConnection();
+            throw FarragoResource.instance().NoDefaultConnection.ex();
         }
 
         RoutineInvocationFrame frame =
             (RoutineInvocationFrame) stack.get(stack.size() - 1);
 
         if (!frame.allowSql) {
-            throw FarragoResource.instance().newNoDefaultConnection();
+            throw FarragoResource.instance().NoDefaultConnection.ex();
         }
 
         if (frame.connection == null) {

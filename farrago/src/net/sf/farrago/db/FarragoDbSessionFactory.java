@@ -84,7 +84,7 @@ public class FarragoDbSessionFactory implements FarragoSessionFactory
                 factory.newModelExtension();
             return modelExtension;
         } catch (Throwable ex) {
-            throw FarragoResource.instance().newPluginInitFailed(url, ex);
+            throw FarragoResource.instance().PluginInitFailed.ex(url, ex);
         }
     }
     

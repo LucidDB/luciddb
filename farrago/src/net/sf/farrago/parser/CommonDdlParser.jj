@@ -383,7 +383,7 @@ void SchemaPath(FemLocalSchema schema) :
         while (iter.hasNext()) {
             CwmSchema searchedSchema = (CwmSchema) iter.next();
             if (searchedSchema.getNamespace() != schema.getNamespace()) {
-                throw FarragoResource.instance().newValidatorPathBadCatalog(
+                throw FarragoResource.instance().ValidatorPathBadCatalog.ex(
                     getRepos().getLocalizedObjectName(
                         searchedSchema.getNamespace()),
                     getRepos().getLocalizedObjectName(
@@ -599,7 +599,7 @@ FemLocalIndex IndexDefinition(CwmTable table) :
             if (table != specifiedTable) {
                 throw farragoParser.getDdlValidator().newPositionalError(
                     index,
-                    FarragoResource.instance().newValidatorIndexBadTable());
+                    FarragoResource.instance().ValidatorIndexBadTable.ex());
             }
         }
         getRepos().getKeysIndexesPackage().getIndexSpansClass().add(
@@ -818,7 +818,7 @@ FemRoutine RoutineReferenceImpl(boolean specific) :
         // found nothing
         if ((routineType != null) && (routineType != routine.getType())) {
             throw farragoParser.newPositionalError(
-                FarragoResource.instance().newValidatorUnknownObject(
+                FarragoResource.instance().ValidatorUnknownObject.ex(
                     routineType.toString() + " " +
                     getRepos().getLocalizedObjectName(
                         routine.getNamespace().getName(),
@@ -1150,7 +1150,7 @@ CwmModelElement UserDefinedOrderingDrop() :
             typeName,
             getRepos().getSql2003Package().getFemUserDefinedType());
         if (typeDef.getOrdering().isEmpty()) {
-            throw FarragoResource.instance().newValidatorNoOrdering(
+            throw FarragoResource.instance().ValidatorNoOrdering.ex(
                 getRepos().getLocalizedObjectName(
                     typeDef));
         }
@@ -1730,11 +1730,11 @@ void RoutineCharacteristics(FemRoutine routine) :
                     throw farragoParser.getDdlValidator().newPositionalError(
                         routine,
                         FarragoResource.instance().
-                        newValidatorRoutineSchemaMismatch(
-                            getRepos().getLocalizedObjectName(
-                                specificName.names[0]),
-                            getRepos().getLocalizedObjectName(
-                                routine.getNamespace())));
+                            ValidatorRoutineSchemaMismatch.ex(
+                                getRepos().getLocalizedObjectName(
+                                    specificName.names[0]),
+                                getRepos().getLocalizedObjectName(
+                                    routine.getNamespace())));
                 }
                 routine.setName(specificName.names[1]);
             } else {

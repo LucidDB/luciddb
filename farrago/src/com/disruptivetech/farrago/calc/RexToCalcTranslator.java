@@ -745,7 +745,7 @@ public class RexToCalcTranslator implements RexVisitor
 
     public void visitOver(RexOver over)
     {
-        throw FarragoResource.instance().newProgramImplementationError(
+        throw FarragoResource.instance().ProgramImplementationError.ex(
             "Don't know how to implement rex node=" + over);
     }
 
@@ -756,13 +756,13 @@ public class RexToCalcTranslator implements RexVisitor
 
     public void visitDynamicParam(RexDynamicParam dynamicParam)
     {
-        throw FarragoResource.instance().newProgramImplementationError(
+        throw FarragoResource.instance().ProgramImplementationError.ex(
             "Don't know how to implement rex node=" + dynamicParam);
     }
 
     public void visitRangeRef(RexRangeRef rangeRef)
     {
-        throw FarragoResource.instance().newProgramImplementationError(
+        throw FarragoResource.instance().ProgramImplementationError.ex(
             "Don't know how to implement rex node=" + rangeRef);
     }
 
@@ -773,7 +773,7 @@ public class RexToCalcTranslator implements RexVisitor
             implementNode(fieldAccess);
             return;
         }
-        throw FarragoResource.instance().newProgramImplementationError(
+        throw FarragoResource.instance().ProgramImplementationError.ex(
             "Don't know how to implement rex node=" + fieldAccess);
     }
 
@@ -822,7 +822,7 @@ public class RexToCalcTranslator implements RexVisitor
             //Return is currently always at the end.
             builder.addLabel(restOfInstructions);
         } else {
-            throw FarragoResource.instance().newProgramImplementationError(
+            throw FarragoResource.instance().ProgramImplementationError.ex(
                 op.toString());
         }
     }
@@ -959,8 +959,8 @@ public class RexToCalcTranslator implements RexVisitor
             }
         }
 
-        throw FarragoResource.instance()
-            .newProgramImplementationError("Unknown operator " + op);
+        throw FarragoResource.instance().ProgramImplementationError.ex(
+            "Unknown operator " + op);
     }
 
     private boolean isStrCmp(RexCall call)

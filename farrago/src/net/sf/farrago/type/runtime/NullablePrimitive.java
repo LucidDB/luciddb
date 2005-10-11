@@ -108,7 +108,7 @@ public abstract class NullablePrimitive implements NullableValue,
             try {
                 n = new BigDecimal(s.trim());
             } catch (NumberFormatException ex) {
-                throw FarragoResource.instance().newAssignFromFailed(
+                throw FarragoResource.instance().AssignFromFailed.ex(
                     s,
                     "NUMERIC",
                     ex.toString());

@@ -82,7 +82,7 @@ class EmptyScope implements SqlValidatorScope
         SqlNode ctx)
     {
         throw validator.newValidationError(ctx,
-            EigenbaseResource.instance().newColumnNotFound(columnName));
+            EigenbaseResource.instance().ColumnNotFound.ex(columnName));
     }
 
     public void addChild(SqlValidatorNamespace ns, String alias)

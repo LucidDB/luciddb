@@ -256,9 +256,9 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
                 assignFrom(parsedDate);
             } else {
                 String reason =
-                    EigenbaseResource.instance().getBadFormat(format);
+                    EigenbaseResource.instance().BadFormat.str(format);
 
-                throw FarragoResource.instance().newAssignFromFailed(date,
+                throw FarragoResource.instance().AssignFromFailed.ex(date,
                     "DATE", reason);
             }
 
@@ -301,9 +301,9 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
                 assignFrom(parsedDate);
             } else {
                 String reason =
-                    EigenbaseResource.instance().getBadFormat(format);
+                    EigenbaseResource.instance().BadFormat.str(format);
 
-                throw FarragoResource.instance().newAssignFromFailed(date,
+                throw FarragoResource.instance().AssignFromFailed.ex(date,
                     "TIME", reason);
             }
         }
@@ -349,9 +349,9 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
                 assignFrom(parsedDate);
             } else {
                 String reason =
-                    EigenbaseResource.instance().getBadFormat(format);
+                    EigenbaseResource.instance().BadFormat.str(format);
 
-                throw FarragoResource.instance().newAssignFromFailed(date,
+                throw FarragoResource.instance().AssignFromFailed.ex(date,
                     "TIMESTAMP", reason);
             }
         }

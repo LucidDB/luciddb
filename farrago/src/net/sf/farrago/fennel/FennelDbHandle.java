@@ -318,7 +318,7 @@ public class FennelDbHandle implements FarragoAllocation
 
     public EigenbaseException handleNativeException(SQLException ex)
     {
-        return FarragoResource.instance().newFennelUntranslated(
+        return FarragoResource.instance().FennelUntranslated.ex(
             ex.getMessage());
     }
 }

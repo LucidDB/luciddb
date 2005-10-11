@@ -69,8 +69,7 @@ public class SqlMultisetMemberOfOperator extends SqlBinaryOperator
         if (t0.getFamily() != t1.getFamily()) {
             if (throwOnFailure) {
                 throw callBinding.newValidationError(
-                    EigenbaseResource.instance().
-                    newTypeNotComparableNear(
+                    EigenbaseResource.instance().TypeNotComparableNear.ex(
                         t0.toString(), t1.toString()));
             }
             return false;

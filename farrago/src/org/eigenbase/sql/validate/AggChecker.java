@@ -82,7 +82,7 @@ class AggChecker extends SqlBasicVisitor
         }
         final String exprString = id.toString();
         throw scope.getValidator().newValidationError(id,
-            EigenbaseResource.instance().newNotGroupExpr(exprString));
+            EigenbaseResource.instance().NotGroupExpr.ex(exprString));
     }
 
     public void visit(SqlCall call) {

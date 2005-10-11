@@ -170,7 +170,7 @@ public class SqlCaseOperator extends SqlOperator
                 if (throwOnFailure) {
                     throw callBinding.getValidator().newValidationError(
                         node,
-                        EigenbaseResource.instance().newExpectedBoolean());
+                        EigenbaseResource.instance().ExpectedBoolean.ex());
                 }
                 return false;
             }
@@ -192,7 +192,7 @@ public class SqlCaseOperator extends SqlOperator
             // according to the sql standard we can not have all of the THEN
             // statements and the ELSE returning null
             if (throwOnFailure) {
-                throw EigenbaseResource.instance().newMustNotNullInElse();
+                throw EigenbaseResource.instance().MustNotNullInElse.ex();
             }
             return false;
         }
@@ -239,7 +239,7 @@ public class SqlCaseOperator extends SqlOperator
             argTypes);
         if (null == ret) {
             throw callBinding.newValidationError(
-                EigenbaseResource.instance().newIllegalMixingOfTypes());
+                EigenbaseResource.instance().IllegalMixingOfTypes.ex());
         }
         for (int i = 0; i < nullList.size(); i++) {
             SqlNode node = (SqlNode) nullList.get(i);

@@ -188,7 +188,7 @@ public class SqlWindow extends SqlCall
         final SqlNodeList partitions = getPartitionList();
         if (0 != partitions.size()) {
             throw validator.newValidationError(partitions.get(0),
-                EigenbaseResource.instance().newPartitionNotAllowed());
+                EigenbaseResource.instance().PartitionNotAllowed.ex());
         }
 
         // 7.11 rule 10d
@@ -196,7 +196,7 @@ public class SqlWindow extends SqlCall
         final SqlNodeList refOrder = that.getOrderList();
         if (0 != baseOrder.size() && 0 != refOrder.size()) {
             throw validator.newValidationError(baseOrder.get(0),
-                EigenbaseResource.instance().newOrderByOverlap());
+                EigenbaseResource.instance().OrderByOverlap.ex());
         }
 
         // 711 rule 10e
@@ -204,7 +204,7 @@ public class SqlWindow extends SqlCall
                       upperBound = that.getUpperBound();
         if (null != lowerBound || null != upperBound) {
             throw validator.newValidationError(that.operands[IsRows_OPERAND],
-                EigenbaseResource.instance().newRefWindowWithFrame());
+                EigenbaseResource.instance().RefWindowWithFrame.ex());
         }
 
         final SqlNode[] newOperands = (SqlNode[]) operands.clone();
@@ -234,7 +234,7 @@ public class SqlWindow extends SqlCall
             } else {
                 throw validator.newValidationError(clonedOperand,
                     EigenbaseResource.instance()
-                    .newCannotOverrideWindowAttribute());
+                    .CannotOverrideWindowAttribute.ex());
             }
         }
     }

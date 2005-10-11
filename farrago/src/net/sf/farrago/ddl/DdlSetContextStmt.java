@@ -72,7 +72,7 @@ public abstract class DdlSetContextStmt extends DdlStmt
         try {
             processExpression(session);
         } catch (Throwable ex) {
-            throw FarragoResource.instance().newValidatorSetStmtInvalid(ex);
+            throw FarragoResource.instance().ValidatorSetStmtInvalid.ex(ex);
         } finally {
             ddlValidator.releaseReentrantSession(session);
         }
@@ -106,7 +106,7 @@ public abstract class DdlSetContextStmt extends DdlStmt
         }
         if (fieldList == null) {
             // expression is not a simple string value
-            throw FarragoResource.instance().newValidatorSetStmtNonString();
+            throw FarragoResource.instance().ValidatorSetStmtNonString.ex();
         }
         stmtContext.execute();
         ResultSet resultSet = stmtContext.getResultSet();

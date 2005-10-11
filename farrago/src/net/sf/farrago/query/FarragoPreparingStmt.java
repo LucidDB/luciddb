@@ -25,26 +25,21 @@ package net.sf.farrago.query;
 
 import java.io.*;
 import java.net.*;
-import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
 
-import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.cwm.behavioral.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.*;
-import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.resource.*;
-import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.type.*;
@@ -52,7 +47,6 @@ import net.sf.farrago.util.*;
 
 import openjava.mop.*;
 import openjava.ptree.*;
-import openjava.ptree.util.*;
 
 import org.eigenbase.oj.rel.JavaRelImplementor;
 import org.eigenbase.oj.stmt.*;
@@ -898,8 +892,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             return medColumnSet;
         } catch (Throwable ex) {
             // TODO:  better name formatting
-            throw FarragoResource.instance()
-                .newValidatorForeignTableLookupFailed(
+            throw FarragoResource.instance().
+                ValidatorForeignTableLookupFailed.ex(
                     Arrays.asList(resolved.getQualifiedName()).toString(),
                     ex);
         }

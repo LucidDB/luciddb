@@ -100,7 +100,7 @@ public class FarragoDbSessionPrivilegeChecker
         }
 
         // Verboten!
-        throw FarragoResource.instance().newValidatorAccessDenied(
+        throw FarragoResource.instance().ValidatorAccessDenied.ex(
             session.getRepos().getLocalizedObjectName(action),
             session.getRepos().getLocalizedObjectName(obj));
     }

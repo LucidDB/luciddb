@@ -665,11 +665,11 @@ public abstract class SqlUtil
     {
         EigenbaseContextException contextExcn =
             line == endLine && col == endCol ?
-            EigenbaseResource.instance().newValidatorContextPoint(
+            EigenbaseResource.instance().ValidatorContextPoint.ex(
                 new Integer(line),
                 new Integer(col),
                 e) :
-            EigenbaseResource.instance().newValidatorContext(
+            EigenbaseResource.instance().ValidatorContext.ex(
                 new Integer(line),
                 new Integer(col),
                 new Integer(endLine),

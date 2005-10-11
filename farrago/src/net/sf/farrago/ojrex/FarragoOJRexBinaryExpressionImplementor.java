@@ -255,28 +255,26 @@ public class FarragoOJRexBinaryExpressionImplementor
     }
 
     private Statement checkOverflow(Expression expr, RelDataType returnType)
-        
     {
         if (SqlTypeUtil.isApproximateNumeric(returnType) && 
             (ojBinaryExpressionOrdinal == BinaryExpression.DIVIDE || 
-            ojBinaryExpressionOrdinal == BinaryExpression.TIMES))
-        {
+            ojBinaryExpressionOrdinal == BinaryExpression.TIMES)) {
             Statement ifStatement =
                 new IfStatement(
-                     new MethodCall(
-                         new Literal(
-                             Literal.STRING,
-                             "Double"),
-                         "isInfinite",
-                         new ExpressionList(expr)),
-                     new StatementList(
-                         new ThrowStatement(
-                             new MethodCall(
-                             new Literal(
-                                 Literal.STRING, 
-                                 "net.sf.farrago.resource.FarragoResource.instance()"),
-                                 "newOverflow", 
-                                 new ExpressionList()))));
+                    new MethodCall(
+                        new Literal(
+                            Literal.STRING,
+                            "Double"),
+                        "isInfinite",
+                        new ExpressionList(expr)),
+                    new StatementList(
+                        new ThrowStatement(
+                            new MethodCall(
+                                new Literal(
+                                    Literal.STRING,
+                                    "net.sf.farrago.resource.FarragoResource.instance().Overflow"),
+                                "ex", 
+                                new ExpressionList()))));
             return ifStatement;
         } else {
             return null;

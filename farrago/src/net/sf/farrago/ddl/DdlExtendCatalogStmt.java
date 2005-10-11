@@ -70,7 +70,7 @@ public class DdlExtendCatalogStmt extends DdlStmt
             jarName,
             repos.getSql2003Package().getFemJar());
         if (femJar.isModelExtension()) {
-            throw FarragoResource.instance().newCatalogModelAlreadyImported(
+            throw FarragoResource.instance().CatalogModelAlreadyImported.ex(
                 repos.getLocalizedObjectName(femJar));
         }
         femJar.setModelExtension(true);
@@ -113,7 +113,7 @@ public class DdlExtendCatalogStmt extends DdlStmt
                 repos.getMdrRepos(),
                 xmiResourceUrl);
         } catch (Exception ex) {
-            throw FarragoResource.instance().newCatalogModelImportFailed(
+            throw FarragoResource.instance().CatalogModelImportFailed.ex(
                 repos.getLocalizedObjectName(femJar), ex);
         } finally {
             Util.squelchStream(jarInputStream);

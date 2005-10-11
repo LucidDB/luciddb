@@ -60,7 +60,7 @@ public class FamilyOperandTypeChecker
             if (throwOnFailure) {
                 throw callBinding.getValidator().newValidationError(
                     node,
-                    EigenbaseResource.instance().newNullIllegal());
+                    EigenbaseResource.instance().NullIllegal.ex());
             } else {
                 return false;
             }

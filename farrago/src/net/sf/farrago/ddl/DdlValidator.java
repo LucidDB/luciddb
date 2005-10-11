@@ -392,7 +392,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         } else {
             schemaElement.setName(qualifiedName.names[0]);
             if (stmtValidator.getSessionVariables().schemaName == null) {
-                throw FarragoResource.instance().newValidatorNoDefaultSchema();
+                throw FarragoResource.instance().ValidatorNoDefaultSchema.ex();
             }
             schemaName = new SqlIdentifier(
                 stmtValidator.getSessionVariables().schemaName,
@@ -698,7 +698,7 @@ public class DdlValidator extends FarragoCompoundAllocation
                 // Every single object hit a
                 // FarragoUnvalidatedDependencyException.  This implies a
                 // cycle.  TODO:  identify the cycle in the exception.
-                throw FarragoResource.instance().newValidatorSchemaDependencyCycle();
+                throw FarragoResource.instance().ValidatorSchemaDependencyCycle.ex();
             }
         }
 
@@ -746,7 +746,7 @@ public class DdlValidator extends FarragoCompoundAllocation
                     // definition order, which may not be guaranteed?
                     throw newPositionalError(
                         element,
-                        FarragoResource.instance().newValidatorDuplicateNames(
+                        FarragoResource.instance().ValidatorDuplicateNames.ex(
                             getRepos().getLocalizedObjectName(
                                 null,
                                 element.getName(),
@@ -769,7 +769,7 @@ public class DdlValidator extends FarragoCompoundAllocation
                     // new object clashes with existing object
                     throw newPositionalError(
                         newElement,
-                        FarragoResource.instance().newValidatorNameInUse(
+                        FarragoResource.instance().ValidatorNameInUse.ex(
                             getRepos().getLocalizedObjectName(
                                 null,
                                 oldElement.getName(),
@@ -882,7 +882,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         }
         String msg = parserContext.toString();
         EigenbaseContextException contextExcn =
-            FarragoResource.instance().newValidatorPositionContext(msg, ex);
+            FarragoResource.instance().ValidatorPositionContext.ex(msg, ex);
         contextExcn.setPosition(
             parserContext.getLineNum(),
             parserContext.getColumnNum(),
@@ -951,7 +951,7 @@ public class DdlValidator extends FarragoCompoundAllocation
                 {
                     CwmModelElement droppedElement =
                         (CwmModelElement) getRepos().getMdrRepos().getByMofId(mofId);
-                    return FarragoResource.instance().newValidatorDropRestrict(
+                    return FarragoResource.instance().ValidatorDropRestrict.ex(
                         getRepos().getLocalizedObjectName(
                             droppedElement,
                             droppedElement.refClass()));

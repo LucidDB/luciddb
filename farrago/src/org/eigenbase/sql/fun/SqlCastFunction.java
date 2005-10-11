@@ -105,7 +105,7 @@ public class SqlCastFunction extends SqlFunction
                 callBinding.getCall().operands[1]);
         if (!SqlTypeUtil.canCastFrom(returnType, validatedNodeType, true)) {
             if (throwOnFailure) {
-                throw EigenbaseResource.instance().newCannotCastValue(
+                throw EigenbaseResource.instance().CannotCastValue.ex(
                     validatedNodeType.toString(),
                     returnType.toString());
             }

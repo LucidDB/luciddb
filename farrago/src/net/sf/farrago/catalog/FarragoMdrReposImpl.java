@@ -86,7 +86,7 @@ public class FarragoMdrReposImpl extends FarragoReposImpl
 
         tracer.fine("Loading catalog");
         if (FarragoProperties.instance().homeDir.get() == null) {
-            throw FarragoResource.instance().newMissingHomeProperty(
+            throw FarragoResource.instance().MissingHomeProperty.ex(
                 FarragoProperties.instance().homeDir.getPath());
         }
 
@@ -98,7 +98,7 @@ public class FarragoMdrReposImpl extends FarragoReposImpl
             try {
                 new FarragoFileLockAllocation(allocations, lockFile, true);
             } catch (IOException ex) {
-                throw FarragoResource.instance().newCatalogFileLockFailed(
+                throw FarragoResource.instance().CatalogFileLockFailed.ex(
                     lockFile.toString());
             }
         }
@@ -107,14 +107,14 @@ public class FarragoMdrReposImpl extends FarragoReposImpl
             try {
                 FarragoReposUtil.reloadRepository();
             } catch (Exception ex) {
-                throw FarragoResource.instance().newCatalogReloadFailed(ex);
+                throw FarragoResource.instance().CatalogReloadFailed.ex(ex);
             }
         }
 
         FarragoPackage farragoPackage =
             modelLoader.loadModel("FarragoCatalog", userRepos);
         if (farragoPackage == null) {
-            throw FarragoResource.instance().newCatalogUninitialized();
+            throw FarragoResource.instance().CatalogUninitialized.ex();
         }
 
         super.setRootPackage(farragoPackage);
@@ -146,7 +146,7 @@ public class FarragoMdrReposImpl extends FarragoReposImpl
             FarragoTransientStorage.ignoreCommit = true;
             fennelPackage = transientFarragoPackage.getFem().getFennel();
         } catch (Throwable ex) {
-            throw FarragoResource.instance().newCatalogInitTransientFailed(ex);
+            throw FarragoResource.instance().CatalogInitTransientFailed.ex(ex);
         }
 
         // Load configuration
