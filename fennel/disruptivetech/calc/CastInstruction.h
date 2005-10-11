@@ -70,9 +70,9 @@ public:
     virtual void exec(TProgramCounter& pc) const {
         // See SQL99 Part 2 Section 6.22 for specification of CAST() operator
         pc++;
-        if (mOp1->isNull()) {
+        if (CastInstruction<RESULT_T, SOURCE_T>::mOp1->isNull()) {
             // SQL99 Part 2 Section 6.22 General Rule 2.c.
-            mResult->toNull();
+            CastInstruction<RESULT_T, SOURCE_T>::mResult->toNull();
         } else {
             // TODO: Update Boost library to fix the following
             // TODO: problem: 
@@ -85,7 +85,7 @@ public:
             // HACK: Add some extra tests before numeric_cast to try
             // HACK: to catch some of the more henious and obvious errors.
 
-            SOURCE_T src = mOp1->value();
+            SOURCE_T src = CastInstruction<RESULT_T, SOURCE_T>::mOp1->value();
             bool thr = false;
             bool resultSigned = numeric_limits<RESULT_T>::is_signed;
             bool sourceSigned = numeric_limits<SOURCE_T>::is_signed;
@@ -120,7 +120,9 @@ public:
             // HACK: End. (Phew.)
 
             try {
-                mResult->value(boost::numeric_cast<RESULT_T>(mOp1->value()));
+                CastInstruction<RESULT_T, SOURCE_T>::mResult->value
+                   (boost::numeric_cast<RESULT_T>
+                      (CastInstruction<RESULT_T, SOURCE_T>::mOp1->value()));
             }
             catch (boost::bad_numeric_cast) {
                 // class contains no useful information about what went wrong
@@ -137,7 +139,9 @@ public:
     void describe(string& out, bool values) const {
         RegisterRef<char> dummy;
         describeHelper(out, values, longName(), shortName(), 
-                       mResult, mOp1, mOp2);
+                       CastInstruction<RESULT_T, SOURCE_T>::mResult, 
+                       CastInstruction<RESULT_T, SOURCE_T>::mOp1, 
+                       CastInstruction<RESULT_T, SOURCE_T>::mOp2);
     }
 
     static InstructionSignature

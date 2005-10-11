@@ -132,6 +132,9 @@ public:
     virtual PConstBuffer getEntryForRead(
         BTreeNode const &node,uint iEntry) = 0;
 
+    virtual PConstBuffer getEntryForReadInline(
+        BTreeNode const &node,uint iEntry) = 0;
+
     /**
      * Receives notification from BTreeAccessBase after tupleDescriptor has
      * been set up.
