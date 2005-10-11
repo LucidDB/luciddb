@@ -72,12 +72,14 @@ public:
 
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
-        if (mOp1->isNull() || mOp2->isNull()) {
-            mResult->toNull();
-        } else if (mOp1->value() == mOp2->value()) {
-            mResult->value(true);
+        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+            NativeInstruction<TMPLT>::mOp2->isNull()) {
+            BoolNativeInstruction<TMPLT>::mResult->toNull();
+        } else if (NativeInstruction<TMPLT>::mOp1->value() == 
+                   NativeInstruction<TMPLT>::mOp2->value()) {
+            BoolNativeInstruction<TMPLT>::mResult->value(true);
         } else {
-            mResult->value(false);
+            BoolNativeInstruction<TMPLT>::mResult->value(false);
         }
     }
 
@@ -86,7 +88,9 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, mOp2);
+                       BoolNativeInstruction<TMPLT>::mResult, 
+                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
@@ -124,12 +128,14 @@ public:
 
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
-        if (mOp1->isNull() || mOp2->isNull()) {
-            mResult->toNull();
-        } else if (mOp1->value() == mOp2->value()) {
-            mResult->value(false);
+        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+            NativeInstruction<TMPLT>::mOp2->isNull()) {
+            BoolNativeInstruction<TMPLT>::mResult->toNull();
+        } else if (NativeInstruction<TMPLT>::mOp1->value() == 
+                   NativeInstruction<TMPLT>::mOp2->value()) {
+            BoolNativeInstruction<TMPLT>::mResult->value(false);
         } else {
-            mResult->value(true);
+            BoolNativeInstruction<TMPLT>::mResult->value(true);
         }
     }
 
@@ -138,7 +144,9 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, mOp2);
+                       BoolNativeInstruction<TMPLT>::mResult, 
+                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
@@ -176,12 +184,14 @@ public:
 
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
-        if (mOp1->isNull() || mOp2->isNull()) {
-            mResult->toNull();
-        } else if (mOp1->value() > mOp2->value()) {
-            mResult->value(true);
+        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+            NativeInstruction<TMPLT>::mOp2->isNull()) {
+            BoolNativeInstruction<TMPLT>::mResult->toNull();
+        } else if (NativeInstruction<TMPLT>::mOp1->value() > 
+                   NativeInstruction<TMPLT>::mOp2->value()) {
+            BoolNativeInstruction<TMPLT>::mResult->value(true);
         } else {
-            mResult->value(false);
+            BoolNativeInstruction<TMPLT>::mResult->value(false);
         }
     }
 
@@ -190,7 +200,9 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, mOp2);
+                       BoolNativeInstruction<TMPLT>::mResult, 
+                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
@@ -228,12 +240,14 @@ public:
 
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
-        if (mOp1->isNull() || mOp2->isNull()) {
-            mResult->toNull();
-        } else if (mOp1->value() >= mOp2->value()) {
-            mResult->value(true);
+        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+            NativeInstruction<TMPLT>::mOp2->isNull()) {
+            BoolNativeInstruction<TMPLT>::mResult->toNull();
+        } else if (NativeInstruction<TMPLT>::mOp1->value() >= 
+                   NativeInstruction<TMPLT>::mOp2->value()) {
+            BoolNativeInstruction<TMPLT>::mResult->value(true);
         } else {
-            mResult->value(false);
+            BoolNativeInstruction<TMPLT>::mResult->value(false);
         }
     }
 
@@ -242,7 +256,9 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, mOp2);
+                       BoolNativeInstruction<TMPLT>::mResult, 
+                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
@@ -280,12 +296,14 @@ public:
 
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
-        if (mOp1->isNull() || mOp2->isNull()) {
-            mResult->toNull();
-        } else if (mOp1->value() < mOp2->value()) {
-            mResult->value(true);
+        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+            NativeInstruction<TMPLT>::mOp2->isNull()) {
+            BoolNativeInstruction<TMPLT>::mResult->toNull();
+        } else if (NativeInstruction<TMPLT>::mOp1->value() < 
+                   NativeInstruction<TMPLT>::mOp2->value()) {
+            BoolNativeInstruction<TMPLT>::mResult->value(true);
         } else {
-            mResult->value(false);
+            BoolNativeInstruction<TMPLT>::mResult->value(false);
         }
     }
     static const char * longName() { return "BoolNativeLess"; }
@@ -293,7 +311,9 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, mOp2);
+                       BoolNativeInstruction<TMPLT>::mResult, 
+                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
@@ -331,12 +351,14 @@ public:
 
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
-        if (mOp1->isNull() || mOp2->isNull()) {
-            mResult->toNull();
-        } else if (mOp1->value() <= mOp2->value()) {
-            mResult->value(true);
+        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+            NativeInstruction<TMPLT>::mOp2->isNull()) {
+            BoolNativeInstruction<TMPLT>::mResult->toNull();
+        } else if (NativeInstruction<TMPLT>::mOp1->value() <= 
+                   NativeInstruction<TMPLT>::mOp2->value()) {
+            BoolNativeInstruction<TMPLT>::mResult->value(true);
         } else {
-            mResult->value(false);
+            BoolNativeInstruction<TMPLT>::mResult->value(false);
         }
     }
 
@@ -345,7 +367,9 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, mOp2);
+                       BoolNativeInstruction<TMPLT>::mResult, 
+                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
@@ -382,10 +406,10 @@ public:
 
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
-        if (mOp1->isNull()) {
-            mResult->value(true);
+        if (NativeInstruction<TMPLT>::mOp1->isNull()) {
+            BoolNativeInstruction<TMPLT>::mResult->value(true);
         } else {
-            mResult->value(false);
+            BoolNativeInstruction<TMPLT>::mResult->value(false);
         }
     }
 
@@ -394,7 +418,9 @@ public:
     static int numArgs() { return 2; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, mOp2);
+                       BoolNativeInstruction<TMPLT>::mResult, 
+                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
@@ -429,10 +455,10 @@ public:
 
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
-        if (mOp1->isNull()) {
-            mResult->value(false);
+        if (NativeInstruction<TMPLT>::mOp1->isNull()) {
+            BoolNativeInstruction<TMPLT>::mResult->value(false);
         } else {
-            mResult->value(true);
+            BoolNativeInstruction<TMPLT>::mResult->value(true);
         }
     }
 
@@ -441,7 +467,9 @@ public:
     static int numArgs() { return 2; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, mOp2);
+                       BoolNativeInstruction<TMPLT>::mResult, 
+                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature

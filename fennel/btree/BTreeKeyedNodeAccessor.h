@@ -44,8 +44,8 @@ public:
     void accessTupleInline(BTreeNode const &node,uint iEntry)
     {
         assert(iEntry < node.nEntries);
-        tupleAccessor.setCurrentTupleBuf(
-            getEntryForReadInline(node,iEntry));
+        NodeAccessor::tupleAccessor.setCurrentTupleBuf(
+            NodeAccessor::getEntryForReadInline(node,iEntry));
     }
     
     virtual void accessTuple(BTreeNode const &node,uint iEntry)
@@ -69,7 +69,7 @@ public:
         uint probe = 0;
         uint base = probe;
         found = false;
-        int nKeys = getKeyCount(node);
+        int nKeys = NodeAccessor::getKeyCount(node);
         while (nKeys > 0) {
             uint split = nKeys >> 1;
             probe = base + split;
@@ -107,7 +107,7 @@ public:
 
     virtual PConstBuffer getEntryForRead(BTreeNode const &node,uint iEntry)
     {
-        return getEntryForReadInline(node,iEntry);
+        return NodeAccessor::getEntryForReadInline(node,iEntry);
     }
 };
 

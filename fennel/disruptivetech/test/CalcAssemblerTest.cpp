@@ -153,6 +153,7 @@ public:
 class CalcChecker
 {
 public:
+    virtual ~CalcChecker() {};
     virtual bool checkResult(Calculator& calc, TupleData& output) = 0;
 };
 

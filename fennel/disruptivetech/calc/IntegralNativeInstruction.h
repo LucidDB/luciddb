@@ -42,17 +42,17 @@ FENNEL_BEGIN_NAMESPACE
 // built on top.
 //
 template <class T> class IntegralNativeInstruction_NotAnIntegralType;
-class IntegralNativeInstruction_NotAnIntegralType<char> {} ;
-class IntegralNativeInstruction_NotAnIntegralType<short> {} ;
-class IntegralNativeInstruction_NotAnIntegralType<int> {} ;
-class IntegralNativeInstruction_NotAnIntegralType<long> {} ;
-class IntegralNativeInstruction_NotAnIntegralType<long long> {} ;
-class IntegralNativeInstruction_NotAnIntegralType<unsigned char> {} ;
-class IntegralNativeInstruction_NotAnIntegralType<unsigned short> {} ;
-class IntegralNativeInstruction_NotAnIntegralType<unsigned int> {} ;
-class IntegralNativeInstruction_NotAnIntegralType<unsigned long> {} ;
-class IntegralNativeInstruction_NotAnIntegralType<unsigned long long> {} ;
-class IntegralNativeInstruction_NotAnIntegralType<signed char> {} ;
+template <> class IntegralNativeInstruction_NotAnIntegralType<char> {} ;
+template <> class IntegralNativeInstruction_NotAnIntegralType<short> {} ;
+template <> class IntegralNativeInstruction_NotAnIntegralType<int> {} ;
+template <> class IntegralNativeInstruction_NotAnIntegralType<long> {} ;
+template <> class IntegralNativeInstruction_NotAnIntegralType<long long> {} ;
+template <> class IntegralNativeInstruction_NotAnIntegralType<unsigned char> {} ;
+template <> class IntegralNativeInstruction_NotAnIntegralType<unsigned short> {} ;
+template <> class IntegralNativeInstruction_NotAnIntegralType<unsigned int> {} ;
+template <> class IntegralNativeInstruction_NotAnIntegralType<unsigned long> {} ;
+template <> class IntegralNativeInstruction_NotAnIntegralType<unsigned long long> {} ;
+template <> class IntegralNativeInstruction_NotAnIntegralType<signed char> {} ;
 
 template<typename TMPLT>
 class IntegralNativeInstruction : public NativeInstruction<TMPLT>
@@ -104,16 +104,19 @@ public:
     virtual void exec(TProgramCounter& pc) const {
         pc++;
         // SQL99 Part 2 Section 6.17 General Rule 10
-        if (mOp1->isNull() || mOp2->isNull()) {
-            mResult->toNull();
+        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+            NativeInstruction<TMPLT>::mOp2->isNull()) {
+            IntegralNativeInstruction<TMPLT>::mResult->toNull();
         } else {
-            TMPLT o2 = mOp2->value(); // encourage into register
+            // encourage into register
+            TMPLT o2 = NativeInstruction<TMPLT>::mOp2->value();
             if (o2 == 0) {
-                mResult->toNull();
+                IntegralNativeInstruction<TMPLT>::mResult->toNull();
                 // SQL99 22.1 SQLState dataexception class 22, division by zero subclass 012
                 throw CalcMessage("22012", pc - 1); 
             }
-            mResult->value(mOp1->value() % o2);
+            IntegralNativeInstruction<TMPLT>::mResult->
+                value(NativeInstruction<TMPLT>::mOp1->value() % o2);
         }
     }
 
@@ -122,7 +125,9 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, mOp2);
+                       IntegralNativeInstruction<TMPLT>::mResult, 
+                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
@@ -158,10 +163,13 @@ public:
 
     virtual void exec(TProgramCounter& pc) const {
         // making up null semantics here
-        if (mOp1->isNull() || mOp2->isNull()) {
-            mResult->toNull();
+        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+            NativeInstruction<TMPLT>::mOp2->isNull()) {
+            IntegralNativeInstruction<TMPLT>::mResult->toNull();
         } else {
-            mResult->value(mOp1->value() & mOp2->value());
+            IntegralNativeInstruction<TMPLT>::mResult->
+                value(NativeInstruction<TMPLT>::mOp1->value() & 
+                      NativeInstruction<TMPLT>::mOp2->value());
         }
         pc++;
     }
@@ -171,7 +179,9 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, mOp2);
+                       IntegralNativeInstruction<TMPLT>::mResult, 
+                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
@@ -208,10 +218,13 @@ public:
     virtual void exec(TProgramCounter& pc) const {
         pc++;
         // making up null semantics here
-        if (mOp1->isNull() || mOp2->isNull()) {
-            mResult->toNull();
+        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+            NativeInstruction<TMPLT>::mOp2->isNull()) {
+            IntegralNativeInstruction<TMPLT>::mResult->toNull();
         } else {
-            mResult->value(mOp1->value() | mOp2->value());
+            IntegralNativeInstruction<TMPLT>::mResult->
+                value(NativeInstruction<TMPLT>::mOp1->value() | 
+                      NativeInstruction<TMPLT>::mOp2->value());
         }
     }
 
@@ -220,7 +233,9 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, mOp2);
+                       IntegralNativeInstruction<TMPLT>::mResult, 
+                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
@@ -257,10 +272,13 @@ public:
     virtual void exec(TProgramCounter& pc) const {
         pc++;
         // making up null semantics here
-        if (mOp1->isNull() || mOp2->isNull()) {
-            mResult->toNull();
+        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+            NativeInstruction<TMPLT>::mOp2->isNull()) {
+            IntegralNativeInstruction<TMPLT>::mResult->toNull();
         } else {
-            mResult->value(mOp1->value() << mOp2->value());
+            IntegralNativeInstruction<TMPLT>::mResult->
+                value(NativeInstruction<TMPLT>::mOp1->value() << 
+                      NativeInstruction<TMPLT>::mOp2->value());
         }
     }
 
@@ -269,7 +287,9 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, mOp2);
+                       IntegralNativeInstruction<TMPLT>::mResult, 
+                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
@@ -307,10 +327,13 @@ public:
     virtual void exec(TProgramCounter& pc) const {
         pc++;
         // making up null semantics here
-        if (mOp1->isNull() || mOp2->isNull()) {
-            mResult->toNull();
+        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+            NativeInstruction<TMPLT>::mOp2->isNull()) {
+            IntegralNativeInstruction<TMPLT>::mResult->toNull();
         } else {
-            mResult->value(mOp1->value() >> mOp2->value());
+            IntegralNativeInstruction<TMPLT>::mResult->
+                value(NativeInstruction<TMPLT>::mOp1->value() >> 
+                      NativeInstruction<TMPLT>::mOp2->value());
         }
     }
 
@@ -319,7 +342,9 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, mOp2);
+                       IntegralNativeInstruction<TMPLT>::mResult, 
+                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature

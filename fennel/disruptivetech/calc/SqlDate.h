@@ -52,6 +52,14 @@ enum SqlDateTimeType { SQLDATE, SQLTIME, SQLTIMESTAMP };
 
 boost::posix_time::ptime const epoc(boost::gregorian::date(1970,1,1));
 
+int TimeToIsoString(char *dest, boost::posix_time::ptime t);
+int DateToIsoString(char *dest, boost::posix_time::ptime t);
+int TimestampToIsoString(char *dest, boost::posix_time::ptime t);
+
+int64_t IsoStringToTime(char *src, int len);
+int64_t IsoStringToDate(char *src, int len);
+int64_t IsoStringToTimestamp(char *src, int len);
+
 template <int CodeUnitBytes, int MaxCodeUnitsPerCodePoint, SqlDateTimeType dateTimeType>
 int
 SqlDateToStr(char *dest,
@@ -162,13 +170,6 @@ SqlStrToDate(char *src, int len)
    
 }
 
-int TimeToIsoString(char *dest, boost::posix_time::ptime t);
-int DateToIsoString(char *dest, boost::posix_time::ptime t);
-int TimestampToIsoString(char *dest, boost::posix_time::ptime t);
-
-int64_t IsoStringToTime(char *src, int len);
-int64_t IsoStringToDate(char *src, int len);
-int64_t IsoStringToTimestamp(char *src, int len);
 int64_t CurrentTime();
 int64_t CurrentTimestamp();
 

@@ -117,10 +117,11 @@ public:
     void operator ++ ()
     {
         assert(jIter);
-        get()->jObject = JniUtil::getNextFromIter(get()->pEnv,jIter);
-        if (!(get()->jObject)) {
+        boost::shared_ptr<T>::get()->jObject = 
+            JniUtil::getNextFromIter(boost::shared_ptr<T>::get()->pEnv,jIter);
+        if (!(boost::shared_ptr<T>::get()->jObject)) {
             // iteration exhausted, so become singular
-            reset();
+            boost::shared_ptr<T>::reset();
         }
     }
 };

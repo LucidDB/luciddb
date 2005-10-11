@@ -111,14 +111,24 @@ public final class FennelTupleAccessor
     // stored values offsets are (unsigned) short
     static final int STOREDVALUEOFFSETSIZE = 2;
 
+    /** specify 4-byte alignment. */
+    public static final int TUPLE_ALIGN4 = 4;
+
+    /** specify 8-byte alignment. */
+    public static final int TUPLE_ALIGN8 = 8;
+
+    /** tuple byte alignment. */
+    private int tupleAlignment;
+
     /**
-     *  rounds up a value to the next power-of-4.
-     */ 
-    private static int alignRoundUp(int val)
+     * rounds up a value to the next multiple of {@link #tupleAlignment}.
+     */
+    private int alignRoundUp(int val)
     {
-        int lobits = val&3;
+        int mask = tupleAlignment -1;
+        int lobits = val & mask;
         if (lobits != 0) {
-            val += (4 - lobits);
+            val += (tupleAlignment - lobits);
         }
         return val;
     }
@@ -199,6 +209,18 @@ public final class FennelTupleAccessor
      */
     public FennelTupleAccessor()
     {
+        this(TUPLE_ALIGN4);    // default 4-byte alignment
+    }
+
+    /**
+     * Creates tuple accessor with specified byte alignmnent.
+     * @param alignment must be multiple of 4
+     */
+    public FennelTupleAccessor(int alignment)
+    {
+        assert (alignment % 4 == 0) :
+            "alignment (" +alignment +") not multiple of 4";
+        this.tupleAlignment = alignment;
     }
 
     /**

@@ -48,19 +48,19 @@ template<typename T> class RegisterRef;
 // long long.
 //
 template <class T> class NativeInstruction_NotANativeType;
-class NativeInstruction_NotANativeType<char> {} ;
-class NativeInstruction_NotANativeType<short> {} ;
-class NativeInstruction_NotANativeType<int> {} ;
-class NativeInstruction_NotANativeType<long> {} ;
-class NativeInstruction_NotANativeType<long long> {} ;
-class NativeInstruction_NotANativeType<unsigned char> {} ;
-class NativeInstruction_NotANativeType<unsigned short> {} ;
-class NativeInstruction_NotANativeType<unsigned int> {} ;
-class NativeInstruction_NotANativeType<unsigned long> {} ;
-class NativeInstruction_NotANativeType<unsigned long long> {} ;
-class NativeInstruction_NotANativeType<signed char> {} ;
-class NativeInstruction_NotANativeType<float> {} ;
-class NativeInstruction_NotANativeType<double> {} ;
+template<> class NativeInstruction_NotANativeType<char> {} ;
+template<> class NativeInstruction_NotANativeType<short> {} ;
+template<> class NativeInstruction_NotANativeType<int> {} ;
+template<> class NativeInstruction_NotANativeType<long> {} ;
+template<> class NativeInstruction_NotANativeType<long long> {} ;
+template<> class NativeInstruction_NotANativeType<unsigned char> {} ;
+template<> class NativeInstruction_NotANativeType<unsigned short> {} ;
+template<> class NativeInstruction_NotANativeType<unsigned int> {} ;
+template<> class NativeInstruction_NotANativeType<unsigned long> {} ;
+template<> class NativeInstruction_NotANativeType<unsigned long long> {} ;
+template<> class NativeInstruction_NotANativeType<signed char> {} ;
+template<> class NativeInstruction_NotANativeType<float> {} ;
+template<> class NativeInstruction_NotANativeType<double> {} ;
 
 
 template<typename TMPLT>

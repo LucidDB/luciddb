@@ -67,11 +67,13 @@ public:
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
 
-        if (mOp1->isNull()) {
-            mResult->toNull();
-            mResult->length(0);
+        if (PointerIntegralInstruction<PTR_TYPE>::mOp1->isNull()) {
+            PointerIntegralInstruction<PTR_TYPE>::mResult->toNull();
+            PointerIntegralInstruction<PTR_TYPE>::mResult->length(0);
         } else {
-            mResult->length(mOp1->value());   // get value, put size
+            // get value, put size
+            PointerIntegralInstruction<PTR_TYPE>::mResult->length
+               (PointerIntegralInstruction<PTR_TYPE>::mOp1->value()); 
         }
     }
 
@@ -81,7 +83,8 @@ public:
     void describe(string& out, bool values) const {
         RegisterRef<PTR_TYPE> mOp2; // create invalid regref
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, &mOp2);
+                       PointerIntegralInstruction<PTR_TYPE>::mResult, 
+                       PointerIntegralInstruction<PTR_TYPE>::mOp1, &mOp2);
     }
 
     static InstructionSignature
