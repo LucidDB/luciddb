@@ -26,12 +26,8 @@ import java.lang.reflect.*;
 import java.sql.*;
 import java.util.*;
 
-import javax.sql.*;
-
-import net.sf.farrago.catalog.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
-import net.sf.farrago.resource.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
@@ -41,7 +37,6 @@ import org.eigenbase.rel.jdbc.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.util.*;
 
 
 // TODO:  change most asserts into proper exceptions
@@ -120,7 +115,9 @@ class MedJdbcDataServer extends MedAbstractDataServer
                 (DatabaseMetaData) Proxy.newProxyInstance(
                     null,
                     new Class [] { DatabaseMetaData.class },
-                    new StupidDatabaseMetaData());
+                    new SqlUtil.DatabaseMetaDataInvocationHandler(
+                        "UNKNOWN",
+                        ""));
         }
     }
 
@@ -216,24 +213,6 @@ class MedJdbcDataServer extends MedAbstractDataServer
             } catch (SQLException ex) {
                 // TODO:  trace?
             }
-        }
-    }
-
-    //~ Inner Classes ---------------------------------------------------------
-
-    public static class StupidDatabaseMetaData
-        extends SqlUtil.DatabaseMetaDataInvocationHandler
-    {
-        public String getDatabaseProductName()
-            throws SQLException
-        {
-            return "UNKNOWN";
-        }
-
-        public String getIdentifierQuoteString()
-            throws SQLException
-        {
-            return "";
         }
     }
 }

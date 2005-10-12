@@ -234,7 +234,10 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             SqlTypeStrategies.otcComparableOrderedX2);
 
     /**
-     * Arithmetic minus operator, '<code>-</code>'.
+     * Infix arithmetic minus operator, '<code>-</code>'.
+     *
+     * <p>Its precedence is less than the prefix {@link #prefixPlusOperator +}
+     * and {@link #prefixMinusOperator -} operators.
      */
     public static final SqlBinaryOperator minusOperator =
         new SqlMonotonicBinaryOperator("-", SqlKind.Minus, 20, true,
@@ -271,6 +274,9 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             SqlTypeStrategies.otiBoolean,
             SqlTypeStrategies.otcBoolX2);
 
+    /**
+     * Infix arithmetic plus operator, '<code>+</code>'.
+     */
     public static final SqlBinaryOperator plusOperator =
         new SqlMonotonicBinaryOperator("+", SqlKind.Plus, 20, true,
             // FIXME jvs 4-June-2005:  this is incorrect; plus
@@ -382,14 +388,26 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             SqlTypeStrategies.otiBoolean,
             SqlTypeStrategies.otcBool);
 
+    /**
+     * Prefix arithmetic minus operator, '<code>-</code>'.
+     *
+     * <p>Its precedence is greater than the infix '{@link #plusOperator +}'
+     * and '{@link #minusOperator -}' operators.
+     */
     public static final SqlPrefixOperator prefixMinusOperator =
-        new SqlPrefixOperator("-", SqlKind.MinusPrefix, 20,
+        new SqlPrefixOperator("-", SqlKind.MinusPrefix, 40,
             SqlTypeStrategies.rtiFirstArgType,
             SqlTypeStrategies.otiReturnType,
             SqlTypeStrategies.otcNumericOrInterval);
 
+    /**
+     * Prefix arithmetic plus operator, '<code>+</code>'.
+     *
+     * <p>Its precedence is greater than the infix '{@link #plusOperator +}'
+     * and '{@link #minusOperator -}' operators.
+     */
     public static final SqlPrefixOperator prefixPlusOperator =
-        new SqlPrefixOperator("+", SqlKind.PlusPrefix, 20,
+        new SqlPrefixOperator("+", SqlKind.PlusPrefix, 40,
             SqlTypeStrategies.rtiFirstArgType,
             SqlTypeStrategies.otiReturnType,
             SqlTypeStrategies.otcNumericOrInterval);

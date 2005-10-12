@@ -26,6 +26,7 @@ package org.eigenbase.sql.parser;
 import junit.framework.AssertionFailedError;
 import junit.framework.TestCase;
 import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.SqlUtil;
 import org.eigenbase.sql.parser.impl.SqlParserImpl;
 import org.eigenbase.test.SqlValidatorTestCase;
 import org.eigenbase.util.TestUtil;
@@ -57,21 +58,121 @@ public class SqlParserTest extends TestCase
 
     //~ Methods ---------------------------------------------------------------
 
+    /**
+     * Callback to control how test actions are performed.
+     */
+    protected interface Tester
+    {
+        void check(String sql, String expected);
+
+        void checkExp(String sql, String expected);
+
+        void checkFails(String sql, String expectedMsgPattern);
+
+        void checkExpFails(String sql, String expectedMsgPattern);
+    }
+
+    /**
+     * Default implementation of {@link Tester}.
+     */
+    protected class TesterImpl implements Tester
+    {
+        public void check(
+            String sql,
+            String expected)
+        {
+            final SqlNode sqlNode = parseStmtAndHandleEx(sql);
+            // no dialect, always parenthesize
+            final String actual = sqlNode.toSqlString(null, true);
+            TestUtil.assertEqualsVerbose(expected, actual);
+        }
+
+        protected SqlNode parseStmtAndHandleEx(String sql)
+        {
+            final SqlNode sqlNode;
+            try {
+                sqlNode = parseStmt(sql);
+            } catch (SqlParseException e) {
+                e.printStackTrace();
+                String message = "Received error while parsing SQL '" + sql +
+                    "'; error is:" + NL + e.toString();
+                throw new AssertionFailedError(message);
+            }
+            return sqlNode;
+        }
+
+        public void checkExp(
+            String sql,
+            String expected)
+        {
+            final SqlNode sqlNode = parseExpressionAndHandleEx(sql);
+            final String actual = sqlNode.toSqlString(null, true);
+            TestUtil.assertEqualsVerbose(expected, actual);
+        }
+
+        protected SqlNode parseExpressionAndHandleEx(String sql)
+        {
+            final SqlNode sqlNode;
+            try {
+                sqlNode = parseExpression(sql);
+            } catch (SqlParseException e) {
+                e.printStackTrace();
+                String message = "Received error while parsing SQL '" + sql +
+                    "'; error is:" + NL + e.toString();
+                throw new AssertionFailedError(message);
+            }
+            return sqlNode;
+        }
+
+        public void checkFails(
+            String sql,
+            String expectedMsgPattern)
+        {
+            SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);
+            Throwable thrown = null;
+            try {
+                final SqlNode sqlNode = parseStmt(sap.sql);
+                Util.discard(sqlNode);
+            } catch (Throwable ex) {
+                thrown = ex;
+            }
+
+            SqlValidatorTestCase.checkEx(thrown, expectedMsgPattern, sap);
+        }
+
+        /**
+         * Tests that an expression throws an exception which matches the given
+         * pattern.
+         */
+        public void checkExpFails(
+            String sql,
+            String expectedMsgPattern)
+        {
+            SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);
+            Throwable thrown = null;
+            try {
+                final SqlNode sqlNode = parseExpression(sap.sql);
+                Util.discard(sqlNode);
+            } catch (Throwable ex) {
+                thrown = ex;
+            }
+
+            SqlValidatorTestCase.checkEx(thrown, expectedMsgPattern, sap);
+        }
+    }
+
     // Helper functions -------------------------------------------------------
+
+    protected Tester getTester()
+    {
+        return new TesterImpl();
+    }
+
     protected void check(
         String sql,
         String expected)
     {
-        final SqlNode sqlNode;
-        try {
-            sqlNode = parseStmt(sql);
-        } catch (SqlParseException e) {
-            String message = "Received error while parsing SQL '" + sql +
-                    "'; error is:" + NL + e.toString();
-            throw new AssertionFailedError(message);
-        }
-        final String actual = sqlNode.toSqlString(null, true); // no dialect, always parenthesize
-        TestUtil.assertEqualsVerbose(expected, actual);
+        getTester().check(sql, expected);
     }
 
     protected static String fold(String[] strings)
@@ -83,20 +184,10 @@ public class SqlParserTest extends TestCase
         return new SqlParser(sql).parseStmt();
     }
 
-    protected void checkExp(
-        String sql,
+    protected void checkExp(String sql,
         String expected)
     {
-        final SqlNode sqlNode;
-        try {
-            sqlNode = parseExpression(sql);
-        } catch (SqlParseException e) {
-            String message = "Received error while parsing SQL '" + sql +
-                    "'; error is:" + NL + e.toString();
-            throw new AssertionFailedError(message);
-        }
-        final String actual = sqlNode.toSqlString(null, true);
-        TestUtil.assertEqualsVerbose(expected, actual);
+        getTester().checkExp(sql, expected);
     }
 
     protected SqlNode parseExpression(String sql) throws SqlParseException {
@@ -116,16 +207,7 @@ public class SqlParserTest extends TestCase
         String sql,
         String expectedMsgPattern)
     {
-        SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);
-        Throwable thrown = null;
-        try {
-            final SqlNode sqlNode = parseStmt(sap.sql);
-            Util.discard(sqlNode);
-        } catch (Throwable ex) {
-            thrown = ex;
-        }
-
-        SqlValidatorTestCase.checkEx(thrown, expectedMsgPattern, sap);
+        getTester().checkFails(sql, expectedMsgPattern);
     }
 
     /**
@@ -136,16 +218,7 @@ public class SqlParserTest extends TestCase
         String sql,
         String expectedMsgPattern)
     {
-        SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(sql);
-        Throwable thrown = null;
-        try {
-            final SqlNode sqlNode = parseExpression(sap.sql);
-            Util.discard(sqlNode);
-        } catch (Throwable ex) {
-            thrown = ex;
-        }
-
-        SqlValidatorTestCase.checkEx(thrown, expectedMsgPattern, sap);
+        getTester().checkExpFails(sql, expectedMsgPattern);
     }
 
     /**
@@ -934,7 +1007,7 @@ public class SqlParserTest extends TestCase
             fold(new String[] {
                 "SELECT *",
                 "FROM `A`",
-                "INNER JOIN `B` USING ((`X`))"}));
+                "INNER JOIN `B` USING (`X`)"}));
         checkFails("select * from a join b using () where c = d",
             "(?s).*Encountered \"[)]\" at line 1, column 31.*");
     }
@@ -982,9 +1055,9 @@ public class SqlParserTest extends TestCase
             fold(new String[] {
                 "SELECT *",
                 "FROM `A`",
-                "INNER JOIN `B` USING ((`X`)),",
+                "INNER JOIN `B` USING (`X`),",
                 "`C`",
-                "INNER JOIN `D` USING ((`Y`))"}));
+                "INNER JOIN `D` USING (`Y`)"}));
     }
 
     public void testMixedStar()
@@ -2013,22 +2086,23 @@ public class SqlParserTest extends TestCase
     }
 
     public void testCastToInterval() {
-        checkExp("cast(x as interval year)", "CAST(`X` AS YEAR)");
-        checkExp("cast(x as interval month)", "CAST(`X` AS MONTH)");
-        checkExp("cast(x as interval year to month)", "CAST(`X` AS YEAR TO MONTH)");
-        checkExp("cast(x as interval day)", "CAST(`X` AS DAY)");
-        checkExp("cast(x as interval hour)", "CAST(`X` AS HOUR)");
-        checkExp("cast(x as interval minute)", "CAST(`X` AS MINUTE)");
-        checkExp("cast(x as interval second)", "CAST(`X` AS SECOND)");
-        checkExp("cast(x as interval day to hour)", "CAST(`X` AS DAY TO HOUR)");
-        checkExp("cast(x as interval day to minute)", "CAST(`X` AS DAY TO MINUTE)");
-        checkExp("cast(x as interval day to second)", "CAST(`X` AS DAY TO SECOND)");
-        checkExp("cast(x as interval hour to minute)", "CAST(`X` AS HOUR TO MINUTE)");
-        checkExp("cast(x as interval hour to second)", "CAST(`X` AS HOUR TO SECOND)");
-        checkExp("cast(x as interval minute to second)", "CAST(`X` AS MINUTE TO SECOND)");
+        checkExp("cast(x as interval year)", "CAST(`X` AS INTERVAL YEAR)");
+        checkExp("cast(x as interval month)", "CAST(`X` AS INTERVAL MONTH)");
+        checkExp("cast(x as interval year to month)", "CAST(`X` AS INTERVAL YEAR TO MONTH)");
+        checkExp("cast(x as interval day)", "CAST(`X` AS INTERVAL DAY)");
+        checkExp("cast(x as interval hour)", "CAST(`X` AS INTERVAL HOUR)");
+        checkExp("cast(x as interval minute)", "CAST(`X` AS INTERVAL MINUTE)");
+        checkExp("cast(x as interval second)", "CAST(`X` AS INTERVAL SECOND)");
+        checkExp("cast(x as interval day to hour)", "CAST(`X` AS INTERVAL DAY TO HOUR)");
+        checkExp("cast(x as interval day to minute)", "CAST(`X` AS INTERVAL DAY TO MINUTE)");
+        checkExp("cast(x as interval day to second)", "CAST(`X` AS INTERVAL DAY TO SECOND)");
+        checkExp("cast(x as interval hour to minute)", "CAST(`X` AS INTERVAL HOUR TO MINUTE)");
+        checkExp("cast(x as interval hour to second)", "CAST(`X` AS INTERVAL HOUR TO SECOND)");
+        checkExp("cast(x as interval minute to second)", "CAST(`X` AS INTERVAL MINUTE TO SECOND)");
     }
 
-    public void testUnnest() {
+    public void testUnnest()
+    {
         check("select*from unnest(x)",
               "SELECT *" + NL +
               "FROM (UNNEST(`X`))");
@@ -2036,8 +2110,38 @@ public class SqlParserTest extends TestCase
               "SELECT *" + NL +
               "FROM (UNNEST(`X`)) AS `T`");
 
-        checkFails("unnest(x)","(?s).*");
+        // UNNEST cannot be first word in query
+        checkFails("^unnest^(x)",
+            "(?s)Encountered \"unnest\" at.*");
+    }
 
+    public void testParensInFrom()
+    {
+        // UNNEST may not occur within parentheses.
+        checkFails("select *from (unnest(x))",
+            "(?s)Encountered \"unnest\" at .*");
+
+        // <table-name> may not occur within parentheses.
+        checkFails("select * from (^emp^)",
+            "(?s)Non-query expression encountered in illegal context.*");
+
+        // <table-name> may not occur within parentheses.
+        checkFails("select * from (^emp^ as x)",
+            "(?s)Non-query expression encountered in illegal context.*");
+
+        // <table-name> may not occur within parentheses.
+        checkFails("select * from (^emp^) as x",
+            "(?s)Non-query expression encountered in illegal context.*");
+
+        // Parentheses around JOINs are OK, and sometimes necessary.
+        if (false) {
+        // todo:
+        check("select * from (emp join dept using (deptno))",
+            "xx");
+
+        check("select * from (emp join dept using (deptno)) join foo using (x)",
+            "xx");
+        }
     }
 
     public void testProcedureCall()
@@ -2106,6 +2210,80 @@ public class SqlParserTest extends TestCase
         String jdbcKeywords = metadata.getJdbcKeywords();
         assertTrue(jdbcKeywords.indexOf(",COLLECT,") >= 0);
         assertTrue(jdbcKeywords.indexOf(",SELECT,") < 0);
+    }
+
+    /**
+     * Implementation of {@link Tester} which makes sure that the results of
+     * unparsing a query are consistent with the original query.
+     */
+    public class UnparsingTesterImpl extends TesterImpl
+    {
+        public void check(String sql, String expected)
+        {
+            SqlNode sqlNode = parseStmtAndHandleEx(sql);
+
+            // Unparse with no dialect, always parenthesize.
+            final String actual = sqlNode.toSqlString(null, true);
+            assertEquals(expected, actual);
+
+            // Unparse again in Eigenbase dialect (which we can parse), and
+            // minimal parentheses.
+            final String sql1 =
+                sqlNode.toSqlString(SqlUtil.eigenbaseDialect, false);
+
+            // Parse and unparse again.
+            SqlNode sqlNode2 = parseStmtAndHandleEx(sql1);
+            final String sql2 =
+                sqlNode2.toSqlString(SqlUtil.eigenbaseDialect, false);
+
+            // Should be the same as we started with.
+            assertEquals(sql1, sql2);
+
+            // Now unparse again in the null dialect.
+            // If the unparser is not including sufficient parens to override
+            // precedence, the problem will show up here.
+            final String actual2 = sqlNode2.toSqlString(null, true);
+            assertEquals(expected, actual2);
+        }
+
+        public void checkExp(String sql, String expected)
+        {
+            SqlNode sqlNode = parseExpressionAndHandleEx(sql);
+
+            // Unparse with no dialect, always parenthesize.
+            final String actual = sqlNode.toSqlString(null, true);
+            assertEquals(expected, actual);
+
+            // Unparse again in Eigenbase dialect (which we can parse), and
+            // minimal parentheses.
+            final String sql1 =
+                sqlNode.toSqlString(SqlUtil.eigenbaseDialect, false);
+
+            // Parse and unparse again.
+            SqlNode sqlNode2 = parseExpressionAndHandleEx(sql1);
+            final String sql2 =
+                sqlNode2.toSqlString(SqlUtil.eigenbaseDialect, false);
+
+            // Should be the same as we started with.
+            assertEquals(sql1, sql2);
+
+            // Now unparse again in the null dialect.
+            // If the unparser is not including sufficient parens to override
+            // precedence, the problem will show up here.
+            final String actual2 = sqlNode2.toSqlString(null, true);
+            assertEquals(expected, actual2);
+        }
+
+        public void checkFails(String sql, String expectedMsgPattern)
+        {
+            // Do nothing. We're not interested in unparsing invalid SQL
+        }
+
+        public void checkExpFails(String sql, String expectedMsgPattern)
+        {
+            // Do nothing. We're not interested in unparsing invalid SQL
+        }
+
     }
 }
 
