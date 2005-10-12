@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/agg.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/agg.sql#2 $
 0: jdbc:farrago:> -- Test aggregate queries
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';
@@ -103,5 +103,26 @@ Error: Type mismatch in value ''CALCVM_FENNEl'' for system parameter "calcVirtua
 '    FennelAggRel(groupCount=[0], agg#0=[MIN(0)])'
 '      FennelRenameRel(fieldNames=[[$f0]])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- the queries below used to be bugs
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > select name
+. . . . . . . . > from (select name from depts group by name);
+'column0'
+'ProjectRel(NAME=[$0])'
+'  ProjectRel(NAME=[$0])'
+'    AggregateRel(groupCount=[1])'
+'      ProjectRel(field#0=[$1])'
+'        TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > select foo
+. . . . . . . . > from (select name as foo from depts group by name);
+'column0'
+'ProjectRel(FOO=[$0])'
+'  ProjectRel(FOO=[$0])'
+'    AggregateRel(groupCount=[1])'
+'      ProjectRel(field#0=[$1])'
+'        TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit
