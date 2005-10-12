@@ -232,7 +232,7 @@ Error: From line 1, column 8 to line 1, column 40: No match found for function s
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- this should fail
 0: jdbc:farrago:> values good_atoi('nineoneone');
-Error: Cannot assign 'nineoneone' to a NUMERIC value: java.lang.NumberFormatException (state=,code=0)
+Error: Cannot assign 'nineoneone' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values stirfry('Alley');
 +-------------+
