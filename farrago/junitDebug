@@ -7,4 +7,6 @@ if [ ! "$1" ]; then
    exit; 
 fi
 
-junitSingle "$1" jswat.junit
+SCRIPT_DIR=$(cd `dirname $0`; echo $PWD)
+
+$SCRIPT_DIR/junitSingle "$1" jswat.junit
