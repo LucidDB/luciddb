@@ -589,10 +589,11 @@ inline void ExecStreamBufAccessor::consumeData(PConstBuffer pEnd)
     assert(pEnd <= getConsumptionEnd());
     pConsumer = const_cast<PBuffer>(pEnd);
     if (pConsumer == getConsumptionEnd()) {
-        if (pendingEOS)
+        if (pendingEOS) {
             setEOS();
-        else
+        } else {
             state = EXECBUF_EMPTY;
+        }
     } else {
         // NOTE jvs 9-Nov-2004:  this is misleading until circular buffering
         // gets implemented, but it isn't incorrect either
