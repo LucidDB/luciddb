@@ -25,6 +25,7 @@
     <orderEntry type="library" name="jgrapht" level="project" />
     <orderEntry type="library" name="sqlline" level="project" />
     <orderEntry type="library" name="xml" level="project" />
+    <orderEntry type="library" name="tools" level="project" />
     <orderEntryProperties />
   </component>
 </module>

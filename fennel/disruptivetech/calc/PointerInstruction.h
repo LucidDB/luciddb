@@ -95,19 +95,19 @@ protected:
 // long long.
 //
 template <class T> class PointerInstruction_NotAPointerType;
-class PointerInstruction_NotAPointerType<char *> {} ;
-class PointerInstruction_NotAPointerType<short *> {} ;
-class PointerInstruction_NotAPointerType<int *> {} ;
-class PointerInstruction_NotAPointerType<long *> {} ;
-class PointerInstruction_NotAPointerType<long long *> {} ;
-class PointerInstruction_NotAPointerType<unsigned char *> {} ;
-class PointerInstruction_NotAPointerType<unsigned short *> {} ;
-class PointerInstruction_NotAPointerType<unsigned int *> {} ;
-class PointerInstruction_NotAPointerType<unsigned long *> {} ;
-class PointerInstruction_NotAPointerType<unsigned long long *> {} ;
-class PointerInstruction_NotAPointerType<signed char *> {} ;
-class PointerInstruction_NotAPointerType<float *> {} ;
-class PointerInstruction_NotAPointerType<double *> {} ;
+template <> class PointerInstruction_NotAPointerType<char *> {} ;
+template <> class PointerInstruction_NotAPointerType<short *> {} ;
+template <> class PointerInstruction_NotAPointerType<int *> {} ;
+template <> class PointerInstruction_NotAPointerType<long *> {} ;
+template <> class PointerInstruction_NotAPointerType<long long *> {} ;
+template <> class PointerInstruction_NotAPointerType<unsigned char *> {} ;
+template <> class PointerInstruction_NotAPointerType<unsigned short *> {} ;
+template <> class PointerInstruction_NotAPointerType<unsigned int *> {} ;
+template <> class PointerInstruction_NotAPointerType<unsigned long *> {} ;
+template <> class PointerInstruction_NotAPointerType<unsigned long long *> {} ;
+template <> class PointerInstruction_NotAPointerType<signed char *> {} ;
+template <> class PointerInstruction_NotAPointerType<float *> {} ;
+template <> class PointerInstruction_NotAPointerType<double *> {} ;
 
 FENNEL_END_NAMESPACE
 

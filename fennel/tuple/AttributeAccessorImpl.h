@@ -248,7 +248,7 @@ public:
     void unmarshalValue(
         TupleAccessor const &tupleAccessor,TupleDatum &value) const
     {
-        if (unmarshalNullableValue(tupleAccessor,value)) {
+        if (Accessor::unmarshalNullableValue(tupleAccessor,value)) {
             return;
         }
         return Accessor::unmarshalValue(tupleAccessor,value);
