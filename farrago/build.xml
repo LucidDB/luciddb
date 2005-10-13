@@ -873,12 +873,14 @@ require version '${required.ant.version}'."/>
     <antcall target="testRngPlugin"/>
     <antcall target="exportCatalog"/>
     <antcall target="junit"/>
-    <!-- TODO jvs 11-Oct-2005:  track down shutdown/restart crash 
+    <!-- TODO jvs 13-Oct-2005:  track down shutdown/restart crash 
          and eliminate this -->
     <sleep seconds="5"/>
+    <antcall target="restoreCatalog"/>
     <antcall target="regressionWithoutBuild"/>
     <antcall target="testCleanup"/>
-    <antcall target="compareCatalogExport"/>
+    <!-- TODO jvs 13-Oct-2005:  re-enable once restoreCatalog above is gone -->
+    <!-- antcall target="compareCatalogExport"/ -->
     <antcall target="macker"/>
     <antcall target="checkSourceFilePreambles"/>
   </target>
