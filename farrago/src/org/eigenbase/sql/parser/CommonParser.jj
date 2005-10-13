@@ -2734,14 +2734,13 @@ SqlNode BuiltinFunctionCall() :
     |
     (
         <FLOOR>
-
-        e = FloorCeilOptions( getPos(), true)
+        e = FloorCeilOptions(getPos(), true)
         { return e ; }
     )
     |
     (
         ( <CEIL> | <CEILING>)
-        e = FloorCeilOptions( getPos(), false)
+        e = FloorCeilOptions(getPos(), false)
         { return e ; }
     )
     |
@@ -2933,7 +2932,7 @@ SqlNode NamedFunctionCall() :
 /*
 * Parse Floor/Ceil function parameters
 */
-SqlNode StandardFloorCeilOptions( SqlParserPos pos, boolean floorFlag) :
+SqlNode StandardFloorCeilOptions(SqlParserPos pos, boolean floorFlag) :
 {
     SqlIdentifier name;
     SqlParserPos overPos = null;
@@ -2957,11 +2956,11 @@ SqlNode StandardFloorCeilOptions( SqlParserPos pos, boolean floorFlag) :
         )
     ]
     {
-        name = new SqlIdentifier(
-            (floorFlag) ? "FLOOR" : "CEIL", pos);
-        function =  createCall(
-            name, SqlParserUtil.toNodeArray(args), pos,
-            SqlFunctionCategory.UserDefinedFunction);
+        SqlOperator op = floorFlag ?
+            SqlStdOperatorTable.floorFunc :
+            SqlStdOperatorTable.ceilFunc;
+        function =  op.createCall(
+            SqlParserUtil.toNodeArray(args), pos);
         if (over) {
             if (id != null) {
                 return SqlStdOperatorTable.overOperator.createCall(
