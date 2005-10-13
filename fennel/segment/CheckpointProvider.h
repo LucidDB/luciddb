@@ -34,6 +34,8 @@ FENNEL_BEGIN_NAMESPACE
 class CheckpointProvider
 {
 public:
+    virtual ~CheckpointProvider() {};
+
     /**
      * Requests a checkpoint.
      *

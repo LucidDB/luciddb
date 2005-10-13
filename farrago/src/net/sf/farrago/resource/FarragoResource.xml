@@ -700,7 +700,7 @@ column type family is {1} but default value type family is {2}</text>
 </message>
 
 <message id="480020" name="ServerListening">
-<text>Server now listening for connections on port {0,number,#}; enter !quit to stop</text>
+<text>Server now listening for RMI connections on port {0,number,#}; enter !quit to stop</text>
 </message>
 
 <message id="480030" name="ServerBadCommand">

@@ -33,6 +33,8 @@ FENNEL_BEGIN_NAMESPACE
 class SegmentMap 
 {
 public:
+    virtual ~SegmentMap() {};
+
     /**
      * Finds a segment by its SegmentId.
      *

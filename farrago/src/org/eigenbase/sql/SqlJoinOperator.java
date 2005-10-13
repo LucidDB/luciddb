@@ -133,10 +133,13 @@ public class SqlJoinOperator extends SqlOperator
                 SqlLiteral.symbolValue(operands[SqlJoin.CONDITION_TYPE_OPERAND]);
             switch (conditionType.getOrdinal()) {
             case ConditionType.Using_ORDINAL:
+                // No need for an extra pair of parens -- the condition is a
+                // list. The result is something like "USING (deptno, gender)".
                 writer.keyword("USING");
+                assert condition instanceof SqlNodeList;
                 final SqlWriter.Frame frame =
                     writer.startList(UsingFrameType, "(", ")");
-                condition.unparse(writer, leftPrec, rightPrec); // e.g. "using (deptno, gender)"
+                condition.unparse(writer, 0, 0);
                 writer.endList(frame);
                 break;
             case ConditionType.On_ORDINAL:

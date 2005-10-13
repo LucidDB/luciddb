@@ -290,6 +290,39 @@ public class FennelTupleTest extends TestCase
         return unmarshallValues( desc, iBuff, a, d );
     }
 
+    public void testTupleAlignment()
+    {
+        FennelTupleAccessor def = new FennelTupleAccessor();
+        FennelTupleAccessor by4 =
+            new FennelTupleAccessor(FennelTupleAccessor.TUPLE_ALIGN4);
+        FennelTupleAccessor by8 =
+            new FennelTupleAccessor(FennelTupleAccessor.TUPLE_ALIGN8);
+//        FennelTupleAccessor by5 = new FennelTupleAccessor(5);
+
+        FennelTupleDescriptor desc = new FennelTupleDescriptor();
+        desc.add(
+            new FennelTupleAttributeDescriptor(
+                FennelStandardTypeDescriptor.INT_16, false, 0));
+        desc.add(
+            new FennelTupleAttributeDescriptor(
+                // len=32 requires padding for 8-byte alignment
+                FennelStandardTypeDescriptor.VARCHAR, false, 32));
+
+        def.compute(desc);
+        by4.compute(desc);
+        by8.compute(desc);
+
+        int defsize = def.getMaxByteCount();
+        int by4size = by4.getMaxByteCount();
+        int by8size = by8.getMaxByteCount();
+//        System.out.println(
+//            "def=" +defsize +" by4=" +by4size +" by8=" +by8size);
+
+        assertEquals("4-byte alignment is default,", by4size, defsize);
+        assertTrue("4-byte alignment, size=" +by4size, by4size % 4 == 0);
+        assertTrue("8-byte alignment, size=" +by8size, by8size % 8 == 0);
+    }
+
     public void testMinimal()
     {
         FennelStandardTypeDescriptor[] o1 = {

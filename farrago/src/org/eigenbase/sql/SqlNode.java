@@ -137,7 +137,7 @@ public abstract class SqlNode implements Cloneable
             dialect = SqlUtil.dummyDialect;
         }
         SqlPrettyWriter writer = new SqlPrettyWriter(dialect);
-        writer.setAlwaysUseParentheses(true);
+        writer.setAlwaysUseParentheses(forceParens);
         writer.setSelectListItemsOnSeparateLines(false);
         writer.setIndentation(0);
         unparse(writer, 0, 0);

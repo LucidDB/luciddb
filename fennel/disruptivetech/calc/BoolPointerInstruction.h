@@ -83,12 +83,14 @@ public:
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
 
-        if (mOp1->isNull() || mOp2->isNull()) {
-            mResult->toNull();
-        } else if (mOp1->pointer() == mOp2->pointer()) {
-            mResult->value(true);
+        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull() || 
+            BoolPointerInstruction<PTR_TYPE>::mOp2->isNull()) {
+            BoolPointerInstruction<PTR_TYPE>::mResult->toNull();
+        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer() == 
+                   BoolPointerInstruction<PTR_TYPE>::mOp2->pointer()) {
+            BoolPointerInstruction<PTR_TYPE>::mResult->value(true);
         } else {
-            mResult->value(false);
+            BoolPointerInstruction<PTR_TYPE>::mResult->value(false);
         }
     }
 
@@ -97,7 +99,9 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(), 
-                       mResult, mOp1, mOp2);
+                       BoolPointerInstruction<PTR_TYPE>::mResult, 
+                       BoolPointerInstruction<PTR_TYPE>::mOp1, 
+                       BoolPointerInstruction<PTR_TYPE>::mOp2);
     }
 
     static InstructionSignature
@@ -135,13 +139,15 @@ public:
 
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
-        if (mOp1->isNull() || mOp2->isNull()) {
-            mResult->toNull
+        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull() || 
+            BoolPointerInstruction<PTR_TYPE>::mOp2->isNull()) {
+            BoolPointerInstruction<PTR_TYPE>::mResult->toNull
                 ();
-        } else if (mOp1->pointer() == mOp2->pointer()) {
-            mResult->value(false);
+        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer() == 
+                   BoolPointerInstruction<PTR_TYPE>::mOp2->pointer()) {
+            BoolPointerInstruction<PTR_TYPE>::mResult->value(false);
         } else {
-            mResult->value(true);
+            BoolPointerInstruction<PTR_TYPE>::mResult->value(true);
         }
     }
 
@@ -150,7 +156,9 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, mOp2);
+                       BoolPointerInstruction<PTR_TYPE>::mResult, 
+                       BoolPointerInstruction<PTR_TYPE>::mOp1, 
+                       BoolPointerInstruction<PTR_TYPE>::mOp2);
     }
 
     static InstructionSignature
@@ -188,12 +196,14 @@ public:
 
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
-        if (mOp1->isNull() || mOp2->isNull()) {
-            mResult->toNull();
-        } else if (mOp1->pointer() > mOp2->pointer()) {
-            mResult->value(true);
+        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull() || 
+            BoolPointerInstruction<PTR_TYPE>::mOp2->isNull()) {
+            BoolPointerInstruction<PTR_TYPE>::mResult->toNull();
+        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer() > 
+                   BoolPointerInstruction<PTR_TYPE>::mOp2->pointer()) {
+            BoolPointerInstruction<PTR_TYPE>::mResult->value(true);
         } else {
-            mResult->value(false);
+            BoolPointerInstruction<PTR_TYPE>::mResult->value(false);
         }
     }
 
@@ -202,7 +212,9 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, mOp2);
+                       BoolPointerInstruction<PTR_TYPE>::mResult, 
+                       BoolPointerInstruction<PTR_TYPE>::mOp1, 
+                       BoolPointerInstruction<PTR_TYPE>::mOp2);
     }
 
     static InstructionSignature
@@ -240,12 +252,14 @@ public:
 
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
-        if (mOp1->isNull() || mOp2->isNull()) {
-            mResult->toNull();
-        } else if (mOp1->pointer() >= mOp2->pointer()) {
-            mResult->value(true);
+        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull() || 
+            BoolPointerInstruction<PTR_TYPE>::mOp2->isNull()) {
+            BoolPointerInstruction<PTR_TYPE>::mResult->toNull();
+        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer() >= 
+                   BoolPointerInstruction<PTR_TYPE>::mOp2->pointer()) {
+            BoolPointerInstruction<PTR_TYPE>::mResult->value(true);
         } else {
-            mResult->value(false);
+            BoolPointerInstruction<PTR_TYPE>::mResult->value(false);
         }
     }
 
@@ -254,7 +268,9 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, mOp2);
+                       BoolPointerInstruction<PTR_TYPE>::mResult, 
+                       BoolPointerInstruction<PTR_TYPE>::mOp1, 
+                       BoolPointerInstruction<PTR_TYPE>::mOp2);
     }
 
     static InstructionSignature
@@ -292,12 +308,14 @@ public:
 
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
-        if (mOp1->isNull() || mOp2->isNull()) {
-            mResult->toNull();
-        } else if (mOp1->pointer() < mOp2->pointer()) {
-            mResult->value(true);
+        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull() || 
+            BoolPointerInstruction<PTR_TYPE>::mOp2->isNull()) {
+            BoolPointerInstruction<PTR_TYPE>::mResult->toNull();
+        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer() < 
+                   BoolPointerInstruction<PTR_TYPE>::mOp2->pointer()) {
+            BoolPointerInstruction<PTR_TYPE>::mResult->value(true);
         } else {
-            mResult->value(false);
+            BoolPointerInstruction<PTR_TYPE>::mResult->value(false);
         }
     }
     static const char * longName() { return "BoolPointerLess"; }
@@ -305,7 +323,9 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, mOp2);
+                       BoolPointerInstruction<PTR_TYPE>::mResult, 
+                       BoolPointerInstruction<PTR_TYPE>::mOp1, 
+                       BoolPointerInstruction<PTR_TYPE>::mOp2);
     }
 
     static InstructionSignature
@@ -343,12 +363,14 @@ public:
 
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
-        if (mOp1->isNull() || mOp2->isNull()) {
-            mResult->toNull();
-        } else if (mOp1->pointer() <= mOp2->pointer()) {
-            mResult->value(true);
+        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull() || 
+            BoolPointerInstruction<PTR_TYPE>::mOp2->isNull()) {
+            BoolPointerInstruction<PTR_TYPE>::mResult->toNull();
+        } else if (BoolPointerInstruction<PTR_TYPE>::mOp1->pointer() <= 
+                   BoolPointerInstruction<PTR_TYPE>::mOp2->pointer()) {
+            BoolPointerInstruction<PTR_TYPE>::mResult->value(true);
         } else {
-            mResult->value(false);
+            BoolPointerInstruction<PTR_TYPE>::mResult->value(false);
         }
     }
 
@@ -357,7 +379,9 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, mOp2);
+                       BoolPointerInstruction<PTR_TYPE>::mResult, 
+                       BoolPointerInstruction<PTR_TYPE>::mOp1, 
+                       BoolPointerInstruction<PTR_TYPE>::mOp2);
     }
 
     static InstructionSignature
@@ -394,10 +418,10 @@ public:
 
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
-        if (mOp1->isNull()) {
-            mResult->value(true);
+        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull()) {
+            BoolPointerInstruction<PTR_TYPE>::mResult->value(true);
         } else {
-            mResult->value(false);
+            BoolPointerInstruction<PTR_TYPE>::mResult->value(false);
         }
     }
 
@@ -406,7 +430,9 @@ public:
     static int numArgs() { return 2; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, mOp2);
+                       BoolPointerInstruction<PTR_TYPE>::mResult, 
+                       BoolPointerInstruction<PTR_TYPE>::mOp1, 
+                       BoolPointerInstruction<PTR_TYPE>::mOp2);
     }
 
     static InstructionSignature
@@ -442,10 +468,10 @@ public:
 
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
-        if (mOp1->isNull()) {
-            mResult->value(false);
+        if (BoolPointerInstruction<PTR_TYPE>::mOp1->isNull()) {
+            BoolPointerInstruction<PTR_TYPE>::mResult->value(false);
         } else {
-            mResult->value(true);
+            BoolPointerInstruction<PTR_TYPE>::mResult->value(true);
         }
     }
 
@@ -454,7 +480,9 @@ public:
     static int numArgs() { return 2; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(), 
-                       mResult, mOp1, mOp2);
+                       BoolPointerInstruction<PTR_TYPE>::mResult, 
+                       BoolPointerInstruction<PTR_TYPE>::mOp1, 
+                       BoolPointerInstruction<PTR_TYPE>::mOp2);
     }
 
     static InstructionSignature

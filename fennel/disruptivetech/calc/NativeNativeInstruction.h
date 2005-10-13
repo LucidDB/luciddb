@@ -80,11 +80,14 @@ public:
 
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
-        if (mOp1->isNull() || mOp2->isNull()) {
+        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+            NativeInstruction<TMPLT>::mOp2->isNull()) {
             // SQL99 Part 2 Section 6.26 General Rule 1
-            mResult->toNull();
+            NativeNativeInstruction<TMPLT>::mResult->toNull();
         } else {
-            mResult->value(mOp1->value() + mOp2->value());
+            NativeNativeInstruction<TMPLT>::mResult->
+               value(NativeInstruction<TMPLT>::mOp1->value() + 
+                     NativeInstruction<TMPLT>::mOp2->value());
         }
     }
 
@@ -93,7 +96,9 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, mOp2);
+                       NativeNativeInstruction<TMPLT>::mResult, 
+                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
@@ -129,11 +134,14 @@ public:
 
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
-        if (mOp1->isNull() || mOp2->isNull()) {
+        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+            NativeInstruction<TMPLT>::mOp2->isNull()) {
             // SQL99 Part 2 Section 6.26 General Rule 1
-            mResult->toNull();
+            NativeNativeInstruction<TMPLT>::mResult->toNull();
         } else {
-            mResult->value(mOp1->value() - mOp2->value());
+            NativeNativeInstruction<TMPLT>::mResult->value
+                (NativeInstruction<TMPLT>::mOp1->value() - 
+                 NativeInstruction<TMPLT>::mOp2->value());
         }
     }
 
@@ -142,7 +150,9 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, mOp2);
+                       NativeNativeInstruction<TMPLT>::mResult, 
+                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
@@ -178,11 +188,14 @@ public:
 
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
-        if (mOp1->isNull() || mOp2->isNull()) {
+        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+            NativeInstruction<TMPLT>::mOp2->isNull()) {
             // SQL99 Part 2 Section 6.26 General Rule 1
-            mResult->toNull();
+            NativeNativeInstruction<TMPLT>::mResult->toNull();
         } else {
-            mResult->value(mOp1->value() * mOp2->value());
+            NativeNativeInstruction<TMPLT>::mResult->value
+               (NativeInstruction<TMPLT>::mOp1->value() * 
+                NativeInstruction<TMPLT>::mOp2->value());
         }
     }
 
@@ -191,7 +204,9 @@ public:
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, mOp2);
+                       NativeNativeInstruction<TMPLT>::mResult, 
+                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
@@ -228,19 +243,21 @@ public:
 
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
-        if (mOp1->isNull() || mOp2->isNull()) {
+        if (NativeInstruction<TMPLT>::mOp1->isNull() || 
+            NativeInstruction<TMPLT>::mOp2->isNull()) {
             // SQL99 Part 2 Section 6.26 General Rule 1
-            mResult->toNull();
+            NativeNativeInstruction<TMPLT>::mResult->toNull();
         } else {
-            TMPLT o2 = mOp2->value(); // encourage into register
+            TMPLT o2 = NativeInstruction<TMPLT>::mOp2->value(); // encourage into register
             if (o2 == 0) {
                 // SQL99 Part 2 Section 6.26 General Rule 4
-                mResult->toNull();
+                NativeNativeInstruction<TMPLT>::mResult->toNull();
                 // SQL99 Part 2 Section 22.1 SQLState dataexception class 22,
                 // division by zero subclass 012
                 throw CalcMessage("22012", pc - 1); 
             }
-            mResult->value(mOp1->value() / o2);
+            NativeNativeInstruction<TMPLT>::mResult->value
+                (NativeInstruction<TMPLT>::mOp1->value() / o2);
         }
     }
 
@@ -248,8 +265,10 @@ public:
     static char const * const shortName() { return "DIV"; } 
     static int numArgs() { return 3; }
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), 
-                       mResult, mOp1, mOp2);
+        describeHelper(out, values, longName(), shortName(),
+                       NativeNativeInstruction<TMPLT>::mResult, 
+                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
@@ -286,11 +305,12 @@ public:
 
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
-        if (mOp1->isNull()) {
+        if (NativeInstruction<TMPLT>::mOp1->isNull()) {
             // SQL99 Part 2 Section 6.26 General Rule 1
-            mResult->toNull();
+            NativeNativeInstruction<TMPLT>::mResult->toNull();
         } else {
-            mResult->value(mOp1->value() * -1);
+            NativeNativeInstruction<TMPLT>::mResult->value
+               (NativeInstruction<TMPLT>::mOp1->value() * -1);
         }
     }
     static char const * const longName() { return "NativeNeg"; }
@@ -298,7 +318,9 @@ public:
     static int numArgs() { return 2; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, mOp2);
+                       NativeNativeInstruction<TMPLT>::mResult, 
+                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
@@ -362,12 +384,13 @@ public:
 
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
-        if (mOp1->isNull()) {
-            mResult->toNull();
+        if (NativeInstruction<TMPLT>::mOp1->isNull()) {
+            NativeNativeInstruction<TMPLT>::mResult->toNull();
         } else {
             TMPLT tmp;
-            NativeRoundHelp<TMPLT>::r(tmp, mOp1->value());
-            mResult->value(tmp);
+            NativeRoundHelp<TMPLT>::r
+                 (tmp, NativeInstruction<TMPLT>::mOp1->value());
+            NativeNativeInstruction<TMPLT>::mResult->value(tmp);
         }
     }
     static char const * const longName() { return "NativeRound"; }
@@ -375,7 +398,9 @@ public:
     static int numArgs() { return 2; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, mOp2);
+                       NativeNativeInstruction<TMPLT>::mResult, 
+                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
@@ -409,18 +434,21 @@ public:
 
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
-        if (mOp1->isNull()) {
-            mResult->toNull();
+        if (NativeInstruction<TMPLT>::mOp1->isNull()) {
+            NativeNativeInstruction<TMPLT>::mResult->toNull();
         } else {
-            mResult->value(mOp1->value());
+            NativeNativeInstruction<TMPLT>::mResult->value
+               (NativeInstruction<TMPLT>::mOp1->value());
         }
     }
     static char const * const longName() { return "NativeMove"; }
     static char const * const shortName() { return "MOVE"; }
     static int numArgs() { return 2; }
     void describe(string& out, bool values) const {
-        describeHelper(out, values, longName(), shortName(), 
-                       mResult, mOp1, mOp2);
+        describeHelper(out, values, longName(), shortName(),
+                       NativeNativeInstruction<TMPLT>::mResult, 
+                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
@@ -454,14 +482,17 @@ public:
 
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
-        mResult->refer(mOp1);
+        NativeNativeInstruction<TMPLT>::mResult->
+            refer(NativeInstruction<TMPLT>::mOp1);
     }
     static char const * const longName() { return "NativeRef"; }
     static char const * const shortName() { return "REF"; }
     static int numArgs() { return 2; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, mOp2);
+                       NativeNativeInstruction<TMPLT>::mResult, 
+                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
@@ -494,14 +525,16 @@ public:
 
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
-        mResult->toNull();
+        NativeNativeInstruction<TMPLT>::mResult->toNull();
     }
     static char const * const longName() { return "NativeToNull"; }
     static char const * const shortName() { return "TONULL"; }
     static int numArgs() { return 1; }
     void describe(string& out, bool values) const {
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, mOp2);
+                       NativeNativeInstruction<TMPLT>::mResult, 
+                       NativeInstruction<TMPLT>::mOp1, 
+                       NativeInstruction<TMPLT>::mOp2);
     }
 
     static InstructionSignature
