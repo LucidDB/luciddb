@@ -156,7 +156,7 @@ public class DdlGrantPrivStmt extends DdlGrantStmt
                 // throw an exception, because this is an illegal privilege
                 // REVIEW jvs 13-Aug-2005:  maybe report all illegal
                 // privileges at once instead of just the first one?
-                throw FarragoResource.instance().newValidatorInvalidGrant(
+                throw FarragoResource.instance().ValidatorInvalidGrant.ex(
                     privId.getSimple(), grantedObject.getName());
             }
         }

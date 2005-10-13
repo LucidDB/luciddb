@@ -67,10 +67,12 @@ public:
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
 
-        if (mOp1->isNull()) {
-            mResult->toNull();
+        if (IntegralPointerInstruction<PTR_TYPE>::mOp1->isNull()) {
+            IntegralPointerInstruction<PTR_TYPE>::mResult->toNull();
         } else {
-            mResult->value(mOp1->length());  // get size, put value
+            // get size, put value
+            IntegralPointerInstruction<PTR_TYPE>::mResult->
+               value(IntegralPointerInstruction<PTR_TYPE>::mOp1->length());
         }
     }
 
@@ -80,7 +82,8 @@ public:
     void describe(string& out, bool values) const {
         RegisterRef<PTR_TYPE> mOp2; // create invalid regref
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, &mOp2);
+                       IntegralPointerInstruction<PTR_TYPE>::mResult, 
+                       IntegralPointerInstruction<PTR_TYPE>::mOp1, &mOp2);
     }
 
     static InstructionSignature
@@ -117,10 +120,12 @@ public:
     virtual void exec(TProgramCounter& pc) const { 
         pc++;
 
-        if (mOp1->isNull()) {
-            mResult->toNull();
+        if (IntegralPointerInstruction<PTR_TYPE>::mOp1->isNull()) {
+            IntegralPointerInstruction<PTR_TYPE>::mResult->toNull();
         } else {
-            mResult->value(mOp1->storage());  // get size, put value
+            // get size, put value
+            IntegralPointerInstruction<PTR_TYPE>::mResult->value
+               (IntegralPointerInstruction<PTR_TYPE>::mOp1->storage());
         }
     }
 
@@ -130,7 +135,8 @@ public:
     void describe(string& out, bool values) const {
         RegisterRef<PTR_TYPE> mOp2; // create invalid regref
         describeHelper(out, values, longName(), shortName(),
-                       mResult, mOp1, &mOp2);
+                       IntegralPointerInstruction<PTR_TYPE>::mResult, 
+                       IntegralPointerInstruction<PTR_TYPE>::mOp1, &mOp2);
     }
 
     static InstructionSignature

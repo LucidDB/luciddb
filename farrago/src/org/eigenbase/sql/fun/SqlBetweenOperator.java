@@ -30,6 +30,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.util.SqlBasicVisitor;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.util.EnumeratedValues;
@@ -164,7 +165,21 @@ public class SqlBetweenOperator extends SqlInfixOperator
         operands[VALUE_OPERAND].unparse(writer, getLeftPrec(), 0);
         writer.sep(getName());
         operands[SYMFLAG_OPERAND].unparse(writer, 0, 0);
-        operands[LOWER_OPERAND].unparse(writer, 0, 0);
+        // If the expression for the lower bound contains a call to an AND
+        // operator, we need to wrap the expression in parentheses to prevent
+        // the AND from associating with BETWEEN. For example, we should
+        // unparse
+        //    a BETWEEN b OR (c AND d) OR e AND f
+        // as
+        //    a BETWEEN (b OR c AND d) OR e) AND f
+        // If it were unparsed as
+        //    a BETWEEN b OR c AND d OR e AND f
+        // then it would be interpreted as
+        //    (a BETWEEN (b OR c) AND d) OR (e AND f)
+        // which would be wrong.
+        int lowerPrec =
+            new AndFinder().containsAnd(operands[LOWER_OPERAND]) ? 100 : 0;
+        operands[LOWER_OPERAND].unparse(writer, lowerPrec, lowerPrec);
         writer.sep("AND");
         operands[UPPER_OPERAND].unparse(writer, 0, getRightPrec());
         writer.endList(frame);
@@ -200,20 +215,20 @@ public class SqlBetweenOperator extends SqlInfixOperator
             SqlParserPos errPos = new SqlParserPos(line, col, line, col);
             throw SqlUtil.newContextException(
                 errPos,
-                EigenbaseResource.instance().newBetweenWithoutAnd());
+                EigenbaseResource.instance().BetweenWithoutAnd.ex());
         }
         final Object o = list.get(opOrdinal + 2);
         if (!(o instanceof SqlParserUtil.ToTreeListItem)) {
             SqlParserPos errPos = ((SqlNode) o).getParserPosition();
             throw SqlUtil.newContextException(
                 errPos,
-                EigenbaseResource.instance().newBetweenWithoutAnd());
+                EigenbaseResource.instance().BetweenWithoutAnd.ex());
         }
         if (((SqlParserUtil.ToTreeListItem) o).getOperator().getKind() != SqlKind.And) {
             SqlParserPos errPos = ((SqlParserUtil.ToTreeListItem) o).getPos();
             throw SqlUtil.newContextException(
                 errPos,
-                EigenbaseResource.instance().newBetweenWithoutAnd());
+                EigenbaseResource.instance().BetweenWithoutAnd.ex());
         }
 
         // Create the expression after 'AND', but stopping if we encounter an
@@ -266,7 +281,35 @@ public class SqlBetweenOperator extends SqlInfixOperator
             super(name, ordinal, null);
         }
     }
-}
 
+    /**
+     * Finds an AND operator in an expression.
+     */
+    private static class AndFinder extends SqlBasicVisitor
+    {
+        public void visit(SqlCall call)
+        {
+            final SqlOperator operator = call.getOperator();
+            if (operator == SqlStdOperatorTable.andOperator) {
+                throw new Found();
+            }
+            super.visit(call);
+        }
+
+        boolean containsAnd(SqlNode node)
+        {
+            try {
+                node.accept(this);
+                return false;
+            } catch (AndFinder.Found e) {
+                return true;
+            }
+        }
+
+        private static class Found extends RuntimeException
+        {
+        }
+    }
+}
 
 // End SqlBetweenOperator.java

@@ -35,6 +35,7 @@ FENNEL_BEGIN_NAMESPACE
 class TimerThreadClient 
 {
 public:
+    virtual ~TimerThreadClient() {};
     /**
      * Calculates the interval which should elapse before the next call to
      * onTimerInterval.  This can be different each time.  A return value of 0

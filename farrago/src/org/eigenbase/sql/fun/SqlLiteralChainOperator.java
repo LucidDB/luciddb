@@ -137,7 +137,7 @@ public class SqlLiteralChainOperator extends SqlInternalOperator {
             SqlParserPos pos = operand.getParserPosition();
             if (pos.getLineNum() <= prevPos.getLineNum()) {
                 throw validator.newValidationError(operand,
-                    EigenbaseResource.instance().newStringFragsOnSameLine());
+                    EigenbaseResource.instance().StringFragsOnSameLine.ex());
             }
         }
     }

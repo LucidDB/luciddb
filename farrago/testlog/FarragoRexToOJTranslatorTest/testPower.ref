@@ -1,6 +1,6 @@
 double oj_var0;
 if (2 == 0 && ID$5$EMPID < 0 || 2 < 0 && ID$5$EMPID != java.lang.Math.floor( ID$5$EMPID )) {
-    throw net.sf.farrago.resource.FarragoResource.instance().newInvalidFunctionArgument( "POW" );
+    throw net.sf.farrago.resource.FarragoResource.instance().InvalidFunctionArgument.ex( "POW" );
 } else {
     oj_var0 = java.lang.Math.pow( 2, ID$5$EMPID );
 }

@@ -259,14 +259,14 @@ public class SqlDataTypeSpec extends SqlNode
         //for now we only support builtin datatypes
         if (!SqlTypeName.containsName(name)) {
             throw validator.newValidationError(this,
-                EigenbaseResource.instance().newUnknownDatatypeName(name));
+                EigenbaseResource.instance().UnknownDatatypeName.ex(name));
         }
 
         if (null != collectionsTypeName) {
             final String collectionName = collectionsTypeName.getSimple();
             if (!SqlTypeName.containsName(collectionName)) {
                 throw validator.newValidationError(this,
-                    EigenbaseResource.instance().newUnknownDatatypeName(
+                    EigenbaseResource.instance().UnknownDatatypeName.ex(
                         collectionName));
             }
         }

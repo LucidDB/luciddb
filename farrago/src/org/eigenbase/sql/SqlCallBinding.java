@@ -132,7 +132,7 @@ public class SqlCallBinding extends SqlOperatorBinding
     {
         return validator.newValidationError(
             call,
-            EigenbaseResource.instance().newCanNotApplyOp2Type(
+            EigenbaseResource.instance().CanNotApplyOp2Type.ex(
                 getOperator().getName(),
                 call.getCallSignature(validator, scope),
                 getOperator().getAllowedSignatures()));

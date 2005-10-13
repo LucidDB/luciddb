@@ -594,7 +594,7 @@ public class SqlLiteral extends SqlNode
         } catch (NumberFormatException e) {
             throw SqlUtil.newContextException(
                 pos,
-                EigenbaseResource.instance().newBinaryLiteralInvalid());
+                EigenbaseResource.instance().BinaryLiteralInvalid.ex());
         }
         return new SqlBinaryStringLiteral(bits, pos);
     }

@@ -111,16 +111,20 @@ public class SqlNodeList extends SqlNode
         int leftPrec,
         int rightPrec)
     {
-        if ((leftPrec > 0) || (rightPrec > 0)) {
-            final SqlWriter.Frame frame = writer.startList("(", ")");
-            unparse(writer, 0, 0);
-            writer.endList(frame);
-        } else {
-            for (int i = 0; i < list.size(); i++) {
-                SqlNode node = (SqlNode) list.get(i);
-                writer.sep(",");
-                node.unparse(writer, 0, 0);
-            }
+        final SqlWriter.Frame frame =
+            (leftPrec > 0) || (rightPrec > 0) ?
+            writer.startList("(", ")") :
+            writer.startList("", "");
+        commaList(writer);
+        writer.endList(frame);
+    }
+
+    private void commaList(SqlWriter writer)
+    {
+        for (int i = 0; i < list.size(); i++) {
+            SqlNode node = (SqlNode) list.get(i);
+            writer.sep(",");
+            node.unparse(writer, 0, 0);
         }
     }
 

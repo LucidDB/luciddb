@@ -21,16 +21,9 @@
 */
 package org.eigenbase.sql;
 
-import org.eigenbase.reltype.*;
-import org.eigenbase.sql.validate.*;
-import org.eigenbase.sql.util.*;
-import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.test.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
-import org.eigenbase.resource.*;
-
-import java.util.*;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.sql.type.MultisetSqlType;
+import org.eigenbase.sql.type.SqlTypeStrategies;
 
 /**
  * The <code>UNNEST<code> operator.

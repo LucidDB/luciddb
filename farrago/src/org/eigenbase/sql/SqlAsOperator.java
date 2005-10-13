@@ -21,16 +21,11 @@
 */
 package org.eigenbase.sql;
 
-import org.eigenbase.reltype.*;
-import org.eigenbase.sql.validate.*;
-import org.eigenbase.sql.util.*;
-import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.test.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
-import org.eigenbase.resource.*;
-
-import java.util.*;
+import org.eigenbase.resource.EigenbaseResource;
+import org.eigenbase.sql.type.SqlTypeStrategies;
+import org.eigenbase.sql.util.SqlVisitor;
+import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.SqlValidatorScope;
 
 /**
  * The <code>AS</code> operator associates an expression with an alias.
@@ -68,7 +63,7 @@ public class SqlAsOperator extends SqlBinaryOperator
         if (!id.isSimple()) {
             throw validator.newValidationError(id,
                 EigenbaseResource.instance()
-                .newAliasMustBeSimpleIdentifier());
+                .AliasMustBeSimpleIdentifier.ex());
         }
     }
 

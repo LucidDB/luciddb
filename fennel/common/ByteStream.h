@@ -65,6 +65,7 @@ class ByteStreamMarker
     
 protected:
     explicit ByteStreamMarker(ByteStream const &stream);
+    virtual ~ByteStreamMarker() {};
 
 public:
     /**
@@ -90,6 +91,9 @@ class SequentialByteStreamMarker : public ByteStreamMarker
      * Byte position in stream.
      */
     FileSize cbOffset;
+
+public:
+    virtual ~SequentialByteStreamMarker() {};
     
 protected:
     explicit SequentialByteStreamMarker(ByteStream const &stream);

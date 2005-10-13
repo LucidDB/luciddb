@@ -39,7 +39,6 @@ import java.nio.charset.Charset;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.lang.reflect.Array;
 
 
 /**
@@ -226,7 +225,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 if (childScope == null) {
                     // e.g. "select r.* from e"
                     throw newValidationError(identifier,
-                        EigenbaseResource.instance().newUnknownIdentifier(
+                        EigenbaseResource.instance().UnknownIdentifier.ex(
                             tableName));
                 }
                 final SqlNode from = childScope.getNode();
@@ -862,7 +861,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
 
                     if (type == null) {
                         throw newValidationError(id,
-                            EigenbaseResource.instance().newUnknownIdentifier(
+                            EigenbaseResource.instance().UnknownIdentifier.ex(
                                 name));
                     }
                 } else {
@@ -871,7 +870,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                     if (fieldType == null) {
                         throw newValidationError(
                             id,
-                            EigenbaseResource.instance().newUnknownField(name));
+                            EigenbaseResource.instance().UnknownField.ex(name));
                     }
                     type = fieldType;
                 }
@@ -1043,7 +1042,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                             "An implicit or explicit charset should have been set";
                         if (!cs1.equals(cs2)) {
                             throw EigenbaseResource.instance()
-                                .newIncompatibleCharset(
+                                .IncompatibleCharset.ex(
                                     call.getOperator().getName(),
                                     cs1.name(),
                                     cs2.name());
@@ -1116,7 +1115,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             // TODO jvs 12-Feb-2005:  proper type name formatting
             throw newValidationError(
                 sqlIdentifier,
-                EigenbaseResource.instance().newUnknownDatatypeName(
+                EigenbaseResource.instance().UnknownDatatypeName.ex(
                     sqlIdentifier.toString()));
         }
 
@@ -1177,7 +1176,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                     fun.getOperandCountRange().getAllowedList().get(0);
                 throw newValidationError(
                     call,
-                    EigenbaseResource.instance().newInvalidArgCount(
+                    EigenbaseResource.instance().InvalidArgCount.ex(
                         call.getOperator().getName(),
                         expectedArgCount));
             }
@@ -1190,7 +1189,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 unresolvedFunction, unresolvedFunction.getName());
         throw newValidationError(
             call,
-            EigenbaseResource.instance().newValidatorUnknownFunction(
+            EigenbaseResource.instance().ValidatorUnknownFunction.ex(
                 signature));
     }
 
@@ -1208,10 +1207,10 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             if (inferredType.equals(unknownType)) {
                 if (isNullLiteral) {
                     throw newValidationError(node,
-                        EigenbaseResource.instance().newNullIllegal());
+                        EigenbaseResource.instance().NullIllegal.ex());
                 } else {
                     throw newValidationError(node,
-                        EigenbaseResource.instance().newDynamicParamIllegal());
+                        EigenbaseResource.instance().DynamicParamIllegal.ex());
                 }
             }
 
@@ -1752,7 +1751,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             final BitString bitString = (BitString) literal.getValue();
             if (bitString.getBitCount() % 8 != 0) {
                 throw newValidationError(literal,
-                    EigenbaseResource.instance().newBinaryLiteralOdd());
+                    EigenbaseResource.instance().BinaryLiteralOdd.ex());
             }
             break;
         case SqlTypeName.IntervalYearMonth_ordinal:
@@ -1762,9 +1761,12 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                         ((SqlIntervalLiteral) literal).getValue();
                 int[] values = SqlParserUtil.parseIntervalValue(interval);
                 if (values == null) {
-                    throw newValidationError(literal,
-                            EigenbaseResource.instance().newUnsupportedIntervalLiteral
-                            (interval.toString(), "INTERVAL " +
+                    throw newValidationError(
+                        literal,
+                        EigenbaseResource.instance()
+                        .UnsupportedIntervalLiteral.ex(
+                            interval.toString(),
+                            "INTERVAL " +
                             interval.getIntervalQualifier().toString()));
                 }
             }
@@ -1859,8 +1861,8 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         // Validate NATURAL.
         if (natural && condition != null) {
             throw newValidationError(condition,
-                EigenbaseResource.instance().
-                newNaturalDisallowsOnOrUsing());
+                EigenbaseResource.instance()
+                .NaturalDisallowsOnOrUsing.ex());
         }
         // Which join types require/allow a ON/USING condition, or allow
         // a NATURAL keyword?
@@ -1873,7 +1875,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 throw newValidationError(
                     join,
                     EigenbaseResource.instance()
-                    .newJoinRequiresCondition());
+                    .JoinRequiresCondition.ex());
             }
             break;
         case SqlJoinOperator.JoinType.Comma_ORDINAL:
@@ -1882,13 +1884,13 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 throw newValidationError(
                     join.operands[SqlJoin.CONDITION_TYPE_OPERAND],
                     EigenbaseResource.instance()
-                    .newCrossJoinDisallowsCondition());
+                    .CrossJoinDisallowsCondition.ex());
             }
             if (natural) {
                 throw newValidationError(
                     join.operands[SqlJoin.CONDITION_TYPE_OPERAND],
                     EigenbaseResource.instance()
-                    .newCrossJoinDisallowsCondition());
+                    .CrossJoinDisallowsCondition.ex());
             }
             break;
         default:
@@ -1906,7 +1908,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             }
         }
         throw newValidationError(id,
-            EigenbaseResource.instance().newColumnNotFound(
+            EigenbaseResource.instance().ColumnNotFound.ex(
                 id.toString()));
     }
 
@@ -1981,13 +1983,13 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             if (!declName.isSimple()){
                 throw this.newValidationError(declName,
                     EigenbaseResource.instance()
-                    .newWindowNameMustBeSimple());
+                    .WindowNameMustBeSimple.ex());
             }
 
             if (windowScope.existingWindowName(declName.toString())) {
                 throw this.newValidationError(declName,
                     EigenbaseResource.instance()
-                    .newDuplicateWindowName());
+                    .DuplicateWindowName.ex());
             } else {
                 windowScope.addWindowName(declName.toString());
             }
@@ -2001,7 +2003,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                     if (winArr[i].equalsDeep(winArr[j])) {
                         throw this.newValidationError(winArr[j],
                             EigenbaseResource.instance()
-                            .newDupWindowSpec());
+                            .DupWindowSpec.ex());
                     }
                 }
             }
@@ -2023,7 +2025,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         if (!shouldAllowIntermediateOrderBy()) {
             if (select != outermostNode) {
                 throw newValidationError(select,
-                    EigenbaseResource.instance().newInvalidOrderByPos());
+                    EigenbaseResource.instance().InvalidOrderByPos.ex());
             }
         }
         final SqlValidatorScope orderScope = getOrderScope(select);
@@ -2057,7 +2059,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         final SqlNode agg = aggFinder.findAgg(where);
         if (agg != null) {
             throw newValidationError(agg,
-                EigenbaseResource.instance().newAggregateIllegalInWhere());
+                EigenbaseResource.instance().AggregateIllegalInWhere.ex());
         }
         inferUnknownTypes(
             booleanType,
@@ -2067,7 +2069,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         final RelDataType type = deriveType(whereScope, where);
         if (!SqlTypeUtil.inBooleanFamily(type)) {
             throw newValidationError(where,
-                EigenbaseResource.instance().newWhereMustBeBoolean());
+                EigenbaseResource.instance().WhereMustBeBoolean.ex());
         }
     }
 
@@ -2095,7 +2097,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         final RelDataType type = deriveType(havingScope, having);
         if (!SqlTypeUtil.inBooleanFamily(type)) {
             throw newValidationError(having,
-                EigenbaseResource.instance().newHavingMustBeBoolean());
+                EigenbaseResource.instance().HavingMustBeBoolean.ex());
         }
     }
 
@@ -2172,7 +2174,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             int iColumn = baseRowType.getFieldOrdinal(id.getSimple());
             if (iColumn == -1) {
                 throw newValidationError(id,
-                    EigenbaseResource.instance().newUnknownTargetColumn(
+                    EigenbaseResource.instance().UnknownTargetColumn.ex(
                         id.getSimple()));
             }
             fieldNames[iTarget] = targetFields[iColumn].getName();
@@ -2208,7 +2210,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         if (targetRowType.getFieldList().size()
             != sourceRowType.getFieldList().size())
         {
-            throw EigenbaseResource.instance().newUnmatchInsertColumn(
+            throw EigenbaseResource.instance().UnmatchInsertColumn.ex(
                 new Integer(targetRowType.getFieldList().size()),
                 new Integer(sourceRowType.getFieldList().size()));
         }
@@ -2272,7 +2274,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         if (table != null) {
             SqlAccessType access = table.getAllowedAccess();
             if (!access.allowsAccess(requiredAccess)) {
-                throw EigenbaseResource.instance().newAccessNotAllowed(
+                throw EigenbaseResource.instance().AccessNotAllowed.ex(
                     requiredAccess.getName(),
                     Arrays.asList(table.getQualifiedName()).toString());
             }
@@ -2327,7 +2329,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 if (numOfColumns != thisRow.operands.length) {
                     throw newValidationError(node,
                         EigenbaseResource.instance()
-                        .newIncompatibleValueType());
+                        .IncompatibleValueType.ex());
                 }
             }
 
@@ -2346,7 +2348,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 if (null == type) {
                     throw newValidationError(node,
                         EigenbaseResource.instance()
-                        .newIncompatibleValueType());
+                        .IncompatibleValueType.ex());
                 }
             }
         }
@@ -2411,7 +2413,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         if (window == null) {
             throw newValidationError(
                 id,
-                EigenbaseResource.instance().newWindowNotFound(
+                EigenbaseResource.instance().WindowNotFound.ex(
                     id.toString()));
         }
         return window;
@@ -2436,7 +2438,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             SqlWindow refWindow = scope.lookupWindow(refName);
             if (refWindow == null) {
                 throw newValidationError(refId,
-                    EigenbaseResource.instance().newWindowNotFound(refName));
+                    EigenbaseResource.instance().WindowNotFound.ex(refName));
             }
             window = window.overlay(refWindow, this);
         }

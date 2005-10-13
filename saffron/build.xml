@@ -360,7 +360,11 @@
     <taskdef name="resgen" classname="org.eigenbase.resgen.ResourceGenTask">
       <classpath refid="saffron.run.classpath"/>
     </taskdef>
-    <resgen srcdir="${src.dir}" resdir="${classes.dir}" locales="en_US">
+    <resgen
+      srcdir="${src.dir}"
+      resdir="${classes.dir}"
+      style="functor"
+      locales="en_US">
       <include name="net/sf/saffron/resource/SaffronResource.xml"/>
     </resgen>
   </target>

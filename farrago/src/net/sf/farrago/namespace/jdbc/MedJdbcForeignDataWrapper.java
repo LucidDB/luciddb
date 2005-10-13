@@ -94,7 +94,7 @@ public class MedJdbcForeignDataWrapper extends MedAbstractDataWrapper
         try {
             Class.forName(driverClassName);
         } catch (ClassNotFoundException ex) {
-            throw FarragoResource.instance().newJdbcDriverLoadFailed(driverClassName,
+            throw FarragoResource.instance().JdbcDriverLoadFailed.ex(driverClassName,
                 ex);
         }
     }

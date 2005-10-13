@@ -57,6 +57,8 @@ enum ExternalSortRC
 class ExternalSortSubStream
 {
 public:
+    virtual ~ExternalSortSubStream() {};
+
     /**
      * Binds the fetch array which will be used implicitly by
      * subsequent calls to fetch().

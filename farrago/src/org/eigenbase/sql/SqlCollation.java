@@ -130,7 +130,7 @@ public class SqlCollation
     {
         SqlCollation ret = getCoercibilityDyadic(col1, col2);
         if (null == ret) {
-            throw EigenbaseResource.instance().newInvalidCompare(col1.collationName,
+            throw EigenbaseResource.instance().InvalidCompare.ex(col1.collationName,
                 "" + col1.coercibility, col2.collationName,
                 "" + col2.coercibility);
         }
@@ -229,7 +229,7 @@ public class SqlCollation
                     return new SqlCollation(col2.collationName,
                         Coercibility.Explicit);
                 }
-                throw EigenbaseResource.instance().newDifferentCollations(col1.collationName,
+                throw EigenbaseResource.instance().DifferentCollations.ex(col1.collationName,
                     col2.collationName);
             }
         }

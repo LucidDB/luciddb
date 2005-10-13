@@ -105,7 +105,7 @@ public class SqlCastFunction extends SqlFunction
                 callBinding.getCall().operands[1]);
         if (!SqlTypeUtil.canCastFrom(returnType, validatedNodeType, true)) {
             if (throwOnFailure) {
-                throw EigenbaseResource.instance().newCannotCastValue(
+                throw EigenbaseResource.instance().CannotCastValue.ex(
                     validatedNodeType.toString(),
                     returnType.toString());
             }
@@ -129,6 +129,9 @@ public class SqlCastFunction extends SqlFunction
         final SqlWriter.Frame frame = writer.startFunCall(getName());
         operands[0].unparse(writer, 0, 0);
         writer.sep("AS");
+        if (operands[1] instanceof SqlIntervalQualifier) {
+            writer.sep("INTERVAL");
+        }
         operands[1].unparse(writer, 0, 0);
         writer.endFunCall(frame);
     }

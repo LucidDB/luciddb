@@ -23,11 +23,8 @@ package org.eigenbase.sql.type;
 
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.*;
-
-import java.util.*;
 
 /**
  * SqlTypeStrategies defines singleton instances of strategy objects for
@@ -197,7 +194,7 @@ public abstract class SqlTypeStrategies
                 if (value < 0) {
                     if (throwOnFailure) {
                         throw EigenbaseResource.instance()
-                            .newArgumentMustBePositiveInteger(
+                            .ArgumentMustBePositiveInteger.ex(
                                 callBinding.getOperator().getName());
                     }
                     return false;
@@ -726,7 +723,7 @@ public abstract class SqlTypeStrategies
                     if (!SqlTypeUtil.isCharTypeComparable(
                             opBinding.collectOperandTypes(), 0, 1)) {
                         throw EigenbaseResource.instance()
-                            .newTypeNotComparable(
+                            .TypeNotComparable.ex(
                                 opBinding.getOperandType(0).toString(),
                                 opBinding.getOperandType(1).toString());
                     }
@@ -779,7 +776,7 @@ public abstract class SqlTypeStrategies
 
     /**
      * Same as {@link #rtiDyadicStringSumPrecision} and using
-     * {@link #toNullable}
+     * {@link SqlTypeTransforms#toNullable}
      */
     public static final SqlReturnTypeInference
         rtiNullableDyadicStringSumPrecision =
@@ -789,7 +786,8 @@ public abstract class SqlTypeStrategies
 
     /**
      * Same as {@link #rtiDyadicStringSumPrecision} and using
-     * {@link #toNullable}, {@link #toVarying}
+     * {@link SqlTypeTransforms#toNullable},
+     * {@link SqlTypeTransforms#toVarying}.
      */
     public static final SqlReturnTypeInference
         rtiNullableVaryingDyadicStringSumPrecision =

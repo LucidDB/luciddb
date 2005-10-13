@@ -218,7 +218,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
                 columnName);
         if (column == null) {
             throw newPositionalError(
-                FarragoResource.instance().newValidatorUnknownObjectInScope(
+                FarragoResource.instance().ValidatorUnknownObjectInScope.ex(
                     getRepos().getLocalizedObjectName(
                         null,
                         columnName,
@@ -309,7 +309,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
 
         if ((catalog == null) && throwIfNotFound) {
             throw newPositionalError(
-                FarragoResource.instance().newValidatorUnknownObject(
+                FarragoResource.instance().ValidatorUnknownObject.ex(
                     getRepos().getLocalizedObjectName(
                         null,
                         catalogName,
@@ -359,7 +359,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
                 return null;
             }
             throw newPositionalError(
-                FarragoResource.instance().newValidatorUnknownObject(
+                FarragoResource.instance().ValidatorUnknownObject.ex(
                     getRepos().getLocalizedObjectName(
                         catalog.getName(),
                         simpleName,
@@ -384,7 +384,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         }
         if (wrapper == null) {
             throw newPositionalError(
-                FarragoResource.instance().newValidatorUnknownObject(
+                FarragoResource.instance().ValidatorUnknownObject.ex(
                     getRepos().getLocalizedObjectName(
                         null,
                         wrapperName.getSimple(),
@@ -431,7 +431,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
 
         if (element == null) {
             throw newPositionalError(
-                FarragoResource.instance().newValidatorUnknownObject(
+                FarragoResource.instance().ValidatorUnknownObject.ex(
                 getRepos().getLocalizedObjectName(schemaName,
                     qualifiedName.names[qualifiedName.names.length - 1],
                     refClass)));
@@ -451,7 +451,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
                 unqualifiedName.getSimple());
         if (element == null) {
             throw newPositionalError(
-                FarragoResource.instance().newValidatorUnknownObject(
+                FarragoResource.instance().ValidatorUnknownObject.ex(
                     getRepos().getLocalizedObjectName(
                         null,
                         unqualifiedName.getSimple(),
@@ -571,7 +571,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         }
 
         throw newPositionalError(
-            FarragoResource.instance().newValidatorUnknownObject(
+            FarragoResource.instance().ValidatorUnknownObject.ex(
                 getRepos().getLocalizedObjectName(
                     null,
                     simpleName,
@@ -590,7 +590,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
             qualifiedJarName = (SqlIdentifier) sqlNode;
         } catch (Throwable ex) {
             throw FarragoResource.instance().
-                newValidatorRoutineInvalidJarName(
+                ValidatorRoutineInvalidJarName.ex(
                     repos.getLocalizedObjectName(jarName));
         }
         return (FemJar) findSchemaObject(
@@ -626,7 +626,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         } else if (names.length == 1) {
             if (sessionVariables.schemaName == null) {
                 // TODO:  use names for context
-                throw FarragoResource.instance().newValidatorNoDefaultSchema();
+                throw FarragoResource.instance().ValidatorNoDefaultSchema.ex();
             }
             resolved.catalogName = sessionVariables.catalogName;
             resolved.schemaName = sessionVariables.schemaName;
@@ -680,7 +680,7 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
             return parser.newPositionalError(ex);
         } else {
             String msg = parserPos.toString();
-            return FarragoResource.instance().newValidatorPositionContext(
+            return FarragoResource.instance().ValidatorPositionContext.ex(
                 msg, ex);
         }
     }

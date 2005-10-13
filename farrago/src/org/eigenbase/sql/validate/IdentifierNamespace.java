@@ -58,7 +58,7 @@ public class IdentifierNamespace extends AbstractNamespace
         table = validator.catalogReader.getTable(id.names);
         if (table == null) {
             throw validator.newValidationError(id,
-                EigenbaseResource.instance().newTableNameNotFound(
+                EigenbaseResource.instance().TableNameNotFound.ex(
                     id.toString()));
         }
         if (validator.shouldExpandIdentifiers()) {

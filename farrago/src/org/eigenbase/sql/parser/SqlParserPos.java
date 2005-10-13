@@ -124,7 +124,7 @@ public class SqlParserPos
     // implements Object
     public String toString()
     {
-        return EigenbaseResource.instance().getParserContext(
+        return EigenbaseResource.instance().ParserContext.str(
             new Integer(lineNumber),
             new Integer(columnNumber));
     }

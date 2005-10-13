@@ -117,7 +117,7 @@ public class FarragoPluginClassLoader extends URLClassLoader
                     className);
             }
         } catch (Throwable ex) {
-            throw FarragoResource.instance().newPluginJarLoadFailed(
+            throw FarragoResource.instance().PluginJarLoadFailed.ex(
                 libraryName,
                 ex);
         }
@@ -148,7 +148,7 @@ public class FarragoPluginClassLoader extends URLClassLoader
             Manifest manifest = jarConnection.getManifest();
             className = manifest.getMainAttributes().getValue(jarAttributeName);
         } catch (Throwable ex) {
-            throw FarragoResource.instance().newPluginJarLoadFailed(
+            throw FarragoResource.instance().PluginJarLoadFailed.ex(
                 jarUrl,
                 ex);
         }
@@ -173,7 +173,7 @@ public class FarragoPluginClassLoader extends URLClassLoader
             addPluginUrl(url);
             return loadClass(className);
         } catch (Throwable ex) {
-            throw FarragoResource.instance().newPluginJarClassLoadFailed(
+            throw FarragoResource.instance().PluginJarClassLoadFailed.ex(
                 className,
                 jarUrl,
                 ex);

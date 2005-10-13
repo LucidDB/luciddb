@@ -54,7 +54,14 @@ public abstract class SqlUtil
      * this dialect to do what you want.
      */
     public static final SqlDialect dummyDialect =
-        new SqlDialect(dummyDatabaseMetaData());
+        new SqlDialect(dummyDatabaseMetaData("fooBar", "`"));
+
+    /**
+     * A {@link SqlDialect} useful for generating SQL which can be parsed by
+     * the Eigenbase parser, but not much else.
+     */
+    public static final SqlDialect eigenbaseDialect =
+        new SqlDialect(dummyDatabaseMetaData("EigenbaseDummy", "\""));
 
     //~ Methods ---------------------------------------------------------------
 
@@ -298,13 +305,20 @@ public abstract class SqlUtil
     /**
      * Creates a {@link DatabaseMetaData} object good enough to create a
      * {@link SqlDialect} object with, but not good for much else.
+     *
+     * @param databaseProductName Database product name
+     * @param identifierQuoteString Identifier quote string
      */
-    private static DatabaseMetaData dummyDatabaseMetaData()
+    private static DatabaseMetaData dummyDatabaseMetaData(
+        String databaseProductName,
+        String identifierQuoteString)
     {
         return (DatabaseMetaData) Proxy.newProxyInstance(
             null,
             new Class [] { DatabaseMetaData.class },
-            new DatabaseMetaDataInvocationHandler());
+            new DatabaseMetaDataInvocationHandler(
+                databaseProductName,
+                identifierQuoteString));
     }
 
     /**
@@ -665,11 +679,11 @@ public abstract class SqlUtil
     {
         EigenbaseContextException contextExcn =
             line == endLine && col == endCol ?
-            EigenbaseResource.instance().newValidatorContextPoint(
+            EigenbaseResource.instance().ValidatorContextPoint.ex(
                 new Integer(line),
                 new Integer(col),
                 e) :
-            EigenbaseResource.instance().newValidatorContext(
+            EigenbaseResource.instance().ValidatorContext.ex(
                 new Integer(line),
                 new Integer(col),
                 new Integer(endLine),
@@ -689,18 +703,30 @@ public abstract class SqlUtil
     public static class DatabaseMetaDataInvocationHandler
         extends BarfingInvocationHandler
     {
+        private final String databaseProductName;
+        private final String identifierQuoteString;
+
+        public DatabaseMetaDataInvocationHandler(
+            String databaseProductName,
+            String identifierQuoteString)
+        {
+            this.databaseProductName = databaseProductName;
+            this.identifierQuoteString = identifierQuoteString;
+        }
+
         public String getDatabaseProductName()
             throws SQLException
         {
-            return "fooBar";
+            return databaseProductName;
         }
 
         public String getIdentifierQuoteString()
             throws SQLException
         {
-            return "`";
+            return identifierQuoteString;
         }
     }
+
 }
 
 

@@ -87,7 +87,7 @@ public class FarragoModelLoader
             try {
                 setSystemReposProperties();
             } catch (IOException ex) {
-                throw FarragoResource.instance().newCatalogPropsAccessFailed(
+                throw FarragoResource.instance().CatalogPropsAccessFailed.ex(
                     getSystemReposFile().getAbsolutePath(), ex);
             }
         }
