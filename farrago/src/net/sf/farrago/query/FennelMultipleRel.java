@@ -23,9 +23,8 @@
 package net.sf.farrago.query;
 
 import net.sf.farrago.type.FarragoTypeFactory;
-import openjava.ptree.Expression;
-import openjava.ptree.ExpressionList;
-import openjava.ptree.MethodCall;
+import openjava.ptree.*;
+import openjava.mop.OJClass;
 import org.eigenbase.rel.AbstractRelNode;
 import org.eigenbase.rel.RelFieldCollation;
 import org.eigenbase.rel.RelNode;
@@ -98,19 +97,24 @@ public abstract class FennelMultipleRel
     public Object implementFennelChild(FennelRelImplementor implementor)
     {
         final ExpressionList expressionList = new ExpressionList();
+
         for (int i = 0; i < inputs.length; i++) {
             RelNode input = inputs[i];
             Expression expr = 
                 (Expression) implementor.visitChild(this, i, input);
-            expressionList.add(expr);            
+            expressionList.add(expr);
         }
 
         FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(this);
 
         return new MethodCall(
             stmt.getConnectionVariable(),
-            "dummyPair",
-            expressionList);
+            "dummyArray",
+            new ExpressionList(
+                new ArrayAllocationExpression(
+                    OJClass.forClass(Object.class),
+                    new ExpressionList(null),
+                    new ArrayInitializer(expressionList))));
     }
 
     // implement RelNode
