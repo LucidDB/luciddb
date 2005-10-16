@@ -79,7 +79,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     private FarragoSessionPersonality personality;
     
     /** Fennel transaction context for this session */
-    private final FennelTxnContext fennelTxnContext;
+    private FennelTxnContext fennelTxnContext;
 
     /** Qualifiers to assume for unqualified object references */
     private FarragoSessionVariables sessionVariables;
@@ -144,12 +144,23 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         FarragoSessionFactory sessionFactory)
     {
         this.sessionFactory = sessionFactory;
+        this.url = url;
 
-        // TODO:  excn handling
         database = FarragoDatabase.pinReference(sessionFactory);
-
         FarragoDatabase.addSession(database, this);
+        boolean success = false;
+        try {
+            init(info);
+            success = true;
+        } finally {
+            if (!success) {
+                closeAllocation();
+            }
+        }
+    }
 
+    private void init(Properties info)
+    {
         sessionVariables = new FarragoSessionVariables();
 
         String sessionUser = info.getProperty("user", "GUEST");
@@ -197,8 +208,6 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             sessionVariables.catalogName =
                 defaultNamespace.getNamespace().getName();
         }
-
-        this.url = url;
 
         txnCodeCache = new HashMap();
 
@@ -350,6 +359,9 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     // implement FarragoSession
     public boolean isTxnInProgress()
     {
+        if (fennelTxnContext == null) {
+            return false;
+        }
         return fennelTxnContext.isTxnInProgress();
     }
 

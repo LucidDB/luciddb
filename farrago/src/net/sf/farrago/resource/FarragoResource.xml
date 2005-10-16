@@ -603,6 +603,10 @@ column type family is {1} but default value type family is {2}</text>
 <text>Overflow during calculation or cast.</text>
 </exception>
 
+<exception id="450110" name="DmlFailure">
+<text>DML statement execution failed.</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Data wrapper resources 460,000 - 470,000 -->
 <!-- ====================================================================== -->
