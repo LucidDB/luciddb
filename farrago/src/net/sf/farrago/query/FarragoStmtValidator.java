@@ -46,6 +46,8 @@ import org.eigenbase.sql.validate.SqlMoniker;
 import org.eigenbase.sql.validate.SqlMonikerImpl;
 import org.eigenbase.sql.validate.SqlMonikerType;
 import org.eigenbase.sql.parser.*;
+import org.eigenbase.resource.*;
+import org.eigenbase.resgen.*;
 import org.eigenbase.util.*;
 
 /**
@@ -682,6 +684,31 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
             String msg = parserPos.toString();
             return FarragoResource.instance().ValidatorPositionContext.ex(
                 msg, ex);
+        }
+    }
+    
+    // implement FarragoSessionStmtValidator
+    public void validateFeature(
+        ResourceDefinition feature,
+        SqlParserPos context)
+    {
+        
+        FarragoSessionPersonality personality =
+            getSession().getPersonality();
+        if (personality.supportsFeature(feature)) {
+            return;
+        }
+        EigenbaseException ex = new EigenbaseException(
+            feature.instantiate(
+                EigenbaseResource.instance(),
+                Util.emptyObjectArray).toString(),
+            null);
+        if (context != null) {
+            throw SqlUtil.newContextException(
+                context,
+                ex);
+        } else {
+            throw ex;
         }
     }
 }

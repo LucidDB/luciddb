@@ -57,8 +57,7 @@ public class SqlValidatorException extends Exception {
         Throwable cause) {
         super(message, cause);
 
-        // TODO: Force the caller to pass in a Logger as a trace argument for
-        // better context.  Need to extend MonRG for this.
+        // TODO: see note in EigenbaseException constructor
         tracer.throwing("SqlValidatorException", "constructor", this);
         tracer.severe(toString());
     }

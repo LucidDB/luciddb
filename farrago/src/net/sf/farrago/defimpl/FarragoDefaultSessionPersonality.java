@@ -31,6 +31,7 @@ import org.eigenbase.oj.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.fun.*;
+import org.eigenbase.resgen.*;
 
 import net.sf.farrago.session.*;
 import net.sf.farrago.db.*;
@@ -321,6 +322,13 @@ public class FarragoDefaultSessionPersonality
         default:
             return false;
         }
+    }
+
+    // implement FarragoSessionPersonality
+    public boolean supportsFeature(ResourceDefinition feature)
+    {
+        // By default, support everything
+        return true;
     }
 }
 

@@ -33,6 +33,7 @@ import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.trace.EigenbaseTrace;
+import org.eigenbase.resgen.*;
 import org.eigenbase.util.*;
 
 import java.nio.charset.Charset;
@@ -1928,6 +1929,13 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         final SelectNamespace ns = (SelectNamespace) getNamespace(select);
         assert ns.rowType == null;
 
+        if (select.isDistinct()) {
+            validateFeature(
+                EigenbaseResource.instance().SQLFeature_E051_01,
+                select.getModifierNode(
+                    SqlSelectKeyword.Distinct).getParserPosition());
+        }
+
         final SqlNodeList selectItems = select.getSelectList();
         RelDataType fromType = unknownType;
         if (selectItems.size() == 1) {
@@ -2610,8 +2618,27 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         }
         // Delegate validation to the operator.
         call.getOperator().validateCall(call, this, scope, operandScope);
-   }
+    }
 
+    /**
+     * Validates that a particular feature is enabled.  By default, all
+     * features are enabled; subclasses may override this method
+     * to be more discriminating.
+     *
+     * @param feature feature being used, represented as a
+     * resource definition from {@link EigenbaseResource}
+     *
+     * @param context parser position context for error reporting,
+     * or null if none available
+     */
+    protected void validateFeature(
+        ResourceDefinition feature,
+        SqlParserPos context)
+    {
+        // By default, do nothing except to verify that the resource
+        // represents a real feature definition.
+        assert(feature.getProperties().get("FeatureDefinition") != null);
+    }
 }
 
 // End SqlValidator.java

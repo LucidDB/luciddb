@@ -59,7 +59,7 @@ public class EigenbaseException extends RuntimeException
         super(message, cause);
 
         // TODO: Force the caller to pass in a Logger as a trace argument for
-        // better context.  Need to extend MonRG for this.
+        // better context.  Need to extend ResGen for this.
         tracer.throwing("EigenbaseException", "constructor", this);
         tracer.severe(toString());
     }

@@ -75,16 +75,21 @@ public class SqlSelect extends SqlCall
 
     public final boolean isDistinct()
     {
+        return getModifierNode(SqlSelectKeyword.Distinct) != null;
+    }
+
+    public final SqlNode getModifierNode(SqlSelectKeyword modifier)
+    {
         final SqlNodeList keywords =
             (SqlNodeList) operands[SqlSelect.KEYWORDS_OPERAND];
         for (int i = 0; i < keywords.size(); i++) {
             SqlSelectKeyword keyword = (SqlSelectKeyword)
                 SqlLiteral.symbolValue(keywords.get(i));
-            if (keyword == SqlSelectKeyword.Distinct) {
-                return true;
+            if (keyword == modifier) {
+                return keywords.get(i);
             }
         }
-        return false;
+        return null;
     }
 
     public final SqlNode getFrom()
