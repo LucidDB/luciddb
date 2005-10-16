@@ -276,15 +276,14 @@ public class FarragoDbStmtContext implements FarragoSessionStmtContext
                 boolean found = resultSet.next();
                 assert (found);
                 updateCount = resultSet.getInt(1);
-                // REVIEW jvs 13-Sept-2004:  johnp, is this still needed?
-                while (resultSet.next()) {
-                }
+                boolean superfluousRowCounts = resultSet.next();
+                assert (!superfluousRowCounts);
                 if (tracer.isLoggable(Level.FINE)) {
                     tracer.fine("Update count = " + updateCount);
                 }
                 success = true;
             } catch (SQLException ex) {
-                throw Util.newInternal(ex);
+                throw FarragoResource.instance().DmlFailure.ex(ex);
             } finally {
                 if (!success) {
                     session.endTransactionIfAuto(false);

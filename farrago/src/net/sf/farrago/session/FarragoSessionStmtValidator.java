@@ -37,6 +37,8 @@ import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.util.*;
+import org.eigenbase.resgen.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.validate.SqlMoniker;
@@ -285,8 +287,8 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
       * partially qualified object name in the format of 'schema.object', or an 
       * unqualified name in the format of 'object'
       *
-      * @return the list of all {@link SqlMoniker} object (schema and table) names 
-      * under the above criteria
+      * @return the list of all {@link SqlMoniker} object (schema and table)
+      * names under the above criteria
       */
     public SqlMoniker [] getAllSchemaObjectNames(String [] names);
 
@@ -296,6 +298,19 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      * @param pos new position to set, or null to clear
      */
     public void setParserPosition(SqlParserPos pos);
+
+    /**
+     * Validates that a particular feature is enabled.
+     *
+     * @param feature feature being used, represented as a
+     * resource definition from {@link EigenbaseResource}
+     *
+     * @param context parser position context for error reporting,
+     * or null if none available
+     */
+    public void validateFeature(
+        ResourceDefinition feature,
+        SqlParserPos context);
 }
 
 

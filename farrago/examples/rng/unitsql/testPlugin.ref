@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/examples/rng/unitsql/testPlugin.sql#5 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/examples/rng/unitsql/testPlugin.sql#1 $
 0: jdbc:farrago:> -- Test usage of RNG plugin
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify that without plugin enabled, custom syntax is unrecognized
@@ -237,6 +237,9 @@ Error: DDL validation error: Reference to unknown random number generator "RNG_N
 0: jdbc:farrago:> drop rng rng2 restrict;
 Error: Dropping random number generator "RNGTEST"."RNG2" requires CASCADE because other objects still reference it (state=,code=0)
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  SELECT DISTINCT feature is disabled in this personality
+0: jdbc:farrago:> select distinct empno from sales.emps order by empno;
+Error: SELECT DISTINCT not supported (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- now, disable plugin personality for this session
 0: jdbc:farrago:> alter session implementation set default;
@@ -294,5 +297,15 @@ Was expecting:
 0: jdbc:farrago:> -- verify that DROP CASCADE works correctly even without DDL personality
 0: jdbc:farrago:> -- TODO:  use Java filesystem access to verify creation/deletion of .dat file
 0: jdbc:farrago:> drop schema rngtest cascade;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify that SELECT DISTINCT is working again
+0: jdbc:farrago:> select distinct empno from sales.emps order by empno;
++--------+
+| EMPNO  |
++--------+
+| 100    |
+| 110    |
+| 120    |
++--------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

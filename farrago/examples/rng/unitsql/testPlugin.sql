@@ -104,6 +104,8 @@ select * from random_udf_view;
 -- should fail:  dependency
 drop rng rng2 restrict;
 
+-- should fail:  SELECT DISTINCT feature is disabled in this personality
+select distinct empno from sales.emps order by empno;
 
 -- now, disable plugin personality for this session
 alter session implementation set default;
@@ -128,3 +130,6 @@ select * from random_udf_view;
 -- verify that DROP CASCADE works correctly even without DDL personality
 -- TODO:  use Java filesystem access to verify creation/deletion of .dat file
 drop schema rngtest cascade;
+
+-- verify that SELECT DISTINCT is working again
+select distinct empno from sales.emps order by empno;

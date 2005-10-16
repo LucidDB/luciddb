@@ -25,6 +25,8 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.rng.resource.*;
 
 import org.eigenbase.util.*;
+import org.eigenbase.resource.*;
+import org.eigenbase.resgen.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.oj.rex.*;
 
@@ -108,10 +110,23 @@ public class FarragoRngPluginFactory
             return FarragoRngOperatorTable.rngInstance();
         }
         
+        // implement FarragoSessionPersonality
         public OJRexImplementorTable getOJRexImplementorTable(
             FarragoSessionPreparingStmt preparingStmt)
         {
             return FarragoRngImplementorTable.rngInstance();
+        }
+
+        // implement FarragoSessionPersonality
+        public boolean supportsFeature(ResourceDefinition feature)
+        {
+            // We disable SELECT DISTINCT in this personality just
+            // so we can test the ability to selectively disable features
+            // within specific personalities.
+            if (feature == EigenbaseResource.instance().SQLFeature_E051_01) {
+                return false;
+            }
+            return defaultPersonality.supportsFeature(feature);
         }
         
         // NOTE:  we don't specify defineDdlHandlers here to avoid

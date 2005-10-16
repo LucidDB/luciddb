@@ -26,6 +26,7 @@ import org.eigenbase.oj.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.jmi.*;
+import org.eigenbase.resgen.*;
 import org.eigenbase.reltype.RelDataType;
 
 import java.util.*;
@@ -179,6 +180,8 @@ public interface FarragoSessionPersonality extends FarragoStreamFactoryProvider
      */
     public JmiQueryProcessor newJmiQueryProcessor(String language);
 
+    // TODO jvs 15-Oct-2005: replace this with the more generic
+    // supportsFeature() method below
     /**
      * Returns whether a type is valid in this database.
      *
@@ -186,7 +189,17 @@ public interface FarragoSessionPersonality extends FarragoStreamFactoryProvider
      *
      * @return whether a type is valid in this database
      */
-    boolean isSupportedType(SqlTypeName type);
+    public boolean isSupportedType(SqlTypeName type);
+
+    /**
+     * Tests whether a feature is supported in this personality.
+     *
+     * @param feature {@link EigenbaseResource} resource definition
+     * representing the feature to be tested
+     *
+     * @return true iff feature is supported
+     */
+    public boolean supportsFeature(ResourceDefinition feature);
 }
 
 // End FarragoSessionPersonality.java

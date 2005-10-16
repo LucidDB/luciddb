@@ -249,6 +249,21 @@ public abstract class FarragoTestCase extends DiffTestCase
             connection.close();
             connection = null;
         }
+
+        // This method shouldn't be called except by the "last one out".  So
+        // if other sessions are still hanging around, that's bad; fail
+        // tests so some unlucky person will have to track them down.
+        // Hint:
+        /*
+        grep -n -F "`echo pinReference && echo disconnectSession`" \
+        FarragoTrace.log | more
+        */
+        if (FarragoDatabase.isReferenced()) {
+            String msg = "Leaked test sessions detected, aborting!";
+            System.err.println(msg);
+            tracer.severe(msg);
+            Runtime.getRuntime().halt(1);
+        }
     }
 
     private static class ShutdownThread extends Thread

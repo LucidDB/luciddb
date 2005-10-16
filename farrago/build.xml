@@ -731,6 +731,7 @@ require version '${required.ant.version}'."/>
       classpathref="farrago.3p.classpath">
       <include name="**/EigenbaseException.java" />
       <include name="**/EigenbaseContextException.java" />
+      <include name="**/EigenbaseFeatureException.java" />
       <include name="**/SqlValidatorException.java" />
     </farrago.javaCompile>
     <taskdef name="resgen" classname="org.eigenbase.resgen.ResourceGenTask">
@@ -873,14 +874,9 @@ require version '${required.ant.version}'."/>
     <antcall target="testRngPlugin"/>
     <antcall target="exportCatalog"/>
     <antcall target="junit"/>
-    <!-- TODO jvs 13-Oct-2005:  track down shutdown/restart crash 
-         and eliminate this -->
-    <sleep seconds="5"/>
-    <antcall target="restoreCatalog"/>
     <antcall target="regressionWithoutBuild"/>
     <antcall target="testCleanup"/>
-    <!-- TODO jvs 13-Oct-2005:  re-enable once restoreCatalog above is gone -->
-    <!-- antcall target="compareCatalogExport"/ -->
+    <antcall target="compareCatalogExport"/>
     <antcall target="macker"/>
     <antcall target="checkSourceFilePreambles"/>
   </target>

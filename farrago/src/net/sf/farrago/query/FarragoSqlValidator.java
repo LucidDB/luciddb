@@ -28,7 +28,9 @@ import java.math.*;
 
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.validate.SqlValidatorImpl;
+import org.eigenbase.resgen.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 import net.sf.farrago.session.FarragoSessionPersonality;
@@ -184,7 +186,16 @@ class FarragoSqlValidator extends SqlValidatorImpl
         super.validateDelete(call);
         getPreparingStmt().clearDmlValidation();
     }
+    
+    // override SqlValidatorImpl
+    protected void validateFeature(
+        ResourceDefinition feature,
+        SqlParserPos context)
+    {
+        super.validateFeature(feature, context);
+        getPreparingStmt().getStmtValidator().validateFeature(
+            feature, context);
+    }
 }
-
 
 // End FarragoSqlValidator.java

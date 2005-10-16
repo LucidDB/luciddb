@@ -29,6 +29,14 @@
 	locale="en_US"
 	exceptionClassName="org.eigenbase.util.EigenbaseException">
 
+<!--
+======================================================================
+TODO jvs 15-Oct-2005: exceptions corresponding to standard SQL
+exceptions should have a property named SQLSTATE containing the
+relevant standard code.  See IllegalIntervalLiteral for an example.
+======================================================================
+-->
+
 <!-- ====================================================================== -->
 <!-- Eigenbase Parser resources 100,000 - 110,000 -->
 <!-- ====================================================================== -->
@@ -51,6 +59,7 @@
 </exception>
 
 <exception id="100050" name="IllegalIntervalLiteral">
+    <property name="SQLSTATE">42000</property>
     <text>Illegal INTERVAL literal {0}; at {1}</text>
 </exception>
 
@@ -417,6 +426,34 @@
 <exception id="130080" name="DynamicParamIllegal" className="org.eigenbase.sql.validate.SqlValidatorException">
     <text>Illegal use of dynamic parameter</text>
 </exception>
+
+<!--
+======================================================================
+The exceptions below define Eigenbase features which can be
+independently enabled or disabled.  For features defined by SQL:2003
+(e.g. Annex F of Part 2, SQL feature taxonomy), the name of the
+resource should be of the form SQLFeature_XXXX_YY where XXXX-YY is the
+Feature ID.  The text of the exception should be the message to be
+returned when a user attempts to use a disabled feature.  No id
+attribute is required; for feature resources, the name attribute is
+used instead.  All feature exceptions must be defined with property
+FeatureDefinition; the property value should be a reference to the
+specification in which the feature is defined.
+
+TBD: naming convention for extension features
+======================================================================
+-->
+
+<!-- ====================================================================== -->
+<!-- SQL:2003 Section 2 Annex F -->
+<!-- ====================================================================== -->
+
+<exception name="SQLFeature_E051_01">
+    <property name="FeatureDefinition">SQL:2003 Part 2 Annex F</property>
+    <text>SELECT DISTINCT not supported</text>
+</exception>
+
+<!-- ====================================================================== -->
 
 <!-- End of last error section ============================================ -->
 
