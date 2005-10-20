@@ -29,6 +29,7 @@ import org.eigenbase.sql.type.SqlTypeFactoryImpl;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.validate.SqlValidatorWithHints;
 import org.eigenbase.sql.validate.SqlMoniker;
+import org.eigenbase.sql.validate.SqlMonikerType;
 import org.eigenbase.test.SqlValidatorTestCase;
 import org.eigenbase.test.MockCatalogReader;
 import org.eigenbase.util.TestUtil;
@@ -511,9 +512,18 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
 
     private String[] convertCompletionHints(SqlMoniker[] results)
     {
-        String [] strHints = new String[results.length];
+        int cnt = 0;
         for (int i = 0; i < results.length; i++) {
-            strHints[i] = results[i].toString();
+            if (results[i].getType() != SqlMonikerType.Function) {
+                cnt++;
+            }
+        }
+        String [] strHints = new String[cnt];
+        cnt = 0;
+        for (int i = 0; i < results.length; i++) {
+            if (results[i].getType() != SqlMonikerType.Function) {
+                strHints[cnt++] = results[i].toString();
+            }
         }
         return strHints;
     }
