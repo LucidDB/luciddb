@@ -565,6 +565,8 @@ SqlSelect SqlSelect() :
     SqlNode having;
     SqlNodeList windowDecls;
     SqlParserPos pos;
+    SqlParserPos selectListPos;
+    SqlNode selectItem;
 }
 {
     <SELECT>
@@ -591,8 +593,11 @@ SqlSelect SqlSelect() :
     having = HavingOpt()
     windowDecls = WindowOpt()
     {
+	selectItem = (SqlNode)selectList.get(0);
+        selectListPos = selectItem.getParserPosition();	
         return SqlStdOperatorTable.selectOperator.createCall(
-            new SqlNodeList(keywords, pos), new SqlNodeList(selectList,pos),
+            new SqlNodeList(keywords, pos), 
+            new SqlNodeList(selectList,selectListPos.plusAll(selectList)),
             fromClause, where, groupBy, having, windowDecls, null, pos);
     }
 }

@@ -580,6 +580,9 @@ public class SqlValidatorTestCase extends TestCase
             for (int i = 0; i < ((SqlSelect) n).getOperands().length; i++) {
                 node = ((SqlSelect) n).getOperands()[i];
                 if (node instanceof SqlCall) {
+                    if (node.isA(SqlKind.As)) {
+                        node = ((SqlCall) node).operands[0];
+                    }
                     node = ((SqlCall) ((SqlCall) node).getOperands()[0]).getOperands()[0];
                     break;
                 }

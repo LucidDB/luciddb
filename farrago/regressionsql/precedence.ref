@@ -48,7 +48,7 @@
 | 20.0    |
 +---------+
 0: jdbc:farrago:> values (2.0*{fn pow(2.0, 2.0)}+3.0*{fn pow(2.0, 2.0)});
-Error: From line 1, column 13 to line 1, column 15: Function '{fn POW}' is not defined (state=,code=0)
+Error: From line 1, column 13 to line 1, column 28: Function '{fn POW}' is not defined (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values (true is unknown is not unknown);
 +---------+

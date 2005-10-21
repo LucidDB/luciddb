@@ -197,6 +197,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                     && identifier.names[0].equals("*")) {
 
                 ArrayList tableNames = scope.childrenNames;
+                SqlParserPos starPosition = identifier.getParserPosition();
                 for (int i = 0; i < tableNames.size(); i++) {
                     String tableName = (String) tableNames.get(i);
                     final SqlValidatorNamespace childScope = scope.getChild(tableName);
@@ -213,7 +214,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                         final SqlNode exp =
                             new SqlIdentifier(
                                 new String [] {tableName, columnName},
-                                SqlParserPos.ZERO);
+                                starPosition);
                         addToSelectList(selectItems, aliases, types, exp,
                             scope);
                     }
@@ -2132,8 +2133,11 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 aliasList, typeList);
         }
 
+        // Create the new select list with expanded items.  Pass through
+        // the original parser position so that any over all failures can
+        // still reference the original input text
         SqlNodeList newSelectList =
-            new SqlNodeList(expandedSelectItems, SqlParserPos.ZERO);
+            new SqlNodeList(expandedSelectItems, selectItems.getParserPosition());
         if (shouldExpandIdentifiers()) {
             select.setOperand(SqlSelect.SELECT_OPERAND, newSelectList);
         }
