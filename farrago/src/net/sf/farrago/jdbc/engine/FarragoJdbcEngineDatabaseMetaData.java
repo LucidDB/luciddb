@@ -1176,7 +1176,20 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         boolean approximate)
         throws SQLException
     {
-        throw new UnsupportedOperationException("getIndexInfo");
+        QueryBuilder queryBuilder =
+            new QueryBuilder(
+                "select * from sys_boot.jdbc_metadata.index_info_view");
+        queryBuilder.addExact("table_cat", catalog);
+        queryBuilder.addExact("table_schem", schema);
+        queryBuilder.addExact("table_name", table);
+        if (unique) {
+            queryBuilder.addExact("non_unique", new Boolean(false));
+        }
+        // TODO jvs 22-Oct-2005:  do something with parameter "approximate"
+        // as part of implementing stats
+        queryBuilder.addOrderBy(
+            "non_unique, type, index_name, ordinal_position");
+        return queryBuilder.execute();
     }
 
     // implement DatabaseMetaData

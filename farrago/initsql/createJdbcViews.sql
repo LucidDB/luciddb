@@ -83,6 +83,16 @@ when typename='TIMESTAMP' then ''''
 else cast(null as varchar(128))
 end;
 
+-- NOTE:  currently unused return codes are 0 for statistic, 2 for hashed
+create function convert_cwm_index_attributes_to_type(is_clustered boolean)
+returns smallint
+contains sql
+deterministic
+return case
+when is_clustered then 1
+else 3
+end;
+
 -- NOTE:  don't include ORDER BY in the view definitions
 
 create view schemas_view_internal as
@@ -464,7 +474,54 @@ create view primary_keys_view as
         k."mofId" = c."KeyConstraint"
 ;
 grant select on primary_keys_view to public;
-        
+
+-- TODO:  index/table statistics
+
+create view index_info_internal as
+    select
+        t.table_cat,
+        t.table_schem,
+        t.table_name,
+        (not i."isUnique") as non_unique,
+        t.table_cat as index_qualifier,
+        i."name" as index_name,
+        convert_cwm_index_attributes_to_type(i."isClustered") as type,
+        0 as "CARDINALITY",
+        0 as pages,
+        cast(null as varchar(128)) as filter_condition,
+        i."mofId"
+    from 
+        tables_view_internal t
+    inner join
+        sys_fem."MED"."LocalIndex" i
+    on
+        t."mofId" = i."spannedClass"
+;
+
+create view index_info_view as
+    select
+        i.table_cat,
+        i.table_schem,
+        i.table_name,
+        i.non_unique,
+        i.table_cat as index_qualifier,
+        i.index_name,
+        i.type,
+        c."ordinal" + 1 as ordinal_position,
+        c."name" as column_name,
+        'A' as asc_ord_desc,
+        i."CARDINALITY",
+        i.pages,
+        i.filter_condition
+    from 
+        index_info_internal i
+    inner join
+        sys_fem."MED"."LocalIndexColumn" c
+    on
+        i."mofId" = c."index"
+;
+grant select on index_info_view to public;
+    
 -- TODO:  all the rest
 
 -- just a placeholder for now

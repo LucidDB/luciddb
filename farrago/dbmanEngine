@@ -1,0 +1,12 @@
+#!/bin/bash
+# $Id$
+# Run the hsqldb Database Manager tool
+# with an embedded Farrago engine
+
+source ./defineFarragoRuntime.sh
+
+java ${SERVER_JAVA_ARGS} org.hsqldb.util.DatabaseManagerSwing \
+--driver net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver \
+--url jdbc:farrago: \
+--user sa \
+$*

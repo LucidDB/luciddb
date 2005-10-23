@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/initsql/createJdbcViews.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/initsql/createJdbcViews.sql#3 $
 0: jdbc:farrago:> -- This script creates a view schema used by JDBC metadata calls
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set verbose true
@@ -81,6 +81,16 @@
 . . . . . . . . > when typename='TIME' then ''''
 . . . . . . . . > when typename='TIMESTAMP' then ''''
 . . . . . . . . > else cast(null as varchar(128))
+. . . . . . . . > end;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- NOTE:  currently unused return codes are 0 for statistic, 2 for hashed
+0: jdbc:farrago:> create function convert_cwm_index_attributes_to_type(is_clustered boolean)
+. . . . . . . . > returns smallint
+. . . . . . . . > contains sql
+. . . . . . . . > deterministic
+. . . . . . . . > return case
+. . . . . . . . > when is_clustered then 1
+. . . . . . . . > else 3
 . . . . . . . . > end;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE:  don't include ORDER BY in the view definitions
@@ -464,7 +474,54 @@
 . . . . . . . . >         k."mofId" = c."KeyConstraint"
 . . . . . . . . > ;
 0: jdbc:farrago:> grant select on primary_keys_view to public;
-0: jdbc:farrago:>         
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- TODO:  index/table statistics
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view index_info_internal as
+. . . . . . . . >     select
+. . . . . . . . >         t.table_cat,
+. . . . . . . . >         t.table_schem,
+. . . . . . . . >         t.table_name,
+. . . . . . . . >         (not i."isUnique") as non_unique,
+. . . . . . . . >         t.table_cat as index_qualifier,
+. . . . . . . . >         i."name" as index_name,
+. . . . . . . . >         convert_cwm_index_attributes_to_type(i."isClustered") as type,
+. . . . . . . . >         0 as "CARDINALITY",
+. . . . . . . . >         0 as pages,
+. . . . . . . . >         cast(null as varchar(128)) as filter_condition,
+. . . . . . . . >         i."mofId"
+. . . . . . . . >     from 
+. . . . . . . . >         tables_view_internal t
+. . . . . . . . >     inner join
+. . . . . . . . >         sys_fem."MED"."LocalIndex" i
+. . . . . . . . >     on
+. . . . . . . . >         t."mofId" = i."spannedClass"
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view index_info_view as
+. . . . . . . . >     select
+. . . . . . . . >         i.table_cat,
+. . . . . . . . >         i.table_schem,
+. . . . . . . . >         i.table_name,
+. . . . . . . . >         i.non_unique,
+. . . . . . . . >         i.table_cat as index_qualifier,
+. . . . . . . . >         i.index_name,
+. . . . . . . . >         i.type,
+. . . . . . . . >         c."ordinal" + 1 as ordinal_position,
+. . . . . . . . >         c."name" as column_name,
+. . . . . . . . >         'A' as asc_ord_desc,
+. . . . . . . . >         i."CARDINALITY",
+. . . . . . . . >         i.pages,
+. . . . . . . . >         i.filter_condition
+. . . . . . . . >     from 
+. . . . . . . . >         index_info_internal i
+. . . . . . . . >     inner join
+. . . . . . . . >         sys_fem."MED"."LocalIndexColumn" c
+. . . . . . . . >     on
+. . . . . . . . >         i."mofId" = c."index"
+. . . . . . . . > ;
+0: jdbc:farrago:> grant select on index_info_view to public;
+0: jdbc:farrago:>     
 0: jdbc:farrago:> -- TODO:  all the rest
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- just a placeholder for now
