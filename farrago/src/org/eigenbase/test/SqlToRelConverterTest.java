@@ -275,7 +275,7 @@ public class SqlToRelConverterTest extends TestCase
             SqlValidatorCatalogReader catalogReader,
             RelDataTypeFactory typeFactory)
         {
-            return SqlValidatorUtil.newValidator(
+            return new FarragoTestValidator(
                 getOperatorTable(),
                 new MockCatalogReader(typeFactory),
                 typeFactory);
@@ -298,13 +298,31 @@ public class SqlToRelConverterTest extends TestCase
         }
     }
 
+    private static class FarragoTestValidator extends SqlValidatorImpl
+    {
+        public FarragoTestValidator(
+            SqlOperatorTable opTab,
+            SqlValidatorCatalogReader catalogReader,
+            RelDataTypeFactory typeFactory)
+        {
+            super(opTab, catalogReader, typeFactory);
+        }
+
+        // override SqlValidator
+        protected boolean shouldExpandIdentifiers()
+        {
+            return true;
+        }
+
+    }
+
     //~ TESTS --------------------------------
 
     public void testIntegerLiteral()
     {
         check("select 1 from emp",
             "ProjectRel(EXPR$0=[1])" + NL +
-            "  TableAccessRel(table=[[EMP]])" + NL);
+            "  TableAccessRel(table=[[SALES, EMP]])" + NL);
     }
 
     public void testGroup()
@@ -313,21 +331,21 @@ public class SqlToRelConverterTest extends TestCase
             "ProjectRel(DEPTNO=[$0])" + NL +
             "  AggregateRel(groupCount=[1])" + NL +
             "    ProjectRel(field#0=[$7])" + NL +
-            "      TableAccessRel(table=[[EMP]])" + NL);
+            "      TableAccessRel(table=[[SALES, EMP]])" + NL);
 
         // just one agg
         check("select deptno, sum(sal) from emp group by deptno",
             "ProjectRel(DEPTNO=[$0], EXPR$1=[$1])" + NL +
             "  AggregateRel(groupCount=[1], agg#0=[SUM(1)])" + NL +
             "    ProjectRel(field#0=[$7], field#1=[$5])" + NL +
-            "      TableAccessRel(table=[[EMP]])" + NL);
+            "      TableAccessRel(table=[[SALES, EMP]])" + NL);
 
         // expressions inside and outside aggs
         check("select deptno + 4, sum(sal), sum(3 + sal), 2 * sum(sal) from emp group by deptno",
             "ProjectRel(EXPR$0=[+($0, 4)], EXPR$1=[$1], EXPR$2=[$2], EXPR$3=[*(2, $3)])" + NL +
             "  AggregateRel(groupCount=[1], agg#0=[SUM(1)], agg#1=[SUM(2)], agg#2=[SUM(3)])" + NL +
             "    ProjectRel(field#0=[$7], field#1=[$5], field#2=[+(3, $5)], field#3=[$5])" + NL +
-            "      TableAccessRel(table=[[EMP]])" + NL);
+            "      TableAccessRel(table=[[SALES, EMP]])" + NL);
 
         // empty group-by clause, having
         check("select sum(sal + sal) from emp having sum(sal) > 10",
@@ -335,7 +353,7 @@ public class SqlToRelConverterTest extends TestCase
             "  ProjectRel(EXPR$0=[$0])" + NL +
             "    AggregateRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[SUM(1)])" + NL +
             "      ProjectRel(field#0=[+($5, $5)], field#1=[$5])" + NL +
-            "        TableAccessRel(table=[[EMP]])" + NL);
+            "        TableAccessRel(table=[[SALES, EMP]])" + NL);
     }
 
     public void testGroupBug281() {
@@ -347,7 +365,7 @@ public class SqlToRelConverterTest extends TestCase
             "  ProjectRel(NAME=[$0])" + NL +
             "    AggregateRel(groupCount=[1])" + NL +
             "      ProjectRel(field#0=[$1])" + NL +
-            "        TableAccessRel(table=[[DEPT]])" + NL);
+            "        TableAccessRel(table=[[SALES, DEPT]])" + NL);
 
         // Try to confuse it with spurious columns.
         check("select name, foo from (" +
@@ -358,7 +376,7 @@ public class SqlToRelConverterTest extends TestCase
             "  ProjectRel(DEPTNO=[$1], NAME=[$0], FOO=[$3])" + NL +
             "    AggregateRel(groupCount=[3], agg#0=[COUNT(3)])" + NL +
             "      ProjectRel(field#0=[$1], field#1=[$0], field#2=[$1], field#3=[$0])" + NL +
-            "        TableAccessRel(table=[[DEPT]])" + NL);
+            "        TableAccessRel(table=[[SALES, DEPT]])" + NL);
     }
 
     public void testUnnest() {
@@ -379,7 +397,7 @@ public class SqlToRelConverterTest extends TestCase
                 "    ProjectRel(EXPR$0=[$0])" + NL +
                 "      CollectRel" + NL +
                 "        ProjectRel(DEPTNO=[$0], NAME=[$1])" + NL +
-                "          TableAccessRel(table=[[DEPT]])" + NL);
+                "          TableAccessRel(table=[[SALES, DEPT]])" + NL);
 
     }
 
@@ -392,12 +410,12 @@ public class SqlToRelConverterTest extends TestCase
             "        OneRowRel" + NL +
             "    CollectRel" + NL +
             "      ProjectRel(DEPTNO=[$0])" + NL +
-            "        TableAccessRel(table=[[DEPT]])" + NL);
+            "        TableAccessRel(table=[[SALES, DEPT]])" + NL);
 
         check("select 'a',multiset[10] from dept",
             "ProjectRel(EXPR$0=[_ISO-8859-1'a'], EXPR$1=[$2])" + NL +
             "  JoinRel(condition=[true], joinType=[left])" + NL +
-            "    TableAccessRel(table=[[DEPT]])" + NL +
+            "    TableAccessRel(table=[[SALES, DEPT]])" + NL +
             "    CollectRel" + NL +
             "      UnionRel(all=[true])" + NL +
             "        ProjectRel(EXPR$0=[10])" + NL +
@@ -406,7 +424,7 @@ public class SqlToRelConverterTest extends TestCase
         check("select 'abc',multiset[deptno,sal] from emp",
             "ProjectRel(EXPR$0=[_ISO-8859-1'abc'], EXPR$1=[$8])" + NL +
             "  CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset7, var1=offset5]])" + NL +
-            "    TableAccessRel(table=[[EMP]])" + NL +
+            "    TableAccessRel(table=[[SALES, EMP]])" + NL +
             "    CollectRel" + NL +
             "      UnionRel(all=[true])" + NL +
             "        ProjectRel(EXPR$0=[$cor0.DEPTNO])" + NL +
@@ -423,11 +441,11 @@ public class SqlToRelConverterTest extends TestCase
 
             "ProjectRel(DEPTNO=[$0], NAME=[$1], EMPSET=[$2])" + NL +
             "  CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset0]])" + NL +
-            "    TableAccessRel(table=[[DEPT]])" + NL +
+            "    TableAccessRel(table=[[SALES, DEPT]])" + NL +
             "    CollectRel" + NL +
             "      ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])" + NL +
             "        FilterRel(condition=[=($7, $cor0.DEPTNO)])" + NL +
-            "          TableAccessRel(table=[[EMP]])" + NL);
+            "          TableAccessRel(table=[[SALES, EMP]])" + NL);
     }
 
     public void testExists() {
@@ -435,21 +453,21 @@ public class SqlToRelConverterTest extends TestCase
             "ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])" + NL +
             "  FilterRel(condition=[$9])" + NL +
             "    JoinRel(condition=[true], joinType=[left])" + NL +
-            "      TableAccessRel(table=[[EMP]])" + NL +
+            "      TableAccessRel(table=[[SALES, EMP]])" + NL +
             "      ProjectRel(EXPR$0=[$0], $indicator=[true])" + NL +
             "        ProjectRel(EXPR$0=[1])" + NL +
             "          FilterRel(condition=[=($0, 55)])" + NL +
-            "            TableAccessRel(table=[[DEPT]])" + NL);
+            "            TableAccessRel(table=[[SALES, DEPT]])" + NL);
 
         check("select*from emp where exists (select 1 from dept where emp.deptno=dept.deptno)",
             "ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])" + NL +
             "  FilterRel(condition=[$9])" + NL +
             "    CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset7]])" + NL +
-            "      TableAccessRel(table=[[EMP]])" + NL +
+            "      TableAccessRel(table=[[SALES, EMP]])" + NL +
             "      ProjectRel(EXPR$0=[$0], $indicator=[true])" + NL +
             "        ProjectRel(EXPR$0=[1])" + NL +
             "          FilterRel(condition=[=($cor0.DEPTNO, $0)])" + NL +
-            "            TableAccessRel(table=[[DEPT]])" + NL);
+            "            TableAccessRel(table=[[SALES, DEPT]])" + NL);
     }
 
     public void testUnnestSelect() {
@@ -459,7 +477,7 @@ public class SqlToRelConverterTest extends TestCase
             "    ProjectRel(EXPR$0=[$0])" + NL +
             "      ProjectRel(EXPR$0=[$2])" + NL +
             "        CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset0]])" + NL +
-            "          TableAccessRel(table=[[DEPT]])" + NL +
+            "          TableAccessRel(table=[[SALES, DEPT]])" + NL +
             "          CollectRel" + NL +
             "            UnionRel(all=[true])" + NL +
             "              ProjectRel(EXPR$0=[$cor0.DEPTNO])" + NL +
@@ -470,17 +488,17 @@ public class SqlToRelConverterTest extends TestCase
         check("select * from emp, LATERAL (select * from dept where emp.deptno=dept.deptno)",
             "ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], DEPTNO0=[$8], NAME=[$9])" + NL +
             "  CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset7]])" + NL +
-            "    TableAccessRel(table=[[EMP]])" + NL +
+            "    TableAccessRel(table=[[SALES, EMP]])" + NL +
             "    ProjectRel(DEPTNO=[$0], NAME=[$1])" + NL +
             "      FilterRel(condition=[=($cor0.DEPTNO, $0)])" + NL +
-            "        TableAccessRel(table=[[DEPT]])" + NL);
+            "        TableAccessRel(table=[[SALES, DEPT]])" + NL);
     }
 
     public void testElement() {
         check("select element(multiset[5]) from emp",
             "ProjectRel(EXPR$0=[ELEMENT($8)])" + NL +
             "  JoinRel(condition=[true], joinType=[left])" + NL +
-            "    TableAccessRel(table=[[EMP]])" + NL +
+            "    TableAccessRel(table=[[SALES, EMP]])" + NL +
             "    CollectRel" + NL +
             "      UnionRel(all=[true])" + NL +
             "        ProjectRel(EXPR$0=[5])" + NL +
@@ -500,18 +518,18 @@ public class SqlToRelConverterTest extends TestCase
             "ProjectRel(EMPNO=[$0])" + NL +
             "  UnionRel(all=[true])" + NL +
             "    ProjectRel(EMPNO=[$0])" + NL +
-            "      TableAccessRel(table=[[EMP]])" + NL +
+            "      TableAccessRel(table=[[SALES, EMP]])" + NL +
             "    ProjectRel(DEPTNO=[$0])" + NL +
-            "      TableAccessRel(table=[[DEPT]])" + NL);
+            "      TableAccessRel(table=[[SALES, DEPT]])" + NL);
 
         // union without all
         check("select empno from emp union select deptno from dept",
             "ProjectRel(EMPNO=[$0])" + NL +
             "  UnionRel(all=[false])" + NL +
             "    ProjectRel(EMPNO=[$0])" + NL +
-            "      TableAccessRel(table=[[EMP]])" + NL +
+            "      TableAccessRel(table=[[SALES, EMP]])" + NL +
             "    ProjectRel(DEPTNO=[$0])" + NL +
-            "      TableAccessRel(table=[[DEPT]])" + NL);
+            "      TableAccessRel(table=[[SALES, DEPT]])" + NL);
 
         // union with values
         check("values (10), (20)" + NL +
@@ -529,7 +547,7 @@ public class SqlToRelConverterTest extends TestCase
             "            ProjectRel(EXPR$0=[20])" + NL +
             "              OneRowRel" + NL +
             "        ProjectRel(EXPR$0=[34])" + NL +
-            "          TableAccessRel(table=[[EMP]])" + NL +
+            "          TableAccessRel(table=[[SALES, EMP]])" + NL +
             "    ProjectRel(EXPR$0=[$0])" + NL +
             "      UnionRel(all=[true])" + NL +
             "        ProjectRel(EXPR$0=[30])" + NL +
@@ -544,16 +562,16 @@ public class SqlToRelConverterTest extends TestCase
             "  values (45), (67))",
             "ProjectRel(DEPTNO=[$7])" + NL +
             "  JoinRel(condition=[true], joinType=[inner])" + NL +
-            "    TableAccessRel(table=[[EMP]])" + NL +
+            "    TableAccessRel(table=[[SALES, EMP]])" + NL +
             "    ProjectRel(EMPNO=[$0])" + NL +
             "      UnionRel(all=[true])" + NL +
             "        ProjectRel(EMPNO=[$0])" + NL +
             "          UnionRel(all=[true])" + NL +
             "            ProjectRel(EMPNO=[$0])" + NL +
-            "              TableAccessRel(table=[[EMP]])" + NL +
+            "              TableAccessRel(table=[[SALES, EMP]])" + NL +
             "            ProjectRel(DEPTNO=[$0])" + NL +
             "              FilterRel(condition=[>($0, 20)])" + NL +
-            "                TableAccessRel(table=[[DEPT]])" + NL +
+            "                TableAccessRel(table=[[SALES, DEPT]])" + NL +
             "        ProjectRel(EXPR$0=[$0])" + NL +
             "          UnionRel(all=[true])" + NL +
             "            ProjectRel(EXPR$0=[45])" + NL +
@@ -602,7 +620,7 @@ public class SqlToRelConverterTest extends TestCase
             "ROWS 3 PRECEDING)])" + NL +
             "  FilterRel(condition=[>(SUM(-($7, $5)) OVER (PARTITION BY $2 ORDER BY $4" + NL +
             "ROWS 2 PRECEDING), 999)])" + NL +
-            "    TableAccessRel(table=[[EMP]])" + NL);
+            "    TableAccessRel(table=[[SALES, EMP]])" + NL);
     }
 
     /**
@@ -644,7 +662,7 @@ public class SqlToRelConverterTest extends TestCase
             "ROWS 2 PRECEDING), 0), CAST(null):INTEGER, /(SUM($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
             "ROWS 2 PRECEDING), COUNT($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
             "ROWS 2 PRECEDING)))])" + NL +
-            "  TableAccessRel(table=[[EMP]])" + NL);
+            "  TableAccessRel(table=[[SALES, EMP]])" + NL);
     }
 
     public void testOverCountStar()
@@ -658,7 +676,7 @@ public class SqlToRelConverterTest extends TestCase
             "ProjectRel(EXPR$0=[COUNT($5) OVER (PARTITION BY $2 ORDER BY $4" + NL +
             "ROWS 2 PRECEDING)], EXPR$1=[COUNT() OVER (PARTITION BY $2 ORDER BY $4" + NL +
             "ROWS 2 PRECEDING)])" + NL +
-            "  TableAccessRel(table=[[EMP]])" + NL);
+            "  TableAccessRel(table=[[SALES, EMP]])" + NL);
     }
 
     public void testExplainAsXml() {

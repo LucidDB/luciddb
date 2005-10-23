@@ -532,7 +532,11 @@ public abstract class SqlUtil
     public static SqlNode getSelectListItem(SqlNode query, int i) {
         if (query instanceof SqlSelect) {
             SqlSelect select = (SqlSelect) query;
-            final SqlNode from = select.getFrom();
+            SqlNode from = select.getFrom();
+            if (from.isA(SqlKind.As)) {
+                SqlCall as = (SqlCall) from;
+                from = as.operands[0];
+            }
             if (from.isA(SqlKind.Values)) {
                 // They wrote "VALUES (x, y)", but the validator has
                 // converted this into "SELECT * FROM VALUES (x, y)".

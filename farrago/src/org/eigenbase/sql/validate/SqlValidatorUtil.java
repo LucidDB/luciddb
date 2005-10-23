@@ -105,7 +105,7 @@ public class SqlValidatorUtil
         SqlNode expr,
         String alias)
     {
-        final SqlIdentifier id = new SqlIdentifier(alias, SqlParserPos.ZERO);
+        final SqlIdentifier id = new SqlIdentifier(alias, expr.getParserPosition());
         return SqlStdOperatorTable.asOperator.createCall(
             expr, id, SqlParserPos.ZERO);
     }

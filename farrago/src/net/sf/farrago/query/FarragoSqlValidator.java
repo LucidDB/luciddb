@@ -42,7 +42,7 @@ import net.sf.farrago.session.FarragoSessionPersonality;
  * @author John V. Sichi
  * @version $Id$
  */
-class FarragoSqlValidator extends SqlValidatorImpl
+public class FarragoSqlValidator extends SqlValidatorImpl
 {
     //~ Constructors ----------------------------------------------------------
 

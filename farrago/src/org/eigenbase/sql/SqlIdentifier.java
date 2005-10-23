@@ -29,8 +29,14 @@ import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.validate.SqlValidatorNamespace;
 import org.eigenbase.sql.validate.SqlMoniker;
+import org.eigenbase.sql.validate.SqlMonikerImpl;
+import org.eigenbase.sql.validate.SqlMonikerType;
+import org.eigenbase.sql.validate.SqlMonikerComparator;
 import org.eigenbase.util.Util;
+import java.util.Iterator;
+import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
 
 
 /**
@@ -166,11 +172,51 @@ public class SqlIdentifier extends SqlNode
             // table names are valid completion hints when the identifier
             // has only 1 name part
             scope.findAllTableNames(result);
+            findAllValidFunctionNames(validator, scope, result);
         }
         // if the identifer has more than 1 part, use the tableName to limit
         // the choices of valid column names
         scope.findAllColumnNames(tableName, result);
+        Collections.sort(result, new SqlMonikerComparator());
         return (SqlMoniker [])result.toArray(Util.emptySqlMonikerArray);
+    }
+
+    private void findAllValidFunctionNames(SqlValidator validator, 
+                                           SqlValidatorScope scope,
+                                           List result)
+    {   
+        // a function name can only be 1 part
+        if (names.length > 1) {
+            return;
+        }
+        List opList = validator.getOperatorTable().getOperatorList();
+        Iterator i = opList.iterator();
+        while (i.hasNext()) {
+            final SqlOperator op = (SqlOperator)i.next();
+            SqlIdentifier curOpId = 
+                new SqlIdentifier(op.getName(), getParserPosition());
+
+            if (SqlUtil.makeCall(validator.getOperatorTable(), curOpId) 
+                != null) {
+                result.add(new SqlMonikerImpl(
+                    op.getName(), SqlMonikerType.Function));
+            }
+            else {
+                if (op.getSyntax() == SqlSyntax.Function ||
+                    op.getSyntax() == SqlSyntax.Prefix) {
+                    if (op.getOperandTypeChecker() != null) {
+                        String sig = op.getAllowedSignatures();
+                        sig = sig.replaceAll("'","");
+                        result.add(new SqlMonikerImpl(sig, 
+                            SqlMonikerType.Function));
+                            continue;
+                    }
+                    result.add(new SqlMonikerImpl(op.getName(), 
+                        SqlMonikerType.Function));
+                }
+            }
+           
+        }
     }
 
     public void validateExpr(SqlValidator validator, SqlValidatorScope scope)

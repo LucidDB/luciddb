@@ -184,20 +184,25 @@ public class SqlParserPos
         int endLine,
         int endColumn)
     {
+        int testLine;
+        int testColumn;
         for (int i = 0; i < nodes.length; i++) {
             SqlNode node = nodes[i];
             SqlParserPos pos = node.getParserPosition();
-            if (pos.getLineNum() < line ||
-                pos.getLineNum() == line &&
-                pos.getColumnNum() < column) {
-                line = pos.getLineNum();
-                column = pos.getColumnNum();
+            testLine = pos.getLineNum();
+            testColumn = pos.getColumnNum();
+            if (testLine < line ||
+                testLine == line && testColumn < column) {
+                line = testLine;
+                column = testColumn;
             }
-            if (pos.getEndLineNum() > endLine ||
-                pos.getEndLineNum() == endColumn &&
-                pos.getEndColumnNum() > endColumn) {
-                endLine = pos.getLineNum();
-                endColumn = pos.getColumnNum();
+
+            testLine = pos.getEndLineNum();
+            testColumn = pos.getEndColumnNum();
+            if (testLine > endLine ||
+                testLine == endLine && testColumn > endColumn) {
+                endLine = testLine;
+                endColumn = testColumn;
             }
         }
         return new SqlParserPos(line, column, endLine, endColumn);

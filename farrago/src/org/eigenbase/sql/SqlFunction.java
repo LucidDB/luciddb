@@ -72,6 +72,10 @@ public class SqlFunction extends SqlOperator
     {
         super(name, kind, 100, 100, returnTypeInference, operandTypeInference,
             operandTypeChecker);
+        
+        assert !(funcType == SqlFunctionCategory.UserDefinedConstructor &&
+            returnTypeInference == null);
+
         this.functionType = funcType;
 
         // NOTE jvs 18-Jan-2005:  we leave sqlIdentifier as null to indicate
@@ -113,6 +117,10 @@ public class SqlFunction extends SqlOperator
             returnTypeInference,
             operandTypeInference,
             operandTypeChecker);
+
+ //       assert !(funcType == SqlFunctionCategory.UserDefinedConstructor &&
+ //           returnTypeInference == null);
+
         this.sqlIdentifier = sqlIdentifier;
         this.functionType = funcType;
         this.paramTypes = paramTypes;

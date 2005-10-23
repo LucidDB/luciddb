@@ -46,8 +46,8 @@ import org.eigenbase.util.*;
 public abstract class RelDataTypeImpl
     implements RelDataType, RelDataTypeFamily
 {
-    protected final RelDataTypeField [] fields;
-    protected final List fieldList;
+    protected RelDataTypeField [] fields;
+    protected List fieldList;
     protected String digest;
 
     protected RelDataTypeImpl(RelDataTypeField [] fields)

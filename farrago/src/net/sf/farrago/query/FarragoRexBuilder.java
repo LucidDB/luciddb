@@ -46,13 +46,13 @@ import java.math.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FarragoRexBuilder extends JavaRexBuilder
+public class FarragoRexBuilder extends JavaRexBuilder
 {
     private final FarragoPreparingStmt preparingStmt;
     
     //~ Constructors ----------------------------------------------------------
 
-    FarragoRexBuilder(FarragoPreparingStmt preparingStmt)
+    public FarragoRexBuilder(FarragoPreparingStmt preparingStmt)
     {
         super(preparingStmt.getFarragoTypeFactory());
 

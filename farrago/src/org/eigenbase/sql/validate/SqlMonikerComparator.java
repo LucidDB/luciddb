@@ -22,23 +22,36 @@
 
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.util.EnumeratedValues;
+import java.util.Comparator;
 
 /**
- * An enumeration of moniker types. used in {@link SqlMoniker}
+ * A generic implementation of {@link SqlMonikerComparator} to 
+ * compare {@link SqlMoniker}.
  *
  * @author tleung
- * @since May 24, 2005
- * @version $Id$
+ * @since Oct 16, 2005
+ * @version $$
  **/
-public class SqlMonikerType extends EnumeratedValues.BasicValue {
-    public static final SqlMonikerType Column = new SqlMonikerType("Column", 0);
-    public static final SqlMonikerType Table = new SqlMonikerType("Table", 1);
-    public static final SqlMonikerType View = new SqlMonikerType("View", 2);
-    public static final SqlMonikerType Schema = new SqlMonikerType("Schema", 3);
-    public static final SqlMonikerType Repository = new SqlMonikerType("Repository", 4);
-    public static final SqlMonikerType Function = new SqlMonikerType("Function", 5);
-    public SqlMonikerType(String name, int ordinal) {
-        super(name, ordinal, name);
+public class SqlMonikerComparator implements Comparator
+{   
+    /* 
+     * Compares its arguments for order.  The arguments have to be of type
+     * {@link SqlMoniker}
+     */
+    public int compare(Object o1, Object o2) 
+    {
+        if (!(o1 instanceof SqlMoniker) || !(o2 instanceof SqlMoniker)) {
+            return 0;
+        }
+        SqlMoniker m1 = (SqlMoniker)o1;
+        SqlMoniker m2 = (SqlMoniker)o2;
+
+        if (m1.getType().getOrdinal() > m2.getType().getOrdinal()) {
+            return 1;
+        } else if (m1.getType().getOrdinal() < m2.getType().getOrdinal()) {
+            return -1;
+        } else {
+            return (m1.toString().compareTo(m2.toString()));
+        }
     }
 }

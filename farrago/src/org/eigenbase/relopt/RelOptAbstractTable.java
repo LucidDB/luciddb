@@ -40,7 +40,7 @@ public abstract class RelOptAbstractTable implements RelOptTable
     //~ Instance fields -------------------------------------------------------
 
     protected RelOptSchema schema;
-    protected final RelDataType rowType;
+    protected RelDataType rowType;
     protected String name;
 
     //~ Constructors ----------------------------------------------------------
@@ -75,6 +75,10 @@ public abstract class RelOptAbstractTable implements RelOptTable
     public RelDataType getRowType()
     {
         return rowType;
+    }
+
+    public void setRowType(RelDataType rowType) {
+        this.rowType = rowType;
     }
 
     public RelOptSchema getRelOptSchema()

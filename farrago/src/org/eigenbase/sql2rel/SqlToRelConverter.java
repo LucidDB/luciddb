@@ -60,19 +60,19 @@ public class SqlToRelConverter
 {
     //~ Instance fields -------------------------------------------------------
 
-    private final SqlValidator validator;
-    private final RexBuilder rexBuilder;
+    protected final SqlValidator validator;
+    protected final RexBuilder rexBuilder;
     private final RelOptPlanner planner;
     private final RelOptConnection connection;
-    private final RelOptSchema schema;
-    private final RelOptCluster cluster;
+    protected final RelOptSchema schema;
+    protected final RelOptCluster cluster;
     private final Map mapScopeToRel = new HashMap();
     private DefaultValueFactory defaultValueFactory;
     final ArrayList leaves = new ArrayList();
     private final List dynamicParamSqlNodes = new ArrayList();
     private final SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
     private boolean shouldConvertTableAccess;
-    private final RelDataTypeFactory typeFactory;
+    protected final RelDataTypeFactory typeFactory;
     private final SqlNodeToRexConverter exprConverter;
     /**
      * Used to pass the result of a {@link SqlVisitor} call.
@@ -1037,53 +1037,89 @@ public class SqlToRelConverter
     {
         SqlValidatorNamespace targetScope =
             validator.getNamespace(call.getTargetTable());
-        RelNode sourceRel = convertQueryRecursive(call.getSourceSelect());
         RelOptTable targetTable = SqlValidatorUtil.getRelOptTable(targetScope, schema);
         RelDataType lhsRowType = targetTable.getRowType();
         SqlNodeList targetColumnList = call.getTargetColumnList();
 
+        RelNode sourceRel = convertQueryRecursive(call.getSourceSelect());
         RelDataType sourceRowType = sourceRel.getRowType();
-        int nExps = lhsRowType.getFieldList().size();
-        RexNode [] rhsExps = new RexNode[nExps];
-
         final RexNode sourceRef =
             rexBuilder.makeRangeReference(sourceRowType, 0);
+
         if (targetColumnList == null) {
             // Source expressions match target columns in order.
-            for (int i = 0; i < nExps; ++i) {
-                rhsExps[i] = rexBuilder.makeFieldAccess(sourceRef, i);
-            }
+            sourceRel = convertUnnamedColumnList(call, targetTable, sourceRel,
+                sourceRef);
         } else {
             // Source expressions are mapped to target columns by name via
             // targetColumnList, and may not cover the entire target table.
             // So, we'll make up a full row, using a combination of default
             // values and the source expressions provided.
-            int iSrc = 0;
-            Iterator iter = targetColumnList.getList().iterator();
-            for (; iter.hasNext(); ++iSrc) {
-                SqlIdentifier id = (SqlIdentifier) iter.next();
-                String targetColumnName = id.getSimple();
-                int iTarget = lhsRowType.getFieldOrdinal(targetColumnName);
-                assert (iTarget != -1);
-                rhsExps[iTarget] = rexBuilder.makeFieldAccess(sourceRef, iSrc);
-            }
-
-            for (int i = 0; i < nExps; ++i) {
-                if (rhsExps[i] != null) {
-                    continue;
-                }
-
-                rhsExps[i] =
-                    defaultValueFactory.newColumnDefaultValue(targetTable, i);
-            }
-
-            sourceRel =
-                new ProjectRel(cluster, sourceRel, rhsExps, null,
-                    ProjectRel.Flags.Boxed);
+            sourceRel = convertNamedColumnList(call,targetTable,sourceRel,
+                sourceRef);
         }
 
         return new TableModificationRel(cluster, targetTable, connection,
             sourceRel, TableModificationRel.Operation.INSERT, null, false);
+    }
+
+    protected RelNode convertUnnamedColumnList(
+        SqlInsert call,
+        RelOptTable targetTable,
+        RelNode sourceRel,
+        RexNode sourceRef)
+    {
+        RelDataType lhsRowType = targetTable.getRowType();
+        int nExps = lhsRowType.getFieldList().size();
+        RexNode [] rhsExps = new RexNode[nExps];
+
+        for (int i = 0; i < nExps; ++i) {
+            rhsExps[i] = rexBuilder.makeFieldAccess(sourceRef, i);
+        }
+
+        return( sourceRel);
+    }
+
+    protected RelNode convertNamedColumnList(
+        SqlInsert call,
+        RelOptTable targetTable,
+        RelNode sourceRel,
+        RexNode sourceRef)
+    {
+        SqlNodeList targetColumnList = call.getTargetColumnList();
+        RelDataType lhsRowType = targetTable.getRowType();
+        
+        int nExps = lhsRowType.getFieldList().size();
+        
+        RexNode [] rhsExps = new RexNode[nExps];
+
+        // Walk the name list and place the associated value in the
+        // expression list according to the ordinal value returned from
+        // the table contruct, leaving nulls in the list for columns
+        // that are not referenced.
+        int iSrc = 0;
+        Iterator iter = targetColumnList.getList().iterator();
+        for (; iter.hasNext(); ++iSrc) {
+            SqlIdentifier id = (SqlIdentifier) iter.next();
+            String targetColumnName = id.getSimple();
+            int iTarget = lhsRowType.getFieldOrdinal(targetColumnName);
+            assert (iTarget != -1);
+            rhsExps[iTarget] = rexBuilder.makeFieldAccess(sourceRef, iSrc);
+        }
+
+        // Walk the expresion list and get default values for any columns
+        // that were not supplied in the statement
+        for (int i = 0; i < nExps; ++i) {
+            if (rhsExps[i] != null) {
+                continue;
+            }
+
+            rhsExps[i] =
+                defaultValueFactory.newColumnDefaultValue(targetTable, i);
+        }
+
+        return new ProjectRel(cluster, sourceRel, rhsExps, null,
+                ProjectRel.Flags.Boxed);
     }
 
     private RelNode convertDelete(SqlDelete call)
@@ -1979,6 +2015,11 @@ public class SqlToRelConverter
         {
             return (AggregateRel.Call[])
                 aggCalls.toArray(new AggregateRel.Call[aggCalls.size()]);
+        }
+
+        public RelDataTypeFactory getTypeFactory()
+        {
+            return typeFactory;
         }
     }
 
