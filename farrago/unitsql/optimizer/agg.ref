@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/agg.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/agg.sql#3 $
 0: jdbc:farrago:> -- Test aggregate queries
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';
@@ -104,25 +104,12 @@ Error: Type mismatch in value ''CALCVM_FENNEl'' for system parameter "calcVirtua
 '      FennelRenameRel(fieldNames=[[$f0]])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- the queries below used to be bugs
 0: jdbc:farrago:> explain plan without implementation for
-. . . . . . . . > select name
-. . . . . . . . > from (select name from depts group by name);
+. . . . . . . . > select deptno,max(name) from sales.emps group by deptno;
 'column0'
-'ProjectRel(NAME=[$0])'
-'  ProjectRel(NAME=[$0])'
-'    AggregateRel(groupCount=[1])'
-'      ProjectRel(field#0=[$1])'
-'        TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan without implementation for
-. . . . . . . . > select foo
-. . . . . . . . > from (select name as foo from depts group by name);
-'column0'
-'ProjectRel(FOO=[$0])'
-'  ProjectRel(FOO=[$0])'
-'    AggregateRel(groupCount=[1])'
-'      ProjectRel(field#0=[$1])'
-'        TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])'
+'ProjectRel(DEPTNO=[$0], EXPR$1=[$1])'
+'  AggregateRel(groupCount=[1], agg#0=[MAX(1)])'
+'    ProjectRel(field#0=[$2], field#1=[$1])'
+'      TableAccessRel(table=[[LOCALDB, SALES, EMPS]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

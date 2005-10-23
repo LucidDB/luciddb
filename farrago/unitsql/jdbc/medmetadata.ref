@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/jdbc/medmetadata.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/jdbc/medmetadata.sql#1 $
 0: jdbc:farrago:> -- Test JDBC metadata calls for foreign data wrappers
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- !set verbose true
@@ -50,7 +50,6 @@
 | ROOT_PACKAGE_NAME  | FEM                                 |
 | ROOT_PACKAGE_NAME  | MOF                                 |
 | SCHEMA_NAME        | MODEL                               |
-| SCHEMA_NAME        | SALES                               |
 | SCHEMA_NAME        | TESTDATA                            |
 | TABLE_TYPES        | TABLE,VIEW                          |
 | URL                | jdbc:hsqldb:testcases/hsqldb/scott  |

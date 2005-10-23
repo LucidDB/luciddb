@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/jdbc/metadata.sql#9 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/jdbc/metadata.sql#1 $
 0: jdbc:farrago:> -- Test JDBC metadata calls
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test getCatalogs
@@ -72,6 +72,8 @@
 | SYS_BOOT   | JDBC_METADATA  | CATALOGS_VIEW                    | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | COLUMNS_VIEW                     | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | COLUMNS_VIEW_INTERNAL            | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | INDEX_INFO_INTERNAL              | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | INDEX_INFO_VIEW                  | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | PRIMARY_KEYS_VIEW                | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | PRIMARY_KEYS_VIEW_INTERNAL       | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | PROCEDURES_VIEW                  | VIEW        |          |           |             |            |                            |                 |
@@ -225,6 +227,15 @@
 | LOCALDB    | SALES        | EMPS        | DEPTNO       | 1        | SYS$PRIMARY_KEY  |
 | LOCALDB    | SALES        | EMPS        | EMPNO        | 2        | SYS$PRIMARY_KEY  |
 +------------+--------------+-------------+--------------+----------+------------------+
+0: jdbc:farrago:> !indexes EMPS
++------------+--------------+-------------+-------------+------------------+-------------------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |                   INDEX_NAME                    | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
++------------+--------------+-------------+-------------+------------------+-------------------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| LOCALDB    | SALES        | EMPS        | false       | LOCALDB          | SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY       | 1     | 1                 | DEPTNO       | A             | 0            | 0      |                   |
+| LOCALDB    | SALES        | EMPS        | false       | LOCALDB          | SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY       | 1     | 2                 | EMPNO        | A             | 0            | 0      |                   |
+| LOCALDB    | SALES        | EMPS        | false       | LOCALDB          | SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID  | 3     | 1                 | EMPID        | A             | 0            | 0      |                   |
+| LOCALDB    | SALES        | EMPS        | true        | LOCALDB          | EMPS_UX                                         | 3     | 1                 | NAME         | A             | 0            | 0      |                   |
++------------+--------------+-------------+-------------+------------------+-------------------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
 0: jdbc:farrago:> !procedures
 +----------------+------------------+---------------------+------------+------------+------------+----------+-----------------+
 | PROCEDURE_CAT  | PROCEDURE_SCHEM  |   PROCEDURE_NAME    | RESERVED1  | RESERVED2  | RESERVED3  | REMARKS  | PROCEDURE_TYPE  |
@@ -430,20 +441,16 @@ usesLocalFiles                                    false
 0: jdbc:farrago:> -- !metadata hashCode
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Not supported
-0: jdbc:farrago:> -- !metadata getPrimaryKeys
 0: jdbc:farrago:> -- !metadata getImportKeys
 0: jdbc:farrago:> -- !metadata getExportKeys
-0: jdbc:farrago:> -- !metadata getColumnPriviledges
-0: jdbc:farrago:> -- !metadata getTablePriviledges
+0: jdbc:farrago:> -- !metadata getColumnPrivileges
+0: jdbc:farrago:> -- !metadata getTablePrivileges
 0: jdbc:farrago:> -- !metadata getBestRowIdentifier
 0: jdbc:farrago:> -- !metadata getVersionColumns
 0: jdbc:farrago:> -- !metadata getCrossReference
-0: jdbc:farrago:> -- !metadata getIndexInfo
 0: jdbc:farrago:> -- !metadata getSuperTypes
 0: jdbc:farrago:> -- !metadata getSuperTables
-0: jdbc:farrago:> -- !indexes
 0: jdbc:farrago:> -- !importedkeys
 0: jdbc:farrago:> -- !exportedkeys
-0: jdbc:farrago:> -- !primarykeys
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

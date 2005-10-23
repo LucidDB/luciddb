@@ -38,11 +38,5 @@ select max(deptno) from depts;
 explain plan for
 select min(deptno) from depts;
 
--- the queries below used to be bugs
 explain plan without implementation for
-select name
-from (select name from depts group by name);
-
-explain plan without implementation for
-select foo
-from (select name as foo from depts group by name);
+select deptno,max(name) from sales.emps group by deptno;

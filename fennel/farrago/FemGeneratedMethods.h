@@ -5,6 +5,7 @@ JniProxyVisitTable<FemVisitor> FemVisitor::visitTbl;
 jmethodID ProxyAggInvocation::meth_getFunction = 0;
 jmethodID ProxyAggInvocation::meth_getInputAttributeIndex = 0;
 jmethodID ProxyAggInvocation::meth_getAggStreamDef = 0;
+jmethodID ProxyAggStreamDef::meth_getGroupingPrefixSize = 0;
 jmethodID ProxyAggStreamDef::meth_getAggInvocation = 0;
 jmethodID ProxyBufferingTupleStreamDef::meth_isInMemory = 0;
 jmethodID ProxyBufferingTupleStreamDef::meth_isMultipass = 0;
@@ -109,6 +110,7 @@ ProxyAggInvocation::meth_getAggStreamDef = pEnv->GetMethodID(jClass,"getAggStrea
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemAggStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyAggStreamDef>));
+ProxyAggStreamDef::meth_getGroupingPrefixSize = pEnv->GetMethodID(jClass,"getGroupingPrefixSize","()I");
 ProxyAggStreamDef::meth_getAggInvocation = pEnv->GetMethodID(jClass,"getAggInvocation","()Ljava/util/Collection;");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemBufferingTupleStreamDef");
@@ -409,6 +411,11 @@ p->pEnv = pEnv;
 p->jObject = pEnv->CallObjectMethod(jObject,meth_getAggStreamDef);
 if (!p->jObject) p.reset();
 return p;
+}
+
+int32_t ProxyAggStreamDef::getGroupingPrefixSize()
+{
+return pEnv->CallIntMethod(jObject,meth_getGroupingPrefixSize);
 }
 
 SharedProxyAggInvocation ProxyAggStreamDef::getAggInvocation()

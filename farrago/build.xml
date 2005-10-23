@@ -447,17 +447,9 @@ require version '${required.ant.version}'."/>
     <antcall target="createCatalog"/>
   </target>
 
-  <!-- sets property ReposStorage.configured if ReposStorage.properties
-       already exists-->
-  <target name="checkReposStorage">
-    <available property="ReposStorage.configured" 
-      file="${farrago.ReposStorage.propfile}"/>
-  </target>
-
   <!-- creates ReposStorage.properties from a default template unless
        it already exists -->
-  <target name="configureReposStorage" depends="checkReposStorage"
-    unless="ReposStorage.configured">
+  <target name="configureReposStorage" unless="ReposStorage.configured">
     <copy file="${farrago.catalog.dir}/templates/HsqldbRepos.properties" 
       tofile="${farrago.ReposStorage.propfile}"/>
   </target>

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/med.sql#4 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/med.sql#3 $
 0: jdbc:farrago:> -- Test SQL/MED DDL
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- create a private wrapper for mdr (don't use the standard mdr wrapper)
@@ -210,7 +210,7 @@ Error: From line 1, column 15 to line 1, column 24: Table 'MOF_SCHEMA.FOREIGN_EX
 . . . . . . . . >     dname char(20),
 . . . . . . . . >     loc char(20))
 . . . . . . . . > server hsqldb_demo
-. . . . . . . . > options(table_name 'DEPT');
+. . . . . . . . > options(schema_name 'SALES', table_name 'DEPT');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test same query as above, but against foreign table
 0: jdbc:farrago:> select * from demo_schema.dept order by dno;
@@ -226,7 +226,7 @@ Error: From line 1, column 15 to line 1, column 24: Table 'MOF_SCHEMA.FOREIGN_EX
 0: jdbc:farrago:> -- create a foreign table (inferring datatypes)
 0: jdbc:farrago:> create foreign table demo_schema.dept_inferred
 . . . . . . . . > server hsqldb_demo
-. . . . . . . . > options(table_name 'DEPT');
+. . . . . . . . > options(schema_name 'SALES', table_name 'DEPT');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test same query as above, but against foreign table with inferred types
 0: jdbc:farrago:> select * from demo_schema.dept_inferred order by deptno;

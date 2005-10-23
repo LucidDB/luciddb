@@ -140,7 +140,7 @@ create foreign table demo_schema.dept(
     dname char(20),
     loc char(20))
 server hsqldb_demo
-options(table_name 'DEPT');
+options(schema_name 'SALES', table_name 'DEPT');
 
 -- test same query as above, but against foreign table
 select * from demo_schema.dept order by dno;
@@ -148,7 +148,7 @@ select * from demo_schema.dept order by dno;
 -- create a foreign table (inferring datatypes)
 create foreign table demo_schema.dept_inferred
 server hsqldb_demo
-options(table_name 'DEPT');
+options(schema_name 'SALES', table_name 'DEPT');
 
 -- test same query as above, but against foreign table with inferred types
 select * from demo_schema.dept_inferred order by deptno;

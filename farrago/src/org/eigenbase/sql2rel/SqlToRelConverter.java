@@ -1933,7 +1933,7 @@ public class SqlToRelConverter
                 (quantifier.getValue() == SqlSelectKeyword.Distinct)) {
                 aggCall.setDistinctFalg(true);
             }
-            int index = aggCalls.size();
+            int index = aggCalls.size() + groupExprs.size();
             aggCalls.add(aggCall);
             final RexNode rex = rexBuilder.makeInputRef(type, index);
             return rex;

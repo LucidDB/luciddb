@@ -228,6 +228,8 @@ class ProxyAggStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
+int32_t getGroupingPrefixSize();
+static jmethodID meth_getGroupingPrefixSize;
 SharedProxyAggInvocation getAggInvocation();
 static jmethodID meth_getAggInvocation;
 };

@@ -94,16 +94,9 @@ void TestBase::readParams(int argc,char **argv)
     }
 
     // set a default dictionary file location for use by tests that need a
-    // small (400K on my RedHat distribution) non-random sorted data set
+    // small non-random sorted data set
     if (!configMap.isParamSet(paramDictionaryFileName)) {
-#ifdef __MINGW32__
-        std::string dictFileName = "d:\\cygwin\\usr\\share\\dict\\words";
-#else
-        std::string dictFileName = "/usr/share/dict/words";
-#endif
-        if (!FileSystem::doesFileExist(dictFileName.c_str())) {
-            dictFileName = "/usr/dict/words";
-        }
+        std::string dictFileName = "dictWords";
         configMap.setStringParam(paramDictionaryFileName,dictFileName);
     }
     

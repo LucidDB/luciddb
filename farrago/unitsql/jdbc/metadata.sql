@@ -56,6 +56,7 @@ create type metadata_test_schema.rectilinear_coord as (
 !metadata getUDTs LOCALDB METADATA_TEST_SCHEMA % %
 !metadata getAttributes LOCALDB METADATA_TEST_SCHEMA % %
 !primarykeys EMPS
+!indexes EMPS
 !procedures
 
 drop schema metadata_test_schema cascade;
@@ -93,18 +94,14 @@ select "databaseInitSize", "databaseIncrementSize", "databaseMaxSize",
 -- !metadata hashCode
 
 -- Not supported
--- !metadata getPrimaryKeys
 -- !metadata getImportKeys
 -- !metadata getExportKeys
--- !metadata getColumnPriviledges
--- !metadata getTablePriviledges
+-- !metadata getColumnPrivileges
+-- !metadata getTablePrivileges
 -- !metadata getBestRowIdentifier
 -- !metadata getVersionColumns
 -- !metadata getCrossReference
--- !metadata getIndexInfo
 -- !metadata getSuperTypes
 -- !metadata getSuperTables
--- !indexes
 -- !importedkeys
 -- !exportedkeys
--- !primarykeys

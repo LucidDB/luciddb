@@ -317,14 +317,14 @@ public class SqlToRelConverterTest extends TestCase
 
         // just one agg
         check("select deptno, sum(sal) from emp group by deptno",
-            "ProjectRel(DEPTNO=[$0], EXPR$1=[$0])" + NL +
+            "ProjectRel(DEPTNO=[$0], EXPR$1=[$1])" + NL +
             "  AggregateRel(groupCount=[1], agg#0=[SUM(1)])" + NL +
             "    ProjectRel(field#0=[$7], field#1=[$5])" + NL +
             "      TableAccessRel(table=[[EMP]])" + NL);
 
         // expressions inside and outside aggs
         check("select deptno + 4, sum(sal), sum(3 + sal), 2 * sum(sal) from emp group by deptno",
-            "ProjectRel(EXPR$0=[+($0, 4)], EXPR$1=[$0], EXPR$2=[$1], EXPR$3=[*(2, $2)])" + NL +
+            "ProjectRel(EXPR$0=[+($0, 4)], EXPR$1=[$1], EXPR$2=[$2], EXPR$3=[*(2, $3)])" + NL +
             "  AggregateRel(groupCount=[1], agg#0=[SUM(1)], agg#1=[SUM(2)], agg#2=[SUM(3)])" + NL +
             "    ProjectRel(field#0=[$7], field#1=[$5], field#2=[+(3, $5)], field#3=[$5])" + NL +
             "      TableAccessRel(table=[[EMP]])" + NL);
@@ -342,7 +342,7 @@ public class SqlToRelConverterTest extends TestCase
         // Dtbug 281 gives:
         //   Internal error:
         //   Type 'RecordType(VARCHAR(128) $f0)' has no field 'NAME'
-        if(false) check("select name from (select name from dept group by name)",
+        check("select name from (select name from dept group by name)",
             "ProjectRel(NAME=[$0])" + NL +
             "  ProjectRel(NAME=[$0])" + NL +
             "    AggregateRel(groupCount=[1])" + NL +
@@ -355,7 +355,7 @@ public class SqlToRelConverterTest extends TestCase
             "from dept " +
             "group by name, deptno, name)",
             "ProjectRel(NAME=[$1], FOO=[$2])" + NL +
-            "  ProjectRel(DEPTNO=[$1], NAME=[$0], FOO=[$0])" + NL +
+            "  ProjectRel(DEPTNO=[$1], NAME=[$0], FOO=[$3])" + NL +
             "    AggregateRel(groupCount=[3], agg#0=[COUNT(3)])" + NL +
             "      ProjectRel(field#0=[$1], field#1=[$0], field#2=[$1], field#3=[$0])" + NL +
             "        TableAccessRel(table=[[DEPT]])" + NL);

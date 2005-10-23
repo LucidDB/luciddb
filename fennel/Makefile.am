@@ -1,9 +1,12 @@
 include $(top_srcdir)/am_include.mk
 
 AUTOMAKE_OPTIONS=foreign
+
 SUBDIRS=common synch device cache segment txn tuple exec btree \
 db ftrs libfennel test @farrago_subdir@ disruptivetech lucidera build
-EXTRA_DIST=am_include.mk moodss web test/verboseTest INSTALL.mingw
+
+EXTRA_DIST=am_include.mk moodss web test/verboseTest test/dictWords \
+INSTALL.mingw
 
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status --recheck
