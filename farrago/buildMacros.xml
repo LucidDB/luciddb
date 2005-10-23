@@ -103,7 +103,6 @@
   <fail unless="macker.dir"/>
   <fail unless="jalopy.dir"/>
   <fail unless="janino.dir"/>
-  <fail unless="isql.dir"/>
   <fail unless="jswat.dir"/>
   <fail unless="sqlline.dir"/>
   <fail unless="sqlline.lib.dir"/>
@@ -305,12 +304,6 @@
   </path>
   <property name="farrago.retro.classpath" refid="farrago.retro.classpath"/>
 
-  <!-- classpath for running from iSQL -->
-  <path id="isql.classpath">
-    <pathelement location="${isql.dir}/isql-core.jar"/>
-  </path>
-  <property name="isql.classpath" refid="isql.classpath"/>
-
   <!-- classpath for reentrantly invoking ant -->
   <path id="ant.classpath">
     <pathelement location="${ant.home}/lib/ant.jar"/>
@@ -498,19 +491,6 @@
       <xslt style="${farrago.xmi.dir}/resolveCwmRefs.xsl"
         in="@{xmiDir}/FarragoMetamodelUnresolved.xmi"
         out="@{xmiDir}/FarragoMetamodel.xmi"/>
-    </sequential>
-  </macrodef>
-
-  <!-- Macro for running iSQL -->
-  <macrodef name="farrago.iSQL">
-    <attribute name="classpath" default="unspecified"/>
-    <attribute name="propertieshome" default="unspecified"/>
-    <sequential>
-      <farrago.javaExec
-        classname="org.isqlviewer.core.Launcher"
-        classpathref="@{classpath}">
-        <sysproperty key="isql.home" value="@{propertieshome}" />
-      </farrago.javaExec>
     </sequential>
   </macrodef>
 

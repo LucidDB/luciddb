@@ -82,7 +82,6 @@ RELEASE_DIR=`echo $TMP_DIR/*`
 LIB_DIR=$RELEASE_DIR/lib
 INSTALL_DIR=$RELEASE_DIR/install
 CATALOG_DIR=$RELEASE_DIR/catalog
-ISQL_DIR=$RELEASE_DIR/isql
 BIN_DIR=$RELEASE_DIR/bin
 
 # create staging sub-directories
@@ -94,7 +93,6 @@ mkdir $INSTALL_DIR
 mkdir $CATALOG_DIR
 mkdir $CATALOG_DIR/fennel
 mkdir $BIN_DIR
-mkdir $ISQL_DIR
 
 # copy thirdparty libs
 cd $THIRDPARTY_DIR
@@ -124,7 +122,6 @@ cp stlport/README $LIB_DIR/fennel/stlport.README.txt
 cp -d boost/lib/$SO_3P_PATTERN $LIB_DIR/fennel
 rm -f $LIB_DIR/fennel/*gdp*
 cp boost/LICENSE_1_0.txt $LIB_DIR/fennel/boost.license.txt
-cp iSQLViewer/* $ISQL_DIR
 
 # TODO jvs 12-Mar-2005
 # cp -d icu/lib/$SO_3P_PATTERN $LIB_DIR/fennel
@@ -177,7 +174,6 @@ else
     cp dist/bin/* $BIN_DIR
     rm -f $BIN_DIR/*.bat
 fi
-cp isql/FarragoServer.service $ISQL_DIR
 
 # archive the whole thing up
 cd $TMP_DIR

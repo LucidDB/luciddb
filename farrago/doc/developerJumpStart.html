@@ -279,14 +279,7 @@ comes back empty).
 
 <p>
 
-If you prefer using a GUI, try the <a
-href="http://www.isqlviewer.com">iSQL-Viewer</a> project instead.  To
-start the GUI, run <code>ant isql</code>.  From the services menu,
-choose <code>FarragoEmbedded</code> to start the engine and connect to
-it.  This service is predefined from
-<code>dev/farrago/isql/FarragoEmbedded.service</code>.  (The
-<code>FarragoServer</code> alternative is described later in this
-document.)
+If you prefer using a GUI, try the <code>dbmanEngine</code> script instead.
 
 <h2>Tracing</h2>
 
@@ -380,11 +373,8 @@ useful for debugging, but scripts are also available to test
 client/server mode.  Run the <code>farragoServer</code> script to
 start the server in a shell (after startup, it waits listening for
 connections; enter the <code>!quit</code> command in that shell to
-shut it down).  From another shell, run <code>sqllineClient</code> (or
-<code>ant isql.client</code>, and choose the
-<code>FarragoServer</code> service) to communicate with the server in
-client/server mode.  To debug the server, start it with <code>ant
-jswat.server</code>.
+shut it down).  From another shell, run <code>sqllineClient</code> or
+<code>dbmanClient</code> to connect and execute commands.
 
 <h2>Coding</h2>
 

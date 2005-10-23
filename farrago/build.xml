@@ -216,7 +216,6 @@ require version '${required.ant.version}'."/>
   <path id="farrago.sourcepath">
     <pathelement location="${farrago.catalog.src.dir}"/>
     <pathelement location="${farrago.src.dir}"/>
-    <pathelement location="${isql.dir}/src"/>
     <pathelement location="${sqlline.dir}/src"/>
     <pathelement location="${junit.dir}/src.jar"/>
     <pathelement location="${rmijdbc.dir}/src"/>
@@ -240,14 +239,6 @@ require version '${required.ant.version}'."/>
   </path>
   <property name="createUserRepository.classpath"
     refid="createUserRepository.classpath"/>
-
-
-  <!-- classpath for running from iSQL -->
-  <path id="isql.run.classpath">
-    <pathelement path="${isql.classpath}"/>
-    <pathelement path="${farrago.run.classpath}"/>
-  </path>
-  <property name="isql.run.classpath" refid="isql.run.classpath"/>
 
 
   <!-- Targets -->
@@ -1121,31 +1112,6 @@ require version '${required.ant.version}'."/>
     <gzip zipfile="${farrago.dir}/doc.tar.gz"
               src="${farrago.dir}/doc.tar" />
     <delete file="${farrago.dir}/doc.tar" />
-  </target>
-
-  <!-- run iSQL -->
-  <target name="isql" depends="all">
-    <farrago.iSQL
-      classpath="isql.run.classpath"
-      propertieshome="${farrago.dir}/isql">
-    </farrago.iSQL>
-  </target>
-
-  <!-- NOTE:  To debug iSQL itself, you have to get its source and
-  compile a debug build.
-  -->
-
-  <!-- run JSwat on iSQL -->
-  <target name="jswat.isql" depends="all">
-    <farrago.jswatDebug
-      classpath="${isql.run.classpath}"
-      sourcepath="${farrago.sourcepath}"
-      classname="org.isqlviewer.core.Launcher">
-      <jvmargs>
-        <arg value="-Disql.home=${farrago.dir}/isql"/>
-        <arg line="&FarragoProps;"/>
-      </jvmargs>
-    </farrago.jswatDebug>
   </target>
 
   <!-- run JSwat on sqlline in interactive mode -->
