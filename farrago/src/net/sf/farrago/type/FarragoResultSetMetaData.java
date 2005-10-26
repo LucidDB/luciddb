@@ -55,23 +55,21 @@ public class FarragoResultSetMetaData extends FarragoJdbcMetaDataImpl
     public boolean isAutoIncrement(int column)
         throws SQLException
     {
-        return false;
+        return isFieldAutoIncrement(column);
     }
 
     // implement ResultSetMetaData
     public boolean isCaseSensitive(int column)
         throws SQLException
     {
-        // TODO
-        return false;
+        return isFieldCaseSensitive(column);
     }
 
     // implement ResultSetMetaData
     public String getCatalogName(int column)
         throws SQLException
     {
-        // TODO
-        return "";
+        return getFieldCatalogName(column);
     }
 
     // implement ResultSetMetaData
@@ -92,43 +90,7 @@ public class FarragoResultSetMetaData extends FarragoJdbcMetaDataImpl
     public int getColumnDisplaySize(int column)
         throws SQLException
     {
-        int precision = getPrecision(column);
-        int type = getColumnType(column);
-        switch (type) {
-        case Types.BOOLEAN:
-
-            // 5 for max(strlen("true"),strlen("false"))
-            return 5;
-        case Types.DATE:
-
-            // 10 for strlen("yyyy-mm-dd")
-            return 10;
-        case Types.TIME:
-            if (precision == 0) {
-                // 8 for strlen("hh:mm:ss")
-                return 8;
-            } else {
-                // 1 extra for decimal point
-                return 9 + precision;
-            }
-        case Types.TIMESTAMP:
-            if (precision == 0) {
-                // 19 for strlen("yyyy-mm-dd hh:mm:ss")
-                return 19;
-            } else {
-                // 1 extra for decimal point
-                return 20 + precision;
-            }
-        case Types.REAL:
-        case Types.FLOAT:
-            return 13;
-        case Types.DOUBLE:
-            return 22;
-        default:
-
-            // TODO:  adjust for numeric formatting, etc.
-            return precision;
-        }
+        return getFieldDisplaySize(column);
     }
 
     // implement ResultSetMetaData
@@ -163,14 +125,14 @@ public class FarragoResultSetMetaData extends FarragoJdbcMetaDataImpl
     public boolean isCurrency(int column)
         throws SQLException
     {
-        return false;
+        return isFieldCurrency(column);
     }
 
     // implement ResultSetMetaData
     public boolean isDefinitelyWritable(int column)
         throws SQLException
     {
-        return false;
+        return isFieldDefinitelyWritable(column);
     }
 
     // implement ResultSetMetaData
@@ -198,22 +160,21 @@ public class FarragoResultSetMetaData extends FarragoJdbcMetaDataImpl
     public boolean isReadOnly(int column)
         throws SQLException
     {
-        return true;
+        return isFieldReadOnly(column);
     }
 
     // implement ResultSetMetaData
     public String getSchemaName(int column)
         throws SQLException
     {
-        // TODO
-        return "";
+        return getFieldSchemaName(column);
     }
 
     // implement ResultSetMetaData
     public boolean isSearchable(int column)
         throws SQLException
     {
-        return true;
+        return isFieldSearchable(column);
     }
 
     // implement ResultSetMetaData
@@ -227,15 +188,14 @@ public class FarragoResultSetMetaData extends FarragoJdbcMetaDataImpl
     public String getTableName(int column)
         throws SQLException
     {
-        // TODO
-        return "";
+        return getFieldTableName(column);
     }
 
     // implement ResultSetMetaData
     public boolean isWritable(int column)
         throws SQLException
     {
-        return false;
+        return isFieldWritable(column);
     }
 }
 
