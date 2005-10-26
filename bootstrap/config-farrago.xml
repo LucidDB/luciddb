@@ -6,13 +6,16 @@
 
 		<!-- Bootstrappers are run with every build before mod checks -->
 		<bootstrappers>
-			<currentbuildstatusbootstrapper file="logs/farrago/currentbuildstatus.txt"/>
-			<p4bootstrapper p4port="&open_p4port;" p4client="&open_p4client;" p4user="&open_p4user;" path="&open_root;/bootstrap/..."/>
+			<!-- currentbuildstatusbootstrapper file="logs/farrago/currentbuildstatus.txt"/ -->
+			<p4bootstrapper port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/bootstrap/..."/>
 		</bootstrappers>
 
+                <listeners>
+                        <currentbuildstatuslistener file="logs/farrago/currentbuildstatus.txt"/>
+                </listeners>
 
 		<!-- Defines where cruise looks for changes, to decide whether to run the build -->
-		<modificationset quietperiod="300">
+		<modificationset requiremodification="false" quietperiod="300">
 			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/farrago/..."/>
 			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/fennel/..."/>
 			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/thirdparty/..."/>
@@ -21,7 +24,7 @@
 
 		<!-- Configures the actual build loop, how often and which build file/target -->
 		<schedule interval="&build_interval;">
-			<ant buildfile="build-farrago.xml" uselogger="true" usedebug="false" antscript="&ant;" target="integration-build-and-test">
+			<ant buildfile="&open_default.build.home;/bootstrap/build-farrago.xml" uselogger="true" usedebug="false" antscript="&ant;" target="integration-build-and-test">
 			    <property name="open_propfile" value="&open_propfile;"/>
 			    <property name="open_root" value="&open_root;"/>
 			</ant>
@@ -29,12 +32,12 @@
 
 		<!-- directory to write build logs to -->
 		<log dir="logs/farrago">
-			<merge dir="build/farrago/testlog"/>
+			<merge dir="&open_default.build.home;/bootstrap/build/farrago/testlog"/>
 		</log>
 
 		<!-- Publishers are run *after* a build completes -->
 		<publishers>
-			<currentbuildstatuspublisher file="logs/farrago/currentbuildstatus.txt"/>
+			<!-- currentbuildstatuspublisher file="logs/farrago/currentbuildstatus.txt"/ -->
 
 			<artifactspublisher dir="build/farrago/trace" dest="artifacts/farrago&configSuffix;" subdirectory="trace"/>
 			<artifactspublisher dir="build/farrago/unitsql" dest="artifacts/farrago&configSuffix;" subdirectory="unitsql"/>
