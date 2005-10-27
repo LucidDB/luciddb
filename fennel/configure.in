@@ -263,6 +263,7 @@ disruptivetech/libfennel_dt/Makefile \
 disruptivetech/test/Makefile \
 disruptivetech/farrago/Makefile \
 lucidera/Makefile \
+lucidera/colstore/Makefile \
 lucidera/sorter/Makefile \
 lucidera/libfennel_lu/Makefile \
 lucidera/test/Makefile \

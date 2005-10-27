@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/jdbc/metadata.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/jdbc/metadata.sql#2 $
 0: jdbc:farrago:> -- Test JDBC metadata calls
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test getCatalogs
@@ -9,6 +9,7 @@
 | HSQLDB_DEMO                   |
 | LOCALDB                       |
 | SYS_BOOT                      |
+| SYS_COLUMN_STORE_DATA_SERVER  |
 | SYS_CWM                       |
 | SYS_FEM                       |
 | SYS_FTRS_DATA_SERVER          |

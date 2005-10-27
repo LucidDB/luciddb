@@ -20,6 +20,7 @@
 +-------------------+
 |       name        |
 +-------------------+
+| SYS_COLUMN_STORE  |
 | SYS_FTRS          |
 | SYS_JDBC          |
 | SYS_MDR           |
@@ -33,6 +34,7 @@
 +-------------------------------+
 | CSV_SERVER                    |
 | HSQLDB_DEMO                   |
+| SYS_COLUMN_STORE_DATA_SERVER  |
 | SYS_CWM                       |
 | SYS_FEM                       |
 | SYS_FTRS_DATA_SERVER          |
@@ -145,6 +147,7 @@ Error: DDL validation error near line 1, column 31: Reference to unknown foreign
 |             name              |
 +-------------------------------+
 | HSQLDB_DEMO                   |
+| SYS_COLUMN_STORE_DATA_SERVER  |
 | SYS_CWM                       |
 | SYS_FEM                       |
 | SYS_FTRS_DATA_SERVER          |
@@ -170,6 +173,7 @@ Error: DDL validation error near line 1, column 31: Reference to unknown foreign
 +-------------------+
 |       name        |
 +-------------------+
+| SYS_COLUMN_STORE  |
 | SYS_FTRS          |
 | SYS_JDBC          |
 | SYS_MDR           |

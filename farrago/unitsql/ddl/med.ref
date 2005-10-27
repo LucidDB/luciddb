@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/med.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/med.sql#4 $
 0: jdbc:farrago:> -- Test SQL/MED DDL
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- create a private wrapper for mdr (don't use the standard mdr wrapper)
@@ -168,6 +168,7 @@ Error: From line 1, column 15 to line 1, column 24: Table 'MOF_SCHEMA.FOREIGN_EX
 +-------------------+
 |       name        |
 +-------------------+
+| SYS_COLUMN_STORE  |
 | SYS_FTRS          |
 | SYS_JDBC          |
 | SYS_MDR           |
@@ -180,6 +181,7 @@ Error: From line 1, column 15 to line 1, column 24: Table 'MOF_SCHEMA.FOREIGN_EX
 |             name              |
 +-------------------------------+
 | HSQLDB_DEMO                   |
+| SYS_COLUMN_STORE_DATA_SERVER  |
 | SYS_CWM                       |
 | SYS_FEM                       |
 | SYS_FTRS_DATA_SERVER          |

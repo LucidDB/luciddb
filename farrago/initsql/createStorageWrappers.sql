@@ -34,6 +34,11 @@ create local data wrapper sys_ftrs
 library 'class net.sf.farrago.namespace.ftrs.FtrsDataWrapper'
 language java;
 
+-- create wrapper for access to local LucidDB column-store data
+create local data wrapper sys_column_store
+library 'class com.lucidera.lcs.LcsDataWrapper'
+language java;
+
 -- create wrapper for access to local mock data
 create local data wrapper sys_mock
 library 'class net.sf.farrago.namespace.mock.MedMockLocalDataWrapper'
@@ -47,6 +52,10 @@ language java;
 -- create singleton server for local FTRS row-store data
 create server sys_ftrs_data_server
 local data wrapper sys_ftrs;
+
+-- create singleton server for local LucidDB column-store data
+create server sys_column_store_data_server
+local data wrapper sys_column_store;
 
 -- create singleton server for local mock row-store data
 create server sys_mock_data_server

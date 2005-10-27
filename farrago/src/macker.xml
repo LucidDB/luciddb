@@ -82,6 +82,7 @@
     <pattern name="dt.fennel" class="com.disruptivetech.farrago.fennel.*" />
     <pattern name="dt.sql.advise" class="com.disruptivetech.farrago.sql.advise.*" />
 
+    <pattern name="lu.lcs" class="com.lucidera.lcs.*"/>
     <pattern name="lu.lurql" class="com.lucidera.lurql.*"/>
     <pattern name="lu.lurql.parser" class="com.lucidera.lurql.parser.*"/>
     <pattern name="lu.lurql.test" class="com.lucidera.lurql.test.*"/>
@@ -137,6 +138,7 @@
       <include pattern="dt.rel"/>
       <include pattern="dt.fennel"/>
       <include pattern="dt.sql.advise"/>
+      <include pattern="lu.lcs"/>
       <include pattern="lu.lurql"/>
       <include pattern="lu.lurql.parser"/>
       <include pattern="lu.lurql.test"/>
@@ -762,6 +764,22 @@
         <to pattern="farrago" />
         <allow>
           <to pattern="lu.fennel.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="lu.lcs.deps">
+      <include pattern="namespace.impl.deps" />
+      <include pattern="lu.lcs" />
+    </pattern>
+
+    <access-rule>
+      <message>lu.lcs dependency violation</message>
+      <deny>
+        <from pattern="lu.lcs" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="lu.lcs.deps" />
         </allow>
       </deny>
     </access-rule>
