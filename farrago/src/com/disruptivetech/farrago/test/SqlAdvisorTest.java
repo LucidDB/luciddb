@@ -131,7 +131,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         assertComplete(sql, expected); // join
     }
 
-    public void _testOnCondition() throws Exception {
+    public void testOnCondition() throws Exception {
         String sql;
         ArrayList expected = new ArrayList();
         expected.add("EMPNO");
@@ -168,7 +168,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         assertComplete(sql, expected); // on right
     }
 
-    public void _testFromWhere() throws Exception {
+    public void testFromWhere() throws Exception {
         String sql;
         ArrayList expected = new ArrayList();
         expected.add("EMPNO");
@@ -210,7 +210,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         assertComplete(sql, expected); // where list
     }
 
-    public void _testWhereList() throws Exception {
+    public void testWhereList() throws Exception {
         String sql;
         ArrayList expected = new ArrayList();
         expected.add("SALES.EMP");
@@ -252,7 +252,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         assertComplete(sql, expected); // where list
     }
 
-    public void _testSelectList() throws Exception {
+    public void testSelectList() throws Exception {
         String sql;
         ArrayList expected = new ArrayList();
         expected.add("SALES.EMP");
@@ -320,7 +320,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
     }
 
 
-    public void _testSubQuery() throws Exception {
+    public void testSubQuery() throws Exception {
         String sql;
         ArrayList expected = new ArrayList();
         expected.add("X");

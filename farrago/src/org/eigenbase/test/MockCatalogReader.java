@@ -195,6 +195,9 @@ public class MockCatalogReader implements SqlValidatorCatalogReader
         else if (names.length == 2) {
             // looking for table names under the schema
             MockSchema schema = (MockSchema) schemas.get(names[0]);
+            if (schema == null) {
+                return Util.emptySqlMonikerArray;
+            }
             ArrayList result = new ArrayList();
             Iterator j = schema.tableNames.iterator();
             while (j.hasNext()) {
