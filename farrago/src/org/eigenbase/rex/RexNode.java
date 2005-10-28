@@ -92,6 +92,13 @@ public abstract class RexNode
      * {@link RexVisitor#visitInputRef} method.
      */
     public abstract void accept(RexVisitor visitor);
+
+    /**
+     * Accepts a shuttle, dispatching to the right overloaded
+     * {@link RexShuttle#visitOver(RexOver)} method, and returning the
+     * resulting node.
+     */
+    public abstract RexNode accept(RexShuttle shuttle);
 }
 
 

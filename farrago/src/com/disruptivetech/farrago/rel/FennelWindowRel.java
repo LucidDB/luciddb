@@ -372,17 +372,17 @@ public class FennelWindowRel extends FennelSingleRel
         }
 
         public void go(RexNode rex) {
-            visit(rex);
+            rex.accept(this);
         }
 
-        public RexNode visit(RexCall call) {
+        public RexNode visitCall(RexCall call) {
             if (call instanceof RexOver) {
                 RexOver over = (RexOver) call;
                 registerWindow(over);
                 RexNode[] clonedOperands = new RexNode[over.operands.length];
                 for (int i = 0; i < over.operands.length; i++) {
                     RexNode operand = over.operands[i];
-                    clonedOperands[i] = subCollector.visit(operand);
+                    clonedOperands[i] = operand.accept(subCollector);
                 }
                 return builder.makeOver(
                     over.getType(),
@@ -397,7 +397,7 @@ public class FennelWindowRel extends FennelSingleRel
                 RexNode[] clonedOperands = new RexNode[call.operands.length];
                 for (int i = 0; i < call.operands.length; i++) {
                     RexNode operand = call.operands[i];
-                    clonedOperands[i] = subCollector.visit(operand);
+                    clonedOperands[i] = operand.accept(subCollector);
                 }
                 return builder.makeCall(call.getOperator(), clonedOperands);
             }

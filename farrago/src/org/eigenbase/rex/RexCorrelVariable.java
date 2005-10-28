@@ -24,8 +24,6 @@
 package org.eigenbase.rex;
 
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.rex.RexVariable;
-
 
 /**
  * Reference to the current row of a correlating relational expression.
@@ -59,6 +57,11 @@ public class RexCorrelVariable extends RexVariable
     public void accept(RexVisitor visitor)
     {
         visitor.visitCorrelVariable(this);
+    }
+
+    public RexNode accept(RexShuttle shuttle)
+    {
+        return shuttle.visitCorrelVariable(this);
     }
 }
 

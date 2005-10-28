@@ -30,7 +30,6 @@ import java.util.Calendar;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.SqlIntervalQualifier;
 import org.eigenbase.util.BitString;
 import org.eigenbase.util.EnumeratedValues;
 import org.eigenbase.util.NlsString;
@@ -415,6 +414,11 @@ public class RexLiteral extends RexNode
     public void accept(RexVisitor visitor)
     {
         visitor.visitLiteral(this);
+    }
+
+    public RexNode accept(RexShuttle shuttle)
+    {
+        return shuttle.visitLiteral(this);
     }
 }
 

@@ -30,6 +30,7 @@ import openjava.ptree.Literal;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexVisitor;
+import org.eigenbase.rex.RexShuttle;
 
 
 /**
@@ -75,6 +76,11 @@ public class JavaRowExpression extends RexNode
     public void accept(RexVisitor visitor)
     {
         throw new UnsupportedOperationException();
+    }
+
+    public RexNode accept(RexShuttle shuttle)
+    {
+        return this;
     }
 
     public RelDataType getType()

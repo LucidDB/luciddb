@@ -151,7 +151,7 @@ public class UnboundVariableCollector extends RexShuttle
 
     // todo: jhyde 2003/12/10 This doesn't work, and won't until we introduce
     //   RexParameter
-    public RexNode visit(RexCorrelVariable v)
+    public RexNode visitCorrelVariable(RexCorrelVariable v)
     {
         final Environment.VariableInfo info = env.lookupBind(v.toString());
         if (info != null) {
