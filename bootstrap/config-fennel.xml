@@ -15,7 +15,7 @@
                 </listeners>
 
 		<!-- Defines where cruise looks for changes, to decide whether to run the build -->
-		<modificationset requiremodification="false" quietperiod="300">
+		<modificationset quietperiod="300">
 			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/fennel/..."/>
 			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/thirdparty/..."/>
 		</modificationset>

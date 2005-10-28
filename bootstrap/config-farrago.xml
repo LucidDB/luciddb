@@ -15,7 +15,7 @@
                 </listeners>
 
 		<!-- Defines where cruise looks for changes, to decide whether to run the build -->
-		<modificationset requiremodification="false" quietperiod="300">
+		<modificationset quietperiod="300">
 			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/farrago/..."/>
 			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/fennel/..."/>
 			<p4 port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/thirdparty/..."/>
@@ -39,10 +39,10 @@
 		<publishers>
 			<!-- currentbuildstatuspublisher file="logs/farrago/currentbuildstatus.txt"/ -->
 
-			<artifactspublisher dir="build/farrago/trace" dest="artifacts/farrago&configSuffix;" subdirectory="trace"/>
-			<artifactspublisher dir="build/farrago/unitsql" dest="artifacts/farrago&configSuffix;" subdirectory="unitsql"/>
-			<artifactspublisher dir="build/farrago/initsql" dest="artifacts/farrago&configSuffix;" subdirectory="initsql"/>
-			<artifactspublisher dir="build/farrago/regressionsql" dest="artifacts/farrago&configSuffix;" subdirectory="regressionsql"/>
+			<artifactspublisher dir="&open_default.build.home;/bootstrap/build/farrago/trace" dest="artifacts/farrago&configSuffix;" subdirectory="trace"/>
+			<artifactspublisher dir="&open_default.build.home;/bootstrap/build/farrago/unitsql" dest="artifacts/farrago&configSuffix;" subdirectory="unitsql"/>
+			<artifactspublisher dir="&open_default.build.home;/bootstrap/build/farrago/initsql" dest="artifacts/farrago&configSuffix;" subdirectory="initsql"/>
+			<artifactspublisher dir="&open_default.build.home;/bootstrap/build/farrago/regressionsql" dest="artifacts/farrago&configSuffix;" subdirectory="regressionsql"/>
 
 			<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
 			<execute command="&rsync_cmd; artifacts/farrago&configSuffix; &rsync_dest;"/>
