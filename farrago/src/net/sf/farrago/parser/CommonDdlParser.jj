@@ -462,6 +462,7 @@ FemLocalTable UnscopedTableDefinition() :
     <TABLE>
     {
         table = getRepos().newFemLocalTable();
+        table.setModality(ModalityTypeEnum.MODALITYTYPE_RELATIONAL);
     }
     qualifiedTableName = CompoundIdentifier3()
     {
@@ -526,6 +527,7 @@ FemLocalView ViewDefinition() :
     <VIEW>
     {
         view = getRepos().newFemLocalView();
+        view.setModality(ModalityTypeEnum.MODALITYTYPE_RELATIONAL);
     }
     qualifiedViewName = CompoundIdentifier3()
     {
@@ -2114,6 +2116,7 @@ FemForeignTable ForeignTableDefinition() :
     <FOREIGN> <TABLE>
     {
         table = getRepos().newFemForeignTable();
+        table.setModality(ModalityTypeEnum.MODALITYTYPE_RELATIONAL);
     }
     qualifiedTableName = CompoundIdentifier3()
     {
