@@ -48,11 +48,11 @@ Error: Dynamic parameters are illegal in views (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad:  duplicate view name
 0: jdbc:farrago:> create view v1 as select * from sales.emps;
-Error: DDL validation error near line 1, column 8: Target schema "LOCALDB"."S" already contains view "V1" with same name (state=,code=0)
+Error: DDL validation error near line 1, column 13: Target schema "LOCALDB"."S" already contains view "V1" with same name (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad:  duplicate view name (views and tables conflict)
 0: jdbc:farrago:> create view sales.depts as select * from sales.emps;
-Error: DDL validation error near line 1, column 8: Target schema "LOCALDB"."SALES" already contains table "DEPTS" with same name (state=,code=0)
+Error: DDL validation error near line 1, column 19: Target schema "LOCALDB"."SALES" already contains table "DEPTS" with same name (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- bad:  ORDER BY in view
 0: jdbc:farrago:> create view v7 as select * from sales.emps order by name;

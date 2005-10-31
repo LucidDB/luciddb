@@ -9,7 +9,7 @@
 0: jdbc:farrago:> create table multisetTable(i integer primary key, ii integer multiset);
 0: jdbc:farrago:> -- create again, should fail
 0: jdbc:farrago:> create table multisetTable(i integer primary key, ii integer multiset);
-Error: DDL validation error near line 1, column 8: Target schema "LOCALDB"."COLLECTIONSTEST" already contains table "MULTISETTABLE" with same name (state=,code=0)
+Error: DDL validation error near line 1, column 14: Target schema "LOCALDB"."COLLECTIONSTEST" already contains table "MULTISETTABLE" with same name (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- drop table
 0: jdbc:farrago:> drop table multisetTable;
