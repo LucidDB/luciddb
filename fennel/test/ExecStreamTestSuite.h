@@ -40,6 +40,7 @@ class ExecStreamTestSuite : public ExecStreamUnitTestBase
 protected:
     void verifyZeroedOutput(ExecStream &stream,uint nBytesExpected);
     void testCartesianJoinExecStream(uint nRowsLeft,uint nRowsRight);
+    void testGroupAggExecStreamNrows(uint nrows);
     
 public:
     /**
@@ -58,6 +59,10 @@ public:
             FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCartesianJoinExecStreamOuter);
             FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCountAggExecStream);
             FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testSumAggExecStream);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream1);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream2);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream3);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testGroupAggExecStream4);
         }
     }
 
@@ -77,6 +82,29 @@ public:
     {
         // iterate multiple inner buffers
         testCartesianJoinExecStream(5,10000);
+    }
+
+    void testGroupAggExecStream1()
+    {
+        testGroupAggExecStreamNrows(10000);
+    }
+    
+    // 258*2 values seems to be the point at which buffer
+    // overflow occurs, so test that case as well as +/- 1
+    // from there
+    void testGroupAggExecStream2()
+    {
+        testGroupAggExecStreamNrows(257*2);
+    }
+    
+    void testGroupAggExecStream3()
+    {
+        testGroupAggExecStreamNrows(258*2);
+    }
+    
+    void testGroupAggExecStream4()
+    {
+        testGroupAggExecStreamNrows(259*2);
     }
 };
 

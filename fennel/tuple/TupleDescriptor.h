@@ -80,10 +80,16 @@ public:
         TupleDescriptor const &tupleDescriptor,
         TupleProjection const &tupleProjection);
 
+    // Utility function to compare the prefixes of two tuples up to keyCount.
+    int compareTuplesKey(
+        TupleData const &tuple1,
+        TupleData const &tuple2,
+        uint keyCount) const;
+
     int compareTuples(
         TupleData const &tuple1,
         TupleData const &tuple2) const;
-
+    
     void writePersistent(
         ByteOutputStream &) const;
     

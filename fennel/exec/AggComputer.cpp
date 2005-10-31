@@ -161,12 +161,9 @@ inline void ExtremeAggComputer::copyInputToAccumulator(
     TupleDatum &accumulatorDatum, 
     TupleDatum const &inputDatum)
 {
-    // TODO jvs 7-Oct-2005:  make this a TupleDatum utility function
-    memcpy(
-        const_cast<PBuffer>(accumulatorDatum.pData),
-        inputDatum.pData,
-        inputDatum.cbData);
-    accumulatorDatum.cbData = inputDatum.cbData;
+    // Use the utility function to copy from inputDatum's buffer to
+    // accumulatorDatum.
+    accumulatorDatum.memCopyFrom(inputDatum);    
 }
 
 void ExtremeAggComputer::updateAccumulator(

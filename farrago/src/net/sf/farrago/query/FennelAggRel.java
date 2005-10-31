@@ -77,6 +77,7 @@ public class FennelAggRel extends AggregateRelBase implements FennelRel
     {
         final FarragoRepos repos = FennelRelUtil.getRepos(this);
         FemAggStreamDef aggStream = repos.newFemAggStreamDef();
+        aggStream.setGroupingPrefixSize(groupCount);
         for (int i = 0; i < aggCalls.length; ++i) {
             Call call = aggCalls[i];
             assert(!call.isDistinct());

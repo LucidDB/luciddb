@@ -36,14 +36,17 @@ FENNEL_BEGIN_NAMESPACE
 struct SortedAggExecStreamParams : public ConduitExecStreamParams
 {
     AggInvocationList aggInvocations;
+    int groupByKeyCount;
+    explicit SortedAggExecStreamParams()
+    {
+        groupByKeyCount = 0;
+    }    
 };
 
 /**
  * SortedAggExecStream aggregates its input, producing tuples of aggregate
- * function computations as output.  Currently it treats the entire input as
- * one group and so produces only a single tuple of output; it will soon be
- * extended to take input sorted on a group key and produce one output tuple
- * per group.
+ * function computations as output. It takes input sorted on a group key and
+ * produce one output tuple per group.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -56,16 +59,26 @@ class SortedAggExecStream : public ConduitExecStream
         STATE_DONE
     };
     
-    TupleData inputTuple;
-    TupleDataWithBuffer accumulatorTuple;
-    TupleDataWithBuffer outputTuple;
     State state;
-    AggComputerList aggComputers;
 
+    AggComputerList aggComputers;
+    int groupByKeyCount;
+
+    TupleData inputTuple;
+    TupleDataWithBuffer prevTuple;
+    TupleData outputTuple;
+    bool prevTupleValid;
+    
     inline void clearAccumulator();
     inline void updateAccumulator();
     inline void computeOutput();
 
+    // Methods to store and compare group by keys 
+    inline void copyPrevGroupByKey();
+    inline void setCurGroupByKey();
+    inline int  compareGroupByKeys();
+    inline ExecStreamResult produce();
+    
     AggComputer *newAggComputer(
         AggFunction aggFunction,
         TupleAttributeDescriptor const *pAttrDesc);

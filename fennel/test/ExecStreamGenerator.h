@@ -314,6 +314,75 @@ public:
     }
 };
 
+
+/**
+ * Duplicate stream generator
+ *
+ * Generates two duplicates rows per value
+ *
+ * @author Zelaine Fong
+ * @version $Id$
+ */
+class RampDuplicateExecStreamGenerator : public MockProducerExecStreamGenerator
+{
+public:
+    virtual int64_t generateValue(uint iRow, uint iCol)
+    {
+        return iRow/2;
+    }
+};
+
+/**
+ * Column generator which produces values in sequence, starting at start.
+ */
+class SeqColumnGenerator : public ColumnGenerator<int64_t>
+{
+    int start;
+    int curr;
+
+public:
+    explicit SeqColumnGenerator()
+    {
+        start = 0;
+        curr = 0;
+    }
+    explicit SeqColumnGenerator(int startInit)
+    {
+        start = startInit;
+        curr = start;
+    }
+
+    int64_t next() 
+    {
+        return curr++;
+    }
+};
+
+
+/**
+ * Constant column generator
+ *
+ * Generates the same value for a column
+ *
+ * @author Zelaine Fong
+ * @version $Id$
+ */
+class ConstColumnGenerator : public ColumnGenerator<int64_t>
+{
+    int64_t constvalue;
+
+public:
+    explicit ConstColumnGenerator(int constInit) {
+        constvalue = constInit;
+    }
+
+    int64_t next() 
+    {
+        return constvalue;
+    }
+};
+
+
 FENNEL_END_NAMESPACE
 
 #endif

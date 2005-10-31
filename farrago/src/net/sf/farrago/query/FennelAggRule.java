@@ -66,11 +66,6 @@ public class FennelAggRule extends RelOptRule
     {
         AggregateRel aggRel = (AggregateRel) call.rels[0];
 
-        if (aggRel.getGroupCount() > 0) {
-            // TODO jvs 5-Oct-2005:  implement GROUP BY
-            return;
-        }
-
         AggregateRel.Call [] calls = aggRel.getAggCalls();
         for (int i = 0; i < calls.length; ++i) {
             if (calls[i].isDistinct()) {
@@ -90,12 +85,41 @@ public class FennelAggRule extends RelOptRule
         }
         
         RelNode relInput = call.rels[1];
-        RelNode fennelInput =
+        RelNode fennelInput;
+        
+        if (aggRel.getGroupCount() > 0) {
+            
+            // add a FennelSortRel node beneath AggRel with sort keys
+            // corresponding to the group by keys
+            RelNode sortInput = 
+                mergeTraitsAndConvert(
+                    aggRel.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
+                    relInput);
+            if (sortInput == null) {
+                return;
+            }
+
+            Integer [] keyProjection = new Integer[aggRel.getGroupCount()];
+            for (int i = 0; i < keyProjection.length; ++i) {
+                keyProjection[i] = new Integer(i);
+            }
+
+            boolean discardDuplicates = false;
+            FennelSortRel fennelSortRel =
+                new FennelSortRel(
+                    aggRel.getCluster(),
+                    sortInput,
+                    keyProjection,
+                    discardDuplicates);
+            fennelInput = fennelSortRel;
+        } else {
+            fennelInput =
             mergeTraitsAndConvert(
                 aggRel.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
                 relInput);
-        if (fennelInput == null) {
-            return;
+            if (fennelInput == null) {
+                return;
+            }
         }
 
         FennelAggRel fennelAggRel =

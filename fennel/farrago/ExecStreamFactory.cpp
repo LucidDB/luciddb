@@ -226,6 +226,7 @@ void ExecStreamFactory::visit(ProxyAggStreamDef &streamDef)
             pAggInvocation->getInputAttributeIndex();
         params.aggInvocations.push_back(aggInvocation);
     }
+    params.groupByKeyCount = streamDef.getGroupingPrefixSize(); 
     embryo.init(new SortedAggExecStream(), params);
 }
 

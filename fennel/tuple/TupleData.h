@@ -66,6 +66,21 @@ struct TupleDatum
         copyFrom(other);
         return *this;
     }
+
+    void memCopyFrom(TupleDatum const &other)
+    {
+        cbData = other.cbData;
+
+        // Perform memcpy from "other". However, set pData to NULL if it is
+        // NULL in "other".
+        if (other.pData) {
+            memcpy(const_cast<PBuffer>(pData),
+                   other.pData,
+                   other.cbData);
+        } else {
+            pData = other.pData;
+        }
+    }
 };
 
 /**

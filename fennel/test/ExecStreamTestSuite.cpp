@@ -38,7 +38,6 @@
 
 using namespace fennel;
 
-
 void ExecStreamTestSuite::verifyZeroedOutput(
     ExecStream &stream,uint nBytesExpected)
 {
@@ -191,6 +190,7 @@ void ExecStreamTestSuite::testCountAggExecStream()
 
     // simulate SELECT COUNT(*) FROM t10k
     SortedAggExecStreamParams aggParams;
+    aggParams.groupByKeyCount = 0;
     aggParams.outputTupleDesc.push_back(attrDesc);
     AggInvocation countInvocation;
     countInvocation.aggFunction = AGG_FUNC_COUNT;
@@ -228,6 +228,7 @@ void ExecStreamTestSuite::testSumAggExecStream()
 
     // simulate SELECT SUM(x) FROM t10k with x iterating from 0 to 9999
     SortedAggExecStreamParams aggParams;
+    aggParams.groupByKeyCount = 0;
     attrDesc.isNullable = true;
     aggParams.outputTupleDesc.push_back(attrDesc);
     AggInvocation sumInvocation;
@@ -249,5 +250,57 @@ void ExecStreamTestSuite::testSumAggExecStream()
 
     verifyOutput(*pOutputStream, 1, expectedResultGenerator);
 }
+
+void ExecStreamTestSuite::testGroupAggExecStreamNrows(uint nrows)
+{
+    StandardTypeDescriptorFactory stdTypeFactory;
+    TupleAttributeDescriptor attrDesc(
+        stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
+    
+    // Create two columns, both with two duplicates per column.
+    MockProducerExecStreamParams mockParams;
+    mockParams.outputTupleDesc.push_back(attrDesc);
+    mockParams.outputTupleDesc.push_back(attrDesc);
+    mockParams.nRows = nrows;   // at least two buffers
+    mockParams.pGenerator.reset(new RampDuplicateExecStreamGenerator());
+
+    ExecStreamEmbryo mockStreamEmbryo;
+    mockStreamEmbryo.init(new MockProducerExecStream(),mockParams);
+    mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
+
+    // simulate SELECT col, COUNT(*) FROM t10k GROUP BY col;
+    SortedAggExecStreamParams aggParams;
+    aggParams.groupByKeyCount = 1;
+    aggParams.outputTupleDesc.push_back(attrDesc);
+    aggParams.outputTupleDesc.push_back(attrDesc);
+    AggInvocation countInvocation;
+    countInvocation.aggFunction = AGG_FUNC_COUNT;
+    countInvocation.iInputAttr = -1; // interpreted as COUNT(*)
+    aggParams.aggInvocations.push_back(countInvocation);
+    
+    ExecStreamEmbryo aggStreamEmbryo;
+    
+    aggStreamEmbryo.init(new SortedAggExecStream(),aggParams);
+    aggStreamEmbryo.getStream()->setName("SortedAggExecStream");    
+
+    SharedExecStream pOutputStream = prepareTransformGraph(
+        mockStreamEmbryo,aggStreamEmbryo);
+
+    // Result should be a sequence of values in the first column
+    // and 2 for the second column
+    vector<boost::shared_ptr<ColumnGenerator<int64_t> > > columnGenerators;
+    
+    SharedInt64ColumnGenerator col =
+        SharedInt64ColumnGenerator(new SeqColumnGenerator());
+    columnGenerators.push_back(col);
+    
+    col = SharedInt64ColumnGenerator(new ConstColumnGenerator(2));
+    columnGenerators.push_back(col);
+    
+    CompositeExecStreamGenerator expectedResultGenerator(columnGenerators);
+
+    verifyOutput(*pOutputStream, mockParams.nRows/2, expectedResultGenerator);
+}
+
 
 // End ExecStreamTest.cpp

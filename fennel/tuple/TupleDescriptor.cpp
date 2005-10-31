@@ -83,10 +83,22 @@ int TupleDescriptor::compareTuples(
     TupleData const &tuple1,
     TupleData const &tuple2) const
 {
+    int keyComp;    
     // REVIEW:  should pass n as a param instead of recalculating it each time
-    uint n = std::min(tuple1.size(),tuple2.size());
-    n = std::min(n,size());
-    for (uint i = 0; i < n; ++i) {
+    uint keyCount = std::min(tuple1.size(),tuple2.size());
+    keyCount = std::min(keyCount,size());
+    keyComp = compareTuplesKey(tuple1, tuple2, keyCount);
+    return keyComp;
+}
+
+int TupleDescriptor::compareTuplesKey(
+    TupleData const &tuple1,
+    TupleData const &tuple2,
+    uint keyCount) const
+{
+    assert(keyCount <= std::min(tuple1.size(), tuple2.size()));
+    
+    for (uint i = 0; i < keyCount; ++i) {
         TupleDatum const &datum1 = tuple1[i];
         TupleDatum const &datum2 = tuple2[i];
         // TODO:  parameterize NULL-value collation

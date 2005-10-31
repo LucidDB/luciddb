@@ -46,8 +46,10 @@ public:
     explicit TupleDataWithBuffer();
     explicit TupleDataWithBuffer(TupleDescriptor const& tupleDesc);
     void computeAndAllocate(TupleDescriptor const& tupleDesc);
+    void resetBuffer();
     ~TupleDataWithBuffer();
 private:
+    TupleAccessor tupleAccessor;
     boost::scoped_array<FixedBuffer> array;
 };
 
