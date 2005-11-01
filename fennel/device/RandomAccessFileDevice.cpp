@@ -57,7 +57,7 @@ void RandomAccessFileDevice::prepareTransfer(RandomAccessRequest &request)
 {
     assert(request.pDevice == this);
 
-#ifdef HAVE_AIO_H
+#ifdef USE_AIO_H
     int aio_lio_opcode =
         (request.type == RandomAccessRequest::READ)
         ? LIO_READ : LIO_WRITE;
@@ -75,6 +75,28 @@ void RandomAccessFileDevice::prepareTransfer(RandomAccessRequest &request)
         pBinding->aio_reqprio = 0;
         pBinding->aio_offset = cbOffset;
         cbOffset += pBinding->aio_nbytes;
+    }
+    assert(cbOffset == request.cbOffset + request.cbTransfer);
+#endif
+
+#ifdef USE_LIBAIO_H
+    FileSize cbOffset = request.cbOffset;
+    for (RandomAccessRequest::BindingListIter
+             bindingIter(request.bindingList);
+         bindingIter; ++bindingIter)
+    {
+        RandomAccessRequestBinding *pBinding = bindingIter;
+
+        if (request.type == RandomAccessRequest::READ) {
+            io_prep_pread(
+                pBinding, handle, pBinding->getBuffer(),
+                pBinding->getBufferSize(), cbOffset);
+        } else {
+            io_prep_pwrite(
+                pBinding, handle, pBinding->getBuffer(),
+                pBinding->getBufferSize(), cbOffset);
+        }
+        cbOffset += pBinding->getBufferSize();
     }
     assert(cbOffset == request.cbOffset + request.cbTransfer);
 #endif

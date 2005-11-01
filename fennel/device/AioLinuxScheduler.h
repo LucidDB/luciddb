@@ -4,7 +4,6 @@
 // Copyright (C) 2005-2005 The Eigenbase Project
 // Copyright (C) 2005-2005 Disruptive Tech
 // Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,49 +20,52 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#ifndef Fennel_AioPollingScheduler_Included
-#define Fennel_AioPollingScheduler_Included
+#ifndef Fennel_AioLinuxScheduler_Included
+#define Fennel_AioLinuxScheduler_Included
 
-#ifdef USE_AIO_H
+#ifdef USE_LIBAIO_H
 
-#include "fennel/synch/Thread.h"
 #include "fennel/device/DeviceAccessScheduler.h"
 #include "fennel/device/RandomAccessRequest.h"
-#include <vector>
+#include "fennel/common/AtomicCounter.h"
+#include "fennel/synch/Thread.h"
 
-#include <aio.h>
-struct aiocb;
+#include <vector>
+#include <boost/scoped_array.hpp>
 
 FENNEL_BEGIN_NAMESPACE
-
+    
 /**
- * AioPollingScheduler implements DeviceAccessScheduler via Unix aio calls and
- * threads which poll for completion.
+ * AioLinuxScheduler implements DeviceAccessScheduler via Linux-specific
+ * kernel-mode libaio calls.
+ *
+ * @author John V. Sichi
+ * @version $Id$
  */
-class AioPollingScheduler : public DeviceAccessScheduler, public Thread
+class AioLinuxScheduler : public DeviceAccessScheduler, public Thread
 {
-    StrictMutex mutex;
-    LocalCondition newRequestPending;
+    io_context_t context;
+    uint nRequestsMax;
+    AtomicCounter nRequestsPending;
     bool quit;
-    
-    std::vector<aiocb *> currentRequests;
-    std::vector<aiocb *> newRequests;
-    
+
+    inline bool isStarted() const;
+
 public:
     /**
      * Constructor.
      */
-    explicit AioPollingScheduler(
-        DeviceAccessSchedulerParams const &);
-    
+    explicit AioLinuxScheduler(DeviceAccessSchedulerParams const &);
+
     /**
      * Destructor:  stop must already have been called.
      */
-    virtual ~AioPollingScheduler();
+    virtual ~AioLinuxScheduler();
 
 // ----------------------------------------------------------------------
 // Implementation of DeviceAccessScheduler interface (q.v.)
 // ----------------------------------------------------------------------
+    virtual void registerDevice(SharedRandomAccessDevice pDevice);
     virtual void schedule(RandomAccessRequest &request);
     virtual void stop();
     
@@ -76,7 +78,7 @@ public:
 FENNEL_END_NAMESPACE
 
 #endif
-
+    
 #endif
 
-// End AioPollingScheduler.h
+// End AioLinuxScheduler.h

@@ -34,8 +34,10 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 ThreadPoolScheduler::ThreadPoolScheduler(
     DeviceAccessSchedulerParams const &params)
 {
-    // threads and requests are 1-to-1
-    pool.start(params.maxRequests);
+    // threads and requests are 1-to-1, but threads are expensive,
+    // so arbitrarily cap at 10
+    uint nThreads = std::min<uint>(10, params.maxRequests);
+    pool.start(nThreads);
 }
 
 ThreadPoolScheduler::~ThreadPoolScheduler()

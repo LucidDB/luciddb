@@ -48,11 +48,6 @@ class TestBase
         public boost::enable_shared_from_this<TestBase>
     
 {
-    // implement TraceTarget
-    virtual void notifyTrace(
-        std::string source,TraceLevel level,std::string message);
-    virtual TraceLevel getSourceTraceLevel(std::string source);
-    
 protected:
     /**
      * Boost test suite.
@@ -138,6 +133,11 @@ public:
      * case method is invoked.  Default is no-op.
      */
     virtual void testCaseTearDown();
+    
+    // implement TraceTarget
+    virtual void notifyTrace(
+        std::string source,TraceLevel level,std::string message);
+    virtual TraceLevel getSourceTraceLevel(std::string source);
 };
 
 /**
@@ -169,7 +169,12 @@ public:
         pUserTestCase->beforeTestCase(name);
         pUserTestCase->testCaseSetUp();
         try {
-            ((*pUserTestCase).*pFunction)();
+            try {
+                ((*pUserTestCase).*pFunction)();
+            } catch (std::exception &ex) {
+                pUserTestCase->notifyTrace(name, TRACE_SEVERE, ex.what());
+                throw ex;
+            }
         } catch (...) {
             try {
                 pUserTestCase->testCaseTearDown();

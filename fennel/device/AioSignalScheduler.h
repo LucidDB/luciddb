@@ -24,7 +24,7 @@
 #ifndef Fennel_AioSignalScheduler_Included
 #define Fennel_AioSignalScheduler_Included
 
-#ifdef HAVE_AIO_H
+#ifdef USE_AIO_H
 
 #include "fennel/device/DeviceAccessScheduler.h"
 #include "fennel/device/RandomAccessRequest.h"

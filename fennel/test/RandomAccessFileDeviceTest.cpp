@@ -29,6 +29,7 @@
 #include "fennel/device/RandomAccessRequest.h"
 #include "fennel/device/DeviceAccessScheduler.h"
 #include "fennel/device/DeviceAccessSchedulerParams.h"
+#include "fennel/cache/VMAllocator.h"
 #include <memory>
 #include <fstream>
 #include <boost/test/test_tools.hpp>
@@ -120,91 +121,99 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         closeDevice();
     }
 
+    class Listener
+    {
+        StrictMutex mutex;
+        LocalCondition cond;
+            
+    public:
+        int nTarget;
+        int nSuccess;
+        int nCompleted;
+
+        explicit Listener(int nTargetInit)
+        {
+            nTarget = nTargetInit;
+            nSuccess = 0;
+            nCompleted = 0;
+        }
+        virtual ~Listener()
+        {
+        }
+            
+        void notifyTransferCompletion(bool b)
+        {
+            StrictMutexGuard mutexGuard(mutex);
+            if (b) {
+                nSuccess++;
+            }
+            nCompleted++;
+            if (nCompleted == nTarget) {
+                cond.notify_all();
+            }
+        }
+
+        void waitForAll()
+        {
+            StrictMutexGuard mutexGuard(mutex);
+            while (nCompleted < nTarget) {
+                cond.wait(mutexGuard);
+            }
+        }
+    };
+
+    class Binding : public RandomAccessRequestBinding 
+    {
+        Listener &listener;
+        uint cb;
+        PBuffer pBuffer;
+    public:
+        explicit Binding(
+            Listener &listenerInit,uint cbInit,PBuffer pBufferInit)
+            : listener(listenerInit),cb(cbInit),pBuffer(pBufferInit)
+        {
+        }
+
+        virtual ~Binding()
+        {
+        }
+            
+        virtual PBuffer getBuffer() const
+        {
+            return pBuffer;
+        }
+            
+        virtual uint getBufferSize() const
+        {
+            return cb;
+        }
+            
+        virtual void notifyTransferCompletion(bool bSuccess)
+        {
+            listener.notifyTransferCompletion(bSuccess);
+        }
+    };
+
     void testAsyncIO()
     {
-        class Listener
-        {
-            StrictMutex mutex;
-            LocalCondition cond;
-            
-        public:
-            int nTarget;
-            int nSuccess;
-            int nCompleted;
-
-            explicit Listener(int nTargetInit)
-            {
-                nTarget = nTargetInit;
-                nSuccess = 0;
-                nCompleted = 0;
-            }
-            virtual ~Listener()
-            {
-            }
-            
-            void notifyTransferCompletion(bool b)
-            {
-                StrictMutexGuard mutexGuard(mutex);
-                if (b) {
-                    nSuccess++;
-                }
-                nCompleted++;
-                if (nCompleted == nTarget) {
-                    cond.notify_all();
-                }
-            }
-
-            void waitForAll()
-            {
-                StrictMutexGuard mutexGuard(mutex);
-                while (nCompleted < nTarget) {
-                    cond.wait(mutexGuard);
-                }
-            }
-        };
-
-        class Binding : public RandomAccessRequestBinding 
-        {
-            Listener &listener;
-            uint cb;
-            PBuffer pBuffer;
-        public:
-            explicit Binding(
-                Listener &listenerInit,uint cbInit,PBuffer pBufferInit)
-                : listener(listenerInit),cb(cbInit),pBuffer(pBufferInit)
-            {
-            }
-
-            virtual ~Binding()
-            {
-            }
-            
-            virtual PBuffer getBuffer() const
-            {
-                return pBuffer;
-            }
-            
-            virtual uint getBufferSize() const
-            {
-                return cb;
-            }
-            
-            virtual void notifyTransferCompletion(bool bSuccess)
-            {
-                listener.notifyTransferCompletion(bSuccess);
-            }
-        };
-
-#ifdef __MINGW32__
-        if (baseMode.direct) {
-            // TODO:  use sector-aligned writes and re-enable this.
-            return;
+        int n = 5;
+        uint cbSector = HALF_SIZE;
+        VMAllocator allocator(cbSector*n);
+        void *pBuf = allocator.allocate();
+        try {
+            testAsyncIOImpl(n, cbSector, reinterpret_cast<PBuffer>(pBuf));
+        } catch (...) {
+            allocator.deallocate(pBuf);
+            throw;
         }
-#endif
-
+        allocator.deallocate(pBuf);
+    }
+    
+    void testAsyncIOImpl(int n, uint cbSector, PBuffer pBuf)
+    {
         DeviceAccessScheduler *pScheduler =
             DeviceAccessScheduler::newScheduler(schedParams);
-        
+
         char *devName = "async.dat";
         DeviceMode openMode = baseMode;
         openMode.create = 1;
@@ -213,18 +222,18 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         std::string s = "Four score and seven years ago.";
         char const *writeBuf = s.c_str();
         uint cb = s.size();
-        int n = 5;
-        pRandomAccessDevice->setSizeInBytes(n*cb);
+        pRandomAccessDevice->setSizeInBytes(n*cbSector);
         
         Listener writeListener(n);
         RandomAccessRequest writeRequest;
         writeRequest.pDevice = pRandomAccessDevice.get();
         writeRequest.cbOffset = 0;
-        writeRequest.cbTransfer=n*cb;
+        writeRequest.cbTransfer=n*cbSector;
         writeRequest.type = RandomAccessRequest::WRITE;
+        memcpy(pBuf, writeBuf, cb);
         for (int i = 0; i < n; i++) {
             Binding *pBinding = new Binding(
-                writeListener,cb,PBuffer(writeBuf));
+                writeListener,cbSector,PBuffer(pBuf));
             writeRequest.bindingList.push_back(*pBinding);
         }
         pScheduler->schedule(writeRequest);
@@ -244,20 +253,19 @@ class RandomAccessFileDeviceTest : virtual public TestBase
         RandomAccessRequest readRequest;
         readRequest.pDevice = pRandomAccessDevice.get();
         readRequest.cbOffset = 0;
-        readRequest.cbTransfer=n*cb;
+        readRequest.cbTransfer=n*cbSector;
         readRequest.type = RandomAccessRequest::READ;
-        boost::scoped_array<FixedBuffer> readBuf(new FixedBuffer[cb*n]);
         for (int i = 0; i < n; i++) {
             Binding *pBinding = new Binding(
-                readListener,cb,
-                readBuf.get() + i*cb);
+                readListener,cbSector,
+                pBuf + i*cbSector);
             readRequest.bindingList.push_back(*pBinding);
         }
         pScheduler->schedule(readRequest);
         readListener.waitForAll();
         BOOST_CHECK_EQUAL(readListener.nSuccess,n);
         for (int i = 0; i < n; i++) {
-            std::string s2(reinterpret_cast<char *>(readBuf.get() + i*cb),cb);
+            std::string s2(reinterpret_cast<char *>(pBuf + i*cbSector),cb);
             BOOST_CHECK_EQUAL(s,s2);
         }
         pScheduler->unregisterDevice(pRandomAccessDevice);
@@ -314,7 +322,7 @@ public:
 // for direct I/O to work on Windows.
 const uint RandomAccessFileDeviceTest::ZERO_SIZE = 0;
 const uint RandomAccessFileDeviceTest::HALF_SIZE = 4096;
-const uint RandomAccessFileDeviceTest::FULL_SIZE = 8192;
+const uint RandomAccessFileDeviceTest::FULL_SIZE = 2*HALF_SIZE;
 
 FENNEL_UNIT_TEST_SUITE(RandomAccessFileDeviceTest);
 

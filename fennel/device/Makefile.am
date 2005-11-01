@@ -2,6 +2,7 @@ include $(top_srcdir)/am_include.mk
 
 noinst_LTLIBRARIES=libdevice.la
 libdevice_la_SOURCES=\
+AioLinuxScheduler.cpp \
 AioPollingScheduler.cpp \
 AioSignalScheduler.cpp \
 DeviceAccessScheduler.cpp \

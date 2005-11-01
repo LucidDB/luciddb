@@ -34,7 +34,11 @@
 #include <windows.h>
 #endif
 
-#ifdef HAVE_AIO_H
+#ifdef USE_LIBAIO_H
+#include "fennel/device/AioLinuxScheduler.h"
+#endif
+
+#ifdef USE_AIO_H
 #include "fennel/device/AioPollingScheduler.h"
 #include "fennel/device/AioSignalScheduler.h"
 #endif
@@ -55,7 +59,12 @@ DeviceAccessScheduler::newScheduler(
         return new IoCompletionPortScheduler(params);
 #endif
         
-#ifdef HAVE_AIO_H
+#ifdef USE_LIBAIO_H
+    case DeviceAccessSchedulerParams::AIO_LINUX_SCHEDULER:
+        return new AioLinuxScheduler(params);
+#endif
+        
+#ifdef USE_AIO_H
     case DeviceAccessSchedulerParams::AIO_POLLING_SCHEDULER:
         return new AioPollingScheduler(params);
     case DeviceAccessSchedulerParams::AIO_SIGNAL_SCHEDULER:

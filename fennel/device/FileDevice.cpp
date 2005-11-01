@@ -105,8 +105,10 @@ FileDevice::FileDevice(
 
     if (mode.direct) {
         access |= O_SYNC;
-        // NOTE:  I tried O_DIRECT, but got EINVAL errors back from pwrite.
-        // Maybe try again with Linux 2.6.
+        // NOTE:  We don't actually set O_DIRECT here, because on Linux
+        // that results in EINVAL errors from pwrite.  Instead,
+        // O_DIRECT is set from AioLinuxScheduler, because it is required
+        // for libaio.
     }
     
     handle = ::open(filename.c_str(), access, permission);

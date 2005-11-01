@@ -43,6 +43,7 @@ public:
     static ParamVal valIoCompletionPortScheduler;
     static ParamVal valAioPollingScheduler;
     static ParamVal valAioSignalScheduler;
+    static ParamVal valAioLinuxScheduler;
     
     /**
      * Enumeration of available scheduler implementations
@@ -51,7 +52,8 @@ public:
         THREAD_POOL_SCHEDULER,
         IO_COMPLETION_PORT_SCHEDULER,
         AIO_POLLING_SCHEDULER,
-        AIO_SIGNAL_SCHEDULER
+        AIO_SIGNAL_SCHEDULER,
+        AIO_LINUX_SCHEDULER
     };
 
     /**

@@ -31,6 +31,11 @@
 struct aiocb;
 #endif
 
+#ifdef HAVE_LIBAIO_H
+#include <libaio.h>
+struct iocb;
+#endif
+
 #ifdef __MINGW32__
 #include <windows.h>
 #endif
@@ -44,8 +49,11 @@ class RandomAccessDevice;
  * memory location being read from or written to.
  */
 class RandomAccessRequestBinding : public IntrusiveListNode
-#ifdef HAVE_AIO_H
+#ifdef USE_AIO_H
 , public aiocb
+#endif
+#ifdef USE_LIBAIO_H
+, public iocb
 #endif
 #ifdef __MINGW32__
 , public OVERLAPPED

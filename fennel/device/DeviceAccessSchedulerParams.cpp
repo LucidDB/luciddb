@@ -36,16 +36,19 @@ ParamVal DeviceAccessSchedulerParams::valIoCompletionPortScheduler =
 "ioCompletionPort";
 ParamVal DeviceAccessSchedulerParams::valAioPollingScheduler = "aioPolling";
 ParamVal DeviceAccessSchedulerParams::valAioSignalScheduler = "aioSignal";
+ParamVal DeviceAccessSchedulerParams::valAioLinuxScheduler = "aioLinux";
 
 DeviceAccessSchedulerParams::DeviceAccessSchedulerParams()
 {
 #ifdef __MINGW32__
     schedulerType = IO_COMPLETION_PORT_SCHEDULER;
+#elif defined(USE_LIBAIO_H)
+    schedulerType = AIO_LINUX_SCHEDULER;
 #else
     schedulerType = THREAD_POOL_SCHEDULER;
 #endif
-    nThreads = 3;
-    maxRequests = 10;
+    nThreads = 1;
+    maxRequests = 1024;
 }
 
 void DeviceAccessSchedulerParams::readConfig(ConfigMap const &configMap)
@@ -57,6 +60,8 @@ void DeviceAccessSchedulerParams::readConfig(ConfigMap const &configMap)
         schedulerType = AIO_POLLING_SCHEDULER;
     } else if (s == valAioSignalScheduler) {
         schedulerType = AIO_SIGNAL_SCHEDULER;
+    } else if (s == valAioLinuxScheduler) {
+        schedulerType = AIO_LINUX_SCHEDULER;
     } else if (s == valIoCompletionPortScheduler) {
         schedulerType = IO_COMPLETION_PORT_SCHEDULER;
     } else {

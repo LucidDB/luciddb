@@ -44,6 +44,9 @@ public:
 
     virtual ~FennelExcn() throw();
 
+    // implement std::exception
+    virtual const char *what() const throw();
+
     std::string const &getMessage()
     {
         return msg;

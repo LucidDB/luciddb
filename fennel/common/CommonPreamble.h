@@ -270,6 +270,13 @@ do { \
 
 #define htonll(x) ntohll(x)
 
+// Asynchronous I/O API selection
+
+#if defined(HAVE_LIBAIO_H) && defined(HAVE_LIBAIO)
+#define USE_LIBAIO_H
+#elif HAVE_AIO_H
+#define USE_AIO_H
+#endif
 
 FENNEL_END_NAMESPACE
 

@@ -23,7 +23,7 @@
 
 #include "fennel/common/CommonPreamble.h"
 
-#ifdef HAVE_AIO_H
+#ifdef USE_AIO_H
 
 #include "fennel/device/AioPollingScheduler.h"
 #include "fennel/device/DeviceAccessSchedulerParams.h"
