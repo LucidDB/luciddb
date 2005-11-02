@@ -28,6 +28,7 @@ import org.eigenbase.sql.SqlOperator;
 
 import java.util.Set;
 import java.util.Iterator;
+import java.util.HashSet;
 
 /**
  * Utility class for various multiset related methods
@@ -39,24 +40,23 @@ import java.util.Iterator;
 public class RexMultisetUtil
 {
     /** A set defining all implementable multiset calls */
-    private static final Set multisetOperators = new java.util.HashSet();
+    private static final Set multisetOperators = new HashSet();
     public static final SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
 
     static {
-            multisetOperators.add(opTab.cardinalityFunc);
-            multisetOperators.add(opTab.castFunc);
-            multisetOperators.add(opTab.elementFunc);
-            multisetOperators.add(opTab.multisetExceptAllOperator);
-            multisetOperators.add(opTab.multisetExceptOperator);
-            multisetOperators.add(opTab.multisetIntersectAllOperator);
-            multisetOperators.add(opTab.multisetIntersectOperator);
-            multisetOperators.add(opTab.multisetUnionAllOperator);
-            multisetOperators.add(opTab.multisetUnionOperator);
-            multisetOperators.add(opTab.isASetOperator);
-            multisetOperators.add(opTab.memberOfOperator);
-            multisetOperators.add(opTab.submultisetOfOperator);
-        }
-
+        multisetOperators.add(SqlStdOperatorTable.cardinalityFunc);
+        multisetOperators.add(SqlStdOperatorTable.castFunc);
+        multisetOperators.add(SqlStdOperatorTable.elementFunc);
+        multisetOperators.add(SqlStdOperatorTable.multisetExceptAllOperator);
+        multisetOperators.add(SqlStdOperatorTable.multisetExceptOperator);
+        multisetOperators.add(SqlStdOperatorTable.multisetIntersectAllOperator);
+        multisetOperators.add(SqlStdOperatorTable.multisetIntersectOperator);
+        multisetOperators.add(SqlStdOperatorTable.multisetUnionAllOperator);
+        multisetOperators.add(SqlStdOperatorTable.multisetUnionOperator);
+        multisetOperators.add(SqlStdOperatorTable.isASetOperator);
+        multisetOperators.add(SqlStdOperatorTable.memberOfOperator);
+        multisetOperators.add(SqlStdOperatorTable.submultisetOfOperator);
+    }
 
     /**
      * Returns true if a node contains a mixing between multiset and
@@ -65,7 +65,7 @@ public class RexMultisetUtil
     public static boolean containsMixing(RexNode node)
     {
         RexCallMultisetOperatorCounter countShuttle = new RexCallMultisetOperatorCounter();
-        countShuttle.visit(node);
+        node.accept(countShuttle);
         if (countShuttle.totalCount == countShuttle.multisetCount) {
             return false;
         }
@@ -166,7 +166,7 @@ public class RexMultisetUtil
         int totalCount = 0;
         int multisetCount = 0;
 
-        public RexNode visit(RexCall call)
+        public RexNode visitCall(RexCall call)
         {
             totalCount++;
             doSuper:
@@ -178,7 +178,7 @@ public class RexMultisetUtil
                 }
                 multisetCount++;
             }
-            return super.visit(call);
+            return super.visitCall(call);
         }
     }
 }

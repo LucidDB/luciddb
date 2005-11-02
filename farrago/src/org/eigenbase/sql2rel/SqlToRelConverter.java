@@ -589,7 +589,7 @@ public class SqlToRelConverter
         // a call to an agg function. For example, AVG(x) becomes SUM(x) /
         // COUNT(x).
         final RexShuttle visitor = new RexShuttle() {
-            public RexNode visit(RexCall call)
+            public RexNode visitCall(RexCall call)
             {
                 final SqlOperator op = call.getOperator();
                 if (op instanceof SqlAggFunction) {
@@ -600,10 +600,10 @@ public class SqlToRelConverter
                         orderKeys, window.getLowerBound(),
                         window.getUpperBound(), window.isRows());
                 }
-                return super.visit(call);
+                return super.visitCall(call);
             }
         };
-        return visitor.visit(rexAgg);
+        return rexAgg.accept(visitor);
     }
 
     /**

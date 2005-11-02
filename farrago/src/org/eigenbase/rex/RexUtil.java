@@ -198,15 +198,15 @@ public class RexUtil
     {
         try {
             RexShuttle shuttle = new RexShuttle() {
-                public RexNode visit(RexCall call)
+                public RexNode visitCall(RexCall call)
                 {
                     if (call.getOperator().equals(operator)) {
                         throw new Util.FoundOne(call);
                     }
-                    return super.visit(call);
+                    return super.visitCall(call);
                 }
             };
-            shuttle.visit(node);
+            node.accept(shuttle);
             return null;
         } catch (Util.FoundOne e) {
             Util.swallow(e, null);

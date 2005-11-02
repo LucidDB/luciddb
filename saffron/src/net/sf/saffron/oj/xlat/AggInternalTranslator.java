@@ -29,14 +29,12 @@ import openjava.mop.OJMethod;
 import openjava.mop.Toolbox;
 import openjava.ptree.*;
 
-import org.eigenbase.oj.*;
 import org.eigenbase.oj.util.JavaRexBuilder;
 import org.eigenbase.oj.util.OJUtil;
 import org.eigenbase.rel.AggregateRel;
 import org.eigenbase.rel.Aggregation;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactoryImpl;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.rex.*;
 import org.eigenbase.util.Util;
@@ -287,7 +285,7 @@ outer:
     /**
      * Reference to a key of the current aggregator.
      * This expression is created only temporarily, and is removed by the
-     * {@link #unpickle} method.
+     * {@link AggInternalTranslator#unpickle} method.
      */
     static class RexGroupVariable extends RexVariable
     {
@@ -308,12 +306,17 @@ outer:
         {
             throw new UnsupportedOperationException();
         }
+
+        public RexNode accept(RexShuttle shuttle)
+        {
+            throw new UnsupportedOperationException();
+        }
     }
 
     /**
      * Reference to an aggregation expression of the current aggregator.
      * This expression is created only temporarily, and is removed by the
-     * {@link #unpickle} method.
+     * {@link AggInternalTranslator#unpickle} method.
      */
     static class RexAggVariable extends RexVariable
     {
@@ -331,6 +334,11 @@ outer:
         }
 
         public void accept(RexVisitor visitor)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public RexNode accept(RexShuttle shuttle)
         {
             throw new UnsupportedOperationException();
         }

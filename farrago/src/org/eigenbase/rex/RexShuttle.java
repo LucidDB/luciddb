@@ -39,28 +39,7 @@ public class RexShuttle
 {
     //~ Methods ---------------------------------------------------------------
 
-    public RexNode visit(RexNode rex)
-    {
-        if (rex instanceof RexOver) {
-            return visit((RexOver) rex);
-        } else if (rex instanceof RexCall) {
-            return visit((RexCall) rex);
-        } else if (rex instanceof RexCorrelVariable) {
-            return visit((RexCorrelVariable) rex);
-        } else if (rex instanceof RexInputRef) {
-            return visit((RexInputRef) rex);
-        } else if (rex instanceof RexFieldAccess) {
-            return visit((RexFieldAccess) rex);
-        } else if (rex instanceof RexLiteral) {
-            return visit((RexLiteral) rex);
-        } else if (rex instanceof RexDynamicParam) {
-            return visit((RexDynamicParam) rex);
-        } else {
-            return rex;
-        }
-    }
-
-    public RexNode visit(RexOver over)
+    public RexNode visitOver(RexOver over)
     {
         boolean[] update = {false};
         RexNode[] clonedOperands = visitArray(over.operands, update);
@@ -80,7 +59,7 @@ public class RexShuttle
         }
     }
 
-    public RexNode visit(final RexCall call)
+    public RexNode visitCall(final RexCall call)
     {
         boolean[] update = {false};
         RexNode[] clonedOperands = visitArray(call.operands, update);
@@ -104,7 +83,7 @@ public class RexShuttle
         RexNode[] clonedOperands = new RexNode[exprs.length];
         for (int i = 0; i < exprs.length; i++) {
             RexNode operand = exprs[i];
-            RexNode clonedOperand = visit(operand);
+            RexNode clonedOperand = operand.accept(this);
             if (clonedOperand != operand) {
                 update[0] = true;
             }
@@ -113,15 +92,15 @@ public class RexShuttle
         return clonedOperands;
     }
 
-    public RexNode visit(RexCorrelVariable variable)
+    public RexNode visitCorrelVariable(RexCorrelVariable variable)
     {
         return variable;
     }
 
-    public RexNode visit(RexFieldAccess fieldAccess)
+    public RexNode visitFieldAccess(RexFieldAccess fieldAccess)
     {
         RexNode before = fieldAccess.getReferenceExpr();
-        RexNode after = visit(before);
+        RexNode after = before.accept(this);
 
         if (before == after) {
             return fieldAccess;
@@ -132,19 +111,24 @@ public class RexShuttle
         }
     }
 
-    public RexNode visit(RexInputRef input)
+    public RexNode visitInputRef(RexInputRef input)
     {
         return input;
     }
 
-    public RexNode visit(RexLiteral literal)
+    public RexNode visitLiteral(RexLiteral literal)
     {
         return literal;
     }
 
-    public RexNode visit(RexDynamicParam dynamicParam)
+    public RexNode visitDynamicParam(RexDynamicParam dynamicParam)
     {
         return dynamicParam;
+    }
+
+    public RexNode visitRangeRef(RexRangeRef rangeRef)
+    {
+        return rangeRef;
     }
 }
 

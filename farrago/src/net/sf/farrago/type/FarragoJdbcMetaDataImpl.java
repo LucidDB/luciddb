@@ -68,7 +68,6 @@ public class FarragoJdbcMetaDataImpl
     }
 
     public String getFieldName(int fieldOrdinal)
-        throws SQLException
     {
         return rowType.getFields()[fieldOrdinal - 1].getName();
     }
@@ -129,6 +128,63 @@ public class FarragoJdbcMetaDataImpl
         }
     }
 
+    protected int getFieldDisplaySize(int column)
+    {
+        int precision = getFieldPrecision(column);
+        int type = getFieldJdbcType(column);
+        switch (type) {
+        case Types.BOOLEAN:
+            // 5 for max(strlen("true"),strlen("false"))
+            return 5;
+        case Types.DATE:
+
+            // 10 for strlen("yyyy-mm-dd")
+            return 10;
+        case Types.TIME:
+            if (precision == 0) {
+                // 8 for strlen("hh:mm:ss")
+                return 8;
+            } else {
+                // 1 extra for decimal point
+                return 9 + precision;
+            }
+        case Types.TIMESTAMP:
+            if (precision == 0) {
+                // 19 for strlen("yyyy-mm-dd hh:mm:ss")
+                return 19;
+            } else {
+                // 1 extra for decimal point
+                return 20 + precision;
+            }
+        case Types.REAL:
+        case Types.FLOAT:
+            return 13;
+        case Types.DOUBLE:
+            return 22;
+        default:
+            // TODO:  adjust for numeric formatting, etc.
+            return precision;
+        }
+    }
+
+    protected String getFieldCatalogName(int fieldOrdinal)
+    {
+        // TODO
+        return "";
+    }
+
+    protected String getFieldSchemaName(int fieldOrdinal)
+    {
+        // TODO
+        return "";
+    }
+
+    protected String getFieldTableName(int fieldOrdinal)
+    {
+        // TODO
+        return "";
+    }
+
     protected int isFieldNullable(int fieldOrdinal)
     {
         RelDataType type = getFieldType(fieldOrdinal);
@@ -136,9 +192,45 @@ public class FarragoJdbcMetaDataImpl
         : ResultSetMetaData.columnNoNulls;
     }
 
+    protected boolean isFieldAutoIncrement(int fieldOrdinal)
+    {
+        return false;
+    }
+
+    protected boolean isFieldCaseSensitive(int fieldOrdinal)
+    {
+        // TODO
+        return false;
+    }
+
+    protected boolean isFieldSearchable(int fieldOrdinal)
+    {
+        return true;
+    }
+
     protected boolean isFieldSigned(int fieldOrdinal)
     {
         // TODO
+        return false;
+    }
+
+    protected boolean isFieldCurrency(int fieldOrdinal)
+    {
+        return false;
+    }
+
+    protected boolean isFieldReadOnly(int fieldOrdinal)
+    {
+        return true;
+    }
+
+    protected boolean isFieldWritable(int fieldOrdinal)
+    {
+        return false;
+    }
+
+    protected boolean isFieldDefinitelyWritable(int fieldOrdinal)
+    {
         return false;
     }
 }

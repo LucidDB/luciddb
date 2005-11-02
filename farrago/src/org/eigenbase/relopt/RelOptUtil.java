@@ -710,7 +710,7 @@ public abstract class RelOptUtil
     {
         HashSet variables = new HashSet();
 
-        public RexNode visit(RexCorrelVariable p)
+        public RexNode visitCorrelVariable(RexCorrelVariable p)
         {
             variables.add(p.getName());
             return p;

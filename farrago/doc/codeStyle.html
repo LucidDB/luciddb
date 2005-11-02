@@ -10,7 +10,7 @@
 
 <h1>When In Rome, Do As the Romans Do</h1>
 
-Every so often, all Java code will be automatically standardized via
+<p>Every so often, all Java code will be automatically standardized via
 the <a href="http://jalopy.sourceforge.net">Jalopy</a> source code
 formatter.  You can minimize the effects by following the example set
 by existing code.  The Jalopy settings are defined in
@@ -18,6 +18,8 @@ by existing code.  The Jalopy settings are defined in
 <a href="http://p4web.eigenbase.org/open/farrago/src/jalopy.xml">
 dev/farrago/src/jalopy.xml</a>.  (The most meaningful way to view this file is to import it into
 Jalopy's preferences GUI.)
+
+</p>
 
 <p>
 
@@ -36,6 +38,8 @@ nearby file
 
 </ul>
 
+<h2>Layout</h2>
+
 <p>The following diagram shows the settings for the IntelliJ IDE, and also 
 illustrates what the code looks like.</p>
 
@@ -47,6 +51,60 @@ illustrates what the code looks like.</p>
 		</tr>
 	</table>
 </blockquote>
+
+<h2>Naming conventions</h2>
+
+<p>Follow standard naming conventions:</p>
+
+<blockquote>
+	<pre class="clsCode"><code>package org.eigenbase.lowercase.packagename; 
+
+public class CapitalizedClassName implements CapitalizedInterfaceName
+{
+    public static final int IntegerConstant = 0;
+    int dataMemberName;
+
+    void printOddWidgets(List widgetList)
+    {
+        int widgetCount = widgetList.size();
+        for (int i = 0; i &lt; widgetCount; i++) {
+            if (i % 2 == 1) {
+                Widget oddWidget = (Widget) widgetList.get(i);
+                print(oddWidget);
+            }
+        }
+    }
+}</code></pre>
+</blockquote>
+
+<p/>
+
+Short variable names such as &quot;<code>i</code>&quot; and &quot;<code>j</code>&quot; are 
+acceptable for loop iterators, but otherwise use descriptive names. For cardinal 
+variables, we prefer &quot;<code>widgetCount</code>&quot; to the Hungarian-style &quot;<code>nWidgets</code>&quot;.<p/>
+
+If a name contains an acronym such as &quot;SQL&quot;, treat the acronym as if it were an 
+ordinary word. Thus a class or interface would be called &quot;<code>SqlException</code>&quot; 
+(not &quot;<code>SQLException</code>&quot;), variable or member name &quot;<code>sqlText</code>&quot; 
+(not &quot;<code>SQLText</code>&quot; or &quot;<code>sQLText</code>&quot;).<p/>
+
+&nbsp;<hr noshade color="#000000">
+
+<table border="0" class="clsStd" width="100%" style="border-collapse: collapse" bordercolor="#111111" cellpadding="0" cellspacing="0">
+  <tr>
+    <td class="content">
+      <a target="_top" href="index.html">Home</a> |
+      This file is<i>
+      <a href="http://farrago.sourceforge.net/codeStyle.html">
+        $Id$
+      </a></i> (<a href="http://perforce.eigenbase.org:8080/open/farrago/doc/codeStyle.html?ac=22">log</a>)</td>
+    <td align="right">
+      <a href="http://sourceforge.net">
+        <img src="http://sourceforge.net/sflogo.php?group_id=80183&type=1" width="88" height="31" border="0" alt="SourceForge.net Logo">
+      </a>
+    </td>
+  </tr>
+</table>
 
 </body>
 

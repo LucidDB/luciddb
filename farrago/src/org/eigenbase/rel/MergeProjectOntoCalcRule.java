@@ -99,13 +99,13 @@ public class MergeProjectOntoCalcRule extends RelOptRule
         final RexNode [] projectExprs = new RexNode[project.exps.length];
         final RexShuttle shuttle =
             new RexShuttle() {
-                public RexNode visit(RexInputRef input)
+                public RexNode visitInputRef(RexInputRef input)
                 {
                     return calc.projectExprs[input.getIndex()];
                 }
             };
         for (int i = 0; i < projectExprs.length; i++) {
-            projectExprs[i] = shuttle.visit(project.exps[i]);
+            projectExprs[i] = project.exps[i].accept(shuttle);
         }
         final CalcRel newCalc =
             new CalcRel(calc.getCluster(), RelOptUtil.clone(calc.traits),

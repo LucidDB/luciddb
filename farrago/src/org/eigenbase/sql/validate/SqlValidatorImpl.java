@@ -375,8 +375,16 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             if (pos.toString().equals(
                     idns.getId().getParserPosition().toString()))
             {
-                return catalogReader.getAllSchemaObjectNames(
+                SqlMoniker[] objNames = catalogReader.getAllSchemaObjectNames(
                     idns.getId().names);
+
+                ArrayList result = new ArrayList();
+                for (int i = 0; i < objNames.length; i++)  {
+                    if (objNames[i].getType() != SqlMonikerType.Function) {
+                        result.add(objNames[i]);
+                    }
+                }
+                return (SqlMoniker[])result.toArray(new SqlMoniker[0]);
             }
         }
         switch (node.getKind().getOrdinal()) {

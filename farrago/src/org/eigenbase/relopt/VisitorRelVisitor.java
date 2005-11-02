@@ -61,7 +61,7 @@ public class VisitorRelVisitor extends RelVisitor
         RexNode [] childExps = p.getChildExps();
         for (int i = 0; i < childExps.length; i++) {
             final RexNode exp = childExps[i];
-            childExps[i] = shuttle.visit(exp);
+            childExps[i] = exp.accept(shuttle);
         }
         p.childrenAccept(this);
     }

@@ -174,11 +174,25 @@ public class SqlIdentifier extends SqlNode
             scope.findAllTableNames(result);
             findAllValidFunctionNames(validator, scope, result);
         }
+        findAllValidUDFNames(names, validator, result);
         // if the identifer has more than 1 part, use the tableName to limit
         // the choices of valid column names
         scope.findAllColumnNames(tableName, result);
         Collections.sort(result, new SqlMonikerComparator());
         return (SqlMoniker [])result.toArray(Util.emptySqlMonikerArray);
+    }
+
+    private void findAllValidUDFNames(String[] names,
+                                      SqlValidator validator, 
+                                      List result)
+    {
+        SqlMoniker [] objNames = 
+            validator.getCatalogReader().getAllSchemaObjectNames(names);
+        for (int i = 0; i < objNames.length; i++) {
+            if (objNames[i].getType() == SqlMonikerType.Function) {
+                result.add(objNames[i]);
+            }
+        }
     }
 
     private void findAllValidFunctionNames(SqlValidator validator, 
