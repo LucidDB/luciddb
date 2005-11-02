@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE cruisecontrol [
+
+<!ENTITY open_p4port     "perforce.lucidera.com:1666">
+<!ENTITY open_p4client   "schoi.chikai">
+<!ENTITY open_p4user     "schoi">
+<!ENTITY open_root       "//open/lu/dev">
+<!ENTITY open_propfile   "chikai.perforce.properties">
+<!ENTITY open_default.build.home     "/home/schoi/open">
+<!ENTITY open_integration.build.home "/home/schoi/open/bootstap/build">
+
+<!ENTITY buildresultsbase "http://chikai:8080/cruisecontrol/buildresults">
+<!ENTITY mailhost         "exc01.lucidera.com">
+<!ENTITY reportsuccess    "always">
+<!ENTITY returnname       "Build Monkey">
+<!ENTITY returnaddress    "buildmonkey@fishtaco.org">
+<!ENTITY skipusers        "true">
+<!ENTITY spamwhilebroken  "true">
+<!ENTITY subjectprefix    "Continuous Integration: ">
+<!ENTITY failureaddress   "schoi@lucidera.com">
+<!ENTITY reportwhenfixed  "true">
+
+<!ENTITY scp_user         "schoi">
+<!ENTITY scp_host         "chikai">
+<!ENTITY scp_options      "">
+<!ENTITY scp_filesep      "/">
+<!ENTITY rsync_cmd        "rsync -az -e ssh --delete-after">
+<!ENTITY rsync_dest       "schoi@chikai:web/artifacts">
+
+<!ENTITY build_interval   "3600">
+
+<!ENTITY ant              "./doant.sh">
+
+<!ENTITY configSuffix     "">
+
+<!ENTITY saffronProject SYSTEM "/home/schoi/open/bootstrap/config-saffron.xml">
+<!ENTITY fennelProject SYSTEM "config-fennel.xml">
+<!ENTITY farragoProject SYSTEM "config-farrago.xml">
+
+]>
+
+<cruisecontrol>
+	&saffronProject;
+	&fennelProject;
+	&farragoProject;
+</cruisecontrol>
