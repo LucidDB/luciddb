@@ -459,7 +459,6 @@ inline void ExecStreamBufAccessor::requestConsumption()
 {
     assert((state == EXECBUF_OVERFLOW) || (state == EXECBUF_NONEMPTY));
     state = EXECBUF_OVERFLOW;
-    pBufEnd = pProducer;
 }
 
 inline void ExecStreamBufAccessor::markEOS()
