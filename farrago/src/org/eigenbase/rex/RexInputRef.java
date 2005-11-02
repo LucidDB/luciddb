@@ -89,6 +89,11 @@ public class RexInputRef extends RexVariable
     {
         visitor.visitInputRef(this);
     }
+
+    public RexNode accept(RexShuttle shuttle)
+    {
+        return shuttle.visitInputRef(this);
+    }
 }
 
 

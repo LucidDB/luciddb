@@ -99,6 +99,11 @@ public class RexFieldAccess extends RexNode
         visitor.visitFieldAccess(this);
     }
 
+    public RexNode accept(RexShuttle shuttle)
+    {
+        return shuttle.visitFieldAccess(this);
+    }
+
     /**
      * Returns the expression whose field is being accessed.
      */

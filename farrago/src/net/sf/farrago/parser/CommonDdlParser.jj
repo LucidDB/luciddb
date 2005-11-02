@@ -467,6 +467,7 @@ FemLocalTable UnscopedTableDefinition() :
     {
         farragoParser.getDdlValidator().setSchemaObjectName(
             table,qualifiedTableName);
+        table.setModality(ModalityTypeEnum.MODALITYTYPE_RELATIONAL);
     }
     <LPAREN> TableElementList(table) <RPAREN>
     OptionalDescription(table)
@@ -531,6 +532,7 @@ FemLocalView ViewDefinition() :
     {
         farragoParser.getDdlValidator().setSchemaObjectName(
             view,qualifiedViewName);
+        view.setModality(ModalityTypeEnum.MODALITYTYPE_RELATIONAL);
     }
     [
         <LPAREN> columnNameList = SimpleIdentifierCommaList()
@@ -2119,6 +2121,7 @@ FemForeignTable ForeignTableDefinition() :
     {
         farragoParser.getDdlValidator().setSchemaObjectName(
             table,qualifiedTableName);
+        table.setModality(ModalityTypeEnum.MODALITYTYPE_RELATIONAL);
     }
     [ <LPAREN> ForeignTableElementList(table) <RPAREN> ]
     server = DataServerReference()

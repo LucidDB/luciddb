@@ -199,6 +199,11 @@ public class RexCall extends RexNode
         visitor.visitCall(this);
     }
 
+    public RexNode accept(RexShuttle shuttle)
+    {
+        return shuttle.visitCall(this);
+    }
+
     public RelDataType getType()
     {
         return type;

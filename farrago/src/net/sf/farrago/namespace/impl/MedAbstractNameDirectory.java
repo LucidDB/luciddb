@@ -26,6 +26,7 @@ import java.sql.*;
 import java.util.*;
 
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.ModalityTypeEnum;
 
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.catalog.*;
@@ -65,7 +66,9 @@ public abstract class MedAbstractNameDirectory extends MedAbstractBase
         String tableName)
     {
         // By default, all imported objects are treated as foreign tables
-        return repos.newFemForeignTable();
+        FemBaseColumnSet newColumnSet = repos.newFemForeignTable();
+        newColumnSet.setModality(ModalityTypeEnum.MODALITYTYPE_RELATIONAL);
+        return newColumnSet;
     }
 }
 

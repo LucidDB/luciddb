@@ -23,8 +23,7 @@
 
 package org.eigenbase.rex;
 
-import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
+import org.eigenbase.reltype.RelDataType;
 
 
 /**
@@ -76,6 +75,11 @@ public class RexDynamicParam extends RexVariable
     public void accept(RexVisitor visitor)
     {
         visitor.visitDynamicParam(this);
+    }
+
+    public RexNode accept(RexShuttle shuttle)
+    {
+        return shuttle.visitDynamicParam(this);
     }
 }
 

@@ -93,6 +93,11 @@ public class RexRangeRef extends RexNode
     {
         visitor.visitRangeRef(this);
     }
+
+    public RexNode accept(RexShuttle shuttle)
+    {
+        return shuttle.visitRangeRef(this);
+    }
 }
 
 

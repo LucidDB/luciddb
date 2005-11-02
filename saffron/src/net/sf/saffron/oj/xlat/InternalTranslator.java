@@ -31,9 +31,7 @@ import org.eigenbase.oj.util.JavaRexBuilder;
 import org.eigenbase.oj.util.OJUtil;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.rex.RexKind;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexVisitor;
+import org.eigenbase.rex.*;
 import org.eigenbase.sql.SqlOperator;
 import org.eigenbase.sql.SqlSyntax;
 import org.eigenbase.sql.SqlIdentifier;
@@ -80,12 +78,12 @@ class InternalTranslator
         //map.put(new Integer(UnaryExpression.BIT_NOT),RexKind.None);
         map.put(
             new Integer(UnaryExpression.NOT),
-            SqlStdOperatorTable.instance().notOperator);
+            SqlStdOperatorTable.notOperator);
 
         //map.put(new Integer(UnaryExpression.PLUS),RexKind.None); // no op corresponding to prefix "+"
         map.put(
             new Integer(UnaryExpression.MINUS),
-            SqlStdOperatorTable.instance().prefixMinusOperator);
+            SqlStdOperatorTable.prefixMinusOperator);
 
         //map.put(new Integer(UnaryExpression.EXISTS),RexKind.None);
         return map;
@@ -440,6 +438,11 @@ class InternalTranslator
         }
 
         public void accept(RexVisitor visitor)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        public RexNode accept(RexShuttle shuttle)
         {
             throw new UnsupportedOperationException();
         }

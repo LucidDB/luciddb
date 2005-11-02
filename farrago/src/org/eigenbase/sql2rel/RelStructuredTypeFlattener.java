@@ -261,7 +261,7 @@ public class RelStructuredTypeFlattener
     private RexNode flattenFieldAccesses(RexNode exp)
     {
         RewriteRexShuttle shuttle = new RewriteRexShuttle();
-        return shuttle.visit(exp);
+        return exp.accept(shuttle);
     }
 
     public void rewriteRel(TableModificationRel rel)
@@ -581,7 +581,7 @@ public class RelStructuredTypeFlattener
     private class RewriteRexShuttle extends RexShuttle
     {
         // override RexShuttle
-        public RexNode visit(RexInputRef input)
+        public RexNode visitInputRef(RexInputRef input)
         {
             RexInputRef newInput = new RexInputRef(
                 getNewForOldInput(input.getIndex()),
@@ -598,7 +598,7 @@ public class RelStructuredTypeFlattener
         }
 
         // override RexShuttle
-        public RexNode visit(RexFieldAccess fieldAccess)
+        public RexNode visitFieldAccess(RexFieldAccess fieldAccess)
         {
             // walk down the field access path expression, calculating
             // the desired input number
@@ -634,24 +634,24 @@ public class RelStructuredTypeFlattener
         }
 
         // override RexShuttle
-        public RexNode visit(RexCall rexCall)
+        public RexNode visitCall(RexCall rexCall)
         {
             if (rexCall.isA(RexKind.Cast)) {
-                RexNode input = visit(rexCall.getOperands()[0]);
+                RexNode input = rexCall.getOperands()[0].accept(this);
                 RelDataType targetType = removeDistinct(rexCall.getType());
                 return rexBuilder.makeCast(
                     targetType,
                     input);
             }
             if (!rexCall.isA(RexKind.Comparison)) {
-                return super.visit(rexCall);
+                return super.visitCall(rexCall);
             }
             RexNode lhs = rexCall.getOperands()[0];
             if (!lhs.getType().isStruct()) {
                 // NOTE jvs 9-Mar-2005:  Calls like IS NULL operate 
                 // on the representative null indicator.  Since it comes
                 // first, we don't have to do any special translation.
-                return super.visit(rexCall);
+                return super.visitCall(rexCall);
             }
             // NOTE jvs 22-Mar-2005:  Likewise, the null indicator takes
             // care of comparison null semantics without any special casing.

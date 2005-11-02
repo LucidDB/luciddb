@@ -102,6 +102,11 @@ public class RexOver extends RexCall
         visitor.visitOver(this);
     }
 
+    public RexNode accept(RexShuttle shuttle)
+    {
+        return shuttle.visitOver(this);
+    }
+
     /**
      * Returns whether an expression contains an OVER clause.
      */
@@ -127,7 +132,8 @@ public class RexOver extends RexCall
         return false;
     }
 
-    private static class OverFound extends RuntimeException {
+    private static class OverFound extends RuntimeException
+    {
         public static final OverFound instance = new OverFound();
     };
 
@@ -138,7 +144,8 @@ public class RexOver extends RexCall
      * <p>It is re-entrant (two threads can use an instance at the same time)
      * and it can be re-used for multiple visits.
      */
-    private static class Finder extends RexVisitorImpl {
+    private static class Finder extends RexVisitorImpl
+    {
         static final RexOver.Finder instance = new RexOver.Finder();
 
         public Finder()
