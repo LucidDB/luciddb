@@ -22,8 +22,9 @@
 */
 package net.sf.farrago.namespace.mock;
 
-import java.util.*;
+import org.eigenbase.runtime.*;
 
+import java.util.*;
 
 /**
  * MedMockIterator generates mock data.
@@ -31,12 +32,13 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class MedMockIterator implements Iterator
+public class MedMockIterator implements RestartableIterator
 {
     //~ Instance fields -------------------------------------------------------
 
     private Object obj;
     private long nRows;
+    private long nRowsInit;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -52,6 +54,7 @@ public class MedMockIterator implements Iterator
         long nRows)
     {
         this.obj = obj;
+        this.nRowsInit = nRows;
         this.nRows = nRows;
     }
 
@@ -74,6 +77,12 @@ public class MedMockIterator implements Iterator
     public void remove()
     {
         throw new UnsupportedOperationException();
+    }
+    
+    // implement RestartableIterator
+    public void restart()
+    {
+        nRows = nRowsInit;
     }
 }
 
