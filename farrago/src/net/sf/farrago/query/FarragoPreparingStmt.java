@@ -951,6 +951,10 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         }
 
         CwmNamedColumnSet table = (CwmNamedColumnSet) resolved.object;
+        ModalityType modality = ModalityTypeEnum.MODALITYTYPE_RELATIONAL;
+        if (table instanceof FemBaseColumnSet) {
+            modality = ((FemBaseColumnSet) table).getModality();
+        }
 
         PrivilegedAction action = PrivilegedActionEnum.SELECT;
         if (dmlTarget != null) {
@@ -976,7 +980,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
         RelDataType rowType = createTableRowType(table);
         SqlAccessType allowedAccess = FarragoCatalogUtil.getTableAllowedAccess(table);
-        return newValidatorTable(resolved.getQualifiedName(), rowType, allowedAccess);
+        return newValidatorTable(resolved.getQualifiedName(), rowType,
+            allowedAccess, modality);
     }
 
     /**
@@ -999,9 +1004,10 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     protected SqlValidatorTable newValidatorTable(
         String[] qualifiedName,
         RelDataType rowType,
-        SqlAccessType allowedAccess)
+        SqlAccessType allowedAccess,
+        ModalityType modality)
     {
-        return new ValidatorTable(qualifiedName, rowType, allowedAccess);
+        return new ValidatorTable(qualifiedName, rowType, allowedAccess, modality);
     }
 
     // implement SqlValidator.CatalogReader
@@ -1102,6 +1108,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         private final String [] qualifiedName;
         private final RelDataType rowType;
         private final SqlAccessType accessType;
+        private final ModalityType modality;
 
         /**
          * Creates a new ValidatorTable object.
@@ -1109,11 +1116,13 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         public ValidatorTable(
             String [] qualifiedName,
             RelDataType rowType,
-            SqlAccessType accessType)
+            SqlAccessType accessType,
+            ModalityType modality)
         {
             this.qualifiedName = qualifiedName;
             this.rowType = rowType;
             this.accessType = accessType;
+            this.modality = modality;
         }
 
         // implement SqlValidatorTable
@@ -1138,6 +1147,11 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         public RelDataType getRowType()
         {
             return rowType;
+        }
+
+        public ModalityType getModality()
+        {
+            return modality;
         }
     }
 
