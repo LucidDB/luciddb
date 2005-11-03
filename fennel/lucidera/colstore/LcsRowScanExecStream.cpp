@@ -20,6 +20,12 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
+// TODO
+/*
+#include "fennel/colstore/LcsRowScanExecStream.h"
+*/
+
+#include "BBPort.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
