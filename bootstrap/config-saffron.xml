@@ -31,17 +31,23 @@
 
 		<!-- directory to write build logs to -->
 		<log dir="logs/saffron">
-			<merge dir="&open_default.build.home;/bootstrap/build/saffron/testlog"/>
+			<merge dir="&open_integration.build.home;/saffron/testlog"/>
 		</log>
 
 		<!-- Publishers are run *after* a build completes -->
 		<publishers>
 			<!-- currentbuildstatuspublisher file="logs/saffron/currentbuildstatus.txt"/ -->
 
-			<artifactspublisher dir="&open_default.build.home;/bootstrap/build/saffron/trace" dest="artifacts/saffron&configSuffix;" subdirectory="trace"/>
+			<artifactspublisher dir="&open_integration.build.home;/saffron/trace" dest="artifacts/saffron&configSuffix;" subdirectory="trace"/>
 
 			<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
 			<execute command="&rsync_cmd; artifacts/saffron&configSuffix; &rsync_dest;"/>
+
+                        <onfailure>
+                            <artifactspublisher dir="&open_integration.build.home;/farrago" dest="artifacts/saffron&configSuffix;" subdirectory="farrago"/>
+                            <artifactspublisher dir="&open_integration.build.home;/fennel" dest="artifacts/saffron&configSuffix;" subdirectory="fennel"/>
+                            <artifactspublisher dir="&open_integration.build.home;/saffron" dest="artifacts/saffron&configSuffix;" subdirectory="saffron"/>
+                        </onfailure>
 
 			<scp sourcedir="logs/saffron"
 			     targetuser="&scp_user;"
