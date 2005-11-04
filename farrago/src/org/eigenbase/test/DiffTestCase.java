@@ -24,7 +24,6 @@
 package org.eigenbase.test;
 
 import java.io.*;
-import java.util.*;
 import java.util.regex.*;
 
 import junit.framework.*;
@@ -60,6 +59,9 @@ public abstract class DiffTestCase extends TestCase
     Pattern compiledIgnorePattern;
 
     int gcInterval;
+
+    /** Whether to give verbose message if diff fails. */
+    private boolean verbose;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -216,17 +218,17 @@ public abstract class DiffTestCase extends TestCase
                 }
                 if ((logLine == null) || (refLine == null)) {
                     if (logLine != null) {
-                        diffFail(logFile, logLineReader);
+                        diffFail(logFile, logLineReader.getLineNumber());
                     }
                     if (refLine != null) {
-                        diffFail(logFile, refLineReader);
+                        diffFail(logFile, refLineReader.getLineNumber());
                     }
                     break;
                 }
                 logLine = applyDiffMask(logLine);
                 refLine = applyDiffMask(refLine);
                 if (!logLine.equals(refLine)) {
-                    diffFail(logFile, logLineReader);
+                    diffFail(logFile, logLineReader.getLineNumber());
                 }
             }
         } finally {
@@ -310,10 +312,44 @@ public abstract class DiffTestCase extends TestCase
 
     private void diffFail(
         File logFile,
-        LineNumberReader lineReader)
+        int lineNumber)
     {
-        Assert.fail("diff detected at line " + lineReader.getLineNumber()
-            + " in " + logFile);
+        final String message =
+            "diff detected at line " + lineNumber + " in " + logFile;
+        if (verbose) {
+            Assert.assertEquals(
+                message,
+                fileContents(refFile),
+                fileContents(logFile));
+        }
+        Assert.fail(message);
+    }
+
+    /**
+     * Returns the contents of a file as a string.
+     */ 
+    private static String fileContents(File file)
+    {
+        try {
+            char[] buf = new char[2048];
+            final FileReader reader = new FileReader(file);
+            int readCount;
+            final StringWriter writer = new StringWriter();
+            while ((readCount = reader.read(buf)) >= 0) {
+                writer.write(buf, 0, readCount);
+            }
+            return writer.toString();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Sets whether to give verbose message if diff fails.
+     */
+    protected void setVerbose(boolean verbose)
+    {
+        this.verbose = verbose;
     }
 }
 

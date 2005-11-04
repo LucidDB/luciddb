@@ -37,6 +37,7 @@ public class <xsl:value-of select="$classname"/> extends <xsl:value-of select="$
         runCleanup();
         super.setUp();
         addDiffMask("\\$Id.*\\$");
+        setVerbose(true);
     }
     <xsl:apply-templates select="node()" />
 }
