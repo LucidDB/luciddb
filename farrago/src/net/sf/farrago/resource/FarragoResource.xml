@@ -986,6 +986,14 @@ column type family is {1} but default value type family is {2}</text>
 <text>view</text>
 </message>
 
+<message id="510054" name="UmlUniqueKeyConstraint">
+<text>UNIQUE constraint</text>
+</message>
+
+<message id="510055" name="UmlPrimaryKeyConstraint">
+<text>PRIMARY KEY constraint</text>
+</message>
+
 <!-- End of last error section ============================================ -->
 
 </resourceBundle>

@@ -34,6 +34,7 @@ import net.sf.farrago.resource.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.type.*;
+import net.sf.farrago.namespace.*;
 import net.sf.farrago.util.*;
 
 import net.sf.farrago.cwm.core.*;
@@ -167,19 +168,9 @@ public class DdlRelationalHandler extends DdlHandler
         // NOTE:  don't need to validate index name uniqueness since indexes
         // live in same schema as table, so enforcement will take place at
         // schema level
-        Iterator indexIter = indexes.iterator();
-        int nClustered = 0;
-        while (indexIter.hasNext()) {
-            FemLocalIndex index = (FemLocalIndex) indexIter.next();
-            if (index.isClustered()) {
-                nClustered++;
-            }
-        }
-        if (nClustered > 1) {
-            throw res.ValidatorDuplicateClusteredIndex.ex(
-                repos.getLocalizedObjectName(table));
-        }
 
+        // Validate unique constraints
+        FemLocalIndex generatedPrimaryKeyIndex = null;
         FemPrimaryKeyConstraint primaryKey = null;
         Iterator constraintIter = table.getOwnedElement().iterator();
         while (constraintIter.hasNext()) {
@@ -200,21 +191,12 @@ public class DdlRelationalHandler extends DdlHandler
                 // Implement constraints via system-owned indexes.
                 FemLocalIndex index =
                     createUniqueConstraintIndex(table, constraint);
-                if ((constraint == primaryKey) && (nClustered == 0)) {
-                    // If no clustered index was specified, make the primary
-                    // key's index clustered.
-                    index.setClustered(true);
+                if (constraint == primaryKey) {
+                    generatedPrimaryKeyIndex = index;
                 }
                 // Create redundant metadata used by JDBC views
                 createConstraintColumnMetadata(constraint);
             }
-        }
-
-        if (primaryKey == null) {
-            // TODO:  This is not SQL-standard.  Fixing it requires the
-            // introduction of a system-managed surrogate key.
-            throw res.ValidatorNoPrimaryKey.ex(
-                repos.getLocalizedObjectName(table));
         }
 
         // NOTE:  do this after PRIMARY KEY uniqueness validation to get a
@@ -224,6 +206,23 @@ public class DdlRelationalHandler extends DdlHandler
             table.getOwnedElement(),
             false);
 
+        // Perform validation specific to the local data server
+        FarragoMedDataServer medDataServer = 
+            validator.getDataWrapperCache().loadServerFromCatalog(dataServer);
+        assert(medDataServer instanceof FarragoMedLocalDataServer) :
+            medDataServer.getClass().getName();
+        FarragoMedLocalDataServer medLocalDataServer =
+            (FarragoMedLocalDataServer) medDataServer;
+        try {
+            medLocalDataServer.validateTableDefinition(
+                table,
+                generatedPrimaryKeyIndex);
+        } catch (SQLException ex) {
+            throw res.ValidatorDataServerTableInvalid.ex(
+                repos.getLocalizedObjectName(table),
+                ex);
+        }
+            
         if (creation) {
             medHandler.validateMedColumnSet(table);
         }

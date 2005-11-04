@@ -23,10 +23,12 @@
 package net.sf.farrago.namespace.impl;
 
 import java.util.*;
+import java.sql.*;
 
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.*;
 
+import net.sf.farrago.fem.med.*;
 
 /**
  * MedAbstractLocalDataServer is an abstract base class for
@@ -65,6 +67,15 @@ public abstract class MedAbstractLocalDataServer extends MedAbstractDataServer
     public void setFennelDbHandle(FennelDbHandle fennelDbHandle)
     {
         this.fennelDbHandle = fennelDbHandle;
+    }
+    
+    // implement FarragoMedLocalDataServer
+    public void validateTableDefinition(
+        FemLocalTable table,
+        FemLocalIndex generatedPrimaryKeyIndex)
+        throws SQLException
+    {
+        // by default, no special validation rules
     }
 }
 

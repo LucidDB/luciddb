@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/schema.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/misc.sql#1 $
 0: jdbc:farrago:> -- Miscellaneous DDL
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';
@@ -7,6 +7,29 @@
 0: jdbc:farrago:> create table foo (i int primary key) description 'this is a table';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop table foo;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  a table may not have multiple primary keys
+0: jdbc:farrago:> create table dup_pk(i int not null primary key,j int not null primary key);
+Error: Multiple PRIMARY KEY constraints not allowed on table "SALES"."DUP_PK" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  duplicate constraint names
+0: jdbc:farrago:> create table dup_constraints(
+. . . . . . . . >     i int not null constraint charlie primary key,
+. . . . . . . . >     j int not null constraint charlie unique);
+Error: DDL validation error near line 1, column 120: Duplicate definition for UNIQUE constraint "CHARLIE" within table "SALES"."DUP_CONSTRAINTS"; earlier definition was near line 1, column 77 (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- FTRS-specific table validation rules
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  FTRS tables cannot have multiple clustered indexes
+0: jdbc:farrago:> create table dup_clustered(i int not null primary key,j int not null)
+. . . . . . . . > create clustered index ix on dup_clustered(i)
+. . . . . . . . > create clustered index ix on dup_clustered(j)
+. . . . . . . . > ;
+Error: Clustered index already defined on table "SALES"."DUP_CLUSTERED" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  FTRS tables must have a primary key
+0: jdbc:farrago:> create table missing_pk(i int not null,j int not null);
+Error: PRIMARY KEY constraint required for table "SALES"."MISSING_PK" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- End misc.sql
 0: jdbc:farrago:> 

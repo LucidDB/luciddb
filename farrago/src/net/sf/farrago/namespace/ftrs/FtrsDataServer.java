@@ -108,6 +108,44 @@ class FtrsDataServer extends MedAbstractLocalDataServer
     }
 
     // implement FarragoMedLocalDataServer
+    public void validateTableDefinition(
+        FemLocalTable table,
+        FemLocalIndex generatedPrimaryKeyIndex)
+        throws SQLException
+    {
+        // Validate that there's at most one clustered index.
+        Collection indexes = FarragoCatalogUtil.getTableIndexes(repos, table);
+        Iterator indexIter = indexes.iterator();
+        int nClustered = 0;
+        while (indexIter.hasNext()) {
+            FemLocalIndex index = (FemLocalIndex) indexIter.next();
+            if (index.isClustered()) {
+                nClustered++;
+            }
+        }
+        if (nClustered > 1) {
+            throw FarragoResource.instance().
+                ValidatorDuplicateClusteredIndex.ex(
+                    repos.getLocalizedObjectName(table));
+        }
+        
+        if (FarragoCatalogUtil.getPrimaryKey(table) == null) {
+            // TODO:  This is not SQL-standard.  Fixing it requires the
+            // introduction of a system-managed surrogate key.
+            throw FarragoResource.instance().ValidatorNoPrimaryKey.ex(
+                repos.getLocalizedObjectName(table));
+        }
+
+        if (generatedPrimaryKeyIndex != null) {
+            if (nClustered == 0) {
+                // If no clustered index was specified, make the primary
+                // key's index clustered.
+                generatedPrimaryKeyIndex.setClustered(true);
+            }
+        }
+    }
+    
+    // implement FarragoMedLocalDataServer
     public long createIndex(FemLocalIndex index)
     {
         repos.beginTransientTxn();
