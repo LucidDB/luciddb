@@ -8,18 +8,19 @@
 <!ENTITY open_root       "//open/lu/dev">
 <!ENTITY open_propfile   "chikai.perforce.properties">
 <!ENTITY open_default.build.home     "/home/schoi/open">
-<!ENTITY open_integration.build.home "/home/schoi/open/bootstap/build">
+<!ENTITY open_integration.build.home "/home/schoi/open/bootstrap/build">
 
 <!ENTITY buildresultsbase "http://chikai:8080/cruisecontrol/buildresults">
 <!ENTITY mailhost         "exc01.lucidera.com">
 <!ENTITY reportsuccess    "always">
 <!ENTITY returnname       "Build Monkey">
-<!ENTITY returnaddress    "buildmonkey@fishtaco.org">
+<!ENTITY returnaddress    "schoi@lucidera.com">
 <!ENTITY skipusers        "true">
 <!ENTITY spamwhilebroken  "true">
 <!ENTITY subjectprefix    "Continuous Integration: ">
 <!ENTITY failureaddress   "schoi@lucidera.com">
 <!ENTITY reportwhenfixed  "true">
+<!ENTITY emailmapper      "/home/schoi/open/bootstrap/p4email.txt">
 
 <!ENTITY scp_user         "schoi">
 <!ENTITY scp_host         "chikai">
@@ -28,17 +29,18 @@
 <!ENTITY rsync_cmd        "rsync -az -e ssh --delete-after">
 <!ENTITY rsync_dest       "schoi@chikai:web/artifacts">
 
-<!ENTITY build_interval   "3600">
+<!ENTITY build_interval   "30">
 
 <!ENTITY ant              "./doant.sh">
 
 <!ENTITY configSuffix     "">
 
-<!ENTITY saffronProject SYSTEM "/home/schoi/open/bootstrap/config-saffron.xml">
+<!ENTITY saffronProject SYSTEM "config-saffron.xml">
 <!ENTITY fennelProject SYSTEM "config-fennel.xml">
 <!ENTITY farragoProject SYSTEM "config-farrago.xml">
 
 ]>
+
 
 <cruisecontrol>
 	&saffronProject;

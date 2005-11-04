@@ -78,6 +78,7 @@
 			       subjectprefix="&subjectprefix;">
 				<failure address="&failureaddress;"
 				         reportWhenFixed="&reportwhenfixed;"/>
+                                <propertiesmapper file="&emailmapper;"/>
 			</email>
 		</publishers>
 	</project>
