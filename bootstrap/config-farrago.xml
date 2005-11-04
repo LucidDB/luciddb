@@ -68,7 +68,7 @@
 			     targetdir="web/logs/farrago&configSuffix;"
                              options="&scp_options;"/> 
 			
-			<htmlemail buildresultsurl="&buildresultsbase;/farrago&configSuffix;"
+			<email buildresultsurl="&buildresultsbase;/farrago&configSuffix;"
 			       mailhost="&mailhost;"
 			       reportsuccess="&reportsuccess;"
 			       returnname="&returnname;"
@@ -78,7 +78,7 @@
 			       subjectprefix="&subjectprefix;">
 				<failure address="&failureaddress;"
 				         reportWhenFixed="&reportwhenfixed;"/>
-			</htmlemail>
+			</email>
 		</publishers>
 	</project>
 
