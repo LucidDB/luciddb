@@ -33,7 +33,6 @@ import junit.framework.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.fem.config.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.jdbc.engine.*;
@@ -555,7 +554,8 @@ public abstract class FarragoTestCase extends DiffTestCase
         if (driverName == null) {
             return new FarragoJdbcEngineDriver();
         }
-        return (FarragoJdbcEngineDriver) Class.forName(driverName).newInstance();
+        Class clazz = Class.forName(driverName);
+        return (FarragoJdbcEngineDriver) clazz.newInstance();
     }
 
     protected void runSqlLineTest(String sqlFile)
@@ -708,6 +708,23 @@ public abstract class FarragoTestCase extends DiffTestCase
             dropAuthIds();
         }
 
+        /**
+         * Indicate whether schema should be preserved as a global fixture.
+         * Extension project test case can override this method to bless
+         * additional schema or use attributes other than the name to make
+         * the determination.
+         *
+         * @param schema schema to check
+         * @return true => if schema should be preserved as fixture
+         */
+        protected boolean isBlessedSchema(CwmSchema schema)
+        {
+            String name = schema.getName();
+            return name.equals("SALES")
+                || name.equals("SQLJ")
+                || name.equals("INFORMATION_SCHEMA");
+        }
+
         private void dropSchemas()
             throws Exception
         {
@@ -723,16 +740,13 @@ public abstract class FarragoTestCase extends DiffTestCase
                     continue;
                 }
                 CwmSchema schema = (CwmSchema) obj;
-                if (schema.getName().equals("SALES")) {
-                    continue;
+                String schemaName = schema.getName();
+                if (!isBlessedSchema(schema)) {
+                    list.add(schemaName);
+//                    tracer.warning("dropping schema=" +schemaName);
+//                } else {
+//                    tracer.warning("keeping schema=" +schemaName);
                 }
-                if (schema.getName().equals("SQLJ")) {
-                    continue;
-                }
-                if (schema.getName().equals("INFORMATION_SCHEMA")) {
-                    continue;
-                }
-                list.add(schema.getName());
             }
             Iterator iter = list.iterator();
             while (iter.hasNext()) {
