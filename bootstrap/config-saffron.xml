@@ -12,6 +12,7 @@
 
                 <listeners>
                         <currentbuildstatuslistener file="logs/saffron/currentbuildstatus.txt"/>
+                        <currentbuildstatuslistener file="&open_default.build.home;/../web/logs/saffron&configSuffix;/currentbuildstatus.txt"/>
                 </listeners>
 
 		<!-- Defines where cruise looks for changes, to decide whether to run the build -->

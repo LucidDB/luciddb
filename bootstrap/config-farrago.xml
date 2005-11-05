@@ -12,6 +12,7 @@
 
                 <listeners>
                         <currentbuildstatuslistener file="logs/farrago/currentbuildstatus.txt"/>
+                        <currentbuildstatuslistener file="&open_default.build.home;/../web/logs/farrago&configSuffix;/currentbuildstatus.txt"/>
                 </listeners>
 
 		<!-- Defines where cruise looks for changes, to decide whether to run the build -->
