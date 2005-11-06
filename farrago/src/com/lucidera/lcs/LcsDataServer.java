@@ -25,11 +25,15 @@ import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.fennel.tuple.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.resource.*;
+import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
@@ -47,13 +51,8 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class LcsDataServer extends MedAbstractLocalDataServer
+class LcsDataServer extends MedAbstractFennelDataServer
 {
-    //~ Instance fields -------------------------------------------------------
-
-    private FarragoRepos repos;
-    private FarragoTypeFactory indexTypeFactory;
-
     //~ Constructors ----------------------------------------------------------
 
     LcsDataServer(
@@ -61,19 +60,10 @@ class LcsDataServer extends MedAbstractLocalDataServer
         Properties props,
         FarragoRepos repos)
     {
-        super(serverMofId, props);
-        this.repos = repos;
-        indexTypeFactory = new FarragoTypeFactoryImpl(repos);
+        super(serverMofId, props, repos);
     }
 
     //~ Methods ---------------------------------------------------------------
-
-    // implement FarragoMedDataServer
-    public FarragoMedNameDirectory getNameDirectory()
-        throws SQLException
-    {
-        return null;
-    }
 
     // implement FarragoMedDataServer
     public FarragoMedColumnSet newColumnSet(
@@ -88,13 +78,6 @@ class LcsDataServer extends MedAbstractLocalDataServer
     }
 
     // implement FarragoMedDataServer
-    public Object getRuntimeSupport(Object param)
-        throws SQLException
-    {
-        return null;
-    }
-
-    // implement FarragoMedDataServer
     public void registerRules(RelOptPlanner planner)
     {
         super.registerRules(planner);
@@ -105,78 +88,101 @@ class LcsDataServer extends MedAbstractLocalDataServer
     }
 
     // implement FarragoMedLocalDataServer
-    public long createIndex(FemLocalIndex index)
+    public void validateTableDefinition(
+        FemLocalTable table,
+        FemLocalIndex generatedPrimaryKeyIndex)
+        throws SQLException
     {
-        // REVIEW jvs 26-Oct-2005:  I copied this over from FTRS;
-        // can it be shared?
-        repos.beginTransientTxn();
-        try {
-            FemCmdCreateIndex cmd = repos.newFemCmdCreateIndex();
-            initIndexCmd(cmd, index);
-            return getFennelDbHandle().executeCmd(cmd);
-        } finally {
-            repos.endTransientTxn();
+        // TODO jvs 5-Nov-2005:  get rid of this once we support unclustered
+        // indexes on LCS tables
+        if (generatedPrimaryKeyIndex != null) {
+            generatedPrimaryKeyIndex.refDelete();
         }
-    }
 
-    // implement FarragoMedLocalDataServer
-    public void dropIndex(
-        FemLocalIndex index,
-        long rootPageId,
-        boolean truncate)
-    {
-        // REVIEW jvs 26-Oct-2005:  I copied this over from FTRS;
-        // can it be shared?
-        repos.beginTransientTxn();
-        try {
-            FemCmdDropIndex cmd;
-            if (truncate) {
-                cmd = repos.newFemCmdTruncateIndex();
-            } else {
-                cmd = repos.newFemCmdDropIndex();
+        // Verify that no column has a UDT or collection for its type, because
+        // we don't support those...yet.
+        Set<CwmColumn> uncoveredColumns = new HashSet<CwmColumn>(
+            table.getFeature());
+        for (CwmColumn col : uncoveredColumns) {
+            if (col.getType() instanceof FemUserDefinedType) {
+                throw Util.needToImplement(
+                    "column-store for UDT");
             }
-            initIndexCmd(cmd, index);
-            cmd.setRootPageId(rootPageId);
-            getFennelDbHandle().executeCmd(cmd);
-        } finally {
-            repos.endTransientTxn();
+            if (col.getType() instanceof FemSqlcollectionType) {
+                throw Util.needToImplement(
+                    "column-store for collection type");
+            }
+        }
+        // Verify that clustered indexes do not overlap
+        for (Object i : FarragoCatalogUtil.getTableIndexes(repos, table)) {
+            FemLocalIndex index = (FemLocalIndex) i;
+            if (!index.isClustered()) {
+                throw Util.needToImplement(
+                    "column-store unclustered index");
+            }
+            // LCS clustered indexes are sorted on RID, not value
+            index.setSorted(false);
+            for (Object f : index.getIndexedFeature()) {
+                CwmIndexedFeature indexedFeature = (CwmIndexedFeature) f;
+                if (!uncoveredColumns.contains(indexedFeature.getFeature())) {
+                    throw FarragoResource.instance().
+                        ValidatorMultipleClusterForColumn.ex(
+                            repos.getLocalizedObjectName(
+                                indexedFeature.getFeature()));
+                }
+                uncoveredColumns.remove(indexedFeature.getFeature());
+            }
+        }
+
+        // Create system-defined clustered indexes for any columns which aren't
+        // covered by user-defined clustered indexes.
+        for (CwmColumn col : uncoveredColumns) {
+            FemLocalIndex index = repos.newFemLocalIndex();
+            String name =
+                "SYS$CLUSTERED_INDEX$" + table.getNamespace().getName()
+                + "$" + table.getName() + "$" + col.getName();
+            index.setName(
+                FarragoCatalogUtil.uniquifyGeneratedName(repos, col, name));
+            index.setSpannedClass(table);
+            index.setClustered(true);
+            index.setSorted(false);
+            FemLocalIndexColumn indexColumn = repos.newFemLocalIndexColumn();
+            indexColumn.setName(col.getName());
+            indexColumn.setFeature(col);
+            indexColumn.setIndex(index);
+            indexColumn.setOrdinal(0);
         }
     }
 
-    private void initIndexCmd(
+    protected void prepareIndexCmd(
         FemIndexCmd cmd,
         FemLocalIndex index)
     {
-        // TODO jvs 26-Oct-2005:  rework this example copied from FTRS
-        cmd.setDbHandle(getFennelDbHandle().getFemDbHandle(repos));
-        /*
-        FtrsIndexGuide indexGuide = new LcsIndexGuide(
-            indexTypeFactory,
-            FarragoCatalogUtil.getIndexTable(index));
-        cmd.setTupleDesc(
-            indexGuide.getCoverageTupleDescriptor(index));
-        cmd.setKeyProj(indexGuide.getDistinctKeyProjection(index));
-        cmd.setSegmentId(getIndexSegmentId(index));
-        cmd.setIndexId(JmiUtil.getObjectId(index));
-        */
-    }
+        // TODO jvs 5-Nov-2005:  get rid of this once we support unclustered
+        // indexes on LCS tables
+        assert(index.isClustered());
 
-    /**
-     * Gets the SegmentId of the segment storing an index.
-     *
-     * @param index the index of interest
-     *
-     * @return containing SegmentId
-     */
-    static long getIndexSegmentId(FemLocalIndex index)
-    {
-        // REVIEW jvs 26-Oct-2005:  I copied this over from FTRS;
-        // can it be shared?
-        if (FarragoCatalogUtil.isIndexTemporary(index)) {
-            return 2;
-        } else {
-            return 1;
+        // For LCS clustered indexes, the stored tuple is always the same:
+        // [RID, PageId]; and the key is just the RID.  In Fennel,
+        // both attributes are represented as 64-bit ints.
+
+        FemTupleDescriptor tupleDesc = repos.newFemTupleDescriptor();
+        FennelStoredTypeDescriptor typeDesc =
+            FennelStandardTypeDescriptor.INT_64;
+        for (int i = 0; i < 2; ++i) {
+            FemTupleAttrDescriptor attrDesc = repos.newFemTupleAttrDescriptor();
+            tupleDesc.getAttrDescriptor().add(attrDesc);
+            attrDesc.setTypeOrdinal(
+                typeDesc.getOrdinal());
+            attrDesc.setByteLength(typeDesc.getFixedByteCount());
+            attrDesc.setNullable(false);
         }
+
+        cmd.setTupleDesc(tupleDesc);
+        cmd.setKeyProj(
+            FennelRelUtil.createTupleProjection(
+                repos,
+                FennelRelUtil.newIotaProjection(1)));
     }
 }
 

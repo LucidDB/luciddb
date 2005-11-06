@@ -275,7 +275,7 @@ public abstract class FarragoCatalogUtil
      *
      * @return uniquified name
      */
-    private static String uniquifyGeneratedName(
+    public static String uniquifyGeneratedName(
         FarragoRepos repos, 
         RefObject refObj,
         String name)

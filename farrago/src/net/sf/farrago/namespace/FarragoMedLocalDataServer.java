@@ -49,7 +49,8 @@ public interface FarragoMedLocalDataServer extends FarragoMedDataServer
     public void setFennelDbHandle(FennelDbHandle fennelDbHandle);
 
     /**
-     * Validates the definition of a table being created.
+     * Validates the definition of a table being created.  May have
+     * side-effects such as creating additional system-maintained indexes.
      *
      * @param table definition of the table being created
      *

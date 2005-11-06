@@ -63,6 +63,13 @@ public abstract class MedAbstractLocalDataServer extends MedAbstractDataServer
         return fennelDbHandle;
     }
 
+    // implement FarragoMedDataServer
+    public FarragoMedNameDirectory getNameDirectory()
+        throws SQLException
+    {
+        return null;
+    }
+
     // implement FarragoMedLocalDataServer
     public void setFennelDbHandle(FennelDbHandle fennelDbHandle)
     {

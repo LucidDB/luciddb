@@ -541,6 +541,10 @@ column type family is {1} but default value type family is {2}</text>
 <text>Privilege {0} required for access to {1}</text>
 </exception>
 
+<exception id="420950" name="ValidatorMultipleClusterForColumn">
+<text>Multiple clustered indexes contain {0}</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Fennel resources 440,000 - 450,000 -->
 <!-- Actual resources are defined separately in Fennel -->

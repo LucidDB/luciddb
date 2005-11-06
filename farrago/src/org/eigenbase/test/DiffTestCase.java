@@ -55,9 +55,9 @@ public abstract class DiffTestCase extends TestCase
     /** Diff masks defined so far */
     // private List diffMasks;
     private String diffMasks;
-    Pattern compiledDiffPattern;
+    Matcher compiledDiffMatcher;
     private String ignorePatterns;
-    Pattern compiledIgnorePattern;
+    Matcher compiledIgnoreMatcher;
 
     int gcInterval;
 
@@ -76,8 +76,8 @@ public abstract class DiffTestCase extends TestCase
         // diffMasks = new ArrayList();
         diffMasks = "";
         ignorePatterns = "";
-        compiledIgnorePattern = null;
-        compiledDiffPattern = null;
+        compiledIgnoreMatcher = null;
+        compiledDiffMatcher = null;
         gcInterval = 0;
     }
 
@@ -91,8 +91,8 @@ public abstract class DiffTestCase extends TestCase
         // diffMasks.clear();
         diffMasks = "";
         ignorePatterns = "";
-        compiledIgnorePattern = null;
-        compiledDiffPattern = null;
+        compiledIgnoreMatcher = null;
+        compiledDiffMatcher = null;
         gcInterval = 0;
     }
 
@@ -190,7 +190,7 @@ public abstract class DiffTestCase extends TestCase
         FileReader logReader = null;
         FileReader refReader = null;
         try {
-            if (compiledIgnorePattern != null) {
+            if (compiledIgnoreMatcher != null) {
                 if (gcInterval != 0) {
                     n++;
                     if ( n == gcInterval) {
@@ -268,7 +268,8 @@ public abstract class DiffTestCase extends TestCase
         } else {
             diffMasks = diffMasks + "|" + mask;
         }
-        compiledDiffPattern = Pattern.compile(diffMasks);
+        Pattern compiledDiffPattern = Pattern.compile(diffMasks);
+        compiledDiffMatcher = compiledDiffPattern.matcher("");
     }
 
     protected void addIgnorePattern(String javaPattern)
@@ -278,32 +279,27 @@ public abstract class DiffTestCase extends TestCase
         } else {
             ignorePatterns = ignorePatterns + "|" + javaPattern;
         }
-        compiledIgnorePattern = Pattern.compile(ignorePatterns);
+        Pattern compiledIgnorePattern = Pattern.compile(ignorePatterns);
+        compiledIgnoreMatcher = compiledIgnorePattern.matcher("");
     }
 
     private String applyDiffMask(String s)
     {
-        // TODO:  reuse a single java.util.regex.Matcher
-        /*
-        for (int i = 0; i < diffMasks.size(); ++i) {
-            String mask = (String) diffMasks.get(i);
-            s = s.replaceAll(mask, "XYZZY");
-        }
-        */
-        if (compiledDiffPattern != null) {
+        if (compiledDiffMatcher != null) {
+            compiledDiffMatcher.reset(s);
             // we assume most of lines do not match
             // so compiled matches will be faster than replaceAll.
-            if (compiledDiffPattern.matcher(s).find()) {
+            if (compiledDiffMatcher.find()) {
                 return s.replaceAll(diffMasks, "XYZZY");
             }
         }
-
         return s;
     }
     private boolean matchIgnorePatterns(String s)
     {
-        if (compiledIgnorePattern != null) {
-            return compiledIgnorePattern.matcher(s).matches();
+        if (compiledIgnoreMatcher != null) {
+            compiledIgnoreMatcher.reset(s);
+            return compiledIgnoreMatcher.matches();
         }
         return false;
     }

@@ -1,35 +1,106 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/misc.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/misc.sql#2 $
 0: jdbc:farrago:> -- Miscellaneous DDL
 0: jdbc:farrago:> 
-0: jdbc:farrago:> set schema 'sales';
+0: jdbc:farrago:> create schema misc;
+0: jdbc:farrago:> set schema 'misc';
+0: jdbc:farrago:> set path 'misc';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Table with description
-0: jdbc:farrago:> create table foo (i int primary key) description 'this is a table';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> drop table foo;
+0: jdbc:farrago:> create table table_with_desc (i int primary key) description 'this is a table';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  a table may not have multiple primary keys
 0: jdbc:farrago:> create table dup_pk(i int not null primary key,j int not null primary key);
-Error: Multiple PRIMARY KEY constraints not allowed on table "SALES"."DUP_PK" (state=,code=0)
+Error: Multiple PRIMARY KEY constraints not allowed on table "MISC"."DUP_PK" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  duplicate constraint names
 0: jdbc:farrago:> create table dup_constraints(
 . . . . . . . . >     i int not null constraint charlie primary key,
 . . . . . . . . >     j int not null constraint charlie unique);
-Error: DDL validation error near line 1, column 120: Duplicate definition for UNIQUE constraint "CHARLIE" within table "SALES"."DUP_CONSTRAINTS"; earlier definition was near line 1, column 77 (state=,code=0)
+Error: DDL validation error near line 1, column 120: Duplicate definition for UNIQUE constraint "CHARLIE" within table "MISC"."DUP_CONSTRAINTS"; earlier definition was near line 1, column 77 (state=,code=0)
+0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- FTRS-specific table validation rules
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  FTRS tables cannot have multiple clustered indexes
 0: jdbc:farrago:> create table dup_clustered(i int not null primary key,j int not null)
 . . . . . . . . > create clustered index ix on dup_clustered(i)
-. . . . . . . . > create clustered index ix on dup_clustered(j)
+. . . . . . . . > create clustered index ix2 on dup_clustered(j)
 . . . . . . . . > ;
-Error: Clustered index already defined on table "SALES"."DUP_CLUSTERED" (state=,code=0)
+Error: Clustered index already defined on table "MISC"."DUP_CLUSTERED" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  FTRS tables must have a primary key
 0: jdbc:farrago:> create table missing_pk(i int not null,j int not null);
-Error: PRIMARY KEY constraint required for table "SALES"."MISSING_PK" (state=,code=0)
+Error: PRIMARY KEY constraint required for table "MISC"."MISSING_PK" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- LCS-specific table validation rules
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- LCS tables don't require primary keys
+0: jdbc:farrago:> create table lcs_table(i int not null)
+. . . . . . . . > server sys_column_store_data_server
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify creation of system-defined clustered index
+0: jdbc:farrago:> !indexes LCS_TABLE
++------------+--------------+-------------+-------------+------------------+---------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | NON_UNIQUE  | INDEX_QUALIFIER  |              INDEX_NAME               | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
++------------+--------------+-------------+-------------+------------------+---------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| LOCALDB    | MISC         | LCS_TABLE   | true        | LOCALDB          | SYS$CLUSTERED_INDEX$MISC$LCS_TABLE$I  | 1     | 1                 | I            | A             | 0            | 0      |                   |
++------------+--------------+-------------+-------------+------------------+---------------------------------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- LCS tables may have multiple clustered indexes
+0: jdbc:farrago:> create table lcs_table_explicit(i int not null,j int not null,k int not null)
+. . . . . . . . > server sys_column_store_data_server
+. . . . . . . . > create clustered index explicit_i on lcs_table_explicit(i)
+. . . . . . . . > create clustered index explicit_jk1 on lcs_table_explicit(j,k)
+. . . . . . . . > ;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify creation of user-defined clustered indexes
+0: jdbc:farrago:> !indexes LCS_TABLE_EXPLICIT
++------------+--------------+---------------------+-------------+------------------+---------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| TABLE_CAT  | TABLE_SCHEM  |     TABLE_NAME      | NON_UNIQUE  | INDEX_QUALIFIER  |  INDEX_NAME   | TYPE  | ORDINAL_POSITION  | COLUMN_NAME  | ASC_ORD_DESC  | CARDINALITY  | PAGES  | FILTER_CONDITION  |
++------------+--------------+---------------------+-------------+------------------+---------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+| LOCALDB    | MISC         | LCS_TABLE_EXPLICIT  | true        | LOCALDB          | EXPLICIT_I    | 1     | 1                 | I            | A             | 0            | 0      |                   |
+| LOCALDB    | MISC         | LCS_TABLE_EXPLICIT  | true        | LOCALDB          | EXPLICIT_JK1  | 1     | 1                 | J            | A             | 0            | 0      |                   |
+| LOCALDB    | MISC         | LCS_TABLE_EXPLICIT  | true        | LOCALDB          | EXPLICIT_JK1  | 1     | 2                 | K            | A             | 0            | 0      |                   |
++------------+--------------+---------------------+-------------+------------------+---------------+-------+-------------------+--------------+---------------+--------------+--------+-------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail: LCS clustered indexes may not overlap
+0: jdbc:farrago:> create table lcs_table_overlap(i int not null,j int not null,k int not null)
+. . . . . . . . > server sys_column_store_data_server
+. . . . . . . . > create clustered index explicit_ij on lcs_table_overlap(i,j)
+. . . . . . . . > create clustered index explicit_jk2 on lcs_table_overlap(j,k)
+. . . . . . . . > ;
+Error: Multiple clustered indexes contain column "J" (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test some features which aren't yet implemented for LCS
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  can't handle unclustered indexes yet
+0: jdbc:farrago:> create table lcs_table_unclustered(i int not null)
+. . . . . . . . > server sys_column_store_data_server
+. . . . . . . . > create index unclustered_i on lcs_table_unclustered(i)
+. . . . . . . . > ;
+Error: java.lang.UnsupportedOperationException: class java.lang.String: column-store unclustered index (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create type square as (
+. . . . . . . . >     side_length double
+. . . . . . . . > ) final;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  can't handle UDT yet
+0: jdbc:farrago:> create table lcs_table_udt(i int not null,s square)
+. . . . . . . . > server sys_column_store_data_server
+. . . . . . . . > ;
+Error: java.lang.UnsupportedOperationException: class java.lang.String: column-store for UDT (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  can't handle collections yet
+0: jdbc:farrago:> create table lcs_table_multiset(i int not null,im integer multiset)
+. . . . . . . . > server sys_column_store_data_server
+. . . . . . . . > ;
+Error: java.lang.UnsupportedOperationException: class java.lang.String: column-store for collection type (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test LCS drop/truncate; TODO: with data
+0: jdbc:farrago:> truncate table lcs_table;
+0: jdbc:farrago:> drop table lcs_table_explicit;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- End misc.sql
 0: jdbc:farrago:> 

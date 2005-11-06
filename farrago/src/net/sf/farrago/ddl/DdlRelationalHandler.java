@@ -112,7 +112,6 @@ public class DdlRelationalHandler extends DdlHandler
 
         // TODO:  verify columns distinct, total width acceptable, and all
         // columns indexable types
-        index.setSorted(true);
         if (index.getNamespace() != null) {
             assert (
                 index.getNamespace().equals(
@@ -321,11 +320,9 @@ public class DdlRelationalHandler extends DdlHandler
         FemLocalIndex index = repos.newFemLocalIndex();
         FarragoCatalogUtil.generateConstraintIndexName(
             repos, constraint, index);
-        repos.getKeysIndexesPackage().getIndexSpansClass().add(table, index);
-
-        // REVIEW:  same as DDL; why is this necessary?
         index.setSpannedClass(table);
         index.setUnique(true);
+        index.setSorted(true);
 
         int iOrdinal = 0;
         Iterator columnIter = constraint.getFeature().iterator();

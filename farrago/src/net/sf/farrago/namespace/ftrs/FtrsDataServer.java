@@ -49,11 +49,10 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsDataServer extends MedAbstractLocalDataServer
+class FtrsDataServer extends MedAbstractFennelDataServer
 {
     //~ Instance fields -------------------------------------------------------
 
-    private FarragoRepos repos;
     private FarragoTypeFactory indexTypeFactory;
 
     //~ Constructors ----------------------------------------------------------
@@ -63,19 +62,11 @@ class FtrsDataServer extends MedAbstractLocalDataServer
         Properties props,
         FarragoRepos repos)
     {
-        super(serverMofId, props);
-        this.repos = repos;
+        super(serverMofId, props, repos);
         indexTypeFactory = new FarragoTypeFactoryImpl(repos);
     }
 
     //~ Methods ---------------------------------------------------------------
-
-    // implement FarragoMedDataServer
-    public FarragoMedNameDirectory getNameDirectory()
-        throws SQLException
-    {
-        return null;
-    }
 
     // implement FarragoMedDataServer
     public FarragoMedColumnSet newColumnSet(
@@ -87,13 +78,6 @@ class FtrsDataServer extends MedAbstractLocalDataServer
         throws SQLException
     {
         return new FtrsTable(localName, rowType, tableProps, columnPropMap);
-    }
-
-    // implement FarragoMedDataServer
-    public Object getRuntimeSupport(Object param)
-        throws SQLException
-    {
-        return null;
     }
 
     // implement FarragoMedDataServer
@@ -144,73 +128,18 @@ class FtrsDataServer extends MedAbstractLocalDataServer
             }
         }
     }
-    
-    // implement FarragoMedLocalDataServer
-    public long createIndex(FemLocalIndex index)
-    {
-        repos.beginTransientTxn();
-        try {
-            FemCmdCreateIndex cmd = repos.newFemCmdCreateIndex();
-            initIndexCmd(cmd, index);
-            return getFennelDbHandle().executeCmd(cmd);
-        } finally {
-            repos.endTransientTxn();
-        }
-    }
 
-    // implement FarragoMedLocalDataServer
-    public void dropIndex(
-        FemLocalIndex index,
-        long rootPageId,
-        boolean truncate)
-    {
-        repos.beginTransientTxn();
-        try {
-            FemCmdDropIndex cmd;
-            if (truncate) {
-                cmd = repos.newFemCmdTruncateIndex();
-            } else {
-                cmd = repos.newFemCmdDropIndex();
-            }
-            initIndexCmd(cmd, index);
-            cmd.setRootPageId(rootPageId);
-            getFennelDbHandle().executeCmd(cmd);
-        } finally {
-            repos.endTransientTxn();
-        }
-    }
-
-    private void initIndexCmd(
+    // implement MedAbstractFennelDataServer
+    protected void prepareIndexCmd(
         FemIndexCmd cmd,
         FemLocalIndex index)
     {
-        cmd.setDbHandle(getFennelDbHandle().getFemDbHandle(repos));
         FtrsIndexGuide indexGuide = new FtrsIndexGuide(
             indexTypeFactory,
             FarragoCatalogUtil.getIndexTable(index));
         cmd.setTupleDesc(
             indexGuide.getCoverageTupleDescriptor(index));
         cmd.setKeyProj(indexGuide.getDistinctKeyProjection(index));
-        cmd.setSegmentId(getIndexSegmentId(index));
-        cmd.setIndexId(JmiUtil.getObjectId(index));
-    }
-
-    /**
-     * Gets the SegmentId of the segment storing an index.
-     *
-     * @param index the index of interest
-     *
-     * @return containing SegmentId
-     */
-    static long getIndexSegmentId(FemLocalIndex index)
-    {
-        // TODO:  share symbolic enum with Fennel rather than hard-coding
-        // values here
-        if (FarragoCatalogUtil.isIndexTemporary(index)) {
-            return 2;
-        } else {
-            return 1;
-        }
     }
 }
 
