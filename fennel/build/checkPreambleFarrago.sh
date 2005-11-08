@@ -6,6 +6,7 @@ set -e
 
 fennelDir=$(dirname $0)/..
 farragoDir=$(dirname $0)/../../farrago
+resgenDir=$(dirname $0)/../../util/resgen
 
 # Check preambles of all Java files. Which copyright notices are
 # required depends upon the zone of the file:
@@ -16,7 +17,7 @@ farragoDir=$(dirname $0)/../../farrago
 # * Eigenbase: All other files must have Eigenbase, LucidEra and
 #   Disruptive Tech copyright notices.
 
-/usr/bin/find $farragoDir/src -name \*.java |
+/usr/bin/find $farragoDir/src $resgenDir/src -name \*.java |
 grep -v -F \
 'farrago/src/net/sf/farrago/FarragoMetadataFactory.java
 farrago/src/net/sf/farrago/FarragoMetadataFactoryImpl.java
@@ -29,7 +30,9 @@ farrago/src/net/sf/farrago/test/FarragoSqlTestWrapper.java
 farrago/src/com/lucidera/lurql/parser/
 farrago/src/org/eigenbase/resource/EigenbaseResource.java
 farrago/src/org/eigenbase/resource/EigenbaseResource_en_US.java
-farrago/src/org/eigenbase/sql/parser/impl/' |
+farrago/src/org/eigenbase/sql/parser/impl/
+util/resgen/src/org/eigenbase/resgen/ResourceDef.java
+util/resgen/src/org/eigenbase/xom/MetaDef.java' |
 (
 exitCode=0;
 while read filename
@@ -37,9 +40,24 @@ do
     zone=eigenbase
     component=farrago
     case "$filename" in
-    */farrago/src/com/lucidera/*) zone=lucidera ;;
-    */farrago/src/com/disruptivetech/*) zone=disruptivetech ;;
-    */farrago/src/org/eigenbase/*) component=farrago-eigenbase ;;
+    */farrago/src/com/lucidera/*) 
+        zone=lucidera
+        ;;
+    */farrago/src/com/disruptivetech/*) 
+        zone=disruptivetech
+        ;;
+    */farrago/src/org/eigenbase/util/property/*) 
+        component=farrago-eigenbase-lgpl
+        ;;
+    */farrago/src/org/eigenbase/*) 
+        component=farrago-eigenbase 
+        ;;
+    */org/eigenbase/resgen/*) 
+        component=resgen
+        ;;
+    */org/eigenbase/xom/*) 
+        component=xom
+        ;;
     *) ;;
     esac
     # Check this file. If there is an error, set the status code, but
