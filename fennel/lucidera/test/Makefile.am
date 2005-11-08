@@ -21,6 +21,7 @@ LDADD = \
 	-L$(top_builddir)/libfennel \
 	-L$(top_builddir)/lucidera/libfennel_lu \
 	-l$(TEST_LIB) \
+	-lfennel_lu_colstore \
 	-lfennel_lu_sorter \
 	-lfennel_db \
 	-lfennel_btree \
