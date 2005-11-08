@@ -1328,15 +1328,6 @@ require version '${required.ant.version}'."/>
     </exec>
   </target>
 
-  <target name="propertiesJar" depends="compile" description="
-Create eigenbase-properties.jar, which is used by Mondrian.">
-    <jar jarfile="${open.dir}/thirdparty/eigenbase-properties.jar">
-      <fileset dir="${farrago.classes.dir}">
-        <include name="org/eigenbase/util/property/**/*.class"/>
-      </fileset>
-    </jar>
-  </target>
-
   <target name="createEclipseProject">
     <pathconvert property="eclipse.libpath" refid="farrago.build.3p.classpath"
       pathsep="&quot;/&gt;&lt;classpathentry kind=&quot;lib&quot; path=&quot;"/>
