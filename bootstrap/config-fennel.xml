@@ -42,11 +42,13 @@
 			<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
 			<execute command="&rsync_cmd; artifacts/fennel&configSuffix; &rsync_dest;"/>
 
+                        <!--
                         <onfailure>
                             <artifactspublisher dir="&open_integration.build.home;/farrago" dest="artifacts/fennel&configSuffix;" subdirectory="farrago"/>
                             <artifactspublisher dir="&open_integration.build.home;/fennel" dest="artifacts/fennel&configSuffix;" subdirectory="fennel"/>
                             <artifactspublisher dir="&open_integration.build.home;/saffron" dest="artifacts/fennel&configSuffix;" subdirectory="saffron"/>
                         </onfailure>
+                        -->
 
 			<scp sourcedir="logs/fennel"
 			     targetuser="&scp_user;"

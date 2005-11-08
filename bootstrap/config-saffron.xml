@@ -44,11 +44,13 @@
 			<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
 			<execute command="&rsync_cmd; artifacts/saffron&configSuffix; &rsync_dest;"/>
 
+                        <!--
                         <onfailure>
                             <artifactspublisher dir="&open_integration.build.home;/farrago" dest="artifacts/saffron&configSuffix;" subdirectory="farrago"/>
                             <artifactspublisher dir="&open_integration.build.home;/fennel" dest="artifacts/saffron&configSuffix;" subdirectory="fennel"/>
                             <artifactspublisher dir="&open_integration.build.home;/saffron" dest="artifacts/saffron&configSuffix;" subdirectory="saffron"/>
                         </onfailure>
+                        -->
 
 			<scp sourcedir="logs/saffron"
 			     targetuser="&scp_user;"

@@ -45,11 +45,13 @@
 			<artifactspublisher dir="&open_integration.build.home;/farrago/initsql" dest="artifacts/farrago&configSuffix;" subdirectory="initsql"/>
 			<artifactspublisher dir="&open_integration.build.home;/farrago/regressionsql" dest="artifacts/farrago&configSuffix;" subdirectory="regressionsql"/>
 
+                        <!--
                         <onfailure>
                             <artifactspublisher dir="&open_integration.build.home;/farrago" dest="artifacts/farrago&configSuffix;" subdirectory="farrago"/>
                             <artifactspublisher dir="&open_integration.build.home;/fennel" dest="artifacts/farrago&configSuffix;" subdirectory="fennel"/>
                             <artifactspublisher dir="&open_integration.build.home;/saffron" dest="artifacts/farrago&configSuffix;" subdirectory="saffron"/>
                         </onfailure>
+                        -->
         
 			<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
 			<execute command="&rsync_cmd; artifacts/farrago&configSuffix; &rsync_dest;"/>
