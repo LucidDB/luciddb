@@ -180,9 +180,9 @@ public abstract class FarragoCatalogUtil
      */
     public static List<FemUniqueKeyConstraint> getUniqueKeyConstraints(CwmClassifier table)
     {
-    	ArrayList listOfConstraints = new ArrayList();
-    	
+        ArrayList listOfConstraints = new ArrayList();
         Iterator iter = table.getOwnedElement().iterator();
+
         while (iter.hasNext()) {
             Object obj = iter.next();
             if (obj instanceof FemUniqueKeyConstraint) {
