@@ -169,6 +169,30 @@ public abstract class FarragoCatalogUtil
         return index.getName().startsWith("SYS$PRIMARY_KEY");
     }
     
+    
+    
+    /**
+     * Finds the unique key constraints for a table.
+     *
+     * @param table the table of interest
+     *
+     * @return a list of unique key constraints, or an empty list if none is defined
+     */
+    public static List<FemUniqueKeyConstraint> getUniqueKeyConstraints(CwmClassifier table)
+    {
+    	ArrayList listOfConstraints = new ArrayList();
+    	
+        Iterator iter = table.getOwnedElement().iterator();
+        while (iter.hasNext()) {
+            Object obj = iter.next();
+            if (obj instanceof FemUniqueKeyConstraint) {
+                listOfConstraints.add(obj);
+            }
+        }
+        return listOfConstraints;
+    }
+    
+    
     /**
      * Finds the primary key for a table.
      *
