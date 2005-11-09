@@ -139,8 +139,8 @@ public class DdlMedHandler extends DdlHandler
     {
         FarragoMedDataWrapper wrapper;
         try {
-            if (!femWrapper.getLibraryFile().startsWith(
-                    FarragoPluginClassLoader.LIBRARY_CLASS_PREFIX))
+            if (!FarragoPluginClassLoader.isLibraryClass(
+                    femWrapper.getLibraryFile()))
             {
                 // convert library filename to absolute path, if necessary
                 String libraryFile = femWrapper.getLibraryFile();

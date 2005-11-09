@@ -727,6 +727,10 @@ column type family is {1} but default value type family is {2}</text>
 <text>Server sessions are still running; enter !kill to force shutdown</text>
 </message>
 
+<message id="480070" name="ServerProductName">
+<text>Server personality:  {0}</text>
+</message>
+
 <!-- ====================================================================== -->
 <!-- Plugin resources 490,000 - 500,000 -->
 <!-- ====================================================================== -->

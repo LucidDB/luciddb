@@ -1,0 +1,11 @@
+#!/bin/bash
+# $Id$
+# Run the sqlline command-line SQL interpreter as a client
+# to a LucidDB server
+
+source ./defineLucidDbRuntime.sh
+
+java ${CLIENT_JAVA_ARGS} ${SQLLINE_JAVA_ARGS} \
+    -u jdbc:luciddb:rmi://localhost \
+    -d com.lucidera.jdbc.LucidDbRmiDriver \
+    -n sa $*

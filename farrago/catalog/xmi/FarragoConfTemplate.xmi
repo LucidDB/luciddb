@@ -14,11 +14,10 @@
       userCatalogEnabled = 'false'
       codeCacheMaxBytes='-1'
       checkpointInterval='300'
-      serverRmiRegistryPort='5433'
+      serverRmiRegistryPort='-1'
       serverSingleListenerPort='-1'
       calcVirtualMachine='CALCVM_AUTO'
       javaCompilerClassName='org.eigenbase.javac.JaninoCompiler'
-      externalReposProps=''
       >
       <FEMConfig:FarragoConfig.FennelConfig>
         <FEMConfig:FennelConfig
@@ -30,7 +29,7 @@
           databaseTxnLogInitSize='2000'
           cachePagesMax='1000'
           cachePagesInit='1000'
-          cachePageSize='4096'
+          cachePageSize='@cachePageSize@'
           resourceDir='@resourceDir@'
           />
       </FEMConfig:FarragoConfig.FennelConfig>

@@ -1,0 +1,17 @@
+#!/bin/bash
+# $Id$
+# Run the sqlline command-line SQL interpreter 
+# with an embedded LucidDB engine
+
+source ./defineLucidDbRuntime.sh
+
+if java ${SERVER_JAVA_ARGS} ${SQLLINE_JAVA_ARGS} \
+    -u jdbc:luciddb: -d com.lucidera.jdbc.LucidDbLocalDriver \
+    -n sa $*;
+then
+    echo
+else
+    tset
+    echo "Terminal reset because sqlline crashed"
+fi
+

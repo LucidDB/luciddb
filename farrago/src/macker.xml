@@ -82,11 +82,13 @@
     <pattern name="dt.fennel" class="com.disruptivetech.farrago.fennel.*" />
     <pattern name="dt.sql.advise" class="com.disruptivetech.farrago.sql.advise.*" />
 
+    <pattern name="lu.jdbc" class="com.lucidera.jdbc.*"/>
     <pattern name="lu.lcs" class="com.lucidera.lcs.*"/>
     <pattern name="lu.lurql" class="com.lucidera.lurql.*"/>
     <pattern name="lu.lurql.parser" class="com.lucidera.lurql.parser.*"/>
     <pattern name="lu.lurql.test" class="com.lucidera.lurql.test.*"/>
 
+    <pattern name="lu.farrago" class="com.lucidera.farrago.*"/>
     <pattern name="lu.fennel" class="com.lucidera.farrago.fennel.*" />
 
     <pattern name="defimpl" class="net.sf.farrago.defimpl.*" />
@@ -138,10 +140,12 @@
       <include pattern="dt.rel"/>
       <include pattern="dt.fennel"/>
       <include pattern="dt.sql.advise"/>
+      <include pattern="lu.jdbc"/>
       <include pattern="lu.lcs"/>
       <include pattern="lu.lurql"/>
       <include pattern="lu.lurql.parser"/>
       <include pattern="lu.lurql.test"/>
+      <include pattern="lu.farrago"/>
       <include pattern="lu.fennel"/>
       <include pattern="defimpl"/>
       <include pattern="test"/>
@@ -768,6 +772,23 @@
       </deny>
     </access-rule>
 
+    <pattern name="lu.jdbc.deps">
+      <include pattern="lu.jdbc" />
+      <include pattern="jdbc.engine" />
+      <include pattern="jdbc.client" />
+    </pattern>
+
+    <access-rule>
+      <message>lu.jdbc dependency violation</message>
+      <deny>
+        <from pattern="lu.jdbc" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="lu.jdbc.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
     <pattern name="lu.lcs.deps">
       <include pattern="namespace.impl.deps" />
       <include pattern="lu.lcs" />
@@ -834,6 +855,22 @@
         <to pattern="farrago" />
         <allow>
           <to pattern="defimpl.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
+    <pattern name="lu.farrago.deps">
+      <include pattern="lu.farrago" />
+      <include pattern="defimpl.deps" />
+    </pattern>
+
+    <access-rule>
+      <message>lu.farrago dependency violation</message>
+      <deny>
+        <from pattern="lu.farrago" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="lu.farrago.deps" />
         </allow>
       </deny>
     </access-rule>
