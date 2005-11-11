@@ -95,6 +95,7 @@ class BTreeTest : virtual public SegStorageTestBase
         bool alternating,
         bool deletion);
     void testSearch(SharedByteInputStream,uint nRecords);
+    void testSearchLast();
     
 public:
     explicit BTreeTest()
@@ -266,9 +267,11 @@ void BTreeTest::testScan(
         1);
 
     BTreeWriter writer(descriptor,scratchAccessor);
-    
+
+    bool found;
+    int32_t lastKey = -1;
     BTreeReader &reader = deletion ? writer : realReader;
-    bool found = reader.searchFirst();
+    found = reader.searchFirst();
     if (!found) {
         BOOST_FAIL("searchFirst found nothing");
     }
@@ -285,12 +288,13 @@ void BTreeTest::testScan(
                        << i << ":  " << record.key);
         }
         reader.getTupleAccessorForRead().unmarshal(tupleData);
-        BOOST_CHECK_EQUAL(record.key,readKey());
+        lastKey = readKey();
+        BOOST_CHECK_EQUAL(record.key,lastKey);
         BOOST_CHECK_EQUAL(record.value,readValue());
         if (!(i%10000)) {
             BOOST_MESSAGE(
                 "scanned value = " << readValue()
-                << " key = " << readKey());
+                << " key = " << lastKey);
         }
         if (deletion) {
             if (!alternating || !(i & 1)) {
@@ -298,6 +302,27 @@ void BTreeTest::testScan(
             }
         }
         found = reader.searchNext();
+    }
+
+    reader.endSearch();
+    
+    if (!deletion) {
+        found = reader.searchLast();
+        if (!found) {
+            BOOST_FAIL("searchLast found nothing");
+        }
+        reader.getTupleAccessorForRead().unmarshal(tupleData);
+        BOOST_CHECK_EQUAL(lastKey,readKey());
+        reader.endSearch();
+    }
+}
+
+void BTreeTest::testSearchLast()
+{
+    BTreeReader reader(descriptor);
+    bool found = reader.searchLast();
+    if (!found) {
+        BOOST_FAIL("searchLast found nothing");
     }
 }
 
