@@ -68,12 +68,45 @@ VMAllocator::~VMAllocator()
 
 void *VMAllocator::allocate()
 {
-#ifdef HAVE_MMAP    
+#ifdef HAVE_MMAP
+
+    uint cbActualAlloc = cbAlloc;
+#ifndef NDEBUG
+    // For a debug build, allocate "fence" regions before and after each
+    // allocated buffer.  This helps to catch stray pointers around buffer
+    // boundaries.  The fence size is one OS memory page, since that's
+    // the minimum unit of protection, and also guarantees 512-byte
+    // alignment for O_DIRECT file access.
+    cbActualAlloc += 2*getpagesize();
+#endif
+    
     void *v = ::mmap(
-        NULL,cbAlloc,PROT_READ | PROT_WRITE,MAP_PRIVATE | MAP_ANONYMOUS,-1,0);
+        NULL,cbActualAlloc,
+        PROT_READ | PROT_WRITE,MAP_PRIVATE | MAP_ANONYMOUS,-1,0);
     if (v == MAP_FAILED) {
         throw SysCallExcn("mmap failed");
     }
+    
+#ifndef NDEBUG
+    PBuffer p = static_cast<PBuffer>(v);
+    memset(p, 0xFE, getpagesize());
+    if (::mprotect(p, getpagesize(), PROT_NONE)) {
+        SysCallExcn excn("mprotect on pre-fence failed");
+        ::munmap(v,cbAlloc);
+        throw excn;
+    }
+    p += getpagesize();
+    memset(p, 0xFF, cbAlloc);
+    v = p;
+    p += cbAlloc;
+    memset(p, 0xFE, getpagesize());
+    if (::mprotect(p, getpagesize(), PROT_NONE)) {
+        SysCallExcn excn("mprotect on post-fence failed");
+        ::munmap(v,cbAlloc);
+        throw excn;
+    }
+#endif
+    
     if (bLockPages) {
         if (::mlock(v,cbAlloc)) {
             SysCallExcn excn("mlock failed");
@@ -99,7 +132,15 @@ void VMAllocator::deallocate(void *p)
             throw SysCallExcn("munlock failed");
         }
     }
-    if (::munmap((caddr_t)p,cbAlloc)) {
+    
+    uint cbActualAlloc = cbAlloc;
+#ifndef NDEBUG
+    PBuffer p2 = static_cast<PBuffer>(p);
+    p2 -= getpagesize();
+    p = p2;
+    cbActualAlloc += 2*getpagesize();
+#endif
+    if (::munmap((caddr_t)p,cbActualAlloc)) {
         throw SysCallExcn("munmap failed");
     }
 #else
