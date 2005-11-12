@@ -54,12 +54,18 @@ class MedJdbcDataServer extends MedAbstractDataServer
     //~ Static fields/initializers --------------------------------------------
 
     public static final String PROP_URL = "URL";
+    public static final String PROP_DRIVER_CLASS = "DRIVER_CLASS";
     public static final String PROP_USER_NAME = "USER_NAME";
     public static final String PROP_PASSWORD = "PASSWORD";
     public static final String PROP_CATALOG_NAME = "QUALIFYING_CATALOG_NAME";
     public static final String PROP_SCHEMA_NAME = "SCHEMA_NAME";
     public static final String PROP_TABLE_NAME = "TABLE_NAME";
     public static final String PROP_TABLE_TYPES = "TABLE_TYPES";
+    public static final String PROP_EXT_OPTIONS = "EXTENDED_OPTIONS";
+    public static final String PROP_VERSION = "VERSION";
+    public static final String PROP_NAME = "NAME";
+    public static final String PROP_TYPE = "TYPE";
+    public static final String VALUE_TRUE = "TRUE";
 
     //~ Instance fields -------------------------------------------------------
 
@@ -87,12 +93,28 @@ class MedJdbcDataServer extends MedAbstractDataServer
         throws SQLException
     {
         Properties props = getProperties();
+        Properties connectProps = null;
         url = props.getProperty(PROP_URL);
         assert (url != null);
         String userName = props.getProperty(PROP_USER_NAME);
         String password = props.getProperty(PROP_PASSWORD);
         schemaName = props.getProperty(PROP_SCHEMA_NAME);
         catalogName = props.getProperty(PROP_CATALOG_NAME);
+        String extensionOptions = props.getProperty(PROP_EXT_OPTIONS);
+
+        if (extensionOptions != null && 
+            extensionOptions.compareToIgnoreCase(VALUE_TRUE) == 0) 
+        {
+            connectProps = (Properties) props.clone();
+            // or remove the properties of unknown?
+            connectProps.remove(PROP_URL);
+            connectProps.remove(PROP_DRIVER_CLASS);
+            connectProps.remove(PROP_SCHEMA_NAME);
+            connectProps.remove(PROP_VERSION);
+            connectProps.remove(PROP_NAME);
+            connectProps.remove(PROP_TYPE);
+            connectProps.remove(PROP_EXT_OPTIONS);
+        }
 
         String tableTypeString = props.getProperty(PROP_TABLE_TYPES);
         if (tableTypeString == null) {
@@ -101,7 +123,9 @@ class MedJdbcDataServer extends MedAbstractDataServer
             tableTypes = tableTypeString.split(",");
         }
 
-        if (userName == null) {
+        if (connectProps != null) {
+            connection = DriverManager.getConnection(url, connectProps);
+        } else if (userName == null) {
             connection = DriverManager.getConnection(url);
         } else {
             connection = DriverManager.getConnection(url, userName, password);
