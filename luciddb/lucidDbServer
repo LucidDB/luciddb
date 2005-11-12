@@ -1,0 +1,7 @@
+#!/bin/bash
+# $Id$
+# Run LucidDB as a standalone RMI server
+
+source ./defineLucidDbRuntime.sh
+
+java ${SERVER_JAVA_ARGS} net.sf.farrago.server.FarragoServer
