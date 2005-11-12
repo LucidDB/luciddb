@@ -32,6 +32,7 @@ import net.sf.farrago.fem.config.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
+import net.sf.farrago.release.*;
 import net.sf.farrago.util.*;
 
 /**
@@ -71,6 +72,11 @@ public class FarragoServer
     public void start(FarragoJdbcServerDriver jdbcDriver)
     {
         FarragoResource res = FarragoResource.instance();
+        FarragoReleaseProperties releaseProps =
+            FarragoReleaseProperties.instance();
+        System.out.println(
+            res.ServerProductName.str(
+                releaseProps.productName.get()));
         System.out.println(res.ServerLoadingDatabase.str());
 
         // Load the session factory
@@ -84,6 +90,10 @@ public class FarragoServer
         int rmiRegistryPort = config.getServerRmiRegistryPort();
 
         int singleListenerPort = config.getServerSingleListenerPort();
+
+        if (rmiRegistryPort == -1) {
+            rmiRegistryPort = releaseProps.jdbcUrlPortDefault.get();
+        }
 
         System.out.println(res.ServerStartingNetwork.str());
 

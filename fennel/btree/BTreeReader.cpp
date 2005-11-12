@@ -51,7 +51,7 @@ inline void BTreeReader::accessLeafTuple()
     getLeafNodeAccessor(node).accessTuple(node,iTupleOnLeaf);
 }
 
-bool BTreeReader::searchFirst()
+bool BTreeReader::searchExtreme(bool first)
 {
     pageId = getRootPageId();
     LockMode lockMode = rootLockMode;
@@ -68,11 +68,17 @@ bool BTreeReader::searchFirst()
             if (!node.nEntries) {
                 pageId = node.rightSibling;
                 if (pageId == NULL_PAGE_ID) {
+                    // FIXME jvs 11-Nov-2005:  see note in method documentation
+                    // for searchLast.
                     return false;
                 }
                 continue;
             }
-            iTupleOnLeaf = 0;
+            if (first) {
+                iTupleOnLeaf = 0;
+            } else {
+                iTupleOnLeaf = node.nEntries - 1;
+            }
             accessLeafTuple();
             return true;
         case 1:
@@ -83,8 +89,15 @@ bool BTreeReader::searchFirst()
             lockMode = nonLeafLockMode;
             break;
         }
-        // continue searching on first child
-        pageId = getChild(node,0);
+
+        assert(node.nEntries);
+        if (first) {
+            // continue searching on first child
+            pageId = getChild(node,0);
+        } else {
+            // continue searching on last child
+            pageId = getChild(node,node.nEntries - 1);
+        }
     }
 }
 

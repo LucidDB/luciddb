@@ -148,6 +148,15 @@ protected:
     inline bool BTreeReader::searchForKeyTemplate(
         TupleData const &key,DuplicateSeek dupSeek,PageStack &pageStack);
     
+    /**
+     * Searches for the first or last tuple in the tree.
+     *
+     * @param first true for first; false for last
+     *
+     * @return true if tuple found; false if tree is empty
+     */
+    bool searchExtreme(bool first);
+    
 public:
     explicit BTreeReader(BTreeDescriptor const &descriptor);
     virtual ~BTreeReader();
@@ -174,7 +183,24 @@ public:
      *
      * @return true if tuple found; false if tree is empty
      */
-    bool searchFirst();
+    inline bool searchFirst();
+
+    /**
+     * Searches for the last tuple in the tree.
+     *
+     *<p>
+     *
+     * FIXME jvs 11-Nov-2005:  This method isn't currently guaranteed
+     * to work after deletions on a tree.  The problem is that deletions
+     * may leave the last page of the tree empty, so when we hit leaf
+     * level, we may not find anything, even though a predecessor
+     * page is non-empty.  We only have right-sibling links, not
+     * left-siblings, so the fix requires keeping a breadcrumb trail
+     * on the way down and backtracking when we hit an empty leaf.
+     *
+     * @return true if tuple found; false if tree is empty
+     */
+    inline bool searchLast();
 
     /**
      * Searches for a tuple in the tree with the given key.
@@ -217,6 +243,16 @@ inline TupleData &BTreeReader::getSearchKeyForWrite()
 inline bool BTreeReader::isPositioned() const
 {
     return pageLock.isLocked();
+}
+
+inline bool BTreeReader::searchFirst()
+{
+    return searchExtreme(true);
+}
+
+inline bool BTreeReader::searchLast()
+{
+    return searchExtreme(false);
 }
 
 FENNEL_END_NAMESPACE

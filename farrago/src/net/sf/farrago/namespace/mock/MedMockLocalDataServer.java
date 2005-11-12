@@ -61,6 +61,15 @@ class MedMockLocalDataServer
     }
 
     // implement FarragoMedLocalDataServer
+    public void validateTableDefinition(
+        FemLocalTable table,
+        FemLocalIndex generatedPrimaryKeyIndex)
+        throws SQLException
+    {
+        // no special validation rules
+    }
+    
+    // implement FarragoMedLocalDataServer
     public long createIndex(FemLocalIndex index)
         throws SQLException
     {

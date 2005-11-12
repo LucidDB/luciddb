@@ -145,8 +145,8 @@ public class FarragoUserDefinedRoutine
         // TODO jvs 11-Jan-2005:  move some of this code to FarragoPluginCache
         String jarName = null;
         String fullMethodName;
-        if (!externalName.startsWith(
-                FarragoPluginClassLoader.LIBRARY_CLASS_PREFIX))
+        if (!FarragoPluginClassLoader.isLibraryClass(
+                externalName))
         {
             int iColon = externalName.indexOf(':');
             if (iColon == -1) {
@@ -157,8 +157,8 @@ public class FarragoUserDefinedRoutine
                 jarName = externalName.substring(0, iColon);
             }
         } else {
-            fullMethodName = externalName.substring(
-                FarragoPluginClassLoader.LIBRARY_CLASS_PREFIX.length());
+            fullMethodName = FarragoPluginClassLoader.getLibraryClassReference(
+                externalName);
         }
         int iLeftParen = fullMethodName.indexOf('(');
         String classPlusMethodName;

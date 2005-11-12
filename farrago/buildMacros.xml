@@ -170,11 +170,18 @@
   <property name="farrago.catalog.backup.dir" 
     location="${farrago.catalog.dir}/backup"/>
 
+  <!-- directory in which unconfigured catalog data is backed up -->
+  <property name="farrago.catalog.unconfigured.dir" 
+    location="${farrago.catalog.dir}/unconfigured"/>
+
   <!-- directory in which catalog-related XMI files are stored -->
   <property name="farrago.xmi.dir" location="${farrago.catalog.dir}/xmi"/>
 
   <!-- directory in which trace files are configured and generated -->
   <property name="farrago.trace.dir" location="${farrago.dir}/trace"/>
+
+  <!-- directory for initialization scripts -->
+  <property name="farrago.initsql.dir" location="${farrago.dir}/initsql"/>
 
 
 
@@ -494,6 +501,7 @@
     </sequential>
   </macrodef>
 
+  <!-- Macro for generating an SQL parser -->
   <macrodef name="farrago.generateParser">
     <attribute name="combined" default="unspecified"/>
     <element name="components"/>
@@ -588,6 +596,35 @@
     </sequential>
   </macrodef>
 
+  <!-- Macro for cleaning out a catalog directory -->
+  <macrodef name="farrago.cleanCatalog">
+    <attribute name="catalogDir" default="${farrago.catalog.dir}"/>
+    <sequential>
+      <delete>
+        <fileset dir="@{catalogDir}" includes="*.dat"/>
+        <fileset dir="@{catalogDir}" includes="FarragoCatalog.*"/>
+        <fileset dir="@{catalogDir}" includes="*Dump.xmi"/>
+        <fileset dir="@{catalogDir}" includes="FarragoBootUrls.lst"/>
+      </delete>
+    </sequential>
+  </macrodef>
+
+  <!-- Macro for backing up a catalog directory -->
+  <macrodef name="farrago.backupCatalog">
+    <attribute name="catalogDir" default="${farrago.catalog.dir}"/>
+    <attribute name="backupDir" default="${farrago.catalog.backup.dir}"/>
+    <sequential>
+      <delete includeEmptyDirs="true" quiet="true">
+        <fileset dir="@{backupDir}" includes="*"/>
+      </delete>
+      <mkdir dir="@{backupDir}"/>
+      <copy todir="@{backupDir}">
+        <fileset dir="@{catalogDir}" includes="FarragoCatalog.*"/>
+        <fileset dir="@{catalogDir}" includes="db.dat"/>
+      </copy>
+    </sequential>
+  </macrodef>
+
   <!-- Macro for comparing catalog export before/after test run -->
   <macrodef name="farrago.compareCatalogExport">
     <attribute name="log.dir" default="unspecified"/>
@@ -616,6 +653,26 @@
           </not>
         </condition>
       </fail>
+    </sequential>
+  </macrodef>
+
+  <!-- Macro for configuring tracing properties -->
+  <macrodef name="farrago.configureTrace">
+    <attribute name="propFile" default="unspecified"/>
+    <attribute name="logFile" default="unspecified"/>
+    <sequential>
+      <touch file="@{propFile}"/>
+      <propertyfile file="@{propFile}"
+        comment="Developer tracing configuration (do not add comments)">
+        <entry key="handlers" default="java.util.logging.FileHandler"/>
+        <entry key="java.util.logging.FileHandler.formatter"
+          default="java.util.logging.SimpleFormatter"/>
+        <entry key=".level" default="CONFIG"/>
+        <entry key="java.util.logging.FileHandler.pattern"
+          default="@{logFile}"/>
+        <entry key="java.util.logging.FileHandler.append" default="true"/>
+        <entry key="net.sf.farrago.jdbc.level" default="FINER"/>
+      </propertyfile>
     </sequential>
   </macrodef>
 

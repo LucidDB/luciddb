@@ -62,7 +62,7 @@ import org.netbeans.api.mdr.events.*;
  *
  * <p>
  * Generic validation support is implemented in this class, but
- * object-specific rules should be implemented in the Impl classes for the
+ * object-specific rules should be implemented in handler classes for the
  * appropriate catalog objects.
  * </p>
  *
@@ -794,7 +794,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         }
         Class typeClass;
         // TODO jvs 25-Feb-2005:  provide a mechanism for generalizing these
-        // special case
+        // special cases
         if (element instanceof CwmNamedColumnSet) {
             typeClass = CwmNamedColumnSet.class;
         } else if (element instanceof CwmCatalog) {

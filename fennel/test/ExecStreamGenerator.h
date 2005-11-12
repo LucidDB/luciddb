@@ -139,47 +139,12 @@ public:
 };
 
 /**
- * Home-grown random number generator because I can't get boost's rng to
- * compile.  The algorithm is from "The C Programming Language" by Kernighan
- * and Ritchie.
- *
- * @author Julian Hyde
- */
-class RandomNumberGenerator
-{
-private:
-    uint seed;
-
-public:
-    RandomNumberGenerator(uint seed)
-    {
-        setSeed(seed);
-    }
-
-    void setSeed(uint seed)
-    {
-        this->seed = seed;
-    }
-
-    uint next()
-    {
-        seed = seed * 1103515245 + 12345;
-        return seed;
-    }
-
-    uint next(uint x)
-    {
-        return next() % x;
-    }
-};
-
-/**
  * Column generator which produces values which are uniformly distributed
  * between 0 and N - 1.
  */
 class RandomColumnGenerator : public ColumnGenerator<int64_t>
 {
-    RandomNumberGenerator rng;
+    std::subtractive_rng rng;
     int max;
 
 public:
@@ -188,7 +153,7 @@ public:
 
     int64_t next() 
     {
-        return rng.next(max);
+        return rng(max);
     }
 };
 
@@ -220,7 +185,7 @@ class PoissonColumnGenerator : public ColumnGenerator<T>
     int ordinalInBatch;
     /// upper bound of current batch, will be the lower bound of the next
     T batchUpper;
-    RandomNumberGenerator rng;
+    std::subtractive_rng rng;
     double meanDistance;
 
 public:
@@ -261,7 +226,7 @@ private:
         T batchUpper = batchLower + batchRange;
         assert(batchUpper > batchLower);
         for (int i = 0; i < nextValues.size(); i++) {
-            nextValues[i] = batchLower + static_cast<T>(rng.next(batchRange));
+            nextValues[i] = batchLower + static_cast<T>(rng(batchRange));
         }
         std::sort(nextValues.begin(), nextValues.end());
         this->batchUpper = batchUpper;

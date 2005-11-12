@@ -13,6 +13,7 @@ libfarrago_lu_la_LIBADD = \
 	-L$(top_builddir)/libfennel \
 	-L$(top_builddir)/farrago \
 	-L$(top_builddir)/lucidera/libfennel_lu \
+	-lfennel_lu_colstore \
 	-lfennel_lu_sorter \
 	-lfarrago \
 	-lfennel_db \

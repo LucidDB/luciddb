@@ -604,14 +604,11 @@ FemLocalIndex IndexDefinition(CwmTable table) :
                     FarragoResource.instance().ValidatorIndexBadTable.ex());
             }
         }
-        getRepos().getKeysIndexesPackage().getIndexSpansClass().add(
-            table,index);
-        // REVIEW:  why is this necessary?  shouldn't association above be
-        // sufficient?
         index.setSpannedClass(table);
         if (clustered) {
             index.setClustered(true);
         }
+        index.setSorted(true);
         index.setUnique(unique);
     }
     <LPAREN> columnNameList = SimpleIdentifierCommaList() <RPAREN>

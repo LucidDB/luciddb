@@ -541,6 +541,10 @@ column type family is {1} but default value type family is {2}</text>
 <text>Privilege {0} required for access to {1}</text>
 </exception>
 
+<exception id="420950" name="ValidatorMultipleClusterForColumn">
+<text>Multiple clustered indexes contain {0}</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Fennel resources 440,000 - 450,000 -->
 <!-- Actual resources are defined separately in Fennel -->
@@ -721,6 +725,10 @@ column type family is {1} but default value type family is {2}</text>
 
 <message id="480060" name="ServerSessionsExist">
 <text>Server sessions are still running; enter !kill to force shutdown</text>
+</message>
+
+<message id="480070" name="ServerProductName">
+<text>Server personality:  {0}</text>
 </message>
 
 <!-- ====================================================================== -->
@@ -984,6 +992,14 @@ column type family is {1} but default value type family is {2}</text>
 
 <message id="510053" name="UmlLocalView">
 <text>view</text>
+</message>
+
+<message id="510054" name="UmlUniqueKeyConstraint">
+<text>UNIQUE constraint</text>
+</message>
+
+<message id="510055" name="UmlPrimaryKeyConstraint">
+<text>PRIMARY KEY constraint</text>
 </message>
 
 <!-- End of last error section ============================================ -->

@@ -62,9 +62,6 @@
   <!-- directory in which javadoc should be generated -->
   <property name="javadoc.dir" location="${farrago.dir}/doc/api"/>
 
-  <!-- directory for initialization scripts -->
-  <property name="initsql.dir" location="${farrago.dir}/initsql"/>
-
   <!-- directory for unit test SQL scripts -->
   <property name="unitsql.dir" location="${farrago.dir}/unitsql"/>
 
@@ -318,7 +315,7 @@ require version '${required.ant.version}'."/>
   </target>
 
   <!-- create classes directory -->
-  <target name="mkdir.classes">
+  <target name="makeClassesDir">
     <mkdir dir="${farrago.classes.dir}"/>
     <mkdir dir="${plugin.classes.dir}"/>
   </target>
@@ -421,10 +418,11 @@ require version '${required.ant.version}'."/>
   </target>
 
   <!-- creates catalog and populates with initial metadata -->
-  <target name="createCatalog" depends="mkdir.classes,configureReposStorage">
+  <target name="createCatalog" depends="makeClassesDir,configureReposStorage">
     <antcall target="createClasspathFile"/>
     <antcall target="compileCatalog"/>
     <antcall target="createMdrTestData"/>
+    <antcall target="saveUnconfiguredCatalog"/>
     <antcall target="importConfig"/>
     <antcall target="backupCatalog"/>
     <antcall target="populateTestData"/>
@@ -513,6 +511,7 @@ require version '${required.ant.version}'."/>
     </copy>
 
     <replace file="${FarragoConf.xmi}">
+      <replacefilter token="@cachePageSize@" value="4096"/>
       <replacefilter token="@fennel.disabled@" value="${fennel.disabled}"/>
       <replacefilter token="@resourceDir@" value="$${FARRAGO_HOME}/catalog/fennel"/>
     </replace>
@@ -522,18 +521,8 @@ require version '${required.ant.version}'."/>
   <!-- set up the default trace configuration file -->
   <target name="configureTrace">
     <mkdir dir="${farrago.trace.dir}"/>
-    <touch file="${FarragoTrace.properties}"/>
-    <propertyfile file="${FarragoTrace.properties}"
-      comment="Farrago developer tracing configuration (do not add comments)">
-      <entry key="handlers" default="java.util.logging.FileHandler"/>
-      <entry key="java.util.logging.FileHandler.formatter"
-        default="java.util.logging.SimpleFormatter"/>
-      <entry key=".level" default="CONFIG"/>
-      <entry key="java.util.logging.FileHandler.pattern"
-        default="${FarragoTrace.log}"/>
-      <entry key="java.util.logging.FileHandler.append" default="true"/>
-      <entry key="net.sf.farrago.jdbc.level" default="FINER"/>
-    </propertyfile>
+    <farrago.configureTrace
+      propFile="${FarragoTrace.properties}" logFile="${FarragoTrace.log}"/>
   </target>
 
   <target name="forked_importConfig" depends="farrago.mdr_taskdef">
@@ -555,7 +544,7 @@ require version '${required.ant.version}'."/>
 
   <!-- determine list of all SQL scripts to run during catalog init -->
   <target name="determineInitSql" >
-    <filelist dir="${initsql.dir}" id="filelist.initsql"
+    <filelist dir="${farrago.initsql.dir}" id="filelist.initsql"
       files="createStorageWrappers.sql,createSqljSchema.sql,createJdbcViews.sql,createSalesSchema.sql"/>
     <pathconvert property="filelist.initsql" refid="filelist.initsql"
       pathsep="${line.separator}" dirsep="${file.separator}" />
@@ -575,16 +564,20 @@ require version '${required.ant.version}'."/>
     </junit>
   </target>
 
+  <!-- save the unconfigured catalog contents -->
+  <target name="saveUnconfiguredCatalog">
+    <delete includeEmptyDirs="true" quiet="true">
+      <fileset dir="${farrago.catalog.unconfigured.dir}" includes="*"/>
+    </delete>
+    <mkdir dir="${farrago.catalog.unconfigured.dir}"/>
+    <copy todir="${farrago.catalog.unconfigured.dir}">
+      <fileset dir="${farrago.catalog.dir}" includes="FarragoCatalog.*"/>
+    </copy>
+  </target>
+
   <!-- back up the current catalog contents -->
   <target name="backupCatalog">
-    <delete includeEmptyDirs="true" quiet="true">
-      <fileset dir="${farrago.catalog.backup.dir}" includes="*"/>
-    </delete>
-    <mkdir dir="${farrago.catalog.backup.dir}"/>
-    <copy todir="${farrago.catalog.backup.dir}">
-      <fileset dir="${farrago.catalog.dir}" includes="FarragoCatalog.*"/>
-      <fileset dir="${farrago.catalog.dir}" includes="db.dat"/>
-    </copy>
+    <farrago.backupCatalog/>
   </target>
 
   <!-- restore catalog from backup -->
@@ -613,12 +606,7 @@ require version '${required.ant.version}'."/>
 
   <!-- delete catalog data only -->
   <target name="cleanCatalogData">
-    <delete>
-      <fileset dir="${farrago.catalog.dir}" includes="*.dat"/>
-      <fileset dir="${farrago.catalog.dir}" includes="FarragoCatalog.*"/>
-      <fileset dir="${farrago.catalog.dir}" includes="*Dump.xmi"/>
-      <fileset dir="${farrago.catalog.dir}" includes="FarragoBootUrls.lst"/>
-    </delete>
+    <farrago.cleanCatalog/>
   </target>
 
   <target name="exportCatalog">
@@ -705,7 +693,8 @@ require version '${required.ant.version}'."/>
     </condition>
   </target>
 
-  <target name="generateResources" depends="mkdir.classes,checkResourceUptodate"
+  <target name="generateResources" 
+    depends="makeClassesDir,checkResourceUptodate"
     unless="resource.uptodate">
     <!-- Exception classes need to exist for reflection -->
     <farrago.javaCompile

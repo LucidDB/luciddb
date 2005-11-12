@@ -87,6 +87,17 @@ public class FarragoSqlTest extends FarragoTestCase
         // run cleanup before each test case
         runCleanup();
         super.setUp();
+
+        // NOTE jvs 5-Nov-2005:  SQL tests tend to be memory-intensive,
+        // and the JVM doesn't always gc often enough, so help it out here
+        // to avoid spurious OutOfMemory errors and generally speed things up.
+        // However, putting this in FarragoTestCase slows down non-SQL
+        // tests by gc'ing too frequently, so don't do that.
+        Runtime rt = Runtime.getRuntime();
+        rt.gc();
+        rt.gc();
+        tracer.info("Java heap in use after gc = "
+            + (rt.totalMemory() - rt.freeMemory()));
     }
 
     protected void runTest()

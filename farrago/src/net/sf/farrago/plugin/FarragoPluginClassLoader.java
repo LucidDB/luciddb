@@ -41,9 +41,15 @@ public class FarragoPluginClassLoader extends URLClassLoader
 
     /**
      * Prefix used to indicate that a wrapper library is loaded directly from
-     * a class rather than a jar.
+     * a class rather than a jar.  TODO:  get rid of this
+     * and use only LIBRARY_CLASS_PREFIX2.
      */
-    public static final String LIBRARY_CLASS_PREFIX = "class ";
+    public static final String LIBRARY_CLASS_PREFIX1 = "class ";
+
+    /**
+     * New alternative to LIBRARY_CLASS_PREFIX1.
+     */
+    public static final String LIBRARY_CLASS_PREFIX2 = "class:";
 
     /**
      * Attribute name used in jar manifest for identifying the class
@@ -103,9 +109,8 @@ public class FarragoPluginClassLoader extends URLClassLoader
             libraryName =
                 FarragoProperties.instance().expandProperties(libraryName);
 
-            if (libraryName.startsWith(LIBRARY_CLASS_PREFIX)) {
-                String className =
-                    libraryName.substring(LIBRARY_CLASS_PREFIX.length());
+            if (isLibraryClass(libraryName)) {
+                String className = getLibraryClassReference(libraryName);
                 return Class.forName(className);
             } else {
                 JarFile jar = new JarFile(libraryName);
@@ -200,6 +205,34 @@ public class FarragoPluginClassLoader extends URLClassLoader
         } finally {
             currentThread.setContextClassLoader(savedClassLoader);
         }
+    }
+
+    /**
+     * Tests whether a library name references a Java class directly rather
+     * than a jar.
+     *
+     * @param libraryName library name to be tested
+     *
+     * @return true iff libraryName references a Java class
+     */
+    public static boolean isLibraryClass(String libraryName)
+    {
+        return libraryName.startsWith(LIBRARY_CLASS_PREFIX1)
+            || libraryName.startsWith(LIBRARY_CLASS_PREFIX2);
+    }
+
+    /**
+     * From a library name which references a Java class directly, obtains the
+     * class reference (possibly with trailing context such as a method name).
+     *
+     * @param libraryName library name to be parsed
+     *
+     * @return class name
+     */
+    public static String getLibraryClassReference(String libraryName)
+    {
+        assert(isLibraryClass(libraryName));
+        return libraryName.substring(LIBRARY_CLASS_PREFIX2.length());
     }
 }
 

@@ -1,8 +1,9 @@
 /*
 // $Id$
-// Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2005-2005 Disruptive Tech
+// Copyright (C) 2005-2005 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -18,19 +19,37 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+package org.eigenbase.jmi;
 
-#include "fennel/common/CommonPreamble.h"
-// TODO
-/*
-#include "fennel/colstore/LcsRowScanExecStream.h"
-*/
+import javax.jmi.reflect.*;
 
-#include "BBPort.h"
+import java.util.*;
 
-FENNEL_BEGIN_CPPFILE("$Id$");
+/**
+ * JmiDependencyVertex represents a set of JMI objects grouped together
+ * as a node in a {@link JmiDependencyGraph}.
+ *
+ * @author John V. Sichi
+ * @version $Id$
+ */
+public class JmiDependencyVertex
+{
+    private Set<RefObject> elementSet;
 
-// TODO:  add member implementations here 
+    public JmiDependencyVertex()
+    {
+        elementSet = new HashSet<RefObject>();
+    }
 
-FENNEL_END_CPPFILE("$Id$");
+    public Set<RefObject> getElementSet()
+    {
+        return elementSet;
+    }
 
-// End LcsRowScanExecStream.cpp
+    void makeImmutable()
+    {
+        elementSet = Collections.unmodifiableSet(elementSet);
+    }
+}
+
+// End JmiDependencyVertex.java

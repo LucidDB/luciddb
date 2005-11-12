@@ -25,7 +25,8 @@
 #  where TEST is the name of a test class
 #  and TARGET is a target in build.xml.
 #  The -repeat option repeats the test until it fails.
-#  Unqualified test classes are assumed to live in package net.sf.farrago.test
+#  Unqualified test classes are assumed to live in package net.sf.farrago.test,
+#  or ${EIGEN_TEST_DEFAULT_PACKAGE} if it is set.
 
 once=true
 if [ "$1" == "-repeat" ]; then
@@ -43,6 +44,10 @@ if [ ! "$2" ]; then
     target=junit
 else
     target="$2"
+fi
+
+if [ ! "$EIGEN_TEST_DEFAULT_PACKAGE" ]; then
+    EIGEN_TEST_DEFAULT_PACKAGE=net.sf.farrago.test
 fi
 
 if [ -e "$test" ]; then
@@ -82,7 +87,7 @@ if [ -e "$test" ]; then
 else
     # Interpret the argument as the name of a test case
     if [ -z `echo $test | grep '\.'` ]; then
-        test=net.sf.farrago.test.$test
+        test=$EIGEN_TEST_DEFAULT_PACKAGE.$test
     fi
     command="ant -Djunit.class=$test -Dfileset.unitsql='' -Dfileset.unitlurql='' $target"
 fi

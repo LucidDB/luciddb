@@ -1,8 +1,9 @@
 /*
 // $Id$
-// Fennel is a library of data storage and processing components.
-// Copyright (C) 2005-2005 LucidEra, Inc.
+// Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2005-2005 Disruptive Tech
+// Copyright (C) 2005-2005 LucidEra, Inc.
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -18,19 +19,28 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+package org.eigenbase.jmi;
 
-#include "fennel/common/CommonPreamble.h"
-// TODO
-/*
-#include "fennel/colstore/LcsRowScanExecStream.h"
-*/
+import org._3pq.jgrapht.*;
+import org._3pq.jgrapht.traverse.*;
 
-#include "BBPort.h"
+/**
+ * JmiDependencyIterator defines a topological ordering iterator over a {@link
+ * JmiDependencyGraph} (iteration proceeds from prerequisites to dependents).
+ *
+ * @author John Sichi
+ * @version $Id$
+ */
+public class JmiDependencyIterator
+    extends TopologicalOrderIterator<
+        JmiDependencyVertex,
+        Edge<JmiDependencyVertex>,
+        Object>
+{
+    public JmiDependencyIterator(JmiDependencyGraph graph)
+    {
+        super(graph);
+    }
+}
 
-FENNEL_BEGIN_CPPFILE("$Id$");
-
-// TODO:  add member implementations here 
-
-FENNEL_END_CPPFILE("$Id$");
-
-// End LcsRowScanExecStream.cpp
+// End JmiDependencyIterator.java

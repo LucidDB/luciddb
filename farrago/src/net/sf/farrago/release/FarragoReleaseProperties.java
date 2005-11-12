@@ -129,7 +129,7 @@ public class FarragoReleaseProperties extends Properties
      * Name of the JDBC driver as reported via java.sql.DatabaseMetaData.
      */
     public final StringProperty jdbcDriverName =
-        new StringProperty(this, "jdbc.drive.name", "FarragoJdbcDriver");
+        new StringProperty(this, "jdbc.driver.name", "FarragoJdbcDriver");
     
     /**
      * JDBC driver major version number as reported via
@@ -157,12 +157,6 @@ public class FarragoReleaseProperties extends Properties
      * for a server can be overridden at each site via system
      * parameter serverRmiRegistryPort, and for a client by
      * explicitly including the port in the connection URL.
-     *
-     *<p>
-     *
-     * FIXME jvs 13-Mar-2005:  Need to use this setting during
-     * catalog burn-in process; currently it's hard-coded in
-     * farrago/catalog/xmi/FarragoConfTemplate.xmi.
      */
     public final IntegerProperty jdbcUrlPortDefault =
         new IntegerProperty(this, "jdbc.url.port.default", 5433);

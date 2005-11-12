@@ -1,6 +1,6 @@
 /*
 // $Id$
-// Fennel is a library of data storage and processing components.
+// Farrago is an extensible data management system.
 // Copyright (C) 2005-2005 LucidEra, Inc.
 // Copyright (C) 2005-2005 The Eigenbase Project
 //
@@ -18,19 +18,28 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+package com.lucidera.farrago;
 
-#include "fennel/common/CommonPreamble.h"
-// TODO
-/*
-#include "fennel/colstore/LcsRowScanExecStream.h"
-*/
+import net.sf.farrago.session.*;
+import net.sf.farrago.db.*;
+import net.sf.farrago.defimpl.*;
 
-#include "BBPort.h"
+/**
+ * LucidDbSessionFactory extends {@link FarragoDbSessionFactory}
+ * with LucidDB-specific behavior.
+ *
+ * @author John V. Sichi
+ * @version $Id$
+ */
+public class LucidDbSessionFactory extends FarragoDefaultSessionFactory
+{
+    // implement FarragoSessionPersonalityFactory
+    public FarragoSessionPersonality newSessionPersonality(
+        FarragoSession session,
+        FarragoSessionPersonality defaultPersonality)
+    {
+        return new LucidDbSessionPersonality((FarragoDbSession) session);
+    }
+}
 
-FENNEL_BEGIN_CPPFILE("$Id$");
-
-// TODO:  add member implementations here 
-
-FENNEL_END_CPPFILE("$Id$");
-
-// End LcsRowScanExecStream.cpp
+// End LucidDbSessionFactory.java

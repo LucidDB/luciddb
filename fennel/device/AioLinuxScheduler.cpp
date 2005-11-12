@@ -28,6 +28,7 @@
 #include "fennel/device/RandomAccessDevice.h"
 #include "fennel/device/DeviceAccessSchedulerParams.h"
 #include "fennel/common/SysCallExcn.h"
+#include <errno.h>
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -120,6 +121,14 @@ void AioLinuxScheduler::run()
         long rc = io_getevents(context, 1, 1, &event, &ts);
         if (rc == 0) {
             // timed out:  check quit flag
+            continue;
+        }
+
+        // REVIEW jvs 11-Nov-2005: I had to put this in to swallow spurious
+        // interrupts while debugging with gdb, but the docs don't mention this
+        // possibility.  Sigh.
+        if (rc == -EINTR) {
+            // spurious interrupt:  ignore
             continue;
         }
         
