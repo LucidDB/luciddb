@@ -3635,8 +3635,6 @@ TOKEN :
     | < REGR_SXY: "REGR_SXY" >
     | < RELATIVE: "RELATIVE" >
     | < RELEASE: "RELEASE" >
-    | < RENAME: "RENAME" >
-    | < REPLACE: "REPLACE" >
     | < REPEATABLE: "REPEATABLE" >
     | < RESTART: "RESTART" >
     | < RESTRICT: "RESTRICT" >
@@ -3964,9 +3962,7 @@ String CommonNonReservedKeyWord() :
         | <PUBLIC>
         | <READ>
         | <RELATIVE>
-        | <RENAME>
         | <REPEATABLE>
-        | <REPLACE>
         | <RESTART>
         | <RESTRICT>
         | <RETURNED_CARDINALITY>

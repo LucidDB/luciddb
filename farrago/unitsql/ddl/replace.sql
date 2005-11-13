@@ -40,6 +40,12 @@ create or replace view fooview as select * from foo3;
 select * from fooview;
 select * from fooview2;
 
+-- try to create a loop
+create view loop1 as select * from foo;
+create view loop2 as select * from loop1;
+-- this should fail
+create or replace view loop1 as select * from loop2;
+
 create index idx on foo(bar);
 
 -- should fail:  duplicate index
@@ -47,3 +53,6 @@ create index idx on foo(bar);
 
 -- should fail:  replace not allowed on INDEX
 create or replace index idx on foo(bar);
+
+-- disallow replace on schema
+create or replace schema createorreplace description 'blah';

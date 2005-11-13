@@ -545,11 +545,7 @@ column type family is {1} but default value type family is {2}</text>
 <text>Multiple clustered indexes contain {0}</text>
 </exception>
 
-<exception id="420960" name="ValidatorInvalidDependency">
-<text>Cannot replace {0} because it would invalidate dependent {1}</text>
-</exception>
-
-<exception id="420970" name="ValidatorNotReplaceable">
+<exception id="420960" name="ValidatorNotReplaceable">
 <text>Cannot replace {0} because it does not support replacement</text>
 </exception>
 

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/schema.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/replace.sql#1 $
 0: jdbc:farrago:> -- Test create or replace DDL 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema createorreplace;
@@ -72,6 +72,13 @@ Error: From line 1, column 7 to line 1, column 15: Unknown field 'BAR2' (state=,
 | 1024  |
 +-------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- try to create a loop
+0: jdbc:farrago:> create view loop1 as select * from foo;
+0: jdbc:farrago:> create view loop2 as select * from loop1;
+0: jdbc:farrago:> -- this should fail
+0: jdbc:farrago:> create or replace view loop1 as select * from loop2;
+Error: Object definition contains recursive cycle (state=,code=0)
+0: jdbc:farrago:> 
 0: jdbc:farrago:> create index idx on foo(bar);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  duplicate index
@@ -81,5 +88,9 @@ Error: DDL validation error near line 1, column 14: Target schema "LOCALDB"."CRE
 0: jdbc:farrago:> -- should fail:  replace not allowed on INDEX
 0: jdbc:farrago:> create or replace index idx on foo(bar);
 Error: Cannot replace index "IDX" because it does not support replacement (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- disallow replace on schema
+0: jdbc:farrago:> create or replace schema createorreplace description 'blah';
+Error: Cannot replace schema "CREATEORREPLACE" because it does not support replacement (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

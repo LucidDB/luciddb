@@ -2453,6 +2453,8 @@ TOKEN :
     | < CLUSTERED: "CLUSTERED" >
     | < INDEX: "INDEX" >
     | < JAR: "JAR" >
+    | < RENAME: "RENAME" >
+    | < REPLACE: "REPLACE" >
     | < TRUNCATE: "TRUNCATE" >
 }
 
@@ -2477,6 +2479,8 @@ String DdlNonReservedKeyWord() :
     (
         <INDEX>
         | <JAR>
+        | <RENAME>
+        | <REPLACE>
     )
     {
         return getToken(0).image.toUpperCase();

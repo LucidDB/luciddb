@@ -89,6 +89,14 @@ public class DdlRelationalHandler extends DdlHandler
     // implement FarragoSessionDdlHandler
     public void validateDefinition(FemLocalSchema schema)
     {
+        if (isReplacingType(schema)) {
+            throw res.ValidatorNotReplaceable.ex(
+                repos.getLocalizedObjectName(
+                    null,
+                    schema.getName(),
+                    schema.refClass()));
+        }
+
         validator.validateUniqueNames(
             schema,
             schema.getOwnedElement(),
@@ -104,7 +112,7 @@ public class DdlRelationalHandler extends DdlHandler
     // implement FarragoSessionDdlHandler
     public void validateDefinition(FemLocalIndex index)
     {
-        if (isReplace()) {
+        if (isReplacingType(index)) {
             throw res.ValidatorNotReplaceable.ex(
                 repos.getLocalizedObjectName(
                     null,
@@ -152,7 +160,7 @@ public class DdlRelationalHandler extends DdlHandler
     // implement FarragoSessionDdlHandler
     public void validateDefinition(FemLocalTable table)
     {
-        if (isReplace()) {
+        if (isReplacingType(table)) {
             throw res.ValidatorNotReplaceable.ex(
                 repos.getLocalizedObjectName(
                     null,
@@ -450,11 +458,9 @@ public class DdlRelationalHandler extends DdlHandler
             true);
     }
 
-    protected boolean isReplace()
+    protected boolean isReplacingType(CwmModelElement obj)
     {
-        DdlReplaceOptions replaceOptions =
-            ((DdlValidator) medHandler.getValidator()).getReplaceOptions();
-        return ((replaceOptions != null) && replaceOptions.isReplace());
+        return ((DdlValidator) medHandler.getValidator()).isReplacingType(obj);
     }
 }
 
