@@ -137,11 +137,24 @@ DdlStmt DdlStmtEof() :
     CwmModelElement modelElement;
     DdlStmt ddlStmt;
     SqlNode expr;
+    DdlReplaceOptions replaceOptions = new DdlReplaceOptions();
+    SqlIdentifier newName;
 }
 {
     (
         (
             <CREATE>
+            [
+            	( <OR> <REPLACE> )
+	            {
+	                replaceOptions.setIsReplace(true);
+	            }
+	            [ ( <RENAME> <TO> newName = SimpleIdentifier() )
+		            {
+		                replaceOptions.setNewName(newName);
+		            }
+	            ]
+            ]
             (
                 modelElement = SchemaDefinition()
                 |
@@ -161,7 +174,7 @@ DdlStmt DdlStmtEof() :
                 modelElement = ExtensionModelDefinition()
             )
             {
-                ddlStmt = new DdlCreateStmt(modelElement);
+                ddlStmt = new DdlCreateStmt(modelElement, replaceOptions);
             }
         )
         |
