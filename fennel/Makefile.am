@@ -22,3 +22,13 @@ dist-hook:
 # Verify that all source files have the required headers
 checkPreambles:
 	build/checkPreambleFennel.sh
+
+# Generate cscope index for all source files.
+cscope:
+	-rm cscope.*
+	cscope -b -q -k -R
+
+# Generate Emacs-compatible cscope index for all source files.
+emacs_cscope:
+	-rm cscope.*
+	cscope-indexer -r
