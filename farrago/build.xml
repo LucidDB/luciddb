@@ -511,7 +511,10 @@ require version '${required.ant.version}'."/>
     </copy>
 
     <replace file="${FarragoConf.xmi}">
+      <replacefilter token="@checkpointInterval@" value="300"/>
       <replacefilter token="@cachePageSize@" value="4096"/>
+      <replacefilter token="@cachePagesMax@" value="1000"/>
+      <replacefilter token="@cachePagesInit@" value="1000"/>
       <replacefilter token="@fennel.disabled@" value="${fennel.disabled}"/>
       <replacefilter token="@resourceDir@" value="$${FARRAGO_HOME}/catalog/fennel"/>
     </replace>
