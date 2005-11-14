@@ -135,10 +135,14 @@ public class FennelPullCorrelatorRel extends FennelDoubleRel
 
         FemExecutionStreamDef leftInput =
             implementor.visitFennelChild((FennelRel) left);
-        streamDef.getInput().add(leftInput);
+        implementor.addDataFlowFromProducerToConsumer(
+            leftInput,
+            streamDef);
         FemExecutionStreamDef rightInput =
             implementor.visitFennelChild((FennelRel) right);
-        streamDef.getInput().add(rightInput);
+        implementor.addDataFlowFromProducerToConsumer(
+            rightInput,
+            streamDef);
 
         return streamDef;
     }

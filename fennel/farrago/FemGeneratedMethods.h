@@ -32,10 +32,12 @@ jmethodID ProxyDatabaseCmd::meth_getDbHandle = 0;
 jmethodID ProxyDatabaseParam::meth_getName = 0;
 jmethodID ProxyDatabaseParam::meth_getValue = 0;
 jmethodID ProxyEndTxnCmd::meth_getSvptHandle = 0;
+jmethodID ProxyExecStreamDataFlow::meth_getConsumer = 0;
+jmethodID ProxyExecStreamDataFlow::meth_getProducer = 0;
 jmethodID ProxyExecutionStreamDef::meth_getName = 0;
-jmethodID ProxyExecutionStreamDef::meth_getInput = 0;
 jmethodID ProxyExecutionStreamDef::meth_getOutputDesc = 0;
-jmethodID ProxyExecutionStreamDef::meth_getConsumer = 0;
+jmethodID ProxyExecutionStreamDef::meth_getOutputFlow = 0;
+jmethodID ProxyExecutionStreamDef::meth_getInputFlow = 0;
 jmethodID ProxyGenericStreamDef::meth_getType = 0;
 jmethodID ProxyGenericStreamDef::meth_getContent = 0;
 jmethodID ProxyHandle::meth_getLongHandle = 0;
@@ -210,12 +212,17 @@ jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemEndTxnCmd");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyEndTxnCmd>));
 ProxyEndTxnCmd::meth_getSvptHandle = pEnv->GetMethodID(jClass,"getSvptHandle","()Lnet/sf/farrago/fem/fennel/FemSvptHandle;");
 
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemExecStreamDataFlow");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyExecStreamDataFlow>));
+ProxyExecStreamDataFlow::meth_getConsumer = pEnv->GetMethodID(jClass,"getConsumer","()Lnet/sf/farrago/fem/fennel/FemExecutionStreamDef;");
+ProxyExecStreamDataFlow::meth_getProducer = pEnv->GetMethodID(jClass,"getProducer","()Lnet/sf/farrago/fem/fennel/FemExecutionStreamDef;");
+
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemExecutionStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyExecutionStreamDef>));
 ProxyExecutionStreamDef::meth_getName = pEnv->GetMethodID(jClass,"getName","()Ljava/lang/String;");
-ProxyExecutionStreamDef::meth_getInput = pEnv->GetMethodID(jClass,"getInput","()Ljava/util/List;");
 ProxyExecutionStreamDef::meth_getOutputDesc = pEnv->GetMethodID(jClass,"getOutputDesc","()Lnet/sf/farrago/fem/fennel/FemTupleDescriptor;");
-ProxyExecutionStreamDef::meth_getConsumer = pEnv->GetMethodID(jClass,"getConsumer","()Ljava/util/Collection;");
+ProxyExecutionStreamDef::meth_getOutputFlow = pEnv->GetMethodID(jClass,"getOutputFlow","()Ljava/util/List;");
+ProxyExecutionStreamDef::meth_getInputFlow = pEnv->GetMethodID(jClass,"getInputFlow","()Ljava/util/List;");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemGenericStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyGenericStreamDef>));
@@ -596,19 +603,27 @@ if (!p->jObject) p.reset();
 return p;
 }
 
-std::string ProxyExecutionStreamDef::getName()
-{
-return constructString(pEnv->CallObjectMethod(jObject,meth_getName));
-}
-
-SharedProxyExecutionStreamDef ProxyExecutionStreamDef::getInput()
+SharedProxyExecutionStreamDef ProxyExecStreamDataFlow::getConsumer()
 {
 SharedProxyExecutionStreamDef p;
 p->pEnv = pEnv;
-p->jObject = pEnv->CallObjectMethod(jObject,meth_getInput);
-p.jIter = JniUtil::getIter(p->pEnv,p->jObject);
-++p;
+p->jObject = pEnv->CallObjectMethod(jObject,meth_getConsumer);
+if (!p->jObject) p.reset();
 return p;
+}
+
+SharedProxyExecutionStreamDef ProxyExecStreamDataFlow::getProducer()
+{
+SharedProxyExecutionStreamDef p;
+p->pEnv = pEnv;
+p->jObject = pEnv->CallObjectMethod(jObject,meth_getProducer);
+if (!p->jObject) p.reset();
+return p;
+}
+
+std::string ProxyExecutionStreamDef::getName()
+{
+return constructString(pEnv->CallObjectMethod(jObject,meth_getName));
 }
 
 SharedProxyTupleDescriptor ProxyExecutionStreamDef::getOutputDesc()
@@ -620,11 +635,21 @@ if (!p->jObject) p.reset();
 return p;
 }
 
-SharedProxyExecutionStreamDef ProxyExecutionStreamDef::getConsumer()
+SharedProxyExecStreamDataFlow ProxyExecutionStreamDef::getOutputFlow()
 {
-SharedProxyExecutionStreamDef p;
+SharedProxyExecStreamDataFlow p;
 p->pEnv = pEnv;
-p->jObject = pEnv->CallObjectMethod(jObject,meth_getConsumer);
+p->jObject = pEnv->CallObjectMethod(jObject,meth_getOutputFlow);
+p.jIter = JniUtil::getIter(p->pEnv,p->jObject);
+++p;
+return p;
+}
+
+SharedProxyExecStreamDataFlow ProxyExecutionStreamDef::getInputFlow()
+{
+SharedProxyExecStreamDataFlow p;
+p->pEnv = pEnv;
+p->jObject = pEnv->CallObjectMethod(jObject,meth_getInputFlow);
 p.jIter = JniUtil::getIter(p->pEnv,p->jObject);
 ++p;
 return p;

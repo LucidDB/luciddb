@@ -104,7 +104,9 @@ class FennelMergeRel extends FennelMultipleRel
         for (int i = 0; i < inputs.length; i++) {
             FemExecutionStreamDef inputStream =
                 implementor.visitFennelChild((FennelRel) inputs[i]);
-            mergeStream.getInput().add(inputStream);
+            implementor.addDataFlowFromProducerToConsumer(
+                inputStream,
+                mergeStream);
         }
 
         return mergeStream;
