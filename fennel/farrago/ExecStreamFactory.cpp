@@ -31,6 +31,7 @@
 #include "fennel/ftrs/BTreeSearchUniqueExecStream.h"
 #include "fennel/ftrs/FtrsTableWriterExecStream.h"
 #include "fennel/ftrs/BTreeSortExecStream.h"
+#include "fennel/exec/MergeExecStream.h"
 #include "fennel/exec/SegBufferExecStream.h"
 #include "fennel/exec/ExecStreamGraphEmbryo.h"
 #include "fennel/ftrs/FtrsTableWriterFactory.h"
@@ -252,6 +253,15 @@ void ExecStreamFactory::visit(ProxyCartesianProductStreamDef &streamDef)
     readTupleStreamParams(params, streamDef);
     params.leftOuter = streamDef.isLeftOuter();
     embryo.init(new CartesianJoinExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxyMergeStreamDef &streamDef)
+{
+    MergeExecStreamParams params;
+    readTupleStreamParams(params, streamDef);
+    // MergeExecStream doesn't support anything but sequential yet
+    assert(streamDef.isSequential());
+    embryo.init(new MergeExecStream(), params);
 }
 
 void ExecStreamFactory::visit(ProxyMockTupleStreamDef &streamDef)
