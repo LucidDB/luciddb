@@ -141,8 +141,9 @@ public class FennelSortRel extends FennelSingleRel
             FennelRelUtil.createTupleProjection(
                 repos,
                 keyProjection));
-        sortingStream.getInput().add(
-            implementor.visitFennelChild((FennelRel) getChild()));
+        implementor.addDataFlowFromProducerToConsumer(
+            implementor.visitFennelChild((FennelRel) getChild()),
+            sortingStream);
         return sortingStream;
     }
 

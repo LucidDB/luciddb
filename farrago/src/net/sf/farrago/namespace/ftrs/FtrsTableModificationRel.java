@@ -301,11 +301,17 @@ class FtrsTableModificationRel extends TableModificationRelBase
                     getFarragoTypeFactory(),
                     getChild().getRowType()));
 
-            buffer.getInput().add(input);
+            implementor.addDataFlowFromProducerToConsumer(
+                input,
+                buffer);
 
-            tableWriterDef.getInput().add(buffer);
+            implementor.addDataFlowFromProducerToConsumer(
+                buffer,
+                tableWriterDef);
         } else {
-            tableWriterDef.getInput().add(input);
+            implementor.addDataFlowFromProducerToConsumer(
+                input,
+                tableWriterDef);
         }
 
         return tableWriterDef;

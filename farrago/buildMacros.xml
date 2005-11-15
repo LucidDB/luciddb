@@ -463,6 +463,24 @@
     </sequential>
   </macrodef>
 
+  <!-- Macro for extracting a UML model from ArgoUML .uml format,
+  and converting it to MOF -->
+  <macrodef name="farrago.extractArgoModel">
+    <attribute name="umlFile" default="unspecified" />
+    <attribute name="umlBasename" default="unspecified" />
+    <attribute name="mofBasename" default="unspecified" />
+    <attribute name="xmiDir" default="unspecified" />
+    <sequential>
+      <xslt style="${farrago.xmi.dir}/extractArgoModel.xsl"
+        in="@{umlFile}"
+        out="@{xmiDir}/@{umlBasename}.xmi">
+      </xslt>
+      <farrago.uml2mof umlmodelname="@{xmiDir}/@{umlBasename}.xmi"
+        outputfilename="@{xmiDir}/@{mofBasename}.xmi"
+        umlsansdiagrams="@{xmiDir}/@{umlBasename}SansDiagrams.xmi"/>
+    </sequential>
+  </macrodef>
+
   <!-- Macro for performing cleansing transformations on an extension model -->
   <macrodef name="farrago.transformExtensionModel">
     <attribute name="mofBasename" default="unspecified" />

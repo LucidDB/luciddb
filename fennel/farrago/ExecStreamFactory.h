@@ -110,6 +110,7 @@ protected:
     virtual void visit(ProxyBufferingTupleStreamDef &);
     virtual void visit(ProxyIndexLoaderDef &);
     virtual void visit(ProxyCartesianProductStreamDef &);
+    virtual void visit(ProxyMergeStreamDef &);
     virtual void visit(ProxyMockTupleStreamDef &);
     virtual void visit(ProxyAggStreamDef &);
 

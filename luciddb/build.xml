@@ -118,7 +118,10 @@
     <copy file="${FarragoConfTemplate.xmi}"
       tofile="${LucidDbConf.xmi}" overwrite="true"/>
     <replace file="${LucidDbConf.xmi}">
+      <replacefilter token="@checkpointInterval@" value="0"/>
       <replacefilter token="@cachePageSize@" value="32768"/>
+      <replacefilter token="@cachePagesMax@" value="5000"/>
+      <replacefilter token="@cachePagesInit@" value="5000"/>
       <replacefilter token="@fennel.disabled@" value="${fennel.disabled}"/>
       <replacefilter token="@resourceDir@" value="$${FARRAGO_HOME}/catalog/fennel"/>
     </replace>
