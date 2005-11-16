@@ -190,10 +190,14 @@ public:
     /**
      * Sets the buffer storing the current tuple image.  Must be called
      * before getCurrentByteCount and unmarshal.
-     *
      * @param pTupleBuf address of tuple image
+     * @param valid (default: true) the buffer contains a marshalled tuple.
+     *  False means the buffer is free space; unmarshal binds a TupleData to the
+     *  buffer. This is useful only for TUPLE_FORMAT_ALL_FIXED.
+     *
+     * REVIEW: An alternative is to require the caller to zero out the buffer; but that seems riskier.
      */
-    void setCurrentTupleBuf(PConstBuffer pTupleBuf);
+    void setCurrentTupleBuf(PConstBuffer pTupleBuf, bool valid = true);
 
     /**
      * Forgets the current tuple buffer.

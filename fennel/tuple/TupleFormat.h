@@ -37,10 +37,10 @@ enum TupleFormat
     TUPLE_FORMAT_STANDARD,
         
     /**
-     * Treat nullable attributes as NOT NULL, and treat variable-width
-     * attributes as fixed width (using maximum width).
+     * Treat variable-width  attributes as fixed width (using maximum width).
+     * Allows nulls.
      */
-    TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED,
+    TUPLE_FORMAT_ALL_FIXED,
 
     /**
      * Same as standard, except all integers are stored in network byte

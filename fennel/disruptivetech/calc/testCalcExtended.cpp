@@ -239,11 +239,11 @@ public:
         // Note: Must use a NOT_NULL_AND_FIXED accessor when creating a tuple out of the
         // air like this, otherwise unmarshal() does not know what to do. If you need a
         // STANDARD type tuple that supports nulls, it has to be built as a copy.
-        _tupleAccessorLiteral.compute(_tupleDescLiteral, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-        _tupleAccessorInput.compute(_tupleDescInput, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-        _tupleAccessorOutput.compute(_tupleDescOutput, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-        _tupleAccessorLocal.compute(_tupleDescLocal, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-        _tupleAccessorStatus.compute(_tupleDescStatus, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
+        _tupleAccessorLiteral.compute(_tupleDescLiteral, TUPLE_FORMAT_ALL_FIXED);
+        _tupleAccessorInput.compute(_tupleDescInput, TUPLE_FORMAT_ALL_FIXED);
+        _tupleAccessorOutput.compute(_tupleDescOutput, TUPLE_FORMAT_ALL_FIXED);
+        _tupleAccessorLocal.compute(_tupleDescLocal, TUPLE_FORMAT_ALL_FIXED);
+        _tupleAccessorStatus.compute(_tupleDescStatus, TUPLE_FORMAT_ALL_FIXED);
         // Allocate memory for the tuple
         _pTupleBufLiteral.reset(new FixedBuffer[_tupleAccessorLiteral.getMaxByteCount()]);
         _pTupleBufInput.reset(new FixedBuffer[_tupleAccessorInput.getMaxByteCount()]);
@@ -251,11 +251,11 @@ public:
         _pTupleBufLocal.reset(new FixedBuffer[_tupleAccessorLocal.getMaxByteCount()]);
         _pTupleBufStatus.reset(new FixedBuffer[_tupleAccessorStatus.getMaxByteCount()]);
         // Link memory to accessor
-        _tupleAccessorLiteral.setCurrentTupleBuf(_pTupleBufLiteral.get());
-        _tupleAccessorInput.setCurrentTupleBuf(_pTupleBufInput.get());
-        _tupleAccessorOutput.setCurrentTupleBuf(_pTupleBufOutput.get());
-        _tupleAccessorLocal.setCurrentTupleBuf(_pTupleBufLocal.get());
-        _tupleAccessorStatus.setCurrentTupleBuf(_pTupleBufStatus.get());
+        _tupleAccessorLiteral.setCurrentTupleBuf(_pTupleBufLiteral.get(), false);
+        _tupleAccessorInput.setCurrentTupleBuf(_pTupleBufInput.get(), false);
+        _tupleAccessorOutput.setCurrentTupleBuf(_pTupleBufOutput.get(), false);
+        _tupleAccessorLocal.setCurrentTupleBuf(_pTupleBufLocal.get(), false);
+        _tupleAccessorStatus.setCurrentTupleBuf(_pTupleBufStatus.get(), false);
         // Create a vector of TupleDatum objects based on the description we built
         _tupleDataLiteral.compute(_tupleDescLiteral);
         _tupleDataInput.compute(_tupleDescInput);

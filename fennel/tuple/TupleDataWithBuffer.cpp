@@ -36,9 +36,9 @@ TupleDataWithBuffer::TupleDataWithBuffer(TupleDescriptor const& tupleDesc)
 
 void TupleDataWithBuffer::computeAndAllocate(TupleDescriptor const& tupleDesc)
 {
-    tupleAccessor.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
+    tupleAccessor.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
     array.reset(new FixedBuffer[tupleAccessor.getMaxByteCount()]);
-    tupleAccessor.setCurrentTupleBuf(array.get());
+    tupleAccessor.setCurrentTupleBuf(array.get(), false);
     compute(tupleDesc);
     tupleAccessor.unmarshal(*this);
 }

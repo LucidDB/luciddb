@@ -113,9 +113,8 @@ void TupleAccessor::compute(
         bool bNullable = attr.isNullable;
         uint nBits = (attr.pTypeDescriptor->getBitCount());
         assert(nBits <= 1);
-        if (format == TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED) {
+        if (format == TUPLE_FORMAT_ALL_FIXED) {
             bFixedWidth = true;
-            bNullable = false;
             nBits = 0;
         }
         uint iAlign = attr.pTypeDescriptor->getAlignmentByteCount(
@@ -367,16 +366,19 @@ bool TupleAccessor::isBufferSufficient(
     return getByteCount(tuple) <= cbBuffer;
 }
 
-void TupleAccessor::setCurrentTupleBuf(PConstBuffer pTupleBufInit)
+void TupleAccessor::setCurrentTupleBuf(PConstBuffer pTupleBufInit, bool valid)
 {
     assert(pTupleBufInit);
-    pTupleBuf = pTupleBufInit;
+    pTupleBuf = pTupleBufInit;          // bind to buffer
     if (!isMAXU(iBitFieldOffset)) {
-        // TODO:  trick dynamic_bitset to avoid copy
-        boost::from_block_range(
-            pTupleBuf + iBitFieldOffset,
-            pTupleBuf + iBitFieldOffset + bitFields.num_blocks(),
-            bitFields);
+        // if buffer holds a valid marshalled tuple, load its bitFields
+        if (valid) {
+            // TODO:  trick dynamic_bitset to avoid copy
+            boost::from_block_range(
+                pTupleBuf + iBitFieldOffset,
+                pTupleBuf + iBitFieldOffset + bitFields.num_blocks(),
+                bitFields);
+        }
     }
 }
 

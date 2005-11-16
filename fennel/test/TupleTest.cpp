@@ -128,11 +128,11 @@ void TupleTest::testStandardTypes(
     TupleAccessor tupleAccessorFixed;
     tupleAccessorFixed.compute(
         tupleDesc,
-        TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
+        TUPLE_FORMAT_ALL_FIXED);
 
     boost::scoped_array<FixedBuffer> pTupleBufFixed(
         new FixedBuffer[tupleAccessor.getMaxByteCount()]);
-    tupleAccessorFixed.setCurrentTupleBuf(pTupleBufFixed.get());
+    tupleAccessorFixed.setCurrentTupleBuf(pTupleBufFixed.get(), false);
     
     TupleData tupleDataFixed(tupleDesc);
     tupleAccessorFixed.unmarshal(tupleDataFixed);
