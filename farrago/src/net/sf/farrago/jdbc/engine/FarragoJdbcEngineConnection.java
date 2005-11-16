@@ -180,9 +180,11 @@ public class FarragoJdbcEngineConnection
         throws SQLException
     {
         try {
+            // FarragoSessionStmtContext created without a param def factory
+            // because plain Statements cannot use dynamic parameters.
             return new FarragoJdbcEngineStatement(
                 this,
-                session.newStmtContext());
+                session.newStmtContext(null));
         } catch (Throwable ex) {
             throw FarragoJdbcEngineDriver.newSqlException(ex);
         }
@@ -283,7 +285,8 @@ public class FarragoJdbcEngineConnection
     {
         FarragoSessionStmtContext stmtContext = null;
         try {
-            stmtContext = session.newStmtContext();
+            stmtContext = 
+                session.newStmtContext(new FarragoJdbcEngineParamDefFactory());
             stmtContext.prepare(sql, false);
             FarragoJdbcEnginePreparedStatement preparedStmt;
             if (!stmtContext.isPrepared()) {
