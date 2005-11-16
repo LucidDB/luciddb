@@ -1419,8 +1419,9 @@ SqlNodeList OrderBy(boolean accept) :
             // Someone told us ORDER BY wasn't allowed here.  So why
             // did they bother calling us?  To get the correct
             // parser position for error reporting.
-            throw new ParseException(
-                "ORDER BY unexpected near " + getPositionString());
+            EigenbaseResource res = EigenbaseResource.instance();
+            String msg = res.IllegalOrderBy.str( getPositionString());
+            throw new ParseException(msg);
         }
     }
     <BY> e = OrderItem()
@@ -2035,8 +2036,8 @@ SqlNode StringLiteral(boolean strict) :
                 nfrags++;
             } catch (NumberFormatException ex) {
                 throw new ParseException(
-                    "Invalid binary string " + token.image + " near " +
-                    getPositionString());
+                    EigenbaseResource.instance().IllegalBinaryString.str(
+                        token.image,  getPositionString()));
             }
         }
     ) *
@@ -2808,8 +2809,8 @@ SqlNode BuiltinFunctionCall() :
             <FROM> {
                 if (null == flag && null == trimChars) {
                     throw new ParseException(
-                        "'FROM' near " + getPositionString() +
-                        ", without operands preceding it is illegal");
+                        EigenbaseResource.instance().IllegalFromEmpty.str(
+                            getPositionString()));
                 }
             }
         ]

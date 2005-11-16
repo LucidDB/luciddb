@@ -79,6 +79,17 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Query expression encountered in illegal context</text>
 </exception>
 
+<exception id="100100" name="IllegalOrderBy">
+    <text>ORDER BY unexpected near {0}</text>
+</exception>
+
+<exception id="100110" name="IllegalBinaryString">
+    <text>Illegal binary string {0} near {1}</text>
+</exception>
+
+<exception id="100120" name="IllegalFromEmpty">
+    <text>''FROM'' near {0}, without operands preceding it is illegal</text>
+</exception>
 
 <!-- ====================================================================== -->
 <!-- Eigenbase Validator resources 121,000 - 130,000 -->
