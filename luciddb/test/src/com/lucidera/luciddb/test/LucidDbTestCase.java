@@ -1,4 +1,4 @@
-package com.lucidera.test;
+package com.lucidera.luciddb.test;
 
 import com.lucidera.jdbc.*;
 

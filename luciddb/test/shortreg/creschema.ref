@@ -1,16 +1,16 @@
-0: jdbc:farrago:> --
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- index.sql - create company tables with indices
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema s;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table s.LOCATION(
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- index.sql - create company tables with indices
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema s;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table s.LOCATION(
 . . . . . . . . > 
 . . . . . . . . > LOCID char(2) primary key,
 . . . . . . . . > 
@@ -23,12 +23,12 @@
 . . . . . . . . > ZIP integer)
 . . . . . . . . > 
 . . . . . . . . > server sys_ftrs_data_server;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- DEPT: Departments in the company
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table s.DEPT(
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- DEPT: Departments in the company
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table s.DEPT(
 . . . . . . . . > 
 . . . . . . . . > DEPTNO integer primary key,
 . . . . . . . . > 
@@ -37,12 +37,12 @@
 . . . . . . . . > LOCID CHAR(2))
 . . . . . . . . > 
 . . . . . . . . > server sys_ftrs_data_server;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- EMP: employees in the company
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table s.EMP(
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- EMP: employees in the company
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table s.EMP(
 . . . . . . . . > 
 . . . . . . . . > EMPNO integer primary key,
 . . . . . . . . > 
@@ -65,10 +65,10 @@
 . . . . . . . . > HOBBY varchar(20))
 . . . . . . . . > 
 . . . . . . . . > server sys_ftrs_data_server;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table s.CUSTOMERS(
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table s.CUSTOMERS(
 . . . . . . . . > 
 . . . . . . . . > CUSTID integer primary key,
 . . . . . . . . > 
@@ -79,10 +79,10 @@
 . . . . . . . . > SEX char(1))
 . . . . . . . . > 
 . . . . . . . . > server sys_ftrs_data_server;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table s.PRODUCTS(
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table s.PRODUCTS(
 . . . . . . . . > 
 . . . . . . . . > PRODID integer primary key,
 . . . . . . . . > 
@@ -91,12 +91,12 @@
 . . . . . . . . > PRICE float)
 . . . . . . . . > 
 . . . . . . . . > server sys_ftrs_data_server;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- TS timestamp,
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create table s.SALES(
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- TS timestamp,
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table s.SALES(
 . . . . . . . . > 
 . . . . . . . . > CUSTID integer,
 . . . . . . . . > 
@@ -109,56 +109,56 @@
 . . . . . . . . > primary key(CUSTID, EMPNO, PRODID, PRICE))
 . . . . . . . . > 
 . . . . . . . . > server sys_ftrs_data_server;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Additional indices not implicitly created by above constraints
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create index EMP_DEPTNO on s.EMP(DEPTNO);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create index EMP_MANAGER on s.EMP(MANAGER);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create index EMP_LOCID on s.EMP(LOCID);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create index EMP_SEX on s.EMP(SEX);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create index EMP_COMMISSION on s.EMP(COMMISSION);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create index PRODUCTS_PRICE on s.PRODUCTS(PRICE);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create index SALES_PRICE on s.SALES(PRICE);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create index SALES_EMPNO on s.SALES(EMPNO);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create index SALES_PRODID on s.SALES(PRODID);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create index SALES_CUSTID on s.SALES(CUSTID);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create index CUSTOMERS_NAME on s.CUSTOMERS(LNAME, FNAME);
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- /creschema.sql
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create foreign data wrapper test_jdbc library '../farrago/plugin/FarragoMedJdbc.jar' language java;
-0: jdbc:farrago:> 
-0: jdbc:farrago:>  
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create server csv_server
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Additional indices not implicitly created by above constraints
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create index EMP_DEPTNO on s.EMP(DEPTNO);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create index EMP_MANAGER on s.EMP(MANAGER);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create index EMP_LOCID on s.EMP(LOCID);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create index EMP_SEX on s.EMP(SEX);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create index EMP_COMMISSION on s.EMP(COMMISSION);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create index PRODUCTS_PRICE on s.PRODUCTS(PRICE);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create index SALES_PRICE on s.SALES(PRICE);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create index SALES_EMPNO on s.SALES(EMPNO);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create index SALES_PRODID on s.SALES(PRODID);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create index SALES_CUSTID on s.SALES(CUSTID);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create index CUSTOMERS_NAME on s.CUSTOMERS(LNAME, FNAME);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- /creschema.sql
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign data wrapper test_jdbc library '../farrago/plugin/FarragoMedJdbc.jar' language java;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:>  
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server csv_server
 . . . . . . . . > 
 . . . . . . . . > foreign data wrapper test_jdbc
 . . . . . . . . > 
@@ -169,10 +169,10 @@
 . . . . . . . . >     url 'jdbc:relique:csv:test/shortreg',
 . . . . . . . . > 
 . . . . . . . . >     schema_name 'TESTDATA');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create schema csv_schema;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema csv_schema;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

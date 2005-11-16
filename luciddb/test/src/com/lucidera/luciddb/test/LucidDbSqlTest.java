@@ -1,4 +1,4 @@
-package com.lucidera.test;
+package com.lucidera.luciddb.test;
 
 import java.io.*;
 import junit.framework.*;

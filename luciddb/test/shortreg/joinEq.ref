@@ -1,20 +1,20 @@
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- Equi-joins
-0: jdbc:farrago:> 
-0: jdbc:farrago:> --
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> set schema 's';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- standard emp/dept
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select EMP.EMPNO, EMP.LNAME, EMP.DEPTNO, DEPT.DEPTNO, DEPT.DNAME
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Equi-joins
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- standard emp/dept
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select EMP.EMPNO, EMP.LNAME, EMP.DEPTNO, DEPT.DEPTNO, DEPT.DNAME
 . . . . . . . . > 
 . . . . . . . . > from EMP, DEPT
 . . . . . . . . > 
@@ -34,12 +34,12 @@
 | 109    | Nife      | 40      | 40      | Sales        |
 | 110    | Jones     | 30      | 30      | Development  |
 +--------+-----------+---------+---------+--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- this one used to fail in calculator due to column mapping stuff
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select EMP.EMPNO, EMP.DEPTNO, DEPT.DNAME from EMP, DEPT
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- this one used to fail in calculator due to column mapping stuff
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select EMP.EMPNO, EMP.DEPTNO, DEPT.DNAME from EMP, DEPT
 . . . . . . . . > 
 . . . . . . . . > where EMP.DEPTNO = DEPT.DEPTNO order by EMPNO;
 +--------+---------+--------------+
@@ -57,12 +57,12 @@
 | 109    | 40      | Sales        |
 | 110    | 30      | Development  |
 +--------+---------+--------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- dept, loc
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select DEPTNO, DNAME, CITY, LOCATION.LOCID from DEPT, LOCATION
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- dept, loc
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select DEPTNO, DNAME, CITY, LOCATION.LOCID from DEPT, LOCATION
 . . . . . . . . > 
 . . . . . . . . > where DEPT.LOCID=LOCATION.LOCID
 . . . . . . . . > 
@@ -76,12 +76,12 @@
 | 40      | Sales        | San Mateo      | HQ     |
 | 50      | Support      | Menlo Park     | MP     |
 +---------+--------------+----------------+--------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- three way join, table A -> B -> C
-0: jdbc:farrago:> 
-0: jdbc:farrago:> SELECT EMP.LNAME, DEPT.DNAME, LOCATION.CITY
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- three way join, table A -> B -> C
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT EMP.LNAME, DEPT.DNAME, LOCATION.CITY
 . . . . . . . . > 
 . . . . . . . . > from EMP, DEPT, LOCATION
 . . . . . . . . > 
@@ -103,12 +103,12 @@
 | Webber    | Marketing    | San Francisco  |
 | Williams  | Sales        | San Mateo      |
 +-----------+--------------+----------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- three way shuffled a bit
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select CUSTOMERS.CUSTID, CUSTOMERS.FNAME, CUSTOMERS.LNAME, PRODUCTS.NAME, SALES.PRICE
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- three way shuffled a bit
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select CUSTOMERS.CUSTID, CUSTOMERS.FNAME, CUSTOMERS.LNAME, PRODUCTS.NAME, SALES.PRICE
 . . . . . . . . > 
 . . . . . . . . > from CUSTOMERS, SALES, PRODUCTS
 . . . . . . . . > 
@@ -1149,10 +1149,10 @@
 +---------+-----------+---------------+---------------+--------+
 | 99      | Veronica  | Dole          | Telephone     | 2.3    |
 +---------+-----------+---------------+---------------+--------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select CUSTOMERS.CUSTID, EMP.LNAME, CUSTOMERS.LNAME, PRODUCTS.NAME, SALES.PRICE
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select CUSTOMERS.CUSTID, EMP.LNAME, CUSTOMERS.LNAME, PRODUCTS.NAME, SALES.PRICE
 . . . . . . . . > 
 . . . . . . . . > from CUSTOMERS, SALES, PRODUCTS, EMP
 . . . . . . . . > 
@@ -2195,12 +2195,12 @@
 +---------+-----------+---------------+---------------+--------+
 | 99      | Reynolds  | Dole          | Microwave     | 8.22   |
 +---------+-----------+---------------+---------------+--------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- self join of emp
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select M.LNAME, R.LNAME, R.EMPNO from EMP M, EMP R
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- self join of emp
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select M.LNAME, R.LNAME, R.EMPNO from EMP M, EMP R
 . . . . . . . . > 
 . . . . . . . . > where M.EMPNO = R.MANAGER order by EMPNO;
 +----------+-----------+--------+
@@ -2217,12 +2217,12 @@
 | Bush     | Nife      | 109    |
 | Brown    | Jones     | 110    |
 +----------+-----------+--------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- double reference of a table
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select EL.CITY, DL.CITY, EMP.LNAME, DEPT.DNAME
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- double reference of a table
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select EL.CITY, DL.CITY, EMP.LNAME, DEPT.DNAME
 . . . . . . . . > 
 . . . . . . . . > from LOCATION EL, LOCATION DL, EMP, DEPT
 . . . . . . . . > 
@@ -2230,23 +2230,23 @@
 . . . . . . . . > 
 . . . . . . . . > order by LNAME, EL.CITY, DL.CITY, DNAME;
 Error: java.lang.AssertionError: null (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- many to many query
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select PRODUCTS.NAME, PRODUCTS.PRICE, SALES.PRICE
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- many to many query
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select PRODUCTS.NAME, PRODUCTS.PRICE, SALES.PRICE
 . . . . . . . . > 
 . . . . . . . . > from SALES, PRODUCTS where SALES.PRICE=PRODUCTS.PRICE
 . . . . . . . . > 
 . . . . . . . . > order by PRODUCTS.NAME, PRODUCTS.PRICE, SALES.PRICE;
 Error: java.lang.AssertionError: null (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- many to many self join
-0: jdbc:farrago:> 
-0: jdbc:farrago:> select M.FNAME ,F.FNAME, M.LNAME
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- many to many self join
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select M.FNAME ,F.FNAME, M.LNAME
 . . . . . . . . > 
 . . . . . . . . > FROM CUSTOMERS M, CUSTOMERS F
 . . . . . . . . > 
@@ -2258,6 +2258,6 @@ Error: java.lang.AssertionError: null (state=,code=0)
 . . . . . . . . > 
 . . . . . . . . > order by M.FNAME, F.FNAME, M.LNAME;
 Error: java.lang.AssertionError: null (state=,code=0)
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

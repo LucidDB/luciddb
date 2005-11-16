@@ -1,4 +1,4 @@
-0: jdbc:farrago:> create foreign table csv_schema.SHORTREG_CUSTOMERS_SRC (
+0: jdbc:luciddb:> create foreign table csv_schema.SHORTREG_CUSTOMERS_SRC (
 . . . . . . . . > 
 . . . . . . . . > CUSTID INTEGER,
 . . . . . . . . > 
@@ -13,12 +13,12 @@
 . . . . . . . . > server csv_server
 . . . . . . . . > 
 . . . . . . . . > options (table_name 'customers');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> INSERT INTO s.CUSTOMERS
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> INSERT INTO s.CUSTOMERS
 . . . . . . . . > 
 . . . . . . . . > SELECT CUSTID,FNAME,LNAME,SEX FROM csv_schema.SHORTREG_CUSTOMERS_SRC;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> 
-0: jdbc:farrago:> !quit
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit
