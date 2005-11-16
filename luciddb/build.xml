@@ -28,6 +28,7 @@
 -Dnet.sf.farrago.catalog=${project.catalog.dir}
 -Djava.util.logging.config.file=${project.trace.propfile}
 -Dnet.sf.farrago.defaultSessionFactoryLibraryName=class:com.lucidera.farrago.LucidDbSessionFactory
+-Dnet.sf.farrago.test.jdbcDriverClass=com.lucidera.jdbc.LucidDbLocalDriver
 ">
 
 ]>
@@ -47,6 +48,9 @@
 
   <!-- directory in which classes are built -->
   <property name="classes.dir" location="${luciddb.dir}/classes" />
+
+  <property name="luciddb.src.dir" location="${luciddb.dir}/src" />
+  <property name="luciddb.test.dir" location="${luciddb.dir}/test" />
 
   <!-- directory in which catalog data is stored -->
   <property name="catalog.dir" location="${luciddb.dir}/catalog" />
@@ -80,6 +84,40 @@
   <!-- Developer configuration file generated from template. -->
   <property name="LucidDbConf.xmi"
     location="${xmi.dir}/LucidDbConf.xmi"/>
+
+  <!-- Classpaths -->
+
+  <!-- classpath for running tests via ant -->
+  <path id="test.classpath">
+    <pathelement path="${farrago.sqlline.classpath}"/>
+    <pathelement path="${ant.classpath}"/>
+    <pathelement path="${classes.dir}"/>
+  </path>
+  <property name="test.classpath" refid="test.classpath"/>
+
+  <path id="luciddb.build.classpath">
+    <pathelement path="${test.classpath}"/>
+    <pathelement location="${farrago.classes.dir}"/>
+  </path>
+  <property name="luciddb.build.classpath" refid="luciddb.build.classpath"/>
+
+  <target name="test">
+    <antcall target="createCatalog"/>
+    <antcall target="shortreg"/>
+  </target>
+
+  <target name="compile">
+    <!-- compile farrago first -->    
+    <ant dir="${farrago.dir}" target="compile"/>
+
+    <farrago.javaCompile
+      deprecation="off"
+      srcdir="${luciddb.test.dir}/src"
+      destdir="${classes.dir}"
+      classpathref="luciddb.build.classpath">
+      <include name="**/*.java" />
+    </farrago.javaCompile>    
+  </target>
 
   <!-- creates catalog and populates with initial metadata -->
   <target name="createCatalog">
@@ -180,5 +218,36 @@
       <test todir="${testlog.dir}" name="net.sf.farrago.test.FarragoSqlTest" />
     </junit>
   </target>
+
+  <target name="shortreg" depends="compile" >
+    <filelist dir="${luciddb.test.dir}/shortreg" id="filelist.shortregsql"
+      files="creschema.sql,locationload.sql,deptload.sql,empload.sql,
+        customersload.sql,productsload.sql,salesload.sql,joinEq.sql"/>
+    <pathconvert property="filelist.shortregsql" refid="filelist.shortregsql"
+      pathsep="${line.separator}" dirsep="${file.separator}" />
+    <junit printsummary="yes" fork="yes" haltonerror="yes" haltonfailure="yes"
+      tempdir="${testlog.dir}">
+      <classpath refid="test.classpath"/>
+      <jvmarg line="${assertions.jvmarg}"/>
+      <jvmarg line="&FarragoProps;"/>
+      <sysproperty key="net.sf.farrago.fileset.unitsql"
+        value="${filelist.shortregsql}"/>
+      <formatter type="plain"/>
+      <formatter type="xml"/> <!-- for integration builds -->
+      <!-- test todir="${testlog.dir}" name="net.sf.farrago.test.FarragoSqlTest" / -->
+      <test todir="${testlog.dir}" name="com.lucidera.test.FarragoSqlTest" />
+    </junit>
+  </target>
+
+  <target name="cleanTestLogs">
+    <delete includeEmptyDirs="true" quiet="true">
+      <fileset dir="${testlog.dir}" includes="*.xml"/>
+      <fileset dir="${testlog.dir}" includes="*.txt"/>
+      <fileset dir="${testlog.dir}" includes="*.log"/>
+      <fileset dir="${testlog.dir}" includes="*.dif"/>
+    </delete>
+    <delete quiet="true" file="${LucidDbTrace.log}"/>
+  </target>
+
 
 </project>

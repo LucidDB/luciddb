@@ -1,0 +1,12 @@
+CREATE foreign table csv_schema.SHORTREG_SALES_SRC (
+CUSTID INTEGER,
+EMPNO INTEGER,
+PRODID INTEGER,
+PRICE DOUBLE
+)
+server csv_server
+options (table_name 'sales');
+
+INSERT INTO s.SALES
+SELECT CUSTID,EMPNO,PRODID,PRICE
+FROM csv_schema.SHORTREG_SALES_SRC;
