@@ -52,7 +52,7 @@ public abstract class FennelMultipleRel
     //~ Constructors ----------------------------------------------------------
 
     /**
-     * Creates a new FennelDoubleRel object.
+     * Creates a new FennelMultipleRel object.
      *
      * @param cluster RelOptCluster for this rel
      * @param inputs array of inputs
@@ -66,8 +66,6 @@ public abstract class FennelMultipleRel
         assert inputs != null;
         for (int i = 0; i < inputs.length; i++) {
             assert inputs[i] != null;
-//            assert inputs[i] instanceof FennelRel;
-//            assert (FennelRelUtil.getPreparingStmt((FennelRel) inputs[i]) == preparingStmt);
         }
     }
 

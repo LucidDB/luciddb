@@ -65,8 +65,9 @@ public class FennelPullUncollectRel extends FennelSingleRel
         FemUncollectTupleStreamDef uncollectStream =
             repos.newFemUncollectTupleStreamDef();
 
-        uncollectStream.getInput().add(
-            implementor.visitFennelChild((FennelRel) getChild()));
+        implementor.addDataFlowFromProducerToConsumer(
+            implementor.visitFennelChild((FennelRel) getChild()),
+            uncollectStream);
 
         return uncollectStream;
     }

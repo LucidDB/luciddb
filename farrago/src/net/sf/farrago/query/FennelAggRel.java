@@ -94,8 +94,10 @@ public class FennelAggRel extends AggregateRelBase implements FennelRel
             }
             aggStream.getAggInvocation().add(aggInvocation);
         }
-        aggStream.getInput().add(
-            implementor.visitFennelChild((FennelRel) getChild()));
+        implementor.addDataFlowFromProducerToConsumer(
+            implementor.visitFennelChild((FennelRel) getChild()), 
+            aggStream);
+        
         return aggStream;
     }
 

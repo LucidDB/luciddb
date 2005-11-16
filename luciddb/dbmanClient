@@ -1,0 +1,12 @@
+#!/bin/bash
+# $Id$
+# Run the hsqldb Database Manager tool as a client
+# to a LucidDB server
+
+source ./defineLucidDbRuntime.sh
+
+java ${CLIENT_JAVA_ARGS} org.hsqldb.util.DatabaseManagerSwing \
+--driver com.lucidera.jdbc.LucidDbRmiDriver \
+--url jdbc:luciddb:rmi://localhost \
+--user sa \
+$*

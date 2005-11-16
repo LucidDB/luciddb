@@ -130,6 +130,16 @@ public class FarragoRelImplementor extends JavaRelImplementor
         registerStreamDef(streamDef, rel, rowType);
     }
 
+    // implement FennelRelImplementor
+    public void addDataFlowFromProducerToConsumer(
+        FemExecutionStreamDef producer,
+        FemExecutionStreamDef consumer)
+    {
+        FemExecStreamDataFlow flow = getRepos().newFemExecStreamDataFlow();
+        producer.getOutputFlow().add(flow);
+        consumer.getInputFlow().add(flow);
+    }
+    
     private void registerStreamDef(
         FemExecutionStreamDef streamDef,
         RelNode rel,
@@ -155,10 +165,10 @@ public class FarragoRelImplementor extends JavaRelImplementor
         }
 
         // recursively ensure all inputs have also been registered
-        Iterator iter = streamDef.getInput().iterator();
-        while (iter.hasNext()) {
-            registerStreamDef((FemExecutionStreamDef) iter.next(), null,
-                rowType);
+        for (Object obj : streamDef.getInputFlow()) {
+            FemExecStreamDataFlow flow = (FemExecStreamDataFlow) obj;
+            FemExecutionStreamDef producer = flow.getProducer();
+            registerStreamDef(producer, null, rowType);
         }
     }
 
