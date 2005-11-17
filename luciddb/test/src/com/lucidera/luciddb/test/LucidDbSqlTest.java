@@ -23,6 +23,7 @@ package com.lucidera.luciddb.test;
 import java.io.*;
 import junit.framework.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.test.FarragoTestCase;
 
 
 /**
@@ -32,7 +33,7 @@ import net.sf.farrago.util.*;
  * @author Sunny Choi
  * @version $Id$
  */
-public class LucidDbSqlTest extends LucidDbTestCase
+public class LucidDbSqlTest extends FarragoTestCase
 {
 
     public LucidDbSqlTest(String testName)
@@ -48,7 +49,7 @@ public class LucidDbSqlTest extends LucidDbTestCase
         return gatherSuite(
             FarragoProperties.instance().testFilesetUnitsql.get(true),
             new LucidDbSqlTestFactory() {
-                public LucidDbTestCase createSqlTest(String testName)
+                public FarragoTestCase createSqlTest(String testName)
                     throws Exception
                 {
                     return new LucidDbSqlTest(testName);
@@ -82,7 +83,7 @@ public class LucidDbSqlTest extends LucidDbTestCase
 
     public interface LucidDbSqlTestFactory
     {
-        public LucidDbTestCase createSqlTest(String testName)
+        public FarragoTestCase createSqlTest(String testName)
             throws Exception;
     }
 }

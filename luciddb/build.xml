@@ -33,7 +33,7 @@
 
 ]>
 
-<project name="luciddb" basedir="." default="unspecified">
+<project name="luciddb" basedir="." default="test">
   <dirname property="luciddb.dir" file="${ant.file.luciddb}" />
 
   <!-- assume common parent of fennel, farrago and luciddb  -->
@@ -100,7 +100,7 @@
   </path>
   <property name="luciddb.build.classpath" refid="luciddb.build.classpath"/>
 
-  <target name="test">
+  <target name="test" depends="compile">
     <antcall target="createCatalog"/>
     <antcall target="shortreg"/>
   </target>
@@ -248,7 +248,7 @@
   </target>
 
   <!-- Extra Short Regression -->
-  <target name="xreg" depends="compile,initSqlTests" >
+  <target name="xreg" depends="compile,createCatalog,initSqlTests" >
     <filelist dir="${testlog.dir}/shortreg" id="filelist.shortregsql"
       files="creschema.sql,locationload.sql,deptload.sql,empload.sql,
         customersload.sql,productsload.sql,salesload.sql,joinEqSanity.sql"/>
@@ -261,6 +261,8 @@
       <jvmarg line="&FarragoProps;"/>
       <sysproperty key="net.sf.farrago.fileset.unitsql"
         value="${filelist.shortregsql}"/>
+      <sysproperty key="net.sf.farrago.test.jdbcDriverClass"
+        value="com.lucidera.jdbc.LucidDbLocalDriver" />
       <formatter type="plain"/>
       <formatter type="xml"/> <!-- for integration builds -->
       <test todir="${testlog.dir}" name="com.lucidera.luciddb.test.LucidDbSqlTest" />
