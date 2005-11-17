@@ -99,10 +99,13 @@ class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
      * @param iNewTuple desired 0-based position for new tuple
      */
     void splitNode(
-        BTreeNode &node,
+        BTreePageLock &pageLock,
         PConstBuffer pTupleBuffer,
         uint cbTuple,
         uint iNewTuple);
+
+    void grow(BTreeNode &node, PageId pageId, 
+              BTreeNode &rightNode, PageId newPageId);
 
     /**
      * Attempts to perform an insertion without splitting, performing
@@ -122,7 +125,6 @@ class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
     bool attemptInsertWithoutSplit(
         BTreePageLock &targetPageLock,
         PConstBuffer pTupleBuffer,uint cbTuple,uint iNewTuple);
-    void insertIntoParent();
 
     /**
      * Inserts a tuple read from a log stream.

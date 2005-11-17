@@ -79,7 +79,8 @@ PageId BTreeVerifier::verifyNode(
         assert(node.height == expectedHeight);
     }
 
-    assert(node.rightSibling == getRightSibling(pageId));
+    // not any more. it is a real blink tree. not just link.
+    // assert(node.rightSibling == getRightSibling(pageId));
     if (strict) {
         assert(node.rightSibling == expectedRightSibling);
     } else {
@@ -106,7 +107,6 @@ PageId BTreeVerifier::verifyNode(
             if (c > 0) {
                 nodeAccessor.dumpNode(std::cerr,node,pageId);
             }
-            
             assert(c <= 0);
             // TODO:  for unique, assert(c == 0)
         }
