@@ -563,10 +563,11 @@ public abstract class FarragoTestCase extends DiffTestCase
         assert (sqlFile.endsWith(".sql"));
         File sqlFileSansExt =
             new File(sqlFile.substring(0, sqlFile.length() - 4));
+        String driverName = driver.getClass().getName();
         String [] args =
             new String [] {
                 "-u", driver.getUrlPrefix(), "-d",
-                "net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver", "-n",
+                driverName, "-n",
                 FarragoCatalogInit.SA_USER_NAME,
                 "--force=true", "--silent=true",
                 "--showWarnings=false", "--maxWidth=1024"
