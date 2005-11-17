@@ -218,10 +218,40 @@
     </junit>
   </target>
 
-  <target name="shortreg" depends="compile" >
-    <filelist dir="${luciddb.test.dir}/shortreg" id="filelist.shortregsql"
+  <target name="shortreg" depends="compile,initSqlTests" >
+    <filelist dir="${testlog.dir}/shortreg" id="filelist.shortregsql"
       files="creschema.sql,locationload.sql,deptload.sql,empload.sql,
         customersload.sql,productsload.sql,salesload.sql,joinEq.sql"/>
+    <pathconvert property="filelist.shortregsql" refid="filelist.shortregsql"
+      pathsep="${line.separator}" dirsep="${file.separator}" />
+    <junit printsummary="yes" fork="yes" haltonerror="yes" haltonfailure="yes"
+      tempdir="${testlog.dir}">
+      <classpath refid="test.classpath"/>
+      <jvmarg line="${assertions.jvmarg}"/>
+      <jvmarg line="&FarragoProps;"/>
+      <sysproperty key="net.sf.farrago.fileset.unitsql"
+        value="${filelist.shortregsql}"/>
+      <formatter type="plain"/>
+      <formatter type="xml"/> <!-- for integration builds -->
+      <test todir="${testlog.dir}" name="com.lucidera.luciddb.test.LucidDbSqlTest" />
+    </junit>
+  </target>
+
+  <!-- move all sql/ref files to testlog area -->
+  <target name="initSqlTests">
+    <copy todir="${testlog.dir}/shortreg">
+      <fileset dir="${luciddb.test.dir}/shortreg">
+        <include name="*.sql"/>
+        <include name="*.ref"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <!-- Extra Short Regression -->
+  <target name="xreg" depends="compile,initSqlTests" >
+    <filelist dir="${testlog.dir}/shortreg" id="filelist.shortregsql"
+      files="creschema.sql,locationload.sql,deptload.sql,empload.sql,
+        customersload.sql,productsload.sql,salesload.sql,joinEqSanity.sql"/>
     <pathconvert property="filelist.shortregsql" refid="filelist.shortregsql"
       pathsep="${line.separator}" dirsep="${file.separator}" />
     <junit printsummary="yes" fork="yes" haltonerror="yes" haltonfailure="yes"
