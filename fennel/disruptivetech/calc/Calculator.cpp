@@ -65,7 +65,7 @@ Calculator::init(int codeSize, int literalSize, int inputSize,
          i++) {
         // explicitly clear registers. allows detection of rebinding
         // local & literal
-        mRegisterTuple[i] = NULL;
+        mRegisterSetBinding[i] = NULL;
         // explicitly clear descriptors. allows cleaner destructor
         mRegisterSetDescriptor[i] = NULL;
     }
@@ -85,6 +85,10 @@ Calculator::~Calculator()
         if (mRegisterSetDescriptor[i]) {
             delete mRegisterSetDescriptor[i];
             mRegisterSetDescriptor[i] = NULL;
+        }
+        if (mRegisterSetBinding[i]) {
+            delete mRegisterSetBinding[i];
+            mRegisterSetBinding[i] = NULL;
         }
     }
 
@@ -108,22 +112,6 @@ Calculator::~Calculator()
         }
         mCode.clear();
 
-        // Assembler also created TupleData for status, literal, and
-        // local registers
-
-        if (mRegisterTuple[RegisterReference::ELiteral]) {
-            delete mRegisterTuple[RegisterReference::ELiteral];
-        }
-        
-        if (mRegisterTuple[RegisterReference::ELocal]) {
-            delete mRegisterTuple[RegisterReference::ELocal];
-        }
-
-        if (mRegisterTuple[RegisterReference::EStatus]) {
-            delete mRegisterTuple[RegisterReference::EStatus];
-        }
-
-        // Assembler also allocated space for tuple data
         for (i=0; i < mBuffers.size(); i++) {
             delete[] mBuffers[i];
         }
@@ -173,11 +161,11 @@ Calculator::bind(RegisterReference::ERegisterSet regset,
     // must reset each RegisterReference that points to these
     // tuples
     assert((regset == RegisterReference::ELiteral) ? 
-           !mRegisterTuple[RegisterReference::ELiteral] : true);
+           !mRegisterSetBinding[RegisterReference::ELiteral] : true);
     assert((regset == RegisterReference::ELocal) ? 
-           !mRegisterTuple[RegisterReference::ELocal] : true);
+           !mRegisterSetBinding[RegisterReference::ELocal] : true);
             
-    mRegisterTuple[regset] = data;
+    mRegisterSetBinding[regset] = new RegisterSetBinding(data);
     mRegisterSetDescriptor[regset] = new TupleDescriptor(desc);
 
     // cache pointers for local and literal sets only
@@ -195,6 +183,20 @@ Calculator::bind(RegisterReference::ERegisterSet regset,
         mRegisterRef[RegisterReference::ELiteral].size() +
         mRegisterRef[RegisterReference::ELocal].size();
     mRegisterReset.reserve(totalResetableRegisters);
+}
+
+void Calculator::bind(
+    TupleData* input, TupleData* output,
+    bool takeOwnwership, const TupleData* outputWrite)
+{
+    mRegisterSetBinding[RegisterReference::EInput] =
+        new RegisterSetBinding(input, takeOwnwership);
+    if (outputWrite)
+        mRegisterSetBinding[RegisterReference::EOutput] =
+            new RegisterSetBinding(output, outputWrite, takeOwnwership);
+    else
+        mRegisterSetBinding[RegisterReference::EOutput] = 
+            new RegisterSetBinding(output, takeOwnwership);
 }
 
 TupleDescriptor
@@ -218,7 +220,7 @@ Calculator::getStatusRegisterDescriptor() const
 TupleData const * const 
 Calculator::getStatusRegister() const
 {
-    return mRegisterTuple[RegisterReference::EStatus];
+    return &(mRegisterSetBinding[RegisterReference::EStatus]->asTupleData());
 }
 
 void
@@ -246,10 +248,10 @@ Calculator::exec()
     if (isTracingLevel(TRACE_FINER)) {
         oss << "Pre-Exec" << endl << "Output Register: " << endl;
         p.print(oss, getOutputRegisterDescriptor(),
-                *(mRegisterTuple[RegisterReference::EOutput]));
+                mRegisterSetBinding[RegisterReference::EOutput]->asTupleData());
         oss << endl << "Input Register: " << endl;
         p.print(oss, getInputRegisterDescriptor(), 
-                *(mRegisterTuple[RegisterReference::EInput]));
+                mRegisterSetBinding[RegisterReference::EInput]->asTupleData());
         oss << endl;
         trace(TRACE_FINER, oss.str());
     }
@@ -293,13 +295,13 @@ Calculator::exec()
         oss.clear();
         oss << "Post-Exec" << endl << "Output Register: " << endl;
         p.print(oss, getOutputRegisterDescriptor(),
-                *(mRegisterTuple[RegisterReference::EOutput]));
+                mRegisterSetBinding[RegisterReference::EOutput]->asTupleData());
         oss << endl << "Input Register: " << endl;
         p.print(oss, getInputRegisterDescriptor(), 
-                *(mRegisterTuple[RegisterReference::EInput]));
+                mRegisterSetBinding[RegisterReference::EInput]->asTupleData());
         oss << endl << "Status Register: " << endl;
         p.print(oss, getStatusRegisterDescriptor(), 
-                *(mRegisterTuple[RegisterReference::EStatus]));
+                mRegisterSetBinding[RegisterReference::EStatus]->asTupleData());
         oss << endl << "Warnings: |" << warnings() << "|"<< endl;
         trace(TRACE_FINER, oss.str());
     }

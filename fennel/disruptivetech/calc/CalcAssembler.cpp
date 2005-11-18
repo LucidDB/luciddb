@@ -34,7 +34,7 @@ using namespace boost;
 CalcAssembler::~CalcAssembler()
 {
     for (uint i = RegisterReference::EFirstSet; i < RegisterReference::ELastSet; i++) {
-        if (mCalc->mRegisterTuple[i] == NULL)
+        if (mCalc->mRegisterSetBinding[i] == NULL)
         {
             // We did NOT successfully bind this register set to the calculator
             // Will need to delete it on our own
