@@ -136,6 +136,15 @@ void SqlSelectKeywords(List keywords) :
     E()
 }
 
+/*
+ * Parses dialect-specific keywords immediately following the INSERT keyword.
+ */
+void SqlInsertKeywords(List keywords) :
+{}
+{
+    E()
+}
+
 String NonReservedKeyWord() :
 {
     String kw;
