@@ -79,9 +79,8 @@ PageId BTreeVerifier::verifyNode(
         assert(node.height == expectedHeight);
     }
 
-    // not any more. it is a real blink tree. not just link.
-    // assert(node.rightSibling == getRightSibling(pageId));
     if (strict) {
+        assert(node.rightSibling == getRightSibling(pageId));
         assert(node.rightSibling == expectedRightSibling);
     } else {
         if (node.rightSibling != expectedRightSibling) {
