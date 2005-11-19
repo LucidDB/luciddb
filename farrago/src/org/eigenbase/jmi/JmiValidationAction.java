@@ -1,10 +1,9 @@
 /*
 // $Id$
-// Farrago is an extensible data management system.
+// Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2005 The Eigenbase Project
 // Copyright (C) 2005-2005 Disruptive Tech
 // Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -20,24 +19,20 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package net.sf.farrago.util;
-
-import org.eigenbase.jmi.*;
+package org.eigenbase.jmi;
 
 /**
- * Static JMI utilities.
- *
- *<p>
- *
- * TODO jvs 16-Nov-2005:  delete this class once all callers
- * been changed to call JmiObjUtil instead.
+ * Enumerates the possible actions taken during validation of
+ * a {@link JmiChangeSet}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class JmiUtil extends JmiObjUtil
+public enum JmiValidationAction
 {
+    CREATION,
+    MODIFICATION,
+    DELETION
 }
 
-
-// End JmiUtil.java
+// End JmiValidationAction.java
