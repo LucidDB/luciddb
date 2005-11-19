@@ -716,6 +716,7 @@ SqlNode NamedRoutineCall(SqlFunctionCategory routineType) :
  */
 SqlNode SqlInsert() :
 {
+    List keywords = new ArrayList();
     SqlIdentifier table;
     SqlNode source;
     List columnList = null;
@@ -723,7 +724,9 @@ SqlNode SqlInsert() :
     SqlParserPos columnListPos = null;
 }
 {
-    <INSERT> <INTO> table = CompoundIdentifier()
+    <INSERT> 
+    SqlInsertKeywords(keywords)
+    <INTO> table = CompoundIdentifier()
     {
         pos = getPos();
     }
@@ -740,6 +743,7 @@ SqlNode SqlInsert() :
     {
         return new SqlInsert(
             SqlStdOperatorTable.insertOperator,
+            new SqlNodeList(keywords, pos),
             table,
             source,
             (columnList != null)
@@ -747,6 +751,14 @@ SqlNode SqlInsert() :
             pos);
     }
 }
+
+/*
+ * Abstract production:
+ *
+ *    void SqlInsertKeywords(List keywords)
+ *
+ * Parses dialect-specific keywords immediately following the INSERT keyword.
+ */
 
 /**
  * Parses a DELETE statement.

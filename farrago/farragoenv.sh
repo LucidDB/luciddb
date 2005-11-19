@@ -24,4 +24,10 @@ fi
 THIRDPARTY_HOME=$1
 [ -z "$ANT_HOME" ] && export ANT_HOME=$THIRDPARTY_HOME/ant
 
-export PATH=$ANT_HOME/bin:$PATH
+# prepend ANT if not already present on PATH
+ANT_BIN=$(cd $ANT_HOME/bin; pwd)
+CURR_ANT=$(dirname `/usr/bin/which ant 2>&1 | cut -d " " -f 1`)
+if [ "$CURR_ANT" != "$ANT_BIN" ]; then
+    export PATH=$ANT_BIN:$PATH
+fi
+unset -v ANT_BIN CURR_ANT

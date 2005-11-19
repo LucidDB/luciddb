@@ -36,11 +36,59 @@ FENNEL_BEGIN_NAMESPACE
 using namespace std;
 using boost::lexical_cast;
 
-typedef TupleData ** TRegisterSetP;
+class Calculator;
+class RegisterSetBinding;
+
+typedef RegisterSetBinding ** TRegisterSetP;
 typedef TupleDescriptor ** TRegisterSetDescP;
 typedef uint32_t TRegisterRefProp;
-class Calculator;
 
+
+//! How a register set is bound to data. 
+class RegisterSetBinding
+{
+    const bool ownTheBase;              // we own (and will delete) the base
+    uint ncols; 
+    TupleData *const base;              // the underlying data
+    PConstBuffer *datumAddr;            // we allocate
+    // In this set, the nth register is bound to TupleDatum d = (*base)[n].
+    // Its length is d.cbLen, its location is d.pDatum.
+    // However, d.pDatum = 0 indicates a null value.
+    // At bind time, the datum location for the nth register is copied to datumAddr[n];
+    // saving this address lets the calculator overwrite a null value.
+    // Changing the register value via the TupleDatum directly changes base.
+
+public:
+    ~RegisterSetBinding();
+
+    //! binds a register set to a tuple
+    //! @param base the underlying tuple
+    //! @param ownIt the RegisterSetBinding takes ownership of the TupleData
+    RegisterSetBinding(TupleData* base, bool ownIt = false);
+
+    //! bind an output register set bound to a tuple, with supplementary target address info.
+    //! @param base the underlying tuple (some columns may be null)
+    //! @param shadow Equivalent to base, but all TupleDatum elements have a non-null address.
+    //! @param ownIt the RegisterSetBinding takes ownership of the TupleData
+    RegisterSetBinding(TupleData* base, const TupleData* shadow, bool ownIt = false);
+
+    //! view the register set as a tuple (read-only)
+    const TupleData& asTupleData() const {
+        return *base;
+    }
+
+    //! get the Nth register
+    TupleDatum& operator[](int n) {
+        assert((n >= 0) && (n < ncols));
+        return (*base)[n];
+    }
+
+    //! get the target address of the Nth register
+    PConstBuffer getTargetAddr(int n) {
+        assert((n >= 0) && (n < ncols));
+        return datumAddr[n];
+    }
+};
 
 
 //! A reference to a register. Base class provides
@@ -224,7 +272,7 @@ protected:
     //! Underlying type of register.
     const StandardTypeDescriptorOrdinal mType;
 
-    //! Array of pointers to register set tuples
+    //! Array of pointers to register set bindings.
     //!
     //! Used as starting point to index through sets and registers.
     TRegisterSetP mRegisterSetP;
@@ -265,6 +313,24 @@ protected:
 
     //! Defines default properties for registers based on register set.
     void setDefaultProperties();
+
+    //! gets the register binding
+    //! @param resetFromNull: if the register is null, reset the address to the
+    //! target buffer so the value can be changed.
+    TupleDatum* getBinding(bool resetFromNull = false) const {
+        // validate indexes
+        assert(mRegisterSetP);
+        assert(mSetIndex < ELastSet);
+        assert(mRegisterSetP[mSetIndex]);
+        RegisterSetBinding* rsb = mRegisterSetP[mSetIndex];
+        TupleDatum& bind = (*rsb)[mIndex];
+        if (resetFromNull) {
+            if (!bind.pData)
+                bind.pData = mRegisterSetP[mSetIndex]->getTargetAddr(mIndex);
+        }
+        return &bind;
+    }
+
 };
 
 //! A typed group of accessor functions to a register
@@ -297,20 +363,14 @@ public:
             assert(mPData);
             return *(reinterpret_cast<TMPLT*>(mPData));
         } else {
-            assert(mRegisterSetP);
-            assert(mSetIndex < ELastSet);
-            assert(mRegisterSetP[mSetIndex]);
-            TupleData* tupleDataP = mRegisterSetP[mSetIndex];
-            TupleDatum* datumP = &((*tupleDataP)[mIndex]);
-            assert(datumP->pData); // Cannot read from a NULL value.
-            return *(reinterpret_cast<TMPLT*>(const_cast<PBuffer>(datumP->pData)));
+            TupleDatum *bind = getBinding();
+            assert(bind->pData); // Cannot read from a NULL value.
+            return *(reinterpret_cast<TMPLT*>(const_cast<PBuffer>(bind->pData)));
         }
     }
 
 
     //! puts/pokes/sets a value into a register
-    //!
-    //! Assumes register is not null.
     void
     value(TMPLT newV)
     {
@@ -319,13 +379,9 @@ public:
             assert(mPData);
             *(reinterpret_cast<TMPLT*>(mPData)) = newV;
         } else {
-            assert(mRegisterSetP);
-            assert(mSetIndex < ELastSet);
-            assert(mRegisterSetP[mSetIndex]);
-            TupleData* tupleDataP = mRegisterSetP[mSetIndex];
-            TupleDatum* datumP = &((*tupleDataP)[mIndex]);
-            assert(datumP->pData); // Cannot write into a NULL value.
-            *(reinterpret_cast<TMPLT*>(const_cast<PBuffer>(datumP->pData))) = newV;
+            TupleDatum *bind = getBinding(true); // reset when null
+            assert(bind->pData);
+            *(reinterpret_cast<TMPLT*>(const_cast<PBuffer>(bind->pData))) = newV;
         }
     }
 
@@ -342,12 +398,8 @@ public:
             mPData = NULL;
             mCbData = 0;
         } else {
-            assert(mRegisterSetP);
-            assert(mSetIndex < ELastSet);
-            assert(mRegisterSetP[mSetIndex]);
-            assert(!(mProp & EPropReadOnly));
-            TupleData* tupleDataP = mRegisterSetP[mSetIndex];
-            (*tupleDataP)[mIndex].pData = NULL;
+            TupleDatum *bind = getBinding();
+            bind->pData = NULL;
         }
         
     }
@@ -356,13 +408,8 @@ public:
         if (mProp & (EPropCachePointer|EPropPtrReset)) {
             return (mPData ? false : true );
         } else {
-            assert(mRegisterSetP);
-            assert(mSetIndex < ELastSet);
-            assert(mRegisterSetP[mSetIndex]);
-            TupleData* tupleDataP = mRegisterSetP[mSetIndex];
-        
-            TupleDatum* datumP = &((*tupleDataP)[mIndex]);
-            return (datumP->pData ? false : true );
+            TupleDatum *bind = getBinding();
+            return (bind->pData ? false : true );
         }
         
     }
@@ -378,13 +425,9 @@ public:
             assert(mPData);  // useful or harmful?
             return reinterpret_cast<TMPLT>(mPData);
         } else {
-            assert(mRegisterSetP);
-            assert(mSetIndex < ELastSet);
-            assert(mRegisterSetP[mSetIndex]);
-            TupleData* tupleDataP = mRegisterSetP[mSetIndex];
-            TupleDatum* datumP = &((*tupleDataP)[mIndex]);
-            assert(datumP->pData);
-            return reinterpret_cast<TMPLT>(const_cast<PBuffer>(datumP->pData));
+            TupleDatum *bind = getBinding();
+            assert(bind->pData);
+            return reinterpret_cast<TMPLT>(const_cast<PBuffer>(bind->pData));
         }
     }
     //! Sets pointer value, rather than what pointer references.
@@ -407,13 +450,9 @@ public:
             reinterpret_cast<TMPLT>(mPData) = newP;
             mCbData = len;
         } else {
-            assert(mRegisterSetP);
-            assert(mSetIndex < ELastSet);
-            assert(mRegisterSetP[mSetIndex]);
-            TupleData* tupleDataP = mRegisterSetP[mSetIndex];
-            TupleDatum* datumP = &((*tupleDataP)[mIndex]);
-            reinterpret_cast<TMPLT>(const_cast<PBuffer>(datumP->pData)) = newP;
-            datumP->cbData = len; 
+            TupleDatum *bind = getBinding();
+            reinterpret_cast<TMPLT>(const_cast<PBuffer>(bind->pData)) = newP;
+            bind->cbData = len; 
         }
     }
     //! Gets reference by pointer for non-pointer types
@@ -422,12 +461,8 @@ public:
         if (mProp & (EPropCachePointer|EPropPtrReset)) {
             return reinterpret_cast<TMPLT*>(const_cast<PBuffer>(mPData));
         } else {
-            assert(mRegisterSetP);
-            assert(mSetIndex < ELastSet);
-            assert(mRegisterSetP[mSetIndex]);
-            TupleData* tupleDataP = mRegisterSetP[mSetIndex];
-            TupleDatum* datumP = &((*tupleDataP)[mIndex]);
-            return reinterpret_cast<TMPLT*>(const_cast<PBuffer>(datumP->pData));
+            TupleDatum *bind = getBinding();
+            return reinterpret_cast<TMPLT*>(const_cast<PBuffer>(bind->pData));
         }
     }
     //! Refers to other RegisterRef for non-pointer types
@@ -440,14 +475,9 @@ public:
     refer(RegisterRef<TMPLT>* from)
     {
         assert(!(mProp & (EPropCachePointer | EPropPtrReset)));
-        assert(mRegisterSetP);
-        assert(mSetIndex < ELastSet);
-        assert(mRegisterSetP[mSetIndex]);
-
-        TupleData* tupleDataP = mRegisterSetP[mSetIndex];
-        TupleDatum* datumP = &((*tupleDataP)[mIndex]);
-        reinterpret_cast<TMPLT*>(const_cast<PBuffer>(datumP->pData)) = from->refer();
-        datumP->cbData = from->length();
+        TupleDatum *bind = getBinding();
+        reinterpret_cast<TMPLT*>(const_cast<PBuffer>(bind->pData)) = from->refer();
+        bind->cbData = from->length();
     }
 
     //! Gets length, in bytes, of data buffer
@@ -461,12 +491,8 @@ public:
         if (mProp & (EPropCachePointer|EPropPtrReset)) {
             return mCbData;
         } else {
-            assert(mRegisterSetP);
-            assert(mSetIndex < ELastSet);
-            assert(mRegisterSetP[mSetIndex]);
-            TupleData* tupleDataP = mRegisterSetP[mSetIndex];
-            TupleDatum* datumP = &((*tupleDataP)[mIndex]);
-            return datumP->cbData;
+            TupleDatum *bind = getBinding();
+            return bind->cbData;
         }
     }
     //! Gets storage length / maximum length, in bytes, of data buffer.
@@ -518,13 +544,9 @@ public:
             assert(newLen <= mCbStorage);         // useful or harmful?
             mCbData = newLen;
         } else {
-            assert(mRegisterSetP);
-            assert(mSetIndex < ELastSet);
-            assert(mRegisterSetP[mSetIndex]);
             assert(newLen <= ((*(mRegisterSetDescP[mSetIndex]))[mIndex]).cbStorage);
-            TupleData* tupleDataP = mRegisterSetP[mSetIndex];
-            TupleDatum* pDatum = &((*tupleDataP)[mIndex]);
-            pDatum->cbData = newLen;
+            TupleDatum *bind = getBinding();
+            bind->cbData = newLen;
         }
     }
     //! Sets length of string, in bytes, based on string type.
