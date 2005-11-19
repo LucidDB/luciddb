@@ -17,17 +17,22 @@ fi
 
 if [ -z "$JAVA_HOME" ]
 then
-    echo 'You must define  environment variable JAVA_HOME'
+    echo 'You must define environment variable JAVA_HOME'
     return
 fi
 
 THIRDPARTY_HOME=$1
-[ -z "$ANT_HOME" ] && export ANT_HOME=$THIRDPARTY_HOME/ant
 
-# prepend ANT if not already present on PATH
-ANT_BIN=$(cd $ANT_HOME/bin; pwd)
-CURR_ANT=$(dirname `/usr/bin/which ant 2>&1 | cut -d " " -f 1`)
-if [ "$CURR_ANT" != "$ANT_BIN" ]; then
-    export PATH=$ANT_BIN:$PATH
+if [ -z "$ANT_HOME" ]; then
+    # if ANT_HOME is unset, use the one under thirdparty
+    export ANT_HOME=$THIRDPARTY_HOME/ant
+    export PATH=$ANT_HOME/bin:$PATH
+else
+    # otherwise, prepend ANT if not already present on PATH
+    ANT_BIN=$(cd $ANT_HOME/bin; pwd)
+    CURR_ANT=$(dirname `/usr/bin/which ant 2>&1 | cut -d " " -f 1`)
+    if [ "$CURR_ANT" != "$ANT_BIN" ]; then
+        export PATH=$ANT_BIN:$PATH
+    fi
+    unset -v ANT_BIN CURR_ANT
 fi
-unset -v ANT_BIN CURR_ANT
