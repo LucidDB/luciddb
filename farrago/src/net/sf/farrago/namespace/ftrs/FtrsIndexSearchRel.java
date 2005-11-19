@@ -226,8 +226,10 @@ class FtrsIndexSearchRel extends FennelSingleRel
             searchStream.setInputJoinProj(
                 FennelRelUtil.createTupleProjection(repos, inputJoinProj));
         }
-        searchStream.getInput().add(
-            implementor.visitFennelChild((FennelRel) getChild()));
+
+        implementor.addDataFlowFromProducerToConsumer(
+            implementor.visitFennelChild((FennelRel) getChild()), 
+            searchStream);
 
         return searchStream;
     }

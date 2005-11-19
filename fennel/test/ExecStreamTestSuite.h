@@ -55,6 +55,7 @@ public:
         if (initTestCases) {
             FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testScratchBufferExecStream);
             FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCopyExecStream);
+            FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testMergeExecStream);
             FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testSegBufferExecStream);
             FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCartesianJoinExecStreamOuter);
             FENNEL_UNIT_TEST_CASE(ExecStreamTestSuite,testCountAggExecStream);
@@ -68,6 +69,7 @@ public:
 
     void testScratchBufferExecStream();
     void testCopyExecStream();
+    void testMergeExecStream();
     void testSegBufferExecStream();
     void testCountAggExecStream();
     void testSumAggExecStream();

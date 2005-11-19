@@ -30,6 +30,7 @@
 #include "fennel/exec/MockProducerExecStream.h"
 #include "fennel/exec/ScratchBufferExecStream.h"
 #include "fennel/exec/CopyExecStream.h"
+#include "fennel/exec/MergeExecStream.h"
 #include "fennel/exec/SegBufferExecStream.h"
 #include "fennel/exec/CartesianJoinExecStream.h"
 #include "fennel/exec/SortedAggExecStream.h"
@@ -105,6 +106,43 @@ void ExecStreamTestSuite::testCopyExecStream()
         mockParams.nRows*sizeof(int32_t));
 }
 
+void ExecStreamTestSuite::testMergeExecStream()
+{
+    // simulate SELECT * FROM t10k UNION ALL SELECT * FROM 10k;
+    
+    StandardTypeDescriptorFactory stdTypeFactory;
+    TupleAttributeDescriptor attrDesc(
+        stdTypeFactory.newDataType(STANDARD_TYPE_INT_32));
+    
+    MockProducerExecStreamParams paramsMock;
+    paramsMock.outputTupleDesc.push_back(attrDesc);
+    paramsMock.nRows = 10000; // at least two buffers
+
+    ExecStreamEmbryo mockStreamEmbryo1;
+    mockStreamEmbryo1.init(new MockProducerExecStream(),paramsMock);
+    mockStreamEmbryo1.getStream()->setName("MockProducerExecStream1");
+
+    ExecStreamEmbryo mockStreamEmbryo2;
+    mockStreamEmbryo2.init(new MockProducerExecStream(),paramsMock);
+    mockStreamEmbryo2.getStream()->setName("MockProducerExecStream2");
+
+    MergeExecStreamParams paramsMerge;
+    paramsMerge.outputTupleDesc.push_back(attrDesc);
+        
+    ExecStreamEmbryo mergeStreamEmbryo;
+    mergeStreamEmbryo.init(new MergeExecStream(),paramsMerge);
+    mergeStreamEmbryo.getStream()->setName("MergeExecStream");
+    
+    SharedExecStream pOutputStream = prepareConfluenceGraph(
+        mockStreamEmbryo1,
+        mockStreamEmbryo2,
+        mergeStreamEmbryo);
+
+    verifyZeroedOutput(
+        *pOutputStream,
+        2*paramsMock.nRows*sizeof(int32_t));
+}
+
 void ExecStreamTestSuite::testSegBufferExecStream()
 {
     StandardTypeDescriptorFactory stdTypeFactory;
@@ -139,6 +177,8 @@ void ExecStreamTestSuite::testSegBufferExecStream()
 void ExecStreamTestSuite::testCartesianJoinExecStream(
     uint nRowsOuter,uint nRowsInner)
 {
+    // simulate SELECT * FROM t1, t2
+    
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_32));

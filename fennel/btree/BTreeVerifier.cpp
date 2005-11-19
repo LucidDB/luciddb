@@ -79,8 +79,8 @@ PageId BTreeVerifier::verifyNode(
         assert(node.height == expectedHeight);
     }
 
-    assert(node.rightSibling == getRightSibling(pageId));
     if (strict) {
+        assert(node.rightSibling == getRightSibling(pageId));
         assert(node.rightSibling == expectedRightSibling);
     } else {
         if (node.rightSibling != expectedRightSibling) {
@@ -106,7 +106,6 @@ PageId BTreeVerifier::verifyNode(
             if (c > 0) {
                 nodeAccessor.dumpNode(std::cerr,node,pageId);
             }
-            
             assert(c <= 0);
             // TODO:  for unique, assert(c == 0)
         }

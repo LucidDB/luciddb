@@ -45,12 +45,25 @@ public abstract class UnionRelBase extends SetOpRel
     // implement RelNode
     public double getRows()
     {
-        double dRows = 0;
-        for (int i = 0; i < getInputs().length; i++) {
-            dRows += getInputs()[i].getRows();
-        }
+        double dRows = estimateRowCount(this);
         if (isDistinct()) {
             dRows *= 0.5;
+        }
+        return dRows;
+    }
+
+    /**
+     * Helper method for computing row count for UNION ALL.
+     *
+     * @param rel node representing UNION ALL
+     *
+     * @return estimated row count for rel
+     */
+    public static double estimateRowCount(RelNode rel)
+    {
+        double dRows = 0;
+        for (int i = 0; i < rel.getInputs().length; i++) {
+            dRows += rel.getInputs()[i].getRows();
         }
         return dRows;
     }

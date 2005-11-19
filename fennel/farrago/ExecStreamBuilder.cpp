@@ -58,7 +58,7 @@ void ExecStreamBuilder::buildStreamGraph(
     for (; pStreamDef; ++pStreamDef) {
         buildStreamInputs(*pStreamDef);
         
-        if (!pStreamDef->getConsumer() && assumeOutputFromSinks) {
+        if (!pStreamDef->getOutputFlow() && assumeOutputFromSinks) {
             // Streams with no consumer are read directly by clients.  They 
             // are expected to support producer provisioned results.
             std::string name = pStreamDef->getName();
@@ -86,8 +86,9 @@ void ExecStreamBuilder::buildStreamInputs(
     ProxyExecutionStreamDef &streamDef)
 {
     std::string name = streamDef.getName();
-    SharedProxyExecutionStreamDef pInput = streamDef.getInput();
-    for (; pInput; ++pInput) {
+    SharedProxyExecStreamDataFlow pInputFlow = streamDef.getInputFlow();
+    for (; pInputFlow; ++pInputFlow) {
+        SharedProxyExecutionStreamDef pInput = pInputFlow->getProducer();
         std::string inputName = pInput->getName();
         graphEmbryo.addDataflow(inputName, name);
     }

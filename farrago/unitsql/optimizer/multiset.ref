@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/optimizer/multiset.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/multiset.sql#1 $
 0: jdbc:farrago:> -- Test multiset related queries
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';
@@ -7,19 +7,18 @@
 0: jdbc:farrago:> --alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for select*from unnest(multiset[1,2]);
-+-----------------------------------------+
-|                 column0                 |
-+-----------------------------------------+
-| FennelToIteratorConverter               |
-|   FennelPullUncollectRel                |
-|     FennelPullCollectRel                |
-|       IteratorToFennelConverter         |
-|         IterConcatenateRel(all=[true])  |
-|           IterCalcRel(EXPR$0=[1])       |
-|             IterOneRowRel               |
-|           IterCalcRel(EXPR$0=[2])       |
-|             IterOneRowRel               |
-+-----------------------------------------+
++------------------------------------+
+|              column0               |
++------------------------------------+
+| FennelToIteratorConverter          |
+|   FennelPullUncollectRel           |
+|     FennelPullCollectRel           |
+|       FennelMergeRel               |
+|         FennelCalcRel(EXPR$0=[1])  |
+|           FennelOneRowRel          |
+|         FennelCalcRel(EXPR$0=[2])  |
+|           FennelOneRowRel          |
++------------------------------------+
 0: jdbc:farrago:> explain plan for select*from unnest(multiset[1+2,3*4/5]);
 +------------------------------------------------+
 |                    column0                     |
@@ -27,12 +26,11 @@
 | FennelToIteratorConverter                      |
 |   FennelPullUncollectRel                       |
 |     FennelPullCollectRel                       |
-|       IteratorToFennelConverter                |
-|         IterConcatenateRel(all=[true])         |
-|           IterCalcRel(EXPR$0=[+(1, 2)])        |
-|             IterOneRowRel                      |
-|           IterCalcRel(EXPR$0=[/(*(3, 4), 5)])  |
-|             IterOneRowRel                      |
+|       FennelMergeRel                           |
+|         FennelCalcRel(EXPR$0=[+(1, 2)])        |
+|           FennelOneRowRel                      |
+|         FennelCalcRel(EXPR$0=[/(*(3, 4), 5)])  |
+|           FennelOneRowRel                      |
 +------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: at the time of adding this, aggregation was not fully supported
@@ -92,16 +90,13 @@
 |             FennelOneRowRel                                 |
 |       FennelPullCollectRel                                  |
 |         FennelSortRel(key=[[0]], discardDuplicates=[true])  |
-|           IteratorToFennelConverter                         |
-|             IterConcatenateRel(all=[true])                  |
-|               FennelToIteratorConverter                     |
-|                 FennelPullUncollectRel                      |
-|                   FennelCalcRel(output$cor0=[$cor0])        |
-|                     FennelOneRowRel                         |
-|               FennelToIteratorConverter                     |
-|                 FennelPullUncollectRel                      |
-|                   FennelCalcRel(output$cor1=[$cor1])        |
-|                     FennelOneRowRel                         |
+|           FennelMergeRel                                    |
+|             FennelPullUncollectRel                          |
+|               FennelCalcRel(output$cor0=[$cor0])            |
+|                 FennelOneRowRel                             |
+|             FennelPullUncollectRel                          |
+|               FennelCalcRel(output$cor1=[$cor1])            |
+|                 FennelOneRowRel                             |
 +-------------------------------------------------------------+
 0: jdbc:farrago:> explain plan for values multiset[1] multiset union all multiset[2];
 +--------------------------------------------------------+
@@ -118,16 +113,13 @@
 |           FennelCalcRel(EXPR$0=[2])                    |
 |             FennelOneRowRel                            |
 |       FennelPullCollectRel                             |
-|         IteratorToFennelConverter                      |
-|           IterConcatenateRel(all=[true])               |
-|             FennelToIteratorConverter                  |
-|               FennelPullUncollectRel                   |
-|                 FennelCalcRel(output$cor0=[$cor0])     |
-|                   FennelOneRowRel                      |
-|             FennelToIteratorConverter                  |
-|               FennelPullUncollectRel                   |
-|                 FennelCalcRel(output$cor1=[$cor1])     |
-|                   FennelOneRowRel                      |
+|         FennelMergeRel                                 |
+|           FennelPullUncollectRel                       |
+|             FennelCalcRel(output$cor0=[$cor0])         |
+|               FennelOneRowRel                          |
+|           FennelPullUncollectRel                       |
+|             FennelCalcRel(output$cor1=[$cor1])         |
+|               FennelOneRowRel                          |
 +--------------------------------------------------------+
 0: jdbc:farrago:> explain plan for values multiset[1] multiset union distinct multiset[2];
 +-------------------------------------------------------------+
@@ -145,16 +137,13 @@
 |             FennelOneRowRel                                 |
 |       FennelPullCollectRel                                  |
 |         FennelSortRel(key=[[0]], discardDuplicates=[true])  |
-|           IteratorToFennelConverter                         |
-|             IterConcatenateRel(all=[true])                  |
-|               FennelToIteratorConverter                     |
-|                 FennelPullUncollectRel                      |
-|                   FennelCalcRel(output$cor0=[$cor0])        |
-|                     FennelOneRowRel                         |
-|               FennelToIteratorConverter                     |
-|                 FennelPullUncollectRel                      |
-|                   FennelCalcRel(output$cor1=[$cor1])        |
-|                     FennelOneRowRel                         |
+|           FennelMergeRel                                    |
+|             FennelPullUncollectRel                          |
+|               FennelCalcRel(output$cor0=[$cor0])            |
+|                 FennelOneRowRel                             |
+|             FennelPullUncollectRel                          |
+|               FennelCalcRel(output$cor1=[$cor1])            |
+|                 FennelOneRowRel                             |
 +-------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- shouldnt fail but does due to current non-intersect support

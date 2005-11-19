@@ -144,13 +144,21 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
             // use Fennel for calculating expressions
             assert fennelEnabled;
             planner.addRule(FennelCalcRule.instance);
+
+            // REVIEW jvs 13-Nov-2005: I put FennelUnionRule here instead of in
+            // fennelEnabled block above because I want to be able to test
+            // both implementations, and currently the only way to control
+            // that is via the calc parameter.  Probably need a more
+            // general parameter controlling all rels in case of
+            // overlap, not just calc.
+            planner.addRule(FennelUnionRule.instance);
         }
 
         if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_JAVA)
                 || calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO)) {
             // use Java code generation for calculating expressions
             planner.addRule(IterRules.IterCalcRule.instance);
-
+            
             // TODO jvs 6-May-2004:  these should be redundant now, but when
             // I remove them, some queries fail.  Find out why.
             planner.addRule(IterRules.ProjectToIteratorRule.instance);
@@ -162,6 +170,9 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
             // decomposing rels into mixed Java/Fennel impl
             planner.addRule(FennelCalcRule.instance);
             planner.addRule(FarragoAutoCalcRule.instance);
+
+            // see REVIEW 13-Nov-2005 comment above
+            planner.addRule(FennelUnionRule.instance);
         }
 
         if (fennelEnabled) {

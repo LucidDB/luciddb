@@ -41,7 +41,7 @@ public abstract class IterRules
     //~ Inner Classes ---------------------------------------------------------
 
     /**
-     * Rule to converts a {@link UnionRel} to {@link
+     * Rule to convert a {@link UnionRel} to {@link
      * CallingConvention#ITERATOR iterator calling convention}.
      */
     public static class UnionToIteratorRule extends ConverterRule

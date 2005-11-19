@@ -68,8 +68,10 @@ public class FennelPullCollectRel extends FennelSingleRel
         FemCollectTupleStreamDef collectStreamDef =
             repos.newFemCollectTupleStreamDef();
 
-        collectStreamDef.getInput().add(
-            implementor.visitFennelChild((FennelRel) getChild()));
+        implementor.addDataFlowFromProducerToConsumer(
+            implementor.visitFennelChild((FennelRel) getChild()),
+            collectStreamDef);
+        
         FemTupleDescriptor outTupleDesc = repos.newFemTupleDescriptor();
         RelDataType type=
             getCluster().getTypeFactory().createSqlType(

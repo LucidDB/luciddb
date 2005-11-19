@@ -78,6 +78,9 @@ typedef JniProxyIter<ProxyDbHandle> SharedProxyDbHandle;
 class ProxyEndTxnCmd;
 typedef JniProxyIter<ProxyEndTxnCmd> SharedProxyEndTxnCmd;
 
+class ProxyExecStreamDataFlow;
+typedef JniProxyIter<ProxyExecStreamDataFlow> SharedProxyExecStreamDataFlow;
+
 class ProxyExecutionStreamDef;
 typedef JniProxyIter<ProxyExecutionStreamDef> SharedProxyExecutionStreamDef;
 
@@ -210,12 +213,12 @@ class ProxyExecutionStreamDef
 public:
 std::string getName();
 static jmethodID meth_getName;
-SharedProxyExecutionStreamDef getInput();
-static jmethodID meth_getInput;
 SharedProxyTupleDescriptor getOutputDesc();
 static jmethodID meth_getOutputDesc;
-SharedProxyExecutionStreamDef getConsumer();
-static jmethodID meth_getConsumer;
+SharedProxyExecStreamDataFlow getOutputFlow();
+static jmethodID meth_getOutputFlow;
+SharedProxyExecStreamDataFlow getInputFlow();
+static jmethodID meth_getInputFlow;
 };
 
 class ProxyTupleStreamDef
@@ -464,6 +467,16 @@ class ProxyDbHandle
 : virtual public JniProxy, virtual public ProxyHandle
 {
 public:
+};
+
+class ProxyExecStreamDataFlow
+: virtual public JniProxy
+{
+public:
+SharedProxyExecutionStreamDef getConsumer();
+static jmethodID meth_getConsumer;
+SharedProxyExecutionStreamDef getProducer();
+static jmethodID meth_getProducer;
 };
 
 class ProxyGenericStreamDef
@@ -825,6 +838,8 @@ virtual void visit(ProxyDatabaseParam &)
 virtual void visit(ProxyDbHandle &)
 { unhandledVisit(); }
 virtual void visit(ProxyEndTxnCmd &)
+{ unhandledVisit(); }
+virtual void visit(ProxyExecStreamDataFlow &)
 { unhandledVisit(); }
 virtual void visit(ProxyExecutionStreamDef &)
 { unhandledVisit(); }

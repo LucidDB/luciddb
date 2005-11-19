@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+// $Id$
+// LucidDB is a DBMS optimized for business intelligence.
+// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005-2005 The Eigenbase Project
+//
+// This program is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation; either version 2 of the License, or (at your option)
+// any later version approved by The Eigenbase Project.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//  
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+-->
+
+<!DOCTYPE project [
+
+<!ENTITY FarragoProps
+"
+-Dnet.sf.farrago.home=${farrago.dir}
+-Dnet.sf.farrago.catalog=${project.catalog.dir}
+-Djava.util.logging.config.file=${project.trace.propfile}
+-Dnet.sf.farrago.defaultSessionFactoryLibraryName=class:com.lucidera.farrago.LucidDbSessionFactory
+">
+
+]>
+
+<project name="luciddb" basedir="." default="unspecified">
+  <dirname property="luciddb.dir" file="${ant.file.luciddb}" />
+
+  <!-- assume common parent of fennel, farrago and luciddb  -->
+  <property name="open.dir" location=".."/>
+  <fail unless="open.dir" />
+  <property name="farrago.dir" location="${open.dir}/farrago"/>
+  <property name="fennel.dir" location="${open.dir}/fennel"/>
+
+  <property environment="env" />
+  <property file="${farrago.dir}/initBuild.properties" />
+  <property file="${farrago.dir}/customBuild.properties" />
+
+  <!-- directory in which classes are built -->
+  <property name="classes.dir" location="${luciddb.dir}/classes" />
+
+  <!-- directory in which catalog data is stored -->
+  <property name="catalog.dir" location="${luciddb.dir}/catalog" />
+
+  <!-- directory in which catalog XMI files are stored -->
+  <property name="xmi.dir" location="${catalog.dir}/xmi" />
+
+  <!-- directory in which catalog data is backed up -->
+  <property name="catalog.backup.dir" location="${catalog.dir}/backup" />
+
+  <property name="trace.dir" location="${luciddb.dir}/trace" />
+
+  <property name="LucidDbTrace.properties" 
+    location="${trace.dir}/LucidDbTrace.properties" />
+
+  <property name="LucidDbTrace.log" location="${trace.dir}/LucidDbTrace.log" />
+
+  <!-- override Farrago -->
+  <property name="project.catalog.dir" location="${catalog.dir}" />
+  <property name="project.trace.propfile" location="${AlsTrace.properties}" />
+
+  <import file="${open.dir}/farrago/buildMacros.xml" />
+
+  <!-- directory for JUnit run output -->
+  <property name="testlog.dir" location="${luciddb.dir}/testlog"/>
+
+  <!-- Template developer configuration file. -->
+  <property name="FarragoConfTemplate.xmi"
+    location="${farrago.xmi.dir}/FarragoConfTemplate.xmi"/>
+
+  <!-- Developer configuration file generated from template. -->
+  <property name="LucidDbConf.xmi"
+    location="${xmi.dir}/LucidDbConf.xmi"/>
+
+  <!-- creates catalog and populates with initial metadata -->
+  <target name="createCatalog">
+    <antcall target="makeOutputDirs"/>
+    <antcall target="copyFarragoCatalog"/>
+    <antcall target="importConfig"/>
+    <antcall target="configureTrace"/>
+    <antcall target="populateCatalog"/>
+    <antcall target="runInitSql"/>
+    <antcall target="backupCatalog"/>
+  </target>
+
+  <!-- Copies the Farrago unconfigured catalog to our catalog directory. -->
+  <target name="copyFarragoCatalog" depends="cleanCatalogData">
+    <copy todir="${catalog.dir}" file="${farrago.ReposStorage.propfile}">
+      <fileset dir="${farrago.catalog.unconfigured.dir}" />
+    </copy>
+  </target>
+
+  <!-- set up the default trace configuration file -->
+  <target name="configureTrace">
+    <mkdir dir="${trace.dir}"/>
+    <farrago.configureTrace
+      propFile="${LucidDbTrace.properties}" logFile="${LucidDbTrace.log}"/>
+  </target>
+
+  <!-- delete catalog data only -->
+  <target name="cleanCatalogData">
+    <mkdir dir="${catalog.dir}"/>
+    <farrago.cleanCatalog catalogDir="${catalog.dir}"/>
+  </target>
+
+  <!-- generate developer configuration file and import it -->
+  <target name="importConfig">
+    <mkdir dir="${xmi.dir}"/>
+    <copy file="${FarragoConfTemplate.xmi}"
+      tofile="${LucidDbConf.xmi}" overwrite="true"/>
+    <replace file="${LucidDbConf.xmi}">
+      <replacefilter token="@checkpointInterval@" value="0"/>
+      <replacefilter token="@cachePageSize@" value="32768"/>
+      <replacefilter token="@cachePagesMax@" value="5000"/>
+      <replacefilter token="@cachePagesInit@" value="5000"/>
+      <replacefilter token="@fennel.disabled@" value="${fennel.disabled}"/>
+      <replacefilter token="@resourceDir@" value="$${FARRAGO_HOME}/catalog/fennel"/>
+    </replace>
+    <farrago.mdrFork target="forked_importConfig"/>
+  </target>
+
+  <target name="forked_importConfig" depends="farrago.mdr_taskdef">
+    <mdr>
+      <readXMI
+        file="${LucidDbConf.xmi}"
+        extent="FarragoCatalog"/>
+    </mdr>
+  </target>
+
+  <!-- back up the current catalog contents -->
+  <target name="backupCatalog">
+    <farrago.backupCatalog 
+      catalogDir="${catalog.dir}" backupDir="${catalog.backup.dir}"/>
+  </target>
+
+  <!-- restore catalog from backup -->
+  <target name="restoreCatalog" depends="cleanCatalogData">
+    <copy todir="${catalog.dir}">
+      <fileset dir="${catalog.backup.dir}"/>
+    </copy>
+  </target>
+
+  <!-- write initial metadata to catalog -->
+  <target name="populateCatalog">
+    <farrago.javaExec classpathref="farrago.run.classpath"
+      classname="net.sf.farrago.db.FarragoDatabase"/>
+  </target>
+
+  <!-- create various output directories -->
+  <target name="makeOutputDirs">
+    <mkdir dir="${classes.dir}"/>
+    <mkdir dir="${testlog.dir}"/>
+    <copy todir="${classes.dir}" file="${xmi.dir}/FarragoRelease.properties"
+      overwrite="true"/>
+  </target>
+
+  <target name="runInitSql" >
+    <filelist dir="${farrago.initsql.dir}" id="filelist.initsql"
+      files="createStorageWrappers.sql,createSqljSchema.sql,createJdbcViews.sql"/>
+    <pathconvert property="filelist.initsql" refid="filelist.initsql"
+      pathsep="${line.separator}" dirsep="${file.separator}" />
+    <junit printsummary="yes" fork="yes" haltonerror="yes" haltonfailure="yes"
+      tempdir="${testlog.dir}">
+      <classpath refid="farrago.sqlline.classpath"/>
+      <jvmarg line="${assertions.jvmarg}"/>
+      <jvmarg line="&FarragoProps;"/>
+      <sysproperty key="net.sf.farrago.fileset.unitsql"
+        value="${filelist.initsql}"/>
+      <formatter type="plain"/>
+      <formatter type="xml"/> <!-- for integration builds -->
+      <test todir="${testlog.dir}" name="net.sf.farrago.test.FarragoSqlTest" />
+    </junit>
+  </target>
+
+</project>
