@@ -105,7 +105,7 @@
     <antcall target="shortreg"/>
   </target>
 
-  <target name="compile">
+  <target name="compile" depends="clean">
     <!-- compile farrago first -->    
     <ant dir="${farrago.dir}" target="compile"/>
 
@@ -127,6 +127,14 @@
     <antcall target="populateCatalog"/>
     <antcall target="runInitSql"/>
     <antcall target="backupCatalog"/>
+  </target>
+
+  <target name="clean">
+    <antcall target="cleanTestLogs"/>
+    <antcall target="cleanCatalogData"/>
+    <delete quiet="true">
+      <fileset dir="${classes.dir}" includes="**/*.java"/>
+    </delete>
   </target>
 
   <!-- Copies the Farrago unconfigured catalog to our catalog directory. -->
@@ -279,5 +287,57 @@
     <delete quiet="true" file="${LucidDbTrace.log}"/>
   </target>
 
+  <!-- Experimental Area: Let's see about creating fine-grained tests with dependencies specified -->
+
+
+  <!-- generic ant target that is parameterized by sql file -->
+  <target name="run-sql-test">
+    <echo>
+      sql.files is ${sql.files}
+    </echo>
+    <junit printsummary="yes" fork="yes" haltonerror="yes" haltonfailure="yes"
+      tempdir="${testlog.dir}">
+      <classpath refid="test.classpath"/>
+      <jvmarg line="${assertions.jvmarg}"/>
+      <jvmarg line="&FarragoProps;"/>
+      <sysproperty key="net.sf.farrago.fileset.unitsql"
+        value="${sql.files}"/>
+      <formatter type="plain"/>
+      <formatter type="xml"/> <!-- for integration builds -->
+      <test todir="${testlog.dir}" name="com.lucidera.luciddb.test.LucidDbSqlTest" />
+    </junit>
+  </target>
+
+  <!-- joinEqSanity test - Basic equi-join tests -->
+  <target name="test-join-eq-sanity" depends="test-setup">
+    <antcall target="run-sql-test">
+      <param name="sql.files" value="${testlog.dir}/shortreg/joinEqSanity.sql"/>
+    </antcall>
+  </target>
+
+  <!-- joinEqSanity test - Basic equi-join tests -->
+  <target name="test-join-eq" depends="test-setup">
+    <antcall target="run-sql-test">
+      <param name="sql.files" value="${testlog.dir}/shortreg/joinEq.sql"/>
+    </antcall>
+  </target>
+
+  <!-- joinRng test - Range join tests. -->
+  <target name="test-join-rng" depends="test-setup">
+    <antcall target="run-sql-test">
+      <param name="sql.files" value="${testlog.dir}/shortreg/joinRng.sql"/>
+    </antcall>
+  </target>
+
+  <target name="test-setup" depends="compile,createCatalog,initSqlTests" >
+    <filelist dir="${testlog.dir}/shortreg" id="filelist.setup"
+      files="creschema.sql,locationload.sql,deptload.sql,empload.sql,
+        customersload.sql,productsload.sql,salesload.sql"/>
+    <pathconvert property="filelist.setup" refid="filelist.setup"
+      pathsep="${line.separator}" dirsep="${file.separator}" />
+    <antcall target="run-sql-test">
+      <param name="sql.files" value="${filelist.setup}"/>
+    </antcall>
+  </target>
 
 </project>
