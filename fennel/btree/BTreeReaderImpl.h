@@ -147,8 +147,10 @@ inline bool BTreeReader::searchForKeyTemplate(
         } else {
             // have to consult our own sibling to find the successor
             // child
+            // need to get the pageId first, then unlock.
+            PageId rightSiblingPageId = node.rightSibling;
             pageLock.unlock();
-            rightSearchTerminator = getFirstChild(node.rightSibling);
+            rightSearchTerminator = getFirstChild(rightSiblingPageId);
         }
     }
 }
