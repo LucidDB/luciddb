@@ -1,10 +1,9 @@
 /*
 // $Id$
-// Fennel is a library of data storage and processing components.
+// Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2005 The Eigenbase Project
 // Copyright (C) 2005-2005 Disruptive Tech
 // Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 1999-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -21,36 +20,24 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#ifndef Fennel_TupleFormat_Included
-#define Fennel_TupleFormat_Included
+package org.eigenbase.sql;
 
-FENNEL_BEGIN_NAMESPACE
+import org.eigenbase.util.EnumeratedValues;
 
 /**
- * TupleFormat enumerates the ways in which a tuple can be marshalled.
+ * Defines the keywords which can occur immediately after the "INSERT"
+ * keyword.  Standard SQL has no such keywords.  This enumeration exists
+ * only to allow extension projects to define them.
  */
-enum TupleFormat 
+public class SqlInsertKeyword extends EnumeratedValues.BasicValue
 {
-    /**
-     * Standard tuple format.
-     */
-    TUPLE_FORMAT_STANDARD,
-        
-    /**
-     * Treat variable-width  attributes as fixed width (using maximum width).
-     * Allows nulls.
-     */
-    TUPLE_FORMAT_ALL_FIXED,
+    protected SqlInsertKeyword(String name, int ordinal)
+    {
+        super(name, ordinal, null);
+    }
 
-    /**
-     * Same as standard, except all integers are stored in network byte
-     * order.
-     */
-    TUPLE_FORMAT_NETWORK
-};
+    public static final EnumeratedValues enumeration =
+        new EnumeratedValues(new SqlInsertKeyword[] { });
+}
 
-FENNEL_END_NAMESPACE
-
-#endif
-
-// End TupleFormat.h
+// End SqlInsertKeyword.java

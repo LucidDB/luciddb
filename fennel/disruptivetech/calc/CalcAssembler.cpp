@@ -34,7 +34,7 @@ using namespace boost;
 CalcAssembler::~CalcAssembler()
 {
     for (uint i = RegisterReference::EFirstSet; i < RegisterReference::ELastSet; i++) {
-        if (mCalc->mRegisterTuple[i] == NULL)
+        if (mCalc->mRegisterSetBinding[i] == NULL)
         {
             // We did NOT successfully bind this register set to the calculator
             // Will need to delete it on our own
@@ -440,13 +440,13 @@ TupleData* CalcAssembler::createTupleData(TupleDescriptor const& tupleDesc, Fixe
     /* Prepare tuples - should only do this for literal/local */
     /* Compute memory layout and access */
     TupleAccessor tupleAccessor;
-    tupleAccessor.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
+    tupleAccessor.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
 
     /* Allocate memory */
     *buf = new FixedBuffer[tupleAccessor.getMaxByteCount()];
 
     /* Link memory - Who will delete this????? */
-    tupleAccessor.setCurrentTupleBuf(*buf);
+    tupleAccessor.setCurrentTupleBuf(*buf, false);
   
     /* Create Tuple Data - to be deleted by the calculator */
     TupleData* pTupleData = new TupleData(tupleDesc);

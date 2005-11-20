@@ -30,9 +30,48 @@ using boost::format;
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+RegisterSetBinding::~RegisterSetBinding()
+{
+    if (ownTheBase)
+        delete base;
+    delete datumAddr;
+}
+
+RegisterSetBinding::RegisterSetBinding(TupleData* base, bool ownIt)
+    :ownTheBase(ownIt), base(base)
+{
+    assert(base);
+    ncols = base->size();
+    datumAddr = new PConstBuffer[ncols];
+    for (int i = 0; i < ncols; i++) {
+        const TupleDatum& baseCol = (*base)[i];
+        datumAddr[i] = baseCol.pData;
+    }
+}
+
+RegisterSetBinding::RegisterSetBinding(TupleData* base, const TupleData* shadow, bool ownIt)
+    :ownTheBase(ownIt), base(base)
+{
+    assert(base);
+    ncols = base->size();
+    assert(shadow->size() == ncols);
+    datumAddr = new PConstBuffer[ncols];
+    for (int i = 0; i < ncols; i++) {
+        const TupleDatum& baseCol = (*base)[i];
+        const TupleDatum& shadowCol = (*shadow)[i];
+        datumAddr[i] = shadowCol.pData;
+        // check that SHADOW coincides with BASE
+        if (baseCol.pData)
+            assert(baseCol.pData == shadowCol.pData);
+        else
+            assert(shadowCol.pData);
+    }
+
+}
+
 void 
 RegisterReference::setCalc(Calculator* calcP) {
-    mRegisterSetP = calcP->mRegisterTuple;
+    mRegisterSetP = calcP->mRegisterSetBinding;
     mRegisterSetDescP = calcP->mRegisterSetDescriptor;
     mResetP = &(calcP->mRegisterReset);
     mPDynamicParamManager = calcP->getDynamicParamManager();
@@ -45,15 +84,9 @@ RegisterReference::setCalc(Calculator* calcP) {
 void 
 RegisterReference::cachePointer() {
     if (mProp & (EPropCachePointer|EPropPtrReset)) {
-        assert(mRegisterSetP);
-        assert(mSetIndex < ELastSet);
-        assert(mRegisterSetP[mSetIndex]);
-        assert(mRegisterSetDescP[mSetIndex]);
-
-        TupleData* tupleDataP = mRegisterSetP[mSetIndex];
-        TupleDatum* datumP = &((*tupleDataP)[mIndex]);
-        mPData = const_cast<PBuffer>(datumP->pData);
-        mCbData = datumP->cbData;
+        TupleDatum *bind = getBinding();
+        mPData = const_cast<PBuffer>(bind->pData);
+        mCbData = bind->cbData;
 
         // Next 3 lines clarify complex 4th line:
         // TupleDescriptor* tupleDescP = mRegisterSetDescP[mSetIndex];
@@ -98,6 +131,6 @@ RegisterReference::toString() const
 
 
 
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/disruptivetech/calc/RegisterReference.cpp#2 $");
 
 // End RegisterReference.cpp

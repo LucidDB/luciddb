@@ -26,6 +26,7 @@ package org.eigenbase.sql;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -37,22 +38,28 @@ public class SqlInsert extends SqlCall
     //~ Static fields/initializers --------------------------------------------
 
     // constants representing operand positions
-    public static final int TARGET_TABLE_OPERAND = 0;
-    public static final int SOURCE_OPERAND = 1;
-    public static final int TARGET_COLUMN_LIST_OPERAND = 2;
-    public static final int SOURCE_SELECT_OPERAND = 3;
-    public static final int OPERAND_COUNT = 4;
+    public static final int KEYWORDS_OPERAND = 0;
+    public static final int TARGET_TABLE_OPERAND = 1;
+    public static final int SOURCE_OPERAND = 2;
+    public static final int TARGET_COLUMN_LIST_OPERAND = 3;
+    public static final int SOURCE_SELECT_OPERAND = 4;
+    public static final int OPERAND_COUNT = 5;
 
     //~ Constructors ----------------------------------------------------------
 
     public SqlInsert(
         SqlSpecialOperator operator,
+        SqlNodeList keywords,
         SqlIdentifier targetTable,
         SqlNode source,
         SqlNodeList columnList,
         SqlParserPos pos)
     {
         super(operator, new SqlNode[OPERAND_COUNT], pos);
+
+        Util.pre(keywords != null, "keywords != null");
+    
+        operands[KEYWORDS_OPERAND] = keywords;
         operands[TARGET_TABLE_OPERAND] = targetTable;
         operands[SOURCE_OPERAND] = source;
         operands[TARGET_COLUMN_LIST_OPERAND] = columnList;
@@ -96,6 +103,20 @@ public class SqlInsert extends SqlCall
     {
         return (SqlNodeList) operands[TARGET_COLUMN_LIST_OPERAND];
     }
+
+    public final SqlNode getModifierNode(SqlInsertKeyword modifier)
+    {
+        final SqlNodeList keywords = (SqlNodeList) operands[KEYWORDS_OPERAND];
+        for (int i = 0; i < keywords.size(); i++) {
+            SqlInsertKeyword keyword = 
+                (SqlInsertKeyword)SqlLiteral.symbolValue(keywords.get(i));
+            if (keyword == modifier) {
+                return keywords.get(i);
+            }
+        }
+        return null;
+    }
+
 
     // implement SqlNode
     public void unparse(

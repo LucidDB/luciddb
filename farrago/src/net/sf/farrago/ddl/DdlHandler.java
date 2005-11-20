@@ -574,7 +574,9 @@ public abstract class DdlHandler
         String defaultExpression)
     {
         String sql = "VALUES(" + defaultExpression + ")";
-        FarragoSessionStmtContext stmtContext = session.newStmtContext();
+        
+        // null param def factory okay because we won't use dynamic params
+        FarragoSessionStmtContext stmtContext = session.newStmtContext(null);
         stmtContext.prepare(sql, false);
         RelDataType rowType = stmtContext.getPreparedRowType();
         assert (rowType.getFieldList().size() == 1);

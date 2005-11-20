@@ -4,66 +4,64 @@
 // Copyright (C) 2005-2005 The Eigenbase Project
 // Copyright (C) 2005-2005 Disruptive Tech
 // Copyright (C) 2005-2005 LucidEra, Inc.
-// Portions Copyright (C) 2003-2005 John V. Sichi
+// Portions Copyright (C) 2004-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-//
+// 
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//
+// 
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 package net.sf.farrago.ddl;
 
-import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.session.*;
-
-import java.util.*;
-
-import org.eigenbase.sql.*;
+import org.eigenbase.sql.SqlIdentifier;
 
 /**
- * DdlCreateStmt represents a DDL CREATE statement of any kind.
+ * DdlReplaceOptions contains attributes of a CREATE OR REPLACE statement.
  *
- * @author John V. Sichi
+ * @author Jason Ouellette
  * @version $Id$
  */
-public class DdlCreateStmt extends DdlStmt
+public class DdlReplaceOptions
 {
-    DdlReplaceOptions replaceOptions;
-    
+    //~ Instance fields -------------------------------------------------------
+
+    private boolean isReplace;
+    private SqlIdentifier newName;
+
     //~ Constructors ----------------------------------------------------------
 
-    /**
-     * Constructs a new DdlCreateStmt.
-     *
-     * @param createdElement top-level element created by this stmt
-     */
-    public DdlCreateStmt(CwmModelElement createdElement, DdlReplaceOptions replaceOptions)
+    public DdlReplaceOptions()
     {
-        super(createdElement);
-        this.replaceOptions = replaceOptions;
     }
 
     //~ Methods ---------------------------------------------------------------
 
-    // implement DdlStmt
-    public void visit(DdlVisitor visitor)
+    public boolean isReplace()
     {
-        visitor.visit(this);
+        return isReplace;
     }
-    
-    public DdlReplaceOptions getReplaceOptions() { return replaceOptions; }
-    
+
+    public SqlIdentifier getNewName()
+    {
+        return newName;
+    }
+
+    public void setIsReplace(boolean isReplace)
+    {
+        this.isReplace = isReplace;
+    }
+
+    public void setNewName(SqlIdentifier newName)
+    {
+        this.newName = newName;
+    }
 }
-
-
-// End DdlCreateStmt.java

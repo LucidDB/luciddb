@@ -6,7 +6,15 @@ set -e
 
 fennelDir=$(dirname $0)/..
 farragoDir=$(dirname $0)/../../farrago
-resgenDir=$(dirname $0)/../../util/resgen
+
+# NOTE jvs 16-Nov-2005:  I am disabling this because (a)
+# the assumption about the Perforce mapping for //open/util relative
+# to fennel is unwarranted (it's not required to have this mapped,
+# and it isn't even there after unpacking a src distribution tarball,
+# and once a machine has multiple branches on it, it gets more
+# complicated) and (b) the check should be done as part of
+# the util build, not part of the main Eigenbase build.
+# resgenDir=$(dirname $0)/../../util/resgen
 
 # Check preambles of all Java files. Which copyright notices are
 # required depends upon the zone of the file:
@@ -17,7 +25,10 @@ resgenDir=$(dirname $0)/../../util/resgen
 # * Eigenbase: All other files must have Eigenbase, LucidEra and
 #   Disruptive Tech copyright notices.
 
-/usr/bin/find $farragoDir/src $resgenDir/src -name \*.java |
+# NOTE jvs 16-Nov-2005:  I removed $resgenDir/src from the find directory
+# list below for the reasons given above.
+
+/usr/bin/find $farragoDir/src -name \*.java |
 grep -v -F \
 'farrago/src/net/sf/farrago/FarragoMetadataFactory.java
 farrago/src/net/sf/farrago/FarragoMetadataFactoryImpl.java

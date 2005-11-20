@@ -411,8 +411,8 @@ sets TupleDatum.pData to reference it.
 <p>
 
 A third storage format is also supported:
-TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED.  This format precludes both NULL
-values and variable-width values.  It is mostly useful for setting up
+TUPLE_FORMAT_ALL_FIXED.  This format treats all values as fixed-width
+(a variable-width attribute is taken at its maximum width).  It is mostly useful for setting up
 a TupleData instance with a preallocated staging area.  For example:
 
 <pre><code>
@@ -421,10 +421,12 @@ void storeLocalhostMachineTuple(FILE *file)
     TupleAccessor fixedAccessor;
     fixedAccessor.compute(
         machineTupleDesc,
-        TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
+        TUPLE_FORMAT_ALL_FIXED);
     boost::scoped_array<byte> tupleBuffer =
         new byte[fixedAccessor.getMaxByteCount()];
-    fixedAccessor.setCurrentTupleBuffer(tupleBuffer.get());
+    // the 2nd arg 'valid = false' tells the accessor not to load the offsets
+    // and bitflags  from the new buffer, because they contain garbage.
+    fixedAccessor.setCurrentTupleBuf(tupleBuffer.get(), false);
 
     // this is a little weird; the purpose of this unmarshal isn't actually
     // to read existing data values; instead, it's to set machineTupleData
@@ -489,7 +491,7 @@ public:
 
     char const *getMachineName(byte const *pStoredTuple)
     {
-        tupleAccessor.setCurrentTupleBuffer(pStoredTuple);
+        tupleAccessor.setCurrentTupleBuf(pStoredTuple);
         projAccessor.unmarshal(projData);
         return (char const *) (projData[0].pData);
     }
@@ -501,7 +503,7 @@ Notes:
 <ul>
 
 <li>projAccessor is "bound" to tupleAccessor.  This is why after we
-call tupleAccessor.setCurrentTupleBuffer in getMachineName, projAccessor
+call tupleAccessor.setCurrentTupleBuf in getMachineName, projAccessor
 knows where to find the desired data.  It also means that you have to
 be careful about the lifetimes of the two objects.
 

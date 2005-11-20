@@ -20,50 +20,27 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package net.sf.farrago.ddl;
+package net.sf.farrago.session;
 
-import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.session.*;
-
-import java.util.*;
-
-import org.eigenbase.sql.*;
+import org.eigenbase.reltype.RelDataType;
 
 /**
- * DdlCreateStmt represents a DDL CREATE statement of any kind.
- *
- * @author John V. Sichi
+ * FarragoSessionStmtParamDefFactory represents a factory that creates
+ * {@link FarragoSessionStmtParamDef} instances.
+ * 
+ * @author Stephan Zuercher
  * @version $Id$
  */
-public class DdlCreateStmt extends DdlStmt
+public interface FarragoSessionStmtParamDefFactory
 {
-    DdlReplaceOptions replaceOptions;
-    
-    //~ Constructors ----------------------------------------------------------
-
     /**
-     * Constructs a new DdlCreateStmt.
-     *
-     * @param createdElement top-level element created by this stmt
+     * Constructs a new {@link FarragoSessionStmtParamDef} for a parameter
+     * with the given name and type.
+     * 
+     * @param paramName parameter's name
+     * @param paramType parameter's type
+     * @return a new FarragoSessionStmtParamDef
      */
-    public DdlCreateStmt(CwmModelElement createdElement, DdlReplaceOptions replaceOptions)
-    {
-        super(createdElement);
-        this.replaceOptions = replaceOptions;
-    }
-
-    //~ Methods ---------------------------------------------------------------
-
-    // implement DdlStmt
-    public void visit(DdlVisitor visitor)
-    {
-        visitor.visit(this);
-    }
-    
-    public DdlReplaceOptions getReplaceOptions() { return replaceOptions; }
-    
+    FarragoSessionStmtParamDef newParamDef(
+        String paramName, RelDataType paramType);
 }
-
-
-// End DdlCreateStmt.java

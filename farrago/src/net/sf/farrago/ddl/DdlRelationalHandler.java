@@ -10,43 +10,43 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 package net.sf.farrago.ddl;
 
-import org.eigenbase.util.*;
+import java.io.*;
+import java.nio.charset.*;
+import java.sql.*;
+import java.util.*;
+
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.cwm.relational.enumerations.*;
+import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.namespace.*;
+import net.sf.farrago.query.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.type.*;
+import net.sf.farrago.util.*;
+
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
 
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.resource.*;
-import net.sf.farrago.query.*;
-import net.sf.farrago.session.*;
-import net.sf.farrago.type.*;
-import net.sf.farrago.namespace.*;
-import net.sf.farrago.util.*;
-
-import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.cwm.relational.enumerations.*;
-import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.fem.med.*;
-
-import java.io.*;
-import java.nio.charset.*;
-import java.sql.*;
-import java.util.*;
 
 /**
  * DdlRelationalHandler defines DDL handler methods for standard relational
@@ -57,14 +57,19 @@ import java.util.*;
  */
 public class DdlRelationalHandler extends DdlHandler
 {
+    //~ Instance fields -------------------------------------------------------
+
     protected final DdlMedHandler medHandler;
-    
-    public DdlRelationalHandler(
-        DdlMedHandler medHandler)
+
+    //~ Constructors ----------------------------------------------------------
+
+    public DdlRelationalHandler(DdlMedHandler medHandler)
     {
         super(medHandler.getValidator());
         this.medHandler = medHandler;
     }
+
+    //~ Methods ---------------------------------------------------------------
 
     // implement FarragoSessionDdlHandler
     public void validateDefinition(CwmCatalog catalog)
@@ -74,31 +79,47 @@ public class DdlRelationalHandler extends DdlHandler
             catalog.getOwnedElement(),
             true);
     }
-    
+
     // implement FarragoSessionDdlHandler
     public void validateModification(CwmCatalog catalog)
     {
         validateDefinition(catalog);
     }
-    
+
     // implement FarragoSessionDdlHandler
     public void validateDefinition(FemLocalSchema schema)
     {
+        if (isReplacingType(schema)) {
+            throw res.ValidatorNotReplaceable.ex(
+                repos.getLocalizedObjectName(
+                    null,
+                    schema.getName(),
+                    schema.refClass()));
+        }
+
         validator.validateUniqueNames(
             schema,
             schema.getOwnedElement(),
             true);
     }
-    
+
     // implement FarragoSessionDdlHandler
     public void validateModification(FemLocalSchema schema)
     {
         validateDefinition(schema);
     }
-    
+
     // implement FarragoSessionDdlHandler
     public void validateDefinition(FemLocalIndex index)
     {
+        if (isReplacingType(index)) {
+            throw res.ValidatorNotReplaceable.ex(
+                repos.getLocalizedObjectName(
+                    null,
+                    index.getName(),
+                    index.refClass()));
+        }
+
         CwmTable table = FarragoCatalogUtil.getIndexTable(index);
         if (table.isTemporary()) {
             if (!validator.isCreatedObject(table)) {
@@ -113,23 +134,21 @@ public class DdlRelationalHandler extends DdlHandler
         // TODO:  verify columns distinct, total width acceptable, and all
         // columns indexable types
         if (index.getNamespace() != null) {
-            assert (
-                index.getNamespace().equals(
-                    table.getNamespace()));
+            assert (index.getNamespace().equals(table.getNamespace()));
         } else {
             index.setNamespace(table.getNamespace());
         }
 
         index.setFilterCondition("TRUE");
     }
-    
+
     // implement FarragoSessionDdlHandler
     public void validateModification(FemLocalIndex index)
     {
         // indexes are never modified after creation
         throw new AssertionError();
     }
-    
+
     // implement FarragoSessionDdlHandler
     public void validateModification(FemBaseColumnSet columnSet)
     {
@@ -141,16 +160,26 @@ public class DdlRelationalHandler extends DdlHandler
     // implement FarragoSessionDdlHandler
     public void validateDefinition(FemLocalTable table)
     {
+        if (isReplacingType(table)) {
+            throw res.ValidatorNotReplaceable.ex(
+                repos.getLocalizedObjectName(
+                    null,
+                    table.getName(),
+                    table.refClass()));
+        }
+
         validateLocalTable(table, true);
     }
-    
+
     // implement FarragoSessionDdlHandler
     public void validateModification(FemLocalTable table)
     {
         validateLocalTable(table, false);
     }
-    
-    public void validateLocalTable(FemLocalTable table, boolean creation)
+
+    public void validateLocalTable(
+        FemLocalTable table,
+        boolean creation)
     {
         FemDataServer dataServer = table.getServer();
         FemDataWrapper dataWrapper = dataServer.getWrapper();
@@ -167,7 +196,6 @@ public class DdlRelationalHandler extends DdlHandler
         // NOTE:  don't need to validate index name uniqueness since indexes
         // live in same schema as table, so enforcement will take place at
         // schema level
-
         // Validate unique constraints
         FemLocalIndex generatedPrimaryKeyIndex = null;
         FemPrimaryKeyConstraint primaryKey = null;
@@ -193,6 +221,7 @@ public class DdlRelationalHandler extends DdlHandler
                 if (constraint == primaryKey) {
                     generatedPrimaryKeyIndex = index;
                 }
+
                 // Create redundant metadata used by JDBC views
                 createConstraintColumnMetadata(constraint);
             }
@@ -206,27 +235,26 @@ public class DdlRelationalHandler extends DdlHandler
             false);
 
         // Perform validation specific to the local data server
-        FarragoMedDataServer medDataServer = 
+        FarragoMedDataServer medDataServer =
             validator.getDataWrapperCache().loadServerFromCatalog(dataServer);
-        assert(medDataServer instanceof FarragoMedLocalDataServer) :
-            medDataServer.getClass().getName();
+        assert (medDataServer instanceof FarragoMedLocalDataServer) : medDataServer.getClass()
+            .getName();
         FarragoMedLocalDataServer medLocalDataServer =
             (FarragoMedLocalDataServer) medDataServer;
         try {
-            medLocalDataServer.validateTableDefinition(
-                table,
+            medLocalDataServer.validateTableDefinition(table,
                 generatedPrimaryKeyIndex);
         } catch (SQLException ex) {
             throw res.ValidatorDataServerTableInvalid.ex(
                 repos.getLocalizedObjectName(table),
                 ex);
         }
-            
+
         if (creation) {
             medHandler.validateMedColumnSet(table);
         }
     }
-    
+
     // implement FarragoSessionDdlHandler
     public void validateDefinition(FemLocalView view)
     {
@@ -239,7 +267,7 @@ public class DdlRelationalHandler extends DdlHandler
             throw ex;
         } catch (Throwable ex) {
             throw res.ValidatorInvalidObjectDefinition.ex(
-                repos.getLocalizedObjectName(view), 
+                repos.getLocalizedObjectName(view),
                 ex);
         } finally {
             validator.releaseReentrantSession(session);
@@ -256,8 +284,11 @@ public class DdlRelationalHandler extends DdlHandler
         tracer.fine(sql);
         FarragoSessionAnalyzedSql analyzedSql;
         try {
-            analyzedSql = session.analyzeSql(
-                sql, validator.getTypeFactory(), null);
+            analyzedSql =
+                session.analyzeSql(
+                    sql,
+                    validator.getTypeFactory(),
+                    null);
         } catch (Throwable ex) {
             throw adjustExceptionParserPosition(view, ex);
         }
@@ -307,19 +338,17 @@ public class DdlRelationalHandler extends DdlHandler
         view.setOriginalDefinition(sql);
         view.getQueryExpression().setBody(analyzedSql.canonicalString);
 
-        validator.createDependency(
-            view, analyzedSql.dependencies);
+        validator.createDependency(view, analyzedSql.dependencies);
     }
 
     public FemLocalIndex createUniqueConstraintIndex(
-        FemLocalTable table, 
+        FemLocalTable table,
         FemAbstractUniqueConstraint constraint)
     {
         // TODO:  make index SYSTEM-owned so that it can't be
         // dropped explicitly
         FemLocalIndex index = repos.newFemLocalIndex();
-        FarragoCatalogUtil.generateConstraintIndexName(
-            repos, constraint, index);
+        FarragoCatalogUtil.generateConstraintIndexName(repos, constraint, index);
         index.setSpannedClass(table);
         index.setUnique(true);
         index.setSorted(true);
@@ -337,7 +366,7 @@ public class DdlRelationalHandler extends DdlHandler
         }
         return index;
     }
-    
+
     private void createConstraintColumnMetadata(
         FemAbstractUniqueConstraint constraint)
     {
@@ -351,9 +380,9 @@ public class DdlRelationalHandler extends DdlHandler
             component.setAttribute(column);
             constraint.getComponent().add(component);
             component.setOrdinal(iOrdinal++);
-        }        
+        }
     }
-    
+
     // implement FarragoSessionDdlHandler
     public void validateDrop(FemLocalIndex index)
     {
@@ -366,7 +395,7 @@ public class DdlRelationalHandler extends DdlHandler
 
         if (index.isClustered()) {
             throw validator.newPositionalError(
-                index, 
+                index,
                 res.ValidatorDropClusteredIndex.ex(
                     repos.getLocalizedObjectName(index)));
         }
@@ -379,7 +408,7 @@ public class DdlRelationalHandler extends DdlHandler
                 repos.getLocalizedObjectName(table));
         }
     }
-    
+
     // implement FarragoSessionDdlHandler
     public void validateTruncation(FemLocalTable table)
     {
@@ -390,7 +419,7 @@ public class DdlRelationalHandler extends DdlHandler
             validator.scheduleTruncation(index);
         }
     }
-    
+
     // implement FarragoSessionDdlHandler
     public void executeCreation(FemLocalIndex index)
     {
@@ -400,12 +429,13 @@ public class DdlRelationalHandler extends DdlHandler
         }
 
         validator.getIndexMap().createIndexStorage(
-            validator.getDataWrapperCache(), index);
+            validator.getDataWrapperCache(),
+            index);
 
         // TODO:  index existing rows; for now, creating an index on a
         // non-empty table will leave the index (incorrectly) empty
     }
-    
+
     // implement FarragoSessionDdlHandler
     public void executeDrop(FemLocalIndex index)
     {
@@ -414,14 +444,23 @@ public class DdlRelationalHandler extends DdlHandler
         // collected as those sessions close (or on recovery in case of a
         // crash).
         validator.getIndexMap().dropIndexStorage(
-            validator.getDataWrapperCache(), index, false);
+            validator.getDataWrapperCache(),
+            index,
+            false);
     }
-    
+
     // implement FarragoSessionDdlHandler
     public void executeTruncation(FemLocalIndex index)
     {
         validator.getIndexMap().dropIndexStorage(
-            validator.getDataWrapperCache(), index, true);
+            validator.getDataWrapperCache(),
+            index,
+            true);
+    }
+
+    protected boolean isReplacingType(CwmModelElement obj)
+    {
+        return ((DdlValidator) medHandler.getValidator()).isReplacingType(obj);
     }
 }
 

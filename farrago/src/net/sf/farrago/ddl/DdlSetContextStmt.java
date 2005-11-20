@@ -91,7 +91,10 @@ public abstract class DdlSetContextStmt extends DdlStmt
         valueExpr.unparse(writer, 0, 0);
 
         String sql = writer.toString();
-        FarragoSessionStmtContext stmtContext = session.newStmtContext();
+        
+        // null param def factory okay because the SQL does not use dynamic
+        // parameters
+        FarragoSessionStmtContext stmtContext = session.newStmtContext(null);
         stmtContext.prepare(sql, true);
         RelDataType rowType = stmtContext.getPreparedRowType();
         List fieldList = rowType.getFieldList();

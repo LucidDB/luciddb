@@ -35,8 +35,8 @@ import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.med.*;
-import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fem.security.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.util.*;
@@ -48,8 +48,8 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidatorException;
 import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.validate.SqlValidatorException;
 import org.eigenbase.util.*;
 import org.netbeans.api.mdr.events.*;
 
@@ -158,6 +158,16 @@ public class DdlValidator extends FarragoCompoundAllocation
      */
     protected List actionHandlers;
 
+    /**
+     * Object to be replaced if CREATE OR REPLACE
+     */
+    private CwmModelElement replacementTarget;
+
+    /**
+     * Set of objects to be revalidated (CREATE OR REPLACE)
+     */
+    private Set revalidateQueue;
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -194,28 +204,16 @@ public class DdlValidator extends FarragoCompoundAllocation
         Iterator extIter =
             stmtValidator.getSession().getModelExtensions().iterator();
         while (extIter.hasNext()) {
-            FarragoSessionModelExtension ext = (FarragoSessionModelExtension)
-                extIter.next();
-            ext.defineDdlHandlers(
-                this,
-                actionHandlers);
+            FarragoSessionModelExtension ext =
+                (FarragoSessionModelExtension) extIter.next();
+            ext.defineDdlHandlers(this, actionHandlers);
         }
 
         // Then, install action handlers specific to this personality.
-        stmtValidator.getSession().getPersonality().defineDdlHandlers(
-            this,
+        stmtValidator.getSession().getPersonality().defineDdlHandlers(this,
             actionHandlers);
 
-        // MDR pre-change instance creation events are useless, since they
-        // don't refer to the new instance.  Instead, we rely on the
-        // fact that it's pretty much guaranteed that the new object will have
-        // attributes or associations set (though someone will probably come up
-        // with a pathological case eventually).
-        activeThread = Thread.currentThread();
-        getRepos().getMdrRepos().addListener(this,
-            InstanceEvent.EVENT_INSTANCE_DELETE
-                | AttributeEvent.EVENTMASK_ATTRIBUTE
-                | AssociationEvent.EVENTMASK_ASSOCIATION);
+        startListening();
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -339,7 +337,9 @@ public class DdlValidator extends FarragoCompoundAllocation
     }
 
     // implement FarragoSessionDdlValidator
-    public void setParserOffset(RefObject obj, SqlParserPos pos)
+    public void setParserOffset(
+        RefObject obj,
+        SqlParserPos pos)
     {
         parserOffsetMap.put(obj, pos);
     }
@@ -351,7 +351,9 @@ public class DdlValidator extends FarragoCompoundAllocation
     }
 
     // implement FarragoSessionDdlValidator
-    public void setSqlDefinition(RefObject obj, SqlNode sqlNode)
+    public void setSqlDefinition(
+        RefObject obj,
+        SqlNode sqlNode)
     {
         sqlMap.put(obj, sqlNode);
     }
@@ -378,25 +380,24 @@ public class DdlValidator extends FarragoCompoundAllocation
 
         if (qualifiedName.names.length == 3) {
             schemaElement.setName(qualifiedName.names[2]);
-            schemaName = new SqlIdentifier(
-                new String[] {
-                    qualifiedName.names[0],
-                    qualifiedName.names[1]
-                },
-                SqlParserPos.ZERO);
+            schemaName =
+                new SqlIdentifier(
+                    new String [] {
+                        qualifiedName.names[0], qualifiedName.names[1]
+                    },
+                    SqlParserPos.ZERO);
         } else if (qualifiedName.names.length == 2) {
             schemaElement.setName(qualifiedName.names[1]);
-            schemaName = new SqlIdentifier(
-                qualifiedName.names[0],
-                SqlParserPos.ZERO);
+            schemaName =
+                new SqlIdentifier(qualifiedName.names[0], SqlParserPos.ZERO);
         } else {
             schemaElement.setName(qualifiedName.names[0]);
             if (stmtValidator.getSessionVariables().schemaName == null) {
                 throw FarragoResource.instance().ValidatorNoDefaultSchema.ex();
             }
-            schemaName = new SqlIdentifier(
-                stmtValidator.getSessionVariables().schemaName,
-                SqlParserPos.ZERO);
+            schemaName =
+                new SqlIdentifier(stmtValidator.getSessionVariables().schemaName,
+                    SqlParserPos.ZERO);
         }
         CwmSchema schema = stmtValidator.findSchema(schemaName);
         schema.getOwnedElement().add(schemaElement);
@@ -419,6 +420,68 @@ public class DdlValidator extends FarragoCompoundAllocation
     {
         stopListening();
         super.closeAllocation();
+    }
+
+    /**
+     * Tests if DDL statement is CREATE OR REPLACE.
+     * @return true if statement is CREATE OR REPLACE
+     */
+    public boolean isReplace()
+    {
+        if (ddlStmt instanceof DdlCreateStmt) {
+            return (((DdlCreateStmt) ddlStmt).getReplaceOptions().isReplace());
+        }
+        return false;
+    }
+
+    /**
+     * Tests if DDL statement is CREATE OR REPLACE and the target object
+     * (to be replaced) is of the specified type.
+     * @param object Object type to test for
+     * @return true if CREATE OR REPLACE and replacing an object of this type
+     */
+    public boolean isReplacingType(CwmModelElement object)
+    {
+        if (ddlStmt instanceof DdlCreateStmt) {
+            DdlCreateStmt createStmt = (DdlCreateStmt) ddlStmt;
+            if (createStmt.getReplaceOptions().isReplace()) {
+                CwmModelElement e = createStmt.getModelElement();
+                if (e != null) {
+                    return (object.refClass().refMetaObject()
+                        .refGetValue("name").toString().equals(
+                        e.refClass().refMetaObject().refGetValue("name")
+                            .toString()));
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Delete the existing object of a CREATE OR REPLACE statement,
+     * saving its dependencies for later revalidation.
+     */
+    public void deleteReplacementTarget()
+    {
+        if (replacementTarget != null) {
+            revalidateQueue = getDependencies(replacementTarget, true);
+
+            stopListening();
+            breakDependencies(replacementTarget);
+            startListening();
+
+            replacementTarget.refDelete();
+            while (!deleteQueue.isEmpty()) {
+                RefObject refObj = (RefObject) deleteQueue.iterator().next();
+                deleteQueue.remove(refObj);
+                if (!schedulingMap.containsKey(refObj.refMofId())) {
+                    if (tracer.isLoggable(Level.FINE)) {
+                        tracer.fine("probe deleting " + refObj);
+                    }
+                    refObj.refDelete();
+                }
+            }
+        }
     }
 
     // implement FarragoSessionDdlValidator
@@ -507,16 +570,16 @@ public class DdlValidator extends FarragoCompoundAllocation
             // Define a pseudo-grant representing the element's relationship to
             // its creator.  As a bonus, this will initialize element creation
             // time.
-            creationGrant = FarragoCatalogUtil.newCreationGrant(
-                getRepos(),
-                FarragoCatalogInit.SYSTEM_USER_NAME,
-                getInvokingSession().getSessionVariables().currentUserName,
-                element);
+            creationGrant =
+                FarragoCatalogUtil.newCreationGrant(
+                    getRepos(),
+                    FarragoCatalogInit.SYSTEM_USER_NAME,
+                    getInvokingSession().getSessionVariables().currentUserName,
+                    element);
         } else {
             // Find the original creation grant for this existing element.
             PrivilegeIsGrantedOnElement privAssoc =
-                getRepos().getSecurityPackage().
-                getPrivilegeIsGrantedOnElement();
+                getRepos().getSecurityPackage().getPrivilegeIsGrantedOnElement();
             Iterator iter = privAssoc.getPrivilege(element).iterator();
             while (iter.hasNext()) {
                 Object obj = iter.next();
@@ -526,12 +589,12 @@ public class DdlValidator extends FarragoCompoundAllocation
                 }
             }
         }
-        assert(creationGrant != null);
+        assert (creationGrant != null);
 
         // Update element modification time.
         Timestamp ts = new Timestamp(System.currentTimeMillis());
         creationGrant.setModificationTimestamp(ts.toString());
-        
+
         // We use the visibility attribute to distinguish new objects
         // from existing objects.  From here on, no longer treat
         // this element as new.
@@ -648,6 +711,16 @@ public class DdlValidator extends FarragoCompoundAllocation
             // deletion takes place, not before.
         }
 
+        if (isReplace()) {
+            replacementTarget = findDuplicate(ddlStmt.getModelElement());
+
+            if (replacementTarget != null) {
+                // if this is CREATE OR REPLACE and we've encountered an object to be
+                // replaced, save its dependencies for revalidation and delete it.
+                deleteReplacementTarget();
+            }
+        }
+
         while (!schedulingMap.isEmpty()) {
             checkValidationExcnQueue();
 
@@ -661,8 +734,8 @@ public class DdlValidator extends FarragoCompoundAllocation
             while (mapIter.hasNext()) {
                 Map.Entry mapEntry = (Map.Entry) mapIter.next();
                 RefObject obj =
-                    (RefObject) getRepos().getMdrRepos().getByMofId(
-                        (String) mapEntry.getKey());
+                    (RefObject) getRepos().getMdrRepos().getByMofId((String) mapEntry
+                            .getKey());
                 if (obj == null) {
                     continue;
                 }
@@ -691,6 +764,13 @@ public class DdlValidator extends FarragoCompoundAllocation
                     schedulingMap.put(
                         obj.refMofId(),
                         action);
+                } catch (EigenbaseException ex) {
+                    if ((revalidateQueue != null)
+                            && revalidateQueue.contains(obj)) {
+                        handleRevalidationException(obj, ex);
+                    } else {
+                        throw ex;
+                    }
                 }
             }
             transitMap = null;
@@ -698,8 +778,16 @@ public class DdlValidator extends FarragoCompoundAllocation
                 // Every single object hit a
                 // FarragoUnvalidatedDependencyException.  This implies a
                 // cycle.  TODO:  identify the cycle in the exception.
-                throw FarragoResource.instance().ValidatorSchemaDependencyCycle.ex();
+                throw FarragoResource.instance().ValidatorSchemaDependencyCycle
+                    .ex();
             }
+        }
+
+        if (isReplace()) {
+            // check for loops in our newly replaced object
+            getDependencies(
+                ddlStmt.getModelElement(),
+                false);
         }
 
         // one last time
@@ -707,6 +795,19 @@ public class DdlValidator extends FarragoCompoundAllocation
 
         // finally, process any deferred privilege checks
         stmtValidator.getPrivilegeChecker().checkAccess();
+    }
+
+    /**
+     * Handle an exception encountered during validation of dependencies of an
+     * object replaced via CREATE OR REPLACE (a.k.a. revalidation).
+     * @param obj Catalog object causing revalidation exception
+     * @param ex Revalidation exception
+     */
+    public void handleRevalidationException(
+        RefObject obj,
+        EigenbaseException ex)
+    {
+        throw ex;
     }
 
     private void clearDependencySuppliers(RefObject refObj)
@@ -793,6 +894,7 @@ public class DdlValidator extends FarragoCompoundAllocation
             return name;
         }
         Class typeClass;
+
         // TODO jvs 25-Feb-2005:  provide a mechanism for generalizing these
         // special cases
         if (element instanceof CwmNamedColumnSet) {
@@ -811,8 +913,8 @@ public class DdlValidator extends FarragoCompoundAllocation
         Collection suppliers)
     {
         String depName = client.getName() + "$DEP";
-        CwmDependency dependency = (CwmDependency)
-            FarragoCatalogUtil.getModelElementByNameAndType(
+        CwmDependency dependency =
+            (CwmDependency) FarragoCatalogUtil.getModelElementByNameAndType(
                 client.getOwnedElement(),
                 depName,
                 getRepos().getCorePackage().getCwmDependency());
@@ -849,26 +951,23 @@ public class DdlValidator extends FarragoCompoundAllocation
         FarragoSessionVariables sessionVariables =
             getStmtValidator().getSessionVariables();
 
-        sessionVariables.catalogName =
-            schema.getNamespace().getName();
-        sessionVariables.schemaName =
-            schema.getName();
+        sessionVariables.catalogName = schema.getNamespace().getName();
+        sessionVariables.schemaName = schema.getName();
 
         // convert from List<FemSqlpathElement> to List<SqlIdentifier>
         List list = new ArrayList();
         Iterator iter = schema.getPathElement().iterator();
         while (iter.hasNext()) {
             FemSqlpathElement element = (FemSqlpathElement) iter.next();
-            SqlIdentifier id = new SqlIdentifier(
-                new String [] {
-                    element.getSearchedSchemaCatalogName(),
-                    element.getSearchedSchemaName()
-                },
-                SqlParserPos.ZERO);
+            SqlIdentifier id =
+                new SqlIdentifier(new String [] {
+                        element.getSearchedSchemaCatalogName(),
+                        element.getSearchedSchemaName()
+                    },
+                    SqlParserPos.ZERO);
             list.add(id);
         }
-        sessionVariables.schemaSearchPath =
-            Collections.unmodifiableList(list);
+        sessionVariables.schemaSearchPath = Collections.unmodifiableList(list);
     }
 
     // implement FarragoSessionDdlValidator
@@ -878,7 +977,9 @@ public class DdlValidator extends FarragoCompoundAllocation
     {
         SqlParserPos parserContext = getParserPos(refObj);
         if (parserContext == null) {
-            return new EigenbaseException(ex.getMessage(), ex.getCause());
+            return new EigenbaseException(
+                ex.getMessage(),
+                ex.getCause());
         }
         String msg = parserContext.toString();
         EigenbaseContextException contextExcn =
@@ -961,8 +1062,7 @@ public class DdlValidator extends FarragoCompoundAllocation
 
     private void mapParserPosition(Object obj)
     {
-        SqlParserPos context =
-            getParser().getCurrentPosition();
+        SqlParserPos context = getParser().getCurrentPosition();
         if (context == null) {
             return;
         }
@@ -1007,7 +1107,9 @@ public class DdlValidator extends FarragoCompoundAllocation
         if (!(obj instanceof CwmModelElement)) {
             // NOTE jvs 12-June-2005:  record it so that we can run
             // integrity verification on it during executeStorage()
-            schedulingMap.put(obj.refMofId(), VALIDATE_MODIFICATION);
+            schedulingMap.put(
+                obj.refMofId(),
+                VALIDATE_MODIFICATION);
             return;
         }
         CwmModelElement element = (CwmModelElement) obj;
@@ -1021,6 +1123,20 @@ public class DdlValidator extends FarragoCompoundAllocation
                 VALIDATE_MODIFICATION);
         }
         mapParserPosition(obj);
+    }
+
+    private void startListening()
+    {
+        // MDR pre-change instance creation events are useless, since they
+        // don't refer to the new instance.  Instead, we rely on the
+        // fact that it's pretty much guaranteed that the new object will have
+        // attributes or associations set (though someone will probably come up
+        // with a pathological case eventually).
+        activeThread = Thread.currentThread();
+        getRepos().getMdrRepos().addListener(this,
+            InstanceEvent.EVENT_INSTANCE_DELETE
+                | AttributeEvent.EVENTMASK_ATTRIBUTE
+                | AssociationEvent.EVENTMASK_ASSOCIATION);
     }
 
     private void stopListening()
@@ -1037,21 +1153,13 @@ public class DdlValidator extends FarragoCompoundAllocation
     {
         stmtValidator.setParserPosition(null);
         if (action == VALIDATE_CREATION) {
-            return invokeHandler(
-                modelElement,
-                "validateDefinition");
+            return invokeHandler(modelElement, "validateDefinition");
         } else if (action == VALIDATE_MODIFICATION) {
-            return invokeHandler(
-                modelElement,
-                "validateModification");
+            return invokeHandler(modelElement, "validateModification");
         } else if (action == VALIDATE_DELETION) {
-            return invokeHandler(
-                modelElement,
-                "validateDrop");
+            return invokeHandler(modelElement, "validateDrop");
         } else if (action == VALIDATE_TRUNCATION) {
-            return invokeHandler(
-                modelElement,
-                "validateTruncation");
+            return invokeHandler(modelElement, "validateTruncation");
         } else {
             throw new AssertionError();
         }
@@ -1063,16 +1171,142 @@ public class DdlValidator extends FarragoCompoundAllocation
     {
         for (int i = 0; i < actionHandlers.size(); ++i) {
             Object handler = actionHandlers.get(i);
-            boolean handled = ReflectUtil.invokeVisitor(
-                handler,
-                modelElement,
-                CwmModelElement.class,
-                action);
+            boolean handled =
+                ReflectUtil.invokeVisitor(handler, modelElement,
+                    CwmModelElement.class, action);
             if (handled) {
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * Return transitive closure of dependencies for an element and if specified,
+     * schedule their validation.  If not scheduling validation, throw exception
+     * upon encountering a cycle.
+     *
+     * @param element Starting element for dependency search
+     * @param schedule If true, schedule dependencies for validation
+     * @return Set of CwmModelElement
+     */
+    public Set getDependencies(
+        CwmModelElement rootElement,
+        boolean schedule)
+    {
+        HashSet result = new HashSet();
+        HashSet visited = new HashSet();
+        HashSet visit = new HashSet();
+
+        DependencySupplier depSupplier =
+            getRepos().getCorePackage().getDependencySupplier();
+
+        visit.add(rootElement);
+        while (!visit.isEmpty()) {
+            CwmModelElement element =
+                (CwmModelElement) visit.iterator().next();
+            visit.remove(element);
+            if (visited.contains(element)) {
+                if (!schedule) {
+                    throw FarragoResource.instance().ValidatorSchemaDependencyCycle
+                        .ex();
+                }
+                continue;
+            }
+            visited.add(element);
+            Collection deps = depSupplier.getSupplierDependency(element);
+
+            if (deps != null) {
+                Iterator i = deps.iterator();
+                while (i.hasNext()) {
+                    Object o = i.next();
+                    if (o instanceof CwmDependency) {
+                        CwmDependency dep = (CwmDependency) o;
+                        Collection c = dep.getClient();
+                        Iterator i2 = c.iterator();
+                        while (i2.hasNext()) {
+                            CwmModelElement e = (CwmModelElement) i2.next();
+                            result.add(e);
+                            visit.add(e);
+                            if (schedule) {
+                                //REVIEW: unless we regenerate this dependency's SQL
+                                //and reparse, how would we get the SqlParserPos.
+                                //set to a dummy value for now.
+                                this.setParserOffset(
+                                    e,
+                                    new SqlParserPos(1, 0));
+                                schedulingMap.put(
+                                    e.refMofId(),
+                                    VALIDATE_CREATION);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Removes dependency associations on an element so that it may be deleted
+     * without cascading side effects.  Assumes MDR change listener isn't active.
+     * @param element Element to remove dependencies on
+     */
+    private void breakDependencies(CwmModelElement element)
+    {
+        assert (activeThread == null);
+
+        DependencySupplier depSupplier =
+            getRepos().getCorePackage().getDependencySupplier();
+        Collection c = depSupplier.getSupplierDependency(element);
+        Iterator i = c.iterator();
+        while (i.hasNext()) {
+            depSupplier.remove(element, (CwmDependency) i.next());
+        }
+
+        DependencyClient depClient =
+            getRepos().getCorePackage().getDependencyClient();
+        c = depClient.getClientDependency(element);
+        i = c.iterator();
+        while (i.hasNext()) {
+            depClient.remove(element, (CwmDependency) i.next());
+        }
+    }
+
+    /**
+     * Searches an element's namespace's owned elements and returns the
+     * first duplicate found (by name, type).
+     * @param target Target of search
+     * @return CwmModelElement found, or null if not found
+     */
+    private CwmModelElement findDuplicate(CwmModelElement target)
+    {
+        String name = target.getName();
+        RefClass type = target.refClass();
+
+        CwmNamespace ns = target.getNamespace();
+        if (ns != null) {
+            Collection c = ns.getOwnedElement();
+            if (c != null) {
+                Iterator iter = c.iterator();
+                while (iter.hasNext()) {
+                    CwmModelElement element = (CwmModelElement) iter.next();
+                    if (element.equals(target)) {
+                        continue;
+                    }
+                    if (!element.getName().equals(name)) {
+                        continue;
+                    }
+                    if (element.refIsInstanceOf(
+                                type.refMetaObject(),
+                                true)) {
+                        return element;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     //~ Inner Classes ---------------------------------------------------------
@@ -1087,6 +1321,5 @@ public class DdlValidator extends FarragoCompoundAllocation
         abstract EigenbaseException getException();
     }
 }
-
 
 // End DdlValidator.java

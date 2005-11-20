@@ -129,11 +129,11 @@ public:
         assert(newRef->setIndex() < RegisterReference::ELastSet);
 
         // do not allow more RegisterReferences after bind()
-        assert(!mRegisterTuple[RegisterReference::ELiteral]);
-        assert(!mRegisterTuple[RegisterReference::EInput]);
-        assert(!mRegisterTuple[RegisterReference::EOutput]);
-        assert(!mRegisterTuple[RegisterReference::ELocal]);
-        assert(!mRegisterTuple[RegisterReference::EStatus]);
+        assert(!mRegisterSetBinding[RegisterReference::ELiteral]);
+        assert(!mRegisterSetBinding[RegisterReference::EInput]);
+        assert(!mRegisterSetBinding[RegisterReference::EOutput]);
+        assert(!mRegisterSetBinding[RegisterReference::ELocal]);
+        assert(!mRegisterSetBinding[RegisterReference::EStatus]);
 
         mRegisterRef[newRef->setIndex()].push_back(newRef);
         newRef->setCalc(this);
@@ -187,18 +187,23 @@ public:
     TupleData const * const getStatusRegister() const;
     
 
-    //! Binds commonly changing Register Sets Input and Output.
+    //! Binds the commonly changing Register Sets Input and Output.
     //!
     //! Binding or rebinding of varying externally allocated 
     //! register memory tuples. This is the common case call to
     //! bind, where input and output tuples are rebound between
     //! exec() calls. Typically called to advance to the next row.
-    void bind(TupleData* input,
-              TupleData* output)
-    {
-        mRegisterTuple[RegisterReference::EInput] = input;
-        mRegisterTuple[RegisterReference::EOutput] = output;
-    }
+    //!
+    //! @param input  bind the input registers to this tuple
+    //! @param output bind the output registers to this tuple
+    //! @param outputWrite (optional, use when \c output contains null values).
+    //!   Equivalent to \c output, except it has the allocated target address of each datum
+    //!   which is null in \c output.
+    //! @param takeOwnership When true, the Calculator owns these TupleData, and will
+    //!   delete them in its destructor.
+    void bind(TupleData* input, TupleData* output, bool takeOwnwership = false, 
+              const TupleData* outputWrite = 0);
+
 
     //! Configures Calculator to either exit immediately upon
     //! exceptions or to continue execution.
@@ -236,10 +241,10 @@ protected:
     //! Program instructions
     vector<Instruction *> mCode;
 
-    //! Tuples that underlie registers, indexed by register set
-    //!
+    //! How registers are bound to underlying tuples, indexed by register set
+    //! (null element means the register set is not bound)
     //! Note: Referenced in class RegisterReference and CalcAssembler
-    TupleData* mRegisterTuple[RegisterReference::ELastSet];
+    RegisterSetBinding* mRegisterSetBinding[RegisterReference::ELastSet];
 
     //! All active registers, indexed by register set
     //!

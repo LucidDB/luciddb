@@ -57,9 +57,12 @@ public interface FarragoSession extends FarragoAllocation
     /**
      * Creates a new statement context within this session.
      *
+     * @param paramDefFactory a factory for FarragoSessionStmtParamDef 
+     *                        instances
      * @return new statement context
      */
-    public FarragoSessionStmtContext newStmtContext();
+    public FarragoSessionStmtContext newStmtContext(
+        FarragoSessionStmtParamDefFactory paramDefFactory);
 
     /**
      * Creates a new SQL statement validator.

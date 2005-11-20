@@ -86,11 +86,11 @@ unitTestBool()
     TupleAccessor tupleAccessorFixedOutput;
     TupleAccessor tupleAccessorFixedLocal;
     TupleAccessor tupleAccessorFixedStatus;
-    tupleAccessorFixedLiteral.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedInput.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedOutput.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedLocal.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedStatus.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
+    tupleAccessorFixedLiteral.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedInput.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedOutput.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedLocal.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedStatus.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
 
     // Allocate memory for the tuple
     boost::scoped_array<FixedBuffer>
@@ -105,11 +105,11 @@ unitTestBool()
         pTupleBufFixedStatus(new FixedBuffer[tupleAccessorFixedStatus.getMaxByteCount()]);
 
     // Link memory to accessor
-    tupleAccessorFixedLiteral.setCurrentTupleBuf(pTupleBufFixedLiteral.get());
-    tupleAccessorFixedInput.setCurrentTupleBuf(pTupleBufFixedInput.get());
-    tupleAccessorFixedOutput.setCurrentTupleBuf(pTupleBufFixedOutput.get());
-    tupleAccessorFixedLocal.setCurrentTupleBuf(pTupleBufFixedLocal.get());
-    tupleAccessorFixedStatus.setCurrentTupleBuf(pTupleBufFixedStatus.get());
+    tupleAccessorFixedLiteral.setCurrentTupleBuf(pTupleBufFixedLiteral.get(), false);
+    tupleAccessorFixedInput.setCurrentTupleBuf(pTupleBufFixedInput.get(), false);
+    tupleAccessorFixedOutput.setCurrentTupleBuf(pTupleBufFixedOutput.get(), false);
+    tupleAccessorFixedLocal.setCurrentTupleBuf(pTupleBufFixedLocal.get(), false);
+    tupleAccessorFixedStatus.setCurrentTupleBuf(pTupleBufFixedStatus.get(), false);
 
     // Create a vector of TupleDatum objects based on the description we built
     TupleData tupleDataFixedLiteral(tupleDesc);
@@ -582,11 +582,11 @@ unitTestLong()
     TupleAccessor tupleAccessorFixedOutput;
     TupleAccessor tupleAccessorFixedLocal;
     TupleAccessor tupleAccessorFixedStatus;
-    tupleAccessorFixedLiteral.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedInput.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedOutput.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedLocal.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedStatus.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
+    tupleAccessorFixedLiteral.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedInput.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedOutput.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedLocal.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedStatus.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
 
     // Allocate memory for the tuple
     boost::scoped_array<FixedBuffer>
@@ -601,11 +601,11 @@ unitTestLong()
         pTupleBufFixedStatus(new FixedBuffer[tupleAccessorFixedStatus.getMaxByteCount()]);
 
     // Link memory to accessor
-    tupleAccessorFixedLiteral.setCurrentTupleBuf(pTupleBufFixedLiteral.get());
-    tupleAccessorFixedInput.setCurrentTupleBuf(pTupleBufFixedInput.get());
-    tupleAccessorFixedOutput.setCurrentTupleBuf(pTupleBufFixedOutput.get());
-    tupleAccessorFixedLocal.setCurrentTupleBuf(pTupleBufFixedLocal.get());
-    tupleAccessorFixedStatus.setCurrentTupleBuf(pTupleBufFixedStatus.get());
+    tupleAccessorFixedLiteral.setCurrentTupleBuf(pTupleBufFixedLiteral.get(), false);
+    tupleAccessorFixedInput.setCurrentTupleBuf(pTupleBufFixedInput.get(), false);
+    tupleAccessorFixedOutput.setCurrentTupleBuf(pTupleBufFixedOutput.get(), false);
+    tupleAccessorFixedLocal.setCurrentTupleBuf(pTupleBufFixedLocal.get(), false);
+    tupleAccessorFixedStatus.setCurrentTupleBuf(pTupleBufFixedStatus.get(), false);
 
     // Create a vector of TupleDatum objects based on the description we built
     TupleData tupleDataFixedLiteral(tupleDesc);
@@ -1292,11 +1292,11 @@ unitTestFloat()
     TupleAccessor tupleAccessorFixedOutput;
     TupleAccessor tupleAccessorFixedLocal;
     TupleAccessor tupleAccessorFixedStatus;
-    tupleAccessorFixedLiteral.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedInput.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedOutput.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedLocal.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedStatus.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
+    tupleAccessorFixedLiteral.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedInput.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedOutput.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedLocal.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedStatus.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
 
     // Allocate memory for the tuple
     boost::scoped_array<FixedBuffer>
@@ -1311,11 +1311,11 @@ unitTestFloat()
         pTupleBufFixedStatus(new FixedBuffer[tupleAccessorFixedStatus.getMaxByteCount()]);
 
     // Link memory to accessor
-    tupleAccessorFixedLiteral.setCurrentTupleBuf(pTupleBufFixedLiteral.get());
-    tupleAccessorFixedInput.setCurrentTupleBuf(pTupleBufFixedInput.get());
-    tupleAccessorFixedOutput.setCurrentTupleBuf(pTupleBufFixedOutput.get());
-    tupleAccessorFixedLocal.setCurrentTupleBuf(pTupleBufFixedLocal.get());
-    tupleAccessorFixedStatus.setCurrentTupleBuf(pTupleBufFixedStatus.get());
+    tupleAccessorFixedLiteral.setCurrentTupleBuf(pTupleBufFixedLiteral.get(), false);
+    tupleAccessorFixedInput.setCurrentTupleBuf(pTupleBufFixedInput.get(), false);
+    tupleAccessorFixedOutput.setCurrentTupleBuf(pTupleBufFixedOutput.get(), false);
+    tupleAccessorFixedLocal.setCurrentTupleBuf(pTupleBufFixedLocal.get(), false);
+    tupleAccessorFixedStatus.setCurrentTupleBuf(pTupleBufFixedStatus.get(), false);
 
     // Create a vector of TupleDatum objects based on the description we built
     TupleData tupleDataFixedLiteral(tupleDesc);
@@ -1915,11 +1915,11 @@ unitTestPointer()
     TupleAccessor tupleAccessorFixedOutput;
     TupleAccessor tupleAccessorFixedLocal;
     TupleAccessor tupleAccessorFixedStatus;
-    tupleAccessorFixedLiteral.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedInput.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedOutput.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedLocal.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedStatus.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
+    tupleAccessorFixedLiteral.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedInput.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedOutput.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedLocal.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedStatus.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
 
     // Allocate memory for the tuple
     boost::scoped_array<FixedBuffer>
@@ -1934,11 +1934,11 @@ unitTestPointer()
         pTupleBufFixedStatus(new FixedBuffer[tupleAccessorFixedStatus.getMaxByteCount()]);
 
     // Link memory to accessor
-    tupleAccessorFixedLiteral.setCurrentTupleBuf(pTupleBufFixedLiteral.get());
-    tupleAccessorFixedInput.setCurrentTupleBuf(pTupleBufFixedInput.get());
-    tupleAccessorFixedOutput.setCurrentTupleBuf(pTupleBufFixedOutput.get());
-    tupleAccessorFixedLocal.setCurrentTupleBuf(pTupleBufFixedLocal.get());
-    tupleAccessorFixedStatus.setCurrentTupleBuf(pTupleBufFixedStatus.get());
+    tupleAccessorFixedLiteral.setCurrentTupleBuf(pTupleBufFixedLiteral.get(), false);
+    tupleAccessorFixedInput.setCurrentTupleBuf(pTupleBufFixedInput.get(), false);
+    tupleAccessorFixedOutput.setCurrentTupleBuf(pTupleBufFixedOutput.get(), false);
+    tupleAccessorFixedLocal.setCurrentTupleBuf(pTupleBufFixedLocal.get(), false);
+    tupleAccessorFixedStatus.setCurrentTupleBuf(pTupleBufFixedStatus.get(), false);
 
     // Create a vector of TupleDatum objects based on the description we built
     TupleData tupleDataFixedLiteral(tupleDesc);
@@ -2546,11 +2546,11 @@ unitTestWarnings()
     TupleAccessor tupleAccessorFixedOutput;
     TupleAccessor tupleAccessorFixedLocal;
     TupleAccessor tupleAccessorFixedStatus;
-    tupleAccessorFixedLiteral.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedInput.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedOutput.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedLocal.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedStatus.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
+    tupleAccessorFixedLiteral.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedInput.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedOutput.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedLocal.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedStatus.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
 
     // Allocate memory for the tuple
     boost::scoped_array<FixedBuffer>
@@ -2565,11 +2565,11 @@ unitTestWarnings()
         pTupleBufFixedStatus(new FixedBuffer[tupleAccessorFixedStatus.getMaxByteCount()]);
 
     // Link memory to accessor
-    tupleAccessorFixedLiteral.setCurrentTupleBuf(pTupleBufFixedLiteral.get());
-    tupleAccessorFixedInput.setCurrentTupleBuf(pTupleBufFixedInput.get());
-    tupleAccessorFixedOutput.setCurrentTupleBuf(pTupleBufFixedOutput.get());
-    tupleAccessorFixedLocal.setCurrentTupleBuf(pTupleBufFixedLocal.get());
-    tupleAccessorFixedStatus.setCurrentTupleBuf(pTupleBufFixedStatus.get());
+    tupleAccessorFixedLiteral.setCurrentTupleBuf(pTupleBufFixedLiteral.get(), false);
+    tupleAccessorFixedInput.setCurrentTupleBuf(pTupleBufFixedInput.get(), false);
+    tupleAccessorFixedOutput.setCurrentTupleBuf(pTupleBufFixedOutput.get(), false);
+    tupleAccessorFixedLocal.setCurrentTupleBuf(pTupleBufFixedLocal.get(), false);
+    tupleAccessorFixedStatus.setCurrentTupleBuf(pTupleBufFixedStatus.get(), false);
 
     // Create a vector of TupleDatum objects based on the description we built
     TupleData tupleDataFixedLiteral(tupleDesc);
@@ -2791,11 +2791,11 @@ unitTestPointerCache()
     TupleAccessor tupleAccessorFixedOutput;
     TupleAccessor tupleAccessorFixedLocal;
     TupleAccessor tupleAccessorFixedStatus;
-    tupleAccessorFixedLiteral.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedInput.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedOutput.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedLocal.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedStatus.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
+    tupleAccessorFixedLiteral.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedInput.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedOutput.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedLocal.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedStatus.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
 
     // Allocate memory for the tuple
     boost::scoped_array<FixedBuffer>
@@ -2810,11 +2810,11 @@ unitTestPointerCache()
         pTupleBufFixedStatus(new FixedBuffer[tupleAccessorFixedStatus.getMaxByteCount()]);
 
     // Link memory to accessor
-    tupleAccessorFixedLiteral.setCurrentTupleBuf(pTupleBufFixedLiteral.get());
-    tupleAccessorFixedInput.setCurrentTupleBuf(pTupleBufFixedInput.get());
-    tupleAccessorFixedOutput.setCurrentTupleBuf(pTupleBufFixedOutput.get());
-    tupleAccessorFixedLocal.setCurrentTupleBuf(pTupleBufFixedLocal.get());
-    tupleAccessorFixedStatus.setCurrentTupleBuf(pTupleBufFixedStatus.get());
+    tupleAccessorFixedLiteral.setCurrentTupleBuf(pTupleBufFixedLiteral.get(), false);
+    tupleAccessorFixedInput.setCurrentTupleBuf(pTupleBufFixedInput.get(), false);
+    tupleAccessorFixedOutput.setCurrentTupleBuf(pTupleBufFixedOutput.get(), false);
+    tupleAccessorFixedLocal.setCurrentTupleBuf(pTupleBufFixedLocal.get(), false);
+    tupleAccessorFixedStatus.setCurrentTupleBuf(pTupleBufFixedStatus.get(), false);
 
     // Create a vector of TupleDatum objects based on the description we built
     TupleData tupleDataFixedLiteral(tupleDesc);
@@ -3066,11 +3066,11 @@ unitTestNullableLocal()
     TupleAccessor tupleAccessorFixedOutput;
     TupleAccessor tupleAccessorFixedLocal;
     TupleAccessor tupleAccessorFixedStatus;
-    tupleAccessorFixedLiteral.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedInput.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedOutput.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedLocal.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedStatus.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
+    tupleAccessorFixedLiteral.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedInput.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedOutput.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedLocal.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedStatus.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
 
     // Allocate memory for the tuple
     boost::scoped_array<FixedBuffer>
@@ -3085,11 +3085,11 @@ unitTestNullableLocal()
         pTupleBufFixedStatus(new FixedBuffer[tupleAccessorFixedStatus.getMaxByteCount()]);
 
     // Link memory to accessor
-    tupleAccessorFixedLiteral.setCurrentTupleBuf(pTupleBufFixedLiteral.get());
-    tupleAccessorFixedInput.setCurrentTupleBuf(pTupleBufFixedInput.get());
-    tupleAccessorFixedOutput.setCurrentTupleBuf(pTupleBufFixedOutput.get());
-    tupleAccessorFixedLocal.setCurrentTupleBuf(pTupleBufFixedLocal.get());
-    tupleAccessorFixedStatus.setCurrentTupleBuf(pTupleBufFixedStatus.get());
+    tupleAccessorFixedLiteral.setCurrentTupleBuf(pTupleBufFixedLiteral.get(), false);
+    tupleAccessorFixedInput.setCurrentTupleBuf(pTupleBufFixedInput.get(), false);
+    tupleAccessorFixedOutput.setCurrentTupleBuf(pTupleBufFixedOutput.get(), false);
+    tupleAccessorFixedLocal.setCurrentTupleBuf(pTupleBufFixedLocal.get(), false);
+    tupleAccessorFixedStatus.setCurrentTupleBuf(pTupleBufFixedStatus.get(), false);
 
     // Create a vector of TupleDatum objects based on the description we built
     TupleData tupleDataFixedLiteral(tupleDesc);
@@ -3419,11 +3419,11 @@ unitTestStatusRegister()
     TupleAccessor tupleAccessorFixedOutput;
     TupleAccessor tupleAccessorFixedLocal;
     TupleAccessor tupleAccessorFixedStatus;
-    tupleAccessorFixedLiteral.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedInput.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedOutput.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedLocal.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
-    tupleAccessorFixedStatus.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
+    tupleAccessorFixedLiteral.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedInput.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedOutput.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedLocal.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
+    tupleAccessorFixedStatus.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
 
     // Allocate memory for the tuple
     boost::scoped_array<FixedBuffer>
@@ -3438,11 +3438,11 @@ unitTestStatusRegister()
         pTupleBufFixedStatus(new FixedBuffer[tupleAccessorFixedStatus.getMaxByteCount()]);
 
     // Link memory to accessor
-    tupleAccessorFixedLiteral.setCurrentTupleBuf(pTupleBufFixedLiteral.get());
-    tupleAccessorFixedInput.setCurrentTupleBuf(pTupleBufFixedInput.get());
-    tupleAccessorFixedOutput.setCurrentTupleBuf(pTupleBufFixedOutput.get());
-    tupleAccessorFixedLocal.setCurrentTupleBuf(pTupleBufFixedLocal.get());
-    tupleAccessorFixedStatus.setCurrentTupleBuf(pTupleBufFixedStatus.get());
+    tupleAccessorFixedLiteral.setCurrentTupleBuf(pTupleBufFixedLiteral.get(), false);
+    tupleAccessorFixedInput.setCurrentTupleBuf(pTupleBufFixedInput.get(), false);
+    tupleAccessorFixedOutput.setCurrentTupleBuf(pTupleBufFixedOutput.get(), false);
+    tupleAccessorFixedLocal.setCurrentTupleBuf(pTupleBufFixedLocal.get(), false);
+    tupleAccessorFixedStatus.setCurrentTupleBuf(pTupleBufFixedStatus.get(), false);
 
     // Create a vector of TupleDatum objects based on the description we built
     TupleData tupleDataFixedLiteral(tupleDesc);

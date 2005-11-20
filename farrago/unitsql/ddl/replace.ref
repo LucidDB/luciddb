@@ -1,0 +1,96 @@
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/replace.sql#1 $
+0: jdbc:farrago:> -- Test create or replace DDL 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create schema createorreplace;
+0: jdbc:farrago:> set schema 'createorreplace';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table foo (bar integer primary key);
+0: jdbc:farrago:> insert into foo (bar) values (128);
+0: jdbc:farrago:> create table foo2 (bar2 integer primary key);
+0: jdbc:farrago:> insert into foo2 (bar2) values (256);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  replace not allowed on TABLE
+0: jdbc:farrago:> create or replace table foo (bar2 integer primary key);
+Error: Cannot replace table "FOO" because it does not support replacement (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view fooview as select * from foo;
+0: jdbc:farrago:> select * from fooview;
++------+
+| BAR  |
++------+
+| 128  |
++------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- simple case:  replace view, no dependencies
+0: jdbc:farrago:> create or replace view fooview as select * from foo2;
+0: jdbc:farrago:> select * from fooview;
++-------+
+| BAR2  |
++-------+
+| 256   |
++-------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view fooview2 as select * from fooview;
+0: jdbc:farrago:> select * from fooview2;
++-------+
+| BAR2  |
++-------+
+| 256   |
++-------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should succeed since dependency FOOVIEW2 remains valid
+0: jdbc:farrago:> create or replace view fooview as select * from foo2;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail, cannot replace object if dependencies are invalidated
+0: jdbc:farrago:> create or replace view fooview as select * from foo;
+Error: From line 1, column 7 to line 1, column 15: Unknown field 'BAR2' (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- make sure fooview2 didn't get nuked from above
+0: jdbc:farrago:> select * from fooview2;
++-------+
+| BAR2  |
++-------+
+| 256   |
++-------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table foo3 (bar integer primary key, bar2 integer, bar3 varchar(25));
+0: jdbc:farrago:> insert into foo3 (bar, bar2, bar3) values (512, 1024, 'FOOBAR');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should succeed because dependent view FOOVIEW2 is still valid (column BAR2 exists)
+0: jdbc:farrago:> create or replace view fooview as select * from foo3;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from fooview;
++------+-------+---------+
+| BAR  | BAR2  |  BAR3   |
++------+-------+---------+
+| 512  | 1024  | FOOBAR  |
++------+-------+---------+
+0: jdbc:farrago:> select * from fooview2;
++-------+
+| BAR2  |
++-------+
+| 1024  |
++-------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- try to create a loop
+0: jdbc:farrago:> create view loop1 as select * from foo;
+0: jdbc:farrago:> create view loop2 as select * from loop1;
+0: jdbc:farrago:> -- this should fail
+0: jdbc:farrago:> create or replace view loop1 as select * from loop2;
+Error: Object definition contains recursive cycle (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create index idx on foo(bar);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  duplicate index
+0: jdbc:farrago:> create index idx on foo(bar);
+Error: DDL validation error near line 1, column 14: Target schema "LOCALDB"."CREATEORREPLACE" already contains index "IDX" with same name (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail:  replace not allowed on INDEX
+0: jdbc:farrago:> create or replace index idx on foo(bar);
+Error: Cannot replace index "IDX" because it does not support replacement (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- disallow replace on schema
+0: jdbc:farrago:> create or replace schema createorreplace description 'blah';
+Error: Cannot replace schema "CREATEORREPLACE" because it does not support replacement (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

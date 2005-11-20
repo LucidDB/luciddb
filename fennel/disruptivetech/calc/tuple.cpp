@@ -71,18 +71,18 @@ tupleFiddle()
 
   // Create a tuple accessor from the description
   //
-  // Note: Must use a NOT_NULL_AND_FIXED accessor when creating a tuple out of the
+  // Note: Must use an ALL_FIXED accessor when creating a tuple out of the
   // air like this, otherwise unmarshal() does not know what to do. If you need a
-  // STANDARD type tuple that supports nulls, it has to be built as a copy.
+  // STANDARD type tuple with variable-lengty fields, it has to be built as a copy.
   TupleAccessor tupleAccessorFixed;
-  tupleAccessorFixed.compute(tupleDesc, TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED);
+  tupleAccessorFixed.compute(tupleDesc, TUPLE_FORMAT_ALL_FIXED);
 
   // Allocate memory for the tuple
   boost::scoped_array<FixedBuffer>
     pTupleBufFixed(new FixedBuffer[tupleAccessorFixed.getMaxByteCount()]);
 
   // Link memory to accessor
-  tupleAccessorFixed.setCurrentTupleBuf(pTupleBufFixed.get());
+  tupleAccessorFixed.setCurrentTupleBuf(pTupleBufFixed.get(), false);
 
   // Create a vector of TupleDatum objects based on the description we built
   TupleData tupleDataFixed(tupleDesc);

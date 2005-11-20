@@ -278,9 +278,11 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     }
 
     // implement FarragoSession
-    public FarragoSessionStmtContext newStmtContext()
+    public FarragoSessionStmtContext newStmtContext(
+        FarragoSessionStmtParamDefFactory paramDefFactory)
     {
-        FarragoDbStmtContext stmtContext = new FarragoDbStmtContext(this);
+        FarragoDbStmtContext stmtContext = 
+            new FarragoDbStmtContext(this, paramDefFactory);
         addAllocation(stmtContext);
         return stmtContext;
     }
