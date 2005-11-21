@@ -244,7 +244,7 @@
     </sequential>
   </macrodef>
 
-  <target name="shortreg" depends="compile,initSqlTests" >
+  <target name="shortreg" depends="compile" >
     <filelist dir="${testlog.dir}/shortreg" id="filelist.shortregsql"
       files="creschema.sql,locationload.sql,deptload.sql,empload.sql,
         customersload.sql,productsload.sql,salesload.sql,joinEq.sql"/>
@@ -253,7 +253,7 @@
     <runSqlTests filelist="${filelist.shortregsql}"/>
   </target>
 
-  <target name="txn" depends="compile,initSqlTests" >
+  <target name="txn" depends="compile">
     <filelist dir="${testlog.dir}/txn" id="filelist.txnsql"
       files="negative.sql"/>
     <pathconvert property="filelist.txnsql" refid="filelist.txnsql"
@@ -261,24 +261,8 @@
     <runSqlTests filelist="${filelist.txnsql}"/>
   </target>
 
-  <!-- move all sql/ref files to testlog area -->
-  <target name="initSqlTests">
-    <copy todir="${testlog.dir}/shortreg">
-      <fileset dir="${luciddb.test.dir}/shortreg">
-        <include name="*.sql"/>
-        <include name="*.ref"/>
-      </fileset>
-    </copy>
-    <copy todir="${testlog.dir}/txn">
-      <fileset dir="${luciddb.test.dir}/txn">
-        <include name="*.sql"/>
-        <include name="*.ref"/>
-      </fileset>
-    </copy>
-  </target>
-
   <!-- Extra Short Regression -->
-  <target name="xreg" depends="compile,createCatalog,initSqlTests" >
+  <target name="xreg" depends="compile,createCatalog">
     <filelist dir="${testlog.dir}/shortreg" id="filelist.shortregsql"
       files="creschema.sql,locationload.sql,deptload.sql,empload.sql,
         customersload.sql,productsload.sql,salesload.sql,joinEqSanity.sql"/>
@@ -339,7 +323,7 @@
     </antcall>
   </target>
 
-  <target name="test-setup" depends="compile,createCatalog,initSqlTests" >
+  <target name="test-setup" depends="compile,createCatalog">
     <filelist dir="${testlog.dir}/shortreg" id="filelist.setup"
       files="creschema.sql,locationload.sql,deptload.sql,empload.sql,
         customersload.sql,productsload.sql,salesload.sql"/>

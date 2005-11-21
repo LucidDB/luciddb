@@ -1,0 +1,16 @@
+0: jdbc:luciddb:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/misc.sql#3 $
+0: jdbc:luciddb:> -- Negative tests for LucidDB transaction support
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should fail:  we don't support transactions
+0: jdbc:luciddb:> !autocommit off
+Error: Transactions not supported (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should fail:  still in autocommit mode
+0: jdbc:luciddb:> commit;
+Error: Cannot COMMIT in auto-commit mode (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should fail:  still in autocommit mode
+0: jdbc:luciddb:> rollback;
+Error: Cannot ROLLBACK in auto-commit mode (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit
