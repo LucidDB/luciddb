@@ -82,7 +82,7 @@ create server csv_server
 foreign data wrapper test_jdbc
 options(
     driver_class 'org.relique.jdbc.csv.CsvDriver',
-    url 'jdbc:relique:csv:test/shortreg',
+    url 'jdbc:relique:csv:testlog/shortreg',
     schema_name 'TESTDATA');
 
 create schema csv_schema;
