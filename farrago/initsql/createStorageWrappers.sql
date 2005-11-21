@@ -2,7 +2,6 @@
 -- This script creates the builtin storage data wrappers
 
 !set verbose true
-!autocommit off
 
 -- create system-owned schema to hold objects like model extension plugin jars
 create schema sys_boot.sys_boot;
@@ -69,5 +68,3 @@ foreign data wrapper sys_mock_foreign;
 create foreign data wrapper sys_jdbc
 library '${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'
 language java;
-
-commit;

@@ -2,6 +2,5 @@
 -- This dummy script cleans up after unit tests
 -- (actual cleanup work is done by FarragoTestCase.CleanUp)
 !set verbose true
-!autocommit off
 
-commit;
+values(1);

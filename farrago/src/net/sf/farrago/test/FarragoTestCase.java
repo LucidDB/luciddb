@@ -220,7 +220,16 @@ public abstract class FarragoTestCase extends DiffTestCase
         if (repos != null) {
             restoreParameters();
         }
-        if (connection != null) {
+        rollbackIfSupported();
+    }
+
+    private static void rollbackIfSupported()
+        throws SQLException
+    {
+        if (connection == null) {
+            return;
+        }
+        if (connection.getMetaData().supportsTransactions()) {
             connection.rollback();
         }
     }
@@ -234,15 +243,17 @@ public abstract class FarragoTestCase extends DiffTestCase
                 driver.getUrlPrefix(),
                 FarragoCatalogInit.SA_USER_NAME,
                 null);
-        newConnection.setAutoCommit(false);
+        if (newConnection.getMetaData().supportsTransactions()) {
+            newConnection.setAutoCommit(false);
+        }
         return newConnection;
     }
 
     public static void forceShutdown() throws Exception
     {
         repos = null;
+        rollbackIfSupported();
         if (connection != null) {
-            connection.rollback();
             connection.close();
             connection = null;
         }
@@ -430,9 +441,7 @@ public abstract class FarragoTestCase extends DiffTestCase
                 stmt.close();
                 stmt = null;
             }
-            if (connection != null) {
-                connection.rollback();
-            }
+            rollbackIfSupported();
             allocOwner.closeAllocation();
             allocOwner = null;
         } finally {

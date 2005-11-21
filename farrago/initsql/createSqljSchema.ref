@@ -2,7 +2,6 @@
 0: jdbc:farrago:> -- This script creates the SQLJ support schema
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set verbose true
-0: jdbc:farrago:> !autocommit off
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema sqlj;
 0: jdbc:farrago:> 
@@ -36,7 +35,5 @@
 . . . . . . . . > language java
 . . . . . . . . > modifies sql data
 . . . . . . . . > external name 'class net.sf.farrago.ddl.DdlSqlj.alter_java_path';
-0: jdbc:farrago:> 
-0: jdbc:farrago:> commit;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

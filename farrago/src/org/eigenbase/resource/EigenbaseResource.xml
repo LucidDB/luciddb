@@ -464,6 +464,11 @@ TBD: naming convention for extension features
     <text>SELECT DISTINCT not supported</text>
 </exception>
 
+<exception name="SQLFeature_E151">
+    <property name="FeatureDefinition">SQL:2003 Part 2 Annex F</property>
+    <text>Transactions not supported</text>
+</exception>
+
 <!-- ====================================================================== -->
 
 <!-- End of last error section ============================================ -->

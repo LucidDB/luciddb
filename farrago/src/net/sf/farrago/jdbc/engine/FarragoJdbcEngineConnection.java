@@ -224,8 +224,11 @@ public class FarragoJdbcEngineConnection
     public int getTransactionIsolation()
         throws SQLException
     {
-        // TODO:  implement this; dummied out for now to shut sqlline up
-        return TRANSACTION_READ_UNCOMMITTED;
+        if (getMetaData().supportsTransactions()) {
+            return TRANSACTION_READ_UNCOMMITTED;
+        } else {
+            return TRANSACTION_NONE;
+        }
     }
 
     // implement Connection

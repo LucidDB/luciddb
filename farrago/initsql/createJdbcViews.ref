@@ -2,7 +2,6 @@
 0: jdbc:farrago:> -- This script creates a view schema used by JDBC metadata calls
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set verbose true
-0: jdbc:farrago:> !autocommit off
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- create views in system-owned schema sys_boot.jdbc_metadata
 0: jdbc:farrago:> create schema sys_boot.jdbc_metadata;
@@ -526,7 +525,5 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- just a placeholder for now
 0: jdbc:farrago:> create schema localdb.information_schema;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> commit;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit
