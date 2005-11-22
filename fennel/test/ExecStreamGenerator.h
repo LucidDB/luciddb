@@ -290,10 +290,28 @@ public:
  */
 class RampDuplicateExecStreamGenerator : public MockProducerExecStreamGenerator
 {
+    
 public:
     virtual int64_t generateValue(uint iRow, uint iCol)
     {
         return iRow/2;
+    }
+};
+
+
+class ConstExecStreamGenerator : public MockProducerExecStreamGenerator
+{
+    uint constVal;
+    
+public:
+    ConstExecStreamGenerator (uint constValInit)
+    {
+        constVal = constValInit;
+    }
+    
+    virtual int64_t generateValue(uint iRow, uint iCol)
+    {
+        return constVal;
     }
 };
 

@@ -136,6 +136,12 @@ protected:
         const TupleData  &expectedTuple,
         uint nRowsExpected);
 
+    /**
+     * Reset stream graph so multiple iterations of a method can be called
+     * within a single testcase
+     */
+    void testReset();
+
     // refine ExecStreamTestBase
     virtual void tearDown();
 

@@ -276,6 +276,16 @@ typedef uint ExtentNum;
 typedef uint BlockNum;
 
 /**
+ * Rowid
+ */
+typedef uint64_t Rid;
+
+/**
+ * Standard type corresponding to RecordNum type
+ */
+#define STANDARD_TYPE_RECORDNUM STANDARD_TYPE_INT_64 
+
+/**
  * SeekPosition enumerates the two possible endpoints for a seek.
  */
 enum SeekPosition

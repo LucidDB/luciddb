@@ -33,6 +33,132 @@ TupleDatum::TupleDatum()
     pData = NULL;
 }
 
+TupleDatum::TupleDatum(TupleDatum const &other)
+{
+    copyFrom(other);
+}
+
+TupleDatum::TupleDatum(PConstBuffer pDataWithLen)
+{
+    loadDatum(pDataWithLen);
+}
+
+TupleDatum &TupleDatum::operator = (TupleDatum const &other)
+{
+    copyFrom(other);
+    return *this;
+}
+
+void TupleDatum::copyFrom(TupleDatum const &other)
+{
+    cbData = other.cbData;
+    pData = other.pData;
+}
+
+void TupleDatum::memCopyFrom(TupleDatum const &other)
+{
+    cbData = other.cbData;
+    
+    /*
+      Perform memcpy from "other".
+      Set pData to NULL if it is NULL in "other".
+    */
+    if (other.pData) {
+        memcpy(const_cast<PBuffer>(pData),
+            other.pData,
+            other.cbData);
+    } else {
+        pData = other.pData;
+    }
+}
+
+void TupleDatum::storeDatum(PBuffer pDataWithLen)
+{
+    PBuffer tmpDataPtr = pDataWithLen;
+      
+    /*
+      Note: This storage format can only encode values shorter than 0x7f00
+    */
+    assert(cbData <= TWO_BYTE_MAX_LENGTH);
+      
+    FixedBuffer higherByte = (cbData & 0x00007f00) >> 8;
+    FixedBuffer lowerByte  = cbData & 0x000000ff;
+        
+    /*
+      store length
+    */
+    if (cbData <= ONE_BYTE_MAX_LENGTH) {
+        *tmpDataPtr = (FixedBuffer)cbData;
+        tmpDataPtr ++;
+    }
+    else {
+        *tmpDataPtr = higherByte;
+        tmpDataPtr++;
+        *tmpDataPtr = lowerByte;
+        tmpDataPtr++;
+    }
+      
+    /*
+      store value
+    */
+    memcpy(tmpDataPtr, pData, cbData);
+      
+}
+
+void TupleDatum::loadDatum(PConstBuffer pDataWithLen)
+{
+    /*
+      if length longer than 127, use two bytes to store length
+    */
+    if (*pDataWithLen & TWO_BYTE_LENGTH_BIT) {
+        cbData = ((*pDataWithLen & ONE_BYTE_LENGTH_MASK) << 8)
+            | *(pDataWithLen + 1);
+        pData = pDataWithLen + 2;
+    }
+    else {
+        cbData = *pDataWithLen;
+        pData = pDataWithLen + 1;
+    }
+}
+
+void TupleDatum::loadDatumWithBuffer(PConstBuffer pDataWithLen)
+{
+    assert (pData);
+
+    /*
+      if length longer than 127, length is from a two bytes
+    */
+    if (*pDataWithLen & TWO_BYTE_LENGTH_BIT) {
+        cbData =
+            ((*pDataWithLen & ONE_BYTE_LENGTH_MASK) << 8)
+            | *(pDataWithLen + 1);
+        memcpy(const_cast<PBuffer>(pData), pDataWithLen + 2, cbData);
+    }
+    else {
+        cbData = *pDataWithLen;
+        memcpy(const_cast<PBuffer>(pData), pDataWithLen + 1, cbData);
+    }
+}
+
+TupleStorageByteLength TupleDatum::getStorageLength(PConstBuffer pDataWithLen)
+{
+    if (pDataWithLen) {
+        if (*pDataWithLen & TWO_BYTE_LENGTH_BIT)
+            return
+                (((*pDataWithLen & ONE_BYTE_LENGTH_MASK) << 8)
+                    | *(pDataWithLen + 1)
+                    + 2);
+        else
+            return (*pDataWithLen + 1);
+    } else {
+        if (cbData <= ONE_BYTE_MAX_LENGTH) {
+            return cbData + 1;
+        } else {
+            return cbData + 2;
+        }
+    }
+}    
+
 TupleData::TupleData()
 {
 }
