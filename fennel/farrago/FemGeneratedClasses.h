@@ -123,6 +123,15 @@ typedef JniProxyIter<ProxyJavaTupleStreamDef> SharedProxyJavaTupleStreamDef;
 class ProxyKeyAccessorDef;
 typedef JniProxyIter<ProxyKeyAccessorDef> SharedProxyKeyAccessorDef;
 
+class ProxyLcsClusterAppendStreamDef;
+typedef JniProxyIter<ProxyLcsClusterAppendStreamDef> SharedProxyLcsClusterAppendStreamDef;
+
+class ProxyLcsClusterScanDef;
+typedef JniProxyIter<ProxyLcsClusterScanDef> SharedProxyLcsClusterScanDef;
+
+class ProxyLcsRowScanStreamDef;
+typedef JniProxyIter<ProxyLcsRowScanStreamDef> SharedProxyLcsRowScanStreamDef;
+
 class ProxyMergeStreamDef;
 typedef JniProxyIter<ProxyMergeStreamDef> SharedProxyMergeStreamDef;
 
@@ -512,7 +521,7 @@ static jmethodID meth_getTupleDesc;
 };
 
 class ProxyIndexStreamDef
-: virtual public JniProxy, virtual public ProxyTupleStreamDef, virtual public ProxyIndexAccessorDef
+: virtual public JniProxy, virtual public ProxyIndexAccessorDef, virtual public ProxyTupleStreamDef
 {
 public:
 };
@@ -587,6 +596,34 @@ class ProxyJavaTupleStreamDef
 public:
 int32_t getStreamId();
 static jmethodID meth_getStreamId;
+};
+
+class ProxyLcsClusterAppendStreamDef
+: virtual public JniProxy, virtual public ProxyIndexStreamDef
+{
+public:
+bool isOverwrite();
+static jmethodID meth_isOverwrite;
+};
+
+class ProxyLcsClusterScanDef
+: virtual public JniProxy, virtual public ProxyIndexAccessorDef
+{
+public:
+SharedProxyTupleDescriptor getClusterTupleDesc();
+static jmethodID meth_getClusterTupleDesc;
+SharedProxyLcsRowScanStreamDef getRowScan();
+static jmethodID meth_getRowScan;
+};
+
+class ProxyLcsRowScanStreamDef
+: virtual public JniProxy, virtual public ProxyTupleStreamDef
+{
+public:
+SharedProxyTupleProjection getOutputProj();
+static jmethodID meth_getOutputProj;
+SharedProxyLcsClusterScanDef getClusterScan();
+static jmethodID meth_getClusterScan;
 };
 
 class ProxyMergeStreamDef
@@ -868,6 +905,12 @@ virtual void visit(ProxyJavaTransformStreamDef &)
 virtual void visit(ProxyJavaTupleStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyKeyAccessorDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyLcsClusterAppendStreamDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyLcsClusterScanDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyLcsRowScanStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyMergeStreamDef &)
 { unhandledVisit(); }
