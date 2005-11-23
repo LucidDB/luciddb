@@ -118,6 +118,18 @@ void ExecStreamUnitTestBase::testCaseSetUp()
     pGraphEmbryo = newStreamGraphEmbryo(pGraph);
 }
 
+void ExecStreamUnitTestBase::testReset()
+{
+    if (pScheduler) {
+        pScheduler->stop();
+    }
+    tearDown();
+    pScheduler.reset();
+                
+    pScheduler.reset(newScheduler());
+    pGraph = newStreamGraph();
+    pGraphEmbryo = newStreamGraphEmbryo(pGraph);
+}
 
 // refines ExecStreamTestBase::testCaseTearDown()
 void ExecStreamUnitTestBase::tearDown()

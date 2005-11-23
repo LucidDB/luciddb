@@ -1,0 +1,81 @@
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Equi-joins
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- standard emp/dept
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select EMP.EMPNO, EMP.LNAME, EMP.DEPTNO, DEPT.DEPTNO, DEPT.DNAME
+. . . . . . . . > 
+. . . . . . . . > from EMP, DEPT
+. . . . . . . . > 
+. . . . . . . . > where EMP.DEPTNO = DEPT.DEPTNO order by EMPNO;
++--------+-----------+---------+---------+--------------+
+| EMPNO  |   LNAME   | DEPTNO  | DEPTNO  |    DNAME     |
++--------+-----------+---------+---------+--------------+
+| 100    | Bush      | 30      | 30      | Development  |
+| 101    | Brown     | 50      | 50      | Support      |
+| 102    | Andrews   | 30      | 30      | Development  |
+| 103    | Webber    | 20      | 20      | Marketing    |
+| 104    | Fratz     | 10      | 10      | Accounting   |
+| 105    | Guy       | 30      | 30      | Development  |
+| 106    | Roy       | 40      | 40      | Sales        |
+| 107    | Williams  | 40      | 40      | Sales        |
+| 108    | Reynolds  | 50      | 50      | Support      |
+| 109    | Nife      | 40      | 40      | Sales        |
+| 110    | Jones     | 30      | 30      | Development  |
++--------+-----------+---------+---------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- this one used to fail in calculator due to column mapping stuff
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select EMP.EMPNO, EMP.DEPTNO, DEPT.DNAME from EMP, DEPT
+. . . . . . . . > 
+. . . . . . . . > where EMP.DEPTNO = DEPT.DEPTNO order by EMPNO;
++--------+---------+--------------+
+| EMPNO  | DEPTNO  |    DNAME     |
++--------+---------+--------------+
+| 100    | 30      | Development  |
+| 101    | 50      | Support      |
+| 102    | 30      | Development  |
+| 103    | 20      | Marketing    |
+| 104    | 10      | Accounting   |
+| 105    | 30      | Development  |
+| 106    | 40      | Sales        |
+| 107    | 40      | Sales        |
+| 108    | 50      | Support      |
+| 109    | 40      | Sales        |
+| 110    | 30      | Development  |
++--------+---------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- dept, loc
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select DEPTNO, DNAME, CITY, LOCATION.LOCID from DEPT, LOCATION
+. . . . . . . . > 
+. . . . . . . . > where DEPT.LOCID=LOCATION.LOCID
+. . . . . . . . > 
+. . . . . . . . > order by DEPTNO, LOCID;
++---------+--------------+----------------+--------+
+| DEPTNO  |    DNAME     |      CITY      | LOCID  |
++---------+--------------+----------------+--------+
+| 10      | Accounting   | San Francisco  | SF     |
+| 20      | Marketing    | San Francisco  | SF     |
+| 30      | Development  | San Mateo      | HQ     |
+| 40      | Sales        | San Mateo      | HQ     |
+| 50      | Support      | Menlo Park     | MP     |
++---------+--------------+----------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

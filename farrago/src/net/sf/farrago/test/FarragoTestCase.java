@@ -220,7 +220,16 @@ public abstract class FarragoTestCase extends DiffTestCase
         if (repos != null) {
             restoreParameters();
         }
-        if (connection != null) {
+        rollbackIfSupported();
+    }
+
+    private static void rollbackIfSupported()
+        throws SQLException
+    {
+        if (connection == null) {
+            return;
+        }
+        if (connection.getMetaData().supportsTransactions()) {
             connection.rollback();
         }
     }
@@ -234,15 +243,17 @@ public abstract class FarragoTestCase extends DiffTestCase
                 driver.getUrlPrefix(),
                 FarragoCatalogInit.SA_USER_NAME,
                 null);
-        newConnection.setAutoCommit(false);
+        if (newConnection.getMetaData().supportsTransactions()) {
+            newConnection.setAutoCommit(false);
+        }
         return newConnection;
     }
 
     public static void forceShutdown() throws Exception
     {
         repos = null;
+        rollbackIfSupported();
         if (connection != null) {
-            connection.rollback();
             connection.close();
             connection = null;
         }
@@ -430,9 +441,7 @@ public abstract class FarragoTestCase extends DiffTestCase
                 stmt.close();
                 stmt = null;
             }
-            if (connection != null) {
-                connection.rollback();
-            }
+            rollbackIfSupported();
             allocOwner.closeAllocation();
             allocOwner = null;
         } finally {
@@ -563,10 +572,11 @@ public abstract class FarragoTestCase extends DiffTestCase
         assert (sqlFile.endsWith(".sql"));
         File sqlFileSansExt =
             new File(sqlFile.substring(0, sqlFile.length() - 4));
+        String driverName = driver.getClass().getName();
         String [] args =
             new String [] {
                 "-u", driver.getUrlPrefix(), "-d",
-                "net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver", "-n",
+                driverName, "-n",
                 FarragoCatalogInit.SA_USER_NAME,
                 "--force=true", "--silent=true",
                 "--showWarnings=false", "--maxWidth=1024"

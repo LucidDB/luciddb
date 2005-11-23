@@ -24,6 +24,9 @@ import net.sf.farrago.session.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.defimpl.*;
 
+import org.eigenbase.resgen.*;
+import org.eigenbase.resource.*;
+
 /**
  * Customizes Farrago session personality with LucidDB behavior.
  *
@@ -42,6 +45,19 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         FarragoSessionStmtValidator stmtValidator)
     {
         return "SYS_COLUMN_STORE_DATA_SERVER";
+    }
+
+    public boolean supportsFeature(ResourceDefinition feature)
+    {
+        // TODO jvs 20-Nov-2005: better infrastructure once there
+        // are enough feature overrides to justify it
+
+        // LucidDB doesn't yet support transactions.
+        if (feature == EigenbaseResource.instance().SQLFeature_E151) {
+            return false;
+        }
+        
+        return super.supportsFeature(feature);
     }
 }
 

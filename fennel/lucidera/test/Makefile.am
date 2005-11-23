@@ -8,12 +8,14 @@ endif
 
 # NOTE:  tests are ordered roughly from fastest to slowest
 noinst_PROGRAMS= \
+LcsClusterAppendExecStreamTest \
 ExternalSortExecStreamTest \
 FlatFileExecStreamTest
 
 TESTS = $(noinst_PROGRAMS)
 
 ExternalSortExecStreamTest_SOURCES=ExternalSortExecStreamTest.cpp
+LcsClusterAppendExecStreamTest_SOURCES=LcsClusterAppendExecStreamTest.cpp
 FlatFileExecStreamTest_SOURCES=FlatFileExecStreamTest.cpp
 
 # NOTE:  have to repeat $(EXTRA_LDFLAGS) on mingw due to stupid linker.
@@ -26,6 +28,7 @@ LDADD = \
 	-lfennel_lu_colstore \
 	-lfennel_lu_flatfile \
 	-lfennel_lu_sorter \
+	-lfennel_ftrs \
 	-lfennel_db \
 	-lfennel_btree \
 	-lfennel_exec \

@@ -2,7 +2,6 @@
 -- This script creates a simple schema used by some of the unit tests.
 
 !set verbose true
-!autocommit off
 
 -- create local sales schema
 create schema sales;
@@ -81,5 +80,3 @@ options(
     url 'jdbc:hsqldb:testcases/hsqldb/scott',
     user_name 'SA',
     table_types 'TABLE,VIEW');
-
-commit;

@@ -31,6 +31,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.session.*;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.resource.*;
 
 /**
  * FarragoJdbcEngineDatabaseMetaData implements the {@link
@@ -453,7 +454,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
     public boolean supportsMultipleTransactions()
         throws SQLException
     {
-        return true;
+        return supportsTransactions();
     }
 
     // implement DatabaseMetaData
@@ -897,21 +898,27 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
     public int getDefaultTransactionIsolation()
         throws SQLException
     {
-        return Connection.TRANSACTION_READ_UNCOMMITTED;
+        if (supportsTransactions()) {
+            return Connection.TRANSACTION_READ_UNCOMMITTED;
+        } else {
+            return Connection.TRANSACTION_NONE;
+        }
     }
 
     // implement DatabaseMetaData
     public boolean supportsTransactions()
         throws SQLException
     {
-        return true;
+        return connection.getSession().getPersonality().supportsFeature(
+            EigenbaseResource.instance().SQLFeature_E151);
     }
 
     // implement DatabaseMetaData
     public boolean supportsTransactionIsolationLevel(int level)
         throws SQLException
     {
-        return level == Connection.TRANSACTION_READ_UNCOMMITTED;
+        return supportsTransactions() &&
+            (level == Connection.TRANSACTION_READ_UNCOMMITTED);
     }
 
     // implement DatabaseMetaData

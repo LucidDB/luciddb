@@ -42,6 +42,8 @@ import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.plugin.*;
 
+import org.eigenbase.resgen.*;
+import org.eigenbase.resource.*;
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.sql.*;
@@ -370,6 +372,13 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     // implement FarragoSession
     public void setAutoCommit(boolean autoCommit)
     {
+        ResourceDefinition txnFeature =
+            EigenbaseResource.instance().SQLFeature_E151;
+        if (!autoCommit) {
+            if (!personality.supportsFeature(txnFeature)) {
+                throw EigenbaseResource.instance().SQLFeature_E151.ex();
+            }
+        }
         commitImpl();
         isAutoCommit = autoCommit;
     }

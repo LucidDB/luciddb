@@ -1,0 +1,11 @@
+create foreign table csv_schema.SHORTREG_CUSTOMERS_SRC (
+CUSTID INTEGER,
+FNAME VARCHAR(30),
+LNAME VARCHAR(30),
+SEX VARCHAR(1)
+)
+server csv_server
+options (table_name 'customers');
+
+INSERT INTO s.CUSTOMERS
+SELECT CUSTID,FNAME,LNAME,SEX FROM csv_schema.SHORTREG_CUSTOMERS_SRC;

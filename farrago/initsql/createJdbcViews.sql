@@ -2,7 +2,6 @@
 -- This script creates a view schema used by JDBC metadata calls
 
 !set verbose true
-!autocommit off
 
 -- create views in system-owned schema sys_boot.jdbc_metadata
 create schema sys_boot.jdbc_metadata;
@@ -526,5 +525,3 @@ grant select on index_info_view to public;
 
 -- just a placeholder for now
 create schema localdb.information_schema;
-
-commit;

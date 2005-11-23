@@ -33,6 +33,7 @@ import org.eigenbase.oj.util.OJClassMap;
 import org.eigenbase.util.property.Property;
 import org.eigenbase.runtime.CompoundIterator;
 import org.eigenbase.runtime.CompoundParallelIterator;
+import org.eigenbase.jmi.JmiChangeSet;
 
 /**
  * Contains all of the {@link java.util.logging.Logger tracers} used within
@@ -113,6 +114,15 @@ public abstract class EigenbaseTrace
     public static Logger getParserTracer()
     {
         return Logger.getLogger("org.eigenbase.sql.parser");
+    }
+    
+    /**
+     * The "org.eigenbase.jmi.JmiChangeSet" tracer reports
+     * JmiChangeSet events.
+     */
+    public static Logger getJmiChangeSetTracer()
+    {
+        return Logger.getLogger("org.eigenbase.jmi.JmiChangeSet");
     }
     
     /**
