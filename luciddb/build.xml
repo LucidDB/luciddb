@@ -76,6 +76,8 @@
   <!-- directory for JUnit run output -->
   <property name="testlog.dir" location="${luciddb.dir}/testlog"/>
 
+  <property name="testsrc.dir" location="${luciddb.test.dir}/sql"/>
+
   <!-- Template developer configuration file. -->
   <property name="FarragoConfTemplate.xmi"
     location="${farrago.xmi.dir}/FarragoConfTemplate.xmi"/>
@@ -245,7 +247,7 @@
   </macrodef>
 
   <target name="shortreg" depends="compile" >
-    <filelist dir="${testlog.dir}/shortreg" id="filelist.shortregsql"
+    <filelist dir="${testsrc.dir}/shortreg" id="filelist.shortregsql"
       files="creschema.sql,locationload.sql,deptload.sql,empload.sql,
         customersload.sql,productsload.sql,salesload.sql,joinEq.sql"/>
     <pathconvert property="filelist.shortregsql" refid="filelist.shortregsql"
@@ -254,7 +256,7 @@
   </target>
 
   <target name="txn" depends="compile">
-    <filelist dir="${testlog.dir}/txn" id="filelist.txnsql"
+    <filelist dir="${testsrc.dir}/txn" id="filelist.txnsql"
       files="negative.sql"/>
     <pathconvert property="filelist.txnsql" refid="filelist.txnsql"
       pathsep="${line.separator}" dirsep="${file.separator}" />
@@ -263,7 +265,7 @@
 
   <!-- Extra Short Regression -->
   <target name="xreg" depends="compile,createCatalog">
-    <filelist dir="${testlog.dir}/shortreg" id="filelist.shortregsql"
+    <filelist dir="${testsrc.dir}/shortreg" id="filelist.shortregsql"
       files="creschema.sql,locationload.sql,deptload.sql,empload.sql,
         customersload.sql,productsload.sql,salesload.sql,joinEqSanity.sql"/>
     <pathconvert property="filelist.shortregsql" refid="filelist.shortregsql"
@@ -275,14 +277,42 @@
     <delete includeEmptyDirs="true" quiet="true">
       <fileset dir="${testlog.dir}" includes="*.xml"/>
       <fileset dir="${testlog.dir}" includes="*.txt"/>
-      <fileset dir="${testlog.dir}" includes="*.log"/>
-      <fileset dir="${testlog.dir}" includes="*.dif"/>
+      <fileset dir="${testlog.dir}/shortreg"/><!-- delete eventually-->
+      <fileset dir="${testlog.dir}/txn"/><!-- delete eventually-->
+      <fileset dir="${testsrc.dir}" includes="*.log"/>
+      <fileset dir="${testsrc.dir}" includes="*.dif"/>
     </delete>
     <delete quiet="true" file="${LucidDbTrace.log}"/>
   </target>
 
   <!-- Experimental Area: Let's see about creating fine-grained tests with dependencies specified -->
 
+  <macrodef name="xrunSqlTests">
+    <attribute name="filelist" default="unspecified"/>
+    <sequential>
+      <junit printsummary="yes" fork="yes" forkmode="perBatch" haltonerror="no" haltonfailure="no"
+        tempdir="${testlog.dir}">
+        <classpath refid="test.classpath"/>
+        <jvmarg line="${assertions.jvmarg}"/>
+        <jvmarg line="&FarragoProps;"/>
+        <sysproperty key="net.sf.farrago.fileset.unitsql"
+          value="@{filelist}"/>
+        <formatter type="plain"/>
+        <formatter type="xml"/> <!-- for integration builds -->
+        <test todir="${testlog.dir}" 
+          name="com.lucidera.luciddb.test.LucidDbSqlTest" />
+      </junit>
+    </sequential>
+  </macrodef>
+
+  <target name="x">
+    <filelist dir="${testsrc.dir}/shortreg" id="filelist.shortregsql"
+      files="creschema.sql,locationload.sql,deptload.sql,empload.sql,
+        customersload.sql,productsload.sql,salesload.sql,${testfile}"/>
+    <pathconvert property="filelist.shortregsql" refid="filelist.shortregsql"
+      pathsep="${line.separator}" dirsep="${file.separator}" />
+    <xrunSqlTests filelist="${filelist.shortregsql}"/>
+  </target>
 
   <!-- generic ant target that is parameterized by sql file -->
   <target name="run-sql-test">
@@ -305,7 +335,7 @@
   <!-- joinEqSanity test - Basic equi-join tests -->
   <target name="test-join-eq-sanity" depends="test-setup">
     <antcall target="run-sql-test">
-      <param name="sql.files" value="${testlog.dir}/shortreg/joinEqSanity.sql"/>
+      <param name="sql.files" value="${testsrc.dir}/shortreg/joinEqSanity.sql"/>
     </antcall>
   </target>
 
@@ -319,12 +349,12 @@
   <!-- joinRng test - Range join tests. -->
   <target name="test-join-rng" depends="test-setup">
     <antcall target="run-sql-test">
-      <param name="sql.files" value="${testlog.dir}/shortreg/joinRng.sql"/>
+      <param name="sql.files" value="${testsrc.log}/shortreg/joinRng.sql"/>
     </antcall>
   </target>
 
   <target name="test-setup" depends="compile,createCatalog">
-    <filelist dir="${testlog.dir}/shortreg" id="filelist.setup"
+    <filelist dir="${testsrc.log}/shortreg" id="filelist.setup"
       files="creschema.sql,locationload.sql,deptload.sql,empload.sql,
         customersload.sql,productsload.sql,salesload.sql"/>
     <pathconvert property="filelist.setup" refid="filelist.setup"

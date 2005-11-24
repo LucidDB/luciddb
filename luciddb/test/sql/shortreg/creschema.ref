@@ -82,7 +82,7 @@
 . . . . . . . . > foreign data wrapper test_jdbc
 . . . . . . . . > options(
 . . . . . . . . >     driver_class 'org.relique.jdbc.csv.CsvDriver',
-. . . . . . . . >     url 'jdbc:relique:csv:testlog/shortreg',
+. . . . . . . . >     url 'jdbc:relique:csv:test/sql/shortreg',
 . . . . . . . . >     schema_name 'TESTDATA');
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create schema csv_schema;
