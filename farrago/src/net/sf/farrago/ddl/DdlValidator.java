@@ -756,6 +756,10 @@ public class DdlValidator extends FarragoCompoundAllocation
                         // mark this new element as validated
                         element.setVisibility(VisibilityKindEnum.VK_PRIVATE);
                     }
+                    if ((revalidateQueue != null)
+                            && revalidateQueue.contains(obj)) {
+                        setRevalidationResult((CwmModelElement)obj, null);
+                    }
                     progress = true;
                 } catch (FarragoUnvalidatedDependencyException ex) {
                     // Something hit an unvalidated dependency; we'll have
@@ -767,7 +771,7 @@ public class DdlValidator extends FarragoCompoundAllocation
                 } catch (EigenbaseException ex) {
                     if ((revalidateQueue != null)
                             && revalidateQueue.contains(obj)) {
-                        handleRevalidationException(obj, ex);
+                        setRevalidationResult((CwmModelElement)obj, ex);
                     } else {
                         throw ex;
                     }
@@ -800,14 +804,16 @@ public class DdlValidator extends FarragoCompoundAllocation
     /**
      * Handle an exception encountered during validation of dependencies of an
      * object replaced via CREATE OR REPLACE (a.k.a. revalidation).
-     * @param obj Catalog object causing revalidation exception
+     * @param element Catalog object causing revalidation exception
      * @param ex Revalidation exception
      */
-    public void handleRevalidationException(
-        RefObject obj,
+    public void setRevalidationResult(
+        CwmModelElement element,
         EigenbaseException ex)
     {
-        throw ex;
+        if (ex != null) {
+            throw ex;
+        }
     }
 
     private void clearDependencySuppliers(RefObject refObj)
