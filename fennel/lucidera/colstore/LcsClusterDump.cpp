@@ -113,7 +113,7 @@ void LcsClusterDump::dump(uint64_t pageId, PBuffer pBlock, uint szBlock)
             mode = "Fixed";
             break;
         default:
-            assert(true);
+            permAssert(false);
         }
         callTrace("Batch #%2u (%s)", i + 1, mode);
         callTrace("--------------------");

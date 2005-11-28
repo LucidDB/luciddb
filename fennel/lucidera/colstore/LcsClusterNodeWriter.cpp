@@ -845,6 +845,7 @@ RecordNum LcsClusterNodeWriter::MoveFromIndexToTemp()
     uint16_t column;
     uint16_t m_batchCount = (uint16_t)(m_pHdr->nBatch / m_numColumns);
     RecordNum nrows;
+    uint16_t b;
 
     batchDirOffset.reset(new uint16_t[m_pHdr->nBatch]);
     
@@ -868,10 +869,8 @@ RecordNum LcsClusterNodeWriter::MoveFromIndexToTemp()
 
     pBatch = (PLcsBatchDir)(m_indexBlock + m_pHdr->oBatch);
     for (column = 0; column < m_numColumns; column++) {
-        uint16_t b;
         uint i;
         loc = m_pHdrSize;
-        nrows = 0;
 
         // move every batch for this column
         for (b = column, i = 0; i < m_batchCount;
@@ -953,6 +952,13 @@ RecordNum LcsClusterNodeWriter::MoveFromIndexToTemp()
             b= (uint16_t)(b+m_numColumns);
             dirLoc += sizeof(LcsBatchDir);
         }
+    }
+
+    // compute the number of rows on the page
+    pBatch = (PLcsBatchDir)(m_indexBlock + m_pHdr->oBatch);
+    for (b = 0, nrows = 0; b < m_batchCount;
+            b = (uint16_t) (b + m_numColumns)) {
+        nrows += pBatch[b].nRow;
     }
 
     batchDirOffset.reset();
