@@ -191,7 +191,7 @@ fi
 cp catalog/FarragoCatalog.* $CATALOG_DIR
 cp catalog/ReposStorage.properties $CATALOG_DIR
  
-if dist_fennel; then
+if $dist_fennel; then
     cp catalog/*.dat $CATALOG_DIR
 fi
 
