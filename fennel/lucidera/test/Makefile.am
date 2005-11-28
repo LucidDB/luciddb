@@ -9,12 +9,14 @@ endif
 # NOTE:  tests are ordered roughly from fastest to slowest
 noinst_PROGRAMS= \
 LcsClusterAppendExecStreamTest \
-ExternalSortExecStreamTest
+ExternalSortExecStreamTest \
+FlatFileExecStreamTest
 
 TESTS = $(noinst_PROGRAMS)
 
 ExternalSortExecStreamTest_SOURCES=ExternalSortExecStreamTest.cpp
 LcsClusterAppendExecStreamTest_SOURCES=LcsClusterAppendExecStreamTest.cpp
+FlatFileExecStreamTest_SOURCES=FlatFileExecStreamTest.cpp
 
 # NOTE:  have to repeat $(EXTRA_LDFLAGS) on mingw due to stupid linker.
 
@@ -24,6 +26,7 @@ LDADD = \
 	-L$(top_builddir)/lucidera/libfennel_lu \
 	-l$(TEST_LIB) \
 	-lfennel_lu_colstore \
+	-lfennel_lu_flatfile \
 	-lfennel_lu_sorter \
 	-lfennel_ftrs \
 	-lfennel_db \
