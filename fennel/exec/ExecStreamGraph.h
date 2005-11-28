@@ -323,6 +323,16 @@ public:
      * @return vector of sorted streams
      */
     virtual std::vector<SharedExecStream> getSortedStreams() = 0;
+
+    /**
+     * the number of streams in the graph. Can only be called after prepare.
+     */
+    virtual int getStreamCount() = 0;
+
+    /**
+     * the number of dataflows (edges) in the graph. Can only be called after prepare.
+     */
+    virtual int getDataflowCount() = 0;
 };
 
 inline ExecStreamScheduler *ExecStreamGraph::getScheduler() const

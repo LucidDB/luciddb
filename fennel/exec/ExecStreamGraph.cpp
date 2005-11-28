@@ -93,6 +93,11 @@ void ExecStreamGraphImpl::freeVertex(Vertex v)
     freeVertices.push_back(v);
 }
 
+int ExecStreamGraphImpl::getStreamCount()
+{
+    return boost::num_vertices(graphRep) - freeVertices.size();
+}
+
 ExecStreamGraphImpl::Vertex 
 ExecStreamGraphImpl::addVertex(SharedExecStream pStream)
 {
@@ -129,6 +134,7 @@ void ExecStreamGraphImpl::removeStream(ExecStreamId id)
     pStream->pGraph = 0;
     pStream->id = 0;
 }
+
 
 void ExecStreamGraphImpl::removeFromStreamOutMap(SharedExecStream p)
 {
@@ -183,6 +189,13 @@ void ExecStreamGraphImpl::addInputDataflow(
     boost::add_edge(producerId,consumerId,graphRep);
 }
 
+
+int ExecStreamGraphImpl::getDataflowCount()
+{
+    return boost::num_edges(graphRep);
+}
+
+
 void ExecStreamGraphImpl::mergeFrom(ExecStreamGraph& src)
 {
     if (ExecStreamGraphImpl *p = dynamic_cast<ExecStreamGraphImpl*>(&src)) {
@@ -232,7 +245,8 @@ void ExecStreamGraphImpl::mergeFrom(ExecStreamGraphImpl& src)
             pBuf, graphRep);
         assert(x.second);
     }
-    src.clear();
+    src.clear();                        // source is empty
+    sortedStreams.clear();              // invalid now
 }
 
 
@@ -258,22 +272,24 @@ void ExecStreamGraphImpl::mergeFrom(
 
     // Copy the internal edges (with attached buffers, which stay bound to the adjacent streams).
     // It suffices to scan the outbound edges. The external edges are abandoned.
-    for (int i = 0; i < nnodes; i++) {
-        // Find all outbound edges E (U,V) in the source subgraph
-        Vertex u = boost::vertices(src.graphRep).first[nodes[i]];
-        for (OutEdgeIterPair edges = boost::out_edges(u, src.graphRep);
-             edges.first != edges.second;
-             ++edges.first)
-        {
-            // an edge e (u, v) in the source graph
-            Edge e = *edges.first;
-            assert(u == boost::source(e, src.graphRep));
-            Vertex v = boost::target(e, src.graphRep);
-            // V is in the subgraph iff v is a key in the map vmap[]
-            if (vmap.find(v) != vmap.end()) {
-                SharedExecStreamBufAccessor pBuf = src.getSharedBufAccessorFromEdge(e);
-                std::pair<Edge, bool> x = boost::add_edge(vmap[u], vmap[v], pBuf, graphRep);
-                assert(x.second);
+    if (nnodes > 1) {                   // (when only 1 node, no internal edges)
+        for (int i = 0; i < nnodes; i++) {
+            // Find all outbound edges E (U,V) in the source subgraph
+            Vertex u = boost::vertices(src.graphRep).first[nodes[i]];
+            for (OutEdgeIterPair edges = boost::out_edges(u, src.graphRep);
+                 edges.first != edges.second;
+                 ++edges.first)
+            {
+                // an edge e (u, v) in the source graph
+                Edge e = *edges.first;
+                assert(u == boost::source(e, src.graphRep));
+                Vertex v = boost::target(e, src.graphRep);
+                // V is in the subgraph iff v is a key in the map vmap[]
+                if (vmap.find(v) != vmap.end()) {
+                    SharedExecStreamBufAccessor pBuf = src.getSharedBufAccessorFromEdge(e);
+                    std::pair<Edge, bool> x = boost::add_edge(vmap[u], vmap[v], pBuf, graphRep);
+                    assert(x.second);
+                }
             }
         }
     }
@@ -286,7 +302,8 @@ void ExecStreamGraphImpl::mergeFrom(
         src.removeFromStreamOutMap(pStream);
         src.freeVertex(v);
     }
-    src.sortedStreams.clear();
+    src.sortedStreams.clear();          // invalidate
+    sortedStreams.clear();              // invalidate
 }
 
 
@@ -481,12 +498,19 @@ uint ExecStreamGraphImpl::getOutputCount(
     return boost::out_degree(streamVertex,graphRep);
 }
 
-SharedExecStream ExecStreamGraphImpl::getStreamInput(
+ExecStreamGraphImpl::Edge ExecStreamGraphImpl::getInputEdge(
     ExecStreamId streamId,
     uint iInput)
 {
     Vertex streamVertex = boost::vertices(graphRep).first[streamId];
-    Edge inputEdge = boost::in_edges(streamVertex,graphRep).first[iInput];
+    return boost::in_edges(streamVertex,graphRep).first[iInput];
+}
+
+SharedExecStream ExecStreamGraphImpl::getStreamInput(
+    ExecStreamId streamId,
+    uint iInput)
+{
+    Edge inputEdge = getInputEdge(streamId, iInput);
     Vertex inputVertex = boost::source(inputEdge,graphRep);
     return getStreamFromVertex(inputVertex);
 }
@@ -495,17 +519,23 @@ SharedExecStreamBufAccessor ExecStreamGraphImpl::getStreamInputAccessor(
     ExecStreamId streamId,
     uint iInput)
 {
-    Vertex streamVertex = boost::vertices(graphRep).first[streamId];
-    Edge inputEdge = boost::in_edges(streamVertex,graphRep).first[iInput];
+    Edge inputEdge = getInputEdge(streamId, iInput);
     return getSharedBufAccessorFromEdge(inputEdge);
+}
+
+ExecStreamGraphImpl::Edge ExecStreamGraphImpl::getOutputEdge(
+    ExecStreamId streamId,
+    uint iOutput)
+{
+    Vertex streamVertex = boost::vertices(graphRep).first[streamId];
+    return boost::out_edges(streamVertex,graphRep).first[iOutput];
 }
 
 SharedExecStream ExecStreamGraphImpl::getStreamOutput(
     ExecStreamId streamId,
     uint iOutput)
 {
-    Vertex streamVertex = boost::vertices(graphRep).first[streamId];
-    Edge outputEdge = boost::out_edges(streamVertex,graphRep).first[iOutput];
+    Edge outputEdge = getOutputEdge(streamId, iOutput);
     Vertex outputVertex = boost::target(outputEdge,graphRep);
     return getStreamFromVertex(outputVertex);
 }
@@ -514,8 +544,7 @@ SharedExecStreamBufAccessor ExecStreamGraphImpl::getStreamOutputAccessor(
     ExecStreamId streamId,
     uint iOutput)
 {
-    Vertex streamVertex = boost::vertices(graphRep).first[streamId];
-    Edge outputEdge = boost::out_edges(streamVertex,graphRep).first[iOutput];
+    Edge outputEdge = getOutputEdge(streamId, iOutput);
     return getSharedBufAccessorFromEdge(outputEdge);
 }
 
