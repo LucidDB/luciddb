@@ -57,34 +57,36 @@ public:
     inline explicit LcsHashValOrd(LcsHashValOrd const &other);
     
     /**
-     * 
+     * Copy assignment. Used to cast an uint16_t to LcsHashValOrd.
      */
     inline LcsHashValOrd& operator=(uint16_t valOrdInit);
   
     /**
-     * Get fields in LcsHashValOrd struct The highest bit in the value ordinal
-     * indicates whether or not value is part of current batch.
+     * Gets fields in LcsHashValOrd struct.
+     * The highest bit in the value ordinal indicates whether or not value is
+     * part of current batch.
      */
     inline uint16_t getValOrd();
     
     /**
-     * Set fields in LcsHashValOrd struct The highest bit in the value ordinal
-     * indicates whether or not value is part of current batch.
+     * Sets fields in LcsHashValOrd struct.
+     * The highest bit in the value ordinal indicates whether or not value is
+     * part of current batch.
      */
     inline void setValOrd(uint16_t valOrdInit);
 
     /**
-     * Check if this value node is part of the current batch.
+     * Checks if this value node is part of the current batch.
      */
     inline bool isValueInBatch();
         
     /**
-     * Mark that this value node is part of the current batch.
+     * Marks that this value node is part of the current batch.
      */
     inline void setValueInBatch();
     
     /**
-     * Mark that this value node is not part of the current batch.
+     * Marks that this value node is not part of the current batch.
      */
     inline void clearValueInBatch();
 };
@@ -165,22 +167,22 @@ public:
     inline explicit LcsHashTable();
 
     /**
-     * Setup fields in LcsHashTable
+     * Sets up fields in LcsHashTable.
      *
-     * @param[in] hashBlockInit buffer to fit the variable length fields entry and
-     * valueNodes
+     * @param[in] hashBlockInit buffer to fit the variable length fields entry
+     * and valueNodes
      *
      * @param[in] hashBlockSizeInit size of the buffer
      */
     void init(PBuffer hashBlockInit, uint hashBlockSizeInit);
     
     /**
-     * Reset the hash table to prepare for encoding the next page.
+     * Resets the hash table to prepare for encoding the next page.
      */
     inline void resetHash();
 
     /**
-     * Reset the entries present in the current batch to prepare for encoding
+     * Resets the entries present in the current batch to prepare for encoding
      * the next batch.
      */
     inline void resetBatch();
@@ -191,13 +193,13 @@ public:
     inline uint16_t numHashEntries();
 
     /**
-     * Give out the next hash value node (for the caller to fill in interesting
-     * information).
+     * Gives out the next hash value node for the caller to fill in interesting
+     * information.
      */
     inline LcsHashValueNode* getNewValueNode();
 
     /**
-     * Insert a new node into the overflow chain.
+     * Inserts a new node into the overflow chain.
      *
      * @param[in] key hash key of the newNode
      *
@@ -206,7 +208,7 @@ public:
     inline void insertNewValueNode(uint key,  LcsHashValueNode *newNode);
 
     /**
-     * Undo the most recent insert.
+     * Undoes the most recent insert.
      *
      * @param[in] key hash key of the node to remove. The most recently inserted
      * value nodes is always at the beginning of the overflow list for a key
@@ -214,30 +216,30 @@ public:
     inline void undoNewValueNode(uint key);
 
     /**
-     * Return the first value node having a certain key value.
+     * Returns the first value node having a certain key value.
      *
      * @param[in] key hash key to locate
      *
-     * @return LcsHashValueNode* pointer to the first value node
+     * @return pointer to the first value node
      */ 
     inline LcsHashValueNode* getFirstValueNode(uint key);
     
     /**
-     * Return the next value node following a value node
+     * Returns the next value node following a value node
      *
      * @param[in] pValueNode pointer to the current LcsHashValueNode
      *
-     * @return LcsHashValueNode* pointer to the next value node
+     * @return pointer to the next value node
      */ 
     inline LcsHashValueNode* getNextValueNode(LcsHashValueNode *pValueNode);
 
     /**
-     * Check if hash table is full.
+     * Checks if hash table is full.
      *
      * @param[in] leftOvers additional value nodes to accommodate with a default
      * value of 0
      *
-     * @return bool true if hash table is full
+     * @return true if hash table is full
      */
     inline bool isFull(uint leftOvers = 0);
 };
@@ -280,7 +282,7 @@ struct LcsUndoType
     inline LcsUndoType();
 
     /**
-     * Set fields.
+     * Sets fields.
      *
      * @param[in] whatInit undo action
      *
@@ -297,7 +299,7 @@ struct LcsUndoType
         LcsHashValueNode *vPtrInit);
 
     /**
-     * Reset fields.
+     * Resets fields.
      */
     inline void reset();
 };
@@ -363,7 +365,7 @@ public:
     ~LcsCompareColKeyUsingOffsetIndex() {}
 
     /**
-     * Compare the two values stored at the offsets located by the two indices.
+     * Compares the two values stored at the offsets located by the two indices.
      * The implementation uses type information saved in colTupleDesc when
      * performing the comparison.
      *
@@ -371,7 +373,7 @@ public:
      *
      * @param[in] ColKeyOffsetIndex2 index into the offset of the second value
      *
-     * @return bool true if value at offset located at colKeyOffsetIndex1 is
+     * @return true if value at offset located at colKeyOffsetIndex1 is
      * less than value at offset loocated at colKeyOffsetIndex2
      */
     bool lessThan(const uint16_t colKeyOffsetIndex1,
@@ -409,7 +411,7 @@ public:
      *
      * @param[in] ColKeyOffsetIndex2 index into the offset of the second value
      *
-     * @return bool true if value at offset located at colKeyOffsetIndex1 is
+     * @return true if value at offset located at colKeyOffsetIndex1 is
      * less than value at offset loocated at colKeyOffsetIndex2
      */
     inline bool operator()(const uint16_t colKeyOffsetIndex1,
@@ -502,7 +504,7 @@ private:
      * @param[in] dataWithLen pointer to buffer with value and length info encoded
      * at the first 1 or 2 bytes.
      *
-     * @return uint hash key
+     * @return hash key
      */
     uint computeKey(PBuffer dataWithLen);
   
@@ -517,7 +519,7 @@ private:
      *
      * @param[out] v hash value node if value is previously inserted
      *
-     * @return bool true if a match in both the key and the data value is found
+     * @return true if a match in both the key and the data value is found
      */
     bool search(uint key, PBuffer dataWithLen,
         LcsHashValOrd *valOrd, LcsHashValueNode **v);
@@ -527,7 +529,7 @@ public:
     ~LcsHash() {};
 
     /**
-     * Initialized the LcsHash object.
+     * Initializes the LcsHash object.
      *
      * @param[in] hashBlockSizeInit block to hold the hash table
      *
@@ -547,7 +549,7 @@ public:
         uint16_t blockSizeInit);
   
     /**
-     * Insert a single column tuple into the hash table. It also causes the
+     * Inserts a single column tuple into the hash table. It also causes the
      * column value to be inserted into the cluster block if needed.
      *
      * @param[in] colTupleData column tuple to insert
@@ -562,8 +564,8 @@ public:
         bool *undoInsert);
     
     /**
-     * Insert a data buffer of a column into the hash table. It also causes the
-     * column value to be inserted into the cluster block if needed.
+     * Inserts a data buffer of a column into the hash table. It also causes
+     * the column value to be inserted into the cluster block if needed.
      *
      * @param[in] dataWithLen data buffer of column tuple to insert
      *
@@ -577,17 +579,16 @@ public:
         bool *undoInsert);
 
     /**
-     * Undo the previous insert of a column tuple. This will be called if we
+     * Undoes the previous insert of a column tuple. This will be called if we
      * are trying to add all of the columns in a cluster and at least one can't
      * fit we will remove previously added cluster column values.
-     
      *
      * @param[in] colTupleData column tuple just inserted
      */
     void undoInsert(TupleData &colTupleData);
     
     /**
-     * Undo the previous insert of a column data buffer.
+     * Undoes the previous insert of a column data buffer.
      *
      * @param[in] dataWithLen data buffer to column tuple just inserted
      */
@@ -595,7 +596,7 @@ public:
     
 
     /**
-     * Prepare a fixed or variable batch to be written to the cluster block.
+     * Prepares a fixed or variable batch to be written to the cluster block.
      *
      * @param[in, out] rowArray upon input, this array holds value node
      * ordinals; at output, the array holds offsets for values in a batch
@@ -605,7 +606,7 @@ public:
     void prepareFixedOrVariableBatch(uint8_t *rowArray, uint numRows);
     
     /**
-     * Prepare a compressed batch to be written to the cluster block.
+     * Prepares a compressed batch to be written to the cluster block.
      *
      * @param[in, out] rowArray upon input, this array holds value nodes
      * ordinals; at output, it holds the indices to the offset array of the
@@ -625,21 +626,22 @@ public:
         uint16_t *offsetIndexVector);
     
     /**
-     * Clear the fixed values from batch to indicate the offset is not longer
+     * Clears the fixed values from batch to indicate the offset is not longer
      * useful because the key storage can be relocated between batches.
      */
     void clearFixedEntries();
     
     /**
-     * Prepare LcsHash object for a new batch.
+     * Prepares LcsHash object for a new batch.
      *
-     * @param[in] leftOvers number of left over hash value nodes from the previous
-     * batch. The new batch need to leave room apriori for these nodes.
+     * @param[in] leftOvers number of left over hash value nodes from the
+     * previous batch. The new batch needs to leave room apriori for these
+     * nodes.
      */
     void startNewBatch(uint leftOvers);
     
     /**
-     * Set up hash with values from an existing cluster block. This is called
+     * Sets up hash with values from an existing cluster block. This is called
      * when appending to an existing block.
      *
      * @param[in] numVal number of values for this column
@@ -650,20 +652,20 @@ public:
     void restore(uint numVals, uint16_t lastValOff);
 
     /**
-     * Get the maximum value length.
+     * Gets the maximum value length.
      *
-     * @return uint data value length, including the bytes encoding the length
+     * @return data value length, including the bytes encoding the length
      * information.
      */
     inline uint getMaxValueSize();
 
     /**
-     * Check if the hash table is full.
+     * Checks if the hash table is full.
      *
      * @param[in] leftOvers number of left over hash value nodes from the previous
      * batch. The next batch need to leave room apriori for these nodes.
      *
-     * @return bool true if hash table is full
+     * @return true if hash table is full
      */
     inline bool isHashFull(uint leftOvers = 0);
 };

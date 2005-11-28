@@ -60,9 +60,9 @@ void TupleDatum::memCopyFrom(TupleDatum const &other)
     cbData = other.cbData;
     
     /*
-      Perform memcpy from "other".
-      Set pData to NULL if it is NULL in "other".
-    */
+     * Performs memcpy from "other".
+     * Sets pData to NULL if it is NULL in "other".
+     */
     if (other.pData) {
         memcpy(const_cast<PBuffer>(pData),
             other.pData,
@@ -77,16 +77,17 @@ void TupleDatum::storeDatum(PBuffer pDataWithLen)
     PBuffer tmpDataPtr = pDataWithLen;
       
     /*
-      Note: This storage format can only encode values shorter than 0x7f00
-    */
+     * Note:
+     * This storage format can only encode values shorter than 0x7f00 bytes.
+     */
     assert(cbData <= TWO_BYTE_MAX_LENGTH);
       
     FixedBuffer higherByte = (cbData & 0x00007f00) >> 8;
     FixedBuffer lowerByte  = cbData & 0x000000ff;
         
     /*
-      store length
-    */
+     * Stores length.
+     */
     if (cbData <= ONE_BYTE_MAX_LENGTH) {
         *tmpDataPtr = (FixedBuffer)cbData;
         tmpDataPtr ++;
@@ -99,8 +100,8 @@ void TupleDatum::storeDatum(PBuffer pDataWithLen)
     }
       
     /*
-      store value
-    */
+     * Stores value.
+     */
     memcpy(tmpDataPtr, pData, cbData);
       
 }
@@ -108,8 +109,8 @@ void TupleDatum::storeDatum(PBuffer pDataWithLen)
 void TupleDatum::loadDatum(PConstBuffer pDataWithLen)
 {
     /*
-      if length longer than 127, use two bytes to store length
-    */
+     * If length is longer than 127, use two bytes to store length.
+     */
     if (*pDataWithLen & TWO_BYTE_LENGTH_BIT) {
         cbData = ((*pDataWithLen & ONE_BYTE_LENGTH_MASK) << 8)
             | *(pDataWithLen + 1);
@@ -126,8 +127,8 @@ void TupleDatum::loadDatumWithBuffer(PConstBuffer pDataWithLen)
     assert (pData);
 
     /*
-      if length longer than 127, length is from a two bytes
-    */
+     * If length is longer than 127, length comes from two bytes.
+     */
     if (*pDataWithLen & TWO_BYTE_LENGTH_BIT) {
         cbData =
             ((*pDataWithLen & ONE_BYTE_LENGTH_MASK) << 8)
