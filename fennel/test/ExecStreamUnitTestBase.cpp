@@ -37,6 +37,13 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+SharedExecStream ExecStreamUnitTestBase::prepareSourceGraph(
+    ExecStreamEmbryo &sourceStreamEmbryo)
+{
+    std::vector<ExecStreamEmbryo> transforms;
+    return prepareTransformGraph(sourceStreamEmbryo, transforms);
+}
+
 SharedExecStream ExecStreamUnitTestBase::prepareTransformGraph(
     ExecStreamEmbryo &sourceStreamEmbryo,
     ExecStreamEmbryo &transformStreamEmbryo)
