@@ -37,7 +37,7 @@ FENNEL_BEGIN_NAMESPACE
 
     
 struct LcsClusterAppendExecStreamParams : public BTreeExecStreamParams,
-                                                public ConduitExecStreamParams
+                                          public ConduitExecStreamParams
 {
     /**
      * True if cluster append is in overwrite mode
@@ -222,12 +222,12 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
 
     /**
      * Given a TupleData representing all columns in a cluster,
-     * convert each column into its own TupleData
+     * converts each column into its own TupleData
      */
     void convertTuplesToCols();
 
     /**
-     * Add value ordinal to row array for new row
+     * Adds value ordinal to row array for new row
      */
     void AddRow(uint16_t column, uint16_t vOrd);
 
@@ -237,7 +237,7 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
     bool IsRowArrayFull();
 
     /**
-     * Write a batch(run) to index block.
+     * Writes a batch(run) to index block.
      * Batches have a multiple of 8 rows.
      *
      * @param lastBatch true if last batch
@@ -245,13 +245,13 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
     void WriteBatch(bool lastBatch);
 
     /**
-     * Write block to index when the block is full or this is the last block
+     * Writes block to index when the block is full or this is the last block
      * in the load
      */
     void WriteBlock();
 
     /**
-     * Get last block written to disk so we can append to it, reading in the
+     * Gets last block written to disk so we can append to it, reading in the
      * first rid value stored on the page
      *
      * @param pBlock returns pointer to last cluster block, NULL if cluster
@@ -303,7 +303,7 @@ public:
     ExecStreamResult Compress(ExecStreamQuantum const &quantum);
 
     /**
-     * Write out the last pending batches and btree pages.  Deallocates
+     * Writes out the last pending batches and btree pages.  Deallocates
      * temporary memory and buffer pages
      */
     void Close();
@@ -348,7 +348,7 @@ public:
     virtual void closeImpl();
 
     /**
-     * Return RID from btree tuple
+     * Returns RID from btree tuple
      */
     inline Rid readRid()
     {
@@ -356,7 +356,7 @@ public:
     }
     
     /**
-     * Return cluster pageid from btree tuple
+     * Returns cluster pageid from btree tuple
      */
     inline PageId readClusterPageId()
     {

@@ -27,7 +27,7 @@
 FENNEL_BEGIN_NAMESPACE
 
 /**
- * Set nBits(1,2,4) starting at whatBits in *pB, from the LSB of v; 
+ * Sets nBits(1,2,4) starting at whatBits in *pB, from the LSB of v
  */
 inline void SetBits(uint8_t *pB, uint nBits, uint whatBits, uint16_t v)
 {
@@ -35,8 +35,8 @@ inline void SetBits(uint8_t *pB, uint nBits, uint whatBits, uint16_t v)
 }
 
 /**
- * Copy nBits(1,2,4), starting at fromBits from byte B to uint16_t V starting at
- * toBits
+ * Copies nBits(1,2,4), starting at fromBits from byte B to uint16_t V,
+ * starting at toBits
  */
 inline void ReadBits(uint8_t b, uint nBits, uint fromBits, uint16_t *v,
                         uint toBits)
@@ -45,15 +45,17 @@ inline void ReadBits(uint8_t b, uint nBits, uint fromBits, uint16_t *v,
 }
 
 /**
- * Overload for bytes
+ * Copies nBits(1,2,4), starting at fromBits from byte B to uint8_t V,
+ * starting at toBits
  */
-inline void ReadBits(uint8_t b, uint nBits, uint fromBits, uint8_t *v, uint toBits)
+inline void ReadBits(uint8_t b, uint nBits, uint fromBits, uint8_t *v,
+                     uint toBits)
 {
     *v |= (((b & (((1 << nBits) -1) << fromBits)) >> fromBits) << toBits);
 }
 
 /**
- * Calculate the # of bits it takes to encode n different values
+ * Calculates the # of bits it takes to encode n different values
  * correct the number so that no more then 2 vectors (1,2,4,8,16) wide are
  * required.
  *
@@ -93,18 +95,11 @@ typedef WidthVec    *PWidthVec;
 typedef uint8_t     *PtrVec[WIDTH_VECTOR_SIZE];
 typedef PtrVec      *PPtrVec;
 
-/**
- * @param v destination of ref numbers
- *
- * @param bitVec offsets
- *
- * @param first row of interest
- */
 typedef void (*PBitVecFuncPtr)(uint16_t *v, const PtrVec p, uint pos);
 typedef void (*PByteBitVecFuncPtr)(uint8_t *v, const PtrVec p, uint pos);
 
 /*
- * Create a vector of witdhs required to represent l bits
+ * Creates a vector of widths required to represent l bits
  */
 inline uint BitVecWidth(uint l, WidthVec w)
 {
@@ -121,7 +116,7 @@ inline uint BitVecWidth(uint l, WidthVec w)
 }
 
 /**
- * Calculate the offsets of the bitVecs, returns the number of bytes
+ * Calculates the offsets of the bitVecs, returns the number of bytes
  * the bitVecs will take
  *
  * @param iCount number of entries
@@ -150,6 +145,8 @@ inline uint BitVecPtr(uint iCount, uint iW, WidthVec w, PtrVec p,
 }
 
 /**
+ * Returns size of bit vector
+ *
  * @param nRow number of rows
  *
  * @param iW size of the vectors
@@ -167,6 +164,8 @@ inline uint SizeofBitVec(uint nRow, uint iW, WidthVec w)
 }
 
 /**
+ * Reads bit vectors
+ *
  * @param v destination of ref numbers
  *
  * @param iV # of bit vectors
@@ -189,8 +188,7 @@ inline void ReadBitVecs(uint16_t *v, uint iV, const WidthVec w,
     memset(v, 0, sizeof(uint16_t) * count);
 
     // read bit arrays
-    for (i = 0, b = 0; i < iV; i++)
-    {   
+    for (i = 0, b = 0; i < iV; i++) {   
         // w[i] contains the width of the bit vector
         // read append each vector bits into v[i], b is the bit position
         // of the next append
@@ -229,6 +227,8 @@ inline void ReadBitVecs(uint16_t *v, uint iV, const WidthVec w,
 }
 
 /**
+ * Sets bit vector to 0
+ *
  * @param v destination of ref numbers
  *
  * @param p bitVec offsets
@@ -243,7 +243,7 @@ inline void ReadBitVec0(uint16_t *v, const PtrVec p, uint pos)
 }
 
 /**
- * Read one row from a bit vector with 1 or 2 vectors only
+ * Reads one row from a bit vector with 1 or 2 vectors only
  *
  * @param v destination of ref numbers
  *
@@ -256,11 +256,29 @@ inline void ReadBitVec16(uint16_t *v, const PtrVec p, uint pos)
     *v = *(p[0] + pos*2);
 }
 
+/**
+ * Reads an 8-bit vector
+ *
+ * @param v destination of ref numbers
+ *
+ * @param p bitVec offsets
+ *
+ * @param pos first row of interest
+ */
 inline void ReadBitVec8(uint16_t *v, const PtrVec p, uint pos)
 {
-        *v = *(p[0] + pos);
+    *v = *(p[0] + pos);
 }
 
+/**
+ * Reads a 4-bit vector
+ *
+ * @param v destination of ref numbers
+ *
+ * @param p bitVec offsets
+ *
+ * @param pos first row of interest
+ */
 inline void ReadBitVec4(uint16_t *v, const PtrVec p, uint pos)
 {
     // clear the destination
@@ -268,6 +286,15 @@ inline void ReadBitVec4(uint16_t *v, const PtrVec p, uint pos)
     ReadBits(p[0][pos/2], 4, (pos*4) % 8, v, 0);
 }
 
+/**
+ * Reads a 2-bit vector
+ *
+ * @param v destination of ref numbers
+ *
+ * @param p bitVec offsets
+ *
+ * @param pos first row of interest
+ */
 inline void ReadBitVec2(uint16_t *v, const PtrVec p, uint pos)
 {
     // clear the destination
@@ -275,6 +302,15 @@ inline void ReadBitVec2(uint16_t *v, const PtrVec p, uint pos)
     ReadBits(p[0][pos/4], 2, (pos*2) % 8, v, 0);
 }
 
+/**
+ * Reads a 1-bit vector
+ *
+ * @param v destination of ref numbers
+ *
+ * @param p bitVec offsets
+ *
+ * @param pos first row of interest
+ */
 inline void ReadBitVec1(uint16_t *v, const PtrVec p, uint pos)
 {
     // clear the destination
@@ -282,24 +318,60 @@ inline void ReadBitVec1(uint16_t *v, const PtrVec p, uint pos)
     ReadBits(p[0][pos/8], 1, pos % 8, v, 0);
 }
 
+/**
+ * Reads a 12-bit vector (8 bits + 4 bits)
+ *
+ * @param v destination of ref numbers
+ *
+ * @param p bitVec offsets
+ *
+ * @param pos first row of interest
+ */
 inline void ReadBitVec12(uint16_t *v, const PtrVec p, uint pos)
 {
     *v = *(p[0] + pos);
     ReadBits(p[1][pos/2], 4, (pos*4) % 8, v, 8);
 }
 
+/**
+ * Reads a 10-bit vector (8 bits + 2 bits)
+ *
+ * @param v destination of ref numbers
+ *
+ * @param p bitVec offsets
+ *
+ * @param pos first row of interest
+ */
 inline void ReadBitVec10(uint16_t *v, const PtrVec p, uint pos)
 {
     *v = *(p[0] + pos);
     ReadBits(p[1][pos/4], 2, (pos*2) % 8, v, 8);
 }
 
+/**
+ * Reads a 9-bit vector (8 bits + 1 bit)
+ *
+ * @param v destination of ref numbers
+ *
+ * @param p bitVec offsets
+ *
+ * @param pos first row of interest
+ */
 inline void ReadBitVec9(uint16_t *v, const PtrVec p, uint pos)
 {
     *v = *(p[0] + pos);
     ReadBits(p[1][pos/8], 1, pos % 8, v, 8);
 }
 
+/**
+ * Reads a 6 bit vector (4 bits + 2 bits)
+ *
+ * @param v destination of ref numbers
+ *
+ * @param p bitVec offsets
+ *
+ * @param pos first row of interest
+ */
 inline void ReadBitVec6(uint16_t *v, const PtrVec p, uint pos)
 {
     // clear the destination
@@ -308,6 +380,15 @@ inline void ReadBitVec6(uint16_t *v, const PtrVec p, uint pos)
     ReadBits(p[1][pos/4], 2, (pos*2) % 8, v, 4);
 }
 
+/**
+ * Reads a 5-bit vector (4 bits + 1 bit)
+ *
+ * @param v destination of ref numbers
+ *
+ * @param p bitVec offsets
+ *
+ * @param pos first row of interest
+ */
 inline void ReadBitVec5(uint16_t *v, const PtrVec p, uint pos)
 {
     // clear the destination
@@ -316,6 +397,15 @@ inline void ReadBitVec5(uint16_t *v, const PtrVec p, uint pos)
     ReadBits(p[1][pos/8], 1, pos % 8, v, 4);
 }
 
+/**
+ * Reads a 3-bit vector (2 bits + 1 bit)
+ *
+ * @param v destination of ref numbers
+ *
+ * @param p bitVec offsets
+ *
+ * @param pos first row of interest
+ */
 inline void ReadBitVec3(uint16_t *v, const PtrVec p, uint pos)
 {
     // clear the destination

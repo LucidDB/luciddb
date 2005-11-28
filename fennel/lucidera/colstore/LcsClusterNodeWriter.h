@@ -188,20 +188,20 @@ private:
     }
 
     /**
-     * Move all cluster data from cluster page to temporary storage
+     * Moves all cluster data from cluster page to temporary storage
      *
      * @return number of rows currently on page
      */
     RecordNum MoveFromIndexToTemp(); 
 
     /**
-     * Move all cluster data from temporary storage to the actual
+     * Moves all cluster data from temporary storage to the actual
      * cluster page
      */
     void MoveFromTempToIndex(); 
 
     /**
-     * Allocate temporary arrays used during cluster writes
+     * Allocates temporary arrays used during cluster writes
      */
     void AllocArrays();
 
@@ -238,14 +238,14 @@ public:
     void Close();
 
     /**
-     * Prepare a cluster page as a new one
+     * Prepares a cluster page as a new one
      *
      * @param startRID first RID on the page
      */
     void OpenNew(Rid startRID);
 
     /**
-     * Prepare an existing cluster page for appending new data
+     * Prepares an existing cluster page for appending new data
      *
      * @param nVal pointer to output array reflecting the number of values
      * currently in each column on this page
@@ -305,7 +305,7 @@ public:
     };
 
     /**
-     * Translate an offset for a column to the pointer to the actual value
+     * Translates an offset for a column to the pointer to the actual value
      *
      * @param column offset corresponds to this column
      *
@@ -317,7 +317,7 @@ public:
         { return m_pBlock[column] + offset; };
 
     /**
-     * Add a value to the page, in the case where the value already exists
+     * Adds a value to the page, in the case where the value already exists
      * in the column
      *
      * @param column column corresponding to the value being added
@@ -330,9 +330,9 @@ public:
     bool AddValue(uint16_t column, bool bFirstTimeInBatch);
 
     /**
-     * Add a new value to the page.  In the case of compressed or variable
-     * mode, the value is added to the bottom of the page.  In the case of
-     * fixed mode, the value is added to the "value bank".
+     * Adds a new value to the page.  In the case of compressed or variable
+     * mode, adds the value to the bottom of the page.  In the case of
+     * fixed mode, adds the value to the "value bank".
      *
      * @param column column corresponding to the value being added
      *
@@ -345,7 +345,7 @@ public:
     bool AddValue(uint16_t column, PBuffer pVal, uint16_t *oVal);
 
     /**
-     * Undo the last value added to the current batch for a column
+     * Undoes the last value added to the current batch for a column
      *
      * @param column column corresponding to the value to be undone
      *
@@ -357,7 +357,7 @@ public:
     void UndoValue(uint16_t column, PBuffer pVal, bool bFirstInBatch);
 
     /**
-     * Write a compressed mode batch into the temporary cluster page for
+     * Writes a compressed mode batch into the temporary cluster page for
      * a column.  Only a multiple of 8 rows is written, if this is not the
      * last batch in the cluster.
      *
@@ -380,7 +380,7 @@ public:
     void PutCompressedBatch(uint16_t column, PBuffer pRows, PBuffer pBuf);
 
     /**
-     * Write a fixed or variable mode batch into a temporary cluster page for
+     * Writes a fixed or variable mode batch into a temporary cluster page for
      * a column.  Only a multiple of 8 rows is written, if this is not the
      * last batch in the cluster.
      *
@@ -434,7 +434,7 @@ public:
     }
 
     /**
-     * Done with the current cluster page.  Move all data from temporary
+     * Done with the current cluster page.  Moves all data from temporary
      * pages into the real cluster page
      */
     void EndBlock() { MoveFromTempToIndex(); }

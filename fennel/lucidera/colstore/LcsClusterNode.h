@@ -143,11 +143,12 @@ public:
 };
 
 /**
- * Size of the header at the start of the cluster page, taking into account
- * the variable length elements that are dependent on the number of columns
- * in the cluster
+ * Returns size of the header at the start of the cluster page, taking into
+ * account the variable length elements that are dependent on the number of
+ * columns in the cluster
  */
-inline uint GetClusterSubHeaderSize(uint nColumns) {
+inline uint GetClusterSubHeaderSize(uint nColumns)
+{
     return sizeof(LcsClusterNode) + (4 * sizeof(uint16_t *) * nColumns);
 }
 
