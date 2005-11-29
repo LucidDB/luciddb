@@ -106,6 +106,9 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
      */
     boost::scoped_array<LcsHash> m_hash;
 
+    // REVIEW jvs 28-Nov-2005:  use uint instead of uint16_t here
+    // and other places where there's no good reason for a
+    // constraint on the number of objects
     /**
      * Number of columns in the cluster
      */
@@ -126,11 +129,16 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
      */
     boost::scoped_array<PBuffer> m_builderBlock;
 
+    // REVIEW jvs 28-Nov-2005:  this state variable is used in
+    // non-obvious ways having to do with the 8-row minimum per batch.
+    // Is there any way to consolidate that logic or make it less implicit?
     /**
      * Number of rows loaded into the current set of batches
      */
     uint16_t m_rowCnt;
 
+    // REVIEW jvs 28-Nov-2005:  I think it should be safe to get rid of
+    // this (closeImpl will only be called if it's really needed).
     /**
      * True if close already done
      */
@@ -163,7 +171,7 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
     /**
      * Row value ordinal returned from hash, one per cluster column
      */
-    boost::scoped_array<LcsHashValOrd>  m_vOrd;
+    boost::scoped_array<LcsHashValOrd> m_vOrd;
 
     /**
      * Temporary buffers used by WriteBatch
@@ -226,6 +234,8 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
      */
     void convertTuplesToCols();
 
+    // REVIEW jvs 28-Nov-2005:  This method is somewhat misnamed, since it
+    // just sets one value in a cluster row.
     /**
      * Adds value ordinal to row array for new row
      */
@@ -347,6 +357,8 @@ public:
         ExecStreamResourceQuantity &optQuantity);
     virtual void closeImpl();
 
+    // REVIEW jvs 28-Nov-2005:  I don't think these should be either
+    // public or inline.
     /**
      * Returns RID from btree tuple
      */

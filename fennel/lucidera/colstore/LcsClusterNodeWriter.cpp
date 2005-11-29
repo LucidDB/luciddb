@@ -458,6 +458,9 @@ void LcsClusterNodeWriter::PutCompressedBatch(uint16_t column, PBuffer pRows,
 
     if (m_batch[column].nRow > 8) {
         pOffs = (uint16_t *)(m_pBlock[column] + m_batch[column].oVal);
+        // REVIEW jvs 28-Nov-2005:  Here and below, should be using
+        // a macro for RID masking, and the macro should use a
+        // 64-bit mask instead of a 32-bit mask
         for (i = m_batch[column].nRow & 0xfffffff8; i < m_batch[column].nRow;
                 i++, pBuf += m_batch[column].recSize) {
             iRow = ((uint16_t *) pRows)[i];
@@ -844,7 +847,6 @@ RecordNum LcsClusterNodeWriter::MoveFromIndexToTemp()
     uint16_t loc;
     uint16_t column;
     uint16_t m_batchCount = (uint16_t)(m_pHdr->nBatch / m_numColumns);
-    RecordNum nrows;
     uint16_t b;
 
     batchDirOffset.reset(new uint16_t[m_pHdr->nBatch]);
@@ -877,7 +879,6 @@ RecordNum LcsClusterNodeWriter::MoveFromIndexToTemp()
                 i++, b = (uint16_t) (b + m_numColumns)) {
             uint16_t    batchStart = loc;
 
-            nrows += pBatch[b].nRow;
             if (pBatch[b].mode == LCS_COMPRESSED) {
                 uint8_t     *pBit;
                 WidthVec    w;      // bitVec m_width vector
@@ -956,8 +957,8 @@ RecordNum LcsClusterNodeWriter::MoveFromIndexToTemp()
 
     // compute the number of rows on the page
     pBatch = (PLcsBatchDir)(m_indexBlock + m_pHdr->oBatch);
-    for (b = 0, nrows = 0; b < m_batchCount;
-            b = (uint16_t) (b + m_numColumns)) {
+    RecordNum nrows = 0;
+    for (b = 0; b < m_batchCount; b = (uint16_t) (b + m_numColumns)) {
         nrows += pBatch[b].nRow;
     }
 

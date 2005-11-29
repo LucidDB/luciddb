@@ -33,11 +33,6 @@ FENNEL_BEGIN_NAMESPACE
 class TupleDescriptor;
 class TupleProjection;
 
-const TupleStorageByteLength ONE_BYTE_MAX_LENGTH = 127;
-const TupleStorageByteLength TWO_BYTE_MAX_LENGTH = 32767;
-const FixedBuffer ONE_BYTE_LENGTH_MASK = 0x7f;
-const FixedBuffer TWO_BYTE_LENGTH_BIT = 0x80;
-
 /**
  * A TupleDatum is a component of TupleData; see
  * <a href="structTupleDesign.html#TupleData">the design docs</a> for
@@ -45,6 +40,11 @@ const FixedBuffer TWO_BYTE_LENGTH_BIT = 0x80;
  */
 struct TupleDatum
 {
+    static const TupleStorageByteLength ONE_BYTE_MAX_LENGTH = 127;
+    static const TupleStorageByteLength TWO_BYTE_MAX_LENGTH = 32767;
+    static const uint8_t ONE_BYTE_LENGTH_MASK = 0x7f;
+    static const uint8_t TWO_BYTE_LENGTH_BIT = 0x80;
+
     TupleStorageByteLength cbData;
     PConstBuffer pData;
   
@@ -57,8 +57,16 @@ struct TupleDatum
     
     explicit TupleDatum();
     TupleDatum(TupleDatum const &other);
-    explicit TupleDatum(PConstBuffer pDataWithLen);
 
+
+    /*
+      REVIEW jvs 27-Nov-2005:  instead of providing this constructor,
+      requiring a call to the default constructor followed by
+      loadDatum would make calling code more self-explanatory.
+    */
+    
+    explicit TupleDatum(PConstBuffer pDataWithLen);
+      
     /**
      * Copy assignment(shallow copy).
      *
@@ -103,17 +111,16 @@ struct TupleDatum
 
     /**
      * Stores data with length information encoded into the buffer passed in.
-     *
-     * @note
-     * These methods - storeDatum, loadDatum and loadDatumWithBuffer - store and
-     * load TupleDatum to and from a preallocated buffer. The length of this
-     * buffer is set to the number of bytes to store the length plus the length
-     * of the data field(bound by the associated TupleDescriptor cbStorage
-     * value). The storage format is different from the marshalled format of a
-     * tuple (see TupleAccessor.h) since there's only one TupleDatum here, so
-     * there is no need for storing the offset to provide "constant seek time"
-     * of any column. The byte format of the result buffer from the storeDatum
-     * function call is:
+     * 
+     * @note Several methods - storeDatum, loadDatum and loadDatumWithBuffer -
+     * store and load TupleDatum to and from a preallocated buffer. The length
+     * required for this buffer is determined by the number of bytes needed to
+     * store the length indicator plus the maximum length of the data field
+     * (from the associated TupleDescriptor cbStorage value). The storage format
+     * is different from the marshalled format for a tuple (see TupleAccessor):
+     * since there's only one TupleDatum involved, there is no need to store the
+     * offset needed for "constant seek time". The byte format of the buffer
+     * after storeDatum is:
      *
      * @par
      * 0xxxxxxx\n
@@ -121,7 +128,7 @@ struct TupleDatum
      * |length  |     data value bytes\n
      *
      * @par
-     * 1xxxxxxx xxxxxxxx\n
+     * 1xxxxxxx xxxxxxxx   \n
      * -------- -------- -------- -------- -------- ...\n
      * |      length     |     data value bytes\n
      *
@@ -130,6 +137,10 @@ struct TupleDatum
      * and data value bytes are copied from TupleDatum.pData. The buffer to
      * allocate should be at least (cbStorage + 2) bytes long.
      *
+     * REVIEW jvs 27-Nov-2005:  probably worth providing a method for
+     * computing the required buffer length instead of relying on
+     * a comment spec here
+     *  
      * @param[in, out] pDataWithLen data buffer to store to
      */
     void storeDatum(PBuffer pDataWithLen);
@@ -139,7 +150,7 @@ struct TupleDatum
      * function perform shallow copy.
      *
      * @note
-     * See the note of copyFrom method.
+     * See note on copyFrom method.
      *
      * @param[in] pDataWithLen data buffer to load from
      */
@@ -149,7 +160,7 @@ struct TupleDatum
      * Loads TupleDatum from a buffer with length information encoded.
      *
      * @note
-     * See the note of memCopyFrom method.
+     * See note on memCopyFrom method.
      *
      * @param[in] pDataWithLen data buffer to load from
      */
