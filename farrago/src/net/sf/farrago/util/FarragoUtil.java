@@ -26,9 +26,9 @@ import java.io.*;
 import java.sql.*;
 import java.util.logging.*;
 
-import org.eigenbase.util.*;
-import org.eigenbase.sql.validate.SqlValidatorException;
 import org.eigenbase.sql.parser.SqlParseException;
+import org.eigenbase.sql.validate.SqlValidatorException;
+import org.eigenbase.util.*;
 
 
 /**
@@ -108,8 +108,9 @@ public abstract class FarragoUtil
                 // so the message should be
                 //   "Validation error at line 5, column 10: Bad column 'FOO'"
                 final String causeMessage = cause.getMessage();
-                sqlExcn = new FarragoSqlException(
-                    message + ": " + causeMessage, ex);
+                sqlExcn =
+                    new FarragoSqlException(message + ": " + causeMessage, ex);
+
                 // Discard this cause and move on to next.
                 cause = cause.getCause();
             } else {
@@ -121,8 +122,8 @@ public abstract class FarragoUtil
             // for anything else, include the class name
             // as part of what went wrong
             sqlExcn =
-                new FarragoSqlException(
-                    ex.getClass().getName() + ": " + message, ex);
+                new FarragoSqlException(ex.getClass().getName() + ": "
+                    + message, ex);
         }
 
         // preserve additional attributes of the original excn
@@ -147,6 +148,33 @@ public abstract class FarragoUtil
             return sqlCause;
         }
     }
+
+    /**
+     * Converts any Throwable and its causes to a String.
+     *
+     * @param ex Throwable to be converted
+     *
+     * @return ex as a String
+     */
+    public static String exceptionToString(final Throwable ex)
+    {
+        String result = null;
+        if (ex != null) {
+            Throwable t = ex;
+            StringBuffer sb = new StringBuffer();
+            while (t != null) {
+                sb.append(t.getLocalizedMessage());
+                t = t.getCause();
+                if (t != null) {
+                    sb.append(": ");
+                }
+            }
+            result = sb.toString();
+        }
+        return result;
+    }
+
+    //~ Inner Classes ---------------------------------------------------------
 
     /**
      * Exception thrown by Farrago JDBC driver.
@@ -176,7 +204,9 @@ public abstract class FarragoUtil
          * @param s
          * @param original
          */
-        public FarragoSqlException(String s, Throwable original)
+        public FarragoSqlException(
+            String s,
+            Throwable original)
         {
             super(s);
             this.original = original;
@@ -188,6 +218,5 @@ public abstract class FarragoUtil
         }
     }
 }
-
 
 // End FarragoUtil.java

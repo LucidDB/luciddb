@@ -306,6 +306,14 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
      */
     public void setRevalidationResult(CwmModelElement element,
             EigenbaseException ex);    
+
+    /**
+     * Returns immediate dependencies of an of element.
+     * @param element Starting element for dependency search
+     * @return Set of CwmModelElement, immediate dependencies of rootElement
+     */
+    public Set getDependencies(CwmModelElement rootElement);
+
 }
 
 
