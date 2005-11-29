@@ -116,9 +116,9 @@ void LcsClusterAppendExecStream::closeImpl()
 LcsClusterAppendExecStream::LcsClusterAppendExecStream() 
 {
     m_indexBlock = 0;
-    m_firstRow = Rid(0);
-    m_lastRow = Rid(0);
-    m_startRow = Rid(0);
+    m_firstRow = LcsRid(0);
+    m_lastRow = LcsRid(0);
+    m_startRow = LcsRid(0);
     m_bClosed = true;
     clusterDump = new LcsClusterDump(TRACE_FINE, getSharedTraceTarget(),
                                      getTraceSourceName());
@@ -248,7 +248,7 @@ ExecStreamResult LcsClusterAppendExecStream::Compress(
         } else {
             // Start writing a new block
             StartNewBlock();
-            m_startRow = Rid(0);
+            m_startRow = LcsRid(0);
         }
     }
 

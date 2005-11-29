@@ -152,16 +152,16 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
     /**
      * Starting rowid in a cluster page
      */
-    Rid m_firstRow;
+    LcsRid m_firstRow;
 
     /**
      * Last rowid in the last batch
      */
-    Rid m_lastRow;
+    LcsRid m_lastRow;
 
     /* First rowid in current load
      */
-    Rid m_startRow;
+    LcsRid m_startRow;
 
     /**
      * Page builder object
@@ -335,7 +335,7 @@ public:
         return m_lastRow;
     }
 
-    void SetLastRow(Rid row) {
+    void SetLastRow(LcsRid row) {
         m_lastRow = row;
     } 
 
@@ -362,9 +362,9 @@ public:
     /**
      * Returns RID from btree tuple
      */
-    inline Rid readRid()
+    inline LcsRid readRid()
     {
-        return *reinterpret_cast<Rid const *> (btreeTupleData[0].pData);
+        return *reinterpret_cast<LcsRid const *> (btreeTupleData[0].pData);
     }
     
     /**

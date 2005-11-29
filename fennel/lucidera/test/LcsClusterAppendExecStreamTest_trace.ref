@@ -8888,9 +8888,9 @@
 [testMultiColNoDupOldRoot] firstVal[1]:       3988
 [testMultiColNoDupOldRoot] nVal[1]:             10
 [testMultiColNoDupOldRoot] delta[1]:           108
-[testMultiColNoDupOldRoot] lastVal[2]:        3790
+[testMultiColNoDupOldRoot] lastVal[2]:        3808
 [testMultiColNoDupOldRoot] firstVal[2]:       3898
-[testMultiColNoDupOldRoot] nVal[2]:             12
+[testMultiColNoDupOldRoot] nVal[2]:             10
 [testMultiColNoDupOldRoot] delta[2]:           198
 [testMultiColNoDupOldRoot] #############################################################
 [testMultiColNoDupOldRoot] Batch # 1 (Variable)
@@ -9077,10 +9077,6 @@
 [testMultiColNoDupOldRoot]          9:  8  0  0  0  0  0  0  0  0                       .........          
 [testMultiColNoDupOldRoot] Column # 2
 [testMultiColNoDupOldRoot] ------------
-[testMultiColNoDupOldRoot] 00012:
-[testMultiColNoDupOldRoot]          9:  8  9  0  0  0  0  0  0  0                       .........          
-[testMultiColNoDupOldRoot] 00011:
-[testMultiColNoDupOldRoot]          9:  8  8  0  0  0  0  0  0  0                       .........          
 [testMultiColNoDupOldRoot] 00010:
 [testMultiColNoDupOldRoot]          9:  8  9  0  0  0  0  0  0  0                       .........          
 [testMultiColNoDupOldRoot] 00009:
@@ -9117,9 +9113,9 @@
 [testMultiColNoDupOldRoot] firstVal[1]:       3952
 [testMultiColNoDupOldRoot] nVal[1]:             10
 [testMultiColNoDupOldRoot] delta[1]:           144
-[testMultiColNoDupOldRoot] lastVal[2]:        3718
+[testMultiColNoDupOldRoot] lastVal[2]:        3736
 [testMultiColNoDupOldRoot] firstVal[2]:       3862
-[testMultiColNoDupOldRoot] nVal[2]:             16
+[testMultiColNoDupOldRoot] nVal[2]:             14
 [testMultiColNoDupOldRoot] delta[2]:           234
 [testMultiColNoDupOldRoot] #############################################################
 [testMultiColNoDupOldRoot] Batch # 1 (Variable)
@@ -9335,20 +9331,20 @@
 [testMultiColNoDupOldRoot] mode:                 2
 [testMultiColNoDupOldRoot] nRow:                 4
 [testMultiColNoDupOldRoot] nVal:                 0
-[testMultiColNoDupOldRoot] nValHighMark:        12
+[testMultiColNoDupOldRoot] nValHighMark:        10
 [testMultiColNoDupOldRoot] oVal:               200
-[testMultiColNoDupOldRoot] oLastValHighMark:  3988
+[testMultiColNoDupOldRoot] oLastValHighMark:  4006
 [testMultiColNoDupOldRoot] recSize:              9
 [testMultiColNoDupOldRoot] Variable Size Rows
 [testMultiColNoDupOldRoot] ------------------
 [testMultiColNoDupOldRoot] 00000:
-[testMultiColNoDupOldRoot]          9:  8  6  0  0  0  0  0  0  0                       .........          
-[testMultiColNoDupOldRoot] 00001:
-[testMultiColNoDupOldRoot]          9:  8  7  0  0  0  0  0  0  0                       .........          
-[testMultiColNoDupOldRoot] 00002:
 [testMultiColNoDupOldRoot]          9:  8  8  0  0  0  0  0  0  0                       .........          
-[testMultiColNoDupOldRoot] 00003:
+[testMultiColNoDupOldRoot] 00001:
 [testMultiColNoDupOldRoot]          9:  8  9  0  0  0  0  0  0  0                       .........          
+[testMultiColNoDupOldRoot] 00002:
+[testMultiColNoDupOldRoot]          9:  8  6  0  0  0  0  0  0  0                       .........          
+[testMultiColNoDupOldRoot] 00003:
+[testMultiColNoDupOldRoot]          9:  8  7  0  0  0  0  0  0  0                       .........          
 [testMultiColNoDupOldRoot] #############################################################
 [testMultiColNoDupOldRoot] Value List at the Bottom of the Page
 [testMultiColNoDupOldRoot] ------------------------------------
@@ -9410,18 +9406,14 @@
 [testMultiColNoDupOldRoot]          9:  8  0  0  0  0  0  0  0  0                       .........          
 [testMultiColNoDupOldRoot] Column # 2
 [testMultiColNoDupOldRoot] ------------
-[testMultiColNoDupOldRoot] 00016:
-[testMultiColNoDupOldRoot]          9:  8  9  0  0  0  0  0  0  0                       .........          
-[testMultiColNoDupOldRoot] 00015:
-[testMultiColNoDupOldRoot]          9:  8  8  0  0  0  0  0  0  0                       .........          
 [testMultiColNoDupOldRoot] 00014:
-[testMultiColNoDupOldRoot]          9:  8  7  0  0  0  0  0  0  0                       .........          
-[testMultiColNoDupOldRoot] 00013:
-[testMultiColNoDupOldRoot]          9:  8  6  0  0  0  0  0  0  0                       .........          
-[testMultiColNoDupOldRoot] 00012:
 [testMultiColNoDupOldRoot]          9:  8  9  0  0  0  0  0  0  0                       .........          
-[testMultiColNoDupOldRoot] 00011:
+[testMultiColNoDupOldRoot] 00013:
 [testMultiColNoDupOldRoot]          9:  8  8  0  0  0  0  0  0  0                       .........          
+[testMultiColNoDupOldRoot] 00012:
+[testMultiColNoDupOldRoot]          9:  8  7  0  0  0  0  0  0  0                       .........          
+[testMultiColNoDupOldRoot] 00011:
+[testMultiColNoDupOldRoot]          9:  8  6  0  0  0  0  0  0  0                       .........          
 [testMultiColNoDupOldRoot] 00010:
 [testMultiColNoDupOldRoot]          9:  8  9  0  0  0  0  0  0  0                       .........          
 [testMultiColNoDupOldRoot] 00009:

@@ -134,7 +134,7 @@ void LcsClusterAppendExecStreamTest::verifyClusterPages(
         BOOST_FAIL("searchFirst found nothing");
     }
     do {
-        Rid rid;
+        LcsRid rid;
         PageId clusterPageId;
 
         reader.getTupleAccessorForRead().unmarshal(lcsStream->btreeTupleData);

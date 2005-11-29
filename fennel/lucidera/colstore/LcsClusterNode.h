@@ -27,6 +27,11 @@
 
 FENNEL_BEGIN_NAMESPACE
 
+/**
+ * Column store rid type
+ */
+DEFINE_OPAQUE_INTEGER(LcsRid, uint64_t);
+
 // batch compression mode values
 const uint LCS_COMPRESSED   = 0;
 const uint LCS_FIXED        = 1;
@@ -99,7 +104,7 @@ public:
     /**
      * First RID stored on cluster page
      */
-    Rid firstRID;
+    LcsRid firstRID;
 
     /**
      * Number of columns in the cluster

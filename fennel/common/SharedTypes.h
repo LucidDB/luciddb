@@ -165,6 +165,9 @@ typedef boost::shared_ptr<DynamicParamManager> SharedDynamicParamManager;
 class SizeBuffer;
 typedef boost::shared_ptr<SizeBuffer> SharedSizeBuffer;
 
+class LcsClusterDump;
+typedef boost::shared_ptr<LcsClusterDump> SharedLcsClusterDump;
+
 FENNEL_END_NAMESPACE
 
 #endif

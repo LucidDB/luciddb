@@ -101,7 +101,7 @@ void LcsClusterNodeWriter::Init(SegmentAccessor const &accessor,
     AllocArrays();
 }
 
-void LcsClusterNodeWriter::OpenNew(Rid startRID)
+void LcsClusterNodeWriter::OpenNew(LcsRid startRID)
 {
     int i;
 

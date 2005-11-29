@@ -86,7 +86,7 @@ void LcsClusterDump::dump(uint64_t pageId, PBuffer pBlock, uint szBlock)
     callTrace("Header");
     callTrace("------");
     callTrace("nColumn:          %5u", pHdr->nColumn);
-    callTrace("firstRid:         %5u", pHdr->firstRID);
+    callTrace("firstRid:         %5u", opaqueToInt(pHdr->firstRID));
     callTrace("oBatch:           %5u", pHdr->oBatch);
     callTrace("nBatch:           %5u", pHdr->nBatch);
     for (i = 0; i < pHdr->nColumn; i++) {

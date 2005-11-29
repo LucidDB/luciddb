@@ -242,7 +242,7 @@ public:
      *
      * @param startRID first RID on the page
      */
-    void OpenNew(Rid startRID);
+    void OpenNew(LcsRid startRID);
 
     /**
      * Prepares an existing cluster page for appending new data
