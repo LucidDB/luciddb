@@ -143,6 +143,6 @@ bool FlatFileBuffer::full()
     return (contentSize == bufferSize);
 }
 
-FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/lucidera/flatfile/FlatFileBuffer.cpp#1 $");
+FENNEL_END_CPPFILE("$Id: //open/dev/fennel/lucidera/flatfile/FlatFileBuffer.cpp#1 $");
 
 // End FlatFileBuffer.cpp
