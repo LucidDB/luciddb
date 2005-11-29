@@ -80,7 +80,6 @@ void JavaPushSourceExecStream::open(bool restart)
 {
     JavaSourceExecStream::open(restart);
 
-    releaseReadBuffer();
     if (restart) 
         return;
 
@@ -93,12 +92,12 @@ void JavaPushSourceExecStream::open(bool restart)
         PageId pageID = bufferLock.allocatePage();
         PBuffer bufstart = bufferLock.getPage().getWritableData();
         uint cb = bufferLock.getPage().getCache().getPageSize();
-        FENNEL_TRACE(TRACE_FINER, "alloc buffer at " << bufstart <<
+        FENNEL_TRACE(TRACE_FINER, "alloc buffer at " << (void*) bufstart <<
                      " len " << bufferSize << " on page " << pageID << ", pagesize " << cb);
         assert(bufstart);
         jobject o = pEnv->NewDirectByteBuffer(bufstart, bufferSize);
         assert(o);
-        FENNEL_TRACE(TRACE_FINER, "direct ByteBuffer " << o << " wraps buffer " << bufstart);
+        FENNEL_TRACE(TRACE_FINER, "direct ByteBuffer " << o << " wraps buffer " << (void*) bufstart);
         pEnv->SetObjectArrayElement(bba, i, o);
     }
 
@@ -152,18 +151,15 @@ ExecStreamResult JavaPushSourceExecStream::execute(ExecStreamQuantum const &)
 
 void JavaPushSourceExecStream::releaseReadBuffer()
 {
-    if (rdBuffer == NULL)
-        return;
-
-    JniEnvAutoRef pEnv;
-    assert(javaTupleStream);
-
-    FENNEL_TRACE(TRACE_FINER, "reader calls JavaPushTupleStream.freeBuffer(" << rdBuffer << ")");
-    pEnv->CallVoidMethod(javaTupleStream, methFreeBuffer, rdBuffer);
-    FENNEL_TRACE(TRACE_FINER, "JavaPushTupleStream.freeBuffer(" << rdBuffer << ") returned");
-    pEnv->DeleteGlobalRef(rdBuffer);
-
-    rdBuffer = 0;
+    if (rdBuffer) {
+        JniEnvAutoRef pEnv;
+        assert(javaTupleStream);
+        FENNEL_TRACE(TRACE_FINER, "reader calls JavaPushTupleStream.freeBuffer(" << rdBuffer << ")");
+        pEnv->CallVoidMethod(javaTupleStream, methFreeBuffer, rdBuffer);
+        FENNEL_TRACE(TRACE_FINER, "JavaPushTupleStream.freeBuffer(" << rdBuffer << ") returned");
+        pEnv->DeleteGlobalRef(rdBuffer);
+        rdBuffer = 0;
+    }
     rdBufferEOS = false;
     rdBufferStart = rdBufferEnd = rdBufferPosn = 0;
 }
@@ -226,8 +222,7 @@ void JavaPushSourceExecStream::closeImpl()
     JniEnvAutoRef pEnv;
     if (javaTupleStream)
         pEnv->CallVoidMethod(javaTupleStream, methCloseStream);
-    if (rdBuffer)
-        pEnv->DeleteGlobalRef(rdBuffer);
+    releaseReadBuffer();
     JavaSourceExecStream::closeImpl();
 }
 

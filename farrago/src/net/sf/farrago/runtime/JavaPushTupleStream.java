@@ -85,7 +85,11 @@ public class JavaPushTupleStream implements JavaTupleStream
      */
     public void freeBuffer(ByteBuffer buf)
     {
-        pool.freeBuffer(buf);
+        try {
+            pool.freeBuffer(buf);
+        } catch (ClassCastException e) {
+            tracer.severe(this + " reader freed a bad buffer (not a ByteBuffer) " + e);
+        }
     }
 
     /**
@@ -94,12 +98,16 @@ public class JavaPushTupleStream implements JavaTupleStream
      */
     public void open(ByteBuffer[] buffers)
     {
-        pool.traceBuffers(Level.FINE, "open stream with buffers: ", buffers);
-        pool.open(buffers);
-        inputThread = new RowReaderThread();
-        // start marshalling input data
-        tracer.fine(this+"starting thread");
-        inputThread.start();
+        try {
+            pool.traceBuffers(Level.FINE, "open stream with buffers: ", buffers);
+            pool.open(buffers);
+            inputThread = new RowReaderThread();
+            // start marshalling input data
+            tracer.fine(this + " starting thread");
+            inputThread.start();
+        } catch (ClassCastException e) {
+            tracer.severe(this + " C++ peer passed bad buffers (not ByteBuffers) " + e);
+        }
     }
 
 
@@ -154,8 +162,8 @@ public class JavaPushTupleStream implements JavaTupleStream
     protected static class BufferPool {
         final private JavaPushTupleStream stream;
 
-        private LinkedList blankBufs = new LinkedList(); // a free list
-        private LinkedList writtenBufs = new LinkedList(); // a queue
+        private LinkedList<ByteBuffer> blankBufs = new LinkedList<ByteBuffer>(); // a free list
+        private LinkedList<ByteBuffer> writtenBufs = new LinkedList<ByteBuffer>(); // a queue
         private int nBlank = 0;          // length of free list
         private int nWritten = 0;         // length of queue
 
@@ -183,10 +191,8 @@ public class JavaPushTupleStream implements JavaTupleStream
         {
             if (buf == null)
                 sb.append("null");
-            else {
-                sb.append("@").append(Integer.toHexString(buf.hashCode()));
-                sb.append(": ").append(buf);
-            }
+            else 
+                sb.append(buf);
             return sb;
         }
 
@@ -327,34 +333,40 @@ public class JavaPushTupleStream implements JavaTupleStream
         // Read all the input data. OK to block, since in own thread.
         public void run() 
         {
-            // get the 1st row
-            Object next = iter.hasNext()? iter.next() : null;
-            boolean eos = (next == null) || stopped;
-            while (!eos) {
-                ByteBuffer buf = pool.getBlankBuffer(false);
-                if (buf == null) continue; // interrupted
-                while (next != null) {
-                    if (tracer.isLoggable(Level.FINER))
-                        tracer.finer(this + " read row " + next);
-                    if (!tupleWriter.marshalTuple(buf, next))
-                        break;              // buffer full
-                    if (stopped) break;
-                    next = iter.hasNext()? iter.next() : null;
+            try {
+                // get the 1st row
+                Object next = iter.hasNext()? iter.next() : null;
+                boolean eos = (next == null) || stopped;
+                while (!eos) {
+                    ByteBuffer buf = pool.getBlankBuffer(false);
+                    if (buf == null) continue; // interrupted
+                    while (next != null) {
+                        if (tracer.isLoggable(Level.FINER))
+                            tracer.finer(this + " read row " + next);
+                        if (!tupleWriter.marshalTuple(buf, next))
+                            break;              // buffer full
+                        if (stopped) break;
+                        next = iter.hasNext()? iter.next() : null;
+                    }
+                    eos = (next == null) || stopped;
+                    if (eos) tracer.log(Level.FINE, "{0} read EOS", this);
+                    pool.addBuffer(buf);
                 }
-                eos = (next == null) || stopped;
-                if (eos) tracer.log(Level.FINE, "{0} read EOS", this);
-                pool.addBuffer(buf);
-            }
 
-            // send an empty buffer to indicate EOS
-            if (eos) {
-                tracer.finer(this + "reader sending EOS");
-                ByteBuffer buf = pool.getBlankBuffer(false);                
-                pool.addBuffer(buf);
-            }
+                // send an empty buffer to indicate EOS
+                if (eos) {
+                    tracer.finer(this + "reader sending EOS");
+                    ByteBuffer buf = pool.getBlankBuffer(false);                
+                    pool.addBuffer(buf);
+                }
 
-            tracer.fine(this + "RowReaderThread stopped");
-            stopped = true;
+                tracer.fine(this + "RowReaderThread stopped");
+                stopped = true;
+
+            } catch (Exception e) {
+                // unexpected: thread dies, but log it
+                tracer.severe(this + "RowReaderThread caught exception: " + e);
+            }
         }
     };
 }
