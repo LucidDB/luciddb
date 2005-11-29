@@ -119,25 +119,14 @@ LcsClusterAppendExecStream::LcsClusterAppendExecStream()
     m_firstRow = LcsRid(0);
     m_lastRow = LcsRid(0);
     m_startRow = LcsRid(0);
-    m_bClosed = true;
-    clusterDump = new LcsClusterDump(TRACE_FINE, getSharedTraceTarget(),
-                                     getTraceSourceName());
-}
-
-LcsClusterAppendExecStream::~LcsClusterAppendExecStream() 
-{
-    // REVIEW jvs 28-Nov-2005:  these explicit resets aren't necessary
-    colTupleDesc.reset();
-    colTupleData.reset();
-    
-    // TODO jvs 28-Nov-2005:  use a scoped_ptr so this won't be necessary
-    delete clusterDump;
+    clusterDump = SharedLcsClusterDump(
+                    new LcsClusterDump(TRACE_FINE, getSharedTraceTarget(),
+                                       getTraceSourceName()));
 }
 
 void LcsClusterAppendExecStream::Init()
 {
     m_rowCnt = 0;
-    m_bClosed = false;
     m_indexBlockDirty = false;
     m_arraysAlloced = false;
     m_bCompressCalled = false;
@@ -206,6 +195,8 @@ void LcsClusterAppendExecStream::Init()
         m_hash[i].init(m_hashBlock[i], &m_riBlockBuilder,
             colTupleDesc[i], i, m_blockSize);
     }
+
+    nRowsMax = (m_blockSize & 0xfffffff0) / sizeof(uint16_t);
 }
 
 
@@ -284,11 +275,12 @@ ExecStreamResult LcsClusterAppendExecStream::Compress(
             return EXECRC_BUF_UNDERFLOW;
         }
    
-        // unmarshal the cluster tuple and convert them into individual
+        // if we have finished processing the previous row, unmarshal
+        // the next cluster tuple and convert them into individual
         // tuples, one per cluster column
-        pInAccessor->unmarshalTuple(clusterColsTupleData);
+        if (!pInAccessor->isTupleConsumptionPending())
+            pInAccessor->unmarshalTuple(clusterColsTupleData);
 
-StartCompressed:
         // Go through each column value for current row and insert it.
         // If we run out of space then rollback all the columns that
         // I already inserted.
@@ -320,14 +312,11 @@ StartCompressed:
             }
         }
         
-        // REVIEW jvs 28-Nov-2005:  The if test below is
-        // a redundant conjunction, right?  The only way we get through
-        // with j == m_numColumns is when undoInsert was never set.
-        
         // Was there enough space to add this row?  Note that the Insert()
-        // calls above accounted for the space needed by AddRow() below,
-        // so we don't have to worry about AddRow() running out of space
-        if (!undoInsert && (j == m_numColumns)) {
+        // calls above accounted for the space needed by addValueOrdinal()
+        // below, so we don't have to worry about addValueOrdinal() running
+        // out of space
+        if (!undoInsert) {
             canFit = true;
         } else {
             canFit = false;
@@ -337,7 +326,7 @@ StartCompressed:
                 
             // Add the pointers from the batch to the data values
             for (j = 0; j < m_numColumns; j++) {
-                AddRow(j, m_vOrd[j].getValOrd());
+                addValueOrdinal(j, m_vOrd[j].getValOrd());
             }
             
             m_rowCnt++;
@@ -351,15 +340,11 @@ StartCompressed:
             // since we can't fit anymore values write out current batch
             WriteBatch(false);
                     
-            // NOTE jvs 28-Nov-2005:  It is possible to change
-            // this goto to a continue, but only by wrapping an
-            // pInAccessor->isTupleConsumptionPending test
-            // around the unmarshalTuple at the top of the loop
-            // (quantum increment off-by-one isn't important).
-            
             // restart using last value retrieved from stream because it
-            // could not fit in the batch
-            goto StartCompressed;
+            // could not fit in the batch; by continuing we can avoid
+            // a goto to jump back to the top of this for loop at the
+            // expense of a harmless increment of the quantum
+            continue;
         }
 
         // only consume the tuple after we know the row can fit
@@ -373,11 +358,6 @@ StartCompressed:
 
 void LcsClusterAppendExecStream::Close() 
 {
-    if (m_bClosed) {
-        return;
-    }
-    m_bClosed = true;
-    
     m_btree.reset();
 
     // free cache blocks and the arrays pointing to them
@@ -483,10 +463,10 @@ void LcsClusterAppendExecStream::LoadExistingBlock()
                                             // array of buffers to hold
                                             // rolled back data for each
                                             // column
-    
-    // REVIEW jvs 28-Nov-2005:  shouldn't this be the same for each column?
-    boost::scoped_array<uint> anLeftOvers;  // number of leftover rows for
-                                            // each col
+    uint anLeftOvers;                       // number of leftover rows for
+                                            // each col; since the value is
+                                            // same for every column, no need
+                                            // for this to be an array
     boost::scoped_array<uint16_t> aiFixedSize;  // how much space was used for
                                             // each column; should be
                                             // equal for each column
@@ -525,7 +505,6 @@ void LcsClusterAppendExecStream::LoadExistingBlock()
     }
 
     // Setup structures to hold rolled back information
-    anLeftOvers.reset(new uint[m_numColumns]);
     aiFixedSize.reset(new uint16_t[m_numColumns]);
     aLeftOverBufs.reset(new PBuffer[m_numColumns]);
 
@@ -546,13 +525,13 @@ void LcsClusterAppendExecStream::LoadExistingBlock()
         
         //reset everytime through loop
         m_rowCnt = startRowCnt;
-        m_riBlockBuilder.DescribeLastBatch(i, anLeftOvers[i], aiFixedSize[i]);
+        m_riBlockBuilder.DescribeLastBatch(i, anLeftOvers, aiFixedSize[i]);
         
         // if we have left overs from the last batch (ie. batch did not end on
         // an 8 boundary), rollback and store in temporary mem
         // aLeftOverBufs[i]
-        if (anLeftOvers[i] > 0) {
-            aLeftOverBufs[i] = new FixedBuffer[anLeftOvers[i] * aiFixedSize[i]];
+        if (anLeftOvers > 0) {
+            aLeftOverBufs[i] = new FixedBuffer[anLeftOvers * aiFixedSize[i]];
             m_riBlockBuilder.RollBackLastBatch(i, aLeftOverBufs[i]);
         }
     }
@@ -572,7 +551,7 @@ void LcsClusterAppendExecStream::LoadExistingBlock()
         // if we had left overs from the last batch, start a new batch
         // NOTE: we are guaranteed to be able to add these values back
         // to the current block
-        if (anLeftOvers[i] > 0) {
+        if (anLeftOvers > 0) {
 
             uint8_t *val;
             bool undoInsert = false;
@@ -582,19 +561,19 @@ void LcsClusterAppendExecStream::LoadExistingBlock()
             // hash will be full and some of the left over values
             // can not be stored in the hash.  If this is true then clear
             // the hash.
-            if (m_hash[i].isHashFull(anLeftOvers[i])) {
-                m_hash[i].startNewBatch(anLeftOvers[i]);
+            if (m_hash[i].isHashFull(anLeftOvers)) {
+                m_hash[i].startNewBatch(anLeftOvers);
             }
 
             for (j = 0, val = aLeftOverBufs[i];
-                 j < anLeftOvers[i];
+                 j < anLeftOvers;
                  j++, val += aiFixedSize[i])
             {
                 m_hash[i].insert(val, &vOrd, &undoInsert);
                 
                 //If we have left overs they should fit in the block 
                 assert(!undoInsert);
-                AddRow(i, vOrd.getValOrd());
+                addValueOrdinal(i, vOrd.getValOrd());
                 m_rowCnt++;
             }
         }
@@ -602,21 +581,15 @@ void LcsClusterAppendExecStream::LoadExistingBlock()
     
     m_lastRow -= m_rowCnt;
 
-    // NOTE jvs 28-Nov-2005:  these explicit resets aren't necessary
-    lastValOff.reset();
-    numVals.reset();
-    aiFixedSize.reset();
     // TODO jvs 28-Nov-2005:  see note above on scoped_array<FixedBuffer>
     for (i = 0; i < m_numColumns; i++) {
-        if (anLeftOvers[i] > 0) {
+        if (anLeftOvers > 0) {
             delete[] aLeftOverBufs[i];
         }
     }
-    aLeftOverBufs.reset();
-    anLeftOvers.reset();
 }
 
-void LcsClusterAppendExecStream::AddRow(uint16_t column, uint16_t vOrd) 
+void LcsClusterAppendExecStream::addValueOrdinal(uint16_t column, uint16_t vOrd) 
 {
     uint16_t * rowWordArray = (uint16_t *) m_rowBlock[column];
     rowWordArray[m_rowCnt] = vOrd;
@@ -627,21 +600,10 @@ void LcsClusterAppendExecStream::AddRow(uint16_t column, uint16_t vOrd)
 
 bool LcsClusterAppendExecStream::IsRowArrayFull() 
 {
-    // REVIEW jvs 28-Nov-2005:  can't we just precompute an nRowsMax
-    // once and compare against it here?  This pointer arithmetic
-    // shouldn't be necessary.  The state should be identical for
-    // all columns since these are uint16_t codes, correct?
-    
-    for (uint i = 0; i < m_numColumns; i++) {
-        uint16_t *rowWordArray = (uint16_t *) m_rowBlock[i];
-        // row value ordinals when valCnt >= 256
-        if ((PBuffer) &rowWordArray[m_rowCnt] >=
-            (PBuffer) m_rowBlock[i] + (m_blockSize & 0xfffffff0))
-        {
-            return true;
-        }
-    }
-    return false;
+    if (m_rowCnt >= nRowsMax)
+        return true;
+    else
+        return false;
 }
 
 void LcsClusterAppendExecStream::WriteBatch(bool lastBatch) 
@@ -716,14 +678,11 @@ void LcsClusterAppendExecStream::WriteBatch(bool lastBatch)
     bool bStartNewBlock;
     bStartNewBlock = false;
 
-    // REVIEW jvs 28-Nov-2005:  Comment below refers to PutBatch, but
-    // that method no longer exists.
-    
     // If we couldn't even fit 8 values into the batch (and this is not the
-    // final batch), then the block must be full.  PutBatch() assumed that
-    // this was the last batch, so it wrote out these rows in a small batch.
-    // Roll back the entire batch (putting rolled back results in m_buf) and
-    // move to next block
+    // final batch), then the block must be full.  PutCompressedBatch()/
+    // PutFixedVarBatch() assumed that this was the last batch, so they wrote
+    // out these rows in a small batch.  Roll back the entire batch (putting
+    // rolled back results in m_buf) and move to next block
     if (!lastBatch && origRowCnt < 8) {
     
         // rollback each batch
@@ -755,7 +714,7 @@ void LcsClusterAppendExecStream::WriteBatch(bool lastBatch)
                 // If we have leftovers they should fit in the current block
                 // (because we moved to a new block above, if it was necessary)
                 assert(!undoInsert);
-                AddRow(i, vOrd.getValOrd());
+                addValueOrdinal(i, vOrd.getValOrd());
                 m_rowCnt++;
                 val += m_maxValueSize[i];
             }

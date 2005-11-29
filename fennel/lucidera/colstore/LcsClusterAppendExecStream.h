@@ -120,6 +120,11 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
     boost::scoped_array<PBuffer> m_rowBlock;
     
     /**
+     * Maximum number of values that can be stored in m_rowBlock
+     */
+    uint nRowsMax;
+
+    /**
      * Array of temporary blocks for hash table
      */
     boost::scoped_array<PBuffer> m_hashBlock;
@@ -136,13 +141,6 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
      * Number of rows loaded into the current set of batches
      */
     uint16_t m_rowCnt;
-
-    // REVIEW jvs 28-Nov-2005:  I think it should be safe to get rid of
-    // this (closeImpl will only be called if it's really needed).
-    /**
-     * True if close already done
-     */
-    bool m_bClosed;
 
     /**
      * True if index blocks need to be written to disk
@@ -211,7 +209,7 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
     /**
      * Cluster dump
      */
-    LcsClusterDump *clusterDump;
+    SharedLcsClusterDump clusterDump;
 
     /**
      * Allocate memory for arrays
@@ -234,12 +232,10 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
      */
     void convertTuplesToCols();
 
-    // REVIEW jvs 28-Nov-2005:  This method is somewhat misnamed, since it
-    // just sets one value in a cluster row.
     /**
      * Adds value ordinal to row array for new row
      */
-    void AddRow(uint16_t column, uint16_t vOrd);
+    void addValueOrdinal(uint16_t column, uint16_t vOrd);
 
     /**
      * True if row array is full
@@ -290,11 +286,6 @@ public:
      * Performs minimal initialization of object
      */
     explicit LcsClusterAppendExecStream();
-
-    /**
-     * Deallocates remaining temporary memory allocated during prepare()
-     */
-    ~LcsClusterAppendExecStream();
 
     /**
      * Initializes and sets up object with content specific to the load that

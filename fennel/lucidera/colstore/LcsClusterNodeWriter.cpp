@@ -458,16 +458,14 @@ void LcsClusterNodeWriter::PutCompressedBatch(uint16_t column, PBuffer pRows,
 
     if (m_batch[column].nRow > 8) {
         pOffs = (uint16_t *)(m_pBlock[column] + m_batch[column].oVal);
-        // REVIEW jvs 28-Nov-2005:  Here and below, should be using
-        // a macro for RID masking, and the macro should use a
-        // 64-bit mask instead of a 32-bit mask
-        for (i = m_batch[column].nRow & 0xfffffff8; i < m_batch[column].nRow;
+        for (i = round8Boundary(m_batch[column].nRow);
+                i < m_batch[column].nRow;
                 i++, pBuf += m_batch[column].recSize) {
             iRow = ((uint16_t *) pRows)[i];
             memcpy(pBuf, m_pBlock[column] + pOffs[iRow],
                     m_batch[column].recSize);
         }
-        m_batch[column].nRow = m_batch[column].nRow &0xfffffff8;
+        m_batch[column].nRow = round8Boundary(m_batch[column].nRow);
     }
 
     // calculate the bit vector widthes, sum(w[i]) is m_nBits

@@ -205,6 +205,28 @@ private:
      */
     void AllocArrays();
 
+    /**
+     * Rounds a 32-bit value to a boundary of 8
+     *
+     * @param val value to be rounded
+     */
+    inline uint32_t round8Boundary(uint32_t val)
+    {
+        return val & 0xfffffff8;
+    }
+
+    /**
+     * Rounds a 32-bit value to a boundary of 8 if it is > 8
+     *
+     * @param val value to be rounded
+     */
+    inline uint32_t roundIf8Boundary(uint32_t val)
+    {
+        if (val > 8) {
+            return round8Boundary(val);
+        }
+    }
+
 public:
     /**
      * Creates a new LcsClusterNodeWriter, zeroing out all member fields
