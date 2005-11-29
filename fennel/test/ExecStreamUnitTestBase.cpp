@@ -37,6 +37,13 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+SharedExecStream ExecStreamUnitTestBase::prepareSourceGraph(
+    ExecStreamEmbryo &sourceStreamEmbryo)
+{
+    std::vector<ExecStreamEmbryo> transforms;
+    return prepareTransformGraph(sourceStreamEmbryo, transforms);
+}
+
 SharedExecStream ExecStreamUnitTestBase::prepareTransformGraph(
     ExecStreamEmbryo &sourceStreamEmbryo,
     ExecStreamEmbryo &transformStreamEmbryo)
@@ -111,6 +118,18 @@ void ExecStreamUnitTestBase::testCaseSetUp()
     pGraphEmbryo = newStreamGraphEmbryo(pGraph);
 }
 
+void ExecStreamUnitTestBase::testReset()
+{
+    if (pScheduler) {
+        pScheduler->stop();
+    }
+    tearDown();
+    pScheduler.reset();
+                
+    pScheduler.reset(newScheduler());
+    pGraph = newStreamGraph();
+    pGraphEmbryo = newStreamGraphEmbryo(pGraph);
+}
 
 // refines ExecStreamTestBase::testCaseTearDown()
 void ExecStreamUnitTestBase::tearDown()

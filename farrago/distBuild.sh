@@ -49,13 +49,29 @@ else
     SO_PATTERN=$SO_3P_PATTERN
 fi
 
-if [ -z "$1" ]; then
+#default
+init_build=true
+dist_fennel=true
+
+while [ -n "$1" ]; do
+    case $1 in
+        --skip-init-build) init_build=false;;
+        *) usage; exit -1;;
+    esac
+    shift
+done
+
+if $init_build; then
     ./initBuild.sh --with-fennel
-elif [ "$1" == "--skip-init-build" ]; then
-    echo "Skipping Farrago initial build."
 else
-    usage
-    exit -1
+    echo "Skip init build"
+
+    # if fennel was not build, don't include it.
+    if ( grep -q -i '^fennel.disabled=true' initBuild.properties ) ; then
+        dist_fennel=true;
+    else 
+        dist_fennel=false;
+    fi
 fi
 
 set -e
@@ -116,15 +132,20 @@ cp jgrapht/jgrapht-*.jar $LIB_DIR
 cp jgrapht/license-LGPL.txt $LIB_DIR/jgrapht.license.txt
 cp hsqldb/doc/hypersonic_lic.txt $LIB_DIR/hsqldb.license.txt
 cp hsqldb/lib/hsqldb.jar $LIB_DIR
-cp -d stlport/lib/$SO_3P_PATTERN $LIB_DIR/fennel
 rm -f $LIB_DIR/fennel/*debug*
 cp stlport/README $LIB_DIR/fennel/stlport.README.txt
-cp -d boost/lib/$SO_3P_PATTERN $LIB_DIR/fennel
+if $dist_fennel; then
+    cp -d stlport/lib/$SO_3P_PATTERN $LIB_DIR/fennel
+    cp -d boost/lib/$SO_3P_PATTERN $LIB_DIR/fennel
+fi
+
 rm -f $LIB_DIR/fennel/*gdp*
 cp boost/LICENSE_1_0.txt $LIB_DIR/fennel/boost.license.txt
 
 # TODO jvs 12-Mar-2005
-# cp -d icu/lib/$SO_3P_PATTERN $LIB_DIR/fennel
+# if dist_fennel; then
+#   cp -d icu/lib/$SO_3P_PATTERN $LIB_DIR/fennel
+# fi
 # cp icu/license.html $LIB_DIR/fennel/icu.license.html
 
 if [ $cygwin = "true" ]; then
@@ -132,16 +153,18 @@ if [ $cygwin = "true" ]; then
 fi
 
 # copy fennel libs
-cd $FENNEL_DIR
-cp -d libfennel/.libs/$SO_PATTERN $LIB_DIR/fennel
-cp -d farrago/.libs/$SO_PATTERN $LIB_DIR/fennel
-cp -d disruptivetech/libfennel_dt/.libs/$SO_PATTERN $LIB_DIR/fennel
-cp -d disruptivetech/farrago/.libs/$SO_PATTERN $LIB_DIR/fennel
-cp -d lucidera/libfennel_lu/.libs/$SO_PATTERN $LIB_DIR/fennel
-cp -d lucidera/farrago/.libs/$SO_PATTERN $LIB_DIR/fennel
-
-# copy fennel resources
-cp common/*.properties $CATALOG_DIR/fennel
+if $dist_fennel; then
+    cd $FENNEL_DIR
+    cp -d libfennel/.libs/$SO_PATTERN $LIB_DIR/fennel
+    cp -d farrago/.libs/$SO_PATTERN $LIB_DIR/fennel
+    cp -d disruptivetech/libfennel_dt/.libs/$SO_PATTERN $LIB_DIR/fennel
+    cp -d disruptivetech/farrago/.libs/$SO_PATTERN $LIB_DIR/fennel
+    cp -d lucidera/libfennel_lu/.libs/$SO_PATTERN $LIB_DIR/fennel
+    cp -d lucidera/farrago/.libs/$SO_PATTERN $LIB_DIR/fennel
+    
+    # copy fennel resources
+    cp common/*.properties $CATALOG_DIR/fennel
+fi
 
 # create farrago libs
 cd $DIST_DIR
@@ -167,7 +190,11 @@ else
 fi
 cp catalog/FarragoCatalog.* $CATALOG_DIR
 cp catalog/ReposStorage.properties $CATALOG_DIR
-cp catalog/*.dat $CATALOG_DIR
+ 
+if $dist_fennel; then
+    cp catalog/*.dat $CATALOG_DIR
+fi
+
 if [ $cygwin = "true" ]; then
     cp dist/bin/*.bat $BIN_DIR
 else

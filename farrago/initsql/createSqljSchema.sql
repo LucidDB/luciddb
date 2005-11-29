@@ -2,7 +2,6 @@
 -- This script creates the SQLJ support schema
 
 !set verbose true
-!autocommit off
 
 create schema sqlj;
 
@@ -36,5 +35,3 @@ create procedure alter_java_path(
 language java
 modifies sql data
 external name 'class net.sf.farrago.ddl.DdlSqlj.alter_java_path';
-
-commit;

@@ -13,6 +13,7 @@ ExecStream.cpp \
 ExecStreamGraph.cpp \
 ExecStreamGraphEmbryo.cpp \
 ExecStreamScheduler.cpp \
+MergeExecStream.cpp \
 MockConsumerExecStream.cpp \
 MockProducerExecStream.cpp \
 ScratchBufferExecStream.cpp \

@@ -1,0 +1,872 @@
+<?xml version = "1.0" encoding = "UTF-8" ?>
+<uml version="4">
+  <argo version="4">
+    <documentation>
+      <authorname></authorname>
+      <version>0.19.7</version>
+      <description>
+        
+      </description>
+    </documentation>
+    <searchpath href="PROJECT_DIR" />
+    <member type="xmi" />
+    <member type="pgml" />
+    <member type="todo" />
+    <historyfile name="" />
+  </argo>
+    <XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Sun Nov 13 00:36:30 PST 2005'>
+      <XMI.header>
+        <XMI.documentation>
+          <XMI.exporter>Netbeans XMI Writer</XMI.exporter>
+          <XMI.exporterVersion>1.0</XMI.exporterVersion>
+        </XMI.documentation>
+      </XMI.header>
+      <XMI.content>
+        <UML:Model xmi.id = '.:00000000000009F4' name = 'MOF Metamodel' isSpecification = 'false'
+          isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+          <UML:ModelElement.taggedValue>
+            <UML:TaggedValue xmi.id = '.:000000000000094D' isSpecification = 'false'>
+              <UML:TaggedValue.dataValue>&lt;p&gt;
+    &lt;/p&gt;</UML:TaggedValue.dataValue>
+              <UML:TaggedValue.type>
+                <UML:TagDefinition xmi.idref = '.:0000000000000999'/>
+              </UML:TaggedValue.type>
+            </UML:TaggedValue>
+          </UML:ModelElement.taggedValue>
+          <UML:Namespace.ownedElement>
+            <UML:Stereotype xmi.id = '.:000000000000094E' name = 'metamodel' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Stereotype.baseClass>Package</UML:Stereotype.baseClass>
+            </UML:Stereotype>
+            <UML:Stereotype xmi.id = '.:000000000000094F' name = 'reference' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Stereotype.baseClass>Attribute</UML:Stereotype.baseClass>
+            </UML:Stereotype>
+            <UML:Stereotype xmi.id = '.:0000000000000950' name = 'alias' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Stereotype.baseClass>DataType</UML:Stereotype.baseClass>
+            </UML:Stereotype>
+            <UML:Stereotype xmi.id = '.:0000000000000951' name = 'exception' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Stereotype.baseClass>Class</UML:Stereotype.baseClass>
+            </UML:Stereotype>
+            <UML:Stereotype xmi.id = '.:0000000000000952' name = 'structure' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Stereotype.baseClass>Class</UML:Stereotype.baseClass>
+            </UML:Stereotype>
+            <UML:Stereotype xmi.id = '.:0000000000000953' name = 'collection' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Stereotype.baseClass>Class</UML:Stereotype.baseClass>
+            </UML:Stereotype>
+            <UML:Stereotype xmi.id = '.:0000000000000954' name = 'gentleware-import'
+              isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Stereotype.baseClass>Dependency</UML:Stereotype.baseClass>
+            </UML:Stereotype>
+            <UML:Stereotype xmi.id = '.:0000000000000955' name = 'clustering' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Stereotype.baseClass>Dependency</UML:Stereotype.baseClass>
+            </UML:Stereotype>
+            <UML:Stereotype xmi.id = '.:0000000000000956' name = 'subtyping' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Stereotype.baseClass>Dependency</UML:Stereotype.baseClass>
+            </UML:Stereotype>
+            <UML:Stereotype xmi.id = '.:0000000000000957' name = 'entity' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Stereotype.baseClass>Class</UML:Stereotype.baseClass>
+            </UML:Stereotype>
+            <UML:Stereotype xmi.id = '.:0000000000000958' name = 'enumeration' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Stereotype.baseClass>Class</UML:Stereotype.baseClass>
+            </UML:Stereotype>
+            <UML:Stereotype xmi.id = '.:0000000000000959' name = 'enumeration' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Stereotype.baseClass>DataType</UML:Stereotype.baseClass>
+            </UML:Stereotype>
+            <UML:Package xmi.id = '.:0000000000000960' name = 'PrimitiveTypes' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Namespace.ownedElement>
+                <UML:DataType xmi.id = '.:000000000000095A' name = 'Boolean' isSpecification = 'false'
+                  isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+                <UML:DataType xmi.id = '.:000000000000095B' name = 'Double' isSpecification = 'false'
+                  isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+                <UML:DataType xmi.id = '.:000000000000095C' name = 'Float' isSpecification = 'false'
+                  isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+                <UML:DataType xmi.id = '.:000000000000095D' name = 'Integer' isSpecification = 'false'
+                  isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+                <UML:DataType xmi.id = '.:000000000000095E' name = 'Long' isSpecification = 'false'
+                  isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+                <UML:DataType xmi.id = '.:000000000000095F' name = 'String' isSpecification = 'false'
+                  isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+              </UML:Namespace.ownedElement>
+            </UML:Package>
+            <UML:Stereotype xmi.id = '.:0000000000000961' name = 'accessor' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Stereotype.baseClass>Dependency</UML:Stereotype.baseClass>
+            </UML:Stereotype>
+            <UML:Package xmi.id = '.:000000000000096F' name = 'FEME' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:ModelElement.stereotype>
+                <UML:Stereotype xmi.idref = '.:000000000000094E'/>
+              </UML:ModelElement.stereotype>
+              <UML:ModelElement.taggedValue>
+                <UML:TaggedValue xmi.id = '.:0000000000000962' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue>&lt;p&gt;FEME is a placeholder for the top-level Farrago package which contains CWM, FEM, and all plugin extension models.&lt;/p&gt;
+    </UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = '.:0000000000000999'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+                <UML:TaggedValue xmi.id = '.:0000000000000963' isSpecification = 'false'>
+                  <UML:TaggedValue.dataValue>FEM</UML:TaggedValue.dataValue>
+                  <UML:TaggedValue.type>
+                    <UML:TagDefinition xmi.idref = '.:00000000000009A5'/>
+                  </UML:TaggedValue.type>
+                </UML:TaggedValue>
+              </UML:ModelElement.taggedValue>
+              <UML:Namespace.ownedElement>
+                <UML:Package xmi.id = '.:0000000000000966' name = 'CwmRef' visibility = 'public'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Namespace.ownedElement>
+                    <UML:Class xmi.id = '.:0000000000000964' name = 'ModelElement' visibility = 'public'
+                      isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'
+                      isActive = 'false'/>
+                    <UML:Generalization xmi.id = '.:0000000000000965' isSpecification = 'false'>
+                      <UML:Generalization.child>
+                        <UML:Class xmi.idref = '.:000000000000096C'/>
+                      </UML:Generalization.child>
+                      <UML:Generalization.parent>
+                        <UML:Class xmi.idref = '.:0000000000000964'/>
+                      </UML:Generalization.parent>
+                    </UML:Generalization>
+                  </UML:Namespace.ownedElement>
+                </UML:Package>
+                <UML:Package xmi.id = '.:0000000000000967' name = 'FemRef' visibility = 'public'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+                <UML:Package xmi.id = '.:000000000000096E' name = 'RNGModel' visibility = 'public'
+                  isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Namespace.ownedElement>
+                    <UML:Package xmi.id = '.:000000000000096D' name = 'RNGSchema' visibility = 'public'
+                      isSpecification = 'false' isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                      <UML:Namespace.ownedElement>
+                        <UML:Class xmi.id = '.:000000000000096C' name = 'RandomNumberGenerator'
+                          visibility = 'public' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
+                          isAbstract = 'false' isActive = 'false'>
+                          <UML:GeneralizableElement.generalization>
+                            <UML:Generalization xmi.idref = '.:0000000000000965'/>
+                          </UML:GeneralizableElement.generalization>
+                          <UML:Classifier.feature>
+                            <UML:Attribute xmi.id = '.:0000000000000968' name = 'serializedFile' visibility = 'private'
+                              isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                              <UML:StructuralFeature.type>
+                                <UML:DataType xmi.idref = '.:000000000000095F'/>
+                              </UML:StructuralFeature.type>
+                            </UML:Attribute>
+                            <UML:Attribute xmi.id = '.:000000000000096B' name = 'initialSeed' visibility = 'private'
+                              isSpecification = 'false' ownerScope = 'instance' changeability = 'changeable'>
+                              <UML:StructuralFeature.multiplicity>
+                                <UML:Multiplicity xmi.id = '.:000000000000096A'>
+                                  <UML:Multiplicity.range>
+                                    <UML:MultiplicityRange xmi.id = '.:0000000000000969' lower = '0' upper = '1'/>
+                                  </UML:Multiplicity.range>
+                                </UML:Multiplicity>
+                              </UML:StructuralFeature.multiplicity>
+                              <UML:StructuralFeature.type>
+                                <UML:DataType xmi.idref = '.:000000000000095E'/>
+                              </UML:StructuralFeature.type>
+                            </UML:Attribute>
+                          </UML:Classifier.feature>
+                        </UML:Class>
+                      </UML:Namespace.ownedElement>
+                    </UML:Package>
+                  </UML:Namespace.ownedElement>
+                </UML:Package>
+              </UML:Namespace.ownedElement>
+            </UML:Package>
+            <UML:Package xmi.id = '.:0000000000000974' name = 'java' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Namespace.ownedElement>
+                <UML:Package xmi.id = '.:0000000000000973' name = 'lang' isSpecification = 'false'
+                  isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+                  <UML:Namespace.ownedElement>
+                    <UML:DataType xmi.id = '.:0000000000000970' name = 'int' isSpecification = 'false'
+                      isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+                    <UML:DataType xmi.id = '.:0000000000000971' name = 'void' isSpecification = 'false'
+                      isRoot = 'false' isLeaf = 'false' isAbstract = 'false'/>
+                    <UML:Class xmi.id = '.:0000000000000972' name = 'Boolean' isSpecification = 'false'
+                      isRoot = 'false' isLeaf = 'false' isAbstract = 'false' isActive = 'false'/>
+                  </UML:Namespace.ownedElement>
+                </UML:Package>
+              </UML:Namespace.ownedElement>
+            </UML:Package>
+            <UML:Stereotype xmi.id = '.:0000000000000975' name = 'implicit' isSpecification = 'false'
+              isRoot = 'false' isLeaf = 'false' isAbstract = 'false'>
+              <UML:Stereotype.baseClass>Association</UML:Stereotype.baseClass>
+            </UML:Stereotype>
+            <UML:TagDefinition xmi.id = '.:0000000000000978' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'String'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:0000000000000977'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:0000000000000976' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:000000000000097B' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'String'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:000000000000097A'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:0000000000000979' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:000000000000097E' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'element.uuid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:000000000000097D'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:000000000000097C' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:0000000000000981' name = 'javax.jmi.' isSpecification = 'false'
+              tagType = 'javax.jmi.packagePrefix'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:0000000000000980'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:000000000000097F' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:0000000000000984' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'element.uuid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:0000000000000983'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:0000000000000982' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:0000000000000987' name = 'documentation'
+              isSpecification = 'false' tagType = 'documentation'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:0000000000000986'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:0000000000000985' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:000000000000098A' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'element.uuid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:0000000000000989'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:0000000000000988' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:000000000000098D' name = 'documentation'
+              isSpecification = 'false' tagType = 'documentation'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:000000000000098C'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:000000000000098B' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:0000000000000990' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'element.uuid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:000000000000098F'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:000000000000098E' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:0000000000000993' name = 'documentation'
+              isSpecification = 'false' tagType = 'documentation'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:0000000000000992'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:0000000000000991' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:0000000000000996' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'element.uuid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:0000000000000995'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:0000000000000994' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:0000000000000999' name = 'documentation'
+              isSpecification = 'false' tagType = 'documentation'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:0000000000000998'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:0000000000000997' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:000000000000099C' name = 'isValid' isSpecification = 'false'
+              tagType = 'isValid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:000000000000099B'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:000000000000099A' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:000000000000099F' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'element.uuid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:000000000000099E'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:000000000000099D' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009A2' name = 'org.netbeans.mdr.transient'
+              isSpecification = 'false' tagType = 't'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009A1'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009A0' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009A5' name = 'org.omg.xmi.namespace'
+              isSpecification = 'false' tagType = 'org.omg.xmi.namespace'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009A4'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009A3' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009A8' name = 'org.omg.xmi.namespace=FEMConfig'
+              isSpecification = 'false' tagType = 'org.omg.xmi.namespace=FEMConfig'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009A7'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009A6' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009AB' name = 'org.omg.xmin.namespace=Fennel'
+              isSpecification = 'false' tagType = 'org.omg.xmi.namespace'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009AA'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009A9' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009AE' name = 'org.netbeans.mdr.transient'
+              isSpecification = 'false' tagType = 'org.netbeans.mdr.transient'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009AD'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009AC' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009B1' name = '' isSpecification = 'false'
+              tagType = ''>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009B0'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009AF' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009B4' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'element.uuid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009B3'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009B2' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009B7' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'element.uuid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009B6'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009B5' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009BA' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'element.uuid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009B9'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009B8' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009BD' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'element.uuid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009BC'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009BB' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009C0' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'element.uuid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009BF'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009BE' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009C3' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'element.uuid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009C2'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009C1' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009C6' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'element.uuid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009C5'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009C4' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009C9' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'element.uuid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009C8'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009C7' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009CC' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'element.uuid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009CB'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009CA' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009CF' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'element.uuid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009CE'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009CD' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009D2' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'element.uuid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009D1'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009D0' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009D5' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'element.uuid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009D4'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009D3' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009D8' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'element.uuid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009D7'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009D6' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009DB' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'element.uuid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009DA'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009D9' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009DE' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'element.uuid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009DD'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009DC' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009E1' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'element.uuid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009E0'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009DF' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009E4' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'element.uuid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009E3'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009E2' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009E7' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'element.uuid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009E6'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009E5' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009EA' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'element.uuid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009E9'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009E8' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009ED' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'element.uuid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009EC'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009EB' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009F0' name = 'element.uuid' isSpecification = 'false'
+              tagType = 'element.uuid'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009EF'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009EE' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+            <UML:TagDefinition xmi.id = '.:00000000000009F3' name = 'derived' isSpecification = 'false'
+              tagType = 'String'>
+              <UML:TagDefinition.multiplicity>
+                <UML:Multiplicity xmi.id = '.:00000000000009F2'>
+                  <UML:Multiplicity.range>
+                    <UML:MultiplicityRange xmi.id = '.:00000000000009F1' lower = '1' upper = '1'/>
+                  </UML:Multiplicity.range>
+                </UML:Multiplicity>
+              </UML:TagDefinition.multiplicity>
+            </UML:TagDefinition>
+          </UML:Namespace.ownedElement>
+        </UML:Model>
+      </XMI.content>
+    </XMI>
+    <pgml description="org.argouml.uml.diagram.static_structure.ui.UMLClassDiagram|.:000000000000096D"
+          name="Class Diagram 1"
+    >
+      <group name="Fig0"
+           description="org.argouml.uml.diagram.static_structure.ui.FigClass[264, 240, 127, 74]pathVisible=false;operationsVisible=true;attributesVisible=true"
+           href=".:000000000000096C"
+           fill="1"
+           fillcolor="white"
+           stroke="1"
+           strokecolor="black"
+      >
+        <private>
+        </private>
+        
+        <rectangle name="Fig0.0"
+          x="264"
+          y="240"
+          width="127"
+          height="74"
+          fill="1"
+          fillcolor="white"
+          stroke="0"
+          strokecolor="0 255 255"
+        />
+        <text name="Fig0.1"
+          x="264"
+          y="240"
+          fill="0"
+          fillcolor="white"
+          stroke="0"
+          strokecolor="black"
+          font="Dialog"
+          textsize="10"
+        ></text>
+        <text name="Fig0.2"
+          x="264"
+          y="240"
+          fill="0"
+          fillcolor="white"
+          stroke="0"
+          strokecolor="red"
+          font="Dialog"
+          textsize="10"
+        >RandomNumberGenerator</text>
+        <group name="Fig0.3"
+             description="org.argouml.uml.diagram.ui.FigOperationsCompartment[264, 295, 127, 19]"
+             fill="1"
+             fillcolor="white"
+             stroke="1"
+             strokecolor="black"
+        >
+          <private>
+          </private>
+          
+          <rectangle name="Fig0.3.0"
+            x="264"
+            y="295"
+            width="127"
+            height="19"
+            fill="1"
+            fillcolor="white"
+            stroke="1"
+            strokecolor="black"
+          />
+        </group>
+        <group name="Fig0.4"
+             description="org.argouml.uml.diagram.ui.FigAttributesCompartment[264, 260, 127, 36]"
+             fill="1"
+             fillcolor="white"
+             stroke="1"
+             strokecolor="black"
+        >
+          <private>
+          </private>
+          
+          <rectangle name="Fig0.4.0"
+            x="264"
+            y="260"
+            width="127"
+            height="36"
+            fill="1"
+            fillcolor="white"
+            stroke="1"
+            strokecolor="black"
+          />
+          <text name="Fig0.4.1"
+            x="265"
+            y="261"
+            fill="0"
+            fillcolor="white"
+            stroke="0"
+            strokecolor="black"
+            font="Dialog"
+            textsize="10"
+          >serializedFile : String</text>
+          <text name="Fig0.4.2"
+            x="265"
+            y="278"
+            fill="0"
+            fillcolor="white"
+            stroke="0"
+            strokecolor="black"
+            font="Dialog"
+            textsize="10"
+          >initialSeed [0..1] : Long</text>
+        </group>
+        <rectangle name="Fig0.5"
+          x="264"
+          y="240"
+          width="127"
+          height="74"
+          fill="0"
+          fillcolor="white"
+          stroke="1"
+          strokecolor="black"
+        />
+      </group>
+      <group name="Fig1"
+           description="org.argouml.uml.diagram.static_structure.ui.FigClass[288, 128, 69, 57]pathVisible=false;operationsVisible=true;attributesVisible=true"
+           href=".:0000000000000964"
+           fill="1"
+           fillcolor="white"
+           stroke="1"
+           strokecolor="black"
+      >
+        <private>
+        </private>
+        
+        <rectangle name="Fig1.0"
+          x="288"
+          y="128"
+          width="69"
+          height="57"
+          fill="1"
+          fillcolor="white"
+          stroke="0"
+          strokecolor="0 255 255"
+        />
+        <text name="Fig1.1"
+          x="288"
+          y="128"
+          fill="0"
+          fillcolor="white"
+          stroke="0"
+          strokecolor="black"
+          font="Dialog"
+          textsize="10"
+        ></text>
+        <text name="Fig1.2"
+          x="288"
+          y="128"
+          fill="0"
+          fillcolor="white"
+          stroke="0"
+          strokecolor="red"
+          font="Dialog"
+          textsize="10"
+        >ModelElement</text>
+        <group name="Fig1.3"
+             description="org.argouml.uml.diagram.ui.FigOperationsCompartment[288, 166, 69, 19]"
+             fill="1"
+             fillcolor="white"
+             stroke="1"
+             strokecolor="black"
+        >
+          <private>
+          </private>
+          
+          <rectangle name="Fig1.3.0"
+            x="288"
+            y="166"
+            width="69"
+            height="19"
+            fill="1"
+            fillcolor="white"
+            stroke="1"
+            strokecolor="black"
+          />
+        </group>
+        <group name="Fig1.4"
+             description="org.argouml.uml.diagram.ui.FigAttributesCompartment[288, 148, 69, 19]"
+             fill="1"
+             fillcolor="white"
+             stroke="1"
+             strokecolor="black"
+        >
+          <private>
+          </private>
+          
+          <rectangle name="Fig1.4.0"
+            x="288"
+            y="148"
+            width="69"
+            height="19"
+            fill="1"
+            fillcolor="white"
+            stroke="1"
+            strokecolor="black"
+          />
+        </group>
+        <rectangle name="Fig1.5"
+          x="288"
+          y="128"
+          width="69"
+          height="57"
+          fill="0"
+          fillcolor="white"
+          stroke="1"
+          strokecolor="black"
+        />
+      </group>
+      <group name="Fig2"
+           description="org.argouml.uml.diagram.ui.FigGeneralization"
+           href=".:0000000000000965"
+           stroke="1"
+           strokecolor="black"
+      >
+        <private>
+          sourcePortFig="Fig0"
+          destPortFig="Fig1"
+          sourceFigNode="Fig0"
+          destFigNode="Fig1"
+        </private>
+        <path name="Fig2.0"
+          description="org.tigris.gef.presentation.FigPoly"
+          fill="0"
+          fillcolor="white"
+          stroke="1"
+          strokecolor="black"
+        >
+          <moveto x="325"
+                  y="240" />
+          <lineto x="325"
+                  y="185" />
+        </path>
+      </group>
+    </pgml>
+    <todo>
+    <todolist>
+    </todolist>
+    <resolvedcritics>
+    </resolvedcritics>
+    </todo>
+</uml>

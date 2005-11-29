@@ -28,11 +28,15 @@ if [ -z "$ANT_HOME" ]; then
     export ANT_HOME=$THIRDPARTY_HOME/ant
     export PATH=$ANT_HOME/bin:$PATH
 else
+    # REVIEW jvs 19-Nov-2005: disabling this to see if it's
+    # breaking LucidEra CruiseControl
+    
     # otherwise, prepend ANT if not already present on PATH
-    ANT_BIN=$(cd $ANT_HOME/bin; pwd)
-    CURR_ANT=$(dirname `/usr/bin/which ant 2>&1 | cut -d " " -f 1`)
-    if [ "$CURR_ANT" != "$ANT_BIN" ]; then
-        export PATH=$ANT_BIN:$PATH
-    fi
-    unset -v ANT_BIN CURR_ANT
+    # ANT_BIN=$(cd $ANT_HOME/bin; pwd)
+    # CURR_ANT=$(dirname `/usr/bin/which ant 2>&1 | cut -d " " -f 1`)
+    # if [ "$CURR_ANT" != "$ANT_BIN" ]; then
+    #    export PATH=$ANT_BIN:$PATH
+    # fi
+    # unset -v ANT_BIN CURR_ANT
+    export PATH=$ANT_HOME/bin:$PATH
 fi

@@ -99,10 +99,34 @@ class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
      * @param iNewTuple desired 0-based position for new tuple
      */
     void splitNode(
-        BTreeNode &node,
+        BTreePageLock &pageLock,
         PConstBuffer pTupleBuffer,
         uint cbTuple,
         uint iNewTuple);
+
+    /**
+     * The tree grows by one level. The root node should have two entries
+     * the first entry points to left node and the second entry points 
+     * the right node. The root page id is kept.
+     *
+     * @param node the left node
+     *
+     * @param pageId the origianl root page id.
+     *
+     * @param rightNode the right node.
+     *
+     * @param rightPageId the right page id.
+     */
+    void grow(BTreeNode &node, PageId pageId, 
+              BTreeNode &rightNode, PageId rightPageId);
+
+    /**
+     * try to find the parent page, put the result into pageId.
+     * and lock the parent page inside pageLock.
+     *
+     * @param height is the current height of the btree.
+     */
+    uint lockParentPage(int height);
 
     /**
      * Attempts to perform an insertion without splitting, performing
@@ -122,7 +146,6 @@ class BTreeWriter : public BTreeReader, public LogicalTxnParticipant
     bool attemptInsertWithoutSplit(
         BTreePageLock &targetPageLock,
         PConstBuffer pTupleBuffer,uint cbTuple,uint iNewTuple);
-    void insertIntoParent();
 
     /**
      * Inserts a tuple read from a log stream.

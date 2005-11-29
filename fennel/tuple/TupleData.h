@@ -26,7 +26,9 @@
 
 #include <vector>
 
+
 FENNEL_BEGIN_NAMESPACE
+
 
 class TupleDescriptor;
 class TupleProjection;
@@ -38,9 +40,14 @@ class TupleProjection;
  */
 struct TupleDatum
 {
+    static const TupleStorageByteLength ONE_BYTE_MAX_LENGTH = 127;
+    static const TupleStorageByteLength TWO_BYTE_MAX_LENGTH = 32767;
+    static const uint8_t ONE_BYTE_LENGTH_MASK = 0x7f;
+    static const uint8_t TWO_BYTE_LENGTH_BIT = 0x80;
+
     TupleStorageByteLength cbData;
     PConstBuffer pData;
-
+  
     union
     {
         uint16_t data16;
@@ -49,38 +56,124 @@ struct TupleDatum
     };
     
     explicit TupleDatum();
+    TupleDatum(TupleDatum const &other);
 
-    void copyFrom(TupleDatum const &other)
-    {
-        cbData = other.cbData;
-        pData = other.pData;
-    }
+
+    /*
+      REVIEW jvs 27-Nov-2005:  instead of providing this constructor,
+      requiring a call to the default constructor followed by
+      loadDatum would make calling code more self-explanatory.
+    */
     
-    TupleDatum(TupleDatum const &other)
-    {
-        copyFrom(other);
-    }
+    explicit TupleDatum(PConstBuffer pDataWithLen);
+      
+    /**
+     * Copy assignment(shallow copy).
+     *
+     * @note
+     * See the note of copyFrom method.
+     * 
+     * @param[in] other the source TupleDatum
+     */
+    TupleDatum &operator = (TupleDatum const &other);
+    
+    /**
+     * Copies data from source(shallow copy).
+     * 
+     * @note
+     * pData is set to the source data buffer. If pData points to any buffer
+     * before this call, it will no longer point to that buffer after this
+     * function call.
+     * 
+     * @param[in] other the source TupleDatum 
+     */
+    void copyFrom(TupleDatum const &other);
 
-    TupleDatum &operator = (TupleDatum const &other)
-    {
-        copyFrom(other);
-        return *this;
-    }
+    /**
+     * Copies data into TupleDatum's private buffer(deep copy).
+     * 
+     * @note
+     * pData must point to allocated memory before calling this function. If
+     * this TupleDatum is part of a TupleDataWithBuffer class,  pData will
+     * point to valid memory after computeAndAllocate if no memory has been
+     * allocated yet, or resetBuffer if computeAndAllocate had previously been
+     * called. If this TupleDatum is not part of a TupleDataWithBuffer class,
+     * the caller needs to allocate buffer and set up the pData pointer
+     * manually.
+     *
+     * @par
+     * Upon return, pData might no longer point to allocated memory if the
+     * source has a null data pointer.
+     * 
+     * @param[in] other the source TupleDatum
+     */
+    void memCopyFrom(TupleDatum const &other);
 
-    void memCopyFrom(TupleDatum const &other)
-    {
-        cbData = other.cbData;
+    /**
+     * Stores data with length information encoded into the buffer passed in.
+     * 
+     * @note Several methods - storeDatum, loadDatum and loadDatumWithBuffer -
+     * store and load TupleDatum to and from a preallocated buffer. The length
+     * required for this buffer is determined by the number of bytes needed to
+     * store the length indicator plus the maximum length of the data field
+     * (from the associated TupleDescriptor cbStorage value). The storage format
+     * is different from the marshalled format for a tuple (see TupleAccessor):
+     * since there's only one TupleDatum involved, there is no need to store the
+     * offset needed for "constant seek time". The byte format of the buffer
+     * after storeDatum is:
+     *
+     * @par
+     * 0xxxxxxx\n
+     * -------- -------- -------- -------- -------- ...\n
+     * |length  |     data value bytes\n
+     *
+     * @par
+     * 1xxxxxxx xxxxxxxx   \n
+     * -------- -------- -------- -------- -------- ...\n
+     * |      length     |     data value bytes\n
+     *
+     * @par
+     * where length(1 or 2 bytes) comes from TupleDatum.cbData(a 4 byte type)
+     * and data value bytes are copied from TupleDatum.pData. The buffer to
+     * allocate should be at least (cbStorage + 2) bytes long.
+     *
+     * REVIEW jvs 27-Nov-2005:  probably worth providing a method for
+     * computing the required buffer length instead of relying on
+     * a comment spec here
+     *  
+     * @param[in, out] pDataWithLen data buffer to store to
+     */
+    void storeDatum(PBuffer pDataWithLen);
 
-        // Perform memcpy from "other". However, set pData to NULL if it is
-        // NULL in "other".
-        if (other.pData) {
-            memcpy(const_cast<PBuffer>(pData),
-                   other.pData,
-                   other.cbData);
-        } else {
-            pData = other.pData;
-        }
-    }
+    /**
+     * Loads TupleDatum from a buffer with length information encoded. This
+     * function perform shallow copy.
+     *
+     * @note
+     * See note on copyFrom method.
+     *
+     * @param[in] pDataWithLen data buffer to load from
+     */
+    void loadDatum(PConstBuffer pDataWithLen);
+
+    /**
+     * Loads TupleDatum from a buffer with length information encoded.
+     *
+     * @note
+     * See note on memCopyFrom method.
+     *
+     * @param[in] pDataWithLen data buffer to load from
+     */
+    void loadDatumWithBuffer(PConstBuffer pDataWithLen);
+
+    /**
+     * Gets the length information from a stored data buffer.
+     *
+     * @param[in] pDataWithLen the data buffer to get the length from
+     *
+     * @return length of the data portion in the buffer
+     */
+    TupleStorageByteLength getStorageLength(PConstBuffer pDataWithLen = NULL);
 };
 
 /**

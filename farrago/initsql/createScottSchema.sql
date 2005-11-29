@@ -2,7 +2,6 @@
 -- This script creates the SCOTT schema used by some of the unit tests.
 
 !set verbose true
-!autocommit off
 
 -- create local SCOTT schema
 create schema SCOTT;

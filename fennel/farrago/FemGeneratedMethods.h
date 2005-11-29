@@ -32,10 +32,24 @@ jmethodID ProxyDatabaseCmd::meth_getDbHandle = 0;
 jmethodID ProxyDatabaseParam::meth_getName = 0;
 jmethodID ProxyDatabaseParam::meth_getValue = 0;
 jmethodID ProxyEndTxnCmd::meth_getSvptHandle = 0;
-jmethodID ProxyExecutionStreamDef::meth_getName = 0;
-jmethodID ProxyExecutionStreamDef::meth_getInput = 0;
+jmethodID ProxyExecStreamDataFlow::meth_getProducer = 0;
+jmethodID ProxyExecStreamDataFlow::meth_getConsumer = 0;
 jmethodID ProxyExecutionStreamDef::meth_getOutputDesc = 0;
-jmethodID ProxyExecutionStreamDef::meth_getConsumer = 0;
+jmethodID ProxyExecutionStreamDef::meth_getInputFlow = 0;
+jmethodID ProxyExecutionStreamDef::meth_getOutputFlow = 0;
+jmethodID ProxyExecutionStreamDef::meth_getName = 0;
+jmethodID ProxyFlatFileTupleStreamDef::meth_getDataFilePath = 0;
+jmethodID ProxyFlatFileTupleStreamDef::meth_getErrorFilePath = 0;
+jmethodID ProxyFlatFileTupleStreamDef::meth_isHasHeader = 0;
+jmethodID ProxyFlatFileTupleStreamDef::meth_getNumRowsScan = 0;
+jmethodID ProxyFlatFileTupleStreamDef::meth_getFieldDelimiter = 0;
+jmethodID ProxyFlatFileTupleStreamDef::meth_getRowDelimiter = 0;
+jmethodID ProxyFlatFileTupleStreamDef::meth_getQuoteCharacter = 0;
+jmethodID ProxyFlatFileTupleStreamDef::meth_getEscapeCharacter = 0;
+jmethodID ProxyFlatFileTupleStreamDef::meth_getCalcProgram = 0;
+jmethodID ProxyFlatFileTupleStreamDef::meth_getCodePage = 0;
+jmethodID ProxyFlatFileTupleStreamDef::meth_isTranslationRecovery = 0;
+jmethodID ProxyFlatFileTupleStreamDef::meth_getSubstituteCharacter = 0;
 jmethodID ProxyGenericStreamDef::meth_getType = 0;
 jmethodID ProxyGenericStreamDef::meth_getContent = 0;
 jmethodID ProxyHandle::meth_getLongHandle = 0;
@@ -63,6 +77,11 @@ jmethodID ProxyJavaTransformStreamDef::meth_getJavaClassName = 0;
 jmethodID ProxyJavaTransformStreamDef::meth_getReserved = 0;
 jmethodID ProxyJavaTupleStreamDef::meth_getStreamId = 0;
 jmethodID ProxyKeyAccessorDef::meth_getKeyProj = 0;
+jmethodID ProxyLcsClusterAppendStreamDef::meth_isOverwrite = 0;
+jmethodID ProxyLcsClusterScanDef::meth_getClusterTupleDesc = 0;
+jmethodID ProxyLcsClusterScanDef::meth_getRowScan = 0;
+jmethodID ProxyLcsRowScanStreamDef::meth_getOutputProj = 0;
+jmethodID ProxyLcsRowScanStreamDef::meth_getClusterScan = 0;
 jmethodID ProxyMergeStreamDef::meth_isSequential = 0;
 jmethodID ProxyMockTupleStreamDef::meth_getRowCount = 0;
 jmethodID ProxySortingStreamDef::meth_getDistinctness = 0;
@@ -83,18 +102,18 @@ jmethodID ProxyTupleDescriptor::meth_getAttrDescriptor = 0;
 jmethodID ProxyTupleProjection::meth_getAttrProjection = 0;
 jmethodID ProxyTupleStreamGraphCmd::meth_getStreamGraphHandle = 0;
 jmethodID ProxyTxnCmd::meth_getTxnHandle = 0;
-jmethodID ProxyWindowDef::meth_getOffset = 0;
 jmethodID ProxyWindowDef::meth_getOrderKeyList = 0;
 jmethodID ProxyWindowDef::meth_isPhysical = 0;
 jmethodID ProxyWindowDef::meth_getRange = 0;
 jmethodID ProxyWindowDef::meth_getWindowStream = 0;
 jmethodID ProxyWindowDef::meth_getPartition = 0;
-jmethodID ProxyWindowPartitionDef::meth_getWindow = 0;
+jmethodID ProxyWindowDef::meth_getOffset = 0;
 jmethodID ProxyWindowPartitionDef::meth_getPartitionKeyList = 0;
 jmethodID ProxyWindowPartitionDef::meth_getInitializeProgram = 0;
 jmethodID ProxyWindowPartitionDef::meth_getAddProgram = 0;
 jmethodID ProxyWindowPartitionDef::meth_getDropProgram = 0;
 jmethodID ProxyWindowPartitionDef::meth_getBucketDesc = 0;
+jmethodID ProxyWindowPartitionDef::meth_getWindow = 0;
 jmethodID ProxyWindowStreamDef::meth_isFilter = 0;
 jmethodID ProxyWindowStreamDef::meth_getOutputProgram = 0;
 jmethodID ProxyWindowStreamDef::meth_getInputOrderKeyList = 0;
@@ -210,12 +229,32 @@ jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemEndTxnCmd");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyEndTxnCmd>));
 ProxyEndTxnCmd::meth_getSvptHandle = pEnv->GetMethodID(jClass,"getSvptHandle","()Lnet/sf/farrago/fem/fennel/FemSvptHandle;");
 
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemExecStreamDataFlow");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyExecStreamDataFlow>));
+ProxyExecStreamDataFlow::meth_getProducer = pEnv->GetMethodID(jClass,"getProducer","()Lnet/sf/farrago/fem/fennel/FemExecutionStreamDef;");
+ProxyExecStreamDataFlow::meth_getConsumer = pEnv->GetMethodID(jClass,"getConsumer","()Lnet/sf/farrago/fem/fennel/FemExecutionStreamDef;");
+
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemExecutionStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyExecutionStreamDef>));
-ProxyExecutionStreamDef::meth_getName = pEnv->GetMethodID(jClass,"getName","()Ljava/lang/String;");
-ProxyExecutionStreamDef::meth_getInput = pEnv->GetMethodID(jClass,"getInput","()Ljava/util/List;");
 ProxyExecutionStreamDef::meth_getOutputDesc = pEnv->GetMethodID(jClass,"getOutputDesc","()Lnet/sf/farrago/fem/fennel/FemTupleDescriptor;");
-ProxyExecutionStreamDef::meth_getConsumer = pEnv->GetMethodID(jClass,"getConsumer","()Ljava/util/Collection;");
+ProxyExecutionStreamDef::meth_getInputFlow = pEnv->GetMethodID(jClass,"getInputFlow","()Ljava/util/List;");
+ProxyExecutionStreamDef::meth_getOutputFlow = pEnv->GetMethodID(jClass,"getOutputFlow","()Ljava/util/List;");
+ProxyExecutionStreamDef::meth_getName = pEnv->GetMethodID(jClass,"getName","()Ljava/lang/String;");
+
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemFlatFileTupleStreamDef");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyFlatFileTupleStreamDef>));
+ProxyFlatFileTupleStreamDef::meth_getDataFilePath = pEnv->GetMethodID(jClass,"getDataFilePath","()Ljava/lang/String;");
+ProxyFlatFileTupleStreamDef::meth_getErrorFilePath = pEnv->GetMethodID(jClass,"getErrorFilePath","()Ljava/lang/String;");
+ProxyFlatFileTupleStreamDef::meth_isHasHeader = pEnv->GetMethodID(jClass,"isHasHeader","()Z");
+ProxyFlatFileTupleStreamDef::meth_getNumRowsScan = pEnv->GetMethodID(jClass,"getNumRowsScan","()I");
+ProxyFlatFileTupleStreamDef::meth_getFieldDelimiter = pEnv->GetMethodID(jClass,"getFieldDelimiter","()Ljava/lang/String;");
+ProxyFlatFileTupleStreamDef::meth_getRowDelimiter = pEnv->GetMethodID(jClass,"getRowDelimiter","()Ljava/lang/String;");
+ProxyFlatFileTupleStreamDef::meth_getQuoteCharacter = pEnv->GetMethodID(jClass,"getQuoteCharacter","()Ljava/lang/String;");
+ProxyFlatFileTupleStreamDef::meth_getEscapeCharacter = pEnv->GetMethodID(jClass,"getEscapeCharacter","()Ljava/lang/String;");
+ProxyFlatFileTupleStreamDef::meth_getCalcProgram = pEnv->GetMethodID(jClass,"getCalcProgram","()Ljava/lang/String;");
+ProxyFlatFileTupleStreamDef::meth_getCodePage = pEnv->GetMethodID(jClass,"getCodePage","()I");
+ProxyFlatFileTupleStreamDef::meth_isTranslationRecovery = pEnv->GetMethodID(jClass,"isTranslationRecovery","()Z");
+ProxyFlatFileTupleStreamDef::meth_getSubstituteCharacter = pEnv->GetMethodID(jClass,"getSubstituteCharacter","()Ljava/lang/String;");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemGenericStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyGenericStreamDef>));
@@ -282,6 +321,20 @@ ProxyJavaTupleStreamDef::meth_getStreamId = pEnv->GetMethodID(jClass,"getStreamI
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemKeyAccessorDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyKeyAccessorDef>));
 ProxyKeyAccessorDef::meth_getKeyProj = pEnv->GetMethodID(jClass,"getKeyProj","()Lnet/sf/farrago/fem/fennel/FemTupleProjection;");
+
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemLcsClusterAppendStreamDef");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyLcsClusterAppendStreamDef>));
+ProxyLcsClusterAppendStreamDef::meth_isOverwrite = pEnv->GetMethodID(jClass,"isOverwrite","()Z");
+
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemLcsClusterScanDef");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyLcsClusterScanDef>));
+ProxyLcsClusterScanDef::meth_getClusterTupleDesc = pEnv->GetMethodID(jClass,"getClusterTupleDesc","()Lnet/sf/farrago/fem/fennel/FemTupleDescriptor;");
+ProxyLcsClusterScanDef::meth_getRowScan = pEnv->GetMethodID(jClass,"getRowScan","()Lnet/sf/farrago/fem/fennel/FemLcsRowScanStreamDef;");
+
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemLcsRowScanStreamDef");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyLcsRowScanStreamDef>));
+ProxyLcsRowScanStreamDef::meth_getOutputProj = pEnv->GetMethodID(jClass,"getOutputProj","()Lnet/sf/farrago/fem/fennel/FemTupleProjection;");
+ProxyLcsRowScanStreamDef::meth_getClusterScan = pEnv->GetMethodID(jClass,"getClusterScan","()Ljava/util/List;");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemMergeStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyMergeStreamDef>));
@@ -368,21 +421,21 @@ visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(ne
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemWindowDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyWindowDef>));
-ProxyWindowDef::meth_getOffset = pEnv->GetMethodID(jClass,"getOffset","()I");
 ProxyWindowDef::meth_getOrderKeyList = pEnv->GetMethodID(jClass,"getOrderKeyList","()Lnet/sf/farrago/fem/fennel/FemTupleProjection;");
 ProxyWindowDef::meth_isPhysical = pEnv->GetMethodID(jClass,"isPhysical","()Z");
 ProxyWindowDef::meth_getRange = pEnv->GetMethodID(jClass,"getRange","()Ljava/lang/String;");
 ProxyWindowDef::meth_getWindowStream = pEnv->GetMethodID(jClass,"getWindowStream","()Lnet/sf/farrago/fem/fennel/FemWindowStreamDef;");
 ProxyWindowDef::meth_getPartition = pEnv->GetMethodID(jClass,"getPartition","()Ljava/util/List;");
+ProxyWindowDef::meth_getOffset = pEnv->GetMethodID(jClass,"getOffset","()I");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemWindowPartitionDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyWindowPartitionDef>));
-ProxyWindowPartitionDef::meth_getWindow = pEnv->GetMethodID(jClass,"getWindow","()Lnet/sf/farrago/fem/fennel/FemWindowDef;");
 ProxyWindowPartitionDef::meth_getPartitionKeyList = pEnv->GetMethodID(jClass,"getPartitionKeyList","()Lnet/sf/farrago/fem/fennel/FemTupleProjection;");
 ProxyWindowPartitionDef::meth_getInitializeProgram = pEnv->GetMethodID(jClass,"getInitializeProgram","()Ljava/lang/String;");
 ProxyWindowPartitionDef::meth_getAddProgram = pEnv->GetMethodID(jClass,"getAddProgram","()Ljava/lang/String;");
 ProxyWindowPartitionDef::meth_getDropProgram = pEnv->GetMethodID(jClass,"getDropProgram","()Ljava/lang/String;");
 ProxyWindowPartitionDef::meth_getBucketDesc = pEnv->GetMethodID(jClass,"getBucketDesc","()Lnet/sf/farrago/fem/fennel/FemTupleDescriptor;");
+ProxyWindowPartitionDef::meth_getWindow = pEnv->GetMethodID(jClass,"getWindow","()Lnet/sf/farrago/fem/fennel/FemWindowDef;");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemWindowStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyWindowStreamDef>));
@@ -596,18 +649,21 @@ if (!p->jObject) p.reset();
 return p;
 }
 
-std::string ProxyExecutionStreamDef::getName()
-{
-return constructString(pEnv->CallObjectMethod(jObject,meth_getName));
-}
-
-SharedProxyExecutionStreamDef ProxyExecutionStreamDef::getInput()
+SharedProxyExecutionStreamDef ProxyExecStreamDataFlow::getProducer()
 {
 SharedProxyExecutionStreamDef p;
 p->pEnv = pEnv;
-p->jObject = pEnv->CallObjectMethod(jObject,meth_getInput);
-p.jIter = JniUtil::getIter(p->pEnv,p->jObject);
-++p;
+p->jObject = pEnv->CallObjectMethod(jObject,meth_getProducer);
+if (!p->jObject) p.reset();
+return p;
+}
+
+SharedProxyExecutionStreamDef ProxyExecStreamDataFlow::getConsumer()
+{
+SharedProxyExecutionStreamDef p;
+p->pEnv = pEnv;
+p->jObject = pEnv->CallObjectMethod(jObject,meth_getConsumer);
+if (!p->jObject) p.reset();
 return p;
 }
 
@@ -620,14 +676,89 @@ if (!p->jObject) p.reset();
 return p;
 }
 
-SharedProxyExecutionStreamDef ProxyExecutionStreamDef::getConsumer()
+SharedProxyExecStreamDataFlow ProxyExecutionStreamDef::getInputFlow()
 {
-SharedProxyExecutionStreamDef p;
+SharedProxyExecStreamDataFlow p;
 p->pEnv = pEnv;
-p->jObject = pEnv->CallObjectMethod(jObject,meth_getConsumer);
+p->jObject = pEnv->CallObjectMethod(jObject,meth_getInputFlow);
 p.jIter = JniUtil::getIter(p->pEnv,p->jObject);
 ++p;
 return p;
+}
+
+SharedProxyExecStreamDataFlow ProxyExecutionStreamDef::getOutputFlow()
+{
+SharedProxyExecStreamDataFlow p;
+p->pEnv = pEnv;
+p->jObject = pEnv->CallObjectMethod(jObject,meth_getOutputFlow);
+p.jIter = JniUtil::getIter(p->pEnv,p->jObject);
+++p;
+return p;
+}
+
+std::string ProxyExecutionStreamDef::getName()
+{
+return constructString(pEnv->CallObjectMethod(jObject,meth_getName));
+}
+
+std::string ProxyFlatFileTupleStreamDef::getDataFilePath()
+{
+return constructString(pEnv->CallObjectMethod(jObject,meth_getDataFilePath));
+}
+
+std::string ProxyFlatFileTupleStreamDef::getErrorFilePath()
+{
+return constructString(pEnv->CallObjectMethod(jObject,meth_getErrorFilePath));
+}
+
+bool ProxyFlatFileTupleStreamDef::isHasHeader()
+{
+return pEnv->CallBooleanMethod(jObject,meth_isHasHeader);
+}
+
+int32_t ProxyFlatFileTupleStreamDef::getNumRowsScan()
+{
+return pEnv->CallIntMethod(jObject,meth_getNumRowsScan);
+}
+
+std::string ProxyFlatFileTupleStreamDef::getFieldDelimiter()
+{
+return constructString(pEnv->CallObjectMethod(jObject,meth_getFieldDelimiter));
+}
+
+std::string ProxyFlatFileTupleStreamDef::getRowDelimiter()
+{
+return constructString(pEnv->CallObjectMethod(jObject,meth_getRowDelimiter));
+}
+
+std::string ProxyFlatFileTupleStreamDef::getQuoteCharacter()
+{
+return constructString(pEnv->CallObjectMethod(jObject,meth_getQuoteCharacter));
+}
+
+std::string ProxyFlatFileTupleStreamDef::getEscapeCharacter()
+{
+return constructString(pEnv->CallObjectMethod(jObject,meth_getEscapeCharacter));
+}
+
+std::string ProxyFlatFileTupleStreamDef::getCalcProgram()
+{
+return constructString(pEnv->CallObjectMethod(jObject,meth_getCalcProgram));
+}
+
+int32_t ProxyFlatFileTupleStreamDef::getCodePage()
+{
+return pEnv->CallIntMethod(jObject,meth_getCodePage);
+}
+
+bool ProxyFlatFileTupleStreamDef::isTranslationRecovery()
+{
+return pEnv->CallBooleanMethod(jObject,meth_isTranslationRecovery);
+}
+
+std::string ProxyFlatFileTupleStreamDef::getSubstituteCharacter()
+{
+return constructString(pEnv->CallObjectMethod(jObject,meth_getSubstituteCharacter));
 }
 
 std::string ProxyGenericStreamDef::getType()
@@ -803,6 +934,48 @@ if (!p->jObject) p.reset();
 return p;
 }
 
+bool ProxyLcsClusterAppendStreamDef::isOverwrite()
+{
+return pEnv->CallBooleanMethod(jObject,meth_isOverwrite);
+}
+
+SharedProxyTupleDescriptor ProxyLcsClusterScanDef::getClusterTupleDesc()
+{
+SharedProxyTupleDescriptor p;
+p->pEnv = pEnv;
+p->jObject = pEnv->CallObjectMethod(jObject,meth_getClusterTupleDesc);
+if (!p->jObject) p.reset();
+return p;
+}
+
+SharedProxyLcsRowScanStreamDef ProxyLcsClusterScanDef::getRowScan()
+{
+SharedProxyLcsRowScanStreamDef p;
+p->pEnv = pEnv;
+p->jObject = pEnv->CallObjectMethod(jObject,meth_getRowScan);
+if (!p->jObject) p.reset();
+return p;
+}
+
+SharedProxyTupleProjection ProxyLcsRowScanStreamDef::getOutputProj()
+{
+SharedProxyTupleProjection p;
+p->pEnv = pEnv;
+p->jObject = pEnv->CallObjectMethod(jObject,meth_getOutputProj);
+if (!p->jObject) p.reset();
+return p;
+}
+
+SharedProxyLcsClusterScanDef ProxyLcsRowScanStreamDef::getClusterScan()
+{
+SharedProxyLcsClusterScanDef p;
+p->pEnv = pEnv;
+p->jObject = pEnv->CallObjectMethod(jObject,meth_getClusterScan);
+p.jIter = JniUtil::getIter(p->pEnv,p->jObject);
+++p;
+return p;
+}
+
 bool ProxyMergeStreamDef::isSequential()
 {
 return pEnv->CallBooleanMethod(jObject,meth_isSequential);
@@ -936,11 +1109,6 @@ if (!p->jObject) p.reset();
 return p;
 }
 
-int32_t ProxyWindowDef::getOffset()
-{
-return pEnv->CallIntMethod(jObject,meth_getOffset);
-}
-
 SharedProxyTupleProjection ProxyWindowDef::getOrderKeyList()
 {
 SharedProxyTupleProjection p;
@@ -979,13 +1147,9 @@ p.jIter = JniUtil::getIter(p->pEnv,p->jObject);
 return p;
 }
 
-SharedProxyWindowDef ProxyWindowPartitionDef::getWindow()
+int32_t ProxyWindowDef::getOffset()
 {
-SharedProxyWindowDef p;
-p->pEnv = pEnv;
-p->jObject = pEnv->CallObjectMethod(jObject,meth_getWindow);
-if (!p->jObject) p.reset();
-return p;
+return pEnv->CallIntMethod(jObject,meth_getOffset);
 }
 
 SharedProxyTupleProjection ProxyWindowPartitionDef::getPartitionKeyList()
@@ -1017,6 +1181,15 @@ SharedProxyTupleDescriptor ProxyWindowPartitionDef::getBucketDesc()
 SharedProxyTupleDescriptor p;
 p->pEnv = pEnv;
 p->jObject = pEnv->CallObjectMethod(jObject,meth_getBucketDesc);
+if (!p->jObject) p.reset();
+return p;
+}
+
+SharedProxyWindowDef ProxyWindowPartitionDef::getWindow()
+{
+SharedProxyWindowDef p;
+p->pEnv = pEnv;
+p->jObject = pEnv->CallObjectMethod(jObject,meth_getWindow);
 if (!p->jObject) p.reset();
 return p;
 }

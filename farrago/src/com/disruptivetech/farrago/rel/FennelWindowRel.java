@@ -213,8 +213,10 @@ public class FennelWindowRel extends FennelSingleRel
         final FarragoMetadataFactory repos = implementor.getRepos();
         final FemWindowStreamDef windowStreamDef =
             repos.newFemWindowStreamDef();
-        windowStreamDef.getInput().add(
-            implementor.visitFennelChild((FennelRel) getChild()));
+        implementor.addDataFlowFromProducerToConsumer(
+            implementor.visitFennelChild((FennelRel) getChild()),
+            windowStreamDef);
+        
         windowStreamDef.setFilter(conditionExpr != null);
 
         // Generate output program.

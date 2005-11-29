@@ -153,6 +153,15 @@ void BTreeTest::testBulkLoad(uint nRecords,uint nLevelsExpected,bool newRoot)
 
     tupleData.compute(descriptor.tupleDescriptor);
 
+    // NOTE jvs 15-Nov-2005:  This looks like it's doing the opposite of
+    // what it's supposed to, but it's actually correct.  What we're doing
+    // here is testing for preservation of the root PageId of an existing
+    // truncated index.  This is important for catalogs which store
+    // the root PageId as an attribute of an index.  So, newRoot=true
+    // means let the builder allocate a new root; newRoot=false means
+    // verify that the build preserves the location of the existing root.
+    // To verify that, we create an empty root here (simulating the
+    // truncation of an existing index before reload).
     if (!newRoot) {
         builder.createEmptyRoot();
         descriptor.rootPageId = builder.getRootPageId();

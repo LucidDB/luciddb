@@ -44,6 +44,16 @@ protected:
 
 
     /**
+     * Defines and prepares a graph consisting of one source stream.
+     *
+     * @param sourceStreamEmbryo embryonic source stream which produces tuples
+     *
+     * @return output buffer stream
+     */
+    SharedExecStream prepareSourceGraph(
+        ExecStreamEmbryo &sourceStreamEmbryo);
+
+    /**
      * Defines and prepares a graph consisting of one source stream
      * and one transform stream.
      *
@@ -135,6 +145,12 @@ protected:
         ExecStream &stream, 
         const TupleData  &expectedTuple,
         uint nRowsExpected);
+
+    /**
+     * Reset stream graph so multiple iterations of a method can be called
+     * within a single testcase
+     */
+    void testReset();
 
     // refine ExecStreamTestBase
     virtual void tearDown();

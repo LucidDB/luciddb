@@ -68,6 +68,26 @@ public interface FennelRelImplementor extends RelImplementor
         RelDataType rowType);
 
     /**
+     * Adds a new dataflow edge between two existing stream definitions.
+     * In cases where a stream has multiple inputs or outputs, order
+     * may be significant, in which case it is the caller's responsibility
+     * to add the flows in the desired order.
+     *
+     *<p>
+     *
+     * NOTE jvs 14-Nov-2005:  I gave this method a long name so that
+     * it wouldn't be necessary to guess the direction when reading
+     * code that uses it.
+     *
+     * @param producer the upstream node of the dataflow
+     *
+     * @param consumer the downstream node of the dataflow
+     */
+    public void addDataFlowFromProducerToConsumer(
+        FemExecutionStreamDef producer,
+        FemExecutionStreamDef consumer);
+
+    /**
      * Returns the repository.
      */
     public FarragoRepos getRepos();

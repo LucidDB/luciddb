@@ -1,0 +1,12 @@
+EMPID, FNAME, LNAME, SEX, DEPNO, MANID, LOC, SALARY, COMM, SKILL 
+100,Bill,Bush,M,30,123,HQ,50000,123,Piano,
+101,Bob,Brown,M,50,100,SJ,50000,123,Skiing,
+102,Julie,Andrews,F,30,104,MP,50000,123,Rugby,
+103,Frank,Webber,M,20,102,MP,50000,123,Piano,
+104,Fritz,Fratz,M,10,100,HQ,50000,123,Rugby,
+105,Rich,Guy,M,30,102,HQ,50000,123,Gambling,
+106,Rob,Roy,M,40,102,SF,50000,7,Karate,
+107,Robin,Williams,M,40,103,HQ,50000,10,Telling Jokes,
+108,Mary,Reynolds,F,50,104,SF,50000,123,,
+109,Jack,Nife,M,40,100,SF,50000,5,,
+110,Jill,Jones,F,30,101,MP,50000,123,,

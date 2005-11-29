@@ -2,7 +2,6 @@
 0: jdbc:farrago:> -- This script creates the builtin storage data wrappers
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set verbose true
-0: jdbc:farrago:> !autocommit off
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- create system-owned schema to hold objects like model extension plugin jars
 0: jdbc:farrago:> create schema sys_boot.sys_boot;
@@ -69,7 +68,5 @@
 0: jdbc:farrago:> create foreign data wrapper sys_jdbc
 . . . . . . . . > library '${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'
 . . . . . . . . > language java;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> commit;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

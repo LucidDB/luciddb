@@ -178,8 +178,10 @@ public class FennelCalcRel extends FennelSingleRel
         FemCalcTupleStreamDef calcStream =
             implementor.getRepos().newFemCalcTupleStreamDef();
 
-        calcStream.getInput().add(
-            implementor.visitFennelChild((FennelRel) getChild()));
+        implementor.addDataFlowFromProducerToConsumer(
+            implementor.visitFennelChild((FennelRel) getChild()), 
+            calcStream);
+        
         calcStream.setFilter(getConditionExpr() != null);
         final RexToCalcTranslator translator =
             new RexToCalcTranslator(getCluster().getRexBuilder());

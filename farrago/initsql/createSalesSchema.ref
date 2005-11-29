@@ -2,7 +2,6 @@
 0: jdbc:farrago:> -- This script creates a simple schema used by some of the unit tests.
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set verbose true
-0: jdbc:farrago:> !autocommit off
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- create local sales schema
 0: jdbc:farrago:> create schema sales;
@@ -81,7 +80,5 @@
 . . . . . . . . >     url 'jdbc:hsqldb:testcases/hsqldb/scott',
 . . . . . . . . >     user_name 'SA',
 . . . . . . . . >     table_types 'TABLE,VIEW');
-0: jdbc:farrago:> 
-0: jdbc:farrago:> commit;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

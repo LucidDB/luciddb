@@ -58,7 +58,13 @@ enum StandardTypeDescriptorOrdinal
     STANDARD_TYPE_BINARY = 14,
     STANDARD_TYPE_VARBINARY = 15,
     STANDARD_TYPE_END,
-    EXTENSION_TYPE_MIN = 1000
+    
+    /**
+     * Matches RecordNum type.
+     */
+    STANDARD_TYPE_RECORDNUM = STANDARD_TYPE_INT_64,
+    
+    EXTENSION_TYPE_MIN = 1000,
 };
 
 /**

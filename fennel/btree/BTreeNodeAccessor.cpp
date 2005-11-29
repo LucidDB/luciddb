@@ -109,6 +109,7 @@ void BTreeNodeAccessor::splitNode(
     
     assert(!newNode.nEntries);
     assert(node.nEntries > 1);
+    newNode.height = node.height; // split should be of the same height
 
     // Calculate the balance point in bytes
     uint cbNeeded = getEntryByteCount(cbNewTuple);

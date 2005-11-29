@@ -275,6 +275,14 @@ typedef uint ExtentNum;
  */
 typedef uint BlockNum;
 
+// REVIEW jvs 28-Nov-2005:  Different storage systems may have different
+// notions of row ID's.  Maybe move this to lucidera/colstore and
+// rename to LcsRowId.  Also make it an OpaqueInteger?
+/**
+ * Rowid
+ */
+typedef uint64_t Rid;
+
 /**
  * SeekPosition enumerates the two possible endpoints for a seek.
  */

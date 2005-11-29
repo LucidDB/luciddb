@@ -73,11 +73,23 @@
     <mkdir dir="${plugin.classes.dir}"/>
     <copy file="${farrago.catalog.dir}/templates/BTreeRepos.properties" 
       tofile="${plugin.catalog.dir}/ReposStorage.properties"/>
-    <farrago.extractPoseidonModel 
-      zumlFile="${plugin.xmi.dir}/${plugin.model.basename}Model.zuml"
-      umlBasename="${plugin.model.basename}Model"
-      mofBasename="${plugin.model.basename}Mof"
-      xmiDir="${plugin.xmi.dir}"/>
+    <ac:if xmlns:ac="antlib:net.sf.antcontrib">
+      <available file="${plugin.xmi.dir}/${plugin.model.basename}Model.uml"/>
+      <ac:then>
+        <farrago.extractArgoModel 
+          umlFile="${plugin.xmi.dir}/${plugin.model.basename}Model.uml"
+          umlBasename="${plugin.model.basename}Model"
+          mofBasename="${plugin.model.basename}Mof"
+          xmiDir="${plugin.xmi.dir}"/>
+      </ac:then>
+      <ac:else>
+        <farrago.extractPoseidonModel 
+          zumlFile="${plugin.xmi.dir}/${plugin.model.basename}Model.zuml"
+          umlBasename="${plugin.model.basename}Model"
+          mofBasename="${plugin.model.basename}Mof"
+          xmiDir="${plugin.xmi.dir}"/>
+      </ac:else>
+    </ac:if>
     <farrago.transformExtensionModel
       mofBasename="${plugin.model.basename}Mof"
       modelPrefix="${plugin.model.prefix}"
