@@ -93,7 +93,8 @@ void LcsHash::init(
      * Temporary in-memory representation for the tuple this LcsHash
      * is working on.
      */
-    colTuple.compute(colTupleDesc);
+    colTuple.computeAndAllocate(colTupleDesc);
+    searchTuple.computeAndAllocate(colTupleDesc);
 
     /*
      * colTupleBuffer provides storage for storing the length as well the data
@@ -109,17 +110,15 @@ void LcsHash::init(
 }
 
 void LcsHash::insert(
-    TupleData &colTupleData,
+    TupleDatum &colTupleDatum,
     LcsHashValOrd   *valOrd,
     bool       *undoInsert)
 {
-    assert (colTupleData.size() == 1);
-
     /*
      * gets the data buffer with length encoded
      */
     PBuffer dataWithLen = colTupleBuffer.get();
-    colTupleData[0].storeDatum(dataWithLen);
+    colTupleDatum.storeDatum(dataWithLen);
 
     insert(dataWithLen, valOrd, undoInsert);
 }
@@ -133,6 +132,7 @@ void LcsHash::insert(
     uint        key;
     uint16_t    newValueOffset;
     LcsHashValueNode  *vPtr=0;
+    TupleStorageByteLength storageLength;
     
     /*
      * Compression mode could change dynamically so we have to check everytime.
@@ -194,9 +194,10 @@ void LcsHash::insert(
          */
         undo.set(NEWENTRY, key, maxValueSize, 0);
         
-        colTuple[0].loadDatum(dataWithLen);
-        if (colTuple[0].getStorageLength() > maxValueSize)
-            maxValueSize = colTuple[0].getStorageLength();
+        storageLength = colTuple[0].getStorageLength(dataWithLen);
+        
+        if (storageLength > maxValueSize)
+            maxValueSize = storageLength;
 
     }
 
@@ -243,15 +244,13 @@ void LcsHash::insert(
      */
 }
 
-void LcsHash::undoInsert(TupleData &colTupleData)
+void LcsHash::undoInsert(TupleDatum &colTupleDatum)
 {
-    assert (colTupleData.size() == 1);
-        
     /*
      * gets the data buffer with length encoded
      */
     PBuffer dataWithLen = colTupleBuffer.get();
-    colTupleData[0].storeDatum(dataWithLen);
+    colTupleDatum.storeDatum(dataWithLen);
 
     undoInsert(dataWithLen);
 
@@ -308,9 +307,9 @@ bool LcsHash::search(
     LcsHashValueNode **vNode = 0)
 {
     LcsHashValueNode       *valueNode;
-    TupleData       searchTuple = colTuple;
+    bool    compareRes;
 
-    colTuple[0].loadDatum(dataWithLen);
+    colTuple[0].loadDatumWithBuffer(dataWithLen);
     
     for( valueNode = hash.getFirstValueNode(key);
          valueNode != NULL;
@@ -325,18 +324,27 @@ bool LcsHash::search(
         if( valueNode->valueOffset == 0 )
             continue;
 
-        searchTuple[0].loadDatum(clusterBlockWriter
+        searchTuple[0].loadDatumWithBuffer(clusterBlockWriter
             ->GetOffsetPtr(columnId, valueNode->valueOffset));
 
-        if (colTupleDesc.compareTuples(colTuple, searchTuple) == 0)
+        compareRes = colTupleDesc.compareTuples(colTuple, searchTuple);
+
+        /*
+         * Prepare for next loadDatumWithBuffer.
+         */
+        searchTuple.resetBuffer();
+        
+        if (compareRes == 0)
         {
             numMatches++;
             *valOrd = valueNode->valueOrd;
             if(vNode) *vNode = valueNode;
+            colTuple.resetBuffer();
             return true;
         }
     }
-
+    
+    colTuple.resetBuffer();    
     /*
      * No Match.
      */
@@ -439,6 +447,7 @@ void LcsHash::restore(uint numVals, uint16_t lastValOff)
     LcsHashValueNode      *newNode;
     LcsHashValOrd   dummy;
     LcsHashValOrd   valOrd;
+    TupleStorageByteLength storageLength;
 
     /*
      * Compression mode could change dynamically so we have to check everytime.
@@ -468,9 +477,9 @@ void LcsHash::restore(uint numVals, uint16_t lastValOff)
 
             hash.insertNewValueNode(key,  newNode);
 
-            colTuple[0].loadDatum(dataWithLen);
-            if( colTuple[0].getStorageLength() > maxValueSize )
-                maxValueSize = colTuple[0].getStorageLength();
+            storageLength = colTuple[0].getStorageLength(dataWithLen);
+            if( storageLength > maxValueSize )
+                maxValueSize = storageLength;
         }
       
         lastValOff = clusterBlockWriter->GetNextVal(columnId,
@@ -507,7 +516,7 @@ uint LcsHash::computeKey(PBuffer dataWithLen)
     uint     i, colSize;
     PConstBuffer  colData;
 
-    colTuple[0].loadDatum(dataWithLen);
+    colTuple[0].loadDatumWithBuffer(dataWithLen);
                         
     colSize = colTuple[0].cbData;
     colData = colTuple[0].pData;
@@ -519,6 +528,8 @@ uint LcsHash::computeKey(PBuffer dataWithLen)
         keyVal[1] = magicTable[oldKeyVal[1] ^ *colData];
     }
 
+    colTuple.resetBuffer();
+    
     return ((keyVal[1]<<8) + keyVal[0]) % hash.numHashEntries();
 }
 
@@ -580,6 +591,8 @@ bool LcsCompareColKeyUsingOffsetIndex::lessThan(
     const uint16_t colKeyOffsetIndex1,
     const uint16_t colKeyOffsetIndex2)
 {
+    bool isLessThan = false;
+    
     /*
      * Using index, locates the offset in the hash table then using offset,
      * constructs TupleDatum of the column "columnId".
@@ -596,7 +609,12 @@ bool LcsCompareColKeyUsingOffsetIndex::lessThan(
      * The std::sort interface requires a "less than" operator. Returns true if
      * first value is less than the second value.
      */
-    return (colTupleDesc.compareTuples(colTuple1, colTuple2) < 0);
+    isLessThan = colTupleDesc.compareTuples(colTuple1, colTuple2) < 0;
+
+    colTuple1.resetBuffer();
+    colTuple2.resetBuffer();
+
+    return (isLessThan);
 }
 
 FENNEL_END_CPPFILE("$Id$");

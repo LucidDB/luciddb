@@ -233,7 +233,7 @@ PBuffer LcsClusterDump::fprintVal(uint idx, PBuffer pV)
     memset(st, ' ', lnLen);
     callTrace("%05u:", idx);
     
-    sz = TupleDatum(p).getStorageLength();
+    sz = TupleDatum().getStorageLength(p);
     l = sprintf(st + lnValIdx, "%4u: ", sz);
     st[lnValIdx + l] = 0;
 

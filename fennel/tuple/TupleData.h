@@ -58,15 +58,6 @@ struct TupleDatum
     explicit TupleDatum();
     TupleDatum(TupleDatum const &other);
 
-
-    /*
-      REVIEW jvs 27-Nov-2005:  instead of providing this constructor,
-      requiring a call to the default constructor followed by
-      loadDatum would make calling code more self-explanatory.
-    */
-    
-    explicit TupleDatum(PConstBuffer pDataWithLen);
-      
     /**
      * Copy assignment(shallow copy).
      *
@@ -76,7 +67,7 @@ struct TupleDatum
      * @param[in] other the source TupleDatum
      */
     TupleDatum &operator = (TupleDatum const &other);
-    
+
     /**
      * Copies data from source(shallow copy).
      * 
@@ -144,18 +135,7 @@ struct TupleDatum
      * @param[in, out] pDataWithLen data buffer to store to
      */
     void storeDatum(PBuffer pDataWithLen);
-
-    /**
-     * Loads TupleDatum from a buffer with length information encoded. This
-     * function perform shallow copy.
-     *
-     * @note
-     * See note on copyFrom method.
-     *
-     * @param[in] pDataWithLen data buffer to load from
-     */
-    void loadDatum(PConstBuffer pDataWithLen);
-
+    
     /**
      * Loads TupleDatum from a buffer with length information encoded.
      *
@@ -171,7 +151,7 @@ struct TupleDatum
      *
      * @param[in] pDataWithLen the data buffer to get the length from
      *
-     * @return length of the data portion in the buffer
+     * @return length of the storage format including the length bytes
      */
     TupleStorageByteLength getStorageLength(PConstBuffer pDataWithLen = NULL);
 };

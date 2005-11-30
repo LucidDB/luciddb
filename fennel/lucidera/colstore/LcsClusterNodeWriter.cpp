@@ -184,7 +184,7 @@ uint16_t LcsClusterNodeWriter::GetNextVal(uint column, uint16_t thisVal)
 {
     if (thisVal && thisVal != m_szBlock)
         return (uint16_t) (thisVal +
-            TupleDatum(m_pBlock[column] + thisVal).getStorageLength());
+            TupleDatum().getStorageLength(m_pBlock[column] + thisVal));
     else
         return 0;
 }
@@ -325,7 +325,7 @@ bool LcsClusterNodeWriter::AddValue(uint column, PBuffer pVal, uint16_t *oVal)
 {
     uint16_t lastVal;
     int oldSzLeft = m_szLeft;
-    uint szVal = TupleDatum(pVal).getStorageLength();
+    uint szVal = TupleDatum().getStorageLength(pVal);
     
     // if we are in forced fixed compression mode,
     // see if the maximum record size in this batch has increased.
@@ -402,7 +402,7 @@ void LcsClusterNodeWriter::UndoValue(uint column, PBuffer pVal,
     // added to the value list.  However, if it was the first such value for
     // the batch, AddValue was called to bump-up the batch value count
     // so we still need to call UndoValue
-    uint szVal = (pVal) ? TupleDatum(pVal).getStorageLength() : 0;
+    uint szVal = (pVal) ? TupleDatum().getStorageLength(pVal) : 0;
   
     // add back size subtracted for offset
     m_szLeft += (sizeof(uint16_t) + szVal) ;

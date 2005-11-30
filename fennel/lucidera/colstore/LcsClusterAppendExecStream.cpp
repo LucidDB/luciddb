@@ -43,13 +43,8 @@ void LcsClusterAppendExecStream::prepare(
     clusterColsTupleData.compute(clusterColsTupleDesc);
     m_numColumns = clusterColsTupleData.size();
     colTupleDesc.reset(new TupleDescriptor[m_numColumns]);
-    colTupleData.reset(new TupleData[m_numColumns]);
     for (int i = 0; i < m_numColumns; i++) {
         colTupleDesc[i].push_back(clusterColsTupleDesc[i]);
-        colTupleData[i].compute(colTupleDesc[i]);
-
-        // There should only be one column for each colTupleData
-        assert(colTupleData[i].size() == 1);
     }
 
     // setup bufferLock to access temporary large page blocks
@@ -288,16 +283,7 @@ ExecStreamResult LcsClusterAppendExecStream::Compress(
 
         for (j = 0; j < m_numColumns; j++) {
 
-            // REVIEW jvs 28-Nov-2005:  We could get rid of the
-            // single-column TupleData copies if the hash took
-            // a TupleDatum instead (it's just going to assert
-            // that there's only one).
-            
-            // Use one column from the cluster tuple to initialize a
-            // colTupleData which contains only one column
-            (colTupleData[j])[0] = clusterColsTupleData[j];
-            
-            m_hash[j].insert(colTupleData[j], &m_vOrd[j], &undoInsert);
+            m_hash[j].insert(clusterColsTupleData[j], &m_vOrd[j], &undoInsert);
             
             if (undoInsert) {
                 
@@ -306,7 +292,7 @@ ExecStreamResult LcsClusterAppendExecStream::Compress(
                 //     k <= j
                 for (k = 0; k <= j; k++) {
                     
-                    m_hash[k].undoInsert(colTupleData[k]);
+                    m_hash[k].undoInsert(clusterColsTupleData[k]);
                 }
                 break;
             }

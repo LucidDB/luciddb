@@ -455,7 +455,12 @@ private:
     /**
      * The column currently begin compressed.
      */
-    TupleData             colTuple;
+    TupleDataWithBuffer   colTuple;
+
+    /**
+     * The column being compared against.
+     */
+    TupleDataWithBuffer   searchTuple;
     
     /**
      * Scratch memory to store the current column value being compressed.
@@ -559,7 +564,7 @@ public:
      * @param[out] undoInsert true if this insert should be undone
      */
     void insert(
-        TupleData &colTupleData,
+        TupleDatum &colTupleDatum,
         LcsHashValOrd *valOrd,
         bool *undoInsert);
     
@@ -585,7 +590,7 @@ public:
      *
      * @param[in] colTupleData column tuple just inserted
      */
-    void undoInsert(TupleData &colTupleData);
+    void undoInsert(TupleDatum &colTupleDatum);
     
     /**
      * Undoes the previous insert of a column data buffer.
