@@ -52,7 +52,7 @@ void FlatFileExecStreamImpl::prepare(
     SingleOutputExecStream::prepare(params);
 
     header = params.header;
-    logging = params.logging;
+    logging = (params.errorFilePath.size() > 0);
     
     lastTuple.compute(pOutAccessor->getTupleDesc());
     
@@ -60,27 +60,10 @@ void FlatFileExecStreamImpl::prepare(
     bufferLock.accessSegment(scratchAccessor);
 
     rowDesc = readTupleDescriptor(pOutAccessor->getTupleDesc());
-    pBuffer.reset(new FlatFileBuffer(params.path));
+    pBuffer.reset(new FlatFileBuffer(params.dataFilePath));
     pParser.reset(new FlatFileParser(
-                      readDelimiter(params.fieldDelim),
-                      readDelimiter(params.rowDelim),
+                      params.fieldDelim, params.rowDelim,
                       params.quoteChar, params.escapeChar));
-}
-
-char FlatFileExecStreamImpl::readDelimiter(const std::string &delim)
-{
-    if (delim.size() == 0 || delim.at(0) == '"') {
-        return 0;
-    }
-    if (delim.find("\t") == 0) {
-        return '\t';
-    }
-    int a = delim.find("\r");
-    int b = delim.find("\n");
-    if (a == 0 || a == 1 || a == 2 || b == 0 || b == 1 || b == 2) {
-        return '\n';
-    }
-    return delim.at(0);
 }
 
 FlatFileRowDescriptor FlatFileExecStreamImpl::readTupleDescriptor(

@@ -24,6 +24,7 @@ NativeMethods.cpp
 
 libfarrago_la_LIBADD = \
 	-L$(top_builddir)/libfennel \
+	-L$(top_builddir)/lucidera/libfennel_lu \
 	-lfennel_ftrs \
 	-lfennel_db \
 	-lfennel_btree \
@@ -33,6 +34,7 @@ libfarrago_la_LIBADD = \
 	-lfennel_segment \
 	-lfennel_cache \
 	-lfennel_device \
-	-lfennel_common
+	-lfennel_common \
+	-lfennel_lu_flatfile
 
 LDADD = -Wl,--no-undefined

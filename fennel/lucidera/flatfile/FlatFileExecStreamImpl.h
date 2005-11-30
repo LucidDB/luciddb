@@ -77,22 +77,6 @@ class FlatFileExecStreamImpl : public FlatFileExecStream
     void releaseResources();
 
     /**
-     * Decodes a delimiter string into a character. Recognizes the escape
-     * sequences \t, \r, \n. The two line characters \r and \n are canonized
-     * into a universal line character \n.
-     *
-     * This function's behavior is based on odd heuristics. An initial double
-     * quote denotes no delimiter. A tab escape "\t" becomes a tab.
-     * Otherwise preference is given to the line characters escapes "\r" and
-     * "\n". These escapes are recognized from the 0, 1, and 2 index
-     * positions. The escape cannot quote any other character, and becomes a
-     * delimiter. Any other character becomes a delimiter.
-     *
-     * REVIEW: this behavior seems overly complex and awkward
-     */
-    char readDelimiter(const std::string &delim);
-    
-    /**
      * Translates a TupleDescriptor into a FlatFileRowDescriptor. The major
      * attributes required for parsing a column are whether it is a character
      * column (which can be quoted) and the maximum length of the column.

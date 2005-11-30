@@ -44,6 +44,7 @@
 #include "fennel/tuple/TupleAccessor.h"
 #include "fennel/cache/QuotaCacheAccessor.h"
 #include "fennel/segment/SegmentFactory.h"
+#include "fennel/lucidera/flatfile/FlatFileExecStream.h"
 
 FENNEL_BEGIN_CPPFILE(
         "$Id$");
@@ -284,6 +285,22 @@ void ExecStreamFactory::visit(ProxyBufferingTupleStreamDef &streamDef)
     embryo.init(new SegBufferExecStream(), params);
 }
 
+void ExecStreamFactory::visit(ProxyFlatFileTupleStreamDef &streamDef)
+{
+    FlatFileExecStreamParams params;
+    readTupleStreamParams(params, streamDef);
+
+    assert(streamDef.getDataFilePath().size() > 0);
+    params.dataFilePath = streamDef.getDataFilePath();
+    params.errorFilePath = streamDef.getErrorFilePath();
+    params.fieldDelim = readCharParam(streamDef.getFieldDelimiter());
+    params.rowDelim = readCharParam(streamDef.getRowDelimiter());
+    params.quoteChar = readCharParam(streamDef.getQuoteCharacter());
+    params.escapeChar = readCharParam(streamDef.getEscapeCharacter());
+    params.header = streamDef.isHasHeader();
+    embryo.init(FlatFileExecStream::newFlatFileExecStream(), params);
+}
+
 void ExecStreamFactory::readExecStreamParams(
     ExecStreamParams &params,
     ProxyExecutionStreamDef &streamDef)
@@ -398,6 +415,12 @@ bool ExecStreamFactory::shouldEnforceCacheQuotas()
 #else
     return traceLevel <= TRACE_FINE;
 #endif
+}
+
+char ExecStreamFactory::readCharParam(const std::string &val)
+{
+    assert(val.size() == 1);
+    return val.at(0);
 }
 
 ExecStreamSubFactory::~ExecStreamSubFactory()

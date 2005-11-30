@@ -113,6 +113,7 @@ protected:
     virtual void visit(ProxyMergeStreamDef &);
     virtual void visit(ProxyMockTupleStreamDef &);
     virtual void visit(ProxyAggStreamDef &);
+    virtual void visit(ProxyFlatFileTupleStreamDef &);
 
     // helpers for above visitors
 
@@ -131,6 +132,8 @@ protected:
     void readTableWriterStreamParams(
         FtrsTableWriterExecStreamParams &,
         ProxyTableWriterDef &);
+
+    char readCharParam(const std::string &);
 
 public:
     explicit ExecStreamFactory(

@@ -46,22 +46,26 @@ struct FlatFileExecStreamParams : public SingleOutputExecStreamParams
      * Path to the flat file containing tuples to be read. This path follows
      * conventions of the operating system.
      */
-    std::string path;
+    std::string dataFilePath;
 
     /**
-     * Delimiter used to separate fields in a row. The delimiter string may
-     * either be empty (for no delimiter), a single character, or the escape
-     * \t (for tab).
+     * Path to the error log used for writing errors encountered while
+     * processing tuples. If this value is empty, then no logging will
+     * be performed.
      */
-    std::string fieldDelim;
+    std::string errorFilePath;
 
     /**
-     * Delimiter used to terminate a row. The delimiter may be a empty, a
-     * single character, or one of the escapes \r, \n, or \r\n. The last three
-     * escapes are considered to be equivalent and represent either a carriage
-     * return, or a line feed, or both.
+     * Delimiter used to separate fields in a row. This value is typically
+     * ',' (comma) or '\t' (tab) or zero, which signifies no delimiter.
      */
-    std::string rowDelim;
+    char fieldDelim;
+
+    /**
+     * Delimiter used to terminate a row. This value is typically
+     * '\n' (newline), which represents any combination of '\r' and '\n'. 
+     */
+    char rowDelim;
 
     /**
      * Character used to quote data values. Quoted data values must have an
@@ -87,21 +91,14 @@ struct FlatFileExecStreamParams : public SingleOutputExecStreamParams
      */
     bool header;
 
-    /*
-     * Specifies whether to create an error log for errors encountered while
-     * processing tuples. Defaults to false. An error log for a flat file has a
-     * similar path to the file, but with a ".err" suffix.
-     */
-    bool logging;
-
     explicit FlatFileExecStreamParams()
     {
-        fieldDelim = ",";
-        rowDelim = "\n";
+        errorFilePath = "";
+        fieldDelim = ',';
+        rowDelim = '\n';
         quoteChar = '"';
         escapeChar = '\\';
         header = true;
-        logging = false;
     }
 };
 
