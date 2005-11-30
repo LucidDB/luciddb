@@ -191,7 +191,8 @@ public class DdlValidator extends FarragoCompoundAllocation
         parserContextMap = new HashMap();
         parserOffsetMap = new HashMap();
         sqlMap = new HashMap();
-
+        revalidateQueue = new HashSet();
+        
         // NOTE:  dropRules are populated implicitly as action handlers
         // are set up below.
         dropRules = new MultiMap();
@@ -461,13 +462,14 @@ public class DdlValidator extends FarragoCompoundAllocation
      * Delete the existing object of a CREATE OR REPLACE statement,
      * saving its dependencies for later revalidation.
      */
-    public void deleteReplacementTarget()
+    public void deleteReplacementTarget(CwmModelElement newElement)
     {
         if (replacementTarget != null) {
-            revalidateQueue = getDependencies(replacementTarget, true);
+            Set deps = getDependencies(replacementTarget);
+            scheduleRevalidation(deps);
 
             stopListening();
-            breakDependencies(replacementTarget);
+            replaceDependencies(replacementTarget, newElement);
             startListening();
 
             replacementTarget.refDelete();
@@ -717,7 +719,7 @@ public class DdlValidator extends FarragoCompoundAllocation
             if (replacementTarget != null) {
                 // if this is CREATE OR REPLACE and we've encountered an object to be
                 // replaced, save its dependencies for revalidation and delete it.
-                deleteReplacementTarget();
+                deleteReplacementTarget(ddlStmt.getModelElement());
             }
         }
 
@@ -756,6 +758,10 @@ public class DdlValidator extends FarragoCompoundAllocation
                         // mark this new element as validated
                         element.setVisibility(VisibilityKindEnum.VK_PRIVATE);
                     }
+                    if ((revalidateQueue != null)
+                            && revalidateQueue.contains(obj)) {
+                        setRevalidationResult(element, null);
+                    }
                     progress = true;
                 } catch (FarragoUnvalidatedDependencyException ex) {
                     // Something hit an unvalidated dependency; we'll have
@@ -765,9 +771,10 @@ public class DdlValidator extends FarragoCompoundAllocation
                         obj.refMofId(),
                         action);
                 } catch (EigenbaseException ex) {
+                    tracer.info("Revalidate exception on " + ((CwmModelElement)obj).getName() + ": " + FarragoUtil.exceptionToString(ex));
                     if ((revalidateQueue != null)
                             && revalidateQueue.contains(obj)) {
-                        handleRevalidationException(obj, ex);
+                        setRevalidationResult(element, ex);
                     } else {
                         throw ex;
                     }
@@ -785,9 +792,10 @@ public class DdlValidator extends FarragoCompoundAllocation
 
         if (isReplace()) {
             // check for loops in our newly replaced object
-            getDependencies(
-                ddlStmt.getModelElement(),
-                false);
+            if (containsCycle(
+                ddlStmt.getModelElement())) {
+                throw FarragoResource.instance().ValidatorSchemaDependencyCycle.ex();
+            }
         }
 
         // one last time
@@ -800,14 +808,16 @@ public class DdlValidator extends FarragoCompoundAllocation
     /**
      * Handle an exception encountered during validation of dependencies of an
      * object replaced via CREATE OR REPLACE (a.k.a. revalidation).
-     * @param obj Catalog object causing revalidation exception
+     * @param element Catalog object causing revalidation exception
      * @param ex Revalidation exception
      */
-    public void handleRevalidationException(
-        RefObject obj,
+    public void setRevalidationResult(
+        CwmModelElement element,
         EigenbaseException ex)
     {
-        throw ex;
+        if (ex != null) {
+            throw ex;
+        }
     }
 
     private void clearDependencySuppliers(RefObject refObj)
@@ -1182,19 +1192,14 @@ public class DdlValidator extends FarragoCompoundAllocation
     }
 
     /**
-     * Return transitive closure of dependencies for an element and if specified,
-     * schedule their validation.  If not scheduling validation, throw exception
-     * upon encountering a cycle.
+     * Check transitive closure of dependencies of an element for cycles.
      *
      * @param element Starting element for dependency search
-     * @param schedule If true, schedule dependencies for validation
-     * @return Set of CwmModelElement
+     * @return true if cycle is found
      */
-    public Set getDependencies(
-        CwmModelElement rootElement,
-        boolean schedule)
+    private boolean containsCycle(
+        CwmModelElement rootElement)
     {
-        HashSet result = new HashSet();
         HashSet visited = new HashSet();
         HashSet visit = new HashSet();
 
@@ -1207,11 +1212,7 @@ public class DdlValidator extends FarragoCompoundAllocation
                 (CwmModelElement) visit.iterator().next();
             visit.remove(element);
             if (visited.contains(element)) {
-                if (!schedule) {
-                    throw FarragoResource.instance().ValidatorSchemaDependencyCycle
-                        .ex();
-                }
-                continue;
+                return true;
             }
             visited.add(element);
             Collection deps = depSupplier.getSupplierDependency(element);
@@ -1226,20 +1227,54 @@ public class DdlValidator extends FarragoCompoundAllocation
                         Iterator i2 = c.iterator();
                         while (i2.hasNext()) {
                             CwmModelElement e = (CwmModelElement) i2.next();
-                            result.add(e);
                             visit.add(e);
-                            if (schedule) {
-                                //REVIEW: unless we regenerate this dependency's SQL
-                                //and reparse, how would we get the SqlParserPos.
-                                //set to a dummy value for now.
-                                this.setParserOffset(
-                                    e,
-                                    new SqlParserPos(1, 0));
-                                schedulingMap.put(
-                                    e.refMofId(),
-                                    VALIDATE_CREATION);
-                            }
                         }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private void scheduleRevalidation(Set elements)
+    {
+        Iterator i = elements.iterator();
+        while (i.hasNext()) {
+            CwmModelElement e = (CwmModelElement)i.next();
+            if (!revalidateQueue.contains(e)) {
+                revalidateQueue.add(e);
+                //REVIEW: unless we regenerate this dependency's SQL
+                //and reparse, how would we get the SqlParserPos.
+                //set to a dummy value for now.
+                this.setParserOffset(
+                    e,
+                    new SqlParserPos(1, 0));
+                schedulingMap.put(
+                    e.refMofId(),
+                    VALIDATE_CREATION);
+            }
+        }
+    }
+
+    //FarragoSessionDdlValidator
+    public Set getDependencies(CwmModelElement rootElement)
+    {
+        HashSet result = new HashSet();
+        DependencySupplier s =
+            getRepos().getCorePackage().getDependencySupplier();
+        Collection deps = s.getSupplierDependency(rootElement);
+
+        if (deps != null) {
+            Iterator i = deps.iterator();
+            while (i.hasNext()) {
+                Object o = i.next();
+                if (o instanceof CwmDependency) {
+                    CwmDependency dep = (CwmDependency) o;
+                    Collection c = dep.getClient();
+                    Iterator i2 = c.iterator();
+                    while (i2.hasNext()) {
+                        CwmModelElement e = (CwmModelElement)i2.next();
+                        result.add(e);
                     }
                 }
             }
@@ -1249,28 +1284,34 @@ public class DdlValidator extends FarragoCompoundAllocation
     }
 
     /**
-     * Removes dependency associations on an element so that it may be deleted
-     * without cascading side effects.  Assumes MDR change listener isn't active.
-     * @param element Element to remove dependencies on
+     * Removes dependency associations on oldElement so that it may be deleted
+     * without cascading side effects.  Reassign these dependencies to newElement.
+     * Assumes MDR change listener isn't active.
+     * @param oldElement Element to remove dependencies from
+     * @param newElement Element to add dependencies to
      */
-    private void breakDependencies(CwmModelElement element)
+    private void replaceDependencies(CwmModelElement oldElement, CwmModelElement newElement)
     {
         assert (activeThread == null);
 
         DependencySupplier depSupplier =
             getRepos().getCorePackage().getDependencySupplier();
-        Collection c = depSupplier.getSupplierDependency(element);
+        Collection c = depSupplier.getSupplierDependency(oldElement);
         Iterator i = c.iterator();
         while (i.hasNext()) {
-            depSupplier.remove(element, (CwmDependency) i.next());
+            CwmDependency dep = (CwmDependency)i.next();
+            depSupplier.remove(oldElement, dep);
+            depSupplier.add(newElement, dep);
         }
 
         DependencyClient depClient =
             getRepos().getCorePackage().getDependencyClient();
-        c = depClient.getClientDependency(element);
+        c = depClient.getClientDependency(oldElement);
         i = c.iterator();
         while (i.hasNext()) {
-            depClient.remove(element, (CwmDependency) i.next());
+            CwmDependency dep = (CwmDependency)i.next();
+            depClient.remove(oldElement, dep);
+            depClient.add(newElement, dep);
         }
     }
 

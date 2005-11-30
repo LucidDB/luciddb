@@ -154,6 +154,9 @@ protected:
     /** removes a stream from streamOutMap */
     void removeFromStreamOutMap(SharedExecStream);
 
+    virtual Edge getInputEdge(ExecStreamId stream, uint iInput);
+    virtual Edge getOutputEdge(ExecStreamId stream, uint iOutput);
+
 public:
     explicit ExecStreamGraphImpl();
     virtual ~ExecStreamGraphImpl() {}
@@ -207,6 +210,8 @@ public:
         ExecStreamId streamId,
         uint iOutput);
     virtual std::vector<SharedExecStream> getSortedStreams();
+    virtual int getStreamCount();
+    virtual int getDataflowCount();
 };
 
 inline ExecStreamGraphImpl::GraphRep const &ExecStreamGraphImpl::getGraphRep()

@@ -34,7 +34,7 @@ RegisterSetBinding::~RegisterSetBinding()
 {
     if (ownTheBase)
         delete base;
-    delete datumAddr;
+    delete[] datumAddr;
 }
 
 RegisterSetBinding::RegisterSetBinding(TupleData* base, bool ownIt)
@@ -131,6 +131,6 @@ RegisterReference::toString() const
 
 
 
-FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/disruptivetech/calc/RegisterReference.cpp#2 $");
+FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/disruptivetech/calc/RegisterReference.cpp#3 $");
 
 // End RegisterReference.cpp

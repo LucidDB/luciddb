@@ -294,6 +294,26 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
     public void defineDropRule(
         RefAssociation refAssoc,
         FarragoSessionDdlDropRule dropRule);
+    
+    /**
+     * Called after revalidation (validation of dependencies
+     * during a CREATE OR REPLACE) is successful (ex is null),
+     * or upon failure (ex is not null).
+     * 
+     * @param element object impacted by replacement
+     *
+     * @param ex exception to be handled, may be null
+     */
+    public void setRevalidationResult(CwmModelElement element,
+            EigenbaseException ex);    
+
+    /**
+     * Returns immediate dependencies of an of element.
+     * @param element Starting element for dependency search
+     * @return Set of CwmModelElement, immediate dependencies of rootElement
+     */
+    public Set getDependencies(CwmModelElement rootElement);
+
 }
 
 

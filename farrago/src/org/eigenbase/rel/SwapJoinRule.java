@@ -29,6 +29,7 @@ import java.util.HashSet;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelOptRuleOperand;
+import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.rex.*;
@@ -159,6 +160,11 @@ public class SwapJoinRule extends RelOptRule
                     exps,
                     fieldNames,
                     ProjectRel.Flags.Boxed);
+            
+            // Make sure extra traits are carried over from the original rel
+            project.traits = 
+                RelOptUtil.mergeTraits(project.traits, swapped.traits);
+            
             RelNode rel = call.getPlanner().register(project, newJoin);
             Util.discard(rel);
         }
